@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import os
+import shutil
 from pathlib import Path
 
 from .config import *
@@ -114,6 +115,18 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Vercel functions run on a read-only filesystem except /tmp.
+# Use a writable SQLite location there and seed from the repository DB if available.
+if os.environ.get('VERCEL') == '1':
+    vercel_db_path = Path('/tmp/db.sqlite3')
+    repo_db_path = BASE_DIR / 'db.sqlite3'
+    if not vercel_db_path.exists() and repo_db_path.exists():
+        try:
+            shutil.copy2(repo_db_path, vercel_db_path)
+        except Exception:
+            pass
+    DATABASES['default']['NAME'] = vercel_db_path
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
