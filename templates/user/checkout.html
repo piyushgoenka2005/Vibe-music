@@ -1,0 +1,230 @@
+{% extends 'user/index.html' %}
+{% load static %}
+{% block title %} Checkout | Vibe Music {% endblock %}
+
+{% block css %}
+<style>
+    .checkout-page { background: #f8f9fa; padding: 60px 0; min-height: 800px; }
+    .checkout-grid { display: grid; grid-template-columns: 1fr 400px; gap: 40px; }
+    
+    .checkout-main { background: #fff; border-radius: 12px; border: 1px solid #eee; padding: 40px; }
+    .checkout-step { margin-bottom: 40px; }
+    .checkout-step-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid #f8f9fa; padding-bottom: 15px; }
+    .step-number { width: 32px; height: 32px; background: var(--primary-blue); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
+    .checkout-step-header h2 { font-size: 20px; font-weight: 800; margin: 0; color: #111; }
+
+    /* ADDRESS CARDS */
+    .address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+    .address-card { border: 2px solid #eee; border-radius: 10px; padding: 20px; cursor: pointer; position: relative; transition: border-color .2s, background .2s; }
+    .address-card:hover { border-color: #ddd; background: #fafafa; }
+    .address-card.selected { border-color: var(--primary-blue); background: #f0f7ff; }
+    
+    .address-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: #111; }
+    .address-card p { font-size: 13px; color: #666; line-height: 1.5; margin: 0; }
+    .address-card .radio-hidden { position: absolute; opacity: 0; }
+
+    .add-address-btn { border: 2px dashed #ddd; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; color: #888; font-weight: 700; transition: all .2s; }
+    .add-address-btn:hover { border-color: var(--primary-blue); color: var(--primary-blue); background: #f0f7ff; }
+
+    /* ORDER SUMMARY */
+    .order-summary-sidebar { background: #fff; border-radius: 12px; border: 1px solid #eee; padding: 30px; position: sticky; top: 20px; }
+    .order-summary-sidebar h3 { font-size: 18px; font-weight: 800; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+    
+    .mini-product { display: flex; gap: 15px; margin-bottom: 15px; }
+    .mini-img { width: 60px; height: 60px; border: 1px solid #eee; border-radius: 4px; padding: 5px; }
+    .mini-info h4 { font-size: 13px; font-weight: 700; margin: 0; line-height: 1.4; }
+    .mini-price { font-size: 13px; color: #666; margin-top: 4px; }
+
+    .price-summary { border-top: 1px solid #eee; margin-top: 20px; padding-top: 20px; }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+    .summary-row.total { font-size: 20px; font-weight: 800; color: #d71920; border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px; }
+
+    .place-order-btn { background: var(--primary-blue); color: #fff; border: none; padding: 18px; width: 100%; border-radius: 30px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 25px; transition: background .2s; }
+    .place-order-btn:hover { background: #004d99; }
+
+    /* MODAL FOR NEW ADDRESS */
+    #address-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-content { background: #fff; width: 500px; padding: 40px; border-radius: 16px; max-height: 90vh; overflow-y: auto; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-page">
+    <div class="container">
+        <form method="POST" id="checkout-form">
+            {% csrf_token %}
+            <input type="hidden" name="hidden_address" id="hidden_address" value="0">
+            <input type="hidden" name="cart_sid" id="cart_sid" value="{{cart_val}}">
+
+            <div class="checkout-grid">
+                <!-- Main Flow -->
+                <div class="checkout-main">
+                    <!-- Step 1: Shipping -->
+                    <div class="checkout-step">
+                        <div class="checkout-step-header">
+                            <div class="step-number">1</div>
+                            <h2>Shipping Address</h2>
+                        </div>
+                        
+                        <div class="address-grid">
+                            {% for i in address_obj %}
+                            <div class="address-card" onclick="selectAddress({{i.id}}, this)">
+                                <input type="radio" name="address_sel" value="{{i.id}}" class="radio-hidden" id="addr-{{i.id}}">
+                                <h4>{{i.first_name}} {{i.last_name}}</h4>
+                                <p>{{i.street_address}}, {{i.city}} - {{i.pincode}}</p>
+                                <p>{{i.state}}, {{i.country}}</p>
+                                <p>Phone: {{i.phone_number}}</p>
+                            </div>
+                            {% endfor %}
+                            <div class="add-address-btn" onclick="openAddressModal()">
+                                <i class="fas fa-plus-circle" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                                Add New Address
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Payment -->
+                    <div class="checkout-step">
+                        <div class="checkout-step-header">
+                            <div class="step-number">2</div>
+                            <h2>Payment Method</h2>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            <label class="address-card" style="display: flex; align-items: center; gap: 15px; width: 100%;">
+                                <input type="radio" name="payment_group" value="COD" checked style="width: 20px; height: 20px;">
+                                <div>
+                                    <h4 style="margin:0;">Cash On Delivery (COD)</h4>
+                                    <p style="margin:0;">Pay when your gear arrives</p>
+                                </div>
+                            </label>
+                            <label class="address-card" style="display: flex; align-items: center; gap: 15px; width: 100%;">
+                                <input type="radio" name="payment_group" value="RAZORPAY" style="width: 20px; height: 20px;">
+                                <div>
+                                    <h4 style="margin:0;">Online Payment (Razorpay)</h4>
+                                    <p style="margin:0;">Cards, UPI, Netbanking</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="checkout-sidebar">
+                    <div class="order-summary-sidebar">
+                        <h3>Order Summary</h3>
+                        
+                        <div class="items-preview">
+                            {% for i in cartt %}
+                            <div class="mini-product">
+                                <img src="{{i.product_id.pro_image.url}}" class="mini-img" alt="">
+                                <div class="mini-info">
+                                    <h4>{{i.product_id.productname|truncatechars:40}}</h4>
+                                    <div class="mini-price">Qty: {{i.quantity}} | <i class="fas fa-rupee-sign"></i> {{i.product_id.pro_price}}.00</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="price-summary">
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span><i class="fas fa-rupee-sign"></i> {{subtotal}}.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Shipping</span>
+                                <span style="color:#2e7d32; font-weight:700;">FREE</span>
+                            </div>
+                            <div class="summary-row.total">
+                                <span>Total Payable</span>
+                                <span><i class="fas fa-rupee-sign"></i> {{total_price}}.00</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="place-order-btn">Review & Place Order</button>
+                        
+                        <div style="margin-top: 20px; font-size: 12px; color: #888; text-align: center;">
+                            <i class="fas fa-lock"></i> SSL Secured Transaction
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Simple Address Modal -->
+<div id="address-modal">
+    <div class="modal-content">
+        <h3 style="margin-bottom: 25px;">Add New Shipping Address</h3>
+        <form action="/user/myaccount/" method="POST">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <input type="text" name="firstname" placeholder="First Name" class="form-control" required style="width:100%; padding:10px; border:1px solid #eee; border-radius:4px;">
+                <input type="text" name="lastname" placeholder="Last Name" class="form-control" required style="width:100%; padding:10px; border:1px solid #eee; border-radius:4px;">
+            </div>
+            <input type="number" name="phone_number" placeholder="Mobile Number" class="form-control" required style="width:100%; padding:10px; border:1px solid #eee; border-radius:4px; margin-bottom: 15px;">
+            <textarea name="Street" placeholder="Street Address" class="form-control" required style="width:100%; padding:10px; border:1px solid #eee; border-radius:4px; margin-bottom: 15px; height: 80px;"></textarea>
+            <input type="text" name="locality" placeholder="Area / Locality" class="form-control" required style="width:100%; padding:10px; border:1px solid #eee; border-radius:4px; margin-bottom: 15px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <input type="text" name="city" placeholder="City" class="form-control" required style="width:100%; padding:10px; border:1px solid #eee; border-radius:4px;">
+                <input type="number" name="pincode" placeholder="Pincode" class="form-control" required style="width:100%; padding:10px; border:1px solid #eee; border-radius:4px;">
+            </div>
+            <select name="state" class="form-control" required style="width:100%; padding:10px; border:1px solid #eee; border-radius:4px; margin-bottom: 25px;">
+                <option value="">Select State</option>
+                {% for i in state_list %}
+                <option value="{{i.id}}">{{i.state_name}}</option>
+                {% endfor %}
+            </select>
+            <div style="display: flex; gap: 15px;">
+                <button type="submit" class="place-order-btn" style="margin:0; padding:12px;">Save Address</button>
+                <button type="button" class="place-order-btn" onclick="closeAddressModal()" style="margin:0; padding:12px; background:#666;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Razorpay Integration -->
+<div style="display: none;">
+    <form action="/user/success/" method="POST" id="razorpay-form">
+        {% csrf_token %}
+        <script src="https://checkout.razorpay.com/v1/checkout.js"
+            data-key="rzp_test_As5y7xyrTHsCyp" data-amount="{{price}}"
+            data-currency="INR" data-order_id="{{ order_id }}"
+            data-buttontext="Pay with Razorpay" data-name="Vibe Music Store"
+            data-description="Purchase from Vibe Music"
+            data-image="{% static 'admin/folder/images/logo-vibemusic.png' %}"
+            {% for i in address_iid %} data-prefill.name="{{i.first_name}}" data-prefill.contact="{{i.phone_number}}" {% endfor %}
+            {% for i in emaill %} data-prefill.email="{{i.email}}" {% endfor %}
+            data-theme.color="#005cb9">
+        </script>
+        <input type="hidden" name="hidden">
+    </form>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    function selectAddress(id, el) {
+        document.getElementById('hidden_address').value = id;
+        document.querySelectorAll('.address-card').forEach(card => card.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('addr-' + id).checked = true;
+    }
+
+    function openAddressModal() {
+        document.getElementById('address-modal').style.display = 'flex';
+    }
+
+    function closeAddressModal() {
+        document.getElementById('address-modal').style.display = 'none';
+    }
+
+    // Razorpay Auto-trigger logic (if applicable)
+    {% if check_var == '1' %}
+    window.onload = function() {
+        document.querySelector('.razorpay-payment-button').click();
+    };
+    {% endif %}
+</script>
+{% endblock %}

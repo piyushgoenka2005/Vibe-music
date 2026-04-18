@@ -1,0 +1,79 @@
+{% extends 'user/index.html' %}
+{% load static %}
+{% block title %} My Account | Vibe Music {% endblock %}
+
+{% block css %}
+<style>
+    .account-page { background: #f8f9fa; padding: 60px 0; min-height: 800px; }
+    .account-layout { display: grid; grid-template-columns: 280px 1fr; gap: 40px; }
+    
+    /* ACCOUNT SIDEBAR */
+    .account-nav { background: #fff; border-radius: 12px; border: 1px solid #eee; overflow: hidden; height: fit-content; position: sticky; top: 20px; }
+    .account-nav-header { padding: 30px; background: #111; color: #fff; text-align: center; }
+    .account-nav-header .avatar { width: 64px; height: 64px; background: var(--primary-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; margin: 0 auto 12px; text-transform: uppercase; }
+    .account-nav-header h3 { font-size: 16px; margin: 0; font-weight: 700; text-transform: capitalize; }
+    
+    .account-menu { list-style: none; padding: 0; }
+    .account-menu li { border-bottom: 1px solid #f8f9fa; }
+    .account-menu li:last-child { border-bottom: none; }
+    .account-menu a { display: flex; align-items: center; gap: 15px; padding: 18px 25px; color: #444; font-size: 15px; font-weight: 600; transition: all .2s; }
+    .account-menu a i { font-size: 18px; width: 20px; color: #999; }
+    .account-menu a:hover { background: #fafafa; color: var(--primary-blue); }
+    .account-menu li.active a { background: #f0f7ff; color: var(--primary-blue); border-left: 4px solid var(--primary-blue); }
+    .account-menu li.active a i { color: var(--primary-blue); }
+
+    /* CONTENT CARD */
+    .account-card { background: #fff; border-radius: 12px; border: 1px solid #eee; padding: 40px; }
+    .account-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #f8f9fa; padding-bottom: 20px; }
+    .account-card-header h2 { font-size: 24px; font-weight: 800; margin: 0; }
+
+    @media (max-width: 991px) {
+        .account-layout { grid-template-columns: 1fr; }
+        .account-nav { position: static; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="account-page">
+    <div class="container">
+        <div class="account-layout">
+            <!-- Sidebar -->
+            <aside class="account-nav">
+                <div class="account-nav-header">
+                    <div class="avatar">{{ request.session.username|slice:":1" }}</div>
+                    <h3>{{ request.session.username }}</h3>
+                </div>
+                <ul class="account-menu">
+                    <li class="{% if dashboard_active == 'dashboard_master' %}active{% endif %}">
+                        <a href="/user/dashboard/"><i class="fas fa-th-large"></i> Dashboard</a>
+                    </li>
+                    <li class="{% if myorder_active == 'myorder_master' %}active{% endif %}">
+                        <a href="/user/myorder/"><i class="fas fa-shopping-bag"></i> My Orders</a>
+                    </li>
+                    <li class="{% if address_active == 'address_master' %}active{% endif %}">
+                        <a href="/user/address/"><i class="fas fa-map-marker-alt"></i> Address Book</a>
+                    </li>
+                    <li class="{% if change_active == 'password_master' %}active{% endif %}">
+                        <a href="/user/change-password/"><i class="fas fa-lock"></i> Security</a>
+                    </li>
+                    <li>
+                        <a href="/user/logout/" style="color: #d32f2f;"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- Main Content -->
+            <div class="account-main">
+                <div class="account-card">
+                    <div class="account-card-header">
+                        <h2>{% block titall %} Account Overview {% endblock %}</h2>
+                        {% block action_btn %}{% endblock %}
+                    </div>
+                    {% block contentt %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

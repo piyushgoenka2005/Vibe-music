@@ -1,0 +1,81 @@
+{% extends 'admin/masterpage/index-1.html' %}
+{% block title3 %} View Order {% endblock %}
+{% load static %}
+{% block content %}
+
+
+<div class="cal_ content-wrapper">
+    <section class="content-header">
+        <div class="row">
+      <div class="col-md-8">
+        <h5 class="card-title mb-1">Order Tracking</h5>
+        <span class="dash-pill"><i class="fa fa-truck"></i> Latest order status updates</span>
+      </div>
+      <div class="col-md-4" style="padding-top:12px;" >
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/admin/"><i class="fa fa-dashboard"></i> Home</a></li>
+                    <li class="breadcrumb-item"><a href="javascript:void(0)">Tracker Master</a></li>
+                    <li class="breadcrumb-item active">Tracker Order</li>
+        </ol>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="row">
+    	    <div class="col-12">
+    	        <div class="box">
+                <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                    <h6 class="mb-2 mb-md-0">Tracking Timeline</h6>
+                    <span class="text-muted">Total Orders: {{ tracker_details|length }}</span>
+                </div>
+                    <div class="box-body">
+    			        <div class="table-responsive">
+    				        <table id="productorder" class="table table-hover no-wrap product-order text-center" data-page-size="10">
+    					        <thead>
+                          <th>Details</th>
+            							<th>Order ID</th>
+                                          <th>Customer</th>
+                                          <th>Status</th>
+                                          <th>Total Amount</th>
+                                          <th>Date</th>
+                                        <th>Time</th>
+        							</tr>
+    					        </thead>
+    					        <tbody>
+    					            {% for i in tracker_details %}
+    					            <tr>
+        					            <td>
+                                            <a href="/admin/order/{{i.order_id.id}}">
+                                                <i style="font-size: 2em;" class="fa fa-info-circle" aria-hidden="true"></i>
+                                            </a>
+                                            <td>#{{i.id}}</td>
+                                            <td>{{i.user_id.username}}</td>
+                                            <td>
+                                              {% if i.order_status %}
+                                                  <span class="badge badge-info">{{i.order_status}}</span>
+                                              {% else %}
+                                                  <span class="badge badge-secondary">Pending</span>
+                                              {% endif %}
+                                          </td>
+                                            <td>₹{{i.total_amount}}</td>
+                                            <td>{{i.order_date}}</td>
+                                        <td>{{i.timestamp}}</td>
+                                    </tr>
+                                    {% if not tracker_details %}
+                                        <tr>
+                                            <td colspan="6" class="text-muted py-4">No order tracking entries found.</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% endfor %}
+    						    </tbody>
+    				        </table>
+    			        </div>
+                    </div>
+                </div>
+    	    </div>		  
+        </div>
+    </section>
+</div>
+
+{% endblock %}

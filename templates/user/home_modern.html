@@ -1,0 +1,623 @@
+{% extends 'user/index.html' %}
+{% load static %}
+{% block title %}Home - Vibe Music{% endblock %}
+
+{% block content %}
+<style>
+  :root {
+    --vm-blue: #0f6dbc;
+    --vm-dark: #101318;
+    --vm-gray: #f4f5f7;
+    --vm-text: #1f2933;
+    --vm-muted: #64748b;
+    --vm-border: #e5e7eb;
+  }
+
+  .vm-page {
+    background: #fff;
+    color: var(--vm-text);
+  }
+
+  .vm-container {
+    width: min(1280px, 96%);
+    margin: 0 auto;
+  }
+
+  .vm-top-strip {
+    background: #ececec;
+    border-bottom: 1px solid #dcdcdc;
+    font-size: 13px;
+  }
+
+  .vm-top-strip .vm-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 0;
+  }
+
+  .vm-strip-links a {
+    color: #333;
+    margin-right: 16px;
+  }
+
+  .vm-strip-links a:last-child { margin-right: 0; }
+
+  .vm-contact {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 600;
+  }
+
+  .vm-contact a {
+    color: var(--vm-blue);
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .vm-search-row {
+    border-bottom: 1px solid var(--vm-border);
+    background: #fff;
+  }
+
+  .vm-search-row .vm-container {
+    display: grid;
+    grid-template-columns: 190px 1fr 360px;
+    gap: 18px;
+    align-items: center;
+    padding: 12px 0;
+  }
+
+  .vm-logo img {
+    max-height: 64px;
+    width: auto;
+  }
+
+  .vm-search {
+    position: relative;
+  }
+
+  .vm-search input {
+    width: 100%;
+    border: 1px solid #cfd4da;
+    border-radius: 4px;
+    height: 44px;
+    padding: 0 42px 0 14px;
+    font-size: 15px;
+  }
+
+  .vm-search i {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    color: #6c757d;
+  }
+
+  .vm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 18px;
+    align-items: center;
+    font-size: 14px;
+  }
+
+  .vm-actions a {
+    color: #222;
+    font-weight: 600;
+  }
+
+  .vm-main-nav {
+    border-bottom: 1px solid var(--vm-border);
+    background: #fff;
+  }
+
+  .vm-main-nav .vm-container {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    padding: 10px 0;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .vm-main-nav a {
+    color: #1f2933;
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .vm-main-nav a.primary {
+    color: var(--vm-blue);
+  }
+
+  .vm-hero {
+    margin-top: 10px;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .vm-hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 420px;
+  }
+
+  .vm-hero-copy {
+    background: #111318;
+    color: #fff;
+    padding: 56px 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .vm-hero-copy .brand {
+    color: #b5b5b5;
+    font-size: 28px;
+    margin-bottom: 18px;
+  }
+
+  .vm-hero-copy h1 {
+    font-size: 56px;
+    line-height: 1.04;
+    margin-bottom: 12px;
+    color: #fff;
+  }
+
+  .vm-hero-copy p {
+    color: #e5e7eb;
+    font-size: 20px;
+    margin-bottom: 24px;
+  }
+
+  .vm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 12px 24px;
+    font-weight: 700;
+    border: 1px solid transparent;
+  }
+
+  .vm-btn.light {
+    background: #fff;
+    color: #111;
+  }
+
+  .vm-hero-media {
+    position: relative;
+    min-height: 420px;
+    background: #0a0a0a;
+  }
+
+  .vm-hero-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .vm-finance-strip {
+    background: #07080e;
+    color: #fff;
+    text-align: center;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  .vm-finance-strip a {
+    color: #fff;
+    text-decoration: underline;
+    margin-left: 14px;
+    font-weight: 600;
+  }
+
+  .vm-section {
+    padding: 34px 0;
+  }
+
+  .vm-section h2 {
+    font-size: 34px;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  .vm-category-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+
+  .vm-category-card {
+    border: 1px solid var(--vm-border);
+    border-radius: 10px;
+    text-align: center;
+    padding: 12px 10px;
+    background: #fff;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+
+  .vm-category-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 18px rgba(15, 109, 188, 0.12);
+  }
+
+  .vm-category-card img {
+    height: 56px;
+    width: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+
+  .vm-category-card .name {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .vm-promo-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .vm-promo-card {
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 230px;
+    background: linear-gradient(125deg, #0d1a2e, #122f63);
+    color: #fff;
+    position: relative;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .vm-promo-card h3 {
+    font-size: 26px;
+    margin-bottom: 8px;
+    color: #fff;
+  }
+
+  .vm-promo-card p {
+    color: #e2e8f0;
+    max-width: 74%;
+  }
+
+  .vm-product-rail {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+
+  .vm-product-card {
+    border: 1px solid var(--vm-border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .vm-product-card .thumb {
+    height: 132px;
+    background: #fafafa;
+  }
+
+  .vm-product-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .vm-product-card .meta {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .vm-product-card .title {
+    font-size: 13px;
+    line-height: 1.2;
+    min-height: 32px;
+    color: #1f2933;
+    font-weight: 700;
+  }
+
+  .vm-product-card .price {
+    color: #d81f1f;
+    font-weight: 800;
+    font-size: 14px;
+  }
+
+  .vm-product-card .strike {
+    color: #6b7280;
+    text-decoration: line-through;
+    font-size: 12px;
+    margin-left: 4px;
+  }
+
+  .vm-feature-icons {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  .vm-feature-icons .item {
+    border: 1px solid var(--vm-border);
+    border-radius: 10px;
+    padding: 16px 8px;
+    background: #fff;
+  }
+
+  .vm-feature-icons i {
+    color: var(--vm-blue);
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  .vm-feature-icons .txt {
+    font-size: 12px;
+    font-weight: 700;
+    color: #374151;
+  }
+
+  .vm-support-banner {
+    background: linear-gradient(130deg, #0f172a, #1e293b 60%, #102a43);
+    color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    min-height: 250px;
+  }
+
+  .vm-support-banner .copy {
+    padding: 28px;
+  }
+
+  .vm-support-banner h3 {
+    color: #fff;
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+
+  .vm-support-banner p {
+    color: #cbd5e1;
+    font-size: 15px;
+    margin-bottom: 14px;
+  }
+
+  .vm-support-banner .phone {
+    font-size: 30px;
+    color: #fff;
+    font-weight: 800;
+  }
+
+  .vm-support-banner .visual {
+    height: 100%;
+    min-height: 250px;
+  }
+
+  .vm-support-banner .visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (max-width: 1200px) {
+    .vm-search-row .vm-container { grid-template-columns: 170px 1fr 250px; }
+    .vm-category-grid { grid-template-columns: repeat(4, 1fr); }
+    .vm-product-rail { grid-template-columns: repeat(4, 1fr); }
+    .vm-feature-icons { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 900px) {
+    .vm-top-strip { display: none; }
+    .vm-search-row .vm-container {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .vm-actions { justify-content: flex-start; flex-wrap: wrap; }
+    .vm-hero-grid, .vm-support-banner, .vm-promo-row { grid-template-columns: 1fr; }
+    .vm-hero-copy { padding: 26px 22px; }
+    .vm-hero-copy h1 { font-size: 36px; }
+    .vm-hero-copy p { font-size: 17px; }
+    .vm-category-grid, .vm-product-rail { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+
+<div class="vm-page">
+  <section class="vm-top-strip">
+    <div class="vm-container">
+      <div class="vm-strip-links">
+        <a href="/user/product/">Trending Gear</a>
+        <a href="/user/category/">Categories</a>
+        <a href="/user/product/">Hot Deals</a>
+        <a href="/user/classify-image/">AI Search</a>
+      </div>
+      <div class="vm-contact">
+        <a href="tel:+919773651006">+91 97736 51006</a>
+        <span>Talk to a music expert</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="vm-search-row">
+    <div class="vm-container">
+      <div class="vm-logo">
+        <a href="/user/"><img src="{% static 'admin/folder/images/logo-vibemusic.png' %}" alt="Vibe Music"></a>
+      </div>
+      <form class="vm-search" method="get" action="/user/product/">
+        <input type="text" name="q" placeholder="Search for guitars, drums, keyboards, audio interfaces...">
+        <i class="fa fa-search"></i>
+      </form>
+      <div class="vm-actions">
+        <a href="/user/tracker/">Order Tracking</a>
+        <a href="/user/dashboard/">My Account</a>
+        <a href="/user/gocart/"><i class="fa fa-shopping-cart"></i> Cart (0)</a>
+      </div>
+    </div>
+  </section>
+
+  <nav class="vm-main-nav">
+    <div class="vm-container">
+      <a class="primary" href="/user/category/">Shop by Category</a>
+      <a href="/user/product/">What's New</a>
+      <a href="/user/product/">Deals</a>
+      <a href="/user/product/">Used Gear</a>
+      <a href="/user/product/">Rentals</a>
+      <a href="/user/product/">Articles & Videos</a>
+      <a href="/user/product/">Giveaway</a>
+    </div>
+  </nav>
+
+  <div class="vm-container">
+    <section class="vm-hero">
+      <div class="vm-hero-grid">
+        <div class="vm-hero-copy">
+          <div class="brand">Vibe Signature Series</div>
+          <h1>New Futura Guitars</h1>
+          <p>Timeless designs and pro-level upgrades for creators.</p>
+          <div>
+            <a class="vm-btn light" href="/user/product/">Shop Now</a>
+          </div>
+        </div>
+        <div class="vm-hero-media">
+          {% if obj|length %}
+            <img src="{{ obj.0.slider_img.url }}" alt="Featured instruments">
+          {% else %}
+            <img src="{% static 'admin/folder/images/pretty-snap-25-09-2023.png' %}" alt="Featured instruments">
+          {% endif %}
+        </div>
+      </div>
+      <div class="vm-finance-strip">
+        GIBSON BRANDS 48-MONTH SPECIAL FINANCING*
+        <a href="/user/product/">Learn More</a>
+        <a href="/user/product/">Shop The Offers</a>
+      </div>
+    </section>
+
+    <section class="vm-section">
+      <h2>Popular Categories</h2>
+      <div class="vm-category-grid">
+        {% for cat in pro|slice:":12" %}
+          <a class="vm-category-card" href="/user/category/{{ cat.id }}">
+            {% if cat.cat_img %}
+              <img src="{{ cat.cat_img.url }}" alt="{{ cat.cat_name }}">
+            {% else %}
+              <img src="{% static 'admin/folder/images/placeholder.jpg' %}" alt="{{ cat.cat_name }}">
+            {% endif %}
+            <div class="name">{{ cat.cat_name }}</div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="vm-section" style="padding-top: 4px;">
+      <h2>New & Notable</h2>
+      <div class="vm-promo-row">
+        <div class="vm-promo-card" style="background: linear-gradient(130deg, #1f2937, #111827);">
+          <h3>New Inspired by Gibson Models</h3>
+          <p>Fresh inventory from premium brands updated in real time from the Vibe catalog.</p>
+          <a class="vm-btn light" href="/user/product/">Shop Now</a>
+        </div>
+        <div class="vm-promo-card" style="background: linear-gradient(130deg, #1f2a44, #0f6dbc);">
+          <h3>Save Up to 30%</h3>
+          <p>Curated weekly markdowns across keyboards, mics, drums, and effects.</p>
+          <a class="vm-btn light" href="/user/product/">View Deals</a>
+        </div>
+        <div class="vm-promo-card" style="background: linear-gradient(130deg, #21334a, #1e3a8a);">
+          <h3>48-Month Financing</h3>
+          <p>Get your dream setup now and pay over time.</p>
+          <a class="vm-btn light" href="/user/product/">Apply Now</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="vm-section" style="padding-top: 8px;">
+      <h2>Trending Gear</h2>
+      <div class="vm-product-rail">
+        {% for p in pro1|slice:":12" %}
+          <a class="vm-product-card" href="/user/product/{{ p.id }}">
+            <div class="thumb">
+              {% if p.pro_image %}
+                <img src="{{ p.pro_image.url }}" alt="{{ p.productname }}">
+              {% else %}
+                <img src="{% static 'admin/folder/images/placeholder.jpg' %}" alt="{{ p.productname }}">
+              {% endif %}
+            </div>
+            <div class="meta">
+              <div class="title">{{ p.productname|truncatechars:42 }}</div>
+              <div>
+                <span class="price"><i class="fa fa-inr" aria-hidden="true"></i> {{ p.pro_price }}</span>
+                {% if p.strike_price %}<span class="strike"><i class="fa fa-inr" aria-hidden="true"></i> {{ p.strike_price }}</span>{% endif %}
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="vm-section" style="padding-top: 10px;">
+      <h2>Get More at Vibe Music</h2>
+      <div class="vm-feature-icons">
+        <div class="item"><i class="fa fa-truck"></i><div class="txt">Fast Delivery</div></div>
+        <div class="item"><i class="fa fa-headphones"></i><div class="txt">Expert Support</div></div>
+        <div class="item"><i class="fa fa-refresh"></i><div class="txt">Easy Returns</div></div>
+        <div class="item"><i class="fa fa-shield"></i><div class="txt">Secure Payments</div></div>
+        <div class="item"><i class="fa fa-credit-card"></i><div class="txt">EMI Options</div></div>
+        <div class="item"><i class="fa fa-certificate"></i><div class="txt">Original Brands</div></div>
+      </div>
+    </section>
+
+    <section class="vm-section" style="padding-top: 8px;">
+      <h2>Hottest Deals</h2>
+      <div class="vm-product-rail">
+        {% for p in pro1|slice:"12:24" %}
+          <a class="vm-product-card" href="/user/product/{{ p.id }}">
+            <div class="thumb">
+              {% if p.pro_image %}
+                <img src="{{ p.pro_image.url }}" alt="{{ p.productname }}">
+              {% else %}
+                <img src="{% static 'admin/folder/images/placeholder.jpg' %}" alt="{{ p.productname }}">
+              {% endif %}
+            </div>
+            <div class="meta">
+              <div class="title">{{ p.productname|truncatechars:42 }}</div>
+              <div>
+                <span class="price"><i class="fa fa-inr" aria-hidden="true"></i> {{ p.pro_price }}</span>
+                {% if p.strike_price %}<span class="strike"><i class="fa fa-inr" aria-hidden="true"></i> {{ p.strike_price }}</span>{% endif %}
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="vm-section" style="padding-top: 8px; padding-bottom: 44px;">
+      <div class="vm-support-banner">
+        <div class="copy">
+          <h3>Dedicated Sales Engineers</h3>
+          <p>Talk to experienced musicians and product specialists before you buy. Get personalized recommendations based on your style and budget.</p>
+          <div><a class="phone" href="tel:+919773651006">+91 97736 51006</a></div>
+          <div style="margin-top: 8px;"><a href="mailto:support@vibemusic.in" style="color:#93c5fd;">support@vibemusic.in</a></div>
+        </div>
+        <div class="visual">
+          <img src="{% static 'admin/folder/images/pretty-snap-25-09-2023.png' %}" alt="Sales engineer support">
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

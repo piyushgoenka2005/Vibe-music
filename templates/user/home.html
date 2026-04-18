@@ -1,0 +1,2367 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Music | Musical Instruments, Pro Audio, Accessories & More</title>
+    <meta name="author" content="Vibe Music"/>
+    <meta name="description" content="Vibe Music - India's premier destination for musical instruments, pro audio gear, recording equipment, and accessories. Free shipping, expert advice, and the best prices."/>
+    <meta property="og:title" content="Vibe Music"/>
+    <meta property="og:site_name" content="Vibe Music"/>
+    <meta property="og:type" content="website"/>
+    <link rel="shortcut icon" href="{% static 'admin/folder/images/logo-mini-music-club.png' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @font-face {
+            font-display: swap;
+            font-family: Sweetwater;
+            font-stretch: normal;
+            font-style: normal;
+            font-weight: 400;
+            src: url(https://media.sweetwater.com/m/fonts/aspira/aspira_regular/Aspira-Regular.woff2) format("woff2"),
+                 url(https://media.sweetwater.com/m/fonts/aspira/aspira_regular/Aspira-Regular.woff) format("woff");
+        }
+        
+        :root {
+            --grey100: #2e2e2d;
+            --aa-search-input-height: 44px;
+            --aa-input-icon-size: 20px;
+            --aa-base-unit: 16;
+            --aa-spacing-factor: 1;
+            --aa-spacing: calc(var(--aa-base-unit) * var(--aa-spacing-factor) * 1px);
+            --aa-spacing-half: calc(var(--aa-spacing) / 2);
+            --aa-panel-max-height: 650px;
+            --aa-base-z-index: 9999;
+            --aa-font-size: calc(var(--aa-base-unit) * 1px);
+            --aa-font-family: inherit;
+            --aa-font-weight-medium: 500;
+            --aa-font-weight-semibold: 600;
+            --aa-font-weight-bold: 700;
+            --aa-icon-size: 20px;
+            --aa-icon-stroke-width: 1.6;
+            --aa-icon-color-rgb: 119, 119, 163;
+            --aa-icon-color-alpha: 1;
+            --aa-action-icon-size: 20px;
+            --aa-text-color-rgb: 38, 38, 39;
+            --aa-text-color-alpha: 1;
+            --aa-primary-color-rgb: 62, 52, 211;
+            --aa-primary-color-alpha: 0.2;
+            --aa-muted-color-rgb: 128, 126, 163;
+            --aa-muted-color-alpha: 0.6;
+            --aa-panel-border-color-rgb: 128, 126, 163;
+            --aa-panel-border-color-alpha: 0.3;
+            --aa-input-border-color-rgb: 128, 126, 163;
+            --aa-input-border-color-alpha: 0.8;
+            --aa-background-color-rgb: 255, 255, 255;
+            --aa-background-color-alpha: 1;
+            --aa-input-background-color-rgb: 255, 255, 255;
+            --aa-input-background-color-alpha: 1;
+            --aa-selected-color-rgb: 179, 173, 214;
+            --aa-selected-color-alpha: 0.205;
+            --aa-description-highlight-background-color-rgb: 245, 223, 77;
+            --aa-description-highlight-background-color-alpha: 0.5;
+            --aa-detached-media-query: (max-width: 680px);
+            --aa-detached-modal-media-query: (min-width: 680px);
+            --aa-detached-modal-max-width: 680px;
+            --aa-detached-modal-max-height: 500px;
+            --aa-overlay-color-rgb: 115, 114, 129;
+            --aa-overlay-color-alpha: 0.4;
+            --aa-panel-shadow: 0 0 0 1px rgba(35, 38, 59, 0.1), 0 6px 16px -4px rgba(35, 38, 59, 0.15);
+            --aa-scrollbar-width: 13px;
+            --aa-scrollbar-track-background-color-rgb: 234, 234, 234;
+            --aa-scrollbar-track-background-color-alpha: 1;
+            --aa-scrollbar-thumb-background-color-rgb: var(--aa-background-color-rgb);
+            --aa-scrollbar-thumb-background-color-alpha: 1;
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box}
+        body {
+            background: #fff;
+            color: #2e2e2d;
+            color: var(--grey100);
+            font-size: 16px;
+            font-size: 1rem;
+            line-height: normal;
+            position: static;
+            font-family: Sweetwater, 'Inter', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        a{text-decoration:none;color:inherit;cursor:pointer}
+        button{cursor:pointer}
+        img{max-width:100%;height:auto}
+        .container{max-width:1280px;margin:0 auto;padding:0 20px}
+
+        /* TOP BAR */
+        .top-bar{background:#f2f2f2;color:#2e2e2d;font-size:12px;padding:0;border-bottom:1px solid #e0e0e0; font-family: Helvetica, Arial, sans-serif;}
+        .top-bar .container{display:flex;justify-content:space-between;align-items:center; max-width:1440px; padding:0 20px;}
+        .top-bar-left{display:flex;align-items:center;}
+        .top-bar-left a{color:#2e2e2d;font-weight:400;padding:12px 16px;border-right:1px solid #ddd; border-left:1px solid transparent; transition:background .2s;}
+        .top-bar-left a.active{background:#fff; border-left:1px solid #ddd; font-weight:600;}
+        .top-bar-left a:hover{background:#fff;}
+        .top-bar-right{display:flex;align-items:center;}
+        .top-bar-right a{color:#2e2e2d;padding:12px 14px;border-left:1px solid #ddd; transition:background .2s;}
+        .top-bar-right a:hover{background:#fff;}
+
+        /* MAIN HEADER */
+        .main-header{background:#fff;padding:24px 0 20px;position:relative;border-bottom:1px solid #f2f2f2;}
+        .main-header .container{display:flex;align-items:center;justify-content:space-between; gap:40px; max-width:1440px; padding:0 20px;}
+        .logo{display:flex;align-items:center;flex-shrink:0;text-decoration:none;}
+        .logo-text{font-size:42px;font-weight:900;color:#005cb9;letter-spacing:-1.5px;font-family:-apple-system, BlinkMacSystemFont, sans-serif;}
+        .logo-text span{font-weight:500;}
+        .search-bar{flex:1;max-width:850px;position:relative;}
+        .search-bar form { width: 100%; display: flex; background:#f5f5f5; border-radius:4px;border:1px solid #e5e5e5; transition:border .2s; position:relative;}
+        .search-bar form:hover {border-color:#ccc;}
+        .search-bar .search-icon {color:#888; padding:0 8px 0 16px; display:flex; align-items:center; font-size:16px;}
+        .search-bar input{width:100%;padding:14px 10px 14px 5px;border:none;background:transparent;color:#333;font-size:16px;outline:none;}
+        .search-bar input::placeholder{color:#777; font-weight:400;}
+        .search-bar button{display:none;} /* Assuming search is triggered by enter */
+        
+        .header-actions{display:flex;align-items:center;gap:45px;flex-shrink:0;}
+        .header-action-col{display:flex;flex-direction:column;}
+        .header-action-phone{color:#0071c5;font-size:20px;font-weight:700;line-height:1;margin-bottom:4px;}
+        .header-action-sub{color:#666;font-size:11px;}
+        
+        .header-action-link{display:flex;align-items:center;gap:6px;color:#333;font-size:14px;font-weight:600; cursor:pointer;}
+        .header-action-link i{font-size:10px;color:#888;}
+        
+        .header-cart{position:relative;color:#333;font-size:26px;display:flex;align-items:center;}
+        .header-cart-badge{position:absolute;top:-6px;right:-10px;background:#fff;color:#333;font-size:15px;font-weight:700;padding:0 2px;}
+
+        /* CATEGORY NAV */
+        .cat-nav{background:#fff;border-bottom:1px solid #ddd; font-family:-apple-system, BlinkMacSystemFont, sans-serif;}
+        .cat-nav .container{display:flex;align-items:center;max-width:1440px;padding:0 10px;}
+        .cat-nav > .container > a{color:#333;font-size:14px;font-weight:600;padding:16px 10px;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:color .2s; flex:1; justify-content:center;}
+        .cat-nav > .container > a:hover{color:#005cb9;}
+        .cat-nav > .container > a i{font-size:10px;color:#888;}
+
+        .mega-trigger {
+            position: relative;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .mega-anchor {
+            color:#333;
+            font-size:14px;
+            font-weight:600;
+            padding:16px 10px;
+            white-space:nowrap;
+            display:flex;
+            align-items:center;
+            gap:6px;
+        }
+
+        .mega-trigger:hover .mega-anchor {
+            color: #005cb9;
+        }
+
+        .flyout-trigger {
+            position: relative;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .flyout-anchor {
+            color:#333;
+            font-size:14px;
+            font-weight:600;
+            padding:16px 10px;
+            white-space:nowrap;
+            display:flex;
+            align-items:center;
+            gap:6px;
+        }
+
+        .flyout-trigger:hover .flyout-anchor {
+            color: #005cb9;
+        }
+
+        .flyout-panel {
+            position: absolute;
+            top: calc(100% + 1px);
+            left: 0;
+            min-width: 640px;
+            background: #f3f3f3;
+            border: 1px solid #d3d3d3;
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.16);
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            transition: opacity .18s ease, transform .18s ease;
+            z-index: 1200;
+        }
+
+        .flyout-panel.hover-categories {
+            width: 300px !important;
+            min-width: 300px !important;
+            grid-template-columns: 300px;
+        }
+
+        .flyout-panel.hover-categories .flyout-right {
+            display: none;
+        }
+
+        .flyout-panel.hover-categories.show-right {
+            width: 640px !important;
+            min-width: 640px !important;
+            grid-template-columns: 300px 1fr;
+        }
+
+        .flyout-panel.hover-categories.show-right .flyout-right {
+            display: block;
+        }
+
+        .flyout-trigger:hover .flyout-panel {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .flyout-left {
+            background: #efefef;
+            border-right: 1px solid #d8d8d8;
+        }
+
+        .flyout-brand {
+            padding: 16px 18px;
+            border-bottom: 1px solid #d8d8d8;
+            background: #f5f5f5;
+        }
+
+        .flyout-brand h3 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: .3px;
+            color: #2c2c2c;
+        }
+
+        .flyout-brand p {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.35;
+        }
+
+        .flyout-left a,
+        .flyout-right a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 18px;
+            border-bottom: 1px solid #d8d8d8;
+            color: #333;
+            font-size: 15px;
+            line-height: 1.2;
+        }
+
+        .flyout-left a:hover,
+        .flyout-right a:hover {
+            background: #fff;
+            color: #0071c5;
+        }
+
+        .flyout-right {
+            background: #f7f7f7;
+        }
+
+        .sale-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: #e53935;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 7px;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        .mega-panel {
+            position: absolute;
+            top: calc(100% + 1px);
+            left: 0;
+            width: min(1240px, 96vw);
+            background: #f3f3f3;
+            border: 1px solid #d3d3d3;
+            box-shadow: 0 18px 35px rgba(0, 0, 0, 0.16);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            transition: opacity .18s ease, transform .18s ease;
+            z-index: 1200;
+        }
+
+        .mega-trigger:hover .mega-panel {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .mega-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 480px;
+        }
+
+        .mega-left {
+            border-right: 1px solid #d8d8d8;
+            background: #efefef;
+        }
+
+        .mega-left a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-bottom: 1px solid #d8d8d8;
+            font-size: 15px;
+            color: #2f2f2f;
+        }
+
+        .mega-left a:hover,
+        .mega-left a.active {
+            background: #fff;
+            color: #0071c5;
+            font-weight: 700;
+        }
+
+        .mega-right {
+            background: #f7f7f7;
+        }
+
+        .mega-content-panels {
+            position: relative;
+        }
+
+        .mega-content-panel {
+            display: none;
+        }
+
+        .mega-content-panel.active {
+            display: block;
+        }
+
+        .mega-right-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #dadada;
+            background: #f2f2f2;
+        }
+
+        .mega-right-head h3 {
+            font-size: 42px;
+            line-height: 1;
+            font-weight: 700;
+            color: #2b2b2b;
+        }
+
+        .mega-right-head a {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0071c5;
+        }
+
+        .mega-cols {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(140px, 1fr));
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .mega-col {
+            padding: 14px 18px;
+            border-right: 1px solid #dddddd;
+            min-height: 380px;
+        }
+
+        .mega-col:last-child {
+            border-right: none;
+        }
+
+        .mega-col h4 {
+            margin-bottom: 12px;
+            font-size: 21px;
+            font-weight: 700;
+            color: #2f2f2f;
+        }
+
+        .mega-col a {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #3f3f3f;
+            line-height: 1.25;
+        }
+
+        .mega-col a:hover {
+            color: #0071c5;
+        }
+
+        .mega-col.quick a {
+            color: #0071c5;
+            font-weight: 700;
+        }
+
+        .mega-empty {
+            color: #888;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 1100px) {
+            .mega-panel {
+                display: none;
+            }
+
+            .flyout-panel {
+                display: none;
+            }
+        }
+
+        /* HERO */
+        .hero {width: 100%; display: flex; flex-direction: column; background-color: #161616;}
+        .sw-hero__main {display: flex; width: 100%; position: relative; text-decoration: none; min-height: 520px;}
+        .sw-hero__image-side {width: 50%; position: absolute; right: 0; top: 0; bottom: 0; overflow: hidden;}
+        .sw-hero__content {width: 50%; display: flex; align-items: center; padding: 60px; box-sizing: border-box; z-index: 1;}
+        .sw-hero__overlay {position: absolute; inset: 0; pointer-events: none; z-index: 0;}
+        .sw-hero__copy {max-width: 480px; position: relative; z-index: 2;}
+        .sw-hero__eyebrow {margin-bottom: 24px;}
+        .sw-hero__eyebrow img {max-width: 160px; display: block;}
+        .sw-hero__headline {font-size: 56px; font-weight: 800; line-height: 1.1; margin-bottom: 15px; letter-spacing: -1px;}
+        .sw-hero__subhead {font-size: 20px; font-weight: 400; margin-bottom: 35px; line-height: 1.4; color: #fff !important;}
+        .sw-hero__cta {display: inline-block; font-size: 16px; font-weight: 800; padding: 12px 32px; border-radius: 30px; text-decoration: none; text-align: center; transition: background 0.2s, color 0.2s;}
+        .sw-hero__cta:hover {opacity: 0.9;}
+        
+        .hero-banner-footer { background-color: #0b0b0b; padding: 22px 40px; display: flex; justify-content: center; align-items: center; font-size: 15px; letter-spacing: 1.5px; font-family: -apple-system, sans-serif; }
+        .hero-banner-footer span { font-weight: 600; color: #fff; margin-right: 15px;}
+        .hero-banner-footer div { display: flex; gap: 20px; }
+        .hero-banner-footer a { color: #fff; text-decoration: underline; font-weight: 600; letter-spacing: 0.5px; text-transform:none; }
+        .hero-banner-footer a:hover { color: #f26522; text-decoration: none; }
+        /* HERO TILES */
+        .hero-tiles {
+            width: 100%;
+            max-width: 1440px;
+            margin: 20px auto;
+            display: flex;
+            gap: 20px;
+            padding: 0 40px;
+        }
+        .hero-tile {
+            flex: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #eee;
+            position: relative;
+        }
+        .hero--large {
+            flex: 2; /* Larger width for the main promotion */
+            aspect-ratio: 1820 / 820;
+        }
+        .hero--small {
+            flex: 1; /* Smaller width for secondary promotion */
+            aspect-ratio: 940 / 820;
+        }
+        .hero-tile__link {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .hero-tile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease;
+        }
+        .hero-tile:hover img {
+            transform: scale(1.03);
+        }
+
+        @media (max-width: 1000px) {
+            .hero-tiles {
+                flex-direction: column;
+                padding: 0 20px;
+            }
+            .hero--large, .hero--small {
+                flex: none;
+                width: 100%;
+            }
+        }
+
+        /* SECTION HEADER */
+        .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom: 2px solid #ddd;padding-bottom:10px;}
+        .section-header h2{font-size:24px;font-weight:800;color:#333;text-transform:uppercase;}
+        .section-header .see-all{color:#005e9c;font-weight:700;font-size:14px; text-transform:uppercase;}
+        /* WELCOME CAROUSEL */
+        .welcome-carousel {padding: 60px 0; background: #fff;}
+        .welcome-carousel .container {max-width: 1440px; margin: 0 auto; padding: 0 40px;}
+        .welcome-title {font-size: 34px; font-weight: 700; color: #333; margin-bottom: 25px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;}
+        
+        .carousel-wrapper {position: relative;}
+        .cards-container {display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;}
+        
+        .carousel-card {background: #fff; border: 1px solid #eaeaea; border-radius: 12px; padding: 25px; transition: box-shadow .2s; display: flex; flex-direction: column;}
+        .carousel-card:hover {box-shadow: 0 2px 10px rgba(0,0,0,0.06);}
+        .card-title {font-size: 16px; font-weight: 600; color: #111; margin-bottom: 25px;}
+        
+        /* Card Types */
+        .type-single {display: flex; gap: 20px; align-items: flex-start;}
+        .type-single img {width: 100px; height: auto; object-fit: contain; border-radius:4px;}
+        .card-desc {font-size: 12px; color: #222; line-height: 1.4;}
+        
+        .type-grid {display: grid; grid-template-columns: 1fr 1fr; gap: 20px 10px;}
+        .grid-item {text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center;}
+        .grid-item img {width: 100px; height: 80px; object-fit: contain; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
+        .grid-item span {font-size: 11px; color: #222;}
+        .grid-item span.blue-link {color: #0071c5; text-decoration: none;}
+        
+        .shop-now-link {display: inline-block; font-size: 14px; font-weight: 500; color: #0071c5; text-decoration: none; margin-top: auto; padding-top: 25px;}
+        
+        /* Navigation & Scrollbar */
+        .carousel-arrow {position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: #fff; border: 1px solid #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; font-size: 16px; z-index: 2; box-shadow: 0 2px 8px rgba(0,0,0,0.05);}
+        .carousel-arrow:hover {color: #000; border-color: #bbb;}
+        .left-arrow {left: -20px;}
+        .right-arrow {right: -20px;}
+        
+        .carousel-progress {margin: 40px auto 35px; display: flex; align-items: center; max-width: 96%; gap: 6px;}
+        .progress-indicator {width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-right: 6px solid #000;}
+        .progress-indicator.right {border-right: none; border-left: 6px solid #000;}
+        .progress-track {flex: 1; height: 3px; background: #000;}
+        
+        /* Action Button */
+        .carousel-actions {display: flex; justify-content: center;}
+        .btn-login-personalize {display: inline-block; padding: 12px 60px; border: 1.5px solid #0071c5; border-radius: 30px; font-size: 15px; font-weight: 500; color: #0071c5; text-decoration: none; background: #fff; transition: background .2s;}
+        .btn-login-personalize:hover {background: #f4f9fd;}
+
+        /* POPULAR CATEGORIES (POPCAT) */
+        .popular-categories{padding:60px 0; background:#fff;}
+        .popular-categories .section-header {display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid #eaeaea; padding-bottom:15px; margin-bottom:30px;}
+        .popular-categories .section-header h2 {font-size:32px; font-weight:700; color:#333; letter-spacing:-0.5px; text-transform:none;}
+        
+        .popcat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+        .popcat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 20px 10px;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+        .popcat-item:hover {
+            border-color: #0071c5;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+        .popcat-image {
+            width: 100%;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .popcat-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .popcat-name h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #222;
+            line-height: 1.3;
+        }
+        .popcat-item:hover .popcat-name h3 {
+            color: #0071c5;
+        }
+        .popcat-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: #d71920;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 12px;
+            z-index: 2;
+            box-shadow: 0 2px 4px rgba(215, 25, 32, 0.3);
+        }
+
+        /* SALE EVENTS / NEW & NOTABLE */
+        .sale-events {background-color:#f5f5f5; padding:60px 0;}
+        .sale-events.fw-containered {max-width:1440px; margin:0 auto; padding:0 40px;}
+        .sale-events .tile-block {border:none; margin: 0 auto;}
+        .sale-events .section-header {display:flex; flex-direction:column; align-items:center; margin-bottom:30px; text-align:center; padding-bottom:0; border:none;}
+        .sale-events .accent-text.black {font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#111; margin-bottom:8px; display:block;}
+        .sale-events h2 {font-size:36px; font-weight:800; color:#111; letter-spacing:-1px; padding:0; background:transparent;}
+
+        .tiles--multi {display:grid; grid-template-columns:repeat(3, 1fr); gap:20px;}
+        .tile--link {text-decoration:none; display:block;}
+        .tile.multi {position:relative; aspect-ratio:1/1; border-radius:12px; overflow:hidden; background:#111;}
+        .tile.multi .tile--body {width:100%; height:100%; position:relative;}
+        .tile.multi picture {width:100%; height:100%; display:block;}
+        .tile.multi img {width:100%; height:100%; object-fit:cover; transition:transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);}
+        .tile--link:hover .tile.multi img {transform:scale(1.05);}
+
+        .tile.multi .content {position:absolute; inset:0; padding:15px; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-start; background:linear-gradient(to top, rgba(0,0,0,0.8), transparent 50%); z-index:2;}
+        .tile.multi .type-lg {font-size:24px; font-weight:600; color:#fff; line-height:1.2; margin-bottom:15px; text-shadow:0 1px 4px rgba(0,0,0,0.5);}
+        .tile.multi .btn-white {background:#fff; color:#111; padding:10px 24px; font-size:14px; font-weight:700; border-radius:30px; text-transform:uppercase; letter-spacing:0.5px;}
+
+        @media (max-width: 768px) {
+            .tiles--multi {grid-template-columns:1fr;}
+            .sale-events.fw-containered {padding:0 20px;}
+        }
+
+        /* TRENDING GEAR / SUGGESTED PRODUCTS */
+        .suggested-products {padding: 60px 0; background: #fff; max-width: 1440px; margin: 0 auto; padding: 60px 40px;}
+        .suggested-products h2 {font-size: 28px; font-weight: 700; color: #111; margin-bottom: 25px;}
+        
+        .product-suggest__stage {position: relative;}
+        .product-suggest__items {display: flex; overflow-x: auto; gap: 0; padding: 0; margin: 0; list-style: none; scroll-snap-type: x mandatory; -ms-overflow-style: none; scrollbar-width: none;}
+        .product-suggest__items::-webkit-scrollbar {display: none;}
+        
+        .product-suggest__item-wrap {flex: 0 0 25%; scroll-snap-align: start; border-right: 1px solid #eee; min-width: 280px;}
+        .product-suggest__item {display: flex; flex-direction: column; padding: 20px; text-decoration: none; color: #333; height: 100%; transition: background 0.2s;}
+        .product-suggest__item:hover {background-color: #f9f9f9;}
+        
+        .product-suggest__summary {display: flex; gap: 15px; margin-bottom: 15px; flex: 1;}
+        .product-suggest__item-img {width: 90px; height: 90px; flex-shrink: 0;}
+        .product-suggest__item-img img {width: 100%; height: 100%; object-fit: contain;}
+        
+        .product-suggest__item-content {flex: 1;}
+        .product-suggest__name {font-size: 14px; line-height: 1.4; color: #111; margin-bottom: 8px;}
+        .product-suggest__name strong {font-weight: 700;}
+        
+        .product-suggest__item-reviews {display: flex; align-items: center; gap: 5px;}
+        .rating__stars {color: #ffb400; font-size: 11px;}
+        .product-suggest__item-review-count-inline {font-size: 12px; color: #888;}
+        
+        .product-suggest__item-price {font-size: 24px; font-weight: 800; color: #111; display: flex; align-items: flex-start;}
+        .product-suggest__item-price sup {font-size: 14px; margin-top: 4px; font-weight: 600;}
+        
+        .product-suggest__nav {position: absolute; top: -50px; right: 0; display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: 14px; font-weight: 700; color: #0071c5;}
+        .product-suggest__nav--prev {right: 80px;}
+        .product-suggest__nav svg {width: 24px; height: 24px; stroke: #0071c5; fill: none;}
+
+        @media (max-width: 1024px) { .product-suggest__item-wrap {flex: 0 0 33.333%;} }
+        @media (max-width: 768px) { 
+            .product-suggest__item-wrap {flex: 0 0 100%;}
+            .suggested-products {padding: 40px 20px;}
+            .product-suggest__nav {display: none;}
+        }
+
+        /* TOP GEAR (Products) / TRENDING */
+        .top-gear {padding: 60px 0; background: #fff;}
+        .top-gear .section-header {border-bottom: 2px solid #eaeaea; padding-bottom: 12px; margin-bottom: 30px;}
+        .top-gear .section-header h2 {font-size: 28px; font-weight: 700; color: #111; text-transform: none;}
+
+        /* DEALS + RESEARCH SECTION FIXES */
+        .deals,
+        .research {
+            padding: 56px 0;
+            background: #fff;
+        }
+
+        .deals .section-header,
+        .research .section-header {
+            border-bottom: 1px solid #e1e1e1;
+            margin-bottom: 22px;
+            padding-bottom: 12px;
+        }
+
+        .deals .section-header h2,
+        .research .section-header h2 {
+            font-size: 38px;
+            font-weight: 700;
+            text-transform: none;
+            letter-spacing: -.4px;
+            color: #222;
+        }
+
+        .deals .section-header a {
+            color: #005cb9;
+            font-size: 20px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .deals-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .deal-card {
+            display: block;
+            border: 1px solid #e5e5e5;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fff;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+        .deal-card:hover {
+            transform: translateY(-2px);
+            border-color: #c9dff5;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .08);
+        }
+
+        .deal-img {
+            height: 155px;
+            background: #f8f9fb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .deal-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .deal-info {
+            padding: 12px;
+            border-top: 1px solid #efefef;
+        }
+
+        .deal-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: #1e2a37;
+            min-height: 38px;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .deal-info .price {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111;
+            margin-right: 8px;
+        }
+
+        .deal-info .original {
+            font-size: 15px;
+            color: #7a8794;
+            text-decoration: line-through;
+            font-weight: 500;
+        }
+
+        .research-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(240px, 1fr));
+            gap: 18px;
+        }
+
+        .research-card {
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            transition: transform .18s ease, box-shadow .18s ease;
+            display: block;
+        }
+
+        .research-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,.08);
+        }
+
+        .research-card .img-wrap {
+            height: 170px;
+            overflow: hidden;
+            background: #f5f7fb;
+        }
+
+        .research-card .img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .research-card .content {
+            padding: 14px;
+        }
+
+        .research-card .tag {
+            display: inline-block;
+            margin-bottom: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #0071c5;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+        }
+
+        .research-card h3 {
+            font-size: 22px;
+            line-height: 1.2;
+            margin-bottom: 8px;
+            color: #1f2933;
+            font-weight: 700;
+        }
+
+        .research-card p {
+            font-size: 16px;
+            color: #4d5e70;
+            line-height: 1.45;
+            margin-bottom: 10px;
+        }
+
+        .research-card .read-more {
+            font-size: 15px;
+            color: #005cb9;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1200px) {
+            .deals-grid { grid-template-columns: repeat(4, minmax(150px, 1fr)); }
+        }
+
+        @media (max-width: 900px) {
+            .deals-grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+            .research-grid { grid-template-columns: 1fr; }
+            .deals .section-header h2,
+            .research .section-header h2 { font-size: 30px; }
+        }
+        
+        .gear-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;}
+        .gear-card {background: #fff; border: 1px solid #eaeaea; border-radius: 8px; overflow: hidden; transition: all 0.2s ease; position: relative; text-decoration: none;}
+        .gear-card:hover {border-color: #0071c5; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transform: translateY(-2px);}
+        
+        .gear-card .img-wrap {position: relative; height: 180px; padding: 15px; display: flex; align-items: center; justify-content: center; background: #fff;}
+        .gear-card .img-wrap img {max-height: 100%; max-width: 100%; object-fit: contain;}
+        
+        .gear-card .info {padding: 15px; border-top: 1px solid #f5f5f5;}
+        .gear-card .info h4 {font-size: 14px; font-weight: 500; color: #0071c5; line-height: 1.3; margin-bottom: 15px; height: 36px; overflow: hidden;}
+        .gear-card .info .rating {color: #ffb400; font-size: 12px; margin-bottom: 8px; display: block;}
+        .gear-card .info .price {font-size: 18px; font-weight: 700; color: #333; display: block; margin-bottom: 4px;}
+        .gear-card .info .free-shipping {font-size: 11px; font-weight: 700; color: #2e7d32; text-transform: uppercase; letter-spacing: 0.5px;}
+
+        /* PROMO TILES / CANDY CARDS */
+        .promo-tiles { padding: 40px 0; max-width: 1440px; margin: 0 auto; padding: 0 40px; }
+        .candy-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .candy-tile { background: transparent; border-radius: 16px; overflow: hidden; position: relative; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .candy-tile:hover { transform: translateY(-8px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
+        .candy__link { text-decoration: none; display: block; height: 100%; }
+        
+        .candy__img { width: 100%; display: block; }
+        .candy__img img { width: 100%; height: auto; display: block; object-fit: cover; }
+        
+        @media (max-width: 1100px) { .candy-tiles { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 650px) { .candy-tiles { grid-template-columns: 1fr; } }
+
+        /* INSYNC HOME / RESEARCH ARTICLES */
+        .insync-home { padding: 80px 0; background: #fff; max-width: 1440px; margin: 0 auto; padding: 60px 40px; }
+        .insync-home h2 { font-size: 36px; font-weight: 700; color: #333; margin-bottom: 40px; text-align: center; }
+        .insync-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        
+        /* Hero Callout (Left Large) */
+        .insync-grid--hero { 
+            grid-column: span 2; 
+            background: #33302e url('https://media.sweetwater.com/insync/assets/insync-bg-pattern.svg') repeat;
+            background-size: 300px;
+            color: #fff; 
+            padding: 60px; 
+            border-radius: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            text-align: center; 
+            min-height: 480px; 
+        }
+        .insync-grid--hero .logo-wrap { display: flex; align-items: baseline; margin-bottom: 25px; }
+        .insync-grid--hero .logo-in { color: #f26522; font-size: 48px; font-weight: 900; font-style: italic; margin-right: 5px; }
+        .insync-grid--hero .logo-sync { color: #fff; font-size: 48px; font-weight: 800; letter-spacing: -2px; text-transform: lowercase; }
+        .insync-grid--hero p { font-size: 16px; max-width: 350px; line-height: 1.5; margin-bottom: 30px; opacity: 0.9; }
+        .explore-btn { 
+            padding: 12px 35px; 
+            border: 2px solid #fff; 
+            border-radius: 50px; 
+            color: #fff; 
+            text-decoration: none; 
+            font-weight: 700; 
+            font-size: 14px;
+            transition: all 0.2s; 
+            background: rgba(255,255,255,0.05);
+        }
+        .explore-btn:hover { background: #fff; color: #33302e; }
+        
+        /* Large Article (Right Large) */
+        .insync-grid--article-large { 
+            grid-column: span 2; 
+            position: relative; 
+            border-radius: 20px; 
+            overflow: hidden; 
+            text-decoration: none; 
+            display: flex; 
+            flex-direction: column; 
+            height: 480px;
+        }
+        .insync-grid--article-large .main-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+        .insync-grid--article-large:hover .main-img { transform: scale(1.05); }
+        .insync-grid--article-large .overlay { 
+            position: absolute; 
+            inset: 0; 
+            background: linear-gradient(transparent 50%, rgba(0,0,0,0.8) 100%); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-end; 
+            padding: 30px 40px; 
+        }
+        .insync-grid--article-large .content-stem { border-left: 3px solid #5ab7d4; padding-left: 15px; }
+        .insync-grid--article-large h3 { color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 8px; line-height: 1.2; }
+        .insync-grid--article-large .date { color: #ccc; font-size: 13px; }
+
+        /* Small Articles */
+        .insync-grid--article { 
+            grid-column: span 1; 
+            text-decoration: none; 
+            color: inherit; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .insync-grid--article .thumb-wrap { width: 100%; aspect-ratio: 16/10; border-radius: 15px; overflow: hidden; margin-bottom: 15px; }
+        .insync-grid--article .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .insync-grid--article:hover img { transform: scale(1.08); }
+        .insync-grid--article .info { border-left: 2px solid #5ab7d4; padding-left: 12px; }
+        .insync-grid--article h4 { font-size: 14px; font-weight: 700; color: #333; line-height: 1.4; }
+
+        @media (max-width: 1024px) {
+            .insync-grid { grid-template-columns: repeat(2, 1fr); }
+            .insync-grid--article { grid-column: span 1; }
+        }
+        @media (max-width: 600px) {
+            .insync-grid { grid-template-columns: 1fr; }
+            .insync-grid--hero, .insync-grid--article-large, .insync-grid--article { grid-column: span 1; }
+        }
+
+        /* VALUE ADDS / GET MORE AT SWEETWATER */
+        .value-ads { padding: 60px 0; background: #fff; max-width: 1440px; margin: 0 auto; padding: 60px 40px; }
+        .value-ads h2 { font-size: 28px; font-weight: 700; color: #111; margin-bottom: 30px; }
+        .value-ads--links { display: grid; grid-template-columns: repeat(7, 1fr); gap: 15px; }
+        .value-ads--links a { display: flex; flex-direction: column; align-items: center; text-align: center; text-decoration: none; padding: 20px 10px; border: 1px solid #eee; border-radius: 8px; transition: all 0.2s; }
+        .value-ads--links a:hover { border-color: #0071c5; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .value-ads--icon { width: 40px; height: 40px; margin-bottom: 15px; }
+        .value-ads--icon svg { width: 100%; height: 100%; }
+        .value-ads--title { font-size: 14px; font-weight: 700; color: #111; margin-bottom: 8px; line-height: 1.2; height: 34px; overflow: hidden; }
+        .value-ads--subtitle { font-size: 12px; color: #666; margin-bottom: 15px; line-height: 1.3; height: 32px; overflow: hidden; }
+        .value-ads--cta { font-size: 13px; font-weight: 700; color: #0071c5; margin-top: auto; }
+        
+        @media (max-width: 1200px) { .value-ads--links { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 768px) { 
+            .value-ads--links { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; scrollbar-width: none; }
+            .value-ads--links::-webkit-scrollbar { display: none; }
+            .value-ads--links a { flex: 0 0 200px; }
+            .value-ads { padding: 40px 20px; }
+        }
+
+
+        /* COMPREHENSIVE SITE FOOTER */
+        .assets-site-footer { background: #fff; color: #333; font-size: 14px; line-height: 1.5; border-top: 1px solid #ddd; }
+        
+        /* Recently Viewed Items */
+        .assets-site-footer-recently-viewed { background: #f9f9f9; padding: 20px 40px; border-bottom: 1px solid #eee; }
+        .assets-site-footer-recently-viewed__content { max-width: 1440px; margin: 0 auto; }
+        .assets-site-footer-recently-viewed__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .assets-site-footer-recently-viewed__header__headline { font-weight: 700; color: #111; }
+        .assets-site-footer-recently-viewed--clear { background: none; border: none; color: #0071c5; cursor: pointer; font-size: 13px; }
+        .assets-site-footer-recently-viewed__products { display: flex; gap: 15px; }
+        .assets-site-footer-recently-viewed__item { width: 60px; height: 60px; background: #fff; border: 1px solid #eee; padding: 5px; }
+        .assets-site-footer-recently-viewed__item img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* New Gear Day Section */
+        .assets-site-footer__newgearday-wrap { position: relative; padding: 40px 0; background: #111; color: #fff; overflow: hidden; text-align: center; }
+        .newgearday-background { position: absolute; inset: 0; opacity: 0.15; background-size: cover; z-index: 1; }
+        .assets-site-footer__newgearday { position: relative; z-index: 2; max-width: 1440px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 40px; padding: 0 40px; }
+        .assets-site-footer__newgearday-photos-left, .assets-site-footer__newgearday-photos-right { display: flex; gap: 10px; }
+        .assets-site-footer__newgearday-photos-left img, .assets-site-footer__newgearday-photos-right img { width: 120px; height: 120px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); transition: transform 0.2s; }
+        .assets-site-footer__newgearday-photos-left img:hover { transform: scale(1.05); }
+        .assets-site-footer__newgearday-text-headline { font-size: 48px; font-weight: 900; line-height: 1; margin: 0; }
+        .assets-site-footer__newgearday-text-logo { max-width: 240px; margin: 10px 0; }
+        .assets-site-footer__newgearday-text-link { color: #fff; text-decoration: underline; font-weight: 700; }
+
+        /* Candy Section (Subscribe, Finance, App) */
+        .assets-site-footer-candy { padding: 50px 40px; background: #fff; border-bottom: 1px solid #eee; }
+        .assets-site-footer-row { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+        .assets-site-footer-col { display: flex; flex-direction: column; gap: 15px; }
+        .assets-site-footer-heading { font-weight: 800; font-size: 18px; color: #000; text-transform: uppercase; margin: 0; }
+        
+        .assets-site-footer__subscribe-input-wrap { display: flex; gap: 10px; margin-top: 10px; }
+        .assets-site-footer__subscribe-input { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 4px; }
+        .assets-site-footer__subscribe-submit { background: #0071c5; color: #fff; padding: 12px 25px; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; }
+        
+        .assets-site-footer-col--finance { text-decoration: none; color: inherit; padding: 20px; background: #f5fafd; border-radius: 12px; border: 1px solid #e1f0f8; position: relative;}
+        .assets-site-footer-finance-card { width: 140px; position: absolute; right: 20px; top: 20px; }
+        .assets-site-footer-col__cta { color: #0071c5; font-weight: 700; display: flex; align-items: center; gap: 5px; margin-top: auto; }
+
+        .assets-site-footer-col--app-highlight { background: #111; color: #fff; padding: 20px; border-radius: 12px; position: relative; overflow: hidden; }
+        .assets-site-footer-app-phone { position: absolute; right: -20px; bottom: -20px; opacity: 0.4; }
+        .assets-site-footer--app-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        .assets-site-footer--app-button svg { height: 32px; width: auto; }
+
+        /* Help Links Nav */
+        .assets-site-footer__help-links { max-width: 1440px; margin: 0 auto; padding: 50px 40px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; }
+        .assets-site-footer__help-links__category { display: flex; flex-direction: column; gap: 10px; }
+        .assets-site-footer__help-links__category-heading { font-weight: 800; text-transform: uppercase; color: #111; text-decoration: none; margin-bottom: 5px; }
+        .assets-site-footer__help-links__category a:not(.assets-site-footer__help-links__category-heading) { color: #666; text-decoration: none; font-size: 13px; }
+        .assets-site-footer__help-links__category a:hover { color: #0071c5; text-decoration: underline; }
+
+        /* Contact Section */
+        .assets-site-footer__contact { max-width: 1440px; margin: 0 auto; padding: 40px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .assets-site-footer__contact-se { display: flex; gap: 20px; align-items: center; }
+        .assets-site-footer__contact-se-img { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #eee; }
+        .site-footer-contact__methods { display: flex; gap: 20px; margin-top: 10px; }
+        .assets-site-footer-contact__call--primary a { font-size: 20px; font-weight: 800; color: #0071c5; text-decoration: none; }
+        .assets-site-footer-contact__email a { font-weight: 700; color: #111; }
+        
+        .assets-site-footer__contact-social-links { display: flex; gap: 15px; }
+        .assets-site-footer__contact-social-link svg { fill: #666; transition: fill 0.2s; }
+        .assets-site-footer__contact-social-link:hover svg { fill: #0071c5; }
+
+        /* Copyright & Policies */
+        .assets-site-footer__copyright { max-width: 1440px; margin: 0 auto; padding: 30px 40px; border-top: 1px solid #eee; text-align: center; color: #888; font-size: 12px; }
+        .assets-site-footer__copyright-policies { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 15px 0; }
+        .assets-site-footer__copyright-policies a { color: #888; text-decoration: none; }
+        .assets-site-footer__copyright-policies a:hover { text-decoration: underline; }
+
+        @media (max-width: 1024px) {
+            .assets-site-footer-row, .assets-site-footer__help-links { grid-template-columns: repeat(2, 1fr); }
+            .assets-site-footer__newgearday { flex-direction: column; }
+        }
+        @media (max-width: 768px) {
+            .assets-site-footer-row, .assets-site-footer__help-links { grid-template-columns: 1fr; }
+            .assets-site-footer__contact { flex-direction: column; gap: 30px; }
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- ===== TOP UTILITY BAR ===== -->
+<div class="top-bar">
+    <div class="container">
+        <div class="top-bar-left">
+            <a href="/" class="active">Vibemusic</a>
+            <a href="/used">Gear Exchange</a>
+            <a href="/integration/">Integration</a>
+            <a href="#">Studios</a>
+        </div>
+        <div class="top-bar-right">
+            <a href="#">Content Creators</a>
+            <a href="#">Home Audio</a>
+            <a href="#">House of Worship</a>
+            <a href="#">Immersive</a>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MAIN HEADER ===== -->
+<header class="main-header">
+    <div class="container">
+        <a href="/" class="logo">
+            <div class="logo-text" style="font-family: Sweetwater, sans-serif; font-size: 38px; font-weight: 800; color: #005cb9; letter-spacing: -1.5px;">Vibe<span style="color:#d71920;">Music</span></div>
+        </a>
+
+        <div class="search-bar">
+            <form action="/store/search" method="get">
+                <span class="search-icon"><i class="fas fa-search"></i></span>
+                <input type="text" name="s" placeholder="Search for sweet gear" autocomplete="off" required>
+            </form>
+        </div>
+
+        <div class="header-actions">
+            <div class="header-action-col" style="align-items:flex-end;">
+                <a href="tel://+18002224700" class="header-action-phone">(800) 222-4700</a>
+                <span class="header-action-sub">Talk to an expert!</span>
+            </div>
+            
+            <div class="header-action-col" style="justify-content:center;">
+                <a href="/about/contact" class="header-action-link">Contact Us <i class="fas fa-chevron-down"></i></a>
+                <span class="header-action-sub" style="margin-top:2px;">We're here to help</span>
+            </div>
+            
+            <a href="/myaccount" class="header-action-link" style="align-items:center; height:100%;">
+                Account <i class="fas fa-chevron-down"></i>
+            </a>
+            
+            <a href="/user/gocart/" class="header-cart" aria-label="Cart">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 35 35" height="35" width="35" style="fill:none;stroke:#333;stroke-width:2;"><path d="M26.9,29.6c0,1.5,1.2,2.7,2.7,2.7c1.5,0,2.7-1.2,2.7-2.7c0-1.5-1.2-2.7-2.7-2.7c-0.7,0-1.4,0.3-1.9,0.8 C27.2,28.2,26.9,28.9,26.9,29.6z" fill="#333"/><path d="M8.1,29.6c0,1.5,1.2,2.7,2.7,2.7c1.5,0,2.7-1.2,2.7-2.7c0-1.5-1.2-2.7-2.7-2.7c-0.7,0-1.4,0.3-1.9,0.8 C8.4,28.2,8.1,28.9,8.1,29.6z" fill="#333"/><path d="M34.6,5.8c-0.2-0.3-0.6-0.4-0.9-0.4c-1.2,0-1.3,1.2-1.3,1.2s0,8.3,0,9.2c0,0.9-0.5,0.9-1.4,1C30,16.9,11.2,19,11.2,19 L8.4,5.4c0-0.1,0-0.3-0.1-0.5c0-0.3-0.1-0.5-0.1-0.6C8.1,4,8.1,3.9,8,3.7C8,3.5,7.9,3.3,7.7,3.2C7.6,3,7.5,2.9,7.3,2.8 C7.1,2.7,6.9,2.7,6.7,2.7H1.3C1,2.7,0.6,2.8,0.4,3.1c-0.5,0.5-0.5,1.3,0,1.9c0,0,0,0,0,0C0.6,5.2,1,5.4,1.3,5.4h4.3l3.7,17.3 c0,0.1-0.2,0.3-0.4,0.8c-0.3,0.5-0.5,0.9-0.6,1.3c-0.1,0.3-0.2,0.5-0.2,0.8c0,0.7,0.6,1.3,1.3,1.3H31c0.7,0,1.3-0.6,1.3-1.3 s-0.6-1.3-1.3-1.3H11.6c0.2-0.4,0.4-0.9,0.5-1.3c0-0.2,0-0.3-0.1-0.5c0-0.2-0.1-0.4-0.1-0.6c0-0.2-0.1-0.4-0.1-0.5l22-2.6 c0.3,0,0.6-0.2,0.9-0.5c0.2-0.2,0.3-0.6,0.3-0.9V6.7C35,6.4,34.9,6,34.6,5.8L34.6,5.8z" fill="#333" stroke="none"/></svg>
+                <span class="header-cart-badge">0</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- ===== CATEGORY NAV ===== -->
+<nav class="cat-nav">
+    <div class="container">
+        <div class="mega-trigger">
+            <a href="/shop/by-category/" class="mega-anchor">Shop By Category <i class="fas fa-chevron-down"></i></a>
+            <div class="mega-panel">
+                <div class="mega-grid">
+                    <div class="mega-left">
+                        {% for c in pro|slice:":14" %}
+                        <a href="/user/category/{{ c.id }}" data-cat="cat-{{ c.id }}" class="{% if forloop.first %}active{% endif %}">
+                            {{ c.cat_name }}
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    <div class="mega-right">
+                        <div class="mega-content-panels">
+                            {% for c in pro|slice:":14" %}
+                            <div class="mega-content-panel {% if forloop.first %}active{% endif %}" data-panel="cat-{{ c.id }}">
+                                <div class="mega-right-head">
+                                    <h3>{{ c.cat_name }}</h3>
+                                    <a href="/user/category/{{ c.id }}">View All {{ c.cat_name }} <i class="fas fa-chevron-right"></i></a>
+                                </div>
+                                <div class="mega-cols">
+                                    <div class="mega-col">
+                                        <h4>Popular {{ c.cat_name }}</h4>
+                                        {% for p in pro1|slice:":36" %}
+                                            {% if p.catname_id_id == c.id %}
+                                            <a href="/user/product/{{ p.id }}">{{ p.productname|truncatechars:30 }}</a>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <p class="mega-empty">Explore best-selling picks in this category.</p>
+                                    </div>
+                                    <div class="mega-col">
+                                        <h4>Brands</h4>
+                                        {% for p in pro1|slice:":42" %}
+                                            {% if p.catname_id_id == c.id and p.brand %}
+                                            <a href="/user/product/{{ p.id }}">{{ p.brand.brand_name|truncatechars:26 }}</a>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <a href="/user/category/{{ c.id }}">Shop all {{ c.cat_name }} brands</a>
+                                    </div>
+                                    <div class="mega-col">
+                                        <h4>Featured</h4>
+                                        {% for p in pro1|slice:"36:72" %}
+                                            {% if p.catname_id_id == c.id %}
+                                            <a href="/user/product/{{ p.id }}">{{ p.productname|truncatechars:30 }}</a>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <a href="/user/product/?q={{ c.cat_name|urlencode }}">Shop {{ c.cat_name }} deals</a>
+                                    </div>
+                                    <div class="mega-col">
+                                        <h4>Need Help?</h4>
+                                        <a href="/user/product/?q={{ c.cat_name|urlencode }}">Search {{ c.cat_name }}</a>
+                                        <a href="/user/classify-image/">AI Image Search</a>
+                                        <a href="/user/tracker/">Order Tracking</a>
+                                        <a href="/user/address/">Shipping & Delivery</a>
+                                        <a href="/user/change-password/">Account & Security</a>
+                                    </div>
+                                    <div class="mega-col quick">
+                                        <h4>Quick Links</h4>
+                                        <a href="/user/category/{{ c.id }}">View All {{ c.cat_name }}</a>
+                                        <a href="/user/product/?sort=new">New Arrivals</a>
+                                        <a href="/user/product/?type=deals">Deals</a>
+                                        <a href="/user/gocart/">View Cart</a>
+                                        <a href="/user/myaccount/">My Account</a>
+                                        <a href="/user/category/">Browse All Categories</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href="/nowshipping/">What's New</a>
+
+        <div class="flyout-trigger">
+            <a href="/dealzone/" class="flyout-anchor">Deals <i class="fas fa-chevron-down"></i></a>
+            <div class="flyout-panel hover-categories">
+                <div class="flyout-left">
+                    <div class="flyout-brand">
+                        <h3>DEALZONE</h3>
+                    </div>
+                    <a href="/user/category/" class="shop-by-category-link">Shop By Category <i class="fas fa-chevron-right"></i></a>
+                    <a href="/user/product/?q=keyboard">Keyboard Month <span class="sale-badge">Sale</span></a>
+                    <a href="/user/product/?q=effects">Multi-Effects Sale <span class="sale-badge">Sale</span></a>
+                    <a href="/user/product/?q=turntable">Turntable & Hi-Fi Sale <span class="sale-badge">Sale</span></a>
+                    <a href="/user/product/?q=band">Band & Orchestra Step Up Sale <span class="sale-badge">Sale</span></a>
+                    <a href="/user/product/?q=certified">Certified Open Box</a>
+                    <a href="/user/product/?type=deals">Rebates & Promos</a>
+                    <a href="/user/product/?sort=price_low">Price Drops</a>
+                    <a href="/user/product/?q=bundle">Bundles</a>
+                    <a href="/used">Used</a>
+                    <a href="/user/product/?q=b-stock">B-Stock</a>
+                </div>
+                <div class="flyout-right">
+                    <a href="/user/product/?q=guitar%20deals">Guitar Deals</a>
+                    <a href="/user/product/?q=studio%20deals">Studio & Recording Deals</a>
+                    <a href="/user/product/?q=live%20sound%20deals">Live Sound Deals</a>
+                    <a href="/user/product/?q=orchestra%20deals">Band & Orchestra Deals</a>
+                    <a href="/user/product/?q=home%20audio%20deals">Home Audio Deals</a>
+                    <a href="/user/product/?q=drums%20deals">Drums & Percussion Deals</a>
+                    <a href="/user/product/?q=software%20deals">Software & Plugins Deals</a>
+                    <a href="/user/product/?q=accessories%20deals">Accessories Deals</a>
+                    <a href="/user/product/?q=bass%20deals">Bass Deals</a>
+                    <a href="/user/product/?q=keyboard%20deals">Keyboards & Synthesizer Deals</a>
+                    <a href="/user/product/?q=dj%20deals">DJ Equipment Deals</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="flyout-trigger">
+            <a href="/used" class="flyout-anchor">Used Gear <i class="fas fa-chevron-down"></i></a>
+            <div class="flyout-panel hover-categories" style="min-width: 620px;">
+                <div class="flyout-left">
+                    <div class="flyout-brand">
+                        <h3 style="letter-spacing:.4px;">GEAR EXCHANGE</h3>
+                        <p>Turn your old gear into new gear with the Vibe Music Gear Exchange.</p>
+                    </div>
+                    <a href="/user/category/" class="shop-by-category-link">Shop By Category <i class="fas fa-chevron-right"></i></a>
+                    <a href="/used">What is Gear Exchange?</a>
+                    <a href="/used">Seller Fees</a>
+                    <a href="/used">Create a Listing</a>
+                    <a href="/user/myaccount/">My Messages</a>
+                    <a href="/user/myorder/">My Purchases</a>
+                    <a href="/user/tracker/">Help Center</a>
+                </div>
+                <div class="flyout-right">
+                    <a href="/user/product/?q=used%20guitar">Used Guitars</a>
+                    <a href="/user/product/?q=used%20effects">Used Effects & Pedals</a>
+                    <a href="/user/product/?q=used%20amplifier">Used Amplifiers</a>
+                    <a href="/user/product/?q=used%20bass">Used Basses</a>
+                    <a href="/user/product/?q=used%20keyboard">Used Keyboards & Synthesizers</a>
+                    <a href="/user/product/?q=used%20microphones">Used Microphones & Wireless</a>
+                    <a href="/user/product/?q=used%20live%20sound">Used Live Sound & Lighting</a>
+                    <a href="/user/product/?q=used%20studio">Used Studio & Recording</a>
+                    <a href="/user/product/?q=used%20drums">Used Drums & Percussion</a>
+                    <a href="/user/product/?q=used%20orchestra">Used Band & Orchestra</a>
+                    <a href="/user/product/?q=used%20dj">Used DJ / Electronic</a>
+                </div>
+            </div>
+        </div>
+
+        <a href="/rentals/">Rentals</a>
+        <a href="/insync/">Articles & Videos</a>
+        <a href="/giveaway/">Giveaway</a>
+        <a href="/financing/">Vibemusic Card</a>
+    </div>
+</nav>
+
+<!-- ===== HERO SECTION ===== -->
+<section class="hero">
+    <a href="/shop/inspired_by_gibson_modern_futura_series/?promo_creative=hero&amp;promo_id=ps_npi_0414_epiphone_futura_2026&amp;promo_name=ps_npi_gibson_spotlight_2026&amp;promo_position=superhero" class="sw-hero__main" data-hp-section="superhero" data-hp-slot="1" style="background-color: #161616;">
+        <div id="sw-overlay-iifkmm" class="sw-hero__overlay"></div>
+        <div class="sw-hero__content">
+            <div class="sw-hero__copy">
+                <div class="sw-hero__eyebrow sw-hero__eyebrow--logo">
+                    <img src="https://media.sweetwater.com/m/images/manufacturer-logos/homepage-brands/epiphone_reverse.svg" alt="Eyebrow">
+                </div>
+                <div class="sw-hero__headline animate__animated animate__fadeIn" style="color: #FFFFFF;">NEW Futura <br>Guitars</div>
+                <p class="sw-hero__subhead animate__animated animate__fadeIn" style="color: #FFFFFF; ">Timeless designs and pro-level upgrades.</p>
+                <span class="sw-hero__cta sw-hero__cta--solid animate__animated animate__fadeIn" style="background-color: #FFFFFF; color: #000000;">Shop Now</span>
+            </div>
+        </div>
+        <div class="sw-hero__image-side">
+            <img src="https://media.sweetwater.com/m/home/takeovers/2026/gibson-spotlight/Epiphone-Superhero-x2.jpg?format=webp&amp;optimize=medium" alt="NEW Epiphone Futura Guitars" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;">
+        </div>
+    </a>
+    <div class="hero-banner-footer">
+        <span>GIBSON BRANDS 48-MONTH SPECIAL FINANCING*</span>
+        <div>
+            <a href="#">Learn More</a>
+            <a href="#">Shop the Offers</a>
+        </div>
+    </div>
+</section>
+
+<!-- ===== HERO TILES ===== -->
+<section id="hero-tiles" class="hero-tiles">
+    <div class="hero-tile hero--large">
+        <a href="/dealzone?Sale=Keyboard+Month&amp;promo_name=promotion_keyboard_month_2026&amp;promo_id=promotion_keyboard_month_2026&amp;promo_creative=Tile&amp;promo_position=home_page" class="hero-tile__link" data-hp-section="hero" data-hp-slot="1">
+            <picture>
+                <source type="image/webp" srcset="https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=40&amp;width=1900 1900w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=40&amp;width=1425 1425w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=950 950w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=825 825w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=750 750w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=625 625w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=475 475w" sizes="(min-width: 1440px) 910px, (min-width: 681px) calc((100vw - 60px) * 0.65942), calc(100vw - 32px)" media="(min-width: 503px) and (max-width: 680px), (min-width: 1001px)" width="1820" height="820">
+                <source type="image/webp" srcset="https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=40&amp;width=1900 1900w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=40&amp;width=1425 1425w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=950 950w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=825 825w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=750 750w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=625 625w, https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=475 475w" sizes="(min-width: 681px) calc((100vw - 42px) * 0.5), calc(100vw - 32px)" media="(max-width: 502px), (min-width: 681px) and (max-width: 1000px)" width="940" height="820">
+                <img src="https://media.sweetwater.com/m/promotions/2026/0401-KeyboardMonth/0401-KeyboardMonth-HPBanner-Slot1-1820x820.jpg?width=1820&amp;format=jpg" alt="Keyboard Month, Shop like a pro. Discover expert picks, the biggest selection of top brands, and instant savings on stage pianos, synths, and more." width="1820" height="820">
+            </picture>
+        </a> 
+    </div>
+    <div class="hero-tile hero--small">
+        <a href="/shop/band-and-orchestra/?promo_name=Promotion+BandOrchestra+Step-Up+Sale+2026&amp;promo_id=Promotion+BandOrchestra+Step-Up+Sale+2026&amp;promo_creative=Tile&amp;promo_position=home_page" class="hero-tile__link" data-hp-section="hero" data-hp-slot="2">
+            <picture>
+                <source type="image/webp" srcset="https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=40&amp;width=1900 1900w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=40&amp;width=1425 1425w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=950 950w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=825 825w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=750 750w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=625 625w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=475 475w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot1-1820x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=320 320w" sizes="(min-width: 1440px) 910px, (min-width: 681px) calc((100vw - 60px) * 0.65942), calc(100vw - 32px)" media="(min-width: 503px) and (max-width: 680px)" width="1820" height="820">
+                <source type="image/webp" srcset="https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=40&amp;width=1900 1900w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=40&amp;width=1425 1425w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=950 950w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=825 825w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=750 750w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=625 625w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=475 475w, https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot2-940x820.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=320 320w" sizes="(min-width: 681px) calc((100vw - 42px) * 0.5), calc(100vw - 32px)" media="(max-width: 502px), (min-width: 681px)" width="940" height="820">
+                <img src="https://media.sweetwater.com/m/promotions/2026/0402-StepUp-Promo/0402-StepUp-Promo-HPBanner-Slot1-1820x820.jpg?width=940&amp;format=jpg" alt="Step Up &amp; Save The best time to upgrade your rental or buy an instrument — step up your progress today!" width="940" height="820">
+            </picture>
+        </a>
+    </div>
+</section>
+
+<!-- ===== WELCOME CAROUSEL ===== -->
+<section class="welcome-carousel">
+    <div class="container">
+        <h2 class="welcome-title">Welcome Back!</h2>
+        <div class="carousel-wrapper">
+            <!-- Left Arrow -->
+            <button class="carousel-arrow left-arrow"><i class="fas fa-chevron-left"></i></button>
+
+            <!-- Cards Container -->
+            <div class="cards-container">
+                <!-- Card 1 -->
+                <div class="carousel-card">
+                    <h3 class="card-title">Pick Up Where You Left Off</h3>
+                    <div class="type-single">
+                        <img src="https://images.unsplash.com/photo-1510915228340-29c85a36856e?w=200&h=300&fit=crop" alt="Acoustic Guitar">
+                        <div class="card-desc">24ce Grand Auditorium Acoustic-electric Guitar - Natural</div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="carousel-card">
+                    <h3 class="card-title">Trending Categories</h3>
+                    <div class="type-grid">
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1549429443-bd2ed62bb4e2?w=150&h=150&fit=crop" alt="Solidbody">
+                            <span>Solidbody Guitars</span>
+                        </a>
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1460036521480-c11c5e9f84bd?w=150&h=150&fit=crop" alt="Basses">
+                            <span>4-string Basses</span>
+                        </a>
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1525201548942-d8732f6617a0?w=150&h=150&fit=crop" alt="Acoustic">
+                            <span>6-string Acoustic...</span>
+                        </a>
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1622329241517-8e658eccc61b?w=150&h=150&fit=crop" alt="Amps">
+                            <span>Guitar Combo Amps</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="carousel-card">
+                    <h3 class="card-title">Every Moment, Amplified</h3>
+                    <div class="type-grid">
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1520166012956-add9ba0ee3f4?w=150&h=150&fit=crop" alt="Cameras">
+                            <span>Video & Cameras</span>
+                        </a>
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1545454675-3531b543be5d?w=150&h=150&fit=crop" alt="Home Audio">
+                            <span>Home Audio</span>
+                        </a>
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150&h=150&fit=crop" alt="Headphones">
+                            <span>Headphones</span>
+                        </a>
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=150&h=150&fit=crop" alt="Bluetooth">
+                            <span class="blue-link">Party Box & Bluetooth</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="carousel-card">
+                    <h3 class="card-title">Top New Releases</h3>
+                    <div class="type-grid">
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=150&h=150&fit=crop" alt="DSP">
+                            <span>Neural DSP Quad...</span>
+                        </a>
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1606775871408-c31a74d2fac0?w=150&h=150&fit=crop" alt="MPC">
+                            <span>MPC XL Standalone...</span>
+                        </a>
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1593699199321-df8c42ff150c?w=150&h=150&fit=crop" alt="Portable">
+                            <span>MPC Sample Porta...</span>
+                        </a>
+                        <a href="#" class="grid-item">
+                            <img src="https://images.unsplash.com/photo-1510915228340-29c85a36856e?w=150&h=150&fit=crop" alt="Explorer">
+                            <span>Epiphone Explorer...</span>
+                        </a>
+                    </div>
+                    <a href="/user/product-list/" class="shop-now-link">Shop Now</a>
+                </div>
+            </div>
+
+            <!-- Right Arrow -->
+            <button class="carousel-arrow right-arrow"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        
+        <!-- Progress Bar Line -->
+        <div class="carousel-progress">
+            <div class="progress-indicator left"></div>
+            <div class="progress-track"></div>
+            <div class="progress-indicator right"></div>
+        </div>
+
+        <div class="carousel-actions">
+            <a href="/login" class="btn-login-personalize">Login to Personalize</a>
+        </div>
+    </div>
+</section>
+
+<!-- ===== POPULAR CATEGORIES ===== -->
+<section class="popular-categories">
+    <div class="container">
+        <div class="section-header">
+            <h2>Popular Categories</h2>
+            <a href="/user/product-list/" class="see-all">Browse All <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div class="popcat-grid">
+                            <a href="/shop/guitars/" class="popcat-item" data-hp-section="categories" data-hp-slot="0">
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/LPR59VOWCSNH.png?width=202&amp;amp%3Bheight=350&amp;amp%3Bquality=75&amp;amp%3Boptimize=high&amp;amp%3Bfit=bounds&amp;format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70 202w, https://media.sweetwater.com/m/home/cats/LPR59VOWCSNH.png?width=151&amp;amp%3Bheight=350&amp;amp%3Bquality=75&amp;amp%3Boptimize=high&amp;amp%3Bfit=bounds&amp;format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70 151w, https://media.sweetwater.com/m/home/cats/LPR59VOWCSNH.png?width=101&amp;amp%3Bheight=350&amp;amp%3Bquality=75&amp;amp%3Boptimize=high&amp;amp%3Bfit=bounds&amp;format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/LPR59VOWCSNH.png?width=233&amp;height=350&amp;quality=75&amp;optimize=high&amp;fit=bounds?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Guitars</h3>
+                    </div>
+                </a>
+                            <a href="/shop/studio-recording/" class="popcat-item" data-hp-section="categories" data-hp-slot="1">
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/Arrow-small.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/Arrow-small.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/Arrow-small.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/Arrow-small.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Studio &amp; Recording</h3>
+                    </div>
+                </a>
+                            <a href="/shop/drums-percussion/" class="popcat-item" data-hp-section="categories" data-hp-slot="2">
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/LM402.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/LM402.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/LM402.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/LM402.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Drums &amp; Percussion</h3>
+                    </div>
+                </a>
+                            <a href="/shop/bass/" class="popcat-item" data-hp-section="categories" data-hp-slot="3">
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/PBassAPR3SB.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/PBassAPR3SB.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/PBassAPR3SB.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/PBassAPR3SB.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Bass</h3>
+                    </div>
+                </a>
+                            <a href="/shop/keyboards-synthesizers/" class="popcat-item" data-hp-section="categories" data-hp-slot="4">
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/Matriarch.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/Matriarch.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/Matriarch.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/Matriarch.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Keyboards &amp; Synth</h3>
+                    </div>
+                </a>
+                            <a href="/shop/live-sound/" class="popcat-item" data-hp-section="categories" data-hp-slot="5">
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/k12_2.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/k12_2.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/k12_2.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/k12_2.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Live Sound &amp; Lights</h3>
+                    </div>
+                </a>
+                            <a href="/shop/software-plugins/" class="popcat-item" data-hp-section="categories" data-hp-slot="6">
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/ptstudioann.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/ptstudioann.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/ptstudioann.jpg?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/ptstudioann.jpg?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Software &amp; Plug-ins</h3>
+                    </div>
+                </a>
+                            <a href="/shop/dj-equipment/" class="popcat-item" data-hp-section="categories" data-hp-slot="7">
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/ATLP120XUSBSV.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/ATLP120XUSBSV.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/ATLP120XUSBSV.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/ATLP120XUSBSV.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>DJ Equipment</h3>
+                    </div>
+                </a>
+                            <a href="/shop/studio-recording/microphones/" class="popcat-item" data-hp-section="categories" data-hp-slot="8">
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/SM58-cat.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/SM58-cat.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/SM58-cat.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/SM58-cat.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Microphones &amp; Wireless</h3>
+                    </div>
+                </a>
+                            <a href="/shop/band-and-orchestra/" class="popcat-item" data-hp-section="categories" data-hp-slot="9">
+                                            <div class="popcat-badge tile-label bg-red text-white text-xxs">New</div>
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/KingSlvFlTr.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/KingSlvFlTr.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/KingSlvFlTr.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/KingSlvFlTr.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Band &amp; Orchestra</h3>
+                    </div>
+                </a>
+                            <a href="/shop/home-audio-and-electronics/" class="popcat-item" data-hp-section="categories" data-hp-slot="10">
+                                            <div class="popcat-badge tile-label bg-red text-white text-xxs">New</div>
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/TourOneM2Bk.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/TourOneM2Bk.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/TourOneM2Bk.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/TourOneM2Bk.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Home Audio &amp; Electronics</h3>
+                    </div>
+                </a>
+                            <a href="/shop/commercial-audio-installed-sound/" class="popcat-item" data-hp-section="categories" data-hp-slot="11">
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/Control28.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/Control28.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/Control28.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/Control28.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Commercial Audio &amp; Install</h3>
+                    </div>
+                </a>
+                            <a href="/shop/accessories/" class="popcat-item" data-hp-section="categories" data-hp-slot="12">
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/M4WP006.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/M4WP006.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/M4WP006.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/M4WP006.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Cables, Cases, Stands &amp; More</h3>
+                    </div>
+                </a>
+                            <a href="/shop/video-equipment/" class="popcat-item" data-hp-section="categories" data-hp-slot="13">
+                                            <div class="popcat-badge tile-label bg-red text-white text-xxs">New</div>
+                                        <picture class="popcat-image">
+                        <source type="image/webp" srcset="https://media.sweetwater.com/m/home/cats/EOSR82450Kit.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=202 202w, https://media.sweetwater.com/m/home/cats/EOSR82450Kit.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=151 151w, https://media.sweetwater.com/m/home/cats/EOSR82450Kit.png?format=jpg&amp;optimize=high&amp;auto=webp&amp;quality=70&amp;width=101 101w" sizes="(max-width:768px) 101px, (max-width:1000px) 10vw, 101px">
+                        <img width="101" height="101" src="https://media.sweetwater.com/m/home/cats/EOSR82450Kit.png?width=200&amp;height=200&amp;fit=bounds&amp;format=webp" alt="">
+                    </picture>
+                    <div class="popcat-name">
+                        <h3>Video &amp; Cameras</h3>
+                    </div>
+                </a>
+                    </div>
+    </div>
+</section>
+
+<!-- ===== SALES EVENTS / NEW & NOTABLE ===== -->
+<section id="sales-events" class="sale-events bg-gray50 text-black fw-containered self-spaced">
+    <section class="tile-block borderless">
+        <div class="section-header">
+            <span class="accent-text black">Gibson</span>
+            <h2 class="bg-gray50 text-black text-center">New &amp; Notable</h2>
+        </div>
+        <div id="tile-block-multi-0" class="tiles tiles--multi flex-container flex-row flex-wrap cols-3">
+            
+            <a class="tile--link" data-hp-section="sale events" href="https://www.sweetwater.com/epiphone-inspired-by-gibson/series?sb=newest&amp;promo_creative=3up_feature_block_new_inspired_by&amp;promo_id=ps_aws_inspiredby_electric_guitars&amp;promo_name=ps_gibson_spotlight_2026&amp;promo_position=takeover">
+                <div class="tile multi full radius-lg bg-black" style="">
+                    <div class="tile--body">
+                        <picture class="tile--image opacity-100 blend-normal">
+                            <!-- Mobile image (small screens) -->
+                            <source media="(max-width: 768px)" srcset="https://media.sweetwater.com/m/promotions/2026/0414-Epiphone-Inspired_by_Gibson-T2/0414-Epiphone-Inspired_by_Gibson-T2-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=low" data-width="800" data-height="800">
+                            <!-- Tablet image (medium screens) -->
+                            <source media="(min-width: 769px) and (max-width: 1024px)" srcset="https://media.sweetwater.com/m/promotions/2026/0414-Epiphone-Inspired_by_Gibson-T2/0414-Epiphone-Inspired_by_Gibson-T2-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=low" data-width="800" data-height="800">
+                            <!-- Desktop image (large screens) -->
+                            <source media="(min-width: 1025px)" srcset="https://media.sweetwater.com/m/promotions/2026/0414-Epiphone-Inspired_by_Gibson-T2/0414-Epiphone-Inspired_by_Gibson-T2-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=low" data-width="800" data-height="800">
+                            <!-- Fallback image -->
+                            <img src="https://media.sweetwater.com/m/promotions/2026/0414-Epiphone-Inspired_by_Gibson-T2/0414-Epiphone-Inspired_by_Gibson-T2-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=low" alt="New Inspired by Gibson Models" loading="lazy" width="800" height="800" class="responsive-image">
+                        </picture>                              
+                        <div class="content">
+                            <div class="type-lg text-white weight-demi">
+                                New Inspired By Gibson Models
+                            </div>
+                            <div class="btn btn-white btn-sm weight-demi">
+                                Shop Now
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <a class="tile--link" data-hp-section="sale events" href="https://www.sweetwater.com/shop/save_on_gibson_les_paul_sg_models/?promo_creative=3up_feature_block_save_up_to_600&amp;promo_id=ps_deal_lp_sg_deal&amp;promo_name=ps_gibson_spotlight_2026&amp;promo_position=takeover">
+                <div class="tile multi full radius-lg bg-black" style="">
+                    <div class="tile--body">
+                        <picture class="tile--image opacity-100 blend-normal">
+                            <!-- Mobile image (small screens) -->
+                            <source media="(max-width: 768px)" srcset="https://media.sweetwater.com/m/home/takeovers/2026/gibson-spotlight/0401-Gibson_Deal_1-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=medium" data-width="800" data-height="800">
+                            <!-- Tablet image (medium screens) -->
+                            <source media="(min-width: 769px) and (max-width: 1024px)" srcset="https://media.sweetwater.com/m/home/takeovers/2026/gibson-spotlight/0401-Gibson_Deal_1-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=medium" data-width="800" data-height="800">
+                            <!-- Desktop image (large screens) -->
+                            <source media="(min-width: 1025px)" srcset="https://media.sweetwater.com/m/home/takeovers/2026/gibson-spotlight/0401-Gibson_Deal_1-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=medium" data-width="800" data-height="800">
+                            <!-- Fallback image -->
+                            <img src="https://media.sweetwater.com/m/home/takeovers/2026/gibson-spotlight/0401-Gibson_Deal_1-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=medium" alt="Save Up to 600 on Gibson" loading="lazy" width="800" height="800" class="responsive-image">
+                        </picture>                              
+                        <div class="content">
+                            <div class="type-lg text-white weight-demi">
+                                Save Up to $600 on Gibson
+                            </div>
+                            <div class="btn btn-white btn-sm weight-demi">
+                                Shop Now
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <a class="tile--link" data-hp-section="sale events" href="/shop/gibson-48-month-special-financing/?promo_creative=3up_feature_gibson_48_financing&amp;promo_id=ps_financing_gibson_48_march_2026&amp;promo_name=ps_gibson_spotlight_2026&amp;promo_position=takeover">
+                <div class="tile multi full radius-lg bg-blue" style="">
+                    <div class="tile--body">
+                        <picture class="tile--image opacity-100 blend-normal">
+                            <!-- Mobile image (small screens) -->
+                            <source media="(max-width: 768px)" srcset="https://media.sweetwater.com/m/promotions/2026/0401-GibsonSpotlight-48MO/0401-GibsonSpotlight-48MO-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=low" data-width="800" data-height="800">
+                            <!-- Tablet image (medium screens) -->
+                            <source media="(min-width: 769px) and (max-width: 1024px)" srcset="https://media.sweetwater.com/m/promotions/2026/0401-GibsonSpotlight-48MO/0401-GibsonSpotlight-48MO-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=low" data-width="800" data-height="800">
+                            <!-- Desktop image (large screens) -->
+                            <source media="(min-width: 1025px)" srcset="https://media.sweetwater.com/m/promotions/2026/0401-GibsonSpotlight-48MO/0401-GibsonSpotlight-48MO-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=low" data-width="800" data-height="800">
+                            <!-- Fallback image -->
+                            <img src="https://media.sweetwater.com/m/promotions/2026/0401-GibsonSpotlight-48MO/0401-GibsonSpotlight-48MO-HPFeatureTile-2up-1600x1600.jpg?format=webp&amp;optimize=low" alt="Gibson 48-month Special Financing*" loading="lazy" width="800" height="800" class="responsive-image">
+                        </picture>                              
+                        <div class="content">
+                            <div class="type-lg text-white weight-demi">
+                                Gibson 48-month Special Financing*
+                            </div>
+                            <div class="btn btn-white btn-sm weight-demi">
+                                Shop Now
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            
+        </div>
+    </section>
+</section>
+
+</section>
+
+<!-- ===== TRENDING GEAR (LIST VIEW) ===== -->
+<section id="suggested-products" class="suggested-products list-view vue-enabled-section" data-resources-loaded="true" data-v-app="" data-vue-initialized="true">
+    <h2>Trending Gear</h2>
+    <div class="product-suggest__stage">
+        <ul class="product-suggest__items scrollbar-minimal horizontal paged">
+            
+            <li class="product-suggest__item-wrap">
+                <a href="#" class="product-suggest__item">
+                    <div class="product-suggest__summary">
+                        <div class="product-suggest__item-img">
+                            <picture>
+                                <source type="image/webp" sizes="(max-width:992px) 90px, 120px" width="300" height="300" srcset="https://media.sweetwater.com/api/i/q-85__b-original__w-90__h-90__bg-ffffff__ha-3bf85b7160c1ef99__hmac-fe952421fac55dca36a64f2749e786e98f0fa426/images/items/350/QCMini.jpg 90w, https://media.sweetwater.com/api/i/q-85__b-original__w-120__h-120__bg-ffffff__ha-3bf85b7160c1ef99__hmac-fe952421fac55dca36a64f2749e786e98f0fa426/images/items/350/QCMini.jpg 120w">
+                                <img alt="" width="300" height="300" src="https://media.sweetwater.com/api/i/q-85__b-original__w-300__h-300__bg-ffffff__ha-3bf85b7160c1ef99__hmac-fe952421fac55dca36a64f2749e786e98f0fa426/images/items/350/QCMini.jpg">
+                            </picture>
+                        </div>
+                        <div class="product-suggest__item-content">
+                            <div class="product-suggest__name"><strong>Neural DSP</strong> Quad Cortex Mini Modeling and Effects Processor</div>
+                            <div class="product-suggest__item-reviews">
+                                <span class="rating__stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></span>
+                                <span class="product-suggest__item-review-count-inline">(7)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-suggest__item-price"><sup>$</sup>1,399<sup>.00</sup></div>
+                </a>
+            </li>
+
+            <li class="product-suggest__item-wrap">
+                <a href="#" class="product-suggest__item">
+                    <div class="product-suggest__summary">
+                        <div class="product-suggest__item-img">
+                            <picture>
+                                <img alt="" width="300" height="300" src="https://media.sweetwater.com/api/i/q-85__b-original__w-300__h-300__bg-ffffff__ha-a38f6607f0d075c4__hmac-c16e1daa1977d020ef7a22b9be8fc26822279077/images/items/350/QuadCortex.jpg">
+                            </picture>
+                        </div>
+                        <div class="product-suggest__item-content">
+                            <div class="product-suggest__name"><strong>Neural DSP</strong> Quad Cortex Digital Amp Modeling and Floorboard</div>
+                            <div class="product-suggest__item-reviews">
+                                <span class="rating__stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></span>
+                                <span class="product-suggest__item-review-count-inline">(248)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-suggest__item-price"><sup>$</sup>1,799<sup>.00</sup></div>
+                </a>
+            </li>
+
+            <li class="product-suggest__item-wrap">
+                <a href="#" class="product-suggest__item">
+                    <div class="product-suggest__summary">
+                        <div class="product-suggest__item-img">
+                            <img alt="" width="300" height="300" src="https://media.sweetwater.com/api/i/q-85__b-original__w-300__h-300__bg-ffffff__ha-56a3a6fca5cb78c2__hmac-cea183fc2b8de02a33e9eedfb142938fa6b44882/images/items/350/K12.2StdPk2.jpg">
+                        </div>
+                        <div class="product-suggest__item-content">
+                            <div class="product-suggest__name"><strong>QSC</strong> K12.2 Powered Speaker Pair with Stands and Bags</div>
+                        </div>
+                    </div>
+                    <div class="product-suggest__item-price"><sup>$</sup>1,799<sup>.99</sup></div>
+                </a>
+            </li>
+
+            <li class="product-suggest__item-wrap">
+                <a href="#" class="product-suggest__item">
+                    <div class="product-suggest__summary">
+                        <div class="product-suggest__item-img">
+                            <img alt="" width="300" height="300" src="https://media.sweetwater.com/api/i/q-85__b-new__w-300__h-300__bg-ffffff__ha-19c03a90a9a38cc1__hmac-0a99fe05d3989dbcb7bdf743f01091687859994b/images/items/350/MPCSample.jpg">
+                        </div>
+                        <div class="product-suggest__item-content">
+                            <div class="product-suggest__name"><strong>Akai Professional</strong> MPC Sample Portable Groovebox</div>
+                            <div class="product-suggest__item-reviews">
+                                <span class="rating__stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></span>
+                                <span class="product-suggest__item-review-count-inline">(12)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-suggest__item-price"><sup>$</sup>399<sup>.00</sup></div>
+                </a>
+            </li>
+
+            <li class="product-suggest__item-wrap">
+                <a href="#" class="product-suggest__item">
+                    <div class="product-suggest__summary">
+                        <div class="product-suggest__item-img">
+                            <picture>
+                                <img alt="" width="300" height="300" src="https://media.sweetwater.com/api/i/q-85__b-original__w-300__h-300__bg-ffffff__ha-567553765d8b8108__hmac-8d0ad70939b54730824d48f3b8335e3b37137cf7/images/items/350/FLStu20Pro.jpg">
+                            </picture>
+                        </div>
+                        <div class="product-suggest__item-content">
+                            <div class="product-suggest__name"><strong>Image Line</strong> FL Studio Producer Edition - Download</div>
+                            <div class="product-suggest__item-reviews">
+                                <span class="rating__stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></span>
+                                <span class="product-suggest__item-review-count-inline">(46)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-suggest__item-price"><sup>$</sup>179<sup>.00</sup></div>
+                </a>
+            </li>
+            
+            <li class="product-suggest__item-wrap">
+                <a href="#" class="product-suggest__item">
+                    <div class="product-suggest__summary">
+                        <div class="product-suggest__item-img">
+                            <img alt="" width="300" height="300" src="https://media.sweetwater.com/api/i/q-85__b-original__w-300__h-300__bg-ffffff__ha-a393439253332e83__hmac-c17e2ab6b15e7581637ce149f78d153c5f79e80f/images/items/350/Stage4-88.jpg">
+                        </div>
+                        <div class="product-suggest__item-content">
+                            <div class="product-suggest__name"><strong>Nord</strong> Stage 4 88 Stage Keyboard</div>
+                            <div class="product-suggest__item-reviews">
+                                <span class="rating__stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></span>
+                                <span class="product-suggest__item-review-count-inline">(16)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-suggest__item-price"><sup>$</sup>5,999<sup>.00</sup></div>
+                </a>
+            </li>
+
+        </ul>
+    </div>
+    <div class="product-suggest__nav product-suggest__nav--prev">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path d="M22.238 12.495l-7.739 7.739 7.739 7.739"></path></g></svg> Previous 
+    </div>
+    <div class="product-suggest__nav product-suggest__nav--next">
+        Next <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path d="M17.762 27.505l7.739-7.739-7.739-7.739"></path></g></svg>
+    </div>
+</section>
+<!-- ===== INSYNC RESEARCH DESTINATION ===== -->
+<section id="research-articles" class="insync-home">
+    <h2>Your Research Destination</h2>
+    <div class="insync-grid">
+        <!-- Hero Box (Left) -->
+        <div class="insync-grid--hero">
+            <div class="logo-wrap">
+                <span class="logo-in">in</span>
+                <span class="logo-sync">sync</span>
+            </div>
+            <p>Browse 30,000+ Gear reviews, tips and tricks, how-to articles and more!</p>
+            <a href="#" class="explore-btn">Explore Insync</a>
+        </div>
+
+        <!-- Large Featured Article (Right) -->
+        <a href="#" class="insync-grid--article-large">
+            <img src="https://media.sweetwater.com/m/insync/2025/06/250617_HelixLine6_01-1.jpg?width=1050&height=549&fit=cover" alt="Main Article" class="main-img">
+            <div class="overlay">
+                <div class="content-stem">
+                    <h3>Line 6 Helix Stadium XL | The Future of Modeling is HERE</h3>
+                    <div class="date">Jun 17, 2025</div>
+                </div>
+            </div>
+        </a>
+
+        <!-- Small Articles Row -->
+        <a href="#" class="insync-grid--article">
+            <div class="thumb-wrap">
+                <img src="https://media.sweetwater.com/m/insync/2023/06/Featured-Bass-Preamp-Pedals-10-Best-Bass-Preamp-Pedals.jpg?width=600&height=400&fit=cover" alt="Bass Preamp">
+            </div>
+            <div class="info">
+                <h4>10 Best Bass Preamp Pedals</h4>
+            </div>
+        </a>
+
+        <a href="#" class="insync-grid--article">
+            <div class="thumb-wrap">
+                <img src="https://media.sweetwater.com/m/insync/2023/05/Featured-Guitar-Stand-in-Living-Room-with-Guitar-Best-Guitar-Stands-for-Your-Collection.jpg?width=600&height=400&fit=cover" alt="Guitar Stands">
+            </div>
+            <div class="info">
+                <h4>Best Guitar Stands for Your Collection</h4>
+            </div>
+        </a>
+
+        <a href="#" class="insync-grid--article">
+            <div class="thumb-wrap">
+                <img src="https://media.sweetwater.com/m/insync/2024/03/Jazzmaster-vs.-Jaguar-Which-Is-Best-for-You.jpg?width=600&height=400&fit=cover" alt="Jaguar vs Jazzmaster">
+            </div>
+            <div class="info">
+                <h4>Jazzmaster vs. Jaguar: Which Is Best for You?</h4>
+            </div>
+        </a>
+
+        <a href="#" class="insync-grid--article">
+            <div class="thumb-wrap">
+                <img src="https://media.sweetwater.com/m/insync/2024/04/Anatomy-of-a-Home-Sound-System-Featured-Image.jpg?width=600&height=400&fit=cover" alt="Sound System">
+            </div>
+            <div class="info">
+                <h4>Anatomy of a Home Sound System</h4>
+            </div>
+        </a>
+    </div>
+</section>
+
+<section id="value-adds" class="value-ads">
+    <h2>Get More at Sweetwater</h2>
+    <div class="value-ads--links">
+        <a href="/about/free-shipping/" data-log="Free Shipping" data-hp-section="get-more" data-hp-slot="1">
+            <div class="value-ads--icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 22" class="sw--svg">
+                    <title>Fast, Free Shipping</title>
+                    <path d="M8.2,15.9c0.9,0,1.7,0.5,2,1.3l0.2,0.4l0,0.5c0,0,0,0.1,0,0.1c0,1.2-1,2.2-2.2,2.2 c-1.2,0-2.2-1-2.2-2.2l0,0l0-0.1l0-0.5l0.2-0.4C6.6,16.4,7.4,15.9,8.2,15.9 M25.8,15.9c0.9,0,1.6,0.5,2,1.3l0.2,0.5l0,0.5l0,0.1l0,0 c0,1.2-1,2.2-2.2,2.2c-1.2,0-2.2-1-2.2-2.2l0,0l0-0.1l0-0.5l0.2-0.5C24.1,16.4,24.9,15.9,25.8,15.9 M21.2,0.6H9.5v1.3h10.3v15h-8.7 c-0.5-1.1-1.6-1.9-2.9-1.9c-1.3,0-2.4,0.8-2.9,1.9H2.4v1.3l2.6,0c0,0,0,0,0,0.1c0,1.8,1.5,3.2,3.2,3.2s3.2-1.5,3.2-3.2 c0,0,0,0,0-0.1l11,0c0,0,0,0,0,0c0,1.8,1.5,3.2,3.2,3.2c1.8,0,3.2-1.5,3.2-3.2c0,0,0,0,0,0l0.7,0c1.1,0,2-0.9,2-2v-4.3 c0-0.1,0-0.2,0-0.3c0,0,0,0,0,0c0-1-0.9-1.9-1.9-1.9c0,0,0,0-0.1,0h-0.3L27.4,6c-0.4-0.5-1-0.9-1.6-0.9h-4.6V0.6L21.2,0.6z M22.9,16.8l-1.7,0V6.4h4.6c0,0,0,0,0,0c0.2,0,0.4,0.1,0.5,0.2l2.4,4.3h1c0,0,0,0,0,0c0,0,0,0,0,0c0.3,0,0.6,0.3,0.6,0.6v4.6 c0,0.4-0.3,0.7-0.7,0.7l-1,0c-0.5-1.1-1.6-1.9-2.9-1.9C24.5,14.9,23.4,15.7,22.9,16.8L22.9,16.8z M8.2,0.6H6.9v1.3h1.3V0.6L8.2,0.6z M15.4,4.5H5.6v1.3h9.8V4.5L15.4,4.5z M4.3,4.5H3v1.3h1.3V4.5L4.3,4.5z M25.7,8l-1.1,0.7l1.1,1.6h-3.8v1.3h5.2v-1.5L25.7,8L25.7,8z M11.5,8.4h-11v1.3h11V8.4L11.5,8.4z"></path>
+                    <path fill="#2E71EA" d="M21.9,8h3.8l1.4,2.1l0,1.6h-5.2V8z M8.2,16.8c-0.8,0-1.4,0.6-1.4,1.4c0,0.8,0.6,1.4,1.4,1.4 s1.4-0.6,1.4-1.4C9.6,17.4,9,16.8,8.2,16.8z M25.8,16.8c-0.8,0-1.4,0.6-1.4,1.4s0.6,1.4,1.4,1.4c0.8,0,1.4-0.6,1.4-1.4 S26.5,16.8,25.8,16.8z"></path>
+                </svg></div>
+            <div class="value-ads--title">
+                Fast, FREE Shipping
+            </div>
+            <div class="value-ads--subtitle">
+                Even on the small stuff.
+            </div>
+            <div class="value-ads--cta">Learn More</div>
+        </a> 
+        <a href="about/sales-engineers/" data-log="Sales Engineers" data-hp-section="get-more" data-hp-slot="2">
+            <div class="value-ads--icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 32" class="sw--svg">
+                    <title>Sales Engineers</title>
+                    <path fill="#2E71EA" d="M12.9,26.5H1.3l0-0.5c-0.3-3.6,0-4.1,0.1-4.2c0.5-0.7,3.9-2,6.8-3v-1.2c0,0,0-0.4-0.4-1.2 c-0.2-0.4-0.4-0.8-0.5-1.2c0-0.1-0.1-0.3-0.1-0.3c-0.4-0.4-0.6-1.3-0.6-2.1c0-0.3-0.1-0.7-0.1-1.1c-0.1-0.4-0.1-0.9-0.1-1.3V8.2 c0-0.4,0.1-2,1.6-3.3c1.8-1.6,4.2-1.1,5.4-0.9l0.1,0c1.5,0.3,2.8,2.4,3.1,3.8c0.1,0.7,0,2.9,0,3.4c0.1,0.3,0.2,1,0,1.9 c-0.1,0.4-0.2,0.7-0.4,1.1c-0.1,0.3-0.2,0.5-0.3,0.7c0,0.1-0.1,0.3-0.1,0.5c-0.1,0.2-0.1,0.5-0.2,0.6c-0.2,0.6-0.5,1.3-0.7,1.6v1.1 l6.3,2.2l-1.7,0.5c0,0-4.3,1.4-5.8,2.2c-1.2,0.6-0.9,2-0.9,2.1L12.9,26.5z M2.4,25.3h9.2c0-0.9,0.4-2,1.6-2.6c1-0.5,2.9-1.2,4.3-1.7 l-3.8-1.3v-2.2l0.1-0.1c0,0,0.5-0.9,0.7-1.6c0-0.1,0.1-0.3,0.1-0.5c0-0.2,0.1-0.4,0.1-0.5c0.1-0.3,0.2-0.6,0.4-0.9 c0.1-0.3,0.3-0.6,0.3-0.9c0.1-0.4,0.1-0.9,0-1.3l0-0.1l0-0.1c0.1-1,0.1-2.7,0-3.2C15.1,7,14,5.4,13.2,5.2l-0.1,0 c-1.1-0.2-3-0.6-4.4,0.6c-1.1,1-1.2,2.1-1.2,2.4v2.2c0,0.3,0.1,0.7,0.1,1.1c0.1,0.4,0.1,0.9,0.1,1.3c0,0.6,0.2,1.1,0.3,1.3 c0.2,0.2,0.3,0.5,0.4,0.8c0.1,0.3,0.2,0.6,0.4,1c0.5,1,0.5,1.6,0.5,1.7v2.1l-0.4,0.1c-2.8,0.9-6,2.2-6.6,2.6 C2.3,22.8,2.3,24.1,2.4,25.3L2.4,25.3z"></path>
+                    <path d="M37.3,29.5H11.7l-0.1-0.7c-0.4-4.5,0-5.1,0.1-5.3c0.6-0.9,4.9-2.5,8.6-3.7v-1.6 c0,0,0-0.5-0.5-1.5c-0.2-0.5-0.4-1-0.6-1.5c-0.1-0.2-0.1-0.4-0.2-0.4c-0.5-0.5-0.8-1.6-0.8-2.6c0-0.4-0.1-0.9-0.1-1.4 c-0.1-0.5-0.1-1.1-0.2-1.6V6.6c0-0.6,0.1-2.5,2.1-4.2c2.3-2,5.2-1.4,6.8-1.1l0.1,0c1.9,0.4,3.5,3,3.9,4.8c0.2,0.9,0.1,3.6,0,4.3 c0.1,0.4,0.3,1.2,0,2.4c-0.1,0.5-0.3,0.9-0.5,1.4c-0.1,0.3-0.3,0.6-0.4,0.9c0,0.1-0.1,0.4-0.1,0.6c-0.1,0.3-0.1,0.5-0.2,0.8 c-0.2,0.7-0.5,1.4-0.9,2v1.4c3.6,1.1,7.7,2.5,8.3,3.4c0.7,1,0.5,4.2,0.4,5.6L37.3,29.5z M13.1,28h22.9c0.1-1.8,0-3.5-0.2-3.9 c-0.6-0.5-4.6-2-8-3l-0.5-0.2v-2.8l0.1-0.2c0,0,0.6-1.2,0.9-2c0-0.1,0.1-0.4,0.2-0.6c0-0.2,0.1-0.5,0.2-0.7c0.1-0.4,0.3-0.8,0.4-1.1 c0.2-0.4,0.3-0.7,0.4-1.1c0.2-1,0-1.7,0-1.7l0-0.1l0-0.1c0.1-1.2,0.1-3.4,0-4C29,5,27.7,3,26.6,2.8l-0.1,0c-1.4-0.3-3.8-0.8-5.5,0.8 c-1.4,1.2-1.5,2.6-1.5,3v2.7c0,0.4,0.1,0.9,0.1,1.4c0.1,0.5,0.2,1.1,0.2,1.6c0,0.7,0.3,1.4,0.4,1.6c0.3,0.3,0.4,0.6,0.5,1 c0.1,0.3,0.2,0.7,0.5,1.3c0.6,1.3,0.7,2,0.7,2.1v2.6l-0.5,0.2c-3.5,1.2-7.6,2.7-8.3,3.3C12.9,24.8,12.9,26.5,13.1,28L13.1,28z"></path>
+                </svg></div>
+            <div class="value-ads--title">
+                Dedicated Sales Engineer
+            </div>
+            <div class="value-ads--subtitle">
+                Helping you buy music gear with confidence.
+            </div>
+            <div class="value-ads--cta">Learn More</div>
+        </a> 
+        <a href="/about/guitars/" data-log="55 point" data-hp-section="inspection" data-hp-slot="3">
+            <div class="value-ads--icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 61 61" class="sw--svg">
+                    <title>55-Point Guitar Inspection</title>
+                    <path d="M15.2,38.9c-0.3,0.8-0.3,1.7,0,2.5c0.3,0.8,0.9,1.4,1.7,1.7l9.5,3.9c0.4,0.2,0.8,0.2,1.2,0.2 c1.3,0,2.4-0.8,2.9-2c0.3-0.8,0.3-1.7,0-2.4c-0.3-0.8-0.9-1.4-1.7-1.7l-9.5-3.9c-0.4-0.2-0.8-0.2-1.2-0.2 C16.8,36.9,15.6,37.7,15.2,38.9z M28.2,44.2c-0.1,0.3-0.5,0.5-0.8,0.4l-9.5-3.9c-0.3-0.1-0.5-0.5-0.3-0.9c0.1-0.2,0.3-0.4,0.6-0.4 c0.1,0,0.2,0,0.2,0l9.5,3.9C28.1,43.5,28.3,43.9,28.2,44.2l0.2,0.1L28.2,44.2z M58,44.2c-0.1-0.8-0.5-1.6-1.1-2.1l-7.6-6.2 c-0.4-0.4-1-0.6-1.5-0.7c0.9-2.3,1.1-4.9,0.3-7.2c-0.3-1.1-0.9-2.1-1.6-3.1c2.8-4.8-0.7-9.2-0.8-9.4c-0.2-0.3-0.6-0.4-0.9-0.5 c-0.3,0-0.7,0.1-0.9,0.4c-1.7,1.7-3.3,2.6-4.5,2.6c0,0-0.1,0-0.1,0c-0.7,0-1.3-0.3-1.8-0.8l5-12.8c0.2-0.5,0-1.1-0.4-1.4l0-0.1 l-5.7-2.3c-0.3-0.1-0.6-0.1-1,0C35,0.7,34.8,1,34.7,1.3l-4.7,11.7c-0.6,0.2-2,0.5-3.2-0.2c-1.2-0.8-2-2.6-2.3-5.3 c0-0.4-0.2-0.7-0.5-0.9c-0.3-0.2-0.7-0.3-1-0.2c-0.2,0-3.7,0.9-5.5,4.2c-1.2,2.3-1.2,5.2,0.1,8.6c0,0.1,1.1,2.2-2.4,4.4 c-0.4,0.3-0.9,0.5-1.5,0.8l-0.1,0.1c-3.2,1.8-7.9,4.4-10.3,10.2c-3.9,9.8,1.1,18.9,13.1,23.8c3.2,1.3,6.4,2,9.5,2 c4.7,0,8.9-1.6,12.2-4.7c4.2-4,6.2-10.1,4.9-15.2c0.6-0.3,1.1-0.7,1.6-1.1c0.2,0.5,0.5,0.8,0.8,1.1l7.6,6.2c0.5,0.4,1.2,0.7,1.9,0.7 c0.9,0,1.8-0.4,2.4-1.1C57.8,45.8,58,45,58,44.2z M46.9,37.9c0.1-0.1,0.3-0.2,0.4-0.2c0.1,0,0.3,0,0.4,0.1l7.6,6.2 c0.2,0.2,0.3,0.5,0.1,0.8l0.2,0.2l0,0l-0.2-0.2c-0.2,0.2-0.5,0.3-0.8,0.1L47,38.7c-0.1-0.1-0.2-0.4-0.2-0.4 C46.8,38.2,46.8,38,46.9,37.9z M30.7,17.6l5.8-14.2l3.1,1.3L34,18.9L30.7,17.6z M20,18.8c-0.1-0.3-0.2-0.5-0.2-0.6 c-1-2.6-1-4.7-0.2-6.3c0.6-1.2,1.7-2,2.5-2.4c0.5,2.7,1.6,4.5,3.2,5.5c1,0.6,2.1,0.9,3.4,0.8l-0.4,1.1c-1.8-0.1-3.5,0.9-4.2,2.6 c-0.9,2.1,0.2,4.6,2.3,5.5l2.4,1c-0.4,0.7-0.8,1.5-1,2.3l-2.3-1c-1-0.4-2.1-0.4-3.2,0c-1,0.4-1.8,1.2-2.2,2.3 c-0.9,2.1,0.2,4.6,2.3,5.5l5.6,2.3c0.5,0.2,0.9,0.3,1.4,0.3c0.8,1.1,1.9,2.1,3.2,2.8c-0.2,0.2-0.5,0.3-0.7,0.6 c-0.6,0.6-0.9,1.5-0.8,2.3c0,0.9,0.4,1.6,1.1,2.2c0.6,0.5,1.3,0.8,2.1,0.8c0.9,0,1.8-0.4,2.4-1.1c0.8-0.9,1-2.3,0.5-3.4 c1.1,0.1,2.2,0,3.4-0.3c0.9,4.2-0.8,9.1-4.3,12.4c-4.7,4.4-11.6,5.3-19,2.2c-5.2-2.1-9-5.2-11.1-8.8c-2-3.6-2.3-7.6-0.6-11.7 c2-5,6.1-7.3,9.1-8.9c0.6-0.3,1.2-0.7,1.7-1C20.7,23.1,20.4,20,20,18.8z M44.7,23c-0.6-0.5-1.2-0.9-1.8-1.2 c-1.5-0.8-3.2-1.2-4.9-1.2c-0.4,0-0.8,0-1.2,0.1c-0.2-0.2-0.4-0.4-0.6-0.5l0.2-0.4c0.8,0.6,1.7,0.9,2.7,0.9h0 c1.7,0.1,3.5-0.7,5.4-2.2C45,19.4,45.5,21.1,44.7,23z M34.9,43.6c-0.2,0.3-0.7,0.3-1,0.1c-0.1-0.1-0.2-0.3-0.2-0.5 c0-0.2,0.1-0.4,0.2-0.5c0.1-0.1,0.3-0.2,0.5-0.2c0.2,0,0.3,0.1,0.5,0.2C35.1,42.9,35.1,43.3,34.9,43.6z M27.4,30.7 c-0.1,1.3,0.1,2.5,0.4,3.7c0,0,0,0,0,0.1l-4.5-1.9c-0.4-0.2-0.7-0.5-0.9-0.9c-0.2-0.4-0.2-0.9,0-1.3c0.2-0.4,0.5-0.7,0.9-0.9 c0.2-0.1,0.4-0.1,0.7-0.1c0.2,0,0.4,0,0.6,0.1L27.4,30.7z M30.4,23.8l-3-1.2c-0.8-0.3-1.3-1.3-0.9-2.2c0.2-0.4,0.5-0.7,0.9-0.9 c0.2-0.1,0.4-0.1,0.6-0.1c0.2,0,0.4,0,0.6,0.1l5,2.1C32.4,22,31.4,22.8,30.4,23.8z M34.2,38.4c-1.9-1-3.3-2.7-4-4.8 c-1.3-4.3,1.1-8.9,5.3-10.2c0.8-0.2,1.6-0.4,2.4-0.4c1.3,0,2.6,0.3,3.8,0.9c1.9,1,3.3,2.7,4,4.8c1.3,4.3-1.1,8.9-5.3,10.2 C38.3,39.6,36.1,39.5,34.2,38.4z"></path>
+                    <path fill="#2E71EA" d="M56.8,42l-7.4-6.1c-0.1-0.1-0.7-0.6-1.5-0.7c0.5-1.2,0.8-2.6,0.8-4 c0-5.9-4.8-10.6-10.6-10.6c-5.9,0-10.6,4.8-10.6,10.6c0,5.9,4.8,10.6,10.6,10.6c2.5,0,4.8-0.9,6.6-2.4c0.2,0.5,0.5,0.9,0.7,1.1 l7.8,6.4c0.6,0.4,2.4,1.3,4.1-0.5C58.5,45.2,58,43,56.8,42z M38,39.2c-4.4,0-8-3.6-8-8c0-4.4,3.6-8,8-8c4.4,0,8,3.6,8,8 C46,35.7,42.4,39.2,38,39.2z M55.3,44.9c-0.3,0.2-0.6,0.1-0.8-0.1l-7.5-6.2c-0.3-0.2-0.2-0.7,0.1-0.8c0.3-0.2,0.5-0.1,0.7,0 c0.1,0,7.5,6.2,7.5,6.2C55.5,44.3,55.6,44.7,55.3,44.9z M45.5,31.7c0,0.6-0.5,1-1,1c-0.6,0-1-0.5-1-1c0-1.5-0.5-3-1.6-4.1 s-2.5-1.8-4-1.8c-0.6,0-1-0.5-1-1c0-0.6,0.5-0.9,1-1l0,0c2.1,0.1,4,0.9,5.4,2.4C44.8,27.6,45.5,29.6,45.5,31.7z"></path>
+                </svg></div>
+            <div class="value-ads--title">
+                55-point Guitar Inspection
+            </div>
+            <div class="value-ads--subtitle">
+                Guitar perfection <span>right out of the box.</span></div>
+            <div class="value-ads--cta">Learn More</div>
+        </a> 
+        <a href="/about/price-protection/" data-log="Price Protection" data-hp-section="get-more" data-hp-slot="4">
+            <div class="value-ads--icon"><svg fill="none" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg" class="sw--svg">
+            <title>Price Protection</title>    
+            <clipPath id="a"><path d="m0 0h25v23.489h-25z"></path></clipPath><g clip-path="url(#a)"><path d="m16.7317 13.073c-.1103-.0255-.2292-.0509-.348-.0764l-.8913.8829c.348.0848.6961.1612 1.0186.2292 1.6299.348 2.6146.6027 2.6146 1.1799 0 .6622-1.3412.7216-1.7487.7216-1.0526 0-2.1307-.2462-3.2513-.764l-.7979.7979c1.3922.6961 2.7249 1.0272 4.0492 1.0272 2.5382 0 2.8099-1.2479 2.8099-1.7827 0-1.4771-1.6809-1.8336-3.4551-2.2156zm-4.1765 1.3243-.4414-.2717-.2802.433.7386.7385.5602-.5518c-.1952-.1103-.382-.2207-.5772-.348zm4.1765-1.3243c-.1103-.0255-.2292-.0509-.348-.0764l-.8913.8829c.348.0848.6961.1612 1.0186.2292 1.6299.348 2.6146.6027 2.6146 1.1799 0 .6622-1.3412.7216-1.7487.7216-1.0526 0-2.1307-.2462-3.2513-.764l-.7979.7979c1.3922.6961 2.7249 1.0272 4.0492 1.0272 2.5382 0 2.8099-1.2479 2.8099-1.7827 0-1.4771-1.6809-1.8336-3.4551-2.2156zm1.8761-3.77758c-.2037-.04245-.3905-.0764-.5688-.11885.0255.36503.017.72156-.0424 1.07813.1358.0339.2717.0594.4075.0849 2.5976.5093 5.5348 1.0865 5.5348 4.6519 0 2.8608-1.8846 4.7114-5.1783 5.0764l-.4754.0509v2.309h-2.0288v-2.3684l-.4415-.0679c-1.2054-.1952-2.3514-.6027-3.438-1.2054l-.781.781c1.1375.6621 2.343 1.129 3.5993 1.3837v2.5382h4.1511v-2.4279c3.5569-.5603 5.6537-2.8013 5.6537-6.0696 0-4.4397-3.8455-5.19524-6.3922-5.69608zm-1.8761 3.77758c-.1103-.0255-.2292-.0509-.348-.0764l-.8913.8829c.348.0848.6961.1612 1.0186.2292 1.6299.348 2.6146.6027 2.6146 1.1799 0 .6622-1.3412.7216-1.7487.7216-1.0526 0-2.1307-.2462-3.2513-.764l-.7979.7979c1.3922.6961 2.7249 1.0272 4.0492 1.0272 2.5382 0 2.8099-1.2479 2.8099-1.7827 0-1.4771-1.6809-1.8336-3.4551-2.2156zm0 0c-.1103-.0255-.2292-.0509-.348-.0764l-.8913.8829c.348.0848.6961.1612 1.0186.2292 1.6299.348 2.6146.6027 2.6146 1.1799 0 .6622-1.3412.7216-1.7487.7216-1.0526 0-2.1307-.2462-3.2513-.764l-.7979.7979c1.3922.6961 2.7249 1.0272 4.0492 1.0272 2.5382 0 2.8099-1.2479 2.8099-1.7827 0-1.4771-1.6809-1.8336-3.4551-2.2156zm0 0c-.1103-.0255-.2292-.0509-.348-.0764l-.8913.8829c.348.0848.6961.1612 1.0186.2292 1.6299.348 2.6146.6027 2.6146 1.1799 0 .6622-1.3412.7216-1.7487.7216-1.0526 0-2.1307-.2462-3.2513-.764l-.7979.7979c1.3922.6961 2.7249 1.0272 4.0492 1.0272 2.5382 0 2.8099-1.2479 2.8099-1.7827 0-1.4771-1.6809-1.8336-3.4551-2.2156z" fill="#231f20"></path><path d="m24.9236 4.94907-2.5467 3.85399-.4244-.23769c-1.4007-.78099-2.8438-1.18846-4.1681-1.18846-.1189 0-.2292 0-.3481.00849-.4244.03395-.8319.11036-1.112.26316-.2122.11884-.3566.28013-.3566.50085 0 .33955.3396.56876.9508.764.0509.22072.0764.44143.0764.67063 0 .14431 0 .28863-.034.43296-1.1714-.31411-2.0543-.7895-2.0543-1.86759 0-.24618.0679-.78948.5858-1.22242.2546-.21222.6112-.39049 1.129-.49236.3226-.0764.7046-.11884 1.163-.11884 1.3667 0 2.8268.37351 4.2445 1.08659l1.4601-2.19864c-1.3583-.91681-2.9882-1.53651-4.6435-1.75722l-.4584-.05942v-2.32598h-1.9355v2.34295l-.4499.07641c-1.0102.16129-2.9796.67911-4.0323 2.35144-.3141.50085-.5433 1.11205-.6366 1.8421-.034.23769-.051.50085-.051.7725 0 2.75038 1.8421 3.70968 3.8795 4.26148l-.8489.8489c-2.0289-.6452-3.9474-1.8336-4.0832-4.77931-.0085-.11036-.0085-.22071-.0085-.33107 0-.44992.0425-.88285.1358-1.29881.4584-2.37691 2.2666-4.05773 5.034-4.63498v-2.51273h4.0577v2.47029c1.8421.31409 3.6333 1.0781 5.0849 2.18166z" fill="#231f20"></path><path d="m18.039 9.17657c-.0594-.62818-.2631-1.23939-.6027-1.79117-.4244.03396-.8319.11036-1.112.26316.2886.37351.5008.80645.5942 1.26485.0509.22072.0764.44143.0764.67063 0 .14431 0 .28863-.0339.43296-.0849.6791-.399 1.2988-.8914 1.7827l-1.7572 1.7572-1.18 1.1884-.5602.5518-.7386-.7385h-.0085l-3.68418-3.6927 2.08828-2.08831c-.0085-.11036-.0085-.22071-.0085-.33107 0-.44991.0425-.88285.1358-1.29881l-2.96261 2.97109-.89983-.89978-6.49406 6.49408 7.73345 7.7249 3.86245-3.8709.781-.781 1.8421-1.8421-.8998-.8999h.0085l2.1647-2.1646.8913-.8829.4414-.4414c.6537-.6537 1.0442-1.4601 1.1715-2.3005.0594-.35657.0679-.7131.0424-1.07813zm-6.5959 9.04923-.764.7555-2.94565 2.9542-6.2309-6.2224 4.99151-4.9915.14431.1443 4.60103 4.601.7555.7555.5773.5773.1443.1443z" fill="#2E71EA"></path><path d="m8.48048 16.7827c-.33107.3311-.80645.4414-1.2309.3226l-.59423 1.5025-1.82513-1.8166 1.50255-.5943c-.11885-.4244 0-.8998.33107-1.2393.50085-.5009 1.31579-.5009 1.81664 0 .50934.5008.50934 1.3157 0 1.8251z" fill="#231f20"></path></g></svg></div>
+            <div class="value-ads--title">
+                Price Protection
+            </div>
+            <div class="value-ads--subtitle">
+                Worry-free Shopping</div>
+            <div class="value-ads--cta">Learn More</div>
+        </a> 
+        <a href="/about/support/" data-log="Support" data-hp-section="get-more" data-hp-slot="5">
+            <div class="value-ads--icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" class="sw--svg">
+                    <title>Tech Support</title>
+                    <path d="M9.7 16.1c.2 1.1.8 3.6 1.8 4.4v1.1c-5.4 1.8-7.9 3.1-9.1 4.8l-.1.1c-.4.5-.8 1.1-1 3.8v.7h30.3l-.1-.7c-.3-2.6-.6-3.2-1-3.8l-.1.1.1-.1-.1-.1c-1.2-1.7-3.7-3-9.1-4.8v-1l.1-.1c.6-.6 1-1.4 1.2-2.2l.5-2.4c.6-.6 1-1.4 1-2.3.1-1.3-.2-2.3-.9-2.8 0-.2-.1-.5-.1-.7-.1-.4-.2-.8-.2-1-1-4.3-2.4-4.5-6.4-4.5S11 4.8 10 9.1c0 .3-.1.9-.2 1.3l-.1.4c-.7.4-1 1.5-.9 2.8 0 0 .2 1.5.9 2.5zM21.8 10v.2l-2.9-1.4-.3.1c-2.4 1.1-5 1.7-7.6 1.7.1-.4.2-.9.3-1.2.8-3.5 1.5-3.5 5.2-3.5s4.3 0 5.2 3.5c0 .1.1.3.1.6zM11 15.5v-.3l-.3-.1c-.4-.4-.7-.9-.7-1.5.1-1.1.4-1.7.5-1.7h.2c2.9 0 5.6-.6 8.3-1.7 1.2.6 2.3 1.2 3.6 1.7.1 0 .4.6.3 1.7 0 .6-.2 1.1-.7 1.5l-.3.1v.3c-.1.7-.2 1.4-.4 2.1s-1 1.9-1.1 2c-1.6 1.3-2.9 1.9-4 1.9h-.1c-1.1 0-2.4-.6-4-1.9-.8-.7-1.2-3.1-1.3-4.1zm9 6c.1 1.1-.3 2.3-1 3.2-.7.7-1.6 1-2.6 1s-1.9-.3-2.6-1a4.7 4.7 0 01-1-3.2c1.1.8 2.3 1.2 3.7 1.3 1.3-.1 2.5-.5 3.5-1.3zM2.6 29.7c.2-1.8.4-2.1.7-2.4l.1-.2c1-1.4 3.3-2.6 8.2-4.2a4.6 4.6 0 004.8 4c1.3.1 2.6-.4 3.5-1.3.7-.7 1.1-1.7 1.3-2.7 4.9 1.7 7.2 2.8 8.2 4.2l.1.2c.2.3.5.6.7 2.4H2.6z"></path>
+                    <path fill="#2E71EA" d="M26 10.7c0-.1-.1-.2-.2-.3-.2-.2-.4-.5-.4-.8-.1-.9-.4-2.9-.9-3.9-.6-1-1.5-2.3-3.6-3.1-.9-.3-1.7-.5-2.9-.6-1.5-.1-3-.1-4.5.1-1.9.3-4.3 1.6-4.9 3-.3.8-.6 1.5-.8 2.2-.1.5-.2.9-.2 1.2l-.1.7c0 .2-.1.5-.2.8 0 .1-.1.2-.2.3-.3.4-.6.9-.6 1.5-.2 1.2 0 2.5.5 3.4.6 1.1 1.4 1.7 2.2 1.7.3 0 .5-.1.5-.1l.2-.1-.2-.9-.2-.4-.1.1H9.1c-.3 0-.5-.3-.9-.9v-.1c-.2-.4-.3-.8-.3-1.2-.1-.6-.1-1.1-.1-1.4.1-.4.2-.7.4-.9l.1-.1c.1-.1.2-.2.3-.4.2-.4.2-.9.2-1.1l.1-.5v-.3c0-.6.1-1.5.8-2.8.2-.3.3-.5.5-.7.8-.8 2.2-1.4 3.4-1.7 1.3-.2 2.7-.3 4-.2 3.6.3 4.9 1.7 5.7 3.1.4.7.7 2.4.8 3.3 0 .5.2 1 .5 1.4l.2.3c.2.4.3.7.2 1.6 0 .4-.1.6-.2 1.2l-.3 1c-.2.3-.4.5-.6.5h-.6l-.1.5s-.1.3-.4.6c-.4.3-.8.6-1.3.8-.9.4-1.9.8-2.9 1.1-.1 0-.3.1-.5.1h-.2l.8-.5-.1-.1c-.1-.2-.2-.3-.4-.5-.4-.3-.9-.4-1.4-.2-.7.2-1.2.9-1.1 1.8.1.3.5 1.1 1.3 1.2h.2c.4 0 .9-.1 1.2-.6l1.4-.3c.7-.2 1.3-.5 2-.8a6 6 0 002.3-1.9c.3 0 .5-.1.7-.3.6-.4 1-1 1.2-2 .5-2 .5-2.9 0-3.8zm-8.4 8.4c-.1.1-.2.2-.4.2-.1 0-.2-.1-.2-.3 0-.2.2-.3.3-.3.2 0 .3.1.3.1l.1.1h.1l-.2.2z"></path>
+                </svg></div>
+            <div class="value-ads--title">
+                FREE Product Support
+            </div>
+            <div class="value-ads--subtitle">
+                Got a question? <span>We're here to help.</span></div>
+            <div class="value-ads--cta">Learn More</div>
+        </a> 
+        <a href="/about/warranty/" data-log="Warranty" data-hp-section="get-more" data-hp-slot="6">
+            <div class="value-ads--icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 30" class="sw--svg">
+                    <title>2-Year Warranty Color</title>
+                    <path d="M12,30c-0.1,0-0.2,0-0.3-0.1l-1.4-0.8c-3.7-2.4-6.2-4.2-7.3-4.9c-2-1.6-3.1-4.1-3-6.6V5.4 c0-0.1,0.1-0.3,0.2-0.4c0.1-0.1,0.3-0.1,0.4-0.1L2.9,5h0.2c2.4,0,5.8-2.3,7.2-3.5l1.3-1.3c0.2-0.2,0.5-0.2,0.8,0l1.4,1.3 C15,2.6,18.4,5,20.9,5h0.3l2.2-0.2c0.1,0,0.3,0,0.4,0.1c0.1,0.1,0.2,0.2,0.2,0.4v12.2c0.1,2.5-1,4.9-3,6.6c-1.9,1.4-7.3,5-7.5,5.1 l-1.2,0.7C12.2,30,12.1,30,12,30z M1.1,6v11.6c-0.1,2.2,0.9,4.3,2.6,5.7c0.7,0.5,2.6,1.8,7.2,4.9l1.1,0.6l0.9-0.5 c0.1-0.1,5.6-3.7,7.4-5c1.7-1.4,2.6-3.5,2.5-5.7V5.9L21,6.1c-3.1,0-6.9-2.8-8-3.8l-1-1l-1,1c-0.1,0.2-4.4,3.8-7.9,3.8H2.8L1.1,6z M11.7,20.5c-3.1,0-5.5-2.5-5.5-5.6c0-3.1,2.5-5.5,5.6-5.5c1.3,0,2.5,0.5,3.5,1.3c0.2,0.2,0.3,0.5,0.1,0.8c-0.2,0.2-0.5,0.3-0.8,0.1 c-1.9-1.6-4.7-1.3-6.3,0.6c-0.8,0.9-1.1,2.1-1,3.2c0.1,1.2,0.7,2.3,1.6,3c1.9,1.6,4.7,1.3,6.3-0.6c0.7-0.8,1-1.8,1-2.9 c0-0.2,0-0.5-0.1-0.7c0-0.3,0.2-0.6,0.5-0.6c0.3,0,0.6,0.2,0.6,0.5c0,0.3,0,0.6,0.1,0.8c0,2.9-2.2,5.3-5,5.5L11.7,20.5z M11.3,17.2 l-2.9-2.8c-0.2-0.2-0.2-0.6,0-0.8c0.2-0.2,0.5-0.2,0.7,0l2.5,2.5l5.3-5.3c0.2-0.2,0.6-0.2,0.8,0c0.2,0.2,0.2,0.5,0,0.7L12,17.2 c-0.1,0.1-0.3,0.1-0.4,0.1C11.5,17.4,11.4,17.3,11.3,17.2z M12,4.1c1.2,1,5.1,3.9,8.8,4v9.5c0.1,1.5-0.6,3-1.7,3.9 c-1.1,0.8-3.6,2.5-5.4,3.7c-0.7,0.5-1.3,0.9-1.6,1.1c-3.5-2.3-6-4-7-4.7c-1.2-1-1.8-2.5-1.7-4V8.1C6.9,8.1,10.8,5.1,12,4.1 M12,2.8 c-0.1,0-0.3,0-0.4,0.1C11.6,3,7.1,7,3.2,7C3,7,2.9,7,2.7,7c0,0,0,0-0.1,0c-0.1,0-0.2,0-0.3,0.1C2.2,7.3,2.1,7.4,2.2,7.6v10 c-0.1,1.9,0.7,3.7,2.2,4.9c1.8,1.3,7.2,4.9,7.4,5c0.1,0.1,0.2,0.1,0.3,0.1h0v0c0.2,0,0.3-0.1,0.4-0.2c0.9-0.6,5.6-3.7,7.3-5 c1.4-1.2,2.2-3,2.2-4.8v-10c0-0.1-0.1-0.3-0.2-0.4C21.6,7.1,21.5,7,21.3,7h0c-0.1,0-0.2,0-0.3,0C17,7,12.4,3,12.4,3 C12.3,2.9,12.1,2.8,12,2.8z"></path>
+                    <path fill="#2E71EA" d="M12,4.1c1.2,1,5.1,3.9,8.8,4v9.5c0.1,1.5-0.6,3-1.7,3.9c-1.1,0.8-3.6,2.5-5.4,3.7 c-0.7,0.5-1.3,0.9-1.6,1.1c-3.5-2.3-6-4-7-4.7c-1.2-1-1.8-2.5-1.7-4V8.1C6.9,8.1,10.8,5.1,12,4.1 M12,2.8c-0.1,0-0.3,0-0.4,0.1 C11.6,3,7.1,7,3.2,7C3,7,2.9,7,2.7,7c0,0,0,0-0.1,0c-0.1,0-0.2,0-0.3,0.1C2.2,7.3,2.1,7.4,2.2,7.6v10c-0.1,1.9,0.7,3.7,2.2,4.9 c1.8,1.3,7.2,4.9,7.4,5c0.1,0.1,0.2,0.1,0.3,0.1h0v0c0.2,0,0.3-0.1,0.4-0.2c0.9-0.6,5.6-3.7,7.3-5c1.4-1.2,2.2-3,2.2-4.8v-10 c0-0.1-0.1-0.3-0.2-0.4C21.6,7.1,21.5,7,21.3,7h0c-0.1,0-0.2,0-0.3,0C17,7,12.4,3,12.4,3C12.3,2.9,12.1,2.8,12,2.8z"></path>
+                </svg></div>
+            <div class="value-ads--title">
+                FREE 2-year Warranty
+            </div>
+            <div class="value-ads--subtitle">
+                Buy with confidence.
+            </div>
+            <div class="value-ads--cta">Learn More</div>
+        </a> <a href="/payments/" data-log="Financing" data-hp-section="get-more" data-hp-slot="7">
+            <div class="value-ads--icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 20" class="sw--svg">
+                    <title>Financing Color</title>
+                    <path d="M28 1c.6 0 1 .4 1 1v16c0 .6-.4 1-1 1H2c-.6 0-1-.4-1-1V2c0-.6.4-1 1-1h26m0-1H2a2 2 0 00-2 2v16c0 1.1.9 2 2 2h26a2 2 0 002-2V2a2 2 0 00-2-2z"></path>
+                    <path fill="#2E71EA" d="M25.5 17h-2c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5h2c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5zM3 15h12v1H3zM3 12h7v1H3z"></path>
+                    <path d="M1 4h28v3H1z"></path>
+                </svg></div>
+            <div class="value-ads--title">
+                Easy Payments
+            </div>
+            <div class="value-ads--subtitle">
+                Up to 48 Months.
+            </div>
+            <div class="value-ads--cta">Learn More</div>
+        </a></div>
+</section>
+
+
+
+<!-- ===== PROMO TILES (CANDY CARDS) ===== -->
+<section id="promo-tiles" class="promo-tiles">
+    <div class="candy-tiles">
+        <!-- Tile 1 -->
+        <div class="candy-tile">
+            <a href="#" class="candy__link">
+                <div class="candy__img">
+                    <img src="https://media.sweetwater.com/m/images/personal_promo/9unymk--04_01_2026+05_01_2026+evo522-ps+jpeg?v=1b35317564822c2d" alt="New from Ludwig">
+                </div>
+            </a>
+        </div>
+        <!-- Tile 2 -->
+        <div class="candy-tile">
+            <a href="#" class="candy__link">
+                <div class="candy__img">
+                    <img src="https://media.sweetwater.com/m/images/personal_promo/emc26p--04_07_2026+05_02_2026+humfdhcs-rs45vsn19-ocjb20vs+jpeg?v=341c8750c2036caa" alt="Exclusive Gibson Acoustic">
+                </div>
+            </a>
+        </div>
+        <!-- Tile 3 -->
+        <div class="candy-tile">
+            <a href="#" class="candy__link">
+                <div class="candy__img">
+                    <img src="https://media.sweetwater.com/m/images/personal_promo/ja30p6--01_19_2026+02_19_2026+leviasynthd-leviasynthk+jpeg?v=97ec243ae52e1468" alt="New from ASM">
+                </div>
+            </a>
+        </div>
+        <!-- Tile 4 -->
+        <div class="candy-tile">
+            <a href="#" class="candy__link">
+                <div class="candy__img">
+                    <img src="https://media.sweetwater.com/m/images/personal_promo/nv8z2k--01_20_2026+04_22_2026+ne7-61+jpeg?v=3f0b771c76c82f55" alt="Nord Electro 7">
+                </div>
+            </a>
+        </div>
+        <!-- Tile 5 -->
+        <div class="candy-tile">
+            <a href="#" class="candy__link">
+                <div class="candy__img">
+                    <img src="https://media.sweetwater.com/m/images/personal_promo/p3xvu9--04_13_2026+04_21_2026+whch720nblk+jpeg?v=072a08db52ccabd7" alt="45% Off Sony Headphones">
+                </div>
+            </a>
+        </div>
+        <!-- Tile 6 -->
+        <div class="candy-tile">
+            <a href="#" class="candy__link">
+                <div class="candy__img">
+                    <img src="https://media.sweetwater.com/m/images/personal_promo/2i51oq--03_26_2026+04_27_2026+slse16+jpeg?v=6f60f2e5188d8740" alt="Up to $300 Off PreSonus">
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ===== TOP NEW GEAR ===== -->
+<section class="top-gear">
+    <div class="container">
+        <div class="section-header">
+            <h2>Top New Musical Instruments & Gear</h2>
+            <a href="/user/product-list/">See All New Gear <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div class="gear-grid">
+            {% for product in new_products %}
+            <a href="/user/product/{{ product.id }}" class="gear-card">
+                <div class="img-wrap">
+                    {% if product.product_image %}
+                    <img src="{{ product.product_image.url }}" alt="{{ product.productname }}">
+                    {% else %}
+                    <img src="https://images.unsplash.com/photo-1510915228340-29c85a36856e?w=300&h=220&fit=crop" alt="{{ product.productname }}">
+                    {% endif %}
+                    <span class="rank">{{ forloop.counter }}</span>
+                    {% if product.total_quantity > 0 %}
+                    <span class="instock-tag">In Stock</span>
+                    {% else %}
+                    <span class="preorder-tag">Pre-Order</span>
+                    {% endif %}
+                </div>
+                <div class="info">
+                    <h4>{{ product.productname|truncatechars:60 }}</h4>
+                    <span class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></span>
+                    <span class="price"><i class="fa fa-inr"></i> {{ product.pro_price }}</span>
+                    <span class="free-shipping">Free Shipping</span>
+                </div>
+            </a>
+            {% empty %}
+            <div class="gear-card">
+                <div class="img-wrap">
+                    <img src="https://images.unsplash.com/photo-1510915228340-29c85a36856e?w=300&h=220&fit=crop" alt="Product">
+                </div>
+                <div class="info">
+                    <h4>Premium Electric Guitar - Sunburst</h4>
+                    <span class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></span>
+                    <span class="price"><i class="fa fa-inr"></i> 29,999</span>
+                    <span class="free-shipping">Free Shipping</span>
+                </div>
+            </div>
+            <div class="gear-card">
+                <div class="img-wrap">
+                    <img src="https://images.unsplash.com/photo-1524230659092-7f4836a88e2a?w=300&h=220&fit=crop" alt="Product">
+                </div>
+                <div class="info">
+                    <h4>Professional Drum Kit - 5 Piece</h4>
+                    <span class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></span>
+                    <span class="price"><i class="fa fa-inr"></i> 45,999</span>
+                    <span class="free-shipping">Free Shipping</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ===== DEALS ===== -->
+{% if deal_products %}
+<section class="deals">
+    <div class="container">
+        <div class="section-header">
+            <h2>Top Deals</h2>
+            <a href="/user/product-list/">Shop All Deals <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div class="deals-grid">
+            {% for product in deal_products %}
+            <a href="/user/product/{{ product.id }}" class="deal-card">
+                <div class="deal-img">
+                    {% if product.pro_image %}
+                    <img src="{{ product.pro_image.url }}" alt="{{ product.productname }}" onerror="this.onerror=null;this.src='{% static 'admin/folder/images/placeholder.jpg' %}';">
+                    {% else %}
+                    <img src="{% static 'admin/folder/images/placeholder.jpg' %}" alt="{{ product.productname }}">
+                    {% endif %}
+                </div>
+                <div class="deal-info">
+                    <h4>{{ product.productname|truncatechars:40 }}</h4>
+                    <div>
+                        <span class="price"><i class="fa fa-inr"></i> {{ product.pro_price }}</span>
+                        <span class="original"><i class="fa fa-inr"></i> {{ product.strike_price }}</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ===== RESEARCH / ARTICLES ===== -->
+<section class="research">
+    <div class="container">
+        <div class="section-header">
+            <h2>Your Research Destination</h2>
+        </div>
+        <div class="research-grid">
+            <a href="#" class="research-card">
+                <div class="img-wrap">
+                    <img src="https://images.unsplash.com/photo-1510915228340-29c85a36856e?w=400&h=200&fit=crop" alt="Article">
+                </div>
+                <div class="content">
+                    <span class="tag">BUYER'S GUIDE</span>
+                    <h3>Best Electric Guitars for Beginners in 2025</h3>
+                    <p>Our experts pick the top guitars for players just starting out.</p>
+                    <span class="read-more">Read More <i class="fas fa-chevron-right"></i></span>
+                </div>
+            </a>
+            <a href="#" class="research-card">
+                <div class="img-wrap">
+                    <img src="https://images.unsplash.com/photo-1511378565302-c02f4f1b4498?w=400&h=200&fit=crop" alt="Article">
+                </div>
+                <div class="content">
+                    <span class="tag">REVIEW</span>
+                    <h3>Top 10 Studio Monitors for Home Recording</h3>
+                    <p>Find the perfect monitors for your home studio setup.</p>
+                    <span class="read-more">Read More <i class="fas fa-chevron-right"></i></span>
+                </div>
+            </a>
+            <a href="#" class="research-card">
+                <div class="img-wrap">
+                    <img src="https://images.unsplash.com/photo-1524230659092-7f4836a88e2a?w=400&h=200&fit=crop" alt="Article">
+                </div>
+                <div class="content">
+                    <span class="tag">COMPARISON</span>
+                    <h3>Acoustic vs Electric: Which Guitar Is Right for You?</h3>
+                    <p>A comprehensive guide to choosing your first guitar.</p>
+                    <span class="read-more">Read More <i class="fas fa-chevron-right"></i></span>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ===== CTA BANNER ===== -->
+<section class="cta-banner">
+    <div class="container">
+        <h2>You Shop Here, Why Not Work Here?</h2>
+        <p>Join the Vibe Music team and turn your passion for music into a career. We're always looking for talented people.</p>
+        <a href="#" class="btn-cta">Explore Careers <i class="fas fa-arrow-right"></i></a>
+    </div>
+</section>
+
+<!-- ===== COMPREHENSIVE SITE FOOTER ===== -->
+<footer class="assets-site-footer" id="assets-footer">
+    <!-- Recently Viewed items bar -->
+    <div id="recently-viewed-items" class="assets-site-footer-recently-viewed">
+        <div class="assets-site-footer-recently-viewed__content">
+            <div class="assets-site-footer-recently-viewed__header">
+                <span class="assets-site-footer-recently-viewed__header__headline">Your recently viewed items</span>
+                <button class="assets-site-footer-recently-viewed--clear">Clear history</button>
+            </div>
+            <div class="assets-site-footer-recently-viewed__products">
+                <div class="assets-site-footer-recently-viewed__item">
+                    <a href="#" class="assets-site-footer-recently-viewed__item--wrapper">
+                        <img src="https://media.sweetwater.com/m/products/image/d166c57dc6crV7xCtst9ox8xPyBWC0qZenuRyHNN.png?v=d166c57dc6b23f9c" alt="Recently Viewed">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Gear Day Banner -->
+    <section class="assets-site-footer__newgearday-wrap">
+        <div class="newgearday-background" style="background-image: url(https://media.sweetwater.com/m/include/footer/images/new-gear-day/gear-pattern-optimized-700x700.png?format=webp)"></div>
+        <div class="assets-site-footer__newgearday">
+            <div class="assets-site-footer__newgearday-photos-left">
+                <img src="https://media.sweetwater.com/m/include/footer/images/new-gear-day/5.jpg?format=webp" alt="NGD 1">
+                <img src="https://media.sweetwater.com/m/include/footer/images/new-gear-day/7.jpg?format=webp" alt="NGD 2">
+                <img src="https://media.sweetwater.com/m/include/footer/images/new-gear-day/13.jpg?format=webp" alt="NGD 3">
+            </div>
+            <div class="assets-site-footer__newgearday-text">
+                <p class="assets-site-footer__newgearday-text-headline">HAPPY</p>
+                <img alt="#NewGearDay" class="assets-site-footer__newgearday-text-logo" src="https://media.sweetwater.com/m/newgearday/logo.png?format=webp">
+                <p>Happy customers, one piece of gear at a time! <br><a href="#" class="assets-site-footer__newgearday-text-link">Learn More about #NewGearDay</a></p>
+            </div>
+            <div class="assets-site-footer__newgearday-photos-right">
+                <img src="https://media.sweetwater.com/m/include/footer/images/new-gear-day/14.jpg?format=webp" alt="NGD 4">
+                <img src="https://media.sweetwater.com/m/include/footer/images/new-gear-day/8.jpg?format=webp" alt="NGD 5">
+                <img src="https://media.sweetwater.com/m/include/footer/images/new-gear-day/3.jpg?format=webp" alt="NGD 6">
+            </div>
+        </div>
+    </section>
+
+    <!-- Candy Row (Subscribe, Financing, App) -->
+    <section class="assets-site-footer-candy">
+        <div class="assets-site-footer-row">
+            <!-- Newsletter -->
+            <form class="assets-site-footer-col assets-site-footer-col--subscribe" action="#" method="POST">
+                <p class="assets-site-footer-heading">Sign Up For Email Offers!</p>
+                <p>Exclusive deals, delivered straight to your inbox.</p>
+                <div class="assets-site-footer__subscribe-input-wrap">
+                    <input class="assets-site-footer__subscribe-input" placeholder="Enter your email address" type="email">
+                    <input class="assets-site-footer__subscribe-submit" type="submit" value="Subscribe">
+                </div>
+            </form>
+
+            <!-- Financing -->
+            <a href="#" class="assets-site-footer-col assets-site-footer-col--finance">
+                <img alt="Sync Card" class="assets-site-footer-finance-card" src="https://media.sweetwater.com/api/i/q-60__w-180/resources/sweetwater-synchrony-card.png">
+                <p class="assets-site-footer-heading">Special Financing!</p>
+                <p>Now is the perfect time to get the gear you want with simple, promotional financing.</p>
+                <span class="assets-site-footer-col__cta">Take me there <i class="fas fa-chevron-right"></i></span>
+            </a>
+
+            <!-- App Promo -->
+            <div class="assets-site-footer-col assets-site-footer-col--app-highlight">
+                <p class="assets-site-footer-heading">NEW APP AVAILABLE!</p>
+                <p>Everything you love about Vibe Music in the palm of your hand.</p>
+                <div class="assets-site-footer--app-buttons">
+                    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" style="height:32px;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play" style="height:32px;">
+                </div>
+                <div class="assets-site-footer-app-phone">
+                    <img src="https://media.sweetwater.com/m/footer/app-highlight/sw.png" height="120" style="opacity:0.6;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <nav>
+        <!-- Contact & Social -->
+        <div class="assets-site-footer__contact">
+            <div class="assets-site-footer__contact-se">
+                <img alt="Sales Engineer" class="assets-site-footer__contact-se-img" src="https://media.sweetwater.com/m/include/ses/left/nick-pasquino@2x.png">
+                <div>
+                    <p class="assets-site-footer-heading">Need Help?</p>
+                    <p>Call your Sales Engineer.</p>
+                    <div class="site-footer-contact__methods">
+                        <div class="assets-site-footer-contact__call--primary">
+                            <a href="tel://18002224700">(800) 222-4700</a>
+                        </div>
+                        <div class="assets-site-footer-contact__email">
+                            <a href="#">Email Us</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="assets-site-footer__contact-social-links">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-youtube"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-tiktok"></i></a>
+            </div>
+        </div>
+
+        <!-- Help Links -->
+        <section class="assets-site-footer__help-links">
+            <div class="assets-site-footer__help-links__category">
+                <a href="#" class="assets-site-footer__help-links__category-heading">About Vibe Music</a>
+                <a href="#">Careers</a>
+                <a href="#">Our Story</a>
+                <a href="#">Tour Our Campus</a>
+                <a href="#">Press Releases</a>
+            </div>
+            <div class="assets-site-footer__help-links__category">
+                <a href="#" class="assets-site-footer__help-links__category-heading">Customer Service</a>
+                <a href="#">Free Shipping Policy</a>
+                <a href="#">Order Status</a>
+                <a href="#">Return Policy</a>
+                <a href="#">FAQ</a>
+                <a href="#">Contact Us</a>
+            </div>
+            <div class="assets-site-footer__help-links__category">
+                <a href="#" class="assets-site-footer__help-links__category-heading">Ordering</a>
+                <a href="#">Gift Cards</a>
+                <a href="#">Payment Options</a>
+                <a href="#">Shipping Times</a>
+                <a href="#">Gear Exchange</a>
+            </div>
+            <div class="assets-site-footer__help-links__category">
+                <a href="#" class="assets-site-footer__help-links__category-heading">Services</a>
+                <a href="#">Guitar Workshop</a>
+                <a href="#">Music Lessons</a>
+                <a href="#">Recording Studio</a>
+                <a href="#">Piano Showroom</a>
+            </div>
+        </section>
+    </nav>
+
+    <!-- Copyright -->
+    <section class="assets-site-footer__copyright">
+        <p><strong>Vibe Music Sound</strong>, Mumbai, India | <a href="#">Directions</a> | <a href="#">Hours</a></p>
+        <article class="assets-site-footer__copyright-policies">
+            <a href="#">Terms of Use</a>
+            <a href="#">Privacy Notice</a>
+            <a href="#">Accessibility</a>
+            <a href="#">Cookies Settings</a>
+        </article>
+        <p>&copy; 2026 Vibe Music - All rights reserved.</p>
+    </section>
+</footer>
+
+    <script>
+        // Trending Gear Horizontal Scroller
+        const scrollContainer = document.querySelector('.product-suggest__items');
+        const nextBtn = document.querySelector('.product-suggest__nav--next');
+        const prevBtn = document.querySelector('.product-suggest__nav--prev');
+
+        if (scrollContainer && nextBtn && prevBtn) {
+            nextBtn.addEventListener('click', () => {
+                const scrollAmount = scrollContainer.offsetWidth;
+                scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            });
+
+            prevBtn.addEventListener('click', () => {
+                const scrollAmount = scrollContainer.offsetWidth;
+                scrollContainer.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            });
+        }
+
+        // Mega category hover switching for Shop By Category
+        document.addEventListener('DOMContentLoaded', function () {
+            const leftItems = document.querySelectorAll('.mega-left a[data-cat]');
+            const panels = document.querySelectorAll('.mega-content-panel');
+
+            function activateCategory(catId) {
+                leftItems.forEach((item) => {
+                    item.classList.toggle('active', item.dataset.cat === catId);
+                });
+
+                panels.forEach((panel) => {
+                    panel.classList.toggle('active', panel.dataset.panel === catId);
+                });
+            }
+
+            leftItems.forEach((item) => {
+                item.addEventListener('mouseenter', function () {
+                    activateCategory(this.dataset.cat);
+                });
+
+                item.addEventListener('focus', function () {
+                    activateCategory(this.dataset.cat);
+                });
+            });
+
+            // Deals/Used Gear: show right list only when hovering "Shop By Category"
+            const conditionalFlyouts = document.querySelectorAll('.flyout-panel.hover-categories');
+            conditionalFlyouts.forEach((panel) => {
+                const categoryLink = panel.querySelector('.shop-by-category-link');
+                if (!categoryLink) {
+                    return;
+                }
+
+                const showRight = () => panel.classList.add('show-right');
+                const hideRight = () => panel.classList.remove('show-right');
+
+                categoryLink.addEventListener('mouseenter', showRight);
+                categoryLink.addEventListener('focus', showRight);
+                panel.addEventListener('mouseleave', hideRight);
+            });
+        });
+    </script>
+
+</body>
+</html>

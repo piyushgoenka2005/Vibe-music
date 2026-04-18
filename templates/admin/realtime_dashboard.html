@@ -1,0 +1,462 @@
+{% extends 'admin/masterpage/index-1.html' %}
+{% load static %}
+{% block title3 %} Real-Time Dashboard {% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Vibe Music Real-Time Dashboard</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/admin_side/">Home</a></li>
+                        <li class="breadcrumb-item active">Real-Time Dashboard</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Real-time Status Indicators -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="alert alert-info alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <h5><i class="icon fas fa-info"></i> Real-Time Status</h5>
+                        <span id="connection-status">Connecting to real-time updates...</span>
+                        <span id="last-update" class="float-right">Last updated: Never</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-info">
+                        <div class="inner">
+                            <h3 id="total-products">0</h3>
+                            <p>Total Products</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-success">
+                        <div class="inner">
+                            <h3 id="total-users">0</h3>
+                            <p>Total Users</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-warning">
+                        <div class="inner">
+                            <h3 id="total-orders">0</h3>
+                            <p>Total Orders</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-danger">
+                        <div class="inner">
+                            <h3 id="low-stock">0</h3>
+                            <p>Low Stock Items</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Activity -->
+            <div class="row">
+                <div class="col-md-6">
+                        <div class="card vibe-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Today's Activity</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6 text-center">
+                                    <div class="progress-group">
+                                        <span class="float-left">Today's Orders</span>
+                                        <span class="float-right" id="today-orders">0</span>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-primary" id="today-orders-progress" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 text-center">
+                                    <div class="progress-group">
+                                        <span class="float-left">Monthly Orders</span>
+                                        <span class="float-right" id="monthly-orders">0</span>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-info" id="monthly-orders-progress" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="col-md-6">
+                        <div class="card vibe-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Recent Orders</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table m-0">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Product</th>
+                                            <th>Quantity</th>
+                                            <th>Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-orders-tbody">
+                                        <!-- Orders will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Users & Top Products -->
+            <div class="row">
+                <div class="col-md-6">
+                        <div class="card vibe-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Recent Users</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="users-list clearfix" id="recent-users-list">
+                                <!-- Users will be populated here -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                        <div class="card vibe-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Top Selling Products</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table m-0">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Stock</th>
+                                        <th>Orders</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-products-tbody">
+                                    <!-- Products will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Inventory Monitor -->
+            <div class="row">
+                <div class="col-12">
+                        <div class="card vibe-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Live Inventory Monitor</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" onclick="refreshInventory()">
+                                    <i class="fas fa-sync"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Product Name</th>
+                                            <th>Category</th>
+                                            <th>Price</th>
+                                            <th>Stock Level</th>
+                                            <th>Status</th>
+                                            <th>Last Updated</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inventory-tbody">
+                                        <!-- Inventory data will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+.connection-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.connection-indicator.connected {
+    background-color: #28a745;
+    animation: pulse 2s infinite;
+}
+
+.connection-indicator.disconnected {
+    background-color: #dc3545;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.stock-low {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.stock-critical {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.stock-good {
+    background-color: #d4edda;
+    color: #155724;
+}
+</style>
+
+<script>
+let dashboardSocket = null;
+let inventorySocket = null;
+
+function connectWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    
+    // Dashboard WebSocket
+    dashboardSocket = new WebSocket(`${protocol}//${host}/ws/admin/dashboard/`);
+    
+    dashboardSocket.onopen = function(e) {
+        console.log('Dashboard WebSocket connected');
+        updateConnectionStatus(true);
+    };
+    
+    dashboardSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'dashboard_update') {
+            updateDashboard(data.data);
+        }
+    };
+    
+    dashboardSocket.onclose = function(e) {
+        console.log('Dashboard WebSocket disconnected');
+        updateConnectionStatus(false);
+        // Try to reconnect after 3 seconds
+        setTimeout(connectWebSocket, 3000);
+    };
+    
+    dashboardSocket.onerror = function(e) {
+        console.error('Dashboard WebSocket error:', e);
+        updateConnectionStatus(false);
+    };
+    
+    // Inventory WebSocket
+    inventorySocket = new WebSocket(`${protocol}//${host}/ws/admin/inventory/`);
+    
+    inventorySocket.onopen = function(e) {
+        console.log('Inventory WebSocket connected');
+    };
+    
+    inventorySocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'inventory_data') {
+            updateInventoryTable(data.data);
+        }
+    };
+    
+    inventorySocket.onclose = function(e) {
+        console.log('Inventory WebSocket disconnected');
+        setTimeout(connectWebSocket, 3000);
+    };
+}
+
+function updateConnectionStatus(connected) {
+    const statusElement = document.getElementById('connection-status');
+    const indicator = document.createElement('span');
+    indicator.className = `connection-indicator ${connected ? 'connected' : 'disconnected'}`;
+    
+    statusElement.innerHTML = '';
+    statusElement.appendChild(indicator);
+    statusElement.appendChild(document.createTextNode(connected ? 'Connected to real-time updates' : 'Disconnected - attempting to reconnect...'));
+}
+
+function updateDashboard(data) {
+    // Update stats cards
+    document.getElementById('total-products').textContent = data.total_products;
+    document.getElementById('total-users').textContent = data.total_users;
+    document.getElementById('total-orders').textContent = data.total_orders;
+    document.getElementById('low-stock').textContent = data.low_stock_products;
+    
+    // Update activity
+    document.getElementById('today-orders').textContent = data.today_orders;
+    document.getElementById('monthly-orders').textContent = data.monthly_orders;
+    
+    // Update progress bars
+    const todayProgress = Math.min((data.today_orders / 10) * 100, 100);
+    const monthlyProgress = Math.min((data.monthly_orders / 100) * 100, 100);
+    
+    document.getElementById('today-orders-progress').style.width = todayProgress + '%';
+    document.getElementById('monthly-orders-progress').style.width = monthlyProgress + '%';
+    
+    // Update recent orders
+    const ordersTbody = document.getElementById('recent-orders-tbody');
+    ordersTbody.innerHTML = '';
+    data.recent_orders.forEach(order => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${order.user}</td>
+            <td>${order.product}</td>
+            <td>${order.quantity}</td>
+            <td>${order.created_at}</td>
+        `;
+        ordersTbody.appendChild(row);
+    });
+    
+    // Update recent users
+    const usersList = document.getElementById('recent-users-list');
+    usersList.innerHTML = '';
+    data.recent_users.forEach(user => {
+        const li = document.createElement('li');
+        li.className = 'users-list-name';
+        li.innerHTML = `
+            <img src="{% static 'admin/folder/images/default-avatar.png' %}" alt="User">
+            <a class="users-list-name" href="#">${user.username}</a>
+            <span class="users-list-date">${user.created_at}</span>
+        `;
+        usersList.appendChild(li);
+    });
+    
+    // Update top products
+    const productsTbody = document.getElementById('top-products-tbody');
+    productsTbody.innerHTML = '';
+    data.top_products.forEach(product => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${product.name}</td>
+            <td>Rs. ${product.price.toFixed(2)}</td>
+            <td>${product.stock}</td>
+            <td>${product.orders}</td>
+        `;
+        productsTbody.appendChild(row);
+    });
+    
+    // Update last updated time
+    document.getElementById('last-update').textContent = `Last updated: ${data.last_updated}`;
+}
+
+function updateInventoryTable(data) {
+    const tbody = document.getElementById('inventory-tbody');
+    tbody.innerHTML = '';
+    
+    data.forEach(product => {
+        const row = document.createElement('tr');
+        
+        let stockClass = 'stock-good';
+        let status = 'In Stock';
+        
+        if (product.stock <= 2) {
+            stockClass = 'stock-critical';
+            status = 'Critical';
+        } else if (product.stock <= 5) {
+            stockClass = 'stock-low';
+            status = 'Low Stock';
+        }
+        
+        row.className = stockClass;
+        row.innerHTML = `
+            <td>${product.name}</td>
+            <td>${product.category}</td>
+            <td>Rs. ${product.price.toFixed(2)}</td>
+            <td>${product.stock}</td>
+            <td><span class="badge badge-${status === 'In Stock' ? 'success' : status === 'Low Stock' ? 'warning' : 'danger'}">${status}</span></td>
+            <td>${product.last_updated}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function refreshInventory() {
+    if (inventorySocket && inventorySocket.readyState === WebSocket.OPEN) {
+        inventorySocket.send(JSON.stringify({type: 'refresh_inventory'}));
+    }
+}
+
+// Initialize WebSocket connection when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    connectWebSocket();
+});
+
+// Clean up WebSocket connections when page unloads
+window.addEventListener('beforeunload', function() {
+    if (dashboardSocket) {
+        dashboardSocket.close();
+    }
+    if (inventorySocket) {
+        inventorySocket.close();
+    }
+});
+</script>
+{% endblock %}

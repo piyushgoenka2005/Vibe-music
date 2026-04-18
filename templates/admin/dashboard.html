@@ -1,0 +1,88 @@
+{% extends 'admin/masterpage/index-1.html' %}
+{% load static %}
+{% block title3 %} Dashboard {% endblock %}
+
+{% block content %}
+<div class="cal_ content-wrapper">
+  <section class="content-header">
+    <div class="row">
+      <div class="col-md-8">
+        <h5 class="card-title mb-1">Admin Dashboard</h5>
+        <p class="text-muted mb-0">Welcome back. Here is a quick snapshot of your store.</p>
+      </div>
+      <div class="col-md-4" style="padding-top:12px;">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/admin/"><i class="fa fa-dashboard"></i> Home</a></li>
+          <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="row">
+      <div class="col-12 col-md-6 col-xl-3 mb-3">
+        <div class="box vibe-card">
+          <div class="box-body">
+            <h6 class="text-muted mb-2">Total Orders</h6>
+            <h3 class="mb-0">{{ total_orders }}</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3 mb-3">
+        <div class="box vibe-card">
+          <div class="box-body">
+            <h6 class="text-muted mb-2">Pending Orders</h6>
+            <h3 class="mb-0">{{ pending_orders }}</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3 mb-3">
+        <div class="box vibe-card">
+          <div class="box-body">
+            <h6 class="text-muted mb-2">Products</h6>
+            <h3 class="mb-0">{{ total_products }}</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3 mb-3">
+        <div class="box vibe-card">
+          <div class="box-body">
+            <h6 class="text-muted mb-2">Categories / Brands</h6>
+            <h3 class="mb-0">{{ total_categories }} / {{ total_brands }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12 col-lg-8 mb-3">
+        <div class="box">
+          <div class="box-body">
+            <h5 class="mb-3">Quick Actions</h5>
+            <div class="d-flex flex-wrap" style="gap:10px;">
+              <a href="/admin/product/" class="btn btn-primary">Manage Products</a>
+              <a href="/admin/category/" class="btn btn-light">Manage Categories</a>
+              <a href="/admin/brand/" class="btn btn-light">Manage Brands</a>
+              <a href="/admin/order/" class="btn btn-light">View Orders</a>
+              <a href="/admin/order/tracker/" class="btn btn-light">Order Tracker</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4 mb-3">
+        <div class="box">
+          <div class="box-body">
+            <h5 class="mb-3">Need Attention</h5>
+            <ul class="mb-0" style="padding-left: 18px;">
+              <li class="mb-2">Pending orders: <strong>{{ pending_orders }}</strong></li>
+              <li class="mb-2">Keep product stock updated from Product Management.</li>
+              <li>Review latest order details from Order Tracker.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

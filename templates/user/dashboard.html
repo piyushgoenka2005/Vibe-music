@@ -1,0 +1,49 @@
+{% extends 'user/profile.html' %}
+{% block titall %} Dashboard {% endblock %}
+{% block contentt %}
+
+<div class="dashboard-widgets" style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+    <!-- Welcome Info -->
+    <div style="grid-column: span 2; background: #fafafa; padding: 25px; border-radius: 10px; border-left: 5px solid var(--primary-blue);">
+        <h3 style="font-size: 18px; margin-bottom: 10px;">Hello, {{request.session.username}}!</h3>
+        <p style="font-size: 14px; color: #666; margin: 0; line-height: 1.6;">
+            From your account dashboard, you can easily check your <strong>recent orders</strong>, manage your <strong>shipping addresses</strong>, and update your <strong>password</strong>.
+        </p>
+    </div>
+
+    <!-- Contact Info -->
+    <div style="padding: 25px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h4 style="font-size: 16px; font-weight: 700; margin: 0;">Contact Information</h4>
+            <a href="/user/change-password/" style="font-size: 13px; color: var(--primary-blue); font-weight: 700;">Edit</a>
+        </div>
+        <p style="font-size: 14px; color: #444; margin-bottom: 5px;">{{request.session.username}}</p>
+        <p style="font-size: 14px; color: #888;">{{email.email}}</p>
+    </div>
+
+    <!-- Default Address -->
+    <div style="padding: 25px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h4 style="font-size: 16px; font-weight: 700; margin: 0;">Default Shipping Address</h4>
+            <a href="/user/address/" style="font-size: 13px; color: var(--primary-blue); font-weight: 700;">Manage</a>
+        </div>
+        {% if address_obj %}
+            {% with default=address_obj.0 %}
+            <p style="font-size: 14px; color: #444; margin-bottom: 5px;">{{default.first_name}} {{default.last_name}}</p>
+            <p style="font-size: 14px; color: #666; line-height: 1.5; margin: 0;">
+                {{default.street_address}}, {{default.city}}<br>
+                {{default.state}}, {{default.country}} - {{default.pincode}}
+            </p>
+            {% endwith %}
+        {% else %}
+            <p style="font-size: 14px; color: #888; margin: 0;">No addresses added yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div style="margin-top: 40px;">
+    <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">Recent Orders</h3>
+    <a href="/user/myorder/" class="sds-button sds-button__secondary" style="padding: 12px 20px; font-size: 14px;">View All Orders</a>
+</div>
+
+{% endblock %}

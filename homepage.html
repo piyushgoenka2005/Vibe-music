@@ -1,0 +1,508 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Music |  Musical Instruments, Pro Audio, Accessories & More </title>
+    <meta name="author" content="Vibe Music"/>
+    <meta name="description" content="Discover a Harmonious Shopping Experience for Music Instruments in our E Commerce Store."/>
+    <link rel="shortcut icon" href="/static/admin/folder/images/logo-mini-music-club.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Functional assets -->
+    <link rel="stylesheet" type="text/css" href="/static/user/folder/assets/css/slick.css">
+    <link rel="stylesheet" type="text/css" href="/static/user/folder/assets/css/slick-theme.css">
+    
+    <style>
+        @font-face {
+            font-display: swap;
+            font-family: VibeMusic;
+            src: url(https://media.sweetwater.com/m/fonts/aspira/aspira_regular/Aspira-Regular.woff2) format("woff2");
+        }
+        
+        :root {
+            --grey100: #2e2e2d;
+            --grey500: #888;
+            --primary-blue: #005cb9;
+            --primary-red: #d71920;
+            --header-height: 120px;
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box}
+        body {
+            background: #fff;
+            color: var(--grey100);
+            font-family: VibeMusic, 'Inter', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        a{text-decoration:none;color:inherit;cursor:pointer;transition:all .2s;}
+        ul{list-style:none}
+        
+        .container { max-width: 1440px; margin: 0 auto; padding: 0 40px; }
+        @media (max-width: 768px) { .container { padding: 0 20px; } }
+
+        /* UTIL BAR */
+        .util-bar { background: #f2f2f2; border-bottom: 1px solid #ddd; font-size: 12px; height: 40px; display: flex; align-items: center; }
+        .util-bar .container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .util-left { display: flex; gap: 20px; }
+        .util-left a { color: #555; font-weight: 500; }
+        .util-left a:hover { color: var(--primary-blue); }
+        .util-right { display: flex; gap: 25px; align-items: center; }
+        .util-right a { font-weight: 600; color: #333; }
+        .util-right .admin-link { color: var(--primary-red); font-weight: 800; }
+
+        /* MAIN HEADER */
+        .main-header { background: #fff; padding: 25px 0; border-bottom: 1px solid #f2f2f2; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .main-header .container { display: flex; align-items: center; gap: 40px; }
+        .logo-text { font-size: 38px; font-weight: 900; color: var(--primary-blue); letter-spacing: -1.5px; }
+        
+        .search-container { flex: 1; max-width: 800px; position: relative; }
+        .search-form { display: flex; background: #f5f5f5; border: 1px solid #e5e5e5; border-radius: 4px; overflow: hidden; transition: border-color .2s; }
+        .search-form:focus-within { border-color: var(--primary-blue); background: #fff; }
+        .search-form input { flex: 1; padding: 12px 15px; border: none; background: transparent; font-size: 16px; outline: none; }
+        .search-btn { background: transparent; border: none; padding: 0 15px; color: #888; cursor: pointer; }
+        
+        .header-tools { display: flex; align-items: center; gap: 35px; }
+        .tool-item { display: flex; flex-direction: column; text-align: right; }
+        .tool-title { font-size: 11px; color: #888; text-transform: uppercase; font-weight: 700; }
+        .tool-value { font-size: 18px; font-weight: 800; color: #111; }
+        .tool-value.phone { color: var(--primary-blue); }
+        
+        .cart-trigger { position: relative; font-size: 24px; color: #333; margin-left: 10px; }
+        .cart-badge { position: absolute; top: -8px; right: -10px; background: var(--primary-red); color: #fff; font-size: 12px; font-weight: 800; padding: 2px 6px; border-radius: 10px; min-width: 20px; text-align: center; }
+
+        /* CATEGORY NAV */
+        .cat-nav { background: #fff; border-bottom: 1px solid #ddd; }
+        .cat-nav-list { display: flex; justify-content: center; }
+        .cat-nav-list li a { display: block; padding: 15px 20px; font-size: 13px; font-weight: 700; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
+        .cat-nav-list li a:hover { color: var(--primary-blue); background: #f9f9f9; }
+
+        /* FOOTER */
+        .site-footer { background: #fff; border-top: 1px solid #eee; margin-top: 80px; }
+        .footer-cta { background: #005cb9; color: #fff; padding: 60px 0; text-align: center; }
+        .footer-cta h2 { font-size: 32px; font-weight: 800; margin-bottom: 15px; }
+        .footer-cta p { opacity: 0.8; font-size: 18px; }
+        
+        .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 60px; padding: 80px 0; }
+        .footer-col h4 { font-size: 14px; font-weight: 800; text-transform: uppercase; margin-bottom: 25px; color: #000; letter-spacing: 1px; }
+        .footer-col ul li { margin-bottom: 12px; }
+        .footer-col ul li a { color: #666; font-size: 14px; }
+        .footer-col ul li a:hover { color: var(--primary-blue); text-decoration: underline; }
+        
+        .footer-bottom { border-top: 1px solid #eee; padding: 40px 0; display: flex; justify-content: space-between; align-items: center; color: #999; font-size: 13px; }
+        .social-links { display: flex; gap: 20px; }
+        .social-links a { font-size: 18px; color: #555; }
+        .social-links a:hover { color: var(--primary-blue); }
+
+        
+<style>
+    /* HERO */
+    .hero {width: 100%; display: flex; flex-direction: column; background-color: #161616;}
+    .sw-hero__main {display: flex; width: 100%; position: relative; text-decoration: none; min-height: 520px;}
+    .sw-hero__image-side {width: 50%; position: absolute; right: 0; top: 0; bottom: 0; overflow: hidden;}
+    .sw-hero__content {width: 50%; display: flex; align-items: center; padding: 60px; box-sizing: border-box; z-index: 1;}
+    .sw-hero__eyebrow img {max-width: 160px; display: block; margin-bottom: 24px;}
+    .sw-hero__headline {font-size: 56px; font-weight: 800; line-height: 1.1; margin-bottom: 15px; letter-spacing: -1px; color: #fff;}
+    .sw-hero__subhead {font-size: 20px; font-weight: 400; margin-bottom: 35px; line-height: 1.4; color: #fff !important;}
+    .sw-hero__cta {display: inline-block; font-size: 16px; font-weight: 800; padding: 14px 32px; border-radius: 30px; text-decoration: none; transition: background 0.2s; background: var(--primary-blue); color: #fff;}
+    .sw-hero__cta:hover { background: #004da3; }
+
+    /* POPULAR CATEGORIES */
+    .popular-categories { padding: 60px 0; background: #fff; }
+    .popcat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
+    .popcat-item { display: flex; flex-direction: column; align-items: center; text-align: center; background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 25px 15px; transition: all 0.2s; position: relative; }
+    .popcat-item:hover { border-color: var(--primary-blue); box-shadow: 0 5px 15px rgba(0,0,0,0.08); transform: translateY(-3px); }
+    .popcat-image { height: 120px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
+    .popcat-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .popcat-name h3 { font-size: 15px; font-weight: 700; color: #333; margin: 0; }
+
+    /* TRENDING GEAR */
+    .suggested-products { padding: 60px 0; }
+    .product-suggest__items { display: flex; overflow-x: auto; gap: 0; scroll-snap-type: x mandatory; scrollbar-width: none; }
+    .product-suggest__items::-webkit-scrollbar { display: none; }
+    .product-suggest__item-wrap { flex: 0 0 25%; min-width: 300px; border-right: 1px solid #eee; scroll-snap-align: start; }
+    .product-suggest__item { display: block; padding: 30px 20px; transition: background 0.2s; }
+    .product-suggest__item:hover { background: #f9f9f9; }
+    .product-suggest__item-img { height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .product-suggest__item-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .product-suggest__name { font-size: 15px; line-height: 1.5; color: #111; height: 45px; overflow: hidden; margin-bottom: 10px; }
+    .product-suggest__item-price { font-size: 24px; font-weight: 800; color: #111; }
+
+    /* CAREERS & SALES ENGINEER */
+    .promo-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 60px 0; }
+    .card-promo { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+    .card-promo-img { height: 300px; position: relative; }
+    .card-promo-img img { width: 100%; height: 100%; object-fit: cover; }
+    .card-promo-content { padding: 40px; }
+    .card-promo-content h3 { font-size: 28px; font-weight: 800; margin-bottom: 20px; }
+    
+    /* SECTION HEADERS */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+    .section-header h2 { font-size: 32px; font-weight: 800; color: #111; margin: 0; }
+    .see-all { font-size: 16px; font-weight: 700; color: var(--primary-blue); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .see-all:hover { text-decoration: underline; }
+    
+    /* BUTTONS */
+    .sds-button { display: inline-block; padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 700; transition: all 0.2s; }
+    .sds-button { background: var(--primary-blue); color: #fff; }
+    .sds-button:hover { background: #004da3; }
+    .sds-button__secondary { background: transparent; color: var(--primary-blue); border: 2px solid var(--primary-blue); }
+    .sds-button__secondary:hover { background: var(--primary-blue); color: #fff; }
+    
+    /* BACKGROUND COLORS */
+    .bg-gray50 { background: #f9f9f9; }
+</style>
+
+    </style>
+</head>
+<body>
+
+<!-- ===== UTILITY BAR ===== -->
+<div class="util-bar">
+    <div class="container">
+        <div class="util-left">
+            <a href="/user/">Vibemusic</a>
+            <a href="/user/product/?sort=new">New Arrivals</a>
+            <a href="/user/category/">Shop Categories</a>
+        </div>
+        <div class="util-right">
+            
+                <a href="/user/accounts/login/">Sign In</a>
+                <a href="/user/register/">Create Account</a>
+            
+            <a href="/user/tracker/">Order Tracking</a>
+            <a href="/admin/" class="admin-link">Admin Panel</a>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MAIN HEADER ===== -->
+<header class="main-header">
+    <div class="container">
+        <a href="/user/" class="logo">
+            <div class="logo-text">Vibe<span style="color:var(--primary-red);">Music</span></div>
+        </a>
+
+        <div class="search-container">
+            <form action="/user/product/" method="get" class="search-form">
+                <input type="text" name="q" value="" placeholder="Search for musical instruments, pro audio, and more..." autocomplete="off">
+                <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
+
+        <div class="header-tools">
+            <div class="tool-item">
+                <span class="tool-title">Expert Advice</span>
+                <a href="tel:+919773651006" class="tool-value phone">+91 97736 51006</a>
+            </div>
+            
+            <a href="/user/gocart/" class="cart-trigger">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-badge">0</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- ===== CATEGORY NAV ===== -->
+<nav class="cat-nav">
+    <div class="container">
+        <ul class="cat-nav-list">
+            <li><a href="/user/category/">Guitars</a></li>
+            <li><a href="/user/category/">Keyboards</a></li>
+            <li><a href="/user/category/">Drums</a></li>
+            <li><a href="/user/category/">Recording</a></li>
+            <li><a href="/user/category/">Live Sound</a></li>
+            <li><a href="/user/category/">DJ Gear</a></li>
+            <li><a href="/user/category/">Accessories</a></li>
+        </ul>
+    </div>
+</nav>
+
+<main>
+    
+<!-- ===== HERO SECTION ===== -->
+<div class="hero">
+    <a href="/user/product/117" class="sw-hero__main">
+        <div class="sw-hero__content">
+            <div class="sw-hero__copy">
+                <div class="sw-hero__eyebrow">
+                    <img src="/static/user/folder/assets/images/home.png" alt="Fender">
+                </div>
+                <h1 class="sw-hero__headline">The New Legend: American Professional II</h1>
+                <p class="sw-hero__subhead">Experience the evolution of Fender's most iconic instruments.</p>
+                <div class="sw-hero__cta">Shop The Series</div>
+            </div>
+        </div>
+        <div class="sw-hero__image-side">
+            <img src="/static/user/folder/assets/images/product-1.png" style="width:100%; height:100%; object-fit:cover;" alt="Hero">
+        </div>
+    </a>
+</div>
+
+<!-- ===== POPULAR CATEGORIES ===== -->
+<section class="popular-categories">
+    <div class="container">
+        <div class="section-header">
+            <h2>Shop Top Categories</h2>
+            <a href="/user/category/" class="see-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="popcat-grid">
+            
+            <a href="/user/category/1" class="popcat-item">
+                <div class="popcat-image">
+                    
+                        <img src="/static/user/folder/assets/images/category.png" alt="Placeholder">
+                    
+                </div>
+                <div class="popcat-name">
+                    <h3></h3>
+                </div>
+            </a>
+            
+            <a href="/user/category/2" class="popcat-item">
+                <div class="popcat-image">
+                    
+                        <img src="/static/user/folder/assets/images/category.png" alt="Placeholder">
+                    
+                </div>
+                <div class="popcat-name">
+                    <h3></h3>
+                </div>
+            </a>
+            
+            <a href="/user/category/3" class="popcat-item">
+                <div class="popcat-image">
+                    
+                        <img src="/static/user/folder/assets/images/category.png" alt="Placeholder">
+                    
+                </div>
+                <div class="popcat-name">
+                    <h3></h3>
+                </div>
+            </a>
+            
+            <a href="/user/category/4" class="popcat-item">
+                <div class="popcat-image">
+                    
+                        <img src="/static/user/folder/assets/images/category.png" alt="Placeholder">
+                    
+                </div>
+                <div class="popcat-name">
+                    <h3></h3>
+                </div>
+            </a>
+            
+            <a href="/user/category/5" class="popcat-item">
+                <div class="popcat-image">
+                    
+                        <img src="/static/user/folder/assets/images/category.png" alt="Placeholder">
+                    
+                </div>
+                <div class="popcat-name">
+                    <h3></h3>
+                </div>
+            </a>
+            
+            <a href="/user/category/6" class="popcat-item">
+                <div class="popcat-image">
+                    
+                        <img src="/static/user/folder/assets/images/category.png" alt="Placeholder">
+                    
+                </div>
+                <div class="popcat-name">
+                    <h3></h3>
+                </div>
+            </a>
+            
+            <a href="/user/category/7" class="popcat-item">
+                <div class="popcat-image">
+                    
+                        <img src="/static/user/folder/assets/images/category.png" alt="Placeholder">
+                    
+                </div>
+                <div class="popcat-name">
+                    <h3></h3>
+                </div>
+            </a>
+            
+            <a href="/user/category/8" class="popcat-item">
+                <div class="popcat-image">
+                    
+                        <img src="/static/user/folder/assets/images/category.png" alt="Placeholder">
+                    
+                </div>
+                <div class="popcat-name">
+                    <h3></h3>
+                </div>
+            </a>
+            
+        </div>
+    </div>
+</section>
+
+<!-- ===== TRENDING GEAR ===== -->
+<section class="suggested-products bg-gray50">
+    <div class="container">
+        <div class="section-header">
+            <h2>Trending Gear</h2>
+            <a href="/user/product/?sort=trending" class="see-all">See All Trending <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="product-suggest__stage">
+            <ul class="product-suggest__items horizontal">
+                
+                <li class="product-suggest__item-wrap">
+                    <a href="/user/product/117" class="product-suggest__item">
+                        <div class="product-suggest__item-img">
+                            
+                                <img src="/uploads/Admin/ProductImage/Main/guitar_1.webp" alt="drum">
+                            
+                        </div>
+                        <div class="product-suggest__name"><strong>Drum Pedal</strong> drum</div>
+                        <div class="product-suggest__item-price"><sup>₹</sup>12000</div>
+                    </a>
+                </li>
+                
+                <li class="product-suggest__item-wrap">
+                    <a href="/user/product/1" class="product-suggest__item">
+                        <div class="product-suggest__item-img">
+                            
+                                <img src="/uploads/Admin/ProductImage/Main/GUITAR_1.jpg" alt="Zoom F1-LP Field Recorder and Lavalier Microphone">
+                            
+                        </div>
+                        <div class="product-suggest__name"><strong>KORG</strong> Zoom F1-LP Field Recorder and Lavalier Microphone</div>
+                        <div class="product-suggest__item-price"><sup>₹</sup>18500</div>
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ===== PROMO CARDS ===== -->
+<div class="container">
+    <div class="promo-section">
+        <div class="card-promo">
+                <div class="card-promo-img">
+                <img src="/static/user/folder/assets/images/home.png" alt="Careers">
+            </div>
+            <div class="card-promo-content">
+                <h3>Work at Vibe Music</h3>
+                <p style="margin-bottom:25px; color:#666;">Join our team of music enthusiasts and build the career of your dreams.</p>
+                <a href="#" class="sds-button sds-button__secondary">Explore Openings</a>
+            </div>
+        </div>
+        <div class="card-promo" style="background:#005cb9; color:#fff;">
+            <div class="card-promo-img">
+                <img src="/static/user/folder/assets/images/profile.png" alt="Sales Engineer">
+            </div>
+            <div class="card-promo-content">
+                <h3>Expert Advice, Always Free</h3>
+                <p style="margin-bottom:25px; opacity:0.8;">Your dedicated Sales Engineer is here to help you find the perfect gear.</p>
+                <a href="#" class="sds-button" style="background:#fff; color:#005cb9;">Meet The Team</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</main>
+
+<footer class="site-footer">
+    <div class="footer-cta">
+        <div class="container">
+            <h2>Experience the Vibe</h2>
+            <p>India's Premium Destination for High-End Musical Gear.</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>Customer Support</h4>
+                <ul>
+                    <li><a href="/user/tracker/">Track Your Order</a></li>
+                    <li><a href="/user/address/">Shipping Policy</a></li>
+                    <li><a href="#">Return Policy</a></li>
+                    <li><a href="#">Self-Help Center</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Shop by Vibe</h4>
+                <ul>
+                    <li><a href="/user/product/?sort=new">New Arrivals</a></li>
+                    <li><a href="/user/category/">Top Sellers</a></li>
+                    <li><a href="/user/product/?type=deals">Deals & Steals</a></li>
+                    <li><a href="/user/category/?type=used">Used Gear</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>About Us</h4>
+                <ul>
+                    <li><a href="#">Our Story</a></li>
+                    <li><a href="#">Vibe Studios</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Affiliate Program</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Contact Us</h4>
+                <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                    Mumbai, India<br>
+                    Phone: +91 97736 51006<br>
+                    Email: support@vibemusic.in
+                </p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2026 Vibe Music. All rights reserved.</p>
+            <div style="display: flex; gap: 20px;">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="/static/user/folder/assets/js/jquery-3.3.1.min.js"></script>
+<script src="/static/user/folder/assets/js/slick.js"></script>
+
+<script>
+    // Simple drag scroll for horizontal items
+    const scrollContainer = document.querySelector('.product-suggest__items');
+    if (scrollContainer) {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        scrollContainer.addEventListener('mousedown', (e) => {
+            isDown = true;
+            startX = e.pageX - scrollContainer.offsetLeft;
+            scrollLeft = scrollContainer.scrollLeft;
+        });
+        scrollContainer.addEventListener('mouseleave', () => { isDown = false; });
+        scrollContainer.addEventListener('mouseup', () => { isDown = false; });
+        scrollContainer.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - scrollContainer.offsetLeft;
+            const walk = (x - startX) * 2;
+            scrollContainer.scrollLeft = scrollLeft - walk;
+        });
+    }
+</script>
+
+
+</body>
+</html>

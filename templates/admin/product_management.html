@@ -1,0 +1,1109 @@
+{% extends 'admin/masterpage/index-1.html' %}
+{% load static %}
+{% block title3 %} Product Management {% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Vibe Music Product Management</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/admin_side/">Home</a></li>
+                        <li class="breadcrumb-item active">Product Management</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Real-time Status Bar -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5><i class="fas fa-sync"></i> Real-Time Product Management</h5>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <span class="connection-indicator" id="product-status"></span> Product Sync
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="connection-indicator" id="upload-status"></span> Upload Status
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="connection-indicator" id="inventory-status"></span> Inventory
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="connection-indicator" id="analytics-status"></span> Analytics
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-right">
+                                <span id="last-sync">Last sync: Never</span>
+                                <button class="btn btn-sm btn-primary ml-2" onclick="refreshProducts()">
+                                    <i class="fas fa-sync"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Upload Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card vibe-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-upload"></i> Upload New Product
+                            </h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <form id="product-upload-form" enctype="multipart/form-data">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="product-name">Product Name *</label>
+                                            <input type="text" class="form-control" id="product-name" name="product_name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="product-description">Description</label>
+                                            <textarea class="form-control" id="product-description" name="description" rows="3"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="product-price">Price (Rs.) *</label>
+                                            <input type="number" class="form-control" id="product-price" name="price" step="0.01" min="0" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="product-strike-price">Strike Price (Rs.)</label>
+                                            <input type="number" class="form-control" id="product-strike-price" name="strike_price" step="0.01" min="0">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="product-condition">Condition</label>
+                                            <select class="form-control" id="product-condition" name="condition">
+                                                <option value="New">New</option>
+                                                <option value="Renewed">Renewed</option>
+                                                <option value="Used">Used</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="product-material">Material</label>
+                                            <input type="text" class="form-control" id="product-material" name="material" placeholder="e.g. Maple Wood, Brass">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="product-quantity">Quantity *</label>
+                                            <input type="number" class="form-control" id="product-quantity" name="quantity" min="0" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="product-category">Category *</label>
+                                            <select class="form-control" id="product-category" name="category_id" required>
+                                                <option value="">Select Category</option>
+                                                {% for category in categories %}
+                                                <option value="{{ category.id }}">{{ category.cat_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="product-brand">Brand</label>
+                                            <select class="form-control" id="product-brand" name="brand_id">
+                                                <option value="">Select Brand</option>
+                                                {% for brand in brands %}
+                                                <option value="{{ brand.id }}">{{ brand.brand_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="product-skill-level">Skill Level</label>
+                                            <select class="form-control" id="product-skill-level" name="skill_level">
+                                                <option value="">Select Skill Level</option>
+                                                <option value="Beginner">Beginner</option>
+                                                <option value="Intermediate">Intermediate</option>
+                                                <option value="Professional">Professional</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="product-sku">SKU / Model Number</label>
+                                            <input type="text" class="form-control" id="product-sku" name="pro_code">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="product-color">Color</label>
+                                            <input type="text" class="form-control" id="product-color" name="color" placeholder="e.g. Sunburst, Black">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="product-image">Product Image</label>
+                                            <input type="file" class="form-control" id="product-image" name="product_image" accept="image/*">
+                                            <small class="form-text text-muted">Allowed formats: JPG, PNG, GIF, WebP</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <img id="image-preview" src="#" alt="Image preview" style="max-width: 200px; display: none;" class="img-thumbnail">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-upload"></i> Upload Product
+                                        </button>
+                                        <button type="button" class="btn btn-secondary ml-2" onclick="resetForm()">
+                                            <i class="fas fa-redo"></i> Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Search and Filters -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card vibe-card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="search-input" placeholder="Search products...">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary" onclick="searchProducts()">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-control" id="category-filter" onchange="filterProducts()">
+                                        <option value="">All Categories</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.cat_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="btn-group">
+                                        <button class="btn btn-default" onclick="changeView('grid')">
+                                            <i class="fas fa-th"></i> Grid
+                                        </button>
+                                        <button class="btn btn-default" onclick="changeView('list')">
+                                            <i class="fas fa-list"></i> List
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-success" onclick="showBulkUpload()">
+                                        <i class="fas fa-file-upload"></i> Bulk Upload
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Display -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card vibe-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-box"></i> Products 
+                                <span class="badge badge-info ml-2" id="product-count">{{ total_products }}</span>
+                            </h3>
+                            <div class="card-tools">
+                                <span class="badge badge-success" id="live-indicator">LIVE</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Loading Indicator -->
+                            <div id="loading-indicator" class="text-center" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p>Loading products...</p>
+                            </div>
+
+                            <!-- Products Grid -->
+                            <div id="products-grid" class="row">
+                                <!-- Products will be loaded here via JavaScript -->
+                            </div>
+
+                            <!-- Products List -->
+                            <div id="products-list" class="table-responsive" style="display: none;">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Image</th>
+                                            <th>Name</th>
+                                            <th>Category</th>
+                                            <th>Price</th>
+                                            <th>Stock</th>
+                                            <th>Orders</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="products-list-body">
+                                        <!-- Products will be loaded here via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            <div id="pagination" class="d-flex justify-content-center">
+                                <!-- Pagination will be loaded here via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Product Edit Modal -->
+<div class="modal fade" id="editProductModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Product</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="product-edit-form" enctype="multipart/form-data">
+                    <input type="hidden" id="edit-product-id" name="product_id">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit-product-name">Product Name *</label>
+                                <input type="text" class="form-control" id="edit-product-name" name="product_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-product-description">Description</label>
+                                <textarea class="form-control" id="edit-product-description" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-product-price">Price (Rs.) *</label>
+                                <input type="number" class="form-control" id="edit-product-price" name="price" step="0.01" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-product-strike-price">Strike Price (Rs.)</label>
+                                <input type="number" class="form-control" id="edit-product-strike-price" name="strike_price" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit-product-quantity">Quantity *</label>
+                                <input type="number" class="form-control" id="edit-product-quantity" name="quantity" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-product-category">Category *</label>
+                                <select class="form-control" id="edit-product-category" name="category_id" required>
+                                    <option value="">Select Category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.cat_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-product-brand">Brand</label>
+                                <select class="form-control" id="edit-product-brand" name="brand_id">
+                                    <option value="">Select Brand</option>
+                                    {% for brand in brands %}
+                                    <option value="{{ brand.id }}">{{ brand.brand_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-product-image">Product Image</label>
+                                <input type="file" class="form-control" id="edit-product-image" name="product_image" accept="image/*">
+                                <small class="form-text text-muted">Leave empty to keep current image</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <img id="edit-image-preview" src="#" alt="Current image" style="max-width: 200px; display: none;" class="img-thumbnail">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateProduct()">Update Product</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Upload Modal -->
+<div class="modal fade" id="bulkUploadModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bulk Product Upload</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle"></i> Bulk Upload Instructions</h5>
+                    <p>Upload products in bulk using CSV or Excel files. The file should contain the following columns:</p>
+                    <ul>
+                        <li>Product Name (required)</li>
+                        <li>Description</li>
+                        <li>Price (required)</li>
+                        <li>Quantity (required)</li>
+                        <li>Category Name (required)</li>
+                        <li>Brand Name</li>
+                        <li>Strike Price</li>
+                    </ul>
+                </div>
+                <form id="bulk-upload-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="bulk-file">Select File</label>
+                        <input type="file" class="form-control" id="bulk-file" name="bulk_file" accept=".csv,.xlsx,.xls">
+                        <small class="form-text text-muted">Supported formats: CSV, Excel (.xlsx, .xls)</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="uploadBulk()">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.connection-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.connection-indicator.connected {
+    background-color: #28a745;
+    animation: pulse 2s infinite;
+}
+
+.connection-indicator.disconnected {
+    background-color: #dc3545;
+}
+
+.connection-indicator.connecting {
+    background-color: #ffc107;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.product-card {
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+}
+
+.product-image {
+    height: 200px;
+    object-fit: cover;
+}
+
+.stock-low {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.stock-out {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.product-new {
+    animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.product-updated {
+    animation: highlight 2s ease-out;
+}
+
+@keyframes highlight {
+    0% { background-color: #fff3cd; }
+    100% { background-color: transparent; }
+}
+</style>
+
+<script>
+// WebSocket connection for real-time updates
+let productSocket = null;
+let currentView = 'grid';
+let currentPage = 1;
+let searchQuery = '';
+let categoryFilter = '';
+
+// Initialize WebSocket connection
+function connectProductWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    
+    productSocket = new WebSocket(`${protocol}//${host}/ws/admin/inventory/`);
+    
+    productSocket.onopen = function() {
+        console.log('Product WebSocket connected');
+        updateConnectionStatus('product', true);
+        updateConnectionStatus('inventory', true);
+        updateConnectionStatus('analytics', true);
+    };
+    
+    productSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'inventory_update') {
+            handleProductUpdate(data.data);
+        }
+    };
+    
+    productSocket.onclose = function() {
+        console.log('Product WebSocket disconnected');
+        updateConnectionStatus('product', false);
+        updateConnectionStatus('inventory', false);
+        updateConnectionStatus('analytics', false);
+        setTimeout(connectProductWebSocket, 3000);
+    };
+    
+    productSocket.onerror = function(e) {
+        console.error('Product WebSocket error:', e);
+        updateConnectionStatus('product', false);
+    };
+}
+
+function updateConnectionStatus(type, connected) {
+    const statusElement = document.getElementById(`${type}-status`);
+    if (statusElement) {
+        statusElement.className = `connection-indicator ${connected ? 'connected' : 'disconnected'}`;
+    }
+}
+
+function handleProductUpdate(data) {
+    if (data.action === 'created') {
+        addProductToList(data);
+        showNotification('success', `Product "${data.name}" added successfully!`);
+    } else if (data.action === 'updated') {
+        updateProductInList(data);
+        showNotification('info', `Product "${data.name}" updated successfully!`);
+    } else if (data.action === 'deleted') {
+        removeProductFromList(data.id);
+        showNotification('warning', `Product deleted successfully!`);
+    }
+    
+    updateLastSync();
+    updateProductCount();
+}
+
+function showNotification(type, message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="close" data-dismiss="alert">
+            <span>&times;</span>
+        </button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+function updateLastSync() {
+    document.getElementById('last-sync').textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
+}
+
+function updateProductCount() {
+    // Update product count
+    const count = document.querySelectorAll('.product-card').length;
+    document.getElementById('product-count').textContent = count;
+}
+
+// Product upload form handling
+document.getElementById('product-upload-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    updateConnectionStatus('upload', true);
+    
+    fetch('/admin/api/product-upload/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateConnectionStatus('upload', false);
+        
+        if (data.success) {
+            showNotification('success', data.message);
+            resetForm();
+            refreshProducts();
+        } else {
+            showNotification('danger', data.error);
+        }
+    })
+    .catch(error => {
+        updateConnectionStatus('upload', false);
+        showNotification('danger', 'Upload failed. Please try again.');
+        console.error('Error:', error);
+    });
+});
+
+// Image preview
+document.getElementById('product-image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('image-preview');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('edit-product-image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('edit-image-preview');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function resetForm() {
+    document.getElementById('product-upload-form').reset();
+    document.getElementById('image-preview').style.display = 'none';
+}
+
+function loadProducts(page = 1, search = '', category = '') {
+    currentPage = page;
+    showLoading(true);
+    
+    const params = new URLSearchParams({
+        page: page,
+        q: search,
+        category_id: category
+    });
+    
+    fetch(`/admin/api/products/?${params}`)
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        
+        if (data.success) {
+            if (currentView === 'grid') {
+                renderProductsGrid(data.products);
+            } else {
+                renderProductsList(data.products);
+            }
+            renderPagination(data.pagination);
+        } else {
+            showNotification('danger', data.error);
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        showNotification('danger', 'Failed to load products');
+        console.error('Error:', error);
+    });
+}
+
+function renderProductsGrid(products) {
+    const grid = document.getElementById('products-grid');
+    grid.innerHTML = '';
+    
+    products.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'col-md-3 mb-4';
+        card.innerHTML = `
+            <div class="card product-card product-new" data-product-id="${product.id}">
+                <img src="${product.image_url || '/static/admin/folder/images/default-product.png'}" 
+                     class="card-img-top product-image" alt="${product.name}">
+                <div class="card-body">
+                    <h6 class="card-title">${product.name}</h6>
+                    <p class="card-text text-muted small">${product.description}</p>
+                    <div class="mb-2">
+                        <span class="badge badge-info">${product.category}</span>
+                        ${product.brand ? `<span class="badge badge-secondary">${product.brand}</span>` : ''}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Rs. ${product.price}</strong>
+                            ${product.strike_price ? `<small class="text-muted strike">Rs. ${product.strike_price}</small>` : ''}
+                        </div>
+                        <span class="badge ${product.quantity <= 5 ? 'badge-danger' : 'badge-success'}">
+                            Stock: ${product.quantity}
+                        </span>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">Orders: ${product.orders_count}</small>
+                    </div>
+                    <div class="mt-2 btn-group btn-group-sm">
+                        <button class="btn btn-primary" onclick="editProduct(${product.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-info" onclick="viewProduct(${product.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteProduct(${product.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function renderProductsList(products) {
+    const tbody = document.getElementById('products-list-body');
+    tbody.innerHTML = '';
+    
+    products.forEach(product => {
+        const row = document.createElement('tr');
+        row.setAttribute('data-product-id', product.id);
+        row.innerHTML = `
+            <td>
+                <img src="${product.image_url || '/static/admin/folder/images/default-product.png'}" 
+                     style="width: 50px; height: 50px; object-fit: cover;" alt="${product.name}">
+            </td>
+            <td>
+                <strong>${product.name}</strong><br>
+                <small class="text-muted">${product.description}</small>
+            </td>
+            <td>${product.category}</td>
+            <td>
+                Rs. ${product.price}
+                ${product.strike_price ? `<br><small class="text-muted strike">Rs. ${product.strike_price}</small>` : ''}
+            </td>
+            <td>
+                <span class="badge ${product.quantity <= 5 ? 'badge-danger' : 'badge-success'}">
+                    ${product.quantity}
+                </span>
+            </td>
+            <td>${product.orders_count}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-primary" onclick="editProduct(${product.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-info" onclick="viewProduct(${product.id})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteProduct(${product.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function renderPagination(pagination) {
+    const container = document.getElementById('pagination');
+    container.innerHTML = '';
+    
+    if (pagination.total_pages <= 1) return;
+    
+    const nav = document.createElement('nav');
+    nav.innerHTML = '<ul class="pagination"></ul>';
+    const ul = nav.querySelector('ul');
+    
+    // Previous button
+    if (pagination.has_previous) {
+        ul.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadProducts(${pagination.current_page - 1}, searchQuery, categoryFilter)">Previous</a></li>`;
+    }
+    
+    // Page numbers
+    for (let i = 1; i <= pagination.total_pages; i++) {
+        const active = i === pagination.current_page ? 'active' : '';
+        ul.innerHTML += `<li class="page-item ${active}"><a class="page-link" href="#" onclick="loadProducts(${i}, searchQuery, categoryFilter)">${i}</a></li>`;
+    }
+    
+    // Next button
+    if (pagination.has_next) {
+        ul.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadProducts(${pagination.current_page + 1}, searchQuery, categoryFilter)">Next</a></li>`;
+    }
+    
+    container.appendChild(nav);
+}
+
+function showLoading(show) {
+    document.getElementById('loading-indicator').style.display = show ? 'block' : 'none';
+}
+
+function editProduct(productId) {
+    // Load product data and show edit modal
+    fetch(`/admin/api/products/${productId}/`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const product = data.product;
+            document.getElementById('edit-product-id').value = product.id;
+            document.getElementById('edit-product-name').value = product.name;
+            document.getElementById('edit-product-description').value = product.description;
+            document.getElementById('edit-product-price').value = product.price;
+            document.getElementById('edit-product-strike-price').value = product.strike_price || '';
+            document.getElementById('edit-product-quantity').value = product.quantity;
+            document.getElementById('edit-product-category').value = product.category_id;
+            document.getElementById('edit-product-brand').value = product.brand_id || '';
+            
+            if (product.image_url) {
+                document.getElementById('edit-image-preview').src = product.image_url;
+                document.getElementById('edit-image-preview').style.display = 'block';
+            }
+            
+            $('#editProductModal').modal('show');
+        }
+    });
+}
+
+function updateProduct() {
+    const form = document.getElementById('product-edit-form');
+    const formData = new FormData(form);
+    
+    fetch('/admin/api/product-update/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#editProductModal').modal('hide');
+            showNotification('success', data.message);
+            refreshProducts();
+        } else {
+            showNotification('danger', data.error);
+        }
+    })
+    .catch(error => {
+        showNotification('danger', 'Update failed. Please try again.');
+        console.error('Error:', error);
+    });
+}
+
+function deleteProduct(productId) {
+    if (confirm('Are you sure you want to delete this product?')) {
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        
+        fetch('/admin/api/product-delete/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('warning', data.message);
+                refreshProducts();
+            } else {
+                showNotification('danger', data.error);
+            }
+        })
+        .catch(error => {
+            showNotification('danger', 'Delete failed. Please try again.');
+            console.error('Error:', error);
+        });
+    }
+}
+
+function viewProduct(productId) {
+    // Open product in new tab or modal
+    window.open(`/admin/product/${productId}/`, '_blank');
+}
+
+function searchProducts() {
+    searchQuery = document.getElementById('search-input').value;
+    currentPage = 1;
+    loadProducts(currentPage, searchQuery, categoryFilter);
+}
+
+function filterProducts() {
+    categoryFilter = document.getElementById('category-filter').value;
+    currentPage = 1;
+    loadProducts(currentPage, searchQuery, categoryFilter);
+}
+
+function changeView(view) {
+    currentView = view;
+    
+    if (view === 'grid') {
+        document.getElementById('products-grid').style.display = 'flex';
+        document.getElementById('products-list').style.display = 'none';
+    } else {
+        document.getElementById('products-grid').style.display = 'none';
+        document.getElementById('products-list').style.display = 'block';
+    }
+    
+    refreshProducts();
+}
+
+function refreshProducts() {
+    loadProducts(currentPage, searchQuery, categoryFilter);
+}
+
+function showBulkUpload() {
+    $('#bulkUploadModal').modal('show');
+}
+
+function uploadBulk() {
+    const form = document.getElementById('bulk-upload-form');
+    const formData = new FormData(form);
+    
+    fetch('/admin/api/bulk-upload/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#bulkUploadModal').modal('hide');
+            showNotification('success', data.message);
+            refreshProducts();
+        } else {
+            showNotification('danger', data.error);
+        }
+    })
+    .catch(error => {
+        showNotification('danger', 'Bulk upload failed. Please try again.');
+        console.error('Error:', error);
+    });
+}
+
+function addProductToList(product) {
+    if (currentView === 'grid') {
+        // Add to grid view
+        const grid = document.getElementById('products-grid');
+        const card = createProductCard(product);
+        grid.insertBefore(card, grid.firstChild);
+    } else {
+        // Add to list view
+        const tbody = document.getElementById('products-list-body');
+        const row = createProductRow(product);
+        tbody.insertBefore(row, tbody.firstChild);
+    }
+}
+
+function updateProductInList(product) {
+    if (currentView === 'grid') {
+        const card = document.querySelector(`[data-product-id="${product.id}"]`);
+        if (card) {
+            card.classList.add('product-updated');
+            setTimeout(() => card.classList.remove('product-updated'), 2000);
+            // Update card content
+            updateProductCard(card, product);
+        }
+    } else {
+        const row = document.querySelector(`tr[data-product-id="${product.id}"]`);
+        if (row) {
+            row.classList.add('product-updated');
+            setTimeout(() => row.classList.remove('product-updated'), 2000);
+            // Update row content
+            updateProductRow(row, product);
+        }
+    }
+}
+
+function removeProductFromList(productId) {
+    if (currentView === 'grid') {
+        const card = document.querySelector(`[data-product-id="${productId}"]`);
+        if (card) {
+            card.remove();
+        }
+    } else {
+        const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+        if (row) {
+            row.remove();
+        }
+    }
+}
+
+function createProductCard(product) {
+    const col = document.createElement('div');
+    col.className = 'col-md-3 mb-4';
+    col.innerHTML = `
+        <div class="card product-card product-new" data-product-id="${product.id}">
+            <img src="${product.image_url || '/static/admin/folder/images/default-product.png'}" 
+                 class="card-img-top product-image" alt="${product.name}">
+            <div class="card-body">
+                <h6 class="card-title">${product.name}</h6>
+                <p class="card-text text-muted small">${product.description}</p>
+                <div class="mb-2">
+                    <span class="badge badge-info">${product.category}</span>
+                    ${product.brand ? `<span class="badge badge-secondary">${product.brand}</span>` : ''}
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Rs. ${product.price}</strong>
+                        ${product.strike_price ? `<small class="text-muted strike">Rs. ${product.strike_price}</small>` : ''}
+                    </div>
+                    <span class="badge ${product.quantity <= 5 ? 'badge-danger' : 'badge-success'}">
+                        Stock: ${product.quantity}
+                    </span>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted">Orders: ${product.orders_count || 0}</small>
+                </div>
+                <div class="mt-2 btn-group btn-group-sm">
+                    <button class="btn btn-primary" onclick="editProduct(${product.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-info" onclick="viewProduct(${product.id})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteProduct(${product.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    return col;
+}
+
+function createProductRow(product) {
+    const row = document.createElement('tr');
+    row.setAttribute('data-product-id', product.id);
+    row.innerHTML = `
+        <td>
+            <img src="${product.image_url || '/static/admin/folder/images/default-product.png'}" 
+                 style="width: 50px; height: 50px; object-fit: cover;" alt="${product.name}">
+        </td>
+        <td>
+            <strong>${product.name}</strong><br>
+            <small class="text-muted">${product.description}</small>
+        </td>
+        <td>${product.category}</td>
+        <td>
+            Rs. ${product.price}
+            ${product.strike_price ? `<br><small class="text-muted strike">Rs. ${product.strike_price}</small>` : ''}
+        </td>
+        <td>
+            <span class="badge ${product.quantity <= 5 ? 'badge-danger' : 'badge-success'}">
+                ${product.quantity}
+            </span>
+        </td>
+        <td>${product.orders_count || 0}</td>
+        <td>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-primary" onclick="editProduct(${product.id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-info" onclick="viewProduct(${product.id})">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-danger" onclick="deleteProduct(${product.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    `;
+    return row;
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Search on Enter key
+document.getElementById('search-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchProducts();
+    }
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    connectProductWebSocket();
+    loadProducts();
+});
+
+// Clean up WebSocket on page unload
+window.addEventListener('beforeunload', function() {
+    if (productSocket) {
+        productSocket.close();
+    }
+});
+</script>
+{% endblock %}

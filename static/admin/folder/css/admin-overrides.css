@@ -1,0 +1,247 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+/* Custom admin overrides inspired by storefront styling */
+:root{
+  --vibe-navy: #08243a;
+  --vibe-blue: #0f5e8c;
+  --vibe-cyan: #4aa3d8;
+  --vibe-accent: #f68a1f;
+  --vibe-ice: #eef6fb;
+  --admin-bg: #f5f8fc;
+  --admin-border: #d9e5f1;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+}
+
+.content-wrapper,
+.right-side {
+  background: radial-gradient(circle at 10% 10%, #fbfdff 0%, var(--admin-bg) 45%, #edf3f9 100%) !important;
+}
+
+/* Top utility bar */
+.admin-top-utility {
+  background: linear-gradient(90deg, var(--vibe-navy), var(--vibe-blue));
+  color: #fff;
+  padding: 8px 0;
+  font-size: 13px;
+  border-top: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.admin-top-utility .container {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-top-utility .utility-link {
+  color: #fff;
+  text-decoration: none;
+  padding: 7px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.2px;
+  opacity: 0.96;
+  transition: all .2s ease;
+}
+
+.admin-top-utility .utility-link:hover,
+.admin-top-utility .utility-link.active {
+  background: rgba(255, 255, 255, 0.16);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.admin-top-utility .utility-spacer {
+  flex: 1;
+}
+
+/* Header tweaks */
+.main-header .navbar {
+  background: #fff;
+  box-shadow: inset 0 -1px 0 rgba(8, 36, 58, 0.08);
+}
+
+.main-header .logo-lg img {
+  height: 54px;
+}
+
+/* Sidebar */
+.main-sidebar {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 4px 0 20px rgba(9, 44, 68, 0.06);
+}
+
+.sidebar-menu li a {
+  color: #234057;
+  border-radius: 10px;
+  margin: 3px 10px;
+  transition: all .2s ease;
+}
+
+.sidebar-menu li.active > a,
+.sidebar-menu li > a:hover {
+  background: linear-gradient(90deg, rgba(15, 94, 140, 0.13), rgba(74, 163, 216, 0.08));
+  color: #0d5077;
+  font-weight: 600;
+}
+
+.sidebar-menu .treeview-menu > li > a {
+  padding-left: 24px;
+}
+
+.sidebar-menu .user-profile a span {
+  color: #16344a;
+  font-weight: 700;
+}
+
+/* Header blocks */
+.content-header h5,
+.card-title {
+  font-weight: 700;
+  color: #123851;
+  letter-spacing: 0.2px;
+}
+
+.breadcrumb {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--admin-border);
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+
+/* Cards and containers */
+.box {
+  border-radius: 14px;
+  border: 1px solid var(--admin-border);
+  box-shadow: 0 10px 26px rgba(14, 53, 81, 0.06);
+  overflow: hidden;
+  background: #fff;
+}
+
+.box .box-body {
+  padding: 18px;
+}
+
+.vibe-card {
+  border-radius: 14px;
+  border: 1px solid rgba(15, 94, 140, 0.12);
+  box-shadow: 0 12px 30px rgba(15, 94, 140, 0.08);
+  overflow: hidden;
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(90deg, var(--vibe-blue), #1e78ab);
+  border-color: #1c6f9e;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: linear-gradient(90deg, #0b4f75, #145f89);
+  border-color: #145f89;
+}
+
+.btn-light {
+  border: 1px solid var(--admin-border);
+}
+
+/* Forms */
+.form-control,
+.select2-container--default .select2-selection--single {
+  border: 1px solid #c9d9e8;
+  border-radius: 10px;
+  box-shadow: none;
+  min-height: 40px;
+}
+
+.form-control:focus {
+  border-color: var(--vibe-cyan);
+  box-shadow: 0 0 0 3px rgba(74, 163, 216, 0.18);
+}
+
+label {
+  font-weight: 600;
+  color: #16344a;
+}
+
+/* Tables */
+.table thead th {
+  background: linear-gradient(90deg, var(--vibe-navy), var(--vibe-blue));
+  color: #fff;
+  border: 0;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.table tbody tr {
+  background: #fff;
+}
+
+.table tbody tr:hover {
+  background: #f2f9ff;
+}
+
+.table .badge {
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
+/* Modal */
+.modal-content {
+  border-radius: 14px;
+  border: 1px solid var(--admin-border);
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(90deg, var(--vibe-navy), var(--vibe-blue));
+  color: #fff;
+}
+
+.modal-header .close {
+  color: #fff;
+  opacity: 0.9;
+}
+
+/* Footer */
+.main-footer {
+  background: #fff;
+  border-top: 1px solid #e2edf7;
+  padding: 12px 20px;
+  color: #46647a;
+  font-weight: 500;
+}
+
+/* Utility */
+.dash-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #e8f4ff;
+  color: #0d5077;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .admin-top-utility .container {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-header .logo-lg img {
+    height: 42px;
+  }
+
+  .breadcrumb {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
