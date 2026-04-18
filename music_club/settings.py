@@ -21,12 +21,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '7k@nilk%2=97j8ecf)gxloyd*anhhprwnmuhq69x5*1a=90uaf'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '7k@nilk%2=97j8ecf)gxloyd*anhhprwnmuhq69x5*1a=90uaf')
 
 # SECURITY WARNING: don't run with debug turned on in production! True False
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes', 'on')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'testserver',
+    '.vercel.app',
+]
+
+extra_allowed_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS', '').strip()
+if extra_allowed_hosts:
+    ALLOWED_HOSTS.extend([host.strip() for host in extra_allowed_hosts.split(',') if host.strip()])
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+]
+extra_csrf_origins = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').strip()
+if extra_csrf_origins:
+    CSRF_TRUSTED_ORIGINS.extend([origin.strip() for origin in extra_csrf_origins.split(',') if origin.strip()])
 
 # Application definition
 INSTALLED_APPS = [
@@ -137,6 +153,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/uploads/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
