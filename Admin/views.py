@@ -146,6 +146,7 @@ def logout(request):
 
 def login_attempt(request):
     if request.method == 'POST':
+        referer = request.META.get('HTTP_REFERER') or '/admin/accounts/login/'
         username = request.POST.get('username')
         password = request.POST.get('password')
 
@@ -154,11 +155,11 @@ def login_attempt(request):
 
         if (user_obj or userobj) is None:
             messages.success(request, 'Username/Email not found.')
-            return redirect(request.META.get('HTTP_REFERER'))
+            return redirect(referer)
 
         if not (user_obj or userobj).is_superuser:
             messages.success(request, "User Can't login")
-            return redirect(request.META.get('HTTP_REFERER'))
+            return redirect(referer)
 
         if (user_obj or userobj).is_superuser:
             if not (user_obj or userobj).is_staff:
@@ -197,7 +198,7 @@ def login_attempt(request):
             else:
                 if userobj.is_staff == 2:
                     messages.success(request, "User Can't login")
-                    return redirect(request.META.get('HTTP_REFERER'))
+                    return redirect(referer)
                 else:
                     try:
                         user = UserModel.objects.get(email=username)
