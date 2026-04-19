@@ -116,6 +116,12 @@ DATABASES = {
     }
 }
 
+if os.environ.get('VERCEL') == '1':
+    SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+
 # Vercel functions run on a read-only filesystem except /tmp.
 # Use a writable SQLite location there and seed from the repository DB if available.
 if os.environ.get('VERCEL') == '1':
