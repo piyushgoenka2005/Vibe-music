@@ -27,12 +27,10 @@ from .models import *
 from .serializer import address_Serialize, prooSerialize
 
 import os
+from django.urls import reverse
 
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
-
-
-site_name = '127.0.0.1:8000'
 
 
 def _wants_json_response(request):
@@ -287,7 +285,7 @@ def register_attempt(request):
                 profile_obj.is_verified = True
             profile_obj.save()
             try:
-                send_mail_after_registration(email, username, auth_token)
+                send_mail_after_registration(request, email, username, auth_token)
             except:
                 print('Mail Not Send')
 
@@ -316,12 +314,13 @@ def register_attempt(request):
 
 
 # Account Activation Mail Send
-def send_mail_after_registration(email, username, token):
+def send_mail_after_registration(request, email, username, token):
     email_template_name = 'user/verifymail.html'
+    verification_url = request.build_absolute_uri(f'/user/verify/{token}')
+    site_url = request.build_absolute_uri('/user/')
     parameters = {
-        'domain': f'{site_name}/user/verify',
-        'token': f'{token}',
-        'protocol': 'http',
+        'verification_url': verification_url,
+        'site_url': site_url,
         'username': f'{username}',
 
     }
@@ -384,13 +383,14 @@ def forget_password(request):
                 for user in user_email:
                     subject = "Password Resquest"
                     email_template_name = 'registration/password_reset_email-1.html'
+                    reset_url = request.build_absolute_uri(
+                        reverse('password_reset_confirmm', kwargs={'uidb64': urlsafe_base64_encode(force_bytes(user.pk)), 'token': default_token_generator.make_token(user)})
+                    )
                     parameters = {
                         'email': user.email,
                         'username': user.username,
-                        'domain': f'{site_name}',
-                        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                        'token': default_token_generator.make_token(user),
-                        'protocol': 'http',
+                        'reset_url': reset_url,
+                        'site_url': request.build_absolute_uri('/user/'),
                     }
                     try:
                         message = render_to_string(email_template_name, parameters)
