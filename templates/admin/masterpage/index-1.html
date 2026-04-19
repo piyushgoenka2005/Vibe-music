@@ -1,6 +1,6 @@
 {% load static %}
 
-<html lang="en" style="display: none;" id="main-html">
+<html lang="en" id="main-html">
 
     <head>
         <meta charset="utf-8">
@@ -323,6 +323,11 @@
         
       {% if user.is_authenticated %}
       <script>
+              // Keep UI visible even if timer endpoint is unreachable on some hosts.
+              setTimeout(function(){
+                $("#main-html").css('display','block');
+              }, 300);
+
               window.onload = function dasda(){
                   $.ajax({
                     url: '/admin/login_timer/',
@@ -362,6 +367,9 @@
 
                               error: function () {
                                 alert('Something is Wrong');
+                    ,error: function () {
+                      $("#main-html").css('display','block');
+                    }
                               }
                           });
                         }
