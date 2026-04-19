@@ -30,6 +30,7 @@ urlpatterns = [
     path('admin/', include('Admin.urls')),
     path('myaccount/', myaccount),
     path('login/', lambda request: redirect('/user/accounts/login/')),
+    re_path(r'^static/(?P<path>.*)$', serve, {'document_root': str(settings.BASE_DIR / 'static')}),
     re_path(r'^uploads/(?P<path>.*)$', serve,{'document_root':settings.MEDIA_ROOT}),
 
 ]
