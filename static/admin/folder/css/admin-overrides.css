@@ -84,6 +84,8 @@ textarea {
   align-items: center;
   min-height: 46px;
   line-height: 1.25;
+  position: relative;
+  padding-right: 58px;
 }
 
 .sidebar-menu > li > a > i {
@@ -96,14 +98,19 @@ textarea {
 }
 
 .sidebar-menu > li > a .pull-right-container {
-  position: static;
-  margin-left: 8px;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 0;
   flex-shrink: 0;
 }
 
 .sidebar-menu .badge {
   font-size: 10px;
-  padding: 4px 8px;
+  min-width: 28px;
+  text-align: center;
+  padding: 4px 7px;
   letter-spacing: 0.3px;
 }
 
@@ -390,5 +397,6 @@ label {
   .sidebar-menu > li > a {
     margin-left: 6px;
     margin-right: 6px;
+    padding-right: 54px;
   }
 }
