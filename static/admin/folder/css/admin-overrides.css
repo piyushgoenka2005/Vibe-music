@@ -75,6 +75,38 @@ textarea {
   box-shadow: 4px 0 20px rgba(9, 44, 68, 0.06);
 }
 
+.sidebar {
+  padding-top: 10px;
+}
+
+.sidebar-menu > li > a {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  line-height: 1.25;
+}
+
+.sidebar-menu > li > a > i {
+  width: 22px;
+  margin-right: 8px;
+}
+
+.sidebar-menu > li > a > span {
+  flex: 1;
+}
+
+.sidebar-menu > li > a .pull-right-container {
+  position: static;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.sidebar-menu .badge {
+  font-size: 10px;
+  padding: 4px 8px;
+  letter-spacing: 0.3px;
+}
+
 .sidebar-menu li a {
   color: #234057;
   border-radius: 10px;
@@ -131,6 +163,96 @@ textarea {
   border: 1px solid rgba(15, 94, 140, 0.12);
   box-shadow: 0 12px 30px rgba(15, 94, 140, 0.08);
   overflow: hidden;
+}
+
+.dashboard-hero {
+  position: relative;
+  padding-left: 12px;
+}
+
+.dashboard-hero::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--vibe-blue), var(--vibe-cyan));
+}
+
+.dashboard-hero-kicker {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #3f6a86;
+  font-weight: 700;
+}
+
+.metric-card .box-body h3 {
+  font-size: 34px;
+  font-weight: 700;
+  color: #0f4364;
+}
+
+.metric-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.metric-orders .metric-icon {
+  background: rgba(38, 137, 197, 0.14);
+  color: #1f6794;
+}
+
+.metric-pending .metric-icon {
+  background: rgba(246, 138, 31, 0.16);
+  color: #a35c0f;
+}
+
+.metric-products .metric-icon {
+  background: rgba(45, 171, 112, 0.15);
+  color: #20754d;
+}
+
+.metric-catalog .metric-icon {
+  background: rgba(137, 99, 201, 0.16);
+  color: #5d3c92;
+}
+
+.quick-actions-box,
+.attention-box {
+  height: 100%;
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quick-action-btn {
+  border-radius: 10px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.attention-list li {
+  color: #2f4d63;
+}
+
+.content-wrapper {
+  padding-bottom: 18px;
 }
 
 /* Buttons */
@@ -233,6 +355,10 @@ label {
   .admin-top-utility .container {
     flex-wrap: wrap;
   }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
@@ -243,5 +369,26 @@ label {
   .breadcrumb {
     padding: 6px 10px;
     font-size: 12px;
+  }
+
+  .dashboard-hero {
+    margin-bottom: 10px;
+  }
+
+  .metric-card .box-body h3 {
+    font-size: 28px;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-action-btn {
+    width: 100%;
+  }
+
+  .sidebar-menu > li > a {
+    margin-left: 6px;
+    margin-right: 6px;
   }
 }
