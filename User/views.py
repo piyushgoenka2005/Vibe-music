@@ -11,6 +11,7 @@ from django.contrib.auth.backends import UserModel
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
+from django.db import transaction
 from django.db.models.query_utils import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -1040,6 +1041,47 @@ def review(request):
         return redirect('/user/')
 
 
+def _finalize_order(user_obj, address_obj, payment_mode, order_idd, shipping_charge, total_quantity,
+                    total_amount, line_items, transaction_id=None):
+    """Create order and sub-order rows atomically and decrement stock safely."""
+    with transaction.atomic():
+        buy_obj = buyModel()
+        buy_obj.user_id = user_obj
+        buy_obj.order_idd = order_idd
+        buy_obj.payment_mode = payment_mode
+        buy_obj.address_id = address_obj
+        buy_obj.order_date = date.today()
+        buy_obj.shipping_charge = shipping_charge
+        buy_obj.total_quantity = total_quantity
+        buy_obj.total_amount = total_amount
+        if transaction_id:
+            buy_obj.transaction_id = transaction_id
+        buy_obj.save()
+
+        for item in line_items:
+            product_obj = productModel.objects.select_for_update().get(id=item['product_id'])
+            requested_qty = int(item['quantity'])
+
+            if int(product_obj.total_quantity) < requested_qty:
+                raise ValueError(f"Insufficient stock for product {product_obj.id}")
+
+            product_obj.total_quantity = int(product_obj.total_quantity) - requested_qty
+            product_obj.save(update_fields=['total_quantity'])
+
+            sub_obj = Sub_bayModel()
+            sub_obj.product_id = product_obj
+            sub_obj.quantity = requested_qty
+            sub_obj.total = item['total']
+            sub_obj.order_id = buy_obj
+            sub_obj.save()
+
+            cart_id = item.get('cart_id')
+            if cart_id:
+                add_to_cart.objects.filter(id=cart_id, user=user_obj).delete()
+
+        return buy_obj.id
+
+
 def checkoutt(request):
     if 'userid' in request.session:
         if request.method == 'POST':
@@ -1226,44 +1268,31 @@ def checkouut(request):
 
             if (int(total_quantity) <= int(suma)):
                 if payment_option == 'COD':
-                    buy_obj = buyModel()
-
-                    buy_obj.user_id = user_obj2
-                    buy_obj.order_idd = random_order_id
-                    buy_obj.payment_mode = payment_option
-
-                    buy_obj.address_id = address_obj
-
-                    buy_obj.order_date = order_date
-                    buy_obj.shipping_charge = shipping_charge
-
-                    buy_obj.total_quantity = total_quantity
-                    buy_obj.total_amount = total_amount
-                    buy_obj.save()
-
-                    id11 = buy_obj.id
-                    buy_obj2 = buyModel.objects.get(id=id11)
-
+                    line_items = []
                     for i in range(int(len(alld))):
-                        sub_obj = Sub_bayModel()
+                        line_items.append({
+                            'product_id': objproid[i],
+                            'quantity': objproquan[i],
+                            'total': objproqprice[i],
+                            'cart_id': objcartid[i],
+                        })
 
-                        product_obj = productModel.objects.get(id=objproid[i])
-                        total_quantityt = product_obj.total_quantity
-                        update_quantity = int(total_quantityt) - int(objproquan[i])
-                        product_obj.total_quantity = update_quantity
-                        product_obj.save()
+                    try:
+                        order_row_id = _finalize_order(
+                            user_obj=user_obj2,
+                            address_obj=address_obj,
+                            payment_mode=payment_option,
+                            order_idd=random_order_id,
+                            shipping_charge=shipping_charge,
+                            total_quantity=total_quantity,
+                            total_amount=total_amount,
+                            line_items=line_items,
+                        )
+                    except ValueError:
+                        messages.error(request, 'One or more items are out of stock. Please review your cart.')
+                        return redirect('/user/gocart/')
 
-                        productID = productModel.objects.get(id=objproid[i])
-                        sub_obj.product_id = productID
-                        sub_obj.quantity = objproquan[i]
-                        sub_obj.total = objproqprice[i]
-                        sub_obj.order_id = buy_obj2
-                        sub_obj.save()
-
-                        cart_obj = add_to_cart.objects.get(id=objcartid[i])
-                        cart_obj.delete()
-                    userr = str(id11)
-                    return redirect('/user/order/' + userr + '/1')
+                    return redirect('/user/order/' + str(order_row_id) + '/1')
                 elif payment_option == 'RAZORPAY':
                     x = []
                     pro_dict = {'user_id': user_idd, 'address_id': address_iid, 'total': total_amount,
@@ -1504,10 +1533,20 @@ def payment_status(request):
             'razorpay_signature': response['razorpay_signature']
         }
 
+        try:
+            get_client().utility.verify_payment_signature(params_dict)
+        except Exception:
+            messages.error(request, 'Payment verification failed. Please try again.')
+            return redirect('/user/checkout/')
+
+        order_info = request.session.get('order_info')
+        if not order_info:
+            messages.error(request, 'Order session expired. Please place the order again.')
+            return redirect('/user/checkout/')
+
         transaction_id = params_dict['razorpay_payment_id']
-        i = request.session.get('order_info')[0]
+        i = order_info[0]
         shipping_charge = 70
-        today_date = date.today()
         payment_option = 'RAZORPAY'
 
         address_id = i['address_id']
@@ -1521,48 +1560,37 @@ def payment_status(request):
         pro_total = i['pro_total']
         cart_id = i['cart_id']
 
-        buy_obj = buyModel()
-
         address_obj = addressModel.objects.get(id=address_id)
-        us_id = A_User.objects.get(id=user_idd)
+        user_obj = A_User.objects.get(id=user_idd)
 
-        buy_obj.address_id = address_obj
+        line_items = []
+        for idx in range(int(len(pro_id))):
+            line_items.append({
+                'product_id': pro_id[idx],
+                'quantity': pro_quan[idx],
+                'total': pro_total[idx],
+                'cart_id': cart_id[idx],
+            })
 
-        buy_obj.order_idd = order_id_idd
-        buy_obj.payment_mode = payment_option
-        buy_obj.order_date = today_date
-        buy_obj.shipping_charge = shipping_charge
-        buy_obj.transaction_id = transaction_id
-        buy_obj.total_quantity = quantity
-        buy_obj.total_amount = total
-        buy_obj.user_id = us_id
-        buy_obj.save()
-        id11 = buy_obj.id
-
-        for i in range(int(len(pro_id))):
-            sub_obj = Sub_bayModel()
-
-            product_obj = productModel.objects.get(id=pro_id[i])
-            total_quantityt = product_obj.total_quantity
-            update_quantity = int(total_quantityt) - int(pro_quan[i])
-            product_obj.total_quantity = update_quantity
-            product_obj.save()
-
-            sub_obj.product_id = product_obj
-            sub_obj.quantity = pro_quan[i]
-            sub_obj.total = pro_total[i]
-
-            buy_obj2 = buyModel.objects.get(id=id11)
-            sub_obj.order_id = buy_obj2
-
-            sub_obj.save()
-
-            cart_obj = add_to_cart.objects.get(id=cart_id[i])
-            cart_obj.delete()
+        try:
+            order_row_id = _finalize_order(
+                user_obj=user_obj,
+                address_obj=address_obj,
+                payment_mode=payment_option,
+                order_idd=order_id_idd,
+                shipping_charge=shipping_charge,
+                total_quantity=quantity,
+                total_amount=total,
+                line_items=line_items,
+                transaction_id=transaction_id,
+            )
+        except ValueError:
+            messages.error(request, 'One or more items are out of stock. Please review your cart.')
+            return redirect('/user/gocart/')
 
         del request.session['order_info']
 
-        userr = str(id11)
+        userr = str(order_row_id)
         return redirect('/user/order/' + userr + '/1')
 
     else:
