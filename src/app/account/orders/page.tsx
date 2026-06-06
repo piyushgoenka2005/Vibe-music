@@ -1,22 +1,17 @@
+import type { Metadata } from "next";
 import HtmlSection from "@/components/sweetwater/HtmlSection";
-import AccountNav from "@/components/account/AccountNav";
-import { ROUTES } from "@/lib/routes";
+import AccountOrdersContent from "@/components/account/AccountOrdersContent";
+import { pageTitle } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: pageTitle("Orders"),
+};
 
 export default function AccountOrdersPage() {
   return (
     <>
-      <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
-        <section
-          className="personalization-widgets"
-          style={{ maxWidth: 800, margin: "0 auto", padding: "32px 16px" }}
-        >
-          <h2 className="personalization-widgets__greeting">Order History</h2>
-          <AccountNav active={ROUTES.accountOrders} />
-          <p style={{ color: "#807f7e" }}>
-            You have no orders yet. Items you purchase will appear here.
-          </p>
-        </section>
+        <AccountOrdersContent />
       </main>
       <HtmlSection file="footer" />
     </>

@@ -17,7 +17,6 @@ export default async function SearchResultsRoute({
 
   return (
     <>
-      <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
         <SearchResultsPage
           query={query}

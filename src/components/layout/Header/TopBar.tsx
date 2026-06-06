@@ -1,41 +1,37 @@
 import Link from "next/link";
 import { BLACK_BAR_LINKS, BLACK_BAR_LOGOS } from "@/lib/constants";
+import { ROUTES } from "@/lib/routes";
+
+const LINK_HREFS: Record<string, string> = {
+  Support: `${ROUTES.search}?q=support`,
+  Financing: `${ROUTES.search}?q=financing`,
+  Blog: `${ROUTES.search}?q=articles`,
+};
 
 export default function TopBar() {
   return (
-    <section
-      className="border-b border-[var(--grey10)]"
-      style={{ backgroundColor: "var(--black-bar-bg)", color: "var(--black-bar-text)" }}
-    >
-      <div className="sw-container flex h-9 items-center justify-between gap-4 overflow-x-auto text-[13px]">
-        <div className="flex shrink-0 items-center gap-5">
+    <div className="top-bar">
+      <div className="container">
+        <div className="top-bar-left">
           {BLACK_BAR_LOGOS.map((logo) => (
             <Link
               key={logo.label}
               href={logo.href}
-              className={`whitespace-nowrap transition-colors hover:text-[var(--blue)] ${
-                logo.active
-                  ? "font-semibold text-[var(--grey100)]"
-                  : "text-[var(--grey60)]"
-              }`}
+              className={logo.active ? "active" : undefined}
             >
               {logo.label}
             </Link>
           ))}
         </div>
 
-        <div className="hidden items-center gap-5 lg:flex">
+        <div className="top-bar-right">
           {BLACK_BAR_LINKS.map((link) => (
-            <Link
-              key={link}
-              href="#"
-              className="whitespace-nowrap text-[var(--grey60)] transition-colors hover:text-[var(--blue)]"
-            >
+            <Link key={link} href={LINK_HREFS[link] ?? ROUTES.search}>
               {link}
             </Link>
           ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }

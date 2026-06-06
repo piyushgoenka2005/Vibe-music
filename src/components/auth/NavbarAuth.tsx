@@ -32,23 +32,23 @@ function syncAuthHeader(isAuthenticated: boolean, displayName: string | null) {
   }
 
   if (accountLink) {
-    accountLink.setAttribute(
-      "href",
-      isAuthenticated ? ROUTES.account : ROUTES.login
-    );
+    const href = isAuthenticated ? ROUTES.account : ROUTES.login;
+    if (accountLink.getAttribute("href") !== href) {
+      accountLink.setAttribute("href", href);
+    }
   }
 
   const loginBtn = document.querySelector<HTMLAnchorElement>(
     ".assets-site-header__nav-menu-account-logged-out-login-button"
   );
-  if (loginBtn) {
+  if (loginBtn && loginBtn.getAttribute("href") !== ROUTES.login) {
     loginBtn.setAttribute("href", ROUTES.login);
   }
 
   const signupLink = document.querySelector<HTMLAnchorElement>(
     ".assets-site-header__nav-menu-account-logged-out-login-signup"
   );
-  if (signupLink) {
+  if (signupLink && signupLink.getAttribute("href") !== ROUTES.register) {
     signupLink.setAttribute("href", ROUTES.register);
   }
 }
@@ -70,12 +70,7 @@ export default function NavbarAuth() {
     function watchHeader(header: Element) {
       observer?.disconnect();
       observer = new MutationObserver(sync);
-      observer.observe(header, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["class"],
-      });
+      observer.observe(header, { childList: true, subtree: true });
     }
 
     const header = document.getElementById("assets-header");

@@ -47,7 +47,7 @@ function defaultReviews(productName: string): ProductReview[] {
       author: "Verified Buyer",
       rating: 5,
       title: "Excellent quality",
-      body: `${productName} exceeded my expectations. Great build quality and fast shipping from Sweetwater.`,
+      body: `${productName} exceeded my expectations. Great build quality and fast shipping from VibeMusic.`,
       date: "2025-11-12",
     },
     {
@@ -55,7 +55,7 @@ function defaultReviews(productName: string): ProductReview[] {
       author: "Studio Pro",
       rating: 4,
       title: "Solid choice",
-      body: "Works exactly as described. Sales engineer was very helpful picking the right model.",
+      body: "Works exactly as described. Our Gear Advisor was very helpful picking the right model.",
       date: "2025-10-03",
     },
     {
@@ -75,8 +75,8 @@ function defaultQA(): ProductQA[] {
       id: "qa-1",
       question: "Does this include a manufacturer warranty?",
       answer:
-        "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
-      author: "Sweetwater Sales Engineer",
+        "Yes, all new items include the full manufacturer warranty. Our Gear Advisors can confirm specific terms.",
+      author: "VibeMusic Gear Advisor",
       date: "2025-08-01",
     },
     {
@@ -84,7 +84,7 @@ function defaultQA(): ProductQA[] {
       question: "What is the return policy?",
       answer:
         "Most items can be returned within 30 days. See our return policy page for complete details.",
-      author: "Sweetwater Support",
+      author: "VibeMusic Support",
       date: "2025-07-15",
     },
   ];

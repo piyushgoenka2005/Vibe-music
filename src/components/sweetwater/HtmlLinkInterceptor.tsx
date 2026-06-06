@@ -2,9 +2,10 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { resolveLinkHref } from "@/lib/routes";
+import { isOffSiteBrandUrl, resolveLinkHref } from "@/lib/routes";
 
-const SECTION_SELECTOR = '[data-sweetwater-section="header"], [data-sweetwater-section="main"], [data-sweetwater-section="footer"]';
+const SECTION_SELECTOR =
+  '[data-sweetwater-section="header"], [data-sweetwater-section="main"], [data-sweetwater-section="footer"]';
 
 function patchSectionLinks(section: Element) {
   section.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((anchor) => {
@@ -31,8 +32,16 @@ export default function HtmlLinkInterceptor() {
   const router = useRouter();
 
   useEffect(() => {
+    let patching = false;
+
     function patchAll() {
-      document.querySelectorAll(SECTION_SELECTOR).forEach(patchSectionLinks);
+      if (patching) return;
+      patching = true;
+      try {
+        document.querySelectorAll(SECTION_SELECTOR).forEach(patchSectionLinks);
+      } finally {
+        patching = false;
+      }
     }
 
     function onClick(event: MouseEvent) {
@@ -46,6 +55,13 @@ export default function HtmlLinkInterceptor() {
 
       const href = anchor.getAttribute("href");
       if (!href || href.startsWith("#")) return;
+
+      if (isOffSiteBrandUrl(href)) {
+        event.preventDefault();
+        const resolved = resolveLinkHref(href);
+        router.push(resolved);
+        return;
+      }
 
       const resolved = resolveLinkHref(href);
       if (resolved === href) return;
@@ -63,7 +79,9 @@ export default function HtmlLinkInterceptor() {
 
     patchAll();
 
-    const observer = new MutationObserver(patchAll);
+    const observer = new MutationObserver(() => {
+      window.requestAnimationFrame(patchAll);
+    });
     document.querySelectorAll(SECTION_SELECTOR).forEach((section) => {
       observer.observe(section, { childList: true, subtree: true });
     });

@@ -1,52 +1,50 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
-import AuthFormSkeleton from "@/components/auth/AuthFormSkeleton";
-import AuthInput from "@/components/auth/AuthInput";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
 import { ROUTES } from "@/lib/routes";
-import { useIsClient } from "@/hooks/useIsClient";
-import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated";
+import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LoginForm() {
-  const isClient = useIsClient();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || ROUTES.account;
-  const redirectQuery = searchParams.get("redirect");
-  const registerHref = redirectQuery
-    ? `${ROUTES.register}?redirect=${encodeURIComponent(redirectQuery)}`
+  const registerHref = searchParams.get("redirect")
+    ? `${ROUTES.register}?redirect=${encodeURIComponent(searchParams.get("redirect")!)}`
     : ROUTES.register;
 
   const signIn = useAuthStore((s) => s.signIn);
   const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);
-  const resetPassword = useAuthStore((s) => s.resetPassword);
   const isLoading = useAuthStore((s) => s.isLoading);
-  const clearError = useAuthStore((s) => s.clearError);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [showForgot, setShowForgot] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
 
-  useEffect(() => {
-    return () => clearError();
-  }, [clearError]);
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
-  useRedirectIfAuthenticated(redirectTo);
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
+  async function onSubmit(values: LoginFormValues) {
     setError(null);
-    setResetSent(false);
-
     try {
-      await signIn({ email: email.trim(), password });
+      await signIn(values);
       router.push(redirectTo);
     } catch (err) {
       setError(getFirebaseErrorMessage(err, "Sign in failed."));
@@ -55,8 +53,6 @@ export default function LoginForm() {
 
   async function handleGoogleSignIn() {
     setError(null);
-    setResetSent(false);
-
     try {
       await signInWithGoogle();
       router.push(redirectTo);
@@ -65,133 +61,85 @@ export default function LoginForm() {
     }
   }
 
-  async function handleForgotPassword(event: FormEvent) {
-    event.preventDefault();
-    setError(null);
-    setResetSent(false);
-
-    if (!email.trim()) {
-      setError("Enter your email address to reset your password.");
-      return;
-    }
-
-    try {
-      await resetPassword(email.trim());
-      setResetSent(true);
-      setShowForgot(false);
-    } catch (err) {
-      setError(getFirebaseErrorMessage(err, "Password reset failed."));
-    }
-  }
-
-  if (!isClient) {
-    return <AuthFormSkeleton />;
-  }
-
   return (
     <>
-      {error ? <div className="auth-error">{error}</div> : null}
-      {resetSent ? (
-        <div className="auth-success">
-          Password reset email sent. Check your inbox for {email.trim()}.
-        </div>
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : null}
 
       <GoogleSignInButton onClick={handleGoogleSignIn} disabled={isLoading} />
 
-      <div className="auth-divider">or</div>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <Separator className="w-full" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card px-2 text-muted-foreground">or</span>
+        </div>
+      </div>
 
-      {showForgot ? (
-        <form className="auth-forgot" onSubmit={handleForgotPassword}>
-          <h2 className="auth-forgot__title">Reset your password</h2>
-          <p className="auth-forgot__text">
-            Enter the email for your account and we&apos;ll send a reset link.
-          </p>
-          <div className="auth-form">
-            <div className="auth-field">
-              <label htmlFor="login-email-forgot">Email</label>
-              <AuthInput
-                id="login-email-forgot"
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <button
-              type="submit"
-              className="auth-btn auth-btn--primary"
-              disabled={isLoading}
-            >
-              {isLoading ? "Sending…" : "Send Reset Link"}
-            </button>
-            <button
-              type="button"
-              className="auth-link"
-              onClick={() => setShowForgot(false)}
-              disabled={isLoading}
-            >
-              Back to sign in
-            </button>
-          </div>
-        </form>
-      ) : (
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="auth-field">
-            <label htmlFor="login-email">Email</label>
-            <AuthInput
-              id="login-email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={isLoading}
-            />
-          </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    disabled={isLoading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <div className="auth-field">
-            <label htmlFor="login-password">Password</label>
-            <AuthInput
-              id="login-password"
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              disabled={isLoading}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Password</FormLabel>
+                  <Link
+                    href={ROUTES.forgotPassword}
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <FormControl>
+                  <Input
+                    type="password"
+                    autoComplete="current-password"
+                    disabled={isLoading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <div className="auth-row">
-            <span />
-            <button
-              type="button"
-              className="auth-link"
-              onClick={() => {
-                setShowForgot(true);
-                setError(null);
-              }}
-              disabled={isLoading}
-            >
-              Forgot password?
-            </button>
-          </div>
-
-          <button
-            type="submit"
-            className="auth-btn auth-btn--primary"
-            disabled={isLoading}
-          >
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Signing in…" : "Log In"}
-          </button>
+          </Button>
         </form>
-      )}
+      </Form>
 
-      <p className="auth-footer">
-        Need an account? <Link href={registerHref}>Create one</Link>
+      <p className="text-center text-sm text-muted-foreground">
+        Need an account?{" "}
+        <Link href={registerHref} className="font-semibold text-primary hover:underline">
+          Create one
+        </Link>
       </p>
     </>
   );

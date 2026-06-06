@@ -6,7 +6,6 @@ import { ROUTES } from "@/lib/routes";
 export default function AccountProfilePage() {
   return (
     <>
-      <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
         <section
           className="personalization-widgets"

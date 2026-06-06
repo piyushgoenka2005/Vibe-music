@@ -33,6 +33,8 @@ type Listener = () => void;
 const defaultFilters: SearchFiltersState = {
   category: "",
   brand: "",
+  minPrice: "",
+  maxPrice: "",
   sort: "relevance",
 };
 
@@ -186,6 +188,8 @@ export const searchStore = {
     if (
       next.category === state.filters.category &&
       next.brand === state.filters.brand &&
+      next.minPrice === state.filters.minPrice &&
+      next.maxPrice === state.filters.maxPrice &&
       next.sort === state.filters.sort
     ) {
       return;

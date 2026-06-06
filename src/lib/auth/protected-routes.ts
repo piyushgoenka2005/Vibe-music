@@ -9,12 +9,24 @@ export const PROTECTED_ROUTE_PREFIXES = [
   ROUTES.checkout,
 ] as const;
 
-export const AUTH_PUBLIC_ROUTES = [ROUTES.login, ROUTES.register] as const;
+export const AUTH_GUEST_ROUTES = [
+  ROUTES.login,
+  ROUTES.register,
+  ROUTES.forgotPassword,
+] as const;
+
+/** @deprecated Use AUTH_GUEST_ROUTES */
+export const AUTH_PUBLIC_ROUTES = AUTH_GUEST_ROUTES;
+
+export function isGuestAuthRoute(pathname: string): boolean {
+  const path = pathname.replace(/\/+$/, "") || "/";
+  return AUTH_GUEST_ROUTES.includes(path as (typeof AUTH_GUEST_ROUTES)[number]);
+}
 
 export function isProtectedRoute(pathname: string): boolean {
   const path = pathname.replace(/\/+$/, "") || "/";
 
-  if (AUTH_PUBLIC_ROUTES.includes(path as (typeof AUTH_PUBLIC_ROUTES)[number])) {
+  if (isGuestAuthRoute(path)) {
     return false;
   }
 

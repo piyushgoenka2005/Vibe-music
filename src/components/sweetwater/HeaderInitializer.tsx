@@ -18,37 +18,12 @@ function applyDesktopNavClass() {
   }
 }
 
-function loadHeaderScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector("script[data-sweetwater-header]")) {
-      resolve();
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = "https://assets.sweetwater.com/dist/templates/header.js";
-    script.async = true;
-    script.dataset.sweetwaterHeader = "true";
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("header.js failed to load"));
-    document.body.appendChild(script);
-  });
-}
-
 export default function HeaderInitializer() {
   useEffect(() => {
     applyDesktopNavClass();
-
-    loadHeaderScript()
-      .then(() => applyDesktopNavClass())
-      .catch(() => {});
-
     const onResize = () => applyDesktopNavClass();
     window.addEventListener("resize", onResize);
-
-    return () => {
-      window.removeEventListener("resize", onResize);
-    };
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   return null;

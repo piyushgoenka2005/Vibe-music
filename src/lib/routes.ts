@@ -7,12 +7,17 @@ export const ROUTES = {
   searchResults: "/search/results",
   cart: "/cart",
   checkout: "/checkout",
+  tracking: "/tracking",
   account: "/account",
   accountOrders: "/account/orders",
   accountProfile: "/account/profile",
   accountWishlist: "/account/wishlist",
   login: "/login",
   register: "/register",
+  forgotPassword: "/forgot-password",
+  privacy: "/privacy",
+  terms: "/terms",
+  help: "/help",
   admin: "/admin",
   adminProducts: "/admin/products",
   adminOrders: "/admin/orders",
@@ -29,7 +34,19 @@ export function productPath(slug: string): string {
   return `/product/${slug}`;
 }
 
+export function helpPath(slug: string): string {
+  return `/help/${slug}`;
+}
+
 const CATEGORY_SLUGS = new Set(CATEGORIES.map((c) => c.slug));
+
+const OFF_SITE_HOSTS = new Set([
+  "sweetwater.com",
+  "www.sweetwater.com",
+  "sweetwaterstudios.com",
+  "www.sweetwaterstudios.com",
+  "assets.sweetwater.com",
+]);
 
 const PLACEHOLDER_REDIRECTS: Record<string, string> = {
   "/careers": ROUTES.home,
@@ -40,7 +57,6 @@ const PLACEHOLDER_REDIRECTS: Record<string, string> = {
   "/wishlist": ROUTES.accountWishlist,
 };
 
-/** Longest-prefix shop paths → category slug */
 const SHOP_PREFIX_RULES: Array<{ prefix: string; target: string }> = [
   { prefix: "/shop/studio-recording/microphones", target: categoryPath("microphones-wireless") },
   { prefix: "/shop/guitars", target: categoryPath("guitars") },
@@ -82,7 +98,7 @@ const NAV_TOP_REDIRECTS: Record<string, string> = {
   "/giveaway": `${ROUTES.search}?q=giveaway`,
   "/financing": `${ROUTES.search}?q=financing`,
   "/integration": ROUTES.search,
-  "/tracking": ROUTES.accountOrders,
+  "/tracking": ROUTES.tracking,
 };
 
 const ACCOUNT_REDIRECTS: Record<string, string> = {
@@ -107,6 +123,25 @@ const AUTH_REDIRECTS: Record<string, string> = {
   "/auth/signup": ROUTES.register,
 };
 
+const HELP_REDIRECTS: Record<string, string> = {
+  "/about/accessibility.php": helpPath("accessibility"),
+  "/about/privacy.php": ROUTES.privacy,
+  "/about/terms.php": ROUTES.terms,
+  "/help/returns.php": helpPath("returns"),
+  "/help/shipping.php": helpPath("shipping"),
+  "/help/ordering.php": helpPath("ordering"),
+  "/help/contact.php": helpPath("contact"),
+};
+
+const SERIES_REDIRECTS: Record<string, string> = {
+  "/dw-9000/series": `${ROUTES.searchResults}?q=dw-9000`,
+  "/sabian-stratus/series": `${ROUTES.searchResults}?q=sabian+stratus`,
+};
+
+const SKU_REDIRECTS: Record<string, string> = {
+  "/ApolloTXG2D": `${ROUTES.searchResults}?q=ApolloTXG2D`,
+};
+
 function normalizePath(pathname: string): string {
   const withoutQuery = pathname.split("?")[0]?.split("#")[0] ?? pathname;
   const trimmed = withoutQuery.replace(/\/+$/, "");
@@ -117,7 +152,9 @@ function isValidAppRoute(path: string): boolean {
   if (path === "/") return true;
   if (path === ROUTES.search) return true;
   if (path.startsWith(`${ROUTES.searchResults}`)) return true;
-  if (path === ROUTES.cart || path === ROUTES.checkout) return true;
+  if (path === ROUTES.cart || path === ROUTES.checkout || path === ROUTES.tracking) return true;
+  if (path === ROUTES.privacy || path === ROUTES.terms) return true;
+  if (path.startsWith(`${ROUTES.help}/`)) return true;
   if (path === ROUTES.account) return true;
   if (path === ROUTES.accountOrders) return true;
   if (path === ROUTES.accountProfile) return true;
@@ -147,6 +184,63 @@ function resolveShopPath(path: string): string | null {
   return null;
 }
 
+function resolveStoreDetail(path: string): string | null {
+  const match = path.match(/^\/store\/detail\/[^/]+--(.+)$/);
+  if (!match?.[1]) return null;
+  return productPath(match[1]);
+}
+
+function resolveCatalogCategory(path: string): string | null {
+  const match = path.match(/^\/c\d+--(.+)$/);
+  if (!match?.[1]) return null;
+  const name = match[1].replace(/_/g, " ").toLowerCase();
+  const hit = CATEGORIES.find(
+    (c) =>
+      name.includes(c.slug.replace(/-/g, " ")) ||
+      name.includes(c.name.toLowerCase())
+  );
+  if (hit) return categoryPath(hit.slug);
+  return `${ROUTES.searchResults}?q=${encodeURIComponent(name.replace(/-/g, " "))}`;
+}
+
+export function isOffSiteBrandUrl(href: string): boolean {
+  if (!href.startsWith("http://") && !href.startsWith("https://")) return false;
+  try {
+    const host = new URL(href).hostname.toLowerCase();
+    return OFF_SITE_HOSTS.has(host);
+  } catch {
+    return false;
+  }
+}
+
+/** Rewrite absolute sweetwater.com URLs to internal routes */
+export function rewriteExternalSweetwaterUrl(url: string): string {
+  if (!isOffSiteBrandUrl(url)) return url;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return ROUTES.search;
+  }
+
+  const path = normalizePath(parsed.pathname);
+  const search = parsed.search;
+  const hash = parsed.hash;
+
+  const resolved =
+    resolveLegacyPath(path) ??
+    resolveStoreDetail(path) ??
+    resolveCatalogCategory(path) ??
+    resolveShopPath(path);
+
+  if (resolved) {
+    return resolved.includes("?") ? `${resolved}${hash}` : `${resolved}${search}${hash}`;
+  }
+
+  return ROUTES.search;
+}
+
 /**
  * Maps legacy Sweetwater paths to WRD routes.
  * Returns null when no redirect is needed.
@@ -157,6 +251,9 @@ export function resolveLegacyPath(pathname: string): string | null {
   if (isValidAppRoute(path)) return null;
 
   if (PLACEHOLDER_REDIRECTS[path]) return PLACEHOLDER_REDIRECTS[path];
+  if (HELP_REDIRECTS[path]) return HELP_REDIRECTS[path];
+  if (SERIES_REDIRECTS[path]) return SERIES_REDIRECTS[path];
+  if (SKU_REDIRECTS[path]) return SKU_REDIRECTS[path];
 
   const storeDetail = resolveStoreDetail(path);
   if (storeDetail) return storeDetail;
@@ -195,7 +292,21 @@ export function resolveLegacyPath(pathname: string): string | null {
   if (path.startsWith("/store/manufacturer/")) {
     return ROUTES.search;
   }
-  if (path.startsWith("/about/") || path.startsWith("/help/")) {
+  if (path.startsWith("/about/accessibility")) {
+    return helpPath("accessibility");
+  }
+  if (path.startsWith("/about/privacy")) {
+    return ROUTES.privacy;
+  }
+  if (path.startsWith("/about/terms")) {
+    return ROUTES.terms;
+  }
+  if (path.startsWith("/help/")) {
+    const slug = path.replace(/^\/help\//, "").replace(/\.php$/, "");
+    if (slug) return helpPath(slug);
+    return ROUTES.search;
+  }
+  if (path.startsWith("/about/")) {
     return ROUTES.search;
   }
   if (path.startsWith("/newgearday")) {
@@ -206,25 +317,6 @@ export function resolveLegacyPath(pathname: string): string | null {
   }
 
   return null;
-}
-
-function resolveStoreDetail(path: string): string | null {
-  const match = path.match(/^\/store\/detail\/[^/]+--(.+)$/);
-  if (!match?.[1]) return null;
-  return productPath(match[1]);
-}
-
-function resolveCatalogCategory(path: string): string | null {
-  const match = path.match(/^\/c\d+--(.+)$/);
-  if (!match?.[1]) return null;
-  const name = match[1].replace(/_/g, " ").toLowerCase();
-  const hit = CATEGORIES.find(
-    (c) =>
-      name.includes(c.slug.replace(/-/g, " ")) ||
-      name.includes(c.name.toLowerCase())
-  );
-  if (hit) return categoryPath(hit.slug);
-  return `${ROUTES.searchResults}?q=${encodeURIComponent(name.replace(/-/g, " "))}`;
 }
 
 /** Resolve href for in-page link interception (preserves query + hash) */
@@ -241,7 +333,7 @@ export function resolveLinkHref(href: string): string {
   }
 
   if (href.startsWith("http://") || href.startsWith("https://")) {
-    return href;
+    return rewriteExternalSweetwaterUrl(href);
   }
 
   const hashIndex = href.indexOf("#");

@@ -1,3 +1,5 @@
+import { BRAND } from "@/lib/brand";
+
 export const COLORS = {
   grey0: "#f2f1f0",
   grey10: "#e5e4e3",
@@ -16,21 +18,14 @@ export const COLORS = {
   footerDark: "#2e2e2d",
 } as const;
 
-export const PHONE = "(800) 222-4700";
+export const PHONE = BRAND.phoneDisplay;
 
 export const BLACK_BAR_LOGOS = [
-  { label: "ViBE", href: "/", active: true },
-  { label: "Gear Exchange", href: "/search/results?q=used" },
-  { label: "Integration", href: "#" },
-  { label: "Studios", href: "#" },
+  { label: BRAND.name, href: "/", active: true },
+  { label: "Deals", href: "/search/results?q=deals" },
 ];
 
-export const BLACK_BAR_LINKS = [
-  "Content Creators",
-  "Home Audio",
-  "House of Worship",
-  "Immersive",
-];
+export const BLACK_BAR_LINKS = ["Support", "Financing", "Blog"];
 
 export const NAV_ITEMS = [
   "Shop By Category",
@@ -41,7 +36,7 @@ export const NAV_ITEMS = [
   "Articles & Videos",
   "Product Support",
   "Giveaway",
-  "Sweetwater Card",
+  BRAND.cardName,
 ];
 
 export const POPULAR_CATEGORIES = [

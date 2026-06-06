@@ -34,9 +34,19 @@ export default function SearchResultsPage({
     () => ({
       category: filters.category || initialCategory,
       brand: filters.brand || initialBrand,
+      minPrice: filters.minPrice,
+      maxPrice: filters.maxPrice,
       sort: filters.sort,
     }),
-    [filters.brand, filters.category, filters.sort, initialBrand, initialCategory]
+    [
+      filters.brand,
+      filters.category,
+      filters.maxPrice,
+      filters.minPrice,
+      filters.sort,
+      initialBrand,
+      initialCategory,
+    ]
   );
 
   const { status, error, results } = useSearchResults(query, effectiveFilters);

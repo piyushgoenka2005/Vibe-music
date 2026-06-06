@@ -46,6 +46,32 @@ export default function SearchFilters() {
         </select>
       </label>
 
+      <label htmlFor="search-filter-min-price">
+        Min price
+        <input
+          id="search-filter-min-price"
+          type="number"
+          min="0"
+          value={filters.minPrice}
+          onChange={(event) =>
+            searchStore.setFilters({ minPrice: event.target.value })
+          }
+        />
+      </label>
+
+      <label htmlFor="search-filter-max-price">
+        Max price
+        <input
+          id="search-filter-max-price"
+          type="number"
+          min="0"
+          value={filters.maxPrice}
+          onChange={(event) =>
+            searchStore.setFilters({ maxPrice: event.target.value })
+          }
+        />
+      </label>
+
       <label htmlFor="search-filter-sort">
         Sort by
         <select

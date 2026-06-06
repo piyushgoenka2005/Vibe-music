@@ -182,6 +182,8 @@ export function useSearchResults(
   filters?: {
     category?: string;
     brand?: string;
+    minPrice?: string;
+    maxPrice?: string;
     sort?: string;
   }
 ) {
@@ -190,6 +192,8 @@ export function useSearchResults(
   const [results, setResults] = useState<SearchResultsData | null>(null);
   const category = filters?.category;
   const brand = filters?.brand;
+  const minPrice = filters?.minPrice;
+  const maxPrice = filters?.maxPrice;
   const sort = filters?.sort;
 
   useEffect(() => {
@@ -215,6 +219,8 @@ export function useSearchResults(
         const data = await fetchSearchResults(query, {
           category,
           brand,
+          minPrice,
+          maxPrice,
           sort,
         });
         if (cancelled) return;
@@ -236,7 +242,7 @@ export function useSearchResults(
     return () => {
       cancelled = true;
     };
-  }, [query, category, brand, sort]);
+  }, [query, category, brand, minPrice, maxPrice, sort]);
 
   return { status, error, results };
 }

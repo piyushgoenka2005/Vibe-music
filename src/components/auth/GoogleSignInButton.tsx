@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 interface GoogleSignInButtonProps {
   onClick: () => void;
   disabled?: boolean;
@@ -12,15 +14,16 @@ export default function GoogleSignInButton({
   label = "Continue with Google",
 }: GoogleSignInButtonProps) {
   return (
-    <button
+    <Button
       type="button"
-      className="auth-btn auth-btn--google"
+      variant="outline"
+      className="w-full"
       onClick={onClick}
       disabled={disabled}
     >
       <GoogleIcon />
       {label}
-    </button>
+    </Button>
   );
 }
 

@@ -1,21 +1,24 @@
 import { Suspense } from "react";
-import AuthLayout from "@/components/auth/AuthLayout";
+import AuthShell from "@/components/auth/AuthShell";
+import GuestOnlyRoute from "@/components/auth/GuestOnlyRoute";
 import RegisterForm from "@/components/auth/RegisterForm";
 import HtmlSection from "@/components/sweetwater/HtmlSection";
+import { BRAND } from "@/lib/brand";
 
 export default function RegisterPage() {
   return (
     <>
-      <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
-        <AuthLayout
-          title="Create Account"
-          subtitle="Join Sweetwater to save your wishlist and track orders."
-        >
-          <Suspense fallback={null}>
-            <RegisterForm />
-          </Suspense>
-        </AuthLayout>
+        <GuestOnlyRoute>
+          <AuthShell
+            title="Create Account"
+            description={`Join ${BRAND.name} to save your wishlist and track orders.`}
+          >
+            <Suspense fallback={null}>
+              <RegisterForm />
+            </Suspense>
+          </AuthShell>
+        </GuestOnlyRoute>
       </main>
       <HtmlSection file="footer" />
     </>

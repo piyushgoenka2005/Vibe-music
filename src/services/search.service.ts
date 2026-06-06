@@ -96,7 +96,13 @@ export async function fetchSearchSuggestions(
 
 export async function fetchSearchResults(
   query: string,
-  filters?: { category?: string; brand?: string; sort?: string }
+  filters?: {
+    category?: string;
+    brand?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    sort?: string;
+  }
 ): Promise<SearchResultsData> {
   const trimmed = query.trim();
   await delay(REQUEST_DELAY_MS);
@@ -122,6 +128,7 @@ export async function fetchSearchResults(
   if (categoryFilter) {
     products = products.filter(
       (product) =>
+        product.categorySlug === categoryFilter ||
         product.category.toLowerCase().replace(/\s+/g, "-") === categoryFilter ||
         product.category.toLowerCase() === categoryFilter.replace(/-/g, " ")
     );
@@ -131,9 +138,19 @@ export async function fetchSearchResults(
   if (brandFilter) {
     products = products.filter(
       (product) =>
+        product.brandSlug === brandFilter ||
         product.brand.toLowerCase().replace(/\s+/g, "-") === brandFilter ||
         product.brand.toLowerCase() === brandFilter.replace(/-/g, " ")
     );
+  }
+
+  const minPrice = filters?.minPrice ? Number(filters.minPrice) : null;
+  const maxPrice = filters?.maxPrice ? Number(filters.maxPrice) : null;
+  if (minPrice !== null && !Number.isNaN(minPrice)) {
+    products = products.filter((product) => product.price >= minPrice);
+  }
+  if (maxPrice !== null && !Number.isNaN(maxPrice)) {
+    products = products.filter((product) => product.price <= maxPrice);
   }
 
   if (filters?.sort === "price-asc") {

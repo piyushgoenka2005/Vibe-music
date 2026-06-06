@@ -11,6 +11,7 @@ import {
   subscribeToAuthState,
   syncServerSession,
 } from "@/services/auth/auth.service";
+import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
 import type { AppUser, SignInInput, SignUpInput } from "@/types/user";
 
 interface AuthState {
@@ -48,9 +49,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user, isAuthenticated: true, isLoading: false });
       return user;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Sign up failed.";
-      set({ error: message, isLoading: false });
+      set({
+        error: getFirebaseErrorMessage(error, "Sign up failed."),
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -64,9 +66,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user, isAuthenticated: true, isLoading: false });
       return user;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Sign in failed.";
-      set({ error: message, isLoading: false });
+      set({
+        error: getFirebaseErrorMessage(error, "Sign in failed."),
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -80,9 +83,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user, isAuthenticated: true, isLoading: false });
       return user;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Google sign in failed.";
-      set({ error: message, isLoading: false });
+      set({
+        error: getFirebaseErrorMessage(error, "Google sign in failed."),
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -98,9 +102,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Logout failed.";
-      set({ error: message, isLoading: false });
+      set({
+        error: getFirebaseErrorMessage(error, "Logout failed."),
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -111,9 +116,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       await forgotPassword(email);
       set({ isLoading: false });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Password reset failed.";
-      set({ error: message, isLoading: false });
+      set({
+        error: getFirebaseErrorMessage(error, "Password reset failed."),
+        isLoading: false,
+      });
       throw error;
     }
   },
