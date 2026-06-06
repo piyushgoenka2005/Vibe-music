@@ -1,0 +1,60 @@
+"use client";
+
+import FilterSection from "./FilterSection";
+
+interface PriceRangeFilterProps {
+  minPrice: number | null;
+  maxPrice: number | null;
+  rangeMin: number;
+  rangeMax: number;
+  onChange: (min: number | null, max: number | null) => void;
+}
+
+export default function PriceRangeFilter({
+  minPrice,
+  maxPrice,
+  rangeMin,
+  rangeMax,
+  onChange,
+}: PriceRangeFilterProps) {
+  return (
+    <FilterSection title="Price Range">
+      <div className="cat-filter-price">
+        <label>
+          Min
+          <input
+            type="number"
+            min={rangeMin}
+            max={rangeMax}
+            placeholder={`$${rangeMin}`}
+            value={minPrice ?? ""}
+            onChange={(e) =>
+              onChange(
+                e.target.value ? Number(e.target.value) : null,
+                maxPrice
+              )
+            }
+            aria-label="Minimum price"
+          />
+        </label>
+        <label>
+          Max
+          <input
+            type="number"
+            min={rangeMin}
+            max={rangeMax}
+            placeholder={`$${rangeMax}`}
+            value={maxPrice ?? ""}
+            onChange={(e) =>
+              onChange(
+                minPrice,
+                e.target.value ? Number(e.target.value) : null
+              )
+            }
+            aria-label="Maximum price"
+          />
+        </label>
+      </div>
+    </FilterSection>
+  );
+}
