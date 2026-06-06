@@ -1,18 +1,21 @@
-import HtmlSection from "@/components/sweetwater/HtmlSection";
+import { Suspense } from "react";
+import AuthLayout from "@/components/auth/AuthLayout";
 import RegisterForm from "@/components/auth/RegisterForm";
+import HtmlSection from "@/components/sweetwater/HtmlSection";
 
 export default function RegisterPage() {
   return (
     <>
       <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
-        <section
-          className="personalization-widgets"
-          style={{ maxWidth: 480, margin: "0 auto", padding: "32px 16px" }}
+        <AuthLayout
+          title="Create Account"
+          subtitle="Join Sweetwater to save your wishlist and track orders."
         >
-          <h2 className="personalization-widgets__greeting">Create Account</h2>
-          <RegisterForm />
-        </section>
+          <Suspense fallback={null}>
+            <RegisterForm />
+          </Suspense>
+        </AuthLayout>
       </main>
       <HtmlSection file="footer" />
     </>

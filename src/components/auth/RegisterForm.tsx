@@ -1,101 +1,142 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
+import { useRouter, useSearchParams } from "next/navigation";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import AuthFormSkeleton from "@/components/auth/AuthFormSkeleton";
+import AuthInput from "@/components/auth/AuthInput";
+import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
 import { ROUTES } from "@/lib/routes";
+import { useIsClient } from "@/hooks/useIsClient";
+import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated";
+import { useAuthStore } from "@/store/authStore";
 
 export default function RegisterForm() {
+  const isClient = useIsClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || ROUTES.account;
+  const redirectQuery = searchParams.get("redirect");
+  const loginHref = redirectQuery
+    ? `${ROUTES.login}?redirect=${encodeURIComponent(redirectQuery)}`
+    : ROUTES.login;
+
   const signUp = useAuthStore((s) => s.signUp);
+  const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const clearError = useAuthStore((s) => s.clearError);
+
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => clearError();
+  }, [clearError]);
+
+  useRedirectIfAuthenticated(redirectTo);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    await signUp({
-      email: email.trim(),
-      password,
-      displayName: name.trim() || undefined,
-    });
-    router.push(ROUTES.account);
+    setError(null);
+
+    try {
+      await signUp({
+        email: email.trim(),
+        password,
+        displayName: name.trim() || undefined,
+      });
+      router.push(redirectTo);
+    } catch (err) {
+      setError(getFirebaseErrorMessage(err, "Sign up failed."));
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError(null);
+
+    try {
+      await signInWithGoogle();
+      router.push(redirectTo);
+    } catch (err) {
+      setError(getFirebaseErrorMessage(err, "Google sign up failed."));
+    }
+  }
+
+  if (!isClient) {
+    return <AuthFormSkeleton />;
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 420 }}>
-      <label htmlFor="register-name" style={{ display: "block", marginBottom: 8 }}>
-        Name
-      </label>
-      <input
-        id="register-name"
-        type="text"
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        style={{
-          width: "100%",
-          padding: "10px 12px",
-          border: "1px solid #d1d0cf",
-          borderRadius: 3,
-          marginBottom: 16,
-        }}
+    <>
+      {error ? <div className="auth-error">{error}</div> : null}
+
+      <GoogleSignInButton
+        onClick={handleGoogleSignIn}
+        disabled={isLoading}
+        label="Sign up with Google"
       />
-      <label htmlFor="register-email" style={{ display: "block", marginBottom: 8 }}>
-        Email
-      </label>
-      <input
-        id="register-email"
-        type="email"
-        required
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        style={{
-          width: "100%",
-          padding: "10px 12px",
-          border: "1px solid #d1d0cf",
-          borderRadius: 3,
-          marginBottom: 16,
-        }}
-      />
-      <label htmlFor="register-password" style={{ display: "block", marginBottom: 8 }}>
-        Password
-      </label>
-      <input
-        id="register-password"
-        type="password"
-        required
-        minLength={6}
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        style={{
-          width: "100%",
-          padding: "10px 12px",
-          border: "1px solid #d1d0cf",
-          borderRadius: 3,
-          marginBottom: 16,
-        }}
-      />
-      <button
-        type="submit"
-        style={{
-          background: "#0072ba",
-          color: "#fff",
-          border: 0,
-          borderRadius: 3,
-          padding: "10px 20px",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
-      >
-        Create Account
-      </button>
-      <p style={{ marginTop: 16, fontSize: 14, color: "#807f7e" }}>
-        Already have an account?{" "}
-        <Link href={ROUTES.login} style={{ color: "#0072ba" }}>
-          Log in
-        </Link>
+
+      <div className="auth-divider">or</div>
+
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <div className="auth-field">
+          <label htmlFor="register-name">Full name</label>
+          <AuthInput
+            id="register-name"
+            type="text"
+            autoComplete="name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            disabled={isLoading}
+            placeholder="Your name"
+          />
+        </div>
+
+        <div className="auth-field">
+          <label htmlFor="register-email">Email</label>
+          <AuthInput
+            id="register-email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            disabled={isLoading}
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div className="auth-field">
+          <label htmlFor="register-password">Password</label>
+          <AuthInput
+            id="register-password"
+            type="password"
+            required
+            minLength={6}
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            disabled={isLoading}
+            placeholder="At least 6 characters"
+          />
+          <span className="auth-field__hint">Must be at least 6 characters.</span>
+        </div>
+
+        <button
+          type="submit"
+          className="auth-btn auth-btn--primary"
+          disabled={isLoading}
+        >
+          {isLoading ? "Creating account…" : "Create Account"}
+        </button>
+      </form>
+
+      <p className="auth-footer">
+        Already have an account? <Link href={loginHref}>Log in</Link>
       </p>
-    </form>
+    </>
   );
 }

@@ -16,6 +16,22 @@ import { createUserProfile, getUserProfile } from "@/services/auth/user.service"
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
+async function ensureUserProfile(user: FirebaseUser): Promise<void> {
+  try {
+    const profile = await getUserProfile(user.uid);
+    if (profile) return;
+
+    await createUserProfile(user.uid, {
+      email: user.email ?? "",
+      displayName:
+        user.displayName ?? user.email?.split("@")[0] ?? "User",
+      photoURL: user.photoURL,
+    });
+  } catch (error) {
+    console.warn("[auth] Firestore profile sync skipped:", error);
+  }
+}
+
 export function mapFirebaseUser(user: FirebaseUser): AppUser {
   return {
     id: user.uid,
@@ -40,11 +56,7 @@ export async function signUp(input: SignUpInput): Promise<AppUser> {
     await updateProfile(credential.user, { displayName });
   }
 
-  await createUserProfile(credential.user.uid, {
-    email: credential.user.email ?? input.email,
-    displayName,
-    photoURL: credential.user.photoURL,
-  });
+  await ensureUserProfile(credential.user);
 
   return mapFirebaseUser(credential.user);
 }
@@ -57,17 +69,7 @@ export async function signIn(input: SignInInput): Promise<AppUser> {
     input.password
   );
 
-  const profile = await getUserProfile(credential.user.uid);
-  if (!profile) {
-    await createUserProfile(credential.user.uid, {
-      email: credential.user.email ?? input.email,
-      displayName:
-        credential.user.displayName ??
-        credential.user.email?.split("@")[0] ??
-        "User",
-      photoURL: credential.user.photoURL,
-    });
-  }
+  await ensureUserProfile(credential.user);
 
   return mapFirebaseUser(credential.user);
 }
@@ -76,17 +78,7 @@ export async function signInWithGoogle(): Promise<AppUser> {
   const auth = getClientAuth();
   const credential = await signInWithPopup(auth, googleProvider);
 
-  const profile = await getUserProfile(credential.user.uid);
-  if (!profile) {
-    await createUserProfile(credential.user.uid, {
-      email: credential.user.email ?? "",
-      displayName:
-        credential.user.displayName ??
-        credential.user.email?.split("@")[0] ??
-        "User",
-      photoURL: credential.user.photoURL,
-    });
-  }
+  await ensureUserProfile(credential.user);
 
   return mapFirebaseUser(credential.user);
 }
@@ -114,14 +106,22 @@ export function subscribeToAuthState(
 }
 
 export async function syncServerSession(idToken: string | null): Promise<void> {
-  if (idToken) {
-    await fetch("/api/auth/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken }),
-    });
-    return;
-  }
+  try {
+    if (idToken) {
+      const response = await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
 
-  await fetch("/api/auth/session", { method: "DELETE" });
+      if (!response.ok) {
+        console.warn("[auth] Session cookie sync failed:", response.status);
+      }
+      return;
+    }
+
+    await fetch("/api/auth/session", { method: "DELETE" });
+  } catch (error) {
+    console.warn("[auth] Session cookie sync skipped:", error);
+  }
 }

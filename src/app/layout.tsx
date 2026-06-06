@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import NavbarCart from "@/components/cart/NavbarCart";
+import NavbarAuth from "@/components/auth/NavbarAuth";
 import ToastContainer from "@/components/common/ToastContainer";
 import GlobalSearch from "@/components/search/GlobalSearch";
 import NavbarWishlist from "@/components/wishlist/NavbarWishlist";
@@ -7,6 +8,7 @@ import HeaderInitializer from "@/components/sweetwater/HeaderInitializer";
 import HtmlLinkInterceptor from "@/components/sweetwater/HtmlLinkInterceptor";
 import QueryProvider from "@/providers/QueryProvider";
 import AuthProvider from "@/providers/AuthProvider";
+import "@/components/auth/auth.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -50,6 +52,7 @@ export default function RootLayout({
           <GlobalSearch />
           <NavbarWishlist />
           <NavbarCart />
+          <NavbarAuth />
           <ToastContainer />
           {children}
           </AuthProvider>
