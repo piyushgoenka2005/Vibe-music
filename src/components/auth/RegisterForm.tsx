@@ -8,13 +8,18 @@ import { ROUTES } from "@/lib/routes";
 
 export default function RegisterForm() {
   const router = useRouter();
-  const login = useAuthStore((s) => s.login);
+  const signUp = useAuthStore((s) => s.signUp);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    login(email.trim(), name.trim() || undefined);
+    await signUp({
+      email: email.trim(),
+      password,
+      displayName: name.trim() || undefined,
+    });
     router.push(ROUTES.account);
   }
 
@@ -45,6 +50,24 @@ export default function RegisterForm() {
         required
         value={email}
         onChange={(event) => setEmail(event.target.value)}
+        style={{
+          width: "100%",
+          padding: "10px 12px",
+          border: "1px solid #d1d0cf",
+          borderRadius: 3,
+          marginBottom: 16,
+        }}
+      />
+      <label htmlFor="register-password" style={{ display: "block", marginBottom: 8 }}>
+        Password
+      </label>
+      <input
+        id="register-password"
+        type="password"
+        required
+        minLength={6}
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
         style={{
           width: "100%",
           padding: "10px 12px",

@@ -9,15 +9,8 @@ import "./wishlist.css";
 export default function AccountWishlist() {
   const items = useWishlistStore((s) => s.items);
   const user = useAuthStore((s) => s.user);
-  const login = useAuthStore((s) => s.login);
   const logout = useAuthStore((s) => s.logout);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const syncWithAccount = useWishlistStore((s) => s.syncWithAccount);
-
-  function handleDemoLogin() {
-    login("demo@sweetwater.com", "Demo User");
-    syncWithAccount();
-  }
 
   return (
     <section className="wl-account-section" aria-label="Wishlist">
@@ -65,13 +58,13 @@ export default function AccountWishlist() {
           View Wishlist
         </Link>
         {isAuthenticated ? (
-          <button type="button" className="wl-btn-secondary" onClick={logout}>
+          <button type="button" className="wl-btn-secondary" onClick={() => void logout()}>
             Sign Out
           </button>
         ) : (
-          <button type="button" className="wl-btn-secondary" onClick={handleDemoLogin}>
-            Demo Sign In
-          </button>
+          <Link href={ROUTES.login} className="wl-btn-secondary" style={{ padding: "0 20px" }}>
+            Sign In
+          </Link>
         )}
       </div>
     </section>

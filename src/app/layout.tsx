@@ -6,6 +6,7 @@ import NavbarWishlist from "@/components/wishlist/NavbarWishlist";
 import HeaderInitializer from "@/components/sweetwater/HeaderInitializer";
 import HtmlLinkInterceptor from "@/components/sweetwater/HtmlLinkInterceptor";
 import QueryProvider from "@/providers/QueryProvider";
+import AuthProvider from "@/providers/AuthProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -43,13 +44,15 @@ export default function RootLayout({
       </head>
       <body>
         <QueryProvider>
-          <HeaderInitializer />
+          <AuthProvider>
+            <HeaderInitializer />
           <HtmlLinkInterceptor />
           <GlobalSearch />
           <NavbarWishlist />
           <NavbarCart />
           <ToastContainer />
           {children}
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

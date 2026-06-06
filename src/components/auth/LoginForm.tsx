@@ -8,12 +8,13 @@ import { ROUTES } from "@/lib/routes";
 
 export default function LoginForm() {
   const router = useRouter();
-  const login = useAuthStore((s) => s.login);
-  const [email, setEmail] = useState("demo@sweetwater.com");
+  const signIn = useAuthStore((s) => s.signIn);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    login(email.trim());
+    await signIn({ email: email.trim(), password });
     router.push(ROUTES.account);
   }
 
@@ -28,6 +29,23 @@ export default function LoginForm() {
         required
         value={email}
         onChange={(event) => setEmail(event.target.value)}
+        style={{
+          width: "100%",
+          padding: "10px 12px",
+          border: "1px solid #d1d0cf",
+          borderRadius: 3,
+          marginBottom: 16,
+        }}
+      />
+      <label htmlFor="login-password" style={{ display: "block", marginBottom: 8 }}>
+        Password
+      </label>
+      <input
+        id="login-password"
+        type="password"
+        required
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
         style={{
           width: "100%",
           padding: "10px 12px",

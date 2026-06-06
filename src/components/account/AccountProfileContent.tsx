@@ -24,7 +24,9 @@ export default function AccountProfileContent() {
       </p>
       <button
         type="button"
-        onClick={logout}
+        onClick={() => {
+          void logout();
+        }}
         style={{
           border: "1px solid #d1d0cf",
           background: "#fff",
