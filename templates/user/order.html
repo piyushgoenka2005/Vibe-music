@@ -1,0 +1,69 @@
+{% extends 'user/profile.html' %}
+{% block titall %} My Orders {% endblock %}
+
+{% block contentt %}
+<div class="orders-list">
+    {% if emptyorder == 0 %}
+    <div style="text-align: center; padding: 60px 0;">
+        <i class="fas fa-shopping-bag" style="font-size: 48px; color: #ddd; margin-bottom: 20px; display: block;"></i>
+        <h3 style="font-size: 20px; color: #444; margin-bottom: 10px;">No orders found</h3>
+        <p style="color: #888; margin-bottom: 25px;">You haven't placed any orders yet. Start shopping to see them here!</p>
+        <a href="/user/product/" class="place-order-btn" style="width: auto; padding: 12px 30px;">Start Shopping</a>
+    </div>
+    {% else %}
+        {% for order in allorder %}
+        <div class="order-card" style="border: 1px solid #eee; border-radius: 12px; margin-bottom: 25px; overflow: hidden; transition: transform .2s, box-shadow .2s;">
+            <div class="order-header" style="background: #fafafa; padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 30px;">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase;">Order Placed</div>
+                        <div style="font-size: 14px; font-weight: 700;">{{ order.order_date|date:"F d, Y" }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase;">Total</div>
+                        <div style="font-size: 14px; font-weight: 700;">₹ {{ order.total_amount }}.00</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase;">Ship To</div>
+                        <div style="font-size: 14px; color: var(--primary-blue); font-weight: 700; cursor: help;">{{ request.session.username }}</div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase;">Order # {{ order.order_idd }}</div>
+                    <a href="/user/order/{{order.id}}/0" style="font-size: 13px; color: var(--primary-blue); font-weight: 700; text-decoration: none;">View Details</a>
+                </div>
+            </div>
+            
+            <div class="order-body" style="padding: 25px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="width: 10px; height: 10px; background: {% if order.order_status == 'pending' %}#ff9800{% elif order.order_status == 'delivered' %}#4caf50{% else %}#2196f3{% endif %}; border-radius: 50%;"></span>
+                        <h4 style="font-size: 16px; font-weight: 800; margin: 0; text-transform: capitalize;">{{ order.order_status }}</h4>
+                    </div>
+                    <p style="margin: 0; font-size: 14px; color: #666;">Payment: {{ order.payment_mode }}</p>
+                </div>
+                
+                <div style="display: flex; gap: 15px;">
+                    <a href="/user/order/{{order.id}}/0" class="place-order-btn" style="margin:0; padding: 10px 20px; width: auto; font-size: 14px; background: #eee; color: #333;">Buy it again</a>
+                    {% if order.order_status == 'pending' %}
+                        <button onclick="cancelOrder({{order.id}})" class="place-order-btn" style="margin:0; padding: 10px 20px; width: auto; font-size: 14px; background: #fff; color: #d32f2f; border: 1px solid #d32f2f;">Cancel Order</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    function cancelOrder(id) {
+        if(confirm('Are you sure you want to cancel this order?')) {
+            // Add cancellation logic here (redirect or AJAX)
+            alert('Order cancellation request received for ID: ' + id);
+        }
+    }
+</script>
+{% endblock %}

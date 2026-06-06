@@ -1,0 +1,196 @@
+{% extends 'user/index.html' %}
+{% load static %}
+{% block title %} Welcome Back | Vibe Music {% endblock %}
+
+{% block css %}
+<style>
+    .auth-page {
+        background: radial-gradient(circle at top left, #edf5ff, #f7faff 42%, #ffffff 85%);
+        min-height: calc(100vh - 420px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 64px 20px;
+        width: min(100%, 1200px);
+        margin: 0 auto;
+    }
+
+    .auth-shell {
+        width: min(920px, 100%);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: #fff;
+        border: 1px solid #e7edf5;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 20px 48px rgba(0, 36, 81, 0.14);
+        margin: 0 auto;
+    }
+
+    .auth-brand {
+        padding: 42px;
+        background: linear-gradient(145deg, #003f86, #005cb9 58%, #0f78dd);
+        color: #fff;
+    }
+
+    .auth-brand h1 {
+        font-size: 36px;
+        line-height: 1.1;
+        margin-bottom: 12px;
+        font-weight: 800;
+    }
+
+    .auth-brand p {
+        font-size: 15px;
+        opacity: .92;
+        margin-bottom: 24px;
+    }
+
+    .auth-points {
+        display: grid;
+        gap: 10px;
+        font-size: 14px;
+        opacity: .95;
+    }
+
+    .auth-points div {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .auth-main {
+        padding: 36px;
+    }
+
+    .auth-main h2 {
+        font-size: 28px;
+        margin-bottom: 6px;
+        color: #0f2238;
+        font-weight: 800;
+    }
+
+    .auth-main .sub {
+        font-size: 14px;
+        color: #5b6f84;
+        margin-bottom: 22px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: #34495e;
+        margin-bottom: 8px;
+        letter-spacing: .4px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 13px 14px;
+        border: 1.5px solid #dfe8f2;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(0, 92, 185, .14);
+    }
+
+    .auth-btn {
+        background: var(--primary-blue);
+        color: #fff;
+        border: none;
+        padding: 14px;
+        width: 100%;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform .2s, background .2s;
+    }
+
+    .auth-btn:hover { background: #004d99; transform: translateY(-1px); }
+
+    .auth-footer {
+        margin-top: 18px;
+        text-align: center;
+        font-size: 14px;
+        color: #5f7389;
+    }
+
+    .auth-footer a { color: var(--primary-blue); font-weight: 700; }
+
+    .alert {
+        padding: 11px 12px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        font-size: 13px;
+    }
+
+    .alert-info {
+        background: #e9f3ff;
+        color: #0d4a8a;
+        border: 1px solid #bedcfa;
+    }
+
+    @media (max-width: 900px) {
+        .auth-shell { grid-template-columns: 1fr; }
+        .auth-brand { padding: 28px; }
+        .auth-main { padding: 28px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-shell">
+        <aside class="auth-brand">
+            <h1>Welcome Back</h1>
+            <p>Sign in to track orders, manage addresses, and continue your shopping journey.</p>
+            <div class="auth-points">
+                <div><i class="fas fa-circle-check"></i> Fast and secure checkout</div>
+                <div><i class="fas fa-circle-check"></i> Real-time order tracking</div>
+                <div><i class="fas fa-circle-check"></i> Saved products and preferences</div>
+            </div>
+        </aside>
+        <section class="auth-main">
+            <h2>Sign In</h2>
+            <p class="sub">Use your username or email to access your account.</p>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Username or Email</label>
+                    <input type="text" name="username" class="form-control" placeholder="Enter your username or email" required autofocus>
+                </div>
+                <div class="form-group">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <label style="margin-bottom:0;">Password</label>
+                        <a href="{% url 'password_resett' %}" style="font-size:12px;color:#5f7389;font-weight:700;">Forgot Password?</a>
+                    </div>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="auth-btn">Sign In to My Account</button>
+            </form>
+
+            <div class="auth-footer">
+                Don't have an account? <a href="{% url 'register_attempt' %}">Create One</a>
+                <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid #edf3fa;">
+                    Are you an administrator? <a href="/admin/">Admin Login</a>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

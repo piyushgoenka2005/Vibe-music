@@ -1,0 +1,74 @@
+{% extends 'user/index.html' %}
+{% load static %}
+{% block title %} Category List {% endblock %}
+{% block content %}
+
+<style>
+  .vm-shell { background:#fff; }
+  .vm-wrap { width:min(1280px,96%); margin:0 auto; }
+  .vm-head { border-bottom:1px solid #e5e7eb; background:#fff; margin-top:8px; }
+  .vm-head .roww { display:grid; grid-template-columns:190px 1fr auto; gap:16px; align-items:center; padding:10px 0; }
+  .vm-logo img { max-height:58px; width:auto; }
+  .vm-search { position:relative; }
+  .vm-search input { width:100%; height:42px; border:1px solid #d1d5db; border-radius:4px; padding:0 42px 0 12px; }
+  .vm-search i { position:absolute; right:12px; top:12px; color:#6b7280; }
+  .vm-actions a { color:#0f6dbc; font-weight:700; margin-left:14px; }
+  .vm-title { padding:18px 0 10px; }
+  .vm-title h2 { margin:0; font-size:28px; }
+  .vm-title p { margin:4px 0 0; color:#64748b; }
+  .vm-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; padding-bottom:38px; }
+  .vm-card { border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#fff; text-align:center; }
+  .vm-card .thumb { height:120px; background:#f8fafc; display:flex; align-items:center; justify-content:center; }
+  .vm-card .thumb img { width:100%; height:100%; object-fit:cover; }
+  .vm-card .name { padding:10px; color:#111827; font-weight:700; font-size:13px; min-height:46px; }
+  @media (max-width:1200px){ .vm-grid{grid-template-columns:repeat(4,minmax(0,1fr));} }
+  @media (max-width:900px){ .vm-head .roww{grid-template-columns:1fr;} .vm-actions a{margin-left:0; margin-right:14px;} .vm-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+</style>
+
+<div class="vm-shell">
+  <div class="vm-head">
+    <div class="vm-wrap">
+      <div class="roww">
+        <div class="vm-logo">
+          <a href="/user/"><img src="{% static 'admin/folder/images/logo-vibemusic.png' %}" alt="Vibe Music"></a>
+        </div>
+        <form class="vm-search" method="get" action="/user/category/">
+          <input type="text" name="q" value="{{ q }}" placeholder="Search categories...">
+          <i class="fa fa-search"></i>
+        </form>
+        <div class="vm-actions">
+          <a href="/user/product/">All Products</a>
+          <a href="/user/gocart/">Cart (0)</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="vm-wrap">
+    <div class="vm-title">
+      <h2>All Categories</h2>
+      <p>{% if q %}Showing categories matching "{{ q }}"{% else %}Explore instruments and accessories by category{% endif %}</p>
+    </div>
+
+    {% if cat_obj %}
+      <div class="vm-grid">
+        {% for i in cat_obj %}
+          <a class="vm-card" href="/user/category/{{i.id}}">
+            <div class="thumb">
+              {% if i.cat_img %}
+                <img src="{{i.cat_img.url}}" alt="{{i.cat_name}}">
+              {% else %}
+                <img src="{% static 'admin/folder/images/placeholder.jpg' %}" alt="{{i.cat_name}}">
+              {% endif %}
+            </div>
+            <div class="name">{{i.cat_name}}</div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="padding: 28px 0; color: #64748b;">No categories found for your search.</div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

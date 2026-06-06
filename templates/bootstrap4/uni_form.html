@@ -1,0 +1,18 @@
+{% load crispy_forms_field %}
+{% if form_tag %}<form {{ flat_attrs }}>{% endif %}
+{% if form_method|default:'post'|lower == 'post' and csrf_token %}{% csrf_token %}{% endif %}
+{% for field in form %}
+  <div class="form-group">
+    {% if field.label %}
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {% endif %}
+    {{ field }}
+    {% if field.help_text %}
+      <small class="form-text text-muted">{{ field.help_text }}</small>
+    {% endif %}
+    {% for error in field.errors %}
+      <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+  </div>
+{% endfor %}
+{% if form_tag %}</form>{% endif %}

@@ -1,0 +1,163 @@
+{% extends 'user/index.html' %}
+{% load static %}
+{% block title %} Email Sent   {% endblock %}
+{% block css %}
+<style>
+    .verify-wrap {
+        min-height: calc(100vh - 420px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 70px 20px;
+        background: radial-gradient(circle at top right, #eaf4ff, #f8fbff 38%, #ffffff 75%);
+    }
+
+    .verify-card {
+        width: 100%;
+        max-width: 760px;
+        background: #fff;
+        border: 1px solid #e5edf7;
+        border-radius: 18px;
+        box-shadow: 0 20px 45px rgba(0, 58, 122, 0.12);
+        padding: 34px;
+    }
+
+    .verify-grid {
+        display: grid;
+        grid-template-columns: 1.2fr .8fr;
+        gap: 28px;
+        align-items: center;
+    }
+
+    .verify-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: #e8f2ff;
+        color: #005cb9;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        margin-bottom: 14px;
+    }
+
+    .verify-title {
+        font-size: 34px;
+        line-height: 1.1;
+        color: #0c2744;
+        margin-bottom: 12px;
+        font-weight: 800;
+    }
+
+    .verify-desc {
+        color: #4a6179;
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 22px;
+    }
+
+    .verify-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .verify-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        padding: 12px 16px;
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .verify-btn.primary {
+        background: #005cb9;
+        color: #fff;
+    }
+
+    .verify-btn.primary:hover {
+        background: #004d99;
+    }
+
+    .verify-btn.ghost {
+        background: #fff;
+        color: #30465f;
+        border-color: #d0deec;
+    }
+
+    .verify-btn.ghost:hover {
+        background: #f7fbff;
+    }
+
+    .verify-mail {
+        background: linear-gradient(145deg, #f3f8ff, #d9ebff);
+        border: 1px solid #c8def8;
+        border-radius: 14px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .verify-mail img {
+        width: 100%;
+        max-width: 170px;
+        margin: 0 auto 8px;
+        display: block;
+    }
+
+    .verify-mail small {
+        color: #46617e;
+        font-weight: 600;
+    }
+
+    @media (max-width: 820px) {
+        .verify-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .verify-title {
+            font-size: 28px;
+        }
+
+        .verify-card {
+            padding: 24px;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<section class="verify-wrap">
+    <div class="verify-card">
+        <div class="verify-grid">
+            <div>
+                <span class="verify-pill"><i class="fas fa-envelope-open-text"></i> Verification Required</span>
+                <h1 class="verify-title">Check your inbox to verify your account</h1>
+                <p class="verify-desc">
+                    We sent you a verification link by email. Open it once to activate your account,
+                    then continue shopping from your account dashboard.
+                </p>
+                <div class="verify-actions">
+                    <a href="https://mail.google.com/" target="_blank" rel="noopener noreferrer" class="verify-btn primary">
+                        <i class="fas fa-inbox"></i> Open Gmail
+                    </a>
+                    <a href="/user/accounts/login/" class="verify-btn ghost">
+                        <i class="fas fa-right-to-bracket"></i> Go to Login
+                    </a>
+                </div>
+            </div>
+            <a href="https://mail.google.com/" target="_blank" rel="noopener noreferrer" class="verify-mail">
+                <img src="{% static 'user/assets/img/email-send.png' %}" alt="Email sent">
+                <small>Click to open your mailbox</small>
+            </a>
+        </div>
+    </div>
+</section>
+
+
+    {% endblock %}

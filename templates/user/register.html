@@ -1,0 +1,202 @@
+{% extends 'user/index.html' %}
+{% load static %}
+{% block title %} Create Your Account | Vibe Music {% endblock %}
+
+{% block css %}
+<style>
+    .auth-page {
+        background: radial-gradient(circle at top right, #ecf5ff, #f8fbff 42%, #ffffff 85%);
+        min-height: calc(100vh - 420px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 64px 20px;
+        width: min(100%, 1200px);
+        margin: 0 auto;
+    }
+
+    .auth-shell {
+        width: min(980px, 100%);
+        display: grid;
+        grid-template-columns: .95fr 1.05fr;
+        background: #fff;
+        border: 1px solid #e7edf5;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 20px 48px rgba(0, 36, 81, 0.14);
+        margin: 0 auto;
+    }
+
+    .auth-brand {
+        padding: 42px;
+        background: linear-gradient(145deg, #17191f, #202937 58%, #2a3a4f);
+        color: #fff;
+    }
+
+    .auth-brand h1 {
+        font-size: 34px;
+        line-height: 1.1;
+        margin-bottom: 12px;
+        font-weight: 800;
+    }
+
+    .auth-brand p {
+        font-size: 15px;
+        opacity: .92;
+        margin-bottom: 24px;
+    }
+
+    .auth-points {
+        display: grid;
+        gap: 10px;
+        font-size: 14px;
+        opacity: .95;
+    }
+
+    .auth-points div {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .auth-main {
+        padding: 36px;
+    }
+
+    .auth-main h2 {
+        font-size: 28px;
+        margin-bottom: 6px;
+        color: #0f2238;
+        font-weight: 800;
+    }
+
+    .auth-main .sub {
+        font-size: 14px;
+        color: #5b6f84;
+        margin-bottom: 22px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #34495e;
+        margin-bottom: 8px;
+        letter-spacing: .4px;
+        text-transform: uppercase;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 13px 14px;
+        border: 1.5px solid #dfe8f2;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(0, 92, 185, .14);
+    }
+
+    .auth-btn {
+        background: var(--primary-blue);
+        color: #fff;
+        border: none;
+        padding: 14px;
+        width: 100%;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform .2s, background .2s;
+        margin-top: 10px;
+    }
+
+    .auth-btn:hover { background: #004d99; transform: translateY(-1px); }
+
+    .auth-footer {
+        margin-top: 18px;
+        text-align: center;
+        font-size: 14px;
+        color: #5f7389;
+    }
+
+    .auth-footer a { color: var(--primary-blue); font-weight: 700; }
+
+    .alert {
+        padding: 11px 12px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        font-size: 13px;
+    }
+
+    .alert-info {
+        background: #e9f3ff;
+        color: #0d4a8a;
+        border: 1px solid #bedcfa;
+    }
+
+    @media (max-width: 900px) {
+        .auth-shell { grid-template-columns: 1fr; }
+        .auth-brand { padding: 28px; }
+        .auth-main { padding: 28px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-shell">
+        <aside class="auth-brand">
+            <h1>Create Your Account</h1>
+            <p>Join Vibe Music and unlock a personalized buying experience from day one.</p>
+            <div class="auth-points">
+                <div><i class="fas fa-circle-check"></i> Save addresses and checkout faster</div>
+                <div><i class="fas fa-circle-check"></i> Access order history instantly</div>
+                <div><i class="fas fa-circle-check"></i> Get launches and deals first</div>
+            </div>
+        </aside>
+        <section class="auth-main">
+            <h2>Sign Up</h2>
+            <p class="sub">Create your account in less than a minute.</p>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" class="form-control" placeholder="Choose a unique username" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="yourname@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="Create a strong password" required>
+                </div>
+                <div style="font-size:12px;color:#5f7389;margin-bottom:18px;line-height:1.5;">
+                    By creating an account, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
+                </div>
+                <button type="submit" class="auth-btn">Create My Account</button>
+            </form>
+
+            <div class="auth-footer">
+                Already have an account? <a href="{% url 'login_attempt' %}">Log In</a>
+                <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid #edf3fa;">
+                    Are you an administrator? <a href="/admin/">Admin Login</a>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

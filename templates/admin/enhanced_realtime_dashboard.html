@@ -1,0 +1,883 @@
+{% extends 'admin/masterpage/index-1.html' %}
+{% load static %}
+{% block title3 %} Enhanced Real-Time Dashboard {% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Vibe Music Enhanced Real-Time Dashboard</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/admin_side/">Home</a></li>
+                        <li class="breadcrumb-item active">Enhanced Real-Time Dashboard</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Real-time Status Bar -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="alert alert-info alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5><i class="icon fas fa-bolt"></i> Real-Time Connection Status</h5>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <span class="connection-indicator" id="dashboard-status"></span> Dashboard
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="connection-indicator" id="notifications-status"></span> Notifications
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="connection-indicator" id="orders-status"></span> Order Tracking
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="connection-indicator" id="activity-status"></span> User Activity
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-right">
+                                <span id="last-update">Last updated: Never</span>
+                                <button class="btn btn-sm btn-primary ml-2" onclick="refreshAllConnections()">
+                                    <i class="fas fa-sync"></i> Refresh All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Panel -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bell"></i> Real-Time Notifications
+                                <span class="badge badge-warning ml-2" id="notification-count">0</span>
+                            </h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" onclick="clearAllNotifications()">
+                                    <i class="fas fa-trash"></i> Clear All
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Message</th>
+                                            <th>Time</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="notifications-tbody">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">No notifications</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Stats Cards -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-info">
+                        <div class="inner">
+                            <h3 id="total-products">0</h3>
+                            <p>Total Products</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-success">
+                        <div class="inner">
+                            <h3 id="total-users">0</h3>
+                            <p>Total Users</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-warning">
+                        <div class="inner">
+                            <h3 id="total-orders">0</h3>
+                            <p>Total Orders</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-danger">
+                        <div class="inner">
+                            <h3 id="low-stock">0</h3>
+                            <p>Low Stock Items</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Analytics Dashboard -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-line"></i> Sales Analytics
+                            </h3>
+                            <div class="card-tools">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-default btn-sm" onclick="changeAnalyticsPeriod('7d')">7 Days</button>
+                                    <button type="button" class="btn btn-default btn-sm" onclick="changeAnalyticsPeriod('30d')">30 Days</button>
+                                    <button type="button" class="btn btn-default btn-sm" onclick="changeAnalyticsPeriod('90d')">90 Days</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="sales-chart" style="height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-pie"></i> Category Performance
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="category-chart" style="height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Tracking & User Activity -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-truck"></i> Live Order Tracking
+                            </h3>
+                            <div class="card-tools">
+                                <span class="badge badge-info" id="live-orders-count">0 Live Orders</span>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Product</th>
+                                            <th>Status</th>
+                                            <th>Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="live-orders-tbody">
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">No live orders</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-users"></i> User Activity Monitor
+                            </h3>
+                            <div class="card-tools">
+                                <span class="badge badge-success" id="online-users-count">0 Online</span>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Activity</th>
+                                            <th>Details</th>
+                                            <th>Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="user-activity-tbody">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">No recent activity</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Products & Revenue Metrics -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-trophy"></i> Top Selling Products
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Category</th>
+                                            <th>Orders</th>
+                                            <th>Revenue</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="top-products-tbody">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-bar"></i> Revenue Metrics
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-info"><i class="fas fa-calendar-day"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Today's Revenue</span>
+                                            <span class="info-box-number" id="today-revenue">Rs. 0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-success"><i class="fas fa-calendar-alt"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Monthly Revenue</span>
+                                            <span class="info-box-number" id="monthly-revenue">Rs. 0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-warning"><i class="fas fa-percentage"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Growth Rate</span>
+                                            <span class="info-box-number" id="growth-rate">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-danger"><i class="fas fa-users"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Conversion Rate</span>
+                                            <span class="info-box-number" id="conversion-rate">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Inventory Monitor -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-warehouse"></i> Live Inventory Monitor
+                            </h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" onclick="refreshInventory()">
+                                    <i class="fas fa-sync"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Product Name</th>
+                                            <th>Category</th>
+                                            <th>Current Stock</th>
+                                            <th>Price</th>
+                                            <th>Status</th>
+                                            <th>Last Updated</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inventory-tbody">
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted">Loading inventory data...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+.connection-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.connection-indicator.connected {
+    background-color: #28a745;
+    animation: pulse 2s infinite;
+}
+
+.connection-indicator.disconnected {
+    background-color: #dc3545;
+}
+
+.connection-indicator.connecting {
+    background-color: #ffc107;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.notification-new {
+    animation: slideInRight 0.5s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.order-status-pending { background-color: #fff3cd; }
+.order-status-processing { background-color: #cce5ff; }
+.order-status-completed { background-color: #d4edda; }
+.order-status-cancelled { background-color: #f8d7da; }
+
+.stock-low {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.stock-critical {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.stock-good {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.activity-new {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// WebSocket connections
+let dashboardSocket = null;
+let notificationsSocket = null;
+let ordersSocket = null;
+let activitySocket = null;
+let analyticsSocket = null;
+let inventorySocket = null;
+
+// Chart instances
+let salesChart = null;
+let categoryChart = null;
+
+// Connection management
+function connectAllWebSockets() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    
+    // Dashboard WebSocket
+    dashboardSocket = new WebSocket(`${protocol}//${host}/ws/admin/dashboard/`);
+    dashboardSocket.onopen = () => updateConnectionStatus('dashboard', true);
+    dashboardSocket.onmessage = handleDashboardMessage;
+    dashboardSocket.onclose = () => updateConnectionStatus('dashboard', false);
+    
+    // Notifications WebSocket
+    notificationsSocket = new WebSocket(`${protocol}//${host}/ws/admin/notifications/`);
+    notificationsSocket.onopen = () => updateConnectionStatus('notifications', true);
+    notificationsSocket.onmessage = handleNotificationMessage;
+    notificationsSocket.onclose = () => updateConnectionStatus('notifications', false);
+    
+    // Order Tracking WebSocket
+    ordersSocket = new WebSocket(`${protocol}//${host}/ws/admin/order-tracking/`);
+    ordersSocket.onopen = () => updateConnectionStatus('orders', true);
+    ordersSocket.onmessage = handleOrderMessage;
+    ordersSocket.onclose = () => updateConnectionStatus('orders', false);
+    
+    // User Activity WebSocket
+    activitySocket = new WebSocket(`${protocol}//${host}/ws/admin/user-activity/`);
+    activitySocket.onopen = () => updateConnectionStatus('activity', true);
+    activitySocket.onmessage = handleActivityMessage;
+    activitySocket.onclose = () => updateConnectionStatus('activity', false);
+    
+    // Sales Analytics WebSocket
+    analyticsSocket = new WebSocket(`${protocol}//${host}/ws/admin/sales-analytics/`);
+    analyticsSocket.onopen = () => handleAnalyticsOpen;
+    analyticsSocket.onmessage = handleAnalyticsMessage;
+    analyticsSocket.onclose = () => handleAnalyticsClose;
+    
+    // Inventory WebSocket
+    inventorySocket = new WebSocket(`${protocol}//${host}/ws/admin/inventory/`);
+    inventorySocket.onopen = () => handleInventoryOpen;
+    inventorySocket.onmessage = handleInventoryMessage;
+    inventorySocket.onclose = () => handleInventoryClose;
+}
+
+function updateConnectionStatus(type, connected) {
+    const statusElement = document.getElementById(`${type}-status`);
+    if (statusElement) {
+        statusElement.className = `connection-indicator ${connected ? 'connected' : 'disconnected'}`;
+    }
+}
+
+// Message handlers
+function handleDashboardMessage(e) {
+    const data = JSON.parse(e.data);
+    if (data.type === 'dashboard_update') {
+        updateDashboardStats(data.data);
+        updateLastUpdated(data.data.last_updated);
+    }
+}
+
+function handleNotificationMessage(e) {
+    const data = JSON.parse(e.data);
+    if (data.type === 'notifications_update') {
+        updateNotifications(data.data);
+    } else if (data.type === 'new_notification') {
+        addNewNotification(data.data);
+    }
+}
+
+function handleOrderMessage(e) {
+    const data = JSON.parse(e.data);
+    if (data.type === 'order_updates') {
+        updateOrderTracking(data.data);
+    } else if (data.type === 'order_status_update') {
+        updateOrderStatus(data.data);
+    }
+}
+
+function handleActivityMessage(e) {
+    const data = JSON.parse(e.data);
+    if (data.type === 'activity_update') {
+        updateUserActivity(data.data);
+    } else if (data.type === 'new_activity') {
+        addNewActivity(data.data);
+    }
+}
+
+function handleAnalyticsMessage(e) {
+    const data = JSON.parse(e.data);
+    if (data.type === 'analytics_update') {
+        updateAnalytics(data.data);
+    } else if (data.type === 'new_sale') {
+        addNewSale(data.data);
+    }
+}
+
+function handleInventoryMessage(e) {
+    const data = JSON.parse(e.data);
+    if (data.type === 'inventory_data') {
+        updateInventoryTable(data.data);
+    }
+}
+
+// Update functions
+function updateDashboardStats(data) {
+    document.getElementById('total-products').textContent = data.total_products;
+    document.getElementById('total-users').textContent = data.total_users;
+    document.getElementById('total-orders').textContent = data.total_orders;
+    document.getElementById('low-stock').textContent = data.low_stock_products;
+}
+
+function updateNotifications(notifications) {
+    const tbody = document.getElementById('notifications-tbody');
+    const countElement = document.getElementById('notification-count');
+    
+    if (notifications.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No notifications</td></tr>';
+        countElement.textContent = '0';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    notifications.forEach(notification => {
+        const row = document.createElement('tr');
+        row.className = notification.type === 'warning' ? 'table-warning' : 'table-info';
+        row.innerHTML = `
+            <td><span class="badge badge-${notification.type}">${notification.type}</span></td>
+            <td>
+                <strong>${notification.title}</strong><br>
+                <small>${notification.message}</small>
+            </td>
+            <td>${formatTime(notification.timestamp)}</td>
+            <td>
+                <a href="${notification.action_url}" class="btn btn-sm btn-primary">View</a>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    countElement.textContent = notifications.filter(n => !n.read).length;
+}
+
+function updateOrderTracking(data) {
+    const tbody = document.getElementById('live-orders-tbody');
+    const countElement = document.getElementById('live-orders-count');
+    
+    if (data.recent_orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No live orders</td></tr>';
+        countElement.textContent = '0 Live Orders';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    data.recent_orders.forEach(order => {
+        const row = document.createElement('tr');
+        row.className = `order-status-${order.status.toLowerCase()}`;
+        row.innerHTML = `
+            <td>#${order.id}</td>
+            <td>${order.user}</td>
+            <td>${order.product}</td>
+            <td><span class="badge badge-info">${order.status}</span></td>
+            <td>${formatTime(order.created_at)}</td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    countElement.textContent = `${data.recent_orders.length} Live Orders`;
+}
+
+function updateUserActivity(data) {
+    const tbody = document.getElementById('user-activity-tbody');
+    const countElement = document.getElementById('online-users-count');
+    
+    if (data.recent_activity.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No recent activity</td></tr>';
+        countElement.textContent = '0 Online';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    data.recent_activity.forEach(activity => {
+        const row = document.createElement('tr');
+        row.className = 'activity-new';
+        row.innerHTML = `
+            <td>${activity.user}</td>
+            <td><span class="badge badge-secondary">${activity.action}</span></td>
+            <td>${activity.details}</td>
+            <td>${formatTime(activity.timestamp)}</td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    countElement.textContent = `${data.user_stats.online_users} Online`;
+}
+
+function updateAnalytics(data) {
+    // Update revenue metrics
+    document.getElementById('today-revenue').textContent = `Rs. ${data.daily_sales[data.daily_sales.length - 1]?.revenue || 0}`;
+    document.getElementById('monthly-revenue').textContent = `Rs. ${data.monthly_comparison.this_month.revenue}`;
+    document.getElementById('growth-rate').textContent = `${data.monthly_comparison.revenue_growth || 0}%`;
+    document.getElementById('conversion-rate').textContent = `${data.conversion_metrics.registration_to_order_rate}%`;
+    
+    // Update sales chart
+    updateSalesChart(data.daily_sales);
+    
+    // Update category chart
+    updateCategoryChart(data.category_performance);
+    
+    // Update top products
+    updateTopProducts(data.top_products);
+}
+
+function updateInventoryTable(data) {
+    const tbody = document.getElementById('inventory-tbody');
+    
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No inventory data</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    data.forEach(product => {
+        const row = document.createElement('tr');
+        
+        let stockClass = 'stock-good';
+        let status = 'In Stock';
+        
+        if (product.stock <= 2) {
+            stockClass = 'stock-critical';
+            status = 'Critical';
+        } else if (product.stock <= 5) {
+            stockClass = 'stock-low';
+            status = 'Low Stock';
+        }
+        
+        row.className = stockClass;
+        row.innerHTML = `
+            <td>${product.name}</td>
+            <td>${product.category}</td>
+            <td><strong>${product.stock}</strong></td>
+            <td>Rs. ${product.price.toFixed(2)}</td>
+            <td><span class="badge badge-${status === 'In Stock' ? 'success' : status === 'Low Stock' ? 'warning' : 'danger'}">${status}</span></td>
+            <td>${formatTime(product.last_updated)}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="editStock(${product.id})">Edit</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function updateSalesChart(dailySales) {
+    const ctx = document.getElementById('sales-chart').getContext('2d');
+    
+    if (salesChart) {
+        salesChart.destroy();
+    }
+    
+    salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dailySales.map(d => formatDate(d.date)),
+            datasets: [{
+                label: 'Revenue',
+                data: dailySales.map(d => d.revenue),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }, {
+                label: 'Orders',
+                data: dailySales.map(d => d.orders),
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            }
+        }
+    });
+}
+
+function updateCategoryChart(categoryData) {
+    const ctx = document.getElementById('category-chart').getContext('2d');
+    
+    if (categoryChart) {
+        categoryChart.destroy();
+    }
+    
+    categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: categoryData.map(c => c.category),
+            datasets: [{
+                data: categoryData.map(c => c.revenue),
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                    '#FF9F40'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function updateTopProducts(products) {
+    const tbody = document.getElementById('top-products-tbody');
+    
+    if (products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No products</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    products.forEach(product => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${product.name}</td>
+            <td>${product.category}</td>
+            <td>${product.orders}</td>
+            <td>Rs. ${product.revenue.toFixed(2)}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Utility functions
+function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleString();
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+}
+
+function updateLastUpdated(timestamp) {
+    document.getElementById('last-update').textContent = `Last updated: ${formatTime(timestamp)}`;
+}
+
+function refreshAllConnections() {
+    connectAllWebSockets();
+}
+
+function clearAllNotifications() {
+    if (notificationsSocket && notificationsSocket.readyState === WebSocket.OPEN) {
+        notificationsSocket.send(JSON.stringify({type: 'clear_all'}));
+    }
+}
+
+function changeAnalyticsPeriod(period) {
+    if (analyticsSocket && analyticsSocket.readyState === WebSocket.OPEN) {
+        analyticsSocket.send(JSON.stringify({type: 'get_period_data', period: period}));
+    }
+}
+
+function refreshInventory() {
+    if (inventorySocket && inventorySocket.readyState === WebSocket.OPEN) {
+        inventorySocket.send(JSON.stringify({type: 'refresh_inventory'}));
+    }
+}
+
+function editStock(productId) {
+    // Implement stock editing functionality
+    console.log('Edit stock for product:', productId);
+}
+
+// Chart initialization handlers
+function handleAnalyticsOpen() {
+    console.log('Analytics WebSocket connected');
+}
+
+function handleAnalyticsClose() {
+    console.log('Analytics WebSocket disconnected');
+    setTimeout(connectAllWebSockets, 3000);
+}
+
+function handleInventoryOpen() {
+    console.log('Inventory WebSocket connected');
+}
+
+function handleInventoryClose() {
+    console.log('Inventory WebSocket disconnected');
+    setTimeout(connectAllWebSockets, 3000);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    connectAllWebSockets();
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', function() {
+    const sockets = [dashboardSocket, notificationsSocket, ordersSocket, activitySocket, analyticsSocket, inventorySocket];
+    sockets.forEach(socket => {
+        if (socket) socket.close();
+    });
+});
+</script>
+{% endblock %}

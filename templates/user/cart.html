@@ -1,0 +1,193 @@
+{% extends 'user/index.html' %}
+{% load static %}
+{% block title %} Shopping Cart | Vibe Music {% endblock %}
+
+{% block css %}
+<style>
+    .cart-page { background: #f9f9f9; padding: 60px 0; min-height: 600px; }
+    .cart-grid { display: grid; grid-template-columns: 1fr 380px; gap: 40px; }
+    
+    .cart-items-container { background: #fff; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
+    .cart-item { display: grid; grid-template-columns: 120px 1fr 150px 150px 50px; padding: 25px; border-bottom: 1px solid #eee; align-items: center; }
+    .cart-item:last-child { border-bottom: none; }
+    
+    .cart-item-img { width: 100px; height: 100px; }
+    .cart-item-img img { width: 100%; height: 100%; object-fit: contain; }
+    
+    .cart-item-info h3 { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 4px; }
+    .cart-item-info p { font-size: 13px; color: #666; }
+    
+    .cart-item-price { font-size: 18px; font-weight: 700; color: #111; }
+    
+    .qty-controls { display: flex; align-items: center; gap: 10px; }
+    .qty-btn { width: 32px; height: 32px; border: 1px solid #ddd; background: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .qty-input { width: 45px; height: 32px; text-align: center; border: 1px solid #ddd; border-radius: 4px; font-weight: 700; }
+    
+    .remove-btn { color: #888; cursor: pointer; transition: color .2s; }
+    .remove-btn:hover { color: #d32f2f; }
+
+    /* SUMMARY SIDEBAR */
+    .cart-summary { background: #fff; border-radius: 12px; border: 1px solid #eee; padding: 30px; position: sticky; top: 20px; }
+    .cart-summary h2 { font-size: 20px; font-weight: 800; margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+    
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 15px; color: #555; }
+    .summary-row.total { font-size: 24px; font-weight: 800; color: #111; border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px; }
+    
+    .checkout-btn { background: var(--primary-red); color: #fff; border: none; padding: 18px; border-radius: 30px; font-size: 18px; font-weight: 800; width: 100%; cursor: pointer; transition: transform .2s, background .2s; display: block; text-align: center; margin-top: 30px; }
+    .checkout-btn:hover { background: #b0141a; transform: translateY(-2px); }
+    
+    .guest-checkout { border-top: 1px solid #eee; margin-top: 25px; padding-top: 25px; text-align: center; }
+    .guest-checkout a { font-size: 14px; font-weight: 700; color: #0071c5; text-decoration: underline; }
+
+    .empty-cart-msg { text-align: center; padding: 100px 20px; }
+    .empty-cart-msg i { font-size: 64px; color: #eee; margin-bottom: 20px; }
+
+    @media (max-width: 1100px) {
+        .cart-grid { grid-template-columns: 1fr; }
+        .cart-summary { position: static; }
+    }
+    @media (max-width: 600px) {
+        .cart-item { grid-template-columns: 80px 1fr 1fr; gap: 15px; }
+        .cart-item-price, .qty-controls { font-size: 14px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-page">
+    <div class="container">
+        {% if emptycart == 'emtycart' %}
+        <div class="empty-cart-msg">
+            <i class="fas fa-shopping-cart"></i>
+            <h2>Your cart is empty</h2>
+            <p style="color:#666; margin-bottom:30px;">Looks like you haven't added any gear yet.</p>
+            <a href="/user/product/" class="btn" style="background:var(--primary-blue); color:#fff; border-radius:30px; padding:12px 35px; ">Start Shopping</a>
+        </div>
+        {% else %}
+        <div class="cart-grid">
+            <!-- Left: Items -->
+            <div class="cart-items-wrap">
+                <div class="cart-items-container">
+                    <div style="padding: 20px 25px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 800; font-size: 18px;">Items in Cart ({{cart_val}})</span>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <form method="post" action="/user/gocart/" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="clear_cart">
+                                <button type="submit" style="background: #d32f2f; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onclick="return confirm('Are you sure you want to clear all items from your cart?')">Clear Cart</button>
+                            </form>
+                            <a href="/user/product/" style="font-size: 13px; color: #0071c5; font-weight: 700;">+ Keep Shopping</a>
+                        </div>
+                    </div>
+                    {% for i in cartt %}
+                    <div class="cart-item" id="cart-item-{{i.id}}">
+                        <div class="cart-item-img">
+                            <img src="{{i.product_id.pro_image.url}}" alt="{{i.product_id.productname}}">
+                        </div>
+                        <div class="cart-item-info">
+                            <a href="/user/product/{{i.product_id.id}}"><h3>{{i.product_id.productname}}</h3></a>
+                            <p>Brand: {{i.product_id.brand|default:"Premium Gear"}}</p>
+                            <p>Color: {{i.product_id.pro_colour}}</p>
+                        </div>
+                        <div class="cart-item-price">
+                            <i class="fas fa-rupee-sign"></i> {{i.product_id.pro_price}}.00
+                        </div>
+                        <div class="qty-controls">
+                            <div class="qty-btn" onclick="updateCartQty({{i.id}}, -1)"><i class="fas fa-minus"></i></div>
+                            <input type="number" id="qty-{{i.id}}" value="{{i.quantity}}" class="qty-input" readonly>
+                            <div class="qty-btn" onclick="updateCartQty({{i.id}}, 1)"><i class="fas fa-plus"></i></div>
+                        </div>
+                        <div class="remove-btn" onclick="deleteItem({{i.id}})">
+                            <i class="fas fa-trash-alt"></i>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div style="margin-top: 20px; display: flex; align-items: center; gap: 15px; color: #666; font-size: 14px;">
+                    <i class="fas fa-shield-alt" style="color:#2e7d32; font-size:24px;"></i>
+                    <span>Secure Checkout with 256-bit SSL Encryption. Your security is our priority.</span>
+                </div>
+            </div>
+
+            <!-- Right: Summary -->
+            <div class="cart-summary">
+                <h2>Cart Summary</h2>
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="subtotal-display"><i class="fas fa-rupee-sign"></i> {{totall_amount}}.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span style="color:#2e7d32; font-weight:700;">FREE</span>
+                </div>
+                <div class="summary-row">
+                    <span>Estimated Tax</span>
+                    <span><i class="fas fa-rupee-sign"></i> 0.00</span>
+                </div>
+                
+                <div class="summary-row total">
+                    <span>Grand Total</span>
+                    <span id="total-display"><i class="fas fa-rupee-sign"></i> {{totall_amount}}.00</span>
+                </div>
+                
+                <a href="/user/checkout/" class="checkout-btn">Proceed to Checkout</a>
+                
+                <div class="guest-checkout">
+                    {% if not request.session.username %}
+                    <p>Already have an account? <a href="/user/accounts/login/">Login for faster checkout</a></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    function updateCartQty(cid, delta) {
+        const input = document.getElementById('qty-' + cid);
+        let newQty = parseInt(input.value) + delta;
+        if (newQty < 1) return;
+        
+        $.ajax({
+            url: "/user/gocart/",
+            method: "POST",
+            data: {
+                'id': cid,
+                'cartquntity': newQty,
+                'var': '3',
+                csrfmiddlewaretoken: '{{csrf_token}}'
+            },
+            success: function(data) {
+                if(data.status === true) {
+                    location.reload();
+                } else {
+                    alert("Requested quantity not available in stock.");
+                }
+            }
+        });
+    }
+
+    function deleteItem(cid) {
+        if(confirm("Are you sure you want to remove this item from your cart?")) {
+            $.ajax({
+                url: "/user/cart/",
+                method: "POST",
+                data: { 
+                    'id': cid,
+                    'var': '2',
+                    csrfmiddlewaretoken: '{{csrf_token}}'
+                },
+                success: function(data) {
+                    if(data.status === true) {
+                        location.reload();
+                    }
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Music | {% block title %}Musical Instruments & Pro Audio{% endblock %}</title>
+    <meta name="author" content="Vibe Music"/>
+    <meta name="description" content="Discover a Harmonious Shopping Experience for Music Instruments in our E Commerce Store."/>
+    <link rel="shortcut icon" href="{% static 'admin/folder/images/logo-mini-music-club.png' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Functional assets -->
+    <link rel="stylesheet" type="text/css" href="{% static 'user/folder/assets/css/slick.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'user/folder/assets/css/slick-theme.css' %}">
+    
+    <style>
+        @font-face {
+            font-display: swap;
+            font-family: VibeMusic;
+            src: url(https://media.sweetwater.com/m/fonts/aspira/aspira_regular/Aspira-Regular.woff2) format("woff2");
+        }
+        
+        :root {
+            --grey100: #2e2e2d;
+            --grey500: #888;
+            --primary-blue: #005cb9;
+            --primary-red: #d71920;
+            --header-height: 120px;
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box}
+        body {
+            background: #fff;
+            color: var(--grey100);
+            font-family: VibeMusic, 'Inter', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        a{text-decoration:none;color:inherit;cursor:pointer;transition:all .2s;}
+        ul{list-style:none}
+        
+        .container { max-width: 1440px; margin: 0 auto; padding: 0 40px; }
+        @media (max-width: 768px) { .container { padding: 0 20px; } }
+
+        /* UTIL BAR */
+        .util-bar { background: #f2f2f2; border-bottom: 1px solid #ddd; font-size: 12px; height: 40px; display: flex; align-items: center; }
+        .util-bar .container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .util-left { display: flex; gap: 20px; }
+        .util-left a { color: #555; font-weight: 500; }
+        .util-left a:hover { color: var(--primary-blue); }
+        .util-right { display: flex; gap: 25px; align-items: center; }
+        .util-right a { font-weight: 600; color: #333; }
+        .util-right .admin-link { color: var(--primary-red); font-weight: 800; }
+
+        /* MAIN HEADER */
+        .main-header { background: #fff; padding: 25px 0; border-bottom: 1px solid #f2f2f2; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .main-header .container { display: flex; align-items: center; gap: 40px; }
+        .logo-text { font-size: 38px; font-weight: 900; color: var(--primary-blue); letter-spacing: -1.5px; }
+        
+        .search-container { flex: 1; max-width: 800px; position: relative; }
+        .search-form { display: flex; background: #f5f5f5; border: 1px solid #e5e5e5; border-radius: 4px; overflow: hidden; transition: border-color .2s; }
+        .search-form:focus-within { border-color: var(--primary-blue); background: #fff; }
+        .search-form input { flex: 1; padding: 12px 15px; border: none; background: transparent; font-size: 16px; outline: none; }
+        .search-btn { background: transparent; border: none; padding: 0 15px; color: #888; cursor: pointer; }
+        
+        .header-tools { display: flex; align-items: center; gap: 35px; }
+        .tool-item { display: flex; flex-direction: column; text-align: right; }
+        .tool-title { font-size: 11px; color: #888; text-transform: uppercase; font-weight: 700; }
+        .tool-value { font-size: 18px; font-weight: 800; color: #111; }
+        .tool-value.phone { color: var(--primary-blue); }
+        
+        .cart-trigger { position: relative; font-size: 24px; color: #333; margin-left: 10px; }
+        .cart-badge { position: absolute; top: -8px; right: -10px; background: var(--primary-red); color: #fff; font-size: 12px; font-weight: 800; padding: 2px 6px; border-radius: 10px; min-width: 20px; text-align: center; }
+
+        /* CATEGORY NAV */
+        .cat-nav { background: #fff; border-bottom: 1px solid #ddd; }
+        .cat-nav-list { display: flex; justify-content: center; }
+        .cat-nav-list li a { display: block; padding: 15px 20px; font-size: 13px; font-weight: 700; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
+        .cat-nav-list li a:hover { color: var(--primary-blue); background: #f9f9f9; }
+
+        /* FOOTER */
+        .site-footer { background: #fff; border-top: 1px solid #eee; margin-top: 80px; }
+        .footer-cta { background: #005cb9; color: #fff; padding: 60px 0; text-align: center; }
+        .footer-cta h2 { font-size: 32px; font-weight: 800; margin-bottom: 15px; }
+        .footer-cta p { opacity: 0.8; font-size: 18px; }
+        
+        .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 60px; padding: 80px 0; }
+        .footer-col h4 { font-size: 14px; font-weight: 800; text-transform: uppercase; margin-bottom: 25px; color: #000; letter-spacing: 1px; }
+        .footer-col ul li { margin-bottom: 12px; }
+        .footer-col ul li a { color: #666; font-size: 14px; }
+        .footer-col ul li a:hover { color: var(--primary-blue); text-decoration: underline; }
+        
+        .footer-bottom { border-top: 1px solid #eee; padding: 40px 0; display: flex; justify-content: space-between; align-items: center; color: #999; font-size: 13px; }
+        .social-links { display: flex; gap: 20px; }
+        .social-links a { font-size: 18px; color: #555; }
+        .social-links a:hover { color: var(--primary-blue); }
+
+        {% block css %}{% endblock %}
+    </style>
+</head>
+<body>
+
+<!-- ===== UTILITY BAR ===== -->
+<div class="util-bar">
+    <div class="container">
+        <div class="util-left">
+            <a href="/user/">Vibemusic</a>
+            <a href="/user/product/?sort=new">New Arrivals</a>
+            <a href="/user/category/">Shop Categories</a>
+        </div>
+        <div class="util-right">
+            {% if request.session.username %}
+                <a href="/user/dashboard/"><i class="fas fa-user-circle"></i> {{ request.session.username }}</a>
+                <a href="/user/logout/">Sign Out</a>
+            {% else %}
+                <a href="/user/accounts/login/">Sign In</a>
+                <a href="/user/register/">Create Account</a>
+            {% endif %}
+            <a href="/user/tracker/">Order Tracking</a>
+            <a href="/admin/" class="admin-link">Admin Panel</a>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MAIN HEADER ===== -->
+<header class="main-header">
+    <div class="container">
+        <a href="/user/" class="logo">
+            <div class="logo-text">Vibe<span style="color:var(--primary-red);">Music</span></div>
+        </a>
+
+        <div class="search-container">
+            <form action="/user/product/" method="get" class="search-form">
+                <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search for musical instruments, pro audio, and more..." autocomplete="off">
+                <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
+
+        <div class="header-tools">
+            <div class="tool-item">
+                <span class="tool-title">Expert Advice</span>
+                <a href="tel:+919773651006" class="tool-value phone">+91 97736 51006</a>
+            </div>
+            
+            <a href="/user/gocart/" class="cart-trigger">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-badge">{{ cart_val|default:0 }}</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- ===== CATEGORY NAV ===== -->
+<nav class="cat-nav">
+    <div class="container">
+        <ul class="cat-nav-list">
+            <li><a href="/user/category/">Guitars</a></li>
+            <li><a href="/user/category/">Keyboards</a></li>
+            <li><a href="/user/category/">Drums</a></li>
+            <li><a href="/user/category/">Recording</a></li>
+            <li><a href="/user/category/">Live Sound</a></li>
+            <li><a href="/user/category/">DJ Gear</a></li>
+            <li><a href="/user/category/">Accessories</a></li>
+        </ul>
+    </div>
+</nav>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div class="footer-cta">
+        <div class="container">
+            <h2>Experience the Vibe</h2>
+            <p>India's Premium Destination for High-End Musical Gear.</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>Customer Support</h4>
+                <ul>
+                    <li><a href="/user/tracker/">Track Your Order</a></li>
+                    <li><a href="/user/address/">Shipping Policy</a></li>
+                    <li><a href="#">Return Policy</a></li>
+                    <li><a href="#">Self-Help Center</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Shop by Vibe</h4>
+                <ul>
+                    <li><a href="/user/product/?sort=new">New Arrivals</a></li>
+                    <li><a href="/user/category/">Top Sellers</a></li>
+                    <li><a href="/user/product/?type=deals">Deals & Steals</a></li>
+                    <li><a href="/user/category/?type=used">Used Gear</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>About Us</h4>
+                <ul>
+                    <li><a href="#">Our Story</a></li>
+                    <li><a href="#">Vibe Studios</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Affiliate Program</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Contact Us</h4>
+                <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                    Mumbai, India<br>
+                    Phone: +91 97736 51006<br>
+                    Email: support@vibemusic.in
+                </p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2026 Vibe Music. All rights reserved.</p>
+            <div style="display: flex; gap: 20px;">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="{% static 'user/folder/assets/js/jquery-3.3.1.min.js' %}"></script>
+<script src="{% static 'user/folder/assets/js/slick.js' %}"></script>
+{% block script %}{% endblock %}
+
+</body>
+</html>

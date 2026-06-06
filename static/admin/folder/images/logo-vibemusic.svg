@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="100" viewBox="0 0 400 100" role="img" aria-label="Vibe Music logo">
+  <defs>
+    <style>
+      .title { font: 700 28px/1.2 'Helvetica Neue', Arial, sans-serif; fill: #222; }
+      .note { fill: #d9534f; }
+    </style>
+  </defs>
+  <rect width="100%" height="100%" fill="none" />
+  <g transform="translate(10,10)">
+    <text x="70" y="50" class="title">Vibe Music</text>
+    <g transform="translate(0,0)">
+      <path class="note" d="M20 10c0-1.7 1.3-3 3-3h0c1.7 0 3 1.3 3 3v28c0 5-3.6 9-8 9s-8-4-8-9 3.6-9 8-9c.9 0 1.8.2 2.6.6V10z"/>
+      <circle class="note" cx="26" cy="50" r="6" />
+    </g>
+  </g>
+</svg>

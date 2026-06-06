@@ -1,0 +1,284 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    
+    <link rel="shortcut icon" href="{% static 'admin/folder/images/logo-mini-music-club.png' %}">
+    <link rel="icon" href="{% static 'admin/folder/images/logo-mini-music-club.png' %}" type="image/x-icon">
+    
+    <title>Vibe Music | {% block title %} {% endblock %}</title>
+    
+    <meta name="author" content="Vibe Music"/>
+    <meta name="description" content="Discover a Harmonious Shopping Experience for Music Instruments in our E Commerce Store."/>
+    <meta property="og:title" content="Vibe Music"/>
+    <meta property="og:site_name" content="Vibe Music Website"/>
+    <meta property="og:url" content=""/>
+    <meta property="og:description" content="Discover a Harmonious Shopping Experience for Music Instruments in our E Commerce Store.">
+    <meta property="og:type" content="website"/>
+    <meta property="og:image" content="https://vibemusic.in/static/admin/folder/images/pretty-snap-25-09-2023.png"/>
+
+    <script src="https://use.fontawesome.com/c0fc7bc651.js"></script>
+    
+    <!-- Bootstrap css -->
+    <link rel="stylesheet" type="text/css" href="{% static 'user/folder/assets/css/bootstrap.css' %}">
+    
+    <!-- Theme css -->
+    <link rel="stylesheet" type="text/css" href="{% static 'user/folder/assets/css/color2.css' %}" >
+    
+    <style>
+        .price-filter-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .product-card {
+            transition: transform 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .price-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .filter-sidebar {
+            position: sticky;
+            top: 20px;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+
+<body style="background-color: #f5f6fb!important;">
+
+  <!-- Header -->
+  {% include 'user/header.html' %}
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="row">
+        <div class="col-12 text-center">
+          <h1 class="display-4 fw-bold mb-3">Vibe Music Products</h1>
+          <p class="lead">Find the perfect musical instrument for your needs</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="container">
+    <div class="row">
+      
+      <!-- Filter Sidebar -->
+      <div class="col-lg-3">
+        <div class="filter-sidebar">
+          <div class="price-filter-container">
+            <h4 class="mb-3">Filter by Price</h4>
+            
+            <form method="GET" action="{% url 'filter_products_by_price' %}">
+              <div class="mb-3">
+                <label for="min_price" class="form-label">Minimum Price (₹)</label>
+                <input type="number" class="form-control" id="min_price" name="min_price" 
+                       value="{{ min_price }}" min="0" placeholder="0">
+              </div>
+              
+              <div class="mb-3">
+                <label for="max_price" class="form-label">Maximum Price (₹)</label>
+                <input type="number" class="form-control" id="max_price" name="max_price" 
+                       value="{{ max_price }}" min="0" placeholder="No limit">
+              </div>
+              
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="fa fa-filter"></i> Apply Filter
+              </button>
+              
+              <a href="{% url 'filter_products_by_price' %}" class="btn btn-outline-secondary w-100 mt-2">
+                <i class="fa fa-refresh"></i> Clear Filter
+              </a>
+            </form>
+          </div>
+          
+          <!-- Categories -->
+          <div class="price-filter-container">
+            <h4 class="mb-3">Categories</h4>
+            <div class="list-group">
+              {% for category in categories %}
+                <a href="#" class="list-group-item list-group-item-action">
+                  {{ category.cat_name }}
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Products Grid -->
+      <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3>Products Found: {{ products.count }}</h3>
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary active">
+              <i class="fa fa-th"></i> Grid
+            </button>
+            <button type="button" class="btn btn-outline-primary">
+              <i class="fa fa-list"></i> List
+            </button>
+          </div>
+        </div>
+        
+        <div class="row">
+          {% for product in products %}
+            <div class="col-lg-4 col-md-6 mb-4">
+              <div class="card product-card h-100">
+                {% if product.pro_image %}
+                  <img src="{{ product.pro_image.url }}" class="card-img-top" alt="{{ product.productname }}" 
+                       style="height: 200px; object-fit: cover;">
+                {% else %}
+                  <img src="{% static 'user/folder/assets/images/default-product.jpg' %}" 
+                       class="card-img-top" alt="{{ product.productname }}" 
+                       style="height: 200px; object-fit: cover;">
+                {% endif %}
+                
+                <div class="card-body d-flex flex-column">
+                  <h5 class="card-title">{{ product.productname|truncatechars:30 }}</h5>
+                  <p class="card-text text-muted small">
+                    {{ product.pro_description|truncatechars:80 }}
+                  </p>
+                  
+                  <div class="mt-auto">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="price-badge">₹{{ product.pro_price }}</span>
+                      {% if product.strike_price %}
+                        <small class="text-muted">
+                          <del>₹{{ product.strike_price }}</del>
+                        </small>
+                      {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                      <a href="/user/product/{{ product.id }}" class="btn btn-primary btn-sm">
+                        <i class="fa fa-eye"></i> View
+                      </a>
+                      <button class="btn btn-outline-primary btn-sm" onclick="addToCart({{ product.id }})">
+                        <i class="fa fa-shopping-cart"></i> Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <div class="col-12">
+              <div class="alert alert-info text-center">
+                <i class="fa fa-info-circle fa-2x mb-3"></i>
+                <h4>No products found</h4>
+                <p>Try adjusting your price filter or browse all products.</p>
+                <a href="/user/product/" class="btn btn-primary">
+                  View All Products
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  {% include 'user/footer.html' %}
+
+  <!-- Scripts -->
+  <script src="{% static 'user/folder/assets/js/jquery-3.3.1.min.js' %}"></script>
+  <script src="{% static 'user/folder/assets/js/bootstrap.bundle.min.js' %}"></script>
+  
+  <script>
+    function addToCart(productId) {
+      // Add to cart functionality
+      fetch(`/user/add-to-cart/${productId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update cart count
+          updateCartCount();
+          // Show success message
+          showNotification('Product added to cart!', 'success');
+        } else {
+          showNotification('Failed to add product to cart', 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred', 'error');
+      });
+    }
+    
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    
+    function updateCartCount() {
+      // Update cart count in header
+      fetch('/user/cart-count/')
+        .then(response => response.json())
+        .then(data => {
+          const cartElements = document.querySelectorAll('.item-count-contain');
+          cartElements.forEach(element => {
+            element.textContent = data.count;
+          });
+        });
+    }
+    
+    function showNotification(message, type) {
+      // Simple notification system
+      const notification = document.createElement('div');
+      notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+      notification.style.zIndex = '9999';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+  </script>
+
+</body>
+</html>
