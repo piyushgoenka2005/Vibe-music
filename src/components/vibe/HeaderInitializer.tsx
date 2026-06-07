@@ -1,6 +1,24 @@
 "use client";
 
 import { useEffect } from "react";
+import { LOGO_PATH } from "@/lib/mediaAssets";
+
+function applyLogo() {
+  const logoNodes = document.querySelectorAll<HTMLImageElement>(
+    ".assets-site-header__menu-logo"
+  );
+  logoNodes.forEach((img) => {
+    img.src = LOGO_PATH;
+    img.alt = "Vibe Music";
+  });
+
+  document
+    .querySelectorAll<HTMLImageElement>(".assets-site-header__menu-logo-wrap img")
+    .forEach((img) => {
+      img.src = LOGO_PATH;
+      img.alt = "Vibe Music";
+    });
+}
 
 function applyDesktopNavClass() {
   const header = document.getElementById("assets-header");
@@ -20,7 +38,10 @@ function applyDesktopNavClass() {
 
 export default function HeaderInitializer() {
   useEffect(() => {
-    const timeoutId = window.setTimeout(applyDesktopNavClass, 0);
+    const timeoutId = window.setTimeout(() => {
+      applyLogo();
+      applyDesktopNavClass();
+    }, 0);
     const onResize = () => applyDesktopNavClass();
     window.addEventListener("resize", onResize);
 

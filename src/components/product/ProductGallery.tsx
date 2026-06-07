@@ -70,6 +70,12 @@ export default function ProductGallery({
                 allowFullScreen
               />
             </div>
+          ) : activeImage.src ? (
+            <img
+              src={activeImage.src}
+              alt={activeImage.alt}
+              className="pdp-gallery__photo"
+            />
           ) : (
             <div
               className="pdp-gallery__swatch"
@@ -102,10 +108,18 @@ export default function ProductGallery({
             aria-label={image.alt}
             aria-current={index === activeIndex && !showVideo}
           >
-            <div
-              className="pdp-gallery__thumb-swatch"
-              style={{ backgroundColor: image.color }}
-            />
+            {image.src ? (
+              <img
+                src={image.src}
+                alt=""
+                className="pdp-gallery__thumb-photo"
+              />
+            ) : (
+              <div
+                className="pdp-gallery__thumb-swatch"
+                style={{ backgroundColor: image.color }}
+              />
+            )}
           </button>
         ))}
         {videos.map((video) => (
@@ -160,11 +174,20 @@ export default function ProductGallery({
           </button>
           <div
             className="pdp-lightbox__swatch"
-            style={{ backgroundColor: activeImage.color }}
             onClick={(e) => e.stopPropagation()}
             role="img"
             aria-label={activeImage.alt}
-          />
+          >
+            {activeImage.src ? (
+              <img
+                src={activeImage.src}
+                alt={activeImage.alt}
+                className="pdp-lightbox__photo"
+              />
+            ) : (
+              <div style={{ width: "100%", height: "100%", backgroundColor: activeImage.color }} />
+            )}
+          </div>
         </div>
       ) : null}
     </div>

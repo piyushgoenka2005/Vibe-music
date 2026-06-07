@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit",
     "seed:products": "npx tsx --env-file=.env.local scripts/seed-products.mts",
     "sync:homepage": "node scripts/extract-homepage-html.mjs",
+    "download:images": "node scripts/download-essential-images.mjs",
     "migrate:brand": "node scripts/migrate-brand.mjs && node scripts/migrate-content-brand.mjs"
   },
   "dependencies": {

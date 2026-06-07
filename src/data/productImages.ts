@@ -1,0 +1,83 @@
+/** Self-hosted product images matched to catalog items by instrument type. */
+const IMAGES = {
+  electricGuitar: "/images/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png",
+  telecaster: "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg",
+  lesPaul: "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg",
+  acoustic: "/images/m/products/image/00bd892379Sq23f6EBR8T8HvBcYs9YAESicgOubo.png",
+  hollowbody: "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg",
+  amp: "/images/m/products/image/bfc31b3826CWeDbC6X6IuFyWAjODXQOkmAEnHPW7.jpg",
+  drums: "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg",
+  cymbals: "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-2.jpg",
+  eDrums: "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
+  drumAccessories: "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
+  microphone: "/images/m/home/cats/SM58-cat.png",
+  audioInterface: "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+  software: "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
+  keyboard: "/images/m/home/cats/Matriarch.png",
+  speaker: "/images/m/products/image/6c9d9ecdf8KxbYZ66Y2FbzDnGWRM90iaN4Xlc84X.jpg",
+  pa: "/images/m/home/cats/k12_2.png",
+  dj: "/images/m/home/cats/ATLP120XUSBSV.png",
+  headphones: "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+  pedal: "/images/m/products/image/2f51071997sqxE3R3gW9W0nTbFJsJVxfRgVdqWBU.jpg",
+  mixer: "/images/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg",
+} as const;
+
+const SLUG_OVERRIDES: Record<string, string> = {
+  "fender-player-stratocaster-polar-white": IMAGES.electricGuitar,
+  "fender-player-telecaster-butterscotch-blonde": IMAGES.telecaster,
+  "fender-vintera-ii-60s-stratocaster-surf-green": IMAGES.electricGuitar,
+  "fender-american-professional-ii-strat-used": IMAGES.electricGuitar,
+  "gibson-les-paul-standard-50s-heritage-cherry": IMAGES.lesPaul,
+  "gibson-sg-standard-walnut": IMAGES.lesPaul,
+  "gibson-j-45-standard-open-box": IMAGES.acoustic,
+  "martin-d-28-acoustic-guitar-natural": IMAGES.acoustic,
+  "taylor-214ce-deluxe-grand-auditorium": IMAGES.acoustic,
+  "taylor-314ce-v-class-acoustic-electric": IMAGES.acoustic,
+  "epiphone-les-paul-studio-smokehouse-burst": IMAGES.lesPaul,
+  "epiphone-j-45-studio-acoustic-vintage-sunburst": IMAGES.acoustic,
+  "ibanez-rg550-genesis-collection-desert-yellow": IMAGES.electricGuitar,
+  "ibanez-artcore-as73-semi-hollow-tobacco-brown": IMAGES.hollowbody,
+  "prs-se-custom-24-charcoal-burst": IMAGES.electricGuitar,
+  "prs-se-hollowbody-ii-piezo-mccarty-sunburst": IMAGES.hollowbody,
+  "yamaha-fg830-acoustic-guitar-natural": IMAGES.acoustic,
+  "gretsch-g2622-streamliner-village-amber": IMAGES.hollowbody,
+  "sjc-custom-drums-pathfinder-3-piece-shell-pack-firecracker-red": IMAGES.drums,
+  "sabian-hhx-complex-cymbal-set-10-14-16-18-21": IMAGES.cymbals,
+  "roland-v-drums-td516-electronic-drum-set": IMAGES.eDrums,
+  "yamaha-dtx6k5-m-electronic-drum-set": IMAGES.eDrums,
+  "evans-ec2s-clear-tom-pack-10-12-16": IMAGES.drumAccessories,
+  "shure-sm58-dynamic-vocal-microphone": IMAGES.microphone,
+  "audio-technica-at2020-cardioid-condenser-microphone": IMAGES.microphone,
+  "neumann-u-87-ai-condenser-microphone": IMAGES.microphone,
+  "universal-audio-apollo-twin-x-duo-heritage-edition": IMAGES.audioInterface,
+  "focusrite-scarlett-solo-4th-gen-usb-interface": IMAGES.audioInterface,
+  "presonus-studio-one-7-professional-daw": IMAGES.software,
+  "native-instruments-komplete-15-standard-bundle": IMAGES.software,
+  "korg-minilogue-xd-analog-synthesizer": IMAGES.keyboard,
+  "nord-stage-4-88-key-performance-keyboard": IMAGES.keyboard,
+  "qsc-k12-2-12-inch-powered-speaker": IMAGES.speaker,
+  "jbl-eon-one-compact-portable-pa": IMAGES.pa,
+  "pioneer-dj-ddj-flx4-2-deck-dj-controller": IMAGES.dj,
+  "sennheiser-hd-600-audiophile-headphones": IMAGES.headphones,
+  "beyerdynamic-dt-770-pro-studio-headphones-80-ohm": IMAGES.headphones,
+  "boss-katana-50-mkii-guitar-combo-amp": IMAGES.amp,
+  "marshall-dsl40cr-40-watt-tube-combo-amp": IMAGES.amp,
+};
+
+const CATEGORY_DEFAULTS: Record<string, string> = {
+  Guitars: IMAGES.electricGuitar,
+  "Drums & Percussion": IMAGES.drums,
+  "Microphones & Wireless": IMAGES.microphone,
+  "Studio & Recording": IMAGES.audioInterface,
+  "Software & Plug-ins": IMAGES.software,
+  "Keyboards & Synthesizers": IMAGES.keyboard,
+  "Live Sound & Lighting": IMAGES.speaker,
+  "DJ Equipment": IMAGES.dj,
+  "Home Audio & Electronics": IMAGES.headphones,
+};
+
+export function getProductImage(slug: string, category?: string): string {
+  if (SLUG_OVERRIDES[slug]) return SLUG_OVERRIDES[slug];
+  if (category && CATEGORY_DEFAULTS[category]) return CATEGORY_DEFAULTS[category];
+  return IMAGES.electricGuitar;
+}

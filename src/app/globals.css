@@ -66,3 +66,38 @@ body {
 .vibe-html-section {
   display: contents;
 }
+
+.assets-site-header__menu-logo,
+.assets-site-header__menu-logo-wrap img {
+  height: 42px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+.cat-product-card__image-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: #f7f7f6;
+}
+
+.pdp-gallery__photo,
+.pdp-gallery__thumb-photo,
+.pdp-lightbox__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: #f7f7f6;
+}
+
+.cart-item__photo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  background: #f7f7f6;
+  border: 1px solid #e8e7e6;
+  border-radius: 4px;
+}

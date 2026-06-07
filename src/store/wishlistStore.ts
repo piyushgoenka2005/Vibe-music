@@ -13,6 +13,7 @@ export interface WishlistItem {
   brand: string;
   price: number;
   imageColor: string;
+  image: string;
   addedAt: number;
 }
 
@@ -43,6 +44,7 @@ function productToWishlistItem(product: Product): WishlistItem {
     brand: product.brand,
     price: product.price,
     imageColor: product.imageColor,
+    image: product.image,
     addedAt: Date.now(),
   };
 }

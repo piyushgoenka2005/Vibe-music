@@ -57,9 +57,10 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           aria-hidden="true"
           tabIndex={-1}
         >
-          <div
-            className="cat-product-card__image-swatch"
-            style={{ backgroundColor: product.imageColor }}
+          <img
+            src={product.image}
+            alt=""
+            className="cat-product-card__image-photo"
           />
         </Link>
         <div style={{ position: "absolute", top: 8, right: 8 }}>

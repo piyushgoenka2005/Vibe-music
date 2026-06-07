@@ -1,4 +1,5 @@
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { getProductImage } from "@/data/productImages";
 import type { Product } from "@/types/product";
 import type { DocumentData } from "firebase-admin/firestore";
 
@@ -9,13 +10,16 @@ function normalizeProduct(id: string, data: DocumentData): Product | null {
     return null;
   }
 
+  const slug = String(data.slug);
+  const category = String(data.category ?? "");
+
   return {
     id,
-    slug: String(data.slug),
+    slug,
     name: String(data.name),
     brand: String(data.brand),
     brandSlug: String(data.brandSlug ?? data.slug),
-    category: String(data.category ?? ""),
+    category,
     categorySlug: String(data.categorySlug ?? ""),
     price: Number(data.price ?? 0),
     rating: Number(data.rating ?? 0),
@@ -23,6 +27,7 @@ function normalizeProduct(id: string, data: DocumentData): Product | null {
     availability: data.availability ?? "in-stock",
     condition: data.condition ?? "new",
     imageColor: String(data.imageColor ?? "#e8e8e8"),
+    image: String(data.image ?? getProductImage(slug, category)),
   };
 }
 

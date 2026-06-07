@@ -67,11 +67,15 @@ export default function WishlistDrawer() {
           ) : (
             items.map((item) => (
               <div key={item.productId} className="wl-drawer__item">
-                <div
-                  className="wl-drawer__swatch"
-                  style={{ backgroundColor: item.imageColor }}
-                  aria-hidden="true"
-                />
+                {item.image ? (
+                  <img src={item.image} alt="" className="wl-drawer__photo" />
+                ) : (
+                  <div
+                    className="wl-drawer__swatch"
+                    style={{ backgroundColor: item.imageColor }}
+                    aria-hidden="true"
+                  />
+                )}
                 <div>
                   <div className="wl-drawer__brand">{item.brand}</div>
                   <Link

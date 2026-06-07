@@ -19,17 +19,22 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
   const catalog = PRODUCTS.find((p) => p.id === item.productId);
   const slug = item.slug ?? catalog?.slug ?? "#";
   const imageColor = item.imageColor ?? catalog?.imageColor ?? "#f2f1f0";
+  const image = item.image ?? catalog?.image;
 
   return (
     <article
       className={`cart-item${isUpdating ? " cart-item--loading" : ""}`}
       aria-label={`${item.brand} ${item.name}`}
     >
-      <div
-        className="cart-item__swatch"
-        style={{ backgroundColor: imageColor }}
-        aria-hidden="true"
-      />
+      {image ? (
+        <img src={image} alt="" className="cart-item__photo" />
+      ) : (
+        <div
+          className="cart-item__swatch"
+          style={{ backgroundColor: imageColor }}
+          aria-hidden="true"
+        />
+      )}
       <div>
         <div className="cart-item__brand">{item.brand}</div>
         <Link

@@ -1,4 +1,5 @@
 import { PRODUCTS } from "@/data/products";
+import { getProductImage } from "@/data/productImages";
 import type {
   ProductDetail,
   ProductImage,
@@ -9,7 +10,8 @@ import type {
   ProductVideo,
 } from "@/types/product";
 
-function buildImages(baseColor: string, name: string): ProductImage[] {
+function buildImages(baseColor: string, name: string, slug: string): ProductImage[] {
+  const src = getProductImage(slug);
   const shades = [
     baseColor,
     adjustBrightness(baseColor, 20),
@@ -20,6 +22,7 @@ function buildImages(baseColor: string, name: string): ProductImage[] {
     id: `img-${i}`,
     alt: `${name} view ${i + 1}`,
     color,
+    src: i === 0 ? src : undefined,
   }));
 }
 
@@ -154,7 +157,7 @@ function enrichProduct(product: (typeof PRODUCTS)[0], index: number): ProductDet
       "Warranty card",
       product.category === "Guitars" ? "Gig bag (where applicable)" : "Standard accessories",
     ],
-    images: buildImages(product.imageColor, product.name),
+    images: buildImages(product.imageColor, product.name, product.slug),
     videos,
     variants:
       product.category === "Guitars"

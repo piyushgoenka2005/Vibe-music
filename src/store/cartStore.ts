@@ -10,6 +10,7 @@ export interface CartItem {
   brand: string;
   price: number;
   imageColor?: string;
+  image?: string;
   quantity: number;
 }
 
@@ -50,6 +51,7 @@ function productToCartItem(product: Product, quantity: number): CartItem {
     brand: product.brand,
     price: product.price,
     imageColor: product.imageColor,
+    image: product.image,
     quantity,
   };
 }

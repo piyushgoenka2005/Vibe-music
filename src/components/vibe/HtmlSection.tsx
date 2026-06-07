@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { normalizeHtmlAssets } from "@/lib/mediaAssets";
 
 interface HtmlSectionProps {
   file: "header" | "main" | "footer";
@@ -17,7 +18,7 @@ function readHtml(file: string) {
     );
   }
 
-  return html;
+  return normalizeHtmlAssets(html);
 }
 
 export default function HtmlSection({ file }: HtmlSectionProps) {

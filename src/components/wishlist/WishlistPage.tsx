@@ -47,15 +47,24 @@ export default function WishlistPage() {
           <div className="wl-page__grid">
             {items.map((item) => (
               <article key={item.productId} className="wl-page__card">
-                <div
-                  className="wl-drawer__swatch"
-                  style={{
-                    backgroundColor: item.imageColor,
-                    width: 120,
-                    height: 120,
-                  }}
-                  aria-hidden="true"
-                />
+                {item.image ? (
+                  <img
+                    src={item.image}
+                    alt=""
+                    className="wl-drawer__photo"
+                    style={{ width: 120, height: 120 }}
+                  />
+                ) : (
+                  <div
+                    className="wl-drawer__swatch"
+                    style={{
+                      backgroundColor: item.imageColor,
+                      width: 120,
+                      height: 120,
+                    }}
+                    aria-hidden="true"
+                  />
+                )}
                 <div>
                   <div className="wl-drawer__brand">{item.brand}</div>
                   <Link href={`/product/${item.slug}`} className="wl-drawer__name">

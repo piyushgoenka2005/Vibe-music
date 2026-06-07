@@ -1,4 +1,5 @@
 import { slugify } from "@/lib/slug";
+import { getProductImage } from "@/data/productImages";
 import { usdToInr } from "@/utils/currency";
 import type { Product, ProductAvailability, ProductCondition } from "@/types/product";
 
@@ -56,18 +57,22 @@ const RAW: RawProduct[] = [
   { brand: "Marshall", name: "DSL40CR 40-watt Tube Combo Amp", category: "Guitars", price: 899.99, rating: 4.6, reviewCount: 234, availability: "in-stock", condition: "new", imageColor: "#1a1a1a" },
 ];
 
-export const PRODUCTS: Product[] = RAW.map((item, index) => ({
-  id: `prod-${index + 1}`,
-  slug: slugify(`${item.brand}-${item.name}`),
-  name: item.name,
-  brand: item.brand,
-  brandSlug: slugify(item.brand),
-  category: item.category,
-  categorySlug: slugify(item.category),
-  price: usdToInr(item.price),
-  rating: item.rating,
-  reviewCount: item.reviewCount,
-  availability: item.availability,
-  condition: item.condition,
-  imageColor: item.imageColor,
-}));
+export const PRODUCTS: Product[] = RAW.map((item, index) => {
+  const slug = slugify(`${item.brand}-${item.name}`);
+  return {
+    id: `prod-${index + 1}`,
+    slug,
+    name: item.name,
+    brand: item.brand,
+    brandSlug: slugify(item.brand),
+    category: item.category,
+    categorySlug: slugify(item.category),
+    price: usdToInr(item.price),
+    rating: item.rating,
+    reviewCount: item.reviewCount,
+    availability: item.availability,
+    condition: item.condition,
+    imageColor: item.imageColor,
+    image: getProductImage(slug, item.category),
+  };
+});

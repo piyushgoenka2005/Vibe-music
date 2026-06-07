@@ -15,12 +15,14 @@ export interface Product {
   availability: ProductAvailability;
   condition: ProductCondition;
   imageColor: string;
+  image: string;
 }
 
 export interface ProductImage {
   id: string;
   alt: string;
   color: string;
+  src?: string;
 }
 
 export interface ProductVideo {
