@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import type { Product, ProductDetail } from "@/types/product";
 
@@ -49,7 +50,7 @@ export default function FrequentlyBoughtTogether({
                 <div className="pdp-cross-sell__brand">{product.brand}</div>
                 <div className="pdp-cross-sell__name">{product.name}</div>
                 <div className="pdp-cross-sell__price">
-                  ${product.price.toFixed(2)}
+                  {formatCurrency(product.price)}
                 </div>
               </Link>
             </span>
@@ -59,7 +60,7 @@ export default function FrequentlyBoughtTogether({
           <p style={{ margin: "0 0 8px", fontSize: 14, color: "#807f7e" }}>
             Bundle price:{" "}
             <strong style={{ color: "#0072ba", fontSize: 20 }}>
-              ${bundlePrice.toFixed(2)}
+              {formatCurrency(bundlePrice)}
             </strong>
           </p>
           <button type="button" className="pdp-btn pdp-btn--primary" onClick={addBundle}>

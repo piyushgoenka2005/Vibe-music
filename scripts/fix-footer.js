@@ -1,5 +1,5 @@
 const fs = require("fs");
-const h = fs.readFileSync("sweatwater.html", "utf8");
+const h = fs.readFileSync("homepage-source.html", "utf8");
 
 function stripScripts(html) {
   return html.replace(/<script[\s\S]*?<\/script>/gi, "");

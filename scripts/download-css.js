@@ -24,12 +24,12 @@ async function main() {
   const publicDir = path.join("public");
   if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir);
   await download(
-    "https://www.sweetwater.com/home/build/assets/app-Bcfdfi4d.css",
-    path.join(publicDir, "sweetwater-app.css")
+    "https://www.vibemusic.in/home/build/assets/app-Bcfdfi4d.css",
+    path.join(publicDir, "vibe-app.css")
   );
   await download(
-    "https://assets.sweetwater.com/dist/templates/footer.css",
-    path.join(publicDir, "sweetwater-footer.css")
+    "https://assets.vibemusic.in/dist/templates/footer.css",
+    path.join(publicDir, "vibe-footer.css")
   );
   console.log("Downloaded CSS files");
 }

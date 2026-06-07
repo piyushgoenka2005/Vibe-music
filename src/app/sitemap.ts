@@ -1,34 +1,39 @@
-import type { MetadataRoute } from "next";
+import { BRAND } from "@/lib/brand";
+import { PRODUCTS } from "@/data/products";
 import { CATEGORIES } from "@/data/categories";
-import { getAllProductSlugs } from "@/data/productDetails";
-import { ROUTES } from "@/lib/routes";
-import { SITE_URL } from "@/lib/site";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default function sitemap() {
+  const base = BRAND.siteUrl;
+
   const staticRoutes = [
-    ROUTES.home,
-    ROUTES.search,
-    ROUTES.cart,
-    ROUTES.checkout,
-    ROUTES.tracking,
-    ROUTES.privacy,
-    ROUTES.terms,
-    ROUTES.login,
-    ROUTES.register,
-  ];
+    "",
+    "/search",
+    "/cart",
+    "/checkout",
+    "/login",
+    "/register",
+    "/careers",
+    "/blog",
+  ].map((path) => ({
+    url: `${base}${path}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: path === "" ? 1 : 0.7,
+  }));
 
-  return [
-    ...staticRoutes.map((path) => ({
-      url: `${SITE_URL}${path}`,
-      lastModified: new Date(),
-    })),
-    ...CATEGORIES.map((category) => ({
-      url: `${SITE_URL}/category/${category.slug}`,
-      lastModified: new Date(),
-    })),
-    ...getAllProductSlugs().map((slug) => ({
-      url: `${SITE_URL}/product/${slug}`,
-      lastModified: new Date(),
-    })),
-  ];
+  const categoryRoutes = CATEGORIES.map((category) => ({
+    url: `${base}/category/${category.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+
+  const productRoutes = PRODUCTS.map((product) => ({
+    url: `${base}/product/${product.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
 }

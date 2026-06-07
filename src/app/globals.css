@@ -50,7 +50,7 @@
 }
 
 html {
-  font-family: system-ui, -apple-system, "Segoe UI", Arial, Helvetica, sans-serif;
+  font-family: Vibe Music, Arial, Helvetica, sans-serif;
   font-size: 100%;
 }
 
@@ -60,4 +60,9 @@ body {
   font-size: 16px;
   line-height: normal;
   margin: 0;
+}
+
+/* Preserve Vibe Music DOM hierarchy from HtmlSection host nodes */
+.vibe-html-section {
+  display: contents;
 }

@@ -3,12 +3,12 @@ import FooterNewsletter from "./FooterNewsletter";
 import FooterBottom from "./FooterBottom";
 
 const newGearImages = [
-  "https://media.sweetwater.com/m/include/footer/images/new-gear-day/15.jpg?format=webp",
-  "https://media.sweetwater.com/m/include/footer/images/new-gear-day/12.jpg?format=webp",
-  "https://media.sweetwater.com/m/include/footer/images/new-gear-day/8.jpg?format=webp",
-  "https://media.sweetwater.com/m/include/footer/images/new-gear-day/9.jpg?format=webp",
-  "https://media.sweetwater.com/m/include/footer/images/new-gear-day/16.jpg?format=webp",
-  "https://media.sweetwater.com/m/include/footer/images/new-gear-day/7.jpg?format=webp",
+  "https://media.vibemusic.in/m/include/footer/images/new-gear-day/15.jpg?format=webp",
+  "https://media.vibemusic.in/m/include/footer/images/new-gear-day/12.jpg?format=webp",
+  "https://media.vibemusic.in/m/include/footer/images/new-gear-day/8.jpg?format=webp",
+  "https://media.vibemusic.in/m/include/footer/images/new-gear-day/9.jpg?format=webp",
+  "https://media.vibemusic.in/m/include/footer/images/new-gear-day/16.jpg?format=webp",
+  "https://media.vibemusic.in/m/include/footer/images/new-gear-day/7.jpg?format=webp",
 ];
 
 export default function Footer() {
@@ -33,7 +33,7 @@ export default function Footer() {
                 Happy
               </p>
               <img
-                src="https://media.sweetwater.com/m/newgearday/logo.png?format=webp"
+                src="https://media.vibemusic.in/m/newgearday/logo.png?format=webp"
                 alt="#NewGearDay"
                 className="mx-auto my-3 h-[38px] w-auto"
               />

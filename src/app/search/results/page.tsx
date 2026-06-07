@@ -1,4 +1,4 @@
-import HtmlSection from "@/components/sweetwater/HtmlSection";
+import HtmlSection from "@/components/vibe/HtmlSection";
 import SearchResultsPage from "@/components/search/SearchResultsPage";
 
 interface SearchResultsRouteProps {
@@ -17,6 +17,7 @@ export default async function SearchResultsRoute({
 
   return (
     <>
+      <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
         <SearchResultsPage
           query={query}

@@ -61,7 +61,7 @@ function htmlToJsx(html) {
 }
 
 function wrapComponent(name, jsx) {
-  return `/* Auto-converted from sweatwater.html - preserve exact DOM structure */\nexport default function ${name}() {\n  return (\n    <>\n${jsx
+  return `/* Auto-converted from homepage-source.html - preserve exact DOM structure */\nexport default function ${name}() {\n  return (\n    <>\n${jsx
     .split("\n")
     .map((l) => "      " + l)
     .join("\n")}\n    </>\n  );\n}\n`;
@@ -92,9 +92,9 @@ for (const [file, componentName] of sections) {
 }
 
 // Extract inline CSS from HTML
-const html = fs.readFileSync("sweatwater.html", "utf8");
+const html = fs.readFileSync("homepage-source.html", "utf8");
 const styleBlocks = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)];
 let inlineCss = "";
 for (const m of styleBlocks) inlineCss += m[1] + "\n";
-fs.writeFileSync(path.join("src", "styles", "sweetwater-inline.css"), inlineCss.substring(0, 800000));
-console.log("Wrote sweetwater-inline.css", inlineCss.length);
+fs.writeFileSync(path.join("src", "styles", "vibe-inline.css"), inlineCss.substring(0, 800000));
+console.log("Wrote vibe-inline.css", inlineCss.length);

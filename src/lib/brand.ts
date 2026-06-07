@@ -1,28 +1,21 @@
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic-official.vercel.app";
-
-const phoneDisplay =
-  process.env.NEXT_PUBLIC_BRAND_PHONE ?? "+91 98765 43210";
-
-const phoneTel = phoneDisplay.replace(/[^\d+]/g, "");
-
 export const BRAND = {
-  name: "VibeMusic",
+  name: "Vibe Music",
+  shortName: "VibeMusic",
   tagline: "Your Sound, Delivered",
+  description:
+    "Vibe Music is India's trusted destination for musical instruments, pro audio, accessories, and expert gear advice.",
   supportRole: "Gear Advisor",
-  phone: phoneTel,
-  phoneDisplay,
-  email: process.env.NEXT_PUBLIC_BRAND_EMAIL ?? "support@vibemusic.com",
-  domain: siteUrl.replace(/\/+$/, ""),
-  cardName: "VibeMusic Card",
+  phone: "+91-9876543210",
+  phoneDisplay: "+91-9876543210",
+  phoneTel: "+919876543210",
+  email: "support@vibemusic.in",
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic.in",
+  domain: "vibemusic.in",
+  address: "Mumbai, Maharashtra, India",
   logoPath: "/brand/vibemusic-logo.svg",
   iconPath: "/brand/vibemusic-icon.svg",
-} as const;
-
-export const SOCIAL_LINKS = {
-  facebook: "https://www.facebook.com/vibemusic",
-  youtube: "https://www.youtube.com/@vibemusic",
-  instagram: "https://www.instagram.com/vibemusic",
-  x: "https://x.com/vibemusic",
-  tiktok: "https://www.tiktok.com/@vibemusic",
+  cardName: "Vibe Music Card",
+  financingName: "Vibe Music Financing",
+  gearExchangeName: "Vibe Music Gear Exchange",
+  studiosName: "Vibe Music Studios",
 } as const;

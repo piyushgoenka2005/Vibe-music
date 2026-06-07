@@ -1,4 +1,5 @@
 import { slugify } from "@/lib/slug";
+import { usdToInr } from "@/utils/currency";
 import type { Product, ProductAvailability, ProductCondition } from "@/types/product";
 
 interface RawProduct {
@@ -63,7 +64,7 @@ export const PRODUCTS: Product[] = RAW.map((item, index) => ({
   brandSlug: slugify(item.brand),
   category: item.category,
   categorySlug: slugify(item.category),
-  price: item.price,
+  price: usdToInr(item.price),
   rating: item.rating,
   reviewCount: item.reviewCount,
   availability: item.availability,

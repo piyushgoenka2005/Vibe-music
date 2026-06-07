@@ -5,7 +5,7 @@ export default function SalesEngineer() {
         <div className="grid items-center gap-8 lg:grid-cols-2">
           <div className="overflow-hidden rounded border border-[var(--grey10)]">
             <img
-              src="https://media.sweetwater.com/m/include/footer/images/new-gear-day/15.jpg?format=webp"
+              src="https://media.vibemusic.in/m/include/footer/images/new-gear-day/15.jpg?format=webp"
               alt="Sales engineer helping a customer"
               className="aspect-[4/3] w-full object-cover"
             />

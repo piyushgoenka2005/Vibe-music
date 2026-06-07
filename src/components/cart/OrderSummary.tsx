@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
+import { formatCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import { useState } from "react";
 
@@ -86,13 +87,13 @@ export default function OrderSummary({
 
       <div className="cart-summary__row">
         <span>Subtotal ({items.reduce((s, i) => s + i.quantity, 0)} items)</span>
-        <span>${subtotal.toFixed(2)}</span>
+        <span>{formatCurrency(subtotal)}</span>
       </div>
 
       {discount > 0 ? (
         <div className="cart-summary__row cart-summary__discount">
           <span>Discount</span>
-          <span>−${discount.toFixed(2)}</span>
+          <span>−{formatCurrency(discount)}</span>
         </div>
       ) : null}
 
@@ -103,7 +104,7 @@ export default function OrderSummary({
 
       <div className="cart-summary__row cart-summary__row--total">
         <span>Estimated Total</span>
-        <span>${total.toFixed(2)}</span>
+        <span>{formatCurrency(total)}</span>
       </div>
 
       {onCheckout ? (

@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "seed:products": "npx tsx --env-file=.env.local scripts/seed-products.mts",
+    "sync:homepage": "node scripts/extract-homepage-html.mjs",
+    "migrate:brand": "node scripts/migrate-brand.mjs && node scripts/migrate-content-brand.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatCurrency } from "@/utils/currency";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 
 interface ProductInfoProps {
@@ -17,10 +18,7 @@ interface ProductInfoProps {
 }
 
 function formatPrice(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value);
+  return formatCurrency(value);
 }
 
 function availabilityClass(av: ProductVariant["availability"]): string {

@@ -1,9 +1,17 @@
 "use client";
 
-import { SEARCH_BRANDS, SEARCH_CATEGORIES } from "@/data/searchCatalog";
 import { searchStore, useSearchStore } from "@/store/searchStore";
+import type { SearchBrand, SearchCategory } from "@/types/search";
 
-export default function SearchFilters() {
+interface SearchFiltersProps {
+  categories?: SearchCategory[];
+  brands?: SearchBrand[];
+}
+
+export default function SearchFilters({
+  categories = [],
+  brands = [],
+}: SearchFiltersProps) {
   const filters = useSearchStore((s) => s.filters);
 
   return (
@@ -20,7 +28,7 @@ export default function SearchFilters() {
           }
         >
           <option value="">All categories</option>
-          {SEARCH_CATEGORIES.map((category) => (
+          {categories.map((category) => (
             <option key={category.id} value={category.slug}>
               {category.name}
             </option>
@@ -38,38 +46,12 @@ export default function SearchFilters() {
           }
         >
           <option value="">All brands</option>
-          {SEARCH_BRANDS.map((brand) => (
+          {brands.map((brand) => (
             <option key={brand.id} value={brand.slug}>
               {brand.name}
             </option>
           ))}
         </select>
-      </label>
-
-      <label htmlFor="search-filter-min-price">
-        Min price
-        <input
-          id="search-filter-min-price"
-          type="number"
-          min="0"
-          value={filters.minPrice}
-          onChange={(event) =>
-            searchStore.setFilters({ minPrice: event.target.value })
-          }
-        />
-      </label>
-
-      <label htmlFor="search-filter-max-price">
-        Max price
-        <input
-          id="search-filter-max-price"
-          type="number"
-          min="0"
-          value={filters.maxPrice}
-          onChange={(event) =>
-            searchStore.setFilters({ maxPrice: event.target.value })
-          }
-        />
       </label>
 
       <label htmlFor="search-filter-sort">
@@ -79,7 +61,10 @@ export default function SearchFilters() {
           value={filters.sort}
           onChange={(event) =>
             searchStore.setFilters({
-              sort: event.target.value as "relevance" | "price-asc" | "price-desc",
+              sort: event.target.value as
+                | "relevance"
+                | "price-asc"
+                | "price-desc",
             })
           }
         >

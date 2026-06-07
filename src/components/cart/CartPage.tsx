@@ -4,6 +4,7 @@ import { useIsClient } from "@/hooks/useIsClient";
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 import { PRODUCTS } from "@/data/products";
+import { formatCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import CartItem from "./CartItem";
@@ -79,7 +80,7 @@ export default function CartPage() {
                 </div>
                 <div style={{ fontSize: 14 }}>{product.name}</div>
                 <div style={{ fontWeight: 700, color: "#0072ba" }}>
-                  ${product.price.toFixed(2)}
+                  {formatCurrency(product.price)}
                 </div>
               </Link>
             ))}
@@ -105,7 +106,7 @@ export default function CartPage() {
               </div>
               <div style={{ fontSize: 14 }}>{product.name}</div>
               <div style={{ fontWeight: 700, color: "#0072ba" }}>
-                ${product.price.toFixed(2)}
+                {formatCurrency(product.price)}
               </div>
             </Link>
           ))}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
 import WishlistButton from "@/components/wishlist/WishlistButton";
+import { formatCurrency } from "@/utils/currency";
 import type { Product } from "@/types/product";
 import type { ViewMode } from "@/types/filters";
 
@@ -80,7 +81,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
         </div>
         <div className="cat-product-card__meta">
           <span className="cat-product-card__price">
-            ${product.price.toFixed(2)}
+            {formatCurrency(product.price)}
           </span>
           <span
             className={`cat-product-card__badge ${availabilityClass(product.availability)}`}

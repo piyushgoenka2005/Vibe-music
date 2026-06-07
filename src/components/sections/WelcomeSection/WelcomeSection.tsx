@@ -7,10 +7,10 @@ const widgets = [
   {
     headline: "Trending Categories",
     items: [
-      { title: "Solidbody Guitars", image: "https://media.sweetwater.com/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png" },
-      { title: "4-string Basses", image: "https://media.sweetwater.com/m/products/image/d8c2bbdeccm3Y090lrRNsEkbuepCOgoAPS5sINA5.png" },
-      { title: "6-string Acoustic Guitars", image: "https://media.sweetwater.com/m/products/image/00bd892379Sq23f6EBR8T8HvBcYs9YAESicgOubo.png" },
-      { title: "Guitar Combo Amps", image: "https://media.sweetwater.com/m/products/image/bfc31b3826CWeDbC6X6IuFyWAjODXQOkmAEnHPW7.jpg" },
+      { title: "Solidbody Guitars", image: "https://media.vibemusic.in/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png" },
+      { title: "4-string Basses", image: "https://media.vibemusic.in/m/products/image/d8c2bbdeccm3Y090lrRNsEkbuepCOgoAPS5sINA5.png" },
+      { title: "6-string Acoustic Guitars", image: "https://media.vibemusic.in/m/products/image/00bd892379Sq23f6EBR8T8HvBcYs9YAESicgOubo.png" },
+      { title: "Guitar Combo Amps", image: "https://media.vibemusic.in/m/products/image/bfc31b3826CWeDbC6X6IuFyWAjODXQOkmAEnHPW7.jpg" },
     ],
   },
   {
@@ -20,7 +20,7 @@ const widgets = [
     items: [
       {
         title: "Earn $50 in Bonus Bucks** Now thru June 8",
-        image: "https://media.sweetwater.com/m/home/welcome-tiles/0203-OpenEarn-HPBanner-Slot2-940x820-square.webp",
+        image: "https://media.vibemusic.in/m/home/welcome-tiles/0203-OpenEarn-HPBanner-Slot2-940x820-square.webp",
       },
     ],
   },
@@ -31,17 +31,17 @@ const widgets = [
     items: [
       {
         title: "Camera Drones",
-        image: "https://media.sweetwater.com/m/home/0817-gx-new-homepagetile.jpg?format=webp",
+        image: "https://media.vibemusic.in/m/home/0817-gx-new-homepagetile.jpg?format=webp",
       },
     ],
   },
   {
     headline: "Top Deals",
     items: [
-      { title: "IK Multimedia TONEX Pedal", image: "https://media.sweetwater.com/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg?quality=82&width=400&format=webp" },
-      { title: "Allen & Heath Qu-16 Mixer", image: "https://media.sweetwater.com/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg?quality=82&height=400" },
-      { title: "Universal Audio Apollo Twin X", image: "https://media.sweetwater.com/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg?quality=82&width=750&format=webp" },
-      { title: "Studio Headphones", image: "https://media.sweetwater.com/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg" },
+      { title: "IK Multimedia TONEX Pedal", image: "https://media.vibemusic.in/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg?quality=82&width=400&format=webp" },
+      { title: "Allen & Heath Qu-16 Mixer", image: "https://media.vibemusic.in/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg?quality=82&height=400" },
+      { title: "Universal Audio Apollo Twin X", image: "https://media.vibemusic.in/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg?quality=82&width=750&format=webp" },
+      { title: "Studio Headphones", image: "https://media.vibemusic.in/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg" },
     ],
   },
 ];

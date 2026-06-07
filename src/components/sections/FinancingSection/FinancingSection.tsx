@@ -4,7 +4,7 @@ export default function FinancingSection() {
       <div className="sw-container">
         <div className="grid items-center gap-8 rounded border border-[var(--grey10)] bg-white p-6 lg:grid-cols-[180px_1fr_auto] lg:p-8">
           <img
-            src="https://media.sweetwater.com/api/i/q-60__w-180/resources/sweetwater-synchrony-card.png"
+            src="https://media.vibemusic.in/api/i/q-60__w-180/resources/vibemusic-financing-card.png"
             alt="ViBE financing card"
             className="mx-auto w-[140px] lg:mx-0"
           />

@@ -24,7 +24,7 @@ export default function AuthShell({
   children,
 }: AuthShellProps) {
   return (
-    <section className="mx-auto w-full max-w-md px-4 py-10 font-sans">
+    <section className="mx-auto w-full max-w-md px-4 py-10 font-[Vibe Music,Arial,Helvetica,sans-serif]">
       <Card>
         <CardHeader className="text-center">
           <CardTitle>{title}</CardTitle>

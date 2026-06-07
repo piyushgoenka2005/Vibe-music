@@ -1,5 +1,7 @@
 "use client";
 
+import { formatCurrency } from "@/utils/currency";
+
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -59,7 +61,7 @@ export default function WishlistPage() {
                   <Link href={`/product/${item.slug}`} className="wl-drawer__name">
                     {item.name}
                   </Link>
-                  <div className="wl-drawer__price">${item.price.toFixed(2)}</div>
+                  <div className="wl-drawer__price">{formatCurrency(item.price)}</div>
                 </div>
                 <div className="wl-page__card-actions wl-drawer__actions">
                   <button type="button" onClick={() => moveToCart(item.productId)}>

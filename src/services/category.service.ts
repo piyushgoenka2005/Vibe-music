@@ -1,14 +1,9 @@
-import { PRODUCTS } from "@/data/products";
+import { fetchProducts } from "@/services/products.api";
 import { getCategoryBySlug } from "@/data/categories";
 import type { Product } from "@/types/product";
 import type { CategoryFilters, CategoryProductsResult } from "@/types/filters";
 
 const PAGE_SIZE = 12;
-const REQUEST_DELAY_MS = 200;
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function sortProducts(products: Product[], sort: CategoryFilters["sort"]): Product[] {
   const copy = [...products];
@@ -70,8 +65,6 @@ export async function fetchCategoryProducts(
   categorySlug: string,
   filters: CategoryFilters
 ): Promise<CategoryProductsResult> {
-  await delay(REQUEST_DELAY_MS);
-
   const category = getCategoryBySlug(categorySlug);
   if (!category) {
     return {
@@ -84,9 +77,7 @@ export async function fetchCategoryProducts(
     };
   }
 
-  const categoryProducts = PRODUCTS.filter(
-    (p) => p.categorySlug === categorySlug
-  );
+  const categoryProducts = await fetchProducts({ category: categorySlug });
   const filtered = applyFilters(categoryProducts, filters);
   const sorted = sortProducts(filtered, filters.sort);
   const total = sorted.length;

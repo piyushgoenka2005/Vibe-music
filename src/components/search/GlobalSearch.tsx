@@ -7,7 +7,7 @@ import SearchOverlay from "./SearchOverlay";
 import "./search.css";
 
 const HEADER_INPUT_SELECTORS =
-  "#vibe-search-input, #sw-search-input, #autocomplete-0-input, #sw-search-input-mobile";
+  "#sw-search-input, #autocomplete-0-input, #sw-search-input-mobile";
 
 function isMobileViewport(): boolean {
   return window.matchMedia("(max-width: 767px)").matches;
@@ -19,7 +19,7 @@ function bindHeaderSearch() {
   );
   const forms = Array.from(
     document.querySelectorAll<HTMLFormElement>(
-      ".vibe-header-search-form, .assets-site-header__menu-search-form, #search-mount .aa-Form, .aa-Form"
+      ".assets-site-header__menu-search-form, #search-mount .aa-Form, .aa-Form"
     )
   );
 
@@ -187,7 +187,7 @@ export default function GlobalSearch() {
     }
 
     const headerSection = document.querySelector(
-      '#vibe-header, [data-sweetwater-section="header"]'
+      '[data-vibe-section="header"]'
     );
     if (!headerSection) return;
 

@@ -2,11 +2,12 @@ import { Suspense } from "react";
 import AuthShell from "@/components/auth/AuthShell";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import GuestOnlyRoute from "@/components/auth/GuestOnlyRoute";
-import HtmlSection from "@/components/sweetwater/HtmlSection";
+import HtmlSection from "@/components/vibe/HtmlSection";
 
 export default function ForgotPasswordPage() {
   return (
     <>
+      <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
         <GuestOnlyRoute>
           <AuthShell

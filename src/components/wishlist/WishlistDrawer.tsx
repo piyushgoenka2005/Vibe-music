@@ -1,5 +1,7 @@
 "use client";
 
+import { formatCurrency } from "@/utils/currency";
+
 import { useEffect } from "react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
@@ -80,7 +82,7 @@ export default function WishlistDrawer() {
                     {item.name}
                   </Link>
                   <div className="wl-drawer__price">
-                    ${item.price.toFixed(2)}
+                    {formatCurrency(item.price)}
                   </div>
                   <div className="wl-drawer__actions">
                     <button

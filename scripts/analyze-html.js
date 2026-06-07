@@ -1,5 +1,5 @@
 const fs = require("fs");
-const h = fs.readFileSync("sweatwater.html", "utf8");
+const h = fs.readFileSync("homepage-source.html", "utf8");
 
 // Extract all style blocks
 const styleBlocks = [...h.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)];

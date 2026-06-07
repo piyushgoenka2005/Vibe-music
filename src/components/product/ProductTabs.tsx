@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import type { ProductDetail } from "@/types/product";
-import ProductFirestoreReviews from "./ProductFirestoreReviews";
 
 const TABS = [
   { id: "description", label: "Description" },
@@ -97,10 +96,18 @@ export default function ProductTabs({
         hidden={activeTab !== "reviews"}
         className="pdp-tabs__panel"
       >
-        <ProductFirestoreReviews
-          productId={product.id}
-          fallbackReviews={product.reviews}
-        />
+        {product.reviews.map((review) => (
+          <article key={review.id} className="pdp-review">
+            <h4 className="pdp-review__title">{review.title}</h4>
+            <p className="pdp-review__meta">
+              <span className="pdp-rating__stars" aria-hidden="true">
+                {"★".repeat(review.rating)}
+              </span>{" "}
+              {review.author} — {review.date}
+            </p>
+            <p>{review.body}</p>
+          </article>
+        ))}
       </div>
 
       <div

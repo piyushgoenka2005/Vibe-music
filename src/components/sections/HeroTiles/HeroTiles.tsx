@@ -2,17 +2,17 @@ const tiles = [
   {
     title: "Gear Exchange",
     description: "Buy and sell used gear with confidence.",
-    image: "https://media.sweetwater.com/m/home/0817-gx-new-homepagetile.jpg?format=webp",
+    image: "https://media.vibemusic.in/m/home/0817-gx-new-homepagetile.jpg?format=webp",
   },
   {
     title: "Studio Essentials",
     description: "Everything needed for professional recording.",
-    image: "https://media.sweetwater.com/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+    image: "https://media.vibemusic.in/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
   },
   {
     title: "Live Performance Gear",
     description: "Powerful sound systems and stage equipment.",
-    image: "https://media.sweetwater.com/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Bluetooth-HPFeatured-1600x1600.jpg",
+    image: "https://media.vibemusic.in/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Bluetooth-HPFeatured-1600x1600.jpg",
   },
 ];
 

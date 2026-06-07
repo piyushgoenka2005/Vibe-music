@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatCurrency } from "@/utils/currency";
 import type { Product } from "@/types/product";
 
 interface ProductCrossSellProps {
@@ -30,7 +31,7 @@ export default function ProductCrossSell({
             <div className="pdp-cross-sell__brand">{product.brand}</div>
             <div className="pdp-cross-sell__name">{product.name}</div>
             <div className="pdp-cross-sell__price">
-              ${product.price.toFixed(2)}
+              {formatCurrency(product.price)}
             </div>
           </Link>
         ))}

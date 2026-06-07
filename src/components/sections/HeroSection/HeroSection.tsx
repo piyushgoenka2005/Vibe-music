@@ -1,5 +1,9 @@
 import HeroBanner from "./HeroBanner";
 
 export default function HeroSection() {
-  return <HeroBanner />;
+  return (
+    <section className="bg-white">
+      <HeroBanner />
+    </section>
+  );
 }

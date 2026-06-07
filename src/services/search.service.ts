@@ -1,27 +1,42 @@
-import {
-  RECOMMENDED_PRODUCTS,
-  SEARCH_BRANDS,
-  SEARCH_CATEGORIES,
-  SEARCH_PRODUCTS,
-} from "@/data/searchCatalog";
 import type {
   SearchResultsData,
   SearchSuggestionGroups,
 } from "@/types/search";
 
 const MIN_QUERY_LENGTH = 2;
-const REQUEST_DELAY_MS = 180;
 
-function normalize(value: string): string {
-  return value.trim().toLowerCase();
+interface SearchApiResultsResponse {
+  query: string;
+  products: SearchResultsData["products"];
+  categories: SearchResultsData["categories"];
+  brands: SearchResultsData["brands"];
+  total: number;
+  error?: string;
 }
 
-function matches(query: string, target: string): boolean {
-  return normalize(target).includes(normalize(query));
+interface SearchApiSuggestResponse {
+  products: Array<{
+    id: string;
+    slug: string;
+    name: string;
+    brand: string;
+    category: string;
+    price: number;
+  }>;
+  categories: SearchResultsData["categories"];
+  brands: SearchResultsData["brands"];
+  error?: string;
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
+async function readSearchApi<T>(url: string): Promise<T> {
+  const response = await fetch(url, { cache: "no-store" });
+  const body = (await response.json()) as T & { error?: string };
+
+  if (!response.ok) {
+    throw new Error(body.error ?? "Search request failed");
+  }
+
+  return body;
 }
 
 export async function fetchSearchSuggestions(
@@ -44,45 +59,39 @@ export async function fetchSearchSuggestions(
     };
   }
 
-  await delay(REQUEST_DELAY_MS);
+  const params = new URLSearchParams({
+    q: trimmed,
+    mode: "suggest",
+  });
 
-  const products = SEARCH_PRODUCTS.filter(
-    (product) =>
-      matches(trimmed, product.name) ||
-      matches(trimmed, product.brand) ||
-      matches(trimmed, product.category)
-  )
-    .slice(0, 6)
-    .map((product) => ({
-      id: product.id,
-      type: "product" as const,
-      label: product.name,
-      sublabel: product.brand,
-      href: `/search/results?q=${encodeURIComponent(trimmed)}&product=${product.slug}`,
-    }));
+  const data = await readSearchApi<SearchApiSuggestResponse>(
+    `/api/search?${params.toString()}`
+  );
 
-  const categories = SEARCH_CATEGORIES.filter((category) =>
-    matches(trimmed, category.name)
-  )
-    .slice(0, 4)
-    .map((category) => ({
-      id: category.id,
-      type: "category" as const,
-      label: category.name,
-      href: `/search/results?q=${encodeURIComponent(trimmed)}&category=${category.slug}`,
-    }));
+  const products = data.products.map((product) => ({
+    id: product.id,
+    type: "product" as const,
+    label: product.name,
+    sublabel: product.brand,
+    href: `/search/results?q=${encodeURIComponent(trimmed)}&product=${product.slug}`,
+  }));
 
-  const brands = SEARCH_BRANDS.filter((brand) => matches(trimmed, brand.name))
-    .slice(0, 4)
-    .map((brand) => ({
-      id: brand.id,
-      type: "brand" as const,
-      label: brand.name,
-      href: `/search/results?q=${encodeURIComponent(trimmed)}&brand=${brand.slug}`,
-    }));
+  const categories = data.categories.map((category) => ({
+    id: category.id,
+    type: "category" as const,
+    label: category.name,
+    href: `/search/results?q=${encodeURIComponent(trimmed)}&category=${category.slug}`,
+  }));
+
+  const brands = data.brands.map((brand) => ({
+    id: brand.id,
+    type: "brand" as const,
+    label: brand.name,
+    href: `/search/results?q=${encodeURIComponent(trimmed)}&brand=${brand.slug}`,
+  }));
 
   const recent = recentSearches
-    .filter((item) => matches(trimmed, item))
+    .filter((item) => item.toLowerCase().includes(trimmed.toLowerCase()))
     .slice(0, 3)
     .map((item, index) => ({
       id: `recent-match-${index}`,
@@ -96,16 +105,9 @@ export async function fetchSearchSuggestions(
 
 export async function fetchSearchResults(
   query: string,
-  filters?: {
-    category?: string;
-    brand?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    sort?: string;
-  }
+  filters?: { category?: string; brand?: string; sort?: string }
 ): Promise<SearchResultsData> {
   const trimmed = query.trim();
-  await delay(REQUEST_DELAY_MS);
 
   if (trimmed.length < MIN_QUERY_LENGTH) {
     return {
@@ -117,65 +119,16 @@ export async function fetchSearchResults(
     };
   }
 
-  let products = SEARCH_PRODUCTS.filter(
-    (product) =>
-      matches(trimmed, product.name) ||
-      matches(trimmed, product.brand) ||
-      matches(trimmed, product.category)
+  const params = new URLSearchParams({ q: trimmed, mode: "results" });
+  if (filters?.category) params.set("category", filters.category);
+  if (filters?.brand) params.set("brand", filters.brand);
+  if (filters?.sort && filters.sort !== "relevance") {
+    params.set("sort", filters.sort);
+  }
+
+  return readSearchApi<SearchApiResultsResponse>(
+    `/api/search?${params.toString()}`
   );
-
-  const categoryFilter = filters?.category;
-  if (categoryFilter) {
-    products = products.filter(
-      (product) =>
-        product.categorySlug === categoryFilter ||
-        product.category.toLowerCase().replace(/\s+/g, "-") === categoryFilter ||
-        product.category.toLowerCase() === categoryFilter.replace(/-/g, " ")
-    );
-  }
-
-  const brandFilter = filters?.brand;
-  if (brandFilter) {
-    products = products.filter(
-      (product) =>
-        product.brandSlug === brandFilter ||
-        product.brand.toLowerCase().replace(/\s+/g, "-") === brandFilter ||
-        product.brand.toLowerCase() === brandFilter.replace(/-/g, " ")
-    );
-  }
-
-  const minPrice = filters?.minPrice ? Number(filters.minPrice) : null;
-  const maxPrice = filters?.maxPrice ? Number(filters.maxPrice) : null;
-  if (minPrice !== null && !Number.isNaN(minPrice)) {
-    products = products.filter((product) => product.price >= minPrice);
-  }
-  if (maxPrice !== null && !Number.isNaN(maxPrice)) {
-    products = products.filter((product) => product.price <= maxPrice);
-  }
-
-  if (filters?.sort === "price-asc") {
-    products = [...products].sort((a, b) => a.price - b.price);
-  } else if (filters?.sort === "price-desc") {
-    products = [...products].sort((a, b) => b.price - a.price);
-  }
-
-  const categories = SEARCH_CATEGORIES.filter((category) =>
-    matches(trimmed, category.name)
-  );
-
-  const brands = SEARCH_BRANDS.filter((brand) => matches(trimmed, brand.name));
-
-  return {
-    query: trimmed,
-    products,
-    categories,
-    brands,
-    total: products.length,
-  };
-}
-
-export function getRecommendedProducts() {
-  return RECOMMENDED_PRODUCTS;
 }
 
 export { MIN_QUERY_LENGTH };

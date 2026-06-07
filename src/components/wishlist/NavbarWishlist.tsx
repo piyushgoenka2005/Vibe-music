@@ -66,7 +66,7 @@ export default function NavbarWishlist() {
       };
     }
 
-    const header = document.querySelector('[data-sweetwater-section="header"]');
+    const header = document.querySelector('[data-vibe-section="header"]');
     if (header) {
       observer = new MutationObserver(onHeaderReady);
       observer.observe(header, { childList: true, subtree: true });

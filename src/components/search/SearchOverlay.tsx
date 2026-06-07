@@ -8,7 +8,7 @@ import type { SearchStatus, SearchSuggestionGroups } from "@/types/search";
 import SearchAutocomplete from "./SearchAutocomplete";
 
 const HEADER_INPUT_SELECTORS =
-  "#vibe-search-input, #sw-search-input, #autocomplete-0-input, #sw-search-input-mobile";
+  "#sw-search-input, #autocomplete-0-input, #sw-search-input-mobile";
 
 interface SearchOverlayProps {
   query: string;

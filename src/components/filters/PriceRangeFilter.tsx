@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency } from "@/utils/currency";
 import FilterSection from "./FilterSection";
 
 interface PriceRangeFilterProps {
@@ -26,7 +27,7 @@ export default function PriceRangeFilter({
             type="number"
             min={rangeMin}
             max={rangeMax}
-            placeholder={`$${rangeMin}`}
+            placeholder={formatCurrency(rangeMin)}
             value={minPrice ?? ""}
             onChange={(e) =>
               onChange(
@@ -43,7 +44,7 @@ export default function PriceRangeFilter({
             type="number"
             min={rangeMin}
             max={rangeMax}
-            placeholder={`$${rangeMax}`}
+            placeholder={formatCurrency(rangeMax)}
             value={maxPrice ?? ""}
             onChange={(e) =>
               onChange(

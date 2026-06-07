@@ -1,5 +1,5 @@
 import Link from "next/link";
-import HtmlSection from "@/components/sweetwater/HtmlSection";
+import HtmlSection from "@/components/vibe/HtmlSection";
 import AccountNav from "@/components/account/AccountNav";
 import AccountWishlist from "@/components/wishlist/AccountWishlist";
 import { ROUTES } from "@/lib/routes";
@@ -7,6 +7,7 @@ import { ROUTES } from "@/lib/routes";
 export default function AccountPage() {
   return (
     <>
+      <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
         <section
           className="personalization-widgets"

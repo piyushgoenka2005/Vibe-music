@@ -2,22 +2,22 @@ const articles = [
   {
     title: "Best Studio Setup Guide",
     category: "Buying Guide",
-    image: "https://media.sweetwater.com/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+    image: "https://media.vibemusic.in/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
   },
   {
     title: "Microphone Comparison",
     category: "Review",
-    image: "https://media.sweetwater.com/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg?quality=82&height=400",
+    image: "https://media.vibemusic.in/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg?quality=82&height=400",
   },
   {
     title: "Recording Tips For Beginners",
     category: "Tutorial",
-    image: "https://media.sweetwater.com/m/promotions/2025/1201_CyberMonday/HPTakeover/Adjacency4Up/1201-CyberMonday-Adjacency-Canon-HPFeatured-1600x1600.jpg",
+    image: "https://media.vibemusic.in/m/promotions/2025/1201_CyberMonday/HPTakeover/Adjacency4Up/1201-CyberMonday-Adjacency-Canon-HPFeatured-1600x1600.jpg",
   },
   {
     title: "Industry Trends 2026",
     category: "News",
-    image: "https://media.sweetwater.com/m/home/0817-gx-new-homepagetile.jpg?format=webp",
+    image: "https://media.vibemusic.in/m/home/0817-gx-new-homepagetile.jpg?format=webp",
   },
 ];
 

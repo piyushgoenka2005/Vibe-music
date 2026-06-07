@@ -6,12 +6,7 @@ export interface SearchProduct {
   name: string;
   slug: string;
   category: string;
-  categorySlug?: string;
-  brandSlug?: string;
   price: number;
-  rating?: number;
-  condition?: string;
-  availability?: string;
 }
 
 export interface SearchCategory {
@@ -61,7 +56,5 @@ export interface SearchAnalyticsEvent {
 export interface SearchFiltersState {
   category: string;
   brand: string;
-  minPrice: string;
-  maxPrice: string;
   sort: "relevance" | "price-asc" | "price-desc";
 }

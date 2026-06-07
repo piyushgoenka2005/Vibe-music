@@ -1,12 +1,13 @@
-import HeroSection from "@/components/sections/HeroSection/HeroSection";
-import HtmlSection from "@/components/sweetwater/HtmlSection";
+import HomepageInitializer from "@/components/vibe/HomepageInitializer";
+import HtmlSection from "@/components/vibe/HtmlSection";
 
 export default function Home() {
   return (
     <>
-      <HeroSection />
+      <HtmlSection file="header" />
       <HtmlSection file="main" />
       <HtmlSection file="footer" />
+      <HomepageInitializer />
     </>
   );
 }

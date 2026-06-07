@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { listProducts } from "@/lib/server/productRepository";
 import type { Product } from "@/types/product";
 
 export async function GET() {
   try {
-    const db = getAdminFirestore();
-    const snap = await db.collection("products").get();
-    const products = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const products = await listProducts();
     return NextResponse.json({ products });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to load products";
@@ -17,6 +15,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Product;
+    const { getAdminFirestore } = await import("@/lib/firebase/admin");
     const db = getAdminFirestore();
     const id = body.id || db.collection("products").doc().id;
     await db.collection("products").doc(id).set(body, { merge: true });

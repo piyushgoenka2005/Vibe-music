@@ -1,13 +1,42 @@
 "use client";
 
-import { getRecommendedProducts } from "@/services/search.service";
+import { useEffect, useState } from "react";
+import { fetchProducts } from "@/services/products.api";
+import { formatCurrency } from "@/utils/currency";
+import type { SearchProduct } from "@/types/search";
 
 interface SearchEmptyStateProps {
   query: string;
 }
 
 export default function SearchEmptyState({ query }: SearchEmptyStateProps) {
-  const recommended = getRecommendedProducts();
+  const [recommended, setRecommended] = useState<SearchProduct[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchProducts({ limit: 8 })
+      .then((products) => {
+        if (cancelled) return;
+        setRecommended(
+          products.map((product) => ({
+            id: product.id,
+            slug: product.slug,
+            name: product.name,
+            brand: product.brand,
+            category: product.category,
+            price: product.price,
+          }))
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setRecommended([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="sw-search-empty">
@@ -17,22 +46,24 @@ export default function SearchEmptyState({ query }: SearchEmptyStateProps) {
         recommended products below.
       </p>
 
-      <section aria-label="Recommended products">
-        <h3 style={{ margin: "0 0 12px", fontSize: 18, textAlign: "left" }}>
-          Recommended for you
-        </h3>
-        <div className="sw-search-recommended">
-          {recommended.map((product) => (
-            <article key={product.id} className="sw-search-recommended__card">
-              <div className="sw-search-recommended__brand">{product.brand}</div>
-              <div className="sw-search-recommended__name">{product.name}</div>
-              <div className="sw-search-recommended__price">
-                ${product.price.toFixed(2)}
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+      {recommended.length > 0 ? (
+        <section aria-label="Recommended products">
+          <h3 style={{ margin: "0 0 12px", fontSize: 18, textAlign: "left" }}>
+            Recommended for you
+          </h3>
+          <div className="sw-search-recommended">
+            {recommended.map((product) => (
+              <article key={product.id} className="sw-search-recommended__card">
+                <div className="sw-search-recommended__brand">{product.brand}</div>
+                <div className="sw-search-recommended__name">{product.name}</div>
+                <div className="sw-search-recommended__price">
+                  {formatCurrency(product.price)}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

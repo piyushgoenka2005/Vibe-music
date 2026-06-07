@@ -1,5 +1,5 @@
 const fs = require("fs");
-const h = fs.readFileSync("sweatwater.html", "utf8");
+const h = fs.readFileSync("homepage-source.html", "utf8");
 
 const bodyStart = h.indexOf("<body");
 const bodyEnd = h.lastIndexOf("</body>");
