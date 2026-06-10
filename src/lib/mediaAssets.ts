@@ -9,6 +9,12 @@ const REMOTE_PREFIXES: Array<[RegExp, string]> = [
 ];
 
 const SW_PRICE_PATTERN = /<sup>\$<\/sup>([\d,]+)<sup>\.(\d{2})<\/sup>/g;
+const PLAIN_USD_PATTERN = /\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/g;
+
+function formatUsdAmountAsInr(usdText: string): string {
+  const usd = parseFloat(usdText.replace(/,/g, ""));
+  return `₹${usdToInr(usd).toLocaleString("en-IN")}`;
+}
 
 /** Rewrite broken vibemusic CDN URLs to self-hosted /images paths. */
 export function resolveMediaUrl(url: string): string {
@@ -28,13 +34,20 @@ export function resolveMediaUrl(url: string): string {
   return url;
 }
 
-/** Convert Sweetwater-style USD price markup to INR (₹). */
+/** Convert USD price markup in injected HTML to INR (₹). */
 export function normalizeHtmlPrices(html: string): string {
-  return html.replace(SW_PRICE_PATTERN, (_, dollars: string, cents: string) => {
-    const usd = parseFloat(`${dollars.replace(/,/g, "")}.${cents}`);
-    const inr = usdToInr(usd);
-    return `<sup>₹</sup>${inr.toLocaleString("en-IN")}`;
-  });
+  const withSupPrices = html.replace(
+    SW_PRICE_PATTERN,
+    (_, dollars: string, cents: string) => {
+      const usd = parseFloat(`${dollars.replace(/,/g, "")}.${cents}`);
+      const inr = usdToInr(usd);
+      return `<sup>₹</sup>${inr.toLocaleString("en-IN")}`;
+    }
+  );
+
+  return withSupPrices.replace(PLAIN_USD_PATTERN, (_, amount: string) =>
+    formatUsdAmountAsInr(amount)
+  );
 }
 
 /** Normalize asset URLs inside injected homepage HTML. */

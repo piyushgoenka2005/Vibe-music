@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { initPersonalizationCarousel } from "@/lib/personalizationCarousel";
 
 function removeSkeletons(root: ParentNode): void {
   root.querySelectorAll(".slider-loading-animation").forEach((node) => {
@@ -14,12 +15,16 @@ export default function HomepageInitializer() {
     const mainRoot = document.querySelector('[data-vibe-section="main"]');
     if (!mainRoot) return;
 
+    let cleanupCarousel = () => {};
+
     const timeoutId = window.setTimeout(() => {
       removeSkeletons(mainRoot);
+      cleanupCarousel = initPersonalizationCarousel(mainRoot);
     }, 300);
 
     return () => {
       window.clearTimeout(timeoutId);
+      cleanupCarousel();
     };
   }, []);
 

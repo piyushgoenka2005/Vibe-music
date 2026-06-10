@@ -14,17 +14,6 @@ const widgets = [
     ],
   },
   {
-    headline: "Open a ViBE Card",
-    single: true,
-    cta: "Apply Now",
-    items: [
-      {
-        title: "Earn $50 in Bonus Bucks** Now thru June 8",
-        image: "https://media.vibemusic.in/m/home/welcome-tiles/0203-OpenEarn-HPBanner-Slot2-940x820-square.webp",
-      },
-    ],
-  },
-  {
     headline: "NEW at ViBE!",
     single: true,
     cta: "Shop Now",

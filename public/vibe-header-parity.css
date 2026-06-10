@@ -208,3 +208,26 @@
     grid-column-start: span 12;
   }
 }
+
+/* ── Contact Us: Gear Advisor avatar (circular crop) ── */
+.assets-site-header__nav-menu-contact-se-img-wrap {
+  width: 71px !important;
+  height: 71px !important;
+  flex-shrink: 0;
+  margin-right: 12px !important;
+  padding: 0 !important;
+}
+
+.assets-site-header__nav-menu-contact-se-img,
+.assets-site-header__nav-menu-contact-se-img-wrap img {
+  width: 63px !important;
+  height: 63px !important;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 15%;
+  display: block;
+  background-color: #f1efec;
+  box-sizing: border-box;
+}
+
