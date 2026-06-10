@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { initPersonalizationCarousel } from "@/lib/personalizationCarousel";
+import { initTileSliders } from "@/lib/tileSlider";
 
 function removeSkeletons(root: ParentNode): void {
   root.querySelectorAll(".slider-loading-animation").forEach((node) => {
@@ -19,15 +20,18 @@ export default function HomepageInitializer() {
     if (!mainRoot) return;
 
     let cleanupCarousel = () => {};
+    let cleanupTileSliders = () => {};
 
     const timeoutId = window.setTimeout(() => {
       removeSkeletons(mainRoot);
       cleanupCarousel = initPersonalizationCarousel(mainRoot);
+      cleanupTileSliders = initTileSliders(mainRoot);
     }, 300);
 
     return () => {
       window.clearTimeout(timeoutId);
       cleanupCarousel();
+      cleanupTileSliders();
     };
   }, []);
 

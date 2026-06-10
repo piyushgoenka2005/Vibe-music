@@ -1,57 +1,60 @@
-const deals = [
-  {
-    title: "Recording Equipment",
-    discount: "UP TO 50% OFF",
-    image: "https://media.vibemusic.in/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
-  },
-  {
-    title: "Premium Guitars",
-    discount: "UP TO 40% OFF",
-    image: "https://media.vibemusic.in/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png",
-  },
-  {
-    title: "Studio Monitors",
-    discount: "UP TO 35% OFF",
-    image: "https://media.vibemusic.in/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg?quality=82&height=400",
-  },
-  {
-    title: "DJ Controllers",
-    discount: "UP TO 30% OFF",
-    image: "https://media.vibemusic.in/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Bluetooth-HPFeatured-1600x1600.jpg",
-  },
-];
+import Link from "next/link";
+import { HOTTEST_DEALS } from "@/data/hottestDeals";
+import { resolveLinkHref } from "@/lib/routes";
+import DealCard from "./DealCard";
 
+/** First tile-block inside `#sales-events` (Drum Month / Hottest Deals carousel). */
 export default function HottestDeals() {
-  return (
-    <section className="sw-section border-b border-[var(--grey10)] bg-[var(--grey0)]">
-      <div className="sw-container">
-        <h2 className="sw-section-heading">Hottest Deals</h2>
-        <p className="sw-section-subheading mb-8">
-          Save big on the gear you want most.
-        </p>
+  const { sliderId, accentLabel, heading, ctaHref, ctaLabel, items } =
+    HOTTEST_DEALS;
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {deals.map((deal) => (
-            <a
-              key={deal.title}
-              href="#"
-              className="group relative block min-h-[240px] overflow-hidden rounded border border-[var(--grey10)] bg-white"
-            >
-              <img
-                src={deal.image}
-                alt={deal.title}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-              <div className="relative flex h-full min-h-[240px] flex-col justify-end p-5 text-white">
-                <span className="mb-2 inline-block w-fit rounded bg-[var(--red)] px-2 py-1 text-[11px] font-semibold uppercase tracking-wide">
-                  {deal.discount}
-                </span>
-                <h3 className="text-lg font-semibold">{deal.title}</h3>
-              </div>
-            </a>
-          ))}
-        </div>
+  return (
+    <section className="tile-block borderless">
+      <div className="section-header">
+        <span className="accent-text text-red">{accentLabel}</span>
+        <h2 className="bg-gray50 text-black text-center">{heading}</h2>
+        <span className="accent bg-red"></span>
+      </div>
+
+      <div
+        id={sliderId}
+        className="tiles tiles--slider flex-container flex-row flex-nowrap scrollbar-minimal horizontal cols-4 product-peak-3"
+      >
+        {items.map((item) => (
+          <DealCard key={item.id} item={item} />
+        ))}
+      </div>
+
+      <div
+        data-prev-id={sliderId}
+        className="tile--slider-controls prev bg-white"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+          <g fill="none" stroke="#000" strokeLinecap="round" strokeWidth="2">
+            <g></g>
+            <path d="M22.238 12.495l-7.739 7.739 7.739 7.739" fill="none" />
+          </g>
+        </svg>
+      </div>
+      <div
+        data-next-id={sliderId}
+        className="tile--slider-controls next bg-white"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+          <g fill="none" stroke="#000" strokeLinecap="round" strokeWidth="2">
+            <g transform="rotate(180 20 20)"></g>
+            <path d="M17.762 27.505l7.739-7.739-7.739-7.739" fill="none" />
+          </g>
+        </svg>
+      </div>
+
+      <div className="section-cta">
+        <Link
+          href={resolveLinkHref(ctaHref)}
+          className="btn btn-default btn-red weight-demi"
+        >
+          {ctaLabel}
+        </Link>
       </div>
     </section>
   );
