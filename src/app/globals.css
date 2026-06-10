@@ -67,14 +67,6 @@ body {
   display: contents;
 }
 
-.assets-site-header__menu-logo,
-.assets-site-header__menu-logo-wrap img {
-  height: 42px;
-  width: auto;
-  max-width: 180px;
-  object-fit: contain;
-}
-
 .cat-product-card__image-photo {
   width: 100%;
   height: 100%;

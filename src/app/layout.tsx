@@ -29,6 +29,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link rel="stylesheet" href="/vibe-inline.css" />
+        <link rel="stylesheet" href="/vibe-header-parity.css" />
         <link rel="stylesheet" href="/vibe-app.css" />
         <link rel="stylesheet" href="/vibe-footer.css" />
         <link

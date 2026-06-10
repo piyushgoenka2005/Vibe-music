@@ -32,6 +32,14 @@
   overflow: auto;
 }
 
+/* Flush attach below header search form — matches Sweetwater reference */
+.sw-search-panel--anchored {
+  border-top: 0;
+  border-radius: 0 0 3px 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+  margin-top: 0;
+}
+
 .sw-search-panel--mobile {
   position: fixed;
   inset: 0;

@@ -11,7 +11,11 @@ import {
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
 import type { AppUser, SignInInput, SignUpInput } from "@/types/user";
-import { createUserProfile, getUserProfile } from "@/services/auth/user.service";
+import {
+  createUserProfile,
+  getUserProfile,
+  updateUserProfile,
+} from "@/services/auth/user.service";
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
@@ -103,6 +107,20 @@ export function subscribeToAuthState(
   return onAuthStateChanged(getClientAuth(), (firebaseUser) => {
     listener(firebaseUser ? mapFirebaseUser(firebaseUser) : null);
   });
+}
+
+export async function updateDisplayName(displayName: string): Promise<AppUser> {
+  const auth = getClientAuth();
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("Not authenticated");
+  }
+
+  const trimmed = displayName.trim();
+  await updateProfile(user, { displayName: trimmed });
+  await updateUserProfile(user.uid, { displayName: trimmed });
+
+  return mapFirebaseUser(user);
 }
 
 export async function syncServerSession(idToken: string | null): Promise<void> {

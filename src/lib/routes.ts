@@ -10,6 +10,8 @@ export const ROUTES = {
   account: "/account",
   accountOrders: "/account/orders",
   accountProfile: "/account/profile",
+  accountAddresses: "/account/addresses",
+  accountSettings: "/account/settings",
   accountWishlist: "/account/wishlist",
   login: "/login",
   register: "/register",
@@ -89,8 +91,8 @@ const NAV_TOP_REDIRECTS: Record<string, string> = {
 const ACCOUNT_REDIRECTS: Record<string, string> = {
   "/myaccount": ROUTES.account,
   "/myaccount/update_account": ROUTES.accountProfile,
-  "/myaccount/accounts": ROUTES.accountProfile,
-  "/myaccount/prefs": ROUTES.accountProfile,
+  "/myaccount/accounts": ROUTES.accountAddresses,
+  "/myaccount/prefs": ROUTES.accountSettings,
   "/myaccount/history": ROUTES.accountOrders,
   "/myaccount/create_account.php": ROUTES.register,
 };
@@ -122,6 +124,8 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.account) return true;
   if (path === ROUTES.accountOrders) return true;
   if (path === ROUTES.accountProfile) return true;
+  if (path === ROUTES.accountAddresses) return true;
+  if (path === ROUTES.accountSettings) return true;
   if (path === ROUTES.accountWishlist) return true;
   if (path === ROUTES.login || path === ROUTES.register) return true;
   if (path === ROUTES.admin) return true;

@@ -8,7 +8,7 @@ import type { SearchStatus, SearchSuggestionGroups } from "@/types/search";
 import SearchAutocomplete from "./SearchAutocomplete";
 
 const HEADER_INPUT_SELECTORS =
-  "#sw-search-input, #autocomplete-0-input, #sw-search-input-mobile";
+  "#sw-search-input, #autocomplete-0-input, #sw-search-input-mobile, .assets-site-header__menu-search-typeahead-field";
 
 interface SearchOverlayProps {
   query: string;
@@ -85,9 +85,9 @@ export default function SearchOverlay({
     !isMobile && anchorRect
       ? {
           position: "fixed" as const,
-          top: anchorRect.bottom + 4,
+          top: anchorRect.bottom,
           left: anchorRect.left,
-          width: Math.max(anchorRect.width, 520),
+          width: anchorRect.width,
           zIndex: 100001,
         }
       : undefined;
@@ -99,7 +99,7 @@ export default function SearchOverlay({
     >
       <div
         ref={panelRef}
-        className={`sw-search-panel${isMobile ? " sw-search-panel--mobile" : ""}`}
+        className={`sw-search-panel${isMobile ? " sw-search-panel--mobile" : " sw-search-panel--anchored"}`}
         style={panelStyle}
         role="dialog"
         aria-modal="true"

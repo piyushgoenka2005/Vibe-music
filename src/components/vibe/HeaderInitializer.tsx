@@ -2,18 +2,13 @@
 
 import { useEffect } from "react";
 import { LOGO_PATH } from "@/lib/mediaAssets";
+import { loadReferenceHeaderScript } from "@/lib/loadReferenceHeader";
 
 function applyLogo() {
-  const logoNodes = document.querySelectorAll<HTMLImageElement>(
-    ".assets-site-header__menu-logo"
-  );
-  logoNodes.forEach((img) => {
-    img.src = LOGO_PATH;
-    img.alt = "Vibe Music";
-  });
-
   document
-    .querySelectorAll<HTMLImageElement>(".assets-site-header__menu-logo-wrap img")
+    .querySelectorAll<HTMLImageElement>(
+      ".assets-site-header__menu-logo, .assets-site-header__menu-logo-wrap img"
+    )
     .forEach((img) => {
       img.src = LOGO_PATH;
       img.alt = "Vibe Music";
@@ -38,15 +33,45 @@ function applyDesktopNavClass() {
 
 export default function HeaderInitializer() {
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      applyLogo();
+    let headerScriptReady = false;
+
+    const run = async () => {
       applyDesktopNavClass();
+
+      if (!headerScriptReady && document.getElementById("assets-header")) {
+        try {
+          await loadReferenceHeaderScript();
+          headerScriptReady = true;
+        } catch {
+          // Reference script unavailable — inline CSS parity still applies.
+        }
+      }
+
+      applyLogo();
+      window.dispatchEvent(new CustomEvent("vibe:header-ready"));
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      void run();
     }, 0);
+
+    const observer = new MutationObserver(() => {
+      void run();
+    });
+
+    const headerHost = document.querySelector('[data-vibe-section="header"]');
+    if (headerHost) {
+      observer.observe(headerHost, { childList: true, subtree: true });
+    } else {
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+
     const onResize = () => applyDesktopNavClass();
     window.addEventListener("resize", onResize);
 
     return () => {
       window.clearTimeout(timeoutId);
+      observer.disconnect();
       window.removeEventListener("resize", onResize);
     };
   }, []);

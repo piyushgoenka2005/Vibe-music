@@ -10,6 +10,7 @@ import {
   signUp,
   subscribeToAuthState,
   syncServerSession,
+  updateDisplayName as updateDisplayNameService,
 } from "@/services/auth/auth.service";
 import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
 import type { AppUser, SignInInput, SignUpInput } from "@/types/user";
@@ -25,6 +26,7 @@ interface AuthState {
   signInWithGoogle: () => Promise<AppUser>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updateDisplayName: (displayName: string) => Promise<AppUser>;
   clearError: () => void;
   initializeAuth: () => () => void;
 }
@@ -118,6 +120,21 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       set({
         error: getFirebaseErrorMessage(error, "Password reset failed."),
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  updateDisplayName: async (displayName) => {
+    set({ isLoading: true, error: null });
+    try {
+      const user = await updateDisplayNameService(displayName);
+      set({ user, isLoading: false });
+      return user;
+    } catch (error) {
+      set({
+        error: getFirebaseErrorMessage(error, "Profile update failed."),
         isLoading: false,
       });
       throw error;

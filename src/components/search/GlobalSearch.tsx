@@ -7,34 +7,76 @@ import SearchOverlay from "./SearchOverlay";
 import "./search.css";
 
 const HEADER_INPUT_SELECTORS =
-  "#sw-search-input, #autocomplete-0-input, #sw-search-input-mobile";
+  "#sw-search-input, #autocomplete-0-input, #sw-search-input-mobile, .assets-site-header__menu-search-typeahead-field";
+
+const HEADER_FORM_SELECTORS =
+  ".assets-site-header__menu-search-form, #search-mount .aa-Form, .aa-Form";
+
+const HEADER_SUBMIT_SELECTORS =
+  ".assets-site-header__menu-search-submit, .aa-SubmitButton";
 
 function isMobileViewport(): boolean {
   return window.matchMedia("(max-width: 767px)").matches;
 }
 
-function bindHeaderSearch() {
-  const inputs = Array.from(
-    document.querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS)
-  );
-  const forms = Array.from(
-    document.querySelectorAll<HTMLFormElement>(
-      ".assets-site-header__menu-search-form, #search-mount .aa-Form, .aa-Form"
-    )
+/** Show the classic typeahead field; hide the disabled federated-search mount. */
+export function activateHeaderSearch() {
+  const searchMount = document.getElementById("search-mount");
+  const classic = document.querySelector<HTMLElement>(
+    "[classic-search-container]"
   );
 
-  return { inputs, forms };
+  if (searchMount) {
+    searchMount.style.display = "none";
+  }
+  if (classic) {
+    classic.style.removeProperty("display");
+  }
+
+  document
+    .querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS)
+    .forEach((input) => {
+      input.disabled = false;
+      input.removeAttribute("disabled");
+      if (!input.placeholder || input.placeholder === "Loading...") {
+        input.placeholder = "Search for sweet gear";
+      }
+    });
+
+  document.querySelectorAll(".federated-search--loading").forEach((el) => {
+    el.classList.remove("federated-search--loading");
+  });
+}
+
+function bindHeaderSearch() {
+  activateHeaderSearch();
+
+  const inputs = Array.from(
+    document.querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS)
+  ).filter((input) => !input.disabled && input.offsetParent !== null);
+
+  const forms = Array.from(
+    document.querySelectorAll<HTMLFormElement>(HEADER_FORM_SELECTORS)
+  );
+
+  const submitButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(HEADER_SUBMIT_SELECTORS)
+  );
+
+  return { inputs, forms, submitButtons };
 }
 
 function isFullyBound(
   bound: WeakSet<Element>,
   inputs: HTMLInputElement[],
-  forms: HTMLFormElement[]
+  forms: HTMLFormElement[],
+  submitButtons: HTMLButtonElement[]
 ): boolean {
   return (
     inputs.length > 0 &&
     inputs.every((input) => bound.has(input)) &&
-    forms.every((form) => bound.has(form))
+    forms.every((form) => bound.has(form)) &&
+    submitButtons.every((button) => bound.has(button))
   );
 }
 
@@ -45,6 +87,7 @@ export default function GlobalSearch() {
     onHeaderInput: EventListener;
     onHeaderKeyDown: EventListener;
     onFormSubmit: EventListener;
+    onSubmitClick: EventListener;
   } | null>(null);
 
   const {
@@ -71,24 +114,37 @@ export default function GlobalSearch() {
       });
   }, []);
 
+  const getSearchAnchorRect = useCallback((input: HTMLInputElement) => {
+    const form = input.closest<HTMLElement>(
+      ".assets-site-header__menu-search-form"
+    );
+    return (form ?? input).getBoundingClientRect();
+  }, []);
+
   const onHeaderFocus = useCallback(
     (event: FocusEvent) => {
       const target = event.target as HTMLInputElement;
-      const rect = target.getBoundingClientRect();
+      const rect = getSearchAnchorRect(target);
       const value = target.value ?? "";
       setQuery(value);
       syncNativeInputs(value);
       openOverlay(rect, target.id, isMobileViewport());
     },
-    [openOverlay, setQuery, syncNativeInputs]
+    [getSearchAnchorRect, openOverlay, setQuery, syncNativeInputs]
   );
 
   const onHeaderInput = useCallback(
     (event: Event) => {
       const target = event.target as HTMLInputElement;
-      setQuery(target.value);
+      const value = target.value ?? "";
+      setQuery(value);
+      syncNativeInputs(value);
+      if (!searchStore.getState().isOverlayOpen) {
+        const rect = getSearchAnchorRect(target);
+        openOverlay(rect, target.id, isMobileViewport());
+      }
     },
-    [setQuery]
+    [getSearchAnchorRect, openOverlay, setQuery, syncNativeInputs]
   );
 
   const onHeaderKeyDown = useCallback(
@@ -96,7 +152,7 @@ export default function GlobalSearch() {
       const target = event.target as HTMLInputElement;
       if (!searchStore.getState().isOverlayOpen) {
         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-          const rect = target.getBoundingClientRect();
+          const rect = getSearchAnchorRect(target);
           openOverlay(rect, target.id, isMobileViewport());
         }
         return;
@@ -117,10 +173,19 @@ export default function GlobalSearch() {
         target.blur();
       }
     },
-    [closeOverlay, handleEnter, moveActiveIndex, openOverlay]
+    [closeOverlay, getSearchAnchorRect, handleEnter, moveActiveIndex, openOverlay]
   );
 
   const onFormSubmit = useCallback(
+    (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      submitSearch();
+    },
+    [submitSearch]
+  );
+
+  const onSubmitClick = useCallback(
     (event: Event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -135,8 +200,15 @@ export default function GlobalSearch() {
       onHeaderInput: onHeaderInput as EventListener,
       onHeaderKeyDown: onHeaderKeyDown as EventListener,
       onFormSubmit: onFormSubmit as EventListener,
+      onSubmitClick: onSubmitClick as EventListener,
     };
-  }, [onHeaderFocus, onHeaderInput, onHeaderKeyDown, onFormSubmit]);
+  }, [
+    onHeaderFocus,
+    onHeaderInput,
+    onHeaderKeyDown,
+    onFormSubmit,
+    onSubmitClick,
+  ]);
 
   useEffect(() => {
     searchStore.hydrate();
@@ -147,19 +219,13 @@ export default function GlobalSearch() {
   }, [query, syncNativeInputs]);
 
   useEffect(() => {
-    let observer: MutationObserver | null = null;
-
     function attach(): boolean {
       const handlers = handlersRef.current;
       if (!handlers) return false;
 
-      const { inputs, forms } = bindHeaderSearch();
+      const { inputs, forms, submitButtons } = bindHeaderSearch();
 
       inputs.forEach((input) => {
-        if (input.placeholder === "Loading...") {
-          input.placeholder = "Search for sweet gear";
-        }
-
         if (boundElementsRef.current.has(input)) return;
 
         input.addEventListener("focus", handlers.onHeaderFocus, true);
@@ -174,32 +240,41 @@ export default function GlobalSearch() {
         boundElementsRef.current.add(form);
       });
 
-      return isFullyBound(boundElementsRef.current, inputs, forms);
+      submitButtons.forEach((button) => {
+        if (boundElementsRef.current.has(button)) return;
+        button.addEventListener("click", handlers.onSubmitClick, true);
+        boundElementsRef.current.add(button);
+      });
+
+      return isFullyBound(
+        boundElementsRef.current,
+        inputs,
+        forms,
+        submitButtons
+      );
     }
 
-    function stopWatching() {
-      observer?.disconnect();
-      observer = null;
-    }
+    const onHeaderReady = () => {
+      attach();
+    };
 
-    if (attach()) {
-      return;
-    }
+    attach();
 
     const headerSection = document.querySelector(
       '[data-vibe-section="header"]'
     );
-    if (!headerSection) return;
+    const observer = headerSection
+      ? new MutationObserver(() => {
+          attach();
+        })
+      : null;
 
-    observer = new MutationObserver(() => {
-      if (attach()) {
-        stopWatching();
-      }
-    });
-    observer.observe(headerSection, { childList: true, subtree: true });
+    observer?.observe(headerSection!, { childList: true, subtree: true });
+    window.addEventListener("vibe:header-ready", onHeaderReady);
 
     return () => {
-      stopWatching();
+      observer?.disconnect();
+      window.removeEventListener("vibe:header-ready", onHeaderReady);
     };
   }, []);
 
