@@ -1,3 +1,4 @@
+import HeroTiles from "@/components/sections/HeroTiles/HeroTiles";
 import HottestDeals from "@/components/sections/HottestDeals/HottestDeals";
 import NewAndNotable from "@/components/sections/NewAndNotable/NewAndNotable";
 import PopularCategories from "@/components/sections/PopularCategories/PopularCategories";
@@ -17,6 +18,7 @@ export default function HomePage() {
         <HottestDeals />
         <NewAndNotable />
       </section>
+      <HeroTiles />
       <HtmlChunk name="main-tail" />
     </>
   );
