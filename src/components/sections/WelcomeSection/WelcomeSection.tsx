@@ -8,7 +8,7 @@ export default function WelcomeSection() {
     <section id="personalization-widgets" className="personalization-widgets">
       <h2 className="personalization-widgets__greeting">Welcome!</h2>
       <div className="personalization-widgets__wrap">
-        <div className="personalization-widgets__nav nav--left isPaged">
+        <div className="personalization-widgets__nav nav--left">
           <button type="button" aria-label="Scroll Previous">
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">
               <g fill="none" strokeLinecap="round" strokeWidth="2">
@@ -21,12 +21,12 @@ export default function WelcomeSection() {
             </svg>
           </button>
         </div>
-        <div className="personalization-widgets__inner scrollbar-minimal isPaged">
+        <div className="personalization-widgets__inner scrollbar-minimal">
           {WELCOME_WIDGETS.map((widget) => (
             <WelcomeWidget key={widget.headline} widget={widget} />
           ))}
         </div>
-        <div className="personalization-widgets__nav nav--right isPaged">
+        <div className="personalization-widgets__nav nav--right">
           <button type="button" aria-label="Scroll Next">
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">
               <g fill="none" strokeLinecap="round" strokeWidth="2">

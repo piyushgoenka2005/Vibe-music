@@ -12,7 +12,10 @@ function removeSkeletons(root: ParentNode): void {
 /** Static homepage HTML is served locally; remove Vue skeleton overlays only. */
 export default function HomepageInitializer() {
   useEffect(() => {
-    const mainRoot = document.querySelector('[data-vibe-section="main"]');
+    const mainRoot =
+      document.querySelector("#main-content") ??
+      document.querySelector("main");
+
     if (!mainRoot) return;
 
     let cleanupCarousel = () => {};
