@@ -1,23 +1,38 @@
+import Link from "next/link";
+import { resolveLinkHref } from "@/lib/routes";
+import {
+  POPULAR_CATEGORY_IMAGE_SIZES,
+  type PopularCategoryItem,
+} from "@/data/popularCategories";
+
 interface CategoryCardProps {
-  title: string;
+  item: PopularCategoryItem;
 }
 
-export default function CategoryCard({
-  title,
-}: CategoryCardProps) {
+export default function CategoryCard({ item }: CategoryCardProps) {
   return (
-    <div className="group cursor-pointer">
-
-      <div className="bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-
-        <div className="w-16 h-16 rounded-xl bg-gray-100 mx-auto mb-4" />
-
-        <h3 className="text-center text-sm font-medium text-gray-800 leading-snug">
-          {title}
-        </h3>
-
+    <Link
+      href={resolveLinkHref(item.href)}
+      className="popcat-item"
+      data-hp-section="categories"
+      data-hp-slot={item.slot}
+    >
+      {item.badge ? (
+        <div className="popcat-badge tile-label bg-red text-white text-xxs">
+          {item.badge}
+        </div>
+      ) : null}
+      <picture className="popcat-image">
+        <source
+          type="image/webp"
+          srcSet={item.imageSrcSet}
+          sizes={POPULAR_CATEGORY_IMAGE_SIZES}
+        />
+        <img width={101} height={101} src={item.imageSrc} alt="" />
+      </picture>
+      <div className="popcat-name">
+        <h3>{item.title}</h3>
       </div>
-
-    </div>
+    </Link>
   );
 }

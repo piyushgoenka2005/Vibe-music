@@ -63,7 +63,8 @@ body {
 }
 
 /* Preserve Vibe Music DOM hierarchy from HtmlSection host nodes */
-.vibe-html-section {
+.vibe-html-section,
+.vibe-html-chunk {
   display: contents;
 }
 
