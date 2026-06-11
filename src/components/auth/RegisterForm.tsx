@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import AuthDivider from "@/components/auth/AuthDivider";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -18,7 +18,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
 import { ROUTES } from "@/lib/routes";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations/auth";
@@ -85,22 +84,18 @@ export default function RegisterForm() {
         label="Sign up with Google"
       />
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <Separator className="w-full" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">or</span>
-        </div>
-      </div>
+      <AuthDivider />
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="auth-shell__form"
+        >
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="auth-shell__field">
                 <FormLabel>Full name</FormLabel>
                 <FormControl>
                   <Input
@@ -119,7 +114,7 @@ export default function RegisterForm() {
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="auth-shell__field">
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
@@ -139,7 +134,7 @@ export default function RegisterForm() {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="auth-shell__field">
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input
@@ -149,7 +144,7 @@ export default function RegisterForm() {
                     {...field}
                   />
                 </FormControl>
-                <FormDescription>
+                <FormDescription className="auth-shell__hint">
                   At least 8 characters with a letter and a number.
                 </FormDescription>
                 <FormMessage />
@@ -161,7 +156,7 @@ export default function RegisterForm() {
             control={form.control}
             name="confirmPassword"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="auth-shell__field">
                 <FormLabel>Confirm password</FormLabel>
                 <FormControl>
                   <Input
@@ -176,15 +171,15 @@ export default function RegisterForm() {
             )}
           />
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <button type="submit" className="auth-submit" disabled={isLoading}>
             {isLoading ? "Creating account…" : "Create Account"}
-          </Button>
+          </button>
         </form>
       </Form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="auth-inline-footer">
         Already have an account?{" "}
-        <Link href={loginHref} className="font-semibold text-primary hover:underline">
+        <Link href={loginHref} className="auth-link">
           Log in
         </Link>
       </p>

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import AuthPageLayout from "@/components/auth/AuthPageLayout";
 import AuthShell from "@/components/auth/AuthShell";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import GuestOnlyRoute from "@/components/auth/GuestOnlyRoute";
@@ -8,7 +9,7 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <HtmlSection file="header" />
-      <main className="homepage-wrapper" id="main-content">
+      <AuthPageLayout>
         <GuestOnlyRoute>
           <AuthShell
             title="Forgot Password"
@@ -19,7 +20,7 @@ export default function ForgotPasswordPage() {
             </Suspense>
           </AuthShell>
         </GuestOnlyRoute>
-      </main>
+      </AuthPageLayout>
       <HtmlSection file="footer" />
     </>
   );

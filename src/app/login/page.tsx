@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import AuthPageLayout from "@/components/auth/AuthPageLayout";
 import AuthShell from "@/components/auth/AuthShell";
 import GuestOnlyRoute from "@/components/auth/GuestOnlyRoute";
 import LoginForm from "@/components/auth/LoginForm";
@@ -8,7 +9,7 @@ export default function LoginPage() {
   return (
     <>
       <HtmlSection file="header" />
-      <main className="homepage-wrapper" id="main-content">
+      <AuthPageLayout>
         <GuestOnlyRoute>
           <AuthShell
             title="Log In"
@@ -19,7 +20,7 @@ export default function LoginPage() {
             </Suspense>
           </AuthShell>
         </GuestOnlyRoute>
-      </main>
+      </AuthPageLayout>
       <HtmlSection file="footer" />
     </>
   );

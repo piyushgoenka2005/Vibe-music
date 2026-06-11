@@ -5,7 +5,6 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -63,12 +62,15 @@ export default function ForgotPasswordForm() {
       ) : null}
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="auth-shell__form"
+        >
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="auth-shell__field">
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
@@ -84,15 +86,15 @@ export default function ForgotPasswordForm() {
             )}
           />
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <button type="submit" className="auth-submit" disabled={isLoading}>
             {isLoading ? "Sending…" : "Send Reset Link"}
-          </Button>
+          </button>
         </form>
       </Form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="auth-inline-footer">
         Remember your password?{" "}
-        <Link href={ROUTES.login} className="font-semibold text-primary hover:underline">
+        <Link href={ROUTES.login} className="auth-link">
           Back to log in
         </Link>
       </p>

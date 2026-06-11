@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import AuthDivider from "@/components/auth/AuthDivider";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -17,7 +17,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
 import { ROUTES } from "@/lib/routes";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
@@ -71,22 +70,18 @@ export default function LoginForm() {
 
       <GoogleSignInButton onClick={handleGoogleSignIn} disabled={isLoading} />
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <Separator className="w-full" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">or</span>
-        </div>
-      </div>
+      <AuthDivider />
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="auth-shell__form"
+        >
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="auth-shell__field">
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
@@ -106,13 +101,10 @@ export default function LoginForm() {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center justify-between">
+              <FormItem className="auth-shell__field">
+                <div className="auth-shell__field-row">
                   <FormLabel>Password</FormLabel>
-                  <Link
-                    href={ROUTES.forgotPassword}
-                    className="text-sm font-medium text-primary hover:underline"
-                  >
+                  <Link href={ROUTES.forgotPassword} className="auth-link">
                     Forgot password?
                   </Link>
                 </div>
@@ -129,15 +121,15 @@ export default function LoginForm() {
             )}
           />
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <button type="submit" className="auth-submit" disabled={isLoading}>
             {isLoading ? "Signing in…" : "Log In"}
-          </Button>
+          </button>
         </form>
       </Form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="auth-inline-footer">
         Need an account?{" "}
-        <Link href={registerHref} className="font-semibold text-primary hover:underline">
+        <Link href={registerHref} className="auth-link">
           Create one
         </Link>
       </p>
