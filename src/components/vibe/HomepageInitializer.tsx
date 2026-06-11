@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { initPersonalizationCarousel } from "@/lib/personalizationCarousel";
 import { initProductSuggestSliders } from "@/lib/productSuggestSlider";
+import { initSalesEngineerSection } from "@/lib/salesEngineerCarousel";
 import { initTileSliders } from "@/lib/tileSlider";
 
 function removeSkeletons(root: ParentNode): void {
@@ -23,12 +24,14 @@ export default function HomepageInitializer() {
     let cleanupCarousel = () => {};
     let cleanupTileSliders = () => {};
     let cleanupProductSuggest = () => {};
+    let cleanupSalesEngineer = () => {};
 
     const timeoutId = window.setTimeout(() => {
       removeSkeletons(mainRoot);
       cleanupCarousel = initPersonalizationCarousel(mainRoot);
       cleanupTileSliders = initTileSliders(mainRoot);
       cleanupProductSuggest = initProductSuggestSliders(mainRoot);
+      cleanupSalesEngineer = initSalesEngineerSection(mainRoot);
     }, 300);
 
     return () => {
@@ -36,6 +39,7 @@ export default function HomepageInitializer() {
       cleanupCarousel();
       cleanupTileSliders();
       cleanupProductSuggest();
+      cleanupSalesEngineer();
     };
   }, []);
 

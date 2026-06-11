@@ -2,6 +2,7 @@ import HeroTiles from "@/components/sections/HeroTiles/HeroTiles";
 import HottestDeals from "@/components/sections/HottestDeals/HottestDeals";
 import NewAndNotable from "@/components/sections/NewAndNotable/NewAndNotable";
 import PopularCategories from "@/components/sections/PopularCategories/PopularCategories";
+import SalesEngineer from "@/components/sections/SalesEngineer/SalesEngineer";
 import SuggestedProducts from "@/components/sections/SuggestedProducts/SuggestedProducts";
 import TopNewProducts from "@/components/sections/TopNewProducts/TopNewProducts";
 import ValueAdds from "@/components/sections/ValueAdds/ValueAdds";
@@ -25,6 +26,7 @@ export default function HomePage() {
       <SuggestedProducts />
       <ValueAdds />
       <TopNewProducts />
+      <SalesEngineer />
       <HtmlChunk name="main-tail" />
     </>
   );
