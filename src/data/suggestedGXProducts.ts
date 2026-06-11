@@ -27,7 +27,7 @@ function detailPath(key: string, slug: string): string {
 }
 
 function img(path: string): string {
-  return `https://media.vibemusic.in/m/products/image/${path}?format=webp&optimize=high&width=300`;
+  return `/images/m/products/image/${path}?format=webp&optimize=high&width=300`;
 }
 
 /** Homepage Gear Exchange carousel (`#suggested-gx-products`). */
@@ -38,7 +38,7 @@ export const SUGGESTED_GX_PRODUCTS: SuggestedGXProductsContent = {
     "Certified pre-owned and open-box deals from trusted sellers.",
   gearExchangeHref: "/used",
   overlayImageSrc:
-    "https://media.vibemusic.in/m/home/0817-gx-new-homepagetile.jpg?format=webp",
+    "/images/m/home/0817-gx-new-homepagetile.jpg?format=webp",
   overlayImageAlt: "",
   items: [
     {

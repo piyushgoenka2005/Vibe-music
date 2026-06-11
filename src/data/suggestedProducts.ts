@@ -22,7 +22,7 @@ function detailPath(key: string, slug: string): string {
 }
 
 function img(path: string): string {
-  return `https://media.vibemusic.in/m/products/image/${path}?format=webp&optimize=high&width=300`;
+  return `/images/m/products/image/${path}?format=webp&optimize=high&width=300`;
 }
 
 export const SUGGESTED_PRODUCTS: SuggestedProductsContent = {

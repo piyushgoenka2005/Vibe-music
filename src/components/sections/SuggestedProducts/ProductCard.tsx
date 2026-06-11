@@ -12,7 +12,7 @@ export default function ProductCard({ name, price, image }: ProductCardProps) {
           <img
             src={
               image ??
-              "https://media.vibemusic.in/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png"
+              "/images/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png"
             }
             alt={name}
             className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"

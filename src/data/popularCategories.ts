@@ -22,7 +22,7 @@ function imgSrc(path: string): string {
   return `${path}?width=200&height=200&fit=bounds&format=webp`;
 }
 
-const CAT = "https://media.vibemusic.in/m/home/cats";
+const CAT = "/images/m/home/cats";
 
 export const POPULAR_CATEGORY_ITEMS: PopularCategoryItem[] = [
   {

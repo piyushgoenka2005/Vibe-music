@@ -3,7 +3,7 @@ export default function HeroBanner() {
     <div className="sw-hero sw-hero--dark sw-hero--center relative w-full overflow-hidden bg-[var(--hero-dark)] text-white">
       <div className="sw-hero__main relative block min-h-[400px] w-full max-h-[800px] overflow-hidden md:min-h-[500px] md:h-[40vh]">
         <img
-          src="https://media.vibemusic.in/m/home/0817-gx-new-homepagetile.jpg?format=webp"
+          src="/images/m/home/0817-gx-new-homepagetile.jpg?format=webp"
           alt="Featured promotion"
           className="absolute inset-0 h-full w-full object-cover opacity-60"
         />

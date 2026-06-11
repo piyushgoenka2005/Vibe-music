@@ -18,20 +18,15 @@ export default function TopNewProductCard({ item }: TopNewProductCardProps) {
     >
       <div className="topnew-rank">{item.rank}</div>
       <div className="topnew-image">
-        <picture>
-          <source
-            type="image/webp"
-            srcSet={item.image.srcSet}
-            sizes={item.image.sizes}
-          />
-          <img
-            width={item.image.width}
-            height={item.image.height}
-            src={item.image.src}
-            alt={item.image.alt}
-            loading="lazy"
-          />
-        </picture>
+        <img
+          width={item.image.width}
+          height={item.image.height}
+          src={item.image.src}
+          srcSet={item.image.srcSet}
+          sizes={item.image.sizes}
+          alt={item.image.alt}
+          loading="lazy"
+        />
       </div>
 
       {item.preorder ? (

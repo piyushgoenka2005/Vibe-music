@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import NavbarCart from "@/components/cart/NavbarCart";
 import AuthProvider from "@/components/auth/AuthProvider";
-import Footer from "@/components/layout/Footer/Footer";
-import Header from "@/components/layout/Header/Header";
+import NavbarAuth from "@/components/auth/NavbarAuth";
 import ToastContainer from "@/components/common/ToastContainer";
 import GlobalSearch from "@/components/search/GlobalSearch";
+import NavbarWishlist from "@/components/wishlist/NavbarWishlist";
+import HeaderInitializer from "@/components/vibe/HeaderInitializer";
 import HtmlLinkInterceptor from "@/components/vibe/HtmlLinkInterceptor";
 import QueryProvider from "@/providers/QueryProvider";
 import { DEFAULT_METADATA } from "@/lib/site";
@@ -28,7 +30,6 @@ export default function RootLayout({
         />
         <link rel="stylesheet" href="/vibe-inline.css" />
         <link rel="stylesheet" href="/vibe-header-parity.css" />
-        <link rel="stylesheet" href="/vibe-header-black-bar.css" />
         <link rel="stylesheet" href="/vibe-app.css" />
         <link rel="stylesheet" href="/vibe-footer.css" />
         <link
@@ -39,12 +40,14 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <QueryProvider>
           <AuthProvider>
+            <HeaderInitializer />
             <HtmlLinkInterceptor />
             <GlobalSearch />
-            <Header />
+            <NavbarWishlist />
+            <NavbarCart />
+            <NavbarAuth />
             <ToastContainer />
             {children}
-            <Footer />
           </AuthProvider>
         </QueryProvider>
       </body>

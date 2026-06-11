@@ -19,7 +19,7 @@ export interface SalesEngineerContent {
 }
 
 function img(path: string): string {
-  return `https://media.vibemusic.in/${path}`;
+  return `/images/${path}`;
 }
 
 /** Homepage Sales Engineer block (`#sales-engineer`, generic anonymous layout). */

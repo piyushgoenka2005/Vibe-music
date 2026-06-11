@@ -29,7 +29,7 @@ const SIZES_NARROW =
   "(min-width: 681px) calc((100vw - 42px) * 0.5), calc(100vw - 32px)";
 
 function heroSrcset(imagePath: string, include320 = false): string {
-  const base = `https://media.vibemusic.in/m/${imagePath}?format=jpg&optimize=high&auto=webp`;
+  const base = `/images/m/${imagePath}?format=jpg&optimize=high&auto=webp`;
   const widths = include320
     ? [1900, 1425, 950, 825, 750, 625, 475, 320]
     : [1900, 1425, 950, 825, 750, 625, 475];
@@ -89,7 +89,7 @@ export const HERO_TILES: HeroTilesContent = {
         ),
       ],
       imgSrc:
-        "https://media.vibemusic.in/m/promotions/2026/0514-PedalSale/0514-PedalSale-HPBanner-Slot1-1820x820.jpg?width=1820&format=jpg",
+        "/images/m/promotions/2026/0514-PedalSale/0514-PedalSale-HPBanner-Slot1-1820x820.jpg?width=1820&format=jpg",
       imgAlt: "Pedal Sale: Save Up to 35%",
       imgWidth: 1820,
       imgHeight: 820,
@@ -112,7 +112,7 @@ export const HERO_TILES: HeroTilesContent = {
         ),
       ],
       imgSrc:
-        "https://media.vibemusic.in/m/product_launch/2026/0603-Tama-Starclassic_Performer/0603-Tama-Starclassic_Performer_MBS52RZS-T2-HPBanner-Slot1-1820x820.jpg?width=940&format=jpg",
+        "/images/m/product_launch/2026/0603-Tama-Starclassic_Performer/0603-Tama-Starclassic_Performer_MBS52RZS-T2-HPBanner-Slot1-1820x820.jpg?width=940&format=jpg",
       imgAlt: "New TAMA Starclassic Performer",
       imgWidth: 940,
       imgHeight: 820,

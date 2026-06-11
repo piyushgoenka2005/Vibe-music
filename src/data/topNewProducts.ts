@@ -36,12 +36,12 @@ function itemImage(
   hmac: string,
   alt: string
 ): TopNewProductImage {
-  const base = `https://media.vibemusic.in/api/i/q-85__b-original__w-{w}__h-{w}__bg-ffffff__ha-${hash}__hmac-${hmac}__f-jpg__optimize-high__auto-webp__quality-70/images/items/350/${fileName}`;
+  const base = `/images/api/i/q-85__b-original__w-{w}__h-{w}__bg-ffffff__ha-${hash}__hmac-${hmac}__f-jpg__optimize-high__auto-webp__quality-70/images/items/350/${fileName}`;
   const widths = [360, 270, 180, 120, 90] as const;
   const srcSet = widths
     .map((w) => `${base.replace("{w}", String(w))} ${w}w`)
     .join(", ");
-  const src = `https://media.vibemusic.in/api/i/q-85__b-original__w-300__h-300__bg-ffffff__ha-${hash}__hmac-${hmac}/images/items/350/${fileName}`;
+  const src = `/images/api/i/q-85__b-original__w-300__h-300__bg-ffffff__ha-${hash}__hmac-${hmac}/images/items/350/${fileName}`;
 
   return {
     src,

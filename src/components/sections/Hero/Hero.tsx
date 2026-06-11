@@ -60,9 +60,7 @@ export default function Hero() {
   const [isPaused, setIsPaused] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [lockupSrc] = useState(
-    () => `${headline.src}?v=${Date.now()}`
-  );
+  const lockupSrc = headline.src;
 
   const [leftActiveSlot, setLeftActiveSlot] = useState<0 | 1>(0);
   const [rightActiveSlot, setRightActiveSlot] = useState<0 | 1>(0);

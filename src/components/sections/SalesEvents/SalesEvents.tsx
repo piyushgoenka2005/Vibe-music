@@ -28,17 +28,17 @@ const events = [
   {
     title: "Summer Savings Event",
     subtitle: "Huge discounts on instruments and accessories.",
-    image: "https://media.vibemusic.in/m/home/0817-gx-new-homepagetile.jpg?format=webp",
+    image: "/images/m/home/0817-gx-new-homepagetile.jpg?format=webp",
   },
   {
     title: "Studio Essentials Sale",
     subtitle: "Upgrade your recording setup today.",
-    image: "https://media.vibemusic.in/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+    image: "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
   },
   {
     title: "Limited Time Offers",
     subtitle: "Exclusive deals available this week only.",
-    image: "https://media.vibemusic.in/m/promotions/2025/1201_CyberMonday/HPTakeover/Adjacency4Up/1201-CyberMonday-Adjacency-Canon-HPFeatured-1600x1600.jpg",
+    image: "/images/m/promotions/2025/1201_CyberMonday/HPTakeover/Adjacency4Up/1201-CyberMonday-Adjacency-Canon-HPFeatured-1600x1600.jpg",
   },
 ];
 

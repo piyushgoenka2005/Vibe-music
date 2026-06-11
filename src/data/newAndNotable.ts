@@ -18,7 +18,7 @@ const PROMO =
   "promo_creative=3up_new_notable_npi&promo_id=promotion_drum_month_2026&promo_name=promotion_drum_month_2026&promo_position=takeover";
 
 function promoImg(filename: string): string {
-  return `https://media.vibemusic.in/m/promotions/2026/0603-Drum-Month/homepage/NewandNotable/${filename}?format=webp&optimize=low`;
+  return `/images/m/promotions/2026/0603-Drum-Month/homepage/NewandNotable/${filename}?format=webp&optimize=low`;
 }
 
 export const NEW_AND_NOTABLE: NewAndNotableContent = {

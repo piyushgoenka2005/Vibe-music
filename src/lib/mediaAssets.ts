@@ -2,6 +2,9 @@ import { usdToInr } from "@/utils/currency";
 
 const LOGO_PATH = "/logo.jpeg";
 
+/** Self-hosted mirror of media.vibemusic.in assets under public/images. */
+export const MEDIA_ROOT = "/images";
+
 const REMOTE_PREFIXES: Array<[RegExp, string]> = [
   [/^https:\/\/media\.vibemusic\.in/i, "/images"],
   [/^https:\/\/assets\.vibemusic\.in/i, "/images"],
@@ -16,7 +19,7 @@ function formatUsdAmountAsInr(usdText: string): string {
   return `₹${usdToInr(usd).toLocaleString("en-IN")}`;
 }
 
-/** Rewrite broken vibemusic CDN URLs to self-hosted /images paths. */
+/** Rewrite vibemusic CDN URLs to self-hosted /images paths. */
 export function resolveMediaUrl(url: string): string {
   if (!url) return url;
   if (url.includes("vibemusic-logo") || url.includes("sweetwater-logo")) {
@@ -32,6 +35,20 @@ export function resolveMediaUrl(url: string): string {
   }
 
   return url;
+}
+
+/** Resolve each URL inside an img srcset attribute. */
+export function resolveMediaSrcSet(srcSet: string): string {
+  if (!srcSet) return srcSet;
+  return srcSet
+    .split(",")
+    .map((part) => {
+      const pieces = part.trim().split(/\s+/);
+      if (!pieces[0]) return part.trim();
+      pieces[0] = resolveMediaUrl(pieces[0]);
+      return pieces.join(" ");
+    })
+    .join(", ");
 }
 
 /** Convert USD price markup in injected HTML to INR (₹). */
@@ -57,6 +74,10 @@ export function normalizeHtmlAssets(html: string): string {
       .replace(
         /https:\/\/media\.vibemusic\.in\/m\/header\/logo\/vibemusic-logo__new\.svg/gi,
         LOGO_PATH
+      )
+      .replace(
+        /\/images\/api\/i\/[^"'\s)]*vibemusic-financing-card\.png/gi,
+        "/images/m/home/easy-pay.png"
       )
       .replace(
         /https:\/\/(?:media|assets|cdn)\.vibemusic\.in(\/[^"'\\s)<]+)/gi,

@@ -23,7 +23,7 @@ export interface CareersContent {
 }
 
 const IMAGE_BASE =
-  "https://media.vibemusic.in/m/careers/homepage_2025";
+  "/images/m/careers/homepage_2025";
 
 function careersImage(fileName: string): string {
   return `${IMAGE_BASE}/${fileName}?format=webp&optimize=medium`;

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import HtmlSection from "@/components/vibe/HtmlSection";
 import CategoryPage from "@/components/category/CategoryPage";
 import { getCategoryBySlug } from "@/data/categories";
 
@@ -20,8 +21,12 @@ export default async function CategoryRoute({ params }: CategoryRouteProps) {
   }
 
   return (
-    <main className="homepage-wrapper" id="main-content">
-      <CategoryPage category={category} />
-    </main>
+    <>
+      <HtmlSection file="header" />
+      <main className="homepage-wrapper" id="main-content">
+        <CategoryPage category={category} />
+      </main>
+      <HtmlSection file="footer" />
+    </>
   );
 }

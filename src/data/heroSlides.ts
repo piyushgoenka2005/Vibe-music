@@ -59,7 +59,7 @@ const FINANCING_STRIPE_PROMO =
   "promo_creative=financing_stripe&promo_id=promotion_drum_month_2026&promo_name=promotion_drum_month_2026&promo_position=superhero";
 
 const IMAGE_BASE =
-  "https://media.vibemusic.in/m/promotions/2026/0603-Drum-Month/homepage/superhero";
+  "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero";
 
 /** Homepage Drum Month triptych superhero (`main-head` legacy). */
 export const HERO_SLIDES: HeroSlidesContent = {
@@ -87,7 +87,7 @@ export const HERO_SLIDES: HeroSlidesContent = {
     style: { color: "#000", backgroundColor: "#FFF" },
   },
   headline: {
-    src: "https://media.vibemusic.in/m/home/takeovers/2026/drum-month/drum_month_lockup.svg",
+    src: "/images/m/home/takeovers/2026/drum-month/drum_month_lockup.svg",
     alt: "Headline",
   },
   subhead: {

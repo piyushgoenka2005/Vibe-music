@@ -46,7 +46,7 @@ function insyncSrcSet(path: string, widths: readonly number[]): string {
   return widths
     .map(
       (width) =>
-        `https://media.vibemusic.in/m/insync/${path}?width=${width}&height=549&fit=cover&format=jpg&optimize=high&auto=webp&quality=70 ${width}w`
+        `/images/m/insync/${path}?width=${width}&height=549&fit=cover&format=jpg&optimize=high&auto=webp&quality=70 ${width}w`
     )
     .join(", ");
 }
@@ -56,7 +56,7 @@ function featuredImage(
   alt: string
 ): ResearchArticleImage {
   return {
-    src: `https://media.vibemusic.in/m/insync/${path}?width=1050&height=549&fit=cover`,
+    src: `/images/m/insync/${path}?width=1050&height=549&fit=cover`,
     srcSet: insyncSrcSet(path, FEATURED_WIDTHS),
     sizes: FEATURED_SIZES,
     alt,
@@ -67,7 +67,7 @@ function featuredImage(
 
 function articleImage(path: string, alt: string): ResearchArticleImage {
   return {
-    src: `https://media.vibemusic.in/m/insync/${path}?width=1050&height=549&fit=cover&format=webp`,
+    src: `/images/m/insync/${path}?width=1050&height=549&fit=cover&format=webp`,
     srcSet: insyncSrcSet(path, ARTICLE_WIDTHS),
     sizes: ARTICLE_SIZES,
     alt,
@@ -82,7 +82,7 @@ export const RESEARCH_ARTICLES: ResearchArticlesContent = {
   heading: "Your Research Destination",
   hero: {
     logoSrc:
-      "https://media.vibemusic.in/insync/assets/insync-logo-inverted.svg",
+      "/images/insync/assets/insync-logo-inverted.svg",
     logoAlt: "inSync logo",
     logoWidth: 242,
     logoHeight: 61,

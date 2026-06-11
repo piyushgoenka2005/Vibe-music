@@ -1,3 +1,4 @@
+import HtmlSection from "@/components/vibe/HtmlSection";
 import SearchResultsPage from "@/components/search/SearchResultsPage";
 
 interface SearchResultsRouteProps {
@@ -15,12 +16,16 @@ export default async function SearchResultsRoute({
   const query = params.q?.trim() ?? "";
 
   return (
-    <main className="homepage-wrapper" id="main-content">
-      <SearchResultsPage
-        query={query}
-        initialCategory={params.category ?? ""}
-        initialBrand={params.brand ?? ""}
-      />
-    </main>
+    <>
+      <HtmlSection file="header" />
+      <main className="homepage-wrapper" id="main-content">
+        <SearchResultsPage
+          query={query}
+          initialCategory={params.category ?? ""}
+          initialBrand={params.brand ?? ""}
+        />
+      </main>
+      <HtmlSection file="footer" />
+    </>
   );
 }
