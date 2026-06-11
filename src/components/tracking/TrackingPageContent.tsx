@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import HtmlSection from "@/components/vibe/HtmlSection";
 import { trackOrder } from "@/services/order.service";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrency } from "@/utils/currency";
@@ -97,7 +96,6 @@ export default function TrackingPageContent() {
           </p>
         </section>
       </main>
-      <HtmlSection file="footer" />
     </>
   );
 }

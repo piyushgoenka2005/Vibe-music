@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AuthProvider from "@/components/auth/AuthProvider";
+import Footer from "@/components/layout/Footer/Footer";
 import Header from "@/components/layout/Header/Header";
 import ToastContainer from "@/components/common/ToastContainer";
 import GlobalSearch from "@/components/search/GlobalSearch";
@@ -43,6 +44,7 @@ export default function RootLayout({
             <Header />
             <ToastContainer />
             {children}
+            <Footer />
           </AuthProvider>
         </QueryProvider>
       </body>
