@@ -3,6 +3,7 @@ import HottestDeals from "@/components/sections/HottestDeals/HottestDeals";
 import HottestDealsDynamic from "@/components/sections/HottestDealsDynamic/HottestDealsDynamic";
 import NewAndNotable from "@/components/sections/NewAndNotable/NewAndNotable";
 import PopularCategories from "@/components/sections/PopularCategories/PopularCategories";
+import ResearchArticles from "@/components/sections/ResearchArticles/ResearchArticles";
 import SalesEngineer from "@/components/sections/SalesEngineer/SalesEngineer";
 import SuggestedGXProducts from "@/components/sections/SuggestedGXProducts/SuggestedGXProducts";
 import SuggestedProducts from "@/components/sections/SuggestedProducts/SuggestedProducts";
@@ -31,6 +32,7 @@ export default function HomePage() {
       <SalesEngineer />
       <SuggestedGXProducts />
       <HottestDealsDynamic />
+      <ResearchArticles />
       <HtmlChunk name="main-tail" />
     </>
   );
