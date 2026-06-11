@@ -36,7 +36,7 @@ export default function SuggestedProducts() {
   return (
     <section
       id={sectionId}
-      className="suggested-products list-view vue-enabled-section"
+      className="suggested-products list-view"
     >
       <div className="product-suggest__stage">
         <h2>{heading}</h2>

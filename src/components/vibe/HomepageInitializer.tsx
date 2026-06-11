@@ -12,7 +12,7 @@ function removeSkeletons(root: ParentNode): void {
   });
 }
 
-/** Static homepage HTML is served locally; remove Vue skeleton overlays only. */
+/** Initializes legacy homepage carousels; removes any remaining skeleton overlays. */
 export default function HomepageInitializer() {
   useEffect(() => {
     const mainRoot =

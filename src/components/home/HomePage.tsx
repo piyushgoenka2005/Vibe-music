@@ -1,5 +1,6 @@
 import HeroTiles from "@/components/sections/HeroTiles/HeroTiles";
 import HottestDeals from "@/components/sections/HottestDeals/HottestDeals";
+import HottestDealsDynamic from "@/components/sections/HottestDealsDynamic/HottestDealsDynamic";
 import NewAndNotable from "@/components/sections/NewAndNotable/NewAndNotable";
 import PopularCategories from "@/components/sections/PopularCategories/PopularCategories";
 import SalesEngineer from "@/components/sections/SalesEngineer/SalesEngineer";
@@ -29,6 +30,7 @@ export default function HomePage() {
       <TopNewProducts />
       <SalesEngineer />
       <SuggestedGXProducts />
+      <HottestDealsDynamic />
       <HtmlChunk name="main-tail" />
     </>
   );
