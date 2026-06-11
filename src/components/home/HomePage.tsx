@@ -1,3 +1,4 @@
+import Careers from "@/components/sections/Careers/Careers";
 import HeroTiles from "@/components/sections/HeroTiles/HeroTiles";
 import HottestDeals from "@/components/sections/HottestDeals/HottestDeals";
 import HottestDealsDynamic from "@/components/sections/HottestDealsDynamic/HottestDealsDynamic";
@@ -33,6 +34,7 @@ export default function HomePage() {
       <SuggestedGXProducts />
       <HottestDealsDynamic />
       <ResearchArticles />
+      <Careers />
       <HtmlChunk name="main-tail" />
     </>
   );
