@@ -1,43 +1,53 @@
-import ProductCard from "./ProductCard";
-import { formatCurrency, usdToInr } from "@/utils/currency";
+import { SUGGESTED_PRODUCTS } from "@/data/suggestedProducts";
+import SuggestedProductCard from "./SuggestedProductCard";
 
-const products = [
-  {
-    name: "Fender Player Stratocaster",
-    price: formatCurrency(usdToInr(849.99)),
-    image: "https://media.vibemusic.in/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png",
-  },
-  {
-    name: "Yamaha P-225 Digital Piano",
-    price: formatCurrency(usdToInr(699.99)),
-    image: "https://media.vibemusic.in/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg?quality=82&width=400&format=webp",
-  },
-  {
-    name: "Focusrite Scarlett Solo",
-    price: formatCurrency(usdToInr(119.99)),
-    image: "https://media.vibemusic.in/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg?quality=82&height=400",
-  },
-  {
-    name: "Shure SM7B Microphone",
-    price: formatCurrency(usdToInr(399)),
-    image: "https://media.vibemusic.in/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
-  },
-];
+const NAV_PREV_LABEL = "Scroll Previous";
+const NAV_NEXT_LABEL = "Scroll Next";
 
-export default function SuggestedProducts() {
+function ProductSuggestNav({ next = false }: { next?: boolean }) {
+  const className = next
+    ? "product-suggest__nav product-suggest__nav--next"
+    : "product-suggest__nav";
+
   return (
-    <section className="sw-section border-b border-[var(--grey10)] bg-white">
-      <div className="sw-container">
-        <h2 className="sw-section-heading">Suggested For You</h2>
-        <p className="sw-section-subheading mb-8">
-          Hand-picked gear based on trending products.
-        </p>
+    <button
+      type="button"
+      className={className}
+      aria-label={next ? NAV_NEXT_LABEL : NAV_PREV_LABEL}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+        <g fill="none" strokeLinecap="round" strokeWidth="2">
+          {next ? (
+            <path d="M17.762 27.505l7.739-7.739-7.739-7.739" />
+          ) : (
+            <path d="M22.238 12.495l-7.739 7.739 7.739 7.739" />
+          )}
+        </g>
+      </svg>
+      {next ? NAV_NEXT_LABEL : NAV_PREV_LABEL}
+    </button>
+  );
+}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard key={product.name} {...product} />
+/** Homepage suggested products carousel (`#suggested-products`). */
+export default function SuggestedProducts() {
+  const { sectionId, heading, items } = SUGGESTED_PRODUCTS;
+
+  return (
+    <section
+      id={sectionId}
+      className="suggested-products list-view vue-enabled-section"
+    >
+      <div className="product-suggest__stage">
+        <h2>{heading}</h2>
+        <ProductSuggestNav />
+        <div className="product-suggest__items paged scrollbar-minimal">
+          {items.map((item) => (
+            <SuggestedProductCard key={item.id} item={item} />
           ))}
+          <div className="product-suggest__end-spacer"></div>
         </div>
+        <ProductSuggestNav next />
       </div>
     </section>
   );

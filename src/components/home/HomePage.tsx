@@ -2,6 +2,7 @@ import HeroTiles from "@/components/sections/HeroTiles/HeroTiles";
 import HottestDeals from "@/components/sections/HottestDeals/HottestDeals";
 import NewAndNotable from "@/components/sections/NewAndNotable/NewAndNotable";
 import PopularCategories from "@/components/sections/PopularCategories/PopularCategories";
+import SuggestedProducts from "@/components/sections/SuggestedProducts/SuggestedProducts";
 import WelcomeSection from "@/components/sections/WelcomeSection/WelcomeSection";
 import HtmlChunk from "@/components/vibe/HtmlChunk";
 
@@ -19,6 +20,7 @@ export default function HomePage() {
         <NewAndNotable />
       </section>
       <HeroTiles />
+      <SuggestedProducts />
       <HtmlChunk name="main-tail" />
     </>
   );
