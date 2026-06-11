@@ -3,6 +3,7 @@ import HottestDeals from "@/components/sections/HottestDeals/HottestDeals";
 import NewAndNotable from "@/components/sections/NewAndNotable/NewAndNotable";
 import PopularCategories from "@/components/sections/PopularCategories/PopularCategories";
 import SalesEngineer from "@/components/sections/SalesEngineer/SalesEngineer";
+import SuggestedGXProducts from "@/components/sections/SuggestedGXProducts/SuggestedGXProducts";
 import SuggestedProducts from "@/components/sections/SuggestedProducts/SuggestedProducts";
 import TopNewProducts from "@/components/sections/TopNewProducts/TopNewProducts";
 import ValueAdds from "@/components/sections/ValueAdds/ValueAdds";
@@ -27,6 +28,7 @@ export default function HomePage() {
       <ValueAdds />
       <TopNewProducts />
       <SalesEngineer />
+      <SuggestedGXProducts />
       <HtmlChunk name="main-tail" />
     </>
   );
