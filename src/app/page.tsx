@@ -5,7 +5,6 @@ import HtmlSection from "@/components/vibe/HtmlSection";
 export default function Home() {
   return (
     <>
-      <HtmlSection file="header" />
       <HomePage />
       <HtmlSection file="footer" />
       <HomepageInitializer />

@@ -22,7 +22,6 @@ export default async function CategoryRoute({ params }: CategoryRouteProps) {
 
   return (
     <>
-      <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
         <CategoryPage category={category} />
       </main>

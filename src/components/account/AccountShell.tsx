@@ -8,7 +8,6 @@ interface AccountShellProps {
 export default function AccountShell({ children }: AccountShellProps) {
   return (
     <>
-      <HtmlSection file="header" />
       <AccountDashboardLayout>{children}</AccountDashboardLayout>
       <HtmlSection file="footer" />
     </>

@@ -5,7 +5,6 @@ import "@/components/search/search.css";
 export default function SearchPage() {
   return (
     <>
-      <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
         <section className="sw-search-landing">
           <h1>Search Vibe Music</h1>

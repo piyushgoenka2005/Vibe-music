@@ -7,7 +7,6 @@ import HtmlSection from "@/components/vibe/HtmlSection";
 export default function ForgotPasswordPage() {
   return (
     <>
-      <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
         <GuestOnlyRoute>
           <AuthShell

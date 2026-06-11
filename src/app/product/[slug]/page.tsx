@@ -15,7 +15,6 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
 
   return (
     <>
-      <HtmlSection file="header" />
       <main className="homepage-wrapper" id="main-content">
         <ProductDetailPage slug={slug} />
       </main>
