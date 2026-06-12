@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Package,
@@ -14,6 +15,15 @@ import { useAuthStore } from "@/store/authStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
 import { formatCurrency } from "@/utils/currency";
+import { fetchUserOrders } from "@/services/orderService";
+import type { Order } from "@/types/order";
+import {
+  formatOrderDate,
+  formatPaymentLabel,
+  statusBadgeClass,
+} from "./orderDisplay";
+
+const RECENT_ORDERS_LIMIT = 3;
 
 export default function AccountOverview() {
   const user = useAuthStore((s) => s.user);
@@ -21,14 +31,37 @@ export default function AccountOverview() {
   const wishlistItems = useWishlistStore((s) => s.items);
   const addresses = useAccountProfileStore((s) => s.addresses);
 
-  const orderCount = 0;
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchUserOrders()
+      .then((data) => {
+        if (!cancelled) setOrders(data);
+      })
+      .catch(() => {
+        if (!cancelled) setOrders([]);
+      })
+      .finally(() => {
+        if (!cancelled) setOrdersLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const orderCount = orders.length;
+  const recentOrders = orders.slice(0, RECENT_ORDERS_LIMIT);
   const rewardPoints = wishlistCount * 25 + addresses.length * 50;
 
   const stats = [
     {
       href: ROUTES.accountOrders,
       label: "Orders",
-      value: orderCount,
+      value: ordersLoading ? "…" : orderCount,
       icon: Package,
       variant: "blue" as const,
     },
@@ -86,20 +119,54 @@ export default function AccountOverview() {
             </Link>
           </div>
           <div className="acct__card-body">
-            <div className="acct__empty" style={{ padding: "32px 16px" }}>
-              <div className="acct__empty-icon">
-                <ShoppingBag size={32} strokeWidth={1.5} />
-              </div>
-              <h3 className="acct__empty-title" style={{ fontSize: 16 }}>
-                No orders yet
-              </h3>
-              <p className="acct__empty-text" style={{ marginBottom: 16 }}>
-                Your purchase history will appear here.
+            {ordersLoading ? (
+              <p style={{ padding: 32, textAlign: "center", color: "#666" }}>
+                Loading orders...
               </p>
-              <Link href={ROUTES.search} className="acct__btn acct__btn--primary acct__btn--sm">
-                Shop Now
-              </Link>
-            </div>
+            ) : recentOrders.length === 0 ? (
+              <div className="acct__empty" style={{ padding: "32px 16px" }}>
+                <div className="acct__empty-icon">
+                  <ShoppingBag size={32} strokeWidth={1.5} />
+                </div>
+                <h3 className="acct__empty-title" style={{ fontSize: 16 }}>
+                  No orders yet
+                </h3>
+                <p className="acct__empty-text" style={{ marginBottom: 16 }}>
+                  Your purchase history will appear here.
+                </p>
+                <Link href={ROUTES.search} className="acct__btn acct__btn--primary acct__btn--sm">
+                  Shop Now
+                </Link>
+              </div>
+            ) : (
+              recentOrders.map((order) => (
+                <div key={order.id} className="acct__order">
+                  <div>
+                    <p className="acct__order-id">Order #{order.id}</p>
+                    <p className="acct__order-meta">
+                      {formatOrderDate(order.createdAt)} · {order.items.length} item
+                      {order.items.length === 1 ? "" : "s"} ·{" "}
+                      {formatPaymentLabel(order.paymentStatus)}
+                    </p>
+                  </div>
+                  <span className={statusBadgeClass(order.status)}>
+                    {order.status}
+                  </span>
+                  <div style={{ textAlign: "right" }}>
+                    <p className="acct__order-total">
+                      {formatCurrency(order.total)}
+                    </p>
+                    <Link
+                      href={`${ROUTES.checkoutSuccess}?orderId=${order.id}`}
+                      className="acct__btn acct__btn--secondary acct__btn--sm"
+                      style={{ marginTop: 8 }}
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </section>
 

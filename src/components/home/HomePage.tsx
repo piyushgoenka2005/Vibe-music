@@ -6,6 +6,7 @@ import HottestDealsDynamic from "@/components/sections/HottestDealsDynamic/Hotte
 import NewAndNotable from "@/components/sections/NewAndNotable/NewAndNotable";
 import PopularCategories from "@/components/sections/PopularCategories/PopularCategories";
 import ResearchArticles from "@/components/sections/ResearchArticles/ResearchArticles";
+import StyleStory from "@/components/sections/StyleStory/StyleStory";
 import SalesEngineer from "@/components/sections/SalesEngineer/SalesEngineer";
 import SuggestedGXProducts from "@/components/sections/SuggestedGXProducts/SuggestedGXProducts";
 import SuggestedProducts from "@/components/sections/SuggestedProducts/SuggestedProducts";
@@ -48,6 +49,7 @@ export default function HomePage() {
         <SuggestedGXProducts />
         <HottestDealsDynamic />
         <ResearchArticles />
+        <StyleStory />
         <Careers />
       </div>
     </main>

@@ -2,6 +2,11 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useToastStore } from "@/store/toastStore";
 import type { Product } from "@/types/product";
+import {
+  DEFAULT_GST_RATE,
+  getDefaultGstRateForCategory,
+  type GSTRate,
+} from "@/lib/gstCalculator";
 
 export interface CartItem {
   productId: string;
@@ -9,6 +14,7 @@ export interface CartItem {
   name: string;
   brand: string;
   price: number;
+  gstRate: GSTRate;
   imageColor?: string;
   image?: string;
   quantity: number;
@@ -50,6 +56,7 @@ function productToCartItem(product: Product, quantity: number): CartItem {
     name: product.name,
     brand: product.brand,
     price: product.price,
+    gstRate: product.gstRate ?? getDefaultGstRateForCategory(product.categorySlug),
     imageColor: product.imageColor,
     image: product.image,
     quantity,

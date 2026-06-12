@@ -7,6 +7,7 @@ export const ROUTES = {
   searchResults: "/search/results",
   cart: "/cart",
   checkout: "/checkout",
+  checkoutSuccess: "/checkout/success",
   account: "/account",
   accountOrders: "/account/orders",
   accountProfile: "/account/profile",
@@ -121,6 +122,7 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.search) return true;
   if (path.startsWith(`${ROUTES.searchResults}`)) return true;
   if (path === ROUTES.cart || path === ROUTES.checkout) return true;
+  if (path.startsWith(`${ROUTES.checkout}/`)) return true;
   if (path === ROUTES.account) return true;
   if (path === ROUTES.accountOrders) return true;
   if (path === ROUTES.accountProfile) return true;

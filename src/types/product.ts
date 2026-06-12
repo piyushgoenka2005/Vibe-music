@@ -10,6 +10,8 @@ export interface Product {
   category: string;
   categorySlug: string;
   price: number;
+  /** GST rate in percent (5, 12, 18, or 28). Defaults from category if omitted. */
+  gstRate?: 5 | 12 | 18 | 28;
   rating: number;
   reviewCount: number;
   availability: ProductAvailability;

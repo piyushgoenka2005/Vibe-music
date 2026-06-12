@@ -33,3 +33,25 @@ export async function isAuthenticatedRequest(): Promise<boolean> {
   const sessionCookie = await getSessionCookieFromStore();
   return verifySessionCookie(sessionCookie);
 }
+
+export interface SessionUser {
+  uid: string;
+  email: string | null;
+  name: string | null;
+}
+
+export async function getSessionUser(): Promise<SessionUser | null> {
+  const sessionCookie = await getSessionCookieFromStore();
+  if (!sessionCookie) return null;
+
+  try {
+    const decoded = await getAdminAuth().verifySessionCookie(sessionCookie, true);
+    return {
+      uid: decoded.uid,
+      email: decoded.email ?? null,
+      name: decoded.name ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
