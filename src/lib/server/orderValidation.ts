@@ -6,23 +6,25 @@ import type { CreateOrderPayload } from "@/types/order";
 export async function resolveOrderItemsFromFirestore(
   items: CreateOrderPayload["items"]
 ): Promise<CreateOrderPayload["items"]> {
-  return items.map((item) => {
-    const product = getProductById(item.productId);
-    if (product && product.status === "active") {
-      const salePrice =
-        product.originalPrice > product.price ? product.price : product.price;
-      return {
-        productId: item.productId,
-        name: product.name,
-        quantity: item.quantity,
-        price: salePrice,
-        gstRate: (product.gstRate ??
-          item.gstRate ??
-          getDefaultGstRateForCategory(product.category)) as GSTRate,
-      };
-    }
-    return item;
-  });
+  return Promise.all(
+    items.map(async (item) => {
+      const product = await getProductById(item.productId);
+      if (product && product.status === "active") {
+        const salePrice =
+          product.originalPrice > product.price ? product.price : product.price;
+        return {
+          productId: item.productId,
+          name: product.name,
+          quantity: item.quantity,
+          price: salePrice,
+          gstRate: (product.gstRate ??
+            item.gstRate ??
+            getDefaultGstRateForCategory(product.category)) as GSTRate,
+        };
+      }
+      return item;
+    })
+  );
 }
 
 export async function resolveCouponDiscount(

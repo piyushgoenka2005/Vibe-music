@@ -1,6 +1,6 @@
 import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getAuth, type Auth } from "firebase-admin/auth";
-import { getFirestore, type Firestore } from "firebase-admin/firestore";
+import { getFirestore, initializeFirestore, type Firestore } from "firebase-admin/firestore";
 
 function getAdminApp(): App {
   if (getApps().length > 0) {
@@ -30,6 +30,18 @@ export function getAdminAuth(): Auth {
   return getAuth(getAdminApp());
 }
 
+let adminFirestore: Firestore | null = null;
+
 export function getAdminFirestore(): Firestore {
-  return getFirestore(getAdminApp());
+  if (!adminFirestore) {
+    const app = getAdminApp();
+    try {
+      adminFirestore = initializeFirestore(app, {
+        ignoreUndefinedProperties: true,
+      });
+    } catch {
+      adminFirestore = getFirestore(app);
+    }
+  }
+  return adminFirestore;
 }

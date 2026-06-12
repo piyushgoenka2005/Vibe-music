@@ -4,7 +4,7 @@ import type { InventoryAdjustment, InventoryRecord } from "@/types/admin";
 const LOW_STOCK_DEFAULT = 10;
 
 export async function listInventory(): Promise<InventoryRecord[]> {
-  return getAllProducts(true)
+  return (await getAllProducts(true))
     .map((product) => ({
       productId: product.id,
       productName: product.name,
@@ -22,13 +22,13 @@ export async function adjustStock(
   reason: string,
   adjustedBy: string
 ): Promise<InventoryAdjustment> {
-  const product = getProductById(productId);
+  const product = await getProductById(productId);
   if (!product) throw new Error("Product not found");
 
   const previousQuantity = product.stock;
   const now = new Date().toISOString();
 
-  updateProduct(productId, { stock: newQuantity });
+  await updateProduct(productId, { stock: newQuantity });
 
   return {
     id: `adj-${Date.now().toString(36)}`,

@@ -470,6 +470,27 @@
   color: var(--admin-danger);
 }
 
+.admin-btn--icon-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
+  background: transparent;
+  color: var(--admin-danger);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.admin-btn--icon-danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.admin-btn--icon-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .admin-btn--ghost {
   background: transparent;
   color: var(--admin-muted);
@@ -613,4 +634,34 @@
 .admin-link {
   color: var(--admin-accent);
   text-decoration: underline;
+}
+
+.admin-upload-zone {
+  border: 2px dashed var(--admin-border);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.admin-upload-zone--active,
+.admin-upload-zone:hover {
+  border-color: var(--admin-accent);
+  background: rgba(0, 114, 186, 0.06);
+}
+
+.admin-image-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.admin-image-preview img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
 }

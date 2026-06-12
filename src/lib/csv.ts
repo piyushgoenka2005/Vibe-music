@@ -81,5 +81,7 @@ export function csvRowToImportRow(row: ParsedCsvRow) {
     image1: row.image1 ?? "",
     image2: row.image2 ?? "",
     image3: row.image3 ?? "",
+    image4: row.image4 ?? "",
+    image5: row.image5 ?? "",
   };
 }

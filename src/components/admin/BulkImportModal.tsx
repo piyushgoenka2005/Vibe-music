@@ -15,22 +15,36 @@ export default function BulkImportModal({
   onClose,
   onComplete,
 }: BulkImportModalProps) {
-  const fileRef = useRef<HTMLInputElement>(null);
+  const csvRef = useRef<HTMLInputElement>(null);
+  const zipRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<BulkImportPreviewRow[]>([]);
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [zipFile, setZipFile] = useState<File | null>(null);
 
   if (!open) return null;
 
-  async function handlePreview(selected: File) {
+  function buildFormData(confirm = false): FormData {
+    const formData = new FormData();
+    if (csvFile) formData.append("file", csvFile);
+    if (zipFile) formData.append("zip", zipFile);
+    if (confirm) formData.append("confirm", "true");
+    return formData;
+  }
+
+  async function handlePreview(selectedCsv: File, selectedZip?: File | null) {
     setLoading(true);
     setError(null);
     setResult(null);
-    setFile(selected);
+    setCsvFile(selectedCsv);
+    if (selectedZip !== undefined) setZipFile(selectedZip);
+
     const formData = new FormData();
-    formData.append("file", selected);
+    formData.append("file", selectedCsv);
+    const zip = selectedZip ?? zipFile;
+    if (zip) formData.append("zip", zip);
 
     try {
       const res = await fetch("/api/admin/products/import", {
@@ -48,17 +62,14 @@ export default function BulkImportModal({
   }
 
   async function handleConfirm() {
-    if (!file) return;
+    if (!csvFile) return;
     setLoading(true);
     setError(null);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("confirm", "true");
 
     try {
       const res = await fetch("/api/admin/products/import", {
         method: "POST",
-        body: formData,
+        body: buildFormData(true),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Import failed");
@@ -104,9 +115,11 @@ export default function BulkImportModal({
   function reset() {
     setPreview([]);
     setResult(null);
-    setFile(null);
+    setCsvFile(null);
+    setZipFile(null);
     setError(null);
-    if (fileRef.current) fileRef.current.value = "";
+    if (csvRef.current) csvRef.current.value = "";
+    if (zipRef.current) zipRef.current.value = "";
   }
 
   return (
@@ -120,21 +133,41 @@ export default function BulkImportModal({
         </div>
         <div className="admin-panel__body">
           <p style={{ marginBottom: "1rem" }}>
-            Upload a CSV file.{" "}
+            Upload a CSV file and optionally a ZIP of product images.{" "}
             <a href="/product-import-template.csv" download className="admin-link">
               Download template
             </a>
           </p>
 
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".csv,text/csv"
-            onChange={(e) => {
-              const selected = e.target.files?.[0];
-              if (selected) handlePreview(selected);
-            }}
-          />
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1rem" }}>
+            <label>
+              CSV file *
+              <input
+                ref={csvRef}
+                type="file"
+                accept=".csv,text/csv"
+                style={{ display: "block", marginTop: "0.25rem" }}
+                onChange={(e) => {
+                  const selected = e.target.files?.[0];
+                  if (selected) handlePreview(selected);
+                }}
+              />
+            </label>
+            <label>
+              Images ZIP (optional — matches image1–image5 filenames)
+              <input
+                ref={zipRef}
+                type="file"
+                accept=".zip,application/zip"
+                style={{ display: "block", marginTop: "0.25rem" }}
+                onChange={(e) => {
+                  const selected = e.target.files?.[0] ?? null;
+                  setZipFile(selected);
+                  if (csvFile) handlePreview(csvFile, selected);
+                }}
+              />
+            </label>
+          </div>
 
           {error ? <p className="admin-form-error">{error}</p> : null}
 
@@ -145,7 +178,7 @@ export default function BulkImportModal({
               <p>Errors: {result.errors}</p>
               {result.failedRows.length > 0 ? (
                 <button type="button" className="admin-btn admin-btn--secondary" onClick={exportFailedRows}>
-                  Export Failed Rows
+                  Download Failed Rows CSV
                 </button>
               ) : null}
             </div>

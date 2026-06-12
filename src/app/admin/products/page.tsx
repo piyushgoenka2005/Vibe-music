@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -38,6 +39,7 @@ function ProductsContent() {
   const [bulkStock, setBulkStock] = useState("");
   const [bulkCategorySlug, setBulkCategorySlug] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useQuery({
     queryKey: ["admin-categories"],
@@ -74,10 +76,27 @@ function ProductsContent() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Delete failed");
+      }
     },
-    onSuccess: invalidate,
+    onSuccess: () => {
+      setActionError(null);
+      invalidate();
+    },
+    onError: (err) => {
+      setActionError(err instanceof Error ? err.message : "Delete failed");
+    },
   });
+
+  function handleDelete(product: AdminProduct) {
+    const confirmed = window.confirm(
+      `Delete "${product.name}"? This cannot be undone.`
+    );
+    if (!confirmed) return;
+    deleteMutation.mutate(product.id);
+  }
 
   const duplicateMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -190,6 +209,12 @@ function ProductsContent() {
         ) : null}
       </div>
 
+      {actionError ? (
+        <p className="admin-form-error" style={{ marginBottom: "1rem" }}>
+          {actionError}
+        </p>
+      ) : null}
+
       <div className="admin-panel">
         {products.length === 0 ? (
           <EmptyState message="No products found." />
@@ -240,8 +265,15 @@ function ProductsContent() {
                           <button type="button" className="admin-btn admin-btn--ghost" style={{ padding: "0.25rem 0.5rem" }} onClick={() => duplicateMutation.mutate(product.id)}>
                             Copy
                           </button>
-                          <button type="button" className="admin-btn admin-btn--danger" style={{ padding: "0.25rem 0.5rem" }} onClick={() => deleteMutation.mutate(product.id)}>
-                            Del
+                          <button
+                            type="button"
+                            className="admin-btn admin-btn--icon-danger"
+                            title={`Delete ${product.name}`}
+                            aria-label={`Delete ${product.name}`}
+                            disabled={deleteMutation.isPending}
+                            onClick={() => handleDelete(product)}
+                          >
+                            <Trash2 size={16} aria-hidden="true" />
                           </button>
                         </div>
                       </td>

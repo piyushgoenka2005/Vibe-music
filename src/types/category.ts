@@ -3,6 +3,6 @@ export interface Category {
   name: string;
   slug: string;
   description?: string;
-  /** Computed at runtime from products.json — not persisted. */
+  /** Computed at runtime from Firestore — not persisted. */
   productCount?: number;
 }

@@ -28,6 +28,7 @@ export const adminProductSchema = z.object({
   featured: z.boolean().optional(),
   trending: z.boolean().optional(),
   newArrival: z.boolean().optional(),
+  images: z.array(z.string()).optional(),
   metaTitle: z.string().max(255).optional(),
   metaDescription: z.string().max(500).optional(),
 });

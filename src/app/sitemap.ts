@@ -1,8 +1,7 @@
-import { BRAND } from "@/lib/brand";
 import { getAllProductSlugs, getCategories } from "@/services/catalogService";
 
-export default function sitemap() {
-  const base = BRAND.siteUrl;
+export default async function sitemap() {
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic.in";
 
   const staticRoutes = [
     "",
@@ -20,14 +19,16 @@ export default function sitemap() {
     priority: path === "" ? 1 : 0.7,
   }));
 
-  const categoryRoutes = getCategories().map((category) => ({
+  const categories = await getCategories();
+  const categoryRoutes = categories.map((category) => ({
     url: `${base}/category/${category.slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
 
-  const productRoutes = getAllProductSlugs().map((slug) => ({
+  const slugs = await getAllProductSlugs();
+  const productRoutes = slugs.map((slug) => ({
     url: `${base}/product/${slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,

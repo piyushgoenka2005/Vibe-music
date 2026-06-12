@@ -10,18 +10,18 @@ type RouteContext = { params: Promise<{ slug: string }> };
 export async function GET(_request: Request, context: RouteContext) {
   try {
     const { slug } = await context.params;
-    const product = getProductDetailBySlug(slug);
+    const product = await getProductDetailBySlug(slug);
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     return NextResponse.json({
       product,
-      frequentlyBoughtTogether: getProductSummaries(
+      frequentlyBoughtTogether: await getProductSummaries(
         product.frequentlyBoughtTogether
       ),
-      similarProducts: getProductSummaries(product.similarProductIds),
-      relatedProducts: getRelatedProducts(slug),
+      similarProducts: await getProductSummaries(product.similarProductIds),
+      relatedProducts: await getRelatedProducts(slug),
     });
   } catch (error) {
     const message =

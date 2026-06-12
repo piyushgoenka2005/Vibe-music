@@ -8,12 +8,13 @@ interface CategoryRouteProps {
 }
 
 export async function generateStaticParams() {
-  return getCategories().map((category) => ({ slug: category.slug }));
+  const categories = await getCategories();
+  return categories.map((category) => ({ slug: category.slug }));
 }
 
 export default async function CategoryRoute({ params }: CategoryRouteProps) {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(slug);
 
   if (!category) {
     notFound();

@@ -45,9 +45,10 @@ async function seedReviewsFromStatic(): Promise<ReviewDocument[]> {
   const reviews: ReviewDocument[] = [];
   const now = new Date().toISOString();
 
-  getAllProducts(true).slice(0, 20).forEach((product) => {
-    const detail = getProductDetailBySlug(product.slug);
-    if (!detail) return;
+  const products = (await getAllProducts(true)).slice(0, 20);
+  for (const product of products) {
+    const detail = await getProductDetailBySlug(product.slug);
+    if (!detail) continue;
     detail.reviews.slice(0, 2).forEach((review, index) => {
       const ref = db.collection(COLLECTION).doc();
       const record: ReviewDocument = {
@@ -66,7 +67,7 @@ async function seedReviewsFromStatic(): Promise<ReviewDocument[]> {
       batch.set(ref, record);
       reviews.push(record);
     });
-  });
+  }
 
   if (reviews.length > 0) {
     await batch.commit();

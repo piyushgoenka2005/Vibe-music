@@ -42,7 +42,7 @@ export async function listAdminProducts(options: {
   limit?: number;
   offset?: number;
 } = {}): Promise<{ products: AdminProduct[]; total: number }> {
-  let products = getAllProducts(true).map(toAdminProduct);
+  let products = (await getAllProducts(true)).map(toAdminProduct);
 
   if (options.search) {
     const q = options.search.toLowerCase();
@@ -81,14 +81,16 @@ export async function listAdminProducts(options: {
 }
 
 export async function getAdminProduct(id: string): Promise<AdminProduct | null> {
-  const product = getProductById(id);
+  const product = await getProductById(id);
   return product ? toAdminProduct(product) : null;
 }
 
 export async function createAdminProduct(
-  input: Omit<AdminProduct, "id" | "createdAt" | "updatedAt">
+  input: Omit<AdminProduct, "id" | "createdAt" | "updatedAt"> & {
+    images?: string[];
+  }
 ): Promise<AdminProduct> {
-  const created = createProduct({
+  const created = await createProduct({
     name: input.name,
     brand: input.brand,
     brandSlug: input.brandSlug,
@@ -107,6 +109,7 @@ export async function createAdminProduct(
     condition: input.condition,
     imageColor: input.imageColor,
     image: input.image || getProductImage(input.slug, input.category),
+    images: input.images,
     gstRate: input.gstRate,
     featured: input.featured,
     trending: input.trending,
@@ -117,9 +120,9 @@ export async function createAdminProduct(
 
 export async function updateAdminProduct(
   id: string,
-  patch: Partial<AdminProduct>
+  patch: Partial<AdminProduct> & { images?: string[] }
 ): Promise<AdminProduct> {
-  const updated = updateProduct(id, {
+  const updated = await updateProduct(id, {
     name: patch.name,
     brand: patch.brand,
     brandSlug: patch.brandSlug,
@@ -138,6 +141,7 @@ export async function updateAdminProduct(
     condition: patch.condition,
     imageColor: patch.imageColor,
     image: patch.image,
+    images: patch.images,
     gstRate: patch.gstRate,
     featured: patch.featured,
     trending: patch.trending,
@@ -147,11 +151,11 @@ export async function updateAdminProduct(
 }
 
 export async function deleteAdminProduct(id: string): Promise<void> {
-  deleteProduct(id);
+  await deleteProduct(id);
 }
 
 export async function duplicateAdminProduct(id: string): Promise<AdminProduct> {
-  const original = getProductById(id);
+  const original = await getProductById(id);
   if (!original) throw new Error("Product not found");
 
   const suffix = Date.now().toString(36);
@@ -161,6 +165,7 @@ export async function duplicateAdminProduct(id: string): Promise<AdminProduct> {
     name: `${original.name} (Copy)`,
     sku: `${original.sku}-${suffix}`.slice(0, 20),
     status: "draft",
+    images: original.images,
   });
 }
 
@@ -168,26 +173,28 @@ export async function bulkUpdateProductStatus(
   ids: string[],
   status: NonNullable<AdminProduct["status"]>
 ): Promise<number> {
-  if (status === "active") return bulkActivateProducts(ids).updated;
-  if (status === "archived") return bulkArchiveProducts(ids).updated;
-  ids.forEach((id) => updateProduct(id, { status }));
+  if (status === "active") return (await bulkActivateProducts(ids)).updated;
+  if (status === "archived") return (await bulkArchiveProducts(ids)).updated;
+  for (const id of ids) await updateProduct(id, { status });
   return ids.length;
 }
 
 export async function bulkDeleteAdminProducts(ids: string[]): Promise<number> {
-  return bulkDeleteProducts(ids).deleted;
+  return (await bulkDeleteProducts(ids)).deleted;
 }
 
 export async function bulkUpdateAdminStock(
   updates: Array<{ id: string; stockQuantity: number }>
 ): Promise<number> {
-  return bulkUpdateStock(
-    updates.map((u) => ({ id: u.id, stock: u.stockQuantity }))
+  return (
+    await bulkUpdateStock(
+      updates.map((u) => ({ id: u.id, stock: u.stockQuantity }))
+    )
   ).updated;
 }
 
 export async function bulkUpdateAdminCategory(
   updates: Array<{ id: string; category: string; categorySlug: string }>
 ): Promise<number> {
-  return bulkUpdateCategory(updates).updated;
+  return (await bulkUpdateCategory(updates)).updated;
 }

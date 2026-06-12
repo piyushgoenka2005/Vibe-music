@@ -1,0 +1,18 @@
+{
+  "startedAt": "2026-06-12T19:45:46.111Z",
+  "completedAt": "2026-06-12T19:45:48.325Z",
+  "products": {
+    "total": 40,
+    "migrated": 40,
+    "skipped": 0,
+    "errors": []
+  },
+  "categories": {
+    "total": 14,
+    "migrated": 14
+  },
+  "brands": {
+    "total": 29,
+    "migrated": 29
+  }
+}

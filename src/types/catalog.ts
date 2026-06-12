@@ -11,7 +11,7 @@ import type {
 
 export type ProductStatus = "active" | "draft" | "archived";
 
-/** Canonical catalog product schema — stored in products.json (single source of truth). */
+/** Canonical catalog product schema — stored in Firestore. */
 export interface CatalogProduct {
   id: string;
   slug: string;
@@ -108,6 +108,10 @@ export interface BulkImportRow {
   image1?: string;
   image2?: string;
   image3?: string;
+  image4?: string;
+  image5?: string;
+  /** Cloudinary URLs resolved from ZIP import */
+  resolvedImages?: string[];
 }
 
 export interface BulkImportPreviewRow extends BulkImportRow {

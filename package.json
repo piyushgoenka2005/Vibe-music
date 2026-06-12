@@ -13,7 +13,9 @@
     "sync:homepage": "node scripts/extract-homepage-html.mjs",
     "download:images": "node scripts/download-essential-images.mjs",
     "download:style-story": "node scripts/download-style-story-thumbnails.mjs",
-    "migrate:brand": "node scripts/migrate-brand.mjs && node scripts/migrate-content-brand.mjs"
+    "migrate:brand": "node scripts/migrate-brand.mjs && node scripts/migrate-content-brand.mjs",
+    "migrate:products": "npx tsx --env-file=.env.local scripts/migrate-products-to-firestore.ts",
+    "firebase:deploy-indexes": "npx firebase-tools deploy --only firestore:indexes --project vibe-music-90bb5"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -22,7 +24,9 @@
     "@radix-ui/react-slot": "^1.2.5",
     "@tanstack/react-query": "^5.101.0",
     "@tanstack/react-table": "^8.21.3",
+    "adm-zip": "^0.5.17",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.10.0",
     "clsx": "^2.1.1",
     "firebase": "^12.14.0",
     "firebase-admin": "^13.10.0",
@@ -40,6 +44,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/adm-zip": "^0.5.8",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -14,7 +14,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   const { getProductBySlug: getBySlug } = await import(
     "@/services/catalogService"
   );
-  return getBySlug(slug) ?? null;
+  return (await getBySlug(slug)) ?? null;
 }
 
 export async function searchProducts(

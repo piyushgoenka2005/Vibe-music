@@ -35,7 +35,7 @@ async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
   const { loadCategories } = await import("@/lib/server/catalogRepository");
   const { getAllProducts } = await import("@/services/catalogService");
   const staticCategories = loadCategories();
-  const products = getAllProducts(true);
+  const products = await getAllProducts(true);
   const db = getAdminFirestore();
   const now = new Date().toISOString();
   const batch = db.batch();

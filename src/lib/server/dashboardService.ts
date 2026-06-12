@@ -19,7 +19,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     db.collection("users").get(),
   ]);
 
-  const catalogProducts = getAllProducts(true);
+  const catalogProducts = await getAllProducts(true);
 
   const orders = ordersSnap.docs
     .map(parseOrder)
@@ -167,7 +167,7 @@ export async function getRecentCustomers(limit = 10) {
 }
 
 export async function getLowStockProducts(limit = 10) {
-  return getAllProducts(true)
+  return (await getAllProducts(true))
     .filter((product) => product.stock <= LOW_STOCK_THRESHOLD)
     .sort((a, b) => a.stock - b.stock)
     .slice(0, limit)

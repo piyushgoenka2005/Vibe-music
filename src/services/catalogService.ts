@@ -3,10 +3,21 @@ import "server-only";
 import { getProductImage } from "@/data/productImages";
 import { slugify } from "@/lib/slug";
 import {
-  loadCategories,
-  loadProducts,
-  saveProducts,
-} from "@/lib/server/catalogRepository";
+  batchDeleteProducts as fsBatchDelete,
+  batchUpdateProducts as fsBatchUpdate,
+  batchWriteProducts,
+  fetchAllProducts,
+  fetchBrands,
+  fetchCategories,
+  fetchExistingSlugsAndSkus,
+  fetchProductById,
+  fetchProductBySlug,
+  fetchProductsByCategory,
+  removeProduct,
+  skuExists,
+  slugExists,
+  writeProduct,
+} from "@/lib/server/firestoreCatalogRepository";
 import type { Brand } from "@/types/brand";
 import type { Category } from "@/types/category";
 import type {
@@ -24,29 +35,20 @@ import type {
 } from "@/types/catalog";
 import type { Product, ProductDetail } from "@/types/product";
 
-function activeOnly(products: CatalogProduct[]): CatalogProduct[] {
-  return products.filter((p) => p.status === "active");
-}
-
-function resolveCategory(
+async function resolveCategory(
   categoryInput: string
-): { name: string; slug: string } | null {
-  const categories = loadCategories();
-  const bySlug = categories.find(
-    (c) => c.slug === categoryInput.toLowerCase()
-  );
+): Promise<{ name: string; slug: string } | null> {
+  const categories = await fetchCategories();
+  const normalized = categoryInput.toLowerCase();
+  const bySlug = categories.find((c) => c.slug === normalized);
   if (bySlug) return { name: bySlug.name, slug: bySlug.slug };
-
-  const byName = categories.find(
-    (c) => c.name.toLowerCase() === categoryInput.toLowerCase()
-  );
+  const byName = categories.find((c) => c.name.toLowerCase() === normalized);
   if (byName) return { name: byName.name, slug: byName.slug };
-
   return null;
 }
 
 function uniqueSlug(base: string, existing: Set<string>): string {
-  let slug = slugify(base);
+  const slug = slugify(base);
   if (!existing.has(slug)) return slug;
   let i = 2;
   while (existing.has(`${slug}-${i}`)) i += 1;
@@ -74,14 +76,17 @@ function stockToAvailability(stock: number): Product["availability"] {
   return "in-stock";
 }
 
-function buildDefaultDetail(product: CatalogProduct): NonNullable<CatalogProduct["detail"]> {
-  const sameCategory = loadProducts().filter(
+function buildDefaultDetail(
+  product: CatalogProduct,
+  allProducts: CatalogProduct[]
+): NonNullable<CatalogProduct["detail"]> {
+  const sameCategory = allProducts.filter(
     (p) =>
       p.categorySlug === product.categorySlug &&
       p.id !== product.id &&
       p.status === "active"
   );
-  const sameBrand = loadProducts().filter(
+  const sameBrand = allProducts.filter(
     (p) =>
       p.brandSlug === product.brandSlug &&
       p.id !== product.id &&
@@ -100,7 +105,7 @@ function buildDefaultDetail(product: CatalogProduct): NonNullable<CatalogProduct
       id: `img-${i}`,
       alt: `${product.name} view ${i + 1}`,
       color: product.imageColor,
-      src: i === 0 ? src : undefined,
+      ...(src ? { src } : {}),
     })),
     videos: [],
     variants: [
@@ -144,7 +149,7 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
 }
 
 export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
-  const detail = catalogProduct.detail ?? buildDefaultDetail(catalogProduct);
+  const detail = catalogProduct.detail ?? buildDefaultDetail(catalogProduct, []);
 
   return {
     ...toProduct(catalogProduct),
@@ -165,70 +170,74 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
   };
 }
 
-export function getAllProducts(includeInactive = false): CatalogProduct[] {
-  const products = loadProducts();
-  return includeInactive ? products : activeOnly(products);
+export async function getAllProducts(
+  includeInactive = false
+): Promise<CatalogProduct[]> {
+  return fetchAllProducts(includeInactive);
 }
 
-export function getProductById(id: string): CatalogProduct | undefined {
-  return loadProducts().find((p) => p.id === id);
+export async function getProductById(
+  id: string
+): Promise<CatalogProduct | undefined> {
+  const product = await fetchProductById(id);
+  return product ?? undefined;
 }
 
-export function getCatalogProductBySlug(
+export async function getCatalogProductBySlug(
   slug: string
-): CatalogProduct | undefined {
-  return loadProducts().find((p) => p.slug === slug);
+): Promise<CatalogProduct | undefined> {
+  const product = await fetchProductBySlug(slug);
+  return product ?? undefined;
 }
 
-export function getProductBySlug(slug: string): Product | undefined {
-  const product = getCatalogProductBySlug(slug);
+export async function getProductBySlug(
+  slug: string
+): Promise<Product | undefined> {
+  const product = await getCatalogProductBySlug(slug);
   if (!product || product.status !== "active") return undefined;
   return toProduct(product);
 }
 
-export function getProductDetailBySlug(slug: string): ProductDetail | undefined {
-  const product = getCatalogProductBySlug(slug);
+export async function getProductDetailBySlug(
+  slug: string
+): Promise<ProductDetail | undefined> {
+  const product = await getCatalogProductBySlug(slug);
   if (!product || product.status !== "active") return undefined;
   return toProductDetail(product);
 }
 
-function sortByNewest(products: CatalogProduct[]): CatalogProduct[] {
-  return [...products].sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+export async function getProductsByCategory(
+  categorySlug: string
+): Promise<Product[]> {
+  const products = await fetchProductsByCategory(categorySlug);
+  return products.map(toProduct);
 }
 
-export function getProductsByCategory(categorySlug: string): Product[] {
-  return sortByNewest(
-    activeOnly(loadProducts()).filter((p) => p.categorySlug === categorySlug)
-  ).map(toProduct);
+export async function getFeaturedProducts(): Promise<Product[]> {
+  const products = await fetchAllProducts();
+  return products.filter((p) => p.featured).map(toProduct);
 }
 
-export function getFeaturedProducts(): Product[] {
-  return activeOnly(loadProducts())
-    .filter((p) => p.featured)
-    .map(toProduct);
+export async function getTrendingProducts(): Promise<Product[]> {
+  const products = await fetchAllProducts();
+  return products.filter((p) => p.trending).map(toProduct);
 }
 
-export function getTrendingProducts(): Product[] {
-  return activeOnly(loadProducts())
-    .filter((p) => p.trending)
-    .map(toProduct);
+export async function getNewArrivals(): Promise<Product[]> {
+  const products = await fetchAllProducts();
+  return products.filter((p) => p.newArrival).map(toProduct);
 }
 
-export function getNewArrivals(): Product[] {
-  return activeOnly(loadProducts())
-    .filter((p) => p.newArrival)
-    .map(toProduct);
-}
-
-export function getRelatedProducts(slug: string, limit = 4): Product[] {
-  const product = getCatalogProductBySlug(slug);
+export async function getRelatedProducts(
+  slug: string,
+  limit = 4
+): Promise<Product[]> {
+  const product = await getCatalogProductBySlug(slug);
   if (!product) return [];
 
+  const all = await fetchAllProducts();
   const relatedIds = product.detail?.relatedProductIds ?? [];
-  const idMap = new Map(loadProducts().map((p) => [p.id, p]));
+  const idMap = new Map(all.map((p) => [p.id, p]));
 
   const fromIds = relatedIds
     .map((id) => idMap.get(id))
@@ -238,7 +247,7 @@ export function getRelatedProducts(slug: string, limit = 4): Product[] {
 
   if (fromIds.length >= limit) return fromIds;
 
-  const fallback = activeOnly(loadProducts())
+  const fallback = all
     .filter(
       (p) => p.categorySlug === product.categorySlug && p.slug !== slug
     )
@@ -266,10 +275,17 @@ function matchesQuery(product: Product, query: string): boolean {
   );
 }
 
-export function searchProducts(options: ProductSearchOptions = {}): Product[] {
-  let source = options.includeInactive
-    ? loadProducts()
-    : activeOnly(loadProducts());
+export async function searchProducts(
+  options: ProductSearchOptions = {}
+): Promise<Product[]> {
+  let source = await fetchAllProducts(options.includeInactive ?? false);
+
+  if (options.category) {
+    source = await fetchProductsByCategory(
+      options.category,
+      options.includeInactive ?? false
+    );
+  }
 
   if (options.query) {
     const normalized = options.query.trim().toLowerCase();
@@ -277,15 +293,6 @@ export function searchProducts(options: ProductSearchOptions = {}): Product[] {
       const product = toProduct(p);
       return matchesQuery(product, normalized);
     });
-  }
-
-  if (options.category) {
-    const category = options.category.toLowerCase();
-    source = source.filter(
-      (p) =>
-        p.categorySlug === category ||
-        p.category.toLowerCase().replace(/\s+/g, "-") === category
-    );
   }
 
   if (options.brand) {
@@ -310,35 +317,27 @@ export function searchProducts(options: ProductSearchOptions = {}): Product[] {
   } else if (options.sort === "reviews-desc") {
     source = [...source].sort((a, b) => b.reviewCount - a.reviewCount);
   } else {
-    source = sortByNewest(source);
+    source = [...source].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }
 
   let products = source.map(toProduct);
-
   if (options.limit && options.limit > 0) {
     products = products.slice(0, options.limit);
   }
-
   return products;
 }
 
-export function getBrands(): Brand[] {
-  const map = new Map<string, Brand>();
-  activeOnly(loadProducts()).forEach((p) => {
-    if (!map.has(p.brandSlug)) {
-      map.set(p.brandSlug, {
-        id: p.brandSlug,
-        name: p.brand,
-        slug: p.brandSlug,
-      });
-    }
-  });
-  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+export async function getBrands(): Promise<Brand[]> {
+  return fetchBrands();
 }
 
-export function getCategories(): Category[] {
-  const products = loadProducts();
-  return loadCategories().map((category) => ({
+export async function getCategories(): Promise<Category[]> {
+  const categories = await fetchCategories();
+  const products = await fetchAllProducts(true);
+  return categories.map((category) => ({
     ...category,
     productCount: products.filter(
       (p) => p.categorySlug === category.slug && p.status === "active"
@@ -346,28 +345,32 @@ export function getCategories(): Category[] {
   }));
 }
 
-export function getCategoryBySlug(slug: string): Category | undefined {
-  return getCategories().find((c) => c.slug === slug);
+export async function getCategoryBySlug(
+  slug: string
+): Promise<Category | undefined> {
+  const categories = await getCategories();
+  return categories.find((c) => c.slug === slug);
 }
 
-export function getProductSummaries(ids: string[]): Product[] {
-  const idMap = new Map(loadProducts().map((p) => [p.id, p]));
+export async function getProductSummaries(ids: string[]): Promise<Product[]> {
+  const all = await fetchAllProducts(true);
+  const idMap = new Map(all.map((p) => [p.id, p]));
   return ids
     .map((id) => idMap.get(id))
     .filter((p): p is CatalogProduct => Boolean(p && p.status === "active"))
     .map(toProduct);
 }
 
-export function getAllProductSlugs(): string[] {
-  return activeOnly(loadProducts()).map((p) => p.slug);
+export async function getAllProductSlugs(): Promise<string[]> {
+  const products = await fetchAllProducts();
+  return products.map((p) => p.slug);
 }
 
-export function createProduct(input: CreateProductInput): CatalogProduct {
-  const products = loadProducts();
-  const slugs = new Set(products.map((p) => p.slug));
-  const skus = new Set(products.map((p) => p.sku));
-
-  const category = resolveCategory(input.categorySlug ?? input.category);
+export async function createProduct(
+  input: CreateProductInput
+): Promise<CatalogProduct> {
+  const { slugs, skus } = await fetchExistingSlugsAndSkus();
+  const category = await resolveCategory(input.categorySlug ?? input.category);
   if (!category) {
     throw new Error(`Category "${input.category}" not found`);
   }
@@ -424,29 +427,23 @@ export function createProduct(input: CreateProductInput): CatalogProduct {
     gstRate: input.gstRate,
   };
 
-  product.detail = buildDefaultDetail(product);
-  products.unshift(product);
-  saveProducts(products);
-  return product;
+  const all = await fetchAllProducts(true);
+  product.detail = buildDefaultDetail(product, all);
+  return writeProduct(product);
 }
 
-export function updateProduct(
+export async function updateProduct(
   id: string,
   patch: UpdateProductInput
-): CatalogProduct {
-  const products = loadProducts();
-  const index = products.findIndex((p) => p.id === id);
-  if (index === -1) throw new Error("Product not found");
+): Promise<CatalogProduct> {
+  const current = await fetchProductById(id);
+  if (!current) throw new Error("Product not found");
 
-  const current = products[index];
   const now = new Date().toISOString();
+  let category = { name: current.category, slug: current.categorySlug };
 
-  let category = {
-    name: current.category,
-    slug: current.categorySlug,
-  };
   if (patch.category || patch.categorySlug) {
-    const resolved = resolveCategory(patch.categorySlug ?? patch.category ?? "");
+    const resolved = await resolveCategory(patch.categorySlug ?? patch.category ?? "");
     if (!resolved) {
       throw new Error(`Category "${patch.category ?? patch.categorySlug}" not found`);
     }
@@ -454,13 +451,11 @@ export function updateProduct(
   }
 
   if (patch.slug && patch.slug !== current.slug) {
-    const slugs = new Set(products.filter((p) => p.id !== id).map((p) => p.slug));
-    if (slugs.has(patch.slug)) throw new Error("Slug already exists");
+    if (await slugExists(patch.slug, id)) throw new Error("Slug already exists");
   }
 
   if (patch.sku && patch.sku !== current.sku) {
-    const skus = new Set(products.filter((p) => p.id !== id).map((p) => p.sku));
-    if (skus.has(patch.sku)) throw new Error("SKU already exists");
+    if (await skuExists(patch.sku, id)) throw new Error("SKU already exists");
   }
 
   const stock = patch.stock ?? current.stock;
@@ -476,93 +471,73 @@ export function updateProduct(
     price,
     originalPrice,
     discountPercentage: computeDiscount(price, originalPrice),
-    availability:
-      patch.availability ?? stockToAvailability(stock),
-    brandSlug: patch.brandSlug ?? (patch.brand ? slugify(patch.brand) : current.brandSlug),
+    availability: patch.availability ?? stockToAvailability(stock),
+    brandSlug:
+      patch.brandSlug ??
+      (patch.brand ? slugify(patch.brand) : current.brandSlug),
     updatedAt: now,
   };
 
   if (patch.images?.length) {
     updated.image = patch.images[0];
+    updated.images = patch.images;
   }
 
-  updated.detail = buildDefaultDetail(updated);
-  products[index] = updated;
-  saveProducts(products);
-  return updated;
+  const all = await fetchAllProducts(true);
+  updated.detail = buildDefaultDetail(updated, all);
+  return writeProduct(updated, id);
 }
 
-export function deleteProduct(id: string): void {
-  const products = loadProducts();
-  const next = products.filter((p) => p.id !== id);
-  if (next.length === products.length) throw new Error("Product not found");
-  saveProducts(next);
+export async function deleteProduct(id: string): Promise<void> {
+  await removeProduct(id);
 }
 
-export function bulkDeleteProducts(ids: string[]): BulkDeleteResult {
-  const idSet = new Set(ids);
-  const products = loadProducts();
-  const next = products.filter((p) => !idSet.has(p.id));
-  const deleted = products.length - next.length;
-  saveProducts(next);
+export async function bulkDeleteProducts(
+  ids: string[]
+): Promise<BulkDeleteResult> {
+  const deleted = await fsBatchDelete(ids);
   return { deleted };
 }
 
-export function bulkArchiveProducts(ids: string[]): BulkStatusResult {
+export async function bulkArchiveProducts(
+  ids: string[]
+): Promise<BulkStatusResult> {
   return bulkSetStatus(ids, "archived");
 }
 
-export function bulkActivateProducts(ids: string[]): BulkStatusResult {
+export async function bulkActivateProducts(
+  ids: string[]
+): Promise<BulkStatusResult> {
   return bulkSetStatus(ids, "active");
 }
 
-function bulkSetStatus(ids: string[], status: ProductStatus): BulkStatusResult {
-  const idSet = new Set(ids);
-  const now = new Date().toISOString();
-  const products = loadProducts().map((p) =>
-    idSet.has(p.id) ? { ...p, status, updatedAt: now } : p
-  );
-  saveProducts(products);
-  return { updated: ids.length };
+async function bulkSetStatus(
+  ids: string[],
+  status: ProductStatus
+): Promise<BulkStatusResult> {
+  const updated = await fsBatchUpdate(ids, { status });
+  return { updated };
 }
 
-export function bulkUpdateStock(updates: BulkStockUpdate[]): BulkStatusResult {
-  const map = new Map(updates.map((u) => [u.id, u.stock]));
-  const now = new Date().toISOString();
+export async function bulkUpdateStock(
+  updates: BulkStockUpdate[]
+): Promise<BulkStatusResult> {
   let count = 0;
-  const products = loadProducts().map((p) => {
-    const stock = map.get(p.id);
-    if (stock === undefined) return p;
+  for (const { id, stock } of updates) {
+    await updateProduct(id, { stock });
     count += 1;
-    return {
-      ...p,
-      stock,
-      availability: stockToAvailability(stock),
-      updatedAt: now,
-    };
-  });
-  saveProducts(products);
+  }
   return { updated: count };
 }
 
-export function bulkUpdateCategory(updates: BulkCategoryUpdate[]): BulkStatusResult {
-  const map = new Map(updates.map((u) => [u.id, u]));
-  const now = new Date().toISOString();
+export async function bulkUpdateCategory(
+  updates: BulkCategoryUpdate[]
+): Promise<BulkStatusResult> {
   let count = 0;
-  const products = loadProducts().map((p) => {
-    const patch = map.get(p.id);
-    if (!patch) return p;
+  for (const { id, category, categorySlug } of updates) {
+    await updateProduct(id, { category, categorySlug });
     count += 1;
-    const next = {
-      ...p,
-      category: patch.category,
-      categorySlug: patch.categorySlug,
-      updatedAt: now,
-    };
-    next.detail = buildDefaultDetail(next);
-    return next;
-  });
-  saveProducts(products);
+  }
   return { updated: count };
 }
 
@@ -571,61 +546,89 @@ function parseBool(value: string | undefined): boolean {
   return ["true", "1", "yes", "y"].includes(value.trim().toLowerCase());
 }
 
-export function previewBulkImport(rows: BulkImportRow[]): BulkImportPreviewRow[] {
-  const products = loadProducts();
-  const slugs = new Set(products.map((p) => p.slug));
-  const skus = new Set(products.map((p) => p.sku));
+export async function previewBulkImport(
+  rows: BulkImportRow[]
+): Promise<BulkImportPreviewRow[]> {
+  const { slugs, skus } = await fetchExistingSlugsAndSkus();
   const previewSlugs = new Set<string>();
   const previewSkus = new Set<string>();
 
-  return rows.map((row, index) => {
-    const errors: string[] = [];
-    const rowNumber = index + 2;
+  return Promise.all(
+    rows.map(async (row, index) => {
+      const errors: string[] = [];
+      const rowNumber = index + 2;
 
-    if (!row.name?.trim()) errors.push("Name is required");
-    if (!row.brand?.trim()) errors.push("Brand is required");
-    if (!row.category?.trim()) errors.push("Category is required");
-    if (row.price == null || Number.isNaN(Number(row.price)) || Number(row.price) <= 0) {
-      errors.push("Valid price is required");
-    }
+      if (!row.name?.trim()) errors.push("Name is required");
+      if (!row.brand?.trim()) errors.push("Brand is required");
+      if (!row.category?.trim()) errors.push("Category is required");
+      if (
+        row.price == null ||
+        Number.isNaN(Number(row.price)) ||
+        Number(row.price) <= 0
+      ) {
+        errors.push("Valid price is required");
+      }
 
-    const category = row.category?.trim()
-      ? resolveCategory(row.category.trim())
-      : null;
-    if (row.category?.trim() && !category) {
-      errors.push(`Category "${row.category}" not found`);
-    }
+      const category = row.category?.trim()
+        ? await resolveCategory(row.category.trim())
+        : null;
+      if (row.category?.trim() && !category) {
+        errors.push(`Category "${row.category}" not found`);
+      }
 
-    const generatedSlug = row.name
-      ? uniqueSlug(`${row.brand}-${row.name}`, new Set([...slugs, ...previewSlugs]))
-      : "";
-    if (previewSlugs.has(generatedSlug)) {
-      errors.push("Duplicate slug in import batch");
-    }
-    previewSlugs.add(generatedSlug);
+      const generatedSlug = row.name
+        ? uniqueSlug(`${row.brand}-${row.name}`, new Set([...slugs, ...previewSlugs]))
+        : "";
+      if (previewSlugs.has(generatedSlug)) {
+        errors.push("Duplicate slug in import batch");
+      }
+      previewSlugs.add(generatedSlug);
 
-    const generatedSku = row.sku?.trim()
-      ? row.sku.trim()
-      : uniqueSku(new Set([...skus, ...previewSkus]));
-    if (skus.has(generatedSku) || previewSkus.has(generatedSku)) {
-      errors.push("Duplicate SKU");
-    }
-    previewSkus.add(generatedSku);
+      const generatedSku = row.sku?.trim()
+        ? row.sku.trim()
+        : uniqueSku(new Set([...skus, ...previewSkus]));
+      if (skus.has(generatedSku) || previewSkus.has(generatedSku)) {
+        errors.push("Duplicate SKU");
+      }
+      previewSkus.add(generatedSku);
 
-    return {
-      ...row,
-      rowNumber,
-      errors,
-      valid: errors.length === 0,
-      resolvedCategorySlug: category?.slug,
-      generatedSlug,
-      generatedSku,
-    };
-  });
+      const imageRefs = [
+        row.image1,
+        row.image2,
+        row.image3,
+        row.image4,
+        row.image5,
+      ].filter(Boolean) as string[];
+
+      const isUrl = (v: string) =>
+        v.startsWith("http://") || v.startsWith("https://") || v.startsWith("/");
+
+      if (imageRefs.length === 0 && !row.resolvedImages?.length) {
+        errors.push("At least one image is required");
+      } else if (
+        row.resolvedImages?.length &&
+        row.resolvedImages.length < imageRefs.filter((r) => !isUrl(r)).length
+      ) {
+        errors.push("Some image filenames were not found in ZIP");
+      }
+
+      return {
+        ...row,
+        rowNumber,
+        errors,
+        valid: errors.length === 0,
+        resolvedCategorySlug: category?.slug,
+        generatedSlug,
+        generatedSku,
+      };
+    })
+  );
 }
 
-export function bulkImportProducts(rows: BulkImportRow[]): BulkImportResult {
-  const preview = previewBulkImport(rows);
+export async function bulkImportProducts(
+  rows: BulkImportRow[]
+): Promise<BulkImportResult> {
+  const preview = await previewBulkImport(rows);
   const validRows = preview.filter((r) => r.valid);
   const failedRows = preview
     .filter((r) => !r.valid)
@@ -634,10 +637,13 @@ export function bulkImportProducts(rows: BulkImportRow[]): BulkImportResult {
   const importedProducts: CatalogProduct[] = [];
 
   for (const row of validRows) {
-    const images = [row.image1, row.image2, row.image3].filter(
-      (img): img is string => Boolean(img?.trim())
-    );
-    const product = createProduct({
+    const images =
+      row.resolvedImages ??
+      [row.image1, row.image2, row.image3, row.image4, row.image5].filter(
+        (img): img is string => Boolean(img?.trim())
+      );
+
+    const product = await createProduct({
       name: row.name.trim(),
       brand: row.brand.trim(),
       category: row.category.trim(),
@@ -652,7 +658,7 @@ export function bulkImportProducts(rows: BulkImportRow[]): BulkImportResult {
       featured: parseBool(String(row.featured ?? "")),
       trending: parseBool(String(row.trending ?? "")),
       newArrival: parseBool(String(row.newArrival ?? "")),
-      images: images.length ? images : undefined,
+      images,
     });
     importedProducts.push(product);
   }
@@ -666,4 +672,6 @@ export function bulkImportProducts(rows: BulkImportRow[]): BulkImportResult {
   };
 }
 
-export type CatalogDataSource = "json" | "firestore" | "postgres";
+export type CatalogDataSource = "firestore" | "postgres";
+
+export { batchWriteProducts };

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { slugify } from "@/lib/slug";
 import { ROUTES } from "@/lib/routes";
+import ProductImageUpload from "@/components/admin/ProductImageUpload";
 import type { Category } from "@/types/category";
 
 const EMPTY = {
@@ -25,6 +26,7 @@ const EMPTY = {
   featured: false,
   trending: false,
   newArrival: false,
+  images: [] as string[],
 };
 
 export default function ProductFormPage({ productId }: { productId?: string }) {
@@ -53,6 +55,7 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             featured: d.product.featured ?? false,
             trending: d.product.trending ?? false,
             newArrival: d.product.newArrival ?? false,
+            images: d.product.images ?? (d.product.image ? [d.product.image] : []),
           });
         }
         setLoaded(true);
@@ -72,6 +75,8 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
         category: selectedCategory?.name ?? form.category,
         categorySlug: selectedCategory?.slug ?? form.categorySlug ?? slugify(form.category),
         brandSlug: slugify(form.brand),
+        image: form.images[0] ?? "",
+        images: form.images,
       };
       const url = productId ? `/api/admin/products/${productId}` : "/api/admin/products";
       const method = productId ? "PUT" : "POST";
@@ -175,6 +180,11 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
               <input type="checkbox" checked={form.newArrival} onChange={(e) => setForm({ ...form, newArrival: e.target.checked })} /> New Arrival
             </label>
           </div>
+          <ProductImageUpload
+            categorySlug={form.categorySlug}
+            images={form.images}
+            onChange={(images) => setForm({ ...form, images })}
+          />
           <div className="admin-form-group admin-form-grid--full">
             <label>Description</label>
             <textarea className="admin-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
