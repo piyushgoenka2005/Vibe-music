@@ -3,20 +3,11 @@
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
-import { PRODUCTS } from "@/data/products";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { formatCurrency } from "@/utils/currency";
 import AccountEmptyState from "./AccountEmptyState";
 
-function stockLabel(productId: string): { text: string; inStock: boolean } {
-  const product = PRODUCTS.find((p) => p.id === productId);
-  if (!product) return { text: "In Stock", inStock: true };
-  if (product.availability === "out-of-stock") {
-    return { text: "Out of Stock", inStock: false };
-  }
-  if (product.availability === "limited") {
-    return { text: "Limited Stock", inStock: true };
-  }
+function stockLabel(): { text: string; inStock: boolean } {
   return { text: "In Stock", inStock: true };
 }
 
@@ -55,7 +46,7 @@ export default function AccountWishlistPanel() {
 
           <div className="acct__wishlist-grid">
             {items.map((item) => {
-              const stock = stockLabel(item.productId);
+              const stock = stockLabel();
               return (
                 <article key={item.productId} className="acct__wishlist-card">
                   <div className="acct__wishlist-img">

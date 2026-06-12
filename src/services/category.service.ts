@@ -1,5 +1,5 @@
 import { fetchProducts } from "@/services/products.api";
-import { getCategoryBySlug } from "@/data/categories";
+import { getCategoryBySlug } from "@/services/categories.api";
 import type { Product } from "@/types/product";
 import type { CategoryFilters, CategoryProductsResult } from "@/types/filters";
 
@@ -65,7 +65,7 @@ export async function fetchCategoryProducts(
   categorySlug: string,
   filters: CategoryFilters
 ): Promise<CategoryProductsResult> {
-  const category = getCategoryBySlug(categorySlug);
+  const category = await getCategoryBySlug(categorySlug);
   if (!category) {
     return {
       products: [],

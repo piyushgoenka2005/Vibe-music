@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { createOrder } from "@/lib/server/orderService";
+import {
+  resolveCouponDiscount,
+  resolveOrderItemsFromFirestore,
+} from "@/lib/server/orderValidation";
 import { toPaise } from "@/lib/gstCalculator";
 import type { CreateOrderPayload } from "@/types/order";
 
@@ -31,11 +35,19 @@ export async function POST(request: Request) {
       );
     }
 
+    const resolvedItems = await resolveOrderItemsFromFirestore(body.items);
+    const subtotal = resolvedItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    const couponDiscount = await resolveCouponDiscount(body.couponCode, subtotal);
+
     const payload: CreateOrderPayload = {
       ...body,
+      items: resolvedItems,
       email: body.email.trim().toLowerCase(),
       buyerState: body.buyerState || body.shippingAddress.state,
-      couponDiscount: body.couponDiscount ?? 0,
+      couponDiscount,
     };
 
     const { order, razorpayOrderId, keyId } = await createOrder(

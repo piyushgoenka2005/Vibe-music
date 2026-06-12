@@ -1,0 +1,343 @@
+[
+  {
+    "id": "prod-29",
+    "slug": "presonus-studio-one-7-professional-daw",
+    "name": "Studio One 7 Professional DAW",
+    "brand": "PreSonus",
+    "category": "Software & Plug-ins",
+    "subcategory": "",
+    "price": 33328,
+    "originalPrice": 33328,
+    "discountPercentage": 0,
+    "rating": 4.5,
+    "reviewCount": 312,
+    "stock": 100,
+    "sku": "VM-00029",
+    "isFeatured": false,
+    "isTrending": false,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
+      "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
+      "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
+      "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png"
+    ],
+    "description": "The PreSonus Studio One 7 Professional DAW delivers professional-grade performance for software & plug-ins applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "PreSonus",
+      "Category": "Software & Plug-ins",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "Studio One 7 Professional DAW",
+      "SKU": "VM-00029"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "software-plug-ins"
+    ],
+    "brandSlug": "presonus",
+    "categorySlug": "software-plug-ins",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#0072ba",
+    "image": "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "PreSonus"
+        },
+        {
+          "label": "Category",
+          "value": "Software & Plug-ins"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "Studio One 7 Professional DAW"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00029"
+        }
+      ],
+      "inTheBox": [
+        "Studio One 7 Professional DAW",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "Studio One 7 Professional DAW view 1",
+          "color": "#0072ba",
+          "src": "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png"
+        },
+        {
+          "id": "img-1",
+          "alt": "Studio One 7 Professional DAW view 2",
+          "color": "#1486ce"
+        },
+        {
+          "id": "img-2",
+          "alt": "Studio One 7 Professional DAW view 3",
+          "color": "#0063ab"
+        },
+        {
+          "id": "img-3",
+          "alt": "Studio One 7 Professional DAW view 4",
+          "color": "#2395dd"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "PreSonus Studio One 7 Professional DAW — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00029",
+          "price": 33328,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "Studio One 7 Professional DAW exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-30"
+      ],
+      "similarProductIds": [
+        "prod-30"
+      ],
+      "relatedProductIds": []
+    }
+  },
+  {
+    "id": "prod-30",
+    "slug": "native-instruments-komplete-15-standard-bundle",
+    "name": "Komplete 15 Standard Bundle",
+    "brand": "Native Instruments",
+    "category": "Software & Plug-ins",
+    "subcategory": "",
+    "price": 49915,
+    "originalPrice": 49915,
+    "discountPercentage": 0,
+    "rating": 4.7,
+    "reviewCount": 198,
+    "stock": 100,
+    "sku": "VM-00030",
+    "isFeatured": false,
+    "isTrending": false,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
+      "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
+      "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
+      "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png"
+    ],
+    "description": "The Native Instruments Komplete 15 Standard Bundle delivers professional-grade performance for software & plug-ins applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Native Instruments",
+      "Category": "Software & Plug-ins",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "Komplete 15 Standard Bundle",
+      "SKU": "VM-00030"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "software-plug-ins"
+    ],
+    "brandSlug": "native-instruments",
+    "categorySlug": "software-plug-ins",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#2e2e2d",
+    "image": "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Native Instruments"
+        },
+        {
+          "label": "Category",
+          "value": "Software & Plug-ins"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "Komplete 15 Standard Bundle"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00030"
+        }
+      ],
+      "inTheBox": [
+        "Komplete 15 Standard Bundle",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "Komplete 15 Standard Bundle view 1",
+          "color": "#2e2e2d",
+          "src": "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png"
+        },
+        {
+          "id": "img-1",
+          "alt": "Komplete 15 Standard Bundle view 2",
+          "color": "#424241"
+        },
+        {
+          "id": "img-2",
+          "alt": "Komplete 15 Standard Bundle view 3",
+          "color": "#1f1f1e"
+        },
+        {
+          "id": "img-3",
+          "alt": "Komplete 15 Standard Bundle view 4",
+          "color": "#515150"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00030",
+          "price": 49915,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "Komplete 15 Standard Bundle exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-29"
+      ],
+      "similarProductIds": [
+        "prod-29"
+      ],
+      "relatedProductIds": []
+    }
+  }
+]

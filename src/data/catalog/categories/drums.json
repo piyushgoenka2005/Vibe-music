@@ -1,0 +1,894 @@
+[
+  {
+    "id": "prod-19",
+    "slug": "sjc-custom-drums-pathfinder-3-piece-shell-pack-firecracker-red",
+    "name": "Pathfinder 3-piece Shell Pack - Firecracker Red",
+    "brand": "SJC Custom Drums",
+    "category": "Drums & Percussion",
+    "subcategory": "",
+    "price": 49915,
+    "originalPrice": 57402.25,
+    "discountPercentage": 13,
+    "rating": 4.7,
+    "reviewCount": 45,
+    "stock": 100,
+    "sku": "VM-00019",
+    "isFeatured": false,
+    "isTrending": false,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg"
+    ],
+    "description": "The SJC Custom Drums Pathfinder 3-piece Shell Pack - Firecracker Red delivers professional-grade performance for drums & percussion applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "SJC Custom Drums",
+      "Category": "Drums & Percussion",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "Pathfinder 3-piece Shell Pack - Firecracker Red",
+      "SKU": "VM-00019"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "drums-percussion"
+    ],
+    "brandSlug": "sjc-custom-drums",
+    "categorySlug": "drums-percussion",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#c41e3a",
+    "image": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg",
+    "detail": {
+      "msrp": 57402.25,
+      "salePrice": 49915,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "SJC Custom Drums"
+        },
+        {
+          "label": "Category",
+          "value": "Drums & Percussion"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "Pathfinder 3-piece Shell Pack - Firecracker Red"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00019"
+        }
+      ],
+      "inTheBox": [
+        "Pathfinder 3-piece Shell Pack - Firecracker Red",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "Pathfinder 3-piece Shell Pack - Firecracker Red view 1",
+          "color": "#c41e3a",
+          "src": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "Pathfinder 3-piece Shell Pack - Firecracker Red view 2",
+          "color": "#d8324e"
+        },
+        {
+          "id": "img-2",
+          "alt": "Pathfinder 3-piece Shell Pack - Firecracker Red view 3",
+          "color": "#b50f2b"
+        },
+        {
+          "id": "img-3",
+          "alt": "Pathfinder 3-piece Shell Pack - Firecracker Red view 4",
+          "color": "#e7415d"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "SJC Custom Drums Pathfinder 3-piece Shell Pack - Firecracker Red — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00019",
+          "price": 49915,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "Pathfinder 3-piece Shell Pack - Firecracker Red exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-20",
+        "prod-21"
+      ],
+      "similarProductIds": [
+        "prod-20",
+        "prod-21",
+        "prod-22",
+        "prod-23"
+      ],
+      "relatedProductIds": [
+        "prod-22",
+        "prod-23"
+      ]
+    }
+  },
+  {
+    "id": "prod-20",
+    "slug": "sabian-hhx-complex-cymbal-set-10-14-16-18-21",
+    "name": "HHX Complex Cymbal Set - 10/14/16/18/21",
+    "brand": "Sabian",
+    "category": "Drums & Percussion",
+    "subcategory": "",
+    "price": 74996,
+    "originalPrice": 74996,
+    "discountPercentage": 0,
+    "rating": 4.8,
+    "reviewCount": 78,
+    "stock": 100,
+    "sku": "VM-00020",
+    "isFeatured": false,
+    "isTrending": false,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-2.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-2.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-2.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-2.jpg"
+    ],
+    "description": "The Sabian HHX Complex Cymbal Set - 10/14/16/18/21 delivers professional-grade performance for drums & percussion applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Sabian",
+      "Category": "Drums & Percussion",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "HHX Complex Cymbal Set - 10/14/16/18/21",
+      "SKU": "VM-00020"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "drums-percussion"
+    ],
+    "brandSlug": "sabian",
+    "categorySlug": "drums-percussion",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#b8860b",
+    "image": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-2.jpg",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Sabian"
+        },
+        {
+          "label": "Category",
+          "value": "Drums & Percussion"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "HHX Complex Cymbal Set - 10/14/16/18/21"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00020"
+        }
+      ],
+      "inTheBox": [
+        "HHX Complex Cymbal Set - 10/14/16/18/21",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "HHX Complex Cymbal Set - 10/14/16/18/21 view 1",
+          "color": "#b8860b",
+          "src": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-2.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "HHX Complex Cymbal Set - 10/14/16/18/21 view 2",
+          "color": "#cc9a1f"
+        },
+        {
+          "id": "img-2",
+          "alt": "HHX Complex Cymbal Set - 10/14/16/18/21 view 3",
+          "color": "#a97700"
+        },
+        {
+          "id": "img-3",
+          "alt": "HHX Complex Cymbal Set - 10/14/16/18/21 view 4",
+          "color": "#dba92e"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00020",
+          "price": 74996,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "HHX Complex Cymbal Set - 10/14/16/18/21 exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-19",
+        "prod-21"
+      ],
+      "similarProductIds": [
+        "prod-19",
+        "prod-21",
+        "prod-22",
+        "prod-23"
+      ],
+      "relatedProductIds": [
+        "prod-22",
+        "prod-23"
+      ]
+    }
+  },
+  {
+    "id": "prod-21",
+    "slug": "roland-v-drums-td516-electronic-drum-set",
+    "name": "V-Drums TD516 Electronic Drum Set",
+    "brand": "Roland",
+    "category": "Drums & Percussion",
+    "subcategory": "",
+    "price": 208242,
+    "originalPrice": 208242,
+    "discountPercentage": 0,
+    "rating": 4.9,
+    "reviewCount": 134,
+    "stock": 100,
+    "sku": "VM-00021",
+    "isFeatured": true,
+    "isTrending": false,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg"
+    ],
+    "description": "The Roland V-Drums TD516 Electronic Drum Set delivers professional-grade performance for drums & percussion applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Roland",
+      "Category": "Drums & Percussion",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "V-Drums TD516 Electronic Drum Set",
+      "SKU": "VM-00021"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "drums-percussion"
+    ],
+    "brandSlug": "roland",
+    "categorySlug": "drums-percussion",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#1a1a1a",
+    "image": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Roland"
+        },
+        {
+          "label": "Category",
+          "value": "Drums & Percussion"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "V-Drums TD516 Electronic Drum Set"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00021"
+        }
+      ],
+      "inTheBox": [
+        "V-Drums TD516 Electronic Drum Set",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "V-Drums TD516 Electronic Drum Set view 1",
+          "color": "#1a1a1a",
+          "src": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "V-Drums TD516 Electronic Drum Set view 2",
+          "color": "#2e2e2e"
+        },
+        {
+          "id": "img-2",
+          "alt": "V-Drums TD516 Electronic Drum Set view 3",
+          "color": "#0b0b0b"
+        },
+        {
+          "id": "img-3",
+          "alt": "V-Drums TD516 Electronic Drum Set view 4",
+          "color": "#3d3d3d"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "Roland V-Drums TD516 Electronic Drum Set — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00021",
+          "price": 208242,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "V-Drums TD516 Electronic Drum Set exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-19",
+        "prod-20"
+      ],
+      "similarProductIds": [
+        "prod-19",
+        "prod-20",
+        "prod-22",
+        "prod-23"
+      ],
+      "relatedProductIds": [
+        "prod-22",
+        "prod-23"
+      ]
+    }
+  },
+  {
+    "id": "prod-22",
+    "slug": "yamaha-dtx6k5-m-electronic-drum-set",
+    "name": "DTX6K5-M Electronic Drum Set",
+    "brand": "Yamaha",
+    "category": "Drums & Percussion",
+    "subcategory": "",
+    "price": 124994,
+    "originalPrice": 143743.1,
+    "discountPercentage": 13,
+    "rating": 4.6,
+    "reviewCount": 201,
+    "stock": 100,
+    "sku": "VM-00022",
+    "isFeatured": false,
+    "isTrending": false,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg"
+    ],
+    "description": "The Yamaha DTX6K5-M Electronic Drum Set delivers professional-grade performance for drums & percussion applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Yamaha",
+      "Category": "Drums & Percussion",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "DTX6K5-M Electronic Drum Set",
+      "SKU": "VM-00022"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "drums-percussion"
+    ],
+    "brandSlug": "yamaha",
+    "categorySlug": "drums-percussion",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#2e2e2e",
+    "image": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
+    "detail": {
+      "msrp": 143743.1,
+      "salePrice": 124994,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Yamaha"
+        },
+        {
+          "label": "Category",
+          "value": "Drums & Percussion"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "DTX6K5-M Electronic Drum Set"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00022"
+        }
+      ],
+      "inTheBox": [
+        "DTX6K5-M Electronic Drum Set",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "DTX6K5-M Electronic Drum Set view 1",
+          "color": "#2e2e2e",
+          "src": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "DTX6K5-M Electronic Drum Set view 2",
+          "color": "#424242"
+        },
+        {
+          "id": "img-2",
+          "alt": "DTX6K5-M Electronic Drum Set view 3",
+          "color": "#1f1f1f"
+        },
+        {
+          "id": "img-3",
+          "alt": "DTX6K5-M Electronic Drum Set view 4",
+          "color": "#515151"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00022",
+          "price": 124994,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "DTX6K5-M Electronic Drum Set exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-19",
+        "prod-20"
+      ],
+      "similarProductIds": [
+        "prod-19",
+        "prod-20",
+        "prod-21",
+        "prod-23"
+      ],
+      "relatedProductIds": [
+        "prod-17",
+        "prod-21",
+        "prod-23"
+      ]
+    }
+  },
+  {
+    "id": "prod-23",
+    "slug": "evans-ec2s-clear-tom-pack-10-12-16",
+    "name": "EC2S Clear Tom Pack - 10/12/16",
+    "brand": "Evans",
+    "category": "Drums & Percussion",
+    "subcategory": "",
+    "price": 4582,
+    "originalPrice": 4582,
+    "discountPercentage": 0,
+    "rating": 4.5,
+    "reviewCount": 567,
+    "stock": 100,
+    "sku": "VM-00023",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg"
+    ],
+    "description": "The Evans EC2S Clear Tom Pack - 10/12/16 delivers professional-grade performance for drums & percussion applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Evans",
+      "Category": "Drums & Percussion",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "EC2S Clear Tom Pack - 10/12/16",
+      "SKU": "VM-00023"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "drums-percussion"
+    ],
+    "brandSlug": "evans",
+    "categorySlug": "drums-percussion",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#d4c4a8",
+    "image": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Evans"
+        },
+        {
+          "label": "Category",
+          "value": "Drums & Percussion"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "EC2S Clear Tom Pack - 10/12/16"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00023"
+        }
+      ],
+      "inTheBox": [
+        "EC2S Clear Tom Pack - 10/12/16",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "EC2S Clear Tom Pack - 10/12/16 view 1",
+          "color": "#d4c4a8",
+          "src": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "EC2S Clear Tom Pack - 10/12/16 view 2",
+          "color": "#e8d8bc"
+        },
+        {
+          "id": "img-2",
+          "alt": "EC2S Clear Tom Pack - 10/12/16 view 3",
+          "color": "#c5b599"
+        },
+        {
+          "id": "img-3",
+          "alt": "EC2S Clear Tom Pack - 10/12/16 view 4",
+          "color": "#f7e7cb"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "Evans EC2S Clear Tom Pack - 10/12/16 — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00023",
+          "price": 4582,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "EC2S Clear Tom Pack - 10/12/16 exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-19",
+        "prod-20"
+      ],
+      "similarProductIds": [
+        "prod-19",
+        "prod-20",
+        "prod-21",
+        "prod-22"
+      ],
+      "relatedProductIds": [
+        "prod-21",
+        "prod-22"
+      ]
+    }
+  }
+]

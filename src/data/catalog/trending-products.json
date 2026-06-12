@@ -1,0 +1,1786 @@
+[
+  {
+    "id": "prod-9",
+    "slug": "epiphone-les-paul-studio-smokehouse-burst",
+    "name": "Les Paul Studio - Smokehouse Burst",
+    "brand": "Epiphone",
+    "category": "Guitars",
+    "subcategory": "",
+    "price": 37415,
+    "originalPrice": 37415,
+    "discountPercentage": 0,
+    "rating": 4.5,
+    "reviewCount": 534,
+    "stock": 100,
+    "sku": "VM-00009",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg",
+      "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg",
+      "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg",
+      "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg"
+    ],
+    "description": "The Epiphone Les Paul Studio - Smokehouse Burst delivers professional-grade performance for guitars applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Epiphone",
+      "Category": "Guitars",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "Les Paul Studio - Smokehouse Burst",
+      "SKU": "VM-00009"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "guitars"
+    ],
+    "brandSlug": "epiphone",
+    "categorySlug": "guitars",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#3d2817",
+    "image": "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Epiphone"
+        },
+        {
+          "label": "Category",
+          "value": "Guitars"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "Les Paul Studio - Smokehouse Burst"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00009"
+        }
+      ],
+      "inTheBox": [
+        "Les Paul Studio - Smokehouse Burst",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Gig bag (where applicable)"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "Les Paul Studio - Smokehouse Burst view 1",
+          "color": "#3d2817",
+          "src": "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "Les Paul Studio - Smokehouse Burst view 2",
+          "color": "#513c2b"
+        },
+        {
+          "id": "img-2",
+          "alt": "Les Paul Studio - Smokehouse Burst view 3",
+          "color": "#2e1908"
+        },
+        {
+          "id": "img-3",
+          "alt": "Les Paul Studio - Smokehouse Burst view 4",
+          "color": "#604b3a"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "Epiphone Les Paul Studio - Smokehouse Burst — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00009",
+          "price": 37415,
+          "availability": "in-stock"
+        },
+        {
+          "id": "var-lefty",
+          "label": "Left-handed",
+          "sku": "VM-00009-LH",
+          "price": 37465,
+          "availability": "limited"
+        },
+        {
+          "id": "var-bundle",
+          "label": "Essentials Bundle",
+          "sku": "VM-00009-BDL",
+          "price": 37544.99,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "Les Paul Studio - Smokehouse Burst exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-1",
+        "prod-2"
+      ],
+      "similarProductIds": [
+        "prod-1",
+        "prod-2",
+        "prod-3",
+        "prod-4"
+      ],
+      "relatedProductIds": [
+        "prod-10",
+        "prod-3",
+        "prod-4"
+      ]
+    }
+  },
+  {
+    "id": "prod-17",
+    "slug": "yamaha-fg830-acoustic-guitar-natural",
+    "name": "FG830 Acoustic Guitar - Natural",
+    "brand": "Yamaha",
+    "category": "Guitars",
+    "subcategory": "",
+    "price": 28331,
+    "originalPrice": 28331,
+    "discountPercentage": 0,
+    "rating": 4.6,
+    "reviewCount": 892,
+    "stock": 100,
+    "sku": "VM-00017",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/products/image/00bd892379Sq23f6EBR8T8HvBcYs9YAESicgOubo.png",
+      "/images/m/products/image/00bd892379Sq23f6EBR8T8HvBcYs9YAESicgOubo.png",
+      "/images/m/products/image/00bd892379Sq23f6EBR8T8HvBcYs9YAESicgOubo.png",
+      "/images/m/products/image/00bd892379Sq23f6EBR8T8HvBcYs9YAESicgOubo.png"
+    ],
+    "description": "The Yamaha FG830 Acoustic Guitar - Natural delivers professional-grade performance for guitars applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Yamaha",
+      "Category": "Guitars",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "FG830 Acoustic Guitar - Natural",
+      "SKU": "VM-00017"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "guitars"
+    ],
+    "brandSlug": "yamaha",
+    "categorySlug": "guitars",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#c4a574",
+    "image": "/images/m/products/image/00bd892379Sq23f6EBR8T8HvBcYs9YAESicgOubo.png",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Yamaha"
+        },
+        {
+          "label": "Category",
+          "value": "Guitars"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "FG830 Acoustic Guitar - Natural"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00017"
+        }
+      ],
+      "inTheBox": [
+        "FG830 Acoustic Guitar - Natural",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Gig bag (where applicable)"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "FG830 Acoustic Guitar - Natural view 1",
+          "color": "#c4a574",
+          "src": "/images/m/products/image/00bd892379Sq23f6EBR8T8HvBcYs9YAESicgOubo.png"
+        },
+        {
+          "id": "img-1",
+          "alt": "FG830 Acoustic Guitar - Natural view 2",
+          "color": "#d8b988"
+        },
+        {
+          "id": "img-2",
+          "alt": "FG830 Acoustic Guitar - Natural view 3",
+          "color": "#b59665"
+        },
+        {
+          "id": "img-3",
+          "alt": "FG830 Acoustic Guitar - Natural view 4",
+          "color": "#e7c897"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "Yamaha FG830 Acoustic Guitar - Natural — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00017",
+          "price": 28331,
+          "availability": "in-stock"
+        },
+        {
+          "id": "var-lefty",
+          "label": "Left-handed",
+          "sku": "VM-00017-LH",
+          "price": 28381,
+          "availability": "limited"
+        },
+        {
+          "id": "var-bundle",
+          "label": "Essentials Bundle",
+          "sku": "VM-00017-BDL",
+          "price": 28460.99,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "FG830 Acoustic Guitar - Natural exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-1",
+        "prod-2"
+      ],
+      "similarProductIds": [
+        "prod-1",
+        "prod-2",
+        "prod-3",
+        "prod-4"
+      ],
+      "relatedProductIds": [
+        "prod-22",
+        "prod-3",
+        "prod-4"
+      ]
+    }
+  },
+  {
+    "id": "prod-23",
+    "slug": "evans-ec2s-clear-tom-pack-10-12-16",
+    "name": "EC2S Clear Tom Pack - 10/12/16",
+    "brand": "Evans",
+    "category": "Drums & Percussion",
+    "subcategory": "",
+    "price": 4582,
+    "originalPrice": 4582,
+    "discountPercentage": 0,
+    "rating": 4.5,
+    "reviewCount": 567,
+    "stock": 100,
+    "sku": "VM-00023",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg"
+    ],
+    "description": "The Evans EC2S Clear Tom Pack - 10/12/16 delivers professional-grade performance for drums & percussion applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Evans",
+      "Category": "Drums & Percussion",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "EC2S Clear Tom Pack - 10/12/16",
+      "SKU": "VM-00023"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "drums-percussion"
+    ],
+    "brandSlug": "evans",
+    "categorySlug": "drums-percussion",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#d4c4a8",
+    "image": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Evans"
+        },
+        {
+          "label": "Category",
+          "value": "Drums & Percussion"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "EC2S Clear Tom Pack - 10/12/16"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00023"
+        }
+      ],
+      "inTheBox": [
+        "EC2S Clear Tom Pack - 10/12/16",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "EC2S Clear Tom Pack - 10/12/16 view 1",
+          "color": "#d4c4a8",
+          "src": "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "EC2S Clear Tom Pack - 10/12/16 view 2",
+          "color": "#e8d8bc"
+        },
+        {
+          "id": "img-2",
+          "alt": "EC2S Clear Tom Pack - 10/12/16 view 3",
+          "color": "#c5b599"
+        },
+        {
+          "id": "img-3",
+          "alt": "EC2S Clear Tom Pack - 10/12/16 view 4",
+          "color": "#f7e7cb"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "Evans EC2S Clear Tom Pack - 10/12/16 — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00023",
+          "price": 4582,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "EC2S Clear Tom Pack - 10/12/16 exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-19",
+        "prod-20"
+      ],
+      "similarProductIds": [
+        "prod-19",
+        "prod-20",
+        "prod-21",
+        "prod-22"
+      ],
+      "relatedProductIds": [
+        "prod-21",
+        "prod-22"
+      ]
+    }
+  },
+  {
+    "id": "prod-24",
+    "slug": "shure-sm58-dynamic-vocal-microphone",
+    "name": "SM58 Dynamic Vocal Microphone",
+    "brand": "Shure",
+    "category": "Microphones & Wireless",
+    "subcategory": "",
+    "price": 8250,
+    "originalPrice": 8250,
+    "discountPercentage": 0,
+    "rating": 4.9,
+    "reviewCount": 2341,
+    "stock": 100,
+    "sku": "VM-00024",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/home/cats/SM58-cat.png",
+      "/images/m/home/cats/SM58-cat.png",
+      "/images/m/home/cats/SM58-cat.png",
+      "/images/m/home/cats/SM58-cat.png"
+    ],
+    "description": "The Shure SM58 Dynamic Vocal Microphone delivers professional-grade performance for microphones & wireless applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Shure",
+      "Category": "Microphones & Wireless",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "SM58 Dynamic Vocal Microphone",
+      "SKU": "VM-00024"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "microphones-wireless"
+    ],
+    "brandSlug": "shure",
+    "categorySlug": "microphones-wireless",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#2e2e2e",
+    "image": "/images/m/home/cats/SM58-cat.png",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Shure"
+        },
+        {
+          "label": "Category",
+          "value": "Microphones & Wireless"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "SM58 Dynamic Vocal Microphone"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00024"
+        }
+      ],
+      "inTheBox": [
+        "SM58 Dynamic Vocal Microphone",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "SM58 Dynamic Vocal Microphone view 1",
+          "color": "#2e2e2e",
+          "src": "/images/m/home/cats/SM58-cat.png"
+        },
+        {
+          "id": "img-1",
+          "alt": "SM58 Dynamic Vocal Microphone view 2",
+          "color": "#424242"
+        },
+        {
+          "id": "img-2",
+          "alt": "SM58 Dynamic Vocal Microphone view 3",
+          "color": "#1f1f1f"
+        },
+        {
+          "id": "img-3",
+          "alt": "SM58 Dynamic Vocal Microphone view 4",
+          "color": "#515151"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00024",
+          "price": 8250,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "SM58 Dynamic Vocal Microphone exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-25",
+        "prod-26"
+      ],
+      "similarProductIds": [
+        "prod-25",
+        "prod-26"
+      ],
+      "relatedProductIds": []
+    }
+  },
+  {
+    "id": "prod-25",
+    "slug": "audio-technica-at2020-cardioid-condenser-microphone",
+    "name": "AT2020 Cardioid Condenser Microphone",
+    "brand": "Audio-Technica",
+    "category": "Microphones & Wireless",
+    "subcategory": "",
+    "price": 12416,
+    "originalPrice": 14278.4,
+    "discountPercentage": 13,
+    "rating": 4.7,
+    "reviewCount": 1876,
+    "stock": 100,
+    "sku": "VM-00025",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/home/cats/SM58-cat.png",
+      "/images/m/home/cats/SM58-cat.png",
+      "/images/m/home/cats/SM58-cat.png",
+      "/images/m/home/cats/SM58-cat.png"
+    ],
+    "description": "The Audio-Technica AT2020 Cardioid Condenser Microphone delivers professional-grade performance for microphones & wireless applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Audio-Technica",
+      "Category": "Microphones & Wireless",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "AT2020 Cardioid Condenser Microphone",
+      "SKU": "VM-00025"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "microphones-wireless"
+    ],
+    "brandSlug": "audio-technica",
+    "categorySlug": "microphones-wireless",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#1a1a1a",
+    "image": "/images/m/home/cats/SM58-cat.png",
+    "detail": {
+      "msrp": 14278.4,
+      "salePrice": 12416,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Audio-Technica"
+        },
+        {
+          "label": "Category",
+          "value": "Microphones & Wireless"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "AT2020 Cardioid Condenser Microphone"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00025"
+        }
+      ],
+      "inTheBox": [
+        "AT2020 Cardioid Condenser Microphone",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "AT2020 Cardioid Condenser Microphone view 1",
+          "color": "#1a1a1a",
+          "src": "/images/m/home/cats/SM58-cat.png"
+        },
+        {
+          "id": "img-1",
+          "alt": "AT2020 Cardioid Condenser Microphone view 2",
+          "color": "#2e2e2e"
+        },
+        {
+          "id": "img-2",
+          "alt": "AT2020 Cardioid Condenser Microphone view 3",
+          "color": "#0b0b0b"
+        },
+        {
+          "id": "img-3",
+          "alt": "AT2020 Cardioid Condenser Microphone view 4",
+          "color": "#3d3d3d"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "Audio-Technica AT2020 Cardioid Condenser Microphone — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00025",
+          "price": 12416,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "AT2020 Cardioid Condenser Microphone exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-24",
+        "prod-26"
+      ],
+      "similarProductIds": [
+        "prod-24",
+        "prod-26"
+      ],
+      "relatedProductIds": []
+    }
+  },
+  {
+    "id": "prod-28",
+    "slug": "focusrite-scarlett-solo-4th-gen-usb-interface",
+    "name": "Scarlett Solo 4th Gen USB Interface",
+    "brand": "Focusrite",
+    "category": "Studio & Recording",
+    "subcategory": "",
+    "price": 10832,
+    "originalPrice": 12456.8,
+    "discountPercentage": 13,
+    "rating": 4.6,
+    "reviewCount": 1234,
+    "stock": 100,
+    "sku": "VM-00028",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg"
+    ],
+    "description": "The Focusrite Scarlett Solo 4th Gen USB Interface delivers professional-grade performance for studio & recording applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Focusrite",
+      "Category": "Studio & Recording",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "Scarlett Solo 4th Gen USB Interface",
+      "SKU": "VM-00028"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "studio-recording"
+    ],
+    "brandSlug": "focusrite",
+    "categorySlug": "studio-recording",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#c41e3a",
+    "image": "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+    "detail": {
+      "msrp": 12456.8,
+      "salePrice": 10832,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Focusrite"
+        },
+        {
+          "label": "Category",
+          "value": "Studio & Recording"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "Scarlett Solo 4th Gen USB Interface"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00028"
+        }
+      ],
+      "inTheBox": [
+        "Scarlett Solo 4th Gen USB Interface",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "Scarlett Solo 4th Gen USB Interface view 1",
+          "color": "#c41e3a",
+          "src": "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "Scarlett Solo 4th Gen USB Interface view 2",
+          "color": "#d8324e"
+        },
+        {
+          "id": "img-2",
+          "alt": "Scarlett Solo 4th Gen USB Interface view 3",
+          "color": "#b50f2b"
+        },
+        {
+          "id": "img-3",
+          "alt": "Scarlett Solo 4th Gen USB Interface view 4",
+          "color": "#e7415d"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00028",
+          "price": 10832,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "Scarlett Solo 4th Gen USB Interface exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-27"
+      ],
+      "similarProductIds": [
+        "prod-27"
+      ],
+      "relatedProductIds": []
+    }
+  },
+  {
+    "id": "prod-35",
+    "slug": "pioneer-dj-ddj-flx4-2-deck-dj-controller",
+    "name": "DDJ-FLX4 2-deck DJ Controller",
+    "brand": "Pioneer DJ",
+    "category": "DJ Equipment",
+    "subcategory": "",
+    "price": 27416,
+    "originalPrice": 27416,
+    "discountPercentage": 0,
+    "rating": 4.7,
+    "reviewCount": 891,
+    "stock": 100,
+    "sku": "VM-00035",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": true,
+    "images": [
+      "/images/m/home/cats/ATLP120XUSBSV.png",
+      "/images/m/home/cats/ATLP120XUSBSV.png",
+      "/images/m/home/cats/ATLP120XUSBSV.png",
+      "/images/m/home/cats/ATLP120XUSBSV.png"
+    ],
+    "description": "The Pioneer DJ DDJ-FLX4 2-deck DJ Controller delivers professional-grade performance for dj equipment applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Pioneer DJ",
+      "Category": "DJ Equipment",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "DDJ-FLX4 2-deck DJ Controller",
+      "SKU": "VM-00035"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "dj-equipment"
+    ],
+    "brandSlug": "pioneer-dj",
+    "categorySlug": "dj-equipment",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#2e2e2e",
+    "image": "/images/m/home/cats/ATLP120XUSBSV.png",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Pioneer DJ"
+        },
+        {
+          "label": "Category",
+          "value": "DJ Equipment"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "DDJ-FLX4 2-deck DJ Controller"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00035"
+        }
+      ],
+      "inTheBox": [
+        "DDJ-FLX4 2-deck DJ Controller",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "DDJ-FLX4 2-deck DJ Controller view 1",
+          "color": "#2e2e2e",
+          "src": "/images/m/home/cats/ATLP120XUSBSV.png"
+        },
+        {
+          "id": "img-1",
+          "alt": "DDJ-FLX4 2-deck DJ Controller view 2",
+          "color": "#424242"
+        },
+        {
+          "id": "img-2",
+          "alt": "DDJ-FLX4 2-deck DJ Controller view 3",
+          "color": "#1f1f1f"
+        },
+        {
+          "id": "img-3",
+          "alt": "DDJ-FLX4 2-deck DJ Controller view 4",
+          "color": "#515151"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "Pioneer DJ DDJ-FLX4 2-deck DJ Controller — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00035",
+          "price": 27416,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "DDJ-FLX4 2-deck DJ Controller exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [],
+      "similarProductIds": [],
+      "relatedProductIds": []
+    }
+  },
+  {
+    "id": "prod-36",
+    "slug": "sennheiser-hd-600-audiophile-headphones",
+    "name": "HD 600 Audiophile Headphones",
+    "brand": "Sennheiser",
+    "category": "Home Audio & Electronics",
+    "subcategory": "",
+    "price": 35828,
+    "originalPrice": 35828,
+    "discountPercentage": 0,
+    "rating": 4.9,
+    "reviewCount": 1567,
+    "stock": 100,
+    "sku": "VM-00036",
+    "isFeatured": true,
+    "isTrending": true,
+    "isNewArrival": true,
+    "images": [
+      "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+      "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+      "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+      "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg"
+    ],
+    "description": "The Sennheiser HD 600 Audiophile Headphones delivers professional-grade performance for home audio & electronics applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Sennheiser",
+      "Category": "Home Audio & Electronics",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "HD 600 Audiophile Headphones",
+      "SKU": "VM-00036"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "home-audio-electronics"
+    ],
+    "brandSlug": "sennheiser",
+    "categorySlug": "home-audio-electronics",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#c0c0c0",
+    "image": "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Sennheiser"
+        },
+        {
+          "label": "Category",
+          "value": "Home Audio & Electronics"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "HD 600 Audiophile Headphones"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00036"
+        }
+      ],
+      "inTheBox": [
+        "HD 600 Audiophile Headphones",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "HD 600 Audiophile Headphones view 1",
+          "color": "#c0c0c0",
+          "src": "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "HD 600 Audiophile Headphones view 2",
+          "color": "#d4d4d4"
+        },
+        {
+          "id": "img-2",
+          "alt": "HD 600 Audiophile Headphones view 3",
+          "color": "#b1b1b1"
+        },
+        {
+          "id": "img-3",
+          "alt": "HD 600 Audiophile Headphones view 4",
+          "color": "#e3e3e3"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00036",
+          "price": 35828,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "HD 600 Audiophile Headphones exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-37"
+      ],
+      "similarProductIds": [
+        "prod-37"
+      ],
+      "relatedProductIds": []
+    }
+  },
+  {
+    "id": "prod-37",
+    "slug": "beyerdynamic-dt-770-pro-studio-headphones-80-ohm",
+    "name": "DT 770 Pro Studio Headphones - 80 ohm",
+    "brand": "Beyerdynamic",
+    "category": "Home Audio & Electronics",
+    "subcategory": "",
+    "price": 13249,
+    "originalPrice": 15236.35,
+    "discountPercentage": 13,
+    "rating": 4.7,
+    "reviewCount": 2103,
+    "stock": 100,
+    "sku": "VM-00037",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": true,
+    "images": [
+      "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+      "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+      "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+      "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg"
+    ],
+    "description": "The Beyerdynamic DT 770 Pro Studio Headphones - 80 ohm delivers professional-grade performance for home audio & electronics applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Beyerdynamic",
+      "Category": "Home Audio & Electronics",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "DT 770 Pro Studio Headphones - 80 ohm",
+      "SKU": "VM-00037"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "home-audio-electronics"
+    ],
+    "brandSlug": "beyerdynamic",
+    "categorySlug": "home-audio-electronics",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#2e2e2e",
+    "image": "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+    "detail": {
+      "msrp": 15236.35,
+      "salePrice": 13249,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Beyerdynamic"
+        },
+        {
+          "label": "Category",
+          "value": "Home Audio & Electronics"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "DT 770 Pro Studio Headphones - 80 ohm"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00037"
+        }
+      ],
+      "inTheBox": [
+        "DT 770 Pro Studio Headphones - 80 ohm",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "DT 770 Pro Studio Headphones - 80 ohm view 1",
+          "color": "#2e2e2e",
+          "src": "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "DT 770 Pro Studio Headphones - 80 ohm view 2",
+          "color": "#424242"
+        },
+        {
+          "id": "img-2",
+          "alt": "DT 770 Pro Studio Headphones - 80 ohm view 3",
+          "color": "#1f1f1f"
+        },
+        {
+          "id": "img-3",
+          "alt": "DT 770 Pro Studio Headphones - 80 ohm view 4",
+          "color": "#515151"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "Beyerdynamic DT 770 Pro Studio Headphones - 80 ohm — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00037",
+          "price": 13249,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "DT 770 Pro Studio Headphones - 80 ohm exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-36"
+      ],
+      "similarProductIds": [
+        "prod-36"
+      ],
+      "relatedProductIds": []
+    }
+  },
+  {
+    "id": "prod-38",
+    "slug": "boss-katana-50-mkii-guitar-combo-amp",
+    "name": "Katana 50 MkII Guitar Combo Amp",
+    "brand": "Boss",
+    "category": "Guitars",
+    "subcategory": "",
+    "price": 24998,
+    "originalPrice": 24998,
+    "discountPercentage": 0,
+    "rating": 4.8,
+    "reviewCount": 678,
+    "stock": 100,
+    "sku": "VM-00038",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": true,
+    "images": [
+      "/images/m/products/image/bfc31b3826CWeDbC6X6IuFyWAjODXQOkmAEnHPW7.jpg",
+      "/images/m/products/image/bfc31b3826CWeDbC6X6IuFyWAjODXQOkmAEnHPW7.jpg",
+      "/images/m/products/image/bfc31b3826CWeDbC6X6IuFyWAjODXQOkmAEnHPW7.jpg",
+      "/images/m/products/image/bfc31b3826CWeDbC6X6IuFyWAjODXQOkmAEnHPW7.jpg"
+    ],
+    "description": "The Boss Katana 50 MkII Guitar Combo Amp delivers professional-grade performance for guitars applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Boss",
+      "Category": "Guitars",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "Katana 50 MkII Guitar Combo Amp",
+      "SKU": "VM-00038"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "guitars"
+    ],
+    "brandSlug": "boss",
+    "categorySlug": "guitars",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#1a1a1a",
+    "image": "/images/m/products/image/bfc31b3826CWeDbC6X6IuFyWAjODXQOkmAEnHPW7.jpg",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Boss"
+        },
+        {
+          "label": "Category",
+          "value": "Guitars"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "Katana 50 MkII Guitar Combo Amp"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00038"
+        }
+      ],
+      "inTheBox": [
+        "Katana 50 MkII Guitar Combo Amp",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Gig bag (where applicable)"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "Katana 50 MkII Guitar Combo Amp view 1",
+          "color": "#1a1a1a",
+          "src": "/images/m/products/image/bfc31b3826CWeDbC6X6IuFyWAjODXQOkmAEnHPW7.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "Katana 50 MkII Guitar Combo Amp view 2",
+          "color": "#2e2e2e"
+        },
+        {
+          "id": "img-2",
+          "alt": "Katana 50 MkII Guitar Combo Amp view 3",
+          "color": "#0b0b0b"
+        },
+        {
+          "id": "img-3",
+          "alt": "Katana 50 MkII Guitar Combo Amp view 4",
+          "color": "#3d3d3d"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00038",
+          "price": 24998,
+          "availability": "in-stock"
+        },
+        {
+          "id": "var-lefty",
+          "label": "Left-handed",
+          "sku": "VM-00038-LH",
+          "price": 25048,
+          "availability": "limited"
+        },
+        {
+          "id": "var-bundle",
+          "label": "Essentials Bundle",
+          "sku": "VM-00038-BDL",
+          "price": 25127.99,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "Katana 50 MkII Guitar Combo Amp exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-1",
+        "prod-2"
+      ],
+      "similarProductIds": [
+        "prod-1",
+        "prod-2",
+        "prod-3",
+        "prod-4"
+      ],
+      "relatedProductIds": [
+        "prod-3",
+        "prod-4"
+      ]
+    }
+  }
+]

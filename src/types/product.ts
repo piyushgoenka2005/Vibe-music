@@ -1,6 +1,9 @@
 export type ProductAvailability = "in-stock" | "out-of-stock" | "limited";
 export type ProductCondition = "new" | "used" | "open-box";
 
+/** Re-export canonical catalog schema from catalog types. */
+export type { CatalogProduct, CatalogProductDetail } from "@/types/catalog";
+
 export interface Product {
   id: string;
   slug: string;

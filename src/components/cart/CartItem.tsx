@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { PRODUCTS } from "@/data/products";
 import { formatCurrency } from "@/utils/currency";
 import { useCartStore, type CartItem as CartItemType } from "@/store/cartStore";
 
@@ -16,10 +15,9 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
   const isUpdating = useCartStore((s) => s.isUpdating);
 
   const lineTotal = item.price * item.quantity;
-  const catalog = PRODUCTS.find((p) => p.id === item.productId);
-  const slug = item.slug ?? catalog?.slug ?? "#";
-  const imageColor = item.imageColor ?? catalog?.imageColor ?? "#f2f1f0";
-  const image = item.image ?? catalog?.image;
+  const slug = item.slug ?? "#";
+  const imageColor = item.imageColor ?? "#f2f1f0";
+  const image = item.image;
 
   return (
     <article

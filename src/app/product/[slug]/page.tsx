@@ -1,13 +1,10 @@
 import HtmlSection from "@/components/vibe/HtmlSection";
 import ProductDetailPage from "@/components/product/ProductDetailPage";
-import { getAllProductSlugs } from "@/data/productDetails";
+
+export const dynamicParams = true;
 
 interface ProductRouteProps {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateStaticParams() {
-  return getAllProductSlugs().map((slug) => ({ slug }));
 }
 
 export default async function ProductRoute({ params }: ProductRouteProps) {

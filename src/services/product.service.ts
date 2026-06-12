@@ -1,7 +1,3 @@
-import {
-  getProductDetailBySlug,
-  getProductSummaries,
-} from "@/data/productDetails";
 import type { Product, ProductDetail } from "@/types/product";
 
 const DELAY_MS = 250;
@@ -21,15 +17,9 @@ export async function fetchProductDetail(
   slug: string
 ): Promise<ProductDetailResult | null> {
   await delay(DELAY_MS);
-  const product = getProductDetailBySlug(slug);
-  if (!product) return null;
-
-  return {
-    product,
-    frequentlyBoughtTogether: getProductSummaries(
-      product.frequentlyBoughtTogether
-    ),
-    similarProducts: getProductSummaries(product.similarProductIds),
-    relatedProducts: getProductSummaries(product.relatedProductIds),
-  };
+  const res = await fetch(`/api/products/${encodeURIComponent(slug)}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  return (await res.json()) as ProductDetailResult;
 }

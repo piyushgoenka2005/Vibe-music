@@ -1,0 +1,172 @@
+[
+  {
+    "id": "prod-35",
+    "slug": "pioneer-dj-ddj-flx4-2-deck-dj-controller",
+    "name": "DDJ-FLX4 2-deck DJ Controller",
+    "brand": "Pioneer DJ",
+    "category": "DJ Equipment",
+    "subcategory": "",
+    "price": 27416,
+    "originalPrice": 27416,
+    "discountPercentage": 0,
+    "rating": 4.7,
+    "reviewCount": 891,
+    "stock": 100,
+    "sku": "VM-00035",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": true,
+    "images": [
+      "/images/m/home/cats/ATLP120XUSBSV.png",
+      "/images/m/home/cats/ATLP120XUSBSV.png",
+      "/images/m/home/cats/ATLP120XUSBSV.png",
+      "/images/m/home/cats/ATLP120XUSBSV.png"
+    ],
+    "description": "The Pioneer DJ DDJ-FLX4 2-deck DJ Controller delivers professional-grade performance for dj equipment applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Pioneer DJ",
+      "Category": "DJ Equipment",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "DDJ-FLX4 2-deck DJ Controller",
+      "SKU": "VM-00035"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "dj-equipment"
+    ],
+    "brandSlug": "pioneer-dj",
+    "categorySlug": "dj-equipment",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#2e2e2e",
+    "image": "/images/m/home/cats/ATLP120XUSBSV.png",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Pioneer DJ"
+        },
+        {
+          "label": "Category",
+          "value": "DJ Equipment"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "DDJ-FLX4 2-deck DJ Controller"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00035"
+        }
+      ],
+      "inTheBox": [
+        "DDJ-FLX4 2-deck DJ Controller",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "DDJ-FLX4 2-deck DJ Controller view 1",
+          "color": "#2e2e2e",
+          "src": "/images/m/home/cats/ATLP120XUSBSV.png"
+        },
+        {
+          "id": "img-1",
+          "alt": "DDJ-FLX4 2-deck DJ Controller view 2",
+          "color": "#424242"
+        },
+        {
+          "id": "img-2",
+          "alt": "DDJ-FLX4 2-deck DJ Controller view 3",
+          "color": "#1f1f1f"
+        },
+        {
+          "id": "img-3",
+          "alt": "DDJ-FLX4 2-deck DJ Controller view 4",
+          "color": "#515151"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "Pioneer DJ DDJ-FLX4 2-deck DJ Controller — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00035",
+          "price": 27416,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "DDJ-FLX4 2-deck DJ Controller exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [],
+      "similarProductIds": [],
+      "relatedProductIds": []
+    }
+  }
+]

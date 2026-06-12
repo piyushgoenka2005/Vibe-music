@@ -1,0 +1,343 @@
+[
+  {
+    "id": "prod-31",
+    "slug": "korg-minilogue-xd-analog-synthesizer",
+    "name": "Minilogue XD Analog Synthesizer",
+    "brand": "Korg",
+    "category": "Keyboards & Synthesizers",
+    "subcategory": "",
+    "price": 54164,
+    "originalPrice": 62288.6,
+    "discountPercentage": 13,
+    "rating": 4.8,
+    "reviewCount": 423,
+    "stock": 100,
+    "sku": "VM-00031",
+    "isFeatured": true,
+    "isTrending": false,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/home/cats/Matriarch.png",
+      "/images/m/home/cats/Matriarch.png",
+      "/images/m/home/cats/Matriarch.png",
+      "/images/m/home/cats/Matriarch.png"
+    ],
+    "description": "The Korg Minilogue XD Analog Synthesizer delivers professional-grade performance for keyboards & synthesizers applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Korg",
+      "Category": "Keyboards & Synthesizers",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "Minilogue XD Analog Synthesizer",
+      "SKU": "VM-00031"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "keyboards-synthesizers"
+    ],
+    "brandSlug": "korg",
+    "categorySlug": "keyboards-synthesizers",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#1a1a1a",
+    "image": "/images/m/home/cats/Matriarch.png",
+    "detail": {
+      "msrp": 62288.6,
+      "salePrice": 54164,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Korg"
+        },
+        {
+          "label": "Category",
+          "value": "Keyboards & Synthesizers"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "Minilogue XD Analog Synthesizer"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00031"
+        }
+      ],
+      "inTheBox": [
+        "Minilogue XD Analog Synthesizer",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "Minilogue XD Analog Synthesizer view 1",
+          "color": "#1a1a1a",
+          "src": "/images/m/home/cats/Matriarch.png"
+        },
+        {
+          "id": "img-1",
+          "alt": "Minilogue XD Analog Synthesizer view 2",
+          "color": "#2e2e2e"
+        },
+        {
+          "id": "img-2",
+          "alt": "Minilogue XD Analog Synthesizer view 3",
+          "color": "#0b0b0b"
+        },
+        {
+          "id": "img-3",
+          "alt": "Minilogue XD Analog Synthesizer view 4",
+          "color": "#3d3d3d"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "Korg Minilogue XD Analog Synthesizer — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00031",
+          "price": 54164,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "Minilogue XD Analog Synthesizer exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-32"
+      ],
+      "similarProductIds": [
+        "prod-32"
+      ],
+      "relatedProductIds": []
+    }
+  },
+  {
+    "id": "prod-32",
+    "slug": "nord-stage-4-88-key-performance-keyboard",
+    "name": "Stage 4 88-key Performance Keyboard",
+    "brand": "Nord",
+    "category": "Keyboards & Synthesizers",
+    "subcategory": "",
+    "price": 416567,
+    "originalPrice": 416567,
+    "discountPercentage": 0,
+    "rating": 4.9,
+    "reviewCount": 67,
+    "stock": 100,
+    "sku": "VM-00032",
+    "isFeatured": false,
+    "isTrending": false,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/home/cats/Matriarch.png",
+      "/images/m/home/cats/Matriarch.png",
+      "/images/m/home/cats/Matriarch.png",
+      "/images/m/home/cats/Matriarch.png"
+    ],
+    "description": "The Nord Stage 4 88-key Performance Keyboard delivers professional-grade performance for keyboards & synthesizers applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Nord",
+      "Category": "Keyboards & Synthesizers",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "Stage 4 88-key Performance Keyboard",
+      "SKU": "VM-00032"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "keyboards-synthesizers"
+    ],
+    "brandSlug": "nord",
+    "categorySlug": "keyboards-synthesizers",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#c41e3a",
+    "image": "/images/m/home/cats/Matriarch.png",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Nord"
+        },
+        {
+          "label": "Category",
+          "value": "Keyboards & Synthesizers"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "Stage 4 88-key Performance Keyboard"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00032"
+        }
+      ],
+      "inTheBox": [
+        "Stage 4 88-key Performance Keyboard",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "Stage 4 88-key Performance Keyboard view 1",
+          "color": "#c41e3a",
+          "src": "/images/m/home/cats/Matriarch.png"
+        },
+        {
+          "id": "img-1",
+          "alt": "Stage 4 88-key Performance Keyboard view 2",
+          "color": "#d8324e"
+        },
+        {
+          "id": "img-2",
+          "alt": "Stage 4 88-key Performance Keyboard view 3",
+          "color": "#b50f2b"
+        },
+        {
+          "id": "img-3",
+          "alt": "Stage 4 88-key Performance Keyboard view 4",
+          "color": "#e7415d"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00032",
+          "price": 416567,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "Stage 4 88-key Performance Keyboard exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-31"
+      ],
+      "similarProductIds": [
+        "prod-31"
+      ],
+      "relatedProductIds": []
+    }
+  }
+]

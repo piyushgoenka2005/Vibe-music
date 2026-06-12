@@ -1,0 +1,343 @@
+[
+  {
+    "id": "prod-27",
+    "slug": "universal-audio-apollo-twin-x-duo-heritage-edition",
+    "name": "Apollo Twin X DUO Heritage Edition",
+    "brand": "Universal Audio",
+    "category": "Studio & Recording",
+    "subcategory": "",
+    "price": 83247,
+    "originalPrice": 83247,
+    "discountPercentage": 0,
+    "rating": 4.8,
+    "reviewCount": 456,
+    "stock": 100,
+    "sku": "VM-00027",
+    "isFeatured": false,
+    "isTrending": false,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg"
+    ],
+    "description": "The Universal Audio Apollo Twin X DUO Heritage Edition delivers professional-grade performance for studio & recording applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Universal Audio",
+      "Category": "Studio & Recording",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "Apollo Twin X DUO Heritage Edition",
+      "SKU": "VM-00027"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "studio-recording"
+    ],
+    "brandSlug": "universal-audio",
+    "categorySlug": "studio-recording",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#1a1a1a",
+    "image": "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+    "detail": {
+      "msrp": null,
+      "salePrice": null,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Universal Audio"
+        },
+        {
+          "label": "Category",
+          "value": "Studio & Recording"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "Apollo Twin X DUO Heritage Edition"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00027"
+        }
+      ],
+      "inTheBox": [
+        "Apollo Twin X DUO Heritage Edition",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "Apollo Twin X DUO Heritage Edition view 1",
+          "color": "#1a1a1a",
+          "src": "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "Apollo Twin X DUO Heritage Edition view 2",
+          "color": "#2e2e2e"
+        },
+        {
+          "id": "img-2",
+          "alt": "Apollo Twin X DUO Heritage Edition view 3",
+          "color": "#0b0b0b"
+        },
+        {
+          "id": "img-3",
+          "alt": "Apollo Twin X DUO Heritage Edition view 4",
+          "color": "#3d3d3d"
+        }
+      ],
+      "videos": [
+        {
+          "id": "vid-1",
+          "title": "Universal Audio Apollo Twin X DUO Heritage Edition — Product Overview",
+          "thumbnailColor": "#1a1a1a",
+          "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        }
+      ],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00027",
+          "price": 83247,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "Apollo Twin X DUO Heritage Edition exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-28"
+      ],
+      "similarProductIds": [
+        "prod-28"
+      ],
+      "relatedProductIds": []
+    }
+  },
+  {
+    "id": "prod-28",
+    "slug": "focusrite-scarlett-solo-4th-gen-usb-interface",
+    "name": "Scarlett Solo 4th Gen USB Interface",
+    "brand": "Focusrite",
+    "category": "Studio & Recording",
+    "subcategory": "",
+    "price": 10832,
+    "originalPrice": 12456.8,
+    "discountPercentage": 13,
+    "rating": 4.6,
+    "reviewCount": 1234,
+    "stock": 100,
+    "sku": "VM-00028",
+    "isFeatured": false,
+    "isTrending": true,
+    "isNewArrival": false,
+    "images": [
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+      "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg"
+    ],
+    "description": "The Focusrite Scarlett Solo 4th Gen USB Interface delivers professional-grade performance for studio & recording applications. Expertly set up and inspected by Vibe Music's technical team before shipping. Contact your Gear Advisor for bundle pricing and financing options.",
+    "specifications": {
+      "Manufacturer": "Focusrite",
+      "Category": "Studio & Recording",
+      "Warranty": "Manufacturer warranty included",
+      "Country of Origin": "Varies by model",
+      "Condition": "new",
+      "Model": "Scarlett Solo 4th Gen USB Interface",
+      "SKU": "VM-00028"
+    },
+    "tags": [
+      "new",
+      "in-stock",
+      "studio-recording"
+    ],
+    "brandSlug": "focusrite",
+    "categorySlug": "studio-recording",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#c41e3a",
+    "image": "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+    "detail": {
+      "msrp": 12456.8,
+      "salePrice": 10832,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Focusrite"
+        },
+        {
+          "label": "Category",
+          "value": "Studio & Recording"
+        },
+        {
+          "label": "Warranty",
+          "value": "Manufacturer warranty included"
+        },
+        {
+          "label": "Country of Origin",
+          "value": "Varies by model"
+        },
+        {
+          "label": "Condition",
+          "value": "new"
+        },
+        {
+          "label": "Model",
+          "value": "Scarlett Solo 4th Gen USB Interface"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-00028"
+        }
+      ],
+      "inTheBox": [
+        "Scarlett Solo 4th Gen USB Interface",
+        "Manufacturer documentation",
+        "Warranty card",
+        "Standard accessories"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "Scarlett Solo 4th Gen USB Interface view 1",
+          "color": "#c41e3a",
+          "src": "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg"
+        },
+        {
+          "id": "img-1",
+          "alt": "Scarlett Solo 4th Gen USB Interface view 2",
+          "color": "#d8324e"
+        },
+        {
+          "id": "img-2",
+          "alt": "Scarlett Solo 4th Gen USB Interface view 3",
+          "color": "#b50f2b"
+        },
+        {
+          "id": "img-3",
+          "alt": "Scarlett Solo 4th Gen USB Interface view 4",
+          "color": "#e7415d"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-00028",
+          "price": 10832,
+          "availability": "in-stock"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev-1",
+          "author": "Verified Buyer",
+          "rating": 5,
+          "title": "Excellent quality",
+          "body": "Scarlett Solo 4th Gen USB Interface exceeded my expectations. Great build quality and fast shipping from Vibe Music.",
+          "date": "2025-11-12"
+        },
+        {
+          "id": "rev-2",
+          "author": "Studio Pro",
+          "rating": 4,
+          "title": "Solid choice",
+          "body": "Works exactly as described. Sales engineer was very helpful picking the right model.",
+          "date": "2025-10-03"
+        },
+        {
+          "id": "rev-3",
+          "author": "Gigging Musician",
+          "rating": 5,
+          "title": "Would buy again",
+          "body": "Reliable gear that performs night after night. Highly recommend.",
+          "date": "2025-09-18"
+        }
+      ],
+      "qa": [
+        {
+          "id": "qa-1",
+          "question": "Does this include a manufacturer warranty?",
+          "answer": "Yes, all new items include the full manufacturer warranty. Our sales engineers can confirm specific terms.",
+          "author": "Vibe Music Gear Advisor",
+          "date": "2025-08-01"
+        },
+        {
+          "id": "qa-2",
+          "question": "What is the return policy?",
+          "answer": "Most items can be returned within 30 days. See our return policy page for complete details.",
+          "author": "Vibe Music Support",
+          "date": "2025-07-15"
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-27"
+      ],
+      "similarProductIds": [
+        "prod-27"
+      ],
+      "relatedProductIds": []
+    }
+  }
+]

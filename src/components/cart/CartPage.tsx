@@ -2,16 +2,16 @@
 
 import { useIsClient } from "@/hooks/useIsClient";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { ROUTES } from "@/lib/routes";
-import { PRODUCTS } from "@/data/products";
+import { fetchProducts } from "@/services/products.api";
 import { formatCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
+import type { Product } from "@/types/product";
 import CartItem from "./CartItem";
 import OrderSummary from "./OrderSummary";
 import "./cart.css";
-
-const RECOMMENDED = PRODUCTS.slice(0, 4);
 
 export default function CartPage() {
   const items = useCartStore((s) => s.items);
@@ -19,9 +19,17 @@ export default function CartPage() {
   const recentlyViewedIds = useRecentlyViewedStore((s) => s.productIds);
   const isClient = useIsClient();
 
+  const { data: catalog = [] } = useQuery({
+    queryKey: ["storefront-products"],
+    queryFn: () => fetchProducts(),
+    enabled: isClient,
+  });
+
   const recentlyViewed = recentlyViewedIds
-    .map((id) => PRODUCTS.find((p) => p.id === id))
-    .filter((p): p is (typeof PRODUCTS)[0] => Boolean(p));
+    .map((id) => catalog.find((p) => p.id === id))
+    .filter((p): p is Product => Boolean(p));
+
+  const recommended = catalog.slice(0, 4);
 
   if (!isClient) {
     return (
@@ -88,30 +96,32 @@ export default function CartPage() {
         </section>
       ) : null}
 
-      <section className="cart-page__section" aria-label="Recommended products">
-        <h2 className="cart-page__section-title">Recommended for You</h2>
-        <div className="cart-cross-sell">
-          {RECOMMENDED.map((product) => (
-            <Link
-              key={product.id}
-              href={`/product/${product.slug}`}
-              className="cart-cross-sell__card"
-            >
-              <div
-                className="cart-cross-sell__swatch"
-                style={{ backgroundColor: product.imageColor }}
-              />
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#807f7e" }}>
-                {product.brand}
-              </div>
-              <div style={{ fontSize: 14 }}>{product.name}</div>
-              <div style={{ fontWeight: 700, color: "#0072ba" }}>
-                {formatCurrency(product.price)}
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {recommended.length > 0 ? (
+        <section className="cart-page__section" aria-label="Recommended products">
+          <h2 className="cart-page__section-title">Recommended for You</h2>
+          <div className="cart-cross-sell">
+            {recommended.map((product) => (
+              <Link
+                key={product.id}
+                href={`/product/${product.slug}`}
+                className="cart-cross-sell__card"
+              >
+                <div
+                  className="cart-cross-sell__swatch"
+                  style={{ backgroundColor: product.imageColor }}
+                />
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#807f7e" }}>
+                  {product.brand}
+                </div>
+                <div style={{ fontSize: 14 }}>{product.name}</div>
+                <div style={{ fontWeight: 700, color: "#0072ba" }}>
+                  {formatCurrency(product.price)}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

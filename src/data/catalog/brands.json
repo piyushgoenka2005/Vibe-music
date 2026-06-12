@@ -1,0 +1,147 @@
+[
+  {
+    "id": "audio-technica",
+    "name": "Audio-Technica",
+    "slug": "audio-technica"
+  },
+  {
+    "id": "beyerdynamic",
+    "name": "Beyerdynamic",
+    "slug": "beyerdynamic"
+  },
+  {
+    "id": "boss",
+    "name": "Boss",
+    "slug": "boss"
+  },
+  {
+    "id": "epiphone",
+    "name": "Epiphone",
+    "slug": "epiphone"
+  },
+  {
+    "id": "evans",
+    "name": "Evans",
+    "slug": "evans"
+  },
+  {
+    "id": "fender",
+    "name": "Fender",
+    "slug": "fender"
+  },
+  {
+    "id": "focusrite",
+    "name": "Focusrite",
+    "slug": "focusrite"
+  },
+  {
+    "id": "gibson",
+    "name": "Gibson",
+    "slug": "gibson"
+  },
+  {
+    "id": "gretsch",
+    "name": "Gretsch",
+    "slug": "gretsch"
+  },
+  {
+    "id": "ibanez",
+    "name": "Ibanez",
+    "slug": "ibanez"
+  },
+  {
+    "id": "jbl",
+    "name": "JBL",
+    "slug": "jbl"
+  },
+  {
+    "id": "korg",
+    "name": "Korg",
+    "slug": "korg"
+  },
+  {
+    "id": "marshall",
+    "name": "Marshall",
+    "slug": "marshall"
+  },
+  {
+    "id": "martin",
+    "name": "Martin",
+    "slug": "martin"
+  },
+  {
+    "id": "native-instruments",
+    "name": "Native Instruments",
+    "slug": "native-instruments"
+  },
+  {
+    "id": "neumann",
+    "name": "Neumann",
+    "slug": "neumann"
+  },
+  {
+    "id": "nord",
+    "name": "Nord",
+    "slug": "nord"
+  },
+  {
+    "id": "pioneer-dj",
+    "name": "Pioneer DJ",
+    "slug": "pioneer-dj"
+  },
+  {
+    "id": "presonus",
+    "name": "PreSonus",
+    "slug": "presonus"
+  },
+  {
+    "id": "prs",
+    "name": "PRS",
+    "slug": "prs"
+  },
+  {
+    "id": "qsc",
+    "name": "QSC",
+    "slug": "qsc"
+  },
+  {
+    "id": "roland",
+    "name": "Roland",
+    "slug": "roland"
+  },
+  {
+    "id": "sabian",
+    "name": "Sabian",
+    "slug": "sabian"
+  },
+  {
+    "id": "sennheiser",
+    "name": "Sennheiser",
+    "slug": "sennheiser"
+  },
+  {
+    "id": "shure",
+    "name": "Shure",
+    "slug": "shure"
+  },
+  {
+    "id": "sjc-custom-drums",
+    "name": "SJC Custom Drums",
+    "slug": "sjc-custom-drums"
+  },
+  {
+    "id": "taylor",
+    "name": "Taylor",
+    "slug": "taylor"
+  },
+  {
+    "id": "universal-audio",
+    "name": "Universal Audio",
+    "slug": "universal-audio"
+  },
+  {
+    "id": "yamaha",
+    "name": "Yamaha",
+    "slug": "yamaha"
+  }
+]

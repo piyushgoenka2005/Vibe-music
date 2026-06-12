@@ -30,6 +30,11 @@ export function isProtectedRoute(pathname: string): boolean {
     return false;
   }
 
+  // Admin login is public; other admin routes require session
+  if (path === ROUTES.adminLogin) {
+    return false;
+  }
+
   return PROTECTED_ROUTE_PREFIXES.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}/`)
   );

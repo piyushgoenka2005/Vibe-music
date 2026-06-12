@@ -1,8 +1,8 @@
-import { CATEGORIES } from "@/data/categories";
+import categoriesData from "@/data/catalog/categories.json";
+import type { Category } from "@/types/category";
 
 /** WRD canonical routes */
-export const ROUTES = {
-  home: "/",
+export const ROUTES = {  home: "/",
   search: "/search",
   searchResults: "/search/results",
   cart: "/cart",
@@ -18,10 +18,17 @@ export const ROUTES = {
   register: "/register",
   forgotPassword: "/forgot-password",
   admin: "/admin",
+  adminLogin: "/admin/login",
   adminProducts: "/admin/products",
+  adminProductNew: "/admin/products/new",
   adminOrders: "/admin/orders",
   adminCustomers: "/admin/customers",
+  adminCategories: "/admin/categories",
+  adminCoupons: "/admin/coupons",
   adminReviews: "/admin/reviews",
+  adminInventory: "/admin/inventory",
+  adminAnalytics: "/admin/analytics",
+  adminSettings: "/admin/settings",
   adminBlog: "/admin/blog",
 } as const;
 
@@ -32,6 +39,8 @@ export function categoryPath(slug: string): string {
 export function productPath(slug: string): string {
   return `/product/${slug}`;
 }
+
+const CATEGORIES = categoriesData as Category[];
 
 const CATEGORY_SLUGS = new Set(CATEGORIES.map((c) => c.slug));
 

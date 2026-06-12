@@ -3,7 +3,7 @@
 import type { SortOption } from "@/types/filters";
 
 const OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "relevance", label: "Relevance" },
+  { value: "relevance", label: "Newest" },
   { value: "price-asc", label: "Price: Low to High" },
   { value: "price-desc", label: "Price: High to Low" },
   { value: "rating-desc", label: "Highest Rated" },

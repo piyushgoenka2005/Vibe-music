@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { PRODUCTS } from "@/data/products";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";
@@ -34,6 +33,25 @@ interface WishlistState {
   toggleDrawer: () => void;
   syncWithAccount: () => void;
   _setHydrated: () => void;
+}
+
+function wishlistItemToProduct(item: WishlistItem): Product {
+  return {
+    id: item.productId,
+    slug: item.slug,
+    name: item.name,
+    brand: item.brand,
+    brandSlug: item.brand.toLowerCase().replace(/\s+/g, "-"),
+    category: "",
+    categorySlug: "",
+    price: item.price,
+    rating: 0,
+    reviewCount: 0,
+    availability: "in-stock",
+    condition: "new",
+    imageColor: item.imageColor,
+    image: item.image,
+  };
 }
 
 function productToWishlistItem(product: Product): WishlistItem {
@@ -134,10 +152,9 @@ export const useWishlistStore = create<WishlistState>()(
       count: () => get().items.length,
 
       moveToCart: (productId) => {
-        const product = PRODUCTS.find((p) => p.id === productId);
         const item = get().items.find((i) => i.productId === productId);
-        if (!product || !item) return;
-        useCartStore.getState().addItem(product, 1);
+        if (!item) return;
+        useCartStore.getState().addItem(wishlistItemToProduct(item), 1);
         get().remove(productId);
         useToastStore.getState().show(`${item.name} moved to cart`);
       },
@@ -145,8 +162,7 @@ export const useWishlistStore = create<WishlistState>()(
       moveAllToCart: () => {
         const items = get().items;
         items.forEach((item) => {
-          const product = PRODUCTS.find((p) => p.id === item.productId);
-          if (product) useCartStore.getState().addItem(product, 1);
+          useCartStore.getState().addItem(wishlistItemToProduct(item), 1);
         });
         set({ items: [], drawerOpen: false });
         useToastStore.getState().show(

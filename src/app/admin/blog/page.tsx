@@ -1,19 +1,19 @@
-import HtmlSection from "@/components/vibe/HtmlSection";
-import AdminNav from "@/components/admin/AdminNav";
-import { ROUTES } from "@/lib/routes";
+"use client";
+
+import AdminGuard from "@/components/admin/AdminGuard";
+import AdminShell from "@/components/admin/AdminShell";
+import { EmptyState } from "@/components/admin/AdminUi";
 
 export default function AdminBlogPage() {
   return (
-    <>
-      <HtmlSection file="header" />
-      <main className="homepage-wrapper" id="main-content">
-        <section style={{ maxWidth: 960, margin: "0 auto", padding: "32px 16px" }}>
-          <h1 style={{ margin: "0 0 8px", fontSize: 28 }}>Blog</h1>
-          <AdminNav active={ROUTES.adminBlog} />
-          <p style={{ color: "#807f7e" }}>Admin blog and articles management will appear here.</p>
-        </section>
-      </main>
-      <HtmlSection file="footer" />
-    </>
+    <AdminGuard>
+      {(admin) => (
+        <AdminShell admin={admin} title="Blog">
+          <div className="admin-panel">
+            <EmptyState message="Blog CMS is planned for a future release. Use Settings to configure store content in the meantime." />
+          </div>
+        </AdminShell>
+      )}
+    </AdminGuard>
   );
 }

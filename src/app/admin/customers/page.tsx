@@ -1,19 +1,128 @@
-import HtmlSection from "@/components/vibe/HtmlSection";
-import AdminNav from "@/components/admin/AdminNav";
-import { ROUTES } from "@/lib/routes";
+"use client";
+
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import AdminGuard from "@/components/admin/AdminGuard";
+import AdminShell from "@/components/admin/AdminShell";
+import { StatusBadge, LoadingState, EmptyState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
+
+async function fetchCustomers(params: { search: string; page: number }) {
+  const sp = new URLSearchParams({ limit: "20", offset: String(params.page * 20) });
+  if (params.search) sp.set("search", params.search);
+  const res = await fetch(`/api/admin/customers?${sp}`);
+  if (!res.ok) throw new Error("Failed to load customers");
+  return res.json();
+}
+
+function CustomersContent() {
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-customers", search, page],
+    queryFn: () => fetchCustomers({ search, page }),
+  });
+
+  const { data: detail } = useQuery({
+    queryKey: ["admin-customer", selectedId],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/customers/${selectedId}`);
+      if (!res.ok) throw new Error("Failed to load customer");
+      return res.json();
+    },
+    enabled: !!selectedId,
+  });
+
+  if (isLoading) return <LoadingState />;
+
+  const customers = data?.customers ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / 20);
+
+  return (
+    <>
+      <div className="admin-toolbar">
+        <input className="admin-input" placeholder="Search customers…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} />
+      </div>
+      <div className="admin-grid-2">
+        <div className="admin-panel">
+          {customers.length === 0 ? (
+            <EmptyState message="No customers found." />
+          ) : (
+            <>
+              <div className="admin-table-wrap">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Orders</th>
+                      <th>Spent</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customers.map((c: { uid: string; displayName: string; email: string; orderCount: number; totalSpent: number; isActive: boolean }) => (
+                      <tr key={c.uid} onClick={() => setSelectedId(c.uid)} style={{ cursor: "pointer" }}>
+                        <td>{c.displayName || "—"}</td>
+                        <td>{c.email}</td>
+                        <td>{c.orderCount}</td>
+                        <td>{formatCurrency(c.totalSpent)}</td>
+                        <td><StatusBadge status={c.isActive ? "active" : "cancelled"} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="admin-pagination">
+                <span>{total} customers</span>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <button type="button" className="admin-btn admin-btn--secondary" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</button>
+                  <button type="button" className="admin-btn admin-btn--secondary" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+        <div className="admin-panel">
+          <div className="admin-panel__header"><h2 className="admin-panel__title">Customer Detail</h2></div>
+          <div className="admin-panel__body">
+            {!selectedId || !detail?.customer ? (
+              <EmptyState message="Select a customer." />
+            ) : (
+              <>
+                <p><strong>{detail.customer.displayName}</strong></p>
+                <p>{detail.customer.email}</p>
+                <p>Orders: {detail.customer.orderCount} · Spent: {formatCurrency(detail.customer.totalSpent)}</p>
+                <p>Joined: {formatDate(detail.customer.createdAt)}</p>
+                <h3 style={{ fontSize: "0.875rem", marginTop: "1rem" }}>Order History</h3>
+                {detail.customer.orders?.length === 0 ? (
+                  <p style={{ color: "var(--admin-muted)", fontSize: "0.875rem" }}>No orders</p>
+                ) : (
+                  <ul style={{ fontSize: "0.875rem" }}>
+                    {(detail.customer.orders as Array<{ id: string; total: number; status: string; createdAt: string }>).map((o) => (
+                      <li key={o.id}>{formatDate(o.createdAt)} — {formatCurrency(o.total)} — <StatusBadge status={o.status} /></li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default function AdminCustomersPage() {
   return (
-    <>
-      <HtmlSection file="header" />
-      <main className="homepage-wrapper" id="main-content">
-        <section style={{ maxWidth: 960, margin: "0 auto", padding: "32px 16px" }}>
-          <h1 style={{ margin: "0 0 8px", fontSize: 28 }}>Customers</h1>
-          <AdminNav active={ROUTES.adminCustomers} />
-          <p style={{ color: "#807f7e" }}>Admin customer management will appear here.</p>
-        </section>
-      </main>
-      <HtmlSection file="footer" />
-    </>
+    <AdminGuard>
+      {(admin) => (
+        <AdminShell admin={admin} title="Customers">
+          <CustomersContent />
+        </AdminShell>
+      )}
+    </AdminGuard>
   );
 }

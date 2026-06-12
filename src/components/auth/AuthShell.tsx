@@ -7,13 +7,17 @@ interface AuthShellProps {
   title: string;
   description?: string;
   footer?: React.ReactNode;
+  trustItems?: string[] | false;
   children: React.ReactNode;
 }
+
+const DEFAULT_TRUST = ["Secure sign-in", "Wishlist sync", "Order tracking"];
 
 export default function AuthShell({
   title,
   description,
   footer,
+  trustItems = DEFAULT_TRUST,
   children,
 }: AuthShellProps) {
   return (
@@ -37,11 +41,13 @@ export default function AuthShell({
         <div className="auth-shell__body">{children}</div>
         {footer ? <footer className="auth-footer-note">{footer}</footer> : null}
       </div>
-      <ul className="auth-trust" aria-label="Account benefits">
-        <li>Secure sign-in</li>
-        <li>Wishlist sync</li>
-        <li>Order tracking</li>
-      </ul>
+      {trustItems ? (
+        <ul className="auth-trust" aria-label="Account benefits">
+          {trustItems.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   );
 }

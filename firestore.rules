@@ -2,9 +2,52 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Customer profiles — owner read/write only
     match /users/{userId} {
       allow read, create, update: if request.auth != null && request.auth.uid == userId;
       allow delete: if false;
+    }
+
+    // Admin profiles — no client access (server Admin SDK only)
+    match /admins/{adminId} {
+      allow read, write: if false;
+    }
+
+    // Commerce data — all writes via server Admin SDK
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /orders/{orderId} {
+      allow read, write: if false;
+    }
+
+    match /coupons/{couponId} {
+      allow read, write: if false;
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if resource.data.status == 'approved';
+      allow write: if false;
+    }
+
+    match /inventory_adjustments/{adjustmentId} {
+      allow read, write: if false;
+    }
+
+    match /settings/{settingId} {
+      allow read: if settingId == 'store';
+      allow write: if false;
+    }
+
+    match /analytics/{docId} {
+      allow read, write: if false;
     }
   }
 }

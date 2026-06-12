@@ -1,6 +1,5 @@
 import { BRAND } from "@/lib/brand";
-import { PRODUCTS } from "@/data/products";
-import { CATEGORIES } from "@/data/categories";
+import { getAllProductSlugs, getCategories } from "@/services/catalogService";
 
 export default function sitemap() {
   const base = BRAND.siteUrl;
@@ -21,15 +20,15 @@ export default function sitemap() {
     priority: path === "" ? 1 : 0.7,
   }));
 
-  const categoryRoutes = CATEGORIES.map((category) => ({
+  const categoryRoutes = getCategories().map((category) => ({
     url: `${base}/category/${category.slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
 
-  const productRoutes = PRODUCTS.map((product) => ({
-    url: `${base}/product/${product.slug}`,
+  const productRoutes = getAllProductSlugs().map((slug) => ({
+    url: `${base}/product/${slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.6,

@@ -1,9 +1,9 @@
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import "@/components/admin/admin.css";
 
-export default function AdminLayout({
+export default function AdminRootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <ProtectedRoute>{children}</ProtectedRoute>;
+  return children;
 }

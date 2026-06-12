@@ -1,27 +1,55 @@
 import { NextResponse } from "next/server";
-import { listProducts } from "@/lib/server/productRepository";
-import type { Product } from "@/types/product";
+import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
+import {
+  listAdminProducts,
+  createAdminProduct,
+  bulkUpdateProductStatus,
+} from "@/lib/server/adminProductService";
+import { adminProductSchema } from "@/lib/validations/admin";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const products = await listProducts();
-    return NextResponse.json({ products });
+    await requireAdmin("products:read");
+    const { searchParams } = new URL(request.url);
+    const result = await listAdminProducts({
+      search: searchParams.get("search") ?? undefined,
+      status: searchParams.get("status") ?? undefined,
+      category: searchParams.get("category") ?? undefined,
+      limit: Number(searchParams.get("limit") ?? 20),
+      offset: Number(searchParams.get("offset") ?? 0),
+    });
+    return NextResponse.json(result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to load products";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return adminErrorResponse(error);
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as Product;
-    const { getAdminFirestore } = await import("@/lib/firebase/admin");
-    const db = getAdminFirestore();
-    const id = body.id || db.collection("products").doc().id;
-    await db.collection("products").doc(id).set(body, { merge: true });
-    return NextResponse.json({ id, product: body });
+    await requireAdmin("products:write");
+    const body = await request.json();
+
+    if (body.action === "bulk_status") {
+      const ids = body.ids as string[];
+      const status = body.status as "active" | "draft" | "archived";
+      const count = await bulkUpdateProductStatus(ids, status);
+      return NextResponse.json({ updated: count });
+    }
+
+    const parsed = adminProductSchema.parse(body);
+    const product = await createAdminProduct({
+      ...parsed,
+      availability: parsed.availability ?? "in-stock",
+      condition: parsed.condition ?? "new",
+      brandSlug: parsed.brandSlug ?? parsed.slug,
+      categorySlug: parsed.categorySlug ?? parsed.slug,
+      rating: parsed.rating ?? 0,
+      reviewCount: parsed.reviewCount ?? 0,
+      imageColor: parsed.imageColor ?? "#e8e8e8",
+      image: parsed.image ?? "",
+    });
+    return NextResponse.json({ product }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to save product";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return adminErrorResponse(error);
   }
 }

@@ -1,15 +1,14 @@
 import { notFound } from "next/navigation";
 import HtmlSection from "@/components/vibe/HtmlSection";
 import CategoryPage from "@/components/category/CategoryPage";
-import { getCategoryBySlug } from "@/data/categories";
+import { getCategories, getCategoryBySlug } from "@/services/catalogService";
 
 interface CategoryRouteProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  const { CATEGORIES } = await import("@/data/categories");
-  return CATEGORIES.map((category) => ({ slug: category.slug }));
+  return getCategories().map((category) => ({ slug: category.slug }));
 }
 
 export default async function CategoryRoute({ params }: CategoryRouteProps) {

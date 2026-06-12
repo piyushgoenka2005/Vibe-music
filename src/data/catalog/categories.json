@@ -1,0 +1,86 @@
+[
+  {
+    "id": "cat-1",
+    "name": "Guitars",
+    "slug": "guitars",
+    "description": "Shop guitars from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-2",
+    "name": "Studio & Recording",
+    "slug": "studio-recording",
+    "description": "Shop studio & recording from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-3",
+    "name": "Drums & Percussion",
+    "slug": "drums-percussion",
+    "description": "Shop drums & percussion from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-4",
+    "name": "Bass",
+    "slug": "bass",
+    "description": "Shop bass from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-5",
+    "name": "Keyboards & Synthesizers",
+    "slug": "keyboards-synthesizers",
+    "description": "Shop keyboards & synthesizers from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-6",
+    "name": "Live Sound & Lighting",
+    "slug": "live-sound-lighting",
+    "description": "Shop live sound & lighting from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-7",
+    "name": "Software & Plug-ins",
+    "slug": "software-plug-ins",
+    "description": "Shop software & plug-ins from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-8",
+    "name": "DJ Equipment",
+    "slug": "dj-equipment",
+    "description": "Shop dj equipment from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-9",
+    "name": "Microphones & Wireless",
+    "slug": "microphones-wireless",
+    "description": "Shop microphones & wireless from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-10",
+    "name": "Band & Orchestra",
+    "slug": "band-orchestra",
+    "description": "Shop band & orchestra from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-11",
+    "name": "Home Audio & Electronics",
+    "slug": "home-audio-electronics",
+    "description": "Shop home audio & electronics from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-12",
+    "name": "Commercial Audio & Installation",
+    "slug": "commercial-audio-installation",
+    "description": "Shop commercial audio & installation from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-13",
+    "name": "Cables, Cases & Accessories",
+    "slug": "cables-cases-accessories",
+    "description": "Shop cables, cases & accessories from top brands with expert support and fast shipping."
+  },
+  {
+    "id": "cat-14",
+    "name": "Video & Cameras",
+    "slug": "video-cameras",
+    "description": "Shop video & cameras from top brands with expert support and fast shipping."
+  }
+]
