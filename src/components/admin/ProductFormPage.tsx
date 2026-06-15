@@ -6,7 +6,17 @@ import { useMutation } from "@tanstack/react-query";
 import { slugify } from "@/lib/slug";
 import { ROUTES } from "@/lib/routes";
 import ProductImageUpload from "@/components/admin/ProductImageUpload";
+import ProductBundleEditor, {
+  createEmptyBundleState,
+  type ProductBundleFormState,
+} from "@/components/admin/ProductBundleEditor";
+import ProductRelatedEditor, {
+  createEmptyRelatedState,
+  type ProductRelatedFormState,
+} from "@/components/admin/ProductRelatedEditor";
+import ProductVariantsEditor from "@/components/admin/ProductVariantsEditor";
 import type { Category } from "@/types/category";
+import type { ProductVariant } from "@/types/product";
 
 const EMPTY = {
   name: "",
@@ -27,6 +37,9 @@ const EMPTY = {
   trending: false,
   newArrival: false,
   images: [] as string[],
+  variants: [] as ProductVariant[],
+  bundle: createEmptyBundleState(),
+  related: createEmptyRelatedState(),
 };
 
 export default function ProductFormPage({ productId }: { productId?: string }) {
@@ -56,11 +69,45 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             trending: d.product.trending ?? false,
             newArrival: d.product.newArrival ?? false,
             images: d.product.images ?? (d.product.image ? [d.product.image] : []),
+            variants: d.product.variants ?? [],
+            bundle: createEmptyBundleState(),
+            related: createEmptyRelatedState(),
           });
         }
         setLoaded(true);
       })
       .catch(() => setLoaded(true));
+
+    fetch(`/api/admin/products/${productId}/bundle`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.bundle) {
+          setForm((prev) => ({
+            ...prev,
+            bundle: {
+              relatedProductIds: d.bundle.relatedProductIds ?? [],
+              discountPercent: d.bundle.discountPercent ?? 8,
+              isActive: d.bundle.isActive !== false,
+            },
+          }));
+        }
+      })
+      .catch(() => undefined);
+
+    fetch(`/api/admin/products/${productId}/related`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.related) {
+          setForm((prev) => ({
+            ...prev,
+            related: {
+              relatedProductIds: d.related.relatedProductIds ?? [],
+              isActive: d.related.isActive !== false,
+            },
+          }));
+        }
+      })
+      .catch(() => undefined);
   }, [productId]);
 
   const saveMutation = useMutation({
@@ -77,6 +124,7 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
         brandSlug: slugify(form.brand),
         image: form.images[0] ?? "",
         images: form.images,
+        variants: form.variants,
       };
       const url = productId ? `/api/admin/products/${productId}` : "/api/admin/products";
       const method = productId ? "PUT" : "POST";
@@ -89,7 +137,41 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
         const data = await res.json();
         throw new Error(data.error ?? "Save failed");
       }
-      return res.json();
+      const saved = await res.json();
+      const savedId = productId ?? saved.product?.id;
+      if (savedId) {
+        const bundleRes = await fetch(`/api/admin/products/${savedId}/bundle`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            relatedProductIds: form.bundle.relatedProductIds,
+            discountPercent: form.bundle.discountPercent,
+            isActive: form.bundle.isActive,
+            productName: form.name,
+            productSlug: slug,
+          }),
+        });
+        if (!bundleRes.ok) {
+          const bundleData = await bundleRes.json();
+          throw new Error(bundleData.error ?? "Bundle save failed");
+        }
+
+        const relatedRes = await fetch(`/api/admin/products/${savedId}/related`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            relatedProductIds: form.related.relatedProductIds,
+            isActive: form.related.isActive,
+            productName: form.name,
+            productSlug: slug,
+          }),
+        });
+        if (!relatedRes.ok) {
+          const relatedData = await relatedRes.json();
+          throw new Error(relatedData.error ?? "Related products save failed");
+        }
+      }
+      return saved;
     },
     onSuccess: () => router.push(ROUTES.adminProducts),
     onError: (err) => setError(err instanceof Error ? err.message : "Save failed"),
@@ -185,6 +267,34 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             images={form.images}
             onChange={(images) => setForm({ ...form, images })}
           />
+          <div className="admin-form-grid--full">
+            <ProductVariantsEditor
+              parentSku={form.sku || "VM-00000"}
+              basePrice={form.price || 0}
+              variants={form.variants}
+              productImages={form.images}
+              onChange={(variants) => setForm({ ...form, variants })}
+            />
+          </div>
+          {productId || form.name ? (
+            <div className="admin-form-grid--full">
+              <ProductRelatedEditor
+                productId={productId}
+                currentProductName={form.name}
+                related={form.related}
+                onChange={(related: ProductRelatedFormState) =>
+                  setForm({ ...form, related })
+                }
+              />
+              <ProductBundleEditor
+                productId={productId}
+                currentProductName={form.name}
+                currentProductSlug={form.slug || slugify(`${form.brand}-${form.name}`)}
+                bundle={form.bundle}
+                onChange={(bundle: ProductBundleFormState) => setForm({ ...form, bundle })}
+              />
+            </div>
+          ) : null}
           <div className="admin-form-group admin-form-grid--full">
             <label>Description</label>
             <textarea className="admin-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />

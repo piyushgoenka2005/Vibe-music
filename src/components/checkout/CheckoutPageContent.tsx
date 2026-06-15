@@ -5,13 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CheckoutSummary from "@/components/checkout/CheckoutSummary";
 import PaymentButton from "@/components/checkout/PaymentButton";
+import {
+  addressToShipping,
+  getAddressDisplayLabel,
+} from "@/lib/address/addressMappers";
 import { ROUTES } from "@/lib/routes";
 import { DEFAULT_GST_RATE } from "@/lib/gstCalculator";
+import { useAddresses } from "@/hooks/useAddresses";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { formatCurrencyPrecise } from "@/utils/currency";
-import type { SavedAddress } from "@/store/accountProfileStore";
 import type { ShippingAddress } from "@/types/order";
 import "@/components/checkout/checkout.css";
 
@@ -69,27 +73,19 @@ const EMPTY_ADDRESS: ShippingAddress = {
   phone: "",
 };
 
-function savedToShipping(address: SavedAddress, phone: string): ShippingAddress {
-  return {
-    name: address.name,
-    line1: address.line1,
-    line2: address.line2,
-    city: address.city,
-    state: address.state,
-    postalCode: address.postalCode,
-    country: address.country,
-    phone,
-  };
-}
-
 function isAddressComplete(address: ShippingAddress): boolean {
   return Boolean(
     address.name.trim() &&
       address.line1.trim() &&
       address.city.trim() &&
       address.state.trim() &&
-      address.postalCode.trim()
+      address.postalCode.trim() &&
+      address.phone?.trim()
   );
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
 export default function CheckoutPageContent() {
@@ -97,38 +93,36 @@ export default function CheckoutPageContent() {
   const items = useCartStore((s) => s.items);
   const couponDiscount = useCartStore((s) => s.discount());
   const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const phone = useAccountProfileStore((s) => s.phone);
-  const addresses = useAccountProfileStore((s) => s.addresses);
-  const addAddress = useAccountProfileStore((s) => s.addAddress);
+  const {
+    addresses,
+    defaultAddress,
+    isLoading: addressesLoading,
+    createAddress,
+  } = useAddresses();
 
   const [step, setStep] = useState<CheckoutStep>("address");
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+  const savedAddresses = isAuthenticated ? addresses : [];
+  const [useNewAddressOverride, setUseNewAddressOverride] = useState<boolean | null>(
     null
   );
-  const [useNewAddress, setUseNewAddress] = useState(false);
+  const useNewAddress = useNewAddressOverride ?? savedAddresses.length === 0;
+
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const effectiveSelectedAddressId =
+    selectedAddressId ??
+    (!useNewAddress && defaultAddress ? defaultAddress.id : null);
+
   const [addressForm, setAddressForm] = useState<ShippingAddress>(EMPTY_ADDRESS);
   const [confirmedAddress, setConfirmedAddress] =
     useState<ShippingAddress | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">(
     "razorpay"
   );
-
-  const defaultAddress = useMemo(
-    () => addresses.find((a) => a.isDefault) ?? addresses[0] ?? null,
-    [addresses]
-  );
-
-  useEffect(() => {
-    if (addresses.length === 0) {
-      setUseNewAddress(true);
-    }
-  }, [addresses.length]);
-
-  useEffect(() => {
-    if (defaultAddress && !selectedAddressId && !useNewAddress) {
-      setSelectedAddressId(defaultAddress.id);
-    }
-  }, [defaultAddress, selectedAddressId, useNewAddress]);
+  const [guestEmailInput, setGuestEmailInput] = useState("");
+  const guestEmail = guestEmailInput || user?.email || "";
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
 
   useEffect(() => {
     if (items.length === 0) {
@@ -136,17 +130,11 @@ export default function CheckoutPageContent() {
     }
   }, [items.length, router]);
 
-  useEffect(() => {
-    if (user?.name && !addressForm.name) {
-      setAddressForm((prev) => ({
-        ...prev,
-        name: user.name ?? prev.name,
-      }));
-    }
-  }, [user?.name, addressForm.name]);
-
   const checkoutItems = items.map((item) => ({
     productId: item.productId,
+    variantId: item.variantId,
+    variantSku: item.variantSku,
+    variantLabel: item.variantLabel,
     name: item.name,
     quantity: item.quantity,
     price: item.price,
@@ -158,53 +146,75 @@ export default function CheckoutPageContent() {
       return confirmedAddress;
     }
 
-    if (useNewAddress || addresses.length === 0) {
-      return isAddressComplete(addressForm)
-        ? { ...addressForm, phone: phone || addressForm.phone }
+    if (useNewAddress || savedAddresses.length === 0) {
+      return isAddressComplete({
+        ...addressForm,
+        phone: addressForm.phone || phone,
+      })
+        ? { ...addressForm, phone: addressForm.phone || phone }
         : null;
     }
 
-    const saved = addresses.find((a) => a.id === selectedAddressId);
+    const saved = savedAddresses.find((a) => a.id === effectiveSelectedAddressId);
     if (!saved) return null;
-    return savedToShipping(saved, phone);
+    return addressToShipping(saved);
   }, [
     confirmedAddress,
     useNewAddress,
     addressForm,
-    addresses,
-    selectedAddressId,
+    savedAddresses,
+    effectiveSelectedAddressId,
     phone,
   ]);
 
   const buyerState = resolvedAddress?.state ?? "Maharashtra";
-  const email = user?.email ?? "";
+  const email = (user?.email ?? guestEmail).trim().toLowerCase();
+  const contactPhone = resolvedAddress?.phone || phone || "";
 
   const canContinueFromAddress =
     Boolean(confirmedAddress) ||
-    Boolean(!useNewAddress && selectedAddressId) ||
-    isAddressComplete(addressForm);
+    Boolean(!useNewAddress && effectiveSelectedAddressId) ||
+    isAddressComplete({ ...addressForm, phone: addressForm.phone || phone });
 
-  function handleContinueFromAddress() {
+  const hasValidContact = isAuthenticated
+    ? Boolean(email)
+    : Boolean(email && isValidEmail(email));
+
+  async function handleContinueFromAddress() {
     let shipping: ShippingAddress | null = null;
 
-    if (useNewAddress || addresses.length === 0) {
-      if (!isAddressComplete(addressForm)) return;
-      shipping = { ...addressForm, phone: phone || addressForm.phone };
-      addAddress({
-        label: "Checkout Address",
-        name: addressForm.name,
-        line1: addressForm.line1,
-        line2: addressForm.line2,
-        city: addressForm.city,
-        state: addressForm.state,
-        postalCode: addressForm.postalCode,
-        country: addressForm.country,
-        isDefault: addresses.length === 0,
-      });
+    if (useNewAddress || savedAddresses.length === 0) {
+      if (!isAddressComplete({ ...addressForm, phone: addressForm.phone || phone })) {
+        return;
+      }
+      shipping = {
+        ...addressForm,
+        phone: addressForm.phone || phone,
+      };
+
+      if (isAuthenticated) {
+        setIsSavingAddress(true);
+        try {
+          await createAddress({
+            label: "Checkout",
+            fullName: shipping.name,
+            phone: shipping.phone ?? "",
+            addressLine1: shipping.line1,
+            addressLine2: shipping.line2,
+            city: shipping.city,
+            state: shipping.state,
+            postalCode: shipping.postalCode,
+            country: shipping.country,
+            isDefault: savedAddresses.length === 0,
+          });
+        } finally {
+          setIsSavingAddress(false);
+        }
+      }
     } else {
-      const saved = addresses.find((a) => a.id === selectedAddressId);
+      const saved = savedAddresses.find((a) => a.id === effectiveSelectedAddressId);
       if (!saved) return;
-      shipping = savedToShipping(saved, phone);
+      shipping = addressToShipping(saved);
     }
 
     setConfirmedAddress(shipping);
@@ -225,6 +235,24 @@ export default function CheckoutPageContent() {
   return (
     <div className="checkout-page">
       <h1 className="personalization-widgets__greeting">Checkout</h1>
+
+      {!isAuthenticated ? (
+        <p style={{ marginBottom: 16, fontSize: 14, color: "#666" }}>
+          Checking out as a guest.{" "}
+          <Link
+            href={`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.checkout)}`}
+          >
+            Log in
+          </Link>{" "}
+          or{" "}
+          <Link
+            href={`${ROUTES.register}?redirect=${encodeURIComponent(ROUTES.checkout)}`}
+          >
+            create an account
+          </Link>{" "}
+          to save your order history.
+        </p>
+      ) : null}
 
       <div className="checkout-steps" aria-label="Checkout progress">
         {STEPS.map((s, index) => (
@@ -249,51 +277,59 @@ export default function CheckoutPageContent() {
             <>
               <h2 className="checkout-panel__title">Delivery Address</h2>
 
-              {addresses.length > 0 ? (
+              {isAuthenticated && addressesLoading ? (
+                <p>Loading saved addresses…</p>
+              ) : null}
+
+              {savedAddresses.length > 0 ? (
                 <div className="checkout-address-list">
-                  {addresses.map((addr) => (
+                  {savedAddresses.map((addr) => (
                     <button
                       key={addr.id}
                       type="button"
                       className={`checkout-address-card${
-                        !useNewAddress && selectedAddressId === addr.id
+                        !useNewAddress && effectiveSelectedAddressId === addr.id
                           ? " checkout-address-card--selected"
                           : ""
                       }`}
                       onClick={() => {
-                        setUseNewAddress(false);
+                        setUseNewAddressOverride(false);
                         setSelectedAddressId(addr.id);
                       }}
                     >
                       <div className="checkout-address-card__label">
-                        {addr.label}
+                        {getAddressDisplayLabel(addr)}
                         {addr.isDefault ? " (Default)" : ""}
                       </div>
                       <div className="checkout-address-card__text">
-                        {addr.name}
+                        {addr.fullName}
                         {"\n"}
-                        {addr.line1}
-                        {addr.line2 ? `, ${addr.line2}` : ""}
+                        {addr.addressLine1}
+                        {addr.addressLine2 ? `, ${addr.addressLine2}` : ""}
                         {"\n"}
                         {addr.city}, {addr.state} {addr.postalCode}
+                        {"\n"}
+                        {addr.phone}
                       </div>
                     </button>
                   ))}
                 </div>
               ) : null}
 
-              <button
-                type="button"
-                className="cart-btn cart-btn--secondary"
-                onClick={() => {
-                  setUseNewAddress(true);
-                  setSelectedAddressId(null);
-                }}
-              >
-                {useNewAddress ? "Adding new address" : "+ Add new address"}
-              </button>
+              {isAuthenticated ? (
+                <button
+                  type="button"
+                  className="cart-btn cart-btn--secondary"
+                  onClick={() => {
+                    setUseNewAddressOverride(true);
+                    setSelectedAddressId(null);
+                  }}
+                >
+                  {useNewAddress ? "Adding new address" : "+ Add new address"}
+                </button>
+              ) : null}
 
-              {useNewAddress || addresses.length === 0 ? (
+              {useNewAddress || savedAddresses.length === 0 ? (
                 <form
                   className="checkout-form"
                   onSubmit={(e) => {
@@ -305,7 +341,7 @@ export default function CheckoutPageContent() {
                     Full Name
                     <input
                       required
-                      value={addressForm.name}
+                      value={addressForm.name || user?.name || ""}
                       onChange={(e) =>
                         setAddressForm((p) => ({ ...p, name: e.target.value }))
                       }
@@ -357,6 +393,40 @@ export default function CheckoutPageContent() {
                     </label>
                   </div>
                   <label>
+                    Phone
+                    <input
+                      required
+                      type="tel"
+                      pattern="[0-9]{10}"
+                      value={addressForm.phone ?? ""}
+                      onChange={(e) =>
+                        setAddressForm((p) => ({ ...p, phone: e.target.value }))
+                      }
+                    />
+                  </label>
+                  {!isAuthenticated ? (
+                    <label>
+                      Email
+                      <input
+                        required
+                        type="email"
+                        autoComplete="email"
+                        value={guestEmail}
+                        onChange={(e) => setGuestEmailInput(e.target.value)}
+                      />
+                    </label>
+                  ) : (
+                    <label>
+                      Email
+                      <input
+                        type="email"
+                        value={email}
+                        readOnly
+                        disabled
+                      />
+                    </label>
+                  )}
+                  <label>
                     State
                     <select
                       required
@@ -383,9 +453,9 @@ export default function CheckoutPageContent() {
                   type="button"
                   className="cart-btn cart-btn--checkout"
                   onClick={handleContinueFromAddress}
-                  disabled={!canContinueFromAddress}
+                  disabled={!canContinueFromAddress || isSavingAddress}
                 >
-                  Continue to Summary
+                  {isSavingAddress ? "Saving address…" : "Continue to Summary"}
                 </button>
               </div>
             </>
@@ -397,7 +467,7 @@ export default function CheckoutPageContent() {
 
               <div className="checkout-items">
                 {items.map((item) => (
-                  <div key={item.productId} className="checkout-item">
+                  <div key={item.lineId} className="checkout-item">
                     {item.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -496,20 +566,22 @@ export default function CheckoutPageContent() {
                 </label>
               </div>
 
-              {resolvedAddress && email ? (
+              {resolvedAddress && hasValidContact ? (
                 <PaymentButton
                   items={checkoutItems}
                   shippingAddress={resolvedAddress}
                   buyerState={buyerState}
                   email={email}
-                  phone={phone || undefined}
+                  customerName={resolvedAddress.name}
+                  customerPhone={contactPhone}
+                  phone={contactPhone || undefined}
                   paymentMethod={paymentMethod}
                 />
               ) : (
                 <p role="alert">
                   {!resolvedAddress
                     ? "Delivery address is missing. Go back to the address step."
-                    : "Account email is missing. Update your profile or sign in again."}
+                    : "Enter a valid email address to continue."}
                 </p>
               )}
 

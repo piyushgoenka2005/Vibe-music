@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { resolveBundleBySlug } from "@/lib/server/bundleService";
 import {
   getProductDetailBySlug,
   getProductSummaries,
@@ -15,14 +16,22 @@ export async function GET(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    return NextResponse.json({
-      product,
-      frequentlyBoughtTogether: await getProductSummaries(
-        product.frequentlyBoughtTogether
-      ),
-      similarProducts: await getProductSummaries(product.similarProductIds),
-      relatedProducts: await getRelatedProducts(slug),
-    });
+    const bundle = await resolveBundleBySlug(slug);
+
+    return NextResponse.json(
+      {
+        product,
+        bundle,
+        frequentlyBoughtTogether: bundle?.items ?? [],
+        similarProducts: await getProductSummaries(product.similarProductIds),
+        relatedProducts: await getRelatedProducts(slug),
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=45, stale-while-revalidate=120",
+        },
+      }
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unable to load product";

@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import { searchProducts } from "@/lib/server/productRepository";
+import {
+  enforceRateLimit,
+  handleRouteError,
+} from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import type { SearchBrand, SearchCategory } from "@/types/search";
+
+const DEFAULT_LIMIT = 24;
+const MAX_LIMIT = 48;
 
 function buildCategoryFacets(
   products: Awaited<ReturnType<typeof searchProducts>>
@@ -38,14 +46,28 @@ function buildBrandFacets(
   return Array.from(map.values());
 }
 
+function parsePositiveInt(value: string | null, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return Math.floor(parsed);
+}
+
 export async function GET(request: Request) {
   try {
+    const rateLimited = enforceRateLimit(request, "search", RATE_LIMITS.search);
+    if (rateLimited) return rateLimited;
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q")?.trim() ?? "";
     const category = searchParams.get("category") ?? undefined;
     const brand = searchParams.get("brand") ?? undefined;
     const sort = searchParams.get("sort") ?? undefined;
     const mode = searchParams.get("mode") ?? "results";
+    const page = parsePositiveInt(searchParams.get("page"), 1);
+    const limit = Math.min(
+      parsePositiveInt(searchParams.get("limit"), DEFAULT_LIMIT),
+      MAX_LIMIT
+    );
 
     const products = await searchProducts({ query, category, brand, sort });
     const categories = buildCategoryFacets(products);
@@ -66,16 +88,22 @@ export async function GET(request: Request) {
       });
     }
 
+    const total = products.length;
+    const offset = (page - 1) * limit;
+    const paginated = products.slice(offset, offset + limit);
+
     return NextResponse.json({
       query,
-      products,
+      products: paginated,
       categories,
       brands,
-      total: products.length,
+      total,
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      hasMore: offset + limit < total,
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to perform search";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleRouteError(error, "api/search");
   }
 }

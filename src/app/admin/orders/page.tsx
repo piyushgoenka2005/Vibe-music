@@ -148,10 +148,12 @@ function OrdersContent() {
                   <label>Update Status</label>
                   <select className="admin-select" value={newStatus} onChange={(e) => setNewStatus(e.target.value as OrderStatus)}>
                     <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
                     <option value="processing">Processing</option>
                     <option value="shipped">Shipped</option>
                     <option value="delivered">Delivered</option>
                     <option value="cancelled">Cancelled</option>
+                    <option value="refunded">Refunded</option>
                   </select>
                 </div>
                 <div className="admin-form-group">

@@ -1,4 +1,5 @@
 import { getAllProductSlugs, getCategories } from "@/services/catalogService";
+import { listPublicBlogSlugs } from "@/lib/server/blogService";
 
 export default async function sitemap() {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic.in";
@@ -35,5 +36,13 @@ export default async function sitemap() {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+  const blogSlugs = await listPublicBlogSlugs();
+  const blogRoutes = blogSlugs.map((entry) => ({
+    url: `${base}/blog/${entry.slug}`,
+    lastModified: new Date(entry.updatedAt),
+    changeFrequency: "weekly" as const,
+    priority: 0.65,
+  }));
+
+  return [...staticRoutes, ...categoryRoutes, ...productRoutes, ...blogRoutes];
 }

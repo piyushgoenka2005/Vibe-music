@@ -840,6 +840,28 @@
   flex-wrap: wrap;
 }
 
+.acct__card--spaced {
+  margin-bottom: 20px;
+}
+
+.acct__form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.acct__muted {
+  color: var(--acct-muted);
+  font-size: 14px;
+}
+
+.acct__error {
+  color: #c41e3a;
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+
 /* ── Quick list (overview preview) ── */
 .acct__preview-list {
   list-style: none;

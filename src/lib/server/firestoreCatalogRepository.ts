@@ -75,6 +75,8 @@ export function docToCatalogProduct(
     rating: num(data.rating),
     reviewCount: num(data.reviewCount),
     stock: num(data.stock, 100),
+    reservedStock: num(data.reservedStock, 0),
+    lowStockThreshold: num(data.lowStockThreshold, 10),
     sku: str(data.sku),
     status: (data.status as ProductStatus) ?? "active",
     featured: bool(data.featured),
@@ -100,6 +102,8 @@ export function catalogProductToDoc(product: CatalogProduct): DocumentData {
   return {
     ...product,
     stockQuantity: product.stock,
+    reservedStock: product.reservedStock ?? 0,
+    lowStockThreshold: product.lowStockThreshold ?? 10,
   };
 }
 
@@ -235,6 +239,82 @@ export async function fetchBrands(): Promise<Brand[]> {
     }
   });
   return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+const MAX_FETCH_DEFAULT = 12;
+
+export async function fetchProductsByBrandSlug(
+  brandSlug: string,
+  options: {
+    excludeProductId?: string;
+    excludeSlug?: string;
+    limit?: number;
+  } = {}
+): Promise<CatalogProduct[]> {
+  const limit = options.limit ?? MAX_FETCH_DEFAULT;
+  try {
+    const snap = await db()
+      .collection(PRODUCTS)
+      .where("brandSlug", "==", brandSlug)
+      .where("status", "==", "active")
+      .orderBy("createdAt", "desc")
+      .limit(limit + 4)
+      .get();
+
+    return snap.docs
+      .map((doc) => docToCatalogProduct(doc.id, doc.data()))
+      .filter((product): product is CatalogProduct => {
+        if (!product) return false;
+        if (options.excludeProductId && product.id === options.excludeProductId) {
+          return false;
+        }
+        if (options.excludeSlug && product.slug === options.excludeSlug) {
+          return false;
+        }
+        return true;
+      })
+      .slice(0, limit);
+  } catch {
+    const all = await fetchAllProducts();
+    return all
+      .filter(
+        (product) =>
+          product.brandSlug === brandSlug &&
+          product.status === "active" &&
+          product.id !== options.excludeProductId &&
+          product.slug !== options.excludeSlug
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(0, limit);
+  }
+}
+
+export async function fetchProductsByIds(
+  ids: string[],
+  includeInactive = false
+): Promise<CatalogProduct[]> {
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+  if (uniqueIds.length === 0) return [];
+
+  const firestore = db();
+  const refs = uniqueIds.map((id) => firestore.collection(PRODUCTS).doc(id));
+  const snaps = await firestore.getAll(...refs);
+
+  const byId = new Map<string, CatalogProduct>();
+  snaps.forEach((doc) => {
+    if (!doc.exists) return;
+    const product = docToCatalogProduct(doc.id, doc.data()!);
+    if (!product) return;
+    if (!includeInactive && product.status !== "active") return;
+    byId.set(doc.id, product);
+  });
+
+  return uniqueIds
+    .map((id) => byId.get(id))
+    .filter((product): product is CatalogProduct => Boolean(product));
 }
 
 export async function writeProduct(

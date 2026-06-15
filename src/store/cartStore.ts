@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useToastStore } from "@/store/toastStore";
-import type { Product } from "@/types/product";
+import { getCartLineId } from "@/lib/variants";
+import type { Product, ProductVariant } from "@/types/product";
 import {
   DEFAULT_GST_RATE,
   getDefaultGstRateForCategory,
@@ -9,7 +10,11 @@ import {
 } from "@/lib/gstCalculator";
 
 export interface CartItem {
+  lineId: string;
   productId: string;
+  variantId?: string;
+  variantSku?: string;
+  variantLabel?: string;
   slug?: string;
   name: string;
   brand: string;
@@ -33,9 +38,9 @@ interface CartState {
   couponDiscount: number;
   isApplyingCoupon: boolean;
   isUpdating: boolean;
-  addItem: (product: Product, quantity?: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addItem: (product: Product, quantity?: number, variant?: ProductVariant) => void;
+  removeItem: (lineId: string) => void;
+  updateQuantity: (lineId: string, quantity: number) => void;
   clearCart: () => void;
   itemCount: () => number;
   subtotal: () => number;
@@ -49,16 +54,29 @@ interface CartState {
   setUpdating: (value: boolean) => void;
 }
 
-function productToCartItem(product: Product, quantity: number): CartItem {
+function productToCartItem(
+  product: Product,
+  quantity: number,
+  variant?: ProductVariant
+): CartItem {
+  const variantId = variant?.id;
+  const lineId = getCartLineId(product.id, variantId);
+  const image =
+    variant?.images?.[0] || product.image;
+
   return {
+    lineId,
     productId: product.id,
+    variantId,
+    variantSku: variant?.sku,
+    variantLabel: variant?.label,
     slug: product.slug,
-    name: product.name,
+    name: variant?.label ? `${product.name} — ${variant.label}` : product.name,
     brand: product.brand,
-    price: product.price,
+    price: variant?.price ?? product.price,
     gstRate: product.gstRate ?? getDefaultGstRateForCategory(product.categorySlug),
     imageColor: product.imageColor,
-    image: product.image,
+    image,
     quantity,
   };
 }
@@ -73,34 +91,36 @@ export const useCartStore = create<CartState>()(
       isApplyingCoupon: false,
       isUpdating: false,
 
-      addItem: (product, quantity = 1) => {
+      addItem: (product, quantity = 1, variant) => {
         const qty = Math.max(1, quantity);
+        const lineId = getCartLineId(product.id, variant?.id);
         set((state) => {
-          const existing = state.items.find(
-            (item) => item.productId === product.id
-          );
+          const existing = state.items.find((item) => item.lineId === lineId);
           if (existing) {
             return {
               items: state.items.map((item) =>
-                item.productId === product.id
+                item.lineId === lineId
                   ? { ...item, quantity: item.quantity + qty }
                   : item
               ),
             };
           }
           return {
-            items: [...state.items, productToCartItem(product, qty)],
+            items: [
+              ...state.items,
+              productToCartItem(product, qty, variant),
+            ],
           };
         });
         useToastStore
           .getState()
-          .show(`${product.name} added to cart`);
+          .show(`${variant?.label ?? product.name} added to cart`);
       },
 
-      removeItem: (productId) => {
-        const item = get().items.find((i) => i.productId === productId);
+      removeItem: (lineId) => {
+        const item = get().items.find((i) => i.lineId === lineId);
         set((state) => ({
-          items: state.items.filter((i) => i.productId !== productId),
+          items: state.items.filter((i) => i.lineId !== lineId),
         }));
         if (item) {
           useToastStore
@@ -109,16 +129,16 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      updateQuantity: (productId, quantity) => {
+      updateQuantity: (lineId, quantity) => {
         const qty = Math.max(0, Math.min(99, quantity));
         if (qty === 0) {
-          get().removeItem(productId);
+          get().removeItem(lineId);
           return;
         }
         set({ isUpdating: true });
         set((state) => ({
           items: state.items.map((item) =>
-            item.productId === productId ? { ...item, quantity: qty } : item
+            item.lineId === lineId ? { ...item, quantity: qty } : item
           ),
         }));
         window.setTimeout(() => set({ isUpdating: false }), 200);
@@ -189,6 +209,20 @@ export const useCartStore = create<CartState>()(
         couponCode: state.couponCode,
         couponDiscount: state.couponDiscount,
       }),
+      migrate: (persisted: unknown) => {
+        const state = persisted as { items?: CartItem[] };
+        if (!state?.items) return persisted as CartState;
+        return {
+          ...state,
+          items: state.items.map((item) => ({
+            ...item,
+            lineId:
+              item.lineId ??
+              getCartLineId(item.productId, item.variantId),
+          })),
+        };
+      },
+      version: 2,
     }
   )
 );

@@ -7,6 +7,7 @@ import { useRazorpay } from "@/hooks/useRazorpay";
 import {
   createCodOrder,
   createPaymentOrder,
+  releaseOrderReservation,
   verifyPayment,
 } from "@/services/orderService";
 import { useCartStore } from "@/store/cartStore";
@@ -19,6 +20,8 @@ export interface PaymentButtonProps {
   shippingAddress: ShippingAddress;
   buyerState: string;
   email: string;
+  customerName?: string;
+  customerPhone?: string;
   phone?: string;
   paymentMethod: "razorpay" | "cod";
   disabled?: boolean;
@@ -29,6 +32,8 @@ export default function PaymentButton({
   shippingAddress,
   buyerState,
   email,
+  customerName,
+  customerPhone,
   phone,
   paymentMethod,
   disabled = false,
@@ -49,18 +54,31 @@ export default function PaymentButton({
     return {
       items: items.map((item) => ({
         productId: item.productId,
+        variantId: item.variantId,
+        variantSku: item.variantSku,
+        variantLabel: item.variantLabel,
         name: item.name,
         quantity: item.quantity,
         price: item.price,
         gstRate: item.gstRate,
       })),
       email,
+      customerName: customerName ?? shippingAddress.name,
+      customerPhone: customerPhone ?? shippingAddress.phone,
       couponCode,
       couponDiscount,
       shippingAddress,
       paymentMethod,
       buyerState,
     };
+  }
+
+  function successUrl(orderId: string): string {
+    const params = new URLSearchParams({
+      orderId,
+      email,
+    });
+    return `/checkout/success?${params.toString()}`;
   }
 
   async function handleCodPayment() {
@@ -70,7 +88,7 @@ export default function PaymentButton({
       const { orderId } = await createCodOrder(payload);
       clearCart();
       showToast("Order placed successfully!", "success");
-      router.push(`/checkout/success?orderId=${orderId}`);
+      router.push(successUrl(orderId));
     } catch (err) {
       showToast(
         err instanceof Error ? err.message : "Unable to place COD order",
@@ -83,9 +101,12 @@ export default function PaymentButton({
 
   async function handleRazorpayPayment() {
     setIsProcessing(true);
+    let pendingOrderId: string | null = null;
+
     try {
       const payload = await buildPayload();
       const orderResponse = await createPaymentOrder(payload);
+      pendingOrderId = orderResponse.orderId;
 
       const response = await openCheckout({
         key: orderResponse.keyId,
@@ -107,6 +128,7 @@ export default function PaymentButton({
       });
 
       if (!response) {
+        await releaseOrderReservation(orderResponse.orderId).catch(() => undefined);
         showToast("Payment cancelled or failed", "error");
         return;
       }
@@ -120,8 +142,11 @@ export default function PaymentButton({
 
       clearCart();
       showToast("Payment successful!", "success");
-      router.push(`/checkout/success?orderId=${orderResponse.orderId}`);
+      router.push(successUrl(orderResponse.orderId));
     } catch (err) {
+      if (pendingOrderId) {
+        await releaseOrderReservation(pendingOrderId).catch(() => undefined);
+      }
       showToast(
         err instanceof Error ? err.message : "Payment failed",
         "error"

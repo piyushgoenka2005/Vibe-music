@@ -1,11 +1,15 @@
 import type { GSTRate, GSTInvoiceData } from "@/lib/gstCalculator";
 
+import type { OrderInventoryStatus } from "@/types/inventory";
+
 export type OrderStatus =
   | "pending"
+  | "confirmed"
   | "processing"
   | "shipped"
   | "delivered"
-  | "cancelled";
+  | "cancelled"
+  | "refunded";
 
 export type PaymentStatus =
   | "pending"
@@ -29,6 +33,9 @@ export interface ShippingAddress {
 
 export interface OrderItem {
   productId: string;
+  variantId?: string;
+  variantSku?: string;
+  variantLabel?: string;
   name: string;
   quantity: number;
   /** Unit price excluding GST. */
@@ -45,6 +52,11 @@ export interface Order {
   id: string;
   userId?: string;
   email: string;
+  /** Customer display name (shipping name or guest name). */
+  customerName?: string;
+  /** Customer phone for guest orders and notifications. */
+  customerPhone?: string;
+  isGuestOrder?: boolean;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
@@ -64,6 +76,13 @@ export interface Order {
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
+  razorpayRefundId?: string | null;
+  inventoryStatus?: OrderInventoryStatus;
+  couponUsageApplied?: boolean;
+  paymentCompletedAt?: string;
+  paymentSource?: "client_verify" | "webhook";
+  paymentFailureReason?: string | null;
+  refundedAt?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -71,12 +90,17 @@ export interface Order {
 export interface CreateOrderPayload {
   items: Array<{
     productId: string;
+    variantId?: string;
+    variantSku?: string;
+    variantLabel?: string;
     name: string;
     quantity: number;
     price: number;
     gstRate: GSTRate;
   }>;
   email: string;
+  customerName?: string;
+  customerPhone?: string;
   couponCode?: string | null;
   couponDiscount: number;
   shippingAddress: ShippingAddress;

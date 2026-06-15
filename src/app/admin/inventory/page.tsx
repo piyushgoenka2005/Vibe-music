@@ -77,15 +77,17 @@ function InventoryContent() {
         ) : (
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>Product</th><th>SKU</th><th>Stock</th><th>Threshold</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Product</th><th>SKU</th><th>On Hand</th><th>Reserved</th><th>Available</th><th>Threshold</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 {inventory.map((item: InventoryRecord) => (
                   <tr key={item.productId}>
                     <td>{item.productName}</td>
                     <td>{item.sku ?? "—"}</td>
                     <td>{item.stockQuantity}</td>
+                    <td>{item.reservedQuantity ?? 0}</td>
+                    <td>{item.availableQuantity ?? item.stockQuantity}</td>
                     <td>{item.lowStockThreshold}</td>
-                    <td><StatusBadge status={item.stockQuantity <= 0 ? "out-of-stock" : item.stockQuantity <= item.lowStockThreshold ? "limited" : "in-stock"} /></td>
+                    <td><StatusBadge status={item.availableQuantity !== undefined && item.availableQuantity <= 0 ? "out-of-stock" : item.availableQuantity !== undefined && item.availableQuantity <= item.lowStockThreshold ? "limited" : "in-stock"} /></td>
                     <td>
                       <button type="button" className="admin-btn admin-btn--ghost" onClick={() => { setAdjustProduct(item); setNewQty(item.stockQuantity); }}>Adjust</button>
                     </td>

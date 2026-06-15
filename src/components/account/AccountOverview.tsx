@@ -13,7 +13,7 @@ import {
 import { ROUTES } from "@/lib/routes";
 import { useAuthStore } from "@/store/authStore";
 import { useWishlistStore } from "@/store/wishlistStore";
-import { useAccountProfileStore } from "@/store/accountProfileStore";
+import { useAddresses } from "@/hooks/useAddresses";
 import { formatCurrency } from "@/utils/currency";
 import { fetchUserOrders } from "@/services/orderService";
 import type { Order } from "@/types/order";
@@ -29,7 +29,7 @@ export default function AccountOverview() {
   const user = useAuthStore((s) => s.user);
   const wishlistCount = useWishlistStore((s) => s.items.length);
   const wishlistItems = useWishlistStore((s) => s.items);
-  const addresses = useAccountProfileStore((s) => s.addresses);
+  const { addresses, isLoading: addressesLoading } = useAddresses();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
@@ -75,7 +75,7 @@ export default function AccountOverview() {
     {
       href: ROUTES.accountAddresses,
       label: "Saved Addresses",
-      value: addresses.length,
+      value: addressesLoading ? "…" : addresses.length,
       icon: MapPin,
       variant: "green" as const,
     },

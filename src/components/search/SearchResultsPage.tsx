@@ -82,7 +82,7 @@ export default function SearchResultsPage({
             {productCount === 0 ? (
               <SearchEmptyState query={query} />
             ) : (
-              <SearchResults products={results.products} />
+              <SearchResults query={query} products={results.products} />
             )}
           </div>
         </div>

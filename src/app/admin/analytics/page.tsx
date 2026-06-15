@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatCard, LoadingState, formatCurrency } from "@/components/admin/AdminUi";
+import SearchAnalyticsPanel from "@/components/admin/SearchAnalyticsPanel";
 
 function AnalyticsContent() {
   const [period, setPeriod] = useState("30d");
@@ -15,6 +16,15 @@ function AnalyticsContent() {
     queryFn: async () => {
       const res = await fetch(`/api/admin/analytics?period=${period}`);
       if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+
+  const { data: webhookData, isLoading: webhooksLoading } = useQuery({
+    queryKey: ["admin-payment-webhooks"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/payments/webhooks?logs=true");
+      if (!res.ok) throw new Error("Failed to load webhook metrics");
       return res.json();
     },
   });
@@ -38,6 +48,15 @@ function AnalyticsContent() {
         <StatCard label="Total Revenue" value={report.totalRevenue} format="currency" />
         <StatCard label="Total Orders" value={report.totalOrders} />
         <StatCard label="Avg Order Value" value={Math.round(report.averageOrderValue)} format="currency" />
+      </div>
+
+      <div className="admin-panel" style={{ marginTop: "1.5rem" }}>
+        <div className="admin-panel__header">
+          <h2 className="admin-panel__title">Search Analytics</h2>
+        </div>
+        <div className="admin-panel__body">
+          <SearchAnalyticsPanel period={period} />
+        </div>
       </div>
 
       <div className="admin-grid-2" style={{ marginTop: "1.5rem" }}>
@@ -80,6 +99,61 @@ function AnalyticsContent() {
               <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>{count}</div>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="admin-panel" style={{ marginTop: "1.5rem" }}>
+        <div className="admin-panel__header">
+          <h2 className="admin-panel__title">Razorpay Webhooks</h2>
+        </div>
+        <div className="admin-panel__body">
+          {webhooksLoading ? (
+            <LoadingState message="Loading webhook metrics…" />
+          ) : webhookData?.metrics ? (
+            <>
+              <div className="admin-stat-grid" style={{ marginBottom: "1rem" }}>
+                <StatCard label="Total Events" value={webhookData.metrics.totalEvents} />
+                <StatCard label="Processed" value={webhookData.metrics.processed} />
+                <StatCard label="Failed" value={webhookData.metrics.failed} />
+                <StatCard label="Last 24h" value={webhookData.metrics.last24Hours.total} />
+              </div>
+
+              {webhookData.metrics.recentFailures?.length > 0 ? (
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Event</th>
+                        <th>Order</th>
+                        <th>Error</th>
+                        <th>Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {webhookData.metrics.recentFailures.map((row: {
+                        id: string;
+                        eventType: string;
+                        orderId?: string | null;
+                        error?: string | null;
+                        createdAt: string;
+                      }) => (
+                        <tr key={row.id}>
+                          <td>{row.eventType}</td>
+                          <td>{row.orderId ?? "—"}</td>
+                          <td>{row.error ?? "—"}</td>
+                          <td>{new Date(row.createdAt).toLocaleString("en-IN")}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="admin-empty">No recent webhook failures.</div>
+              )}
+            </>
+          ) : (
+            <div className="admin-empty">Webhook metrics unavailable.</div>
+          )}
         </div>
       </div>
     </>

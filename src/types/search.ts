@@ -27,6 +27,7 @@ export interface SearchSuggestion {
   label: string;
   sublabel?: string;
   href: string;
+  productSlug?: string;
 }
 
 export interface SearchSuggestionGroups {
@@ -42,6 +43,10 @@ export interface SearchResultsData {
   categories: SearchCategory[];
   brands: SearchBrand[];
   total: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+  hasMore?: boolean;
 }
 
 export type SearchStatus = "idle" | "loading" | "success" | "error";
@@ -50,8 +55,13 @@ export interface SearchAnalyticsEvent {
   query: string;
   timestamp: number;
   resultCount: number;
-  source: "autocomplete" | "results-page" | "submit";
+  source: SearchAnalyticsSource;
 }
+
+export type SearchAnalyticsSource =
+  | "autocomplete"
+  | "results-page"
+  | "submit";
 
 export interface SearchFiltersState {
   category: string;

@@ -13,6 +13,8 @@ import {
   updateDisplayName as updateDisplayNameService,
 } from "@/services/auth/auth.service";
 import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
+import { mergeGuestCartOnAuth, snapshotGuestCart } from "@/lib/cart/mergeGuestCart";
+import { useCartStore } from "@/store/cartStore";
 import type { AppUser, SignInInput, SignUpInput } from "@/types/user";
 
 interface AuthState {
@@ -48,6 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const user = await signUp(input);
       const idToken = await getCurrentIdToken(true);
       await syncServerSession(idToken);
+      mergeGuestCartOnAuth();
       set({ user, isAuthenticated: true, isLoading: false });
       return user;
     } catch (error) {
@@ -65,6 +68,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const user = await signIn(input);
       const idToken = await getCurrentIdToken(true);
       await syncServerSession(idToken);
+      mergeGuestCartOnAuth();
       set({ user, isAuthenticated: true, isLoading: false });
       return user;
     } catch (error) {
@@ -82,6 +86,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const user = await signInWithGoogle();
       const idToken = await getCurrentIdToken(true);
       await syncServerSession(idToken);
+      mergeGuestCartOnAuth();
       set({ user, isAuthenticated: true, isLoading: false });
       return user;
     } catch (error) {
@@ -96,6 +101,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     set({ isLoading: true, error: null });
     try {
+      snapshotGuestCart(useCartStore.getState().items);
       await syncServerSession(null);
       await firebaseLogout();
       set({

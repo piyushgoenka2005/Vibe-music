@@ -1,0 +1,66 @@
+import Link from "next/link";
+import { formatCurrency } from "@/utils/currency";
+import { resolveLinkHref } from "@/lib/routes";
+import type { HomepageProductItem } from "@/types/homepage";
+
+interface CarouselProductCardProps {
+  item: HomepageProductItem;
+  sectionKey: string;
+}
+
+function formatRatingAttribute(rating: number): string {
+  const rounded = Math.round(rating * 2) / 2;
+  return Number.isInteger(rounded) ? rounded.toFixed(1) : String(rounded);
+}
+
+export default function CarouselProductCard({
+  item,
+  sectionKey,
+}: CarouselProductCardProps) {
+  const ratingAttr = formatRatingAttribute(item.rating);
+  const displayPrice = item.salePrice ?? item.price;
+
+  return (
+    <div className="product-suggest__item-wrap">
+      <Link
+        href={resolveLinkHref(item.href)}
+        className="product-suggest__item"
+        data-hp-section={sectionKey}
+        data-id={item.id}
+      >
+        <div className="product-suggest__item-img">
+          {item.image ? (
+            <img src={item.image} alt={item.imageAlt} loading="lazy" />
+          ) : null}
+        </div>
+        <div className="product-suggest__item-content">
+          <div className="product-suggest__name">
+            <strong>{item.brand}</strong> {item.name}
+          </div>
+          <div className="product-suggest__item-price">
+            {formatCurrency(displayPrice)}
+          </div>
+          <div className="product-suggest__item-reviews">
+            <span
+              className="rating__stars"
+              data-rated={ratingAttr}
+              aria-label={`Rated ${item.rating} out of 5`}
+            >
+              <i></i>
+              <i></i>
+              <i></i>
+              <i></i>
+              <i></i>
+              <span className="rating__text">
+                Rated {item.rating} out of 5
+              </span>
+            </span>
+            <span className="product-suggest__item-review-count-inline">
+              ({item.reviewCount.toLocaleString("en-IN")})
+            </span>
+          </div>
+        </div>
+      </Link>
+    </div>
+  );
+}

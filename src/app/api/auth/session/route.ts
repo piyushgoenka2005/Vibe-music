@@ -5,6 +5,7 @@ import {
 } from "@/lib/auth/protected-routes";
 import { createSessionCookie } from "@/lib/auth/server-session";
 import { getAdminAuth } from "@/lib/firebase/admin";
+import { linkGuestOrdersToUser } from "@/lib/server/orderService";
 
 export async function POST(request: Request) {
   try {
@@ -15,8 +16,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing idToken" }, { status: 400 });
     }
 
-    await getAdminAuth().verifyIdToken(idToken);
+    const decoded = await getAdminAuth().verifyIdToken(idToken);
     const sessionCookie = await createSessionCookie(idToken);
+
+    if (decoded.uid && decoded.email) {
+      await linkGuestOrdersToUser(decoded.uid, decoded.email).catch((error) => {
+        console.error("[auth/session] Failed to link guest orders:", error);
+      });
+    }
 
     const response = NextResponse.json({ ok: true });
     response.cookies.set({

@@ -7,6 +7,7 @@ import type {
   ProductSpec,
   ProductVariant,
   ProductVideo,
+  VariantAttribute,
 } from "@/types/product";
 
 export type ProductStatus = "active" | "draft" | "archived";
@@ -25,6 +26,8 @@ export interface CatalogProduct {
   rating: number;
   reviewCount: number;
   stock: number;
+  reservedStock?: number;
+  lowStockThreshold?: number;
   sku: string;
   status: ProductStatus;
   featured: boolean;
@@ -69,6 +72,7 @@ export interface CreateProductInput {
   price: number;
   originalPrice?: number;
   stock?: number;
+  lowStockThreshold?: number;
   sku?: string;
   status?: ProductStatus;
   featured?: boolean;
@@ -86,6 +90,16 @@ export interface CreateProductInput {
   imageColor?: string;
   image?: string;
   gstRate?: 5 | 12 | 18 | 28;
+  variants?: Array<{
+    id?: string;
+    label?: string;
+    sku?: string;
+    price?: number;
+    stock?: number;
+    attributes?: VariantAttribute[];
+    images?: string[];
+    isDefault?: boolean;
+  }>;
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {

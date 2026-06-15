@@ -2,11 +2,11 @@ export function StatusBadge({ status }: { status: string }) {
   const normalized = status.toLowerCase().replace(/_/g, " ");
   let variant = "muted";
 
-  if (["paid", "delivered", "active", "approved", "in-stock"].includes(status)) {
+  if (["paid", "delivered", "active", "approved", "in-stock", "confirmed", "published"].includes(status)) {
     variant = "success";
-  } else if (["pending", "processing", "limited", "cod_pending"].includes(status)) {
+  } else if (["pending", "processing", "limited", "cod_pending", "scheduled"].includes(status)) {
     variant = "warning";
-  } else if (["cancelled", "failed", "rejected", "out-of-stock", "archived"].includes(status)) {
+  } else if (["cancelled", "failed", "rejected", "out-of-stock", "archived", "refunded"].includes(status)) {
     variant = "danger";
   } else if (["shipped", "draft"].includes(status)) {
     variant = "info";

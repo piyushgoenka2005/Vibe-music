@@ -1,30 +1,56 @@
 import { getProductById } from "@/services/catalogService";
+import { getVariantFromProduct } from "@/lib/server/variantService";
 import { getDefaultGstRateForCategory, type GSTRate } from "@/lib/gstCalculator";
 import { validateCoupon } from "@/lib/server/couponService";
+import { validateStockAvailability } from "@/lib/server/inventoryService";
 import type { CreateOrderPayload } from "@/types/order";
 
 export async function resolveOrderItemsFromFirestore(
   items: CreateOrderPayload["items"]
 ): Promise<CreateOrderPayload["items"]> {
-  return Promise.all(
+  const resolved = await Promise.all(
     items.map(async (item) => {
       const product = await getProductById(item.productId);
-      if (product && product.status === "active") {
-        const salePrice =
-          product.originalPrice > product.price ? product.price : product.price;
-        return {
-          productId: item.productId,
-          name: product.name,
-          quantity: item.quantity,
-          price: salePrice,
-          gstRate: (product.gstRate ??
-            item.gstRate ??
-            getDefaultGstRateForCategory(product.category)) as GSTRate,
-        };
+      if (!product || product.status !== "active") {
+        throw new Error(
+          `Product "${item.name}" is unavailable or no longer active`
+        );
       }
-      return item;
+
+      const variant = getVariantFromProduct(product, item.variantId);
+      if (item.variantId && !variant) {
+        throw new Error(`Selected variant for "${product.name}" is no longer available`);
+      }
+
+      const unitPrice = variant?.price ?? product.price;
+      const salePrice =
+        product.originalPrice > unitPrice ? unitPrice : unitPrice;
+
+      return {
+        productId: item.productId,
+        variantId: variant?.id,
+        variantSku: variant?.sku ?? item.variantSku,
+        variantLabel: variant?.label ?? item.variantLabel,
+        name: variant?.label ? `${product.name} — ${variant.label}` : product.name,
+        quantity: item.quantity,
+        price: salePrice,
+        gstRate: (product.gstRate ??
+          item.gstRate ??
+          getDefaultGstRateForCategory(product.category)) as GSTRate,
+      };
     })
   );
+
+  await validateStockAvailability(
+    resolved.map((item) => ({
+      productId: item.productId,
+      variantId: item.variantId,
+      quantity: item.quantity,
+      name: item.name,
+    }))
+  );
+
+  return resolved;
 }
 
 export async function resolveCouponDiscount(

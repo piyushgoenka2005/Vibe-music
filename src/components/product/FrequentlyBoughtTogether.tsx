@@ -3,27 +3,39 @@
 import Link from "next/link";
 import { formatCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
-import type { Product, ProductDetail } from "@/types/product";
+import type { ResolvedProductBundle } from "@/types/bundle";
+import type { Product, ProductDetail, ProductVariant } from "@/types/product";
 
 interface FrequentlyBoughtTogetherProps {
   mainProduct: ProductDetail;
-  products: Product[];
+  mainVariant?: ProductVariant;
+  bundle: ResolvedProductBundle;
 }
 
 export default function FrequentlyBoughtTogether({
   mainProduct,
-  products,
+  mainVariant,
+  bundle,
 }: FrequentlyBoughtTogetherProps) {
   const addItem = useCartStore((s) => s.addItem);
 
-  if (products.length === 0) return null;
+  if (bundle.items.length === 0) return null;
 
-  const bundle = [mainProduct, ...products];
-  const total = bundle.reduce((sum, p) => sum + p.price, 0);
-  const bundlePrice = Math.round(total * 0.92 * 100) / 100;
+  const mainLine: Product = {
+    ...mainProduct,
+    price: mainVariant?.price ?? mainProduct.price,
+    image: mainVariant?.images?.[0] || mainProduct.image,
+  };
+
+  const bundleProducts = [mainLine, ...bundle.items];
+  const subtotal = bundleProducts.reduce((sum, product) => sum + product.price, 0);
+  const bundlePrice =
+    Math.round(subtotal * (1 - bundle.discountPercent / 100) * 100) / 100;
+  const savings = Math.round((subtotal - bundlePrice) * 100) / 100;
 
   function addBundle() {
-    bundle.forEach((p) => addItem(p, 1));
+    addItem(mainLine, 1, mainVariant);
+    bundle.items.forEach((product) => addItem(product, 1));
   }
 
   return (
@@ -31,7 +43,7 @@ export default function FrequentlyBoughtTogether({
       <h2 className="pdp-section__title">Frequently Bought Together</h2>
       <div className="pdp-fbt">
         <div className="pdp-fbt__items">
-          {bundle.map((product, index) => (
+          {bundleProducts.map((product, index) => (
             <span key={product.id} style={{ display: "contents" }}>
               {index > 0 ? (
                 <span className="pdp-fbt__plus" aria-hidden="true">
@@ -40,13 +52,21 @@ export default function FrequentlyBoughtTogether({
               ) : null}
               <Link
                 href={`/product/${product.slug}`}
-                className="pdp-cross-sell__card"
-                style={{ width: 160 }}
+                className="pdp-cross-sell__card pdp-fbt__card"
               >
-                <div
-                  className="pdp-cross-sell__swatch"
-                  style={{ backgroundColor: product.imageColor }}
-                />
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt=""
+                    className="pdp-fbt__image"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div
+                    className="pdp-cross-sell__swatch"
+                    style={{ backgroundColor: product.imageColor }}
+                  />
+                )}
                 <div className="pdp-cross-sell__brand">{product.brand}</div>
                 <div className="pdp-cross-sell__name">{product.name}</div>
                 <div className="pdp-cross-sell__price">
@@ -56,15 +76,24 @@ export default function FrequentlyBoughtTogether({
             </span>
           ))}
         </div>
-        <div>
-          <p style={{ margin: "0 0 8px", fontSize: 14, color: "#807f7e" }}>
-            Bundle price:{" "}
-            <strong style={{ color: "#0072ba", fontSize: 20 }}>
-              {formatCurrency(bundlePrice)}
-            </strong>
+        <div className="pdp-fbt__summary">
+          <p className="pdp-fbt__subtotal">
+            Separate price:{" "}
+            <span className="pdp-fbt__subtotal-value">
+              {formatCurrency(subtotal)}
+            </span>
           </p>
+          <p className="pdp-fbt__bundle-price">
+            Bundle price ({bundle.discountPercent}% off):{" "}
+            <strong>{formatCurrency(bundlePrice)}</strong>
+          </p>
+          {savings > 0 ? (
+            <p className="pdp-fbt__savings">
+              You save {formatCurrency(savings)}
+            </p>
+          ) : null}
           <button type="button" className="pdp-btn pdp-btn--primary" onClick={addBundle}>
-            Add Bundle to Cart
+            Add All to Cart
           </button>
         </div>
       </div>

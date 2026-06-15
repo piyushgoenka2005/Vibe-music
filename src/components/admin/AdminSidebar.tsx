@@ -15,6 +15,8 @@ import {
   Settings,
   LogOut,
   FileText,
+  ImageIcon,
+  LayoutTemplate,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -31,11 +33,13 @@ const NAV_ITEMS = [
   { href: ROUTES.adminOrders, label: "Orders", icon: ShoppingCart, permission: "orders:read" },
   { href: ROUTES.adminCustomers, label: "Customers", icon: Users, permission: "customers:read" },
   { href: ROUTES.adminCoupons, label: "Coupons", icon: Ticket, permission: "coupons:read" },
+  { href: ROUTES.adminBanners, label: "Banners", icon: ImageIcon, permission: "banners:read" },
+  { href: ROUTES.adminHomepage, label: "Homepage", icon: LayoutTemplate, permission: "homepage:read" },
   { href: ROUTES.adminReviews, label: "Reviews", icon: Star, permission: "reviews:read" },
   { href: ROUTES.adminInventory, label: "Inventory", icon: Warehouse, permission: "inventory:read" },
   { href: ROUTES.adminAnalytics, label: "Analytics", icon: BarChart3, permission: "analytics:read" },
   { href: ROUTES.adminSettings, label: "Settings", icon: Settings, permission: "settings:read" },
-  { href: ROUTES.adminBlog, label: "Blog", icon: FileText, permission: "settings:read" },
+  { href: ROUTES.adminBlog, label: "Blog", icon: FileText, permission: "blog:read" },
 ] as const;
 
 interface AdminSidebarProps {

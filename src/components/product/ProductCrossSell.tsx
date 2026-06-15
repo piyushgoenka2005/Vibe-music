@@ -23,11 +23,20 @@ export default function ProductCrossSell({
             href={`/product/${product.slug}`}
             className="pdp-cross-sell__card"
           >
-            <div
-              className="pdp-cross-sell__swatch"
-              style={{ backgroundColor: product.imageColor }}
-              aria-hidden="true"
-            />
+            {product.image ? (
+              <img
+                src={product.image}
+                alt=""
+                className="pdp-fbt__image"
+                loading="lazy"
+              />
+            ) : (
+              <div
+                className="pdp-cross-sell__swatch"
+                style={{ backgroundColor: product.imageColor }}
+                aria-hidden="true"
+              />
+            )}
             <div className="pdp-cross-sell__brand">{product.brand}</div>
             <div className="pdp-cross-sell__name">{product.name}</div>
             <div className="pdp-cross-sell__price">

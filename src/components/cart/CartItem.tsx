@@ -35,6 +35,9 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
       )}
       <div>
         <div className="cart-item__brand">{item.brand}</div>
+        {item.variantLabel ? (
+          <div className="cart-item__variant">{item.variantLabel}</div>
+        ) : null}
         <Link
           href={`/product/${slug}`}
           className="cart-item__name"
@@ -54,7 +57,7 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
           <div className="cart-qty" role="group" aria-label="Quantity">
             <button
               type="button"
-              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+              onClick={() => updateQuantity(item.lineId, item.quantity - 1)}
               aria-label="Decrease quantity"
             >
               −
@@ -62,7 +65,7 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
             <span aria-live="polite">{item.quantity}</span>
             <button
               type="button"
-              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+              onClick={() => updateQuantity(item.lineId, item.quantity + 1)}
               aria-label="Increase quantity"
             >
               +
@@ -71,7 +74,7 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
           <button
             type="button"
             className="cart-item__remove"
-            onClick={() => removeItem(item.productId)}
+            onClick={() => removeItem(item.lineId)}
           >
             Remove
           </button>

@@ -1,14 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
-import { useRouter } from "next/navigation";
 import { useProduct } from "@/hooks/useProduct";
 import { useCartStore } from "@/store/cartStore";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import { useWishlistStore } from "@/store/wishlistStore";
-import type { ProductVariant } from "@/types/product";
+import {
+  attributeKey,
+  findVariantById,
+  findVariantBySelection,
+  getDefaultVariant,
+} from "@/lib/variants";
+import type { ProductImage, ProductVariant } from "@/types/product";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import ShippingEstimator from "./ShippingEstimator";
@@ -22,8 +28,35 @@ interface ProductDetailPageProps {
   slug: string;
 }
 
+function buildInitialSelection(variant: ProductVariant): Record<string, string> {
+  const selection: Record<string, string> = {};
+  variant.attributes.forEach((attr) => {
+    selection[attributeKey(attr)] = attr.value;
+  });
+  return selection;
+}
+
+function buildGalleryImages(
+  productImages: ProductImage[],
+  variant: ProductVariant,
+  productName: string,
+  imageColor: string
+): ProductImage[] {
+  if (!variant.images.length) return productImages;
+
+  const variantImages = variant.images.map((src, index) => ({
+    id: `${variant.id}-img-${index}`,
+    alt: `${productName} — ${variant.label}`,
+    color: imageColor,
+    src,
+  }));
+
+  return variantImages;
+}
+
 export default function ProductDetailPage({ slug }: ProductDetailPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const tabsRef = useRef<HTMLDivElement>(null);
   const { data, isLoading, isError } = useProduct(slug);
   const addItem = useCartStore((s) => s.addItem);
@@ -34,19 +67,70 @@ export default function ProductDetailPage({ slug }: ProductDetailPageProps) {
     data ? s.has(data.product.id) : false
   );
 
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+  const catalogProduct = data?.product;
+  const variantFromQuery = searchParams.get("variant");
+
+  const defaultVariant = useMemo(() => {
+    if (!catalogProduct) return null;
+    return (
+      findVariantById(catalogProduct.variants, variantFromQuery) ??
+      getDefaultVariant(catalogProduct.variants)
+    );
+  }, [catalogProduct, variantFromQuery]);
+
+  const [variantOverride, setVariantOverride] = useState<ProductVariant | null>(null);
+  const [attributeOverride, setAttributeOverride] = useState<Record<string, string> | null>(
     null
   );
   const [quantity, setQuantity] = useState(1);
   const [tabOverride, setTabOverride] = useState<TabId | undefined>();
 
+  const selectedVariant = variantOverride ?? defaultVariant;
+  const attributeSelection =
+    attributeOverride ??
+    (selectedVariant ? buildInitialSelection(selectedVariant) : {});
+
   useEffect(() => {
-    if (data?.product) trackRecentlyViewed(data.product);
-  }, [data?.product, trackRecentlyViewed]);
+    if (catalogProduct) {
+      trackRecentlyViewed(catalogProduct);
+    }
+  }, [catalogProduct, trackRecentlyViewed]);
+
+  const galleryImages = useMemo(() => {
+    if (!catalogProduct || !selectedVariant) return [];
+    return buildGalleryImages(
+      catalogProduct.images,
+      selectedVariant,
+      catalogProduct.name,
+      catalogProduct.imageColor
+    );
+  }, [catalogProduct, selectedVariant]);
+
+  const updateVariantSelection = useCallback(
+    (key: string, value: string) => {
+      if (!catalogProduct) return;
+
+      const nextSelection = { ...attributeSelection, [key]: value };
+      const matched =
+        findVariantBySelection(catalogProduct.variants, nextSelection) ??
+        selectedVariant;
+
+      if (!matched) return;
+
+      setAttributeOverride(nextSelection);
+      setVariantOverride(matched);
+      setQuantity(1);
+
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("variant", matched.id);
+      router.replace(`/product/${slug}?${params.toString()}`, { scroll: false });
+    },
+    [attributeSelection, catalogProduct, router, searchParams, selectedVariant, slug]
+  );
 
   if (isLoading) return <ProductDetailSkeleton />;
 
-  if (isError || !data) {
+  if (isError || !data || !selectedVariant) {
     return (
       <div className="pdp">
         <p>Product not found.</p>
@@ -55,9 +139,8 @@ export default function ProductDetailPage({ slug }: ProductDetailPageProps) {
     );
   }
 
-  const { product, frequentlyBoughtTogether, similarProducts, relatedProducts } =
-    data;
-  const variant = selectedVariant ?? product.variants[0];
+  const variant = selectedVariant;
+  const { product, similarProducts, relatedProducts } = data;
 
   function scrollToReviews() {
     setTabOverride("reviews");
@@ -65,12 +148,12 @@ export default function ProductDetailPage({ slug }: ProductDetailPageProps) {
   }
 
   function handleAddToCart() {
-    addItem({ ...product, price: variant.price }, quantity);
+    addItem(product, quantity, variant);
     openCartDrawer();
   }
 
   function handleBuyNow() {
-    addItem({ ...product, price: variant.price }, quantity);
+    addItem(product, quantity, variant);
     router.push("/checkout");
   }
 
@@ -88,7 +171,7 @@ export default function ProductDetailPage({ slug }: ProductDetailPageProps) {
 
       <div className="pdp-main">
         <ProductGallery
-          images={product.images}
+          images={galleryImages}
           videos={product.videos}
           productName={product.name}
         />
@@ -97,7 +180,8 @@ export default function ProductDetailPage({ slug }: ProductDetailPageProps) {
             product={product}
             selectedVariant={variant}
             quantity={quantity}
-            onVariantChange={setSelectedVariant}
+            attributeSelection={attributeSelection}
+            onAttributeChange={updateVariantSelection}
             onQuantityChange={setQuantity}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
@@ -117,10 +201,13 @@ export default function ProductDetailPage({ slug }: ProductDetailPageProps) {
         />
       </div>
 
-      <FrequentlyBoughtTogether
-        mainProduct={product}
-        products={frequentlyBoughtTogether}
-      />
+      {data.bundle ? (
+        <FrequentlyBoughtTogether
+          mainProduct={product}
+          mainVariant={variant}
+          bundle={data.bundle}
+        />
+      ) : null}
       <ProductCrossSell title="Similar Products" products={similarProducts} />
       <ProductCrossSell title="Related Products" products={relatedProducts} />
     </div>

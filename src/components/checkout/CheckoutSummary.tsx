@@ -12,6 +12,9 @@ import type { GSTRate } from "@/lib/gstCalculator";
 
 export interface CheckoutSummaryItem {
   productId: string;
+  variantId?: string;
+  variantSku?: string;
+  variantLabel?: string;
   name: string;
   quantity: number;
   price: number;

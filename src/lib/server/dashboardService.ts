@@ -1,9 +1,12 @@
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import {
+  getInventoryStats,
+  getLowStockProducts as getInventoryLowStock,
+  getOutOfStockProducts,
+} from "@/lib/server/inventoryService";
 import { getAllProducts } from "@/services/catalogService";
 import type { DashboardStats, RevenueDataPoint } from "@/types/admin";
 import type { Order } from "@/types/order";
-
-const LOW_STOCK_THRESHOLD = 10;
 
 function parseOrder(doc: FirebaseFirestore.DocumentSnapshot): Order | null {
   const data = doc.data();
@@ -74,9 +77,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         : 0;
 
   let lowStockProducts = 0;
-  catalogProducts.forEach((product) => {
-    if (product.stock <= LOW_STOCK_THRESHOLD) lowStockProducts += 1;
-  });
+  let outOfStockProducts = 0;
+  const inventoryStats = await getInventoryStats();
+  lowStockProducts = inventoryStats.lowStock;
+  outOfStockProducts = inventoryStats.outOfStock;
 
   return {
     totalRevenue,
@@ -90,6 +94,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     ).length,
     cancelledOrders: orders.filter((o) => o.status === "cancelled").length,
     lowStockProducts,
+    outOfStockProducts,
     revenueChangePercent,
     ordersChangePercent,
   };
@@ -167,18 +172,11 @@ export async function getRecentCustomers(limit = 10) {
 }
 
 export async function getLowStockProducts(limit = 10) {
-  return (await getAllProducts(true))
-    .filter((product) => product.stock <= LOW_STOCK_THRESHOLD)
-    .sort((a, b) => a.stock - b.stock)
-    .slice(0, limit)
-    .map((product) => ({
-      id: product.id,
-      name: product.name,
-      sku: product.sku,
-      stockQuantity: product.stock,
-      lowStockThreshold: LOW_STOCK_THRESHOLD,
-      availability: product.availability,
-    }));
+  return getInventoryLowStock(limit);
+}
+
+export async function getOutOfStockProductList(limit = 10) {
+  return getOutOfStockProducts(limit);
 }
 
 export async function getTopProducts(limit = 5) {

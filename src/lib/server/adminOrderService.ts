@@ -1,4 +1,5 @@
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { releaseOrderInventory } from "@/lib/server/inventoryService";
 import type { Order, OrderStatus } from "@/types/order";
 
 export interface OrderTimelineEvent {
@@ -55,6 +56,12 @@ export async function updateOrderStatus(
   const orderRef = db.collection("orders").doc(orderId);
   const orderDoc = await orderRef.get();
   if (!orderDoc.exists) throw new Error("Order not found");
+
+  const existingOrder = { id: orderDoc.id, ...orderDoc.data() } as Order;
+
+  if (status === "cancelled" && existingOrder.status !== "cancelled") {
+    await releaseOrderInventory(existingOrder);
+  }
 
   const now = new Date().toISOString();
   const timelineEvent: OrderTimelineEvent = {

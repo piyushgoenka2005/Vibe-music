@@ -111,11 +111,6 @@ export function useSearch() {
       const next = (value ?? query).trim();
       if (next.length < MIN_QUERY_LENGTH) return;
       searchStore.addRecentSearch(next);
-      searchStore.trackSearch({
-        query: next,
-        resultCount: 0,
-        source: "submit",
-      });
       closeOverlay();
       router.push(`/search/results?q=${encodeURIComponent(next)}`);
     },
@@ -125,10 +120,19 @@ export function useSearch() {
   const selectSuggestion = useCallback(
     (suggestion: SearchSuggestion) => {
       searchStore.addRecentSearch(suggestion.label);
+      if (suggestion.type === "product" && suggestion.productSlug) {
+        searchStore.trackSearchClick({
+          query: query.trim() || suggestion.label,
+          productId: suggestion.id,
+          productSlug: suggestion.productSlug,
+          productName: suggestion.label,
+          source: "autocomplete",
+        });
+      }
       closeOverlay();
       router.push(suggestion.href);
     },
-    [closeOverlay, router]
+    [closeOverlay, query, router]
   );
 
   const moveActiveIndex = useCallback(

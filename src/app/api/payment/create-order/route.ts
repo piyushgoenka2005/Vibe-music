@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { createOrder } from "@/lib/server/orderService";
+import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
 import {
   resolveCouponDiscount,
   resolveOrderItemsFromFirestore,
@@ -46,6 +47,9 @@ export async function POST(request: Request) {
       ...body,
       items: resolvedItems,
       email: body.email.trim().toLowerCase(),
+      customerName: body.customerName?.trim() || body.shippingAddress.name?.trim(),
+      customerPhone:
+        body.customerPhone?.trim() || body.shippingAddress.phone?.trim(),
       buyerState: body.buyerState || body.shippingAddress.state,
       couponDiscount,
     };
@@ -56,6 +60,7 @@ export async function POST(request: Request) {
     );
 
     if (payload.paymentMethod === "cod") {
+      void sendOrderConfirmationEmail(order);
       return NextResponse.json({ orderId: order.id, order });
     }
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import { formatCurrency } from "@/utils/currency";
+import { optimizeImageUrl } from "@/lib/images";
 import type { Product } from "@/types/product";
 import type { ViewMode } from "@/types/filters";
 
@@ -58,7 +59,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           tabIndex={-1}
         >
           <img
-            src={product.image}
+            src={optimizeImageUrl(product.image, "productCard")}
             alt=""
             className="cat-product-card__image-photo"
           />

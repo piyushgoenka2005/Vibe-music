@@ -46,12 +46,67 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /inventory_logs/{logId} {
+      allow read, write: if false;
+    }
+
+    match /payment_logs/{logId} {
+      allow read, write: if false;
+    }
+
+    match /addresses/{addressId} {
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /homepage_sections/{sectionId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /homepage_section_items/{itemId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /product_bundles/{bundleId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /product_relations/{relationId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /blog_posts/{postId} {
+      allow read: if resource.data.status == 'published';
+      allow write: if false;
+    }
+
+    match /search_analytics_events/{eventId} {
+      allow read, write: if false;
+    }
+
     match /settings/{settingId} {
       allow read: if settingId == 'store';
       allow write: if false;
     }
 
     match /analytics/{docId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
       allow read, write: if false;
     }
   }

@@ -8,6 +8,7 @@ export const ROUTES = {  home: "/",
   cart: "/cart",
   checkout: "/checkout",
   checkoutSuccess: "/checkout/success",
+  trackOrder: "/track-order",
   account: "/account",
   accountOrders: "/account/orders",
   accountProfile: "/account/profile",
@@ -28,8 +29,11 @@ export const ROUTES = {  home: "/",
   adminReviews: "/admin/reviews",
   adminInventory: "/admin/inventory",
   adminAnalytics: "/admin/analytics",
+  adminBanners: "/admin/banners",
+  adminHomepage: "/admin/homepage",
   adminSettings: "/admin/settings",
   adminBlog: "/admin/blog",
+  blog: "/blog",
 } as const;
 
 export function categoryPath(slug: string): string {
@@ -49,7 +53,6 @@ const PLACEHOLDER_REDIRECTS: Record<string, string> = {
   "/categories": ROUTES.search,
   "/products": ROUTES.search,
   "/deals": `${ROUTES.searchResults}?q=deals`,
-  "/blog": ROUTES.adminBlog,
   "/wishlist": ROUTES.accountWishlist,
 };
 
@@ -95,7 +98,7 @@ const NAV_TOP_REDIRECTS: Record<string, string> = {
   "/giveaway": `${ROUTES.search}?q=giveaway`,
   "/financing": `${ROUTES.search}?q=financing`,
   "/integration": ROUTES.search,
-  "/tracking": ROUTES.accountOrders,
+  "/tracking": ROUTES.trackOrder,
 };
 
 const ACCOUNT_REDIRECTS: Record<string, string> = {
@@ -132,6 +135,7 @@ function isValidAppRoute(path: string): boolean {
   if (path.startsWith(`${ROUTES.searchResults}`)) return true;
   if (path === ROUTES.cart || path === ROUTES.checkout) return true;
   if (path.startsWith(`${ROUTES.checkout}/`)) return true;
+  if (path === ROUTES.trackOrder) return true;
   if (path === ROUTES.account) return true;
   if (path === ROUTES.accountOrders) return true;
   if (path === ROUTES.accountProfile) return true;
@@ -139,6 +143,7 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.accountSettings) return true;
   if (path === ROUTES.accountWishlist) return true;
   if (path === ROUTES.login || path === ROUTES.register) return true;
+  if (path === ROUTES.blog || path.startsWith("/blog/")) return true;
   if (path === ROUTES.admin) return true;
   if (path.startsWith("/admin/")) return true;
 

@@ -1,4 +1,5 @@
 import type { Product, ProductDetail } from "@/types/product";
+import type { ResolvedProductBundle } from "@/types/bundle";
 
 const DELAY_MS = 250;
 
@@ -8,6 +9,7 @@ function delay(ms: number): Promise<void> {
 
 export interface ProductDetailResult {
   product: ProductDetail;
+  bundle: ResolvedProductBundle | null;
   frequentlyBoughtTogether: Product[];
   similarProducts: Product[];
   relatedProducts: Product[];

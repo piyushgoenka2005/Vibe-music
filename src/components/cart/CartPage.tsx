@@ -62,7 +62,7 @@ export default function CartPage() {
               </div>
             ) : null}
             {items.map((item) => (
-              <CartItem key={item.productId} item={item} />
+              <CartItem key={item.lineId} item={item} />
             ))}
           </div>
           <OrderSummary showCoupon />

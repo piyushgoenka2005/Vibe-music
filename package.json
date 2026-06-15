@@ -15,7 +15,10 @@
     "download:style-story": "node scripts/download-style-story-thumbnails.mjs",
     "migrate:brand": "node scripts/migrate-brand.mjs && node scripts/migrate-content-brand.mjs",
     "migrate:products": "npx tsx --env-file=.env.local scripts/migrate-products-to-firestore.ts",
-    "firebase:deploy-indexes": "npx firebase-tools deploy --only firestore:indexes --project vibe-music-90bb5"
+    "firebase:deploy-indexes": "npx firebase-tools deploy --only firestore:indexes --project vibe-music-90bb5",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate": "npm run type-check && npm run lint && npm run test && npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -24,6 +27,12 @@
     "@radix-ui/react-slot": "^1.2.5",
     "@tanstack/react-query": "^5.101.0",
     "@tanstack/react-table": "^8.21.3",
+    "@tiptap/extension-link": "^3.26.1",
+    "@tiptap/extension-placeholder": "^3.26.1",
+    "@tiptap/extension-underline": "^3.26.1",
+    "@tiptap/html": "^3.26.1",
+    "@tiptap/react": "^3.26.1",
+    "@tiptap/starter-kit": "^3.26.1",
     "adm-zip": "^0.5.17",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.10.0",
@@ -51,6 +60,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.6"
   }
 }

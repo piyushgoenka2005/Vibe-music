@@ -6,7 +6,6 @@ export const AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 5;
 export const PROTECTED_ROUTE_PREFIXES = [
   ROUTES.account,
   ROUTES.admin,
-  ROUTES.checkout,
 ] as const;
 
 export const AUTH_GUEST_ROUTES = [

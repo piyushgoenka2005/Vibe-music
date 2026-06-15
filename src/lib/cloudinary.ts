@@ -85,3 +85,11 @@ export function categoryUploadFolder(categorySlug: string): string {
   const safe = categorySlug.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
   return `products/${safe || "general"}`;
 }
+
+export function bannerUploadFolder(): string {
+  return "banners/homepage";
+}
+
+export function blogUploadFolder(): string {
+  return "blog/covers";
+}

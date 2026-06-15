@@ -229,13 +229,23 @@
 }
 
 .sw-search-result-card {
+  border: 1px solid var(--sw-grey10);
+  border-radius: 3px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.sw-search-result-card__link {
+  color: inherit;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
-  border: 1px solid var(--sw-grey10);
-  border-radius: 3px;
   padding: 14px 16px;
-  background: #fff;
+  text-decoration: none;
+}
+
+.sw-search-result-card__link:hover {
+  background: #f7f8fa;
 }
 
 .sw-search-result-card__brand {

@@ -1,6 +1,8 @@
 import Razorpay from "razorpay";
-import crypto from "crypto";
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import {
+  verifyRazorpayPaymentSignature,
+} from "@/lib/razorpay/signature";
 import {
   calculateGST,
   DEFAULT_GST_RATE,
@@ -9,6 +11,14 @@ import {
   toPaise,
   type GSTRate,
 } from "@/lib/gstCalculator";
+import {
+  reserveAndFulfillStockForOrder,
+  reserveStockForOrder,
+  releaseReservedStockForOrder,
+} from "@/lib/server/inventoryService";
+import { completeOrderPayment } from "@/lib/server/orderPaymentService";
+import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
+import type { OrderInventoryLine } from "@/types/inventory";
 import type {
   CreateOrderPayload,
   Order,
@@ -30,6 +40,17 @@ function getRazorpayInstance(): Razorpay {
   }
 
   return new Razorpay({ key_id: keyId, key_secret: keySecret });
+}
+
+function toInventoryLines(
+  items: CreateOrderPayload["items"]
+): OrderInventoryLine[] {
+  return items.map((item) => ({
+    productId: item.productId,
+    variantId: item.variantId,
+    quantity: item.quantity,
+    name: item.name,
+  }));
 }
 
 function buildOrderRecord(
@@ -63,24 +84,38 @@ function buildOrderRecord(
 
   const orderStatus = payload.paymentMethod === "cod" ? "processing" : "pending";
 
-  const items = invoice.lineBreakdown.map((line) => ({
-    productId: line.productId,
-    name: line.name,
-    quantity: line.quantity,
-    price: line.unitPrice,
-    gstRate: line.gstRate as GSTRate,
-    taxableAmount: line.taxableAmount,
-    gstAmount: line.gstAmount,
-    cgst: line.cgst,
-    sgst: line.sgst,
-    igst: line.igst,
-  }));
+  const items = payload.items.map((source, index) => {
+    const line = invoice.lineBreakdown[index]!;
+    return {
+      productId: source.productId,
+      variantId: source.variantId,
+      variantSku: source.variantSku,
+      variantLabel: source.variantLabel,
+      name: line.name,
+      quantity: line.quantity,
+      price: line.unitPrice,
+      gstRate: line.gstRate as GSTRate,
+      taxableAmount: line.taxableAmount,
+      gstAmount: line.gstAmount,
+      cgst: line.cgst,
+      sgst: line.sgst,
+      igst: line.igst,
+    };
+  });
 
   const now = new Date().toISOString();
+  const customerName = payload.customerName?.trim() || payload.shippingAddress.name.trim();
+  const customerPhone =
+    payload.customerPhone?.trim() ||
+    payload.shippingAddress.phone?.trim() ||
+    undefined;
 
   return {
     userId,
     email: payload.email.trim().toLowerCase(),
+    customerName,
+    customerPhone,
+    isGuestOrder: !userId,
     status: orderStatus,
     paymentStatus,
     paymentMethod: payload.paymentMethod,
@@ -97,6 +132,7 @@ function buildOrderRecord(
     items,
     shippingAddress: payload.shippingAddress,
     invoice,
+    inventoryStatus: "none",
     createdAt: now,
     updatedAt: now,
   };
@@ -110,33 +146,51 @@ export async function createOrder(
   const orderRef = db.collection("orders").doc();
   const orderId = orderRef.id;
   const orderData = buildOrderRecord(orderId, payload, userId);
-
-  let razorpayOrderId: string | undefined;
-
-  if (payload.paymentMethod === "razorpay") {
-    const razorpay = getRazorpayInstance();
-    const razorpayOrder = await razorpay.orders.create({
-      amount: toPaise(orderData.total),
-      currency: "INR",
-      receipt: orderId,
-      notes: {
-        email: payload.email,
-        orderId,
-      },
-    });
-    razorpayOrderId = razorpayOrder.id;
-    orderData.razorpayOrderId = razorpayOrderId;
-  }
+  const inventoryLines = toInventoryLines(payload.items);
 
   const order: Order = { id: orderId, ...orderData };
   await orderRef.set(order);
 
-  return {
-    order,
-    razorpayOrderId,
-    keyId:
-      process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID,
-  };
+  try {
+    if (payload.paymentMethod === "cod") {
+      await reserveAndFulfillStockForOrder(orderId, inventoryLines);
+      order.inventoryStatus = "fulfilled";
+    } else {
+      await reserveStockForOrder(orderId, inventoryLines);
+      order.inventoryStatus = "reserved";
+    }
+
+    let razorpayOrderId: string | undefined;
+
+    if (payload.paymentMethod === "razorpay") {
+      const razorpay = getRazorpayInstance();
+      const razorpayOrder = await razorpay.orders.create({
+        amount: toPaise(order.total),
+        currency: "INR",
+        receipt: orderId,
+        notes: {
+          email: payload.email,
+          orderId,
+        },
+      });
+      razorpayOrderId = razorpayOrder.id;
+      await orderRef.update({
+        razorpayOrderId,
+        updatedAt: new Date().toISOString(),
+      });
+      order.razorpayOrderId = razorpayOrderId;
+    }
+
+    return {
+      order: { ...order, razorpayOrderId },
+      razorpayOrderId,
+      keyId:
+        process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID,
+    };
+  } catch (error) {
+    await orderRef.delete().catch(() => undefined);
+    throw error;
+  }
 }
 
 export function verifyRazorpaySignature(
@@ -149,13 +203,12 @@ export function verifyRazorpaySignature(
     throw new Error("Missing RAZORPAY_KEY_SECRET");
   }
 
-  const body = `${razorpayOrderId}|${razorpayPaymentId}`;
-  const expected = crypto
-    .createHmac("sha256", keySecret)
-    .update(body)
-    .digest("hex");
-
-  return expected === razorpaySignature;
+  return verifyRazorpayPaymentSignature(
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+    keySecret
+  );
 }
 
 export async function verifyAndCompletePayment(
@@ -171,32 +224,45 @@ export async function verifyAndCompletePayment(
     throw new Error("Invalid payment signature");
   }
 
-  const db = getAdminFirestore();
-  const orderRef = db.collection("orders").doc(payload.orderId);
-  const doc = await orderRef.get();
+  const result = await completeOrderPayment({
+    orderId: payload.orderId,
+    razorpayPaymentId: payload.razorpayPaymentId,
+    razorpayOrderId: payload.razorpayOrderId,
+    source: "client_verify",
+  });
 
-  if (!doc.exists) {
+  if (result.skipped) {
+    return result.order;
+  }
+
+  const db = getAdminFirestore();
+  await db.collection("orders").doc(payload.orderId).update({
+    razorpaySignature: payload.razorpaySignature,
+    updatedAt: new Date().toISOString(),
+  });
+
+  return {
+    ...result.order,
+    razorpaySignature: payload.razorpaySignature,
+  };
+}
+
+export async function releaseOrderReservation(orderId: string): Promise<void> {
+  const order = await getOrderById(orderId);
+  if (!order) {
     throw new Error("Order not found");
   }
 
-  const order = { id: doc.id, ...doc.data() } as Order;
-
-  if (order.razorpayOrderId !== payload.razorpayOrderId) {
-    throw new Error("Razorpay order mismatch");
+  if (order.inventoryStatus !== "reserved") {
+    return;
   }
 
-  const now = new Date().toISOString();
-  const updated: Partial<Order> = {
-    paymentStatus: "paid",
-    status: "processing",
-    razorpayPaymentId: payload.razorpayPaymentId,
-    razorpaySignature: payload.razorpaySignature,
-    updatedAt: now,
-  };
+  if (order.paymentStatus === "paid") {
+    return;
+  }
 
-  await orderRef.update(updated);
-
-  return { ...order, ...updated };
+  const inventoryLines = toInventoryLines(order.items);
+  await releaseReservedStockForOrder(orderId, inventoryLines);
 }
 
 export async function getOrderById(orderId: string): Promise<Order | null> {
@@ -252,6 +318,42 @@ export async function listOrdersForUser(
 export function normalizeGstRate(rate: number | undefined): GSTRate {
   if (rate === 5 || rate === 12 || rate === 18 || rate === 28) return rate;
   return DEFAULT_GST_RATE;
+}
+
+export async function linkGuestOrdersToUser(
+  userId: string,
+  email: string
+): Promise<number> {
+  const db = getAdminFirestore();
+  const normalizedEmail = email.trim().toLowerCase();
+  const snapshot = await db
+    .collection("orders")
+    .where("email", "==", normalizedEmail)
+    .get();
+
+  if (snapshot.empty) return 0;
+
+  const batch = db.batch();
+  let linked = 0;
+  const timestamp = new Date().toISOString();
+
+  for (const doc of snapshot.docs) {
+    const data = doc.data();
+    if (!data.userId) {
+      batch.update(doc.ref, {
+        userId,
+        isGuestOrder: false,
+        updatedAt: timestamp,
+      });
+      linked += 1;
+    }
+  }
+
+  if (linked > 0) {
+    await batch.commit();
+  }
+
+  return linked;
 }
 
 export type { PaymentMethod, PaymentStatus };

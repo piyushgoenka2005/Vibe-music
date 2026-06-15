@@ -2,13 +2,19 @@
 
 import Link from "next/link";
 import { formatCurrency } from "@/utils/currency";
+import {
+  attributeKey,
+  findVariantBySelection,
+  getVariantAttributeGroups,
+} from "@/lib/variants";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 
 interface ProductInfoProps {
   product: ProductDetail;
   selectedVariant: ProductVariant;
   quantity: number;
-  onVariantChange: (variant: ProductVariant) => void;
+  attributeSelection: Record<string, string>;
+  onAttributeChange: (key: string, value: string) => void;
   onQuantityChange: (qty: number) => void;
   onAddToCart: () => void;
   onBuyNow: () => void;
@@ -36,11 +42,16 @@ function availabilityLabel(av: ProductVariant["availability"]): string {
   }
 }
 
+function isHexColor(value: string): boolean {
+  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.trim());
+}
+
 export default function ProductInfo({
   product,
   selectedVariant,
   quantity,
-  onVariantChange,
+  attributeSelection,
+  onAttributeChange,
   onQuantityChange,
   onAddToCart,
   onBuyNow,
@@ -52,6 +63,8 @@ export default function ProductInfo({
   const onSale = product.salePrice !== null && product.msrp !== null;
   const savings =
     onSale && product.msrp ? product.msrp - displayPrice : 0;
+  const attributeGroups = getVariantAttributeGroups(product.variants);
+  const maxQuantity = Math.max(1, Math.min(99, selectedVariant.stock || 99));
 
   return (
     <div className="pdp-info">
@@ -105,9 +118,73 @@ export default function ProductInfo({
       <div className={availabilityClass(selectedVariant.availability)}>
         <span aria-hidden="true">●</span>
         {availabilityLabel(selectedVariant.availability)}
+        {selectedVariant.stock > 0 ? (
+          <span className="pdp-stock-count"> ({selectedVariant.stock} available)</span>
+        ) : null}
       </div>
 
-      {product.variants.length > 1 ? (
+      {attributeGroups.length > 0 ? (
+        <div className="pdp-variants">
+          {attributeGroups.map((group) => {
+            const key = `${group.type}:${group.name}`;
+            const selectedValue = attributeSelection[key] ?? "";
+
+            return (
+              <div key={key} className="pdp-variant-group">
+                <span className="pdp-variants__label">
+                  {group.name}
+                  {selectedValue ? `: ${selectedValue}` : ""}
+                </span>
+                <div className="pdp-variants__options" role="group" aria-label={group.name}>
+                  {group.values.map((value) => {
+                    const isActive = selectedValue === value;
+                    const candidate = findVariantBySelection(product.variants, {
+                      ...attributeSelection,
+                      [key]: value,
+                    });
+                    const isDisabled = !candidate || candidate.availability === "out-of-stock";
+
+                    if (group.type === "color") {
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          className={`pdp-variants__swatch${isActive ? " pdp-variants__swatch--active" : ""}`}
+                          onClick={() => onAttributeChange(key, value)}
+                          aria-pressed={isActive}
+                          aria-label={value}
+                          disabled={isDisabled}
+                          title={value}
+                          style={
+                            isHexColor(value)
+                              ? { backgroundColor: value }
+                              : undefined
+                          }
+                        >
+                          {!isHexColor(value) ? value : null}
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        className={`pdp-variants__btn${isActive ? " pdp-variants__btn--active" : ""}`}
+                        onClick={() => onAttributeChange(key, value)}
+                        aria-pressed={isActive}
+                        disabled={isDisabled}
+                      >
+                        {value}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : product.variants.length > 1 ? (
         <div className="pdp-variants">
           <span className="pdp-variants__label" id="variant-label">
             Select Option
@@ -122,8 +199,17 @@ export default function ProductInfo({
                 key={variant.id}
                 type="button"
                 className={`pdp-variants__btn${selectedVariant.id === variant.id ? " pdp-variants__btn--active" : ""}`}
-                onClick={() => onVariantChange(variant)}
+                onClick={() => {
+                  const selection: Record<string, string> = {};
+                  variant.attributes.forEach((attr) => {
+                    selection[attributeKey(attr)] = attr.value;
+                  });
+                  Object.entries(selection).forEach(([attrKey, value]) =>
+                    onAttributeChange(attrKey, value)
+                  );
+                }}
                 aria-pressed={selectedVariant.id === variant.id}
+                disabled={variant.availability === "out-of-stock"}
               >
                 {variant.label}
               </button>
@@ -147,16 +233,18 @@ export default function ProductInfo({
           <input
             type="number"
             min={1}
-            max={99}
+            max={maxQuantity}
             value={quantity}
             onChange={(e) =>
-              onQuantityChange(Math.max(1, Math.min(99, Number(e.target.value) || 1)))
+              onQuantityChange(
+                Math.max(1, Math.min(maxQuantity, Number(e.target.value) || 1))
+              )
             }
             aria-label="Quantity"
           />
           <button
             type="button"
-            onClick={() => onQuantityChange(Math.min(99, quantity + 1))}
+            onClick={() => onQuantityChange(Math.min(maxQuantity, quantity + 1))}
             aria-label="Increase quantity"
           >
             +

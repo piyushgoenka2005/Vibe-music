@@ -47,8 +47,29 @@ export async function createCodOrder(
   return parseJson<{ orderId: string; order: Order }>(response);
 }
 
+export async function releaseOrderReservation(orderId: string): Promise<void> {
+  const response = await fetch("/api/payment/release-reservation", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ orderId }),
+  });
+  if (!response.ok) {
+    const data = (await response.json()) as { error?: string };
+    throw new Error(data.error ?? "Failed to release reservation");
+  }
+}
+
 export async function fetchOrder(orderId: string): Promise<Order> {
   const response = await fetch(`/api/orders/${orderId}`);
+  return parseJson<{ order: Order }>(response).then((data) => data.order);
+}
+
+export async function fetchGuestOrder(
+  orderId: string,
+  email: string
+): Promise<Order> {
+  const params = new URLSearchParams({ orderId, email });
+  const response = await fetch(`/api/orders/track?${params.toString()}`);
   return parseJson<{ order: Order }>(response).then((data) => data.order);
 }
 

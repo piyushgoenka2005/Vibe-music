@@ -9,15 +9,18 @@ import {
   getAllProducts,
   getProductById,
   toProduct,
+  toProductDetail,
   updateProduct,
 } from "@/services/catalogService";
+import { deleteProductBundle } from "@/lib/server/bundleService";
+import { deleteProductRelatedList } from "@/lib/server/relatedProductsService";
 import { getProductImage } from "@/data/productImages";
-import { slugify } from "@/lib/slug";
 import type { AdminProduct } from "@/types/admin";
-import type { CatalogProduct } from "@/types/catalog";
+import type { CatalogProduct, CreateProductInput } from "@/types/catalog";
 
 function toAdminProduct(catalog: CatalogProduct): AdminProduct {
   const product = toProduct(catalog);
+  const detail = toProductDetail(catalog);
   return {
     ...product,
     sku: catalog.sku,
@@ -25,13 +28,14 @@ function toAdminProduct(catalog: CatalogProduct): AdminProduct {
     salePrice:
       catalog.originalPrice > catalog.price ? catalog.price : null,
     stockQuantity: catalog.stock,
-    lowStockThreshold: 10,
+    lowStockThreshold: catalog.lowStockThreshold ?? 10,
     description: catalog.description,
     featured: catalog.featured,
     trending: catalog.trending,
     newArrival: catalog.newArrival,
     createdAt: catalog.createdAt,
     updatedAt: catalog.updatedAt,
+    variants: detail.variants,
   };
 }
 
@@ -86,8 +90,9 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
 }
 
 export async function createAdminProduct(
-  input: Omit<AdminProduct, "id" | "createdAt" | "updatedAt"> & {
+  input: Omit<AdminProduct, "id" | "createdAt" | "updatedAt" | "variants"> & {
     images?: string[];
+    variants?: CreateProductInput["variants"];
   }
 ): Promise<AdminProduct> {
   const created = await createProduct({
@@ -114,13 +119,17 @@ export async function createAdminProduct(
     featured: input.featured,
     trending: input.trending,
     newArrival: input.newArrival,
+    variants: input.variants,
   });
   return toAdminProduct(created);
 }
 
 export async function updateAdminProduct(
   id: string,
-  patch: Partial<AdminProduct> & { images?: string[] }
+  patch: Partial<Omit<AdminProduct, "variants">> & {
+    images?: string[];
+    variants?: CreateProductInput["variants"];
+  }
 ): Promise<AdminProduct> {
   const updated = await updateProduct(id, {
     name: patch.name,
@@ -146,12 +155,15 @@ export async function updateAdminProduct(
     featured: patch.featured,
     trending: patch.trending,
     newArrival: patch.newArrival,
+    variants: patch.variants,
   });
   return toAdminProduct(updated);
 }
 
 export async function deleteAdminProduct(id: string): Promise<void> {
   await deleteProduct(id);
+  await deleteProductBundle(id).catch(() => undefined);
+  await deleteProductRelatedList(id).catch(() => undefined);
 }
 
 export async function duplicateAdminProduct(id: string): Promise<AdminProduct> {

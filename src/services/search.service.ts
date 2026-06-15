@@ -73,6 +73,7 @@ export async function fetchSearchSuggestions(
     type: "product" as const,
     label: product.name,
     sublabel: product.brand,
+    productSlug: product.slug,
     href: `/search/results?q=${encodeURIComponent(trimmed)}&product=${product.slug}`,
   }));
 

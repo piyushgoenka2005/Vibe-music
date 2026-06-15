@@ -18,6 +18,17 @@ import {
   slugExists,
   writeProduct,
 } from "@/lib/server/firestoreCatalogRepository";
+import { recordInventoryLogEntry } from "@/lib/server/inventoryRepository";
+import {
+  applyVariantsToProduct,
+  fetchAllVariantSkus,
+  getVariantsFromProduct,
+} from "@/lib/server/variantService";
+import {
+  normalizeVariants,
+  stockToVariantAvailability,
+  syncProductAggregatesFromVariants,
+} from "@/lib/variants";
 import type { Brand } from "@/types/brand";
 import type { Category } from "@/types/category";
 import type {
@@ -108,15 +119,21 @@ function buildDefaultDetail(
       ...(src ? { src } : {}),
     })),
     videos: [],
-    variants: [
-      {
-        id: "var-default",
-        label: "Standard",
-        sku: product.sku,
-        price: product.price,
-        availability: product.availability,
-      },
-    ],
+    variants: normalizeVariants(
+      [
+        {
+          id: "var-default",
+          label: "Standard",
+          sku: product.sku,
+          price: product.price,
+          stock: product.stock,
+          isDefault: true,
+        },
+      ],
+      product.sku,
+      product.price,
+      product.stock
+    ),
     reviews: [],
     qa: [],
     frequentlyBoughtTogether: sameCategory.slice(0, 2).map((p) => p.id),
@@ -150,6 +167,17 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
 
 export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
   const detail = catalogProduct.detail ?? buildDefaultDetail(catalogProduct, []);
+  const variants = normalizeVariants(
+    detail.variants.map((variant) => ({
+      ...variant,
+      stock: variant.stock ?? catalogProduct.stock,
+      attributes: variant.attributes ?? [],
+      images: variant.images ?? [],
+    })),
+    catalogProduct.sku,
+    catalogProduct.price,
+    catalogProduct.stock
+  );
 
   return {
     ...toProduct(catalogProduct),
@@ -161,7 +189,7 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
     inTheBox: detail.inTheBox,
     images: detail.gallery,
     videos: detail.videos,
-    variants: detail.variants,
+    variants,
     reviews: detail.reviews,
     qa: detail.qa,
     frequentlyBoughtTogether: detail.frequentlyBoughtTogether,
@@ -230,31 +258,13 @@ export async function getNewArrivals(): Promise<Product[]> {
 
 export async function getRelatedProducts(
   slug: string,
-  limit = 4
+  limit = 8
 ): Promise<Product[]> {
-  const product = await getCatalogProductBySlug(slug);
-  if (!product) return [];
-
-  const all = await fetchAllProducts();
-  const relatedIds = product.detail?.relatedProductIds ?? [];
-  const idMap = new Map(all.map((p) => [p.id, p]));
-
-  const fromIds = relatedIds
-    .map((id) => idMap.get(id))
-    .filter((p): p is CatalogProduct => Boolean(p && p.status === "active"))
-    .slice(0, limit)
-    .map(toProduct);
-
-  if (fromIds.length >= limit) return fromIds;
-
-  const fallback = all
-    .filter(
-      (p) => p.categorySlug === product.categorySlug && p.slug !== slug
-    )
-    .slice(0, limit - fromIds.length)
-    .map(toProduct);
-
-  return [...fromIds, ...fallback];
+  const { resolveRelatedProductsBySlug } = await import(
+    "@/lib/server/relatedProductsService"
+  );
+  const resolved = await resolveRelatedProductsBySlug(slug, limit);
+  return resolved.products;
 }
 
 export interface ProductSearchOptions {
@@ -402,6 +412,8 @@ export async function createProduct(
     rating: input.rating ?? 0,
     reviewCount: input.reviewCount ?? 0,
     stock,
+    reservedStock: 0,
+    lowStockThreshold: input.lowStockThreshold ?? 10,
     sku,
     status: input.status ?? "active",
     featured: input.featured ?? false,
@@ -429,6 +441,14 @@ export async function createProduct(
 
   const all = await fetchAllProducts(true);
   product.detail = buildDefaultDetail(product, all);
+
+  if (input.variants?.length) {
+    const existingSkus = await fetchAllVariantSkus();
+    return writeProduct(
+      applyVariantsToProduct(product, input.variants, existingSkus)
+    );
+  }
+
   return writeProduct(product);
 }
 
@@ -484,7 +504,47 @@ export async function updateProduct(
   }
 
   const all = await fetchAllProducts(true);
-  updated.detail = buildDefaultDetail(updated, all);
+  const preservedDetail = current.detail ?? buildDefaultDetail(current, all);
+
+  if (patch.variants) {
+    const existingSkus = await fetchAllVariantSkus(id);
+    updated.detail = applyVariantsToProduct(
+      { ...updated, detail: preservedDetail },
+      patch.variants,
+      existingSkus
+    ).detail;
+    const aggregates = syncProductAggregatesFromVariants(
+      getVariantsFromProduct({ ...updated, detail: updated.detail })
+    );
+    updated.price = aggregates.price;
+    updated.stock = aggregates.stock;
+    updated.availability = aggregates.availability;
+  } else if (stock !== current.stock || price !== current.price) {
+    const currentVariants = getVariantsFromProduct({
+      ...updated,
+      detail: preservedDetail,
+    });
+    const syncedVariants = currentVariants.map((variant) => {
+      if (currentVariants.length === 1 && variant.isDefault) {
+        return {
+          ...variant,
+          price: updated.price,
+          stock: updated.stock,
+          availability: stockToVariantAvailability(updated.stock),
+        };
+      }
+      return variant;
+    });
+    updated.detail = { ...preservedDetail, variants: syncedVariants };
+    updated.availability =
+      syncProductAggregatesFromVariants(syncedVariants).availability;
+  } else {
+    updated.detail = {
+      ...preservedDetail,
+      variants: getVariantsFromProduct({ ...updated, detail: preservedDetail }),
+    };
+  }
+
   return writeProduct(updated, id);
 }
 
@@ -661,6 +721,18 @@ export async function bulkImportProducts(
       images,
     });
     importedProducts.push(product);
+    await recordInventoryLogEntry({
+      productId: product.id,
+      sku: product.sku,
+      orderId: null,
+      previousStock: 0,
+      newStock: product.stock,
+      quantityChanged: product.stock,
+      action: "bulk_import",
+      adminId: null,
+      timestamp: new Date().toISOString(),
+      note: "Initial stock from bulk import",
+    });
   }
 
   return {

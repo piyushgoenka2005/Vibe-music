@@ -55,6 +55,7 @@ function DashboardContent() {
         <StatCard label="Processing" value={stats.processingOrders} />
         <StatCard label="Completed" value={stats.completedOrders} />
         <StatCard label="Low Stock" value={stats.lowStockProducts} />
+        <StatCard label="Out of Stock" value={stats.outOfStockProducts} />
       </div>
 
       <div className="admin-grid-2" style={{ marginBottom: "1.5rem" }}>

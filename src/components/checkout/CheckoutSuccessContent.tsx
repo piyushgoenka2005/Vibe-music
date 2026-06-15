@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { fetchOrder } from "@/services/orderService";
+import { fetchGuestOrder, fetchOrder } from "@/services/orderService";
+import { useAuthStore } from "@/store/authStore";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrencyPrecise } from "@/utils/currency";
 import type { Order } from "@/types/order";
@@ -12,24 +13,47 @@ import "@/components/checkout/checkout.css";
 export default function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
+  const emailParam = searchParams.get("email");
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const missingOrderId = !orderId;
   const [order, setOrder] = useState<Order | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(
+    missingOrderId ? "Order ID missing" : null
+  );
+  const [loading, setLoading] = useState(!missingOrderId);
 
   useEffect(() => {
-    if (!orderId) {
-      setError("Order ID missing");
-      setLoading(false);
-      return;
+    if (!orderId) return;
+
+    async function loadOrder() {
+      try {
+        if (isAuthenticated) {
+          const authenticatedOrder = await fetchOrder(orderId!);
+          setOrder(authenticatedOrder);
+          return;
+        }
+
+        if (!emailParam) {
+          setError("Email is required to view this order");
+          return;
+        }
+
+        const guestOrder = await fetchGuestOrder(orderId!, emailParam);
+        setOrder(guestOrder);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Unable to load order");
+      } finally {
+        setLoading(false);
+      }
     }
 
-    fetchOrder(orderId)
-      .then(setOrder)
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "Unable to load order");
-      })
-      .finally(() => setLoading(false));
-  }, [orderId]);
+    void loadOrder();
+  }, [orderId, emailParam, isAuthenticated]);
+
+  const trackHref =
+    orderId && (emailParam || order?.email)
+      ? `${ROUTES.trackOrder}?orderId=${encodeURIComponent(orderId)}&email=${encodeURIComponent(emailParam ?? order?.email ?? "")}`
+      : ROUTES.trackOrder;
 
   if (loading) {
     return (
@@ -44,8 +68,8 @@ export default function CheckoutSuccessContent() {
       <div className="checkout-success">
         <h1>Order Confirmation</h1>
         <p role="alert">{error ?? "Order not found"}</p>
-        <Link href={ROUTES.accountOrders} className="cart-btn cart-btn--checkout">
-          View Orders
+        <Link href={trackHref} className="cart-btn cart-btn--checkout">
+          Track Order
         </Link>
       </div>
     );
@@ -62,6 +86,9 @@ export default function CheckoutSuccessContent() {
       <p>
         Thank you for your purchase. Order <strong>{order.id}</strong> has been
         placed successfully.
+      </p>
+      <p>
+        A confirmation email has been sent to <strong>{order.email}</strong>.
       </p>
       <p>
         Payment status:{" "}
@@ -135,9 +162,21 @@ export default function CheckoutSuccessContent() {
         <Link href={ROUTES.home} className="cart-btn cart-btn--secondary">
           Continue Shopping
         </Link>
-        <Link href={ROUTES.accountOrders} className="cart-btn cart-btn--checkout">
-          View My Orders
+        <Link href={trackHref} className="cart-btn cart-btn--checkout">
+          Track Order
         </Link>
+        {isAuthenticated ? (
+          <Link href={ROUTES.accountOrders} className="cart-btn cart-btn--secondary">
+            View My Orders
+          </Link>
+        ) : (
+          <Link
+            href={`${ROUTES.register}?redirect=${encodeURIComponent(ROUTES.accountOrders)}`}
+            className="cart-btn cart-btn--secondary"
+          >
+            Create Account
+          </Link>
+        )}
       </div>
     </div>
   );

@@ -2,6 +2,10 @@
 
 import { useSyncExternalStore } from "react";
 import type { SearchAnalyticsEvent, SearchFiltersState } from "@/types/search";
+import {
+  trackSearchProductClick,
+  trackSearchQuery,
+} from "@/services/searchAnalytics.service";
 
 const RECENT_KEY = "vibe-recent-searches";
 const ANALYTICS_KEY = "vibe-search-analytics";
@@ -178,6 +182,22 @@ export const searchStore = {
     const next = [entry, ...state.analytics].slice(0, MAX_ANALYTICS);
     state = { ...state, analytics: next };
     persistAnalytics(next);
+    trackSearchQuery({
+      query: event.query,
+      resultCount: event.resultCount,
+      source: event.source,
+    });
+    emit();
+  },
+
+  trackSearchClick(input: {
+    query: string;
+    productId: string;
+    productSlug: string;
+    productName: string;
+    source: SearchAnalyticsEvent["source"];
+  }) {
+    trackSearchProductClick(input);
     emit();
   },
 

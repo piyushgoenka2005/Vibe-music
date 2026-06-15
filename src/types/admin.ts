@@ -27,6 +27,14 @@ export type Permission =
   | "analytics:read"
   | "settings:read"
   | "settings:write"
+  | "banners:read"
+  | "banners:write"
+  | "banners:delete"
+  | "homepage:read"
+  | "homepage:write"
+  | "blog:read"
+  | "blog:write"
+  | "blog:delete"
   | "admins:read"
   | "admins:write";
 
@@ -59,6 +67,7 @@ export interface DashboardStats {
   completedOrders: number;
   cancelledOrders: number;
   lowStockProducts: number;
+  outOfStockProducts: number;
   revenueChangePercent: number;
   ordersChangePercent: number;
 }
@@ -70,6 +79,7 @@ export interface RevenueDataPoint {
 }
 
 import type { Product } from "@/types/product";
+import type { ProductVariant } from "@/types/product";
 
 export interface AdminProduct extends Product {
   sku?: string;
@@ -85,6 +95,7 @@ export interface AdminProduct extends Product {
   metaDescription?: string;
   createdAt?: string;
   updatedAt?: string;
+  variants?: ProductVariant[];
 }
 
 export interface AdminCategory {
@@ -140,6 +151,8 @@ export interface InventoryRecord {
   productName: string;
   sku?: string;
   stockQuantity: number;
+  reservedQuantity?: number;
+  availableQuantity?: number;
   lowStockThreshold: number;
   lastAdjustedAt?: string;
 }

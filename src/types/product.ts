@@ -42,7 +42,19 @@ export interface ProductVariant {
   label: string;
   sku: string;
   price: number;
+  stock: number;
   availability: ProductAvailability;
+  attributes: VariantAttribute[];
+  images: string[];
+  isDefault?: boolean;
+}
+
+export type VariantAttributeType = "color" | "size" | "finish" | "custom";
+
+export interface VariantAttribute {
+  type: VariantAttributeType;
+  name: string;
+  value: string;
 }
 
 export interface ProductReview {
