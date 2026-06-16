@@ -13,11 +13,11 @@ export default function HeroBanner() {
         <div className="sw-hero__content absolute inset-0 z-[2] flex items-center">
           <div className="sw-container w-full">
             <div className="sw-hero__copy max-w-2xl text-left">
-              <span className="sw-hero__eyebrow mb-2 inline-block text-sm font-semibold uppercase tracking-[0.1em]">
+              <span className="sw-hero__eyebrow mb-2 inline-block text-sm font-medium uppercase tracking-[0.1em]">
                 Limited Time
               </span>
 
-              <h1 className="sw-hero__headline mb-3 mt-0 text-[clamp(2rem,6vw,4rem)] font-bold leading-none">
+              <h1 className="sw-hero__headline mb-3 mt-0 text-[clamp(2rem,6vw,4rem)] font-normal leading-none">
                 Gear Up For Your Next Performance
               </h1>
 
@@ -25,7 +25,7 @@ export default function HeroBanner() {
                 Explore guitars, keyboards, studio equipment, and professional audio solutions.
               </p>
 
-              <a href="#" className="sw-hero__cta sw-hero__cta--solid inline-block rounded-full border-2 border-transparent bg-white px-7 py-2.5 text-[clamp(0.9rem,1.5vw,1.125rem)] font-semibold text-[var(--hero-dark)] transition hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+              <a href="/search" className="sw-hero__cta sw-hero__cta--solid inline-block rounded-full border-2 border-transparent bg-white px-7 py-2.5 text-[clamp(0.9rem,1.5vw,1.125rem)] font-medium text-[var(--hero-dark)] transition hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
                 Shop Now
               </a>
             </div>

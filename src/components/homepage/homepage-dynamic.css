@@ -5,9 +5,14 @@
 .homepage-section-skeleton__title {
   width: 220px;
   height: 28px;
-  margin: 0 auto 1.5rem;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #ececec 25%, #f5f5f5 50%, #ececec 75%);
+  margin: 0 0 1.5rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--surface-muted) 25%,
+    var(--surface-subtle) 50%,
+    var(--surface-muted) 75%
+  );
   background-size: 200% 100%;
   animation: homepage-shimmer 1.4s ease infinite;
 }
@@ -16,26 +21,28 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 1rem;
-  max-width: 1200px;
+  max-width: var(--content-max);
   margin: 0 auto;
 }
 
 .homepage-section-skeleton__card {
   aspect-ratio: 1;
-  border-radius: 8px;
-  background: linear-gradient(90deg, #ececec 25%, #f5f5f5 50%, #ececec 75%);
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--surface-muted) 25%,
+    var(--surface-subtle) 50%,
+    var(--surface-muted) 75%
+  );
   background-size: 200% 100%;
   animation: homepage-shimmer 1.4s ease infinite;
 }
 
 .homepage-wrapper--loading {
-  min-height: 60vh;
-}
-
-.homepage-section__subtitle {
-  text-align: center;
-  margin: -0.5rem 0 1rem;
-  color: #555;
+  min-height: 40vh;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 1.25rem 4rem;
 }
 
 .homepage-brand-strip {
@@ -73,7 +80,7 @@
 }
 
 .homepage-brand-strip__label {
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.875rem;
   text-align: center;
 }

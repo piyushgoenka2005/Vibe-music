@@ -15,7 +15,7 @@ function EventCard({ title, subtitle, image }: EventCardProps) {
         />
       </div>
       <div className="p-4">
-        <h3 className="text-base font-semibold text-[var(--grey100)] group-hover:text-[var(--blue)]">
+        <h3 className="text-base font-medium text-[var(--grey100)] group-hover:text-[var(--blue)]">
           {title}
         </h3>
         <p className="mt-1 text-sm text-[var(--grey60)]">{subtitle}</p>

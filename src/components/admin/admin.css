@@ -7,15 +7,15 @@
   --admin-border: #2a2a2e;
   --admin-text: #fafafa;
   --admin-muted: #a1a1aa;
-  --admin-accent: #0072ba;
-  --admin-accent-hover: #005a94;
+  --admin-accent: var(--brand-primary);
+  --admin-accent-hover: #0e42be;
   --admin-success: #22c55e;
   --admin-warning: #f59e0b;
   --admin-danger: #ef4444;
   min-height: 100vh;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-family: var(--font-primary);
 }
 
 .admin-root--light {
@@ -89,7 +89,7 @@
 .admin-sidebar__brand-text {
   display: flex;
   align-items: center;
-  font-weight: 700;
+  font-weight: 500;
   font-size: 1.125rem;
   letter-spacing: -0.02em;
   color: var(--admin-text);
@@ -174,7 +174,7 @@
 }
 
 .admin-sidebar__user-name {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--admin-text);
 }
 
@@ -229,7 +229,7 @@
 
 .admin-header__title {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 500;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -289,7 +289,7 @@
 
 .admin-stat-card__value {
   font-size: 1.75rem;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.02em;
 }
 
@@ -323,7 +323,7 @@
 
 .admin-panel__title {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .admin-panel__body {
@@ -372,7 +372,7 @@
   padding: 0.2rem 0.625rem;
   border-radius: 9999px;
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -434,7 +434,7 @@
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   border: none;
   transition: background 0.15s, opacity 0.15s;

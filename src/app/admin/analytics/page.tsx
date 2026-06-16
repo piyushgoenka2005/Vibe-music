@@ -69,7 +69,7 @@ function AnalyticsContent() {
                 <XAxis dataKey="date" tick={{ fill: "#a1a1aa", fontSize: 11 }} tickFormatter={(v: string) => v.slice(5)} />
                 <YAxis tick={{ fill: "#a1a1aa", fontSize: 11 }} />
                 <Tooltip contentStyle={{ background: "#141416", border: "1px solid #2a2a2e" }} formatter={(v) => formatCurrency(Number(v ?? 0))} />
-                <Bar dataKey="revenue" fill="#0072ba" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="revenue" fill="var(--brand-primary)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

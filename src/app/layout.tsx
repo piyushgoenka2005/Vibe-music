@@ -1,15 +1,26 @@
 import type { Metadata } from "next";
+import { primaryFont } from "@/lib/fonts";
 import NavbarCart from "@/components/cart/NavbarCart";
 import AuthProvider from "@/components/auth/AuthProvider";
 import NavbarAuth from "@/components/auth/NavbarAuth";
 import ToastContainer from "@/components/common/ToastContainer";
 import GlobalSearch from "@/components/search/GlobalSearch";
 import NavbarWishlist from "@/components/wishlist/NavbarWishlist";
-import HeaderInitializer from "@/components/vibe/HeaderInitializer";
+import StorefrontChrome from "@/components/layout/StorefrontChrome";
 import HtmlLinkInterceptor from "@/components/vibe/HtmlLinkInterceptor";
 import QueryProvider from "@/providers/QueryProvider";
 import { DEFAULT_METADATA } from "@/lib/site";
 import "./globals.css";
+import "@/styles/tokens.css";
+import "@/styles/typography.css";
+import "@/styles/site-layout.css";
+import "@/styles/social-rail.css";
+import "@/styles/premium-home.css";
+import "@/styles/why-shop-section.css";
+import "@/styles/gear-stories.css";
+import "@/styles/homepage-sections.css";
+import "@/styles/storefront-pages.css";
+import "@/components/homepage/homepage-dynamic.css";
 
 export const metadata: Metadata = DEFAULT_METADATA;
 
@@ -19,35 +30,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en-IN">
-      <head>
-        <link
-          rel="preload"
-          href="https://cdn.vibemusic.in/m/fonts/aspira/aspira_demi/Aspira-Demi.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-        <link rel="stylesheet" href="/vibe-inline.css" />
-        <link rel="stylesheet" href="/vibe-header-parity.css" />
-        <link rel="stylesheet" href="/vibe-app.css" />
-        <link rel="stylesheet" href="/vibe-footer.css" />
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-        />
-      </head>
-      <body suppressHydrationWarning>
+    <html lang="en-IN" className={primaryFont.variable}>
+      <body className={primaryFont.className} suppressHydrationWarning>
         <QueryProvider>
           <AuthProvider>
-            <HeaderInitializer />
-            <HtmlLinkInterceptor />
-            <GlobalSearch />
-            <NavbarWishlist />
-            <NavbarCart />
-            <NavbarAuth />
-            <ToastContainer />
-            {children}
+            <StorefrontChrome>
+              <HtmlLinkInterceptor />
+              <GlobalSearch />
+              <NavbarWishlist />
+              <NavbarCart />
+              <NavbarAuth />
+              <ToastContainer />
+              {children}
+            </StorefrontChrome>
           </AuthProvider>
         </QueryProvider>
       </body>

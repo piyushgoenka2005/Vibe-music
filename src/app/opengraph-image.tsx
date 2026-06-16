@@ -17,16 +17,16 @@ export default function OpenGraphImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #0072ba 0%, #095482 100%)",
+          background: "linear-gradient(135deg, #1253ED 0%, #0A3496 100%)",
           color: "#ffffff",
-          fontFamily: "Arial, Helvetica, sans-serif",
+          fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
         }}
       >
         <div
           style={{
             fontSize: 96,
-            fontWeight: 700,
-            letterSpacing: -2,
+            fontWeight: 400,
+            letterSpacing: "-0.04em",
             marginBottom: 24,
           }}
         >

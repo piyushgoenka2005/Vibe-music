@@ -16,18 +16,31 @@ async function fetchOrders(params: { search: string; status: string; page: numbe
   return res.json() as Promise<{ orders: Order[]; total: number }>;
 }
 
+async function fetchOrderDetail(orderId: string): Promise<Order> {
+  const res = await fetch(`/api/admin/orders/${orderId}`);
+  if (!res.ok) throw new Error("Failed to load order");
+  const data = (await res.json()) as { order: Order };
+  return data.order;
+}
+
 function OrdersContent() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(0);
-  const [selected, setSelected] = useState<Order | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newStatus, setNewStatus] = useState<OrderStatus>("processing");
   const [note, setNote] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-orders", search, status, page],
     queryFn: () => fetchOrders({ search, status, page }),
+  });
+
+  const { data: selected, isLoading: detailLoading } = useQuery({
+    queryKey: ["admin-order-detail", selectedId],
+    queryFn: () => fetchOrderDetail(selectedId!),
+    enabled: Boolean(selectedId),
   });
 
   const updateMutation = useMutation({
@@ -41,9 +54,9 @@ function OrdersContent() {
       if (!res.ok) throw new Error("Update failed");
     },
     onSuccess: () => {
-      setSelected(null);
       setNote("");
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-order-detail", selectedId] });
     },
   });
 
@@ -75,10 +88,12 @@ function OrdersContent() {
         <select className="admin-select" style={{ width: "auto" }} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}>
           <option value="">All statuses</option>
           <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
           <option value="processing">Processing</option>
           <option value="shipped">Shipped</option>
           <option value="delivered">Delivered</option>
           <option value="cancelled">Cancelled</option>
+          <option value="refunded">Refunded</option>
         </select>
         <button type="button" className="admin-btn admin-btn--secondary" onClick={exportCsv}>Export CSV</button>
       </div>
@@ -102,7 +117,7 @@ function OrdersContent() {
                   </thead>
                   <tbody>
                     {orders.map((order) => (
-                      <tr key={order.id} onClick={() => { setSelected(order); setNewStatus(order.status); }} style={{ cursor: "pointer", background: selected?.id === order.id ? "var(--admin-surface-2)" : undefined }}>
+                      <tr key={order.id} onClick={() => { setSelectedId(order.id); setNewStatus(order.status); }} style={{ cursor: "pointer", background: selectedId === order.id ? "var(--admin-surface-2)" : undefined }}>
                         <td>{order.id.slice(0, 10)}…</td>
                         <td>{order.email}</td>
                         <td>{formatCurrency(order.total)}</td>
@@ -130,14 +145,43 @@ function OrdersContent() {
             <h2 className="admin-panel__title">Order Details</h2>
           </div>
           <div className="admin-panel__body">
-            {!selected ? (
+            {!selectedId ? (
               <EmptyState message="Select an order to view details." />
+            ) : detailLoading ? (
+              <LoadingState message="Loading order…" />
+            ) : !selected ? (
+              <EmptyState message="Order not found." />
             ) : (
               <>
                 <p><strong>ID:</strong> {selected.id}</p>
                 <p><strong>Email:</strong> {selected.email}</p>
-                <p><strong>Payment:</strong> <StatusBadge status={selected.paymentStatus} /></p>
+                {selected.customerName ? (
+                  <p><strong>Customer:</strong> {selected.customerName}</p>
+                ) : null}
+                {selected.customerPhone ? (
+                  <p><strong>Phone:</strong> {selected.customerPhone}</p>
+                ) : null}
+                <p><strong>Order status:</strong> <StatusBadge status={selected.status} /></p>
+                <p><strong>Payment:</strong> <StatusBadge status={selected.paymentStatus} /> ({selected.paymentMethod})</p>
+                {selected.inventoryStatus ? (
+                  <p><strong>Inventory:</strong> {selected.inventoryStatus}</p>
+                ) : null}
+                {selected.razorpayOrderId ? (
+                  <p><strong>Razorpay order:</strong> <code style={{ fontSize: "0.8rem" }}>{selected.razorpayOrderId}</code></p>
+                ) : null}
+                {selected.razorpayPaymentId ? (
+                  <p><strong>Razorpay payment:</strong> <code style={{ fontSize: "0.8rem" }}>{selected.razorpayPaymentId}</code></p>
+                ) : null}
                 <p><strong>Total:</strong> {formatCurrency(selected.total)}</p>
+                <p><strong>Placed:</strong> {formatDate(selected.createdAt)}</p>
+                <p><strong>Shipping:</strong></p>
+                <address style={{ fontSize: "0.875rem", color: "var(--admin-muted)", fontStyle: "normal", marginBottom: "0.75rem" }}>
+                  {selected.shippingAddress.name}<br />
+                  {selected.shippingAddress.line1}<br />
+                  {selected.shippingAddress.line2 ? <>{selected.shippingAddress.line2}<br /></> : null}
+                  {selected.shippingAddress.city}, {selected.shippingAddress.state} {selected.shippingAddress.postalCode}<br />
+                  {selected.shippingAddress.country}
+                </address>
                 <p><strong>Items:</strong></p>
                 <ul style={{ fontSize: "0.875rem", color: "var(--admin-muted)" }}>
                   {selected.items.map((item) => (

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { isFirebaseAdminConfigured } from "@/lib/firebase/admin";
 import {
   fetchAllProducts,
   fetchBrands,
@@ -285,6 +286,10 @@ async function resolveSection(
 export async function getPublicHomepageData(
   at = new Date()
 ): Promise<PublicHomepageData> {
+  if (!isFirebaseAdminConfigured()) {
+    return { sections: [], fetchedAt: at.toISOString() };
+  }
+
   if (publicCache && isFresh(publicCacheAt)) {
     return publicCache;
   }

@@ -32,9 +32,9 @@ export default function NavbarWishlist() {
     function tryMount(): boolean {
       if (mountRef.current) return true;
 
-      const cartWrap = document.querySelector(
-        ".assets-site-header__menu-cart-wrap"
-      );
+      const cartWrap =
+        document.querySelector("[data-vibe-wishlist-anchor]") ??
+        document.querySelector(".assets-site-header__menu-cart-wrap");
       if (!cartWrap?.parentElement) return false;
 
       mountRef.current = document.createElement("div");

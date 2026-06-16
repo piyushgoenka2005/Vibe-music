@@ -147,7 +147,7 @@ export default function SearchOverlay({
             <button
               type="button"
               className="sw-search-panel__close"
-              style={{ color: "#0072ba", fontWeight: 700 }}
+              style={{ color: "var(--brand-primary)", fontWeight: 700 }}
               onClick={onSubmit}
             >
               Search

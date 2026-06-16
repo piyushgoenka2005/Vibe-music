@@ -28,7 +28,7 @@ export default function AdminNav({ active }: { active: string }) {
           key={link.href}
           href={link.href}
           style={{
-            color: active === link.href ? "#0072ba" : "#2e2e2d",
+            color: active === link.href ? "var(--brand-primary)" : "#2e2e2d",
             fontWeight: active === link.href ? 700 : 500,
             textDecoration: "none",
           }}

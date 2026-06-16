@@ -7,10 +7,10 @@ import SearchOverlay from "./SearchOverlay";
 import "./search.css";
 
 const HEADER_INPUT_SELECTORS =
-  "#sw-search-input, #autocomplete-0-input, #sw-search-input-mobile, .assets-site-header__menu-search-typeahead-field";
+  "#sw-search-input, #autocomplete-0-input, #sw-search-input-mobile, .assets-site-header__menu-search-typeahead-field, .site-header__search-input";
 
 const HEADER_FORM_SELECTORS =
-  ".assets-site-header__menu-search-form, #search-mount .aa-Form, .aa-Form";
+  ".assets-site-header__menu-search-form, .site-header__search, #search-mount .aa-Form, .aa-Form";
 
 const HEADER_SUBMIT_SELECTORS =
   ".assets-site-header__menu-search-submit, .aa-SubmitButton";
@@ -39,7 +39,7 @@ export function activateHeaderSearch() {
       input.disabled = false;
       input.removeAttribute("disabled");
       if (!input.placeholder || input.placeholder === "Loading...") {
-        input.placeholder = "Search for sweet gear";
+        input.placeholder = "Search guitars, mics, studio gear…";
       }
     });
 

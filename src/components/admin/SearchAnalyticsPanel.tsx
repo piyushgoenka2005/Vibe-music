@@ -70,7 +70,7 @@ export default function SearchAnalyticsPanel({ period }: SearchAnalyticsPanelPro
                     tick={{ fill: "#a1a1aa", fontSize: 11 }}
                   />
                   <Tooltip contentStyle={{ background: "#141416", border: "1px solid #2a2a2e" }} />
-                  <Bar dataKey="count" fill="#0072ba" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="count" fill="var(--brand-primary)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}

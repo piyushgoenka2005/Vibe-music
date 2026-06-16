@@ -78,7 +78,7 @@ function DashboardContent() {
                   labelStyle={{ color: "#fafafa" }}
                   formatter={(value) => [formatCurrency(Number(value ?? 0)), "Revenue"]}
                 />
-                <Line type="monotone" dataKey="revenue" stroke="#0072ba" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="revenue" stroke="var(--brand-primary)" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>

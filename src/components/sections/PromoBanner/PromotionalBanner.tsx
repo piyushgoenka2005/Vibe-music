@@ -23,7 +23,7 @@ const promotions = [
 
 export default function PromotionalBanner() {
   return (
-    <section className="bg-[#0072ba] text-white">
+    <section className="bg-[var(--brand-primary)] text-white">
       <div className="max-w-[1440px] mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           {promotions.map((promo) => (
@@ -38,12 +38,12 @@ export default function PromotionalBanner() {
                 py-4
                 border-r
                 border-white/20
-                hover:bg-[#05629c]
+                hover:bg-[var(--brand-primary-hover)]
                 transition-colors
               "
             >
               <div className="text-left">
-                <h3 className="font-semibold text-sm">
+                <h3 className="font-medium text-sm">
                   {promo.title}
                 </h3>
 

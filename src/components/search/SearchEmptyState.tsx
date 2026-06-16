@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { fetchProducts } from "@/services/products.api";
+import { productPath } from "@/lib/routes";
 import { formatCurrency } from "@/utils/currency";
 import type { SearchProduct } from "@/types/search";
 
@@ -48,18 +50,20 @@ export default function SearchEmptyState({ query }: SearchEmptyStateProps) {
 
       {recommended.length > 0 ? (
         <section aria-label="Recommended products">
-          <h3 style={{ margin: "0 0 12px", fontSize: 18, textAlign: "left" }}>
-            Recommended for you
-          </h3>
+          <h3 className="sw-search-empty__section-title">Recommended for you</h3>
           <div className="sw-search-recommended">
             {recommended.map((product) => (
-              <article key={product.id} className="sw-search-recommended__card">
+              <Link
+                key={product.id}
+                href={productPath(product.slug)}
+                className="sw-search-recommended__card"
+              >
                 <div className="sw-search-recommended__brand">{product.brand}</div>
                 <div className="sw-search-recommended__name">{product.name}</div>
                 <div className="sw-search-recommended__price">
                   {formatCurrency(product.price)}
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </section>

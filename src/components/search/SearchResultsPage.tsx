@@ -45,7 +45,8 @@ export default function SearchResultsPage({
 
   return (
     <div className="sw-search-results-page">
-      <header className="sw-search-results__header">
+      <header className="sw-search-results__header storefront-page__header">
+        <p className="storefront-page__eyebrow">Search</p>
         <h1 className="sw-search-results__title">Search Results</h1>
         <p className="sw-search-results__meta">
           {query ? (

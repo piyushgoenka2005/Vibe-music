@@ -14,7 +14,7 @@ export default function HeroTile({
 
       <div className="p-6">
 
-        <h3 className="text-2xl font-bold mb-3">
+        <h3 className="text-2xl font-normal mb-3">
           {title}
         </h3>
 
@@ -22,7 +22,7 @@ export default function HeroTile({
           {description}
         </p>
 
-        <button className="font-semibold text-[#0072ba]">
+        <button className="font-medium text-[var(--brand-primary)]">
           Learn More →
         </button>
 

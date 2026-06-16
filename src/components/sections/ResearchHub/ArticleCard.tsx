@@ -14,11 +14,11 @@ export default function ArticleCard({
 
       <div className="p-6">
 
-        <span className="text-[#0072ba] text-sm font-semibold">
+        <span className="text-[var(--brand-primary)] text-sm font-medium">
           {category}
         </span>
 
-        <h3 className="text-xl font-bold mt-3">
+        <h3 className="text-xl font-normal mt-3">
           {title}
         </h3>
 

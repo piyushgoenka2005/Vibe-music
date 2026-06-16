@@ -93,7 +93,7 @@ const NAV_TOP_REDIRECTS: Record<string, string> = {
   "/dealzone": `${ROUTES.searchResults}?q=deals`,
   "/used": `${ROUTES.searchResults}?q=used`,
   "/instrument-rentals": `${ROUTES.search}?q=rentals`,
-  "/insync": `${ROUTES.search}?q=articles`,
+  "/insync": ROUTES.blog,
   "/sweetcare": `${ROUTES.search}?q=support`,
   "/giveaway": `${ROUTES.search}?q=giveaway`,
   "/financing": `${ROUTES.search}?q=financing`,
@@ -211,7 +211,7 @@ export function resolveLegacyPath(pathname: string): string | null {
     return `${ROUTES.searchResults}?q=new`;
   }
   if (path.startsWith("/insync")) {
-    return `${ROUTES.search}?q=articles`;
+    return ROUTES.blog;
   }
   if (path.startsWith("/store/manufacturer/")) {
     return ROUTES.search;

@@ -17,7 +17,7 @@ export default function FeaturedPromotion({
         Limited Offer
       </p>
 
-      <h3 className="text-2xl font-bold mb-3">
+      <h3 className="text-2xl font-normal mb-3">
         {title}
       </h3>
 

@@ -11,7 +11,7 @@ export default function AuthPageLayout({
   wide = false,
 }: AuthPageLayoutProps) {
   return (
-    <main className="homepage-wrapper auth-page" id="main-content">
+    <main className="storefront-page storefront-page--subtle auth-page" id="main-content">
       <div
         className={`auth-page__content${wide ? " auth-page__content--wide" : ""}`}
       >

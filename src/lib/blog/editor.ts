@@ -1,6 +1,7 @@
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
+import Image from "@tiptap/extension-image";
 
 export const blogEditorExtensions = [
   StarterKit.configure({
@@ -11,6 +12,12 @@ export const blogEditorExtensions = [
     HTMLAttributes: { rel: "noopener noreferrer nofollow" },
   }),
   Underline,
+  Image.configure({
+    HTMLAttributes: {
+      class: "blog-inline-image",
+      loading: "lazy",
+    },
+  }),
 ];
 
 export const EMPTY_BLOG_CONTENT = JSON.stringify({

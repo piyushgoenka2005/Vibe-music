@@ -44,7 +44,7 @@ export default function AccountWishlist() {
             >
               <Link
                 href={`/product/${item.slug}`}
-                style={{ color: "#0072ba", textDecoration: "none" }}
+                style={{ color: "var(--brand-primary)", textDecoration: "none" }}
               >
                 {item.brand} — {item.name}
               </Link>

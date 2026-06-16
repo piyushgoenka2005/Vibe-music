@@ -70,7 +70,7 @@ export default function CartDrawer() {
               <p>Your cart is empty.</p>
               <Link
                 href={ROUTES.search}
-                style={{ color: "#0072ba", fontWeight: 700 }}
+                style={{ color: "var(--brand-primary)", fontWeight: 700 }}
                 onClick={close}
               >
                 Continue Shopping

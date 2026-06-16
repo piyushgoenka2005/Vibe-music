@@ -13,7 +13,7 @@ export default function FeaturedCollections() {
 
       <div className="max-w-[1440px] mx-auto px-4">
 
-        <h2 className="text-4xl font-bold mb-10">
+        <h2 className="text-4xl font-normal mb-10">
           Featured Collections
         </h2>
 

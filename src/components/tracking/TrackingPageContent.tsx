@@ -43,50 +43,49 @@ export default function TrackingPageContent() {
   }
 
   return (
-    <main className="homepage-wrapper" id="main-content">
-      <section style={{ maxWidth: 640, margin: "0 auto", padding: "32px 16px" }}>
-        <h1>Track your order</h1>
-        <p style={{ color: "#807f7e" }}>
-          Enter your order ID and the email used at checkout.
-        </p>
-        <form onSubmit={onSubmit} style={{ display: "grid", gap: 12, marginTop: 16 }}>
-          <label>
+    <main className="storefront-page storefront-page--subtle" id="main-content">
+      <section className="track-page">
+        <header className="track-page__header">
+          <p className="storefront-page__eyebrow">Order status</p>
+          <h1 className="track-page__title">Track your order</h1>
+          <p className="track-page__lead">
+            Enter your order ID and the email used at checkout.
+          </p>
+        </header>
+
+        <form className="track-form" onSubmit={onSubmit}>
+          <label className="track-form__field">
             Order ID
             <input
+              className="track-form__input"
               value={orderId}
               onChange={(e) => setOrderIdInput(e.target.value)}
               required
-              style={{ display: "block", width: "100%", marginTop: 4, padding: 10 }}
             />
           </label>
-          <label>
+          <label className="track-form__field">
             Email
             <input
+              className="track-form__input"
               type="email"
               value={email}
               onChange={(e) => setEmailInput(e.target.value)}
               required
-              style={{ display: "block", width: "100%", marginTop: 4, padding: 10 }}
             />
           </label>
-          <button type="submit" className="sw-btn sw-btn-blue" disabled={loading}>
+          <button type="submit" className="track-form__submit" disabled={loading}>
             {loading ? "Looking up..." : "Track order"}
           </button>
         </form>
+
         {error ? (
-          <p role="alert" style={{ color: "#c41e3a", marginTop: 16 }}>
+          <p role="alert" className="track-error">
             {error}
           </p>
         ) : null}
+
         {order ? (
-          <div
-            style={{
-              marginTop: 24,
-              border: "1px solid #d9d9d9",
-              borderRadius: 8,
-              padding: 16,
-            }}
-          >
+          <div className="track-result">
             <h2>Order {order.id}</h2>
             <p>Status: {order.status}</p>
             <p>Payment: {order.paymentStatus}</p>
@@ -104,7 +103,8 @@ export default function TrackingPageContent() {
             </ul>
           </div>
         ) : null}
-        <p style={{ marginTop: 24 }}>
+
+        <p className="track-page__footer">
           {isAuthenticated ? (
             <Link href={ROUTES.accountOrders}>View account orders</Link>
           ) : (

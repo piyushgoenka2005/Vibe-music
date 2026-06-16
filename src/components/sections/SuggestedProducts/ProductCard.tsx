@@ -25,7 +25,7 @@ export default function ProductCard({ name, price, image }: ProductCardProps) {
           {name}
         </a>
 
-        <p className="mb-4 text-xl font-semibold text-[var(--grey100)]">{price}</p>
+        <p className="mb-4 text-xl font-medium text-[var(--grey100)]">{price}</p>
 
         <button type="button" className="sw-btn sw-btn-blue mt-auto w-full text-sm">
           Add To Cart

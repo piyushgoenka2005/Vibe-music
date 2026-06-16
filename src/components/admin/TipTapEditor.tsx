@@ -6,6 +6,7 @@ import {
   Bold,
   Heading2,
   Heading3,
+  ImageIcon,
   Italic,
   Link2,
   List,
@@ -14,7 +15,7 @@ import {
   Strikethrough,
   Underline as UnderlineIcon,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   blogEditorExtensions,
   EMPTY_BLOG_CONTENT,
@@ -57,6 +58,9 @@ export default function TipTapEditor({
   onChange,
   placeholder = "Write your post content…",
 }: TipTapEditorProps) {
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -96,6 +100,31 @@ export default function TipTapEditor({
       return;
     }
     editor!.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  }
+
+  async function uploadInlineImage(file: File) {
+    if (!editor || !file.type.startsWith("image/")) return;
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload/blog-image", {
+        method: "POST",
+        body: formData,
+      });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? "Upload failed");
+      }
+      editor.chain().focus().setImage({ src: data.url, alt: "" }).run();
+    } catch (error) {
+      window.alert(
+        error instanceof Error ? error.message : "Image upload failed"
+      );
+    } finally {
+      setUploadingImage(false);
+    }
   }
 
   return (
@@ -169,7 +198,27 @@ export default function TipTapEditor({
         <ToolbarButton label="Link" active={editor.isActive("link")} onClick={setLink}>
           <Link2 size={16} />
         </ToolbarButton>
+        <ToolbarButton
+          label="Insert image"
+          onClick={() => imageInputRef.current?.click()}
+        >
+          <ImageIcon size={16} />
+        </ToolbarButton>
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void uploadInlineImage(file);
+            e.target.value = "";
+          }}
+        />
       </div>
+      {uploadingImage ? (
+        <p className="tiptap-editor__status">Uploading image…</p>
+      ) : null}
       <EditorContent editor={editor} />
     </div>
   );

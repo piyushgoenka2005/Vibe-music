@@ -47,11 +47,14 @@ export async function createCodOrder(
   return parseJson<{ orderId: string; order: Order }>(response);
 }
 
-export async function releaseOrderReservation(orderId: string): Promise<void> {
+export async function releaseOrderReservation(
+  orderId: string,
+  email: string
+): Promise<void> {
   const response = await fetch("/api/payment/release-reservation", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ orderId }),
+    body: JSON.stringify({ orderId, email }),
   });
   if (!response.ok) {
     const data = (await response.json()) as { error?: string };

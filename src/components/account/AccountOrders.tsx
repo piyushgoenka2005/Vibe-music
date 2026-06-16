@@ -13,6 +13,7 @@ import {
   formatPaymentLabel,
   statusBadgeClass,
 } from "./orderDisplay";
+import { InvoicePreviewCard } from "@/features/invoice/ui/InvoicePreviewCard";
 
 export default function AccountOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -92,6 +93,13 @@ export default function AccountOrders() {
                   View Details
                 </Link>
               </div>
+
+              {order.paymentStatus === "paid" ? (
+                <InvoicePreviewCard
+                  order={order}
+                  invoiceUrl={`/orders/${order.id}/invoice`}
+                />
+              ) : null}
             </div>
           ))
         )}

@@ -1,0 +1,133 @@
+/* ─── Fixed vertical social rail (luxury editorial) ─── */
+
+.social-rail {
+  position: fixed;
+  left: 10px;
+  top: 50%;
+  z-index: 90;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.35rem;
+  opacity: 0;
+  transform: translateY(-50%) translateX(-10px);
+  transition:
+    opacity 600ms var(--ease-premium),
+    transform 600ms var(--ease-premium);
+  pointer-events: none;
+}
+
+.social-rail--visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+  pointer-events: auto;
+}
+
+.social-rail__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.15rem;
+}
+
+.social-rail__link svg {
+  width: 17px;
+  height: 17px;
+}
+
+.social-rail__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #111111;
+  text-decoration: none;
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.social-rail__link:hover {
+  color: var(--brand-primary);
+  transform: scale(1.08);
+}
+
+.social-rail__link:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.social-rail__newsletter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 72px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-pill);
+  background: #ffffff;
+  color: #111111;
+  text-decoration: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.social-rail__newsletter:hover {
+  background: #111111;
+  color: #ffffff;
+  border-color: #111111;
+  transform: scale(1.04);
+}
+
+.social-rail__newsletter:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 3px;
+}
+
+.social-rail__newsletter-text {
+  font-size: 0.5rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  line-height: 1;
+  user-select: none;
+}
+
+@media (min-width: 1024px) {
+  .social-rail {
+    display: flex;
+  }
+}
+
+@media (min-width: 1280px) {
+  .social-rail {
+    left: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social-rail {
+    transition: none;
+    opacity: 1;
+    transform: translateY(-50%);
+  }
+
+  .social-rail__link,
+  .social-rail__newsletter {
+    transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+  }
+
+  .social-rail__link:hover,
+  .social-rail__newsletter:hover {
+    transform: none;
+  }
+}

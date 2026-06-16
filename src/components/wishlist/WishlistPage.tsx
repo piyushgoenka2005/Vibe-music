@@ -27,15 +27,15 @@ export default function WishlistPage() {
       </p>
 
       {items.length === 0 ? (
-        <div className="wl-drawer__empty" style={{ border: "1px solid #e5e4e3", borderRadius: 3 }}>
+        <div className="wl-drawer__empty wl-drawer__empty--card">
           <p>Your wishlist is empty.</p>
-          <Link href={ROUTES.search} style={{ color: "#0072ba", fontWeight: 700 }}>
+          <Link href={ROUTES.search} className="wl-drawer__empty-link">
             Browse categories
           </Link>
         </div>
       ) : (
         <>
-          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+          <div className="wl-page__toolbar">
             <button type="button" className="wl-btn-primary" onClick={moveAllToCart}>
               Move All to Cart
             </button>
@@ -48,20 +48,11 @@ export default function WishlistPage() {
             {items.map((item) => (
               <article key={item.productId} className="wl-page__card">
                 {item.image ? (
-                  <img
-                    src={item.image}
-                    alt=""
-                    className="wl-drawer__photo"
-                    style={{ width: 120, height: 120 }}
-                  />
+                  <img src={item.image} alt="" className="wl-drawer__photo" />
                 ) : (
                   <div
                     className="wl-drawer__swatch"
-                    style={{
-                      backgroundColor: item.imageColor,
-                      width: 120,
-                      height: 120,
-                    }}
+                    style={{ backgroundColor: item.imageColor }}
                     aria-hidden="true"
                   />
                 )}

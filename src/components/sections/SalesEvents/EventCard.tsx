@@ -14,7 +14,7 @@ export default function EventCard({
 
       <div className="p-6">
 
-        <h3 className="font-bold text-xl mb-2">
+        <h3 className="font-normal text-xl mb-2">
           {title}
         </h3>
 
@@ -22,7 +22,7 @@ export default function EventCard({
           {subtitle}
         </p>
 
-        <button className="text-[#0072ba] font-semibold">
+        <button className="text-[var(--brand-primary)] font-medium">
           Shop Event →
         </button>
 

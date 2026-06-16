@@ -45,10 +45,10 @@ export default function ResearchHub() {
                 />
               </div>
               <div className="p-4">
-                <span className="mb-2 inline-block text-[12px] font-semibold uppercase tracking-wide text-[var(--blue)]">
+                <span className="mb-2 inline-block text-[12px] font-medium uppercase tracking-wide text-[var(--blue)]">
                   {article.category}
                 </span>
-                <h3 className="text-[15px] font-semibold leading-snug text-[var(--grey100)] group-hover:text-[var(--blue)]">
+                <h3 className="text-[15px] font-medium leading-snug text-[var(--grey100)] group-hover:text-[var(--blue)]">
                   {article.title}
                 </h3>
               </div>

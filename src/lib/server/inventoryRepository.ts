@@ -141,6 +141,44 @@ function buildVariantStockPatch(
   };
 }
 
+async function reserveVariantStockInTransaction(
+  tx: Transaction,
+  orderId: string,
+  item: OrderInventoryLine,
+  now: string
+): Promise<void> {
+  if (!item.variantId) return;
+
+  const productDoc = await tx.get(productRef(item.productId));
+  if (!productDoc.exists) {
+    throw new Error(`Product not found: ${item.productId}`);
+  }
+
+  const data = productDoc.data()!;
+  const previousStock = readVariantStock(data, item.variantId) ?? 0;
+  if (item.quantity > previousStock) {
+    throw new Error(
+      `Insufficient variant stock for ${item.name ?? item.variantId}: requested ${item.quantity}, available ${previousStock}`
+    );
+  }
+
+  const patch = buildVariantStockPatch(data, item.variantId, -item.quantity);
+  const newStock = previousStock - item.quantity;
+
+  tx.update(productRef(item.productId), patch);
+  writeLogInTransaction(tx, {
+    productId: item.productId,
+    sku: item.variantId,
+    orderId,
+    previousStock,
+    newStock,
+    quantityChanged: -item.quantity,
+    action: "order_created",
+    adminId: null,
+    timestamp: now,
+  });
+}
+
 async function fulfillVariantStockInTransaction(
   tx: Transaction,
   orderId: string,
@@ -272,6 +310,8 @@ export async function reserveStockForOrder(
 ): Promise<void> {
   const db = getAdminFirestore();
   const orderRef = db.collection(ORDERS).doc(orderId);
+  const parentItems = items.filter((item) => !item.variantId);
+  const variantItems = items.filter((item) => item.variantId);
 
   await db.runTransaction(async (tx) => {
     const orderDoc = await tx.get(orderRef);
@@ -287,43 +327,44 @@ export async function reserveStockForOrder(
       return;
     }
 
-    const snapshots = await loadSnapshotsInTransaction(tx, items);
-    const errors = validateAvailability(
-      items.map((item) => ({
-        productId: item.productId,
-        name: snapshots.get(item.productId)?.name ?? item.productId,
-        quantity: item.quantity,
-      })),
-      new Map(
-        [...snapshots.entries()].map(([id, snap]) => [
-          id,
-          {
-            name: snap.name,
-            stock: snap.stock,
-            reservedStock: snap.reservedStock,
-            status: snap.status,
-          },
-        ])
-      )
-    );
-
-    if (errors.length > 0) {
-      const detail = errors
-        .map(
-          (e) =>
-            `${e.name}: requested ${e.quantity}, available ${e.available}`
+    if (parentItems.length > 0) {
+      const snapshots = await loadSnapshotsInTransaction(tx, parentItems);
+      const errors = validateAvailability(
+        parentItems.map((item) => ({
+          productId: item.productId,
+          name: snapshots.get(item.productId)?.name ?? item.productId,
+          quantity: item.quantity,
+        })),
+        new Map(
+          [...snapshots.entries()].map(([id, snap]) => [
+            id,
+            {
+              name: snap.name,
+              stock: snap.stock,
+              reservedStock: snap.reservedStock,
+              status: snap.status,
+            },
+          ])
         )
-        .join("; ");
-      throw new Error(`Insufficient stock: ${detail}`);
+      );
+
+      if (errors.length > 0) {
+        const detail = errors
+          .map(
+            (e) =>
+              `${e.name}: requested ${e.quantity}, available ${e.available}`
+          )
+          .join("; ");
+        throw new Error(`Insufficient stock: ${detail}`);
+      }
     }
 
     const now = new Date().toISOString();
 
-    for (const item of items) {
-      if (item.variantId) continue;
-
-      const snap = snapshots.get(item.productId)!;
-      const previousReserved = snap.reservedStock;
+    for (const item of parentItems) {
+      const snap = (await tx.get(productRef(item.productId))).data()!;
+      const snapshot = readSnapshot(item.productId, snap);
+      const previousReserved = snapshot.reservedStock;
       const newReserved = previousReserved + item.quantity;
 
       tx.update(productRef(item.productId), {
@@ -333,10 +374,10 @@ export async function reserveStockForOrder(
 
       writeLogInTransaction(tx, {
         productId: item.productId,
-        sku: snap.sku,
+        sku: snapshot.sku,
         orderId,
-        previousStock: snap.stock,
-        newStock: snap.stock,
+        previousStock: snapshot.stock,
+        newStock: snapshot.stock,
         quantityChanged: item.quantity,
         action: "order_created",
         adminId: null,
@@ -346,8 +387,13 @@ export async function reserveStockForOrder(
       });
     }
 
+    for (const item of variantItems) {
+      await reserveVariantStockInTransaction(tx, orderId, item, now);
+    }
+
     tx.update(orderRef, {
       inventoryStatus: "reserved",
+      variantInventoryHeld: variantItems.length > 0,
       updatedAt: now,
     });
   });
@@ -371,6 +417,7 @@ export async function fulfillReservedStockForOrder(
     const orderData = orderDoc.data()!;
     const currentStatus = (orderData.inventoryStatus ??
       "none") as OrderInventoryStatus;
+    const variantInventoryHeld = Boolean(orderData.variantInventoryHeld);
 
     if (currentStatus === "fulfilled") {
       return;
@@ -382,12 +429,15 @@ export async function fulfillReservedStockForOrder(
       );
     }
 
-    const snapshots = await loadSnapshotsInTransaction(tx, items);
+    const parentItems = items.filter((item) => !item.variantId);
+    const variantItems = items.filter((item) => item.variantId);
+    const snapshots =
+      parentItems.length > 0
+        ? await loadSnapshotsInTransaction(tx, parentItems)
+        : new Map<string, ProductStockSnapshot>();
     const now = new Date().toISOString();
 
-    for (const item of items) {
-      if (item.variantId) continue;
-
+    for (const item of parentItems) {
       const snap = snapshots.get(item.productId)!;
       const previousStock = snap.stock;
       const previousReserved = snap.reservedStock;
@@ -421,14 +471,16 @@ export async function fulfillReservedStockForOrder(
       });
     }
 
-    for (const item of items.filter((entry) => entry.variantId)) {
-      await fulfillVariantStockInTransaction(
-        tx,
-        orderId,
-        item,
-        "order_paid",
-        now
-      );
+    if (!variantInventoryHeld) {
+      for (const item of variantItems) {
+        await fulfillVariantStockInTransaction(
+          tx,
+          orderId,
+          item,
+          "order_paid",
+          now
+        );
+      }
     }
 
     tx.update(orderRef, {
@@ -559,6 +611,7 @@ export async function releaseReservedStockForOrder(
     const orderData = orderDoc.data()!;
     const currentStatus = (orderData.inventoryStatus ??
       "none") as OrderInventoryStatus;
+    const variantInventoryHeld = Boolean(orderData.variantInventoryHeld);
 
     if (currentStatus === "released" || currentStatus === "fulfilled") {
       return;
@@ -568,12 +621,15 @@ export async function releaseReservedStockForOrder(
       return;
     }
 
-    const snapshots = await loadSnapshotsInTransaction(tx, items);
+    const parentItems = items.filter((item) => !item.variantId);
+    const variantItems = items.filter((item) => item.variantId);
+    const snapshots =
+      parentItems.length > 0
+        ? await loadSnapshotsInTransaction(tx, parentItems)
+        : new Map<string, ProductStockSnapshot>();
     const now = new Date().toISOString();
 
-    for (const item of items) {
-      if (item.variantId) continue;
-
+    for (const item of parentItems) {
       const snap = snapshots.get(item.productId)!;
       const previousReserved = snap.reservedStock;
       const newReserved = Math.max(0, previousReserved - item.quantity);
@@ -597,6 +653,18 @@ export async function releaseReservedStockForOrder(
         previousReserved,
         newReserved,
       });
+    }
+
+    if (variantInventoryHeld) {
+      for (const item of variantItems) {
+        await fulfillVariantStockInTransaction(
+          tx,
+          orderId,
+          item,
+          "order_cancelled",
+          now
+        );
+      }
     }
 
     tx.update(orderRef, {

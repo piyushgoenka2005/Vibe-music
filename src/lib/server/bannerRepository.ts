@@ -1,6 +1,9 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import {
+  getAdminFirestore,
+  isFirebaseAdminConfigured,
+} from "@/lib/firebase/admin";
 import type {
   BannerStatus,
   CreateBannerInput,
@@ -62,6 +65,10 @@ export async function listAllBanners(): Promise<HomepageBanner[]> {
 }
 
 export async function listActiveBanners(at = new Date()): Promise<HomepageBanner[]> {
+  if (!isFirebaseAdminConfigured()) {
+    return [];
+  }
+
   const snap = await getAdminFirestore()
     .collection(COLLECTION)
     .where("status", "==", "active")

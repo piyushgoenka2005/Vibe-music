@@ -7,6 +7,10 @@ export const firebasePublicConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
 } as const;
 
+export function isFirebaseClientConfigured(): boolean {
+  return Object.values(firebasePublicConfig).every(Boolean);
+}
+
 export function assertFirebaseClientConfig(): void {
   const missing = Object.entries(firebasePublicConfig)
     .filter(([, value]) => !value)

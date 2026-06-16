@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import CheckoutSummary from "@/components/checkout/CheckoutSummary";
+import { Trash2 } from "lucide-react";import CheckoutSummary from "@/components/checkout/CheckoutSummary";
 import PaymentButton from "@/components/checkout/PaymentButton";
 import {
   addressToShipping,
@@ -15,6 +15,7 @@ import { useAddresses } from "@/hooks/useAddresses";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
+import { useToastStore } from "@/store/toastStore";
 import { formatCurrencyPrecise } from "@/utils/currency";
 import type { ShippingAddress } from "@/types/order";
 import "@/components/checkout/checkout.css";
@@ -57,8 +58,8 @@ const INDIAN_STATES = [
 type CheckoutStep = "address" | "summary" | "payment";
 
 const STEPS: Array<{ id: CheckoutStep; label: string }> = [
-  { id: "address", label: "Address" },
-  { id: "summary", label: "Order Summary" },
+  { id: "address", label: "Shipping" },
+  { id: "summary", label: "Review" },
   { id: "payment", label: "Payment" },
 ];
 
@@ -100,7 +101,10 @@ export default function CheckoutPageContent() {
     defaultAddress,
     isLoading: addressesLoading,
     createAddress,
+    deleteAddress,
+    isDeleting,
   } = useAddresses();
+  const showToast = useToastStore((s) => s.show);
 
   const [step, setStep] = useState<CheckoutStep>("address");
   const savedAddresses = isAuthenticated ? addresses : [];
@@ -117,9 +121,7 @@ export default function CheckoutPageContent() {
   const [addressForm, setAddressForm] = useState<ShippingAddress>(EMPTY_ADDRESS);
   const [confirmedAddress, setConfirmedAddress] =
     useState<ShippingAddress | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">(
-    "razorpay"
-  );
+  const paymentMethod = "razorpay" as const;
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
   const [isSavingAddress, setIsSavingAddress] = useState(false);
@@ -226,6 +228,54 @@ export default function CheckoutPageContent() {
     setStep("address");
   }
 
+  function selectSavedAddress(addressId: string) {
+    setUseNewAddressOverride(false);
+    setSelectedAddressId(addressId);
+  }
+
+  async function handleDeleteAddress(addressId: string, event: MouseEvent) {
+    event.stopPropagation();
+    if (!window.confirm("Remove this address?")) return;
+
+    const wasSelected =
+      !useNewAddress &&
+      (selectedAddressId === addressId || effectiveSelectedAddressId === addressId);
+    const remaining = savedAddresses.filter((a) => a.id !== addressId);
+
+    try {
+      await deleteAddress(addressId);
+      showToast("Address removed", "info");
+
+      if (wasSelected) {
+        setSelectedAddressId(null);
+        setConfirmedAddress(null);
+        if (remaining.length === 0) {
+          setUseNewAddressOverride(true);
+        } else {
+          const next = remaining.find((a) => a.isDefault) ?? remaining[0];
+          if (next) setSelectedAddressId(next.id);
+        }
+      } else if (selectedAddressId === addressId) {
+        setSelectedAddressId(null);
+      }
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Unable to delete address",
+        "error"
+      );
+    }
+  }
+
+  function handleAddressCardKeyDown(
+    addressId: string,
+    event: KeyboardEvent<HTMLDivElement>
+  ) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      selectSavedAddress(addressId);
+    }
+  }
+
   if (items.length === 0) {
     return null;
   }
@@ -234,7 +284,10 @@ export default function CheckoutPageContent() {
 
   return (
     <div className="checkout-page">
-      <h1 className="personalization-widgets__greeting">Checkout</h1>
+      <header className="storefront-page__header">
+        <p className="storefront-page__eyebrow">Secure checkout</p>
+        <h1 className="storefront-page__title">Checkout</h1>
+      </header>
 
       {!isAuthenticated ? (
         <p style={{ marginBottom: 16, fontSize: 14, color: "#666" }}>
@@ -254,21 +307,46 @@ export default function CheckoutPageContent() {
         </p>
       ) : null}
 
-      <div className="checkout-steps" aria-label="Checkout progress">
-        {STEPS.map((s, index) => (
-          <span
-            key={s.id}
-            className={`checkout-step${
-              s.id === step
-                ? " checkout-step--active"
-                : index < stepIndex
-                  ? " checkout-step--done"
-                  : ""
-            }`}
-          >
-            {index + 1}. {s.label}
-          </span>
-        ))}
+      <div className="checkout-progress">
+        <p className="checkout-progress__trust">
+          Secure payment · GST invoice included
+        </p>
+        <ol className="checkout-steps" aria-label="Checkout progress">
+          {STEPS.map((s, index) => {
+            const isActive = s.id === step;
+            const isDone = index < stepIndex;
+            return (
+              <li
+                key={s.id}
+                className="checkout-steps__item"
+                aria-current={isActive ? "step" : undefined}
+              >
+                <div
+                  className={`checkout-step${
+                    isActive
+                      ? " checkout-step--active"
+                      : isDone
+                        ? " checkout-step--done"
+                        : ""
+                  }`}
+                >
+                  <span className="checkout-step__circle" aria-hidden="true">
+                    {index + 1}
+                  </span>
+                  <span className="checkout-step__label">{s.label}</span>
+                </div>
+                {index < STEPS.length - 1 ? (
+                  <span
+                    className={`checkout-step__connector${
+                      isDone ? " checkout-step__connector--done" : ""
+                    }`}
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </li>
+            );
+          })}
+        </ol>
       </div>
 
       <div className="checkout-grid">
@@ -284,22 +362,36 @@ export default function CheckoutPageContent() {
               {savedAddresses.length > 0 ? (
                 <div className="checkout-address-list">
                   {savedAddresses.map((addr) => (
-                    <button
+                    <div
                       key={addr.id}
-                      type="button"
                       className={`checkout-address-card${
                         !useNewAddress && effectiveSelectedAddressId === addr.id
                           ? " checkout-address-card--selected"
                           : ""
                       }`}
-                      onClick={() => {
-                        setUseNewAddressOverride(false);
-                        setSelectedAddressId(addr.id);
-                      }}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => selectSavedAddress(addr.id)}
+                      onKeyDown={(event) => handleAddressCardKeyDown(addr.id, event)}
+                      aria-pressed={
+                        !useNewAddress && effectiveSelectedAddressId === addr.id
+                      }
+                      aria-label={`Select ${getAddressDisplayLabel(addr)}`}
                     >
-                      <div className="checkout-address-card__label">
-                        {getAddressDisplayLabel(addr)}
-                        {addr.isDefault ? " (Default)" : ""}
+                      <div className="checkout-address-card__head">
+                        <div className="checkout-address-card__label">
+                          {getAddressDisplayLabel(addr)}
+                          {addr.isDefault ? " (Default)" : ""}
+                        </div>
+                        <button
+                          type="button"
+                          className="checkout-address-card__delete"
+                          onClick={(event) => void handleDeleteAddress(addr.id, event)}
+                          disabled={isDeleting}
+                          aria-label={`Remove ${getAddressDisplayLabel(addr)}`}
+                        >
+                          <Trash2 size={16} aria-hidden="true" />
+                        </button>
                       </div>
                       <div className="checkout-address-card__text">
                         {addr.fullName}
@@ -311,7 +403,7 @@ export default function CheckoutPageContent() {
                         {"\n"}
                         {addr.phone}
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               ) : null}
@@ -525,45 +617,13 @@ export default function CheckoutPageContent() {
               <h2 className="checkout-panel__title">Payment Method</h2>
 
               <div className="checkout-payment-toggle">
-                <label
-                  className={`checkout-payment-option${
-                    paymentMethod === "razorpay"
-                      ? " checkout-payment-option--selected"
-                      : ""
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    checked={paymentMethod === "razorpay"}
-                    onChange={() => setPaymentMethod("razorpay")}
-                  />
+                <div className="checkout-payment-option checkout-payment-option--selected">
                   <span>
                     <strong>Pay Online</strong>
                     <br />
                     UPI, Credit/Debit Cards, Net Banking, Wallets
                   </span>
-                </label>
-
-                <label
-                  className={`checkout-payment-option${
-                    paymentMethod === "cod"
-                      ? " checkout-payment-option--selected"
-                      : ""
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    checked={paymentMethod === "cod"}
-                    onChange={() => setPaymentMethod("cod")}
-                  />
-                  <span>
-                    <strong>Cash on Delivery (COD)</strong>
-                    <br />
-                    Pay when your order arrives
-                  </span>
-                </label>
+                </div>
               </div>
 
               {resolvedAddress && hasValidContact ? (

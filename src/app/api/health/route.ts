@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { getIntegrationChecks } from "@/lib/server/integrationConfig";
 import { logInfo } from "@/lib/server/logger";
 
 export async function GET() {
@@ -8,6 +9,7 @@ export async function GET() {
     app: "ok",
     firestore: "ok",
   };
+  const integrations = getIntegrationChecks();
 
   try {
     await getAdminFirestore().collection("settings").doc("store").get();
@@ -20,6 +22,7 @@ export async function GET() {
     status: healthy ? "healthy" : "degraded",
     timestamp,
     checks,
+    integrations,
     version: process.env.VERCEL_GIT_COMMIT_SHA ?? "local",
   };
 

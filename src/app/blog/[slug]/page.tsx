@@ -110,7 +110,7 @@ export default async function BlogPostPage({ params }: PageProps) {
   });
 
   return (
-    <main className="blog-page blog-page--article">
+    <main className="blog-page blog-page--article" id="main-content">
       <article className="blog-article">
         <div className="blog-page__inner blog-article__inner">
           <Link href="/blog" className="blog-article__back">

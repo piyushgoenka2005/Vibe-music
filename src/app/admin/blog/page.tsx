@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import {
@@ -95,6 +95,20 @@ function BlogListContent() {
                     <td>{formatDate(post.updatedAt)}</td>
                     <td>
                       <div style={{ display: "flex", gap: 8 }}>
+                        {(post.status === "published" ||
+                          (post.status === "scheduled" &&
+                            post.scheduledAt &&
+                            new Date(post.scheduledAt) <= new Date())) ? (
+                          <a
+                            href={`${ROUTES.blog}/${post.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="admin-btn admin-btn--ghost admin-btn--icon"
+                            aria-label="View live post"
+                          >
+                            <ExternalLink size={14} />
+                          </a>
+                        ) : null}
                         <Link
                           href={`${ROUTES.adminBlog}/${post.id}`}
                           className="admin-btn admin-btn--ghost admin-btn--icon"

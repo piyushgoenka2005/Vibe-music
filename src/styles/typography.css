@@ -1,0 +1,175 @@
+/* ─── Beats-inspired typography system ─── */
+
+:root {
+  --font-primary: var(--font-inter, "Helvetica Neue"), Helvetica, Arial, sans-serif;
+  --font-display: var(--font-primary);
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+
+  /* Type scale */
+  --text-display-size: 4rem;
+  --text-display-tracking: -0.04em;
+  --text-display-leading: 1.05;
+
+  --text-section-size: 2.5rem;
+  --text-section-tracking: -0.03em;
+  --text-section-leading: 1.1;
+
+  --text-page-size: 2rem;
+  --text-page-tracking: -0.03em;
+  --text-page-leading: 1.15;
+
+  --text-product-size: 1.75rem;
+  --text-product-tracking: -0.02em;
+  --text-product-leading: 1.2;
+
+  --text-card-title-size: 1.25rem;
+  --text-card-title-leading: 1.3;
+
+  --text-body-size: 1rem;
+  --text-body-leading: 1.5;
+  --text-body-tracking: 0;
+
+  --text-small-size: 0.875rem;
+  --text-small-leading: 1.45;
+
+  --text-label-size: 0.8125rem;
+  --text-label-leading: 1.35;
+  --text-label-tracking: 0.02em;
+}
+
+/* ─── Semantic type roles ─── */
+
+.type-display {
+  font-family: var(--font-primary);
+  font-size: clamp(2.5rem, 5vw, var(--text-display-size));
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--text-display-tracking);
+  line-height: var(--text-display-leading);
+}
+
+.type-section-heading {
+  font-family: var(--font-primary);
+  font-size: clamp(1.75rem, 3.5vw, var(--text-section-size));
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--text-section-tracking);
+  line-height: var(--text-section-leading);
+}
+
+.type-page-heading {
+  font-family: var(--font-primary);
+  font-size: clamp(1.5rem, 3vw, var(--text-page-size));
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--text-page-tracking);
+  line-height: var(--text-page-leading);
+}
+
+.type-product-title {
+  font-family: var(--font-primary);
+  font-size: clamp(1.375rem, 2.5vw, var(--text-product-size));
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--text-product-tracking);
+  line-height: var(--text-product-leading);
+}
+
+.type-card-title {
+  font-family: var(--font-primary);
+  font-size: var(--text-card-title-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-card-title-leading);
+}
+
+.type-body {
+  font-family: var(--font-primary);
+  font-size: var(--text-body-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-body-leading);
+}
+
+.type-small {
+  font-family: var(--font-primary);
+  font-size: var(--text-small-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-small-leading);
+}
+
+.type-label {
+  font-family: var(--font-primary);
+  font-size: var(--text-label-size);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--text-label-tracking);
+  line-height: var(--text-label-leading);
+}
+
+/* ─── Global heading normalization (luxury light weight) ─── */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: -0.02em;
+}
+
+/* Shared title patterns across storefront */
+.storefront-page__title,
+.pdp-title,
+.pdp-section__title,
+.category-bento__title,
+.editorial-split__title,
+.gear-stories__title,
+.premium-hero__title,
+.site-footer__heading,
+.cat-page__title,
+.cat-product-card__name,
+.auth-page__title,
+.checkout-page__title,
+.cart-page__title,
+.account-page__title,
+.blog-post__title,
+.blog-index__title {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-regular);
+}
+
+/* Eyebrows & UI labels */
+.premium-section-eyebrow,
+.storefront-page__eyebrow,
+.cat-product-card__brand {
+  font-weight: var(--font-weight-medium);
+}
+
+/* Buttons — never bold */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.premium-btn,
+.cat-product-card__add,
+.cart-drawer__close,
+.gear-story-card__cta,
+.gear-story-modal__add,
+.gear-story-modal__view,
+.social-rail__newsletter {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* shadcn / admin UI */
+[data-slot="button"],
+[data-slot="label"] {
+  font-family: var(--font-primary);
+}
+
+[data-slot="button"] {
+  font-weight: var(--font-weight-medium);
+}
+
+[data-slot="label"] {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-label-size);
+}

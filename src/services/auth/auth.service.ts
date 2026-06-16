@@ -23,7 +23,12 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
 async function ensureUserProfile(user: FirebaseUser): Promise<void> {
   try {
     const profile = await getUserProfile(user.uid);
-    if (profile) return;
+    if (profile) {
+      if (user.photoURL && profile.photoURL !== user.photoURL) {
+        await updateUserProfile(user.uid, { photoURL: user.photoURL });
+      }
+      return;
+    }
 
     await createUserProfile(user.uid, {
       email: user.email ?? "",

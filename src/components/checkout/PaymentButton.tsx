@@ -123,12 +123,14 @@ export default function PaymentButton({
         notes: {
           orderId: orderResponse.orderId,
         },
-        theme: { color: "#0072ba" },
+        theme: { color: "#1253ED" },
         handler: () => {},
       });
 
       if (!response) {
-        await releaseOrderReservation(orderResponse.orderId).catch(() => undefined);
+        await releaseOrderReservation(orderResponse.orderId, email).catch(
+          () => undefined
+        );
         showToast("Payment cancelled or failed", "error");
         return;
       }
@@ -145,7 +147,7 @@ export default function PaymentButton({
       router.push(successUrl(orderResponse.orderId));
     } catch (err) {
       if (pendingOrderId) {
-        await releaseOrderReservation(pendingOrderId).catch(() => undefined);
+        await releaseOrderReservation(pendingOrderId, email).catch(() => undefined);
       }
       showToast(
         err instanceof Error ? err.message : "Payment failed",

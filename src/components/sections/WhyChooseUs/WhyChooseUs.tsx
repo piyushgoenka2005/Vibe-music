@@ -39,7 +39,7 @@ export default function WhyChooseUs() {
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--grey0)] text-2xl">
                 {benefit.icon}
               </div>
-              <h3 className="mb-2 text-base font-semibold text-[var(--grey100)]">
+              <h3 className="mb-2 text-base font-medium text-[var(--grey100)]">
                 {benefit.title}
               </h3>
               <p className="text-sm leading-relaxed text-[var(--grey60)]">

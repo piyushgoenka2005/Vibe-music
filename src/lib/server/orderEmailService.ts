@@ -22,7 +22,7 @@ function buildOrderConfirmationHtml(order: Order): string {
 
   return `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#222">
-      <h1 style="color:#0072ba">Order Confirmed</h1>
+      <h1 style="color:var(--brand-primary)">Order Confirmed</h1>
       <p>Hi ${order.customerName ?? order.shippingAddress.name},</p>
       <p>Thank you for shopping at ${BRAND.name}. Your order <strong>${order.id}</strong> has been placed.</p>
       <p><strong>Total:</strong> ${formatInr(order.total)}<br/>
@@ -35,7 +35,7 @@ function buildOrderConfirmationHtml(order: Order): string {
         </tr></thead>
         <tbody>${itemRows}</tbody>
       </table>
-      <p><a href="${trackUrl}" style="display:inline-block;background:#0072ba;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px">Track your order</a></p>
+      <p><a href="${trackUrl}" style="display:inline-block;background:var(--brand-primary);color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px">Track your order</a></p>
       <p style="font-size:13px;color:#666">Deliver to: ${order.shippingAddress.name}, ${order.shippingAddress.line1}, ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}</p>
     </div>
   `;

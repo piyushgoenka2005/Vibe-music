@@ -188,6 +188,7 @@ export async function createOrder(
         process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID,
     };
   } catch (error) {
+    await releaseOrderReservation(orderId).catch(() => undefined);
     await orderRef.delete().catch(() => undefined);
     throw error;
   }
@@ -247,10 +248,20 @@ export async function verifyAndCompletePayment(
   };
 }
 
-export async function releaseOrderReservation(orderId: string): Promise<void> {
+export async function releaseOrderReservation(
+  orderId: string,
+  email?: string
+): Promise<void> {
   const order = await getOrderById(orderId);
   if (!order) {
     throw new Error("Order not found");
+  }
+
+  if (email) {
+    const normalized = email.trim().toLowerCase();
+    if (order.email !== normalized) {
+      throw new Error("Order email does not match");
+    }
   }
 
   if (order.inventoryStatus !== "reserved") {

@@ -12,7 +12,7 @@ export default function CollectionCard({
 
       <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
 
-        <h3 className="text-white text-2xl font-bold">
+        <h3 className="text-white text-2xl font-normal">
           {title}
         </h3>
 

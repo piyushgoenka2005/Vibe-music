@@ -13,6 +13,7 @@ import {
   updateDisplayName as updateDisplayNameService,
 } from "@/services/auth/auth.service";
 import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
+import { isFirebaseClientConfigured } from "@/lib/firebase/config";
 import { mergeGuestCartOnAuth, snapshotGuestCart } from "@/lib/cart/mergeGuestCart";
 import { useCartStore } from "@/store/cartStore";
 import type { AppUser, SignInInput, SignUpInput } from "@/types/user";
@@ -150,6 +151,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   initializeAuth: () => {
     if (unsubscribeAuth) {
       return unsubscribeAuth;
+    }
+
+    if (!isFirebaseClientConfigured()) {
+      set({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        isInitialized: true,
+      });
+      return () => {};
     }
 
     set({ isLoading: true });

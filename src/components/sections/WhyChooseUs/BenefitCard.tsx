@@ -12,7 +12,7 @@ export default function BenefitCard({
 
       <div className="w-16 h-16 rounded-full bg-blue-100 mx-auto mb-5" />
 
-      <h3 className="font-bold text-xl mb-3">
+      <h3 className="font-normal text-xl mb-3">
         {title}
       </h3>
 

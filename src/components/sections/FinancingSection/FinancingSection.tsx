@@ -10,7 +10,7 @@ export default function FinancingSection() {
           />
 
           <div>
-            <h2 className="mb-2 text-xl font-semibold text-[var(--grey100)]">
+            <h2 className="mb-2 text-xl font-medium text-[var(--grey100)]">
               Special Financing!
             </h2>
             <p className="text-[15px] leading-relaxed text-[var(--grey60)]">
@@ -21,7 +21,7 @@ export default function FinancingSection() {
 
           <a
             href="#"
-            className="inline-flex items-center gap-2 whitespace-nowrap text-[15px] font-semibold text-[var(--blue)] hover:text-[var(--blue60)]"
+            className="inline-flex items-center gap-2 whitespace-nowrap text-[15px] font-medium text-[var(--blue)] hover:text-[var(--blue60)]"
           >
             Take me there
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 299 512" aria-hidden="true" height="14" width="14" fill="currentColor">

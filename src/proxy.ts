@@ -7,7 +7,7 @@ import {
 } from "@/lib/auth/protected-routes";
 import { resolveLegacyPath } from "@/lib/routes";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   const resolved = resolveLegacyPath(pathname);

@@ -43,7 +43,10 @@ export default function CartPage() {
 
   return (
     <div className="cart-page">
-      <h1 className="cart-page__title">Your Cart</h1>
+      <header className="storefront-page__header" style={{ marginBottom: "1.5rem" }}>
+        <p className="storefront-page__eyebrow">Your bag</p>
+        <h1 className="storefront-page__title">Cart</h1>
+      </header>
 
       {items.length === 0 ? (
         <div className="cart-drawer__empty" style={{ padding: "48px 16px" }}>
@@ -87,7 +90,7 @@ export default function CartPage() {
                   {product.brand}
                 </div>
                 <div style={{ fontSize: 14 }}>{product.name}</div>
-                <div style={{ fontWeight: 700, color: "#0072ba" }}>
+                <div style={{ fontWeight: 700, color: "var(--brand-primary)" }}>
                   {formatCurrency(product.price)}
                 </div>
               </Link>
@@ -114,7 +117,7 @@ export default function CartPage() {
                   {product.brand}
                 </div>
                 <div style={{ fontSize: 14 }}>{product.name}</div>
-                <div style={{ fontWeight: 700, color: "#0072ba" }}>
+                <div style={{ fontWeight: 700, color: "var(--brand-primary)" }}>
                   {formatCurrency(product.price)}
                 </div>
               </Link>

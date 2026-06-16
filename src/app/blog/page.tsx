@@ -25,7 +25,7 @@ export default async function BlogIndexPage() {
   const posts = await listPublicBlogPosts();
 
   return (
-    <main className="blog-page">
+    <main className="blog-page" id="main-content">
       <div className="blog-page__inner">
         <header className="blog-page__header">
           <p className="blog-page__eyebrow">InSync</p>

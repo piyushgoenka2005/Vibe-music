@@ -9,7 +9,7 @@ export default function WelcomeCard({
 }: WelcomeCardProps) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition">
-      <h3 className="font-semibold text-lg text-gray-900 mb-2">
+      <h3 className="font-medium text-lg text-gray-900 mb-2">
         {title}
       </h3>
 

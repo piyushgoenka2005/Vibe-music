@@ -8,6 +8,7 @@ import {
   getVariantAttributeGroups,
 } from "@/lib/variants";
 import type { ProductDetail, ProductVariant } from "@/types/product";
+import ProductTrustBadges from "./ProductTrustBadges";
 
 interface ProductInfoProps {
   product: ProductDetail;
@@ -46,6 +47,12 @@ function isHexColor(value: string): boolean {
   return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.trim());
 }
 
+function hasLimitedDeal(product: ProductDetail, displayPrice: number): boolean {
+  if (product.msrp === null) return false;
+  if (displayPrice < product.msrp) return true;
+  return product.salePrice !== null && product.salePrice < product.msrp;
+}
+
 export default function ProductInfo({
   product,
   selectedVariant,
@@ -61,6 +68,7 @@ export default function ProductInfo({
 }: ProductInfoProps) {
   const displayPrice = selectedVariant.price;
   const onSale = product.salePrice !== null && product.msrp !== null;
+  const showLimitedDeal = hasLimitedDeal(product, displayPrice);
   const savings =
     onSale && product.msrp ? product.msrp - displayPrice : 0;
   const attributeGroups = getVariantAttributeGroups(product.variants);
@@ -78,6 +86,10 @@ export default function ProductInfo({
       <p className="pdp-sku">
         SKU: <span>{selectedVariant.sku}</span>
       </p>
+
+      {showLimitedDeal ? (
+        <span className="pdp-deal-badge">Limited Deal</span>
+      ) : null}
 
       <div className="pdp-rating">
         <span className="pdp-rating__stars" aria-hidden="true">
@@ -255,30 +267,34 @@ export default function ProductInfo({
       <div className="pdp-actions">
         <button
           type="button"
-          className="pdp-btn pdp-btn--primary"
-          onClick={onAddToCart}
-          disabled={selectedVariant.availability === "out-of-stock"}
-        >
-          Add to Cart
-        </button>
-        <button
-          type="button"
-          className="pdp-btn pdp-btn--buy"
+          className="pdp-btn pdp-btn--buy pdp-buy-now"
           onClick={onBuyNow}
           disabled={selectedVariant.availability === "out-of-stock"}
         >
           Buy Now
         </button>
-        <button
-          type="button"
-          className="pdp-btn pdp-btn--secondary"
-          onClick={onToggleWishlist}
-          aria-pressed={isWishlisted}
-          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-        >
-          {isWishlisted ? "♥ Wishlisted" : "♡ Wishlist"}
-        </button>
+        <div className="pdp-actions__row">
+          <button
+            type="button"
+            className="pdp-btn pdp-btn--primary"
+            onClick={onAddToCart}
+            disabled={selectedVariant.availability === "out-of-stock"}
+          >
+            Add to Cart
+          </button>
+          <button
+            type="button"
+            className="pdp-btn pdp-btn--secondary pdp-btn--wishlist"
+            onClick={onToggleWishlist}
+            aria-pressed={isWishlisted}
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            {isWishlisted ? "♥ Wishlisted" : "♡ Wishlist"}
+          </button>
+        </div>
       </div>
+
+      <ProductTrustBadges />
     </div>
   );
 }
