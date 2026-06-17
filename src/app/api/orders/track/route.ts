@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrderById } from "@/lib/server/orderService";
+import { toOrderTracking } from "@/types/orderTracking";
+import type { OrderTrackingResponse } from "@/types/orderTracking";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -20,7 +22,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ order });
+    const body: OrderTrackingResponse = { order: toOrderTracking(order) };
+    return NextResponse.json(body);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unable to track order";

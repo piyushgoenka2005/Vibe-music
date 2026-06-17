@@ -1,9 +1,9 @@
-import type { Order } from "@/types/order";
+import type { OrderTracking, OrderTrackingResponse } from "@/types/orderTracking";
 
 export async function trackOrder(
   orderId: string,
   email: string
-): Promise<Order | null> {
+): Promise<OrderTracking | null> {
   const params = new URLSearchParams({ orderId, email });
   const response = await fetch(`/api/orders/track?${params.toString()}`);
 
@@ -15,6 +15,6 @@ export async function trackOrder(
     throw new Error("Unable to track order");
   }
 
-  const data = (await response.json()) as { order: Order };
+  const data = (await response.json()) as OrderTrackingResponse;
   return data.order;
 }

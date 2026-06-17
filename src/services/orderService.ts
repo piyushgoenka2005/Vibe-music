@@ -71,8 +71,8 @@ export async function fetchGuestOrder(
   orderId: string,
   email: string
 ): Promise<Order> {
-  const params = new URLSearchParams({ orderId, email });
-  const response = await fetch(`/api/orders/track?${params.toString()}`);
+  const params = new URLSearchParams({ email });
+  const response = await fetch(`/api/orders/${orderId}?${params.toString()}`);
   return parseJson<{ order: Order }>(response).then((data) => data.order);
 }
 

@@ -4,11 +4,15 @@ import { getSessionUser } from "@/lib/auth/server-session";
 import { getAdminSession } from "@/lib/server/adminService";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ orderId: string }> }
 ) {
   try {
     const { orderId } = await context.params;
+    const guestEmail = new URL(request.url).searchParams
+      .get("email")
+      ?.trim()
+      .toLowerCase();
     const sessionUser = await getSessionUser();
     const order = await getOrderById(orderId);
 
@@ -17,6 +21,12 @@ export async function GET(
     }
 
     if (!sessionUser) {
+      if (
+        guestEmail &&
+        order.email?.toLowerCase() === guestEmail
+      ) {
+        return NextResponse.json({ order });
+      }
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 

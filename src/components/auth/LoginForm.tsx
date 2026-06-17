@@ -29,6 +29,9 @@ export default function LoginForm() {
   const registerHref = searchParams.get("redirect")
     ? `${ROUTES.register}?redirect=${encodeURIComponent(searchParams.get("redirect")!)}`
     : ROUTES.register;
+  const adminLoginHref = searchParams.get("redirect")
+    ? `${ROUTES.adminLogin}?redirect=${encodeURIComponent(searchParams.get("redirect")!)}`
+    : ROUTES.adminLogin;
 
   const signIn = useAuthStore((s) => s.signIn);
   const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);
@@ -124,6 +127,10 @@ export default function LoginForm() {
           <button type="submit" className="auth-submit" disabled={isLoading}>
             {isLoading ? "Signing in…" : "Log In"}
           </button>
+
+          <Link href={adminLoginHref} className="auth-secondary-btn">
+            Admin Login
+          </Link>
         </form>
       </Form>
 

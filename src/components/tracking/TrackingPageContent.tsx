@@ -7,7 +7,7 @@ import { trackOrder } from "@/services/order.service";
 import { useAuthStore } from "@/store/authStore";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrency } from "@/utils/currency";
-import type { Order } from "@/types/order";
+import type { OrderTracking } from "@/types/orderTracking";
 
 export default function TrackingPageContent() {
   const searchParams = useSearchParams();
@@ -19,7 +19,7 @@ export default function TrackingPageContent() {
   const [emailInput, setEmailInput] = useState("");
   const orderId = orderIdInput || urlOrderId;
   const email = emailInput || urlEmail;
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<OrderTracking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -86,17 +86,22 @@ export default function TrackingPageContent() {
 
         {order ? (
           <div className="track-result">
-            <h2>Order {order.id}</h2>
+            <h2>Order {order.orderNumber}</h2>
             <p>Status: {order.status}</p>
             <p>Payment: {order.paymentStatus}</p>
             <p>Total: {formatCurrency(order.total)}</p>
-            <p>
-              Deliver to: {order.shippingAddress.name},{" "}
-              {order.shippingAddress.city}, {order.shippingAddress.state}
-            </p>
+            {order.trackingNumber ? (
+              <p>
+                Tracking: {order.trackingNumber}
+                {order.carrier ? ` (${order.carrier})` : ""}
+              </p>
+            ) : null}
+            {order.estimatedDelivery ? (
+              <p>Estimated delivery: {order.estimatedDelivery}</p>
+            ) : null}
             <ul>
-              {order.items.map((item) => (
-                <li key={item.productId}>
+              {order.items.map((item, index) => (
+                <li key={`${item.productId}-${index}`}>
                   {item.quantity} × {item.name}
                 </li>
               ))}
