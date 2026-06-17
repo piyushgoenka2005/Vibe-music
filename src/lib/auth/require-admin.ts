@@ -15,7 +15,8 @@ export class AdminAuthError extends Error {
 }
 
 export async function requireAdmin(
-  permission?: Permission
+  permission?: Permission,
+  _request?: Request
 ): Promise<AdminSession> {
   const sessionUser = await getSessionUser();
   if (!sessionUser) {

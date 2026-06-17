@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("categories:write");
+    await requireAdmin("categories:write", request);
     const body = await request.json();
     const parsed = adminCategorySchema.parse(body);
     const category = await createCategory({

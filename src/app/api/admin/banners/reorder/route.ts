@@ -5,7 +5,7 @@ import { adminBannerReorderSchema } from "@/lib/validations/admin";
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("banners:write");
+    await requireAdmin("banners:write", request);
     const body = await request.json();
     const { orderedIds } = adminBannerReorderSchema.parse(body);
     const banners = await reorderBanners(orderedIds);

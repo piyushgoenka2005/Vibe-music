@@ -5,23 +5,39 @@ import { useQuery } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatusBadge, LoadingState, EmptyState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 
-async function fetchCustomers(params: { search: string; page: number }) {
-  const sp = new URLSearchParams({ limit: "20", offset: String(params.page * 20) });
+async function fetchCustomers(params: { search: string; cursor?: string }) {
+  const sp = new URLSearchParams({ limit: "20" });
   if (params.search) sp.set("search", params.search);
+  if (params.cursor) sp.set("cursor", params.cursor);
   const res = await fetch(`/api/admin/customers?${sp}`);
   if (!res.ok) throw new Error("Failed to load customers");
-  return res.json();
+  return res.json() as Promise<{
+    customers: Array<{
+      uid: string;
+      email: string;
+      displayName: string;
+      isActive: boolean;
+      orderCount: number;
+      totalSpent: number;
+      createdAt: string;
+    }>;
+    hasMore: boolean;
+    nextCursor?: string;
+  }>;
 }
 
 function CustomersContent() {
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(0);
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
+    useAdminCursorPagination();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin-customers", search, page],
-    queryFn: () => fetchCustomers({ search, page }),
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
+    queryKey: ["admin-customers", search, cursor],
+    queryFn: () => fetchCustomers({ search, cursor }),
   });
 
   const { data: detail } = useQuery({
@@ -37,13 +53,12 @@ function CustomersContent() {
   if (isLoading) return <LoadingState />;
 
   const customers = data?.customers ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / 20);
+  const hasMore = data?.hasMore ?? false;
 
   return (
     <>
       <div className="admin-toolbar">
-        <input className="admin-input" placeholder="Search customers…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} />
+        <input className="admin-input" placeholder="Search customers…" value={search} onChange={(e) => { setSearch(e.target.value); reset(); }} />
       </div>
       <div className="admin-grid-2">
         <div className="admin-panel">
@@ -76,10 +91,10 @@ function CustomersContent() {
                 </table>
               </div>
               <div className="admin-pagination">
-                <span>{total} customers</span>
+                <span>Page {pageIndex + 1}</span>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <button type="button" className="admin-btn admin-btn--secondary" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</button>
-                  <button type="button" className="admin-btn admin-btn--secondary" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</button>
+                  <button type="button" className="admin-btn admin-btn--secondary" disabled={!canGoPrev} onClick={goPrev}>Previous</button>
+                  <button type="button" className="admin-btn admin-btn--secondary" disabled={!hasMore} onClick={() => goNext(data?.nextCursor)}>Next</button>
                 </div>
               </div>
             </>

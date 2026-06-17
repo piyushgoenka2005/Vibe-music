@@ -9,7 +9,10 @@ export async function GET(request: Request) {
     const result = await listCustomers({
       search: searchParams.get("search") ?? undefined,
       limit: Number(searchParams.get("limit") ?? 20),
-      offset: Number(searchParams.get("offset") ?? 0),
+      offset: searchParams.has("offset")
+        ? Number(searchParams.get("offset") ?? 0)
+        : undefined,
+      cursor: searchParams.get("cursor") ?? undefined,
     });
     return NextResponse.json(result);
   } catch (error) {

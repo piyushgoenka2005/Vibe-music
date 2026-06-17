@@ -7,6 +7,11 @@ export interface SearchProduct {
   slug: string;
   category: string;
   price: number;
+  image: string;
+  imageColor?: string;
+  rating?: number;
+  reviewCount?: number;
+  availability?: "in-stock" | "out-of-stock" | "limited";
 }
 
 export interface SearchCategory {

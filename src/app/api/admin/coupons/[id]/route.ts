@@ -7,7 +7,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("coupons:write");
+    await requireAdmin("coupons:write", request);
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminCouponSchema.partial().parse(body);
@@ -20,7 +20,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    await requireAdmin("coupons:delete");
+    await requireAdmin("coupons:delete", _request);
     const { id } = await context.params;
     await deleteCoupon(id);
     return NextResponse.json({ ok: true });

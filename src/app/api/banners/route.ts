@@ -15,6 +15,7 @@ export async function GET() {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unable to load banners";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const status = message.includes("Quota exceeded") ? 503 : 500;
+    return NextResponse.json({ error: message, banners: [] }, { status });
   }
 }

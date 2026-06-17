@@ -25,14 +25,16 @@ export default function EditorialSplit() {
             </Link>
           </div>
         </div>
-        <div className="editorial-split__visual" aria-hidden>
-          <div className="editorial-split__orb" />
-          <img
-            src={MARKETING_EDITORIAL_IMAGE}
-            alt=""
-            className="editorial-split__image"
-            loading="lazy"
-          />
+        <div className="editorial-split__visual">
+          <div className="editorial-split__card">
+            <div className="editorial-split__orb" />
+            <img
+              src={MARKETING_EDITORIAL_IMAGE}
+              alt="Studio recording interface and effects processor"
+              className="editorial-split__image"
+              loading="lazy"
+            />
+          </div>
         </div>
       </div>
     </Reveal>

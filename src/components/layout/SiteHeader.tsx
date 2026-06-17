@@ -3,65 +3,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
-import { useHeaderScrollHide } from "@/hooks/useHeaderScrollHide";
 import { useAuthStore } from "@/store/authStore";
-import { useCartStore } from "@/store/cartStore";
-import { useWishlistStore } from "@/store/wishlistStore";
+import { useHideOnScroll, useSiteHeaderOffset } from "@/hooks/useHideOnScroll";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import SiteHeaderNav from "@/components/layout/SiteHeaderNav";
+import SearchRollingPlaceholder, {
+  SEARCH_ROLLING_ARIA_LABEL,
+} from "@/components/search/SearchRollingPlaceholder";
 
 export default function SiteHeader() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
-  const pathname = usePathname() ?? "";
-  const isProductPage = pathname.startsWith("/product/");
-  const user = useAuthStore((s) => s.user);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const isInitialized = useAuthStore((s) => s.isInitialized);
-  const cartDrawerOpen = useCartStore((s) => s.drawerOpen);
-  const wishlistDrawerOpen = useWishlistStore((s) => s.drawerOpen);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const headerHidden = useHideOnScroll({ disabled: mobileOpen });
 
-  const scrollHidePaused =
-    mobileOpen || megaMenuOpen || cartDrawerOpen || wishlistDrawerOpen;
-  const headerHidden = useHeaderScrollHide({
-    enabled: isProductPage,
-    paused: scrollHidePaused,
-  });
+  useSiteHeaderOffset(headerRef);
 
-  const handleMegaMenuOpenChange = useCallback((open: boolean) => {
-    setMegaMenuOpen(open);
-  }, []);
-
-  useEffect(() => {
-    document.body.classList.toggle("pdp-scroll-header", isProductPage);
-    return () => document.body.classList.remove("pdp-scroll-header");
-  }, [isProductPage]);
-
-  useEffect(() => {
-    if (!isProductPage || !headerRef.current) return;
-
-    const el = headerRef.current;
-    const syncHeaderHeight = () => {
-      document.documentElement.style.setProperty(
-        "--site-header-height",
-        `${el.offsetHeight}px`
-      );
-    };
-
-    syncHeaderHeight();
-    const observer = new ResizeObserver(syncHeaderHeight);
-    observer.observe(el);
-
-    return () => {
-      observer.disconnect();
-      document.documentElement.style.removeProperty("--site-header-height");
-    };
-  }, [isProductPage]);
+  const handleMegaMenuOpenChange = useCallback(() => {}, []);
 
   useEffect(() => {
     document.body.classList.toggle("site-nav-open", mobileOpen);
@@ -77,6 +37,10 @@ export default function SiteHeader() {
     return () => window.removeEventListener("keydown", onEscape);
   }, [mobileOpen]);
 
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isInitialized = useAuthStore((s) => s.isInitialized);
+
   const accountHref = isAuthenticated ? ROUTES.account : ROUTES.login;
   const accountLabel =
     isInitialized && isAuthenticated && user?.name
@@ -89,9 +53,7 @@ export default function SiteHeader() {
     <header
       ref={headerRef}
       id="assets-header"
-      className={`site-header assets-site-nav--desktop${
-        isProductPage ? " site-header--scroll-aware" : ""
-      }${headerHidden ? " site-header--scroll-hidden" : ""}`}
+      className={`site-header assets-site-nav--desktop${headerHidden ? " site-header--hidden" : ""}`}
       data-vibe-section="header"
     >
       <AnnouncementBar />
@@ -126,14 +88,18 @@ export default function SiteHeader() {
             onSubmit={(e) => e.preventDefault()}
           >
             <Search size={18} className="site-header__search-icon" aria-hidden />
-            <input
-              id="sw-search-input"
-              name="q"
-              type="search"
-              className="site-header__search-input assets-site-header__menu-search-typeahead-field"
-              placeholder="Search guitars, mics, studio gear…"
-              autoComplete="off"
-            />
+            <div className="site-header__search-field">
+              <input
+                id="sw-search-input"
+                name="q"
+                type="search"
+                className="site-header__search-input assets-site-header__menu-search-typeahead-field"
+                placeholder=" "
+                autoComplete="off"
+                aria-label={SEARCH_ROLLING_ARIA_LABEL}
+              />
+              <SearchRollingPlaceholder inputId="sw-search-input" />
+            </div>
             <button
               type="submit"
               className="site-header__search-submit assets-site-header__menu-search-submit"

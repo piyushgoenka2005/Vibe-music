@@ -1,91 +1,54 @@
-import Image from "next/image";
 import Link from "next/link";
-import BigNamesTypewriterHeadline from "@/components/home/BigNamesTypewriterHeadline";
-import { ROUTES } from "@/lib/routes";
+import Reveal from "@/components/layout/Reveal";
+import BigNamesDealsShowcase from "@/components/home/BigNamesDealsShowcase";
+import { BIG_NAMES_DEALS, BIG_NAMES_DEALS_CTA } from "@/data/bigNamesDeals";
 
-const DEALS_CTA_HREF = `${ROUTES.searchResults}?q=deals`;
-
-const DEAL_BRANDS = [
-  {
-    brand: "Gibson",
-    href: `${ROUTES.searchResults}?brand=gibson`,
-    logo: "/images/big-names-deals/gibson-logo.svg",
-    product: "/images/big-names-deals/gibson-product.png",
-  },
-  {
-    brand: "Epiphone",
-    href: `${ROUTES.searchResults}?brand=epiphone`,
-    logo: "/images/big-names-deals/epiphone-logo.svg",
-    product: "/images/big-names-deals/epiphone-product.png",
-  },
-  {
-    brand: "PRS",
-    href: `${ROUTES.searchResults}?brand=prs`,
-    logo: "/images/big-names-deals/prs-logo.svg",
-    product: "/images/big-names-deals/prs-product.png",
-  },
-  {
-    brand: "Ibanez",
-    href: `${ROUTES.searchResults}?brand=ibanez`,
-    logo: "/images/big-names-deals/ibanez-logo.svg",
-    product: "/images/big-names-deals/ibanez-product.png",
-  },
-  {
-    brand: "Fender",
-    href: `${ROUTES.searchResults}?brand=fender`,
-    logo: "/images/big-names-deals/fender-logo.svg",
-    product: "/images/big-names-deals/fender-product.png",
-  },
-] as const;
+const HEADLINE_ID = "bigNamesDealsHeadline";
 
 export default function BigNamesDealsSection() {
   return (
-    <section
-      className="full-width-feature-sale-banner"
-      aria-labelledby="fullWidthFeatureSaleBannerHeadline"
-    >
-      <div className="full-width-feature-sale-banner__ambient-fog" aria-hidden="true" />
-      <div className="full-width-feature-sale-banner__edge-fade-left" aria-hidden="true" />
-      <div className="full-width-feature-sale-banner__edge-fade-right" aria-hidden="true" />
+    <section className="big-names-deals" aria-labelledby={HEADLINE_ID}>
+      <div className="big-names-deals__inner">
+        <header className="big-names-deals__header">
+          <Reveal>
+            <p className="big-names-deals__eyebrow">
+              <span className="big-names-deals__eyebrow-line" aria-hidden />
+              Shop top brands
+              <span className="big-names-deals__eyebrow-line" aria-hidden />
+            </p>
+          </Reveal>
 
-      <BigNamesTypewriterHeadline id="fullWidthFeatureSaleBannerHeadline" />
-
-      <p className="full-width-feature-sale-banner__supporting-copy">
-        Find all the top brands you already love, at prices that simply can&apos;t be beat
-      </p>
-
-      <div className="full-width-feature-sale-banner__brand-product-row scrollbar-minimal">
-        {DEAL_BRANDS.map((item) => (
-          <div className="full-width-feature-sale-banner__brand-product-card" key={item.brand}>
-            <Link
-              aria-label={`Shop ${item.brand} deals`}
-              className="full-width-feature-sale-banner__brand-product-link"
-              href={item.href}
+          <Reveal delay={40}>
+            <h2
+              className="big-names-deals__headline typo-series"
+              id={HEADLINE_ID}
             >
-              <div className="full-width-feature-sale-banner__brand-logo-wrap">
-                <Image
-                  alt={`${item.brand} logo`}
-                  className="full-width-feature-sale-banner__brand-logo"
-                  height={28}
-                  src={item.logo}
-                  width={120}
-                />
-              </div>
-              <Image
-                alt={`${item.brand} guitar`}
-                className="full-width-feature-sale-banner__brand-product-image"
-                height={360}
-                src={item.product}
-                width={240}
-              />
+              <span className="big-names-deals__headline-line">Big names.</span>
+              <span className="big-names-deals__headline-line">Serious savings.</span>
+            </h2>
+          </Reveal>
+
+          <Reveal delay={80}>
+            <p className="big-names-deals__subtitle">
+              Find all the top brands you already love, at prices that simply
+              can&apos;t be beat
+            </p>
+          </Reveal>
+        </header>
+
+        <BigNamesDealsShowcase items={BIG_NAMES_DEALS} />
+
+        <Reveal delay={120}>
+          <div className="big-names-deals__cta-wrap">
+            <Link className="big-names-deals__cta" href={BIG_NAMES_DEALS_CTA}>
+              Shop All Deals
+              <span className="big-names-deals__cta-arrow" aria-hidden>
+                →
+              </span>
             </Link>
           </div>
-        ))}
+        </Reveal>
       </div>
-
-      <Link className="full-width-feature-sale-banner__primary-cta" href={DEALS_CTA_HREF}>
-        Shop All Deals
-      </Link>
     </section>
   );
 }

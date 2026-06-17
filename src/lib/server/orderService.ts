@@ -1,6 +1,10 @@
 import Razorpay from "razorpay";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import {
+  isFirestoreUnavailableError,
+  logFirestoreWarning,
+} from "@/lib/server/firestoreErrors";
+import {
   verifyRazorpayPaymentSignature,
 } from "@/lib/razorpay/signature";
 import {
@@ -152,12 +156,25 @@ export async function createOrder(
   await orderRef.set(order);
 
   try {
-    if (payload.paymentMethod === "cod") {
-      await reserveAndFulfillStockForOrder(orderId, inventoryLines);
-      order.inventoryStatus = "fulfilled";
-    } else {
-      await reserveStockForOrder(orderId, inventoryLines);
-      order.inventoryStatus = "reserved";
+    try {
+      if (payload.paymentMethod === "cod") {
+        await reserveAndFulfillStockForOrder(orderId, inventoryLines);
+        order.inventoryStatus = "fulfilled";
+      } else {
+        await reserveStockForOrder(orderId, inventoryLines);
+        order.inventoryStatus = "reserved";
+      }
+    } catch (inventoryError) {
+      if (isFirestoreUnavailableError(inventoryError)) {
+        logFirestoreWarning(
+          "orders",
+          inventoryError,
+          "Skipping inventory reservation — Firestore quota exceeded"
+        );
+        order.inventoryStatus = "none";
+      } else {
+        throw inventoryError;
+      }
     }
 
     let razorpayOrderId: string | undefined;
@@ -335,36 +352,49 @@ export async function linkGuestOrdersToUser(
   userId: string,
   email: string
 ): Promise<number> {
-  const db = getAdminFirestore();
-  const normalizedEmail = email.trim().toLowerCase();
-  const snapshot = await db
-    .collection("orders")
-    .where("email", "==", normalizedEmail)
-    .get();
+  try {
+    const db = getAdminFirestore();
+    const normalizedEmail = email.trim().toLowerCase();
+    const snapshot = await db
+      .collection("orders")
+      .where("email", "==", normalizedEmail)
+      .get();
 
-  if (snapshot.empty) return 0;
+    if (snapshot.empty) return 0;
 
-  const batch = db.batch();
-  let linked = 0;
-  const timestamp = new Date().toISOString();
+    const batch = db.batch();
+    let linked = 0;
+    const timestamp = new Date().toISOString();
 
-  for (const doc of snapshot.docs) {
-    const data = doc.data();
-    if (!data.userId) {
-      batch.update(doc.ref, {
-        userId,
-        isGuestOrder: false,
-        updatedAt: timestamp,
-      });
-      linked += 1;
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      if (!data.userId) {
+        batch.update(doc.ref, {
+          userId,
+          isGuestOrder: false,
+          updatedAt: timestamp,
+        });
+        linked += 1;
+      }
     }
-  }
 
-  if (linked > 0) {
-    await batch.commit();
-  }
+    if (linked > 0) {
+      await batch.commit();
+    }
 
-  return linked;
+    return linked;
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      logFirestoreWarning(
+        "orders",
+        error,
+        "Unable to link guest orders — skipping"
+      );
+      return 0;
+    }
+
+    throw error;
+  }
 }
 
 export type { PaymentMethod, PaymentStatus };

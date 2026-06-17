@@ -1,6 +1,11 @@
 import "server-only";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import {
+  createFirestoreCircuitBreaker,
+  isFirestoreUnavailableError,
+  logFirestoreWarning,
+} from "@/lib/server/firestoreErrors";
 import type { Brand } from "@/types/brand";
 import type { Category } from "@/types/category";
 import type { CatalogProduct, ProductStatus } from "@/types/catalog";
@@ -12,10 +17,71 @@ const BRANDS = "brands";
 
 const CACHE_TTL_MS = 45_000;
 
+const catalogCircuit = createFirestoreCircuitBreaker();
+
 let productsCache: CatalogProduct[] | null = null;
 let productsCacheAt = 0;
 let categoriesCache: Category[] | null = null;
 let categoriesCacheAt = 0;
+
+function isCatalogFirestoreDisabled(): boolean {
+  return process.env.DISABLE_FIRESTORE_CATALOG === "true";
+}
+
+function filterActiveProducts(
+  products: CatalogProduct[],
+  includeInactive: boolean
+): CatalogProduct[] {
+  return includeInactive
+    ? products
+    : products.filter((p) => p.status === "active");
+}
+
+async function loadLocalCatalogProducts(): Promise<CatalogProduct[]> {
+  const { loadProducts } = await import("@/lib/server/catalogRepository");
+  return loadProducts();
+}
+
+function sortProducts(products: CatalogProduct[]): CatalogProduct[] {
+  return [...products].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+function localProductsFiltered(includeInactive: boolean): Promise<CatalogProduct[]> {
+  return loadLocalCatalogProducts().then((products) =>
+    filterActiveProducts(sortProducts(products), includeInactive)
+  );
+}
+
+function cachedProducts(includeInactive: boolean): CatalogProduct[] | null {
+  if (!productsCache) return null;
+  return filterActiveProducts(productsCache, includeInactive);
+}
+
+function logCatalogWarning(error: unknown, context: string): void {
+  logFirestoreWarning("catalog", error, context);
+}
+
+function handleCatalogUnavailable<T>(
+  error: unknown,
+  context: string,
+  fallback: T
+): T {
+  if (isFirestoreUnavailableError(error)) {
+    const wasOpen = catalogCircuit.isOpen();
+    catalogCircuit.open();
+    if (!wasOpen) {
+      logCatalogWarning(error, context);
+    }
+    return fallback;
+  }
+  throw error;
+}
+
+export function isCatalogUnavailable(): boolean {
+  return isCatalogFirestoreDisabled() || catalogCircuit.isOpen();
+}
 
 function db(): Firestore {
   return getAdminFirestore();
@@ -110,61 +176,136 @@ export function catalogProductToDoc(product: CatalogProduct): DocumentData {
 export async function fetchAllProducts(
   includeInactive = false
 ): Promise<CatalogProduct[]> {
-  if (productsCache && isFresh(productsCacheAt)) {
-    return includeInactive
-      ? productsCache
-      : productsCache.filter((p) => p.status === "active");
+  if (isCatalogFirestoreDisabled()) {
+    return localProductsFiltered(includeInactive);
   }
 
-  const snap = await db().collection(PRODUCTS).get();
-  const products = snap.docs
-    .map((doc) => docToCatalogProduct(doc.id, doc.data()))
-    .filter((p): p is CatalogProduct => p !== null)
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  if (catalogCircuit.isOpen()) {
+    return cachedProducts(includeInactive) ?? (await localProductsFiltered(includeInactive));
+  }
+
+  if (productsCache && isFresh(productsCacheAt)) {
+    return filterActiveProducts(productsCache, includeInactive);
+  }
+
+  try {
+    const snap = await db().collection(PRODUCTS).get();
+    if (snap.empty) {
+      const local = sortProducts(await loadLocalCatalogProducts());
+      productsCache = local;
+      productsCacheAt = Date.now();
+      return filterActiveProducts(local, includeInactive);
+    }
+
+    const products = sortProducts(
+      snap.docs
+        .map((doc) => docToCatalogProduct(doc.id, doc.data()))
+        .filter((p): p is CatalogProduct => p !== null)
     );
 
-  productsCache = products;
-  productsCacheAt = Date.now();
+    productsCache = products;
+    productsCacheAt = Date.now();
 
-  return includeInactive
-    ? products
-    : products.filter((p) => p.status === "active");
+    return filterActiveProducts(products, includeInactive);
+  } catch (error) {
+    return handleCatalogUnavailable(
+      error,
+      "Unable to fetch products — using local catalog fallback",
+      await localProductsFiltered(includeInactive)
+    );
+  }
 }
 
 export async function fetchProductById(
   id: string
 ): Promise<CatalogProduct | null> {
+  if (isCatalogFirestoreDisabled()) {
+    const local = await loadLocalCatalogProducts();
+    return local.find((p) => p.id === id) ?? null;
+  }
+
   const cached = productsCache?.find((p) => p.id === id);
   if (cached) return cached;
 
-  const doc = await db().collection(PRODUCTS).doc(id).get();
-  if (!doc.exists) return null;
-  return docToCatalogProduct(doc.id, doc.data()!);
+  if (catalogCircuit.isOpen()) {
+    const local = await loadLocalCatalogProducts();
+    return local.find((p) => p.id === id) ?? null;
+  }
+
+  try {
+    const doc = await db().collection(PRODUCTS).doc(id).get();
+    if (!doc.exists) {
+      const local = await loadLocalCatalogProducts();
+      return local.find((p) => p.id === id) ?? null;
+    }
+    return docToCatalogProduct(doc.id, doc.data()!);
+  } catch (error) {
+    const local = await loadLocalCatalogProducts();
+    return handleCatalogUnavailable(
+      error,
+      `Unable to fetch product ${id}`,
+      local.find((p) => p.id === id) ?? null
+    );
+  }
 }
 
 export async function fetchProductBySlug(
   slug: string
 ): Promise<CatalogProduct | null> {
+  if (isCatalogFirestoreDisabled()) {
+    const local = await loadLocalCatalogProducts();
+    return local.find((p) => p.slug === slug) ?? null;
+  }
+
   const cached = productsCache?.find((p) => p.slug === slug);
   if (cached) return cached;
 
-  const snap = await db()
-    .collection(PRODUCTS)
-    .where("slug", "==", slug)
-    .limit(1)
-    .get();
+  if (catalogCircuit.isOpen()) {
+    const local = await loadLocalCatalogProducts();
+    return local.find((p) => p.slug === slug) ?? null;
+  }
 
-  if (snap.empty) return null;
-  const doc = snap.docs[0];
-  return docToCatalogProduct(doc.id, doc.data());
+  try {
+    const snap = await db()
+      .collection(PRODUCTS)
+      .where("slug", "==", slug)
+      .limit(1)
+      .get();
+
+    if (snap.empty) {
+      const local = await loadLocalCatalogProducts();
+      return local.find((p) => p.slug === slug) ?? null;
+    }
+    const doc = snap.docs[0];
+    return docToCatalogProduct(doc.id, doc.data());
+  } catch (error) {
+    const local = await loadLocalCatalogProducts();
+    return handleCatalogUnavailable(
+      error,
+      `Unable to fetch product by slug ${slug}`,
+      local.find((p) => p.slug === slug) ?? null
+    );
+  }
 }
 
 export async function fetchProductsByCategory(
   categorySlug: string,
   includeInactive = false
 ): Promise<CatalogProduct[]> {
+  if (isCatalogFirestoreDisabled()) {
+    const local = await localProductsFiltered(includeInactive);
+    return local.filter((p) => p.categorySlug === categorySlug);
+  }
+
+  if (catalogCircuit.isOpen()) {
+    const cached = cachedProducts(includeInactive);
+    if (cached?.length) {
+      return cached.filter((p) => p.categorySlug === categorySlug);
+    }
+    const local = await localProductsFiltered(includeInactive);
+    return local.filter((p) => p.categorySlug === categorySlug);
+  }
+
   try {
     let query = db()
       .collection(PRODUCTS)
@@ -182,63 +323,125 @@ export async function fetchProductsByCategory(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-  } catch {
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      return handleCatalogUnavailable(
+        error,
+        `Unable to fetch products for category ${categorySlug}`,
+        cachedProducts(includeInactive)?.filter(
+          (p) => p.categorySlug === categorySlug
+        ) ?? []
+      );
+    }
+
     const all = await fetchAllProducts(includeInactive);
     return all.filter((p) => p.categorySlug === categorySlug);
   }
 }
 
 export async function fetchCategories(): Promise<Category[]> {
+  if (isCatalogFirestoreDisabled()) {
+    const { loadCategories } = await import("@/lib/server/catalogRepository");
+    return loadCategories();
+  }
+
   if (categoriesCache && isFresh(categoriesCacheAt)) {
     return categoriesCache;
   }
 
-  const snap = await db().collection(CATEGORIES).get();
-  if (snap.empty) {
-    const { loadCategories } = await import("@/lib/server/catalogRepository");
-    categoriesCache = loadCategories();
-    categoriesCacheAt = Date.now();
-    return categoriesCache;
+  if (catalogCircuit.isOpen()) {
+    return categoriesCache ?? [];
   }
 
-  const categories = snap.docs.map((doc) => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      name: str(data.name),
-      slug: str(data.slug),
-      description: data.description ? str(data.description) : undefined,
-    } satisfies Category;
-  });
+  try {
+    const snap = await db().collection(CATEGORIES).get();
+    if (snap.empty) {
+      const { loadCategories } = await import("@/lib/server/catalogRepository");
+      categoriesCache = loadCategories();
+      categoriesCacheAt = Date.now();
+      return categoriesCache;
+    }
 
-  categoriesCache = categories;
-  categoriesCacheAt = Date.now();
-  return categories;
+    const categories = snap.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: str(data.name),
+        slug: str(data.slug),
+        description: data.description ? str(data.description) : undefined,
+      } satisfies Category;
+    });
+
+    categoriesCache = categories;
+    categoriesCacheAt = Date.now();
+    return categories;
+  } catch (error) {
+    if (categoriesCache?.length) {
+      return handleCatalogUnavailable(
+        error,
+        "Unable to fetch categories",
+        categoriesCache
+      );
+    }
+    const { loadCategories } = await import("@/lib/server/catalogRepository");
+    return handleCatalogUnavailable(
+      error,
+      "Unable to fetch categories — using local catalog fallback",
+      loadCategories()
+    );
+  }
 }
 
 export async function fetchBrands(): Promise<Brand[]> {
-  const snap = await db().collection(BRANDS).get();
-  if (!snap.empty) {
-    return snap.docs
-      .map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          name: str(data.name),
-          slug: str(data.slug),
-        } satisfies Brand;
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
+  if (isCatalogFirestoreDisabled()) {
+    const products = await localProductsFiltered(false);
+    const map = new Map<string, Brand>();
+    products.forEach((p) => {
+      if (!map.has(p.brandSlug)) {
+        map.set(p.brandSlug, { id: p.brandSlug, name: p.brand, slug: p.brandSlug });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  const products = await fetchAllProducts();
-  const map = new Map<string, Brand>();
-  products.forEach((p) => {
-    if (!map.has(p.brandSlug)) {
-      map.set(p.brandSlug, { id: p.brandSlug, name: p.brand, slug: p.brandSlug });
+  if (catalogCircuit.isOpen()) {
+    const cached = cachedProducts(false);
+    const source = cached?.length ? cached : await localProductsFiltered(false);
+    const map = new Map<string, Brand>();
+    source.forEach((p) => {
+      if (!map.has(p.brandSlug)) {
+        map.set(p.brandSlug, { id: p.brandSlug, name: p.brand, slug: p.brandSlug });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  try {
+    const snap = await db().collection(BRANDS).get();
+    if (!snap.empty) {
+      return snap.docs
+        .map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: str(data.name),
+            slug: str(data.slug),
+          } satisfies Brand;
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
     }
-  });
-  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+    const products = await fetchAllProducts();
+    const map = new Map<string, Brand>();
+    products.forEach((p) => {
+      if (!map.has(p.brandSlug)) {
+        map.set(p.brandSlug, { id: p.brandSlug, name: p.brand, slug: p.brandSlug });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    return handleCatalogUnavailable(error, "Unable to fetch brands", []);
+  }
 }
 
 const MAX_FETCH_DEFAULT = 12;
@@ -251,7 +454,28 @@ export async function fetchProductsByBrandSlug(
     limit?: number;
   } = {}
 ): Promise<CatalogProduct[]> {
+  if (isCatalogFirestoreDisabled()) {
+    return [];
+  }
+
   const limit = options.limit ?? MAX_FETCH_DEFAULT;
+
+  if (catalogCircuit.isOpen()) {
+    const cached = cachedProducts(false);
+    return (cached ?? [])
+      .filter(
+        (product) =>
+          product.brandSlug === brandSlug &&
+          product.id !== options.excludeProductId &&
+          product.slug !== options.excludeSlug
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(0, limit);
+  }
+
   try {
     const snap = await db()
       .collection(PRODUCTS)
@@ -274,7 +498,15 @@ export async function fetchProductsByBrandSlug(
         return true;
       })
       .slice(0, limit);
-  } catch {
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      return handleCatalogUnavailable(
+        error,
+        `Unable to fetch products for brand ${brandSlug}`,
+        []
+      );
+    }
+
     const all = await fetchAllProducts();
     return all
       .filter(
@@ -299,22 +531,51 @@ export async function fetchProductsByIds(
   const uniqueIds = [...new Set(ids.filter(Boolean))];
   if (uniqueIds.length === 0) return [];
 
-  const firestore = db();
-  const refs = uniqueIds.map((id) => firestore.collection(PRODUCTS).doc(id));
-  const snaps = await firestore.getAll(...refs);
+  if (isCatalogFirestoreDisabled()) {
+    return [];
+  }
 
-  const byId = new Map<string, CatalogProduct>();
-  snaps.forEach((doc) => {
-    if (!doc.exists) return;
-    const product = docToCatalogProduct(doc.id, doc.data()!);
-    if (!product) return;
-    if (!includeInactive && product.status !== "active") return;
-    byId.set(doc.id, product);
-  });
+  if (catalogCircuit.isOpen()) {
+    const cached = cachedProducts(includeInactive);
+    if (!cached) return [];
+    const byId = new Map(cached.map((p) => [p.id, p]));
+    return uniqueIds
+      .map((id) => byId.get(id))
+      .filter((product): product is CatalogProduct => Boolean(product));
+  }
 
-  return uniqueIds
-    .map((id) => byId.get(id))
-    .filter((product): product is CatalogProduct => Boolean(product));
+  try {
+    const firestore = db();
+    const refs = uniqueIds.map((id) => firestore.collection(PRODUCTS).doc(id));
+    const snaps = await firestore.getAll(...refs);
+
+    const byId = new Map<string, CatalogProduct>();
+    snaps.forEach((doc) => {
+      if (!doc.exists) return;
+      const product = docToCatalogProduct(doc.id, doc.data()!);
+      if (!product) return;
+      if (!includeInactive && product.status !== "active") return;
+      byId.set(doc.id, product);
+    });
+
+    return uniqueIds
+      .map((id) => byId.get(id))
+      .filter((product): product is CatalogProduct => Boolean(product));
+  } catch (error) {
+    const cached = cachedProducts(includeInactive);
+    const byId = cached ? new Map(cached.map((p) => [p.id, p])) : null;
+    const fallback = byId
+      ? uniqueIds
+          .map((id) => byId.get(id))
+          .filter((product): product is CatalogProduct => Boolean(product))
+      : [];
+
+    return handleCatalogUnavailable(
+      error,
+      "Unable to fetch products by ids",
+      fallback
+    );
+  }
 }
 
 export async function writeProduct(

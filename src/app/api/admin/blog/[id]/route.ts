@@ -25,7 +25,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("blog:write");
+    await requireAdmin("blog:write", request);
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminBlogPostUpdateSchema.parse(body);
@@ -38,7 +38,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    await requireAdmin("blog:delete");
+    await requireAdmin("blog:delete", _request);
     const { id } = await context.params;
     await deleteBlogPost(id);
     return NextResponse.json({ ok: true });

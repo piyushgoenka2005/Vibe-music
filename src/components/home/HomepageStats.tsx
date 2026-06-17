@@ -4,7 +4,7 @@ import Reveal from "@/components/layout/Reveal";
 
 export default function HomepageStats() {
   return (
-    <Reveal as="section" className="homepage-stats" aria-label="Store highlights">
+    <Reveal as="section" className="homepage-stats" aria-label="Store highlights" immediate>
       <div className="homepage-stats__inner">
         {LANDING_STATS.map((stat, index) => (
           <Reveal key={stat.label} className="homepage-stats__item" delay={index * 70}>

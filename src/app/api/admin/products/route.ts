@@ -16,7 +16,10 @@ export async function GET(request: Request) {
       status: searchParams.get("status") ?? undefined,
       category: searchParams.get("category") ?? undefined,
       limit: Number(searchParams.get("limit") ?? 20),
-      offset: Number(searchParams.get("offset") ?? 0),
+      offset: searchParams.has("offset")
+        ? Number(searchParams.get("offset") ?? 0)
+        : undefined,
+      cursor: searchParams.get("cursor") ?? undefined,
     });
     return NextResponse.json(result);
   } catch (error) {
@@ -26,7 +29,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("products:write");
+    await requireAdmin("products:write", request);
     const body = await request.json();
 
     if (body.action === "bulk_status") {

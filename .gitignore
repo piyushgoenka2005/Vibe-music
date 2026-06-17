@@ -50,6 +50,7 @@ firestore-debug.log
 ui-debug.log
 *-firebase-adminsdk-*.json
 
-# IDE / OS
-Thumbs.db
+# local dev fallbacks when Firestore is unavailable
+.data/
+
 *.log

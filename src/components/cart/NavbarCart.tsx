@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useCartStore } from "@/store/cartStore";
 import CartDrawer from "./CartDrawer";
 import "./cart.css";
 
-function syncCartCount(count: number) {
+function syncCartCount(count: number, prevCount?: number) {
   const cartCount = document.querySelector(
     ".assets-site-header__menu-cart-count"
   );
@@ -26,6 +26,14 @@ function syncCartCount(count: number) {
     }
     if (cartCount.getAttribute("data-count") !== dataCount) {
       cartCount.setAttribute("data-count", dataCount);
+    }
+    if (prevCount !== undefined && count > prevCount) {
+      cartCount.classList.remove("site-header__cart-count--bump");
+      void (cartCount as HTMLElement).offsetWidth;
+      cartCount.classList.add("site-header__cart-count--bump");
+      window.setTimeout(() => {
+        cartCount.classList.remove("site-header__cart-count--bump");
+      }, 450);
     }
   }
 
@@ -55,9 +63,11 @@ export default function NavbarCart() {
   const count = useCartStore((s) =>
     s.items.reduce((sum, item) => sum + item.quantity, 0)
   );
+  const prevCountRef = useRef(count);
 
   useEffect(() => {
-    syncCartCount(count);
+    syncCartCount(count, prevCountRef.current);
+    prevCountRef.current = count;
   }, [count]);
 
   useEffect(() => {

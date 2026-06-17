@@ -7,6 +7,11 @@ import { fetchGuestOrder, fetchOrder } from "@/services/orderService";
 import { useAuthStore } from "@/store/authStore";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrencyPrecise } from "@/utils/currency";
+import {
+  clearCachedOrderForConfirmation,
+  readCachedOrderForConfirmation,
+} from "@/lib/checkout/orderConfirmationCache";
+import { isInvoiceAvailable } from "@/features/invoice/utils/invoice-utils";
 import type { Order } from "@/types/order";
 import "@/components/checkout/checkout.css";
 import { InvoiceToolbar } from "@/features/invoice/ui/InvoiceToolbar";
@@ -18,32 +23,42 @@ export default function CheckoutSuccessContent() {
   const emailParam = searchParams.get("email");
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const missingOrderId = !orderId;
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<Order | null>(() =>
+    orderId ? readCachedOrderForConfirmation(orderId) : null
+  );
   const [error, setError] = useState<string | null>(
     missingOrderId ? "Order ID missing" : null
   );
-  const [loading, setLoading] = useState(!missingOrderId);
+  const [loading, setLoading] = useState(!missingOrderId && !order);
 
   useEffect(() => {
     if (!orderId) return;
 
+    const resolvedOrderId = orderId;
+    const cached = readCachedOrderForConfirmation(resolvedOrderId);
+
     async function loadOrder() {
       try {
+        let loaded: Order;
+
         if (isAuthenticated) {
-          const authenticatedOrder = await fetchOrder(orderId!);
-          setOrder(authenticatedOrder);
-          return;
+          loaded = await fetchOrder(resolvedOrderId);
+        } else {
+          if (!emailParam) {
+            if (!cached) {
+              setError("Email is required to view this order");
+            }
+            return;
+          }
+          loaded = await fetchGuestOrder(resolvedOrderId, emailParam);
         }
 
-        if (!emailParam) {
-          setError("Email is required to view this order");
-          return;
-        }
-
-        const guestOrder = await fetchGuestOrder(orderId!, emailParam);
-        setOrder(guestOrder);
+        setOrder(loaded);
+        clearCachedOrderForConfirmation(resolvedOrderId);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Unable to load order");
+        if (!cached) {
+          setError(err instanceof Error ? err.message : "Unable to load order");
+        }
       } finally {
         setLoading(false);
       }
@@ -57,10 +72,10 @@ export default function CheckoutSuccessContent() {
       ? `${ROUTES.trackOrder}?orderId=${encodeURIComponent(orderId)}&email=${encodeURIComponent(emailParam ?? order?.email ?? "")}`
       : ROUTES.trackOrder;
 
-  if (loading) {
+  if (loading && !order) {
     return (
       <div className="checkout-success">
-        <p>Loading order confirmation...</p>
+        <p className="checkout-success__loading">Confirming your order…</p>
       </div>
     );
   }
@@ -85,59 +100,82 @@ export default function CheckoutSuccessContent() {
     ? `/api/invoices/${encodeURIComponent(order.id)}/html?email=${encodeURIComponent(emailParam)}`
     : `/api/invoices/${encodeURIComponent(order.id)}/html`;
 
-  const canShowInvoice =
-    order.paymentStatus === "paid" && Boolean(order.invoice?.invoiceNumber);
-
+  const canShowInvoice = isInvoiceAvailable(order);
   const pdfEnabled = process.env.NEXT_PUBLIC_INVOICE_PDF_ENABLED === "true";
+  const paymentLabel =
+    order.paymentStatus === "cod_pending"
+      ? "Cash on Delivery"
+      : order.paymentStatus === "paid"
+        ? "Paid"
+        : order.paymentStatus;
 
   return (
-    <div className="checkout-success">
-      <div className="checkout-success__icon" aria-hidden="true">
-        ✓
+    <div className="checkout-success checkout-success--with-invoice">
+      <div className="checkout-success__hero">
+        <div className="checkout-success__icon" aria-hidden="true">
+          ✓
+        </div>
+        <div>
+          <h1>Order confirmed</h1>
+          <p className="checkout-success__lead">
+            Thank you for your purchase. Order{" "}
+            <strong>{order.id}</strong> has been placed successfully.
+          </p>
+          <ul className="checkout-success__meta">
+            <li>
+              <span>Email</span>
+              <strong>{order.email}</strong>
+            </li>
+            <li>
+              <span>Payment</span>
+              <strong>{paymentLabel}</strong>
+            </li>
+            <li>
+              <span>Total</span>
+              <strong>{formatCurrencyPrecise(order.total)}</strong>
+            </li>
+            {order.invoice?.invoiceNumber ? (
+              <li>
+                <span>Invoice</span>
+                <strong>{order.invoice.invoiceNumber}</strong>
+              </li>
+            ) : null}
+          </ul>
+        </div>
       </div>
-      <h1>Order Confirmed!</h1>
-      <p>
-        Thank you for your purchase. Order <strong>{order.id}</strong> has been
-        placed successfully.
-      </p>
-      <p>
-        A confirmation email has been sent to <strong>{order.email}</strong>.
-      </p>
-      <p>
-        Payment status:{" "}
-        <strong>
-          {order.paymentStatus === "cod_pending"
-            ? "Cash on Delivery"
-            : order.paymentStatus}
-        </strong>
-      </p>
-      <p>Total paid: {formatCurrencyPrecise(order.total)}</p>
 
-      <section className="checkout-invoice" aria-label="Invoice">
-        <h2 className="checkout-invoice__title">Invoice</h2>
+      <section className="checkout-invoice" aria-label="Tax invoice">
+        <h2 className="checkout-invoice__title">Your invoice</h2>
 
         <InvoiceToolbar
           order={order}
           invoiceUrl={invoiceUrl}
           pdfUrl={
-            pdfEnabled ? invoiceFrameSrc.replace("/html", "/pdf") : undefined
+            pdfEnabled && canShowInvoice
+              ? invoiceFrameSrc.replace("/html", "/pdf")
+              : undefined
           }
         />
 
         {canShowInvoice ? (
           <div className="invoice-frame-wrap">
-            <iframe title="Tax invoice preview" className="invoice-frame" src={invoiceFrameSrc} />
+            <iframe
+              title="Tax invoice"
+              className="invoice-frame"
+              src={invoiceFrameSrc}
+            />
           </div>
         ) : (
           <p className="checkout-invoice__muted">
-            Invoice will be available after payment confirmation.
+            Your invoice is being prepared. Refresh this page in a moment or
+            check your email.
           </p>
         )}
 
         <InvoicePreviewCard order={order} invoiceUrl={invoiceUrl} />
       </section>
 
-      <div className="checkout-actions" style={{ justifyContent: "center", marginTop: 24 }}>
+      <div className="checkout-actions checkout-success__actions">
         <Link href={ROUTES.home} className="cart-btn cart-btn--secondary">
           Continue Shopping
         </Link>

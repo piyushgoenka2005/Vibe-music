@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/server-session";
+import { formatCheckoutError } from "@/lib/server/checkoutErrors";
 import { createOrder } from "@/lib/server/orderService";
 import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
 import {
@@ -79,8 +80,12 @@ export async function POST(request: Request) {
       keyId,
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to create order";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const message = formatCheckoutError(error);
+    const status = /Insufficient stock|Cart is empty|required|Invalid payment method/i.test(
+      message
+    )
+      ? 400
+      : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

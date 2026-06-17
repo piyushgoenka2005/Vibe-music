@@ -161,6 +161,9 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
   {
     sectionKey: "new_arrivals",
     title: "Top New Products",
+    subtitle:
+      "Fresh releases and just-landed gear from the brands you trust.",
+    accentLabel: "New arrivals",
     ctaText: "Shop All New Gear",
     ctaLink: "/search/results?q=new",
     isActive: true,
@@ -226,8 +229,6 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
   {
     sectionKey: "brand_strip",
     title: "Shop Top Brands",
-    ctaText: "View All Brands",
-    ctaLink: "/search",
     isActive: true,
     sortOrder: 6,
     sourceMode: "auto",

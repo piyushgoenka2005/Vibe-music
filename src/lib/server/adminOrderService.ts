@@ -10,40 +10,105 @@ export interface OrderTimelineEvent {
   createdAt: string;
 }
 
-export async function listAllOrders(options: {
-  status?: OrderStatus;
-  search?: string;
-  limit?: number;
-  offset?: number;
-} = {}): Promise<{ orders: Order[]; total: number }> {
-  const db = getAdminFirestore();
-  const snap = await db.collection("orders").orderBy("createdAt", "desc").get();
+export interface PaginatedOrdersResult {
+  orders: Order[];
+  total?: number;
+  hasMore: boolean;
+  nextCursor?: string;
+}
 
-  let orders = snap.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Order[];
+export interface PaginatedCustomersResult {
+  customers: Array<{
+    uid: string;
+    email: string;
+    displayName: string;
+    isActive: boolean;
+    orderCount: number;
+    totalSpent: number;
+    createdAt: string;
+  }>;
+  total?: number;
+  hasMore: boolean;
+  nextCursor?: string;
+}
+
+function docToOrder(doc: FirebaseFirestore.QueryDocumentSnapshot): Order {
+  return { id: doc.id, ...doc.data() } as Order;
+}
+
+function matchesOrderSearch(order: Order, query: string): boolean {
+  const q = query.toLowerCase();
+  return (
+    order.id.toLowerCase().includes(q) ||
+    order.email.toLowerCase().includes(q) ||
+    (order.shippingAddress?.name?.toLowerCase().includes(q) ?? false)
+  );
+}
+
+export async function listAllOrders(
+  options: {
+    status?: OrderStatus;
+    search?: string;
+    limit?: number;
+    offset?: number;
+    cursor?: string;
+  } = {}
+): Promise<PaginatedOrdersResult> {
+  const db = getAdminFirestore();
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+  const useLegacyOffset =
+    !options.cursor && options.offset != null && options.offset > 0;
+
+  let query: FirebaseFirestore.Query = db.collection("orders");
 
   if (options.status) {
-    orders = orders.filter((o) => o.status === options.status);
+    query = query.where("status", "==", options.status);
   }
+
+  query = query.orderBy("createdAt", "desc");
+
+  if (options.cursor) {
+    const cursorDoc = await db.collection("orders").doc(options.cursor).get();
+    if (cursorDoc.exists) {
+      query = query.startAfter(cursorDoc);
+    }
+  }
+
+  const fetchLimit = useLegacyOffset
+    ? (options.offset ?? 0) + limit + 1
+    : limit + 1;
+
+  const snap = await query.limit(fetchLimit).get();
+  let docs = snap.docs;
+
+  if (useLegacyOffset) {
+    docs = docs.slice(options.offset ?? 0);
+  }
+
+  const hasMore = docs.length > limit;
+  const pageDocs = docs.slice(0, limit);
+  let orders = pageDocs.map(docToOrder);
 
   if (options.search) {
-    const q = options.search.toLowerCase();
-    orders = orders.filter(
-      (o) =>
-        o.id.toLowerCase().includes(q) ||
-        o.email.toLowerCase().includes(q) ||
-        o.shippingAddress?.name?.toLowerCase().includes(q)
-    );
+    orders = orders.filter((order) => matchesOrderSearch(order, options.search!));
   }
 
-  const total = orders.length;
-  const offset = options.offset ?? 0;
-  const limit = options.limit ?? 20;
-  orders = orders.slice(offset, offset + limit);
+  const nextCursor =
+    hasMore && pageDocs.length > 0
+      ? pageDocs[pageDocs.length - 1]!.id
+      : undefined;
 
-  return { orders, total };
+  const result: PaginatedOrdersResult = {
+    orders,
+    hasMore: options.search ? orders.length >= limit : hasMore,
+    nextCursor,
+  };
+
+  if (!options.cursor && !options.search) {
+    result.total = hasMore ? undefined : orders.length + (options.offset ?? 0);
+  }
+
+  return result;
 }
 
 export async function updateOrderStatus(
@@ -100,33 +165,81 @@ export async function addOrderNote(
   await orderRef.update({ notes, updatedAt: new Date().toISOString() });
 }
 
-export async function listCustomers(options: {
-  search?: string;
-  limit?: number;
-  offset?: number;
-} = {}) {
+async function fetchOrderStatsForUsers(
+  userIds: string[]
+): Promise<Map<string, { count: number; spent: number }>> {
+  const stats = new Map<string, { count: number; spent: number }>();
+  if (userIds.length === 0) return stats;
+
   const db = getAdminFirestore();
-  const [usersSnap, ordersSnap] = await Promise.all([
-    db.collection("users").get(),
-    db.collection("orders").get(),
-  ]);
+  const batches: string[][] = [];
+  for (let i = 0; i < userIds.length; i += 10) {
+    batches.push(userIds.slice(i, i + 10));
+  }
 
-  const orderStats = new Map<string, { count: number; spent: number }>();
-  ordersSnap.docs.forEach((doc) => {
-    const data = doc.data();
-    const uid = data.userId as string | undefined;
-    const email = String(data.email ?? "").toLowerCase();
-    const key = uid ?? email;
-    if (!key) return;
-    const existing = orderStats.get(key) ?? { count: 0, spent: 0 };
-    existing.count += 1;
-    if (data.paymentStatus === "paid" || data.paymentStatus === "cod_pending") {
-      existing.spent += Number(data.total ?? 0);
+  for (const batch of batches) {
+    const snap = await db
+      .collection("orders")
+      .where("userId", "in", batch)
+      .get();
+
+    snap.docs.forEach((doc) => {
+      const data = doc.data();
+      const uid = String(data.userId ?? "");
+      if (!uid) return;
+      const existing = stats.get(uid) ?? { count: 0, spent: 0 };
+      existing.count += 1;
+      if (data.paymentStatus === "paid" || data.paymentStatus === "cod_pending") {
+        existing.spent += Number(data.total ?? 0);
+      }
+      stats.set(uid, existing);
+    });
+  }
+
+  return stats;
+}
+
+export async function listCustomers(
+  options: {
+    search?: string;
+    limit?: number;
+    offset?: number;
+    cursor?: string;
+  } = {}
+): Promise<PaginatedCustomersResult> {
+  const db = getAdminFirestore();
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+  const useLegacyOffset =
+    !options.cursor && options.offset != null && options.offset > 0;
+
+  let query: FirebaseFirestore.Query = db
+    .collection("users")
+    .orderBy("createdAt", "desc");
+
+  if (options.cursor) {
+    const cursorDoc = await db.collection("users").doc(options.cursor).get();
+    if (cursorDoc.exists) {
+      query = query.startAfter(cursorDoc);
     }
-    orderStats.set(key, existing);
-  });
+  }
 
-  let customers = usersSnap.docs.map((doc) => {
+  const fetchLimit = useLegacyOffset
+    ? (options.offset ?? 0) + limit + 1
+    : limit + 1;
+
+  const snap = await query.limit(fetchLimit).get();
+  let docs = snap.docs;
+
+  if (useLegacyOffset) {
+    docs = docs.slice(options.offset ?? 0);
+  }
+
+  const hasMore = docs.length > limit;
+  const pageDocs = docs.slice(0, limit);
+  const userIds = pageDocs.map((doc) => doc.id);
+  const orderStats = await fetchOrderStatsForUsers(userIds);
+
+  let customers = pageDocs.map((doc) => {
     const data = doc.data();
     const stats = orderStats.get(doc.id) ?? { count: 0, spent: 0 };
     return {
@@ -149,14 +262,16 @@ export async function listCustomers(options: {
     );
   }
 
-  customers.sort((a, b) => b.totalSpent - a.totalSpent);
-  const total = customers.length;
-  const offset = options.offset ?? 0;
-  const limit = options.limit ?? 20;
+  const nextCursor =
+    hasMore && pageDocs.length > 0
+      ? pageDocs[pageDocs.length - 1]!.id
+      : undefined;
 
   return {
-    customers: customers.slice(offset, offset + limit),
-    total,
+    customers,
+    hasMore: options.search ? customers.length >= limit : hasMore,
+    nextCursor,
+    total: !options.cursor && !options.search ? undefined : undefined,
   };
 }
 

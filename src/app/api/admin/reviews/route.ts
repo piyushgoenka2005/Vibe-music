@@ -8,8 +8,11 @@ export async function GET(request: Request) {
     await requireAdmin("reviews:read");
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") as ReviewDocument["status"] | null;
-    const reviews = await listReviews(status ?? undefined);
-    return NextResponse.json({ reviews });
+    const result = await listReviews(status ?? undefined, {
+      limit: Number(searchParams.get("limit") ?? 20),
+      cursor: searchParams.get("cursor") ?? undefined,
+    });
+    return NextResponse.json(result);
   } catch (error) {
     return adminErrorResponse(error);
   }

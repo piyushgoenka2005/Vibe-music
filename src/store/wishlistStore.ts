@@ -31,7 +31,7 @@ interface WishlistState {
   openDrawer: () => void;
   closeDrawer: () => void;
   toggleDrawer: () => void;
-  syncWithAccount: () => void;
+  syncWithAccount: () => void | Promise<void>;
   _setHydrated: () => void;
 }
 
@@ -67,7 +67,34 @@ function productToWishlistItem(product: Product): WishlistItem {
   };
 }
 
-function loadAccountWishlist(userId: string): WishlistItem[] {
+function saveAccountWishlist(userId: string, items: WishlistItem[]) {
+  if (typeof window === "undefined") return;
+  void fetch("/api/account/wishlist", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  }).catch(() => {
+    localStorage.setItem(
+      `vibe-wishlist-${userId}`,
+      JSON.stringify({ state: { items }, version: 0 })
+    );
+  });
+}
+
+async function loadAccountWishlistFromApi(
+  userId: string
+): Promise<WishlistItem[] | null> {
+  try {
+    const res = await fetch("/api/account/wishlist");
+    if (!res.ok) return null;
+    const data = (await res.json()) as { items?: WishlistItem[] };
+    return data.items ?? [];
+  } catch {
+    return null;
+  }
+}
+
+function loadAccountWishlistLocal(userId: string): WishlistItem[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(`vibe-wishlist-${userId}`);
@@ -80,14 +107,6 @@ function loadAccountWishlist(userId: string): WishlistItem[] {
   } catch {
     return [];
   }
-}
-
-function saveAccountWishlist(userId: string, items: WishlistItem[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(
-    `vibe-wishlist-${userId}`,
-    JSON.stringify({ state: { items }, version: 0 })
-  );
 }
 
 function mergeItems(
@@ -183,11 +202,13 @@ export const useWishlistStore = create<WishlistState>()(
       closeDrawer: () => set({ drawerOpen: false }),
       toggleDrawer: () => set((s) => ({ drawerOpen: !s.drawerOpen })),
 
-      syncWithAccount: () => {
+      syncWithAccount: async () => {
         const user = useAuthStore.getState().user;
         if (!user) return;
-        const accountItems = loadAccountWishlist(user.id);
-        const merged = mergeItems(get().items, accountItems);
+        const remote =
+          (await loadAccountWishlistFromApi(user.id)) ??
+          loadAccountWishlistLocal(user.id);
+        const merged = mergeItems(get().items, remote);
         const current = get().items;
         const unchanged =
           merged.length === current.length &&

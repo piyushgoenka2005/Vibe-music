@@ -1,7 +1,8 @@
 import type { GearStorySeed } from "@/types/gear-story";
+import { getMirroredReelVideoUrl } from "@/data/reelVideos";
 
 export const GEAR_STORIES_SECTION = {
-  title: "GEAR STYLE STORIES",
+  title: "Gear style stories",
   subtitle: "Discover instruments in action.",
 } as const;
 
@@ -11,7 +12,7 @@ export const GEAR_STORY_SEEDS: GearStorySeed[] = [
     id: "gs-1",
     title: "Player Stratocaster",
     productId: "prod-1",
-    videoUrl: "/videos/gear-stories/guitar-over.mp4",
+    videoUrl: getMirroredReelVideoUrl(0),
     description:
       "Classic single-coil tone with modern playability — the Fender Player Stratocaster delivers stage-ready performance for studio and live sessions.",
     features: [
@@ -26,7 +27,7 @@ export const GEAR_STORY_SEEDS: GearStorySeed[] = [
     id: "gs-2",
     title: "Player Telecaster",
     productId: "prod-2",
-    videoUrl: "/videos/gear-stories/avusinc-video.mp4",
+    videoUrl: getMirroredReelVideoUrl(1),
     description:
       "Butterscotch blonde finish and unmistakable twang — the Player Telecaster pairs timeless design with crisp, articulate tone.",
     features: [
@@ -41,7 +42,7 @@ export const GEAR_STORY_SEEDS: GearStorySeed[] = [
     id: "gs-3",
     title: "Les Paul Standard '50s",
     productId: "prod-4",
-    videoUrl: "/videos/gear-stories/holy-man-chanting.mp4",
+    videoUrl: getMirroredReelVideoUrl(2),
     description:
       "Heritage cherry finish and legendary sustain — the Gibson Les Paul Standard '50s captures thick, singing rock tone.",
     features: [
@@ -56,7 +57,7 @@ export const GEAR_STORY_SEEDS: GearStorySeed[] = [
     id: "gs-4",
     title: "Artcore AS73",
     productId: "prod-12",
-    videoUrl: "/videos/gear-stories/guitar-over.mp4",
+    videoUrl: getMirroredReelVideoUrl(3),
     description:
       "Warm semi-hollow resonance with smooth playability — ideal for jazz, blues, and soulful grooves.",
     features: [
@@ -71,7 +72,7 @@ export const GEAR_STORY_SEEDS: GearStorySeed[] = [
     id: "gs-5",
     title: "V-Drums TD516",
     productId: "prod-21",
-    videoUrl: "/videos/gear-stories/avusinc-video.mp4",
+    videoUrl: getMirroredReelVideoUrl(4),
     description:
       "Professional electronic kit feel with acoustic-level response and expressive dynamics for home studio or stage.",
     features: [
@@ -86,7 +87,7 @@ export const GEAR_STORY_SEEDS: GearStorySeed[] = [
     id: "gs-6",
     title: "HD 600",
     productId: "prod-36",
-    videoUrl: "/videos/gear-stories/holy-man-chanting.mp4",
+    videoUrl: getMirroredReelVideoUrl(5),
     description:
       "Reference-grade open-back headphones trusted by engineers for natural, uncolored critical listening.",
     features: [

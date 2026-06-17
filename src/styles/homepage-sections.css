@@ -461,17 +461,32 @@
 }
 
 .premium-home .topnew-rank {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  margin-bottom: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 0;
   border-radius: var(--radius-pill);
-  background: var(--brand-primary);
-  color: var(--text-inverse);
-  font-size: 0.75rem;
-  font-weight: 500;
+  background: var(--brand-primary, #1253ed);
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(18, 83, 237, 0.35);
+}
+
+.premium-home .product-suggest__item:focus-visible {
+  outline: 2px solid var(--brand-primary, #1253ed);
+  outline-offset: 3px;
+}
+
+.premium-home .product-suggest__nav:focus-visible {
+  outline: 2px solid var(--brand-primary, #1253ed);
+  outline-offset: 3px;
 }
 
 @media (max-width: 767px) {

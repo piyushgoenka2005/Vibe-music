@@ -127,4 +127,5 @@ export interface VerifyPaymentResponse {
   success: boolean;
   orderId: string;
   paymentStatus: PaymentStatus;
+  order?: Order;
 }

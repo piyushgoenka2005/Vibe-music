@@ -25,7 +25,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("categories:write");
+    await requireAdmin("categories:write", request);
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminCategorySchema.partial().parse(body);
@@ -38,7 +38,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    await requireAdmin("categories:delete");
+    await requireAdmin("categories:delete", _request);
     const { id } = await context.params;
     await deleteCategory(id);
     return NextResponse.json({ ok: true });

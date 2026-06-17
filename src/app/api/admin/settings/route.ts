@@ -15,7 +15,7 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    await requireAdmin("settings:write");
+    await requireAdmin("settings:write", request);
     const body = await request.json();
     const parsed = adminSettingsSchema.parse(body);
     const settings = await updateStoreSettings(parsed);

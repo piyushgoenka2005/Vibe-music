@@ -13,6 +13,7 @@ import {
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatCard, StatusBadge, LoadingState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { DashboardStats, RevenueDataPoint } from "@/types/admin";
 import type { Order } from "@/types/order";
 
@@ -32,14 +33,20 @@ async function fetchDashboard(): Promise<DashboardData> {
 }
 
 function DashboardContent() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-dashboard"],
     queryFn: fetchDashboard,
   });
 
   if (isLoading) return <LoadingState message="Loading dashboard…" />;
   if (error || !data) {
-    return <div className="admin-empty">Unable to load dashboard data.</div>;
+    return (
+      <ErrorState
+        message="Unable to load dashboard data."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
   }
 
   const { stats, revenueChart, recentOrders, recentCustomers, lowStock, topProducts } = data;

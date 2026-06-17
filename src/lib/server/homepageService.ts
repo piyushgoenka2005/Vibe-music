@@ -2,10 +2,16 @@ import "server-only";
 
 import { isFirebaseAdminConfigured } from "@/lib/firebase/admin";
 import {
+  isGlobalFirestoreCircuitOpen,
+  tryFirestoreFast,
+} from "@/lib/server/firestoreErrors";
+import {
   fetchAllProducts,
   fetchBrands,
 } from "@/lib/server/firestoreCatalogRepository";
 import { listCategories } from "@/lib/server/categoryRepository";
+import { getBrandLogoUrl } from "@/lib/brandLogos";
+import { getCategoryGridImage } from "@/lib/categoryImages";
 import { categoryPath, productPath } from "@/lib/routes";
 import {
   listActiveSectionItems,
@@ -171,7 +177,7 @@ async function resolveCategories(
         slug: category.slug,
         title: item.customTitle || category.name,
         href: item.customHref || categoryPath(category.slug),
-        imageSrc: item.customImage || category.imageUrl || "",
+        imageSrc: item.customImage || category.imageUrl || getCategoryGridImage(category.slug),
         badge: item.badgeLabel,
       });
     }
@@ -188,7 +194,7 @@ async function resolveCategories(
       slug: category.slug,
       title: category.name,
       href: categoryPath(category.slug),
-      imageSrc: category.imageUrl || "",
+      imageSrc: category.imageUrl || getCategoryGridImage(category.slug),
     }));
 }
 
@@ -214,7 +220,7 @@ async function resolveBrands(
         name: item.customTitle || brand.name,
         slug: brand.slug,
         href: item.customHref || `/search?brand=${encodeURIComponent(brand.slug)}`,
-        logoUrl: item.customImage,
+        logoUrl: item.customImage || getBrandLogoUrl(brand.slug),
       });
     }
 
@@ -226,6 +232,7 @@ async function resolveBrands(
     name: brand.name,
     slug: brand.slug,
     href: `/search?brand=${encodeURIComponent(brand.slug)}`,
+    logoUrl: getBrandLogoUrl(brand.slug),
   }));
 }
 
@@ -286,31 +293,50 @@ async function resolveSection(
 export async function getPublicHomepageData(
   at = new Date()
 ): Promise<PublicHomepageData> {
-  if (!isFirebaseAdminConfigured()) {
-    return { sections: [], fetchedAt: at.toISOString() };
+  const emptyPayload = (): PublicHomepageData => ({
+    sections: [],
+    fetchedAt: at.toISOString(),
+  });
+
+  if (!isFirebaseAdminConfigured() || isGlobalFirestoreCircuitOpen()) {
+    return emptyPayload();
   }
 
   if (publicCache && isFresh(publicCacheAt)) {
     return publicCache;
   }
 
-  const [sections, products] = await Promise.all([
-    listActiveSections(),
-    fetchAllProducts(),
-  ]);
+  return tryFirestoreFast(
+    async () => {
+      const [sections, products] = await Promise.all([
+        listActiveSections(),
+        fetchAllProducts(),
+      ]);
 
-  const resolved = (
-    await Promise.all(sections.map((section) => resolveSection(section, products, at)))
-  ).filter((section): section is ResolvedHomepageSection => section !== null);
+      const resolved = (
+        await Promise.all(
+          sections.map((section) => resolveSection(section, products, at))
+        )
+      ).filter((section): section is ResolvedHomepageSection => section !== null);
 
-  const payload: PublicHomepageData = {
-    sections: resolved,
-    fetchedAt: at.toISOString(),
-  };
+      const payload: PublicHomepageData = {
+        sections: resolved,
+        fetchedAt: at.toISOString(),
+      };
 
-  publicCache = payload;
-  publicCacheAt = Date.now();
-  return payload;
+      publicCache = payload;
+      publicCacheAt = Date.now();
+      return payload;
+    },
+    {
+      domain: "homepage",
+      context: "Firestore unavailable — skipping dynamic homepage sections",
+      fallback: () => {
+        if (publicCache) return publicCache;
+        return emptyPayload();
+      },
+    }
+  );
 }
 
 export {

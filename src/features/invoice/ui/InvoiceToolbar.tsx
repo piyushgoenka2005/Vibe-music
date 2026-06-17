@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import type { Order } from "@/types/order";
 import { formatPrice } from "@/features/invoice/utils/format";
-import { formatInvoiceDate, invoiceStatusBadge, paymentMethodLabel } from "@/features/invoice/utils/invoice-utils";
+import { formatInvoiceDate, invoiceStatusBadge, paymentMethodLabel, isInvoiceAvailable } from "@/features/invoice/utils/invoice-utils";
 import { ROUTES } from "@/lib/routes";
 import { BRAND } from "@/lib/brand";
 
@@ -22,10 +22,13 @@ export function InvoiceToolbar({
   order,
   invoiceUrl,
   pdfUrl,
+  htmlPrintUrl,
 }: {
   order: Order;
   invoiceUrl: string;
   pdfUrl?: string;
+  /** Opens printable HTML when server PDF is unavailable. */
+  htmlPrintUrl?: string;
 }) {
   const invoiceNumber = order.invoice?.invoiceNumber ?? "";
   const status = invoiceStatusBadge(order);
@@ -50,8 +53,7 @@ export function InvoiceToolbar({
     )}&body=${encodeURIComponent(body)}`;
   }, [invoiceNumber, invoiceUrl, order.email, order.id, order.invoice?.grandTotal, order.shippingAddress.name, order.total]);
 
-  const canShowInvoice =
-    order.paymentStatus === "paid" && Boolean(order.invoice?.invoiceNumber);
+  const canShowInvoice = isInvoiceAvailable(order);
 
   if (!canShowInvoice) {
     return (
@@ -111,9 +113,20 @@ export function InvoiceToolbar({
         {pdfUrl ? (
           <a
             href={pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex min-h-11 w-full items-center justify-center rounded border border-neutral-300 bg-neutral-50 px-4 py-2.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100 sm:min-h-0 sm:w-auto sm:py-2"
           >
             Download PDF
+          </a>
+        ) : htmlPrintUrl ? (
+          <a
+            href={htmlPrintUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded border border-neutral-300 bg-neutral-50 px-4 py-2.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100 sm:min-h-0 sm:w-auto sm:py-2"
+          >
+            Save as PDF
           </a>
         ) : null}
       </div>

@@ -9,7 +9,7 @@ import {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("products:write");
+    await requireAdmin("products:write", request);
     const body = await request.json();
     const action = body.action as string;
     const ids = body.ids as string[];
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
     switch (action) {
       case "delete": {
-        await requireAdmin("products:delete");
+        await requireAdmin("products:delete", request);
         const deleted = await bulkDeleteAdminProducts(ids);
         return NextResponse.json({ deleted });
       }

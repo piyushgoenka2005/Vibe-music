@@ -39,7 +39,7 @@ export function activateHeaderSearch() {
       input.disabled = false;
       input.removeAttribute("disabled");
       if (!input.placeholder || input.placeholder === "Loading...") {
-        input.placeholder = "Search guitars, mics, studio gear…";
+        input.placeholder = " ";
       }
     });
 

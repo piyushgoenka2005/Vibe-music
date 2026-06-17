@@ -21,19 +21,52 @@ function normalizeReview(id: string, data: FirebaseFirestore.DocumentData): Revi
   };
 }
 
-export async function listReviews(status?: ReviewDocument["status"]): Promise<ReviewDocument[]> {
+export async function listReviews(
+  status?: ReviewDocument["status"],
+  options: { limit?: number; cursor?: string } = {}
+): Promise<{
+  reviews: ReviewDocument[];
+  hasMore: boolean;
+  nextCursor?: string;
+}> {
   const db = getAdminFirestore();
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
   let query: FirebaseFirestore.Query = db.collection(COLLECTION);
 
   if (status) {
     query = query.where("status", "==", status);
   }
 
-  const snap = await query.orderBy("createdAt", "desc").get();
-  if (snap.empty) {
-    return seedReviewsFromStatic();
+  query = query.orderBy("createdAt", "desc");
+
+  if (options.cursor) {
+    const cursorDoc = await db.collection(COLLECTION).doc(options.cursor).get();
+    if (cursorDoc.exists) {
+      query = query.startAfter(cursorDoc);
+    }
   }
-  return snap.docs.map((doc) => normalizeReview(doc.id, doc.data()));
+
+  const snap = await query.limit(limit + 1).get();
+  if (snap.empty) {
+    const seeded = await seedReviewsFromStatic();
+    return {
+      reviews: seeded.slice(0, limit),
+      hasMore: false,
+    };
+  }
+
+  const docs = snap.docs;
+  const hasMore = docs.length > limit;
+  const pageDocs = docs.slice(0, limit);
+
+  return {
+    reviews: pageDocs.map((doc) => normalizeReview(doc.id, doc.data())),
+    hasMore,
+    nextCursor:
+      hasMore && pageDocs.length > 0
+        ? pageDocs[pageDocs.length - 1]!.id
+        : undefined,
+  };
 }
 
 async function seedReviewsFromStatic(): Promise<ReviewDocument[]> {

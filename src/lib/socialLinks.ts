@@ -16,6 +16,8 @@ export const SOCIAL_LINKS = {
     "https://www.youtube.com/@vibemusic",
   newsletter:
     process.env.NEXT_PUBLIC_NEWSLETTER_URL ?? "#newsletter",
+  instagramHandle:
+    process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "@vibemusic",
 } as const;
 
 export type SocialPlatform = keyof Omit<typeof SOCIAL_LINKS, "newsletter">;

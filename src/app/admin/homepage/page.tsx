@@ -10,6 +10,7 @@ import {
   LoadingState,
   StatusBadge,
 } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import {
   HOMEPAGE_SECTION_KEYS,
   HOMEPAGE_SECTION_LABELS,
@@ -46,7 +47,7 @@ function HomepageContent() {
   const [itemForm, setItemForm] = useState(EMPTY_ITEM);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
       const res = await fetch("/api/admin/homepage");

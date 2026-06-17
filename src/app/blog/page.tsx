@@ -22,7 +22,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogIndexPage() {
-  const posts = await listPublicBlogPosts();
+  const rawPosts = await listPublicBlogPosts();
+  const posts = Array.isArray(rawPosts) ? rawPosts : [];
 
   return (
     <main className="blog-page" id="main-content">

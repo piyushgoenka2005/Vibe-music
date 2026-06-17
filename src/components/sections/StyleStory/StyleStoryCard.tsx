@@ -1,57 +1,25 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef, type RefObject } from "react";
+import { useVisibleVideo } from "@/hooks/useVisibleVideo";
 import type { StyleStoryItem } from "@/data/styleStory";
 
 interface StyleStoryCardProps {
   item: StyleStoryItem;
+  scrollRootRef?: RefObject<HTMLElement | null>;
 }
 
-function tryPlay(video: HTMLVideoElement) {
-  video.muted = true;
-  video.defaultMuted = true;
-  return video.play().catch(() => undefined);
-}
-
-export default function StyleStoryCard({ item }: StyleStoryCardProps) {
+export default function StyleStoryCard({
+  item,
+  scrollRootRef,
+}: StyleStoryCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isActiveRef = useRef(false);
 
-  useEffect(() => {
-    const card = cardRef.current;
-    const video = videoRef.current;
-    if (!card || !video) return;
-
-    const onCanPlay = () => {
-      if (isActiveRef.current) void tryPlay(video);
-    };
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry) return;
-
-        if (entry.isIntersecting) {
-          isActiveRef.current = true;
-          void tryPlay(video);
-        } else {
-          isActiveRef.current = false;
-          video.pause();
-          video.currentTime = 0;
-        }
-      },
-      { threshold: 0.2, rootMargin: "80px 0px" }
-    );
-
-    video.addEventListener("canplay", onCanPlay);
-    observer.observe(card);
-
-    return () => {
-      observer.disconnect();
-      video.removeEventListener("canplay", onCanPlay);
-      video.pause();
-    };
-  }, []);
+  useVisibleVideo(videoRef, cardRef, {
+    scrollRootRef,
+    visibilityRatio: 0.15,
+  });
 
   function openReel() {
     window.open(item.reelUrl, "_blank", "noopener,noreferrer");

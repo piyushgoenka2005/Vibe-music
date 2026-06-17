@@ -6,12 +6,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatCard, LoadingState, formatCurrency } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import SearchAnalyticsPanel from "@/components/admin/SearchAnalyticsPanel";
 
 function AnalyticsContent() {
   const [period, setPeriod] = useState("30d");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-analytics", period],
     queryFn: async () => {
       const res = await fetch(`/api/admin/analytics?period=${period}`);

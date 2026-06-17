@@ -2,37 +2,60 @@ import Link from "next/link";
 import { TOP_NEW_PRODUCTS } from "@/data/topNewProducts";
 import { resolveLinkHref } from "@/lib/routes";
 import TopNewProductCard from "./TopNewProductCard";
-
-const SECTION_CTA_ARROW = (
-  <svg
-    aria-hidden="true"
-    xmlns="http://www.w3.org/2000/svg"
-    xmlSpace="preserve"
-    viewBox="0 0 10.5 9"
-  >
-    <path d="M10.45 4.22a.62.62 0 0 0-.17-.25L6.53.22C6.46.14 6.37.1 6.28.05S6.1 0 6 0s-.19.02-.28.05-.18.1-.25.17a.72.72 0 0 0-.22.53.7.7 0 0 0 .22.53l2.46 2.47H.75a.75.75 0 0 0-.7.46.75.75 0 0 0 0 .58.73.73 0 0 0 .7.46h7.18L5.47 7.72l-.1.11-.07.14-.04.14-.01.14.01.14.04.14.07.14c.02.04.06.08.1.1A.69.69 0 0 0 6 9c.1.01.19 0 .28-.04s.18-.1.25-.17l3.75-3.75a.72.72 0 0 0 .22-.53.8.8 0 0 0-.05-.28z" />
-  </svg>
-);
+import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
+import Reveal from "@/components/layout/Reveal";
 
 /** Homepage ranked new gear grid (`#top-new-products`). */
 export default function TopNewProducts() {
   const { sectionId, heading, ctaHref, ctaLabel, items } = TOP_NEW_PRODUCTS;
+  const titleId = `${sectionId}-title`;
 
   return (
-    <section id={sectionId} className="topnew-products">
-      <h2>{heading}</h2>
-      <div className="topnew-grid">
-        {items.map((item) => (
-          <TopNewProductCard key={item.id} item={item} />
-        ))}
+    <section
+      aria-labelledby={titleId}
+      className="new-arrivals-section"
+      id={sectionId}
+    >
+      <div className="new-arrivals-section__inner">
+        <header className="new-arrivals-section__header">
+          <div className="new-arrivals-section__header-copy">
+            <p className="new-arrivals-section__eyebrow">New arrivals</p>
+            <h2 id={titleId}>{heading}</h2>
+            <p className="new-arrivals-section__subtitle">
+              Pre-orders and just-announced gear from top manufacturers.
+            </p>
+          </div>
+          <Link
+            className="homepage-section__cta-btn new-arrivals-section__cta"
+            href={resolveLinkHref(ctaHref)}
+          >
+            {ctaLabel}
+            {SECTION_CTA_ARROW}
+          </Link>
+        </header>
+
+        <div className="new-arrivals-grid" role="list">
+          {items.map((item, index) => (
+            <Reveal
+              key={item.id}
+              className="new-arrivals-grid__cell"
+              delay={index * 70}
+            >
+              <TopNewProductCard featured={index === 0} item={item} />
+            </Reveal>
+          ))}
+        </div>
+
+        <div className="new-arrivals-section__cta-mobile">
+          <Link
+            className="homepage-section__cta-btn"
+            href={resolveLinkHref(ctaHref)}
+          >
+            {ctaLabel}
+            {SECTION_CTA_ARROW}
+          </Link>
+        </div>
       </div>
-      <Link
-        href={resolveLinkHref(ctaHref)}
-        className="homepage-btn__section-cta blue"
-      >
-        {ctaLabel}
-        {SECTION_CTA_ARROW}
-      </Link>
     </section>
   );
 }

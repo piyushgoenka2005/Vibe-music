@@ -1,6 +1,18 @@
 import type { InvoiceSafeOrder, InvoiceStatusBadge } from "@/features/invoice/types";
 import type { GSTInvoiceData } from "@/lib/gstCalculator";
+import type { Order, PaymentStatus } from "@/types/order";
 import { formatInvoiceDate, formatInvoiceDateTime } from "@/features/invoice/utils/format";
+
+/** Tax invoice is available once the order is placed (paid or COD). */
+export function isInvoiceAvailable(order: {
+  invoice?: Order["invoice"] | null;
+  paymentStatus: PaymentStatus;
+}): boolean {
+  return (
+    Boolean(order.invoice?.invoiceNumber) &&
+    (order.paymentStatus === "paid" || order.paymentStatus === "cod_pending")
+  );
+}
 
 /** Invoice brand tokens for HTML output. */
 export const INVOICE_BRAND = {

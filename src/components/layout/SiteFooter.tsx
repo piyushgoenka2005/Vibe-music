@@ -30,12 +30,15 @@ export default function SiteFooter() {
     <footer className="site-footer" data-vibe-section="footer">
       <div className="site-footer__inner">
         <div className="site-footer__brand">
-          <Image
-            src={BRAND.logoPath}
-            alt={BRAND.name}
-            width={120}
-            height={32}
-          />
+          <Link href={ROUTES.home} className="site-footer__logo" aria-label={`${BRAND.name} home`}>
+            <Image
+              src={BRAND.headerLogoPath}
+              alt={BRAND.name}
+              width={240}
+              height={62}
+              className="site-footer__logo-img"
+            />
+          </Link>
           <p className="site-footer__tagline">{BRAND.tagline}</p>
           <p className="site-footer__desc">{BRAND.description}</p>
         </div>

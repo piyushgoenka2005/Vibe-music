@@ -11,7 +11,7 @@ export interface GSTLineItem {
   productId: string;
   name: string;
   quantity: number;
-  /** Unit price excluding GST (INR). */
+  /** Unit price including GST (INR). */
   unitPrice: number;
   gstRate: GSTRate;
 }
@@ -85,8 +85,9 @@ function generateInvoiceNumber(): string {
 
 /**
  * Calculates GST breakdown for a cart.
+ * Product unit prices are GST-inclusive; tax is extracted for invoicing,
+ * not added on top of the customer-facing total.
  * Discount is allocated proportionally across line items.
- * Shipping and platform fee attract GST at the weighted average rate.
  */
 export function calculateGST(input: GSTCalculationInput): GSTInvoiceData {
   const {
@@ -110,8 +111,10 @@ export function calculateGST(input: GSTCalculationInput): GSTInvoiceData {
       subtotal > 0
         ? round2((lineSubtotal / subtotal) * cappedDiscount)
         : 0;
-    const taxableAmount = round2(lineSubtotal - discountShare);
-    const gstAmount = round2(taxableAmount * (item.gstRate / 100));
+    const lineTotal = round2(lineSubtotal - discountShare);
+    const rateFactor = 1 + item.gstRate / 100;
+    const taxableAmount = round2(lineTotal / rateFactor);
+    const gstAmount = round2(lineTotal - taxableAmount);
 
     let cgst = 0;
     let sgst = 0;
@@ -137,9 +140,13 @@ export function calculateGST(input: GSTCalculationInput): GSTInvoiceData {
       sgst,
       igst,
       gstAmount,
-      lineTotal: round2(taxableAmount + gstAmount),
+      lineTotal,
     };
   });
+
+  const itemsGross = round2(
+    lineBreakdown.reduce((sum, line) => sum + line.lineTotal, 0)
+  );
 
   const itemsTaxable = round2(
     lineBreakdown.reduce((sum, line) => sum + line.taxableAmount, 0)
@@ -155,35 +162,53 @@ export function calculateGST(input: GSTCalculationInput): GSTInvoiceData {
         )
       : DEFAULT_GST_RATE;
 
-  const shippingTaxable = round2(shippingCharge);
-  const platformTaxable = round2(platformFee);
-  const extraTaxable = round2(shippingTaxable + platformTaxable);
-  const extraGst = round2(extraTaxable * (weightedGstRate / 100));
+  function splitGstFromGross(gross: number): {
+    taxable: number;
+    cgst: number;
+    sgst: number;
+    igst: number;
+    gst: number;
+  } {
+    if (gross <= 0) {
+      return { taxable: 0, cgst: 0, sgst: 0, igst: 0, gst: 0 };
+    }
 
-  let extraCgst = 0;
-  let extraSgst = 0;
-  let extraIgst = 0;
+    const taxable = round2(gross / (1 + weightedGstRate / 100));
+    const gst = round2(gross - taxable);
 
-  if (interState) {
-    extraIgst = extraGst;
-  } else {
-    extraCgst = round2(extraGst / 2);
-    extraSgst = round2(extraGst - extraCgst);
+    if (interState) {
+      return { taxable, cgst: 0, sgst: 0, igst: gst, gst };
+    }
+
+    const cgst = round2(gst / 2);
+    const sgst = round2(gst - cgst);
+    return { taxable, cgst, sgst, igst: 0, gst };
   }
 
+  const shippingParts = splitGstFromGross(round2(shippingCharge));
+  const platformParts = splitGstFromGross(round2(platformFee));
+
   const totalCgst = round2(
-    lineBreakdown.reduce((sum, line) => sum + line.cgst, 0) + extraCgst
+    lineBreakdown.reduce((sum, line) => sum + line.cgst, 0) +
+      shippingParts.cgst +
+      platformParts.cgst
   );
   const totalSgst = round2(
-    lineBreakdown.reduce((sum, line) => sum + line.sgst, 0) + extraSgst
+    lineBreakdown.reduce((sum, line) => sum + line.sgst, 0) +
+      shippingParts.sgst +
+      platformParts.sgst
   );
   const totalIgst = round2(
-    lineBreakdown.reduce((sum, line) => sum + line.igst, 0) + extraIgst
+    lineBreakdown.reduce((sum, line) => sum + line.igst, 0) +
+      shippingParts.igst +
+      platformParts.igst
   );
   const totalGst = round2(totalCgst + totalSgst + totalIgst);
 
-  const taxableAmount = round2(itemsTaxable + extraTaxable);
-  const grandTotal = round2(taxableAmount + totalGst);
+  const taxableAmount = round2(
+    itemsTaxable + shippingParts.taxable + platformParts.taxable
+  );
+  const grandTotal = round2(itemsGross + round2(shippingCharge) + round2(platformFee));
 
   const cgstDisplayRate = interState
     ? 0

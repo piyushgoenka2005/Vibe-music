@@ -62,21 +62,22 @@
 }
 
 .acct__hero-content {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 24px;
   position: relative;
   z-index: 1;
 }
 
 .acct__hero-copy {
-  flex: 1;
+  grid-column: 1;
   min-width: 0;
 }
 
 .acct__hero-avatar {
-  flex-shrink: 0;
+  grid-column: 2;
+  justify-self: end;
   width: 96px;
   height: 96px;
   border-radius: 50%;

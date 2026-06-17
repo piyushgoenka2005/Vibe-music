@@ -1,20 +1,23 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
 import { incrementCouponUsage } from "@/lib/server/couponService";
 import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
+import {
+  isFirestoreUnavailableError,
+  logFirestoreWarning,
+} from "@/lib/server/firestoreErrors";
+import {
+  fetchOrderById,
+  findOrderByRazorpayOrderId as findOrderByRazorpayOrderIdFromStore,
+  findOrderByRazorpayPaymentId as findOrderByRazorpayPaymentIdFromStore,
+  updateOrder,
+} from "@/lib/server/orderRepository";
 import {
   fulfillReservedStockForOrder,
   releaseOrderInventory,
 } from "@/lib/server/inventoryService";
 import type { OrderInventoryLine } from "@/types/inventory";
 import type { Order, OrderStatus, PaymentStatus } from "@/types/order";
-
-async function getOrderById(orderId: string): Promise<Order | null> {
-  const doc = await getAdminFirestore().collection("orders").doc(orderId).get();
-  if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() } as Order;
-}
 
 function toInventoryLines(order: {
   items: Array<{
@@ -35,29 +38,17 @@ function toInventoryLines(order: {
 export async function findOrderByRazorpayOrderId(
   razorpayOrderId: string
 ): Promise<{ id: string; data: Order } | null> {
-  const snap = await getAdminFirestore()
-    .collection("orders")
-    .where("razorpayOrderId", "==", razorpayOrderId)
-    .limit(1)
-    .get();
-
-  if (snap.empty) return null;
-  const doc = snap.docs[0]!;
-  return { id: doc.id, data: { id: doc.id, ...doc.data() } as Order };
+  const order = await findOrderByRazorpayOrderIdFromStore(razorpayOrderId);
+  if (!order) return null;
+  return { id: order.id, data: order };
 }
 
 export async function findOrderByRazorpayPaymentId(
   razorpayPaymentId: string
 ): Promise<{ id: string; data: Order } | null> {
-  const snap = await getAdminFirestore()
-    .collection("orders")
-    .where("razorpayPaymentId", "==", razorpayPaymentId)
-    .limit(1)
-    .get();
-
-  if (snap.empty) return null;
-  const doc = snap.docs[0]!;
-  return { id: doc.id, data: { id: doc.id, ...doc.data() } as Order };
+  const order = await findOrderByRazorpayPaymentIdFromStore(razorpayPaymentId);
+  if (!order) return null;
+  return { id: order.id, data: order };
 }
 
 export interface PaymentCompletionResult {
@@ -72,7 +63,7 @@ export async function completeOrderPayment(input: {
   razorpayOrderId?: string;
   source: "client_verify" | "webhook";
 }): Promise<PaymentCompletionResult> {
-  const order = await getOrderById(input.orderId);
+  const order = await fetchOrderById(input.orderId);
   if (!order) {
     throw new Error("Order not found");
   }
@@ -87,19 +78,30 @@ export async function completeOrderPayment(input: {
 
   const inventoryLines = toInventoryLines(order);
 
-  if (order.inventoryStatus === "reserved") {
-    await fulfillReservedStockForOrder(order.id, inventoryLines);
-  } else if (order.inventoryStatus !== "fulfilled") {
+  const inventoryState = order.inventoryStatus ?? "none";
+
+  if (inventoryState === "reserved") {
+    try {
+      await fulfillReservedStockForOrder(order.id, inventoryLines);
+    } catch (error) {
+      if (!isFirestoreUnavailableError(error)) {
+        throw error;
+      }
+      logFirestoreWarning(
+        "inventory",
+        error,
+        "Skipping inventory fulfillment — Firestore unavailable"
+      );
+    }
+  } else if (inventoryState !== "fulfilled" && inventoryState !== "none") {
     throw new Error(
-      `Cannot fulfill inventory for order in state: ${order.inventoryStatus ?? "none"}`
+      `Cannot fulfill inventory for order in state: ${inventoryState}`
     );
   }
 
   await applyCouponUsageIfNeeded(order);
 
   const timestamp = new Date().toISOString();
-  const db = getAdminFirestore();
-  const orderRef = db.collection("orders").doc(order.id);
 
   const updated: Partial<Order> = {
     paymentStatus: "paid" satisfies PaymentStatus,
@@ -115,9 +117,7 @@ export async function completeOrderPayment(input: {
     updated.razorpayOrderId = input.razorpayOrderId;
   }
 
-  await orderRef.update(updated);
-
-  const completedOrder = { ...order, ...updated };
+  const completedOrder = await updateOrder(order.id, updated);
   void sendOrderConfirmationEmail(completedOrder);
 
   return {
@@ -131,7 +131,7 @@ export async function failOrderPayment(input: {
   razorpayPaymentId?: string;
   reason?: string;
 }): Promise<PaymentCompletionResult> {
-  const order = await getOrderById(input.orderId);
+  const order = await fetchOrderById(input.orderId);
   if (!order) {
     throw new Error("Order not found");
   }
@@ -147,8 +147,6 @@ export async function failOrderPayment(input: {
   await releaseOrderInventory(order);
 
   const timestamp = new Date().toISOString();
-  const db = getAdminFirestore();
-  const orderRef = db.collection("orders").doc(order.id);
 
   const updated: Partial<Order> = {
     paymentStatus: "failed",
@@ -162,10 +160,10 @@ export async function failOrderPayment(input: {
     updated.razorpayPaymentId = input.razorpayPaymentId;
   }
 
-  await orderRef.update(updated);
+  const failedOrder = await updateOrder(order.id, updated);
 
   return {
-    order: { ...order, ...updated },
+    order: failedOrder,
     skipped: false,
   };
 }
@@ -175,7 +173,7 @@ export async function refundOrderPayment(input: {
   razorpayPaymentId?: string;
   razorpayRefundId?: string;
 }): Promise<PaymentCompletionResult> {
-  const order = await getOrderById(input.orderId);
+  const order = await fetchOrderById(input.orderId);
   if (!order) {
     throw new Error("Order not found");
   }
@@ -187,8 +185,6 @@ export async function refundOrderPayment(input: {
   await releaseOrderInventory(order);
 
   const timestamp = new Date().toISOString();
-  const db = getAdminFirestore();
-  const orderRef = db.collection("orders").doc(order.id);
 
   const updated: Partial<Order> = {
     paymentStatus: "refunded",
@@ -203,10 +199,10 @@ export async function refundOrderPayment(input: {
     updated.razorpayPaymentId = input.razorpayPaymentId;
   }
 
-  await orderRef.update(updated);
+  const refundedOrder = await updateOrder(order.id, updated);
 
   return {
-    order: { ...order, ...updated },
+    order: refundedOrder,
     skipped: false,
   };
 }
@@ -216,17 +212,26 @@ async function applyCouponUsageIfNeeded(order: Order): Promise<void> {
     return;
   }
 
-  const db = getAdminFirestore();
-  const orderRef = db.collection("orders").doc(order.id);
-  const fresh = await orderRef.get();
-  const data = fresh.data() as Order | undefined;
-
-  if (!data || data.couponUsageApplied) {
+  const fresh = await fetchOrderById(order.id);
+  if (!fresh || fresh.couponUsageApplied) {
     return;
   }
 
-  await incrementCouponUsage(order.couponCode);
-  await orderRef.update({
+  try {
+    await incrementCouponUsage(order.couponCode);
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      logFirestoreWarning(
+        "coupons",
+        error,
+        "Skipping coupon usage increment — Firestore unavailable"
+      );
+    } else {
+      throw error;
+    }
+  }
+
+  await updateOrder(order.id, {
     couponUsageApplied: true,
     updatedAt: new Date().toISOString(),
   });

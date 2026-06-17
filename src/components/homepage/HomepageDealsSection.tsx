@@ -10,60 +10,72 @@ interface HomepageDealsSectionProps {
 export default function HomepageDealsSection({ section }: HomepageDealsSectionProps) {
   const products = section.products ?? [];
   const sliderId = `${section.sectionId}-slider`;
+  const titleId = `${section.sectionId}-title`;
 
   return (
     <section
+      aria-labelledby={titleId}
+      className="homepage-deals-section"
       id={section.sectionId}
-      className="sale-events bg-gray50 text-black fw-containered self-spaced"
     >
-      <section className="tile-block borderless">
-        <div className="section-header">
+      <div className="homepage-deals-section__inner tile-block">
+        <header className="homepage-deals-section__header">
           {section.accentLabel ? (
-            <span className="accent-text text-red">{section.accentLabel}</span>
+            <p className="premium-section-eyebrow homepage-deals-section__eyebrow">
+              {section.accentLabel}
+            </p>
           ) : null}
-          <h2 className="bg-gray50 text-black text-center">{section.title}</h2>
-          <span className="accent bg-red"></span>
-        </div>
+          <h2 className="homepage-deals-section__title" id={titleId}>
+            {section.title}
+          </h2>
+          {section.subtitle ? (
+            <p className="homepage-deals-section__subtitle">{section.subtitle}</p>
+          ) : null}
+        </header>
 
-        {section.subtitle ? (
-          <p className="homepage-section__subtitle text-center">{section.subtitle}</p>
-        ) : null}
+        <div className="homepage-deals-section__stage">
+          <div
+            className="homepage-deals-section__track tiles tiles--slider flex-container flex-row flex-nowrap scrollbar-minimal horizontal cols-4 product-peak-3"
+            id={sliderId}
+          >
+            {products.map((item, index) => (
+              <DealProductCard key={item.id} item={item} slotPosition={index + 1} />
+            ))}
+          </div>
 
-        <div
-          id={sliderId}
-          className="tiles tiles--slider flex-container flex-row flex-nowrap scrollbar-minimal horizontal cols-4 product-peak-3"
-        >
-          {products.map((item, index) => (
-            <DealProductCard key={item.id} item={item} slotPosition={index + 1} />
-          ))}
-        </div>
-
-        <div data-prev-id={sliderId} className="tile--slider-controls prev bg-white">
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">
-            <g fill="none" stroke="#000" strokeLinecap="round" strokeWidth="2">
-              <path d="M22.238 12.495l-7.739 7.739 7.739 7.739" fill="none" />
-            </g>
-          </svg>
-        </div>
-        <div data-next-id={sliderId} className="tile--slider-controls next bg-white">
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">
-            <g fill="none" stroke="#000" strokeLinecap="round" strokeWidth="2">
-              <path d="M17.762 27.505l7.739-7.739-7.739-7.739" fill="none" />
-            </g>
-          </svg>
+          <div
+            className="tile--slider-controls prev bg-white homepage-deals-section__nav homepage-deals-section__nav--prev"
+            data-prev-id={sliderId}
+          >
+            <svg aria-hidden xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+              <g fill="none" stroke="#000" strokeLinecap="round" strokeWidth="2">
+                <path d="M22.238 12.495l-7.739 7.739 7.739 7.739" fill="none" />
+              </g>
+            </svg>
+          </div>
+          <div
+            className="tile--slider-controls next bg-white homepage-deals-section__nav homepage-deals-section__nav--next"
+            data-next-id={sliderId}
+          >
+            <svg aria-hidden xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+              <g fill="none" stroke="#000" strokeLinecap="round" strokeWidth="2">
+                <path d="M17.762 27.505l7.739-7.739-7.739-7.739" fill="none" />
+              </g>
+            </svg>
+          </div>
         </div>
 
         {section.ctaText && section.ctaLink ? (
-          <div className="section-cta">
+          <div className="homepage-deals-section__cta-wrap">
             <Link
+              className="premium-btn premium-btn--primary homepage-deals-section__cta"
               href={resolveLinkHref(section.ctaLink)}
-              className="btn btn-default btn-red weight-demi"
             >
               {section.ctaText}
             </Link>
           </div>
         ) : null}
-      </section>
+      </div>
     </section>
   );
 }

@@ -5,6 +5,10 @@ import HomepageSectionsShell from "@/components/homepage/HomepageSectionsShell";
 export default async function HomepageSectionsAsync() {
   const data = await getPublicHomepageData();
 
+  if (data.sections.length === 0) {
+    return null;
+  }
+
   return (
     <HomepageSectionsShell>
       {data.sections.map((section) => (

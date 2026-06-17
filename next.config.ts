@@ -14,12 +14,14 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://cdnjs.cloudflare.com",
-      "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.vibemusic.in",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.razorpay.com https://cdnjs.cloudflare.com https://apis.google.com",
+      "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.vibemusic.in https://accounts.google.com https://checkout.razorpay.com https://*.razorpay.com",
       "img-src 'self' data: blob: https: http:",
-      "font-src 'self' data: https://cdn.vibemusic.in",
-      "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://api.razorpay.com https://*.cloudinary.com wss://*.firebaseio.com",
-      "frame-src https://api.razorpay.com https://checkout.razorpay.com",
+      "font-src 'self' data: https://cdn.vibemusic.in https://checkout.razorpay.com https://*.razorpay.com",
+      "connect-src 'self' blob: https://*.googleapis.com https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://api.razorpay.com https://*.razorpay.com https://lumberjack.razorpay.com https://*.cloudinary.com https://tonejs.github.io wss://*.firebaseio.com",
+      "media-src 'self' blob: https://tonejs.github.io",
+      "worker-src 'self' blob:",
+      "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://sketchfab.com",
     ].join("; "),
   },
 ];
@@ -29,6 +31,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "cdn.vibemusic.in" },
+      { protocol: "https", hostname: "static.roland.com", pathname: "/**" },
     ],
     formats: ["image/avif", "image/webp"],
   },

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatCard, StatusBadge, LoadingState, EmptyState } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { InventoryRecord } from "@/types/admin";
 
 function InventoryContent() {
@@ -13,7 +14,7 @@ function InventoryContent() {
   const [newQty, setNewQty] = useState(0);
   const [reason, setReason] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-inventory"],
     queryFn: async () => {
       const res = await fetch("/api/admin/inventory");

@@ -9,7 +9,7 @@ import type { HomepageSectionKey } from "@/types/homepage";
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("homepage:write");
+    await requireAdmin("homepage:write", request);
     const body = await request.json();
     const parsed = adminHomepageItemReorderSchema.parse(body);
     const items = await reorderSectionItems(

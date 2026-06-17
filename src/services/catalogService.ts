@@ -277,12 +277,48 @@ export interface ProductSearchOptions {
   includeInactive?: boolean;
 }
 
+function scoreProductMatch(
+  product: Product,
+  tokens: string[]
+): number {
+  if (tokens.length === 0) return 0;
+
+  const name = product.name.toLowerCase();
+  const brand = product.brand.toLowerCase();
+  const category = product.category.toLowerCase();
+  const slug = product.slug.toLowerCase();
+  let score = 0;
+
+  for (const token of tokens) {
+    if (slug === token) score += 120;
+    if (name === token) score += 100;
+    if (name.startsWith(token)) score += 60;
+    if (brand.startsWith(token)) score += 40;
+    if (name.includes(token)) score += 30;
+    if (brand.includes(token)) score += 20;
+    if (category.includes(token)) score += 15;
+    if (slug.includes(token)) score += 10;
+  }
+
+  const allTokensMatch = tokens.every(
+    (token) =>
+      name.includes(token) ||
+      brand.includes(token) ||
+      category.includes(token) ||
+      slug.includes(token)
+  );
+  if (allTokensMatch) score += 25 * tokens.length;
+
+  score += product.rating * 2 + Math.min(product.reviewCount, 50) * 0.1;
+  if (product.availability === "in-stock") score += 5;
+  return score;
+}
+
 function matchesQuery(product: Product, query: string): boolean {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return true;
-  return [product.name, product.brand, product.category, product.slug].some(
-    (value) => value.toLowerCase().includes(normalized)
-  );
+  const tokens = normalized.split(/\s+/).filter(Boolean);
+  return scoreProductMatch(product, tokens) > 0;
 }
 
 export async function searchProducts(
@@ -299,10 +335,12 @@ export async function searchProducts(
 
   if (options.query) {
     const normalized = options.query.trim().toLowerCase();
-    source = source.filter((p) => {
-      const product = toProduct(p);
-      return matchesQuery(product, normalized);
-    });
+    const tokens = normalized.split(/\s+/).filter(Boolean);
+    source = source
+      .map((p) => ({ product: p, score: scoreProductMatch(toProduct(p), tokens) }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map((entry) => entry.product);
   }
 
   if (options.brand) {

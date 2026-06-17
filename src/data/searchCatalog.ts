@@ -178,6 +178,7 @@ export const SEARCH_PRODUCTS: SearchProduct[] = RAW_PRODUCTS.map(
     slug: slugify(`${product.brand}-${product.name}`),
     category: product.category,
     price: product.price,
+    image: "",
   })
 );
 

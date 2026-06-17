@@ -24,7 +24,7 @@ function isUrl(value: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("products:write");
+    await requireAdmin("products:write", request);
     const contentType = request.headers.get("content-type") ?? "";
 
     if (!contentType.includes("multipart/form-data")) {

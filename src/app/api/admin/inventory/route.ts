@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdmin("inventory:write");
+    const admin = await requireAdmin("inventory:write", request);
     const body = await request.json();
     const parsed = adminInventoryAdjustSchema.parse(body);
     const adjustment = await adjustStock(

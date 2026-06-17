@@ -5,13 +5,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatusBadge, LoadingState, EmptyState } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { ReviewDocument } from "@/types/admin";
 
 function ReviewsContent() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-reviews", statusFilter],
     queryFn: async () => {
       const sp = statusFilter ? `?status=${statusFilter}` : "";

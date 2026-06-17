@@ -97,7 +97,14 @@ function readVariantStock(
   if (!Array.isArray(variants)) return null;
   const variant = variants.find((entry) => entry.id === variantId);
   if (!variant) return null;
-  return Number(variant.stock ?? 0);
+
+  if (variant.stock !== undefined && variant.stock !== null) {
+    return Number(variant.stock);
+  }
+
+  const parentStock = Number(data.stock ?? data.stockQuantity ?? 0);
+  const reservedStock = Number(data.reservedStock ?? 0);
+  return getAvailableStock(parentStock, reservedStock);
 }
 
 function buildVariantStockPatch(
@@ -112,7 +119,10 @@ function buildVariantStockPatch(
     throw new Error(`Variant not found: ${variantId}`);
   }
 
-  const currentStock = Number(variants[index].stock ?? 0);
+  const currentStock =
+    variants[index].stock !== undefined && variants[index].stock !== null
+      ? Number(variants[index].stock)
+      : (readVariantStock(data, variantId) ?? 0);
   const newStock = currentStock + delta;
   if (newStock < 0) {
     throw new Error(`Invalid variant stock for ${variantId}`);

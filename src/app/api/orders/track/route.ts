@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import type { Order } from "@/types/order";
+import { getOrderById } from "@/lib/server/orderService";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,16 +14,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const db = getAdminFirestore();
-    const doc = await db.collection("orders").doc(orderId).get();
+    const order = await getOrderById(orderId);
 
-    if (!doc.exists) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
-    }
-
-    const order = { id: doc.id, ...doc.data() } as Order;
-
-    if (order.email?.toLowerCase() !== email) {
+    if (!order || order.email?.toLowerCase() !== email) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 

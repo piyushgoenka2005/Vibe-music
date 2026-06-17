@@ -393,18 +393,6 @@
   padding: 1.5rem 1.25rem 4rem;
 }
 
-.storefront-page .checkout-step--active {
-  background: var(--brand-gradient);
-  color: var(--text-inverse);
-  box-shadow: var(--shadow-sm);
-}
-
-.storefront-page .checkout-step--done {
-  background: rgba(34, 197, 94, 0.12);
-  color: #15803d;
-  border: 1px solid rgba(34, 197, 94, 0.25);
-}
-
 .storefront-page .checkout-panel,
 .storefront-page .checkout-summary {
   border-radius: var(--radius-lg);
@@ -732,7 +720,7 @@
   justify-content: center;
   min-height: 3rem;
   padding: 0 1.5rem;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-button);
   font-size: 0.9375rem;
   font-weight: 500;
   text-decoration: none;

@@ -3,12 +3,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
+const SCRIPT_LOAD_TIMEOUT_MS = 15_000;
+const CHECKOUT_SESSION_TIMEOUT_MS = 15 * 60 * 1000;
 
 export interface RazorpaySuccessResponse {
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
 }
+
+export type RazorpayCheckoutResult =
+  | { status: "success"; response: RazorpaySuccessResponse }
+  | { status: "cancelled" }
+  | { status: "failed"; message: string };
 
 export interface RazorpayCheckoutOptions {
   key: string;
@@ -53,6 +60,39 @@ declare global {
   }
 }
 
+function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
+  if (window.Razorpay) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error("Razorpay SDK load timed out"));
+    }, SCRIPT_LOAD_TIMEOUT_MS);
+
+    const finish = (callback: () => void) => {
+      window.clearTimeout(timeoutId);
+      callback();
+    };
+
+    script.addEventListener(
+      "load",
+      () => {
+        finish(() => resolve());
+      },
+      { once: true }
+    );
+
+    script.addEventListener(
+      "error",
+      () => {
+        finish(() => reject(new Error("Failed to load Razorpay SDK")));
+      },
+      { once: true }
+    );
+  });
+}
+
 function loadRazorpayScript(): Promise<void> {
   if (typeof window === "undefined") {
     return Promise.reject(new Error("Razorpay can only load in the browser"));
@@ -65,23 +105,46 @@ function loadRazorpayScript(): Promise<void> {
   const existing = document.querySelector<HTMLScriptElement>(
     `script[src="${RAZORPAY_SCRIPT_URL}"]`
   );
+
   if (existing) {
-    return new Promise((resolve, reject) => {
-      existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () =>
-        reject(new Error("Failed to load Razorpay SDK"))
-      );
-    });
+    return waitForScriptElement(existing);
   }
 
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = RAZORPAY_SCRIPT_URL;
     script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Razorpay SDK"));
+    script.dataset.razorpayCheckout = "true";
+
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error("Razorpay SDK load timed out"));
+    }, SCRIPT_LOAD_TIMEOUT_MS);
+
+    script.onload = () => {
+      window.clearTimeout(timeoutId);
+      resolve();
+    };
+
+    script.onerror = () => {
+      window.clearTimeout(timeoutId);
+      reject(new Error("Failed to load Razorpay SDK"));
+    };
+
     document.body.appendChild(script);
   });
+}
+
+export function preloadRazorpayCheckout(): void {
+  if (typeof window === "undefined") return;
+  void loadRazorpayScript().catch(() => undefined);
+
+  if (!document.querySelector('link[data-razorpay-preconnect="true"]')) {
+    const preconnect = document.createElement("link");
+    preconnect.rel = "preconnect";
+    preconnect.href = "https://checkout.razorpay.com";
+    preconnect.dataset.razorpayPreconnect = "true";
+    document.head.appendChild(preconnect);
+  }
 }
 
 export function useRazorpay() {
@@ -116,7 +179,7 @@ export function useRazorpay() {
   const openCheckout = useCallback(
     async (
       options: RazorpayCheckoutOptions
-    ): Promise<RazorpaySuccessResponse | null> => {
+    ): Promise<RazorpayCheckoutResult> => {
       setIsLoading(true);
       setError(null);
 
@@ -127,20 +190,33 @@ export function useRazorpay() {
           throw new Error("Razorpay SDK unavailable");
         }
 
-        return await new Promise<RazorpaySuccessResponse | null>((resolve) => {
+        if (!options.key?.startsWith("rzp_")) {
+          throw new Error(
+            "Payment gateway is not configured. Add NEXT_PUBLIC_RAZORPAY_KEY_ID to .env.local."
+          );
+        }
+
+        const checkoutPromise = new Promise<RazorpayCheckoutResult>((resolve) => {
+          let settled = false;
+
+          const finish = (value: RazorpayCheckoutResult) => {
+            if (settled) return;
+            settled = true;
+            setIsLoading(false);
+            resolve(value);
+          };
+
           const razorpay = new window.Razorpay!({
             ...options,
             handler: (response) => {
-              setIsLoading(false);
               options.handler(response);
-              resolve(response);
+              finish({ status: "success", response });
             },
             modal: {
               ...options.modal,
               ondismiss: () => {
-                setIsLoading(false);
                 options.modal?.ondismiss?.();
-                resolve(null);
+                finish({ status: "cancelled" });
               },
             },
           });
@@ -148,19 +224,42 @@ export function useRazorpay() {
           instanceRef.current = razorpay;
 
           razorpay.on("payment.failed", (response) => {
-            setIsLoading(false);
-            setError(response.error.description || "Payment failed");
-            resolve(null);
+            const message =
+              response.error.description ||
+              response.error.reason ||
+              "Payment failed. Please try another method.";
+            setError(message);
+            finish({ status: "failed", message });
           });
 
-          razorpay.open();
+          try {
+            razorpay.open();
+          } catch (openError) {
+            const message =
+              openError instanceof Error
+                ? openError.message
+                : "Unable to open Razorpay checkout";
+            setError(message);
+            finish({ status: "failed", message });
+          }
         });
+
+        const timeoutPromise = new Promise<RazorpayCheckoutResult>((resolve) => {
+          window.setTimeout(() => {
+            const message = "Payment session timed out. Please try again.";
+            setIsLoading(false);
+            setError(message);
+            resolve({ status: "failed", message });
+          }, CHECKOUT_SESSION_TIMEOUT_MS);
+        });
+
+        return await Promise.race([checkoutPromise, timeoutPromise]);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Unable to open Razorpay checkout";
         setError(message);
         setIsLoading(false);
-        return null;
+        return { status: "failed", message };
       }
     },
     []

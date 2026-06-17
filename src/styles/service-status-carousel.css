@@ -1,0 +1,294 @@
+/* BeetleX-style service carousel — light theme, split intro + horizontal cards */
+
+.service-carousel {
+  padding: clamp(2.25rem, 4.5vw, 3.25rem) 0 clamp(1.5rem, 2.5vw, 2rem);
+  background: #ffffff;
+  color: #0f1115;
+  overflow: hidden;
+  border-top: 1px solid #eef0f3;
+  border-bottom: 1px solid #eef0f3;
+}
+
+.service-carousel__inner {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 3.5rem);
+  align-items: center;
+  max-width: var(--content-wide, 1280px);
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 3vw, 1.5rem);
+}
+
+.service-carousel__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.service-carousel__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-primary, #1253ed);
+}
+
+.service-carousel__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: #0f1115;
+}
+
+.service-carousel__subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #6b7280;
+  max-width: 36ch;
+}
+
+.service-carousel__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.service-carousel__arrows {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.service-carousel__arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 17, 21, 0.04);
+  transition:
+    background var(--duration-fast, 0.2s) ease,
+    border-color var(--duration-fast, 0.2s) ease,
+    color var(--duration-fast, 0.2s) ease,
+    box-shadow var(--duration-fast, 0.2s) ease;
+}
+
+.service-carousel__arrow:hover {
+  background: #f9fafb;
+  border-color: rgba(18, 83, 237, 0.35);
+  color: var(--brand-primary, #1253ed);
+  box-shadow: 0 2px 8px rgba(18, 83, 237, 0.08);
+}
+
+.service-carousel__arrow:focus-visible {
+  outline: 2px solid var(--brand-primary, #1253ed);
+  outline-offset: 2px;
+}
+
+.service-carousel__dots {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.service-carousel__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    width var(--duration-fast, 0.2s) ease,
+    background var(--duration-fast, 0.2s) ease;
+}
+
+.service-carousel__dot::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #d1d5db;
+  transition:
+    width var(--duration-fast, 0.2s) ease,
+    background var(--duration-fast, 0.2s) ease;
+}
+
+.service-carousel__dot--active::after {
+  width: 28px;
+  background: var(--brand-primary, #1253ed);
+}
+
+.service-carousel__dot:focus-visible {
+  outline: 2px solid var(--brand-primary, #1253ed);
+  outline-offset: 2px;
+}
+
+.service-carousel__track-wrap {
+  min-width: 0;
+  position: relative;
+}
+
+.service-carousel__track-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 12px;
+  width: clamp(56px, 10vw, 120px);
+  background: linear-gradient(270deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+
+.service-carousel__track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0.25rem;
+  padding: 0.25rem 0.25rem 1rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.service-carousel__track::-webkit-scrollbar {
+  height: 3px;
+}
+
+.service-carousel__track::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 999px;
+}
+
+.service-carousel__track::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.service-carousel__card {
+  flex: 0 0 min(72vw, 320px);
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  padding: 1.5rem;
+  border-radius: 14px;
+  border: 1px solid #e8eaee;
+  background: #fafbfc;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color var(--duration-fast, 0.2s) ease,
+    background var(--duration-fast, 0.2s) ease,
+    box-shadow var(--duration-fast, 0.2s) ease,
+    transform var(--duration-fast, 0.2s) ease;
+}
+
+.service-carousel__card:hover,
+.service-carousel__card:focus-visible {
+  border-color: rgba(18, 83, 237, 0.28);
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 17, 21, 0.06);
+  transform: translateY(-2px);
+}
+
+.service-carousel__card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.service-carousel__card-category {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand-primary, #1253ed);
+}
+
+.service-carousel__card-index {
+  flex-shrink: 0;
+  font-family: var(--font-primary, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 500;
+  font-variant-numeric: slashed-zero tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #90909880;
+  user-select: none;
+}
+
+.service-carousel__card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.service-carousel__card-title {
+  margin: 0 0 0.65rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #0f1115;
+}
+
+.service-carousel__card-desc {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: #6b7280;
+}
+
+@media (max-width: 1023px) {
+  .service-carousel__inner {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 1.75rem;
+  }
+
+  .service-carousel__card {
+    flex-basis: min(82vw, 320px);
+  }
+}
+
+@media (max-width: 639px) {
+  .service-carousel {
+    padding: 2rem 0 1.5rem;
+  }
+
+  .service-carousel__card {
+    flex-basis: 88vw;
+    min-height: 260px;
+    padding: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-carousel__card:hover,
+  .service-carousel__card:focus-visible,
+  .service-carousel__arrow:hover {
+    transform: none;
+  }
+
+  .service-carousel__track {
+    scroll-behavior: auto;
+  }
+}

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { distributedCheckRateLimit } from "@/lib/security/distributed-rate-limit";
 import {
-  checkRateLimit,
   getClientIp,
   RATE_LIMITS,
   type RateLimitOptions,
@@ -22,13 +22,13 @@ export function applyRateLimitHeaders(
   return response;
 }
 
-export function enforceRateLimit(
+export async function enforceRateLimit(
   request: Request,
   scope: string,
   options: RateLimitOptions = RATE_LIMITS.publicApi
-): NextResponse | null {
+): Promise<NextResponse | null> {
   const ip = getClientIp(request);
-  const result = checkRateLimit(`${scope}:${ip}`, options);
+  const result = await distributedCheckRateLimit(`${scope}:${ip}`, options);
   if (!result.allowed) {
     const response = jsonError("Too many requests. Please try again later.", 429);
     return applyRateLimitHeaders(response, result);

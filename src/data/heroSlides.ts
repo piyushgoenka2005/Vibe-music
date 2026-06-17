@@ -1,7 +1,6 @@
-export interface HeroInlineStyle {
-  color?: string;
-  backgroundColor?: string;
-}
+import type { CSSProperties } from "react";
+
+export type HeroInlineStyle = CSSProperties;
 
 export interface HeroStripeLink {
   href: string;

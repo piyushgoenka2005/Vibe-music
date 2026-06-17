@@ -1,15 +1,18 @@
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
+  getRedirectResult,
   onAuthStateChanged,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   updateProfile,
   type User as FirebaseUser,
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
+import { isFirebaseClientConfigured } from "@/lib/firebase/config";
 import type { AppUser, SignInInput, SignUpInput } from "@/types/user";
 import {
   createUserProfile,
@@ -19,6 +22,24 @@ import {
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
+
+function assertAuthConfigured(): void {
+  if (!isFirebaseClientConfigured()) {
+    throw new Error(
+      "Firebase Auth is not configured. Add NEXT_PUBLIC_FIREBASE_* values to .env.local and restart the dev server."
+    );
+  }
+}
+
+function shouldFallbackToRedirect(error: unknown): boolean {
+  if (!error || typeof error !== "object" || !("code" in error)) return false;
+  const code = String((error as { code: string }).code);
+  return (
+    code === "auth/internal-error" ||
+    code === "auth/popup-blocked" ||
+    code === "auth/cancelled-popup-request"
+  );
+}
 
 async function ensureUserProfile(user: FirebaseUser): Promise<void> {
   try {
@@ -52,6 +73,7 @@ export function mapFirebaseUser(user: FirebaseUser): AppUser {
 }
 
 export async function signUp(input: SignUpInput): Promise<AppUser> {
+  assertAuthConfigured();
   const auth = getClientAuth();
   const credential = await createUserWithEmailAndPassword(
     auth,
@@ -71,6 +93,7 @@ export async function signUp(input: SignUpInput): Promise<AppUser> {
 }
 
 export async function signIn(input: SignInInput): Promise<AppUser> {
+  assertAuthConfigured();
   const auth = getClientAuth();
   const credential = await signInWithEmailAndPassword(
     auth,
@@ -84,11 +107,29 @@ export async function signIn(input: SignInInput): Promise<AppUser> {
 }
 
 export async function signInWithGoogle(): Promise<AppUser> {
+  assertAuthConfigured();
   const auth = getClientAuth();
-  const credential = await signInWithPopup(auth, googleProvider);
+
+  try {
+    const credential = await signInWithPopup(auth, googleProvider);
+    await ensureUserProfile(credential.user);
+    return mapFirebaseUser(credential.user);
+  } catch (error) {
+    if (shouldFallbackToRedirect(error)) {
+      await signInWithRedirect(auth, googleProvider);
+      return new Promise(() => {});
+    }
+    throw error;
+  }
+}
+
+export async function completeGoogleRedirectSignIn(): Promise<AppUser | null> {
+  assertAuthConfigured();
+  const auth = getClientAuth();
+  const credential = await getRedirectResult(auth);
+  if (!credential?.user) return null;
 
   await ensureUserProfile(credential.user);
-
   return mapFirebaseUser(credential.user);
 }
 

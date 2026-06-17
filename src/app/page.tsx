@@ -1,8 +1,15 @@
 import HomePage from "@/components/home/HomePage";
-import { listActiveBanners } from "@/lib/server/bannerService";
+import { MARKETING_HERO_SLIDES } from "@/data/marketingHeroSlides";
 
-export default async function Home() {
-  const banners = await listActiveBanners();
+const HERO_PRELOAD = MARKETING_HERO_SLIDES[0]?.src;
 
-  return <HomePage banners={banners} />;
+export default function Home() {
+  return (
+    <>
+      {HERO_PRELOAD ? (
+        <link rel="preload" as="image" href={HERO_PRELOAD} fetchPriority="high" />
+      ) : null}
+      <HomePage />
+    </>
+  );
 }

@@ -22,6 +22,35 @@ export default function ProductGallery({
 
   const activeImage = images[activeIndex] ?? images[0];
 
+  const onTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = ((touch.clientX - rect.left) / rect.width) * 100;
+      const y = ((touch.clientY - rect.top) / rect.height) * 100;
+      setZoomPos({ x, y });
+      const inner = e.currentTarget.querySelector<HTMLElement>(
+        ".pdp-gallery__main-inner"
+      );
+      if (inner) {
+        inner.style.transform = "scale(1.8)";
+        inner.style.transformOrigin = `${x}% ${y}%`;
+      }
+    },
+    []
+  );
+
+  const onTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const inner = e.currentTarget.querySelector<HTMLElement>(
+      ".pdp-gallery__main-inner"
+    );
+    if (inner) {
+      inner.style.transform = "scale(1)";
+      inner.style.transformOrigin = "center center";
+    }
+  }, []);
+
   const onMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const rect = e.currentTarget.getBoundingClientRect();
@@ -54,6 +83,9 @@ export default function ProductGallery({
         className="pdp-gallery__main"
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchEnd}
         onClick={() => setLightboxOpen(true)}
         role="button"
         tabIndex={0}

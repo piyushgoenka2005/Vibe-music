@@ -13,7 +13,7 @@ interface RouteParams {
 
 export async function PUT(request: Request, { params }: RouteParams) {
   try {
-    await requireAdmin("homepage:write");
+    await requireAdmin("homepage:write", request);
     const { key } = await params;
     const body = await request.json();
     const parsed = adminHomepageSectionSchema.parse(body);

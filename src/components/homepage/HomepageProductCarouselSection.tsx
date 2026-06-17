@@ -1,8 +1,20 @@
 import CarouselProductCard from "@/components/homepage/CarouselProductCard";
-import type { ResolvedHomepageSection } from "@/types/homepage";
+import type { HomepageSectionKey, ResolvedHomepageSection } from "@/types/homepage";
 
 const NAV_PREV_LABEL = "Scroll Previous";
 const NAV_NEXT_LABEL = "Scroll Next";
+
+const CAROUSEL_EYEBROWS: Partial<Record<HomepageSectionKey, string>> = {
+  trending: "Hot right now",
+  best_sellers: "Customer favorites",
+  staff_picks: "Curated by us",
+};
+
+const PREMIUM_CAROUSEL_KEYS = new Set<HomepageSectionKey>([
+  "trending",
+  "best_sellers",
+  "staff_picks",
+]);
 
 function ProductSuggestNav({ next = false }: { next?: boolean }) {
   const className = next
@@ -15,7 +27,7 @@ function ProductSuggestNav({ next = false }: { next?: boolean }) {
       className={className}
       aria-label={next ? NAV_NEXT_LABEL : NAV_PREV_LABEL}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" aria-hidden>
         <g fill="none" strokeLinecap="round" strokeWidth="2">
           {next ? (
             <path d="M17.762 27.505l7.739-7.739-7.739-7.739" />
@@ -24,7 +36,6 @@ function ProductSuggestNav({ next = false }: { next?: boolean }) {
           )}
         </g>
       </svg>
-      {next ? NAV_NEXT_LABEL : NAV_PREV_LABEL}
     </button>
   );
 }
@@ -37,14 +48,35 @@ export default function HomepageProductCarouselSection({
   section,
 }: HomepageProductCarouselSectionProps) {
   const products = section.products ?? [];
+  const isPremium = PREMIUM_CAROUSEL_KEYS.has(section.key);
+  const titleId = `${section.sectionId}-title`;
+  const eyebrow = CAROUSEL_EYEBROWS[section.key] ?? section.accentLabel;
 
   return (
-    <section id={section.sectionId} className="suggested-products list-view">
+    <section
+      id={section.sectionId}
+      className={`suggested-products list-view${isPremium ? " premium-product-carousel" : ""}`}
+      aria-labelledby={isPremium ? titleId : undefined}
+    >
       <div className="product-suggest__stage">
-        <h2>{section.title}</h2>
-        {section.subtitle ? (
-          <p className="homepage-section__subtitle">{section.subtitle}</p>
-        ) : null}
+        {isPremium ? (
+          <header className="premium-product-carousel__header">
+            {eyebrow ? (
+              <p className="premium-product-carousel__eyebrow">{eyebrow}</p>
+            ) : null}
+            <h2 id={titleId}>{section.title}</h2>
+            {section.subtitle ? (
+              <p className="premium-product-carousel__subtitle">{section.subtitle}</p>
+            ) : null}
+          </header>
+        ) : (
+          <>
+            <h2>{section.title}</h2>
+            {section.subtitle ? (
+              <p className="homepage-section__subtitle">{section.subtitle}</p>
+            ) : null}
+          </>
+        )}
         <ProductSuggestNav />
         <div className="product-suggest__items paged scrollbar-minimal">
           {products.map((item) => (

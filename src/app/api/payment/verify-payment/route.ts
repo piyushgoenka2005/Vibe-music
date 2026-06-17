@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { formatCheckoutError } from "@/lib/server/checkoutErrors";
 import { verifyAndCompletePayment } from "@/lib/server/orderService";
 import type { VerifyPaymentPayload } from "@/types/order";
 
@@ -26,9 +27,10 @@ export async function POST(request: Request) {
       paymentStatus: order.paymentStatus,
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Payment verification failed";
-    const status = message.includes("Invalid") ? 400 : 500;
+    const message = formatCheckoutError(error);
+    const status = message.includes("Invalid") || message.includes("Missing")
+      ? 400
+      : 500;
     return NextResponse.json({ error: message }, { status });
   }
 }

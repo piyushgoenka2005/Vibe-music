@@ -25,7 +25,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("banners:write");
+    await requireAdmin("banners:write", request);
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminBannerSchema.partial().parse(body);
@@ -42,7 +42,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    await requireAdmin("banners:delete");
+    await requireAdmin("banners:delete", _request);
     const { id } = await context.params;
     await deleteBanner(id);
     return NextResponse.json({ ok: true });

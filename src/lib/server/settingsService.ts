@@ -1,5 +1,10 @@
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { SELLER_STATE, DEFAULT_GST_RATE } from "@/lib/gstCalculator";
+import {
+  isGlobalFirestoreCircuitOpen,
+  logFirestoreWarning,
+  markFirestoreUnavailable,
+} from "@/lib/server/firestoreErrors";
 import type { AnalyticsReport, StoreSettings } from "@/types/admin";
 import { getRevenueChartData } from "@/lib/server/dashboardService";
 
@@ -21,13 +26,28 @@ const DEFAULT_SETTINGS: StoreSettings = {
 };
 
 export async function getStoreSettings(): Promise<StoreSettings> {
-  const db = getAdminFirestore();
-  const doc = await db.collection(COLLECTION).doc(SETTINGS_DOC).get();
-  if (!doc.exists) {
-    await db.collection(COLLECTION).doc(SETTINGS_DOC).set(DEFAULT_SETTINGS);
+  if (isGlobalFirestoreCircuitOpen()) {
     return DEFAULT_SETTINGS;
   }
-  return { ...DEFAULT_SETTINGS, ...doc.data() } as StoreSettings;
+
+  try {
+    const db = getAdminFirestore();
+    const doc = await db.collection(COLLECTION).doc(SETTINGS_DOC).get();
+    if (!doc.exists) {
+      return DEFAULT_SETTINGS;
+    }
+    return { ...DEFAULT_SETTINGS, ...doc.data() } as StoreSettings;
+  } catch (error) {
+    if (markFirestoreUnavailable(error)) {
+      logFirestoreWarning(
+        "settings",
+        error,
+        "Using default store settings — Firestore unavailable"
+      );
+      return DEFAULT_SETTINGS;
+    }
+    throw error;
+  }
 }
 
 export async function updateStoreSettings(

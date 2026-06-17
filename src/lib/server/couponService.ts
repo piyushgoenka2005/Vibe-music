@@ -1,7 +1,57 @@
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import {
+  isGlobalFirestoreCircuitOpen,
+  logFirestoreWarning,
+  markFirestoreUnavailable,
+  tryFirestoreFast,
+} from "@/lib/server/firestoreErrors";
 import type { Coupon } from "@/types/admin";
 
 const COLLECTION = "coupons";
+
+const STATIC_COUPONS: Record<string, Omit<Coupon, "id">> = {
+  SAVE10: {
+    code: "SAVE10",
+    label: "10% off",
+    type: "percentage",
+    value: 10,
+    usedCount: 0,
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+  SWEET15: {
+    code: "SWEET15",
+    label: "15% off",
+    type: "percentage",
+    value: 15,
+    usedCount: 0,
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+  GEAR20: {
+    code: "GEAR20",
+    label: "20% off",
+    type: "percentage",
+    value: 20,
+    usedCount: 0,
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+};
+
+function staticCoupon(code: string): Coupon | null {
+  const normalized = code.toUpperCase();
+  const template = STATIC_COUPONS[normalized];
+  if (!template) return null;
+  return {
+    ...template,
+    id: `static-${normalized}`,
+    code: normalized,
+  };
+}
 
 function normalizeCoupon(id: string, data: FirebaseFirestore.DocumentData): Coupon {
   return {
@@ -21,13 +71,45 @@ function normalizeCoupon(id: string, data: FirebaseFirestore.DocumentData): Coup
   };
 }
 
-export async function listCoupons(): Promise<Coupon[]> {
+export async function listCoupons(
+  options: { limit?: number; cursor?: string } = {}
+): Promise<{
+  coupons: Coupon[];
+  hasMore: boolean;
+  nextCursor?: string;
+}> {
   const db = getAdminFirestore();
-  const snap = await db.collection(COLLECTION).orderBy("createdAt", "desc").get();
-  if (snap.empty) {
-    return seedDefaultCoupons();
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+  let query: FirebaseFirestore.Query = db
+    .collection(COLLECTION)
+    .orderBy("createdAt", "desc");
+
+  if (options.cursor) {
+    const cursorDoc = await db.collection(COLLECTION).doc(options.cursor).get();
+    if (cursorDoc.exists) {
+      query = query.startAfter(cursorDoc);
+    }
   }
-  return snap.docs.map((doc) => normalizeCoupon(doc.id, doc.data()));
+
+  const snap = await query.limit(limit + 1).get();
+  if (snap.empty) {
+    const seeded = await seedDefaultCoupons();
+    return { coupons: seeded.slice(0, limit), hasMore: false };
+  }
+
+  const docs = snap.docs;
+  const hasMore = docs.length > limit;
+  const pageDocs = docs.slice(0, limit);
+  const coupons = pageDocs.map((doc) => normalizeCoupon(doc.id, doc.data()));
+
+  return {
+    coupons,
+    hasMore,
+    nextCursor:
+      hasMore && pageDocs.length > 0
+        ? pageDocs[pageDocs.length - 1]!.id
+        : undefined,
+  };
 }
 
 async function seedDefaultCoupons(): Promise<Coupon[]> {
@@ -80,15 +162,43 @@ async function seedDefaultCoupons(): Promise<Coupon[]> {
 }
 
 export async function getCouponByCode(code: string): Promise<Coupon | null> {
-  const db = getAdminFirestore();
-  const snap = await db
-    .collection(COLLECTION)
-    .where("code", "==", code.toUpperCase())
-    .limit(1)
-    .get();
-  if (snap.empty) return null;
-  const doc = snap.docs[0]!;
-  return normalizeCoupon(doc.id, doc.data());
+  const normalized = code.toUpperCase();
+
+  if (isGlobalFirestoreCircuitOpen()) {
+    return staticCoupon(normalized);
+  }
+
+  try {
+    const coupon = await tryFirestoreFast(
+      async () => {
+        const db = getAdminFirestore();
+        const snap = await db
+          .collection(COLLECTION)
+          .where("code", "==", normalized)
+          .limit(1)
+          .get();
+        if (snap.empty) return null;
+        const doc = snap.docs[0]!;
+        return normalizeCoupon(doc.id, doc.data());
+      },
+      {
+        domain: "coupons",
+        context: "Using static coupon fallback — Firestore unavailable",
+        fallback: () => staticCoupon(normalized),
+      }
+    );
+    return coupon ?? staticCoupon(normalized);
+  } catch (error) {
+    if (markFirestoreUnavailable(error)) {
+      logFirestoreWarning(
+        "coupons",
+        error,
+        "Using static coupon fallback — Firestore unavailable"
+      );
+      return staticCoupon(normalized);
+    }
+    throw error;
+  }
 }
 
 export async function validateCoupon(

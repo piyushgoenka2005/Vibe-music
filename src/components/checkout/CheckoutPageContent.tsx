@@ -3,8 +3,14 @@
 import { useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";import CheckoutSummary from "@/components/checkout/CheckoutSummary";
-import PaymentButton from "@/components/checkout/PaymentButton";
+import { Trash2 } from "lucide-react";
+import CheckoutSummary, {
+  computeCheckoutInvoice,
+} from "@/components/checkout/CheckoutSummary";
+import CheckoutPaymentMethods, {
+  type OnlinePaymentChannel,
+} from "@/components/checkout/CheckoutPaymentMethods";
+import { useCheckoutPayment } from "@/hooks/useCheckoutPayment";
 import {
   addressToShipping,
   getAddressDisplayLabel,
@@ -17,7 +23,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";
 import { formatCurrencyPrecise } from "@/utils/currency";
-import type { ShippingAddress } from "@/types/order";
+import type { PaymentMethod, ShippingAddress } from "@/types/order";
 import "@/components/checkout/checkout.css";
 
 const INDIAN_STATES = [
@@ -121,7 +127,9 @@ export default function CheckoutPageContent() {
   const [addressForm, setAddressForm] = useState<ShippingAddress>(EMPTY_ADDRESS);
   const [confirmedAddress, setConfirmedAddress] =
     useState<ShippingAddress | null>(null);
-  const paymentMethod = "razorpay" as const;
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("razorpay");
+  const [onlineChannel, setOnlineChannel] =
+    useState<OnlinePaymentChannel>("upi");
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
   const [isSavingAddress, setIsSavingAddress] = useState(false);
@@ -181,6 +189,39 @@ export default function CheckoutPageContent() {
   const hasValidContact = isAuthenticated
     ? Boolean(email)
     : Boolean(email && isValidEmail(email));
+
+  const displayItems = items.map((item) => ({
+    productId: item.productId,
+    variantId: item.variantId,
+    variantSku: item.variantSku,
+    variantLabel: item.variantLabel,
+    name: item.name,
+    quantity: item.quantity,
+    price: item.price,
+    gstRate: item.gstRate ?? DEFAULT_GST_RATE,
+    lineId: item.lineId,
+    image: item.image,
+    imageColor: item.imageColor,
+  }));
+
+  const invoice = computeCheckoutInvoice(
+    checkoutItems,
+    couponDiscount,
+    buyerState
+  );
+
+  const payment = useCheckoutPayment({
+    items: checkoutItems,
+    shippingAddress: resolvedAddress ?? EMPTY_ADDRESS,
+    buyerState,
+    email,
+    customerName: resolvedAddress?.name,
+    customerPhone: contactPhone,
+    phone: contactPhone || undefined,
+    paymentMethod,
+    disabled:
+      step !== "payment" || !resolvedAddress || !hasValidContact,
+  });
 
   async function handleContinueFromAddress() {
     let shipping: ShippingAddress | null = null;
@@ -284,33 +325,15 @@ export default function CheckoutPageContent() {
 
   return (
     <div className="checkout-page">
-      <header className="storefront-page__header">
-        <p className="storefront-page__eyebrow">Secure checkout</p>
-        <h1 className="storefront-page__title">Checkout</h1>
-      </header>
+      <header className="checkout-hero">
+        <div className="checkout-hero__copy">
+          <p className="checkout-hero__eyebrow">Secure checkout</p>
+          <h1 className="checkout-hero__title">Checkout</h1>
+          <p className="checkout-hero__subtitle">
+            GST invoice included · Encrypted payments via Razorpay
+          </p>
+        </div>
 
-      {!isAuthenticated ? (
-        <p style={{ marginBottom: 16, fontSize: 14, color: "#666" }}>
-          Checking out as a guest.{" "}
-          <Link
-            href={`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.checkout)}`}
-          >
-            Log in
-          </Link>{" "}
-          or{" "}
-          <Link
-            href={`${ROUTES.register}?redirect=${encodeURIComponent(ROUTES.checkout)}`}
-          >
-            create an account
-          </Link>{" "}
-          to save your order history.
-        </p>
-      ) : null}
-
-      <div className="checkout-progress">
-        <p className="checkout-progress__trust">
-          Secure payment · GST invoice included
-        </p>
         <ol className="checkout-steps" aria-label="Checkout progress">
           {STEPS.map((s, index) => {
             const isActive = s.id === step;
@@ -331,7 +354,7 @@ export default function CheckoutPageContent() {
                   }`}
                 >
                   <span className="checkout-step__circle" aria-hidden="true">
-                    {index + 1}
+                    {isDone ? "✓" : index + 1}
                   </span>
                   <span className="checkout-step__label">{s.label}</span>
                 </div>
@@ -347,7 +370,27 @@ export default function CheckoutPageContent() {
             );
           })}
         </ol>
-      </div>
+      </header>
+
+      {!isAuthenticated ? (
+        <div className="checkout-guest-banner" role="note">
+          <p>
+            Checking out as a guest.{" "}
+            <Link
+              href={`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.checkout)}`}
+            >
+              Log in
+            </Link>{" "}
+            or{" "}
+            <Link
+              href={`${ROUTES.register}?redirect=${encodeURIComponent(ROUTES.checkout)}`}
+            >
+              create an account
+            </Link>{" "}
+            to save your order history.
+          </p>
+        </div>
+      ) : null}
 
       <div className="checkout-grid">
         <div className="checkout-panel">
@@ -411,7 +454,9 @@ export default function CheckoutPageContent() {
               {isAuthenticated ? (
                 <button
                   type="button"
-                  className="cart-btn cart-btn--secondary"
+                  className={`checkout-address-toggle${
+                    useNewAddress ? " checkout-address-toggle--active" : ""
+                  }`}
                   onClick={() => {
                     setUseNewAddressOverride(true);
                     setSelectedAddressId(null);
@@ -538,16 +583,16 @@ export default function CheckoutPageContent() {
               ) : null}
 
               <div className="checkout-actions">
-                <Link href={ROUTES.cart} className="cart-btn cart-btn--secondary">
+                <Link href={ROUTES.cart} className="checkout-btn checkout-btn--ghost">
                   Back to Cart
                 </Link>
                 <button
                   type="button"
-                  className="cart-btn cart-btn--checkout"
+                  className="checkout-btn checkout-btn--primary"
                   onClick={handleContinueFromAddress}
                   disabled={!canContinueFromAddress || isSavingAddress}
                 >
-                  {isSavingAddress ? "Saving address…" : "Continue to Summary"}
+                  {isSavingAddress ? "Saving address…" : "Continue to Review"}
                 </button>
               </div>
             </>
@@ -584,26 +629,33 @@ export default function CheckoutPageContent() {
               </div>
 
               {resolvedAddress ? (
-                <div style={{ marginBottom: 16, fontSize: 14 }}>
-                  <strong>Deliver to:</strong>
-                  <br />
-                  {resolvedAddress.name}, {resolvedAddress.line1},{" "}
-                  {resolvedAddress.city}, {resolvedAddress.state}{" "}
-                  {resolvedAddress.postalCode}
+                <div className="checkout-review-address">
+                  <div className="checkout-review-address__label">Deliver to</div>
+                  <p>
+                    <strong>{resolvedAddress.name}</strong>
+                    <br />
+                    {resolvedAddress.line1}
+                    {resolvedAddress.line2 ? `, ${resolvedAddress.line2}` : ""}
+                    <br />
+                    {resolvedAddress.city}, {resolvedAddress.state}{" "}
+                    {resolvedAddress.postalCode}
+                    <br />
+                    {resolvedAddress.phone}
+                  </p>
                 </div>
               ) : null}
 
               <div className="checkout-actions">
                 <button
                   type="button"
-                  className="cart-btn cart-btn--secondary"
+                  className="checkout-btn checkout-btn--ghost"
                   onClick={handleEditAddress}
                 >
                   Edit Address
                 </button>
                 <button
                   type="button"
-                  className="cart-btn cart-btn--checkout"
+                  className="checkout-btn checkout-btn--primary"
                   onClick={() => setStep("payment")}
                 >
                   Continue to Payment
@@ -615,43 +667,33 @@ export default function CheckoutPageContent() {
           {step === "payment" ? (
             <>
               <h2 className="checkout-panel__title">Payment Method</h2>
+              <p className="checkout-panel__lead">
+                Choose how you&apos;d like to pay. All online payments are
+                processed securely through Razorpay.
+              </p>
 
-              <div className="checkout-payment-toggle">
-                <div className="checkout-payment-option checkout-payment-option--selected">
-                  <span>
-                    <strong>Pay Online</strong>
-                    <br />
-                    UPI, Credit/Debit Cards, Net Banking, Wallets
-                  </span>
-                </div>
-              </div>
+              <CheckoutPaymentMethods
+                onlineChannel={onlineChannel}
+                onOnlineChannelChange={setOnlineChannel}
+                onPaymentMethodChange={setPaymentMethod}
+                paymentMethod={paymentMethod}
+              />
 
-              {resolvedAddress && hasValidContact ? (
-                <PaymentButton
-                  items={checkoutItems}
-                  shippingAddress={resolvedAddress}
-                  buyerState={buyerState}
-                  email={email}
-                  customerName={resolvedAddress.name}
-                  customerPhone={contactPhone}
-                  phone={contactPhone || undefined}
-                  paymentMethod={paymentMethod}
-                />
-              ) : (
-                <p role="alert">
+              {!resolvedAddress || !hasValidContact ? (
+                <p className="checkout-panel__alert" role="alert">
                   {!resolvedAddress
                     ? "Delivery address is missing. Go back to the address step."
                     : "Enter a valid email address to continue."}
                 </p>
-              )}
+              ) : null}
 
-              <div className="checkout-actions">
+              <div className="checkout-actions checkout-actions--payment">
                 <button
                   type="button"
-                  className="cart-btn cart-btn--secondary"
+                  className="checkout-btn checkout-btn--ghost"
                   onClick={() => setStep("summary")}
                 >
-                  Back to Summary
+                  Back to Review
                 </button>
               </div>
             </>
@@ -659,11 +701,54 @@ export default function CheckoutPageContent() {
         </div>
 
         <CheckoutSummary
-          items={checkoutItems}
-          couponDiscount={couponDiscount}
           buyerState={buyerState}
+          couponDiscount={couponDiscount}
+          displayItems={displayItems}
+          items={checkoutItems}
+          paymentAction={
+            step === "payment" && resolvedAddress && hasValidContact
+              ? {
+                  onPay: payment.pay,
+                  disabled: payment.isDisabled,
+                  loading: payment.isProcessing || payment.isLoading,
+                  preparing:
+                    paymentMethod === "razorpay" && !payment.isReady,
+                  paymentMethod,
+                  error: payment.error,
+                }
+              : undefined
+          }
+          showLineItems
+          showPromo
         />
       </div>
+
+      {step !== "payment" ? (
+        <div className="checkout-mobile-bar">
+          <div className="checkout-mobile-bar__total">
+            <span>Total</span>
+            <strong>{formatCurrencyPrecise(invoice.grandTotal)}</strong>
+          </div>
+          {step === "address" ? (
+            <button
+              type="button"
+              className="checkout-btn checkout-btn--primary checkout-mobile-bar__cta"
+              disabled={!canContinueFromAddress || isSavingAddress}
+              onClick={() => void handleContinueFromAddress()}
+            >
+              {isSavingAddress ? "Saving…" : "Continue"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="checkout-btn checkout-btn--primary checkout-mobile-bar__cta"
+              onClick={() => setStep("payment")}
+            >
+              Pay Now
+            </button>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

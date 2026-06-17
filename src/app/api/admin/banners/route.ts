@@ -4,13 +4,23 @@ import {
   createBanner,
   listAllBanners,
 } from "@/lib/server/bannerService";
+import { paginateSortedById } from "@/lib/admin/paginateByCursor";
 import { adminBannerSchema } from "@/lib/validations/admin";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await requireAdmin("banners:read");
+    const { searchParams } = new URL(request.url);
     const banners = await listAllBanners();
-    return NextResponse.json({ banners });
+    const page = paginateSortedById(banners, {
+      limit: Number(searchParams.get("limit") ?? 20),
+      cursor: searchParams.get("cursor") ?? undefined,
+    });
+    return NextResponse.json({
+      banners: page.items,
+      hasMore: page.hasMore,
+      nextCursor: page.nextCursor,
+    });
   } catch (error) {
     return adminErrorResponse(error);
   }
@@ -18,7 +28,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("banners:write");
+    await requireAdmin("banners:write", request);
     const body = await request.json();
     const parsed = adminBannerSchema.parse(body);
     const banner = await createBanner({

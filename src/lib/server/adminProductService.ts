@@ -17,6 +17,7 @@ import { deleteProductRelatedList } from "@/lib/server/relatedProductsService";
 import { getProductImage } from "@/data/productImages";
 import type { AdminProduct } from "@/types/admin";
 import type { CatalogProduct, CreateProductInput } from "@/types/catalog";
+import { paginateSortedById } from "@/lib/admin/paginateByCursor";
 
 function toAdminProduct(catalog: CatalogProduct): AdminProduct {
   const product = toProduct(catalog);
@@ -45,7 +46,13 @@ export async function listAdminProducts(options: {
   category?: string;
   limit?: number;
   offset?: number;
-} = {}): Promise<{ products: AdminProduct[]; total: number }> {
+  cursor?: string;
+} = {}): Promise<{
+  products: AdminProduct[];
+  total: number;
+  hasMore: boolean;
+  nextCursor?: string;
+}> {
   let products = (await getAllProducts(true)).map(toAdminProduct);
 
   if (options.search) {
@@ -77,11 +84,31 @@ export async function listAdminProducts(options: {
   );
 
   const total = products.length;
+
+  if (options.cursor) {
+    const page = paginateSortedById(products, {
+      limit: options.limit,
+      cursor: options.cursor,
+    });
+    return {
+      products: page.items,
+      total,
+      hasMore: page.hasMore,
+      nextCursor: page.nextCursor,
+    };
+  }
+
   const offset = options.offset ?? 0;
   const limit = options.limit ?? 20;
   products = products.slice(offset, offset + limit);
+  const hasMore = offset + limit < total;
 
-  return { products, total };
+  return {
+    products,
+    total,
+    hasMore,
+    nextCursor: hasMore ? products[products.length - 1]?.id : undefined,
+  };
 }
 
 export async function getAdminProduct(id: string): Promise<AdminProduct | null> {

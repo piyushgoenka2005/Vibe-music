@@ -1,5 +1,12 @@
 import { GEAR_STORIES_SECTION, GEAR_STORY_SEEDS } from "@/data/gearStories";
+import { STYLE_STORY_REELS } from "@/data/styleStory";
 import { getProductImage } from "@/data/productImages";
+import { loadProducts } from "@/lib/server/catalogRepository";
+import { isCatalogUnavailable } from "@/lib/server/firestoreCatalogRepository";
+import {
+  isFirestoreUnavailableError,
+  logFirestoreWarning,
+} from "@/lib/server/firestoreErrors";
 import { getProductById } from "@/services/catalogService";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
@@ -8,19 +15,25 @@ import type {
   GearStorySeed,
 } from "@/types/gear-story";
 
-function enrichStory(seed: GearStorySeed, product: CatalogProduct): GearStory {
+function enrichStory(
+  seed: GearStorySeed,
+  product: CatalogProduct,
+  index: number
+): GearStory {
+  const reel = STYLE_STORY_REELS[index];
   const posterUrl =
     product.image || getProductImage(product.slug, product.category);
   const images =
     product.images.length > 0 ? product.images : [posterUrl];
   const salePrice =
-    product.detail?.salePrice ?? (product.price < product.originalPrice ? product.price : null);
+    product.detail?.salePrice ??
+    (product.price < product.originalPrice ? product.price : null);
 
   return {
     id: seed.id,
     title: seed.title,
     productId: product.id,
-    videoUrl: seed.videoUrl,
+    videoUrl: reel?.videoSrc ?? seed.videoUrl,
     posterUrl,
     category: product.category,
     price: product.price,
@@ -40,23 +53,101 @@ function enrichStory(seed: GearStorySeed, product: CatalogProduct): GearStory {
   };
 }
 
-export async function listGearStories(): Promise<GearStoriesSectionData> {
-  const products = await Promise.all(
-    GEAR_STORY_SEEDS.map((seed) => getProductById(seed.productId))
-  );
+function buildFallbackStory(seed: GearStorySeed, index: number): GearStory {
+  const local = loadProducts().find((product) => product.id === seed.productId);
+  if (local) {
+    return enrichStory(seed, { ...local, status: "active" }, index);
+  }
 
-  const stories: GearStory[] = [];
+  const reel = STYLE_STORY_REELS[index];
+  const videoUrl = reel?.videoSrc ?? seed.videoUrl;
+  const posterUrl = reel?.thumbnailSrc ?? "";
 
-  GEAR_STORY_SEEDS.forEach((seed, index) => {
+  return {
+    id: seed.id,
+    title: seed.title,
+    productId: seed.productId,
+    videoUrl,
+    posterUrl,
+    category: "guitars",
+    price: 0,
+    originalPrice: 0,
+    salePrice: null,
+    discountPercentage: 0,
+    description: seed.description,
+    features: seed.features,
+    slug: seed.productId,
+    brand: seed.title.split(" ")[0] ?? "Vibe Music",
+    name: seed.title,
+    rating: 0,
+    reviewCount: 0,
+    availability: "in-stock",
+    image: posterUrl,
+    images: posterUrl ? [posterUrl] : [],
+  };
+}
+
+function buildStoriesFromProducts(
+  products: Array<CatalogProduct | undefined>
+): GearStory[] {
+  return GEAR_STORY_SEEDS.map((seed, index) => {
     const product = products[index];
-    if (!product || product.status !== "active") return;
-    stories.push(enrichStory(seed, product));
+    if (product && product.status === "active") {
+      return enrichStory(seed, product, index);
+    }
+    return buildFallbackStory(seed, index);
   });
+}
 
+function resolveFromLocalCatalog(): Array<CatalogProduct | undefined> {
+  const local = loadProducts();
+  return GEAR_STORY_SEEDS.map((seed) =>
+    local.find((product) => product.id === seed.productId)
+  );
+}
+
+async function resolveSeedProducts(): Promise<Array<CatalogProduct | undefined>> {
+  if (isCatalogUnavailable()) {
+    return resolveFromLocalCatalog();
+  }
+
+  try {
+    const remote = await Promise.all(
+      GEAR_STORY_SEEDS.map((seed) => getProductById(seed.productId))
+    );
+
+    if (buildStoriesFromProducts(remote).length > 0) {
+      return remote;
+    }
+  } catch (error) {
+    if (!isFirestoreUnavailableError(error)) {
+      throw error;
+    }
+
+    logFirestoreWarning(
+      "gear-stories",
+      error,
+      "Firestore unavailable — using local catalog for gear stories"
+    );
+  }
+
+  return resolveFromLocalCatalog();
+}
+
+export async function listGearStories(): Promise<GearStoriesSectionData> {
+  const products = await resolveSeedProducts();
+
+  return buildStaticGearStories(products);
+}
+
+/** Always returns all reel slots — used on the homepage without Firestore. */
+export function buildStaticGearStories(
+  products: Array<CatalogProduct | undefined> = resolveFromLocalCatalog()
+): GearStoriesSectionData {
   return {
     title: GEAR_STORIES_SECTION.title,
     subtitle: GEAR_STORIES_SECTION.subtitle,
-    stories,
+    stories: buildStoriesFromProducts(products),
   };
 }
 

@@ -20,9 +20,7 @@ export async function POST(request: Request) {
     const sessionCookie = await createSessionCookie(idToken);
 
     if (decoded.uid && decoded.email) {
-      await linkGuestOrdersToUser(decoded.uid, decoded.email).catch((error) => {
-        console.error("[auth/session] Failed to link guest orders:", error);
-      });
+      await linkGuestOrdersToUser(decoded.uid, decoded.email);
     }
 
     const response = NextResponse.json({ ok: true });
@@ -37,8 +35,12 @@ export async function POST(request: Request) {
     });
 
     return response;
-  } catch {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  } catch (error) {
+    const message =
+      error instanceof Error && /Missing Firebase Admin env vars/i.test(error.message)
+        ? "Firebase Admin is not configured on the server."
+        : "Invalid token";
+    return NextResponse.json({ error: message }, { status: 401 });
   }
 }
 

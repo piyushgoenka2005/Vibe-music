@@ -152,8 +152,7 @@ input[type="reset"],
 .cat-product-card__add,
 .cart-drawer__close,
 .gear-story-card__cta,
-.gear-story-modal__add,
-.gear-story-modal__view,
+.gear-story-modal__btn,
 .social-rail__newsletter {
   font-family: var(--font-primary);
   font-weight: var(--font-weight-medium);

@@ -1,71 +1,52 @@
 import { NextResponse } from "next/server";
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import { getSessionUser } from "@/lib/auth/server-session";
-import { getAdminSession } from "@/lib/server/adminService";
-import { getOrderById } from "@/lib/server/orderService";
-import type { Order } from "@/types/order";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { getInvoiceSellerMeta } from "@/features/invoice/server/sellerMeta";
 import { generateInvoiceHtml } from "@/features/invoice/server/generateInvoiceHtml";
+import {
+  invoiceOrderErrorStatus,
+  resolveInvoiceOrder,
+} from "@/features/invoice/server/resolveInvoiceOrder";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ orderId: string }> }
 ) {
+  const rateLimited = await enforceRateLimit(
+    request,
+    "invoice-html",
+    RATE_LIMITS.sensitiveAccess
+  );
+  if (rateLimited) return rateLimited;
+
   try {
     const { orderId } = await context.params;
-    const { searchParams } = new URL(_request.url);
-    const email = searchParams.get("email")?.trim().toLowerCase();
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get("email")?.trim().toLowerCase() ?? undefined;
+    const token = searchParams.get("token")?.trim() ?? undefined;
+    const autoPrint = searchParams.get("print") === "1";
 
     if (!orderId) {
       return NextResponse.json({ error: "orderId is required" }, { status: 400 });
     }
 
-    let order: Order | null = null;
-
-    // Guest flow: validate order belongs to the provided email.
-    if (email) {
-      const db = getAdminFirestore();
-      const doc = await db.collection("orders").doc(orderId).get();
-      if (!doc.exists) return NextResponse.json({ error: "Order not found" }, { status: 404 });
-      order = { id: doc.id, ...doc.data() } as Order;
-      if (order.email.toLowerCase() !== email) {
-        return NextResponse.json({ error: "Order not found" }, { status: 404 });
-      }
-    } else {
-      // Auth flow.
-      const sessionUser = await getSessionUser();
-      if (!sessionUser) {
-        return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-      }
-      const adminSession = await getAdminSession(sessionUser.uid);
-      order = await getOrderById(orderId);
-
-      if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
-
-      if (!adminSession) {
-        const owns =
-          order.userId === sessionUser.uid ||
-          (sessionUser.email &&
-            order.email.toLowerCase() === sessionUser.email.toLowerCase());
-
-        if (!owns) return NextResponse.json({ error: "Order not found" }, { status: 404 });
-      }
-    }
-
-    // Invoice should only be generated after payment confirmation.
-    if (order.paymentStatus !== "paid") {
+    const resolved = await resolveInvoiceOrder(orderId, email, token);
+    if (!resolved.ok) {
       return NextResponse.json(
-        { error: "Invoice not available before payment confirmation" },
-        { status: 403 }
+        { error: resolved.message },
+        { status: invoiceOrderErrorStatus(resolved.code) }
       );
     }
 
-    if (!order.invoice) {
-      return NextResponse.json({ error: "Invoice data missing" }, { status: 404 });
-    }
-
     const seller = await getInvoiceSellerMeta();
-    const html = generateInvoiceHtml(order, seller);
+    let html = generateInvoiceHtml(resolved.order, seller);
+
+    if (autoPrint) {
+      html = html.replace(
+        "</body>",
+        `<script>window.addEventListener("load",function(){window.print();});</script></body>`
+      );
+    }
 
     return new NextResponse(html, {
       headers: { "Content-Type": "text/html; charset=utf-8" },
@@ -75,4 +56,3 @@ export async function GET(
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

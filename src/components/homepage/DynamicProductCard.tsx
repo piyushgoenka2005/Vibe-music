@@ -1,46 +1,35 @@
-import Link from "next/link";
-import { formatCurrency } from "@/utils/currency";
-import { resolveLinkHref } from "@/lib/routes";
+import NewArrivalsProductCard from "@/components/homepage/NewArrivalsProductCard";
 import type { HomepageProductItem } from "@/types/homepage";
 
 interface DynamicProductCardProps {
   item: HomepageProductItem;
   sectionKey: string;
   showRank?: boolean;
+  featured?: boolean;
 }
 
 export default function DynamicProductCard({
   item,
   sectionKey,
   showRank = false,
+  featured = false,
 }: DynamicProductCardProps) {
-  const displayPrice = item.salePrice ?? item.price;
-
   return (
-    <Link
-      href={resolveLinkHref(item.href)}
-      className="topnew-item"
-      data-key={item.id}
-      data-hp-section={sectionKey}
-    >
-      {showRank && item.rank ? <div className="topnew-rank">{item.rank}</div> : null}
-      <div className="topnew-image">
-        {item.image ? (
-          <img
-            width={300}
-            height={300}
-            src={item.image}
-            alt={item.imageAlt}
-            loading="lazy"
-          />
-        ) : null}
-      </div>
-
-      <span className="top-new__item-name">
-        <strong>{item.brand}</strong> {item.name}
-      </span>
-
-      <div className="top-new__item-price">{formatCurrency(displayPrice)}</div>
-    </Link>
+    <NewArrivalsProductCard
+      badgeLabel={item.badgeLabel}
+      brand={item.brand}
+      featured={featured}
+      href={item.href}
+      id={item.id}
+      image={item.image}
+      imageAlt={item.imageAlt}
+      name={item.name}
+      price={item.price}
+      rank={showRank ? item.rank : undefined}
+      rating={item.rating}
+      reviewCount={item.reviewCount}
+      salePrice={item.salePrice}
+      sectionKey={sectionKey}
+    />
   );
 }

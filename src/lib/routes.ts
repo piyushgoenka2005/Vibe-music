@@ -34,6 +34,7 @@ export const ROUTES = {  home: "/",
   adminSettings: "/admin/settings",
   adminBlog: "/admin/blog",
   blog: "/blog",
+  gp9: "/gp9",
 } as const;
 
 export function categoryPath(slug: string): string {
@@ -95,6 +96,7 @@ const NAV_TOP_REDIRECTS: Record<string, string> = {
   "/instrument-rentals": `${ROUTES.search}?q=rentals`,
   "/insync": ROUTES.blog,
   "/sweetcare": `${ROUTES.search}?q=support`,
+  "/outlet-deals": `${ROUTES.searchResults}?q=outlet-deals`,
   "/giveaway": `${ROUTES.search}?q=giveaway`,
   "/financing": `${ROUTES.search}?q=financing`,
   "/integration": ROUTES.search,
@@ -144,6 +146,7 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.accountWishlist) return true;
   if (path === ROUTES.login || path === ROUTES.register) return true;
   if (path === ROUTES.blog || path.startsWith("/blog/")) return true;
+  if (path === ROUTES.gp9 || path.startsWith(`${ROUTES.gp9}/`)) return true;
   if (path === ROUTES.admin) return true;
   if (path.startsWith("/admin/")) return true;
 

@@ -54,7 +54,7 @@ function parsePositiveInt(value: string | null, fallback: number): number {
 
 export async function GET(request: Request) {
   try {
-    const rateLimited = enforceRateLimit(request, "search", RATE_LIMITS.search);
+    const rateLimited = await enforceRateLimit(request, "search", RATE_LIMITS.search);
     if (rateLimited) return rateLimited;
 
     const { searchParams } = new URL(request.url);
@@ -82,6 +82,7 @@ export async function GET(request: Request) {
           brand: product.brand,
           category: product.category,
           price: product.price,
+          image: product.image,
         })),
         categories: categories.slice(0, 4),
         brands: brands.slice(0, 4),

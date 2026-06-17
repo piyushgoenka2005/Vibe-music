@@ -12,6 +12,12 @@ const FIREBASE_ERROR_MESSAGES: Record<string, string> = {
     "An account already exists with this email using a different sign-in method.",
   "auth/operation-not-allowed":
     "This sign-in method is not enabled. Check Firebase Authentication settings.",
+  "auth/internal-error":
+    "Sign-in could not complete. Check Firebase env vars, enable Email/Google in Firebase Console, and add localhost to Authorized domains.",
+  "auth/network-request-failed":
+    "Network error while signing in. Check your connection and try again.",
+  "auth/invalid-api-key":
+    "Firebase API key is invalid. Check NEXT_PUBLIC_FIREBASE_* values in .env.local.",
   "permission-denied":
     "Firestore access denied. Deploy firestore.rules in Firebase Console → Firestore → Rules.",
 };
@@ -25,9 +31,19 @@ export function getFirebaseErrorMessage(error: unknown, fallback: string): strin
   }
 
   if (error instanceof Error && error.message) {
+    const codeMatch = error.message.match(/auth\/[\w-]+/);
+    if (codeMatch && FIREBASE_ERROR_MESSAGES[codeMatch[0]]) {
+      return FIREBASE_ERROR_MESSAGES[codeMatch[0]];
+    }
+
     if (/insufficient permissions/i.test(error.message)) {
       return FIREBASE_ERROR_MESSAGES["permission-denied"];
     }
+
+    if (/Missing Firebase client env vars/i.test(error.message)) {
+      return error.message;
+    }
+
     return error.message;
   }
 

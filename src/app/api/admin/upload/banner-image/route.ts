@@ -7,7 +7,7 @@ import {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("banners:write");
+    await requireAdmin("banners:write", request);
     const formData = await request.formData();
     const file = formData.get("file");
 

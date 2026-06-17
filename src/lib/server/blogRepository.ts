@@ -1,6 +1,11 @@
 import "server-only";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import {
+  createFirestoreCircuitBreaker,
+  isFirestoreUnavailableError,
+  logFirestoreWarning,
+} from "@/lib/server/firestoreErrors";
 import { slugify } from "@/lib/slug";
 import type {
   BlogPost,
@@ -11,6 +16,48 @@ import type {
 } from "@/types/blog";
 
 const COLLECTION = "blog_posts";
+
+const blogCircuit = createFirestoreCircuitBreaker();
+
+function isBlogFirestoreDisabled(): boolean {
+  return process.env.DISABLE_FIRESTORE_BLOG === "true";
+}
+
+function handleBlogUnavailable<T>(
+  error: unknown,
+  context: string,
+  fallback: T
+): T {
+  if (isFirestoreUnavailableError(error)) {
+    const wasOpen = blogCircuit.isOpen();
+    blogCircuit.open();
+    if (!wasOpen) {
+      logFirestoreWarning("blog", error, context);
+    }
+    return fallback;
+  }
+  throw error;
+}
+
+async function runBlogRead<T>(
+  context: string,
+  fallback: T,
+  read: () => Promise<T>
+): Promise<T> {
+  if (isBlogFirestoreDisabled() || blogCircuit.isOpen()) {
+    return fallback;
+  }
+
+  try {
+    return await read();
+  } catch (error) {
+    return handleBlogUnavailable(error, context, fallback);
+  }
+}
+
+function ensureBlogPostSummaries(value: unknown): BlogPostSummary[] {
+  return Array.isArray(value) ? value : [];
+}
 
 function now(): string {
   return new Date().toISOString();
@@ -127,52 +174,58 @@ export async function listAllBlogPosts(): Promise<BlogPost[]> {
 export async function listPublicBlogPosts(
   at = new Date()
 ): Promise<BlogPostSummary[]> {
-  const db = getAdminFirestore();
-  const isoNow = at.toISOString();
+  const result = await runBlogRead("Unable to list public blog posts", [], async () => {
+    const db = getAdminFirestore();
+    const isoNow = at.toISOString();
 
-  const [publishedSnap, scheduledSnap] = await Promise.all([
-    db
-      .collection(COLLECTION)
-      .where("status", "==", "published")
-      .orderBy("publishedAt", "desc")
-      .get()
-      .catch(async () => {
-        const fallback = await db
+    const fetchPublished = async () => {
+      try {
+        return await db
           .collection(COLLECTION)
           .where("status", "==", "published")
+          .orderBy("publishedAt", "desc")
           .get();
-        return fallback;
-      }),
-    db
-      .collection(COLLECTION)
-      .where("status", "==", "scheduled")
-      .where("scheduledAt", "<=", isoNow)
-      .orderBy("scheduledAt", "desc")
-      .get()
-      .catch(async () => {
-        const fallback = await db
+      } catch (error) {
+        if (isFirestoreUnavailableError(error)) throw error;
+        return db.collection(COLLECTION).where("status", "==", "published").get();
+      }
+    };
+
+    const fetchScheduled = async () => {
+      try {
+        return await db
           .collection(COLLECTION)
           .where("status", "==", "scheduled")
+          .where("scheduledAt", "<=", isoNow)
+          .orderBy("scheduledAt", "desc")
           .get();
-        return fallback;
-      }),
-  ]);
+      } catch (error) {
+        if (isFirestoreUnavailableError(error)) throw error;
+        return db.collection(COLLECTION).where("status", "==", "scheduled").get();
+      }
+    };
 
-  const posts = [
-    ...publishedSnap.docs.map((doc) => normalizePost(doc.id, doc.data())),
-    ...scheduledSnap.docs
-      .map((doc) => normalizePost(doc.id, doc.data()))
-      .filter((post) => isBlogPostPublic(post, at)),
-  ];
+    const [publishedSnap, scheduledSnap] = await Promise.all([
+      fetchPublished(),
+      fetchScheduled(),
+    ]);
 
-  const unique = new Map<string, BlogPost>();
-  posts.forEach((post) => unique.set(post.id, post));
+    const posts = [
+      ...publishedSnap.docs.map((doc) => normalizePost(doc.id, doc.data())),
+      ...scheduledSnap.docs
+        .map((doc) => normalizePost(doc.id, doc.data()))
+        .filter((post) => isBlogPostPublic(post, at)),
+    ];
 
-  return [...unique.values()]
-    .map((post) => toSummary(post, at))
-    .sort((a, b) =>
-      (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "")
-    );
+    const unique = new Map<string, BlogPost>();
+    posts.forEach((post) => unique.set(post.id, post));
+
+    return [...unique.values()]
+      .map((post) => toSummary(post, at))
+      .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
+  });
+
+  return ensureBlogPostSummaries(result);
 }
 
 export async function getBlogPostById(id: string): Promise<BlogPost | null> {
@@ -184,15 +237,17 @@ export async function getBlogPostById(id: string): Promise<BlogPost | null> {
 export async function getBlogPostBySlug(
   slug: string
 ): Promise<BlogPost | null> {
-  const snap = await getAdminFirestore()
-    .collection(COLLECTION)
-    .where("slug", "==", slug)
-    .limit(1)
-    .get();
+  return runBlogRead(`Unable to load blog post ${slug}`, null, async () => {
+    const snap = await getAdminFirestore()
+      .collection(COLLECTION)
+      .where("slug", "==", slug)
+      .limit(1)
+      .get();
 
-  if (snap.empty) return null;
-  const doc = snap.docs[0]!;
-  return normalizePost(doc.id, doc.data());
+    if (snap.empty) return null;
+    const doc = snap.docs[0]!;
+    return normalizePost(doc.id, doc.data());
+  });
 }
 
 export async function getPublicBlogPostBySlug(
@@ -207,18 +262,19 @@ export async function getPublicBlogPostBySlug(
 export async function listPublicBlogSlugs(): Promise<
   Array<{ slug: string; updatedAt: string }>
 > {
-  const db = getAdminFirestore();
+  return runBlogRead("Unable to list public blog slugs", [], async () => {
+    const db = getAdminFirestore();
+    const [publishedSnap, scheduledSnap] = await Promise.all([
+      db.collection(COLLECTION).where("status", "==", "published").get(),
+      db.collection(COLLECTION).where("status", "==", "scheduled").get(),
+    ]);
 
-  const [publishedSnap, scheduledSnap] = await Promise.all([
-    db.collection(COLLECTION).where("status", "==", "published").get(),
-    db.collection(COLLECTION).where("status", "==", "scheduled").get(),
-  ]);
-
-  const at = new Date();
-  return [...publishedSnap.docs, ...scheduledSnap.docs]
-    .map((doc) => normalizePost(doc.id, doc.data()))
-    .filter((post) => isBlogPostPublic(post, at))
-    .map((post) => ({ slug: post.slug, updatedAt: post.updatedAt }));
+    const at = new Date();
+    return [...publishedSnap.docs, ...scheduledSnap.docs]
+      .map((doc) => normalizePost(doc.id, doc.data()))
+      .filter((post) => isBlogPostPublic(post, at))
+      .map((post) => ({ slug: post.slug, updatedAt: post.updatedAt }));
+  });
 }
 
 export async function createBlogPost(

@@ -1,9 +1,88 @@
 import { getProductById } from "@/services/catalogService";
 import { getVariantFromProduct } from "@/lib/server/variantService";
-import { getDefaultGstRateForCategory, type GSTRate } from "@/lib/gstCalculator";
+import {
+  getDefaultGstRateForCategory,
+  type GSTRate,
+} from "@/lib/gstCalculator";
+import { getAvailableStock } from "@/lib/inventory/stockMath";
+import {
+  isFirestoreUnavailableError,
+  logFirestoreWarning,
+} from "@/lib/server/firestoreErrors";
 import { validateCoupon } from "@/lib/server/couponService";
 import { validateStockAvailability } from "@/lib/server/inventoryService";
 import type { CreateOrderPayload } from "@/types/order";
+
+async function validateStockAvailabilityFromCatalog(
+  items: Array<{
+    productId: string;
+    variantId?: string;
+    quantity: number;
+    name: string;
+  }>
+): Promise<void> {
+  const errors: string[] = [];
+
+  for (const item of items) {
+    const product = await getProductById(item.productId);
+    if (!product || product.status !== "active") {
+      errors.push(`${item.name}: product unavailable`);
+      continue;
+    }
+
+    const variant = getVariantFromProduct(product, item.variantId);
+    if (item.variantId && !variant) {
+      errors.push(`${item.name}: variant unavailable`);
+      continue;
+    }
+
+    const parentAvailable = getAvailableStock(
+      product.stock,
+      product.reservedStock ?? 0
+    );
+    const available =
+      variant && item.variantId
+        ? getAvailableStock(
+            variant.stock ?? product.stock,
+            product.reservedStock ?? 0
+          )
+        : parentAvailable;
+
+    if (item.quantity > available) {
+      errors.push(
+        `${item.name}: requested ${item.quantity}, available ${available}`
+      );
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Insufficient stock: ${errors.join("; ")}`);
+  }
+}
+
+async function validateStockAvailabilityWithFallback(
+  items: Array<{
+    productId: string;
+    variantId?: string;
+    quantity: number;
+    name: string;
+  }>
+): Promise<void> {
+  try {
+    await validateStockAvailability(items);
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      logFirestoreWarning(
+        "inventory",
+        error,
+        "Firestore unavailable — validating stock from catalog"
+      );
+      await validateStockAvailabilityFromCatalog(items);
+      return;
+    }
+    throw error;
+  }
+}
 
 export async function resolveOrderItemsFromFirestore(
   items: CreateOrderPayload["items"]
@@ -41,7 +120,7 @@ export async function resolveOrderItemsFromFirestore(
     })
   );
 
-  await validateStockAvailability(
+  await validateStockAvailabilityWithFallback(
     resolved.map((item) => ({
       productId: item.productId,
       variantId: item.variantId,

@@ -7,7 +7,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("reviews:write");
+    await requireAdmin("reviews:write", request);
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminReviewStatusSchema.parse(body);
@@ -20,7 +20,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    await requireAdmin("reviews:write");
+    await requireAdmin("reviews:write", _request);
     const { id } = await context.params;
     await deleteReview(id);
     return NextResponse.json({ ok: true });

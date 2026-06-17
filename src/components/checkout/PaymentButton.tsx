@@ -1,186 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { BRAND } from "@/lib/brand";
-import { useRazorpay } from "@/hooks/useRazorpay";
-import {
-  createCodOrder,
-  createPaymentOrder,
-  releaseOrderReservation,
-  verifyPayment,
-} from "@/services/orderService";
-import { useCartStore } from "@/store/cartStore";
-import { useToastStore } from "@/store/toastStore";
-import type { CreateOrderPayload, ShippingAddress } from "@/types/order";
-import type { CheckoutSummaryItem } from "@/components/checkout/CheckoutSummary";
+import { useCheckoutPayment, type UseCheckoutPaymentOptions } from "@/hooks/useCheckoutPayment";
 
-export interface PaymentButtonProps {
-  items: CheckoutSummaryItem[];
-  shippingAddress: ShippingAddress;
-  buyerState: string;
-  email: string;
-  customerName?: string;
-  customerPhone?: string;
-  phone?: string;
-  paymentMethod: "razorpay" | "cod";
-  disabled?: boolean;
-}
+export type PaymentButtonProps = UseCheckoutPaymentOptions;
 
-export default function PaymentButton({
-  items,
-  shippingAddress,
-  buyerState,
-  email,
-  customerName,
-  customerPhone,
-  phone,
-  paymentMethod,
-  disabled = false,
-}: PaymentButtonProps) {
-  const router = useRouter();
-  const { isReady, isLoading, error, openCheckout } = useRazorpay();
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const couponCode = useCartStore((s) => s.couponCode);
-  const couponDiscount = useCartStore((s) => s.discount());
-  const clearCart = useCartStore((s) => s.clearCart);
-  const showToast = useToastStore((s) => s.show);
-
-  const isDisabled =
-    disabled || isProcessing || isLoading || (paymentMethod === "razorpay" && !isReady);
-
-  async function buildPayload(): Promise<CreateOrderPayload> {
-    return {
-      items: items.map((item) => ({
-        productId: item.productId,
-        variantId: item.variantId,
-        variantSku: item.variantSku,
-        variantLabel: item.variantLabel,
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-        gstRate: item.gstRate,
-      })),
-      email,
-      customerName: customerName ?? shippingAddress.name,
-      customerPhone: customerPhone ?? shippingAddress.phone,
-      couponCode,
-      couponDiscount,
-      shippingAddress,
-      paymentMethod,
-      buyerState,
-    };
-  }
-
-  function successUrl(orderId: string): string {
-    const params = new URLSearchParams({
-      orderId,
-      email,
-    });
-    return `/checkout/success?${params.toString()}`;
-  }
-
-  async function handleCodPayment() {
-    setIsProcessing(true);
-    try {
-      const payload = await buildPayload();
-      const { orderId } = await createCodOrder(payload);
-      clearCart();
-      showToast("Order placed successfully!", "success");
-      router.push(successUrl(orderId));
-    } catch (err) {
-      showToast(
-        err instanceof Error ? err.message : "Unable to place COD order",
-        "error"
-      );
-    } finally {
-      setIsProcessing(false);
-    }
-  }
-
-  async function handleRazorpayPayment() {
-    setIsProcessing(true);
-    let pendingOrderId: string | null = null;
-
-    try {
-      const payload = await buildPayload();
-      const orderResponse = await createPaymentOrder(payload);
-      pendingOrderId = orderResponse.orderId;
-
-      const response = await openCheckout({
-        key: orderResponse.keyId,
-        amount: orderResponse.amount,
-        currency: orderResponse.currency,
-        name: BRAND.name,
-        description: "Secure payment for your order",
-        order_id: orderResponse.razorpayOrderId,
-        prefill: {
-          name: shippingAddress.name,
-          email,
-          contact: phone,
-        },
-        notes: {
-          orderId: orderResponse.orderId,
-        },
-        theme: { color: "#1253ED" },
-        handler: () => {},
-      });
-
-      if (!response) {
-        await releaseOrderReservation(orderResponse.orderId, email).catch(
-          () => undefined
-        );
-        showToast("Payment cancelled or failed", "error");
-        return;
-      }
-
-      await verifyPayment({
-        orderId: orderResponse.orderId,
-        razorpayOrderId: response.razorpay_order_id,
-        razorpayPaymentId: response.razorpay_payment_id,
-        razorpaySignature: response.razorpay_signature,
-      });
-
-      clearCart();
-      showToast("Payment successful!", "success");
-      router.push(successUrl(orderResponse.orderId));
-    } catch (err) {
-      if (pendingOrderId) {
-        await releaseOrderReservation(pendingOrderId, email).catch(() => undefined);
-      }
-      showToast(
-        err instanceof Error ? err.message : "Payment failed",
-        "error"
-      );
-    } finally {
-      setIsProcessing(false);
-    }
-  }
-
-  async function handlePay() {
-    if (paymentMethod === "cod") {
-      await handleCodPayment();
-    } else {
-      await handleRazorpayPayment();
-    }
-  }
+export default function PaymentButton(props: PaymentButtonProps) {
+  const { pay, isProcessing, isLoading, isDisabled, error, paymentMethod } =
+    useCheckoutPayment(props);
 
   const label =
     paymentMethod === "cod"
       ? isProcessing
-        ? "Placing order..."
+        ? "Placing order…"
         : "Place Order (Cash on Delivery)"
       : isProcessing || isLoading
-        ? "Processing..."
-        : "Pay Securely with Razorpay";
+        ? "Processing…"
+        : "Pay Securely";
 
   return (
     <div className="payment-button">
       <button
         type="button"
-        className="cart-btn cart-btn--checkout"
-        onClick={handlePay}
+        className="cart-btn cart-btn--checkout payment-button__primary"
+        onClick={() => void pay()}
         disabled={isDisabled}
       >
         {label}

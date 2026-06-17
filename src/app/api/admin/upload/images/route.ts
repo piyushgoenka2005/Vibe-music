@@ -7,7 +7,7 @@ import {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("products:write");
+    await requireAdmin("products:write", request);
     const formData = await request.formData();
     const categorySlug = String(formData.get("categorySlug") ?? "general");
     const files = formData.getAll("files").filter((f): f is File => f instanceof File);

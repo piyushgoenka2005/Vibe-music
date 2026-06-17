@@ -1,9 +1,16 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import {
   getAdminFirestore,
   isFirebaseAdminConfigured,
 } from "@/lib/firebase/admin";
+import {
+  isFirestoreUnavailableError,
+  isGlobalFirestoreCircuitOpen,
+  logFirestoreWarning,
+  tryFirestoreFast,
+} from "@/lib/server/firestoreErrors";
 import type {
   BannerStatus,
   CreateBannerInput,
@@ -12,6 +19,12 @@ import type {
 } from "@/types/banner";
 
 const COLLECTION = "banners";
+const ACTIVE_BANNERS_CACHE_KEY = "homepage-active-banners";
+const ACTIVE_BANNERS_REVALIDATE_SECONDS = 300;
+
+function logFirestoreBannerWarning(error: unknown, context: string): void {
+  logFirestoreWarning("banners", error, context);
+}
 
 function now(): string {
   return new Date().toISOString();
@@ -58,34 +71,92 @@ function isBannerScheduledActive(
 }
 
 export async function listAllBanners(): Promise<HomepageBanner[]> {
-  const snap = await getAdminFirestore().collection(COLLECTION).get();
-  return snap.docs
-    .map((doc) => normalizeBanner(doc.id, doc.data()))
-    .sort((a, b) => a.priority - b.priority || b.createdAt.localeCompare(a.createdAt));
-}
-
-export async function listActiveBanners(at = new Date()): Promise<HomepageBanner[]> {
   if (!isFirebaseAdminConfigured()) {
     return [];
   }
 
-  const snap = await getAdminFirestore()
-    .collection(COLLECTION)
-    .where("status", "==", "active")
-    .get();
+  try {
+    const snap = await getAdminFirestore().collection(COLLECTION).get();
+    return snap.docs
+      .map((doc) => normalizeBanner(doc.id, doc.data()))
+      .sort((a, b) => a.priority - b.priority || b.createdAt.localeCompare(a.createdAt));
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      logFirestoreBannerWarning(error, "Unable to list banners for admin");
+      return [];
+    }
 
-  return snap.docs
-    .map((doc) => normalizeBanner(doc.id, doc.data()))
-    .filter((banner) => isBannerScheduledActive(banner, at))
-    .sort((a, b) => a.priority - b.priority || a.createdAt.localeCompare(b.createdAt));
+    throw error;
+  }
+}
+
+async function fetchActiveBannersFromFirestore(): Promise<HomepageBanner[]> {
+  return tryFirestoreFast(
+    async () => {
+      const snap = await getAdminFirestore()
+        .collection(COLLECTION)
+        .where("status", "==", "active")
+        .get();
+
+      return snap.docs.map((doc) => normalizeBanner(doc.id, doc.data()));
+    },
+    {
+      domain: "banners",
+      context: "Firestore unavailable — using static hero fallback",
+      fallback: () => [],
+    }
+  );
+}
+
+const getCachedActiveBannerRows = unstable_cache(
+  fetchActiveBannersFromFirestore,
+  [ACTIVE_BANNERS_CACHE_KEY],
+  { revalidate: ACTIVE_BANNERS_REVALIDATE_SECONDS, tags: ["banners"] }
+);
+
+export async function listActiveBanners(at = new Date()): Promise<HomepageBanner[]> {
+  if (
+    !isFirebaseAdminConfigured() ||
+    process.env.DISABLE_FIRESTORE_BANNERS === "true" ||
+    isGlobalFirestoreCircuitOpen()
+  ) {
+    return [];
+  }
+
+  try {
+    const rows = await getCachedActiveBannerRows();
+    return rows
+      .filter((banner) => isBannerScheduledActive(banner, at))
+      .sort((a, b) => a.priority - b.priority || a.createdAt.localeCompare(b.createdAt));
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      logFirestoreBannerWarning(error, "Firestore unavailable — using static hero fallback");
+      return [];
+    }
+
+    throw error;
+  }
 }
 
 export async function getBannerById(id: string): Promise<HomepageBanner | null> {
-  const doc = await getAdminFirestore().collection(COLLECTION).doc(id).get();
-  if (!doc.exists) return null;
-  const data = doc.data();
-  if (!data) return null;
-  return normalizeBanner(doc.id, data);
+  if (!isFirebaseAdminConfigured()) {
+    return null;
+  }
+
+  try {
+    const doc = await getAdminFirestore().collection(COLLECTION).doc(id).get();
+    if (!doc.exists) return null;
+    const data = doc.data();
+    if (!data) return null;
+    return normalizeBanner(doc.id, data);
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      logFirestoreBannerWarning(error, `Unable to load banner ${id}`);
+      return null;
+    }
+
+    throw error;
+  }
 }
 
 async function getNextPriority(): Promise<number> {

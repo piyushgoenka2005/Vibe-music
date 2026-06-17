@@ -5,15 +5,25 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatusBadge, LoadingState, EmptyState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import type { Order, OrderStatus } from "@/types/order";
 
-async function fetchOrders(params: { search: string; status: string; page: number }) {
-  const sp = new URLSearchParams({ limit: "20", offset: String(params.page * 20) });
+async function fetchOrders(params: {
+  search: string;
+  status: string;
+  cursor?: string;
+}) {
+  const sp = new URLSearchParams({ limit: "20" });
   if (params.search) sp.set("search", params.search);
   if (params.status) sp.set("status", params.status);
+  if (params.cursor) sp.set("cursor", params.cursor);
   const res = await fetch(`/api/admin/orders?${sp}`);
   if (!res.ok) throw new Error("Failed to load orders");
-  return res.json() as Promise<{ orders: Order[]; total: number }>;
+  return res.json() as Promise<{
+    orders: Order[];
+    hasMore: boolean;
+    nextCursor?: string;
+  }>;
 }
 
 async function fetchOrderDetail(orderId: string): Promise<Order> {
@@ -27,14 +37,15 @@ function OrdersContent() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
-  const [page, setPage] = useState(0);
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
+    useAdminCursorPagination();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newStatus, setNewStatus] = useState<OrderStatus>("processing");
   const [note, setNote] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-orders", search, status, page],
-    queryFn: () => fetchOrders({ search, status, page }),
+    queryKey: ["admin-orders", search, status, cursor],
+    queryFn: () => fetchOrders({ search, status, cursor }),
   });
 
   const { data: selected, isLoading: detailLoading } = useQuery({
@@ -78,14 +89,13 @@ function OrdersContent() {
   if (isLoading) return <LoadingState />;
 
   const orders = data?.orders ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / 20);
+  const hasMore = data?.hasMore ?? false;
 
   return (
     <>
       <div className="admin-toolbar">
-        <input className="admin-input" placeholder="Search orders…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} />
-        <select className="admin-select" style={{ width: "auto" }} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}>
+        <input className="admin-input" placeholder="Search orders…" value={search} onChange={(e) => { setSearch(e.target.value); reset(); }} />
+        <select className="admin-select" style={{ width: "auto" }} value={status} onChange={(e) => { setStatus(e.target.value); reset(); }}>
           <option value="">All statuses</option>
           <option value="pending">Pending</option>
           <option value="confirmed">Confirmed</option>
@@ -129,11 +139,10 @@ function OrdersContent() {
                 </table>
               </div>
               <div className="admin-pagination">
-                <span>{total} orders</span>
+                <span>Page {pageIndex + 1}</span>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <button type="button" className="admin-btn admin-btn--secondary" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</button>
-                  <span>Page {page + 1} of {Math.max(totalPages, 1)}</span>
-                  <button type="button" className="admin-btn admin-btn--secondary" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</button>
+                  <button type="button" className="admin-btn admin-btn--secondary" disabled={!canGoPrev} onClick={goPrev}>Previous</button>
+                  <button type="button" className="admin-btn admin-btn--secondary" disabled={!hasMore} onClick={() => goNext(data?.nextCursor)}>Next</button>
                 </div>
               </div>
             </>

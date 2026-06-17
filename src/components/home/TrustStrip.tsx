@@ -1,7 +1,7 @@
 import { Truck, ShieldCheck, RotateCcw, Headphones } from "lucide-react";
 import { LANDING_TRUST_ITEMS } from "@/data/landingStatus";
 import StatusChip from "@/components/home/StatusChip";
-import Reveal from "@/components/layout/Reveal";
+import RevealGroup from "@/components/layout/RevealGroup";
 
 const ICONS = {
   truck: Truck,
@@ -12,12 +12,12 @@ const ICONS = {
 
 export default function TrustStrip() {
   return (
-    <Reveal as="section" className="trust-strip">
-      <div className="trust-strip__inner">
-        {LANDING_TRUST_ITEMS.map((item, index) => {
+    <section className="trust-strip" aria-label="Store trust highlights">
+      <RevealGroup className="trust-strip__inner" staggerOffset={4}>
+        {LANDING_TRUST_ITEMS.map((item) => {
           const Icon = ICONS[item.icon];
           return (
-            <Reveal key={item.title} className="trust-strip__item" delay={index * 80}>
+            <article key={item.title} className="trust-strip__item">
               <span className="trust-strip__icon-wrap" aria-hidden>
                 <Icon size={20} className="trust-strip__icon" />
               </span>
@@ -33,10 +33,10 @@ export default function TrustStrip() {
                 </div>
                 <p className="trust-strip__desc">{item.desc}</p>
               </div>
-            </Reveal>
+            </article>
           );
         })}
-      </div>
-    </Reveal>
+      </RevealGroup>
+    </section>
   );
 }

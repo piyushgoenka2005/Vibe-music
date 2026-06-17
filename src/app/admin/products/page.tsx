@@ -13,27 +13,37 @@ import {
   EmptyState,
   formatCurrency,
 } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import { ROUTES } from "@/lib/routes";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import type { AdminProduct } from "@/types/admin";
 import type { Category } from "@/types/category";
 
-async function fetchProducts(params: { search: string; status: string; page: number }) {
-  const sp = new URLSearchParams({
-    limit: "20",
-    offset: String(params.page * 20),
-  });
+async function fetchProducts(params: {
+  search: string;
+  status: string;
+  cursor?: string;
+}) {
+  const sp = new URLSearchParams({ limit: "20" });
   if (params.search) sp.set("search", params.search);
   if (params.status) sp.set("status", params.status);
+  if (params.cursor) sp.set("cursor", params.cursor);
   const res = await fetch(`/api/admin/products?${sp}`);
   if (!res.ok) throw new Error("Failed to load products");
-  return res.json() as Promise<{ products: AdminProduct[]; total: number }>;
+  return res.json() as Promise<{
+    products: AdminProduct[];
+    total: number;
+    hasMore: boolean;
+    nextCursor?: string;
+  }>;
 }
 
 function ProductsContent() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
-  const [page, setPage] = useState(0);
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
+    useAdminCursorPagination();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [importOpen, setImportOpen] = useState(false);
   const [bulkStock, setBulkStock] = useState("");
@@ -51,9 +61,9 @@ function ProductsContent() {
     },
   });
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin-products", search, status, page],
-    queryFn: () => fetchProducts({ search, status, page }),
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
+    queryKey: ["admin-products", search, status, cursor],
+    queryFn: () => fetchProducts({ search, status, cursor }),
   });
 
   const invalidate = () => {
@@ -123,7 +133,7 @@ function ProductsContent() {
 
   const products = data?.products ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / 20);
+  const hasMore = data?.hasMore ?? false;
   const selectedIds = Array.from(selected);
 
   return (
@@ -133,13 +143,13 @@ function ProductsContent() {
           className="admin-input"
           placeholder="Search products…"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+          onChange={(e) => { setSearch(e.target.value); reset(); }}
         />
         <select
           className="admin-select"
           style={{ width: "auto" }}
           value={status}
-          onChange={(e) => { setStatus(e.target.value); setPage(0); }}
+          onChange={(e) => { setStatus(e.target.value); reset(); }}
         >
           <option value="">All statuses</option>
           <option value="active">Active</option>
@@ -283,11 +293,10 @@ function ProductsContent() {
               </table>
             </div>
             <div className="admin-pagination">
-              <span>{total} products</span>
+              <span>{total} products · page {pageIndex + 1}</span>
               <div style={{ display: "flex", gap: "0.5rem" }}>
-                <button type="button" className="admin-btn admin-btn--secondary" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</button>
-                <span>Page {page + 1} of {Math.max(totalPages, 1)}</span>
-                <button type="button" className="admin-btn admin-btn--secondary" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</button>
+                <button type="button" className="admin-btn admin-btn--secondary" disabled={!canGoPrev} onClick={goPrev}>Previous</button>
+                <button type="button" className="admin-btn admin-btn--secondary" disabled={!hasMore} onClick={() => goNext(data?.nextCursor)}>Next</button>
               </div>
             </div>
           </>

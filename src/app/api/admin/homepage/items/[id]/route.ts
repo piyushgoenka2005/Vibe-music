@@ -13,7 +13,7 @@ interface RouteParams {
 
 export async function PUT(request: Request, { params }: RouteParams) {
   try {
-    await requireAdmin("homepage:write");
+    await requireAdmin("homepage:write", request);
     const { id } = await params;
     const body = await request.json();
     const parsed = adminHomepageSectionItemSchema
@@ -32,7 +32,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
-    await requireAdmin("homepage:write");
+    await requireAdmin("homepage:write", _request);
     const { id } = await params;
     await deleteSectionItem(id);
     invalidatePublicHomepageCache();

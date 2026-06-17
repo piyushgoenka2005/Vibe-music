@@ -38,10 +38,13 @@
   --content-max: 1280px;
   --content-wide: 1440px;
   --header-height: 72px;
+  /* Stable default — updated precisely after mount via useSiteHeaderOffset */
+  --site-header-offset: 148px;
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
   --radius-pill: 9999px;
+  --radius-button: var(--radius-md);
 
   /* Typography — see typography.css for full scale */
   --font-primary: var(--font-inter, "Helvetica Neue"), Helvetica, Arial, sans-serif;

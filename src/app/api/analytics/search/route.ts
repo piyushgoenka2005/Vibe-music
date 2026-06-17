@@ -33,7 +33,7 @@ const searchAnalyticsSchema = z
 
 export async function POST(request: Request) {
   try {
-    const rateLimited = enforceRateLimit(
+    const rateLimited = await enforceRateLimit(
       request,
       "analytics-search",
       RATE_LIMITS.analytics

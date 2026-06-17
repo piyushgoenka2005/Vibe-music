@@ -22,7 +22,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    const admin = await requireAdmin("orders:write");
+    const admin = await requireAdmin("orders:write", request);
     const { id } = await context.params;
     const body = await request.json();
 

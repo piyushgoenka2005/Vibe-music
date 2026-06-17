@@ -9,6 +9,7 @@ import {
 import { LANDING_SERVICE_STATUS } from "@/data/landingStatus";
 import StatusChip from "@/components/home/StatusChip";
 import Reveal from "@/components/layout/Reveal";
+import RevealGroup from "@/components/layout/RevealGroup";
 
 const ICONS: Record<(typeof LANDING_SERVICE_STATUS)[number]["icon"], LucideIcon> = {
   package: Package,
@@ -19,9 +20,9 @@ const ICONS: Record<(typeof LANDING_SERVICE_STATUS)[number]["icon"], LucideIcon>
 
 export default function ServiceStatusSection() {
   return (
-    <Reveal as="section" className="service-status" aria-labelledby="service-status-title">
+    <section className="service-status" aria-labelledby="service-status-title">
       <div className="service-status__inner">
-        <header className="service-status__header">
+        <Reveal as="header" className="service-status__header">
           <p className="service-status__eyebrow premium-section-eyebrow">Service status</p>
           <h2 id="service-status-title" className="service-status__title">
             Everything you need, clearly in view
@@ -29,18 +30,13 @@ export default function ServiceStatusSection() {
           <p className="service-status__subtitle">
             Orders, payments, dispatch, and support — transparent at every step.
           </p>
-        </header>
+        </Reveal>
 
-        <div className="service-status__grid">
-          {LANDING_SERVICE_STATUS.map((item, index) => {
+        <RevealGroup className="service-status__grid">
+          {LANDING_SERVICE_STATUS.map((item) => {
             const Icon = ICONS[item.icon];
             return (
-              <Reveal
-                key={item.title}
-                className="service-status__card"
-                delay={index * 70}
-                as="article"
-              >
+              <article key={item.title} className="service-status__card">
                 <div className="service-status__card-top">
                   <span className="service-status__icon-wrap" aria-hidden>
                     <Icon size={20} className="service-status__icon" />
@@ -55,13 +51,15 @@ export default function ServiceStatusSection() {
                 <p className="service-status__card-desc">{item.desc}</p>
                 <Link href={item.href} className="service-status__cta">
                   {item.cta}
-                  <span aria-hidden>→</span>
+                  <span className="service-status__cta-arrow" aria-hidden>
+                    →
+                  </span>
                 </Link>
-              </Reveal>
+              </article>
             );
           })}
-        </div>
+        </RevealGroup>
       </div>
-    </Reveal>
+    </section>
   );
 }

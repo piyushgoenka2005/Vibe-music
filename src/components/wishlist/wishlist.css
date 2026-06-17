@@ -277,6 +277,28 @@
   transition: color var(--duration-fast);
 }
 
+.wl-heart-btn--pop {
+  animation: wl-heart-pop 0.42s var(--ease-bounce);
+}
+
+@keyframes wl-heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wl-heart-btn--pop {
+    animation: none;
+  }
+}
+
 .wl-heart-btn--active,
 .wl-heart-btn:hover {
   color: var(--brand-primary);

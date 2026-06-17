@@ -1,6 +1,7 @@
 import "server-only";
 
 import { BRAND } from "@/lib/brand";
+import { buildInvoiceAccessUrl } from "@/lib/security/invoiceAccessToken";
 import type { Order } from "@/types/order";
 
 function formatInr(amount: number): string {
@@ -13,6 +14,12 @@ function formatInr(amount: number): string {
 
 function buildOrderConfirmationHtml(order: Order): string {
   const trackUrl = `${BRAND.siteUrl}/track-order?orderId=${encodeURIComponent(order.id)}&email=${encodeURIComponent(order.email)}`;
+  const invoiceUrl =
+    buildInvoiceAccessUrl(
+      order.id,
+      order.email,
+      `/orders/${order.id}/invoice`
+    ) ?? `${BRAND.siteUrl}/orders/${order.id}/invoice?email=${encodeURIComponent(order.email)}`;
   const itemRows = order.items
     .map(
       (item) =>
@@ -36,6 +43,7 @@ function buildOrderConfirmationHtml(order: Order): string {
         <tbody>${itemRows}</tbody>
       </table>
       <p><a href="${trackUrl}" style="display:inline-block;background:var(--brand-primary);color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px">Track your order</a></p>
+      <p><a href="${invoiceUrl}" style="font-size:14px;color:#444">View invoice</a></p>
       <p style="font-size:13px;color:#666">Deliver to: ${order.shippingAddress.name}, ${order.shippingAddress.line1}, ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}</p>
     </div>
   `;

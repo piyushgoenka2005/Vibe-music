@@ -24,7 +24,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("customers:write");
+    await requireAdmin("customers:write", request);
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminCustomerStatusSchema.parse(body);

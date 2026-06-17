@@ -1,42 +1,37 @@
 import { Suspense } from "react";
 import PremiumHero from "@/components/home/PremiumHero";
 import HomepageStats from "@/components/home/HomepageStats";
-import LandingLiveTicker from "@/components/home/LandingLiveTicker";
-import ServiceStatusSection from "@/components/home/ServiceStatusSection";
-import TrustStrip from "@/components/home/TrustStrip";
+import HomepagePromoBanner from "@/components/home/HomepagePromoBanner";
+import ServiceStatusCarousel from "@/components/home/ServiceStatusCarousel";
 import WhyShopSection from "@/components/home/WhyShopSection";
+import BrowseCategoryCardsSection from "@/components/home/BrowseCategoryCardsSection";
 import SocialProofStrip from "@/components/home/SocialProofStrip";
 import DiscoverLocationsSection from "@/components/home/DiscoverLocationsSection";
 import BigNamesDealsSection from "@/components/home/BigNamesDealsSection";
 import CategoryBento from "@/components/home/CategoryBento";
-import GearStoriesSectionAsync from "@/components/home/GearStoriesSectionAsync";
+import OutletStorySection from "@/components/home/OutletStorySection";
+import GearStoriesReelsSection from "@/components/home/GearStoriesReelsSection";
 import EditorialSplit from "@/components/home/EditorialSplit";
 import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
+import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
-import type { HomepageBanner } from "@/types/banner";
 
-interface HomePageProps {
-  banners: HomepageBanner[];
-}
-
-export default function HomePage({ banners }: HomePageProps) {
+export default function HomePage() {
   return (
     <main className="premium-home">
       <h1 className="visually-hidden">Vibe Music — Musical Instruments & Pro Audio</h1>
 
-      <PremiumHero banners={banners} />
+      <PremiumHero />
       <HomepageStats />
-      <LandingLiveTicker variant="hero-bridge" />
-      <ServiceStatusSection />
-      <TrustStrip />
+      <HomepagePromoBanner />
+      <ServiceStatusCarousel />
       <WhyShopSection />
+      <BrowseCategoryCardsSection />
+      <GearStoriesReelsSection />
       <BigNamesDealsSection />
       <CategoryBento />
-
-      <Suspense fallback={null}>
-        <GearStoriesSectionAsync />
-      </Suspense>
+      <OutletStorySection />
 
       <Suspense fallback={<HomepageSectionsSkeleton />}>
         <HomepageSectionsAsync />
@@ -44,12 +39,12 @@ export default function HomePage({ banners }: HomePageProps) {
 
       <EditorialSplit />
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<BlogTeaserSkeleton />}>
         <HomepageBlogTeaser />
       </Suspense>
 
-      <SocialProofStrip />
       <DiscoverLocationsSection />
+      <SocialProofStrip />
     </main>
   );
 }
