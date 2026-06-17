@@ -2,11 +2,16 @@
 
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { CATEGORY_BENTO_ITEMS, type CategoryBentoItem } from "@/data/categoryBento";
+import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { categoryPath, ROUTES } from "@/lib/routes";
 import CategoryBentoImage from "@/components/home/CategoryBentoImage";
+
+function bentoIndexStyle(index: number): CSSProperties {
+  return { "--bento-index": String(index) } as CSSProperties;
+}
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
@@ -95,14 +100,20 @@ function CategoryMeta({
   );
 }
 
-function CategoryBentoHeroTile({ cat, index }: { cat: CategoryBentoItem; index: number }) {
-  const reduceMotion = useReducedMotion();
-
+function CategoryBentoHeroTile({
+  cat,
+  index,
+  reduceMotion,
+}: {
+  cat: CategoryBentoItem;
+  index: number;
+  reduceMotion: boolean;
+}) {
   return (
     <motion.article
       className={tileClassName(cat)}
       role="listitem"
-      style={{ "--bento-index": index } as CSSProperties}
+      style={bentoIndexStyle(index)}
       variants={reduceMotion ? undefined : tileVariants}
     >
       <Link
@@ -138,15 +149,22 @@ function CategoryBentoHeroTile({ cat, index }: { cat: CategoryBentoItem; index: 
   );
 }
 
-function CategoryBentoCard({ cat, index }: { cat: CategoryBentoItem; index: number }) {
-  const reduceMotion = useReducedMotion();
+function CategoryBentoCard({
+  cat,
+  index,
+  reduceMotion,
+}: {
+  cat: CategoryBentoItem;
+  index: number;
+  reduceMotion: boolean;
+}) {
   const wide = Boolean(cat.wide);
 
   return (
     <motion.article
       className={tileClassName(cat)}
       role="listitem"
-      style={{ "--bento-index": index } as CSSProperties}
+      style={bentoIndexStyle(index)}
       variants={reduceMotion ? undefined : tileVariants}
     >
       <Link
@@ -180,7 +198,7 @@ function CategoryBentoCard({ cat, index }: { cat: CategoryBentoItem; index: numb
 }
 
 export default function CategoryBentoShowcase() {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useHydrationSafeReducedMotion();
 
   return (
     <section className="category-bento" aria-labelledby="category-bento-title">
@@ -221,9 +239,19 @@ export default function CategoryBentoShowcase() {
           >
             {CATEGORY_BENTO_ITEMS.map((cat, index) =>
               cat.size === "large" ? (
-                <CategoryBentoHeroTile key={cat.slug} cat={cat} index={index} />
+                <CategoryBentoHeroTile
+                  key={cat.slug}
+                  cat={cat}
+                  index={index}
+                  reduceMotion={reduceMotion}
+                />
               ) : (
-                <CategoryBentoCard key={cat.slug} cat={cat} index={index} />
+                <CategoryBentoCard
+                  key={cat.slug}
+                  cat={cat}
+                  index={index}
+                  reduceMotion={reduceMotion}
+                />
               )
             )}
           </motion.div>

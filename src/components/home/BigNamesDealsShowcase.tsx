@@ -20,7 +20,7 @@ function BigNamesDealItem({
     <div
       className="big-names-deals__item"
       role="listitem"
-      style={{ "--big-names-index": index } as CSSProperties}
+      style={{ "--big-names-index": String(index) } as CSSProperties}
     >
       <Link
         aria-label={`Shop ${item.brand} deals`}
