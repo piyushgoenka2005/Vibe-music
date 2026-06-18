@@ -95,7 +95,9 @@ export async function updateCategory(
 ): Promise<AdminCategory> {
   const db = getAdminFirestore();
   const now = new Date().toISOString();
-  const { id: _id, createdAt: _c, ...rest } = patch;
+  const rest = { ...patch };
+  delete rest.id;
+  delete rest.createdAt;
   await db.collection(COLLECTION).doc(id).update({ ...rest, updatedAt: now });
   const updated = await getCategoryById(id);
   if (!updated) throw new Error("Category not found after update");

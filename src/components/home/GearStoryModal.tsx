@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Heart, X } from "lucide-react";
 import { optimizeImageUrl } from "@/lib/images";
 import { productPath } from "@/lib/routes";
+import { useIsClient } from "@/hooks/useIsClient";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { formatCurrency } from "@/utils/currency";
@@ -43,7 +44,7 @@ function availabilityLabel(availability: GearStory["availability"]): string {
 }
 
 export default function GearStoryModal({ story, onClose }: GearStoryModalProps) {
-  const [isClient, setIsClient] = useState(false);
+  const isClient = useIsClient();
   const [activeImage, setActiveImage] = useState(0);
   const zoomRef = useRef<HTMLDivElement>(null);
   const addItem = useCartStore((s) => s.addItem);
@@ -56,12 +57,8 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
   const open = Boolean(story);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
     if (!open) return;
-    setActiveImage(0);
+    const frame = requestAnimationFrame(() => setActiveImage(0));
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -71,10 +68,11 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
 
     window.addEventListener("keydown", onKeyDown);
     return () => {
+      cancelAnimationFrame(frame);
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [open, onClose]);
+  }, [open, story?.id, onClose]);
 
   const handleAddToCart = useCallback(() => {
     if (!story || story.availability === "out-of-stock") return;

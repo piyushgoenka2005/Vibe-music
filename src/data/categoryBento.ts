@@ -42,23 +42,10 @@ const BENTO_IMAGE_FILES: Record<string, string> = {
   "software-plug-ins": `${CAT}/ptstudioann.jpg`,
 };
 
-function buildResponsiveSet(
-  base: string,
-  widths: number[],
-  aspect = 0.75
-): string {
-  return widths
-    .map((width) => {
-      const height = Math.round(width * aspect);
-      return `${base}?width=${width}&height=${height}&fit=cover&format=webp&quality=90 ${width}w`;
-    })
-    .join(", ");
-}
-
 /** Build optimized image URL for bento tile sizes. */
 export function resolveBentoImage(
   slug: string,
-  size: "hero" | "card" = "card"
+  _size: "hero" | "card" = "card"
 ): string {
   const base =
     BENTO_IMAGE_FILES[slug] ??

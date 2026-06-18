@@ -25,6 +25,7 @@ export default function SwipeToPayButton({
   const dragXRef = useRef(0);
   const draggingRef = useRef(false);
   const maxDragRef = useRef(0);
+  const [maxDrag, setMaxDrag] = useState(0);
   const startXRef = useRef(0);
   const confirmedRef = useRef(false);
   const wasLoadingRef = useRef(false);
@@ -59,9 +60,11 @@ export default function SwipeToPayButton({
 
   useEffect(() => {
     const syncMax = () => {
-      maxDragRef.current = measureMaxDrag();
+      const nextMax = measureMaxDrag();
+      maxDragRef.current = nextMax;
+      setMaxDrag(nextMax);
       if (confirmedRef.current) {
-        setDragPosition(maxDragRef.current);
+        setDragPosition(nextMax);
       }
     };
 
@@ -150,11 +153,7 @@ export default function SwipeToPayButton({
   }, [dragging, endDrag, onPointerMove]);
 
   const progress =
-    maxDragRef.current > 0
-      ? dragX / maxDragRef.current
-      : confirmed
-        ? 1
-        : 0;
+    maxDrag > 0 ? dragX / maxDrag : confirmed ? 1 : 0;
 
   const displayLabel = loading
     ? "Opening Razorpay…"

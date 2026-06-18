@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatusBadge, LoadingState, EmptyState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 
 async function fetchCustomers(params: { search: string; cursor?: string }) {
@@ -35,7 +34,7 @@ function CustomersContent() {
     useAdminCursorPagination();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["admin-customers", search, cursor],
     queryFn: () => fetchCustomers({ search, cursor }),
   });

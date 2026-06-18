@@ -1,6 +1,6 @@
 import type { Order } from "@/types/order";
 import type { GSTInvoiceData } from "@/lib/gstCalculator";
-import { INVOICE_BRAND, amountInWordsInr, formatInvoiceDate, formatInvoiceDateTime, paymentMethodLabel, gstSupplyType, invoiceStatusBadge } from "@/features/invoice/utils/invoice-utils";
+import { INVOICE_BRAND, amountInWordsInr, formatInvoiceDateTime, paymentMethodLabel, gstSupplyType, invoiceStatusBadge } from "@/features/invoice/utils/invoice-utils";
 import { formatPrice } from "@/features/invoice/utils/format";
 import type { InvoiceSellerMeta } from "@/features/invoice/types";
 

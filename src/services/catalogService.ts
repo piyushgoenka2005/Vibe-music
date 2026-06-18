@@ -314,13 +314,6 @@ function scoreProductMatch(
   return score;
 }
 
-function matchesQuery(product: Product, query: string): boolean {
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) return true;
-  const tokens = normalized.split(/\s+/).filter(Boolean);
-  return scoreProductMatch(product, tokens) > 0;
-}
-
 export async function searchProducts(
   options: ProductSearchOptions = {}
 ): Promise<Product[]> {

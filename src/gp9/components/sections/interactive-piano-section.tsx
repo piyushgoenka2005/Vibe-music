@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ScrollReveal } from "@/gp9/components/ui/scroll-reveal";
 import { SectionHeading } from "@/gp9/components/ui/section-heading";
 import { ROLAND_GALLERY } from "@/gp9/lib/gp9-assets";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const SKETCHFAB_EMBED =
   "https://sketchfab.com/models/159b0bd1ef114b32888d9d39885cac68/embed";
@@ -55,11 +56,7 @@ function SketchfabGrandPiano() {
 export function InteractivePianoSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const [mounted, setMounted] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  useEffect(() => {
-    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
+  const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const el = sectionRef.current;

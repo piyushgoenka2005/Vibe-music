@@ -24,6 +24,8 @@ import {
   Gp9PanelStagger,
 } from "@/gp9/components/gp9/gp9-motion";
 import { cn } from "@/gp9/lib/utils";
+import { useIsClient } from "@/hooks/useIsClient";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import {
   Gp9PianoEngine,
   Gp9WebMidi,
@@ -42,7 +44,6 @@ import {
   triggerPedalHaptic,
   getPerformanceMode,
   createDefaultPhraseSteps,
-  PHRASE_STEP_COUNT,
   type Gp9ArpPattern,
   type Gp9CameraPresetId,
   type Gp9FinishId,
@@ -764,14 +765,15 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    engine.onVisualNote = (kind, midi) => {
+    const instance = Gp9PianoEngine.getInstance();
+    instance.onVisualNote = (kind, midi) => {
       if (kind === "noteOn") dispatch({ type: "NOTE_ON", midi });
       else dispatch({ type: "NOTE_OFF", midi });
     };
     return () => {
-      engine.onVisualNote = null;
+      instance.onVisualNote = null;
     };
-  }, [engine]);
+  }, []);
 
   useEffect(() => {
     if (!state.powered) return;
@@ -1492,13 +1494,8 @@ export function Gp9PhraseSequencer() {
 
 export function Gp9Piano3DView() {
   const { state } = useGp9Piano();
-  const [mounted, setMounted] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  useEffect(() => {
-    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
+  const reducedMotion = usePrefersReducedMotion();
 
   const playingBoost = state.activeNotes.size > 0 ? 1 : 0;
 
@@ -1544,7 +1541,6 @@ export function Gp9Piano3DView() {
 export function Gp9RecorderPanel() {
   const {
     state,
-    powerOn,
     startRecording,
     stopRecording,
     playSession,
@@ -1914,13 +1910,9 @@ export function Gp9TransportBar() {
 
 function Gp9InstrumentInner() {
   const { state } = useGp9Piano();
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const reducedMotion = usePrefersReducedMotion();
   const sceneClass = getPerformanceMode(state.performanceModeId).sceneClass;
   const isPlaying = state.activeNotes.size > 0;
-
-  useEffect(() => {
-    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
 
   return (
     <div
@@ -1988,14 +1980,10 @@ export function ShowroomExperience() {
   } = useGp9Piano();
 
   const [mounted, setMounted] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const reducedMotion = usePrefersReducedMotion();
   const [finishId, setFinishId] = useState<Gp9FinishId>("polished_ebony");
   const [cameraPreset, setCameraPreset] = useState<Gp9CameraPresetId>("performance");
   const sectionRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
 
   useEffect(() => {
     const el = sectionRef.current;

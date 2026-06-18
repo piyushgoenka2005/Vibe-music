@@ -16,8 +16,9 @@ export class AdminAuthError extends Error {
 
 export async function requireAdmin(
   permission?: Permission,
-  _request?: Request
+  request?: Request
 ): Promise<AdminSession> {
+  void request;
   const sessionUser = await getSessionUser();
   if (!sessionUser) {
     throw new AdminAuthError("Authentication required", 401);

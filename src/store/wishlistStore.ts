@@ -81,9 +81,7 @@ function saveAccountWishlist(userId: string, items: WishlistItem[]) {
   });
 }
 
-async function loadAccountWishlistFromApi(
-  userId: string
-): Promise<WishlistItem[] | null> {
+async function loadAccountWishlistFromApi(): Promise<WishlistItem[] | null> {
   try {
     const res = await fetch("/api/account/wishlist");
     if (!res.ok) return null;
@@ -206,7 +204,7 @@ export const useWishlistStore = create<WishlistState>()(
         const user = useAuthStore.getState().user;
         if (!user) return;
         const remote =
-          (await loadAccountWishlistFromApi(user.id)) ??
+          (await loadAccountWishlistFromApi()) ??
           loadAccountWishlistLocal(user.id);
         const merged = mergeItems(get().items, remote);
         const current = get().items;

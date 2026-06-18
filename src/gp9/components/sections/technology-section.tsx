@@ -112,7 +112,6 @@ export function TechnologySection() {
   const imageProgress = Math.max(0, Math.min(1, (scrollProgress - 0.2) / 0.8));
 
   const centerWidth = 100 - imageProgress * 58;
-  const centerHeight = 100 - imageProgress * 30;
   const sideWidth = imageProgress * 22;
   const sideOpacity = imageProgress;
   const sideTranslateLeft = -100 + imageProgress * 100;

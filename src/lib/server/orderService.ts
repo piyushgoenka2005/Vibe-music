@@ -21,7 +21,6 @@ import {
   releaseReservedStockForOrder,
 } from "@/lib/server/inventoryService";
 import { completeOrderPayment } from "@/lib/server/orderPaymentService";
-import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
 import type { OrderInventoryLine } from "@/types/inventory";
 import type {
   CreateOrderPayload,

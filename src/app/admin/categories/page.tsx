@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { AdminCategory } from "@/types/admin";
 
 function CategoriesContent() {
@@ -14,7 +13,7 @@ function CategoriesContent() {
   const [form, setForm] = useState({ name: "", slug: "", description: "" });
   const [editId, setEditId] = useState<string | null>(null);
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: async () => {
       const res = await fetch("/api/admin/categories");

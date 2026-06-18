@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
@@ -9,6 +8,7 @@ import SkipToContent from "@/components/layout/SkipToContent";
 import BackToTop from "@/components/layout/BackToTop";
 import HelpWidget from "@/components/layout/HelpWidget";
 import SplashCursor from "@/components/SplashCursor";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 export default function StorefrontChrome({
   children,
@@ -17,21 +17,8 @@ export default function StorefrontChrome({
 }) {
   const pathname = usePathname() ?? "";
   const hideChrome = pathname.startsWith("/admin");
-  const [splashEnabled, setSplashEnabled] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mediaQuery.matches) return undefined;
-
-    setSplashEnabled(true);
-
-    const handleChange = () => {
-      setSplashEnabled(!mediaQuery.matches);
-    };
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const splashEnabled = !prefersReducedMotion;
 
   if (hideChrome) {
     return <>{children}</>;

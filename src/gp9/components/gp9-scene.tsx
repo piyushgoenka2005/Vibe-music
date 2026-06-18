@@ -4,6 +4,7 @@
  * GP-9 3D scene — consolidated React Three Fiber showroom (code-split chunk).
  */
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useIsClient } from "@/hooks/useIsClient";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   ContactShadows,
@@ -185,7 +186,10 @@ export function PianoModel({
   const { accent, activeKeyEmissive } = mode.lighting;
 
   const lidAngle = -1.15 * Math.max(0, Math.min(1, lidOpen));
-  targetLid.current = lidAngle;
+
+  useEffect(() => {
+    targetLid.current = lidAngle;
+  }, [lidAngle]);
 
   const { whiteKeys, blackKeys, whiteWidth } = useMemo(() => {
     const whites = PIANO_KEYS.filter((k) => !k.black);
@@ -335,6 +339,7 @@ export function PianoModelGlb(props: PianoModelProps) {
   const { scene } = useGLTF(GP9_GRAND_GLB_PATH);
   const cloned = useMemo(() => scene.clone(true), [scene]);
   const registry = useMemo(() => buildMeshRegistry(cloned), [cloned]);
+  const registryRef = useRef(registry);
 
   const lidRef = useRef(props.lidOpen);
   const sustainRef = useRef(props.sustain);
@@ -343,12 +348,25 @@ export function PianoModelGlb(props: PianoModelProps) {
   const activeRef = useRef(props.activeNotes);
   const boostRef = useRef(props.playingBoost ?? 0);
 
-  lidRef.current = props.lidOpen;
-  sustainRef.current = props.sustain ?? false;
-  softRef.current = props.softPedal ?? false;
-  sostenutoRef.current = props.sostenuto ?? false;
-  activeRef.current = props.activeNotes;
-  boostRef.current = props.playingBoost ?? 0;
+  useEffect(() => {
+    registryRef.current = registry;
+  }, [registry]);
+
+  useEffect(() => {
+    lidRef.current = props.lidOpen;
+    sustainRef.current = props.sustain ?? false;
+    softRef.current = props.softPedal ?? false;
+    sostenutoRef.current = props.sostenuto ?? false;
+    activeRef.current = props.activeNotes;
+    boostRef.current = props.playingBoost ?? 0;
+  }, [
+    props.lidOpen,
+    props.sustain,
+    props.softPedal,
+    props.sostenuto,
+    props.activeNotes,
+    props.playingBoost,
+  ]);
 
   useEffect(() => {
     registry.keys.forEach((obj) => cacheRestTransform(obj));
@@ -369,8 +387,9 @@ export function PianoModelGlb(props: PianoModelProps) {
     const lerp = Math.min(1, delta * 8);
     const notes = activeRef.current;
     const lidOpen = lidRef.current;
+    const reg = registryRef.current;
 
-    registry.keys.forEach((obj, midi) => {
+    reg.keys.forEach((obj, midi) => {
       const rest = restTransforms.get(obj);
       if (!rest) return;
       const active = notes?.has(midi) ?? false;
@@ -380,18 +399,18 @@ export function PianoModelGlb(props: PianoModelProps) {
       obj.rotation.x = rest.rotation.x + rotX * press;
     });
 
-    if (registry.lid) {
-      const rest = restTransforms.get(registry.lid);
+    if (reg.lid) {
+      const rest = restTransforms.get(reg.lid);
       if (rest) {
         const target = -0.85 * Math.max(0, Math.min(1, lidOpen));
-        registry.lid.rotation.x = rest.rotation.x + (target - registry.lid.rotation.x) * lerp;
+        reg.lid.rotation.x = rest.rotation.x + (target - reg.lid.rotation.x) * lerp;
       }
     }
 
     const pedalMap: [THREE.Object3D | null, boolean][] = [
-      [registry.pedalSoft, softRef.current ?? false],
-      [registry.pedalSustain, sustainRef.current ?? false],
-      [registry.pedalSostenuto, sostenutoRef.current ?? false],
+      [reg.pedalSoft, softRef.current ?? false],
+      [reg.pedalSustain, sustainRef.current ?? false],
+      [reg.pedalSostenuto, sostenutoRef.current ?? false],
     ];
 
     for (const [pedal, pressed] of pedalMap) {
@@ -450,29 +469,44 @@ export function ShowroomCameraRig({
   enableOrbit = true,
 }: ShowroomCameraProps) {
   const { camera } = useThree();
+  const cameraRef = useRef(camera);
   const target = useRef(new THREE.Vector3());
   const desiredPos = useRef(new THREE.Vector3());
   const desiredTarget = useRef(new THREE.Vector3());
   const orbitPhase = useRef(0);
   const orbitEnabled = useRef(preset === "orbit" && enableOrbit);
+  const cameraPresetRef = useRef(getCameraPreset(preset));
+
+  useEffect(() => {
+    cameraRef.current = camera;
+  }, [camera]);
 
   useEffect(() => {
     orbitEnabled.current = preset === "orbit" && enableOrbit;
     const p = getCameraPreset(preset);
+    cameraPresetRef.current = p;
     desiredPos.current.set(...p.position);
     desiredTarget.current.set(...p.target);
-    if (p.fov && camera instanceof THREE.PerspectiveCamera) {
-      camera.fov = p.fov;
-      camera.updateProjectionMatrix();
-    }
-  }, [preset, enableOrbit, camera, performanceModeId]);
+
+    if (!p.fov) return undefined;
+
+    const frame = requestAnimationFrame(() => {
+      const activeCamera = cameraRef.current;
+      if (activeCamera instanceof THREE.PerspectiveCamera) {
+        activeCamera.fov = p.fov!;
+        activeCamera.updateProjectionMatrix();
+      }
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [preset, enableOrbit, performanceModeId]);
 
   useFrame((_, delta) => {
     if (orbitEnabled.current && choreography !== "night-orbit") return;
 
     const smooth = 1 - Math.exp(-delta / (CAMERA_BLEND_TAU * 0.32));
     let px = desiredPos.current.x;
-    let py = desiredPos.current.y;
+    const py = desiredPos.current.y;
     let pz = desiredPos.current.z;
 
     if (choreography === "night-orbit" && !orbitEnabled.current) {
@@ -520,7 +554,10 @@ function SceneChoreography({
 }) {
   const rimRef = useRef<THREE.SpotLight>(null);
   const boostRef = useRef(playingBoost);
-  boostRef.current = playingBoost;
+
+  useEffect(() => {
+    boostRef.current = playingBoost;
+  }, [playingBoost]);
   const accent = getPerformanceMode(performanceModeId).lighting.accent;
 
   useFrame((state) => {
@@ -644,11 +681,14 @@ type ShowroomParticlesProps = {
 export function ShowroomParticles({ playingBoost = 0, performanceModeId = "recital" }: ShowroomParticlesProps) {
   const pointsRef = useRef<THREE.Points>(null);
   const boostRef = useRef(playingBoost);
-  boostRef.current = playingBoost;
+
+  useEffect(() => {
+    boostRef.current = playingBoost;
+  }, [playingBoost]);
 
   const accent = getPerformanceMode(performanceModeId).lighting.accent;
 
-  const { positions, velocities } = useMemo(() => {
+  const [{ positions, velocities }] = useState(() => {
     const count = 120;
     const pos = new Float32Array(count * 3);
     const vel = new Float32Array(count);
@@ -659,7 +699,7 @@ export function ShowroomParticles({ playingBoost = 0, performanceModeId = "recit
       vel[i] = 0.2 + Math.random() * 0.6;
     }
     return { positions: pos, velocities: vel };
-  }, []);
+  });
 
   useFrame((_, delta) => {
     if (!pointsRef.current) return;
@@ -942,15 +982,16 @@ export function ShowroomCanvas({
   cameraPreset,
   className = "h-full w-full touch-none",
 }: ShowroomCanvasProps) {
-  const [dpr, setDpr] = useState<[number, number]>([1, 1.5]);
-  const [quality, setQuality] = useState<"high" | "low">("high");
-
-  useEffect(() => {
+  const [dpr] = useState<[number, number]>(() => {
+    if (typeof window === "undefined") return [1, 1.5];
+    return window.innerWidth < 768 ? [1, 1.25] : [1, 1.75];
+  });
+  const [quality] = useState<"high" | "low">(() => {
+    if (typeof window === "undefined") return "high";
     const mobile = window.innerWidth < 768;
     const coarse = window.matchMedia("(pointer: coarse)").matches;
-    setDpr(mobile ? [1, 1.25] : [1, 1.75]);
-    setQuality(mobile || coarse ? "low" : "high");
-  }, []);
+    return mobile || coarse ? "low" : "high";
+  });
 
   return (
     <Canvas
@@ -999,11 +1040,7 @@ export function PianoScene({
   className,
   ...props
 }: PianoSceneProps & { className?: string }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   if (!mounted) return null;
 

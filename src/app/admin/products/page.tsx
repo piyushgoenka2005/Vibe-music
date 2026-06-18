@@ -13,7 +13,6 @@ import {
   EmptyState,
   formatCurrency,
 } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
 import { ROUTES } from "@/lib/routes";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import type { AdminProduct } from "@/types/admin";
@@ -61,7 +60,7 @@ function ProductsContent() {
     },
   });
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["admin-products", search, status, cursor],
     queryFn: () => fetchProducts({ search, status, cursor }),
   });

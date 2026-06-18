@@ -30,7 +30,6 @@ export function useHideOnScroll({
 
   useLayoutEffect(() => {
     if (disabled) {
-      setHidden(false);
       return;
     }
 
@@ -69,7 +68,7 @@ export function useHideOnScroll({
     };
   }, [disabled, minScroll, threshold]);
 
-  return hidden;
+  return disabled ? false : hidden;
 }
 
 export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {

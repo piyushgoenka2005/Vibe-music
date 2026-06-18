@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 interface RevealProps {
   children: ReactNode;
@@ -26,41 +27,35 @@ export default function Reveal({
   immediate = false,
 }: RevealProps) {
   const ref = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(immediate);
-  const [animate, setAnimate] = useState(immediate);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const skipReveal = immediate || prefersReducedMotion;
+  const [revealed, setRevealed] = useState(immediate);
+  const [animate, setAnimate] = useState(!immediate && !prefersReducedMotion);
+
+  const visible = skipReveal || revealed;
 
   useLayoutEffect(() => {
-    if (immediate) {
-      setVisible(true);
-      setAnimate(false);
-      return;
-    }
+    if (skipReveal) return;
 
     const node = ref.current;
     if (!node) return;
 
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    if (reducedMotion) {
-      setVisible(true);
-      setAnimate(false);
-      return;
-    }
-
     const rect = node.getBoundingClientRect();
     const inView = rect.top < window.innerHeight && rect.bottom > 0;
     if (inView) {
-      setAnimate(false);
-      setVisible(true);
+      requestAnimationFrame(() => {
+        setRevealed(true);
+        setAnimate(false);
+      });
       return;
     }
 
-    setAnimate(true);
+    requestAnimationFrame(() => setAnimate(true));
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
-          setVisible(true);
+          setRevealed(true);
           observer.disconnect();
         }
       },
@@ -69,7 +64,7 @@ export default function Reveal({
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [immediate]);
+  }, [skipReveal]);
 
   const classes = [
     "reveal",

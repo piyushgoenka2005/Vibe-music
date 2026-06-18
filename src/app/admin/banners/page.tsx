@@ -11,7 +11,6 @@ import {
   LoadingState,
   StatusBadge,
 } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { HomepageBanner } from "@/types/banner";
 
 const QUERY_KEY = ["admin-banners"] as const;
@@ -66,7 +65,7 @@ function BannersContent() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
       const res = await fetch("/api/admin/banners");

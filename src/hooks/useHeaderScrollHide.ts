@@ -20,7 +20,6 @@ export function useHeaderScrollHide({
 
   useEffect(() => {
     if (!enabled) {
-      setHidden(false);
       return;
     }
 
@@ -63,5 +62,5 @@ export function useHeaderScrollHide({
     return () => window.removeEventListener("scroll", onScroll);
   }, [enabled, paused]);
 
-  return hidden;
+  return enabled ? hidden : false;
 }

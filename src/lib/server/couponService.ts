@@ -256,7 +256,10 @@ export async function updateCoupon(
 ): Promise<Coupon> {
   const db = getAdminFirestore();
   const now = new Date().toISOString();
-  const { id: _id, usedCount: _u, createdAt: _c, ...rest } = patch;
+  const rest = { ...patch };
+  delete rest.id;
+  delete rest.usedCount;
+  delete rest.createdAt;
   if (rest.code) rest.code = rest.code.toUpperCase();
   await db.collection(COLLECTION).doc(id).update({ ...rest, updatedAt: now });
   const doc = await db.collection(COLLECTION).doc(id).get();

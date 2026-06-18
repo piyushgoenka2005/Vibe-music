@@ -6,7 +6,6 @@ import {
   releaseReservedStockForOrder,
   restoreStockForCancelledOrder,
   setProductStock,
-  validateStockAvailability,
 } from "@/lib/server/inventoryRepository";
 import { getAllProducts, getProductById } from "@/services/catalogService";
 import {

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/gp9/lib/utils";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import {
   frameIndexFromProgress,
   nearestFixFrameIndex,
@@ -25,11 +26,7 @@ export function ProductSpinner({ className }: ProductSpinnerProps) {
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadPct, setLoadPct] = useState(0);
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  useEffect(() => {
-    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
+  const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     let cancelled = false;
@@ -58,8 +55,6 @@ export function ProductSpinner({ className }: ProductSpinnerProps) {
       cancelled = true;
     };
   }, []);
-
-  const frameCount = config?.frames.length ?? 0;
 
   const setFromProgress = useCallback(
     (p: number) => {

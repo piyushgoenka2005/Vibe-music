@@ -25,17 +25,15 @@ export default function RevealGroup({
     const node = ref.current;
     if (!node) return;
 
-    let observer: IntersectionObserver;
-
-    const markVisible = () => {
+    const markVisible = (observer: IntersectionObserver) => {
       setVisible(true);
-      observer?.disconnect();
+      observer.disconnect();
     };
 
-    observer = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
-          markVisible();
+          markVisible(observer);
         }
       },
       { threshold: 0.08, rootMargin: "0px 0px -16px 0px" }
@@ -47,7 +45,7 @@ export default function RevealGroup({
     const inView =
       rect.top < window.innerHeight - 32 && rect.bottom > 0;
     if (inView) {
-      markVisible();
+      markVisible(observer);
     }
 
     return () => observer.disconnect();

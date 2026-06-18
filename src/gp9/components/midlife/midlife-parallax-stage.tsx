@@ -105,7 +105,7 @@ export function MidlifeParallaxStage({ children }: MidlifeParallaxStageProps) {
     targetRef.current.tiltY = x * 7;
   }, []);
 
-  const loop = useCallback(() => {
+  const loop = useCallback(function parallaxLoop() {
     if (!activeRef.current) {
       rafRef.current = null;
       return;
@@ -127,7 +127,7 @@ export function MidlifeParallaxStage({ children }: MidlifeParallaxStageProps) {
     current.shadowBlur = lerp(current.shadowBlur, target.shadowBlur, LERP);
 
     applyTransform(current);
-    rafRef.current = requestAnimationFrame(loop);
+    rafRef.current = requestAnimationFrame(parallaxLoop);
   }, [applyTransform, updatePointerTarget, updateScrollTarget]);
 
   const startLoop = useCallback(() => {

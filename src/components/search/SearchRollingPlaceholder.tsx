@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const SEARCH_TERMS = [
   "guitar",
@@ -23,7 +24,8 @@ export default function SearchRollingPlaceholder({
 }: SearchRollingPlaceholderProps) {
   const [visible, setVisible] = useState(true);
   const [termIndex, setTermIndex] = useState(0);
-  const [motionEnabled, setMotionEnabled] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const motionEnabled = !prefersReducedMotion;
 
   useEffect(() => {
     const input = document.getElementById(inputId) as HTMLInputElement | null;
@@ -46,17 +48,14 @@ export default function SearchRollingPlaceholder({
   }, [inputId]);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mediaQuery.matches) return undefined;
-
-    setMotionEnabled(true);
+    if (!motionEnabled) return undefined;
 
     const interval = window.setInterval(() => {
       setTermIndex((current) => (current + 1) % SEARCH_TERMS.length);
     }, CYCLE_MS);
 
     return () => window.clearInterval(interval);
-  }, []);
+  }, [motionEnabled]);
 
   if (!visible) return null;
 

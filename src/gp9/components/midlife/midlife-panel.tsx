@@ -30,14 +30,9 @@ type MidlifePanelProps = {
 };
 
 export function MidlifePanel({ className }: MidlifePanelProps) {
-  const engineRef = useRef<MidlifeAudioEngine | null>(null);
+  const engine = useMemo(() => MidlifeAudioEngine.getInstance(), []);
 
-  const getEngine = useCallback(() => {
-    if (!engineRef.current) {
-      engineRef.current = MidlifeAudioEngine.getInstance();
-    }
-    return engineRef.current;
-  }, []);
+  const getEngine = useCallback(() => engine, [engine]);
 
   const [powered, setPowered] = useState(false);
   const [autoPlay, setAutoPlay] = useState(false);
@@ -70,16 +65,14 @@ export function MidlifePanel({ className }: MidlifePanelProps) {
 
   useEffect(() => {
     if (!powered) return;
-    const engine = getEngine();
     engine.setMasterVolume(knobs.volume);
     engine.setFilterCutoff(knobs.filter);
     engine.setReverbMix(knobs.reverb);
     engine.setModulation(knobs.mod);
-  }, [getEngine, knobs, powered]);
+  }, [engine, knobs, powered]);
 
   useEffect(() => {
     if (!powered) return;
-    const engine = getEngine();
     const allSounds: SoundLayerId[] = [
       "bird", "owl", "forest", "rain", "plane", "steps", "static", "wind",
       "machine", "flame", "water", "city", "night", "leaf",
@@ -88,10 +81,12 @@ export function MidlifePanel({ className }: MidlifePanelProps) {
       engine.toggleSound(sound, activeSoundIds.has(sound));
     });
 
-    if (recording) setStatus("rec");
-    else if (activeSoundIds.size > 0 || engine.isTransportRunning()) setStatus("play");
-    else setStatus("dormant");
-  }, [activeSoundIds, getEngine, powered, recording]);
+    requestAnimationFrame(() => {
+      if (recording) setStatus("rec");
+      else if (activeSoundIds.size > 0 || engine.isTransportRunning()) setStatus("play");
+      else setStatus("dormant");
+    });
+  }, [activeSoundIds, engine, powered, recording]);
 
   useEffect(() => {
     if (!powered || status !== "play") return;

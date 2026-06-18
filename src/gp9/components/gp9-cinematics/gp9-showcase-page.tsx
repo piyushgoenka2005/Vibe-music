@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { CinematicShotSequence } from "@/gp9/components/gp9-cinematics/cinematic-shot-sequence";
 import { useCinematicScroll } from "@/gp9/components/gp9-cinematics/use-cinematic-scroll";
 import {
@@ -12,6 +12,8 @@ import {
 import { getPerformanceMode } from "@/gp9/lib/gp9-runtime";
 import { gp9Path } from "@/gp9/lib/base-path";
 import { cn } from "@/gp9/lib/utils";
+import { useIsClient } from "@/hooks/useIsClient";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const ShowroomCanvas = dynamic(
   () => import("@/gp9/components/gp9-scene").then((m) => m.ShowroomCanvas),
@@ -22,34 +24,21 @@ export default function Gp9ShowcasePage() {
   const layoutRef = useRef<HTMLDivElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
   const copyColRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const mounted = useIsClient();
+  const reducedMotion = usePrefersReducedMotion();
   const [activeShot, setActiveShot] = useState(0);
-  const [demoNotes, setDemoNotes] = useState<Set<number>>(new Set());
 
   const shot = GP9_CINEMATIC_SHOTS[activeShot] ?? GP9_CINEMATIC_SHOTS[0];
   const sceneClass = getPerformanceMode(shot.performanceModeId).sceneClass;
+  const demoNotes = useMemo(() => {
+    if (shot.id === "touch") return new Set(GP9_CINEMATIC_DEMO_NOTES);
+    if (shot.id === "recital" || shot.id === "showcase") return new Set([60, 64, 67]);
+    return new Set<number>();
+  }, [shot.id]);
 
   const handleActiveShot = useCallback((index: number) => {
     setActiveShot(index);
   }, []);
-
-  useEffect(() => {
-    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (shot.id === "touch") {
-      setDemoNotes(new Set(GP9_CINEMATIC_DEMO_NOTES));
-      return;
-    }
-    if (shot.id === "recital" || shot.id === "showcase") {
-      setDemoNotes(new Set([60, 64, 67]));
-      return;
-    }
-    setDemoNotes(new Set());
-  }, [shot.id]);
 
   useCinematicScroll({
     enabled: mounted && !reducedMotion,

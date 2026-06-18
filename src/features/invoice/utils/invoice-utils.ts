@@ -1,4 +1,4 @@
-import type { InvoiceSafeOrder, InvoiceStatusBadge } from "@/features/invoice/types";
+import type { InvoiceStatusBadge } from "@/features/invoice/types";
 import type { GSTInvoiceData } from "@/lib/gstCalculator";
 import type { Order, PaymentStatus } from "@/types/order";
 import { formatInvoiceDate, formatInvoiceDateTime } from "@/features/invoice/utils/format";

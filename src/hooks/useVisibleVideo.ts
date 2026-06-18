@@ -81,9 +81,6 @@ export function useContinuousVideo(
   videoRef: RefObject<HTMLVideoElement | null>,
   { forcePaused = false, playDelayMs = 0 }: UseContinuousVideoOptions = {}
 ) {
-  const forcePausedRef = useRef(forcePaused);
-  forcePausedRef.current = forcePaused;
-
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -93,14 +90,14 @@ export function useContinuousVideo(
     let startTimer = 0;
 
     const ensurePlaying = () => {
-      if (cancelled || forcePausedRef.current || !videoRef.current) return;
+      if (cancelled || forcePaused || !videoRef.current) return;
       if (videoRef.current.paused) {
         playMuted(videoRef.current);
       }
     };
 
     const onPause = () => {
-      if (!forcePausedRef.current && !cancelled) {
+      if (!forcePaused && !cancelled) {
         window.requestAnimationFrame(ensurePlaying);
       }
     };
@@ -127,7 +124,7 @@ export function useContinuousVideo(
       video.removeEventListener("stalled", onMediaReady);
       video.pause();
     };
-  }, [videoRef, playDelayMs]);
+  }, [videoRef, playDelayMs, forcePaused]);
 
   useEffect(() => {
     const video = videoRef.current;
