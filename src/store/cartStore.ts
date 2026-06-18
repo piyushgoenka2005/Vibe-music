@@ -2,12 +2,15 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useToastStore } from "@/store/toastStore";
 import { getCartLineId } from "@/lib/variants";
-import type { Product, ProductVariant } from "@/types/product";
 import {
-  DEFAULT_GST_RATE,
-  getDefaultGstRateForCategory,
-  type GSTRate,
-} from "@/lib/gstCalculator";
+  calculateCouponDiscountAmount,
+  getCouponEligibilityError,
+} from "@/lib/coupons/couponMath";
+import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
+import { validateCouponCode } from "@/services/coupon.service";
+import type { AppliedCouponSnapshot } from "@/types/coupon";
+import type { Product, ProductVariant } from "@/types/product";
+import { getDefaultGstRateForCategory, type GSTRate } from "@/lib/gstCalculator";
 
 export interface CartItem {
   lineId: string;
@@ -25,17 +28,11 @@ export interface CartItem {
   quantity: number;
 }
 
-const VALID_COUPONS: Record<string, { label: string; percent: number }> = {
-  SAVE10: { label: "10% off", percent: 10 },
-  SWEET15: { label: "15% off", percent: 15 },
-  GEAR20: { label: "20% off", percent: 20 },
-};
-
 interface CartState {
   items: CartItem[];
   drawerOpen: boolean;
   couponCode: string | null;
-  couponDiscount: number;
+  appliedCoupon: AppliedCouponSnapshot | null;
   isApplyingCoupon: boolean;
   isUpdating: boolean;
   addItem: (product: Product, quantity?: number, variant?: ProductVariant) => void;
@@ -81,13 +78,33 @@ function productToCartItem(
   };
 }
 
+function resolveCartDiscount(
+  appliedCoupon: AppliedCouponSnapshot | null,
+  subtotal: number
+): number {
+  if (!appliedCoupon || subtotal <= 0) return 0;
+
+  const eligibilityError = getCouponEligibilityError(
+    {
+      isActive: true,
+      usedCount: 0,
+      minOrderAmount: appliedCoupon.minOrderAmount,
+    },
+    subtotal
+  );
+
+  if (eligibilityError) return 0;
+
+  return calculateCouponDiscountAmount(subtotal, appliedCoupon);
+}
+
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
       drawerOpen: false,
       couponCode: null,
-      couponDiscount: 0,
+      appliedCoupon: null,
       isApplyingCoupon: false,
       isUpdating: false,
 
@@ -145,7 +162,7 @@ export const useCartStore = create<CartState>()(
       },
 
       clearCart: () => {
-        set({ items: [], couponCode: null, couponDiscount: 0 });
+        set({ items: [], couponCode: null, appliedCoupon: null });
         useToastStore.getState().show("Cart cleared", "info");
       },
 
@@ -158,10 +175,8 @@ export const useCartStore = create<CartState>()(
           0
         ),
 
-      discount: () => {
-        const sub = get().subtotal();
-        return Math.round(sub * (get().couponDiscount / 100) * 100) / 100;
-      },
+      discount: () =>
+        resolveCartDiscount(get().appliedCoupon, get().subtotal()),
 
       total: () => {
         const sub = get().subtotal();
@@ -174,29 +189,42 @@ export const useCartStore = create<CartState>()(
 
       applyCoupon: async (code) => {
         const normalized = code.trim().toUpperCase();
-        set({ isApplyingCoupon: true });
-        await new Promise((r) => setTimeout(r, 600));
-        const coupon = VALID_COUPONS[normalized];
-        if (!coupon) {
-          set({ isApplyingCoupon: false });
-          useToastStore
-            .getState()
-            .show("Invalid coupon code", "error");
+        if (!normalized) return false;
+
+        const subtotal = get().subtotal();
+        if (subtotal <= 0) {
+          useToastStore.getState().show("Add items before applying a coupon", "error");
           return false;
         }
-        set({
-          couponCode: normalized,
-          couponDiscount: coupon.percent,
-          isApplyingCoupon: false,
-        });
-        useToastStore
-          .getState()
-          .show(`Coupon applied: ${coupon.label}`);
-        return true;
+
+        set({ isApplyingCoupon: true });
+        try {
+          const result = await validateCouponCode(normalized, subtotal);
+          if (!result.valid || !result.coupon) {
+            useToastStore
+              .getState()
+              .show(result.error ?? "Invalid coupon code", "error");
+            return false;
+          }
+
+          set({
+            couponCode: result.coupon.code,
+            appliedCoupon: result.coupon,
+          });
+          useToastStore
+            .getState()
+            .show(`Coupon applied: ${formatCouponLabel(result.coupon)}`);
+          return true;
+        } catch {
+          useToastStore.getState().show("Unable to validate coupon", "error");
+          return false;
+        } finally {
+          set({ isApplyingCoupon: false });
+        }
       },
 
       removeCoupon: () => {
-        set({ couponCode: null, couponDiscount: 0 });
+        set({ couponCode: null, appliedCoupon: null });
         useToastStore.getState().show("Coupon removed", "info");
       },
 
@@ -207,22 +235,37 @@ export const useCartStore = create<CartState>()(
       partialize: (state) => ({
         items: state.items,
         couponCode: state.couponCode,
-        couponDiscount: state.couponDiscount,
+        appliedCoupon: state.appliedCoupon,
       }),
-      migrate: (persisted: unknown) => {
-        const state = persisted as { items?: CartItem[] };
-        if (!state?.items) return persisted as CartState;
-        return {
-          ...state,
-          items: state.items.map((item) => ({
+      migrate: (persisted: unknown, version) => {
+        const state = persisted as {
+          items?: CartItem[];
+          couponCode?: string | null;
+          couponDiscount?: number;
+          appliedCoupon?: AppliedCouponSnapshot | null;
+        };
+
+        const base = {
+          items: state?.items?.map((item) => ({
             ...item,
             lineId:
-              item.lineId ??
-              getCartLineId(item.productId, item.variantId),
-          })),
+              item.lineId ?? getCartLineId(item.productId, item.variantId),
+          })) ?? [],
+          couponCode: state?.couponCode ?? null,
+          appliedCoupon: state?.appliedCoupon ?? null,
         };
+
+        if (version < 3) {
+          return {
+            ...base,
+            couponCode: null,
+            appliedCoupon: null,
+          };
+        }
+
+        return base;
       },
-      version: 2,
+      version: 3,
     }
   )
 );

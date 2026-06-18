@@ -12,6 +12,7 @@ import {
   type GSTInvoiceData,
 } from "@/lib/gstCalculator";
 import type { GSTRate } from "@/lib/gstCalculator";
+import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
 import SwipeToPayButton from "@/components/checkout/SwipeToPayButton";
 import type { PaymentMethod } from "@/types/order";
@@ -122,7 +123,7 @@ export default function CheckoutSummary({
   );
 
   const couponCode = useCartStore((s) => s.couponCode);
-  const couponPercent = useCartStore((s) => s.couponDiscount);
+  const appliedCoupon = useCartStore((s) => s.appliedCoupon);
   const isApplyingCoupon = useCartStore((s) => s.isApplyingCoupon);
   const applyCoupon = useCartStore((s) => s.applyCoupon);
   const removeCoupon = useCartStore((s) => s.removeCoupon);
@@ -207,7 +208,8 @@ export default function CheckoutSummary({
           {couponCode ? (
             <div className="checkout-summary__promo-applied">
               <span>
-                <strong>{couponCode}</strong> ({couponPercent}% off)
+                <strong>{couponCode}</strong>
+                {appliedCoupon ? ` (${formatCouponLabel(appliedCoupon)})` : null}
               </span>
               <button type="button" onClick={removeCoupon}>
                 Remove
@@ -235,7 +237,7 @@ export default function CheckoutSummary({
           )}
           {!couponCode ? (
             <p className="checkout-summary__promo-hint">
-              Try SAVE10, SWEET15, or GEAR20
+              Enter a valid promo code from your offer email or checkout page.
             </p>
           ) : null}
         </div>

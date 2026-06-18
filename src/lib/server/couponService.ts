@@ -6,6 +6,8 @@ import {
   tryFirestoreFast,
 } from "@/lib/server/firestoreErrors";
 import type { Coupon } from "@/types/admin";
+import type { AppliedCouponSnapshot, CouponValidationResult } from "@/types/coupon";
+import { validateCouponForSubtotal } from "@/lib/coupons/couponMath";
 
 const COLLECTION = "coupons";
 
@@ -204,35 +206,30 @@ export async function getCouponByCode(code: string): Promise<Coupon | null> {
 export async function validateCoupon(
   code: string,
   subtotal: number
-): Promise<{ valid: boolean; discount: number; coupon?: Coupon; error?: string }> {
+): Promise<CouponValidationResult> {
   const coupon = await getCouponByCode(code);
-  if (!coupon) return { valid: false, discount: 0, error: "Invalid coupon code" };
-  if (!coupon.isActive) return { valid: false, discount: 0, error: "Coupon is inactive" };
-
-  const now = new Date();
-  if (coupon.startsAt && new Date(coupon.startsAt) > now) {
-    return { valid: false, discount: 0, error: "Coupon not yet active" };
-  }
-  if (coupon.expiresAt && new Date(coupon.expiresAt) < now) {
-    return { valid: false, discount: 0, error: "Coupon has expired" };
-  }
-  if (coupon.maxUses != null && coupon.usedCount >= coupon.maxUses) {
-    return { valid: false, discount: 0, error: "Coupon usage limit reached" };
-  }
-  if (coupon.minOrderAmount != null && subtotal < coupon.minOrderAmount) {
-    return {
-      valid: false,
-      discount: 0,
-      error: `Minimum order amount is ₹${coupon.minOrderAmount}`,
-    };
+  if (!coupon) {
+    return { valid: false, discount: 0, error: "Invalid coupon code" };
   }
 
-  const discount =
-    coupon.type === "percentage"
-      ? Math.round(subtotal * (coupon.value / 100) * 100) / 100
-      : Math.min(coupon.value, subtotal);
+  const outcome = validateCouponForSubtotal(coupon, subtotal);
+  if (!outcome.valid) {
+    return { valid: false, discount: 0, error: outcome.error };
+  }
 
-  return { valid: true, discount, coupon };
+  const snapshot: AppliedCouponSnapshot = {
+    code: coupon.code,
+    label: coupon.label,
+    type: coupon.type,
+    value: coupon.value,
+    minOrderAmount: coupon.minOrderAmount,
+  };
+
+  return {
+    valid: true,
+    discount: outcome.discount,
+    coupon: snapshot,
+  };
 }
 
 export async function createCoupon(

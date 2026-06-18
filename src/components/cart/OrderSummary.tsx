@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrency } from "@/utils/currency";
+import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
 import { useState } from "react";
 
@@ -24,7 +25,7 @@ export default function OrderSummary({
   const discount = useCartStore((s) => s.discount());
   const total = useCartStore((s) => s.total());
   const couponCode = useCartStore((s) => s.couponCode);
-  const couponDiscount = useCartStore((s) => s.couponDiscount);
+  const appliedCoupon = useCartStore((s) => s.appliedCoupon);
   const isApplyingCoupon = useCartStore((s) => s.isApplyingCoupon);
   const applyCoupon = useCartStore((s) => s.applyCoupon);
   const removeCoupon = useCartStore((s) => s.removeCoupon);
@@ -47,7 +48,8 @@ export default function OrderSummary({
         <div className="cart-coupon">
           {couponCode ? (
             <div style={{ flex: 1, fontSize: 14 }}>
-              <strong>{couponCode}</strong> ({couponDiscount}% off){" "}
+              <strong>{couponCode}</strong>
+              {appliedCoupon ? ` (${formatCouponLabel(appliedCoupon)})` : null}{" "}
               <button
                 type="button"
                 className="cart-item__remove"
