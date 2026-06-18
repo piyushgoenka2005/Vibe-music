@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
 import Reveal from "@/components/layout/Reveal";
+import { resolveLinkHref } from "@/lib/routes";
 
 const HEADLINE_ID = "outletStoryHeadline";
 const SUPPORTING_COPY_ID = "outletStorySupportingCopy";
-const OUTLET_DEALS_HREF = "/outlet-deals";
+const OUTLET_DEALS_HREF = resolveLinkHref("/outlet-deals");
 
 export default function OutletStorySection() {
   return (
