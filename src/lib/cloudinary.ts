@@ -93,3 +93,8 @@ export function bannerUploadFolder(): string {
 export function blogUploadFolder(): string {
   return "blog/covers";
 }
+
+export function reviewUploadFolder(productId: string): string {
+  const safe = productId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+  return `reviews/${safe || "general"}`;
+}

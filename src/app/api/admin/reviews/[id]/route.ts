@@ -11,7 +11,10 @@ export async function PUT(request: Request, context: RouteContext) {
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminReviewStatusSchema.parse(body);
-    const review = await updateReviewStatus(id, parsed.status, parsed.adminReply);
+    const review = await updateReviewStatus(id, parsed.status, {
+      adminReply: parsed.adminReply,
+      rejectionReason: parsed.rejectionReason,
+    });
     return NextResponse.json({ review });
   } catch (error) {
     return adminErrorResponse(error);

@@ -42,6 +42,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /user_product_reviews/{lockId} {
+      allow read, write: if false;
+    }
+
+    match /review_votes/{voteId} {
+      allow read, write: if false;
+    }
+
+    match /product_review_stats/{productId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /inventory_adjustments/{adjustmentId} {
       allow read, write: if false;
     }

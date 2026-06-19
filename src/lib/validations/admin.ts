@@ -94,10 +94,7 @@ export const adminInventoryAdjustSchema = z.object({
   reason: z.string().min(1).max(500),
 });
 
-export const adminReviewStatusSchema = z.object({
-  status: z.enum(["pending", "approved", "rejected"]),
-  adminReply: z.string().optional(),
-});
+export { adminReviewStatusSchema } from "@/lib/validations/review";
 
 export const adminBannerSchema = z.object({
   title: z.string().min(1).max(200),
