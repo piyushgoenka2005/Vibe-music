@@ -129,6 +129,9 @@ h6 {
 .auth-page__title,
 .checkout-page__title,
 .cart-page__title,
+.checkout-panel__title,
+.checkout-summary__title,
+.checkout-confirm__title,
 .account-page__title,
 .blog-post__title,
 .blog-index__title {

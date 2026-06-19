@@ -23,6 +23,7 @@ import "@/styles/service-status-carousel.css";
 import "@/styles/why-shop-section.css";
 import "@/styles/browse-category-cards.css";
 import "@/styles/gear-stories.css";
+import "@/styles/hero-marquee.css";
 import "@/styles/homepage-sections.css";
 import "@/styles/premium-product-carousel.css";
 import "@/styles/storefront-pages.css";

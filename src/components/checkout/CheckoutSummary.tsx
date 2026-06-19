@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lock } from "lucide-react";
+import { Lock, Package, Tag } from "lucide-react";
 import { formatCurrencyPrecise } from "@/utils/currency";
 import {
   calculateGST,
@@ -15,6 +15,7 @@ import type { GSTRate } from "@/lib/gstCalculator";
 import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
 import SwipeToPayButton from "@/components/checkout/SwipeToPayButton";
+import { GlassFilter } from "@/components/ui/liquid-glass";
 import type { PaymentMethod } from "@/types/order";
 
 export interface CheckoutSummaryItem {
@@ -149,15 +150,25 @@ export default function CheckoutSummary({
 
   return (
     <aside className={`checkout-summary ${className}`.trim()}>
-      <div className="checkout-summary__head">
-        <h3 className="checkout-summary__title">Order Summary</h3>
-        <span className="checkout-summary__badge">
-          {itemCount} {itemCount === 1 ? "item" : "items"}
-        </span>
+      <GlassFilter />
+      <div className="checkout-summary__crystal" aria-hidden />
+      <div className="checkout-summary__header">
+        <div className="checkout-summary__head">
+          <div className="checkout-summary__title-wrap">
+            <span className="checkout-summary__title-icon" aria-hidden>
+              <Package size={17} strokeWidth={2.25} />
+            </span>
+            <h3 className="checkout-summary__title">Order Summary</h3>
+          </div>
+          <span className="checkout-summary__badge">
+            {itemCount} {itemCount === 1 ? "item" : "items"}
+          </span>
+        </div>
       </div>
 
+      <div className="checkout-summary__body">
       {showLineItems ? (
-        <ul className="checkout-summary__items">
+        <ul className="checkout-summary__items" aria-label="Order items">
           {lineItems.map((item, index) => {
             const key =
               item.lineId ?? `${item.productId}-${item.variantId ?? "base"}-${index}`;
@@ -205,6 +216,10 @@ export default function CheckoutSummary({
 
       {showPromo ? (
         <div className="checkout-summary__promo">
+          <p className="checkout-summary__promo-label">
+            <Tag size={13} strokeWidth={2.25} aria-hidden />
+            Promo code
+          </p>
           {couponCode ? (
             <div className="checkout-summary__promo-applied">
               <span>
@@ -244,6 +259,7 @@ export default function CheckoutSummary({
       ) : null}
 
       <div className="checkout-summary__totals">
+        <p className="checkout-summary__totals-label">Price breakdown</p>
         <SummaryRow
           label="Subtotal"
           value={formatCurrencyPrecise(invoice.subtotal)}
@@ -311,6 +327,7 @@ export default function CheckoutSummary({
         <Lock size={12} aria-hidden />
         Secure checkout in INR (₹) · UPI · Cards · Net Banking · COD
       </p>
+      </div>
     </aside>
   );
 }

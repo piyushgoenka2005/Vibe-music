@@ -90,6 +90,9 @@ export default async function BlogPostPage({ params }: PageProps) {
   if (!post) notFound();
 
   const html = renderBlogContentHtml(post.content);
+  const plainText = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const wordCount = plainText ? plainText.split(" ").length : 0;
+  const readingMinutes = Math.max(1, Math.ceil(wordCount / 200));
   const publishedLabel = post.publishedAt
     ? new Date(post.publishedAt).toLocaleDateString("en-IN", {
         day: "numeric",
@@ -110,47 +113,84 @@ export default async function BlogPostPage({ params }: PageProps) {
   });
 
   return (
-    <main className="blog-page blog-page--article" id="main-content">
+    <main
+      className="storefront-page blog-page blog-page--article"
+      id="main-content"
+    >
       <article className="blog-article">
-        <div className="blog-page__inner blog-article__inner">
-          <Link href="/blog" className="blog-article__back">
-            ← Back to blog
-          </Link>
+        <div className="blog-article__hero">
+          <div className="blog-page__inner blog-article__inner">
+            <Link href="/blog" className="blog-article__back">
+              ← Back to blog
+            </Link>
 
-          <header className="blog-article__header">
-            {post.tags.length > 0 ? (
-              <div className="blog-card__tags">
-                {post.tags.map((tag) => (
-                  <span key={tag} className="blog-card__tag">
-                    {tag}
-                  </span>
-                ))}
+            <header className="blog-article__header">
+              {post.tags.length > 0 ? (
+                <div className="blog-card__tags blog-article__tags">
+                  {post.tags.map((tag) => (
+                    <span key={tag} className="blog-card__tag">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              <p className="blog-article__eyebrow">Gear guide</p>
+              <h1 className="blog-article__title blog-post__title">
+                {post.title}
+              </h1>
+              <div className="blog-article__meta-row">
+                <p className="blog-article__meta">
+                  By <strong>{post.authorName}</strong>
+                  {publishedLabel ? ` · ${publishedLabel}` : ""}
+                </p>
+                <span className="blog-article__reading">
+                  {readingMinutes} min read
+                </span>
               </div>
+            </header>
+
+            {post.coverImage ? (
+              <figure className="blog-article__cover-wrap">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={optimizeImageUrl(post.coverImage, "blogCover")}
+                  alt=""
+                  className="blog-article__cover"
+                />
+              </figure>
             ) : null}
-            <h1 className="blog-article__title">{post.title}</h1>
-            <p className="blog-article__meta">
-              By {post.authorName}
-              {publishedLabel ? ` · ${publishedLabel}` : ""}
-            </p>
-          </header>
 
-          {post.coverImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={optimizeImageUrl(post.coverImage, "blogCover")}
-              alt=""
-              className="blog-article__cover"
+            {post.excerpt ? (
+              <p className="blog-article__lead">{post.excerpt}</p>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="blog-page__inner blog-article__inner">
+          <div className="blog-article__prose">
+            <div
+              className="blog-article__content"
+              dangerouslySetInnerHTML={{ __html: html }}
             />
-          ) : null}
+          </div>
 
-          {post.excerpt ? (
-            <p className="blog-article__excerpt">{post.excerpt}</p>
-          ) : null}
-
-          <div
-            className="blog-article__content"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+          <footer className="blog-article__footer">
+            <p className="blog-article__footer-copy">
+              Ready to build your rig? Explore studio gear curated by the Vibe
+              Music team.
+            </p>
+            <div className="blog-article__footer-actions">
+              <Link
+                href="/category/studio-recording"
+                className="blog-article__cta blog-article__cta--primary"
+              >
+                Shop studio gear
+              </Link>
+              <Link href="/blog" className="blog-article__cta">
+                More articles
+              </Link>
+            </div>
+          </footer>
         </div>
       </article>
 

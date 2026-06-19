@@ -1,7 +1,9 @@
 import type {
   CreateOrderPayload,
   CreateRazorpayOrderResponse,
+  DemoPaymentResponse,
   Order,
+  ResumePaymentResponse,
   VerifyPaymentPayload,
   VerifyPaymentResponse,
 } from "@/types/order";
@@ -60,6 +62,30 @@ export async function releaseOrderReservation(
     const data = (await response.json()) as { error?: string };
     throw new Error(data.error ?? "Failed to release reservation");
   }
+}
+
+export async function completeDemoPayment(
+  orderId: string,
+  email: string
+): Promise<DemoPaymentResponse> {
+  const response = await fetch("/api/payment/demo", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ orderId, email }),
+  });
+  return parseJson<DemoPaymentResponse>(response);
+}
+
+export async function resumePayment(
+  orderId: string,
+  email: string
+): Promise<ResumePaymentResponse> {
+  const response = await fetch(`/api/orders/${orderId}/resume-payment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return parseJson<ResumePaymentResponse>(response);
 }
 
 export async function fetchOrder(orderId: string): Promise<Order> {

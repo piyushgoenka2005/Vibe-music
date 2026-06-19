@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       success: true,
       orderId: order.id,
       paymentStatus: order.paymentStatus,
+      order,
     });
   } catch (error) {
     const message = formatCheckoutError(error);

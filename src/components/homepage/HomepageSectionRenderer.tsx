@@ -3,6 +3,7 @@ import HomepageCategoryGridSection from "@/components/homepage/HomepageCategoryG
 import HomepageDealsSection from "@/components/homepage/HomepageDealsSection";
 import HomepageProductCarouselSection from "@/components/homepage/HomepageProductCarouselSection";
 import HomepageProductGridSection from "@/components/homepage/HomepageProductGridSection";
+import HeroMarqueeSection from "@/components/home/HeroMarqueeSection";
 import type { ResolvedHomepageSection } from "@/types/homepage";
 
 interface HomepageSectionRendererProps {
@@ -22,7 +23,12 @@ export default function HomepageSectionRenderer({
     case "deals_slider":
       return <HomepageDealsSection section={section} />;
     case "brand_strip":
-      return <HomepageBrandStripSection section={section} />;
+      return (
+        <>
+          <HeroMarqueeSection />
+          <HomepageBrandStripSection section={section} />
+        </>
+      );
     default:
       return null;
   }

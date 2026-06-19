@@ -6,7 +6,7 @@
 }
 
 .why-shop__inner {
-  max-width: 1320px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -44,10 +44,10 @@
   justify-content: flex-start;
   text-align: center;
   height: 100%;
-  min-height: 250px;
-  max-height: 290px;
-  padding: 32px;
-  border-radius: 24px;
+  min-height: 228px;
+  max-height: 268px;
+  padding: 22px 20px 24px;
+  border-radius: 20px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
@@ -78,8 +78,8 @@
 }
 
 .why-shop__icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   color: #0f172a;
   flex-shrink: 0;
   transition: color 300ms ease;
@@ -100,8 +100,8 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -117,9 +117,9 @@
 }
 
 .why-shop__card-title {
-  margin: 20px 0 12px;
+  margin: 16px 0 8px;
   width: 100%;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.25;
@@ -129,9 +129,10 @@
 
 .why-shop__card-desc {
   margin: 0;
-  width: 85%;
-  max-width: 85%;
-  font-size: 15px;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 4px;
+  font-size: 14px;
   line-height: 1.7;
   color: #64748b;
   transition: color 300ms ease;
@@ -150,7 +151,7 @@
 
   .why-shop__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 32px;
+    gap: 24px;
   }
 }
 
@@ -163,15 +164,15 @@
 
   .why-shop__grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 32px;
+    gap: 24px;
   }
 }
 
 @media (max-width: 639px) {
   .why-shop__card {
-    min-height: 220px;
+    min-height: 200px;
     max-height: none;
-    padding: 24px 20px;
+    padding: 20px 18px 22px;
   }
 }
 

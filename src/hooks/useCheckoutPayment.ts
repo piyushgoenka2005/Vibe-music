@@ -8,6 +8,7 @@ import { useRazorpay } from "@/hooks/useRazorpay";
 import {
   createCodOrder,
   createPaymentOrder,
+  completeDemoPayment,
   releaseOrderReservation,
   verifyPayment,
 } from "@/services/orderService";
@@ -98,10 +99,28 @@ export function useCheckoutPayment({
       const orderResponse = await createPaymentOrder(payload);
       pendingOrderId = orderResponse.orderId;
 
+      if (orderResponse.demoMode) {
+        const demo = await completeDemoPayment(orderResponse.orderId, email);
+        if (demo.order) {
+          cacheOrderForConfirmation(demo.order);
+        }
+        clearCart();
+        router.replace(demo.redirectUrl);
+        return;
+      }
+
       if (!orderResponse.keyId?.startsWith("rzp_")) {
         throw new Error(
           "Online payments are not configured. Add Razorpay keys to .env.local and restart the dev server."
         );
+      }
+
+      if (
+        !orderResponse.razorpayOrderId ||
+        orderResponse.amount == null ||
+        !orderResponse.currency
+      ) {
+        throw new Error("Unable to start Razorpay checkout.");
       }
 
       const result = await openCheckout({

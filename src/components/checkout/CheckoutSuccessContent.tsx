@@ -16,6 +16,7 @@ import type { Order } from "@/types/order";
 import "@/components/checkout/checkout.css";
 import { InvoiceToolbar } from "@/features/invoice/ui/InvoiceToolbar";
 import { InvoicePreviewCard } from "@/features/invoice/ui/InvoicePreviewCard";
+import { InvoiceEmbed } from "@/components/checkout/InvoiceEmbed";
 
 export default function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
@@ -158,13 +159,7 @@ export default function CheckoutSuccessContent() {
         />
 
         {canShowInvoice ? (
-          <div className="invoice-frame-wrap">
-            <iframe
-              title="Tax invoice"
-              className="invoice-frame"
-              src={invoiceFrameSrc}
-            />
-          </div>
+          <InvoiceEmbed src={invoiceFrameSrc} title="Tax invoice" />
         ) : (
           <p className="checkout-invoice__muted">
             Your invoice is being prepared. Refresh this page in a moment or

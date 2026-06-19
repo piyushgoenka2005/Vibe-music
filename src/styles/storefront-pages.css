@@ -393,8 +393,7 @@
   padding: 1.5rem 1.25rem 4rem;
 }
 
-.storefront-page .checkout-panel,
-.storefront-page .checkout-summary {
+.storefront-page .checkout-panel {
   border-radius: var(--radius-lg);
   border-color: var(--border-default);
   box-shadow: var(--shadow-card);

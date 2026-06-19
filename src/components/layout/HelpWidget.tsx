@@ -2,7 +2,19 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { MessageCircle, Phone, X } from "lucide-react";
+import {
+  ChevronRight,
+  Clock,
+  Gift,
+  Headphones,
+  MessageCircle,
+  Package,
+  Phone,
+  RotateCcw,
+  ShieldAlert,
+  Truck,
+  X,
+} from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 import {
@@ -12,33 +24,13 @@ import {
   HELP_WIDGET_LINKS,
 } from "@/data/helpWidget";
 
-function HelpFabIcon() {
-  return (
-    <svg
-      aria-hidden
-      className="help-widget__fab-icon"
-      fill="none"
-      height="30"
-      viewBox="0 0 30 30"
-      width="30"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M7.5 8.25h15a2.25 2.25 0 0 1 2.25 2.25v8.25a2.25 2.25 0 0 1-2.25 2.25H15.75L11 23.25V8.25h-3.5Z"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="1.8"
-      />
-      <path
-        d="M14.1 12.4c.55-1.05 1.55-1.65 2.85-1.65 1.55 0 2.75 1.05 2.75 2.55 0 1.35-.85 2.05-2.1 2.65-1 .5-1.35.85-1.35 1.55"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.8"
-      />
-      <circle cx="15.15" cy="19.35" fill="currentColor" r="1" />
-    </svg>
-  );
-}
+const LINK_ICONS = {
+  package: Package,
+  rotate: RotateCcw,
+  truck: Truck,
+  gift: Gift,
+  shield: ShieldAlert,
+} as const;
 
 export default function HelpWidget() {
   const panelId = useId();
@@ -99,97 +91,122 @@ export default function HelpWidget() {
           role="dialog"
         >
           <header className="help-widget__header">
-            <h2 className="help-widget__title" id={`${panelId}-title`}>
-              {BRAND.name} Support
-            </h2>
+            <div className="help-widget__header-copy">
+              <p className="help-widget__eyebrow">{BRAND.supportRole}</p>
+              <h2 className="help-widget__title" id={`${panelId}-title`}>
+                How can we help?
+              </h2>
+            </div>
             <button
               aria-label="Close support panel"
               className="help-widget__close"
               onClick={close}
               type="button"
             >
-              <X aria-hidden size={20} strokeWidth={2.25} />
+              <X aria-hidden size={18} strokeWidth={2.25} />
             </button>
           </header>
 
-          <div className="help-widget__intro">
-            <div aria-hidden className="help-widget__avatar">
-              <MessageCircle size={28} strokeWidth={1.75} />
-            </div>
-            <p className="help-widget__intro-copy">{HELP_WIDGET_INTRO}</p>
-          </div>
+          <div className="help-widget__body">
+            <p className="help-widget__intro">{HELP_WIDGET_INTRO}</p>
 
-          <nav aria-label="Support links" className="help-widget__links">
-            {HELP_WIDGET_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                className="help-widget__link"
-                href={link.href}
+            <nav aria-label="Support links" className="help-widget__links">
+              {HELP_WIDGET_LINKS.map((link) => {
+                const Icon = LINK_ICONS[link.icon];
+                return (
+                  <Link
+                    key={link.href}
+                    className="help-widget__link"
+                    href={link.href}
+                    onClick={close}
+                  >
+                    <span className="help-widget__link-icon" aria-hidden>
+                      <Icon size={16} strokeWidth={2} />
+                    </span>
+                    <span className="help-widget__link-label">{link.label}</span>
+                    <ChevronRight
+                      aria-hidden
+                      className="help-widget__link-chevron"
+                      size={16}
+                      strokeWidth={2}
+                    />
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="help-widget__actions">
+              <a
+                className="help-widget__action-btn help-widget__action-btn--primary"
+                href={`mailto:${BRAND.email}?subject=Live%20Chat%20Support`}
                 onClick={close}
               >
-                {link.label}
+                <MessageCircle aria-hidden size={18} strokeWidth={2} />
+                Chat with an advisor
+              </a>
+              <a
+                className="help-widget__action-btn help-widget__action-btn--secondary"
+                href={BRAND.phoneTel}
+                onClick={close}
+              >
+                <Phone aria-hidden size={18} strokeWidth={2} />
+                {BRAND.phoneDisplay}
+              </a>
+            </div>
+
+            <div className="help-widget__hours">
+              <div className="help-widget__hours-head">
+                <Clock aria-hidden size={14} strokeWidth={2} />
+                <span>Support hours</span>
+              </div>
+              <ul className="help-widget__hours-list">
+                {HELP_WIDGET_HOURS.map((slot) => (
+                  <li key={slot.day}>
+                    <span>{slot.day}</span>
+                    <span>{slot.time}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <p className="help-widget__disclaimer">
+              {HELP_WIDGET_DISCLAIMER}{" "}
+              <Link
+                className="help-widget__disclaimer-link"
+                href={`${ROUTES.searchResults}?q=privacy`}
+                onClick={close}
+              >
+                Privacy Policy
               </Link>
-            ))}
-          </nav>
-
-          <div className="help-widget__actions">
-            <a
-              className="help-widget__action-btn"
-              href={`mailto:${BRAND.email}?subject=Live%20Chat%20Support`}
-              onClick={close}
-            >
-              <MessageCircle aria-hidden size={20} strokeWidth={2} />
-              Live Chat
-            </a>
-            <a
-              className="help-widget__action-btn"
-              href={BRAND.phoneTel}
-              onClick={close}
-            >
-              <Phone aria-hidden size={20} strokeWidth={2} />
-              {BRAND.phoneDisplay}
-            </a>
+            </p>
           </div>
-
-          <div className="help-widget__hours">
-            {HELP_WIDGET_HOURS.map((line) => (
-              <p key={line}>{line}</p>
-            ))}
-          </div>
-
-          <p className="help-widget__disclaimer">
-            {HELP_WIDGET_DISCLAIMER}{" "}
-            <Link
-              className="help-widget__disclaimer-link"
-              href={`${ROUTES.searchResults}?q=privacy`}
-              onClick={close}
-            >
-              Privacy Policy
-            </Link>
-          </p>
         </div>
       ) : null}
 
       <button
         aria-controls={open ? panelId : undefined}
         aria-expanded={open}
-        aria-label={open ? "Close help" : "Open help"}
+        aria-label={open ? "Close support" : "Open support"}
         className={`help-widget__trigger${open ? " help-widget__trigger--open" : ""}`}
         onClick={toggle}
         type="button"
       >
-        <span className="help-widget__circle">
-          <HelpFabIcon />
-          <span className="help-widget__label">Help</span>
-          {loading ? (
-            <span
-              aria-label="Loading - Help"
-              aria-live="polite"
-              className="help-widget__loading"
-              role="alert"
-            />
-          ) : null}
-        </span>
+        {open ? (
+          <X aria-hidden className="help-widget__trigger-icon" size={22} strokeWidth={2.25} />
+        ) : (
+          <>
+            <Headphones aria-hidden className="help-widget__trigger-icon" size={20} strokeWidth={2} />
+            <span className="help-widget__trigger-label">Support</span>
+          </>
+        )}
+        {loading ? (
+          <span
+            aria-label="Loading support"
+            aria-live="polite"
+            className="help-widget__loading"
+            role="alert"
+          />
+        ) : null}
       </button>
     </div>
   );

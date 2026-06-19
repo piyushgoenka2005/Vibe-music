@@ -17,7 +17,8 @@ function SplashCursor({
   BACK_COLOR = { r: 0.5, g: 0, b: 0 },
   TRANSPARENT = true,
   RAINBOW_MODE = false,
-  COLOR = '#1253ED'
+  COLOR = '#1253ED',
+  COLOR_INTENSITY = 0.15
 }) {
   const canvasRef = useRef(null);
   const animationFrameId = useRef(null);
@@ -59,7 +60,8 @@ function SplashCursor({
       BACK_COLOR,
       TRANSPARENT,
       RAINBOW_MODE,
-      COLOR
+      COLOR,
+      COLOR_INTENSITY
     };
 
     let pointers = [new pointerPrototype()];
@@ -814,11 +816,11 @@ function SplashCursor({
 
     function clickSplat(pointer) {
       const color = generateColor();
-      color.r *= 10.0;
-      color.g *= 10.0;
-      color.b *= 10.0;
-      let dx = 10 * (Math.random() - 0.5);
-      let dy = 30 * (Math.random() - 0.5);
+      color.r *= 6.0;
+      color.g *= 6.0;
+      color.b *= 6.0;
+      let dx = 6 * (Math.random() - 0.5);
+      let dy = 18 * (Math.random() - 0.5);
       splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
     }
 
@@ -890,17 +892,19 @@ function SplashCursor({
       const r = parseInt(val.slice(0, 2), 16) / 255;
       const g = parseInt(val.slice(2, 4), 16) / 255;
       const b = parseInt(val.slice(4, 6), 16) / 255;
-      return { r: r * 0.15, g: g * 0.15, b: b * 0.15 };
+      const intensity = config.COLOR_INTENSITY ?? 0.15;
+      return { r: r * intensity, g: g * intensity, b: b * intensity };
     }
 
     function generateColor() {
+      const intensity = config.COLOR_INTENSITY ?? 0.15;
       if (!config.RAINBOW_MODE) {
         return hexToRGB(config.COLOR);
       }
       let c = HSVtoRGB(Math.random(), 1.0, 1.0);
-      c.r *= 0.15;
-      c.g *= 0.15;
-      c.b *= 0.15;
+      c.r *= intensity;
+      c.g *= intensity;
+      c.b *= intensity;
       return c;
     }
 

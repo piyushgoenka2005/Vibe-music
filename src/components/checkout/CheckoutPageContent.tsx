@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import CheckoutSummary, {
   computeCheckoutInvoice,
@@ -16,6 +16,7 @@ import {
   getAddressDisplayLabel,
 } from "@/lib/address/addressMappers";
 import { ROUTES } from "@/lib/routes";
+import { normalizeIndianPhone } from "@/lib/validations/address";
 import { DEFAULT_GST_RATE } from "@/lib/gstCalculator";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
@@ -91,13 +92,37 @@ function isAddressComplete(address: ShippingAddress): boolean {
   );
 }
 
+function resolveAddressDraft(
+  addressForm: ShippingAddress,
+  options: { profilePhone?: string; profileName?: string }
+): ShippingAddress {
+  const phone = addressForm.phone?.trim() || options.profilePhone?.trim() || "";
+  return {
+    ...addressForm,
+    name: addressForm.name.trim() || options.profileName?.trim() || "",
+    phone: phone ? normalizeIndianPhone(phone) : "",
+  };
+}
+
+function addressesMatch(a: ShippingAddress, b: ShippingAddress): boolean {
+  return (
+    a.name.trim().toLowerCase() === b.name.trim().toLowerCase() &&
+    a.line1.trim().toLowerCase() === b.line1.trim().toLowerCase() &&
+    a.postalCode.trim() === b.postalCode.trim() &&
+    normalizeIndianPhone(a.phone ?? "") === normalizeIndianPhone(b.phone ?? "")
+  );
+}
+
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
 export default function CheckoutPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const items = useCartStore((s) => s.items);
+  const couponCode = useCartStore((s) => s.couponCode);
+  const applyCoupon = useCartStore((s) => s.applyCoupon);
   const couponDiscount = useCartStore((s) => s.discount());
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -133,12 +158,23 @@ export default function CheckoutPageContent() {
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
   const [isSavingAddress, setIsSavingAddress] = useState(false);
+  const [addressError, setAddressError] = useState<string | null>(null);
 
   useEffect(() => {
     if (items.length === 0) {
       router.replace(ROUTES.cart);
     }
   }, [items.length, router]);
+
+  useEffect(() => {
+    const fromUrl = searchParams.get("coupon") ?? searchParams.get("code");
+    if (!fromUrl || couponCode) return;
+    void applyCoupon(fromUrl);
+  }, [searchParams, couponCode, applyCoupon]);
+
+  const demoPaymentsLikely =
+    process.env.NODE_ENV !== "production" &&
+    !process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith("rzp_");
 
   const checkoutItems = items.map((item) => ({
     productId: item.productId,
@@ -151,18 +187,18 @@ export default function CheckoutPageContent() {
     gstRate: item.gstRate ?? DEFAULT_GST_RATE,
   }));
 
+  const addressDraft = resolveAddressDraft(addressForm, {
+    profilePhone: phone,
+    profileName: user?.name,
+  });
+
   const resolvedAddress: ShippingAddress | null = useMemo(() => {
     if (confirmedAddress) {
       return confirmedAddress;
     }
 
     if (useNewAddress || savedAddresses.length === 0) {
-      return isAddressComplete({
-        ...addressForm,
-        phone: addressForm.phone || phone,
-      })
-        ? { ...addressForm, phone: addressForm.phone || phone }
-        : null;
+      return isAddressComplete(addressDraft) ? addressDraft : null;
     }
 
     const saved = savedAddresses.find((a) => a.id === effectiveSelectedAddressId);
@@ -171,24 +207,27 @@ export default function CheckoutPageContent() {
   }, [
     confirmedAddress,
     useNewAddress,
-    addressForm,
+    addressDraft,
     savedAddresses,
     effectiveSelectedAddressId,
-    phone,
   ]);
 
   const buyerState = resolvedAddress?.state ?? "Maharashtra";
   const email = (user?.email ?? guestEmail).trim().toLowerCase();
   const contactPhone = resolvedAddress?.phone || phone || "";
 
-  const canContinueFromAddress =
-    Boolean(confirmedAddress) ||
-    Boolean(!useNewAddress && effectiveSelectedAddressId) ||
-    isAddressComplete({ ...addressForm, phone: addressForm.phone || phone });
-
   const hasValidContact = isAuthenticated
     ? Boolean(email)
     : Boolean(email && isValidEmail(email));
+
+  const canContinueFromAddress =
+    Boolean(confirmedAddress) ||
+    Boolean(!useNewAddress && effectiveSelectedAddressId) ||
+    isAddressComplete(addressDraft);
+
+  const canProceedFromAddress =
+    canContinueFromAddress &&
+    (isAuthenticated ? hasValidContact : Boolean(guestEmail && isValidEmail(guestEmail)));
 
   const displayItems = items.map((item) => ({
     productId: item.productId,
@@ -224,54 +263,100 @@ export default function CheckoutPageContent() {
   });
 
   async function handleContinueFromAddress() {
+    setAddressError(null);
+
+    if (!canProceedFromAddress) {
+      if (!canContinueFromAddress) {
+        setAddressError("Please complete all required address fields.");
+      } else if (!isAuthenticated && !isValidEmail(guestEmail)) {
+        setAddressError("Enter a valid email address to continue.");
+      }
+      return;
+    }
+
     let shipping: ShippingAddress | null = null;
 
     if (useNewAddress || savedAddresses.length === 0) {
-      if (!isAddressComplete({ ...addressForm, phone: addressForm.phone || phone })) {
+      if (!isAddressComplete(addressDraft)) {
+        setAddressError("Please complete all required address fields.");
         return;
       }
-      shipping = {
-        ...addressForm,
-        phone: addressForm.phone || phone,
-      };
+      shipping = addressDraft;
 
       if (isAuthenticated) {
-        setIsSavingAddress(true);
-        try {
-          await createAddress({
-            label: "Checkout",
-            fullName: shipping.name,
-            phone: shipping.phone ?? "",
-            addressLine1: shipping.line1,
-            addressLine2: shipping.line2,
-            city: shipping.city,
-            state: shipping.state,
-            postalCode: shipping.postalCode,
-            country: shipping.country,
-            isDefault: savedAddresses.length === 0,
-          });
-        } finally {
-          setIsSavingAddress(false);
+        const alreadySaved = savedAddresses.some((addr) =>
+          addressesMatch(shipping!, addressToShipping(addr))
+        );
+
+        if (!alreadySaved) {
+          setIsSavingAddress(true);
+          try {
+            await createAddress({
+              label: "Checkout",
+              fullName: shipping.name,
+              phone: shipping.phone ?? "",
+              addressLine1: shipping.line1,
+              ...(shipping.line2?.trim()
+                ? { addressLine2: shipping.line2.trim() }
+                : {}),
+              city: shipping.city,
+              state: shipping.state,
+              postalCode: shipping.postalCode,
+              country: shipping.country || "India",
+              isDefault: savedAddresses.length === 0,
+            });
+          } catch (error) {
+            showToast(
+              error instanceof Error
+                ? `Address not saved (${error.message}). Continuing checkout.`
+                : "Address not saved. Continuing checkout.",
+              "info"
+            );
+          } finally {
+            setIsSavingAddress(false);
+          }
         }
       }
     } else {
       const saved = savedAddresses.find((a) => a.id === effectiveSelectedAddressId);
-      if (!saved) return;
+      if (!saved) {
+        setAddressError("Select a delivery address to continue.");
+        return;
+      }
       shipping = addressToShipping(saved);
     }
 
     setConfirmedAddress(shipping);
     setStep("summary");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function handleEditAddress() {
     setConfirmedAddress(null);
     setStep("address");
+    setAddressError(null);
+  }
+
+  function handleContinueToPayment() {
+    setStep("payment");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleStepClick(target: CheckoutStep, index: number) {
+    if (index >= stepIndex) return;
+    if (target === "address") {
+      handleEditAddress();
+      return;
+    }
+    if (target === "summary" && confirmedAddress) {
+      setStep("summary");
+    }
   }
 
   function selectSavedAddress(addressId: string) {
     setUseNewAddressOverride(false);
     setSelectedAddressId(addressId);
+    setAddressError(null);
   }
 
   async function handleDeleteAddress(addressId: string, event: MouseEvent) {
@@ -326,10 +411,10 @@ export default function CheckoutPageContent() {
   return (
     <div className="checkout-page">
       <header className="checkout-hero">
-        <div className="checkout-hero__copy">
-          <p className="checkout-hero__eyebrow">Secure checkout</p>
-          <h1 className="checkout-hero__title">Checkout</h1>
-          <p className="checkout-hero__subtitle">
+        <div className="checkout-hero__copy storefront-page__header">
+          <p className="storefront-page__eyebrow">Secure checkout</p>
+          <h1 className="storefront-page__title checkout-page__title">Checkout</h1>
+          <p className="storefront-page__subtitle">
             GST invoice included · Encrypted payments via Razorpay
           </p>
         </div>
@@ -351,7 +436,20 @@ export default function CheckoutPageContent() {
                       : isDone
                         ? " checkout-step--done"
                         : ""
-                  }`}
+                  }${isDone ? " checkout-step--clickable" : ""}`}
+                  role={isDone ? "button" : undefined}
+                  tabIndex={isDone ? 0 : undefined}
+                  onClick={isDone ? () => handleStepClick(s.id, index) : undefined}
+                  onKeyDown={
+                    isDone
+                      ? (event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            handleStepClick(s.id, index);
+                          }
+                        }
+                      : undefined
+                  }
                 >
                   <span className="checkout-step__circle" aria-hidden="true">
                     {isDone ? "✓" : index + 1}
@@ -478,10 +576,11 @@ export default function CheckoutPageContent() {
                     Full Name
                     <input
                       required
-                      value={addressForm.name || user?.name || ""}
+                      value={addressForm.name}
                       onChange={(e) =>
                         setAddressForm((p) => ({ ...p, name: e.target.value }))
                       }
+                      placeholder={user?.name || "Your full name"}
                     />
                   </label>
                   <label>
@@ -582,6 +681,12 @@ export default function CheckoutPageContent() {
                 </form>
               ) : null}
 
+              {addressError ? (
+                <p className="checkout-panel__alert" role="alert">
+                  {addressError}
+                </p>
+              ) : null}
+
               <div className="checkout-actions">
                 <Link href={ROUTES.cart} className="checkout-btn checkout-btn--ghost">
                   Back to Cart
@@ -589,8 +694,8 @@ export default function CheckoutPageContent() {
                 <button
                   type="button"
                   className="checkout-btn checkout-btn--primary"
-                  onClick={handleContinueFromAddress}
-                  disabled={!canContinueFromAddress || isSavingAddress}
+                  onClick={() => void handleContinueFromAddress()}
+                  disabled={!canProceedFromAddress || isSavingAddress}
                 >
                   {isSavingAddress ? "Saving address…" : "Continue to Review"}
                 </button>
@@ -601,7 +706,9 @@ export default function CheckoutPageContent() {
           {step === "summary" ? (
             <>
               <h2 className="checkout-panel__title">Review Your Order</h2>
-
+              <p className="checkout-panel__lead">
+                Confirm your items and delivery details before payment.
+              </p>
               <div className="checkout-items">
                 {items.map((item) => (
                   <div key={item.lineId} className="checkout-item">
@@ -656,7 +763,7 @@ export default function CheckoutPageContent() {
                 <button
                   type="button"
                   className="checkout-btn checkout-btn--primary"
-                  onClick={() => setStep("payment")}
+                  onClick={handleContinueToPayment}
                 >
                   Continue to Payment
                 </button>
@@ -678,6 +785,14 @@ export default function CheckoutPageContent() {
                 onPaymentMethodChange={setPaymentMethod}
                 paymentMethod={paymentMethod}
               />
+
+              {demoPaymentsLikely && paymentMethod === "razorpay" ? (
+                <p className="checkout-panel__alert" role="note">
+                  <strong>Demo mode:</strong> Razorpay keys are not configured.
+                  Payment will be simulated — your order and invoice are still
+                  created.
+                </p>
+              ) : null}
 
               {!resolvedAddress || !hasValidContact ? (
                 <p className="checkout-panel__alert" role="alert">
@@ -733,10 +848,18 @@ export default function CheckoutPageContent() {
             <button
               type="button"
               className="checkout-btn checkout-btn--primary checkout-mobile-bar__cta"
-              disabled={!canContinueFromAddress || isSavingAddress}
+              disabled={!canProceedFromAddress || isSavingAddress}
               onClick={() => void handleContinueFromAddress()}
             >
               {isSavingAddress ? "Saving…" : "Continue"}
+            </button>
+          ) : step === "summary" ? (
+            <button
+              type="button"
+              className="checkout-btn checkout-btn--primary checkout-mobile-bar__cta"
+              onClick={handleContinueToPayment}
+            >
+              Continue to Payment
             </button>
           ) : (
             <button

@@ -1,9 +1,11 @@
 import Razorpay from "razorpay";
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
 import {
   isFirestoreUnavailableError,
   logFirestoreWarning,
 } from "@/lib/server/firestoreErrors";
+import { sanitizeForFirestore } from "@/lib/server/firestoreSanitize";
 import {
   verifyRazorpayPaymentSignature,
 } from "@/lib/razorpay/signature";
@@ -43,6 +45,10 @@ function getRazorpayInstance(): Razorpay {
   }
 
   return new Razorpay({ key_id: keyId, key_secret: keySecret });
+}
+
+function canUseDemoPayments(): boolean {
+  return isDemoPaymentsAllowed() && !isRazorpayConfigured();
 }
 
 function toInventoryLines(
@@ -144,7 +150,12 @@ function buildOrderRecord(
 export async function createOrder(
   payload: CreateOrderPayload,
   userId?: string
-): Promise<{ order: Order; razorpayOrderId?: string; keyId?: string }> {
+): Promise<{
+  order: Order;
+  razorpayOrderId?: string;
+  keyId?: string;
+  demoMode?: boolean;
+}> {
   const db = getAdminFirestore();
   const orderRef = db.collection("orders").doc();
   const orderId = orderRef.id;
@@ -152,7 +163,7 @@ export async function createOrder(
   const inventoryLines = toInventoryLines(payload.items);
 
   const order: Order = { id: orderId, ...orderData };
-  await orderRef.set(order);
+  await orderRef.set(sanitizeForFirestore(order));
 
   try {
     try {
@@ -179,29 +190,40 @@ export async function createOrder(
     let razorpayOrderId: string | undefined;
 
     if (payload.paymentMethod === "razorpay") {
-      const razorpay = getRazorpayInstance();
-      const razorpayOrder = await razorpay.orders.create({
-        amount: toPaise(order.total),
-        currency: "INR",
-        receipt: orderId,
-        notes: {
-          email: payload.email,
-          orderId,
-        },
-      });
-      razorpayOrderId = razorpayOrder.id;
-      await orderRef.update({
-        razorpayOrderId,
-        updatedAt: new Date().toISOString(),
-      });
-      order.razorpayOrderId = razorpayOrderId;
+      if (isRazorpayConfigured()) {
+        const razorpay = getRazorpayInstance();
+        const razorpayOrder = await razorpay.orders.create({
+          amount: toPaise(order.total),
+          currency: "INR",
+          receipt: orderId,
+          notes: {
+            email: payload.email,
+            orderId,
+          },
+        });
+        razorpayOrderId = razorpayOrder.id;
+        await orderRef.update({
+          razorpayOrderId,
+          updatedAt: new Date().toISOString(),
+        });
+        order.razorpayOrderId = razorpayOrderId;
+      } else if (!canUseDemoPayments()) {
+        throw new Error(
+          "Online payments are not configured. Add Razorpay keys to .env.local."
+        );
+      }
     }
 
     return {
       order: { ...order, razorpayOrderId },
       razorpayOrderId,
-      keyId:
-        process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID,
+      keyId: isRazorpayConfigured()
+        ? process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID
+        : undefined,
+      demoMode:
+        payload.paymentMethod === "razorpay" && canUseDemoPayments()
+          ? true
+          : undefined,
     };
   } catch (error) {
     await releaseOrderReservation(orderId).catch(() => undefined);

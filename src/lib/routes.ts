@@ -9,6 +9,10 @@ export const ROUTES = {
   cart: "/cart",
   checkout: "/checkout",
   checkoutSuccess: "/checkout/success",
+  orderPay: (orderId: string, email?: string) =>
+    email
+      ? `/orders/${orderId}/pay?email=${encodeURIComponent(email)}`
+      : `/orders/${orderId}/pay`,
   trackOrder: "/track-order",
   account: "/account",
   accountOrders: "/account/orders",

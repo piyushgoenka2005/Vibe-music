@@ -110,10 +110,35 @@ export interface CreateOrderPayload {
 
 export interface CreateRazorpayOrderResponse {
   orderId: string;
-  razorpayOrderId: string;
-  amount: number;
-  currency: string;
-  keyId: string;
+  demoMode?: boolean;
+  razorpayOrderId?: string;
+  amount?: number;
+  currency?: string;
+  keyId?: string;
+}
+
+export interface ResumePaymentResponse {
+  orderId: string;
+  email: string;
+  demoMode: boolean;
+  razorpay?: {
+    orderId: string;
+    amount: number;
+    currency: string;
+    keyId: string;
+  };
+  shipping?: {
+    name: string;
+    email: string;
+    phone?: string;
+  };
+}
+
+export interface DemoPaymentResponse {
+  success: boolean;
+  orderId: string;
+  redirectUrl: string;
+  order?: Order;
 }
 
 export interface VerifyPaymentPayload {

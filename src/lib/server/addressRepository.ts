@@ -13,6 +13,7 @@ import {
   openGlobalFirestoreCircuit,
 } from "@/lib/server/firestoreErrors";
 import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
+import { sanitizeForFirestore } from "@/lib/server/firestoreSanitize";
 import type { Address, CreateAddressInput, UpdateAddressInput } from "@/types/address";
 
 const COLLECTION = "addresses";
@@ -227,7 +228,10 @@ export async function createAddress(
   }
 
   try {
-    await getAdminFirestore().collection(COLLECTION).doc(addressId).set(address);
+    await getAdminFirestore()
+      .collection(COLLECTION)
+      .doc(addressId)
+      .set(sanitizeForFirestore(address));
     return address;
   } catch (error) {
     if (isFirestoreUnavailableError(error)) {
@@ -291,7 +295,7 @@ export async function updateAddress(
       await getAdminFirestore()
         .collection(COLLECTION)
         .doc(addressId)
-        .update(patch);
+        .update(sanitizeForFirestore(patch));
     } catch (error) {
       if (isFirestoreUnavailableError(error)) {
         openAddressCircuit(error, "Updating address locally — Firestore unavailable");

@@ -67,15 +67,15 @@ export default function SiteHeader() {
             aria-expanded={mobileOpen}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
           <Link href={ROUTES.home} className="site-header__logo" aria-label={BRAND.name}>
             <Image
               src={BRAND.headerLogoPath}
               alt={BRAND.name}
-              width={220}
-              height={56}
+              width={176}
+              height={44}
               priority
               className="assets-site-header__menu-logo"
             />
@@ -87,7 +87,7 @@ export default function SiteHeader() {
             method="get"
             onSubmit={(e) => e.preventDefault()}
           >
-            <Search size={18} className="site-header__search-icon" aria-hidden />
+            <Search size={16} className="site-header__search-icon" aria-hidden />
             <div className="site-header__search-field">
               <input
                 id="sw-search-input"
@@ -105,7 +105,7 @@ export default function SiteHeader() {
               className="site-header__search-submit assets-site-header__menu-search-submit"
               aria-label="Search"
             >
-              <Search size={16} />
+              <Search size={14} />
             </button>
           </form>
 
@@ -120,12 +120,12 @@ export default function SiteHeader() {
                   src={accountPhotoUrl}
                   alt=""
                   className="site-header__avatar"
-                  width={28}
-                  height={28}
+                  width={26}
+                  height={26}
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <User size={20} aria-hidden />
+                <User size={18} aria-hidden />
               )}
               <span className="site-header__action-label assets-site-header__menu-account-navlink">
                 {accountLabel}
@@ -141,7 +141,7 @@ export default function SiteHeader() {
               className="site-header__action site-header__cart assets-site-header__menu-cart"
               aria-label="Cart"
             >
-              <ShoppingCart size={20} />
+              <ShoppingCart size={18} />
               <span
                 className="site-header__cart-count assets-site-header__menu-cart-count"
                 data-count="0"

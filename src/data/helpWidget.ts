@@ -2,24 +2,25 @@ import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 
 export const HELP_WIDGET_LINKS = [
-  { label: "Track your order", href: ROUTES.trackOrder },
-  { label: "Returns", href: `${ROUTES.searchResults}?q=returns` },
-  { label: "Shipping Policy", href: `${ROUTES.searchResults}?q=shipping` },
-  { label: `${BRAND.name} Rewards`, href: `${ROUTES.searchResults}?q=rewards` },
+  { label: "Track your order", href: ROUTES.trackOrder, icon: "package" },
+  { label: "Returns & exchanges", href: `${ROUTES.searchResults}?q=returns`, icon: "rotate" },
+  { label: "Shipping policy", href: `${ROUTES.searchResults}?q=shipping`, icon: "truck" },
+  { label: `${BRAND.name} Rewards`, href: `${ROUTES.searchResults}?q=rewards`, icon: "gift" },
   {
-    label: "Fraudulent Websites Warning",
+    label: "Fraudulent websites warning",
     href: `${ROUTES.searchResults}?q=fraud`,
+    icon: "shield",
   },
 ] as const;
 
 export const HELP_WIDGET_HOURS = [
-  "MON - FRI  10AM - 7PM IST",
-  "SAT  10AM - 6PM IST",
-  "SUN  11AM - 5PM IST",
+  { day: "Mon – Fri", time: "10 AM – 7 PM IST" },
+  { day: "Saturday", time: "10 AM – 6 PM IST" },
+  { day: "Sunday", time: "11 AM – 5 PM IST" },
 ] as const;
 
 export const HELP_WIDGET_INTRO =
-  "Hey, friend. Got a question? Need advice? We're here to help you out.";
+  "Questions about gear, orders, or setup? Our advisors are musicians too — happy to point you in the right direction.";
 
 export const HELP_WIDGET_DISCLAIMER =
-  "Chat sessions may be recorded by Vibe Music for training, quality, and improvement purposes.";
+  "Chat sessions may be recorded for training, quality, and service improvement.";

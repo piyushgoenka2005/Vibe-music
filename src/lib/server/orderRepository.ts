@@ -15,6 +15,7 @@ import {
   tryFirestoreFast,
 } from "@/lib/server/firestoreErrors";
 import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
+import { sanitizeForFirestore } from "@/lib/server/firestoreSanitize";
 import type { Order } from "@/types/order";
 
 const COLLECTION = "orders";
@@ -79,10 +80,6 @@ function openOrdersCircuit(error: unknown, context: string): void {
   if (!wasOpen) {
     logFirestoreWarning("orders", error, context);
   }
-}
-
-function sanitizeForFirestore<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
 }
 
 export function generateOrderId(): string {

@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       couponDiscount,
     };
 
-    const { order, razorpayOrderId, keyId } = await createOrder(
+    const { order, razorpayOrderId, keyId, demoMode } = await createOrder(
       payload,
       sessionUser?.uid
     );
@@ -63,6 +63,13 @@ export async function POST(request: Request) {
     if (payload.paymentMethod === "cod") {
       void sendOrderConfirmationEmail(order);
       return NextResponse.json({ orderId: order.id, order });
+    }
+
+    if (demoMode) {
+      return NextResponse.json({
+        orderId: order.id,
+        demoMode: true,
+      });
     }
 
     if (!razorpayOrderId || !keyId) {

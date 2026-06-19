@@ -31,6 +31,7 @@ const SLUG_TO_HREF: Record<string, string> = {
   "keyboards-synthesizers": "/shop/keyboards-synthesizers/",
   "live-sound-lighting": "/shop/live-sound/",
   "software-plug-ins": "/shop/software-plugins/",
+  "dj-equipment": "/shop/dj-equipment/",
 };
 
 const BENTO_IMAGE_FILES: Record<string, string> = {
@@ -40,6 +41,7 @@ const BENTO_IMAGE_FILES: Record<string, string> = {
   "keyboards-synthesizers": `${CAT}/Matriarch.png`,
   "live-sound-lighting": `${CAT}/k12_2.png`,
   "software-plug-ins": `${CAT}/ptstudioann.jpg`,
+  "dj-equipment": `${CAT}/ATLP120XUSBSV.png`,
 };
 
 /** Build optimized image URL for bento tile sizes. */
@@ -160,10 +162,23 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageSizes: resolveBentoSizes(),
     imageAlt: "DAW and plug-in software",
     imagePosition: "center 42%",
-    wide: true,
     productCount: "540+ Products",
     brands: "Ableton • Native Instruments • iZotope",
     badge: "TRENDING",
+  },
+  {
+    slug: "dj-equipment",
+    title: "DJ",
+    desc: "Controllers • Decks • Mixers",
+    size: "small",
+    variant: "image-card",
+    image: resolveBentoImage("dj-equipment"),
+    imageSrcSet: resolveBentoSrcSet("dj-equipment"),
+    imageSizes: resolveBentoSizes(),
+    imageAlt: "DJ turntable and controller gear",
+    imagePosition: "center 40%",
+    productCount: "380+ Products",
+    brands: "Pioneer DJ • Denon • Rane",
   },
 ];
 
