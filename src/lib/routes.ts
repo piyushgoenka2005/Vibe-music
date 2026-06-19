@@ -2,7 +2,8 @@ import categoriesData from "@/data/catalog/categories.json";
 import type { Category } from "@/types/category";
 
 /** WRD canonical routes */
-export const ROUTES = {  home: "/",
+export const ROUTES = {
+  home: "/",
   search: "/search",
   searchResults: "/search/results",
   cart: "/cart",
