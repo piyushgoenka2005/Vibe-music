@@ -1,81 +1,41 @@
+import "server-only";
+
+import { escapeHtml } from "@/lib/security/sanitize";
+import { hasPurchasedProduct } from "@/lib/server/orderVerificationService";
+import {
+  countApprovedToday,
+  countReviewsByStatus,
+  createReviewRecord,
+  deleteReviewRecord,
+  getReviewById,
+  listAdminReviews,
+  listProductReviews,
+  normalizeReview,
+  updateReviewFields,
+} from "@/lib/server/reviewRepository";
+import { getReviewEligibility } from "@/lib/server/reviewEligibilityService";
+import { recalculateProductReviewStats } from "@/lib/server/reviewStatsService";
+import type {
+  AdminReviewListParams,
+  AdminReviewStats,
+  CreateReviewInput,
+  Review,
+  ReviewListParams,
+  ReviewListResponse,
+  ReviewStatus,
+} from "@/types/review";
+import { getProductReviewStats } from "@/lib/server/reviewStatsService";
 import { getAdminFirestore } from "@/lib/firebase/admin";
-import type { ReviewDocument } from "@/types/admin";
 
-const COLLECTION = "reviews";
+const REVIEWS_COLLECTION = "reviews";
 
-function normalizeReview(id: string, data: FirebaseFirestore.DocumentData): ReviewDocument {
-  return {
-    id,
-    productId: String(data.productId ?? ""),
-    productName: data.productName ? String(data.productName) : undefined,
-    userId: String(data.userId ?? ""),
-    userEmail: data.userEmail ? String(data.userEmail) : undefined,
-    author: String(data.author ?? "Anonymous"),
-    rating: Number(data.rating ?? 0),
-    title: String(data.title ?? ""),
-    body: String(data.body ?? ""),
-    status: data.status === "approved" || data.status === "rejected" ? data.status : "pending",
-    adminReply: data.adminReply ? String(data.adminReply) : undefined,
-    createdAt: String(data.createdAt ?? ""),
-    updatedAt: String(data.updatedAt ?? ""),
-  };
-}
-
-export async function listReviews(
-  status?: ReviewDocument["status"],
-  options: { limit?: number; cursor?: string } = {}
-): Promise<{
-  reviews: ReviewDocument[];
-  hasMore: boolean;
-  nextCursor?: string;
-}> {
-  const db = getAdminFirestore();
-  const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
-  let query: FirebaseFirestore.Query = db.collection(COLLECTION);
-
-  if (status) {
-    query = query.where("status", "==", status);
-  }
-
-  query = query.orderBy("createdAt", "desc");
-
-  if (options.cursor) {
-    const cursorDoc = await db.collection(COLLECTION).doc(options.cursor).get();
-    if (cursorDoc.exists) {
-      query = query.startAfter(cursorDoc);
-    }
-  }
-
-  const snap = await query.limit(limit + 1).get();
-  if (snap.empty) {
-    const seeded = await seedReviewsFromStatic();
-    return {
-      reviews: seeded.slice(0, limit),
-      hasMore: false,
-    };
-  }
-
-  const docs = snap.docs;
-  const hasMore = docs.length > limit;
-  const pageDocs = docs.slice(0, limit);
-
-  return {
-    reviews: pageDocs.map((doc) => normalizeReview(doc.id, doc.data())),
-    hasMore,
-    nextCursor:
-      hasMore && pageDocs.length > 0
-        ? pageDocs[pageDocs.length - 1]!.id
-        : undefined,
-  };
-}
-
-async function seedReviewsFromStatic(): Promise<ReviewDocument[]> {
+async function seedReviewsFromStatic(): Promise<Review[]> {
   const { getAllProducts, getProductDetailBySlug } = await import(
     "@/services/catalogService"
   );
   const db = getAdminFirestore();
   const batch = db.batch();
-  const reviews: ReviewDocument[] = [];
+  const reviews: Review[] = [];
   const now = new Date().toISOString();
 
   const products = (await getAllProducts(true)).slice(0, 20);
@@ -83,17 +43,22 @@ async function seedReviewsFromStatic(): Promise<ReviewDocument[]> {
     const detail = await getProductDetailBySlug(product.slug);
     if (!detail) continue;
     detail.reviews.slice(0, 2).forEach((review, index) => {
-      const ref = db.collection(COLLECTION).doc();
-      const record: ReviewDocument = {
+      const ref = db.collection(REVIEWS_COLLECTION).doc();
+      const record: Review = {
         id: ref.id,
         productId: detail.id,
         productName: detail.name,
+        productSlug: detail.slug,
         userId: `seed-user-${product.slug}-${index}`,
         author: review.author,
         rating: review.rating,
         title: review.title,
         body: review.body,
+        images: [],
+        hasImages: false,
+        verifiedPurchase: false,
         status: "approved",
+        helpfulCount: 0,
         createdAt: review.date || now,
         updatedAt: now,
       };
@@ -104,25 +69,116 @@ async function seedReviewsFromStatic(): Promise<ReviewDocument[]> {
 
   if (reviews.length > 0) {
     await batch.commit();
+    const productIds = [...new Set(reviews.map((r) => r.productId))];
+    await Promise.all(productIds.map((id) => recalculateProductReviewStats(id)));
   }
   return reviews;
 }
 
+export async function listReviewsForAdmin(params: AdminReviewListParams = {}) {
+  const result = await listAdminReviews(params);
+  if (result.reviews.length === 0 && !params.status && !params.productId) {
+    const seeded = await seedReviewsFromStatic();
+    return {
+      reviews: seeded.slice(0, params.limit ?? 20),
+      hasMore: false,
+    };
+  }
+  return result;
+}
+
+export async function listReviewsForProduct(
+  params: ReviewListParams
+): Promise<ReviewListResponse> {
+  const stats = await getProductReviewStats(params.productId);
+  const result = await listProductReviews(params);
+  return {
+    ...result,
+    totalCount: stats.totalReviews,
+  };
+}
+
+export async function submitProductReview(input: {
+  productId: string;
+  productName: string;
+  productSlug: string;
+  userId: string;
+  userEmail?: string;
+  author: string;
+  payload: CreateReviewInput;
+}): Promise<Review> {
+  const eligibility = await getReviewEligibility(
+    input.userId,
+    input.userEmail,
+    input.productId
+  );
+  if (!eligibility.canReview) {
+    throw new Error(eligibility.reason ?? "You cannot review this product");
+  }
+
+  const purchase = await hasPurchasedProduct(
+    input.userId,
+    input.userEmail,
+    input.productId
+  );
+  const images = (input.payload.images ?? []).slice(0, 5);
+
+  return createReviewRecord({
+    productId: input.productId,
+    productName: input.productName,
+    productSlug: input.productSlug,
+    userId: input.userId,
+    userEmail: input.userEmail,
+    author: escapeHtml(input.author.trim() || "Customer"),
+    rating: input.payload.rating,
+    title: escapeHtml(input.payload.title.trim()),
+    body: escapeHtml(input.payload.body.trim()),
+    images,
+    hasImages: images.length > 0,
+    verifiedPurchase: purchase.verified,
+    orderId: purchase.orderId,
+    status: "pending",
+  });
+}
+
 export async function updateReviewStatus(
   id: string,
-  status: ReviewDocument["status"],
-  adminReply?: string
-): Promise<ReviewDocument> {
-  const db = getAdminFirestore();
-  const now = new Date().toISOString();
-  const patch: Record<string, unknown> = { status, updatedAt: now };
-  if (adminReply !== undefined) patch.adminReply = adminReply;
-  await db.collection(COLLECTION).doc(id).update(patch);
-  const doc = await db.collection(COLLECTION).doc(id).get();
-  return normalizeReview(doc.id, doc.data()!);
+  status: ReviewStatus,
+  options: { adminReply?: string; rejectionReason?: string } = {}
+): Promise<Review> {
+  const existing = await getReviewById(id);
+  if (!existing) throw new Error("Review not found");
+
+  const review = await updateReviewFields(id, {
+    status,
+    adminReply: options.adminReply,
+    rejectionReason: options.rejectionReason,
+  });
+
+  if (existing.status !== status) {
+    await recalculateProductReviewStats(review.productId);
+  }
+
+  return review;
 }
 
 export async function deleteReview(id: string): Promise<void> {
-  const db = getAdminFirestore();
-  await db.collection(COLLECTION).doc(id).delete();
+  const review = await deleteReviewRecord(id);
+  if (!review) throw new Error("Review not found");
+  if (review.status === "approved") {
+    await recalculateProductReviewStats(review.productId);
+  }
 }
+
+export async function getAdminReviewStats(): Promise<AdminReviewStats> {
+  const counts = await countReviewsByStatus();
+  const approvedToday = await countApprovedToday();
+  return {
+    pending: counts.pending,
+    approved: counts.approved,
+    rejected: counts.rejected,
+    approvedToday,
+  };
+}
+
+export { getReviewEligibility, getProductReviewStats, normalizeReview };

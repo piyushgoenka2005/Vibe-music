@@ -51,8 +51,6 @@ export function productPath(slug: string): string {
 
 const CATEGORIES = categoriesData as Category[];
 
-const CATEGORY_SLUGS = new Set(CATEGORIES.map((c) => c.slug));
-
 const PLACEHOLDER_REDIRECTS: Record<string, string> = {
   "/careers": ROUTES.home,
   "/categories": ROUTES.search,
@@ -155,7 +153,7 @@ function isValidAppRoute(path: string): boolean {
   if (path.startsWith("/admin/")) return true;
 
   const categoryMatch = path.match(/^\/category\/([^/]+)$/);
-  if (categoryMatch && CATEGORY_SLUGS.has(categoryMatch[1]!)) return true;
+  if (categoryMatch) return true;
 
   const productMatch = path.match(/^\/product\/([^/]+)$/);
   if (productMatch) return true;

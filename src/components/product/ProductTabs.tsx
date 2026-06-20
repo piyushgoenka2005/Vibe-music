@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { ProductDetail } from "@/types/product";
+import ProductReviewsSection from "./reviews/ProductReviewsSection";
+import "@/styles/product-reviews.css";
 
 const TABS = [
   { id: "description", label: "Description" },
@@ -16,14 +18,19 @@ type TabId = (typeof TABS)[number]["id"];
 
 interface ProductTabsProps {
   product: ProductDetail;
+  productSlug: string;
+  reviewCount?: number;
   initialTab?: TabId;
 }
 
 export default function ProductTabs({
   product,
+  productSlug,
+  reviewCount,
   initialTab = "description",
 }: ProductTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+  const displayedReviewCount = reviewCount ?? product.reviewCount;
 
   return (
     <div className="pdp-tabs">
@@ -40,7 +47,7 @@ export default function ProductTabs({
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.label}
-            {tab.id === "reviews" ? ` (${product.reviews.length})` : ""}
+            {tab.id === "reviews" ? ` (${displayedReviewCount})` : ""}
             {tab.id === "qa" ? ` (${product.qa.length})` : ""}
           </button>
         ))}
@@ -96,18 +103,7 @@ export default function ProductTabs({
         hidden={activeTab !== "reviews"}
         className="pdp-tabs__panel"
       >
-        {product.reviews.map((review) => (
-          <article key={review.id} className="pdp-review">
-            <h4 className="pdp-review__title">{review.title}</h4>
-            <p className="pdp-review__meta">
-              <span className="pdp-rating__stars" aria-hidden="true">
-                {"★".repeat(review.rating)}
-              </span>{" "}
-              {review.author} — {review.date}
-            </p>
-            <p>{review.body}</p>
-          </article>
-        ))}
+        <ProductReviewsSection productSlug={productSlug} productId={product.id} />
       </div>
 
       <div

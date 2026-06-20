@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getProductImage } from "@/data/productImages";
+import { findCategoryInList, normalizeCategorySlug } from "@/lib/categorySlug";
 import { slugify } from "@/lib/slug";
 import {
   batchDeleteProducts as fsBatchDelete,
@@ -52,12 +53,9 @@ async function resolveCategory(
   categoryInput: string
 ): Promise<{ name: string; slug: string } | null> {
   const categories = await fetchCategories();
-  const normalized = categoryInput.toLowerCase();
-  const bySlug = categories.find((c) => c.slug === normalized);
-  if (bySlug) return { name: bySlug.name, slug: bySlug.slug };
-  const byName = categories.find((c) => c.name.toLowerCase() === normalized);
-  if (byName) return { name: byName.name, slug: byName.slug };
-  return null;
+  const found = findCategoryInList(categories, categoryInput);
+  if (!found) return null;
+  return { name: found.name, slug: found.slug };
 }
 
 function uniqueSlug(base: string, existing: Set<string>): string {
@@ -245,7 +243,10 @@ export async function getProductDetailBySlug(
 export async function getProductsByCategory(
   categorySlug: string
 ): Promise<Product[]> {
-  const products = await fetchProductsByCategory(categorySlug);
+  const categories = await fetchCategories();
+  const category = findCategoryInList(categories, categorySlug);
+  const resolvedSlug = category?.slug ?? normalizeCategorySlug(categorySlug);
+  const products = await fetchProductsByCategory(resolvedSlug);
   return products.map(toProduct);
 }
 
@@ -328,8 +329,12 @@ export async function searchProducts(
   let source = await fetchCatalogSnapshot(options.includeInactive ?? false);
 
   if (options.category) {
+    const categories = await fetchCategories();
+    const category = findCategoryInList(categories, options.category);
+    const resolvedSlug =
+      category?.slug ?? normalizeCategorySlug(options.category);
     source = await fetchProductsByCategory(
-      options.category,
+      resolvedSlug,
       options.includeInactive ?? false
     );
   }
@@ -406,7 +411,7 @@ export async function getCategoryBySlug(
   slug: string
 ): Promise<Category | undefined> {
   const categories = await getCategories();
-  return categories.find((c) => c.slug === slug);
+  return findCategoryInList(categories, slug);
 }
 
 export async function getProductSummaries(ids: string[]): Promise<Product[]> {

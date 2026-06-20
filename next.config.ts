@@ -21,7 +21,7 @@ const securityHeaders = [
       "connect-src 'self' blob: https://*.googleapis.com https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://api.razorpay.com https://*.razorpay.com https://lumberjack.razorpay.com https://*.cloudinary.com wss://*.firebaseio.com",
       "media-src 'self' blob:",
       "worker-src 'self' blob:",
-      "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com",
+      "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://sketchfab.com https://www.youtube.com https://www.youtube-nocookie.com",
     ].join("; "),
   },
 ];

@@ -22,7 +22,12 @@ import ShippingEstimator from "./ShippingEstimator";
 import ProductTabs, { type TabId } from "./ProductTabs";
 import FrequentlyBoughtTogether from "./FrequentlyBoughtTogether";
 import ProductCrossSell from "./ProductCrossSell";
+import GuitarSpecShowcase from "./GuitarSpecShowcase";
+import GuitarTonesInMotion from "./GuitarTonesInMotion";
+import GuitarStorySections from "./GuitarStorySections";
 import ProductDetailSkeleton from "./ProductDetailSkeleton";
+import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
+import { useProductReviewStats } from "@/hooks/useProductReviewStats";
 import "./product-detail.css";
 
 interface ProductDetailPageProps {
@@ -61,6 +66,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   const searchParams = useSearchParams();
   const tabsRef = useRef<HTMLDivElement>(null);
   const { data, isLoading, isError } = useProduct(slug, initialData);
+  const { data: reviewStats } = useProductReviewStats(slug);
   const showSkeleton = isLoading && !data;
   const addItem = useCartStore((s) => s.addItem);
   const openCartDrawer = useCartStore((s) => s.openDrawer);
@@ -161,8 +167,9 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   }
 
   return (
-    <div className="pdp">
-      <nav className="pdp-breadcrumb" aria-label="Breadcrumb">
+    <>
+      <div className="pdp">
+        <nav className="pdp-breadcrumb" aria-label="Breadcrumb">
         <Link href="/">Home</Link>
         <span aria-hidden="true">/</span>
         <Link href={`/category/${product.categorySlug}`}>
@@ -191,6 +198,8 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
             onToggleWishlist={() => toggleWishlist(product)}
             isWishlisted={isWishlisted}
             onReviewsClick={scrollToReviews}
+            liveRating={reviewStats?.averageRating}
+            liveReviewCount={reviewStats?.totalReviews}
           />
           <ShippingEstimator />
         </div>
@@ -200,6 +209,8 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
         <ProductTabs
           key={tabOverride ?? "description"}
           product={product}
+          productSlug={slug}
+          reviewCount={reviewStats?.totalReviews}
           initialTab={tabOverride}
         />
       </div>
@@ -213,6 +224,19 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
       ) : null}
       <ProductCrossSell title="Similar Products" products={similarProducts} />
       <ProductCrossSell title="Related Products" products={relatedProducts} />
-    </div>
+      </div>
+
+      {isGuitarProduct(product.categorySlug, product.category) ? (
+        <>
+          <GuitarSpecShowcase
+            specs={product.specs}
+            imageSrc={galleryImages[0]?.src ?? product.image}
+            imageAlt={product.name}
+          />
+          <GuitarTonesInMotion />
+          <GuitarStorySections />
+        </>
+      ) : null}
+    </>
   );
 }

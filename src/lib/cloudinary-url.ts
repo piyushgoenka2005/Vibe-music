@@ -30,4 +30,6 @@ export const CLOUDINARY_PRESETS = {
   productDetail: { width: 900, height: 900, crop: "fit" as const, quality: "auto" as const },
   blogCover: { width: 1200, height: 630, crop: "fill" as const, quality: "auto" as const },
   banner: { width: 1600, height: 600, crop: "fill" as const, quality: "auto" as const },
+  reviewThumbnail: { width: 120, height: 120, crop: "fill" as const, quality: "auto" as const },
+  reviewGallery: { width: 600, height: 600, crop: "fit" as const, quality: "auto" as const },
 };

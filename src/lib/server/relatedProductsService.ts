@@ -2,6 +2,12 @@ import "server-only";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import {
+  isFirestoreUnavailableError,
+  logFirestoreWarning,
+  markFirestoreUnavailable,
+  tryFirestoreFast,
+} from "@/lib/server/firestoreErrors";
+import {
   fetchProductsByBrandSlug,
   fetchProductsByCategory,
   fetchProductsByIds,
@@ -70,12 +76,20 @@ export async function getRelatedListByProductId(
     return relationsCache.get(productId) ?? null;
   }
 
-  const doc = await getAdminFirestore()
-    .collection(COLLECTION)
-    .doc(productId)
-    .get();
-
-  const relation = doc.exists ? normalizeRelation(doc.id, doc.data()!) : null;
+  const relation = await tryFirestoreFast(
+    async () => {
+      const doc = await getAdminFirestore()
+        .collection(COLLECTION)
+        .doc(productId)
+        .get();
+      return doc.exists ? normalizeRelation(doc.id, doc.data()!) : null;
+    },
+    {
+      domain: "related-products",
+      context: `Unable to fetch related products for ${productId}`,
+      fallback: () => null,
+    }
+  );
 
   if (!relationsCache || !isFresh(relationsCacheAt)) {
     relationsCache = new Map();
@@ -122,21 +136,52 @@ export async function deleteProductRelatedList(
   invalidateRelatedProductsCache();
 }
 
+function relationFromProductDetail(
+  product: NonNullable<Awaited<ReturnType<typeof getProductById>>>
+): ProductRelatedList | null {
+  const relatedIds = product.detail?.relatedProductIds ?? [];
+  if (relatedIds.length === 0) return null;
+
+  return {
+    id: product.id,
+    productId: product.id,
+    productName: product.name,
+    productSlug: product.slug,
+    relatedProductIds: relatedIds.slice(0, MAX_RELATED_PRODUCTS),
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  };
+}
+
 async function seedRelationFromProductDetail(
   productId: string
 ): Promise<ProductRelatedList | null> {
   const product = await getProductById(productId);
   if (!product) return null;
 
-  const relatedIds = product.detail?.relatedProductIds ?? [];
-  if (relatedIds.length === 0) return null;
+  const fromDetail = relationFromProductDetail(product);
+  if (!fromDetail) return null;
 
-  return upsertProductRelatedList(productId, {
-    relatedProductIds: relatedIds.slice(0, MAX_RELATED_PRODUCTS),
-    productName: product.name,
-    productSlug: product.slug,
-    isActive: true,
-  });
+  try {
+    return await upsertProductRelatedList(productId, {
+      relatedProductIds: fromDetail.relatedProductIds,
+      productName: product.name,
+      productSlug: product.slug,
+      isActive: true,
+    });
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      markFirestoreUnavailable(error);
+      logFirestoreWarning(
+        "related-products",
+        error,
+        `Unable to seed related products for ${productId} — using product detail fallback`
+      );
+      return fromDetail;
+    }
+    throw error;
+  }
 }
 
 function appendUniqueProducts(

@@ -22,6 +22,8 @@ interface ProductInfoProps {
   onToggleWishlist: () => void;
   isWishlisted: boolean;
   onReviewsClick: () => void;
+  liveRating?: number;
+  liveReviewCount?: number;
 }
 
 function formatPrice(value: number): string {
@@ -65,8 +67,12 @@ export default function ProductInfo({
   onToggleWishlist,
   isWishlisted,
   onReviewsClick,
+  liveRating,
+  liveReviewCount,
 }: ProductInfoProps) {
   const displayPrice = selectedVariant.price;
+  const ratingValue = liveRating ?? product.rating;
+  const reviewCountValue = liveReviewCount ?? product.reviewCount;
   const onSale = product.salePrice !== null && product.msrp !== null;
   const showLimitedDeal = hasLimitedDeal(product, displayPrice);
   const savings =
@@ -93,11 +99,11 @@ export default function ProductInfo({
 
       <div className="pdp-rating">
         <span className="pdp-rating__stars" aria-hidden="true">
-          {"★".repeat(Math.round(product.rating))}
-          {"☆".repeat(5 - Math.round(product.rating))}
+          {"★".repeat(Math.round(ratingValue))}
+          {"☆".repeat(5 - Math.round(ratingValue))}
         </span>
         <span>
-          {product.rating.toFixed(1)} ({product.reviewCount} reviews)
+          {ratingValue.toFixed(1)} ({reviewCountValue} reviews)
         </span>
         <button
           type="button"

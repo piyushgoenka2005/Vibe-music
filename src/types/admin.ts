@@ -130,21 +130,10 @@ export interface Coupon {
   updatedAt: string;
 }
 
-export interface ReviewDocument {
-  id: string;
-  productId: string;
-  productName?: string;
-  userId: string;
-  userEmail?: string;
-  author: string;
-  rating: number;
-  title: string;
-  body: string;
-  status: "pending" | "approved" | "rejected";
-  adminReply?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Review } from "@/types/review";
+
+/** @deprecated Use Review from @/types/review */
+export type ReviewDocument = Review;
 
 export interface InventoryRecord {
   productId: string;

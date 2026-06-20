@@ -1077,6 +1077,16 @@
     "specifications": {
       "Manufacturer": "Fender",
       "Category": "Guitars",
+      "Type": "SuperStrat",
+      "Body": "Alder",
+      "Neck": "Canadian Maple, Bolt-On",
+      "Fingerboard": "Indian Rosewood, 22 Frets",
+      "Scale Length": "25.5\"",
+      "Pickup": "H-S-S Korean",
+      "Controls": "1 Volume, 2 Tone, Coil-Tap",
+      "Pickup Selector": "5-Way",
+      "Bridge": "6-Screw Tremolo",
+      "Tuners & Hardware": "Die-Cast Classic, Chrome",
       "Warranty": "Manufacturer warranty included",
       "Country of Origin": "Varies by model",
       "Condition": "new",
@@ -1102,6 +1112,46 @@
         {
           "label": "Category",
           "value": "Guitars"
+        },
+        {
+          "label": "Type",
+          "value": "SuperStrat"
+        },
+        {
+          "label": "Body",
+          "value": "Alder"
+        },
+        {
+          "label": "Neck",
+          "value": "Canadian Maple, Bolt-On"
+        },
+        {
+          "label": "Fingerboard",
+          "value": "Indian Rosewood, 22 Frets"
+        },
+        {
+          "label": "Scale Length",
+          "value": "25.5\""
+        },
+        {
+          "label": "Pickup",
+          "value": "H-S-S Korean"
+        },
+        {
+          "label": "Controls",
+          "value": "1 Volume, 2 Tone, Coil-Tap"
+        },
+        {
+          "label": "Pickup Selector",
+          "value": "5-Way"
+        },
+        {
+          "label": "Bridge",
+          "value": "6-Screw Tremolo"
+        },
+        {
+          "label": "Tuners & Hardware",
+          "value": "Die-Cast Classic, Chrome"
         },
         {
           "label": "Warranty",
