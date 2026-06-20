@@ -115,7 +115,6 @@ export default async function BlogPostPage({ params }: PageProps) {
   return (
     <main
       className="storefront-page blog-page blog-page--article"
-      id="main-content"
     >
       <article className="blog-article">
         <div className="blog-article__hero">

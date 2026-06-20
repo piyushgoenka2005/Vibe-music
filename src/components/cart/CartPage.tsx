@@ -1,10 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
 import { useIsClient } from "@/hooks/useIsClient";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ROUTES } from "@/lib/routes";
-import { fetchProducts } from "@/services/products.api";
+import { fetchProductSummaries, fetchProducts } from "@/services/products.api";
 import { formatCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
@@ -19,17 +20,24 @@ export default function CartPage() {
   const recentlyViewedIds = useRecentlyViewedStore((s) => s.productIds);
   const isClient = useIsClient();
 
-  const { data: catalog = [] } = useQuery({
-    queryKey: ["storefront-products"],
-    queryFn: () => fetchProducts(),
-    enabled: isClient,
+  const recentlyViewedKey = useMemo(
+    () => recentlyViewedIds.slice(0, 12).join(","),
+    [recentlyViewedIds]
+  );
+
+  const { data: recentlyViewed = [] } = useQuery({
+    queryKey: ["cart-recently-viewed", recentlyViewedKey],
+    queryFn: () => fetchProductSummaries(recentlyViewedIds.slice(0, 12)),
+    enabled: isClient && recentlyViewedIds.length > 0,
+    staleTime: 60_000,
   });
 
-  const recentlyViewed = recentlyViewedIds
-    .map((id) => catalog.find((p) => p.id === id))
-    .filter((p): p is Product => Boolean(p));
-
-  const recommended = catalog.slice(0, 4);
+  const { data: recommended = [] } = useQuery({
+    queryKey: ["cart-recommended"],
+    queryFn: () => fetchProducts({ limit: 4 }),
+    enabled: isClient,
+    staleTime: 120_000,
+  });
 
   if (!isClient) {
     return (
@@ -103,7 +111,7 @@ export default function CartPage() {
         <section className="cart-page__section" aria-label="Recommended products">
           <h2 className="cart-page__section-title">Recommended for You</h2>
           <div className="cart-cross-sell">
-            {recommended.map((product) => (
+            {recommended.map((product: Product) => (
               <Link
                 key={product.id}
                 href={`/product/${product.slug}`}

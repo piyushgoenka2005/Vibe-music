@@ -1,6 +1,10 @@
 "use client";
 
-import { Banknote, Check, CreditCard, Landmark, Smartphone } from "lucide-react";
+import { Banknote, Check, CreditCard, Landmark, Lock, Smartphone } from "lucide-react";
+import {
+  GlassEffect,
+  GlassEffectButton,
+} from "@/components/ui/liquid-glass";
 import type { PaymentMethod } from "@/types/order";
 
 export type OnlinePaymentChannel = "card" | "upi" | "netbanking";
@@ -42,6 +46,72 @@ const ONLINE_CHANNELS: Array<{
   },
 ];
 
+interface PaymentGlassCardProps {
+  selected: boolean;
+  wide?: boolean;
+  channel?: boolean;
+  onClick: () => void;
+  icon: typeof CreditCard;
+  iconSize?: number;
+  title: string;
+  subtitle: string;
+  tags?: string[];
+}
+
+function PaymentGlassCard({
+  selected,
+  wide = false,
+  channel = false,
+  onClick,
+  icon: Icon,
+  iconSize = 22,
+  title,
+  subtitle,
+  tags,
+}: PaymentGlassCardProps) {
+  return (
+    <GlassEffectButton
+      aria-pressed={selected}
+      className={[
+        "checkout-pay-card",
+        wide ? "checkout-pay-card--wide" : "",
+        channel ? "checkout-pay-card--channel" : "",
+        selected ? "checkout-pay-card--selected" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      onClick={onClick}
+      selected={selected}
+      tone="light"
+    >
+      {selected ? (
+        <span className="checkout-pay-card__check" aria-hidden>
+          <Check size={channel ? 12 : 14} strokeWidth={3} />
+        </span>
+      ) : null}
+      <span
+        className={`checkout-pay-card__icon${
+          channel ? " checkout-pay-card__icon--sm" : ""
+        }`}
+        aria-hidden
+      >
+        <Icon size={iconSize} />
+      </span>
+      <span className="checkout-pay-card__body">
+        <strong>{title}</strong>
+        <span>{subtitle}</span>
+      </span>
+      {tags?.length ? (
+        <span className="checkout-pay-card__tags">
+          {tags.map((tag) => (
+            <span key={tag}>{tag}</span>
+          ))}
+        </span>
+      ) : null}
+    </GlassEffectButton>
+  );
+}
+
 export default function CheckoutPaymentMethods({
   paymentMethod,
   onlineChannel,
@@ -49,116 +119,62 @@ export default function CheckoutPaymentMethods({
   onOnlineChannelChange,
 }: CheckoutPaymentMethodsProps) {
   return (
-    <div className="checkout-pay-methods">
-      <div className="checkout-pay-methods__primary">
-        <button
-          type="button"
-          className={`checkout-pay-card checkout-pay-card--wide${
-            paymentMethod === "razorpay" ? " checkout-pay-card--selected" : ""
-          }`}
-          onClick={() => onPaymentMethodChange("razorpay")}
-        >
+    <div className="checkout-pay-stage">
+      <div className="checkout-pay-stage__bg" aria-hidden />
+      <span className="checkout-pay-stage__orb checkout-pay-stage__orb--a" aria-hidden />
+      <span className="checkout-pay-stage__orb checkout-pay-stage__orb--b" aria-hidden />
+      <GlassEffect
+        className="checkout-pay-stage__shell rounded-[1.375rem]"
+        interactive={false}
+        tone="light"
+      >
+        <div className="checkout-pay-methods">
+          <div className="checkout-pay-methods__primary">
+            <PaymentGlassCard
+              icon={CreditCard}
+              onClick={() => onPaymentMethodChange("razorpay")}
+              selected={paymentMethod === "razorpay"}
+              subtitle="UPI, cards, net banking via Razorpay"
+              title="Pay Online"
+              wide
+            />
+            <PaymentGlassCard
+              icon={Banknote}
+              onClick={() => onPaymentMethodChange("cod")}
+              selected={paymentMethod === "cod"}
+              subtitle="Pay in cash when your order arrives"
+              title="Cash on Delivery"
+              wide
+            />
+          </div>
+
           {paymentMethod === "razorpay" ? (
-            <span className="checkout-pay-card__check" aria-hidden>
-              <Check size={14} strokeWidth={3} />
-            </span>
+            <div className="checkout-pay-methods__channels">
+              {ONLINE_CHANNELS.map((channel) => (
+                <PaymentGlassCard
+                  key={channel.id}
+                  channel
+                  icon={channel.icon}
+                  iconSize={18}
+                  onClick={() => onOnlineChannelChange(channel.id)}
+                  selected={onlineChannel === channel.id}
+                  subtitle={channel.subtitle}
+                  tags={channel.tags}
+                  title={channel.title}
+                />
+              ))}
+            </div>
           ) : null}
-          <span className="checkout-pay-card__icon" aria-hidden>
-            <CreditCard size={22} />
-          </span>
-          <span className="checkout-pay-card__body">
-            <strong>Pay Online</strong>
-            <span>UPI, cards, net banking via Razorpay</span>
-          </span>
-        </button>
 
-        <button
-          type="button"
-          className={`checkout-pay-card checkout-pay-card--wide${
-            paymentMethod === "cod" ? " checkout-pay-card--selected" : ""
-          }`}
-          onClick={() => onPaymentMethodChange("cod")}
-        >
-          {paymentMethod === "cod" ? (
-            <span className="checkout-pay-card__check" aria-hidden>
-              <Check size={14} strokeWidth={3} />
+          <div className="checkout-pay-methods__trust">
+            <span>
+              <Lock size={12} strokeWidth={2} aria-hidden />
+              256-bit SSL · PCI-DSS compliant
             </span>
-          ) : null}
-          <span className="checkout-pay-card__icon" aria-hidden>
-            <Banknote size={22} />
-          </span>
-          <span className="checkout-pay-card__body">
-            <strong>Cash on Delivery</strong>
-            <span>Pay in cash when your order arrives</span>
-          </span>
-        </button>
-      </div>
-
-      {paymentMethod === "razorpay" ? (
-        <div className="checkout-pay-methods__channels">
-          {ONLINE_CHANNELS.map((channel) => {
-            const Icon = channel.icon;
-            const selected = onlineChannel === channel.id;
-            return (
-              <button
-                key={channel.id}
-                type="button"
-                className={`checkout-pay-card checkout-pay-card--channel${
-                  selected ? " checkout-pay-card--selected" : ""
-                }`}
-                onClick={() => onOnlineChannelChange(channel.id)}
-              >
-                {selected ? (
-                  <span className="checkout-pay-card__check" aria-hidden>
-                    <Check size={12} strokeWidth={3} />
-                  </span>
-                ) : null}
-                <span className="checkout-pay-card__icon checkout-pay-card__icon--sm" aria-hidden>
-                  <Icon size={18} />
-                </span>
-                <span className="checkout-pay-card__body">
-                  <strong>{channel.title}</strong>
-                  <span>{channel.subtitle}</span>
-                </span>
-                <span className="checkout-pay-card__tags">
-                  {channel.tags.map((tag) => (
-                    <span key={tag}>{tag}</span>
-                  ))}
-                </span>
-              </button>
-            );
-          })}
+            <span>Powered by Razorpay</span>
+          </div>
         </div>
-      ) : null}
-
-      <div className="checkout-pay-methods__trust">
-        <span>
-          <LockIcon /> 256-bit SSL · PCI-DSS compliant
-        </span>
-        <span>Powered by Razorpay</span>
-      </div>
+      </GlassEffect>
     </div>
-  );
-}
-
-function LockIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M7 11V8a5 5 0 0 1 10 0v3"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <rect
-        x="5"
-        y="11"
-        width="14"
-        height="10"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-    </svg>
   );
 }

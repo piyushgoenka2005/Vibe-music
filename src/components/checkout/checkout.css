@@ -307,6 +307,27 @@
   cursor: not-allowed;
 }
 
+/* ─── Liquid glass CTAs ─── */
+@import "../../styles/checkout-glass-button.css";
+
+.checkout-actions .checkout-glass-btn {
+  flex: 1 1 auto;
+  min-width: 160px;
+  width: auto;
+}
+
+.checkout-mobile-bar .checkout-glass-btn {
+  width: auto;
+  min-width: 132px;
+  min-height: 44px;
+  padding: 0 1.25rem;
+}
+
+.checkout-summary__pay .checkout-glass-btn {
+  width: 100%;
+  min-height: 52px;
+}
+
 .checkout-actions {
   display: flex;
   flex-wrap: wrap;
@@ -544,10 +565,78 @@
   color: #334155;
 }
 
-/* ─── Payment methods ─── */
+/* ─── Payment methods — Vision Pro liquid glass (white floating stage) ─── */
+.storefront-page .checkout-panel.checkout-panel--payment-glass {
+  overflow: hidden;
+  padding-bottom: 1.25rem;
+  border-color: rgba(226, 232, 240, 0.9);
+  background: #ffffff;
+  box-shadow:
+    0 24px 64px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.checkout-panel--payment-glass {
+  overflow: hidden;
+}
+
+.checkout-pay-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  border-radius: 22px;
+  min-height: 280px;
+  padding: 0.25rem;
+}
+
+.checkout-pay-stage__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(90% 70% at 8% 0%, rgba(18, 83, 237, 0.07), transparent 62%),
+    radial-gradient(80% 65% at 100% 100%, rgba(99, 102, 241, 0.06), transparent 58%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.checkout-pay-stage__orb {
+  position: absolute;
+  z-index: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(56px);
+  opacity: 0.55;
+}
+
+.checkout-pay-stage__orb--a {
+  top: -18%;
+  left: -6%;
+  width: 42%;
+  height: 48%;
+  background: rgba(18, 83, 237, 0.12);
+}
+
+.checkout-pay-stage__orb--b {
+  right: -4%;
+  bottom: -22%;
+  width: 38%;
+  height: 44%;
+  background: rgba(129, 140, 248, 0.1);
+}
+
+.checkout-pay-stage__shell {
+  position: relative;
+  z-index: 2;
+  margin: 0.65rem;
+  color: #0f172a;
+}
+
 .checkout-pay-methods {
+  position: relative;
   display: grid;
   gap: 1rem;
+  padding: clamp(0.85rem, 2vw, 1.1rem);
 }
 
 .checkout-pay-methods__primary {
@@ -562,65 +651,78 @@
   gap: 0.875rem;
   width: 100%;
   padding: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  background: #fff;
+  border-radius: 18px;
   text-align: left;
-  cursor: pointer;
+  color: inherit;
   transition:
-    border-color 0.15s,
-    background 0.15s,
-    box-shadow 0.15s;
+    transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 2.2),
+    box-shadow 0.35s ease;
 }
 
-.checkout-pay-card:hover {
-  border-color: #cbd5e1;
+.checkout-pay-card:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.005);
 }
 
 .checkout-pay-card--selected {
-  border-color: var(--brand-primary, #1253ed);
-  background: rgba(18, 83, 237, 0.04);
-  box-shadow: 0 0 0 1px var(--brand-primary, #1253ed);
+  transform: translateY(-1px);
 }
 
 .checkout-pay-card__check {
   position: absolute;
   top: 10px;
   right: 10px;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--brand-primary, #1253ed);
+  background: linear-gradient(145deg, #3b7bff 0%, #1253ed 100%);
   color: #fff;
+  box-shadow:
+    0 4px 12px rgba(18, 83, 237, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .checkout-pay-card__icon {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  background: #f1f5f9;
+  border-radius: 14px;
   color: #334155;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 4px 12px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .checkout-pay-card--selected .checkout-pay-card__icon {
-  background: rgba(18, 83, 237, 0.12);
   color: var(--brand-primary, #1253ed);
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(18, 83, 237, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 6px 16px rgba(18, 83, 237, 0.14);
 }
 
 .checkout-pay-card__icon--sm {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .checkout-pay-card__body {
+  position: relative;
+  z-index: 2;
   display: grid;
   gap: 0.15rem;
   min-width: 0;
@@ -656,6 +758,8 @@
 }
 
 .checkout-pay-card__tags {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
@@ -663,20 +767,30 @@
 }
 
 .checkout-pay-card__tags span {
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  background: #f1f5f9;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.55);
   font-size: 0.625rem;
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.04em;
   color: #64748b;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.checkout-pay-card--selected .checkout-pay-card__tags span {
+  color: #475569;
+  border-color: rgba(18, 83, 237, 0.12);
+  background: rgba(255, 255, 255, 0.58);
 }
 
 .checkout-pay-methods__trust {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem 1.25rem;
-  padding-top: 0.25rem;
+  padding-top: 0.35rem;
   font-size: 0.75rem;
   color: #64748b;
 }
@@ -685,6 +799,16 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkout-pay-card {
+    transition: none;
+  }
+
+  .checkout-pay-card:hover {
+    transform: none;
+  }
 }
 
 /* ─── Order summary — crystal premium ─── */

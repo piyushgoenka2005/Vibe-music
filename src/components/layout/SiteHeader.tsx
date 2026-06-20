@@ -8,12 +8,16 @@ import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/store/authStore";
+import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 import { useHideOnScroll, useSiteHeaderOffset } from "@/hooks/useHideOnScroll";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import SiteHeaderNav from "@/components/layout/SiteHeaderNav";
 import SearchRollingPlaceholder, {
   SEARCH_ROLLING_ARIA_LABEL,
 } from "@/components/search/SearchRollingPlaceholder";
+import WishlistCounter from "@/components/wishlist/WishlistCounter";
+import HeaderThemeSwitcher from "@/components/layout/HeaderThemeSwitcher";
 
 export default function SiteHeader() {
   const headerRef = useRef<HTMLElement>(null);
@@ -53,6 +57,47 @@ export default function SiteHeader() {
       : "Account";
   const accountPhotoUrl =
     isInitialized && isAuthenticated ? user?.photoURL ?? null : null;
+
+  const cartCount = useCartStore((s) =>
+    s.items.reduce((sum, item) => sum + item.quantity, 0)
+  );
+  const openCartDrawer = useCartStore((s) => s.openDrawer);
+  const openWishlistDrawer = useWishlistStore((s) => s.openDrawer);
+  const cartCountRef = useRef<HTMLSpanElement>(null);
+  const prevCartCountRef = useRef(cartCount);
+
+  const cartCountText = cartCount > 0 ? String(cartCount) : "";
+  const cartDataCount = cartCount > 99 ? "99+" : String(cartCount);
+  const cartLabel =
+    cartCount === 0
+      ? "No items in your cart"
+      : `${cartCount} item${cartCount === 1 ? "" : "s"} in your cart`;
+
+  useEffect(() => {
+    const el = cartCountRef.current;
+    if (!el || cartCount <= prevCartCountRef.current) {
+      prevCartCountRef.current = cartCount;
+      return;
+    }
+
+    el.classList.remove("site-header__cart-count--bump");
+    void el.offsetWidth;
+    el.classList.add("site-header__cart-count--bump");
+    const timer = window.setTimeout(() => {
+      el.classList.remove("site-header__cart-count--bump");
+    }, 450);
+    prevCartCountRef.current = cartCount;
+
+    return () => window.clearTimeout(timer);
+  }, [cartCount]);
+
+  const handleCartClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>) => {
+      event.preventDefault();
+      openCartDrawer();
+    },
+    [openCartDrawer]
+  );
 
   return (
     <header
@@ -115,6 +160,8 @@ export default function SiteHeader() {
           </form>
 
           <div className="site-header__actions">
+            <HeaderThemeSwitcher />
+
             <Link
               href={accountHref}
               className="site-header__action assets-site-header__menu-account"
@@ -137,20 +184,24 @@ export default function SiteHeader() {
               </span>
             </Link>
 
-            <div className="assets-site-header__menu-cart-wrap" data-vibe-wishlist-anchor>
-              {/* Wishlist mounts here via NavbarWishlist */}
+            <div className="assets-site-header__menu-cart-wrap">
+              <WishlistCounter onClick={openWishlistDrawer} />
             </div>
 
             <Link
               href={ROUTES.cart}
               className="site-header__action site-header__cart assets-site-header__menu-cart"
-              aria-label="Cart"
+              aria-label={cartLabel}
+              onClick={handleCartClick}
             >
               <ShoppingCart size={18} />
               <span
+                ref={cartCountRef}
                 className="site-header__cart-count assets-site-header__menu-cart-count"
-                data-count="0"
-              />
+                data-count={cartDataCount}
+              >
+                {cartCountText}
+              </span>
             </Link>
           </div>
         </div>
@@ -161,7 +212,7 @@ export default function SiteHeader() {
         onMegaMenuOpenChange={handleMegaMenuOpenChange}
       />
 
-      {/* Legacy auth sync hooks — hidden, updated by NavbarAuth */}
+      {/* Mobile nav account states (legacy CSS hooks) */}
       <div className="site-header__auth-hooks" aria-hidden>
         <div
           className={`assets-site-header__nav-menu-account-logged-in${isAuthenticated ? "" : " removed"}`}

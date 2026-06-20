@@ -3,7 +3,7 @@ import { ROUTES } from "@/lib/routes";
 
 export default function NotFound() {
   return (
-    <main className="storefront-page storefront-page--subtle error-page" id="main-content">
+    <main className="storefront-page storefront-page--subtle error-page">
       <div className="error-page__inner">
         <p className="storefront-page__eyebrow">404</p>
         <h1 className="error-page__title">This page hit a wrong note</h1>

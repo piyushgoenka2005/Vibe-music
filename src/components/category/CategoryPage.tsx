@@ -15,14 +15,16 @@ import {
 import CategoryBreadcrumb from "./CategoryBreadcrumb";
 import CategoryPagination from "./CategoryPagination";
 import type { Category } from "@/types/category";
+import type { CategoryProductsResult } from "@/types/filters";
 import "../filters/filters.css";
 import "./category.css";
 
 interface CategoryPageProps {
   category: Category;
+  initialData?: CategoryProductsResult;
 }
 
-function CategoryPageContent({ category }: CategoryPageProps) {
+function CategoryPageContent({ category, initialData }: CategoryPageProps) {
   const {
     filters,
     updateFilters,
@@ -34,7 +36,8 @@ function CategoryPageContent({ category }: CategoryPageProps) {
   const openMobileDrawer = useFilterStore((s) => s.openMobileDrawer);
   const { data, isLoading, isError } = useCategoryProducts(
     category.slug,
-    filters
+    filters,
+    initialData
   );
 
   const facets = data?.facets ?? { brands: [], priceRange: { min: 0, max: 0 } };
@@ -153,7 +156,7 @@ function CategoryPageContent({ category }: CategoryPageProps) {
   );
 }
 
-export default function CategoryPage({ category }: CategoryPageProps) {
+export default function CategoryPage({ category, initialData }: CategoryPageProps) {
   return (
     <Suspense
       fallback={
@@ -162,7 +165,7 @@ export default function CategoryPage({ category }: CategoryPageProps) {
         </div>
       }
     >
-      <CategoryPageContent category={category} />
+      <CategoryPageContent category={category} initialData={initialData} />
     </Suspense>
   );
 }

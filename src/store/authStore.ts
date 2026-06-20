@@ -35,6 +35,7 @@ interface AuthState {
 }
 
 let unsubscribeAuth: (() => void) | null = null;
+let lastSyncedUserId: string | null | undefined;
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
@@ -166,9 +167,15 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
 
     unsubscribeAuth = subscribeToAuthState(async (user) => {
+      const userId = user?.id ?? null;
+      const shouldSyncSession = lastSyncedUserId !== userId;
+      lastSyncedUserId = userId;
+
       if (user) {
-        const idToken = await getCurrentIdToken();
-        await syncServerSession(idToken);
+        if (shouldSyncSession) {
+          const idToken = await getCurrentIdToken();
+          await syncServerSession(idToken);
+        }
         set({
           user,
           isAuthenticated: true,
@@ -178,7 +185,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         return;
       }
 
-      await syncServerSession(null);
+      if (shouldSyncSession) {
+        await syncServerSession(null);
+      }
       set({
         user: null,
         isAuthenticated: false,

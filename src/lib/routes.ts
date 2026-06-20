@@ -39,7 +39,6 @@ export const ROUTES = {
   adminSettings: "/admin/settings",
   adminBlog: "/admin/blog",
   blog: "/blog",
-  gp9: "/gp9",
 } as const;
 
 export function categoryPath(slug: string): string {
@@ -60,6 +59,7 @@ const PLACEHOLDER_REDIRECTS: Record<string, string> = {
   "/products": ROUTES.search,
   "/deals": `${ROUTES.searchResults}?q=deals`,
   "/wishlist": ROUTES.accountWishlist,
+  "/gp9": ROUTES.home,
 };
 
 /** Longest-prefix shop paths → category slug */
@@ -151,7 +151,6 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.accountWishlist) return true;
   if (path === ROUTES.login || path === ROUTES.register) return true;
   if (path === ROUTES.blog || path.startsWith("/blog/")) return true;
-  if (path === ROUTES.gp9 || path.startsWith(`${ROUTES.gp9}/`)) return true;
   if (path === ROUTES.admin) return true;
   if (path.startsWith("/admin/")) return true;
 
@@ -186,6 +185,8 @@ export function resolveLegacyPath(pathname: string): string | null {
   if (isValidAppRoute(path)) return null;
 
   if (PLACEHOLDER_REDIRECTS[path]) return PLACEHOLDER_REDIRECTS[path];
+
+  if (path === "/gp9" || path.startsWith("/gp9/")) return ROUTES.home;
 
   const storeDetail = resolveStoreDetail(path);
   if (storeDetail) return storeDetail;

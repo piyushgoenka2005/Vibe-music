@@ -10,6 +10,7 @@ import CheckoutSummary, {
 import CheckoutPaymentMethods, {
   type OnlinePaymentChannel,
 } from "@/components/checkout/CheckoutPaymentMethods";
+import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
 import { useCheckoutPayment } from "@/hooks/useCheckoutPayment";
 import {
   addressToShipping,
@@ -491,7 +492,11 @@ export default function CheckoutPageContent() {
       ) : null}
 
       <div className="checkout-grid">
-        <div className="checkout-panel">
+        <div
+          className={`checkout-panel${
+            step === "payment" ? " checkout-panel--payment-glass" : ""
+          }`}
+        >
           {step === "address" ? (
             <>
               <h2 className="checkout-panel__title">Delivery Address</h2>
@@ -688,17 +693,15 @@ export default function CheckoutPageContent() {
               ) : null}
 
               <div className="checkout-actions">
-                <Link href={ROUTES.cart} className="checkout-btn checkout-btn--ghost">
+                <CheckoutGlassButton href={ROUTES.cart} variant="ghost">
                   Back to Cart
-                </Link>
-                <button
-                  type="button"
-                  className="checkout-btn checkout-btn--primary"
-                  onClick={() => void handleContinueFromAddress()}
+                </CheckoutGlassButton>
+                <CheckoutGlassButton
                   disabled={!canProceedFromAddress || isSavingAddress}
+                  onClick={() => void handleContinueFromAddress()}
                 >
                   {isSavingAddress ? "Saving address…" : "Continue to Review"}
-                </button>
+                </CheckoutGlassButton>
               </div>
             </>
           ) : null}
@@ -753,20 +756,12 @@ export default function CheckoutPageContent() {
               ) : null}
 
               <div className="checkout-actions">
-                <button
-                  type="button"
-                  className="checkout-btn checkout-btn--ghost"
-                  onClick={handleEditAddress}
-                >
+                <CheckoutGlassButton onClick={handleEditAddress} variant="ghost">
                   Edit Address
-                </button>
-                <button
-                  type="button"
-                  className="checkout-btn checkout-btn--primary"
-                  onClick={handleContinueToPayment}
-                >
+                </CheckoutGlassButton>
+                <CheckoutGlassButton onClick={handleContinueToPayment}>
                   Continue to Payment
-                </button>
+                </CheckoutGlassButton>
               </div>
             </>
           ) : null}
@@ -803,13 +798,12 @@ export default function CheckoutPageContent() {
               ) : null}
 
               <div className="checkout-actions checkout-actions--payment">
-                <button
-                  type="button"
-                  className="checkout-btn checkout-btn--ghost"
+                <CheckoutGlassButton
                   onClick={() => setStep("summary")}
+                  variant="ghost"
                 >
                   Back to Review
-                </button>
+                </CheckoutGlassButton>
               </div>
             </>
           ) : null}
@@ -845,30 +839,20 @@ export default function CheckoutPageContent() {
             <strong>{formatCurrencyPrecise(invoice.grandTotal)}</strong>
           </div>
           {step === "address" ? (
-            <button
-              type="button"
-              className="checkout-btn checkout-btn--primary checkout-mobile-bar__cta"
+            <CheckoutGlassButton
+              className="checkout-mobile-bar__cta"
               disabled={!canProceedFromAddress || isSavingAddress}
               onClick={() => void handleContinueFromAddress()}
             >
               {isSavingAddress ? "Saving…" : "Continue"}
-            </button>
-          ) : step === "summary" ? (
-            <button
-              type="button"
-              className="checkout-btn checkout-btn--primary checkout-mobile-bar__cta"
+            </CheckoutGlassButton>
+          ) : (
+            <CheckoutGlassButton
+              className="checkout-mobile-bar__cta"
               onClick={handleContinueToPayment}
             >
               Continue to Payment
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="checkout-btn checkout-btn--primary checkout-mobile-bar__cta"
-              onClick={() => setStep("payment")}
-            >
-              Pay Now
-            </button>
+            </CheckoutGlassButton>
           )}
         </div>
       ) : null}

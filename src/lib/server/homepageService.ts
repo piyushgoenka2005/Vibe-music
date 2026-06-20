@@ -6,9 +6,9 @@ import {
   tryFirestoreFast,
 } from "@/lib/server/firestoreErrors";
 import {
-  fetchAllProducts,
   fetchBrands,
 } from "@/lib/server/firestoreCatalogRepository";
+import { getCachedActiveProducts } from "@/lib/server/catalogSnapshotCache";
 import { listCategories } from "@/lib/server/categoryRepository";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { getCategoryGridImage } from "@/lib/categoryImages";
@@ -31,20 +31,10 @@ import type {
   ResolvedHomepageSection,
 } from "@/types/homepage";
 
-const PUBLIC_CACHE_TTL_MS = 45_000;
-
-let publicCache: PublicHomepageData | null = null;
-let publicCacheAt = 0;
-let publicInflight: Promise<PublicHomepageData> | null = null;
-
-function isFresh(ts: number): boolean {
-  return Date.now() - ts < PUBLIC_CACHE_TTL_MS;
-}
-
 export function invalidatePublicHomepageCache(): void {
-  publicCache = null;
-  publicCacheAt = 0;
-  publicInflight = null;
+  void import("@/lib/server/homepageSnapshotCache").then(({ revalidateHomepageSnapshot }) =>
+    revalidateHomepageSnapshot()
+  );
 }
 
 function activeProducts(products: CatalogProduct[]): CatalogProduct[] {
@@ -311,19 +301,11 @@ export async function getPublicHomepageData(
     return staticFallback();
   }
 
-  if (publicCache && isFresh(publicCacheAt)) {
-    return publicCache;
-  }
-
-  if (publicInflight) {
-    return publicInflight;
-  }
-
-  publicInflight = tryFirestoreFast(
+  return tryFirestoreFast(
     async () => {
       const [sections, products, allSectionItems] = await Promise.all([
         listActiveSections(),
-        fetchAllProducts(),
+        getCachedActiveProducts(),
         listAllSectionItems(),
       ]);
 
@@ -339,28 +321,17 @@ export async function getPublicHomepageData(
         return staticFallback();
       }
 
-      const payload: PublicHomepageData = {
+      return {
         sections: resolved,
         fetchedAt: at.toISOString(),
       };
-
-      publicCache = payload;
-      publicCacheAt = Date.now();
-      return payload;
     },
     {
       domain: "homepage",
       context: "Firestore unavailable — skipping dynamic homepage sections",
-      fallback: () => {
-        if (publicCache) return publicCache;
-        return staticFallback();
-      },
+      fallback: staticFallback,
     }
-  ).finally(() => {
-    publicInflight = null;
-  });
-
-  return publicInflight;
+  );
 }
 
 export {

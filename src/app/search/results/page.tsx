@@ -15,7 +15,7 @@ export default async function SearchResultsRoute({
   const query = params.q?.trim() ?? "";
 
   return (
-    <main className="storefront-page storefront-page--subtle" id="main-content">
+    <main className="storefront-page storefront-page--subtle">
       <SearchResultsPage
         query={query}
         initialCategory={params.category ?? ""}

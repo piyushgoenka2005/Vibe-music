@@ -60,7 +60,7 @@ export default async function ResumePaymentPage({
   const demoMode = !isRazorpayConfigured() && isDemoPaymentsAllowed();
 
   return (
-    <main className="storefront-page storefront-page--subtle" id="main-content">
+    <main className="storefront-page storefront-page--subtle">
       <ResumePaymentClient order={order} email={email} demoMode={demoMode} />
     </main>
   );

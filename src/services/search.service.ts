@@ -29,7 +29,7 @@ interface SearchApiSuggestResponse {
 }
 
 async function readSearchApi<T>(url: string): Promise<T> {
-  const response = await fetch(url, { cache: "no-store" });
+  const response = await fetch(url);
   const body = (await response.json()) as T & { error?: string };
 
   if (!response.ok) {

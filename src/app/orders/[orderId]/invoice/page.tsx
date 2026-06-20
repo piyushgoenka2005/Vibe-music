@@ -65,7 +65,7 @@ export default async function InvoicePage({
 
   if (!order) {
     return (
-      <main className="storefront-page storefront-page--subtle" id="main-content">
+      <main className="storefront-page storefront-page--subtle">
         <h1 className="storefront-h1">Invoice unavailable</h1>
         <p>Order not found or not accessible.</p>
       </main>
@@ -73,7 +73,7 @@ export default async function InvoicePage({
   }
 
   return (
-    <main className="storefront-page storefront-page--subtle" id="main-content">
+    <main className="storefront-page storefront-page--subtle">
       <div className="storefront-page__inner">
         <h1 className="storefront-h1">Tax Invoice</h1>
 

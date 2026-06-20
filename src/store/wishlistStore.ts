@@ -83,13 +83,22 @@ function saveAccountWishlist(userId: string, items: WishlistItem[]) {
 
 async function loadAccountWishlistFromApi(): Promise<WishlistItem[] | null> {
   try {
-    const res = await fetch("/api/account/wishlist", {
-      signal: AbortSignal.timeout(5_000),
-    });
-    if (res.status === 401 || res.status === 404) return null;
-    if (!res.ok) return null;
-    const data = (await res.json()) as { items?: WishlistItem[] };
-    return data.items ?? [];
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const res = await fetch("/api/account/wishlist", {
+        signal: AbortSignal.timeout(5_000),
+      });
+      if (res.status === 401) return null;
+      if (res.status === 404 && attempt < 3) {
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, 450 * (attempt + 1));
+        });
+        continue;
+      }
+      if (!res.ok) return null;
+      const data = (await res.json()) as { items?: WishlistItem[] };
+      return data.items ?? [];
+    }
+    return null;
   } catch {
     return null;
   }
@@ -227,7 +236,7 @@ export const useWishlistStore = create<WishlistState>()(
       partialize: (state) => ({ items: state.items }),
       onRehydrateStorage: () => (state) => {
         state?._setHydrated();
-        state?.syncWithAccount();
+        window.setTimeout(() => void state?.syncWithAccount(), 900);
       },
     }
   )

@@ -1,15 +1,8 @@
 import type { Metadata } from "next";
 import { primaryFont } from "@/lib/fonts";
-import NavbarCart from "@/components/cart/NavbarCart";
-import AuthProvider from "@/components/auth/AuthProvider";
-import NavbarAuth from "@/components/auth/NavbarAuth";
-import ToastContainer from "@/components/common/ToastContainer";
-import DeferredGlobalSearch from "@/components/layout/DeferredGlobalSearch";
-import StorefrontChrome from "@/components/layout/StorefrontChrome";
-import DeferredHtmlLinkInterceptor from "@/components/vibe/DeferredHtmlLinkInterceptor";
-import NavbarWishlist from "@/components/wishlist/NavbarWishlist";
-import QueryProvider from "@/providers/QueryProvider";
+import AppShell from "@/components/layout/AppShell";
 import { DEFAULT_METADATA } from "@/lib/site";
+import { STOREFRONT_THEME_BOOT_SCRIPT } from "@/lib/storefrontThemeScript";
 import "./globals.css";
 import "@/styles/typography.css";
 import "@/styles/site-layout.css";
@@ -27,21 +20,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en-IN" className={primaryFont.variable}>
+    <html
+      lang="en-IN"
+      className={primaryFont.variable}
+      data-storefront-theme="light"
+      suppressHydrationWarning
+    >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: STOREFRONT_THEME_BOOT_SCRIPT,
+          }}
+        />
+      </head>
       <body className={primaryFont.className} suppressHydrationWarning>
-        <QueryProvider>
-          <AuthProvider>
-            <StorefrontChrome>
-              <DeferredHtmlLinkInterceptor />
-              <DeferredGlobalSearch />
-              <NavbarWishlist />
-              <NavbarCart />
-              <NavbarAuth />
-              <ToastContainer />
-              {children}
-            </StorefrontChrome>
-          </AuthProvider>
-        </QueryProvider>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

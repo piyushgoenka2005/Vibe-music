@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
   AUTH_SESSION_COOKIE,
-  getLoginRedirectUrl,
+  getProtectedLoginRedirectUrl,
   isProtectedRoute,
 } from "@/lib/auth/protected-routes";
 import { resolveLegacyPath } from "@/lib/routes";
@@ -19,7 +19,7 @@ export function proxy(request: NextRequest) {
     const sessionCookie = request.cookies.get(AUTH_SESSION_COOKIE)?.value;
     if (!sessionCookie) {
       return NextResponse.redirect(
-        new URL(getLoginRedirectUrl(pathname), request.url)
+        new URL(getProtectedLoginRedirectUrl(pathname), request.url)
       );
     }
   }

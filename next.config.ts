@@ -18,20 +18,21 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.vibemusic.in https://accounts.google.com https://checkout.razorpay.com https://*.razorpay.com",
       "img-src 'self' data: blob: https: http:",
       "font-src 'self' data: https://cdn.vibemusic.in https://checkout.razorpay.com https://*.razorpay.com",
-      "connect-src 'self' blob: https://*.googleapis.com https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://api.razorpay.com https://*.razorpay.com https://lumberjack.razorpay.com https://*.cloudinary.com https://tonejs.github.io wss://*.firebaseio.com",
-      "media-src 'self' blob: https://tonejs.github.io",
+      "connect-src 'self' blob: https://*.googleapis.com https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://api.razorpay.com https://*.razorpay.com https://lumberjack.razorpay.com https://*.cloudinary.com wss://*.firebaseio.com",
+      "media-src 'self' blob:",
       "worker-src 'self' blob:",
-      "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://sketchfab.com",
+      "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com",
     ].join("; "),
   },
 ];
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  compress: true,
+  serverExternalPackages: ["firebase-admin"],
   experimental: {
     optimizePackageImports: [
       "lucide-react",
-      "@radix-ui/react-accordion",
-      "@radix-ui/react-dialog",
       "@radix-ui/react-label",
       "@radix-ui/react-separator",
       "@radix-ui/react-slot",
@@ -40,16 +41,15 @@ const nextConfig: NextConfig = {
       "firebase/auth",
       "firebase/firestore",
       "@tanstack/react-query",
-      "@tanstack/react-table",
     ],
   },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "cdn.vibemusic.in" },
-      { protocol: "https", hostname: "static.roland.com", pathname: "/**" },
     ],
     formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 3600,
   },
   async headers() {
     return [
@@ -57,6 +57,26 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: securityHeaders,
       },
+      {
+        source: "/assets/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      ...["svg", "png", "jpg", "jpeg", "gif", "webp", "ico", "woff2"].map(
+        (ext) => ({
+          source: `/:path*.${ext}`,
+          headers: [
+            {
+              key: "Cache-Control",
+              value: "public, max-age=86400, stale-while-revalidate=604800",
+            },
+          ],
+        })
+      ),
     ];
   },
 };

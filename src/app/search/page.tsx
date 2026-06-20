@@ -4,7 +4,7 @@ import "@/components/search/search.css";
 
 export default function SearchPage() {
   return (
-    <main className="storefront-page storefront-page--subtle" id="main-content">
+    <main className="storefront-page storefront-page--subtle">
       <div className="sw-search-landing-shell">
         <SearchLandingDecor />
         <section className="sw-search-landing">

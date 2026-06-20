@@ -26,7 +26,7 @@ export default async function BlogIndexPage() {
   const posts = Array.isArray(rawPosts) ? rawPosts : [];
 
   return (
-    <main className="blog-page" id="main-content">
+    <main className="blog-page">
       <div className="blog-page__inner">
         <header className="blog-page__header">
           <p className="blog-page__eyebrow">InSync</p>

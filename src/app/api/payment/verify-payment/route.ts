@@ -1,10 +1,25 @@
 import { NextResponse } from "next/server";
 import { formatCheckoutError } from "@/lib/server/checkoutErrors";
 import { verifyAndCompletePayment } from "@/lib/server/orderService";
+import {
+  enforceMutationSecurity,
+  enforceRateLimit,
+} from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import type { VerifyPaymentPayload } from "@/types/order";
 
 export async function POST(request: Request) {
   try {
+    const rateLimited = await enforceRateLimit(
+      request,
+      "checkout-verify-payment",
+      RATE_LIMITS.checkout
+    );
+    if (rateLimited) return rateLimited;
+
+    const csrfError = enforceMutationSecurity(request);
+    if (csrfError) return csrfError;
+
     const body = (await request.json()) as VerifyPaymentPayload;
 
     if (

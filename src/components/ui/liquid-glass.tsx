@@ -3,7 +3,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
-const GLASS_FILTER_ID = "vibe-glass-distortion";
+const GLASS_FILTER_ID = "glass-distortion";
 const GLASS_EASE = "cubic-bezier(0.175, 0.885, 0.32, 2.2)";
 
 export interface GlassEffectProps {
@@ -93,8 +93,8 @@ export function GlassSurface({
           className
         )}
         style={{
-          backdropFilter: "blur(12px) saturate(160%)",
-          WebkitBackdropFilter: "blur(12px) saturate(160%)",
+          backdropFilter: "blur(3px)",
+          WebkitBackdropFilter: "blur(3px)",
           filter: `url(#${GLASS_FILTER_ID})`,
           isolation: "isolate",
         }}
@@ -124,10 +124,13 @@ export function GlassEffect({
   href,
   target = "_blank",
   interactive = true,
-}: GlassEffectProps) {
+  tone = "default",
+}: GlassEffectProps & { tone?: "default" | "light" }) {
+  const isLight = tone === "light";
   const glassStyle: React.CSSProperties = {
-    boxShadow:
-      "0 6px 6px rgba(0, 0, 0, 0.12), 0 0 24px rgba(18, 83, 237, 0.08)",
+    boxShadow: isLight
+      ? "0 20px 48px rgba(18, 83, 237, 0.08), 0 8px 24px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.95)"
+      : "0 6px 6px rgba(0, 0, 0, 0.12), 0 0 24px rgba(18, 83, 237, 0.08)",
     transitionTimingFunction: GLASS_EASE,
     ...style,
   };
@@ -137,11 +140,14 @@ export function GlassEffect({
       className={cn(
         "relative flex overflow-hidden rounded-[inherit] font-medium transition-all duration-700",
         interactive && "cursor-pointer",
+        isLight && "border border-white/85",
         className
       )}
       style={glassStyle}
     >
-      <GlassSurface />
+      <GlassSurface
+        tint={isLight ? "rgba(255, 255, 255, 0.72)" : undefined}
+      />
       <div className="relative z-30 w-full">{children}</div>
     </div>
   );
@@ -155,6 +161,63 @@ export function GlassEffect({
   }
 
   return content;
+}
+
+export interface GlassEffectButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  selected?: boolean;
+  /** Softer glass on white/light backgrounds */
+  tone?: "default" | "light";
+}
+
+/** Interactive glass surface for toggles, payment cards, and option rows. */
+export function GlassEffectButton({
+  children,
+  className,
+  selected = false,
+  tone = "default",
+  style,
+  type = "button",
+  ...props
+}: GlassEffectButtonProps) {
+  const isLight = tone === "light";
+
+  return (
+    <button
+      type={type}
+      className={cn(
+        "relative flex w-full overflow-hidden rounded-[inherit] border-0 bg-transparent p-0 text-left font-inherit transition-all duration-700",
+        "cursor-pointer disabled:cursor-not-allowed disabled:opacity-60",
+        isLight && "border border-white/80",
+        className
+      )}
+      style={{
+        boxShadow: selected
+          ? isLight
+            ? "0 10px 28px rgba(18, 83, 237, 0.12), 0 0 0 1px rgba(18, 83, 237, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.95)"
+            : "0 8px 24px rgba(18, 83, 237, 0.18), 0 0 0 1px rgba(18, 83, 237, 0.2)"
+          : isLight
+            ? "0 6px 20px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.92)"
+            : "0 6px 6px rgba(0, 0, 0, 0.12), 0 0 20px rgba(0, 0, 0, 0.08)",
+        transitionTimingFunction: GLASS_EASE,
+        ...style,
+      }}
+      {...props}
+    >
+      <GlassSurface
+        tint={
+          selected
+            ? isLight
+              ? "rgba(255, 255, 255, 0.82)"
+              : "rgba(255, 255, 255, 0.42)"
+            : isLight
+              ? "rgba(255, 255, 255, 0.68)"
+              : "rgba(255, 255, 255, 0.25)"
+        }
+      />
+      <div className="relative z-30 w-full">{children}</div>
+    </button>
+  );
 }
 
 export function GlassDock({
@@ -248,7 +311,7 @@ export function LiquidGlassDemo() {
         animation: "moveBackground 60s linear infinite",
       }}
     >
-      <GlassFilter />
+      {/* GlassFilter is mounted once in StorefrontThemeProvider */}
       <div className="flex w-full flex-col items-center justify-center gap-6">
         <GlassDock icons={dockIcons} />
         <GlassButton>

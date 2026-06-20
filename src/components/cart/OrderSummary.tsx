@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
+import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
 import { formatCurrency } from "@/utils/currency";
 import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
@@ -110,31 +110,21 @@ export default function OrderSummary({
       </div>
 
       {onCheckout ? (
-        <button type="button" className="cart-btn cart-btn--checkout" onClick={onCheckout}>
-          Checkout
-        </button>
+        <CheckoutGlassButton onClick={onCheckout}>Checkout</CheckoutGlassButton>
       ) : (
-        <Link
-          href={checkoutHref}
-          className="cart-btn cart-btn--checkout"
-          onClick={closeDrawer}
-        >
+        <CheckoutGlassButton href={checkoutHref} onClick={closeDrawer}>
           Checkout
-        </Link>
+        </CheckoutGlassButton>
       )}
 
       {!compact ? (
-        <Link href={ROUTES.search} className="cart-btn cart-btn--secondary">
+        <CheckoutGlassButton href={ROUTES.search} variant="ghost">
           Continue Shopping
-        </Link>
+        </CheckoutGlassButton>
       ) : (
-        <Link
-          href="/cart"
-          className="cart-btn cart-btn--secondary"
-          onClick={closeDrawer}
-        >
+        <CheckoutGlassButton href="/cart" onClick={closeDrawer} variant="ghost">
           View Cart
-        </Link>
+        </CheckoutGlassButton>
       )}
     </div>
   );

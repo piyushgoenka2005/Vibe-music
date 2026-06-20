@@ -8,10 +8,25 @@ import {
   resolveOrderItemsFromFirestore,
 } from "@/lib/server/orderValidation";
 import { toPaise } from "@/lib/gstCalculator";
+import {
+  enforceMutationSecurity,
+  enforceRateLimit,
+} from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import type { CreateOrderPayload } from "@/types/order";
 
 export async function POST(request: Request) {
   try {
+    const rateLimited = await enforceRateLimit(
+      request,
+      "checkout-create-order",
+      RATE_LIMITS.checkout
+    );
+    if (rateLimited) return rateLimited;
+
+    const csrfError = enforceMutationSecurity(request);
+    if (csrfError) return csrfError;
+
     const sessionUser = await getSessionUser();
     const body = (await request.json()) as CreateOrderPayload;
 

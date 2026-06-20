@@ -17,7 +17,7 @@ import {
   type PanInfo,
 } from "framer-motion";
 import { ArrowRight, Check, Loader2, ShieldCheck } from "lucide-react";
-import { GlassFilter, GlassSurface } from "@/components/ui/liquid-glass";
+import { GlassSurface } from "@/components/ui/liquid-glass";
 
 interface SwipeToPayButtonProps {
   onConfirm: () => void | Promise<void>;
@@ -204,7 +204,6 @@ export default function SwipeToPayButton({
 
   return (
     <div className="checkout-swipe">
-      <GlassFilter />
       <motion.div
         ref={trackRef}
         className={[

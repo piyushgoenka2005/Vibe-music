@@ -74,36 +74,50 @@ export async function GET(request: Request) {
     const brands = buildBrandFacets(products);
 
     if (mode === "suggest") {
-      return NextResponse.json({
-        products: products.slice(0, 6).map((product) => ({
-          id: product.id,
-          slug: product.slug,
-          name: product.name,
-          brand: product.brand,
-          category: product.category,
-          price: product.price,
-          image: product.image,
-        })),
-        categories: categories.slice(0, 4),
-        brands: brands.slice(0, 4),
-      });
+      return NextResponse.json(
+        {
+          products: products.slice(0, 6).map((product) => ({
+            id: product.id,
+            slug: product.slug,
+            name: product.name,
+            brand: product.brand,
+            category: product.category,
+            price: product.price,
+            image: product.image,
+          })),
+          categories: categories.slice(0, 4),
+          brands: brands.slice(0, 4),
+        },
+        {
+          headers: {
+            "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+          },
+        }
+      );
     }
 
     const total = products.length;
     const offset = (page - 1) * limit;
     const paginated = products.slice(offset, offset + limit);
 
-    return NextResponse.json({
-      query,
-      products: paginated,
-      categories,
-      brands,
-      total,
-      page,
-      limit,
-      totalPages: Math.max(1, Math.ceil(total / limit)),
-      hasMore: offset + limit < total,
-    });
+    return NextResponse.json(
+      {
+        query,
+        products: paginated,
+        categories,
+        brands,
+        total,
+        page,
+        limit,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+        hasMore: offset + limit < total,
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+        },
+      }
+    );
   } catch (error) {
     return handleRouteError(error, "api/search");
   }

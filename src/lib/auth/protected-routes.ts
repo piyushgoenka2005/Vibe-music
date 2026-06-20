@@ -43,3 +43,17 @@ export function getLoginRedirectUrl(requestedPath: string): string {
   const params = new URLSearchParams({ redirect: requestedPath });
   return `${ROUTES.login}?${params.toString()}`;
 }
+
+export function getProtectedLoginRedirectUrl(requestedPath: string): string {
+  const path = requestedPath.replace(/\/+$/, "") || "/";
+
+  if (
+    (path === ROUTES.admin || path.startsWith(`${ROUTES.admin}/`)) &&
+    path !== ROUTES.adminLogin
+  ) {
+    const params = new URLSearchParams({ redirect: requestedPath });
+    return `${ROUTES.adminLogin}?${params.toString()}`;
+  }
+
+  return getLoginRedirectUrl(requestedPath);
+}

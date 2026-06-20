@@ -15,6 +15,7 @@ import {
   getDefaultVariant,
 } from "@/lib/variants";
 import type { ProductImage, ProductVariant } from "@/types/product";
+import type { ProductDetailResult } from "@/services/product.service";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import ShippingEstimator from "./ShippingEstimator";
@@ -26,6 +27,7 @@ import "./product-detail.css";
 
 interface ProductDetailPageProps {
   slug: string;
+  initialData?: ProductDetailResult | null;
 }
 
 function buildInitialSelection(variant: ProductVariant): Record<string, string> {
@@ -54,11 +56,12 @@ function buildGalleryImages(
   return variantImages;
 }
 
-export default function ProductDetailPage({ slug }: ProductDetailPageProps) {
+export default function ProductDetailPage({ slug, initialData }: ProductDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabsRef = useRef<HTMLDivElement>(null);
-  const { data, isLoading, isError } = useProduct(slug);
+  const { data, isLoading, isError } = useProduct(slug, initialData);
+  const showSkeleton = isLoading && !data;
   const addItem = useCartStore((s) => s.addItem);
   const openCartDrawer = useCartStore((s) => s.openDrawer);
   const trackRecentlyViewed = useRecentlyViewedStore((s) => s.add);
@@ -128,7 +131,7 @@ export default function ProductDetailPage({ slug }: ProductDetailPageProps) {
     [attributeSelection, catalogProduct, router, searchParams, selectedVariant, slug]
   );
 
-  if (isLoading) return <ProductDetailSkeleton />;
+  if (showSkeleton) return <ProductDetailSkeleton />;
 
   if (isError || !data || !selectedVariant) {
     return (

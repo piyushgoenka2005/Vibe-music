@@ -6,18 +6,20 @@ import {
   batchDeleteProducts as fsBatchDelete,
   batchUpdateProducts as fsBatchUpdate,
   batchWriteProducts,
-  fetchAllProducts,
+  fetchAllProducts as fetchAllProductsFromDb,
   fetchBrands,
   fetchCategories,
   fetchExistingSlugsAndSkus,
   fetchProductById,
   fetchProductBySlug,
   fetchProductsByCategory,
+  fetchProductsByIds,
   removeProduct,
   skuExists,
   slugExists,
   writeProduct,
 } from "@/lib/server/firestoreCatalogRepository";
+import { getCachedProducts } from "@/lib/server/catalogSnapshotCache";
 import { recordInventoryLogEntry } from "@/lib/server/inventoryRepository";
 import {
   applyVariantsToProduct,
@@ -201,7 +203,13 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
 export async function getAllProducts(
   includeInactive = false
 ): Promise<CatalogProduct[]> {
-  return fetchAllProducts(includeInactive);
+  return fetchAllProductsFromDb(includeInactive);
+}
+
+async function fetchCatalogSnapshot(
+  includeInactive = false
+): Promise<CatalogProduct[]> {
+  return getCachedProducts(includeInactive);
 }
 
 export async function getProductById(
@@ -242,17 +250,17 @@ export async function getProductsByCategory(
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
-  const products = await fetchAllProducts();
+  const products = await fetchCatalogSnapshot();
   return products.filter((p) => p.featured).map(toProduct);
 }
 
 export async function getTrendingProducts(): Promise<Product[]> {
-  const products = await fetchAllProducts();
+  const products = await fetchCatalogSnapshot();
   return products.filter((p) => p.trending).map(toProduct);
 }
 
 export async function getNewArrivals(): Promise<Product[]> {
-  const products = await fetchAllProducts();
+  const products = await fetchCatalogSnapshot();
   return products.filter((p) => p.newArrival).map(toProduct);
 }
 
@@ -317,7 +325,7 @@ function scoreProductMatch(
 export async function searchProducts(
   options: ProductSearchOptions = {}
 ): Promise<Product[]> {
-  let source = await fetchAllProducts(options.includeInactive ?? false);
+  let source = await fetchCatalogSnapshot(options.includeInactive ?? false);
 
   if (options.category) {
     source = await fetchProductsByCategory(
@@ -377,12 +385,20 @@ export async function getBrands(): Promise<Brand[]> {
 
 export async function getCategories(): Promise<Category[]> {
   const categories = await fetchCategories();
-  const products = await fetchAllProducts(true);
+  const products = await fetchCatalogSnapshot(true);
+  const countBySlug = new Map<string, number>();
+
+  for (const product of products) {
+    if (product.status !== "active") continue;
+    countBySlug.set(
+      product.categorySlug,
+      (countBySlug.get(product.categorySlug) ?? 0) + 1
+    );
+  }
+
   return categories.map((category) => ({
     ...category,
-    productCount: products.filter(
-      (p) => p.categorySlug === category.slug && p.status === "active"
-    ).length,
+    productCount: countBySlug.get(category.slug) ?? 0,
   }));
 }
 
@@ -394,16 +410,12 @@ export async function getCategoryBySlug(
 }
 
 export async function getProductSummaries(ids: string[]): Promise<Product[]> {
-  const all = await fetchAllProducts(true);
-  const idMap = new Map(all.map((p) => [p.id, p]));
-  return ids
-    .map((id) => idMap.get(id))
-    .filter((p): p is CatalogProduct => Boolean(p && p.status === "active"))
-    .map(toProduct);
+  const products = await fetchProductsByIds(ids);
+  return products.map(toProduct);
 }
 
 export async function getAllProductSlugs(): Promise<string[]> {
-  const products = await fetchAllProducts();
+  const products = await fetchCatalogSnapshot();
   return products.map((p) => p.slug);
 }
 
@@ -470,7 +482,7 @@ export async function createProduct(
     gstRate: input.gstRate,
   };
 
-  const all = await fetchAllProducts(true);
+  const all = await fetchAllProductsFromDb(true);
   product.detail = buildDefaultDetail(product, all);
 
   if (input.variants?.length) {
@@ -534,7 +546,7 @@ export async function updateProduct(
     updated.images = patch.images;
   }
 
-  const all = await fetchAllProducts(true);
+  const all = await fetchAllProductsFromDb(true);
   const preservedDetail = current.detail ?? buildDefaultDetail(current, all);
 
   if (patch.variants) {

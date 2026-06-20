@@ -7,7 +7,7 @@ function CheckoutLoading() {
 
 export default function CheckoutPage() {
   return (
-    <main className="storefront-page storefront-page--subtle" id="main-content">
+    <main className="storefront-page storefront-page--subtle">
       <Suspense fallback={<CheckoutLoading />}>
         <CheckoutPageContent />
       </Suspense>

@@ -64,6 +64,7 @@ export const RATE_LIMITS = {
   search: { limit: 60, windowMs: 60_000 },
   analytics: { limit: 30, windowMs: 60_000 },
   auth: { limit: 20, windowMs: 60_000 },
+  checkout: { limit: 10, windowMs: 60_000 },
   admin: { limit: 200, windowMs: 60_000 },
   sensitiveAccess: { limit: 30, windowMs: 60_000 },
 } as const;

@@ -23,9 +23,7 @@ export async function fetchProducts(params?: {
   if (params?.limit) searchParams.set("limit", String(params.limit));
 
   const query = searchParams.toString();
-  const response = await fetch(`/api/products${query ? `?${query}` : ""}`, {
-    cache: "no-store",
-  });
+  const response = await fetch(`/api/products${query ? `?${query}` : ""}`);
 
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as ProductsResponse | null;
@@ -35,3 +33,21 @@ export async function fetchProducts(params?: {
   const data = (await response.json()) as ProductsResponse;
   return data.products ?? [];
 }
+
+export async function fetchProductSummaries(ids: string[]): Promise<Product[]> {
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+  if (uniqueIds.length === 0) return [];
+
+  const response = await fetch(
+    `/api/products/summaries?ids=${encodeURIComponent(uniqueIds.join(","))}`
+  );
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as ProductsResponse | null;
+    throw new Error(body?.error ?? "Unable to load products");
+  }
+
+  const data = (await response.json()) as ProductsResponse;
+  return data.products ?? [];
+}
+

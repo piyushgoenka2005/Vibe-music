@@ -18,7 +18,9 @@ const PRODUCTS = "products";
 const CATEGORIES = "categories";
 const BRANDS = "brands";
 
-const CACHE_TTL_MS = 45_000;
+const CACHE_TTL_MS =
+  Number(process.env.CATALOG_MEMORY_CACHE_TTL_MS) ||
+  (process.env.NODE_ENV === "production" ? 120_000 : 45_000);
 
 const catalogCircuit = createFirestoreCircuitBreaker();
 
@@ -96,6 +98,9 @@ export function invalidateCatalogCache(): void {
   productsCacheAt = 0;
   categoriesCache = null;
   categoriesCacheAt = 0;
+  void import("@/lib/server/catalogSnapshotCache").then(({ revalidateCatalogSnapshot }) =>
+    revalidateCatalogSnapshot()
+  );
 }
 
 function isFresh(ts: number): boolean {

@@ -15,7 +15,7 @@ import type { GSTRate } from "@/lib/gstCalculator";
 import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
 import SwipeToPayButton from "@/components/checkout/SwipeToPayButton";
-import { GlassFilter } from "@/components/ui/liquid-glass";
+import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
 import type { PaymentMethod } from "@/types/order";
 
 export interface CheckoutSummaryItem {
@@ -150,7 +150,6 @@ export default function CheckoutSummary({
 
   return (
     <aside className={`checkout-summary ${className}`.trim()}>
-      <GlassFilter />
       <div className="checkout-summary__crystal" aria-hidden />
       <div className="checkout-summary__header">
         <div className="checkout-summary__head">
@@ -167,166 +166,170 @@ export default function CheckoutSummary({
       </div>
 
       <div className="checkout-summary__body">
-      {showLineItems ? (
-        <ul className="checkout-summary__items" aria-label="Order items">
-          {lineItems.map((item, index) => {
-            const key =
-              item.lineId ?? `${item.productId}-${item.variantId ?? "base"}-${index}`;
-            return (
-              <li key={key} className="checkout-summary__product">
-                {item.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={item.image}
-                    alt=""
-                    className="checkout-summary__thumb"
-                  />
-                ) : (
-                  <div
-                    className="checkout-summary__thumb"
-                    style={{
-                      background: item.imageColor ?? "#eee",
-                    }}
-                  />
-                )}
-                <div className="checkout-summary__product-info">
-                  <strong>{item.name}</strong>
-                  <span>Qty {item.quantity}</span>
-                </div>
-                <span className="checkout-summary__product-price">
-                  {formatCurrencyPrecise(item.price * item.quantity)}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
-
-      {showLineItems && shippingRemaining > 0 ? (
-        <div className="checkout-summary__shipping-bar">
-          <div
-            className="checkout-summary__shipping-fill"
-            style={{ width: `${shippingProgress}%` }}
-          />
-          <p>
-            Add {formatCurrencyPrecise(shippingRemaining)} more for free shipping
-          </p>
-        </div>
-      ) : null}
-
-      {showPromo ? (
-        <div className="checkout-summary__promo">
-          <p className="checkout-summary__promo-label">
-            <Tag size={13} strokeWidth={2.25} aria-hidden />
-            Promo code
-          </p>
-          {couponCode ? (
-            <div className="checkout-summary__promo-applied">
-              <span>
-                <strong>{couponCode}</strong>
-                {appliedCoupon ? ` (${formatCouponLabel(appliedCoupon)})` : null}
-              </span>
-              <button type="button" onClick={removeCoupon}>
-                Remove
-              </button>
-            </div>
-          ) : (
-            <>
-              <input
-                type="text"
-                placeholder="e.g. SAVE10"
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                aria-label="Promo code"
-                disabled={isApplyingCoupon}
-              />
-              <button
-                type="button"
-                className="checkout-summary__promo-apply"
-                onClick={() => void handleApplyCoupon()}
-                disabled={isApplyingCoupon || !couponInput.trim()}
-              >
-                {isApplyingCoupon ? "…" : "Apply"}
-              </button>
-            </>
-          )}
-          {!couponCode ? (
-            <p className="checkout-summary__promo-hint">
-              Enter a valid promo code from your offer email or checkout page.
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="checkout-summary__totals">
-        <p className="checkout-summary__totals-label">Price breakdown</p>
-        <SummaryRow
-          label="Subtotal"
-          value={formatCurrencyPrecise(invoice.subtotal)}
-        />
-
-        {invoice.couponDiscount > 0 ? (
-          <SummaryRow
-            label="Discount"
-            value={`−${formatCurrencyPrecise(invoice.couponDiscount)}`}
-            negative
-          />
+        {showLineItems ? (
+          <ul className="checkout-summary__items" aria-label="Order items">
+            {lineItems.map((item, index) => {
+              const key =
+                item.lineId ??
+                `${item.productId}-${item.variantId ?? "base"}-${index}`;
+              return (
+                <li key={key} className="checkout-summary__product">
+                  {item.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.image}
+                      alt=""
+                      className="checkout-summary__thumb"
+                    />
+                  ) : (
+                    <div
+                      className="checkout-summary__thumb"
+                      style={{
+                        background: item.imageColor ?? "#eee",
+                      }}
+                    />
+                  )}
+                  <div className="checkout-summary__product-info">
+                    <strong>{item.name}</strong>
+                    <span>Qty {item.quantity}</span>
+                  </div>
+                  <span className="checkout-summary__product-price">
+                    {formatCurrencyPrecise(item.price * item.quantity)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         ) : null}
 
-        <SummaryRow
-          label="Shipping"
-          value={
-            invoice.shippingCharge === 0
-              ? "FREE"
-              : formatCurrencyPrecise(invoice.shippingCharge)
-          }
-        />
-
-        {invoice.platformFee > 0 ? (
-          <SummaryRow
-            label="Platform Fee"
-            value={formatCurrencyPrecise(invoice.platformFee)}
-          />
-        ) : null}
-
-        <SummaryRow
-          label="Total"
-          value={formatCurrencyPrecise(invoice.grandTotal)}
-          highlight
-        />
-      </div>
-
-      {paymentAction ? (
-        <div className="checkout-summary__pay">
-          {paymentAction.paymentMethod === "razorpay" ? (
-            <SwipeToPayButton
-              onConfirm={paymentAction.onPay}
-              disabled={paymentAction.disabled}
-              loading={paymentAction.loading}
-              preparing={paymentAction.preparing}
+        {showLineItems && shippingRemaining > 0 ? (
+          <div className="checkout-summary__shipping-bar">
+            <div
+              className="checkout-summary__shipping-fill"
+              style={{ width: `${shippingProgress}%` }}
             />
-          ) : (
-            <button
-              type="button"
-              className="cart-btn cart-btn--checkout checkout-summary__cod-btn"
-              onClick={() => void paymentAction.onPay()}
-              disabled={paymentAction.disabled || paymentAction.loading}
-            >
-              {paymentAction.loading ? "Placing order…" : "Place order (COD)"}
-            </button>
-          )}
-          {paymentAction.error ? (
-            <p className="payment-button__error" role="alert">
-              {paymentAction.error}
+            <p>
+              Add {formatCurrencyPrecise(shippingRemaining)} more for free
+              shipping
             </p>
-          ) : null}
-        </div>
-      ) : null}
+          </div>
+        ) : null}
 
-      <p className="checkout-summary__trust">
-        <Lock size={12} aria-hidden />
-        Secure checkout in INR (₹) · UPI · Cards · Net Banking · COD
-      </p>
+        {showPromo ? (
+          <div className="checkout-summary__promo">
+            <p className="checkout-summary__promo-label">
+              <Tag size={13} strokeWidth={2.25} aria-hidden />
+              Promo code
+            </p>
+            {couponCode ? (
+              <div className="checkout-summary__promo-applied">
+                <span>
+                  <strong>{couponCode}</strong>
+                  {appliedCoupon
+                    ? ` (${formatCouponLabel(appliedCoupon)})`
+                    : null}
+                </span>
+                <button type="button" onClick={removeCoupon}>
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="e.g. SAVE10"
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                  aria-label="Promo code"
+                  disabled={isApplyingCoupon}
+                />
+                <button
+                  type="button"
+                  className="checkout-summary__promo-apply"
+                  onClick={() => void handleApplyCoupon()}
+                  disabled={isApplyingCoupon || !couponInput.trim()}
+                >
+                  {isApplyingCoupon ? "..." : "Apply"}
+                </button>
+              </>
+            )}
+            {!couponCode ? (
+              <p className="checkout-summary__promo-hint">
+                Enter a valid promo code from your offer email or checkout page.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="checkout-summary__totals">
+          <p className="checkout-summary__totals-label">Price breakdown</p>
+          <SummaryRow
+            label="Subtotal"
+            value={formatCurrencyPrecise(invoice.subtotal)}
+          />
+
+          {invoice.couponDiscount > 0 ? (
+            <SummaryRow
+              label="Discount"
+              value={`-${formatCurrencyPrecise(invoice.couponDiscount)}`}
+              negative
+            />
+          ) : null}
+
+          <SummaryRow
+            label="Shipping"
+            value={
+              invoice.shippingCharge === 0
+                ? "FREE"
+                : formatCurrencyPrecise(invoice.shippingCharge)
+            }
+          />
+
+          {invoice.platformFee > 0 ? (
+            <SummaryRow
+              label="Platform Fee"
+              value={formatCurrencyPrecise(invoice.platformFee)}
+            />
+          ) : null}
+
+          <SummaryRow
+            label="Total"
+            value={formatCurrencyPrecise(invoice.grandTotal)}
+            highlight
+          />
+        </div>
+
+        {paymentAction ? (
+          <div className="checkout-summary__pay">
+            {paymentAction.paymentMethod === "razorpay" ? (
+              <SwipeToPayButton
+                onConfirm={paymentAction.onPay}
+                disabled={paymentAction.disabled}
+                loading={paymentAction.loading}
+                preparing={paymentAction.preparing}
+              />
+            ) : (
+              <CheckoutGlassButton
+                disabled={paymentAction.disabled || paymentAction.loading}
+                onClick={() => void paymentAction.onPay()}
+              >
+                {paymentAction.loading
+                  ? "Placing order..."
+                  : "Place order (COD)"}
+              </CheckoutGlassButton>
+            )}
+            {paymentAction.error ? (
+              <p className="payment-button__error" role="alert">
+                {paymentAction.error}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        <p className="checkout-summary__trust">
+          <Lock size={12} aria-hidden />
+          Secure checkout in INR - UPI - Cards - Net Banking - COD
+        </p>
       </div>
     </aside>
   );

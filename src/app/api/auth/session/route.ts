@@ -3,12 +3,24 @@ import {
   AUTH_SESSION_COOKIE,
   AUTH_SESSION_MAX_AGE_SECONDS,
 } from "@/lib/auth/protected-routes";
-import { createSessionCookie } from "@/lib/auth/server-session";
+import { createSessionCookie, invalidateSessionCache } from "@/lib/auth/server-session";
 import { getAdminAuth } from "@/lib/firebase/admin";
 import { linkGuestOrdersToUser } from "@/lib/server/orderService";
+import {
+  enforceMutationSecurity,
+  enforceRateLimit,
+  handleRouteError,
+} from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 
 export async function POST(request: Request) {
   try {
+    const rateLimited = await enforceRateLimit(request, "auth-session", RATE_LIMITS.auth);
+    if (rateLimited) return rateLimited;
+
+    const csrfError = enforceMutationSecurity(request);
+    if (csrfError) return csrfError;
+
     const body = (await request.json()) as { idToken?: string };
     const idToken = body.idToken?.trim();
 
@@ -22,6 +34,8 @@ export async function POST(request: Request) {
     if (decoded.uid && decoded.email) {
       await linkGuestOrdersToUser(decoded.uid, decoded.email);
     }
+
+    invalidateSessionCache(sessionCookie);
 
     const response = NextResponse.json({ ok: true });
     response.cookies.set({
@@ -44,16 +58,28 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE() {
-  const response = NextResponse.json({ ok: true });
-  response.cookies.set({
-    name: AUTH_SESSION_COOKIE,
-    value: "",
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 0,
-  });
-  return response;
+export async function DELETE(request: Request) {
+  try {
+    const rateLimited = await enforceRateLimit(request, "auth-session", RATE_LIMITS.auth);
+    if (rateLimited) return rateLimited;
+
+    const csrfError = enforceMutationSecurity(request);
+    if (csrfError) return csrfError;
+
+    invalidateSessionCache();
+
+    const response = NextResponse.json({ ok: true });
+    response.cookies.set({
+      name: AUTH_SESSION_COOKIE,
+      value: "",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
+    });
+    return response;
+  } catch (error) {
+    return handleRouteError(error, "api/auth/session DELETE");
+  }
 }

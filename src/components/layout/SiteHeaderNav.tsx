@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { HEADER_MEGA_MENUS, MEGA_MENU_BY_SLUG } from "@/data/headerMegaMenu";
 import { ROUTES } from "@/lib/routes";
 import HeaderMegaMenu from "@/components/layout/HeaderMegaMenu";
@@ -18,8 +17,6 @@ export default function SiteHeaderNav({
   onNavigate,
   onMegaMenuOpenChange,
 }: SiteHeaderNavProps) {
-  const pathname = usePathname() ?? "";
-  const isGp9Active = pathname === ROUTES.gp9 || pathname.startsWith(`${ROUTES.gp9}/`);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [megaEnabled, setMegaEnabled] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,13 +99,6 @@ export default function SiteHeaderNav({
           </Link>
           <Link href={ROUTES.blog} className="site-header__nav-link" onClick={handleNavigate}>
             Guides
-          </Link>
-          <Link
-            href={ROUTES.gp9}
-            className={`site-header__nav-link${isGp9Active ? " site-header__nav-link--active" : ""}`}
-            onClick={handleNavigate}
-          >
-            GP-9
           </Link>
         </div>
 

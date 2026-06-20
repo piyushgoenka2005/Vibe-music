@@ -26,8 +26,8 @@ const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
   loading: () => null,
 });
 
-const SPLASH_CURSOR_DISABLED =
-  process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR === "false";
+const SPLASH_CURSOR_ENABLED =
+  process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR === "true";
 
 export default function StorefrontChrome({
   children,
@@ -39,7 +39,7 @@ export default function StorefrontChrome({
   const isHomePage = pathname === "/";
   const prefersReducedMotion = usePrefersReducedMotion();
   const splashEnabled =
-    isHomePage && !SPLASH_CURSOR_DISABLED && !prefersReducedMotion && !hideChrome;
+    isHomePage && SPLASH_CURSOR_ENABLED && !prefersReducedMotion && !hideChrome;
 
   if (hideChrome) {
     return <>{children}</>;
@@ -66,7 +66,7 @@ export default function StorefrontChrome({
       <SkipToContent />
       <SocialRail />
       <SiteHeader />
-      <div id="main-content" className="storefront-main" tabIndex={-1}>
+      <div className="storefront-main" tabIndex={-1}>
         {children}
       </div>
       <SiteFooter />

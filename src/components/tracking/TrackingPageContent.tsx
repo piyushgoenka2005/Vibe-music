@@ -43,7 +43,7 @@ export default function TrackingPageContent() {
   }
 
   return (
-    <main className="storefront-page storefront-page--subtle" id="main-content">
+    <main className="storefront-page storefront-page--subtle">
       <section className="track-page">
         <header className="track-page__header">
           <p className="storefront-page__eyebrow">Order status</p>

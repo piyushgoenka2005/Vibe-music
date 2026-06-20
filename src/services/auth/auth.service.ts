@@ -1,3 +1,5 @@
+"use client";
+
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -22,6 +24,9 @@ import {
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
+
+const SESSION_SYNC_RETRIES = 4;
+const SESSION_SYNC_RETRY_MS = 450;
 
 function assertAuthConfigured(): void {
   if (!isFirebaseClientConfigured()) {
@@ -50,117 +55,108 @@ async function ensureUserProfile(user: FirebaseUser): Promise<void> {
       }
       return;
     }
-
     await createUserProfile(user.uid, {
       email: user.email ?? "",
-      displayName:
-        user.displayName ?? user.email?.split("@")[0] ?? "User",
-      photoURL: user.photoURL,
+      displayName: user.displayName ?? "",
+      photoURL: user.photoURL ?? undefined,
     });
-  } catch (error) {
-    console.warn("[auth] Firestore profile sync skipped:", error);
+  } catch {
+    // Profile sync is best-effort during sign-in.
   }
 }
 
-export function mapFirebaseUser(user: FirebaseUser): AppUser {
+function mapFirebaseUser(user: FirebaseUser): AppUser {
   return {
     id: user.uid,
     email: user.email ?? "",
-    name: user.displayName ?? user.email?.split("@")[0] ?? "User",
-    photoURL: user.photoURL,
-    emailVerified: user.emailVerified,
+    name: user.displayName ?? user.email ?? "User",
+    photoURL: user.photoURL ?? undefined,
   };
+}
+
+export async function getCurrentIdToken(forceRefresh = false): Promise<string | null> {
+  const auth = getClientAuth();
+  const user = auth.currentUser;
+  if (!user) return null;
+  return user.getIdToken(forceRefresh);
+}
+
+export function subscribeToAuthState(
+  callback: (user: AppUser | null) => void
+): () => void {
+  assertAuthConfigured();
+  const auth = getClientAuth();
+  return onAuthStateChanged(auth, async (firebaseUser) => {
+    if (!firebaseUser) {
+      callback(null);
+      return;
+    }
+    await ensureUserProfile(firebaseUser);
+    callback(mapFirebaseUser(firebaseUser));
+  });
 }
 
 export async function signUp(input: SignUpInput): Promise<AppUser> {
   assertAuthConfigured();
   const auth = getClientAuth();
-  const credential = await createUserWithEmailAndPassword(
-    auth,
-    input.email,
-    input.password
-  );
-
-  const displayName = input.displayName?.trim() || input.email.split("@")[0];
-
+  const credential = await createUserWithEmailAndPassword(auth, input.email, input.password);
+  const displayName = input.displayName?.trim() ?? "";
   if (displayName) {
     await updateProfile(credential.user, { displayName });
   }
-
-  await ensureUserProfile(credential.user);
-
+  await createUserProfile(credential.user.uid, {
+    email: input.email,
+    displayName,
+  });
   return mapFirebaseUser(credential.user);
 }
 
 export async function signIn(input: SignInInput): Promise<AppUser> {
   assertAuthConfigured();
   const auth = getClientAuth();
-  const credential = await signInWithEmailAndPassword(
-    auth,
-    input.email,
-    input.password
-  );
-
+  const credential = await signInWithEmailAndPassword(auth, input.email, input.password);
   await ensureUserProfile(credential.user);
-
   return mapFirebaseUser(credential.user);
 }
 
 export async function signInWithGoogle(): Promise<AppUser> {
   assertAuthConfigured();
   const auth = getClientAuth();
-
   try {
-    const credential = await signInWithPopup(auth, googleProvider);
-    await ensureUserProfile(credential.user);
-    return mapFirebaseUser(credential.user);
+    const result = await signInWithPopup(auth, googleProvider);
+    await ensureUserProfile(result.user);
+    return mapFirebaseUser(result.user);
   } catch (error) {
-    if (shouldFallbackToRedirect(error)) {
-      await signInWithRedirect(auth, googleProvider);
-      return new Promise(() => {});
-    }
-    throw error;
+    if (!shouldFallbackToRedirect(error)) throw error;
+    await signInWithRedirect(auth, googleProvider);
+    throw new Error("Redirecting to Google sign-in…");
   }
 }
 
 export async function completeGoogleRedirectSignIn(): Promise<AppUser | null> {
-  assertAuthConfigured();
+  if (!isFirebaseClientConfigured()) return null;
   const auth = getClientAuth();
-  const credential = await getRedirectResult(auth);
-  if (!credential?.user) return null;
-
-  await ensureUserProfile(credential.user);
-  return mapFirebaseUser(credential.user);
+  const result = await getRedirectResult(auth);
+  if (!result?.user) return null;
+  await ensureUserProfile(result.user);
+  return mapFirebaseUser(result.user);
 }
 
 export async function logout(): Promise<void> {
+  assertAuthConfigured();
   await signOut(getClientAuth());
 }
 
 export async function forgotPassword(email: string): Promise<void> {
-  await sendPasswordResetEmail(getClientAuth(), email.trim());
-}
-
-export async function getCurrentIdToken(forceRefresh = false): Promise<string | null> {
-  const user = getClientAuth().currentUser;
-  if (!user) return null;
-  return user.getIdToken(forceRefresh);
-}
-
-export function subscribeToAuthState(
-  listener: (user: AppUser | null) => void
-): () => void {
-  return onAuthStateChanged(getClientAuth(), (firebaseUser) => {
-    listener(firebaseUser ? mapFirebaseUser(firebaseUser) : null);
-  });
+  assertAuthConfigured();
+  await sendPasswordResetEmail(getClientAuth(), email);
 }
 
 export async function updateDisplayName(displayName: string): Promise<AppUser> {
+  assertAuthConfigured();
   const auth = getClientAuth();
   const user = auth.currentUser;
-  if (!user) {
-    throw new Error("Not authenticated");
-  }
+  if (!user) throw new Error("Not signed in");
 
   const trimmed = displayName.trim();
   await updateProfile(user, { displayName: trimmed });
@@ -169,14 +165,40 @@ export async function updateDisplayName(displayName: string): Promise<AppUser> {
   return mapFirebaseUser(user);
 }
 
+async function fetchSessionRoute(
+  url: string,
+  init: RequestInit
+): Promise<Response> {
+  let lastResponse: Response | null = null;
+
+  for (let attempt = 0; attempt < SESSION_SYNC_RETRIES; attempt += 1) {
+    const response = await fetch(url, init);
+    lastResponse = response;
+
+    if (response.status !== 404) {
+      return response;
+    }
+
+    if (attempt < SESSION_SYNC_RETRIES - 1) {
+      await new Promise((resolve) => {
+        window.setTimeout(resolve, SESSION_SYNC_RETRY_MS * (attempt + 1));
+      });
+    }
+  }
+
+  return lastResponse!;
+}
+
 export async function syncServerSession(idToken: string | null): Promise<void> {
+  if (typeof window === "undefined") return;
+
   try {
     const requestInit: RequestInit = {
       signal: AbortSignal.timeout(8_000),
     };
 
     if (idToken) {
-      const response = await fetch("/api/auth/session", {
+      const response = await fetchSessionRoute("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
@@ -189,7 +211,10 @@ export async function syncServerSession(idToken: string | null): Promise<void> {
       return;
     }
 
-    await fetch("/api/auth/session", { method: "DELETE", ...requestInit });
+    await fetchSessionRoute("/api/auth/session", {
+      method: "DELETE",
+      ...requestInit,
+    });
   } catch (error) {
     if (error instanceof Error && error.name === "TimeoutError") {
       return;
