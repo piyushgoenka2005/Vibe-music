@@ -1,7 +1,10 @@
 import HomePage from "@/components/home/HomePage";
-import { MARKETING_HERO_SLIDES } from "@/data/marketingHeroSlides";
+import { HERO_SHOWCASE_SCENES } from "@/data/heroShowcaseScenes";
 
-const HERO_PRELOAD = MARKETING_HERO_SLIDES[0]?.src;
+/** Cache rendered homepage HTML for 60s — faster repeat visits in production. */
+export const revalidate = 60;
+
+const HERO_PRELOAD = HERO_SHOWCASE_SCENES[0]?.src;
 
 export default function Home() {
   return (

@@ -20,6 +20,7 @@ export interface NewArrivalsProductCardProps {
   badgeLabel?: string;
   preorderLabel?: string;
   featured?: boolean;
+  ariaHidden?: boolean;
   hpSlot?: number;
   priceNode?: ReactNode;
 }
@@ -133,6 +134,7 @@ export default function NewArrivalsProductCard({
   badgeLabel,
   preorderLabel,
   featured = false,
+  ariaHidden = false,
   hpSlot,
   priceNode,
 }: NewArrivalsProductCardProps) {
@@ -154,8 +156,10 @@ export default function NewArrivalsProductCard({
 
   return (
     <Link
+      aria-hidden={ariaHidden || undefined}
       aria-label={`${brand} ${name}, ${formatCurrency(displayPrice)}`}
       className={`new-arrivals-card${featured ? " new-arrivals-card--featured" : ""}`}
+      tabIndex={ariaHidden ? -1 : undefined}
       data-hp-section={sectionKey}
       data-hp-slot={hpSlot}
       data-key={id}

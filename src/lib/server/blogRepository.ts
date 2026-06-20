@@ -3,8 +3,11 @@ import "server-only";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import {
   createFirestoreCircuitBreaker,
+  isFirestoreFastFailError,
   isFirestoreUnavailableError,
   logFirestoreWarning,
+  markFirestoreUnavailable,
+  withFirestoreDeadline,
 } from "@/lib/server/firestoreErrors";
 import { slugify } from "@/lib/slug";
 import type {
@@ -23,12 +26,17 @@ function isBlogFirestoreDisabled(): boolean {
   return process.env.DISABLE_FIRESTORE_BLOG === "true";
 }
 
+export function isBlogUnavailable(): boolean {
+  return isBlogFirestoreDisabled() || blogCircuit.isOpen();
+}
+
 function handleBlogUnavailable<T>(
   error: unknown,
   context: string,
   fallback: T
 ): T {
-  if (isFirestoreUnavailableError(error)) {
+  if (isFirestoreUnavailableError(error) || isFirestoreFastFailError(error)) {
+    markFirestoreUnavailable(error);
     const wasOpen = blogCircuit.isOpen();
     blogCircuit.open();
     if (!wasOpen) {
@@ -49,7 +57,7 @@ async function runBlogRead<T>(
   }
 
   try {
-    return await read();
+    return await withFirestoreDeadline(read);
   } catch (error) {
     return handleBlogUnavailable(error, context, fallback);
   }

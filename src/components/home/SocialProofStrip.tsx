@@ -1,6 +1,5 @@
 import { Star } from "lucide-react";
 import { LANDING_SOCIAL_PROOF } from "@/data/landingStatus";
-import Reveal from "@/components/layout/Reveal";
 
 const PROOF_ITEMS = [
   { value: LANDING_SOCIAL_PROOF.rating, label: "Average rating", suffix: "/5" },
@@ -12,7 +11,7 @@ const PROOF_ITEMS = [
 
 export default function SocialProofStrip() {
   return (
-    <Reveal as="section" className="social-proof-strip" aria-label="Customer trust metrics">
+    <section className="social-proof-strip" aria-label="Customer trust metrics">
       <div className="social-proof-strip__inner">
         <div className="social-proof-strip__rating">
           <Star size={18} className="social-proof-strip__star" aria-hidden />
@@ -34,6 +33,6 @@ export default function SocialProofStrip() {
           ))}
         </ul>
       </div>
-    </Reveal>
+    </section>
   );
 }

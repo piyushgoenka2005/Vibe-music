@@ -17,6 +17,7 @@ import {
   listActiveSectionItems,
   listActiveSections,
 } from "@/lib/server/homepageRepository";
+import { getHomepageStaticFallbacks } from "@/data/homepageStaticFallbacks";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
   HomepageBrandItem,
@@ -293,13 +294,10 @@ async function resolveSection(
 export async function getPublicHomepageData(
   at = new Date()
 ): Promise<PublicHomepageData> {
-  const emptyPayload = (): PublicHomepageData => ({
-    sections: [],
-    fetchedAt: at.toISOString(),
-  });
+  const staticFallback = (): PublicHomepageData => getHomepageStaticFallbacks(at);
 
   if (!isFirebaseAdminConfigured() || isGlobalFirestoreCircuitOpen()) {
-    return emptyPayload();
+    return staticFallback();
   }
 
   if (publicCache && isFresh(publicCacheAt)) {
@@ -319,6 +317,10 @@ export async function getPublicHomepageData(
         )
       ).filter((section): section is ResolvedHomepageSection => section !== null);
 
+      if (resolved.length === 0) {
+        return staticFallback();
+      }
+
       const payload: PublicHomepageData = {
         sections: resolved,
         fetchedAt: at.toISOString(),
@@ -333,7 +335,7 @@ export async function getPublicHomepageData(
       context: "Firestore unavailable — skipping dynamic homepage sections",
       fallback: () => {
         if (publicCache) return publicCache;
-        return emptyPayload();
+        return staticFallback();
       },
     }
   );

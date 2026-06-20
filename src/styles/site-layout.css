@@ -5,13 +5,18 @@
   flex-direction: column;
   flex: 1;
   min-height: 100vh;
+  position: relative;
 }
 
 .storefront-main {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   flex-direction: column;
   padding-top: var(--site-header-offset, 118px);
+  background-color: var(--surface-base, #ffffff);
+  isolation: isolate;
 }
 
 /* Homepage hero sits flush under the fixed header — offset lives on the hero, not main */

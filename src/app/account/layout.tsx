@@ -7,7 +7,7 @@ export default function AccountLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="storefront-page storefront-page--subtle" id="main-content">
+    <main className="storefront-page storefront-page--subtle">
       <ProtectedRoute>
         <AccountShell>{children}</AccountShell>
       </ProtectedRoute>

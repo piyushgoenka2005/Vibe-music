@@ -74,8 +74,8 @@ export default function SiteHeader() {
             <Image
               src={BRAND.headerLogoPath}
               alt={BRAND.name}
-              width={176}
-              height={44}
+              width={220}
+              height={56}
               priority
               className="assets-site-header__menu-logo"
             />

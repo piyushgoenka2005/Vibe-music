@@ -164,6 +164,50 @@ export function getHomepageStaticFallbacks(at: Date): PublicHomepageData {
     });
   }
 
+  sections.push({
+    key: "brand_strip",
+    sectionId: "brand-strip",
+    title: "Shop Top Brands",
+    layout: "brand_strip",
+    brands: [
+      {
+        id: "fender",
+        name: "Fender",
+        slug: "fender",
+        href: "/search?brand=fender",
+        logoUrl: "/images/big-names-deals/fender-logo.svg",
+      },
+      {
+        id: "gibson",
+        name: "Gibson",
+        slug: "gibson",
+        href: "/search?brand=gibson",
+        logoUrl: "/images/big-names-deals/gibson-logo.svg",
+      },
+      {
+        id: "prs",
+        name: "PRS",
+        slug: "prs",
+        href: "/search?brand=prs",
+        logoUrl: "/images/big-names-deals/prs-logo.svg",
+      },
+      {
+        id: "ibanez",
+        name: "Ibanez",
+        slug: "ibanez",
+        href: "/search?brand=ibanez",
+        logoUrl: "/images/big-names-deals/ibanez-logo.svg",
+      },
+      {
+        id: "epiphone",
+        name: "Epiphone",
+        slug: "epiphone",
+        href: "/search?brand=epiphone",
+        logoUrl: "/images/big-names-deals/epiphone-logo.svg",
+      },
+    ],
+  });
+
   return {
     sections,
     fetchedAt: at.toISOString(),

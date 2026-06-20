@@ -7,6 +7,23 @@ export const FIRESTORE_FAST_FAIL_MS = 1_200;
 
 const FIRESTORE_FAST_FAIL = "FIRESTORE_FAST_FAIL";
 
+export function isFirestoreFastFailError(error: unknown): boolean {
+  return error instanceof Error && error.message === FIRESTORE_FAST_FAIL;
+}
+
+/** Rejects if a Firestore read exceeds the deadline (prevents 8s+ gRPC hangs). */
+export async function withFirestoreDeadline<T>(
+  operation: () => Promise<T>,
+  deadlineMs = FIRESTORE_FAST_FAIL_MS
+): Promise<T> {
+  return Promise.race([
+    operation(),
+    new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(FIRESTORE_FAST_FAIL)), deadlineMs);
+    }),
+  ]);
+}
+
 export function isFirestoreUnavailableError(error: unknown): boolean {
   if (!error) return false;
 
@@ -110,10 +127,7 @@ export async function tryFirestoreFast<T>(
       }),
     ]);
   } catch (error) {
-    if (
-      isFirestoreUnavailableError(error) ||
-      (error instanceof Error && error.message === FIRESTORE_FAST_FAIL)
-    ) {
+    if (isFirestoreUnavailableError(error) || isFirestoreFastFailError(error)) {
       markFirestoreUnavailable(error);
       logFirestoreWarning(options.domain, error, options.context);
       return options.fallback();
