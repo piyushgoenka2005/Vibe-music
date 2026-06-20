@@ -26,6 +26,7 @@ import {
   releaseReservedStockForOrder,
 } from "@/lib/server/inventoryService";
 import { completeOrderPayment } from "@/lib/server/orderPaymentService";
+import { allocateNextOrderId } from "@/lib/server/orderIdGenerator";
 import type { OrderInventoryLine } from "@/types/inventory";
 import type {
   CreateOrderPayload,
@@ -160,8 +161,8 @@ export async function createOrder(
   demoMode?: boolean;
 }> {
   const db = getAdminFirestore();
-  const orderRef = db.collection("orders").doc();
-  const orderId = orderRef.id;
+  const orderId = await allocateNextOrderId();
+  const orderRef = db.collection("orders").doc(orderId);
   const orderData = buildOrderRecord(orderId, payload, userId);
   const inventoryLines = toInventoryLines(payload.items);
 

@@ -15,7 +15,7 @@ import type { GSTRate } from "@/lib/gstCalculator";
 import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
 import SwipeToPayButton from "@/components/checkout/SwipeToPayButton";
-import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
+import CheckoutStaticPayButton from "@/components/checkout/CheckoutStaticPayButton";
 import type { PaymentMethod } from "@/types/order";
 
 export interface CheckoutSummaryItem {
@@ -309,14 +309,11 @@ export default function CheckoutSummary({
                 preparing={paymentAction.preparing}
               />
             ) : (
-              <CheckoutGlassButton
-                disabled={paymentAction.disabled || paymentAction.loading}
-                onClick={() => void paymentAction.onPay()}
-              >
-                {paymentAction.loading
-                  ? "Placing order..."
-                  : "Place order (COD)"}
-              </CheckoutGlassButton>
+              <CheckoutStaticPayButton
+                disabled={paymentAction.disabled}
+                loading={paymentAction.loading}
+                onClick={paymentAction.onPay}
+              />
             )}
             {paymentAction.error ? (
               <p className="payment-button__error" role="alert">

@@ -39,14 +39,10 @@ export async function GET(
     }
 
     const seller = await getInvoiceSellerMeta();
-    let html = generateInvoiceHtml(resolved.order, seller);
-
-    if (autoPrint) {
-      html = html.replace(
-        "</body>",
-        `<script>window.addEventListener("load",function(){window.print();});</script></body>`
-      );
-    }
+    const html = generateInvoiceHtml(resolved.order, seller, {
+      autoPrint,
+      showActions: true,
+    });
 
     return new NextResponse(html, {
       headers: { "Content-Type": "text/html; charset=utf-8" },

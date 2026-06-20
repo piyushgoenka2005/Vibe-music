@@ -20,13 +20,13 @@
 
 .culture-typography__bg-spotlight {
   position: absolute;
-  inset: -8% -6%;
+  inset: -6% -4%;
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.1rem, 0.35vw, 0.35rem);
+  gap: clamp(0.1rem, 0.3vw, 0.3rem);
   pointer-events: none;
   user-select: none;
   will-change: transform, opacity;
@@ -95,13 +95,13 @@
 
 .culture-typography__bg {
   position: absolute;
-  inset: -8% -6%;
+  inset: -6% -4%;
   z-index: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.1rem, 0.35vw, 0.35rem);
+  gap: clamp(0.1rem, 0.3vw, 0.3rem);
   pointer-events: none;
   user-select: none;
   will-change: transform;
@@ -110,7 +110,7 @@
 .culture-typography__word {
   margin: 0;
   font-family: var(--font-primary);
-  font-size: clamp(8.5rem, 16.8vw, 26.25rem);
+  font-size: clamp(7.25rem, 14.2vw, 22.5rem);
   font-weight: 900;
   line-height: 0.82;
   letter-spacing: -0.045em;
@@ -247,7 +247,7 @@
   }
 
   .culture-typography__word {
-    font-size: clamp(4.5rem, 22vw, 9rem);
+    font-size: clamp(3.85rem, 18.5vw, 7.75rem);
     letter-spacing: -0.035em;
     opacity: 0.46;
   }

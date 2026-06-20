@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { GlassSurface } from "@/components/ui/liquid-glass";
 
 type CheckoutGlassButtonProps = {
-  variant?: "primary" | "ghost";
+  variant?: "primary" | "solid" | "ghost";
   href?: string;
   className?: string;
   children: React.ReactNode;
@@ -23,24 +23,30 @@ export default function CheckoutGlassButton({
   onClick,
   type = "button",
 }: CheckoutGlassButtonProps) {
-  const isPrimary = variant === "primary";
+  const isSolid = variant === "solid";
+  const isGhost = variant === "ghost";
 
   const shellClass = cn(
     "checkout-glass-btn",
-    isPrimary ? "checkout-glass-btn--primary" : "checkout-glass-btn--ghost",
+    isSolid
+      ? "checkout-glass-btn--solid"
+      : isGhost
+        ? "checkout-glass-btn--ghost"
+        : "checkout-glass-btn--primary",
     className
   );
 
-  const surface = (
+  const surface = isSolid ? (
     <>
-      <GlassSurface
-        tint={
-          isPrimary
-            ? "rgba(18, 83, 237, 0.9)"
-            : "rgba(255, 255, 255, 0.72)"
-        }
-      />
-      {isPrimary ? <span className="checkout-glass-btn__sheen" aria-hidden /> : null}
+      <span className="checkout-glass-btn__shine" aria-hidden />
+      <span className="checkout-glass-btn__label">{children}</span>
+    </>
+  ) : isGhost ? (
+    <span className="checkout-glass-btn__label">{children}</span>
+  ) : (
+    <>
+      <GlassSurface tint="rgba(18, 83, 237, 0.9)" />
+      <span className="checkout-glass-btn__sheen" aria-hidden />
       <span className="checkout-glass-btn__label">{children}</span>
     </>
   );

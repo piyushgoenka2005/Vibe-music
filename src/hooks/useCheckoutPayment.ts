@@ -46,7 +46,6 @@ export function useCheckoutPayment({
 
   const couponCode = useCartStore((s) => s.couponCode);
   const couponDiscount = useCartStore((s) => s.discount());
-  const clearCart = useCartStore((s) => s.clearCart);
   const showToast = useToastStore((s) => s.show);
 
   const isDisabled = disabled || isProcessing || isLoading;
@@ -79,6 +78,11 @@ export function useCheckoutPayment({
     return `/checkout/success?${params.toString()}`;
   }
 
+  function goToOrderConfirmation(orderId: string) {
+    const url = successUrl(orderId);
+    router.replace(url);
+  }
+
   const pay = useCallback(async () => {
     if (disabled || isProcessing || isLoading) return;
 
@@ -91,8 +95,7 @@ export function useCheckoutPayment({
       if (paymentMethod === "cod") {
         const { orderId, order } = await createCodOrder(payload);
         cacheOrderForConfirmation(order);
-        clearCart();
-        router.replace(successUrl(orderId));
+        goToOrderConfirmation(orderId);
         return;
       }
 
@@ -104,7 +107,6 @@ export function useCheckoutPayment({
         if (demo.order) {
           cacheOrderForConfirmation(demo.order);
         }
-        clearCart();
         router.replace(demo.redirectUrl);
         return;
       }
@@ -164,8 +166,7 @@ export function useCheckoutPayment({
         cacheOrderForConfirmation(verified.order);
       }
 
-      clearCart();
-      router.replace(successUrl(orderResponse.orderId));
+      goToOrderConfirmation(orderResponse.orderId);
     } catch (err) {
       if (pendingOrderId) {
         await releaseOrderReservation(pendingOrderId, email).catch(
@@ -190,7 +191,6 @@ export function useCheckoutPayment({
     customerPhone,
     couponCode,
     couponDiscount,
-    clearCart,
     showToast,
     router,
     openCheckout,

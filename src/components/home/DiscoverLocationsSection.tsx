@@ -31,8 +31,8 @@ function LocationCard({
           showDot={location.tone === "live"}
           className="locations-strip__status"
         />
-        <p className="locations-strip__city">{location.city}</p>
       </div>
+      <p className="locations-strip__city">{location.city}</p>
     </article>
   );
 }

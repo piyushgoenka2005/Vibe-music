@@ -1,6 +1,7 @@
 import "server-only";
 
 import { BRAND } from "@/lib/brand";
+import { formatOrderIdDisplay } from "@/lib/orderId";
 import { buildInvoiceAccessUrl } from "@/lib/security/invoiceAccessToken";
 import type { Order } from "@/types/order";
 
@@ -31,7 +32,7 @@ function buildOrderConfirmationHtml(order: Order): string {
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#222">
       <h1 style="color:var(--brand-primary)">Order Confirmed</h1>
       <p>Hi ${order.customerName ?? order.shippingAddress.name},</p>
-      <p>Thank you for shopping at ${BRAND.name}. Your order <strong>${order.id}</strong> has been placed.</p>
+      <p>Thank you for shopping at ${BRAND.name}. Your order <strong>${formatOrderIdDisplay(order.id)}</strong> has been placed.</p>
       <p><strong>Total:</strong> ${formatInr(order.total)}<br/>
       <strong>Payment:</strong> ${order.paymentStatus === "cod_pending" ? "Cash on Delivery" : order.paymentStatus}</p>
       <table style="width:100%;border-collapse:collapse;margin:16px 0">
@@ -73,7 +74,7 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
       body: JSON.stringify({
         from,
         to: [order.email],
-        subject: `Your ${BRAND.name} order ${order.id.slice(0, 8).toUpperCase()} is confirmed`,
+        subject: `Your ${BRAND.name} order ${formatOrderIdDisplay(order.id)} is confirmed`,
         html: buildOrderConfirmationHtml(order),
       }),
     });

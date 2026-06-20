@@ -192,7 +192,7 @@ export default function CheckoutConfirmSection({
       </div>
 
       <p className="checkout-confirm__footnote">
-        By confirming, you agree to place this order. A tax invoice will be
+        By confirming, you agree to place this order. An invoice will be
         included with your shipment.
       </p>
     </div>

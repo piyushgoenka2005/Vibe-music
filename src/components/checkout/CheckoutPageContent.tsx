@@ -162,12 +162,6 @@ export default function CheckoutPageContent() {
   const [addressError, setAddressError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (items.length === 0) {
-      router.replace(ROUTES.cart);
-    }
-  }, [items.length, router]);
-
-  useEffect(() => {
     const fromUrl = searchParams.get("coupon") ?? searchParams.get("code");
     if (!fromUrl || couponCode) return;
     void applyCoupon(fromUrl);
@@ -262,6 +256,12 @@ export default function CheckoutPageContent() {
     disabled:
       step !== "payment" || !resolvedAddress || !hasValidContact,
   });
+
+  useEffect(() => {
+    if (items.length === 0 && !payment.isProcessing) {
+      router.replace(ROUTES.cart);
+    }
+  }, [items.length, payment.isProcessing, router]);
 
   async function handleContinueFromAddress() {
     setAddressError(null);
@@ -416,7 +416,7 @@ export default function CheckoutPageContent() {
           <p className="storefront-page__eyebrow">Secure checkout</p>
           <h1 className="storefront-page__title checkout-page__title">Checkout</h1>
           <p className="storefront-page__subtitle">
-            GST invoice included · Encrypted payments via Razorpay
+            Encrypted payments via Razorpay
           </p>
         </div>
 
@@ -699,6 +699,7 @@ export default function CheckoutPageContent() {
                 <CheckoutGlassButton
                   disabled={!canProceedFromAddress || isSavingAddress}
                   onClick={() => void handleContinueFromAddress()}
+                  variant="solid"
                 >
                   {isSavingAddress ? "Saving address…" : "Continue to Review"}
                 </CheckoutGlassButton>
@@ -731,7 +732,6 @@ export default function CheckoutPageContent() {
                     <div>
                       <strong>{item.name}</strong>
                       <div>Qty: {item.quantity}</div>
-                      <div>GST: {item.gstRate}%</div>
                     </div>
                     <div>{formatCurrencyPrecise(item.price * item.quantity)}</div>
                   </div>
@@ -759,7 +759,7 @@ export default function CheckoutPageContent() {
                 <CheckoutGlassButton onClick={handleEditAddress} variant="ghost">
                   Edit Address
                 </CheckoutGlassButton>
-                <CheckoutGlassButton onClick={handleContinueToPayment}>
+                <CheckoutGlassButton onClick={handleContinueToPayment} variant="solid">
                   Continue to Payment
                 </CheckoutGlassButton>
               </div>

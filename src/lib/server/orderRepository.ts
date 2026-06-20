@@ -1,6 +1,10 @@
 import "server-only";
 
-import { randomUUID } from "crypto";
+import {
+  formatOrderId,
+  getOrderYear,
+  ORDER_ID_SEQUENCE_START,
+} from "@/lib/orderId";
 import fs from "fs";
 import path from "path";
 
@@ -82,8 +86,8 @@ function openOrdersCircuit(error: unknown, context: string): void {
   }
 }
 
-export function generateOrderId(): string {
-  return randomUUID();
+export function generateOrderId(date = new Date()): string {
+  return formatOrderId(ORDER_ID_SEQUENCE_START, getOrderYear(date));
 }
 
 export async function persistOrder(order: Order): Promise<void> {

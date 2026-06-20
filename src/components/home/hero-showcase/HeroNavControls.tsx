@@ -20,6 +20,7 @@ export default function HeroNavControls({
         className="hero-showcase__nav-btn"
         aria-label="Previous scene"
         onClick={onPrev}
+        onPointerDown={(event) => event.stopPropagation()}
       >
         <ChevronUp size={20} strokeWidth={2.25} aria-hidden />
       </button>
@@ -28,6 +29,7 @@ export default function HeroNavControls({
         className="hero-showcase__nav-btn"
         aria-label="Next scene"
         onClick={onNext}
+        onPointerDown={(event) => event.stopPropagation()}
       >
         <ChevronDown size={20} strokeWidth={2.25} aria-hidden />
       </button>

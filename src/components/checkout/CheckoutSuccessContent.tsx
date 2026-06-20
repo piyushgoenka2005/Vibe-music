@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { fetchGuestOrder, fetchOrder } from "@/services/orderService";
 import { useAuthStore } from "@/store/authStore";
+import { useCartStore } from "@/store/cartStore";
+import { formatOrderIdDisplay } from "@/lib/orderId";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrencyPrecise } from "@/utils/currency";
 import {
@@ -14,15 +16,13 @@ import {
 import { isInvoiceAvailable } from "@/features/invoice/utils/invoice-utils";
 import type { Order } from "@/types/order";
 import "@/components/checkout/checkout.css";
-import { InvoiceToolbar } from "@/features/invoice/ui/InvoiceToolbar";
-import { InvoicePreviewCard } from "@/features/invoice/ui/InvoicePreviewCard";
-import { InvoiceEmbed } from "@/components/checkout/InvoiceEmbed";
 
 export default function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
   const emailParam = searchParams.get("email");
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const clearCart = useCartStore((s) => s.clearCart);
   const missingOrderId = !orderId;
   const [order, setOrder] = useState<Order | null>(() =>
     orderId ? readCachedOrderForConfirmation(orderId) : null
@@ -31,6 +31,16 @@ export default function CheckoutSuccessContent() {
     missingOrderId ? "Order ID missing" : null
   );
   const [loading, setLoading] = useState(!missingOrderId && !order);
+
+  useEffect(() => {
+    if (orderId) {
+      clearCart();
+    }
+  }, [clearCart, orderId]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
 
   useEffect(() => {
     if (!orderId) return;
@@ -93,16 +103,13 @@ export default function CheckoutSuccessContent() {
     );
   }
 
-  const invoiceUrl = emailParam
-    ? `/orders/${encodeURIComponent(order.id)}/invoice?email=${encodeURIComponent(emailParam)}`
-    : `/orders/${encodeURIComponent(order.id)}/invoice`;
-
-  const invoiceFrameSrc = emailParam
-    ? `/api/invoices/${encodeURIComponent(order.id)}/html?email=${encodeURIComponent(emailParam)}`
-    : `/api/invoices/${encodeURIComponent(order.id)}/html`;
+  const invoiceQuery = emailParam
+    ? `?email=${encodeURIComponent(emailParam)}`
+    : "";
+  const invoiceViewUrl = `/api/invoices/${encodeURIComponent(order.id)}/html${invoiceQuery}`;
+  const invoicePrintUrl = `${invoiceViewUrl}${invoiceQuery ? "&" : "?"}print=1`;
 
   const canShowInvoice = isInvoiceAvailable(order);
-  const pdfEnabled = process.env.NEXT_PUBLIC_INVOICE_PDF_ENABLED === "true";
   const paymentLabel =
     order.paymentStatus === "cod_pending"
       ? "Cash on Delivery"
@@ -111,7 +118,7 @@ export default function CheckoutSuccessContent() {
         : order.paymentStatus;
 
   return (
-    <div className="checkout-success checkout-success--with-invoice">
+    <div className="checkout-success">
       <div className="checkout-success__hero">
         <div className="checkout-success__icon" aria-hidden="true">
           ✓
@@ -120,7 +127,8 @@ export default function CheckoutSuccessContent() {
           <h1>Order confirmed</h1>
           <p className="checkout-success__lead">
             Thank you for your purchase. Order{" "}
-            <strong>{order.id}</strong> has been placed successfully.
+            <strong>{formatOrderIdDisplay(order.id)}</strong> has been placed
+            successfully.
           </p>
           <ul className="checkout-success__meta">
             <li>
@@ -142,33 +150,33 @@ export default function CheckoutSuccessContent() {
               </li>
             ) : null}
           </ul>
+
+          {canShowInvoice ? (
+            <div className="checkout-success__invoice-actions">
+              <a
+                href={invoiceViewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cart-btn cart-btn--secondary"
+              >
+                View invoice
+              </a>
+              <a
+                href={invoicePrintUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cart-btn cart-btn--checkout"
+              >
+                Print invoice
+              </a>
+            </div>
+          ) : (
+            <p className="checkout-success__invoice-note">
+              Your invoice will be ready shortly. Refresh this page in a moment.
+            </p>
+          )}
         </div>
       </div>
-
-      <section className="checkout-invoice" aria-label="Tax invoice">
-        <h2 className="checkout-invoice__title">Your invoice</h2>
-
-        <InvoiceToolbar
-          order={order}
-          invoiceUrl={invoiceUrl}
-          pdfUrl={
-            pdfEnabled && canShowInvoice
-              ? invoiceFrameSrc.replace("/html", "/pdf")
-              : undefined
-          }
-        />
-
-        {canShowInvoice ? (
-          <InvoiceEmbed src={invoiceFrameSrc} title="Tax invoice" />
-        ) : (
-          <p className="checkout-invoice__muted">
-            Your invoice is being prepared. Refresh this page in a moment or
-            check your email.
-          </p>
-        )}
-
-        <InvoicePreviewCard order={order} invoiceUrl={invoiceUrl} />
-      </section>
 
       <div className="checkout-actions checkout-success__actions">
         <Link href={ROUTES.home} className="cart-btn cart-btn--secondary">

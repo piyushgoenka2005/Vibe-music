@@ -31,6 +31,7 @@ export default function HeroThumbnailStrip({
             aria-label={`Scene ${index + 1}: ${scene.title}`}
             className={`hero-showcase__thumb${isActive ? " hero-showcase__thumb--active" : ""}`}
             onClick={() => onSelect(index)}
+            onPointerDown={(event) => event.stopPropagation()}
           >
             <img
               alt=""

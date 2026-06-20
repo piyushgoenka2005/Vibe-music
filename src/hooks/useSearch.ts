@@ -25,11 +25,18 @@ function flattenSuggestions(groups: SearchSuggestionGroups): SearchSuggestion[] 
   ];
 }
 
-export function useSearch() {
+interface UseSearchOptions {
+  /** Fetch suggestions without opening the header overlay (e.g. search landing page). */
+  inlineSuggestions?: boolean;
+}
+
+export function useSearch(options: UseSearchOptions = {}) {
+  const { inlineSuggestions = false } = options;
   const router = useRouter();
   const query = useSearchStore((s) => s.query);
   const recentSearches = useSearchStore((s) => s.recentSearches);
   const isOverlayOpen = useSearchStore((s) => s.isOverlayOpen);
+  const suggestionsActive = isOverlayOpen || inlineSuggestions;
 
   const debouncedQuery = useDebounce(query, 300);
   const [status, setStatus] = useState<SearchStatus>("idle");
@@ -45,7 +52,7 @@ export function useSearch() {
   const flatSuggestions = useMemo(() => flattenSuggestions(groups), [groups]);
 
   useEffect(() => {
-    if (!isOverlayOpen) return;
+    if (!suggestionsActive) return;
 
     let cancelled = false;
 
@@ -88,7 +95,7 @@ export function useSearch() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, isOverlayOpen, recentSearches]);
+  }, [debouncedQuery, recentSearches, suggestionsActive]);
 
   const setQuery = useCallback((value: string) => {
     searchStore.setQuery(value);

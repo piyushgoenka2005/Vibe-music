@@ -110,9 +110,11 @@ export default function OrderSummary({
       </div>
 
       {onCheckout ? (
-        <CheckoutGlassButton onClick={onCheckout}>Checkout</CheckoutGlassButton>
+        <CheckoutGlassButton onClick={onCheckout} variant="solid">
+          Checkout
+        </CheckoutGlassButton>
       ) : (
-        <CheckoutGlassButton href={checkoutHref} onClick={closeDrawer}>
+        <CheckoutGlassButton href={checkoutHref} onClick={closeDrawer} variant="solid">
           Checkout
         </CheckoutGlassButton>
       )}

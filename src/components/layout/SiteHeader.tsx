@@ -17,7 +17,6 @@ import SearchRollingPlaceholder, {
   SEARCH_ROLLING_ARIA_LABEL,
 } from "@/components/search/SearchRollingPlaceholder";
 import WishlistCounter from "@/components/wishlist/WishlistCounter";
-import HeaderThemeSwitcher from "@/components/layout/HeaderThemeSwitcher";
 
 export default function SiteHeader() {
   const headerRef = useRef<HTMLElement>(null);
@@ -160,8 +159,6 @@ export default function SiteHeader() {
           </form>
 
           <div className="site-header__actions">
-            <HeaderThemeSwitcher />
-
             <Link
               href={accountHref}
               className="site-header__action assets-site-header__menu-account"

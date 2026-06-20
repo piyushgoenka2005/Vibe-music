@@ -22,6 +22,13 @@ import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMo
 const SCENES = HERO_SHOWCASE_SCENES;
 const COUNT = SCENES.length;
 
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  return Boolean(
+    target.closest("button, a, input, textarea, select, label, [role='tab']")
+  );
+}
+
 export default function HeroShowcaseSection() {
   const stageRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -109,6 +116,8 @@ export default function HeroShowcaseSection() {
   );
 
   const handlePointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (isInteractiveTarget(event.target)) return;
+
     dragRef.current.active = true;
     dragRef.current.x = pan.x;
     dragRef.current.y = pan.y;

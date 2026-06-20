@@ -199,6 +199,18 @@
   color: #3b7d1a;
 }
 
+.cart-page .cart-summary .checkout-glass-btn__label {
+  font-weight: 500;
+}
+
+.cart-page .cart-summary .checkout-glass-btn--solid .checkout-glass-btn__label {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.cart-page .cart-summary .checkout-glass-btn--ghost .checkout-glass-btn__label {
+  color: rgba(18, 83, 237, 0.72);
+}
+
 .cart-coupon {
   display: flex;
   gap: 8px;
