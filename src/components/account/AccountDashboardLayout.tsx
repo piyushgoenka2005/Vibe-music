@@ -18,7 +18,7 @@ export default function AccountDashboardLayout({
   const isOverview = pathname === ROUTES.account;
 
   return (
-    <main className="acct">
+    <div className="acct">
       <div className="acct__page">
         {isOverview ? <AccountWelcomeHeader /> : null}
         <div className="acct__layout">
@@ -27,6 +27,6 @@ export default function AccountDashboardLayout({
         </div>
       </div>
       <AccountMobileNav />
-    </main>
+    </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 import { createPortal } from "react-dom";
 import { useIsClient } from "@/hooks/useIsClient";
+import { useShallow } from "zustand/react/shallow";
 import { useCartStore } from "@/store/cartStore";
 import CartItem from "./CartItem";
 import OrderSummary from "./OrderSummary";

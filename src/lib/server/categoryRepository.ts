@@ -1,4 +1,10 @@
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import {
+  isFirestoreFastFailError,
+  isFirestoreUnavailableError,
+  isGlobalFirestoreCircuitOpen,
+  withFirestoreDeadline,
+} from "@/lib/server/firestoreErrors";
 import { invalidateCatalogCache } from "@/lib/server/firestoreCatalogRepository";
 import { slugify } from "@/lib/slug";
 import type { AdminCategory } from "@/types/admin";
@@ -23,13 +29,41 @@ function normalizeCategory(id: string, data: FirebaseFirestore.DocumentData): Ad
   };
 }
 
+async function staticCategories(): Promise<AdminCategory[]> {
+  const { loadCategories } = await import("@/lib/server/catalogRepository");
+  return loadCategories().map((cat, index) => ({
+    id: cat.id,
+    name: cat.name,
+    slug: cat.slug,
+    description: cat.description,
+    parentId: null,
+    imageUrl: undefined,
+    isFeatured: index < 8,
+    sortOrder: index,
+    productCount: 0,
+  }));
+}
+
 export async function listCategories(): Promise<AdminCategory[]> {
-  const db = getAdminFirestore();
-  const snap = await db.collection(COLLECTION).orderBy("sortOrder", "asc").get();
-  if (snap.empty) {
-    return seedCategoriesFromStatic();
+  if (isGlobalFirestoreCircuitOpen()) {
+    return staticCategories();
   }
-  return snap.docs.map((doc) => normalizeCategory(doc.id, doc.data()));
+
+  try {
+    const db = getAdminFirestore();
+    const snap = await withFirestoreDeadline(() =>
+      db.collection(COLLECTION).orderBy("sortOrder", "asc").get()
+    );
+    if (snap.empty) {
+      return seedCategoriesFromStatic();
+    }
+    return snap.docs.map((doc) => normalizeCategory(doc.id, doc.data()));
+  } catch (error) {
+    if (isFirestoreUnavailableError(error) || isFirestoreFastFailError(error)) {
+      return staticCategories();
+    }
+    throw error;
+  }
 }
 
 async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {

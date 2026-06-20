@@ -357,8 +357,27 @@ export default function CategoryBentoShowcase() {
             href={ROUTES.search}
             className="category-bento__browse-btn"
           >
-            Browse all categories
-            <ArrowUpRight aria-hidden size={18} strokeWidth={2.25} />
+            <span className="category-bento__browse-btn-label">
+              <span className="category-bento__browse-btn-track">
+                <span className="category-bento__browse-btn-segment">
+                  {CATEGORY_BENTO_ITEMS.map((cat) => cat.title).join(" · ")} · Browse
+                  all categories ·{" "}
+                </span>
+                <span
+                  aria-hidden
+                  className="category-bento__browse-btn-segment"
+                >
+                  {CATEGORY_BENTO_ITEMS.map((cat) => cat.title).join(" · ")} · Browse
+                  all categories ·{" "}
+                </span>
+              </span>
+              <span className="category-bento__browse-btn-static">
+                Browse all categories
+              </span>
+            </span>
+            <span className="category-bento__browse-btn-icon" aria-hidden>
+              <ArrowUpRight size={18} strokeWidth={2.25} />
+            </span>
           </Link>
         </motion.div>
       </div>

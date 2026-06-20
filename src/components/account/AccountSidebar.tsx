@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { ACCOUNT_LOGOUT, ACCOUNT_NAV_ITEMS } from "./accountNav";
+import { isAccountNavActive } from "./accountNavActive";
 
 export default function AccountSidebar() {
   const pathname = usePathname();
@@ -20,9 +21,7 @@ export default function AccountSidebar() {
       <nav>
         {ACCOUNT_NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            pathname === item.href ||
-            (item.href !== "/account" && pathname.startsWith(item.href));
+          const isActive = isAccountNavActive(pathname, item.href);
 
           return (
             <Link

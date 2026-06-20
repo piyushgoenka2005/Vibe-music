@@ -32,6 +32,7 @@ const SLUG_TO_HREF: Record<string, string> = {
   "live-sound-lighting": "/shop/live-sound/",
   "software-plug-ins": "/shop/software-plugins/",
   "dj-equipment": "/shop/dj-equipment/",
+  "cables-cases-accessories": "/shop/accessories/",
 };
 
 const BENTO_IMAGE_FILES: Record<string, string> = {
@@ -42,6 +43,7 @@ const BENTO_IMAGE_FILES: Record<string, string> = {
   "live-sound-lighting": `${CAT}/k12_2.png`,
   "software-plug-ins": `${CAT}/ptstudioann.jpg`,
   "dj-equipment": `${CAT}/ATLP120XUSBSV.png`,
+  "cables-cases-accessories": `${CAT}/M4WP006.png`,
 };
 
 /** Build optimized image URL for bento tile sizes. */
@@ -59,8 +61,6 @@ export function resolveBentoImage(
 }
 
 function resolveBentoSrcSet(slug: string, size: "hero" | "card" = "card"): string | undefined {
-  if (slug === "guitars") return undefined;
-
   const base =
     BENTO_IMAGE_FILES[slug] ??
     POPULAR_CATEGORY_ITEMS.find((item) => item.href === SLUG_TO_HREF[slug])
@@ -83,12 +83,13 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     slug: "guitars",
     title: "Guitars",
     desc: "Acoustic • Electric • Bass",
-    size: "large",
-    variant: "hero-light",
-    image: resolveBentoImage("guitars", "hero"),
-    imageSizes: resolveBentoSizes("hero"),
-    imageAlt: "Premium electric bass guitar with orange sunburst finish",
-    imagePosition: "center bottom",
+    size: "small",
+    variant: "image-card",
+    image: resolveBentoImage("guitars"),
+    imageSrcSet: resolveBentoSrcSet("guitars"),
+    imageSizes: resolveBentoSizes(),
+    imageAlt: "Premium electric guitar with sunburst finish",
+    imagePosition: "center 72%",
     productCount: "2,500+ Products",
     brands: "Fender • Gibson • Ibanez",
     badge: "BESTSELLER",
@@ -179,6 +180,20 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imagePosition: "center 40%",
     productCount: "380+ Products",
     brands: "Pioneer DJ • Denon • Rane",
+  },
+  {
+    slug: "cables-cases-accessories",
+    title: "Accessories",
+    desc: "Cables • Cases • Stands",
+    size: "small",
+    variant: "image-card",
+    image: resolveBentoImage("cables-cases-accessories"),
+    imageSrcSet: resolveBentoSrcSet("cables-cases-accessories"),
+    imageSizes: resolveBentoSizes(),
+    imageAlt: "Cables, cases, and stands for musicians",
+    imagePosition: "center 45%",
+    productCount: "1,100+ Products",
+    brands: "Hosa • Gator • On-Stage",
   },
 ];
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ACCOUNT_NAV_ITEMS } from "./accountNav";
+import { isAccountNavActive } from "./accountNavActive";
 
 export default function AccountMobileNav() {
   const pathname = usePathname();
@@ -11,9 +12,7 @@ export default function AccountMobileNav() {
     <nav className="acct__mobile-nav" aria-label="Account mobile navigation">
       {ACCOUNT_NAV_ITEMS.filter((item) => item.mobile).map((item) => {
         const Icon = item.icon;
-        const isActive =
-          pathname === item.href ||
-          (item.href !== "/account" && pathname.startsWith(item.href));
+        const isActive = isAccountNavActive(pathname, item.href);
 
         return (
           <Link

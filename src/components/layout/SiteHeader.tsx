@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
+import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/store/authStore";
 import { useHideOnScroll, useSiteHeaderOffset } from "@/hooks/useHideOnScroll";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
@@ -37,9 +38,13 @@ export default function SiteHeader() {
     return () => window.removeEventListener("keydown", onEscape);
   }, [mobileOpen]);
 
-  const user = useAuthStore((s) => s.user);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const isInitialized = useAuthStore((s) => s.isInitialized);
+  const { user, isAuthenticated, isInitialized } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+      isAuthenticated: state.isAuthenticated,
+      isInitialized: state.isInitialized,
+    }))
+  );
 
   const accountHref = isAuthenticated ? ROUTES.account : ROUTES.login;
   const accountLabel =
@@ -74,8 +79,8 @@ export default function SiteHeader() {
             <Image
               src={BRAND.headerLogoPath}
               alt={BRAND.name}
-              width={176}
-              height={44}
+              width={220}
+              height={56}
               priority
               className="assets-site-header__menu-logo"
             />

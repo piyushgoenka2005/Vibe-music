@@ -7,6 +7,7 @@ export {
   getBlogPostBySlug,
   getPublicBlogPostBySlug,
   isBlogPostPublic,
+  isBlogUnavailable,
   listAllBlogPosts,
   listPublicBlogPosts,
   listPublicBlogSlugs,

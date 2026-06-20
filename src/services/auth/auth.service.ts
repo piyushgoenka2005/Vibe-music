@@ -171,21 +171,29 @@ export async function updateDisplayName(displayName: string): Promise<AppUser> {
 
 export async function syncServerSession(idToken: string | null): Promise<void> {
   try {
+    const requestInit: RequestInit = {
+      signal: AbortSignal.timeout(8_000),
+    };
+
     if (idToken) {
       const response = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
+        ...requestInit,
       });
 
-      if (!response.ok) {
+      if (!response.ok && response.status !== 404) {
         console.warn("[auth] Session cookie sync failed:", response.status);
       }
       return;
     }
 
-    await fetch("/api/auth/session", { method: "DELETE" });
+    await fetch("/api/auth/session", { method: "DELETE", ...requestInit });
   } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      return;
+    }
     console.warn("[auth] Session cookie sync skipped:", error);
   }
 }

@@ -3,8 +3,11 @@ import "server-only";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import {
   createFirestoreCircuitBreaker,
+  isFirestoreFastFailError,
   isFirestoreUnavailableError,
   logFirestoreWarning,
+  markFirestoreUnavailable,
+  withFirestoreDeadline,
 } from "@/lib/server/firestoreErrors";
 import type { Brand } from "@/types/brand";
 import type { Category } from "@/types/category";
@@ -87,7 +90,8 @@ function handleCatalogUnavailable<T>(
   context: string,
   fallback: T
 ): T {
-  if (isFirestoreUnavailableError(error)) {
+  if (isFirestoreUnavailableError(error) || isFirestoreFastFailError(error)) {
+    markFirestoreUnavailable(error);
     const wasOpen = catalogCircuit.isOpen();
     catalogCircuit.open();
     if (!wasOpen) {
@@ -208,7 +212,9 @@ export async function fetchAllProducts(
   }
 
   try {
-    const snap = await db().collection(PRODUCTS).get();
+    const snap = await withFirestoreDeadline(() =>
+      db().collection(PRODUCTS).get()
+    );
     if (snap.empty) {
       const local = sortProducts(await loadLocalCatalogProducts());
       productsCache = local;

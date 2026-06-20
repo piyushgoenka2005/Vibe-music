@@ -87,9 +87,13 @@ export default function SocialRail() {
       </nav>
 
       <a
-        href={SOCIAL_LINKS.newsletter}
+        href="#newsletter"
         className="social-rail__newsletter"
         aria-label="Subscribe to newsletter"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("newsletter")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
       >
         <span className="social-rail__newsletter-text">Newsletter</span>
       </a>

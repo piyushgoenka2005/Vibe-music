@@ -1,14 +1,33 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
-import SocialRail from "@/components/layout/SocialRail";
 import SkipToContent from "@/components/layout/SkipToContent";
-import BackToTop from "@/components/layout/BackToTop";
-import HelpWidget from "@/components/layout/HelpWidget";
-import SplashCursor from "@/components/SplashCursor";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+
+const SplashCursor = dynamic(() => import("@/components/SplashCursor"), {
+  ssr: false,
+});
+
+const SocialRail = dynamic(() => import("@/components/layout/SocialRail"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const BackToTop = dynamic(() => import("@/components/layout/BackToTop"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const SPLASH_CURSOR_DISABLED =
+  process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR === "false";
 
 export default function StorefrontChrome({
   children,
@@ -17,8 +36,10 @@ export default function StorefrontChrome({
 }) {
   const pathname = usePathname() ?? "";
   const hideChrome = pathname.startsWith("/admin");
+  const isHomePage = pathname === "/";
   const prefersReducedMotion = usePrefersReducedMotion();
-  const splashEnabled = !prefersReducedMotion;
+  const splashEnabled =
+    isHomePage && !SPLASH_CURSOR_DISABLED && !prefersReducedMotion && !hideChrome;
 
   if (hideChrome) {
     return <>{children}</>;

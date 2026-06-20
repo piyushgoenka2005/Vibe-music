@@ -2,8 +2,11 @@ import Razorpay from "razorpay";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
 import {
+  isFirestoreFastFailError,
   isFirestoreUnavailableError,
+  isGlobalFirestoreCircuitOpen,
   logFirestoreWarning,
+  withFirestoreDeadline,
 } from "@/lib/server/firestoreErrors";
 import { sanitizeForFirestore } from "@/lib/server/firestoreSanitize";
 import {
@@ -373,13 +376,16 @@ export async function linkGuestOrdersToUser(
   userId: string,
   email: string
 ): Promise<number> {
+  if (isGlobalFirestoreCircuitOpen()) {
+    return 0;
+  }
+
   try {
     const db = getAdminFirestore();
     const normalizedEmail = email.trim().toLowerCase();
-    const snapshot = await db
-      .collection("orders")
-      .where("email", "==", normalizedEmail)
-      .get();
+    const snapshot = await withFirestoreDeadline(() =>
+      db.collection("orders").where("email", "==", normalizedEmail).get()
+    );
 
     if (snapshot.empty) return 0;
 
@@ -405,7 +411,10 @@ export async function linkGuestOrdersToUser(
 
     return linked;
   } catch (error) {
-    if (isFirestoreUnavailableError(error)) {
+    if (
+      isFirestoreUnavailableError(error) ||
+      isFirestoreFastFailError(error)
+    ) {
       logFirestoreWarning(
         "orders",
         error,

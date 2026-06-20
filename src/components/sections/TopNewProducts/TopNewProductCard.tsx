@@ -4,17 +4,17 @@ import type { TopNewProductItem } from "@/data/topNewProducts";
 
 interface TopNewProductCardProps {
   item: TopNewProductItem;
-  featured?: boolean;
+  ariaHidden?: boolean;
 }
 
 export default function TopNewProductCard({
   item,
-  featured = false,
+  ariaHidden = false,
 }: TopNewProductCardProps) {
   return (
     <NewArrivalsProductCard
+      ariaHidden={ariaHidden}
       brand={item.brand}
-      featured={featured}
       hpSlot={item.hpSlot}
       href={item.href}
       id={item.id}

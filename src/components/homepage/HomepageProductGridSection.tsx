@@ -2,8 +2,10 @@ import Link from "next/link";
 import { resolveLinkHref } from "@/lib/routes";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import NewArrivalsProductCard from "@/components/homepage/NewArrivalsProductCard";
-import Reveal from "@/components/layout/Reveal";
-import type { ResolvedHomepageSection } from "@/types/homepage";
+import type {
+  HomepageProductItem,
+  ResolvedHomepageSection,
+} from "@/types/homepage";
 
 interface HomepageProductGridSectionProps {
   section: ResolvedHomepageSection;
@@ -11,6 +13,40 @@ interface HomepageProductGridSectionProps {
 
 const DEFAULT_SUBTITLE =
   "Fresh releases and just-landed gear from the brands you trust.";
+
+function ProductSequence({
+  products,
+  sectionKey,
+  ariaHidden = false,
+}: {
+  products: HomepageProductItem[];
+  sectionKey: string;
+  ariaHidden?: boolean;
+}) {
+  return (
+    <>
+      {products.map((item) => (
+        <NewArrivalsProductCard
+          key={ariaHidden ? `${item.id}-clone` : item.id}
+          ariaHidden={ariaHidden}
+          badgeLabel={item.badgeLabel}
+          brand={item.brand}
+          href={item.href}
+          id={item.id}
+          image={item.image}
+          imageAlt={item.imageAlt}
+          name={item.name}
+          price={item.price}
+          rank={item.rank}
+          rating={item.rating}
+          reviewCount={item.reviewCount}
+          salePrice={item.salePrice}
+          sectionKey={sectionKey}
+        />
+      ))}
+    </>
+  );
+}
 
 export default function HomepageProductGridSection({
   section,
@@ -44,35 +80,37 @@ export default function HomepageProductGridSection({
             </Link>
           ) : null}
         </header>
+      </div>
 
-        <div className="new-arrivals-grid" role="list">
-          {products.map((item, index) => (
-            <Reveal
-              key={item.id}
-              className="new-arrivals-grid__cell"
-              delay={index * 70}
-            >
-              <NewArrivalsProductCard
-                badgeLabel={item.badgeLabel}
-                brand={item.brand}
-                featured={index === 0 && Boolean(item.rank)}
-                href={item.href}
-                id={item.id}
-                image={item.image}
-                imageAlt={item.imageAlt}
-                name={item.name}
-                price={item.price}
-                rank={item.rank}
-                rating={item.rating}
-                reviewCount={item.reviewCount}
-                salePrice={item.salePrice}
+      {products.length > 0 ? (
+        <div
+          aria-label={section.title}
+          className="new-arrivals-marquee"
+          role="region"
+        >
+          <div className="new-arrivals-marquee__track">
+            <div className="new-arrivals-marquee__sequence" role="list">
+              <ProductSequence
+                products={products}
                 sectionKey={section.key}
               />
-            </Reveal>
-          ))}
+            </div>
+            <div
+              aria-hidden="true"
+              className="new-arrivals-marquee__sequence new-arrivals-marquee__sequence--clone"
+            >
+              <ProductSequence
+                ariaHidden
+                products={products}
+                sectionKey={section.key}
+              />
+            </div>
+          </div>
         </div>
+      ) : null}
 
-        {section.ctaText && section.ctaLink ? (
+      {section.ctaText && section.ctaLink ? (
+        <div className="new-arrivals-section__inner">
           <div className="new-arrivals-section__cta-mobile">
             <Link
               className="homepage-section__cta-btn"
@@ -82,8 +120,8 @@ export default function HomepageProductGridSection({
               {SECTION_CTA_ARROW}
             </Link>
           </div>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </section>
   );
 }

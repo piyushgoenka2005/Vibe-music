@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { listPublicBlogPosts } from "@/lib/server/blogService";
+import { HOMEPAGE_BLOG_FALLBACK_POSTS } from "@/data/homepageBlogTeaser";
+import { isBlogUnavailable, listPublicBlogPosts } from "@/lib/server/blogService";
 import { optimizeImageUrl } from "@/lib/images";
 import { ROUTES } from "@/lib/routes";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import Reveal from "@/components/layout/Reveal";
-import type { BlogPostSummary } from "@/types/blog";
+import type { HomepageBlogTeaserPost } from "@/data/homepageBlogTeaser";
 
 const HEADLINE_ID = "blog-teaser-title";
 
@@ -17,12 +18,21 @@ function formatPublishedDate(iso: string | null): string | null {
   });
 }
 
+function postHref(post: HomepageBlogTeaserPost, usingFallback: boolean): string {
+  if (usingFallback && post.fallbackHref) {
+    return post.fallbackHref;
+  }
+  return `${ROUTES.blog}/${post.slug}`;
+}
+
 function BlogTeaserCard({
   post,
   featured = false,
+  usingFallback = false,
 }: {
-  post: BlogPostSummary;
+  post: HomepageBlogTeaserPost;
   featured?: boolean;
+  usingFallback?: boolean;
 }) {
   const published = formatPublishedDate(post.publishedAt);
 
@@ -32,7 +42,7 @@ function BlogTeaserCard({
     >
       <Link
         className="blog-teaser__link"
-        href={`${ROUTES.blog}/${post.slug}`}
+        href={postHref(post, usingFallback)}
       >
         <div className="blog-teaser__media">
           {post.coverImage ? (
@@ -77,19 +87,25 @@ function BlogTeaserCard({
 }
 
 export default async function HomepageBlogTeaser() {
-  let posts: BlogPostSummary[] = [];
+  let posts: HomepageBlogTeaserPost[] = [];
+  let usingFallback = false;
 
-  try {
-    const allPosts = await listPublicBlogPosts();
-    posts = Array.isArray(allPosts) ? allPosts.slice(0, 3) : [];
-  } catch (error) {
-    console.warn(
-      "[home] Blog teaser unavailable:",
-      error instanceof Error ? error.message : error
-    );
+  if (!isBlogUnavailable()) {
+    try {
+      const allPosts = await listPublicBlogPosts(new Date(), { limit: 3 });
+      posts = Array.isArray(allPosts) ? allPosts.slice(0, 3) : [];
+    } catch (error) {
+      console.warn(
+        "[home] Blog teaser unavailable:",
+        error instanceof Error ? error.message : error
+      );
+    }
   }
 
-  if (!Array.isArray(posts) || posts.length === 0) return null;
+  if (posts.length === 0) {
+    posts = HOMEPAGE_BLOG_FALLBACK_POSTS;
+    usingFallback = true;
+  }
 
   const gridModifier =
     posts.length === 1 ? "one" : posts.length === 2 ? "two" : "three";
@@ -127,6 +143,7 @@ export default async function HomepageBlogTeaser() {
               <BlogTeaserCard
                 featured={posts.length === 1}
                 post={post}
+                usingFallback={usingFallback}
               />
             </Reveal>
           ))}

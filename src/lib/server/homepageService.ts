@@ -14,9 +14,11 @@ import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { getCategoryGridImage } from "@/lib/categoryImages";
 import { categoryPath, productPath } from "@/lib/routes";
 import {
-  listActiveSectionItems,
   listActiveSections,
+  listAllSectionItems,
+  isHomepageItemScheduledActive,
 } from "@/lib/server/homepageRepository";
+import { getHomepageStaticFallbacks } from "@/data/homepageStaticFallbacks";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
   HomepageBrandItem,
@@ -33,6 +35,7 @@ const PUBLIC_CACHE_TTL_MS = 45_000;
 
 let publicCache: PublicHomepageData | null = null;
 let publicCacheAt = 0;
+let publicInflight: Promise<PublicHomepageData> | null = null;
 
 function isFresh(ts: number): boolean {
   return Date.now() - ts < PUBLIC_CACHE_TTL_MS;
@@ -41,6 +44,7 @@ function isFresh(ts: number): boolean {
 export function invalidatePublicHomepageCache(): void {
   publicCache = null;
   publicCacheAt = 0;
+  publicInflight = null;
 }
 
 function activeProducts(products: CatalogProduct[]): CatalogProduct[] {
@@ -252,9 +256,17 @@ function sectionDomId(sectionKey: HomepageSectionKey): string {
 async function resolveSection(
   section: HomepageSection,
   products: CatalogProduct[],
-  at: Date
+  at: Date,
+  allSectionItems: HomepageSectionItem[]
 ): Promise<ResolvedHomepageSection | null> {
-  const items = await listActiveSectionItems(section.sectionKey, at);
+  const items = allSectionItems
+    .filter(
+      (item) =>
+        item.sectionKey === section.sectionKey &&
+        item.isActive &&
+        isHomepageItemScheduledActive(item, at)
+    )
+    .sort((a, b) => a.sortOrder - b.sortOrder);
   const base: ResolvedHomepageSection = {
     key: section.sectionKey,
     sectionId: sectionDomId(section.sectionKey),
@@ -293,31 +305,39 @@ async function resolveSection(
 export async function getPublicHomepageData(
   at = new Date()
 ): Promise<PublicHomepageData> {
-  const emptyPayload = (): PublicHomepageData => ({
-    sections: [],
-    fetchedAt: at.toISOString(),
-  });
+  const staticFallback = (): PublicHomepageData => getHomepageStaticFallbacks(at);
 
   if (!isFirebaseAdminConfigured() || isGlobalFirestoreCircuitOpen()) {
-    return emptyPayload();
+    return staticFallback();
   }
 
   if (publicCache && isFresh(publicCacheAt)) {
     return publicCache;
   }
 
-  return tryFirestoreFast(
+  if (publicInflight) {
+    return publicInflight;
+  }
+
+  publicInflight = tryFirestoreFast(
     async () => {
-      const [sections, products] = await Promise.all([
+      const [sections, products, allSectionItems] = await Promise.all([
         listActiveSections(),
         fetchAllProducts(),
+        listAllSectionItems(),
       ]);
 
       const resolved = (
         await Promise.all(
-          sections.map((section) => resolveSection(section, products, at))
+          sections.map((section) =>
+            resolveSection(section, products, at, allSectionItems)
+          )
         )
       ).filter((section): section is ResolvedHomepageSection => section !== null);
+
+      if (resolved.length === 0) {
+        return staticFallback();
+      }
 
       const payload: PublicHomepageData = {
         sections: resolved,
@@ -333,10 +353,14 @@ export async function getPublicHomepageData(
       context: "Firestore unavailable — skipping dynamic homepage sections",
       fallback: () => {
         if (publicCache) return publicCache;
-        return emptyPayload();
+        return staticFallback();
       },
     }
-  );
+  ).finally(() => {
+    publicInflight = null;
+  });
+
+  return publicInflight;
 }
 
 export {
