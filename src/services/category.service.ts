@@ -77,7 +77,7 @@ export async function fetchCategoryProducts(
     };
   }
 
-  const categoryProducts = await fetchProducts({ category: categorySlug });
+  const categoryProducts = await fetchProducts({ category: category.slug });
   const filtered = applyFilters(categoryProducts, filters);
   const sorted = sortProducts(filtered, filters.sort);
   const total = sorted.length;

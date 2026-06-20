@@ -1,6 +1,12 @@
 import "server-only";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import {
+  isFirestoreUnavailableError,
+  logFirestoreWarning,
+  markFirestoreUnavailable,
+  tryFirestoreFast,
+} from "@/lib/server/firestoreErrors";
 import { getProductById, getProductSummaries } from "@/services/catalogService";
 import { toProduct } from "@/services/catalogService";
 import type {
@@ -58,12 +64,20 @@ export async function getBundleByProductId(
     return bundleCache.get(productId) ?? null;
   }
 
-  const doc = await getAdminFirestore()
-    .collection(COLLECTION)
-    .doc(productId)
-    .get();
-
-  const bundle = doc.exists ? normalizeBundle(doc.id, doc.data()!) : null;
+  const bundle = await tryFirestoreFast(
+    async () => {
+      const doc = await getAdminFirestore()
+        .collection(COLLECTION)
+        .doc(productId)
+        .get();
+      return doc.exists ? normalizeBundle(doc.id, doc.data()!) : null;
+    },
+    {
+      domain: "bundles",
+      context: `Unable to fetch bundle for ${productId}`,
+      fallback: () => null,
+    }
+  );
 
   if (!bundleCache || !isFresh(bundleCacheAt)) {
     bundleCache = new Map();
@@ -114,22 +128,54 @@ export async function deleteProductBundle(productId: string): Promise<void> {
   invalidateBundleCache();
 }
 
+function bundleFromProductDetail(
+  product: NonNullable<Awaited<ReturnType<typeof getProductById>>>
+): ProductBundle | null {
+  const relatedIds = product.detail?.frequentlyBoughtTogether ?? [];
+  if (relatedIds.length === 0) return null;
+
+  return {
+    id: product.id,
+    productId: product.id,
+    productName: product.name,
+    productSlug: product.slug,
+    relatedProductIds: relatedIds,
+    discountPercent: DEFAULT_BUNDLE_DISCOUNT_PERCENT,
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  };
+}
+
 async function seedBundleFromProductDetail(
   productId: string
 ): Promise<ProductBundle | null> {
   const product = await getProductById(productId);
   if (!product) return null;
 
-  const relatedIds = product.detail?.frequentlyBoughtTogether ?? [];
-  if (relatedIds.length === 0) return null;
+  const fromDetail = bundleFromProductDetail(product);
+  if (!fromDetail) return null;
 
-  return upsertProductBundle(productId, {
-    relatedProductIds: relatedIds,
-    productName: product.name,
-    productSlug: product.slug,
-    discountPercent: DEFAULT_BUNDLE_DISCOUNT_PERCENT,
-    isActive: true,
-  });
+  try {
+    return await upsertProductBundle(productId, {
+      relatedProductIds: fromDetail.relatedProductIds,
+      productName: product.name,
+      productSlug: product.slug,
+      discountPercent: DEFAULT_BUNDLE_DISCOUNT_PERCENT,
+      isActive: true,
+    });
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      markFirestoreUnavailable(error);
+      logFirestoreWarning(
+        "bundles",
+        error,
+        `Unable to seed bundle for ${productId} — using product detail fallback`
+      );
+      return fromDetail;
+    }
+    throw error;
+  }
 }
 
 export async function resolveBundleForProduct(

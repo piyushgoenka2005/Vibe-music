@@ -42,6 +42,25 @@ async function loadLocalCatalogProducts(): Promise<CatalogProduct[]> {
   return loadProducts();
 }
 
+async function loadLocalCategories(): Promise<Category[]> {
+  const { loadCategories } = await import("@/lib/server/catalogRepository");
+  return loadCategories();
+}
+
+function mergeCategories(
+  primary: Category[],
+  fallback: Category[]
+): Category[] {
+  const map = new Map<string, Category>();
+  fallback.forEach((category) => map.set(category.slug, category));
+  primary.forEach((category) => {
+    map.set(category.slug, { ...map.get(category.slug), ...category });
+  });
+  return Array.from(map.values()).sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+}
+
 function sortProducts(products: CatalogProduct[]): CatalogProduct[] {
   return [...products].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -249,6 +268,83 @@ export async function fetchProductById(
   }
 }
 
+async function mergeWithLocalProduct(
+  slug: string,
+  primary: CatalogProduct | null
+): Promise<CatalogProduct | null> {
+  const local = await loadLocalCatalogProducts();
+  const localHit = local.find((product) => product.slug === slug) ?? null;
+
+  if (!primary) return localHit;
+  if (!localHit) {
+    return primary.status === "active" ? primary : null;
+  }
+
+  const activePrimary = primary.status === "active" ? primary : null;
+  const activeLocal = localHit.status === "active" ? localHit : null;
+  const base = activePrimary ?? activeLocal;
+  if (!base) return primary;
+
+  if (!activePrimary && activeLocal) return localHit;
+
+  return mergeCatalogProductDetails(primary, localHit);
+}
+
+function normalizeSpecLabel(label: string): string {
+  return label.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function mergeSpecLists(
+  primary: Array<{ label: string; value: string }>,
+  local: Array<{ label: string; value: string }>
+): Array<{ label: string; value: string }> {
+  const map = new Map<string, { label: string; value: string }>();
+
+  for (const spec of primary) {
+    map.set(normalizeSpecLabel(spec.label), spec);
+  }
+
+  for (const spec of local) {
+    const key = normalizeSpecLabel(spec.label);
+    const value = spec.value.trim();
+    if (!value || map.has(key)) continue;
+    map.set(key, spec);
+  }
+
+  return Array.from(map.values());
+}
+
+function mergeCatalogProductDetails(
+  primary: CatalogProduct,
+  local: CatalogProduct
+): CatalogProduct {
+  const specifications = { ...primary.specifications };
+  for (const [key, value] of Object.entries(local.specifications ?? {})) {
+    if (typeof value !== "string" || !value.trim()) continue;
+    const existing = specifications[key];
+    if (existing == null || !String(existing).trim()) {
+      specifications[key] = value;
+    }
+  }
+
+  const mergedDetailSpecs = mergeSpecLists(
+    primary.detail?.specs ?? [],
+    local.detail?.specs ?? []
+  );
+
+  const detail = primary.detail
+    ? { ...primary.detail, specs: mergedDetailSpecs }
+    : local.detail
+      ? { ...local.detail, specs: mergedDetailSpecs }
+      : undefined;
+
+  return {
+    ...primary,
+    specifications,
+    detail,
+  };
+}
+
 export async function fetchProductBySlug(
   slug: string
 ): Promise<CatalogProduct | null> {
@@ -258,7 +354,9 @@ export async function fetchProductBySlug(
   }
 
   const cached = productsCache?.find((p) => p.slug === slug);
-  if (cached) return cached;
+  if (cached) {
+    return mergeWithLocalProduct(slug, cached);
+  }
 
   if (catalogCircuit.isOpen()) {
     const local = await loadLocalCatalogProducts();
@@ -277,7 +375,10 @@ export async function fetchProductBySlug(
       return local.find((p) => p.slug === slug) ?? null;
     }
     const doc = snap.docs[0];
-    return docToCatalogProduct(doc.id, doc.data());
+    return mergeWithLocalProduct(
+      slug,
+      docToCatalogProduct(doc.id, doc.data())
+    );
   } catch (error) {
     const local = await loadLocalCatalogProducts();
     return handleCatalogUnavailable(
@@ -341,8 +442,7 @@ export async function fetchProductsByCategory(
 
 export async function fetchCategories(): Promise<Category[]> {
   if (isCatalogFirestoreDisabled()) {
-    const { loadCategories } = await import("@/lib/server/catalogRepository");
-    return loadCategories();
+    return loadLocalCategories();
   }
 
   if (categoriesCache && isFresh(categoriesCacheAt)) {
@@ -350,14 +450,17 @@ export async function fetchCategories(): Promise<Category[]> {
   }
 
   if (catalogCircuit.isOpen()) {
-    return categoriesCache ?? [];
+    return categoriesCache?.length
+      ? categoriesCache
+      : await loadLocalCategories();
   }
 
   try {
     const snap = await db().collection(CATEGORIES).get();
+    const local = await loadLocalCategories();
+
     if (snap.empty) {
-      const { loadCategories } = await import("@/lib/server/catalogRepository");
-      categoriesCache = loadCategories();
+      categoriesCache = local;
       categoriesCacheAt = Date.now();
       return categoriesCache;
     }
@@ -372,22 +475,22 @@ export async function fetchCategories(): Promise<Category[]> {
       } satisfies Category;
     });
 
-    categoriesCache = categories;
+    categoriesCache = mergeCategories(categories, local);
     categoriesCacheAt = Date.now();
-    return categories;
+    return categoriesCache;
   } catch (error) {
+    const local = await loadLocalCategories();
     if (categoriesCache?.length) {
       return handleCatalogUnavailable(
         error,
         "Unable to fetch categories",
-        categoriesCache
+        mergeCategories(categoriesCache, local)
       );
     }
-    const { loadCategories } = await import("@/lib/server/catalogRepository");
     return handleCatalogUnavailable(
       error,
       "Unable to fetch categories — using local catalog fallback",
-      loadCategories()
+      local
     );
   }
 }

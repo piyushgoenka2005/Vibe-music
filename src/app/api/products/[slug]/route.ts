@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logFirestoreWarning } from "@/lib/server/firestoreErrors";
 import { resolveBundleBySlug } from "@/lib/server/bundleService";
 import {
   getProductDetailBySlug,
@@ -16,15 +17,34 @@ export async function GET(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    const bundle = await resolveBundleBySlug(slug);
+    let bundle = null;
+    try {
+      bundle = await resolveBundleBySlug(slug);
+    } catch (error) {
+      logFirestoreWarning("products", error, `Bundle lookup failed for ${slug}`);
+    }
+
+    let similarProducts = await getProductSummaries(product.similarProductIds);
+    let relatedProducts: Awaited<ReturnType<typeof getRelatedProducts>> = [];
+
+    try {
+      relatedProducts = await getRelatedProducts(slug);
+    } catch (error) {
+      logFirestoreWarning(
+        "products",
+        error,
+        `Related products lookup failed for ${slug}`
+      );
+      similarProducts = await getProductSummaries(product.similarProductIds);
+    }
 
     return NextResponse.json(
       {
         product,
         bundle,
         frequentlyBoughtTogether: bundle?.items ?? [],
-        similarProducts: await getProductSummaries(product.similarProductIds),
-        relatedProducts: await getRelatedProducts(slug),
+        similarProducts,
+        relatedProducts,
       },
       {
         headers: {

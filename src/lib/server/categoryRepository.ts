@@ -1,4 +1,5 @@
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { invalidateCatalogCache } from "@/lib/server/firestoreCatalogRepository";
 import { slugify } from "@/lib/slug";
 import type { AdminCategory } from "@/types/admin";
 
@@ -86,6 +87,7 @@ export async function createCategory(
     updatedAt: now,
   };
   await ref.set(record);
+  invalidateCatalogCache();
   return record;
 }
 
@@ -99,6 +101,7 @@ export async function updateCategory(
   delete rest.id;
   delete rest.createdAt;
   await db.collection(COLLECTION).doc(id).update({ ...rest, updatedAt: now });
+  invalidateCatalogCache();
   const updated = await getCategoryById(id);
   if (!updated) throw new Error("Category not found after update");
   return updated;
@@ -115,4 +118,5 @@ export async function deleteCategory(id: string): Promise<void> {
     throw new Error("Cannot delete category with subcategories");
   }
   await db.collection(COLLECTION).doc(id).delete();
+  invalidateCatalogCache();
 }

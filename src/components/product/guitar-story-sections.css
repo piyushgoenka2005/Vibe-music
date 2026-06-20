@@ -1,0 +1,17 @@
+.guitar-story {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.guitar-story__banner {
+  width: 100%;
+  line-height: 0;
+}
+
+.guitar-story__image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
