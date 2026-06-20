@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
 import { DEFAULT_METADATA } from "@/lib/site";
-import { STOREFRONT_THEME_BOOT_SCRIPT } from "@/lib/storefrontThemeScript";
 import "./globals.css";
 import "@/styles/typography.css";
 import "@/styles/site-layout.css";
@@ -20,19 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en-IN"
-      className={primaryFont.variable}
-      data-storefront-theme="light"
-      suppressHydrationWarning
-    >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: STOREFRONT_THEME_BOOT_SCRIPT,
-          }}
-        />
-      </head>
+    <html lang="en-IN" className={primaryFont.variable} suppressHydrationWarning>
       <body className={primaryFont.className} suppressHydrationWarning>
         <AppShell>{children}</AppShell>
       </body>

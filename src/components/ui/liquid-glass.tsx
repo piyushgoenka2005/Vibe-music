@@ -311,7 +311,7 @@ export function LiquidGlassDemo() {
         animation: "moveBackground 60s linear infinite",
       }}
     >
-      {/* GlassFilter is mounted once in StorefrontThemeProvider */}
+      {/* GlassFilter is mounted once in StorefrontChrome */}
       <div className="flex w-full flex-col items-center justify-center gap-6">
         <GlassDock icons={dockIcons} />
         <GlassButton>

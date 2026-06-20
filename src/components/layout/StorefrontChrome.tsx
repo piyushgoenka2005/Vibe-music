@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
+import { GlassFilter } from "@/components/ui/liquid-glass";
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SkipToContent from "@/components/layout/SkipToContent";
@@ -62,6 +63,7 @@ export default function StorefrontChrome({
           COLOR="#1253ED"
         />
       ) : null}
+      <GlassFilter />
       <SkipToContent />
       <SocialRail />
       <SiteHeader />
