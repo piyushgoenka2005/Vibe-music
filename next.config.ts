@@ -37,6 +37,10 @@ const nextConfig: NextConfig = {
       "@radix-ui/react-slot",
       "recharts",
       "framer-motion",
+      "firebase/auth",
+      "firebase/firestore",
+      "@tanstack/react-query",
+      "@tanstack/react-table",
     ],
   },
   images: {

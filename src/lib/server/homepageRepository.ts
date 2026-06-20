@@ -24,6 +24,7 @@ let sectionsCache: HomepageSection[] | null = null;
 let sectionsCacheAt = 0;
 let itemsCache: HomepageSectionItem[] | null = null;
 let itemsCacheAt = 0;
+let itemsInflight: Promise<HomepageSectionItem[]> | null = null;
 
 function now(): string {
   return new Date().toISOString();
@@ -38,6 +39,7 @@ export function invalidateHomepageCache(): void {
   sectionsCacheAt = 0;
   itemsCache = null;
   itemsCacheAt = 0;
+  itemsInflight = null;
 }
 
 function isSectionKey(value: string): value is HomepageSectionKey {
@@ -172,15 +174,27 @@ export async function listAllSectionItems(): Promise<HomepageSectionItem[]> {
     return itemsCache;
   }
 
-  const snap = await getAdminFirestore().collection(ITEMS).get();
-  const items = snap.docs
-    .map((doc) => normalizeItem(doc.id, doc.data()))
-    .filter((item): item is HomepageSectionItem => item !== null)
-    .sort((a, b) => a.sortOrder - b.sortOrder || a.createdAt.localeCompare(b.createdAt));
+  if (itemsInflight) {
+    return itemsInflight;
+  }
 
-  itemsCache = items;
-  itemsCacheAt = Date.now();
-  return items;
+  itemsInflight = (async () => {
+    const snap = await getAdminFirestore().collection(ITEMS).get();
+    const items = snap.docs
+      .map((doc) => normalizeItem(doc.id, doc.data()))
+      .filter((item): item is HomepageSectionItem => item !== null)
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.createdAt.localeCompare(b.createdAt));
+
+    itemsCache = items;
+    itemsCacheAt = Date.now();
+    return items;
+  })();
+
+  try {
+    return await itemsInflight;
+  } finally {
+    itemsInflight = null;
+  }
 }
 
 export async function listSectionItems(

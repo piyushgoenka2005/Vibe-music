@@ -61,7 +61,10 @@ export default function SiteFooter() {
     const spacer = spacerRef.current;
     if (!panel || !footer || !spacer) return;
 
-    const shell = footer.querySelector<HTMLElement>(".site-footer__shell");
+    const newsletterShell = footer.querySelector<HTMLElement>(
+      ".site-footer__shell:not(.site-footer__shell--links)"
+    );
+    const linksShell = footer.querySelector<HTMLElement>(".site-footer__shell--links");
 
     const syncSpacer = () => {
       const height = Math.max(panel.offsetHeight, panel.scrollHeight);
@@ -86,23 +89,36 @@ export default function SiteFooter() {
       { threshold: 0.12, rootMargin: "0px" }
     );
 
-    readyObserver.observe(shell ?? footer);
+    readyObserver.observe(newsletterShell ?? footer);
 
     const updateInteractive = () => {
-      if (!shell) return;
-      const shellRect = shell.getBoundingClientRect();
+      const targetShell = linksShell ?? newsletterShell;
+      if (!targetShell) return;
+      const shellRect = targetShell.getBoundingClientRect();
       const panelInteractive = shellRect.bottom <= window.innerHeight * 0.2;
       panel.classList.toggle("is-interactive", panelInteractive);
     };
 
+    let scrollFrame = 0;
+    const onScroll = () => {
+      if (scrollFrame) return;
+      scrollFrame = window.requestAnimationFrame(() => {
+        scrollFrame = 0;
+        updateInteractive();
+      });
+    };
+
     updateInteractive();
-    window.addEventListener("scroll", updateInteractive, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", updateInteractive);
 
     return () => {
       resizeObserver.disconnect();
       readyObserver.disconnect();
-      window.removeEventListener("scroll", updateInteractive);
+      if (scrollFrame) {
+        window.cancelAnimationFrame(scrollFrame);
+      }
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", updateInteractive);
     };
   }, []);
@@ -130,7 +146,7 @@ export default function SiteFooter() {
         data-vibe-section="footer"
       >
         <div className="site-footer__shell">
-        <div className="site-footer__shell-inner">
+          <div className="site-footer__shell-inner">
           <section
             id="newsletter"
             className="site-footer-newsletter"
@@ -184,29 +200,33 @@ export default function SiteFooter() {
               </label>
             </form>
           </section>
-
-          <div className="site-footer__grid">
-            <FooterAccordion sections={FOOTER_SECTIONS} />
-
-            <div className="site-footer-base">
-              <div className="site-footer-base__item">
-                ©{year} /{" "}
-                <Link href={ROUTES.home} title={BRAND.name}>
-                  {BRAND.name}
-                </Link>
-              </div>
-              <div className="site-footer-base__item">
-                <FooterClock />
-              </div>
-              <div className="site-footer-base__item site-footer-base__item--tagline">
-                Pro Audio · Instruments · Studio Gear
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
         <div ref={spacerRef} className="site-footer__panel-spacer" aria-hidden />
+
+        <div className="site-footer__shell site-footer__shell--links">
+          <div className="site-footer__shell-inner">
+            <div className="site-footer__grid">
+              <FooterAccordion sections={FOOTER_SECTIONS} />
+
+              <div className="site-footer-base">
+                <div className="site-footer-base__item">
+                  ©{year} /{" "}
+                  <Link href={ROUTES.home} title={BRAND.name}>
+                    {BRAND.name}
+                  </Link>
+                </div>
+                <div className="site-footer-base__item">
+                  <FooterClock />
+                </div>
+                <div className="site-footer-base__item site-footer-base__item--tagline">
+                  Pro Audio · Instruments · Studio Gear
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </footer>
     </>
   );

@@ -173,9 +173,19 @@
   accent-color: #fff;
 }
 
-/* Grid + accordions */
+.site-footer__shell--links {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  border-bottom: none;
+}
+
 .site-footer__grid {
   border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.site-footer__shell--links .site-footer__grid {
+  border-top: none;
 }
 
 .site-footer-accordion-group {

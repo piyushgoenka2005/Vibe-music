@@ -48,7 +48,7 @@ export default function StyleStoryCard({
         loop
         playsInline
         autoPlay
-        preload="auto"
+        preload="metadata"
         disablePictureInPicture
         controls={false}
       />

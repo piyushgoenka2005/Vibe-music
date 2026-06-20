@@ -48,7 +48,7 @@ export default function GearStoryCard({
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           disablePictureInPicture
           controls={false}
           aria-hidden="true"

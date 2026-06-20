@@ -6,9 +6,15 @@ import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SocialRail from "@/components/layout/SocialRail";
 import SkipToContent from "@/components/layout/SkipToContent";
-import BackToTop from "@/components/layout/BackToTop";
-import HelpWidget from "@/components/layout/HelpWidget";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+
+const BackToTop = dynamic(() => import("@/components/layout/BackToTop"), {
+  loading: () => null,
+});
+
+const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
+  loading: () => null,
+});
 
 const SplashCursor = dynamic(() => import("@/components/SplashCursor"), {
   ssr: false,

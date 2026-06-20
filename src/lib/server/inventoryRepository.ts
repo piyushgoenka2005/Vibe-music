@@ -75,16 +75,21 @@ export async function fetchProductStockSnapshots(
   productIds: string[]
 ): Promise<Map<string, ProductStockSnapshot>> {
   const db = getAdminFirestore();
-  const uniqueIds = [...new Set(productIds)];
+  const uniqueIds = [...new Set(productIds.filter(Boolean))];
   const map = new Map<string, ProductStockSnapshot>();
 
-  await Promise.all(
-    uniqueIds.map(async (productId) => {
-      const doc = await db.collection(PRODUCTS).doc(productId).get();
+  if (uniqueIds.length === 0) return map;
+
+  const CHUNK_SIZE = 30;
+  for (let index = 0; index < uniqueIds.length; index += CHUNK_SIZE) {
+    const chunk = uniqueIds.slice(index, index + CHUNK_SIZE);
+    const refs = chunk.map((productId) => db.collection(PRODUCTS).doc(productId));
+    const docs = await db.getAll(...refs);
+    docs.forEach((doc) => {
       if (!doc.exists) return;
-      map.set(productId, readSnapshot(productId, doc.data()!));
-    })
-  );
+      map.set(doc.id, readSnapshot(doc.id, doc.data()!));
+    });
+  }
 
   return map;
 }
@@ -196,29 +201,43 @@ export async function validateStockAvailability(
   const db = getAdminFirestore();
   const variantErrors: string[] = [];
   const parentItems: OrderInventoryLine[] = [];
+  const variantItems: OrderInventoryLine[] = [];
 
   for (const item of items) {
     if (!item.variantId) {
       parentItems.push(item);
       continue;
     }
+    variantItems.push(item);
+  }
 
-    const doc = await db.collection(PRODUCTS).doc(item.productId).get();
-    if (!doc.exists) {
-      variantErrors.push(`${item.name ?? item.productId}: product not found`);
-      continue;
-    }
+  if (variantItems.length > 0) {
+    const variantProductIds = [...new Set(variantItems.map((item) => item.productId))];
+    const variantDocRefs = variantProductIds.map((productId) =>
+      db.collection(PRODUCTS).doc(productId)
+    );
+    const fullDocs =
+      variantDocRefs.length > 0 ? await db.getAll(...variantDocRefs) : [];
+    const fullDocMap = new Map(fullDocs.map((doc) => [doc.id, doc]));
 
-    const available = readVariantStock(doc.data()!, item.variantId);
-    if (available === null) {
-      variantErrors.push(`${item.name ?? item.productId}: variant not found`);
-      continue;
-    }
+    for (const item of variantItems) {
+      const doc = fullDocMap.get(item.productId);
+      if (!doc?.exists) {
+        variantErrors.push(`${item.name ?? item.productId}: product not found`);
+        continue;
+      }
 
-    if (item.quantity > available) {
-      variantErrors.push(
-        `${item.name ?? item.productId}: requested ${item.quantity}, available ${available}`
-      );
+      const available = readVariantStock(doc.data()!, item.variantId!);
+      if (available === null) {
+        variantErrors.push(`${item.name ?? item.productId}: variant not found`);
+        continue;
+      }
+
+      if (item.quantity > available) {
+        variantErrors.push(
+          `${item.name ?? item.productId}: requested ${item.quantity}, available ${available}`
+        );
+      }
     }
   }
 
