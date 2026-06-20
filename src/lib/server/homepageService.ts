@@ -35,6 +35,7 @@ const PUBLIC_CACHE_TTL_MS = 45_000;
 
 let publicCache: PublicHomepageData | null = null;
 let publicCacheAt = 0;
+let publicInflight: Promise<PublicHomepageData> | null = null;
 
 function isFresh(ts: number): boolean {
   return Date.now() - ts < PUBLIC_CACHE_TTL_MS;
@@ -43,6 +44,7 @@ function isFresh(ts: number): boolean {
 export function invalidatePublicHomepageCache(): void {
   publicCache = null;
   publicCacheAt = 0;
+  publicInflight = null;
 }
 
 function activeProducts(products: CatalogProduct[]): CatalogProduct[] {
@@ -313,7 +315,11 @@ export async function getPublicHomepageData(
     return publicCache;
   }
 
-  return tryFirestoreFast(
+  if (publicInflight) {
+    return publicInflight;
+  }
+
+  publicInflight = tryFirestoreFast(
     async () => {
       const [sections, products, allSectionItems] = await Promise.all([
         listActiveSections(),
@@ -350,7 +356,11 @@ export async function getPublicHomepageData(
         return staticFallback();
       },
     }
-  );
+  ).finally(() => {
+    publicInflight = null;
+  });
+
+  return publicInflight;
 }
 
 export {

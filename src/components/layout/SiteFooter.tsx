@@ -53,7 +53,11 @@ export default function SiteFooter() {
   const panelRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
-  const year = new Date().getFullYear();
+  const [year, setYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
 
   useEffect(() => {
     const panel = panelRef.current;
@@ -185,6 +189,7 @@ export default function SiteFooter() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     required
+                    suppressHydrationWarning
                   />
                   <button type="submit" className="site-footer-newsletter__submit">
                     Sign up
@@ -202,7 +207,7 @@ export default function SiteFooter() {
 
               <div className="site-footer-base">
                 <div className="site-footer-base__item">
-                  ©{year} /{" "}
+                  ©{year ?? ""} /{" "}
                   <Link href={ROUTES.home} title={BRAND.name}>
                     {BRAND.name}
                   </Link>

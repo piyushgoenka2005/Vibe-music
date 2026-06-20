@@ -57,11 +57,22 @@ export function isFirestoreUnavailableError(error: unknown): boolean {
   return false;
 }
 
+const warningKeys = new Map<string, number>();
+const WARNING_DEDUPE_MS = 60_000;
+
 export function logFirestoreWarning(
   domain: string,
   error: unknown,
   context: string
 ): void {
+  const key = `${domain}:${context}`;
+  const now = Date.now();
+  const lastLoggedAt = warningKeys.get(key) ?? 0;
+  if (now - lastLoggedAt < WARNING_DEDUPE_MS) {
+    return;
+  }
+  warningKeys.set(key, now);
+
   const message = error instanceof Error ? error.message : String(error);
   console.warn(`[${domain}] ${context}: ${message}`);
 }

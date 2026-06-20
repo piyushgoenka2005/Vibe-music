@@ -84,8 +84,9 @@ function saveAccountWishlist(userId: string, items: WishlistItem[]) {
 async function loadAccountWishlistFromApi(): Promise<WishlistItem[] | null> {
   try {
     const res = await fetch("/api/account/wishlist", {
-      signal: AbortSignal.timeout(2_500),
+      signal: AbortSignal.timeout(5_000),
     });
+    if (res.status === 401 || res.status === 404) return null;
     if (!res.ok) return null;
     const data = (await res.json()) as { items?: WishlistItem[] };
     return data.items ?? [];
