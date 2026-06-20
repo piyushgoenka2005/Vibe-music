@@ -180,36 +180,48 @@ export async function listAllBlogPosts(): Promise<BlogPost[]> {
 }
 
 export async function listPublicBlogPosts(
-  at = new Date()
+  at = new Date(),
+  options?: { limit?: number }
 ): Promise<BlogPostSummary[]> {
+  const queryLimit =
+    options?.limit && options.limit > 0
+      ? Math.min(Math.max(options.limit * 3, options.limit), 50)
+      : undefined;
+
   const result = await runBlogRead("Unable to list public blog posts", [], async () => {
     const db = getAdminFirestore();
     const isoNow = at.toISOString();
 
     const fetchPublished = async () => {
       try {
-        return await db
+        let query = db
           .collection(COLLECTION)
           .where("status", "==", "published")
-          .orderBy("publishedAt", "desc")
-          .get();
+          .orderBy("publishedAt", "desc");
+        if (queryLimit) query = query.limit(queryLimit);
+        return await query.get();
       } catch (error) {
         if (isFirestoreUnavailableError(error)) throw error;
-        return db.collection(COLLECTION).where("status", "==", "published").get();
+        let query = db.collection(COLLECTION).where("status", "==", "published");
+        if (queryLimit) query = query.limit(queryLimit);
+        return query.get();
       }
     };
 
     const fetchScheduled = async () => {
       try {
-        return await db
+        let query = db
           .collection(COLLECTION)
           .where("status", "==", "scheduled")
           .where("scheduledAt", "<=", isoNow)
-          .orderBy("scheduledAt", "desc")
-          .get();
+          .orderBy("scheduledAt", "desc");
+        if (queryLimit) query = query.limit(queryLimit);
+        return await query.get();
       } catch (error) {
         if (isFirestoreUnavailableError(error)) throw error;
-        return db.collection(COLLECTION).where("status", "==", "scheduled").get();
+        let query = db.collection(COLLECTION).where("status", "==", "scheduled");
+        if (queryLimit) query = query.limit(queryLimit);
+        return query.get();
       }
     };
 
@@ -230,7 +242,8 @@ export async function listPublicBlogPosts(
 
     return [...unique.values()]
       .map((post) => toSummary(post, at))
-      .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
+      .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
+      .slice(0, options?.limit && options.limit > 0 ? options.limit : undefined);
   });
 
   return ensureBlogPostSummaries(result);

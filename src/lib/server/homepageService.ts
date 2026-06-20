@@ -14,8 +14,9 @@ import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { getCategoryGridImage } from "@/lib/categoryImages";
 import { categoryPath, productPath } from "@/lib/routes";
 import {
-  listActiveSectionItems,
   listActiveSections,
+  listAllSectionItems,
+  isHomepageItemScheduledActive,
 } from "@/lib/server/homepageRepository";
 import { getHomepageStaticFallbacks } from "@/data/homepageStaticFallbacks";
 import type { CatalogProduct } from "@/types/catalog";
@@ -253,9 +254,17 @@ function sectionDomId(sectionKey: HomepageSectionKey): string {
 async function resolveSection(
   section: HomepageSection,
   products: CatalogProduct[],
-  at: Date
+  at: Date,
+  allSectionItems: HomepageSectionItem[]
 ): Promise<ResolvedHomepageSection | null> {
-  const items = await listActiveSectionItems(section.sectionKey, at);
+  const items = allSectionItems
+    .filter(
+      (item) =>
+        item.sectionKey === section.sectionKey &&
+        item.isActive &&
+        isHomepageItemScheduledActive(item, at)
+    )
+    .sort((a, b) => a.sortOrder - b.sortOrder);
   const base: ResolvedHomepageSection = {
     key: section.sectionKey,
     sectionId: sectionDomId(section.sectionKey),
@@ -306,14 +315,17 @@ export async function getPublicHomepageData(
 
   return tryFirestoreFast(
     async () => {
-      const [sections, products] = await Promise.all([
+      const [sections, products, allSectionItems] = await Promise.all([
         listActiveSections(),
         fetchAllProducts(),
+        listAllSectionItems(),
       ]);
 
       const resolved = (
         await Promise.all(
-          sections.map((section) => resolveSection(section, products, at))
+          sections.map((section) =>
+            resolveSection(section, products, at, allSectionItems)
+          )
         )
       ).filter((section): section is ResolvedHomepageSection => section !== null);
 

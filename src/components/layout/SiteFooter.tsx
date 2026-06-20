@@ -61,10 +61,7 @@ export default function SiteFooter() {
     const spacer = spacerRef.current;
     if (!panel || !footer || !spacer) return;
 
-    const newsletterShell = footer.querySelector<HTMLElement>(
-      ".site-footer__shell:not(.site-footer__shell--links)"
-    );
-    const linksShell = footer.querySelector<HTMLElement>(".site-footer__shell--links");
+    const shell = footer.querySelector<HTMLElement>(".site-footer__shell");
 
     const syncSpacer = () => {
       const height = Math.max(panel.offsetHeight, panel.scrollHeight);
@@ -86,15 +83,14 @@ export default function SiteFooter() {
           syncSpacer();
         }
       },
-      { threshold: 0.12, rootMargin: "0px" }
+      { threshold: 0.08, rootMargin: "0px 0px 0px 0px" }
     );
 
-    readyObserver.observe(newsletterShell ?? footer);
+    readyObserver.observe(shell ?? footer);
 
     const updateInteractive = () => {
-      const targetShell = linksShell ?? newsletterShell;
-      if (!targetShell) return;
-      const shellRect = targetShell.getBoundingClientRect();
+      if (!shell) return;
+      const shellRect = shell.getBoundingClientRect();
       const panelInteractive = shellRect.bottom <= window.innerHeight * 0.2;
       panel.classList.toggle("is-interactive", panelInteractive);
     };
@@ -147,66 +143,60 @@ export default function SiteFooter() {
       >
         <div className="site-footer__shell">
           <div className="site-footer__shell-inner">
-          <section
-            id="newsletter"
-            className="site-footer-newsletter"
-            aria-labelledby="footer-newsletter-title"
-          >
-            <div className="site-footer-newsletter__header">
-              <h2 id="footer-newsletter-title" className="site-footer-newsletter__title">
-                Inside Vibe Music
-              </h2>
-              <p className="site-footer-newsletter__body">
-                Join the list for launch drops, studio tips, and exclusive offers from India&apos;s
-                trusted gear destination.
-              </p>
-            </div>
-
-            <form className="site-footer-newsletter__form" onSubmit={onNewsletterSubmit}>
-              <div className="site-footer-newsletter__row">
-                <input
-                  type="text"
-                  name="firstName"
-                  autoComplete="given-name"
-                  placeholder="FIRST NAME"
-                  className="site-footer-newsletter__input"
-                />
-                <input
-                  type="text"
-                  name="lastName"
-                  autoComplete="family-name"
-                  placeholder="LAST NAME"
-                  className="site-footer-newsletter__input"
-                />
+            <section
+              id="newsletter"
+              className="site-footer-newsletter"
+              aria-labelledby="footer-newsletter-title"
+            >
+              <div className="site-footer-newsletter__header">
+                <h2 id="footer-newsletter-title" className="site-footer-newsletter__title">
+                  Inside Vibe Music
+                </h2>
+                <p className="site-footer-newsletter__body">
+                  Join the list for launch drops, studio tips, and exclusive offers from
+                  India&apos;s trusted gear destination.
+                </p>
               </div>
-              <div className="site-footer-newsletter__row site-footer-newsletter__row--action">
-                <input
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  placeholder="EMAIL ADDRESS"
-                  className="site-footer-newsletter__input site-footer-newsletter__input--email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                />
-                <button type="submit" className="site-footer-newsletter__submit">
-                  Sign up
-                </button>
-              </div>
-              <label className="site-footer-newsletter__consent">
-                <input type="checkbox" name="marketing" defaultChecked />
-                <span>Vibe Music can contact me about promotions and gear guides.</span>
-              </label>
-            </form>
-          </section>
-        </div>
-      </div>
 
-        <div ref={spacerRef} className="site-footer__panel-spacer" aria-hidden />
+              <form className="site-footer-newsletter__form" onSubmit={onNewsletterSubmit}>
+                <div className="site-footer-newsletter__row">
+                  <input
+                    type="text"
+                    name="firstName"
+                    autoComplete="given-name"
+                    placeholder="FIRST NAME"
+                    className="site-footer-newsletter__input"
+                  />
+                  <input
+                    type="text"
+                    name="lastName"
+                    autoComplete="family-name"
+                    placeholder="LAST NAME"
+                    className="site-footer-newsletter__input"
+                  />
+                </div>
+                <div className="site-footer-newsletter__row site-footer-newsletter__row--action">
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    placeholder="EMAIL ADDRESS"
+                    className="site-footer-newsletter__input site-footer-newsletter__input--email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
+                  />
+                  <button type="submit" className="site-footer-newsletter__submit">
+                    Sign up
+                  </button>
+                </div>
+                <label className="site-footer-newsletter__consent">
+                  <input type="checkbox" name="marketing" defaultChecked />
+                  <span>Vibe Music can contact me about promotions and gear guides.</span>
+                </label>
+              </form>
+            </section>
 
-        <div className="site-footer__shell site-footer__shell--links">
-          <div className="site-footer__shell-inner">
             <div className="site-footer__grid">
               <FooterAccordion sections={FOOTER_SECTIONS} />
 
@@ -227,6 +217,8 @@ export default function SiteFooter() {
             </div>
           </div>
         </div>
+
+        <div ref={spacerRef} className="site-footer__panel-spacer" aria-hidden />
       </footer>
     </>
   );

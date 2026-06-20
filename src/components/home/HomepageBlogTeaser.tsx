@@ -92,7 +92,7 @@ export default async function HomepageBlogTeaser() {
 
   if (!isBlogUnavailable()) {
     try {
-      const allPosts = await listPublicBlogPosts();
+      const allPosts = await listPublicBlogPosts(new Date(), { limit: 3 });
       posts = Array.isArray(allPosts) ? allPosts.slice(0, 3) : [];
     } catch (error) {
       console.warn(

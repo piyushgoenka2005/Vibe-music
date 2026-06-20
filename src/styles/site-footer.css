@@ -173,19 +173,9 @@
   accent-color: #fff;
 }
 
-.site-footer__shell--links {
-  position: relative;
-  z-index: 1;
-  border-top: 1px solid rgba(255, 255, 255, 0.28);
-  border-bottom: none;
-}
-
+/* Grid + accordions — footer bottom links */
 .site-footer__grid {
   border-top: 1px solid rgba(255, 255, 255, 0.28);
-}
-
-.site-footer__shell--links .site-footer__grid {
-  border-top: none;
 }
 
 .site-footer-accordion-group {
@@ -309,10 +299,10 @@
   position: relative;
   z-index: 0;
   pointer-events: none;
-  background: #0d2d7e;
+  background: transparent;
 }
 
-/* Fixed products panel — deep navy reveal section (matches footer swatch) */
+/* Fixed products panel — deep navy reveal section (pinned to viewport bottom) */
 .footer-products-panel {
   position: fixed;
   inset: auto 0 0;

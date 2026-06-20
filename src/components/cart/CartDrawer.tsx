@@ -12,14 +12,10 @@ import OrderSummary from "./OrderSummary";
 import "./cart.css";
 
 export default function CartDrawer() {
-  const { open, close, items, isUpdating } = useCartStore(
-    useShallow((state) => ({
-      open: state.drawerOpen,
-      close: state.closeDrawer,
-      items: state.items,
-      isUpdating: state.isUpdating,
-    }))
-  );
+  const open = useCartStore((s) => s.drawerOpen);
+  const close = useCartStore((s) => s.closeDrawer);
+  const items = useCartStore((s) => s.items);
+  const isUpdating = useCartStore((s) => s.isUpdating);
   const isClient = useIsClient();
 
   useEffect(() => {

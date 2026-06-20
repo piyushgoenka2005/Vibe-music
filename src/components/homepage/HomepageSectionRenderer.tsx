@@ -3,7 +3,7 @@ import HomepageCategoryGridSection from "@/components/homepage/HomepageCategoryG
 import HomepageDealsSection from "@/components/homepage/HomepageDealsSection";
 import HomepageProductCarouselSection from "@/components/homepage/HomepageProductCarouselSection";
 import HomepageProductGridSection from "@/components/homepage/HomepageProductGridSection";
-import HeroMarqueeSection from "@/components/home/hero-marquee";
+import HeroMarqueeSectionLazy from "@/components/home/hero-marquee/HeroMarqueeSectionLazy";
 import type { ResolvedHomepageSection } from "@/types/homepage";
 
 interface HomepageSectionRendererProps {
@@ -25,7 +25,7 @@ export default function HomepageSectionRenderer({
     case "brand_strip":
       return (
         <>
-          <HeroMarqueeSection />
+          <HeroMarqueeSectionLazy />
           <HomepageBrandStripSection section={section} />
         </>
       );
