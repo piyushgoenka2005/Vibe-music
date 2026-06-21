@@ -9,7 +9,10 @@ import type {
   ReviewSortOption,
   ReviewStatus,
 } from "@/types/review";
-import { getUserVotesForReviews } from "@/lib/server/reviewVoteService";
+import {
+  deleteVotesForReview,
+  getUserVotesForReviews,
+} from "@/lib/server/reviewVoteService";
 
 export const REVIEWS_COLLECTION = "reviews";
 export const USER_PRODUCT_REVIEWS_COLLECTION = "user_product_reviews";
@@ -100,6 +103,105 @@ function applyFilters(
   return next;
 }
 
+function countActiveFilters(
+  params: Pick<ReviewListParams, "rating" | "verified" | "hasImages">
+): number {
+  let count = 0;
+  if (params.rating !== undefined) count += 1;
+  if (params.verified === true) count += 1;
+  if (params.hasImages === true) count += 1;
+  return count;
+}
+
+function matchesReviewFilters(
+  review: Review,
+  params: Pick<ReviewListParams, "rating" | "verified" | "hasImages">
+): boolean {
+  if (params.rating !== undefined && review.rating !== params.rating) {
+    return false;
+  }
+  if (params.verified === true && !review.verifiedPurchase) {
+    return false;
+  }
+  if (params.hasImages === true && !review.hasImages) {
+    return false;
+  }
+  return true;
+}
+
+function sortReviewList(
+  reviews: Review[],
+  sort: ReviewSortOption
+): Review[] {
+  const copy = [...reviews];
+  switch (sort) {
+    case "oldest":
+      return copy.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    case "highest":
+      return copy.sort(
+        (a, b) =>
+          b.rating - a.rating || b.createdAt.localeCompare(a.createdAt)
+      );
+    case "lowest":
+      return copy.sort(
+        (a, b) =>
+          a.rating - b.rating || b.createdAt.localeCompare(a.createdAt)
+      );
+    case "helpful":
+      return copy.sort(
+        (a, b) =>
+          b.helpfulCount - a.helpfulCount ||
+          b.createdAt.localeCompare(a.createdAt)
+      );
+    case "newest":
+    default:
+      return copy.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+}
+
+async function listProductReviewsInMemory(
+  params: ReviewListParams
+): Promise<{ reviews: PublicReview[]; hasMore: boolean; nextCursor?: string }> {
+  const db = getAdminFirestore();
+  const limit = Math.min(Math.max(params.limit ?? 10, 1), 20);
+  const sort = params.sort ?? "newest";
+
+  const snap = await db
+    .collection(REVIEWS_COLLECTION)
+    .where("productId", "==", params.productId)
+    .where("status", "==", "approved")
+    .get();
+
+  const filtered = sortReviewList(
+    snap.docs
+      .map((doc) => normalizeReview(doc.id, doc.data()))
+      .filter((review) => matchesReviewFilters(review, params)),
+    sort
+  );
+
+  let startIndex = 0;
+  if (params.cursor) {
+    const cursorIndex = filtered.findIndex((review) => review.id === params.cursor);
+    if (cursorIndex >= 0) startIndex = cursorIndex + 1;
+  }
+
+  const page = filtered.slice(startIndex, startIndex + limit);
+  const hasMore = startIndex + limit < filtered.length;
+
+  let votedIds = new Set<string>();
+  if (params.viewerUserId && page.length > 0) {
+    votedIds = await getUserVotesForReviews(
+      page.map((review) => review.id),
+      params.viewerUserId
+    );
+  }
+
+  return {
+    reviews: page.map((review) => toPublicReview(review, votedIds.has(review.id))),
+    hasMore,
+    nextCursor: hasMore && page.length > 0 ? page[page.length - 1]!.id : undefined,
+  };
+}
 async function paginateReviewQuery(
   query: FirebaseFirestore.Query,
   limit: number,
@@ -123,6 +225,10 @@ async function paginateReviewQuery(
 export async function listProductReviews(
   params: ReviewListParams
 ): Promise<{ reviews: PublicReview[]; hasMore: boolean; nextCursor?: string }> {
+  if (countActiveFilters(params) > 1) {
+    return listProductReviewsInMemory(params);
+  }
+
   const db = getAdminFirestore();
   const limit = Math.min(Math.max(params.limit ?? 10, 1), 20);
   const sort = params.sort ?? "newest";
@@ -280,6 +386,8 @@ export async function deleteReviewRecord(id: string): Promise<Review | null> {
   const db = getAdminFirestore();
   const review = await getReviewById(id);
   if (!review) return null;
+
+  await deleteVotesForReview(id);
 
   const batch = db.batch();
   batch.delete(db.collection(REVIEWS_COLLECTION).doc(id));

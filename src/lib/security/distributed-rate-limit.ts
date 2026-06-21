@@ -4,7 +4,7 @@ import {
   checkRateLimit,
   type RateLimitOptions,
   type RateLimitResult,
-} from "@/lib/security/rate-limit";
+} from "@/lib/security/rate-limit-core";
 
 function getUpstashConfig(): { url: string; token: string } | null {
   const url = process.env.UPSTASH_REDIS_REST_URL?.trim();

@@ -6,6 +6,7 @@ import {
 import { createSessionCookie, invalidateSessionCache } from "@/lib/auth/server-session";
 import { getAdminAuth } from "@/lib/firebase/admin";
 import { linkGuestOrdersToUser } from "@/lib/server/orderService";
+import { logAuditEvent } from "@/lib/server/auditLog";
 import {
   enforceMutationSecurity,
   enforceRateLimit,
@@ -36,6 +37,14 @@ export async function POST(request: Request) {
     }
 
     invalidateSessionCache(sessionCookie);
+
+    void logAuditEvent({
+      action: "auth.session_created",
+      actorId: decoded.uid,
+      actorEmail: decoded.email ?? undefined,
+      resourceType: "session",
+      request,
+    });
 
     const response = NextResponse.json({ ok: true });
     response.cookies.set({
@@ -68,6 +77,12 @@ export async function DELETE(request: Request) {
 
     invalidateSessionCache();
 
+    void logAuditEvent({
+      action: "auth.session_deleted",
+      resourceType: "session",
+      request,
+    });
+
     const response = NextResponse.json({ ok: true });
     response.cookies.set({
       name: AUTH_SESSION_COOKIE,
@@ -80,6 +95,6 @@ export async function DELETE(request: Request) {
     });
     return response;
   } catch (error) {
-    return handleRouteError(error, "api/auth/session DELETE");
+    return handleRouteError(error, "api/auth/session DELETE", request);
   }
 }

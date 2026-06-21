@@ -1,12 +1,21 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import "@/styles/homepage-bundle.css";
-import HeroShowcaseSection from "@/components/home/hero-showcase";
-import PremiumHero from "@/components/home/PremiumHero";
-import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
+
+const HeroShowcaseSection = dynamic(
+  () => import("@/components/home/hero-showcase"),
+  { loading: () => null }
+);
+const PremiumHero = dynamic(() => import("@/components/home/PremiumHero"), {
+  loading: () => null,
+});
+const HomepageBlogTeaser = dynamic(
+  () => import("@/components/home/HomepageBlogTeaser"),
+  { loading: () => <BlogTeaserSkeleton /> }
+);
 
 const HomepageStats = dynamic(() => import("@/components/home/HomepageStats"), {
   loading: () => null,

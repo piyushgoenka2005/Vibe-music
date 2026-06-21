@@ -63,6 +63,40 @@ export async function uploadBufferToCloudinary(
   });
 }
 
+function safeParsePublicId(url: string): string | null {
+  const cloudName = getCloudinaryCloudName();
+  if (!cloudName || !url.includes("res.cloudinary.com")) return null;
+  if (!url.includes(`res.cloudinary.com/${cloudName}`)) return null;
+
+  const match = url.match(/\/upload\/(?:v\d+\/)?([^.?]+)/);
+  if (!match?.[1]) return null;
+
+  const publicId = match[1];
+  if (
+    !publicId.startsWith("products/") &&
+    !publicId.startsWith("banners/") &&
+    !publicId.startsWith("blog/") &&
+    !publicId.startsWith("reviews/")
+  ) {
+    return null;
+  }
+
+  return publicId;
+}
+
+export async function deleteImageFromCloudinary(url: string): Promise<boolean> {
+  const publicId = safeParsePublicId(url);
+  if (!publicId) return false;
+
+  const client = configureCloudinary();
+  const result = await client.uploader.destroy(publicId, {
+    resource_type: "image",
+    invalidate: true,
+  });
+
+  return result.result === "ok" || result.result === "not found";
+}
+
 export function getSignedUploadParams(folder: string) {
   const client = configureCloudinary();
   const timestamp = Math.round(Date.now() / 1000);

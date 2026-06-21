@@ -14,7 +14,11 @@ import {
   updateReviewFields,
 } from "@/lib/server/reviewRepository";
 import { getReviewEligibility } from "@/lib/server/reviewEligibilityService";
-import { recalculateProductReviewStats } from "@/lib/server/reviewStatsService";
+import {
+  getProductReviewStats,
+  recalculateProductReviewStats,
+} from "@/lib/server/reviewStatsService";
+import { MAX_REVIEW_IMAGES } from "@/lib/validations/review";
 import type {
   AdminReviewListParams,
   AdminReviewStats,
@@ -24,10 +28,8 @@ import type {
   ReviewListResponse,
   ReviewStatus,
 } from "@/types/review";
-import { getProductReviewStats } from "@/lib/server/reviewStatsService";
 import { getAdminFirestore } from "@/lib/firebase/admin";
-
-const REVIEWS_COLLECTION = "reviews";
+import { REVIEWS_COLLECTION } from "@/lib/server/reviewRepository";
 
 async function seedReviewsFromStatic(): Promise<Review[]> {
   const { getAllProducts, getProductDetailBySlug } = await import(
@@ -121,9 +123,9 @@ export async function submitProductReview(input: {
     input.userEmail,
     input.productId
   );
-  const images = (input.payload.images ?? []).slice(0, 5);
+  const images = (input.payload.images ?? []).slice(0, MAX_REVIEW_IMAGES);
 
-  return createReviewRecord({
+  const review = await createReviewRecord({
     productId: input.productId,
     productName: input.productName,
     productSlug: input.productSlug,
@@ -137,8 +139,11 @@ export async function submitProductReview(input: {
     hasImages: images.length > 0,
     verifiedPurchase: purchase.verified,
     orderId: purchase.orderId,
-    status: "pending",
+    status: "approved",
   });
+
+  await recalculateProductReviewStats(review.productId);
+  return review;
 }
 
 export async function updateReviewStatus(

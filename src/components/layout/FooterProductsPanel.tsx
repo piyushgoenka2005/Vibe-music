@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { forwardRef, type MouseEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
-import trendingProducts from "@/data/catalog/trending-products.json";
 import { optimizeImageUrl } from "@/lib/images";
 import { categoryPath, productPath, ROUTES } from "@/lib/routes";
+import { fetchProducts } from "@/services/products.api";
 import { formatCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
-import type { Product, ProductAvailability, ProductCondition } from "@/types/product";
-
-const PANEL_PRODUCTS = trendingProducts.slice(0, 4);
+import type { Product } from "@/types/product";
 
 const PANEL_CATEGORIES = [
   { label: "01 / Pro audio", href: categoryPath("studio-recording") },
@@ -19,31 +18,10 @@ const PANEL_CATEGORIES = [
   { label: "04 / Expert setup", href: `${ROUTES.search}?q=studio+setup` },
 ] as const;
 
-type TrendingCatalogProduct = (typeof trendingProducts)[number];
-
-function toCartProduct(product: TrendingCatalogProduct): Product {
-  return {
-    id: product.id,
-    slug: product.slug,
-    name: product.name,
-    brand: product.brand,
-    brandSlug: product.brandSlug,
-    category: product.category,
-    categorySlug: product.categorySlug,
-    price: product.price,
-    rating: product.rating,
-    reviewCount: product.reviewCount,
-    availability: product.availability as ProductAvailability,
-    condition: product.condition as ProductCondition,
-    imageColor: product.imageColor,
-    image: product.image,
-  };
-}
-
-function FooterProductSnippet({ product }: { product: TrendingCatalogProduct }) {
+function FooterProductSnippet({ product }: { product: Product }) {
   const addItem = useCartStore((state) => state.addItem);
   const openDrawer = useCartStore((state) => state.openDrawer);
-  const image = product.images?.[0] ?? product.image;
+  const image = product.image;
   const href = productPath(product.slug);
   const outOfStock = product.availability === "out-of-stock";
 
@@ -51,7 +29,7 @@ function FooterProductSnippet({ product }: { product: TrendingCatalogProduct }) 
     event.preventDefault();
     event.stopPropagation();
     if (outOfStock) return;
-    addItem(toCartProduct(product));
+    addItem(product);
     openDrawer();
   }
 
@@ -90,6 +68,12 @@ function FooterProductSnippet({ product }: { product: TrendingCatalogProduct }) 
 }
 
 const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPanel(_, ref) {
+  const { data: products = [] } = useQuery({
+    queryKey: ["footer-trending-products"],
+    queryFn: () => fetchProducts({ trending: true, limit: 4 }),
+    staleTime: 60_000,
+  });
+
   return (
     <div ref={ref} className="footer-products-panel" data-footer-panel>
       <div className="footer-products-panel__inner">
@@ -114,7 +98,7 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
         </div>
 
         <div className="footer-products-panel__products">
-          {PANEL_PRODUCTS.map((product) => (
+          {products.map((product) => (
             <FooterProductSnippet key={product.id} product={product} />
           ))}
         </div>

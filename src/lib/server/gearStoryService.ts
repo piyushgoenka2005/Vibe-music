@@ -1,7 +1,6 @@
 import { GEAR_STORIES_SECTION, GEAR_STORY_SEEDS } from "@/data/gearStories";
 import { STYLE_STORY_REELS } from "@/data/styleStory";
 import { getProductImage } from "@/data/productImages";
-import { loadProducts } from "@/lib/server/catalogRepository";
 import { isCatalogUnavailable } from "@/lib/server/firestoreCatalogRepository";
 import {
   isFirestoreUnavailableError,
@@ -53,12 +52,7 @@ function enrichStory(
   };
 }
 
-function buildFallbackStory(seed: GearStorySeed, index: number): GearStory {
-  const local = loadProducts().find((product) => product.id === seed.productId);
-  if (local) {
-    return enrichStory(seed, { ...local, status: "active" }, index);
-  }
-
+function buildPlaceholderStory(seed: GearStorySeed, index: number): GearStory {
   const reel = STYLE_STORY_REELS[index];
   const videoUrl = reel?.videoSrc ?? seed.videoUrl;
   const posterUrl = reel?.thumbnailSrc ?? "";
@@ -95,11 +89,12 @@ function buildStoriesFromProducts(
     if (product && product.status === "active") {
       return enrichStory(seed, product, index);
     }
-    return buildFallbackStory(seed, index);
+    return buildPlaceholderStory(seed, index);
   });
 }
 
-function resolveFromLocalCatalog(): Array<CatalogProduct | undefined> {
+async function resolveFromLocalCatalog(): Promise<Array<CatalogProduct | undefined>> {
+  const { loadProducts } = await import("@/lib/server/catalogRepository");
   const local = loadProducts();
   return GEAR_STORY_SEEDS.map((seed) =>
     local.find((product) => product.id === seed.productId)
@@ -112,13 +107,9 @@ async function resolveSeedProducts(): Promise<Array<CatalogProduct | undefined>>
   }
 
   try {
-    const remote = await Promise.all(
+    return await Promise.all(
       GEAR_STORY_SEEDS.map((seed) => getProductById(seed.productId))
     );
-
-    if (buildStoriesFromProducts(remote).length > 0) {
-      return remote;
-    }
   } catch (error) {
     if (!isFirestoreUnavailableError(error)) {
       throw error;
@@ -129,9 +120,8 @@ async function resolveSeedProducts(): Promise<Array<CatalogProduct | undefined>>
       error,
       "Firestore unavailable — using local catalog for gear stories"
     );
+    return resolveFromLocalCatalog();
   }
-
-  return resolveFromLocalCatalog();
 }
 
 export async function listGearStories(): Promise<GearStoriesSectionData> {
@@ -141,13 +131,14 @@ export async function listGearStories(): Promise<GearStoriesSectionData> {
 }
 
 /** Always returns all reel slots — used on the homepage without Firestore. */
-export function buildStaticGearStories(
-  products: Array<CatalogProduct | undefined> = resolveFromLocalCatalog()
-): GearStoriesSectionData {
+export async function buildStaticGearStories(
+  products?: Array<CatalogProduct | undefined>
+): Promise<GearStoriesSectionData> {
+  const resolved = products ?? (await resolveFromLocalCatalog());
   return {
     title: GEAR_STORIES_SECTION.title,
     subtitle: GEAR_STORIES_SECTION.subtitle,
-    stories: buildStoriesFromProducts(products),
+    stories: buildStoriesFromProducts(resolved),
   };
 }
 

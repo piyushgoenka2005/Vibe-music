@@ -1,5 +1,4 @@
-import categoriesData from "@/data/catalog/categories.json";
-import type { Category } from "@/types/category";
+import { slugify } from "@/lib/slug";
 
 /** WRD canonical routes */
 export const ROUTES = {
@@ -48,8 +47,6 @@ export function categoryPath(slug: string): string {
 export function productPath(slug: string): string {
   return `/product/${slug}`;
 }
-
-const CATEGORIES = categoriesData as Category[];
 
 const PLACEHOLDER_REDIRECTS: Record<string, string> = {
   "/careers": ROUTES.home,
@@ -245,14 +242,9 @@ function resolveStoreDetail(path: string): string | null {
 function resolveCatalogCategory(path: string): string | null {
   const match = path.match(/^\/c\d+--(.+)$/);
   if (!match?.[1]) return null;
-  const name = match[1].replace(/_/g, " ").toLowerCase();
-  const hit = CATEGORIES.find(
-    (c) =>
-      name.includes(c.slug.replace(/-/g, " ")) ||
-      name.includes(c.name.toLowerCase())
-  );
-  if (hit) return categoryPath(hit.slug);
-  return `${ROUTES.searchResults}?q=${encodeURIComponent(name.replace(/-/g, " "))}`;
+  const slug = slugify(match[1].replace(/_/g, " "));
+  if (!slug) return null;
+  return categoryPath(slug);
 }
 
 /** Resolve href for in-page link interception (preserves query + hash) */

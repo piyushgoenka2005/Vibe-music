@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
+import AdminOrderShipment from "@/components/admin/AdminOrderShipment";
 import { StatusBadge, LoadingState, EmptyState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import type { Order, OrderStatus } from "@/types/order";
@@ -216,6 +217,7 @@ function OrdersContent() {
                 <button type="button" className="admin-btn admin-btn--primary" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate()}>
                   {updateMutation.isPending ? "Updating…" : "Update Order"}
                 </button>
+                <AdminOrderShipment orderId={selected.id} />
               </>
             )}
           </div>

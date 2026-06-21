@@ -57,12 +57,13 @@ export default function ReviewSubmitForm({ productSlug }: ReviewSubmitFormProps)
     setIsSubmitting(true);
     try {
       await submitProductReview(productSlug, { rating, title, body, images });
-      showToast("Review submitted for moderation", "success");
+      showToast("Your review has been published", "success");
       setTitle("");
       setBody("");
       setImages([]);
       setRating(5);
       void queryClient.invalidateQueries({ queryKey: ["product-reviews", productSlug] });
+      void queryClient.invalidateQueries({ queryKey: ["product-review-stats", productSlug] });
       void queryClient.invalidateQueries({ queryKey: ["review-eligibility", productSlug] });
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to submit review", "error");

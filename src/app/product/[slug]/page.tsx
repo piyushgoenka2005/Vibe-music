@@ -1,7 +1,11 @@
+import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import ProductDetailPage from "@/components/product/ProductDetailPage";
 import { loadProductDetailPage } from "@/lib/server/productDetailLoader";
+
+const ProductDetailPage = dynamic(
+  () => import("@/components/product/ProductDetailPage")
+);
 
 export const dynamicParams = true;
 export const revalidate = 60;

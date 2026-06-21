@@ -53,11 +53,7 @@ export default function SiteFooter() {
   const panelRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
-  const [year, setYear] = useState<number | null>(null);
-
-  useEffect(() => {
-    setYear(new Date().getFullYear());
-  }, []);
+  const year = new Date().getFullYear();
 
   useEffect(() => {
     const panel = panelRef.current;
@@ -207,7 +203,7 @@ export default function SiteFooter() {
 
               <div className="site-footer-base">
                 <div className="site-footer-base__item">
-                  ©{year ?? ""} /{" "}
+                  ©{year} /{" "}
                   <Link href={ROUTES.home} title={BRAND.name}>
                     {BRAND.name}
                   </Link>

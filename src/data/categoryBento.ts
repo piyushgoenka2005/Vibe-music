@@ -47,10 +47,7 @@ const BENTO_IMAGE_FILES: Record<string, string> = {
 };
 
 /** Build optimized image URL for bento tile sizes. */
-export function resolveBentoImage(
-  slug: string,
-  _size: "hero" | "card" = "card"
-): string {
+export function resolveBentoImage(slug: string): string {
   const base =
     BENTO_IMAGE_FILES[slug] ??
     POPULAR_CATEGORY_ITEMS.find((item) => item.href === SLUG_TO_HREF[slug])

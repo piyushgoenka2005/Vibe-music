@@ -1,9 +1,18 @@
-import type { OrderTracking, OrderTrackingResponse } from "@/types/orderTracking";
+import type {
+  OrderTracking,
+  OrderTrackingResponse,
+} from "@/types/orderTracking";
+import type { PublicShipmentTracking } from "@/types/shipment";
+
+export interface OrderTrackingResult {
+  order: OrderTracking;
+  shipment: PublicShipmentTracking | null;
+}
 
 export async function trackOrder(
   orderId: string,
   email: string
-): Promise<OrderTracking | null> {
+): Promise<OrderTrackingResult | null> {
   const params = new URLSearchParams({ orderId, email });
   const response = await fetch(`/api/orders/track?${params.toString()}`);
 
@@ -16,5 +25,5 @@ export async function trackOrder(
   }
 
   const data = (await response.json()) as OrderTrackingResponse;
-  return data.order;
+  return { order: data.order, shipment: data.shipment };
 }

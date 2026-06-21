@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { searchProducts } from "@/lib/server/productRepository";
+import {
+  getTrendingProducts,
+  searchProducts,
+} from "@/lib/server/productRepository";
 import {
   enforceRateLimit,
   handleRouteError,
@@ -16,6 +19,25 @@ export async function GET(request: Request) {
     if (rateLimited) return rateLimited;
 
     const { searchParams } = new URL(request.url);
+    const trending = searchParams.get("trending") === "true";
+
+    if (trending) {
+      const limitParam = searchParams.get("limit");
+      const limit = limitParam ? Number(limitParam) : undefined;
+      let products = await getTrendingProducts();
+      if (Number.isFinite(limit) && limit && limit > 0) {
+        products = products.slice(0, limit);
+      }
+      return NextResponse.json(
+        { products },
+        {
+          headers: {
+            "Cache-Control": "public, s-maxage=45, stale-while-revalidate=120",
+          },
+        }
+      );
+    }
+
     const query = searchParams.get("q") ?? undefined;
     const category = searchParams.get("category") ?? undefined;
     const brand = searchParams.get("brand") ?? undefined;

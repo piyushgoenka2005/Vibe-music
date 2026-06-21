@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { uploadReviewImages } from "@/services/review.service";
+import { MAX_REVIEW_IMAGES } from "@/lib/validations/review";
 import { buildCloudinaryTransformUrl, CLOUDINARY_PRESETS } from "@/lib/cloudinary-url";
 
 interface ReviewImageUploadProps {
@@ -12,7 +13,7 @@ interface ReviewImageUploadProps {
   disabled?: boolean;
 }
 
-const MAX_IMAGES = 5;
+const MAX_IMAGES = MAX_REVIEW_IMAGES;
 
 export default function ReviewImageUpload({
   productSlug,

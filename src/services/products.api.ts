@@ -12,6 +12,7 @@ export async function fetchProducts(params?: {
   sort?: string;
   condition?: Product["condition"];
   limit?: number;
+  trending?: boolean;
 }): Promise<Product[]> {
   const searchParams = new URLSearchParams();
 
@@ -21,6 +22,7 @@ export async function fetchProducts(params?: {
   if (params?.sort) searchParams.set("sort", params.sort);
   if (params?.condition) searchParams.set("condition", params.condition);
   if (params?.limit) searchParams.set("limit", String(params.limit));
+  if (params?.trending) searchParams.set("trending", "true");
 
   const query = searchParams.toString();
   const response = await fetch(`/api/products${query ? `?${query}` : ""}`);

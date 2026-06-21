@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import type { SearchAnalyticsEvent, SearchFiltersState } from "@/types/search";
+import type { ClientSearchAnalyticsEvent, SearchFiltersState } from "@/types/search";
 import {
   trackSearchProductClick,
   trackSearchQuery,
@@ -28,7 +28,7 @@ export interface SearchStoreState {
   anchorRect: AnchorRect | null;
   activeInputId: string | null;
   recentSearches: string[];
-  analytics: SearchAnalyticsEvent[];
+  analytics: ClientSearchAnalyticsEvent[];
   filters: SearchFiltersState;
 }
 
@@ -50,18 +50,18 @@ function readRecent(): string[] {
   }
 }
 
-function readAnalytics(): SearchAnalyticsEvent[] {
+function readAnalytics(): ClientSearchAnalyticsEvent[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(ANALYTICS_KEY);
-    return raw ? (JSON.parse(raw) as SearchAnalyticsEvent[]) : [];
+    return raw ? (JSON.parse(raw) as ClientSearchAnalyticsEvent[]) : [];
   } catch {
     return [];
   }
 }
 
 const EMPTY_RECENT: string[] = [];
-const EMPTY_ANALYTICS: SearchAnalyticsEvent[] = [];
+const EMPTY_ANALYTICS: ClientSearchAnalyticsEvent[] = [];
 
 let state: SearchStoreState = {
   query: "",
@@ -96,7 +96,7 @@ function persistRecent(recent: string[]) {
   window.localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
 }
 
-function persistAnalytics(events: SearchAnalyticsEvent[]) {
+function persistAnalytics(events: ClientSearchAnalyticsEvent[]) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(ANALYTICS_KEY, JSON.stringify(events));
 }
@@ -174,8 +174,8 @@ export const searchStore = {
     emit();
   },
 
-  trackSearch(event: Omit<SearchAnalyticsEvent, "timestamp">) {
-    const entry: SearchAnalyticsEvent = {
+  trackSearch(event: Omit<ClientSearchAnalyticsEvent, "timestamp">) {
+    const entry: ClientSearchAnalyticsEvent = {
       ...event,
       timestamp: Date.now(),
     };
@@ -195,7 +195,7 @@ export const searchStore = {
     productId: string;
     productSlug: string;
     productName: string;
-    source: SearchAnalyticsEvent["source"];
+    source: ClientSearchAnalyticsEvent["source"];
   }) {
     trackSearchProductClick(input);
     emit();

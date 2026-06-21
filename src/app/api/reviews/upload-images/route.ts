@@ -7,9 +7,9 @@ import {
   jsonError,
 } from "@/lib/api/route-utils";
 import { reviewUploadFolder, uploadBufferToCloudinary } from "@/lib/cloudinary";
+import { MAX_REVIEW_IMAGES } from "@/lib/validations/review";
 import { getProductDetailBySlug } from "@/services/catalogService";
 
-const MAX_FILES = 5;
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
@@ -47,8 +47,8 @@ export async function POST(request: Request) {
     if (files.length === 0) {
       return jsonError("No images provided", 400);
     }
-    if (files.length > MAX_FILES) {
-      return jsonError(`Maximum ${MAX_FILES} images allowed`, 400);
+    if (files.length > MAX_REVIEW_IMAGES) {
+      return jsonError(`Maximum ${MAX_REVIEW_IMAGES} images allowed`, 400);
     }
 
     const folder = reviewUploadFolder(product.id);

@@ -17,6 +17,13 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return (await getBySlug(slug)) ?? null;
 }
 
+export async function getTrendingProducts(): Promise<Product[]> {
+  const { getTrendingProducts: getTrending } = await import(
+    "@/services/catalogService"
+  );
+  return getTrending();
+}
+
 export async function searchProducts(
   options: ProductSearchOptions = {}
 ): Promise<Product[]> {

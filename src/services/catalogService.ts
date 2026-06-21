@@ -20,7 +20,7 @@ import {
   slugExists,
   writeProduct,
 } from "@/lib/server/firestoreCatalogRepository";
-import { getCachedProducts } from "@/lib/server/catalogSnapshotCache";
+import { getCachedCategories, getCachedProducts } from "@/lib/server/catalogSnapshotCache";
 import { recordInventoryLogEntry } from "@/lib/server/inventoryRepository";
 import {
   applyVariantsToProduct,
@@ -201,7 +201,7 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
 export async function getAllProducts(
   includeInactive = false
 ): Promise<CatalogProduct[]> {
-  return fetchAllProductsFromDb(includeInactive);
+  return getCachedProducts(includeInactive);
 }
 
 async function fetchCatalogSnapshot(
@@ -389,7 +389,7 @@ export async function getBrands(): Promise<Brand[]> {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const categories = await fetchCategories();
+  const categories = await getCachedCategories();
   const products = await fetchCatalogSnapshot(true);
   const countBySlug = new Map<string, number>();
 
@@ -410,7 +410,7 @@ export async function getCategories(): Promise<Category[]> {
 export async function getCategoryBySlug(
   slug: string
 ): Promise<Category | undefined> {
-  const categories = await getCategories();
+  const categories = await fetchCategories();
   return findCategoryInList(categories, slug);
 }
 

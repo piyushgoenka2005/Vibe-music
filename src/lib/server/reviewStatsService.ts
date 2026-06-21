@@ -59,7 +59,7 @@ export async function getProductReviewStats(
   const doc = await db.collection(STATS_COLLECTION).doc(productId).get();
   if (doc.exists) {
     const data = doc.data()!;
-    return {
+    const stats: ProductReviewStats = {
       productId,
       totalReviews: Number(data.totalReviews ?? 0),
       averageRating: Number(data.averageRating ?? 0),
@@ -75,6 +75,19 @@ export async function getProductReviewStats(
       lastReviewAt: data.lastReviewAt ? String(data.lastReviewAt) : null,
       updatedAt: String(data.updatedAt ?? ""),
     };
+
+    if (stats.totalReviews > 0) return stats;
+  }
+
+  const approvedSnap = await db
+    .collection(REVIEWS_COLLECTION)
+    .where("productId", "==", productId)
+    .where("status", "==", "approved")
+    .limit(1)
+    .get();
+
+  if (!approvedSnap.empty) {
+    return recalculateProductReviewStats(productId);
   }
 
   return {

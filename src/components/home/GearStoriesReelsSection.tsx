@@ -1,9 +1,8 @@
-import { buildStaticGearStories } from "@/lib/server/gearStoryService";
+import { listGearStories } from "@/lib/server/gearStoryService";
 import GearStoriesSection from "@/components/home/GearStoriesSection";
 
-/** Homepage gear reels — static local videos, no Firestore Suspense. */
-export default function GearStoriesReelsSection() {
-  const data = buildStaticGearStories();
+export default async function GearStoriesReelsSection() {
+  const data = await listGearStories();
 
   return <GearStoriesSection data={data} />;
 }

@@ -3,7 +3,7 @@ import "server-only";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
 
-const VOTES_COLLECTION = "review_votes";
+export const REVIEW_VOTES_COLLECTION = "reviewVotes";
 const REVIEWS_COLLECTION = "reviews";
 
 function voteDocId(reviewId: string, userId: string): string {
@@ -15,7 +15,10 @@ export async function hasUserVotedReview(
   userId: string
 ): Promise<boolean> {
   const db = getAdminFirestore();
-  const doc = await db.collection(VOTES_COLLECTION).doc(voteDocId(reviewId, userId)).get();
+  const doc = await db
+    .collection(REVIEW_VOTES_COLLECTION)
+    .doc(voteDocId(reviewId, userId))
+    .get();
   return doc.exists;
 }
 
@@ -24,7 +27,9 @@ export async function voteReviewHelpful(
   userId: string
 ): Promise<{ helpfulCount: number }> {
   const db = getAdminFirestore();
-  const voteRef = db.collection(VOTES_COLLECTION).doc(voteDocId(reviewId, userId));
+  const voteRef = db
+    .collection(REVIEW_VOTES_COLLECTION)
+    .doc(voteDocId(reviewId, userId));
   const reviewRef = db.collection(REVIEWS_COLLECTION).doc(reviewId);
 
   const existingVote = await voteRef.get();
@@ -58,10 +63,41 @@ export async function getUserVotesForReviews(
 
   await Promise.all(
     reviewIds.map(async (reviewId) => {
-      const doc = await db.collection(VOTES_COLLECTION).doc(voteDocId(reviewId, userId)).get();
+      const doc = await db
+        .collection(REVIEW_VOTES_COLLECTION)
+        .doc(voteDocId(reviewId, userId))
+        .get();
       if (doc.exists) voted.add(reviewId);
     })
   );
 
   return voted;
+}
+
+export async function deleteVotesForReview(reviewId: string): Promise<number> {
+  const db = getAdminFirestore();
+  const snap = await db
+    .collection(REVIEW_VOTES_COLLECTION)
+    .where("reviewId", "==", reviewId)
+    .get();
+
+  if (snap.empty) return 0;
+
+  let batch = db.batch();
+  let ops = 0;
+  let count = 0;
+
+  for (const doc of snap.docs) {
+    batch.delete(doc.ref);
+    ops += 1;
+    count += 1;
+    if (ops >= 400) {
+      await batch.commit();
+      batch = db.batch();
+      ops = 0;
+    }
+  }
+
+  if (ops > 0) await batch.commit();
+  return count;
 }

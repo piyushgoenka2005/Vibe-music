@@ -35,6 +35,7 @@ export type PublicReview = Omit<
   "userId" | "userEmail" | "rejectionReason" | "orderId"
 > & {
   hasVoted?: boolean;
+  adminReply?: string;
 };
 
 export interface ProductReviewStats {

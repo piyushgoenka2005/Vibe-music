@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const MAX_REVIEW_IMAGES = 4;
+
 const cloudinaryUrl = z
   .string()
   .url()
@@ -12,7 +14,7 @@ export const createReviewSchema = z.object({
   rating: z.number().int().min(1).max(5),
   title: z.string().trim().min(1).max(120),
   body: z.string().trim().min(20).max(2000),
-  images: z.array(cloudinaryUrl).max(5).optional().default([]),
+  images: z.array(cloudinaryUrl).max(MAX_REVIEW_IMAGES).optional().default([]),
 });
 
 export const reviewListQuerySchema = z.object({

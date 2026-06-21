@@ -188,7 +188,29 @@
       ]
     },
     {
-      "collectionGroup": "homepage_section_items",
+      "collectionGroup": "reviewVotes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "reviewId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "trackingEvents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "orderId", "order": "ASCENDING" },
+        { "fieldPath": "occurredAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "trackingEvents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "shipmentId", "order": "ASCENDING" },
+        { "fieldPath": "occurredAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "sectionKey", "order": "ASCENDING" },

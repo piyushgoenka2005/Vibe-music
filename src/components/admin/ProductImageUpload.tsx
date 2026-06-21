@@ -52,8 +52,24 @@ export default function ProductImageUpload({
     if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
   }
 
-  function removeImage(index: number) {
-    onChange(images.filter((_, i) => i !== index));
+  async function removeImage(index: number) {
+    const next = images.filter((_, i) => i !== index);
+    const url = images[index];
+    onChange(next);
+
+    if (!url) return;
+
+    try {
+      void fetch("/api/admin/upload/images/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ urls: [url] }),
+      });
+    } catch {
+      // Best-effort cleanup; ignore failures.
+    }
   }
 
   return (

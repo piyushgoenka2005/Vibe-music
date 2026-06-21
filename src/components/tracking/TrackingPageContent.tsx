@@ -8,6 +8,8 @@ import { useAuthStore } from "@/store/authStore";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrency } from "@/utils/currency";
 import type { OrderTracking } from "@/types/orderTracking";
+import type { PublicShipmentTracking } from "@/types/shipment";
+import ShipmentTimeline from "@/components/tracking/ShipmentTimeline";
 
 export default function TrackingPageContent() {
   const searchParams = useSearchParams();
@@ -20,6 +22,7 @@ export default function TrackingPageContent() {
   const orderId = orderIdInput || urlOrderId;
   const email = emailInput || urlEmail;
   const [order, setOrder] = useState<OrderTracking | null>(null);
+  const [shipment, setShipment] = useState<PublicShipmentTracking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -28,13 +31,15 @@ export default function TrackingPageContent() {
     setLoading(true);
     setError(null);
     setOrder(null);
+    setShipment(null);
     try {
       const result = await trackOrder(orderId.trim(), email.trim());
       if (!result) {
         setError("No order found for that ID and email combination.");
         return;
       }
-      setOrder(result);
+      setOrder(result.order);
+      setShipment(result.shipment);
     } catch {
       setError("Unable to look up order. Please try again.");
     } finally {
@@ -49,7 +54,8 @@ export default function TrackingPageContent() {
           <p className="storefront-page__eyebrow">Order status</p>
           <h1 className="track-page__title">Track your order</h1>
           <p className="track-page__lead">
-            Enter your order ID and the email used at checkout.
+            Enter your order ID and the email used at checkout to see shipment
+            status and delivery updates.
           </p>
         </header>
 
@@ -87,19 +93,31 @@ export default function TrackingPageContent() {
         {order ? (
           <div className="track-result">
             <h2>Order {order.orderNumber}</h2>
-            <p>Status: {order.status}</p>
-            <p>Payment: {order.paymentStatus}</p>
-            <p>Total: {formatCurrency(order.total)}</p>
-            {order.trackingNumber ? (
+            <div className="track-result__grid">
               <p>
-                Tracking: {order.trackingNumber}
-                {order.carrier ? ` (${order.carrier})` : ""}
+                <span className="track-result__label">Order status</span>
+                {order.status}
               </p>
-            ) : null}
-            {order.estimatedDelivery ? (
-              <p>Estimated delivery: {order.estimatedDelivery}</p>
-            ) : null}
-            <ul>
+              <p>
+                <span className="track-result__label">Payment</span>
+                {order.paymentStatus}
+              </p>
+              <p>
+                <span className="track-result__label">Total</span>
+                {formatCurrency(order.total)}
+              </p>
+            </div>
+
+            {shipment ? (
+              <ShipmentTimeline shipment={shipment} />
+            ) : (
+              <p className="track-result__pending">
+                Shipment details are not available yet. Check back once your
+                order has shipped.
+              </p>
+            )}
+
+            <ul className="track-result__items">
               {order.items.map((item, index) => (
                 <li key={`${item.productId}-${index}`}>
                   {item.quantity} × {item.name}

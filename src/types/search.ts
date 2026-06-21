@@ -1,3 +1,5 @@
+import type { SearchAnalyticsSource } from "@/types/searchAnalytics";
+
 export type SuggestionType = "product" | "category" | "brand" | "recent";
 
 export interface SearchProduct {
@@ -56,17 +58,13 @@ export interface SearchResultsData {
 
 export type SearchStatus = "idle" | "loading" | "success" | "error";
 
-export interface SearchAnalyticsEvent {
+/** Client-side localStorage search analytics (distinct from server `SearchAnalyticsEvent`). */
+export interface ClientSearchAnalyticsEvent {
   query: string;
   timestamp: number;
   resultCount: number;
   source: SearchAnalyticsSource;
 }
-
-export type SearchAnalyticsSource =
-  | "autocomplete"
-  | "results-page"
-  | "submit";
 
 export interface SearchFiltersState {
   category: string;

@@ -295,7 +295,8 @@ async function resolveSection(
 export async function getPublicHomepageData(
   at = new Date()
 ): Promise<PublicHomepageData> {
-  const staticFallback = (): PublicHomepageData => getHomepageStaticFallbacks(at);
+  const staticFallback = (): Promise<PublicHomepageData> =>
+    getHomepageStaticFallbacks(at);
 
   if (!isFirebaseAdminConfigured() || isGlobalFirestoreCircuitOpen()) {
     return staticFallback();

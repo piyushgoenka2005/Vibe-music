@@ -1,4 +1,5 @@
 import type { Order, OrderStatus, PaymentStatus } from "@/types/order";
+import type { PublicShipmentTracking } from "@/types/shipment";
 
 /** Public line-item summary for guest order tracking (no pricing breakdown). */
 export interface OrderTrackingItemSummary {
@@ -23,6 +24,7 @@ export interface OrderTracking {
 
 export interface OrderTrackingResponse {
   order: OrderTracking;
+  shipment: PublicShipmentTracking | null;
 }
 
 /** Optional shipping metadata that may exist on stored orders in the future. */

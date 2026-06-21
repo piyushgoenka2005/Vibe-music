@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOrderById } from "@/lib/server/orderService";
-import { toOrderTracking } from "@/types/orderTracking";
+import { buildPublicOrderTracking } from "@/lib/server/shipmentService";
 import type { OrderTrackingResponse } from "@/types/orderTracking";
 
 export async function GET(request: Request) {
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const body: OrderTrackingResponse = { order: toOrderTracking(order) };
+    const body: OrderTrackingResponse = await buildPublicOrderTracking(order);
     return NextResponse.json(body);
   } catch (error) {
     const message =

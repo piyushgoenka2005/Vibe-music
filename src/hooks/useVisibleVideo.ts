@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, type RefObject } from "react";
 
 interface UseVisibleVideoOptions {
   /** When true, video stays paused regardless of visibility */

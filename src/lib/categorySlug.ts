@@ -77,6 +77,11 @@ export function findCategoryInList(
   );
   if (exact) return exact;
 
+  const byId = categories.find(
+    (category) => normalizeCategorySlug(category.id) === normalized
+  );
+  if (byId) return byId;
+
   const plural = categories.find((category) =>
     variantsMatch(category.slug, normalized)
   );
@@ -88,4 +93,82 @@ export function findCategoryInList(
   if (segment) return segment;
 
   return categories.find((category) => nameMatch(normalized, category));
+}
+
+/** Alias for findCategoryInList — resolves any slug variant to a canonical category. */
+export function resolveCategory(
+  categories: Category[],
+  requestedSlug: string
+): Category | undefined {
+  return findCategoryInList(categories, requestedSlug);
+}
+
+export function isCanonicalCategorySlug(
+  category: Category,
+  requestedSlug: string
+): boolean {
+  return (
+    normalizeCategorySlug(category.slug) === normalizeCategorySlug(requestedSlug)
+  );
+}
+
+/** Normalize a category record read from Firestore or local JSON. */
+export function normalizeCategoryRecord(category: Category): Category {
+  const slug = normalizeCategorySlug(category.slug || category.name);
+  return slug ? { ...category, slug } : category;
+}
+
+function collectAliasCandidates(category: Category): string[] {
+  const canonical = normalizeCategorySlug(category.slug);
+  if (!canonical) return [];
+
+  const aliases = new Set<string>([canonical]);
+
+  for (const variant of slugVariants(canonical)) {
+    aliases.add(variant);
+  }
+
+  const segments = canonical.split("-");
+  if (segments.length > 1 && segments[0]) {
+    aliases.add(segments[0]);
+    for (const variant of slugVariants(segments[0])) {
+      aliases.add(variant);
+    }
+  }
+
+  const nameNorm = normalizeCategorySlug(category.name);
+  if (nameNorm) aliases.add(nameNorm);
+
+  for (const word of category.name.toLowerCase().split(/[\s&]+/).filter(Boolean)) {
+    const wordNorm = normalizeCategorySlug(word);
+    if (wordNorm.length < 3) continue;
+    aliases.add(wordNorm);
+    for (const variant of slugVariants(wordNorm)) {
+      aliases.add(variant);
+    }
+    if (wordNorm.length >= 5) {
+      for (let len = 3; len < wordNorm.length; len += 1) {
+        const stem = wordNorm.slice(0, len);
+        aliases.add(stem);
+        aliases.add(`${stem}s`);
+      }
+    }
+  }
+
+  return Array.from(aliases);
+}
+
+/** Slugs to pre-render for /category/[slug], including common aliases. */
+export function collectCategoryRouteSlugs(categories: Category[]): string[] {
+  const slugs = new Set<string>();
+
+  for (const category of categories) {
+    for (const alias of collectAliasCandidates(category)) {
+      if (findCategoryInList(categories, alias)?.slug === category.slug) {
+        slugs.add(alias);
+      }
+    }
+  }
+
+  return Array.from(slugs);
 }
