@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   buildGuitarShowcaseRows,
+  inferGuitarProfile,
   isGuitarProduct,
+  resolveGuitarShowcaseSpecs,
 } from "@/lib/product/guitarShowcaseSpecs";
 
 describe("buildGuitarShowcaseRows", () => {
@@ -23,6 +25,35 @@ describe("buildGuitarShowcaseRows", () => {
     expect(rows[0]?.left?.value).toBe("SuperStrat");
     expect(rows[0]?.right?.value).toBe("Alder");
     expect(rows[4]?.right?.value).toBe("Die-Cast Classic, Chrome");
+  });
+
+  it("infers strat specs for stratocaster products without showcase data", () => {
+    const rows = buildGuitarShowcaseRows(
+      [
+        { label: "Manufacturer", value: "Fender" },
+        { label: "Category", value: "Guitars" },
+      ],
+      { productName: "Player Stratocaster - Polar White", brand: "Fender" }
+    );
+
+    expect(rows[0]?.left?.value).toBe("Stratocaster");
+    expect(rows[2]?.right?.value).toBe("3x Single-Coil");
+  });
+
+  it("replaces stale seed demo specs with inferred guitar profile", () => {
+    const resolved = resolveGuitarShowcaseSpecs(
+      "Player Stratocaster - Polar White",
+      "Fender",
+      [
+        { label: "Type", value: "SuperStrat" },
+        { label: "Pickup", value: "H-S-S Korean" },
+        { label: "Bridge", value: "6-Screw Tremolo" },
+      ]
+    );
+
+    expect(resolved.find((spec) => spec.label === "Type")?.value).toBe(
+      "Stratocaster"
+    );
   });
 
   it("supports label aliases", () => {
@@ -48,5 +79,13 @@ describe("isGuitarProduct", () => {
   it("detects guitar category products", () => {
     expect(isGuitarProduct("guitars", "Guitars")).toBe(true);
     expect(isGuitarProduct("drums-percussion", "Drums")).toBe(false);
+  });
+});
+
+describe("inferGuitarProfile", () => {
+  it("detects telecaster models", () => {
+    expect(inferGuitarProfile("Player Telecaster - Butterscotch Blonde", "Fender").Type).toBe(
+      "Telecaster"
+    );
   });
 });

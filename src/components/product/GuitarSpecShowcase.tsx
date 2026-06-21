@@ -1,15 +1,18 @@
 import {
   buildGuitarShowcaseRows,
+  GUITAR_SHOWCASE_IMAGE,
+  GUITAR_SHOWCASE_IMAGE_ALT,
   GUITAR_SHOWCASE_PLACEHOLDER,
   type GuitarShowcaseSpec,
 } from "@/lib/product/guitarShowcaseSpecs";
+import { optimizeImageUrl } from "@/lib/images";
 import type { ProductSpec } from "@/types/product";
 import "./guitar-spec-showcase.css";
 
 interface GuitarSpecShowcaseProps {
   specs: ProductSpec[];
-  imageSrc?: string;
-  imageAlt: string;
+  productName: string;
+  brand: string;
 }
 
 function SpecCell({
@@ -37,11 +40,11 @@ function SpecCell({
 
 export default function GuitarSpecShowcase({
   specs,
-  imageSrc,
-  imageAlt,
+  productName,
+  brand,
 }: GuitarSpecShowcaseProps) {
-  const rows = buildGuitarShowcaseRows(specs);
-  const hasImage = Boolean(imageSrc?.trim());
+  const rows = buildGuitarShowcaseRows(specs, { productName, brand });
+  const showcaseImage = optimizeImageUrl(GUITAR_SHOWCASE_IMAGE, "productDetail");
 
   return (
     <section
@@ -50,16 +53,14 @@ export default function GuitarSpecShowcase({
     >
       <div className="guitar-spec-showcase__pattern" aria-hidden="true" />
       <div className="guitar-spec-showcase__inner">
-        {hasImage ? (
-          <div className="guitar-spec-showcase__image-wrap" aria-hidden="true">
-            <img
-              src={imageSrc}
-              alt=""
-              className="guitar-spec-showcase__image"
-              loading="lazy"
-            />
-          </div>
-        ) : null}
+        <div className="guitar-spec-showcase__image-wrap" aria-hidden="true">
+          <img
+            src={showcaseImage}
+            alt=""
+            className="guitar-spec-showcase__image"
+            loading="lazy"
+          />
+        </div>
 
         <div className="guitar-spec-showcase__rows">
           {rows.map((row) => (
@@ -77,11 +78,9 @@ export default function GuitarSpecShowcase({
           ))}
         </div>
 
-        {hasImage ? (
-          <div className="guitar-spec-showcase__mobile-image">
-            <img src={imageSrc} alt={imageAlt} loading="lazy" />
-          </div>
-        ) : null}
+        <div className="guitar-spec-showcase__mobile-image">
+          <img src={showcaseImage} alt={GUITAR_SHOWCASE_IMAGE_ALT} loading="lazy" />
+        </div>
       </div>
     </section>
   );

@@ -12,10 +12,16 @@
   --admin-success: #22c55e;
   --admin-warning: #f59e0b;
   --admin-danger: #ef4444;
+  --admin-scrollbar-track: var(--admin-surface);
+  --admin-scrollbar-thumb: #52525b;
+  --admin-scrollbar-thumb-hover: #71717a;
   min-height: 100vh;
   background: var(--admin-bg);
   color: var(--admin-text);
   font-family: var(--font-primary);
+  color-scheme: dark;
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-scrollbar-thumb) var(--admin-scrollbar-track);
 }
 
 .admin-root--light {
@@ -25,6 +31,52 @@
   --admin-border: #e8e7e6;
   --admin-text: #2e2e2d;
   --admin-muted: #727785;
+  --admin-scrollbar-track: var(--admin-surface);
+  --admin-scrollbar-thumb: #cbd5e1;
+  --admin-scrollbar-thumb-hover: #94a3b8;
+  color-scheme: light;
+}
+
+.admin-root::-webkit-scrollbar,
+.admin-sidebar__nav::-webkit-scrollbar,
+.admin-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-root::-webkit-scrollbar-track,
+.admin-sidebar__nav::-webkit-scrollbar-track,
+.admin-content::-webkit-scrollbar-track {
+  background: var(--admin-scrollbar-track);
+}
+
+.admin-root::-webkit-scrollbar-thumb,
+.admin-sidebar__nav::-webkit-scrollbar-thumb,
+.admin-content::-webkit-scrollbar-thumb {
+  background-color: var(--admin-scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--admin-scrollbar-track);
+  background-clip: padding-box;
+}
+
+.admin-root::-webkit-scrollbar-thumb:hover,
+.admin-sidebar__nav::-webkit-scrollbar-thumb:hover,
+.admin-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--admin-scrollbar-thumb-hover);
+}
+
+.admin-root::-webkit-scrollbar-button,
+.admin-sidebar__nav::-webkit-scrollbar-button,
+.admin-content::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.admin-root::-webkit-scrollbar-corner,
+.admin-sidebar__nav::-webkit-scrollbar-corner,
+.admin-content::-webkit-scrollbar-corner {
+  background: var(--admin-scrollbar-track);
 }
 
 .admin-root--sidebar-collapsed {
@@ -49,6 +101,11 @@
   z-index: 40;
   transition: width 0.2s ease;
   overflow: hidden;
+  color-scheme: dark;
+}
+
+.admin-root--light .admin-sidebar {
+  color-scheme: light;
 }
 
 .admin-sidebar--collapsed .admin-sidebar__link-label,
@@ -134,6 +191,14 @@
   flex: 1;
   padding: 1rem 0.75rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-scrollbar-thumb) var(--admin-scrollbar-track);
+  color-scheme: dark;
+}
+
+.admin-root--light .admin-sidebar__nav {
+  color-scheme: light;
 }
 
 .admin-sidebar__link {
@@ -647,6 +712,38 @@
   background: rgba(0, 0, 0, 0.55);
   overflow-y: auto;
   padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-confirm-dialog {
+  width: min(100%, 28rem);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+.admin-confirm-dialog__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.admin-confirm-dialog__description {
+  margin: 0 0 1.25rem;
+  color: var(--admin-muted);
+  line-height: 1.55;
+  font-size: 0.9375rem;
+}
+
+.admin-confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 .admin-link {

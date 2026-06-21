@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import BulkImportModal from "@/components/admin/BulkImportModal";
+import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
 import {
   StatusBadge,
   LoadingState,
@@ -37,6 +38,13 @@ async function fetchProducts(params: {
   }>;
 }
 
+type ProductsQueryData = Awaited<ReturnType<typeof fetchProducts>>;
+
+type PendingDelete =
+  | { type: "single"; product: AdminProduct }
+  | { type: "bulk"; ids: string[]; label: string }
+  | null;
+
 function ProductsContent() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -49,6 +57,9 @@ function ProductsContent() {
   const [bulkCategorySlug, setBulkCategorySlug] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null);
+
+  const productsQueryKey = ["admin-products", search, status, cursor] as const;
 
   useQuery({
     queryKey: ["admin-categories"],
@@ -61,13 +72,34 @@ function ProductsContent() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-products", search, status, cursor],
+    queryKey: productsQueryKey,
     queryFn: () => fetchProducts({ search, status, cursor }),
   });
 
+  function removeProductsFromCache(ids: string[]) {
+    const idSet = new Set(ids);
+    queryClient.setQueryData<ProductsQueryData>(productsQueryKey, (old) => {
+      if (!old) return old;
+      const removedCount = old.products.filter((product) => idSet.has(product.id)).length;
+      return {
+        ...old,
+        products: old.products.filter((product) => !idSet.has(product.id)),
+        total: Math.max(0, old.total - removedCount),
+      };
+    });
+    setSelected((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.delete(id));
+      return next;
+    });
+  }
+
   const invalidate = () => {
     setSelected(new Set());
-    queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    void queryClient.invalidateQueries({
+      queryKey: ["admin-products"],
+      refetchType: "active",
+    });
   };
 
   const bulkMutation = useMutation({
@@ -78,8 +110,19 @@ function ProductsContent() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Bulk action failed");
+      return payload;
     },
-    onSuccess: invalidate,
+    onSuccess: (payload) => {
+      setPendingDelete(null);
+      setActionError(null);
+      if (payload.action === "delete" && Array.isArray(payload.ids)) {
+        removeProductsFromCache(payload.ids as string[]);
+      }
+      invalidate();
+    },
+    onError: (err) => {
+      setActionError(err instanceof Error ? err.message : "Bulk action failed");
+    },
   });
 
   const deleteMutation = useMutation({
@@ -89,9 +132,12 @@ function ProductsContent() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "Delete failed");
       }
+      return id;
     },
-    onSuccess: () => {
+    onSuccess: (id) => {
+      setPendingDelete(null);
       setActionError(null);
+      removeProductsFromCache([id]);
       invalidate();
     },
     onError: (err) => {
@@ -99,12 +145,26 @@ function ProductsContent() {
     },
   });
 
-  function handleDelete(product: AdminProduct) {
-    const confirmed = window.confirm(
-      `Delete "${product.name}"? This cannot be undone.`
-    );
-    if (!confirmed) return;
-    deleteMutation.mutate(product.id);
+  function requestDelete(product: AdminProduct) {
+    setPendingDelete({ type: "single", product });
+  }
+
+  function requestBulkDelete() {
+    if (selected.size === 0) return;
+    setPendingDelete({
+      type: "bulk",
+      ids: Array.from(selected),
+      label: `${selected.size} selected product${selected.size === 1 ? "" : "s"}`,
+    });
+  }
+
+  function confirmDelete() {
+    if (!pendingDelete) return;
+    if (pendingDelete.type === "single") {
+      deleteMutation.mutate(pendingDelete.product.id);
+      return;
+    }
+    bulkMutation.mutate({ action: "delete", ids: pendingDelete.ids });
   }
 
   const duplicateMutation = useMutation({
@@ -166,7 +226,7 @@ function ProductsContent() {
             <button type="button" className="admin-btn admin-btn--secondary" onClick={() => bulkMutation.mutate({ action: "archive", ids: selectedIds })}>
               Archive ({selected.size})
             </button>
-            <button type="button" className="admin-btn admin-btn--danger" onClick={() => bulkMutation.mutate({ action: "delete", ids: selectedIds })}>
+            <button type="button" className="admin-btn admin-btn--danger" onClick={requestBulkDelete}>
               Delete ({selected.size})
             </button>
             <input
@@ -280,7 +340,7 @@ function ProductsContent() {
                             title={`Delete ${product.name}`}
                             aria-label={`Delete ${product.name}`}
                             disabled={deleteMutation.isPending}
-                            onClick={() => handleDelete(product)}
+                            onClick={() => requestDelete(product)}
                           >
                             <Trash2 size={16} aria-hidden="true" />
                           </button>
@@ -306,6 +366,31 @@ function ProductsContent() {
         open={importOpen}
         onClose={() => setImportOpen(false)}
         onComplete={invalidate}
+      />
+
+      <AdminConfirmDialog
+        open={pendingDelete !== null}
+        title={
+          pendingDelete?.type === "bulk"
+            ? "Delete selected products?"
+            : "Delete product?"
+        }
+        description={
+          pendingDelete?.type === "bulk"
+            ? `Delete ${pendingDelete.label}? This cannot be undone.`
+            : pendingDelete
+              ? `Delete "${pendingDelete.product.name}"? This cannot be undone.`
+              : ""
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={deleteMutation.isPending || bulkMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          if (deleteMutation.isPending || bulkMutation.isPending) return;
+          setPendingDelete(null);
+        }}
       />
     </>
   );

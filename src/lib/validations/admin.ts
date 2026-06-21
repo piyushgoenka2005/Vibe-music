@@ -49,6 +49,8 @@ export const adminProductSchema = z.object({
   metaTitle: z.string().max(255).optional(),
   metaDescription: z.string().max(500).optional(),
   variants: z.array(productVariantSchema).optional(),
+  guitarSpecs: z.record(z.string(), z.string()).optional(),
+  specifications: z.record(z.string(), z.string()).optional(),
 });
 
 export const adminCategorySchema = z.object({

@@ -2,6 +2,11 @@ import "server-only";
 
 import { getProductImage } from "@/data/productImages";
 import { findCategoryInList, normalizeCategorySlug } from "@/lib/categorySlug";
+import {
+  enrichGuitarSpecifications,
+  GUITAR_SHOWCASE_FIELD_LABELS,
+  isGuitarProduct,
+} from "@/lib/product/guitarShowcaseSpecs";
 import { slugify } from "@/lib/slug";
 import {
   batchDeleteProducts as fsBatchDelete,
@@ -85,6 +90,46 @@ function stockToAvailability(stock: number): Product["availability"] {
   if (stock <= 0) return "out-of-stock";
   if (stock <= 5) return "limited";
   return "in-stock";
+}
+
+function applyGuitarSpecifications(
+  name: string,
+  brand: string,
+  categorySlug: string,
+  categoryName: string,
+  specifications: Record<string, string>,
+  guitarSpecs?: Record<string, string>
+): Record<string, string> {
+  if (!isGuitarProduct(categorySlug, categoryName)) {
+    return specifications;
+  }
+
+  const merged = {
+    ...specifications,
+    ...Object.fromEntries(
+      Object.entries(guitarSpecs ?? {}).filter(([, value]) => value.trim())
+    ),
+  };
+
+  return enrichGuitarSpecifications(name, brand, merged);
+}
+
+function syncDetailSpecsFromSpecifications(
+  detail: NonNullable<CatalogProduct["detail"]>,
+  specifications: Record<string, string>
+): NonNullable<CatalogProduct["detail"]> {
+  const baseSpecs = detail.specs.filter(
+    (spec) => !GUITAR_SHOWCASE_FIELD_LABELS.includes(spec.label)
+  );
+  const guitarSpecs = GUITAR_SHOWCASE_FIELD_LABELS.flatMap((label) => {
+    const value = specifications[label]?.trim();
+    return value ? [{ label, value }] : [];
+  });
+
+  return {
+    ...detail,
+    specs: [...baseSpecs, ...guitarSpecs],
+  };
 }
 
 function buildDefaultDetail(
@@ -434,7 +479,7 @@ export async function createProduct(
   }
 
   const slug = uniqueSlug(
-    input.slug ?? `${input.brand}-${input.name}`,
+    slugify(input.slug ?? `${input.brand}-${input.name}`),
     slugs
   );
   const sku = input.sku && !skus.has(input.sku) ? input.sku : uniqueSku(skus);
@@ -446,6 +491,20 @@ export async function createProduct(
     input.image ??
     input.images?.[0] ??
     getProductImage(slug, category.name);
+
+  const baseSpecifications = input.specifications ?? {
+    Manufacturer: input.brand,
+    Category: category.name,
+    SKU: sku,
+  };
+  const specifications = applyGuitarSpecifications(
+    input.name,
+    input.brand,
+    category.slug,
+    category.name,
+    baseSpecifications,
+    input.guitarSpecs
+  );
 
   const product: CatalogProduct = {
     id: `prod-${Date.now().toString(36)}`,
@@ -471,11 +530,7 @@ export async function createProduct(
     description:
       input.description ??
       `The ${input.brand} ${input.name} delivers professional-grade performance for ${category.name.toLowerCase()} applications.`,
-    specifications: input.specifications ?? {
-      Manufacturer: input.brand,
-      Category: category.name,
-      SKU: sku,
-    },
+    specifications,
     createdAt: now,
     updatedAt: now,
     brandSlug,
@@ -518,8 +573,8 @@ export async function updateProduct(
     category = resolved;
   }
 
-  if (patch.slug && patch.slug !== current.slug) {
-    if (await slugExists(patch.slug, id)) throw new Error("Slug already exists");
+  if (patch.slug && slugify(patch.slug) !== current.slug) {
+    if (await slugExists(slugify(patch.slug), id)) throw new Error("Slug already exists");
   }
 
   if (patch.sku && patch.sku !== current.sku) {
@@ -530,9 +585,22 @@ export async function updateProduct(
   const price = patch.price ?? current.price;
   const originalPrice = patch.originalPrice ?? current.originalPrice;
 
+  const nextSpecifications = applyGuitarSpecifications(
+    patch.name ?? current.name,
+    patch.brand ?? current.brand,
+    category.slug,
+    category.name,
+    {
+      ...current.specifications,
+      ...(patch.specifications ?? {}),
+    },
+    patch.guitarSpecs
+  );
+
   const updated: CatalogProduct = {
     ...current,
     ...patch,
+    slug: patch.slug ? slugify(patch.slug) : current.slug,
     category: category.name,
     categorySlug: category.slug,
     stock,
@@ -543,6 +611,7 @@ export async function updateProduct(
     brandSlug:
       patch.brandSlug ??
       (patch.brand ? slugify(patch.brand) : current.brandSlug),
+    specifications: nextSpecifications,
     updatedAt: now,
   };
 
@@ -552,7 +621,10 @@ export async function updateProduct(
   }
 
   const all = await fetchAllProductsFromDb(true);
-  const preservedDetail = current.detail ?? buildDefaultDetail(current, all);
+  const preservedDetail = syncDetailSpecsFromSpecifications(
+    current.detail ?? buildDefaultDetail({ ...current, specifications: nextSpecifications }, all),
+    nextSpecifications
+  );
 
   if (patch.variants) {
     const existingSkus = await fetchAllVariantSkus(id);

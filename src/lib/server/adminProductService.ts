@@ -37,6 +37,8 @@ function toAdminProduct(catalog: CatalogProduct): AdminProduct {
     createdAt: catalog.createdAt,
     updatedAt: catalog.updatedAt,
     variants: detail.variants,
+    specifications: catalog.specifications,
+    images: catalog.images,
   };
 }
 
@@ -120,6 +122,7 @@ export async function createAdminProduct(
   input: Omit<AdminProduct, "id" | "createdAt" | "updatedAt" | "variants"> & {
     images?: string[];
     variants?: CreateProductInput["variants"];
+    guitarSpecs?: Record<string, string>;
   }
 ): Promise<AdminProduct> {
   const created = await createProduct({
@@ -147,6 +150,8 @@ export async function createAdminProduct(
     trending: input.trending,
     newArrival: input.newArrival,
     variants: input.variants,
+    guitarSpecs: input.guitarSpecs,
+    specifications: input.specifications,
   });
   return toAdminProduct(created);
 }
@@ -156,6 +161,7 @@ export async function updateAdminProduct(
   patch: Partial<Omit<AdminProduct, "variants">> & {
     images?: string[];
     variants?: CreateProductInput["variants"];
+    guitarSpecs?: Record<string, string>;
   }
 ): Promise<AdminProduct> {
   const updated = await updateProduct(id, {
@@ -183,6 +189,8 @@ export async function updateAdminProduct(
     trending: patch.trending,
     newArrival: patch.newArrival,
     variants: patch.variants,
+    guitarSpecs: patch.guitarSpecs,
+    specifications: patch.specifications,
   });
   return toAdminProduct(updated);
 }

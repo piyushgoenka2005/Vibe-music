@@ -230,8 +230,8 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
         <>
           <GuitarSpecShowcase
             specs={product.specs}
-            imageSrc={galleryImages[0]?.src ?? product.image}
-            imageAlt={product.name}
+            productName={product.name}
+            brand={product.brand}
           />
           <GuitarTonesInMotion />
           <GuitarStorySections />

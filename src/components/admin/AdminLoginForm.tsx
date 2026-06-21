@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -22,8 +23,7 @@ import { useAuthStore } from "@/store/authStore";
 
 export default function AdminLoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || ROUTES.admin;
+  const queryClient = useQueryClient();
 
   const signIn = useAuthStore((s) => s.signIn);
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -47,7 +47,9 @@ export default function AdminLoginForm() {
       }
 
       await fetch("/api/admin/me", { method: "POST" });
-      router.replace(redirectTo);
+      await queryClient.invalidateQueries({ queryKey: ["admin-session"] });
+      router.replace(ROUTES.admin);
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error && err.message.includes("admin access")

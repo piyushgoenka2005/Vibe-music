@@ -96,6 +96,8 @@ export interface AdminProduct extends Product {
   createdAt?: string;
   updatedAt?: string;
   variants?: ProductVariant[];
+  specifications?: Record<string, string>;
+  images?: string[];
 }
 
 export interface AdminCategory {

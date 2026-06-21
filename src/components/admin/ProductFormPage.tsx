@@ -15,6 +15,10 @@ import ProductRelatedEditor, {
   type ProductRelatedFormState,
 } from "@/components/admin/ProductRelatedEditor";
 import ProductVariantsEditor from "@/components/admin/ProductVariantsEditor";
+import GuitarSpecsEditor, {
+  extractGuitarSpecsFromRecord,
+} from "@/components/admin/GuitarSpecsEditor";
+import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import type { Category } from "@/types/category";
 import type { ProductVariant } from "@/types/product";
 
@@ -40,6 +44,7 @@ const EMPTY = {
   variants: [] as ProductVariant[],
   bundle: createEmptyBundleState(),
   related: createEmptyRelatedState(),
+  guitarSpecs: {} as Record<string, string>,
 };
 
 export default function ProductFormPage({ productId }: { productId?: string }) {
@@ -72,6 +77,7 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             variants: d.product.variants ?? [],
             bundle: createEmptyBundleState(),
             related: createEmptyRelatedState(),
+            guitarSpecs: extractGuitarSpecsFromRecord(d.product.specifications),
           });
         }
         setLoaded(true);
@@ -112,19 +118,28 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const slug = form.slug || slugify(`${form.brand}-${form.name}`);
+      const slug = slugify(form.slug || `${form.brand}-${form.name}`);
       const selectedCategory = categories.find(
         (c) => c.slug === form.categorySlug || c.name === form.category
       );
+      const categoryName = selectedCategory?.name ?? form.category;
+      const categorySlug =
+        selectedCategory?.slug ?? form.categorySlug ?? slugify(form.category);
+      const guitarSpecs = isGuitarProduct(categorySlug, categoryName)
+        ? Object.fromEntries(
+            Object.entries(form.guitarSpecs).filter(([, value]) => value.trim())
+          )
+        : {};
       const payload = {
         ...form,
         slug,
-        category: selectedCategory?.name ?? form.category,
-        categorySlug: selectedCategory?.slug ?? form.categorySlug ?? slugify(form.category),
+        category: categoryName,
+        categorySlug,
         brandSlug: slugify(form.brand),
         image: form.images[0] ?? "",
         images: form.images,
         variants: form.variants,
+        guitarSpecs,
       };
       const url = productId ? `/api/admin/products/${productId}` : "/api/admin/products";
       const method = productId ? "PUT" : "POST";
@@ -299,6 +314,12 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             <label>Description</label>
             <textarea className="admin-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
+          {isGuitarProduct(form.categorySlug, form.category) ? (
+            <GuitarSpecsEditor
+              specs={form.guitarSpecs}
+              onChange={(guitarSpecs) => setForm({ ...form, guitarSpecs })}
+            />
+          ) : null}
         </div>
         {error ? <p className="admin-form-error">{error}</p> : null}
         <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>

@@ -100,6 +100,7 @@ export interface CreateProductInput {
     images?: string[];
     isDefault?: boolean;
   }>;
+  guitarSpecs?: Record<string, string>;
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {

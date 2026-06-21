@@ -6,7 +6,7 @@ import {
   normalizeCategoryRecord,
   normalizeCategorySlug,
 } from "@/lib/categorySlug";
-import { slugify } from "@/lib/slug";
+import { slugify, normalizeProductSlug } from "@/lib/slug";
 import {
   createFirestoreCircuitBreaker,
   isFirestoreFastFailError,
@@ -299,45 +299,110 @@ export async function fetchProductById(
   }
 }
 
+function productMatchesSlug(product: CatalogProduct, slug: string): boolean {
+  const normalized = normalizeProductSlug(slug);
+  const productSlug = normalizeProductSlug(product.slug);
+  return productSlug === normalized || product.slug === slug.trim();
+}
+
+function upsertProductsCacheEntry(product: CatalogProduct): void {
+  if (!productsCache) {
+    productsCache = [product];
+    productsCacheAt = Date.now();
+    return;
+  }
+
+  const index = productsCache.findIndex((entry) => entry.id === product.id);
+  if (index >= 0) {
+    productsCache[index] = product;
+  } else {
+    productsCache.push(product);
+  }
+  productsCacheAt = Date.now();
+}
+
+async function queryActiveProductBySlugFromFirestore(
+  slug: string
+): Promise<CatalogProduct | null> {
+  const normalized = normalizeProductSlug(slug);
+  const candidates = [...new Set([slug.trim(), normalized].filter(Boolean))];
+
+  for (const candidate of candidates) {
+    const snap = await withFirestoreDeadline(() =>
+      db().collection(PRODUCTS).where("slug", "==", candidate).limit(1).get()
+    );
+
+    if (snap.empty) continue;
+
+    const doc = snap.docs[0]!;
+    const product = docToCatalogProduct(doc.id, doc.data());
+    if (!product) continue;
+
+    upsertProductsCacheEntry(product);
+    return product.status === "active" ? product : null;
+  }
+
+  return null;
+}
+
 export async function fetchProductBySlug(
   slug: string
 ): Promise<CatalogProduct | null> {
+  const normalizedSlug = normalizeProductSlug(slug);
+  if (!normalizedSlug) return null;
+
   if (shouldUseLocalCatalog()) {
     const local = await loadLocalCatalogProducts();
-    return local.find((p) => p.slug === slug) ?? null;
+    const hit = local.find((product) => productMatchesSlug(product, normalizedSlug));
+    return hit && hit.status === "active" ? hit : null;
   }
 
-  const cached = productsCache?.find((p) => p.slug === slug);
-  if (cached) return cached.status === "active" ? cached : null;
+  const cachedActive = productsCache?.find(
+    (product) =>
+      productMatchesSlug(product, normalizedSlug) && product.status === "active"
+  );
+  if (cachedActive) return cachedActive;
 
   if (catalogCircuit.isOpen()) {
-    const hit = productsCache?.find((p) => p.slug === slug);
-    if (hit && hit.status === "active") return hit;
+    const hit = productsCache?.find(
+      (product) =>
+        productMatchesSlug(product, normalizedSlug) && product.status === "active"
+    );
+    if (hit) return hit;
     const local = await loadLocalCatalogProducts();
-    const localHit = local.find((p) => p.slug === slug);
+    const localHit = local.find((product) => productMatchesSlug(product, normalizedSlug));
     return localHit && localHit.status === "active" ? localHit : null;
   }
 
   try {
     await ensureCatalogSeeded();
-    const snap = await db()
-      .collection(PRODUCTS)
-      .where("slug", "==", slug)
-      .limit(1)
-      .get();
 
-    if (snap.empty) return null;
-    const doc = snap.docs[0];
-    const product = docToCatalogProduct(doc.id, doc.data());
-    return product && product.status === "active" ? product : null;
+    const firestoreHit = await queryActiveProductBySlugFromFirestore(normalizedSlug);
+    if (firestoreHit) return firestoreHit;
+
+    const allProducts = await fetchAllProducts(true);
+    const scanned = allProducts.find(
+      (product) =>
+        productMatchesSlug(product, normalizedSlug) && product.status === "active"
+    );
+    if (scanned) {
+      upsertProductsCacheEntry(scanned);
+      return scanned;
+    }
+
+    return null;
   } catch (error) {
-    const hit = productsCache?.find((p) => p.slug === slug);
-    if (hit && hit.status === "active") return hit;
+    const hit = productsCache?.find(
+      (product) =>
+        productMatchesSlug(product, normalizedSlug) && product.status === "active"
+    );
+    if (hit) return hit;
+
     const local = await loadLocalCatalogProducts();
-    const localHit = local.find((p) => p.slug === slug);
+    const localHit = local.find((product) => productMatchesSlug(product, normalizedSlug));
     return handleCatalogUnavailable(
       error,
-      `Unable to fetch product by slug ${slug}`,
+      `Unable to fetch product by slug ${normalizedSlug}`,
       localHit && localHit.status === "active" ? localHit : null
     );
   }

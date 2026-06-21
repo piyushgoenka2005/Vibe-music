@@ -1,8 +1,8 @@
 /** Self-hosted product images matched to catalog items by instrument type. */
 const IMAGES = {
   electricGuitar: "/images/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png",
-  telecaster: "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg",
-  lesPaul: "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg",
+  telecaster: "/images/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png",
+  lesPaul: "/images/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png",
   acoustic: "/images/m/products/image/00bd892379Sq23f6EBR8T8HvBcYs9YAESicgOubo.png",
   hollowbody: "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg",
   amp: "/images/m/products/image/bfc31b3826CWeDbC6X6IuFyWAjODXQOkmAEnHPW7.jpg",

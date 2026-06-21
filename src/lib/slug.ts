@@ -11,3 +11,7 @@ export function unslugify(slug: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+
+export function normalizeProductSlug(value: string): string {
+  return slugify(decodeURIComponent(value).trim());
+}
