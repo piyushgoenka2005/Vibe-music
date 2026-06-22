@@ -18,14 +18,20 @@ export async function register() {
       }
     }
 
-    const { verifyFirestoreConnection } = await import(
-      "@/lib/server/firestoreHealth"
-    );
-    const firestoreHealth = await verifyFirestoreConnection();
-    if (!firestoreHealth.ok && process.env.NODE_ENV === "production") {
-      throw new Error(
-        `Firestore initialization failed: ${firestoreHealth.error ?? "unknown"}`
+    const shouldVerifyFirestoreOnStartup =
+      process.env.NODE_ENV === "production" ||
+      process.env.FIRESTORE_HEALTHCHECK_ON_STARTUP === "true";
+
+    if (shouldVerifyFirestoreOnStartup) {
+      const { verifyFirestoreConnection } = await import(
+        "@/lib/server/firestoreHealth"
       );
+      const firestoreHealth = await verifyFirestoreConnection();
+      if (!firestoreHealth.ok && process.env.NODE_ENV === "production") {
+        throw new Error(
+          `Firestore initialization failed: ${firestoreHealth.error ?? "unknown"}`
+        );
+      }
     }
   }
 }

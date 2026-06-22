@@ -7,6 +7,7 @@ import {
   ORDER_ID_SEQUENCE_START,
 } from "@/lib/orderId";
 import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
+import { logPayment, logPaymentError } from "@/lib/server/paymentDiagnostics";
 
 const COUNTERS_COLLECTION = "counters";
 
@@ -20,6 +21,8 @@ export async function allocateNextOrderId(
   const year = getOrderYear(createdAt);
   const db = getAdminFirestore();
   const counterRef = db.collection(COUNTERS_COLLECTION).doc(counterDocId(year));
+
+  logPayment("Firestore order counter transaction started", { year });
 
   return withFirestoreRetry(async () => {
     const orderId = await db.runTransaction(async (transaction) => {
@@ -43,6 +46,10 @@ export async function allocateNextOrderId(
       return formatOrderId(nextSequence, year);
     });
 
+    logPayment("Firestore order counter transaction completed", { orderId });
     return orderId;
-  }, { maxRetries: 4, baseDelayMs: 250 });
+  }, { maxRetries: 4, baseDelayMs: 250 }).catch((error) => {
+    logPaymentError(error, { step: "allocateNextOrderId", year });
+    throw error;
+  });
 }

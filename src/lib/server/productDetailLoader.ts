@@ -47,7 +47,7 @@ const loadCachedProductMerchandising = unstable_cache(
     const [bundle, similarProducts, relatedResult] = await Promise.all([
       resolveBundleForProduct(product.id, product.price),
       getProductSummaries(product.similarProductIds),
-      resolveRelatedProductsForProduct(product.id, 8, product),
+      resolveRelatedProductsForProduct(product.id, 8),
     ]);
 
     return {

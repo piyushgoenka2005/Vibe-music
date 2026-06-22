@@ -11,6 +11,7 @@ import FooterAccordion, {
 import FooterClock from "@/components/layout/FooterClock";
 import FooterProductsPanel from "@/components/layout/FooterProductsPanel";
 import { useToastStore } from "@/store/toastStore";
+import { submitNewsletterToWeb3Forms, isWeb3FormsConfigured } from "@/lib/web3formsClient";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -52,7 +53,11 @@ export default function SiteFooter() {
   const footerRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [marketingConsent, setMarketingConsent] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const year = new Date().getFullYear();
 
   useEffect(() => {
@@ -119,17 +124,49 @@ export default function SiteFooter() {
     };
   }, []);
 
-  function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const value = email.trim();
+    const trimmedEmail = email.trim();
 
-    if (!EMAIL_PATTERN.test(value)) {
+    if (!EMAIL_PATTERN.test(trimmedEmail)) {
       showToast("Please enter a valid email address.", "error");
       return;
     }
 
-    setEmail("");
-    showToast("Thanks for joining the Vibe Music list!", "success");
+    if (!marketingConsent) {
+      showToast("Please accept marketing communications to join the list.", "error");
+      return;
+    }
+
+    if (!isWeb3FormsConfigured()) {
+      showToast(
+        "Newsletter is not configured. Add NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY to .env.local and restart npm run dev.",
+        "error"
+      );
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const result = await submitNewsletterToWeb3Forms({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: trimmedEmail,
+        marketingConsent,
+      });
+
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      showToast(result.message, "success");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not sign you up. Please try again.";
+      showToast(message, "error");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -159,6 +196,14 @@ export default function SiteFooter() {
               </div>
 
               <form className="site-footer-newsletter__form" onSubmit={onNewsletterSubmit}>
+                <input
+                  type="checkbox"
+                  name="botcheck"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden
+                  className="site-footer-newsletter__honeypot"
+                />
                 <div className="site-footer-newsletter__row">
                   <input
                     type="text"
@@ -166,6 +211,9 @@ export default function SiteFooter() {
                     autoComplete="given-name"
                     placeholder="FIRST NAME"
                     className="site-footer-newsletter__input"
+                    value={firstName}
+                    onChange={(event) => setFirstName(event.target.value)}
+                    disabled={submitting}
                   />
                   <input
                     type="text"
@@ -173,6 +221,9 @@ export default function SiteFooter() {
                     autoComplete="family-name"
                     placeholder="LAST NAME"
                     className="site-footer-newsletter__input"
+                    value={lastName}
+                    onChange={(event) => setLastName(event.target.value)}
+                    disabled={submitting}
                   />
                 </div>
                 <div className="site-footer-newsletter__row site-footer-newsletter__row--action">
@@ -185,14 +236,25 @@ export default function SiteFooter() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     required
+                    disabled={submitting}
                     suppressHydrationWarning
                   />
-                  <button type="submit" className="site-footer-newsletter__submit">
-                    Sign up
+                  <button
+                    type="submit"
+                    className="site-footer-newsletter__submit"
+                    disabled={submitting}
+                  >
+                    {submitting ? "Signing up…" : "Sign up"}
                   </button>
                 </div>
                 <label className="site-footer-newsletter__consent">
-                  <input type="checkbox" name="marketing" defaultChecked />
+                  <input
+                    type="checkbox"
+                    name="marketing"
+                    checked={marketingConsent}
+                    onChange={(event) => setMarketingConsent(event.target.checked)}
+                    disabled={submitting}
+                  />
                   <span>Vibe Music can contact me about promotions and gear guides.</span>
                 </label>
               </form>

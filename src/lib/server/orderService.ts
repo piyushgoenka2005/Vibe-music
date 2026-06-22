@@ -1,5 +1,5 @@
 import Razorpay from "razorpay";
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { getAdminFirestore, isFirebaseAdminConfigured } from "@/lib/firebase/admin";
 import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
 import {
   isFirestoreFastFailError,
@@ -28,6 +28,11 @@ import {
 } from "@/lib/server/inventoryService";
 import { completeOrderPayment } from "@/lib/server/orderPaymentService";
 import { allocateNextOrderId } from "@/lib/server/orderIdGenerator";
+import {
+  logPayment,
+  logPaymentError,
+  logRazorpayEnvPresence,
+} from "@/lib/server/paymentDiagnostics";
 import type { OrderInventoryLine } from "@/types/inventory";
 import type {
   CreateOrderPayload,
@@ -40,6 +45,8 @@ import type {
 const PLATFORM_FEE = 0;
 
 function getRazorpayInstance(): Razorpay {
+  logRazorpayEnvPresence();
+
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
@@ -49,7 +56,9 @@ function getRazorpayInstance(): Razorpay {
     );
   }
 
-  return new Razorpay({ key_id: keyId, key_secret: keySecret });
+  const instance = new Razorpay({ key_id: keyId, key_secret: keySecret });
+  logPayment("Razorpay initialized");
+  return instance;
 }
 
 function canUseDemoPayments(): boolean {
@@ -177,27 +186,41 @@ export async function createOrder(
   keyId?: string;
   demoMode?: boolean;
 }> {
+  logPayment("Starting create order", {
+    paymentMethod: payload.paymentMethod,
+    itemCount: payload.items.length,
+    firebaseConfigured: isFirebaseAdminConfigured(),
+  });
+
   const db = getAdminFirestore();
+  logPayment("Allocating order ID");
   const orderId = await allocateNextOrderId();
+  logPayment("Order ID allocated", { orderId });
+
   const orderRef = db.collection("orders").doc(orderId);
   const orderData = buildOrderRecord(orderId, payload, userId);
   const inventoryLines = toInventoryLines(payload.items);
 
   const order: Order = { id: orderId, ...orderData };
+  logPayment("Firestore write started", { orderId });
   await withFirestoreRetry(
     () => orderRef.set(sanitizeForFirestore(order)),
     { maxRetries: 3, baseDelayMs: 200 }
   );
+  logPayment("Firestore write completed", { orderId });
 
   try {
     try {
       if (payload.paymentMethod === "cod") {
+        logPayment("Inventory reservation started (COD)", { orderId });
         await reserveAndFulfillStockForOrder(orderId, inventoryLines);
         order.inventoryStatus = "fulfilled";
       } else {
+        logPayment("Inventory reservation started (online)", { orderId });
         await reserveStockForOrder(orderId, inventoryLines);
         order.inventoryStatus = "reserved";
       }
+      logPayment("Inventory reservation completed", { orderId });
     } catch (inventoryError) {
       if (isFirestoreUnavailableError(inventoryError)) {
         logFirestoreWarning(
@@ -215,6 +238,7 @@ export async function createOrder(
 
     if (payload.paymentMethod === "razorpay") {
       if (isRazorpayConfigured()) {
+        logPayment("Creating Razorpay order", { orderId, amountPaise: toPaise(order.total) });
         const razorpay = getRazorpayInstance();
         let razorpayOrder: { id: string };
         try {
@@ -228,6 +252,7 @@ export async function createOrder(
             },
           })) as { id: string };
         } catch (razorpayError) {
+          logPaymentError(razorpayError, { orderId, step: "razorpay.orders.create" });
           const description = extractRazorpayError(razorpayError);
           throw new Error(
             description
@@ -236,6 +261,7 @@ export async function createOrder(
           );
         }
         razorpayOrderId = razorpayOrder.id;
+        logPayment("Razorpay order created", { orderId, razorpayOrderId });
         await orderRef.update({
           razorpayOrderId,
           updatedAt: new Date().toISOString(),
@@ -248,6 +274,7 @@ export async function createOrder(
       }
     }
 
+    logPayment("Create order completed", { orderId, paymentMethod: payload.paymentMethod });
     return {
       order: { ...order, razorpayOrderId },
       razorpayOrderId,
@@ -260,6 +287,7 @@ export async function createOrder(
           : undefined,
     };
   } catch (error) {
+    logPaymentError(error, { orderId, step: "createOrder" });
     await releaseOrderReservation(orderId).catch(() => undefined);
     await orderRef.delete().catch(() => undefined);
     throw error;
