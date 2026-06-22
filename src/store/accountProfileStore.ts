@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist } from "zustand/middleware";
+import { createSafeJSONStorage } from "@/lib/storage/safeLocalStorage";
 
 /** @deprecated Addresses are stored in Firestore. Kept for localStorage migration only. */
 export interface SavedAddress {
@@ -65,7 +66,7 @@ export const useAccountProfileStore = create<AccountProfileState>()(
     }),
     {
       name: "vibe-account-profile",
-      storage: createJSONStorage(() => localStorage),
+      storage: createSafeJSONStorage(),
       partialize: (state) => ({
         phone: state.phone,
         dateOfBirth: state.dateOfBirth,

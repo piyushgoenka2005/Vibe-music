@@ -11,6 +11,10 @@ export function isFirestoreFastFailError(error: unknown): boolean {
   return error instanceof Error && error.message === FIRESTORE_FAST_FAIL;
 }
 
+export function isFirestoreDegraded(error: unknown): boolean {
+  return isFirestoreUnavailableError(error) || isFirestoreFastFailError(error);
+}
+
 /** Rejects if a Firestore read exceeds the deadline (prevents 8s+ gRPC hangs). */
 export async function withFirestoreDeadline<T>(
   operation: () => Promise<T>,

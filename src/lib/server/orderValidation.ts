@@ -7,6 +7,7 @@ import {
 import { getAvailableStock } from "@/lib/inventory/stockMath";
 import {
   isFirestoreUnavailableError,
+  isGlobalFirestoreCircuitOpen,
   logFirestoreWarning,
 } from "@/lib/server/firestoreErrors";
 import { validateCoupon } from "@/lib/server/couponService";
@@ -87,9 +88,24 @@ async function validateStockAvailabilityWithFallback(
 export async function resolveOrderItemsFromFirestore(
   items: CreateOrderPayload["items"]
 ): Promise<CreateOrderPayload["items"]> {
+  const { loadProducts } = await import("@/lib/server/catalogRepository");
+  const localProducts = loadProducts();
+  const useLocalCatalog = isGlobalFirestoreCircuitOpen();
+
   const resolved = await Promise.all(
     items.map(async (item) => {
-      const product = await getProductById(item.productId);
+      let product =
+        localProducts.find((entry) => entry.id === item.productId) ?? null;
+
+      if (!product && !useLocalCatalog) {
+        product = (await getProductById(item.productId)) ?? null;
+      }
+
+      if (!product) {
+        product =
+          localProducts.find((entry) => entry.id === item.productId) ?? null;
+      }
+
       if (!product || product.status !== "active") {
         throw new Error(
           `Product "${item.name}" is unavailable or no longer active`
@@ -119,6 +135,18 @@ export async function resolveOrderItemsFromFirestore(
       };
     })
   );
+
+  if (isGlobalFirestoreCircuitOpen()) {
+    await validateStockAvailabilityFromCatalog(
+      resolved.map((item) => ({
+        productId: item.productId,
+        variantId: item.variantId,
+        quantity: item.quantity,
+        name: item.name,
+      }))
+    );
+    return resolved;
+  }
 
   await validateStockAvailabilityWithFallback(
     resolved.map((item) => ({

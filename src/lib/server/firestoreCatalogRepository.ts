@@ -11,11 +11,13 @@ import {
   createFirestoreCircuitBreaker,
   isFirestoreFastFailError,
   isFirestoreUnavailableError,
+  isGlobalFirestoreCircuitOpen,
   logFirestoreWarning,
   markFirestoreUnavailable,
   withFirestoreDeadline,
 } from "@/lib/server/firestoreErrors";
 import { createFirestoreCache } from "@/lib/server/firestoreCache";
+import { loadProducts } from "@/lib/server/catalogRepository";
 import type { Brand } from "@/types/brand";
 import type { Category } from "@/types/category";
 import type { CatalogProduct, ProductStatus } from "@/types/catalog";
@@ -60,7 +62,12 @@ function isCatalogFirestoreDisabled(): boolean {
 }
 
 function shouldUseLocalCatalog(): boolean {
-  return isCatalogFirestoreDisabled() || !isFirebaseAdminConfigured();
+  return (
+    isCatalogFirestoreDisabled() ||
+    !isFirebaseAdminConfigured() ||
+    catalogCircuit.isOpen() ||
+    isGlobalFirestoreCircuitOpen()
+  );
 }
 
 let catalogSeedPromise: Promise<void> | null = null;
@@ -101,6 +108,19 @@ function filterActiveProducts(
 async function loadLocalCatalogProducts(): Promise<CatalogProduct[]> {
   const { loadProducts } = await import("@/lib/server/catalogRepository");
   return loadProducts();
+}
+
+function findLocalCatalogProductBySlug(slug: string): CatalogProduct | null {
+  const normalizedSlug = normalizeProductSlug(slug);
+  const hit = loadProducts().find(
+    (product) =>
+      productMatchesSlug(product, normalizedSlug) && product.status === "active"
+  );
+  return hit ?? null;
+}
+
+function findLocalCatalogProductById(id: string): CatalogProduct | null {
+  return loadProducts().find((product) => product.id === id) ?? null;
 }
 
 async function loadLocalCategories(): Promise<Category[]> {
@@ -443,6 +463,12 @@ export async function fetchProductById(
   const cached = productByIdCache.get(id);
   if (cached) return cached;
 
+  const localHit = findLocalCatalogProductById(id);
+  if (localHit) {
+    productByIdCache.set(localHit.id, localHit);
+    return localHit;
+  }
+
   if (catalogCircuit.isOpen()) {
     const fromAll = productsCache.get("all")?.find((p) => p.id === id) ?? null;
     if (fromAll) return fromAll;
@@ -451,18 +477,25 @@ export async function fetchProductById(
 
   try {
     await ensureCatalogSeeded();
-    const doc = await db().collection(PRODUCTS).doc(id).get();
-    if (!doc.exists) return null;
+    const doc = await withFirestoreDeadline(() =>
+      db().collection(PRODUCTS).doc(id).get()
+    );
+    if (!doc.exists) {
+      const local = await loadLocalCatalogProducts();
+      return local.find((p) => p.id === id) ?? null;
+    }
     const product = docToCatalogProduct(doc.id, doc.data()!);
     if (product) {
       productByIdCache.set(product.id, product);
     }
     return product;
   } catch (error) {
+    const local = await loadLocalCatalogProducts();
+    const localHit = local.find((p) => p.id === id) ?? null;
     return handleCatalogUnavailable(
       error,
       `Unable to fetch product ${id}`,
-      productsCache.get("all")?.find((p) => p.id === id) ?? null
+      productsCache.get("all")?.find((p) => p.id === id) ?? localHit
     );
   }
 }
@@ -535,6 +568,12 @@ export async function fetchProductBySlug(
   if (fromAllCache) {
     productBySlugCache.set(normalizedSlug, fromAllCache);
     return fromAllCache;
+  }
+
+  const localHit = findLocalCatalogProductBySlug(normalizedSlug);
+  if (localHit) {
+    upsertProductsCacheEntry(localHit);
+    return localHit;
   }
 
   if (catalogCircuit.isOpen()) {

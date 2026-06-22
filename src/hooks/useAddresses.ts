@@ -23,14 +23,28 @@ export function useAddresses() {
     queryKey: QUERY_KEY,
     queryFn: fetchAddresses,
     enabled: isAuthenticated,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+    placeholderData: [],
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    void migrateLocalAddressesIfNeeded().then(() => {
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-    });
+
+    const runMigration = () => {
+      void migrateLocalAddressesIfNeeded().then((didMigrate) => {
+        if (didMigrate) {
+          void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        }
+      });
+    };
+
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(runMigration, { timeout: 3000 });
+    } else {
+      setTimeout(runMigration, 100);
+    }
   }, [isAuthenticated, queryClient]);
 
   const createMutation = useMutation({
@@ -66,7 +80,7 @@ export function useAddresses() {
   return {
     addresses,
     defaultAddress,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading && !query.data,
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,

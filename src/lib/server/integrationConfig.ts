@@ -7,8 +7,10 @@ export interface IntegrationChecks {
   firebaseAdmin: IntegrationStatus;
   firebaseClient: IntegrationStatus;
   razorpay: IntegrationStatus;
+  razorpayWebhook: IntegrationStatus;
   cloudinary: IntegrationStatus;
   resend: IntegrationStatus;
+  upstash: IntegrationStatus;
 }
 
 function configured(...values: Array<string | undefined>): IntegrationStatus {
@@ -23,6 +25,11 @@ export function getIntegrationChecks(): IntegrationChecks {
       process.env.RAZORPAY_KEY_ID,
       process.env.RAZORPAY_KEY_SECRET,
       process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID
+    ),
+    razorpayWebhook: configured(process.env.RAZORPAY_WEBHOOK_SECRET),
+    upstash: configured(
+      process.env.UPSTASH_REDIS_REST_URL,
+      process.env.UPSTASH_REDIS_REST_TOKEN
     ),
     cloudinary: configured(
       process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,

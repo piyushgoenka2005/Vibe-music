@@ -12,11 +12,13 @@ import { getAdminFirestore } from "@/lib/firebase/admin";
 import type { WriteResult } from "firebase-admin/firestore";
 import {
   createFirestoreCircuitBreaker,
+  isFirestoreDegraded,
   isFirestoreUnavailableError,
   isGlobalFirestoreCircuitOpen,
   logFirestoreWarning,
   openGlobalFirestoreCircuit,
   tryFirestoreFast,
+  withFirestoreDeadline,
 } from "@/lib/server/firestoreErrors";
 import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
 import { sanitizeForFirestore } from "@/lib/server/firestoreSanitize";
@@ -113,7 +115,7 @@ export async function persistOrder(order: Order): Promise<void> {
       }
     );
   } catch (error) {
-    if (isFirestoreUnavailableError(error)) {
+    if (isFirestoreDegraded(error)) {
       openOrdersCircuit(error, "Persisting order locally — Firestore unavailable");
       writeLocalOrder(order);
       return;
@@ -125,17 +127,23 @@ export async function persistOrder(order: Order): Promise<void> {
 export async function fetchOrderById(orderId: string): Promise<Order | null> {
   if (!isOrdersFirestoreDisabled()) {
     try {
-      const doc = await withFirestoreRetry(() =>
-        getAdminFirestore()
-          .collection(COLLECTION)
-          .doc(orderId)
-          .get()
+      const doc = await withFirestoreDeadline(() =>
+        withFirestoreRetry(
+          () =>
+            getAdminFirestore()
+              .collection(COLLECTION)
+              .doc(orderId)
+              .get(),
+          { maxRetries: 1, baseDelayMs: 100 }
+        )
       );
       if (doc.exists) {
-        return { id: doc.id, ...doc.data() } as Order;
+        const order = { id: doc.id, ...doc.data() } as Order;
+        writeLocalOrder(order);
+        return order;
       }
     } catch (error) {
-      if (isFirestoreUnavailableError(error)) {
+      if (isFirestoreDegraded(error)) {
         openOrdersCircuit(error, "Reading orders from local store");
       } else {
         throw error;

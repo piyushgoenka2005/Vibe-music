@@ -1,3 +1,40 @@
+/* ─── Checkout loading skeleton ─── */
+.checkout-skeleton {
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--surface-muted) 25%, var(--surface-base) 50%, var(--surface-muted) 75%);
+  background-size: 200% 100%;
+  animation: checkout-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.checkout-skeleton--title {
+  height: 32px;
+  width: min(280px, 70%);
+  margin-bottom: 1.5rem;
+}
+
+.checkout-skeleton--line {
+  height: 14px;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.checkout-skeleton--field {
+  height: 44px;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.checkout-skeleton--total {
+  height: 24px;
+  width: 50%;
+  margin-top: 1rem;
+}
+
+@keyframes checkout-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* ─── Checkout page shell ─── */
 .checkout-page {
   max-width: 1160px;
@@ -597,7 +634,7 @@
 .checkout-pay-stage {
   position: relative;
   isolation: isolate;
-  overflow: visible;
+  overflow: hidden;
   border-radius: 22px;
   min-height: 280px;
   padding: 0.25rem;

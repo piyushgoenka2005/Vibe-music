@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BRAND } from "@/lib/brand";
 import { cacheOrderForConfirmation } from "@/lib/checkout/orderConfirmationCache";
-import { useRazorpay } from "@/hooks/useRazorpay";
+import { ensureRazorpayScriptLoaded, useRazorpay } from "@/hooks/useRazorpay";
 import {
   createCodOrder,
   createPaymentOrder,
@@ -14,7 +14,12 @@ import {
 } from "@/services/orderService";
 import { useCartStore } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";
-import type { CreateOrderPayload, PaymentMethod, ShippingAddress } from "@/types/order";
+import type {
+  CreateOrderPayload,
+  CreateRazorpayOrderResponse,
+  PaymentMethod,
+  ShippingAddress,
+} from "@/types/order";
 import type { CheckoutSummaryItem } from "@/components/checkout/CheckoutSummary";
 
 export interface UseCheckoutPaymentOptions {
@@ -27,6 +32,20 @@ export interface UseCheckoutPaymentOptions {
   phone?: string;
   paymentMethod: PaymentMethod;
   disabled?: boolean;
+  /** Warm the create-order API while the user reviews payment options. */
+  prefetchEnabled?: boolean;
+}
+
+function orderPayloadKey(payload: CreateOrderPayload): string {
+  return JSON.stringify({
+    items: payload.items,
+    email: payload.email,
+    shipping: payload.shippingAddress,
+    coupon: payload.couponCode,
+    discount: payload.couponDiscount,
+    method: payload.paymentMethod,
+    buyerState: payload.buyerState,
+  });
 }
 
 export function useCheckoutPayment({
@@ -39,18 +58,24 @@ export function useCheckoutPayment({
   phone,
   paymentMethod,
   disabled = false,
+  prefetchEnabled = false,
 }: UseCheckoutPaymentOptions) {
   const router = useRouter();
   const { isReady, isLoading, error, openCheckout } = useRazorpay();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingLabel, setProcessingLabel] = useState<string | null>(null);
+  const prefetchRef = useRef<{
+    key: string;
+    promise: Promise<CreateRazorpayOrderResponse>;
+  } | null>(null);
 
   const couponCode = useCartStore((s) => s.couponCode);
   const couponDiscount = useCartStore((s) => s.discount());
   const showToast = useToastStore((s) => s.show);
 
-  const isDisabled = disabled || isProcessing || isLoading;
+  const isDisabled = disabled || isProcessing;
 
-  async function buildPayload(): Promise<CreateOrderPayload> {
+  const buildPayload = useCallback((): CreateOrderPayload => {
     return {
       items: items.map((item) => ({
         productId: item.productId,
@@ -71,7 +96,42 @@ export function useCheckoutPayment({
       paymentMethod,
       buyerState,
     };
-  }
+  }, [
+    items,
+    email,
+    customerName,
+    customerPhone,
+    shippingAddress,
+    couponCode,
+    couponDiscount,
+    paymentMethod,
+    buyerState,
+  ]);
+
+  useEffect(() => {
+    if (!prefetchEnabled || paymentMethod !== "razorpay" || disabled) {
+      prefetchRef.current = null;
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      const payload = buildPayload();
+      const key = orderPayloadKey(payload);
+
+      if (prefetchRef.current?.key === key) {
+        return;
+      }
+
+      void ensureRazorpayScriptLoaded().catch(() => undefined);
+
+      prefetchRef.current = {
+        key,
+        promise: createPaymentOrder(payload),
+      };
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [prefetchEnabled, paymentMethod, disabled, buildPayload]);
 
   function successUrl(orderId: string): string {
     const params = new URLSearchParams({ orderId, email });
@@ -84,13 +144,16 @@ export function useCheckoutPayment({
   }
 
   const pay = useCallback(async () => {
-    if (disabled || isProcessing || isLoading) return;
+    if (disabled || isProcessing) return;
 
     setIsProcessing(true);
+    setProcessingLabel(
+      paymentMethod === "razorpay" ? "Creating order…" : "Placing order…"
+    );
     let pendingOrderId: string | null = null;
 
     try {
-      const payload = await buildPayload();
+      const payload = buildPayload();
 
       if (paymentMethod === "cod") {
         const { orderId, order } = await createCodOrder(payload);
@@ -99,8 +162,18 @@ export function useCheckoutPayment({
         return;
       }
 
-      const orderResponse = await createPaymentOrder(payload);
+      const key = orderPayloadKey(payload);
+      const prefetched =
+        prefetchRef.current?.key === key ? prefetchRef.current.promise : null;
+      prefetchRef.current = null;
+
+      const [orderResponse] = await Promise.all([
+        prefetched ?? createPaymentOrder(payload),
+        ensureRazorpayScriptLoaded(),
+      ]);
+
       pendingOrderId = orderResponse.orderId;
+      setProcessingLabel("Opening Razorpay…");
 
       if (orderResponse.demoMode) {
         const demo = await completeDemoPayment(orderResponse.orderId, email);
@@ -124,6 +197,8 @@ export function useCheckoutPayment({
       ) {
         throw new Error("Unable to start Razorpay checkout.");
       }
+
+      setIsProcessing(false);
 
       const result = await openCheckout({
         key: orderResponse.keyId,
@@ -175,22 +250,17 @@ export function useCheckoutPayment({
       }
       showToast(err instanceof Error ? err.message : "Payment failed", "error");
     } finally {
+      setProcessingLabel(null);
       setIsProcessing(false);
     }
   }, [
     disabled,
     isProcessing,
-    isLoading,
     paymentMethod,
-    items,
+    buildPayload,
     email,
     phone,
     shippingAddress,
-    buyerState,
-    customerName,
-    customerPhone,
-    couponCode,
-    couponDiscount,
     showToast,
     router,
     openCheckout,
@@ -204,5 +274,6 @@ export function useCheckoutPayment({
     isReady,
     error,
     paymentMethod,
+    processingLabel,
   };
 }

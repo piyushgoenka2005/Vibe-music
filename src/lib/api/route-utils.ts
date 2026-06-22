@@ -12,7 +12,8 @@ import {
   verifyMutationOrigin,
 } from "@/lib/security/mutation-origin";
 import { getRequestId } from "@/lib/security/request-log";
-import { logError, logInfo } from "@/lib/server/logger";
+import { reportServerError } from "@/lib/server/errorMonitoring";
+import { logInfo } from "@/lib/server/logger";
 
 export function jsonError(message: string, status: number): NextResponse {
   return NextResponse.json({ error: message }, { status });
@@ -118,8 +119,10 @@ export function handleRouteError(
   context: string,
   request?: Request
 ): NextResponse {
-  logError("Route handler failed", error, context, {
+  reportServerError(error, {
+    source: context,
     requestId: request ? getRequestId(request) : undefined,
+    routePath: request ? new URL(request.url).pathname : undefined,
   });
   const message =
     error instanceof Error ? error.message : "Internal server error";

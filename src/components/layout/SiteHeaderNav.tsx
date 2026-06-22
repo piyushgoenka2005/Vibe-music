@@ -19,7 +19,20 @@ export default function SiteHeaderNav({
 }: SiteHeaderNavProps) {
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [megaEnabled, setMegaEnabled] = useState(false);
+  const [scrollable, setScrollable] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navShellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = navShellRef.current?.querySelector(".site-header__nav-inner");
+    if (el) {
+      const check = () => setScrollable(el.scrollWidth > el.clientWidth);
+      check();
+      const ro = new ResizeObserver(check);
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
@@ -68,7 +81,7 @@ export default function SiteHeaderNav({
       aria-label="Shop categories"
       onMouseLeave={scheduleClose}
     >
-      <div className="site-header__nav-shell">
+      <div ref={navShellRef} className={`site-header__nav-shell${scrollable ? " site-header__nav-shell--scrollable" : ""}`}>
         <div className="site-header__nav-inner">
           {HEADER_MEGA_MENUS.map((menu) => (
             <div

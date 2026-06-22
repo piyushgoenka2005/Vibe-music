@@ -24,7 +24,6 @@ import ProductTabs, { type TabId } from "./ProductTabs";
 import ProductCrossSell from "./ProductCrossSell";
 import ProductDetailSkeleton from "./ProductDetailSkeleton";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
-import { useProductReviewStats } from "@/hooks/useProductReviewStats";
 import "./product-detail.css";
 
 const FrequentlyBoughtTogether = dynamic(() => import("./FrequentlyBoughtTogether"), { ssr: false });
@@ -68,7 +67,6 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   const searchParams = useSearchParams();
   const tabsRef = useRef<HTMLDivElement>(null);
   const { data, isLoading, isError } = useProduct(slug, initialData);
-  const { data: reviewStats } = useProductReviewStats(slug);
   const showSkeleton = isLoading && !data;
   const addItem = useCartStore((s) => s.addItem);
   const openCartDrawer = useCartStore((s) => s.openDrawer);
@@ -203,8 +201,8 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
             onToggleWishlist={() => toggleWishlist(product)}
             isWishlisted={isWishlisted}
             onReviewsClick={scrollToReviews}
-            liveRating={reviewStats?.averageRating}
-            liveReviewCount={reviewStats?.totalReviews}
+            liveRating={product.rating}
+            liveReviewCount={product.reviewCount}
           />
           <ShippingEstimator />
         </div>
@@ -215,7 +213,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
           key={tabOverride ?? "description"}
           product={product}
           productSlug={slug}
-          reviewCount={reviewStats?.totalReviews}
+          reviewCount={product.reviewCount}
           initialTab={tabOverride}
         />
       </div>

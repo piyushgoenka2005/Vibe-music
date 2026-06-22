@@ -49,6 +49,7 @@ export interface CheckoutSummaryProps {
     disabled?: boolean;
     loading?: boolean;
     preparing?: boolean;
+    loadingLabel?: string;
     paymentMethod: PaymentMethod;
     error?: string | null;
   };
@@ -307,6 +308,7 @@ export default function CheckoutSummary({
                 disabled={paymentAction.disabled}
                 loading={paymentAction.loading}
                 preparing={paymentAction.preparing}
+                loadingLabel={paymentAction.loadingLabel}
               />
             ) : (
               <CheckoutStaticPayButton

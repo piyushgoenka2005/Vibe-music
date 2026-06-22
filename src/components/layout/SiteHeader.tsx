@@ -21,15 +21,27 @@ import WishlistCounter from "@/components/wishlist/WishlistCounter";
 export default function SiteHeader() {
   const headerRef = useRef<HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const headerHidden = useHideOnScroll({ disabled: mobileOpen });
 
   useSiteHeaderOffset(headerRef);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const handleMegaMenuOpenChange = useCallback(() => {}, []);
 
   useEffect(() => {
     document.body.classList.toggle("site-nav-open", mobileOpen);
-    return () => document.body.classList.remove("site-nav-open");
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.classList.remove("site-nav-open");
+      document.body.style.overflow = "";
+    };
   }, [mobileOpen]);
 
   useEffect(() => {
@@ -102,7 +114,7 @@ export default function SiteHeader() {
     <header
       ref={headerRef}
       id="assets-header"
-      className={`site-header assets-site-nav--desktop${headerHidden ? " site-header--hidden" : ""}`}
+      className={`site-header assets-site-nav--desktop${headerHidden ? " site-header--hidden" : ""}${scrolled ? " site-header--scrolled" : ""}`}
       data-vibe-section="header"
     >
       <AnnouncementBar />

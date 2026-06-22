@@ -5,7 +5,11 @@ export default function Loading() {
       aria-busy="true"
       aria-label="Loading"
     >
-      <div className="storefront-loading">Loading…</div>
+      <div className="page-skeleton">
+        <div className="page-skeleton__line page-skeleton__line--title" />
+        <div className="page-skeleton__line" />
+        <div className="page-skeleton__line page-skeleton__line--short" />
+      </div>
     </main>
   );
 }

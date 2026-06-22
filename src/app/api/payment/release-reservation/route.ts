@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isFirestoreDegraded } from "@/lib/server/firestoreErrors";
 import { releaseOrderReservation } from "@/lib/server/orderService";
 
 export async function POST(request: Request) {
@@ -17,6 +18,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (isFirestoreDegraded(error)) {
+      return NextResponse.json({ ok: true, skipped: true });
+    }
+
     const message =
       error instanceof Error ? error.message : "Unable to release reservation";
     return NextResponse.json({ error: message }, { status: 500 });

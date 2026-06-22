@@ -27,8 +27,10 @@ export async function POST(request: Request) {
     const csrfError = enforceMutationSecurity(request);
     if (csrfError) return csrfError;
 
-    const sessionUser = await getSessionUser();
-    const body = (await request.json()) as CreateOrderPayload;
+    const [sessionUser, body] = await Promise.all([
+      getSessionUser(),
+      request.json() as Promise<CreateOrderPayload>,
+    ]);
 
     if (!body.items?.length) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });

@@ -7,10 +7,11 @@ import path from "path";
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import {
   createFirestoreCircuitBreaker,
-  isFirestoreUnavailableError,
+  isFirestoreDegraded,
   isGlobalFirestoreCircuitOpen,
   logFirestoreWarning,
   openGlobalFirestoreCircuit,
+  withFirestoreDeadline,
 } from "@/lib/server/firestoreErrors";
 import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
 import { sanitizeForFirestore } from "@/lib/server/firestoreSanitize";
@@ -97,18 +98,20 @@ function normalizeAddress(
 export async function listAddressesByUserId(userId: string): Promise<Address[]> {
   if (!isAddressFirestoreDisabled()) {
     try {
-      const snap = await withFirestoreRetry(() =>
-        getAdminFirestore()
-          .collection(COLLECTION)
-          .where("userId", "==", userId)
-          .get()
+      const snap = await withFirestoreDeadline(() =>
+        withFirestoreRetry(() =>
+          getAdminFirestore()
+            .collection(COLLECTION)
+            .where("userId", "==", userId)
+            .get()
+        )
       );
 
       return sortAddresses(
         snap.docs.map((doc) => normalizeAddress(doc.id, doc.data()))
       );
     } catch (error) {
-      if (isFirestoreUnavailableError(error)) {
+      if (isFirestoreDegraded(error)) {
         openAddressCircuit(error, "Reading addresses from local store");
       } else {
         throw error;
@@ -125,17 +128,19 @@ export async function getAddressById(
 ): Promise<Address | null> {
   if (!isAddressFirestoreDisabled()) {
     try {
-      const doc = await getAdminFirestore()
-        .collection(COLLECTION)
-        .doc(addressId)
-        .get();
+      const doc = await withFirestoreDeadline(() =>
+        getAdminFirestore()
+          .collection(COLLECTION)
+          .doc(addressId)
+          .get()
+      );
 
       if (doc.exists) {
         const address = normalizeAddress(doc.id, doc.data()!);
         if (address.userId === userId) return address;
       }
     } catch (error) {
-      if (isFirestoreUnavailableError(error)) {
+      if (isFirestoreDegraded(error)) {
         openAddressCircuit(error, "Reading address from local store");
       } else {
         throw error;
@@ -164,11 +169,13 @@ async function clearDefaultFlags(
   }
 
   try {
-    const snap = await getAdminFirestore()
-      .collection(COLLECTION)
-      .where("userId", "==", userId)
-      .where("isDefault", "==", true)
-      .get();
+    const snap = await withFirestoreDeadline(() =>
+      getAdminFirestore()
+        .collection(COLLECTION)
+        .where("userId", "==", userId)
+        .where("isDefault", "==", true)
+        .get()
+    );
 
     const batch = getAdminFirestore().batch();
     const timestamp = now();
@@ -183,7 +190,7 @@ async function clearDefaultFlags(
       await batch.commit();
     }
   } catch (error) {
-    if (isFirestoreUnavailableError(error)) {
+    if (isFirestoreDegraded(error)) {
       openAddressCircuit(error, "Clearing default flags locally");
       await clearDefaultFlags(userId, exceptId);
       return;
@@ -196,10 +203,22 @@ export async function createAddress(
   userId: string,
   input: CreateAddressInput
 ): Promise<Address> {
-  const existing = await listAddressesByUserId(userId);
-  const shouldBeDefault = input.isDefault ?? existing.length === 0;
   const timestamp = now();
   const addressId = randomUUID();
+
+  let shouldBeDefault: boolean;
+  if (input.isDefault === true) {
+    shouldBeDefault = true;
+    await clearDefaultFlags(userId);
+  } else if (input.isDefault === false) {
+    shouldBeDefault = false;
+  } else {
+    const existing = await listAddressesByUserId(userId);
+    shouldBeDefault = existing.length === 0;
+    if (shouldBeDefault) {
+      await clearDefaultFlags(userId);
+    }
+  }
 
   const address: Address = {
     id: addressId,
@@ -218,23 +237,21 @@ export async function createAddress(
     updatedAt: timestamp,
   };
 
-  if (shouldBeDefault) {
-    await clearDefaultFlags(userId);
-  }
-
   if (isAddressFirestoreDisabled()) {
     writeLocalAddresses(userId, [...readLocalAddresses(userId), address]);
     return address;
   }
 
   try {
-    await getAdminFirestore()
-      .collection(COLLECTION)
-      .doc(addressId)
-      .set(sanitizeForFirestore(address));
+    await withFirestoreDeadline(() =>
+      getAdminFirestore()
+        .collection(COLLECTION)
+        .doc(addressId)
+        .set(sanitizeForFirestore(address))
+    );
     return address;
   } catch (error) {
-    if (isFirestoreUnavailableError(error)) {
+    if (isFirestoreDegraded(error)) {
       openAddressCircuit(error, "Creating address locally — Firestore unavailable");
       writeLocalAddresses(userId, [...readLocalAddresses(userId), address]);
       return address;
@@ -297,7 +314,7 @@ export async function updateAddress(
         .doc(addressId)
         .update(sanitizeForFirestore(patch));
     } catch (error) {
-      if (isFirestoreUnavailableError(error)) {
+      if (isFirestoreDegraded(error)) {
         openAddressCircuit(error, "Updating address locally — Firestore unavailable");
         const addresses = readLocalAddresses(userId).map((address) =>
           address.id === addressId
@@ -347,7 +364,7 @@ export async function deleteAddress(
     try {
       await getAdminFirestore().collection(COLLECTION).doc(addressId).delete();
     } catch (error) {
-      if (isFirestoreUnavailableError(error)) {
+      if (isFirestoreDegraded(error)) {
         openAddressCircuit(error, "Deleting address locally — Firestore unavailable");
         writeLocalAddresses(
           userId,
@@ -393,7 +410,7 @@ export async function setDefaultAddress(
         updatedAt: timestamp,
       });
     } catch (error) {
-      if (isFirestoreUnavailableError(error)) {
+      if (isFirestoreDegraded(error)) {
         openAddressCircuit(error, "Setting default address locally");
         const addresses = readLocalAddresses(userId).map((address) =>
           address.id === addressId
