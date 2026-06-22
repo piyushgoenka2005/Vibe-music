@@ -8,30 +8,24 @@ export async function register() {
     const integrations = getIntegrationChecks();
 
     if (process.env.NODE_ENV === "production") {
-      if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+      if (integrations.upstash !== "ok") {
         throw new Error(
           "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production"
         );
       }
-      if (!process.env.RAZORPAY_WEBHOOK_SECRET) {
+      if (integrations.razorpayWebhook !== "ok") {
         throw new Error("RAZORPAY_WEBHOOK_SECRET is required in production");
       }
     }
 
-    const shouldVerifyFirestoreOnStartup =
-      process.env.NODE_ENV === "production" ||
-      process.env.FIRESTORE_HEALTHCHECK_ON_STARTUP === "true";
-
-    if (shouldVerifyFirestoreOnStartup) {
-      const { verifyFirestoreConnection } = await import(
-        "@/lib/server/firestoreHealth"
+    const { verifyFirestoreConnection } = await import(
+      "@/lib/server/firestoreHealth"
+    );
+    const firestoreHealth = await verifyFirestoreConnection();
+    if (!firestoreHealth.ok && process.env.NODE_ENV === "production") {
+      throw new Error(
+        `Firestore initialization failed: ${firestoreHealth.error ?? "unknown"}`
       );
-      const firestoreHealth = await verifyFirestoreConnection();
-      if (!firestoreHealth.ok && process.env.NODE_ENV === "production") {
-        throw new Error(
-          `Firestore initialization failed: ${firestoreHealth.error ?? "unknown"}`
-        );
-      }
     }
   }
 }
