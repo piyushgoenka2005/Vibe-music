@@ -154,14 +154,6 @@ export default function CheckoutSuccessContent() {
           {canShowInvoice ? (
             <div className="checkout-success__invoice-actions">
               <a
-                href={invoiceViewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="cart-btn cart-btn--secondary"
-              >
-                View invoice
-              </a>
-              <a
                 href={invoicePrintUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -185,18 +177,6 @@ export default function CheckoutSuccessContent() {
         <Link href={trackHref} className="cart-btn cart-btn--checkout">
           Track Order
         </Link>
-        {isAuthenticated ? (
-          <Link href={ROUTES.accountOrders} className="cart-btn cart-btn--secondary">
-            View My Orders
-          </Link>
-        ) : (
-          <Link
-            href={`${ROUTES.register}?redirect=${encodeURIComponent(ROUTES.accountOrders)}`}
-            className="cart-btn cart-btn--secondary"
-          >
-            Create Account
-          </Link>
-        )}
       </div>
     </div>
   );

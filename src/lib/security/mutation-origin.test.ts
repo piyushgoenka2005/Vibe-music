@@ -36,9 +36,10 @@ describe("verifyMutationOrigin", () => {
       { origin: "https://evil.example.com" }
     );
 
-    const previous = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
+    const env = process.env as { NODE_ENV?: string };
+    const previous = env.NODE_ENV;
+    env.NODE_ENV = "production";
     expect(verifyMutationOrigin(request)).toBe(false);
-    process.env.NODE_ENV = previous;
+    env.NODE_ENV = previous;
   });
 });

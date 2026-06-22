@@ -1618,7 +1618,7 @@
     justify-content: flex-start;
   }
 
-  .checkout-actions {
+  .checkout-actions:not(.checkout-success__actions) {
     display: none;
   }
 
@@ -1760,6 +1760,21 @@
 
 .checkout-success__actions {
   margin-top: 2rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.75rem;
+  justify-content: center;
+  max-width: 520px;
+  margin-inline: auto;
+}
+
+.checkout-success__actions .cart-btn {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  margin-bottom: 0;
 }
 
 .checkout-invoice {

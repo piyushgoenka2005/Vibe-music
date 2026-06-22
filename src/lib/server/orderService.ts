@@ -8,6 +8,7 @@ import {
   logFirestoreWarning,
   withFirestoreDeadline,
 } from "@/lib/server/firestoreErrors";
+import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
 import { sanitizeForFirestore } from "@/lib/server/firestoreSanitize";
 import {
   verifyRazorpayPaymentSignature,
@@ -53,6 +54,22 @@ function getRazorpayInstance(): Razorpay {
 
 function canUseDemoPayments(): boolean {
   return isDemoPaymentsAllowed() && !isRazorpayConfigured();
+}
+
+function extractRazorpayError(error: unknown): string | null {
+  if (!error || typeof error !== "object") return null;
+  const record = error as {
+    error?: { description?: string; reason?: string };
+    description?: string;
+    message?: string;
+  };
+  return (
+    record.error?.description ??
+    record.error?.reason ??
+    record.description ??
+    record.message ??
+    null
+  );
 }
 
 function toInventoryLines(
@@ -167,7 +184,10 @@ export async function createOrder(
   const inventoryLines = toInventoryLines(payload.items);
 
   const order: Order = { id: orderId, ...orderData };
-  await orderRef.set(sanitizeForFirestore(order));
+  await withFirestoreRetry(
+    () => orderRef.set(sanitizeForFirestore(order)),
+    { maxRetries: 3, baseDelayMs: 200 }
+  );
 
   try {
     try {
@@ -196,15 +216,25 @@ export async function createOrder(
     if (payload.paymentMethod === "razorpay") {
       if (isRazorpayConfigured()) {
         const razorpay = getRazorpayInstance();
-        const razorpayOrder = await razorpay.orders.create({
-          amount: toPaise(order.total),
-          currency: "INR",
-          receipt: orderId,
-          notes: {
-            email: payload.email,
-            orderId,
-          },
-        });
+        let razorpayOrder: { id: string };
+        try {
+          razorpayOrder = (await razorpay.orders.create({
+            amount: toPaise(order.total),
+            currency: "INR",
+            receipt: orderId,
+            notes: {
+              email: payload.email,
+              orderId,
+            },
+          })) as { id: string };
+        } catch (razorpayError) {
+          const description = extractRazorpayError(razorpayError);
+          throw new Error(
+            description
+              ? `Razorpay: ${description}`
+              : "Unable to create Razorpay payment order"
+          );
+        }
         razorpayOrderId = razorpayOrder.id;
         await orderRef.update({
           razorpayOrderId,

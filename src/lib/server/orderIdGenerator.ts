@@ -6,6 +6,7 @@ import {
   getOrderYear,
   ORDER_ID_SEQUENCE_START,
 } from "@/lib/orderId";
+import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
 
 const COUNTERS_COLLECTION = "counters";
 
@@ -20,26 +21,28 @@ export async function allocateNextOrderId(
   const db = getAdminFirestore();
   const counterRef = db.collection(COUNTERS_COLLECTION).doc(counterDocId(year));
 
-  const orderId = await db.runTransaction(async (transaction) => {
-    const snapshot = await transaction.get(counterRef);
-    const lastSequence = snapshot.exists
-      ? Number(snapshot.data()?.lastSequence ?? ORDER_ID_SEQUENCE_START - 1)
-      : ORDER_ID_SEQUENCE_START - 1;
+  return withFirestoreRetry(async () => {
+    const orderId = await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(counterRef);
+      const lastSequence = snapshot.exists
+        ? Number(snapshot.data()?.lastSequence ?? ORDER_ID_SEQUENCE_START - 1)
+        : ORDER_ID_SEQUENCE_START - 1;
 
-    const nextSequence = Math.max(lastSequence + 1, ORDER_ID_SEQUENCE_START);
+      const nextSequence = Math.max(lastSequence + 1, ORDER_ID_SEQUENCE_START);
 
-    transaction.set(
-      counterRef,
-      {
-        lastSequence: nextSequence,
-        year,
-        updatedAt: createdAt.toISOString(),
-      },
-      { merge: true }
-    );
+      transaction.set(
+        counterRef,
+        {
+          lastSequence: nextSequence,
+          year,
+          updatedAt: createdAt.toISOString(),
+        },
+        { merge: true }
+      );
 
-    return formatOrderId(nextSequence, year);
-  });
+      return formatOrderId(nextSequence, year);
+    });
 
-  return orderId;
+    return orderId;
+  }, { maxRetries: 4, baseDelayMs: 250 });
 }

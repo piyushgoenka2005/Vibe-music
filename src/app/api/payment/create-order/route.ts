@@ -102,6 +102,7 @@ export async function POST(request: Request) {
       keyId,
     });
   } catch (error) {
+    console.error("[checkout/create-order]", error);
     const message = formatCheckoutError(error);
     const status = /Insufficient stock|Cart is empty|required|Invalid payment method/i.test(
       message
