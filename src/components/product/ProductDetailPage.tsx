@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
 import { useProduct } from "@/hooks/useProduct";
@@ -20,15 +21,16 @@ import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import ShippingEstimator from "./ShippingEstimator";
 import ProductTabs, { type TabId } from "./ProductTabs";
-import FrequentlyBoughtTogether from "./FrequentlyBoughtTogether";
 import ProductCrossSell from "./ProductCrossSell";
-import GuitarSpecShowcase from "./GuitarSpecShowcase";
-import GuitarTonesInMotion from "./GuitarTonesInMotion";
-import GuitarStorySections from "./GuitarStorySections";
 import ProductDetailSkeleton from "./ProductDetailSkeleton";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import { useProductReviewStats } from "@/hooks/useProductReviewStats";
 import "./product-detail.css";
+
+const FrequentlyBoughtTogether = dynamic(() => import("./FrequentlyBoughtTogether"), { ssr: false });
+const GuitarSpecShowcase = dynamic(() => import("./GuitarSpecShowcase"), { ssr: false });
+const GuitarTonesInMotion = dynamic(() => import("./GuitarTonesInMotion"), { ssr: false });
+const GuitarStorySections = dynamic(() => import("./GuitarStorySections"), { ssr: false });
 
 interface ProductDetailPageProps {
   slug: string;
@@ -95,9 +97,12 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   const [tabOverride, setTabOverride] = useState<TabId | undefined>();
 
   const selectedVariant = variantOverride ?? defaultVariant;
-  const attributeSelection =
-    attributeOverride ??
-    (selectedVariant ? buildInitialSelection(selectedVariant) : {});
+  const attributeSelection = useMemo(
+    () =>
+      attributeOverride ??
+      (selectedVariant ? buildInitialSelection(selectedVariant) : {}),
+    [attributeOverride, selectedVariant]
+  );
 
   useEffect(() => {
     if (catalogProduct) {

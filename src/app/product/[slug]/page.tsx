@@ -41,8 +41,13 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
     notFound();
   }
 
+  const heroImageUrl = initialData.product.images?.[0]?.src || initialData.product.image;
+
   return (
     <main className="storefront-page">
+      {heroImageUrl ? (
+        <link rel="preload" as="image" href={heroImageUrl} fetchPriority="high" />
+      ) : null}
       <ProductDetailPage slug={slug} initialData={initialData} />
     </main>
   );

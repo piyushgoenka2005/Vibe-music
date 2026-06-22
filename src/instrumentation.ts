@@ -8,12 +8,12 @@ export async function register() {
     const integrations = getIntegrationChecks();
 
     if (process.env.NODE_ENV === "production") {
-      if (integrations.upstash !== "ok") {
+      if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
         throw new Error(
           "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production"
         );
       }
-      if (integrations.razorpayWebhook !== "ok") {
+      if (!process.env.RAZORPAY_WEBHOOK_SECRET) {
         throw new Error("RAZORPAY_WEBHOOK_SECRET is required in production");
       }
     }
