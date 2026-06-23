@@ -14,13 +14,12 @@ import ShipmentTimeline from "@/components/tracking/ShipmentTimeline";
 export default function TrackingPageContent() {
   const searchParams = useSearchParams();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const user = useAuthStore((s) => s.user);
   const urlOrderId = searchParams.get("orderId") ?? "";
-  const urlEmail = searchParams.get("email") ?? user?.email ?? "";
+  const urlTrackingToken = searchParams.get("trackingToken") ?? "";
   const [orderIdInput, setOrderIdInput] = useState("");
-  const [emailInput, setEmailInput] = useState("");
+  const [trackingTokenInput, setTrackingTokenInput] = useState("");
   const orderId = orderIdInput || urlOrderId;
-  const email = emailInput || urlEmail;
+  const trackingToken = trackingTokenInput || urlTrackingToken;
   const [order, setOrder] = useState<OrderTracking | null>(null);
   const [shipment, setShipment] = useState<PublicShipmentTracking | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,9 +32,9 @@ export default function TrackingPageContent() {
     setOrder(null);
     setShipment(null);
     try {
-      const result = await trackOrder(orderId.trim(), email.trim());
+      const result = await trackOrder(orderId.trim(), trackingToken.trim());
       if (!result) {
-        setError("No order found for that ID and email combination.");
+        setError("No order found for that ID and tracking token.");
         return;
       }
       setOrder(result.order);
@@ -54,8 +53,8 @@ export default function TrackingPageContent() {
           <p className="storefront-page__eyebrow">Order status</p>
           <h1 className="track-page__title">Track your order</h1>
           <p className="track-page__lead">
-            Enter your order ID and the email used at checkout to see shipment
-            status and delivery updates.
+            Enter your order ID and tracking token from your confirmation email
+            to see shipment status and delivery updates.
           </p>
         </header>
 
@@ -70,13 +69,13 @@ export default function TrackingPageContent() {
             />
           </label>
           <label className="track-form__field">
-            Email
+            Tracking token
             <input
               className="track-form__input"
-              type="email"
-              value={email}
-              onChange={(e) => setEmailInput(e.target.value)}
+              value={trackingToken}
+              onChange={(e) => setTrackingTokenInput(e.target.value)}
               required
+              autoComplete="off"
             />
           </label>
           <button type="submit" className="track-form__submit" disabled={loading}>

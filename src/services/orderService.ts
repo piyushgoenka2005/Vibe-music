@@ -51,12 +51,12 @@ export async function createCodOrder(
 
 export async function releaseOrderReservation(
   orderId: string,
-  email: string
+  trackingToken: string
 ): Promise<void> {
   const response = await fetch("/api/payment/release-reservation", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ orderId, email }),
+    body: JSON.stringify({ orderId, trackingToken }),
   });
   if (!response.ok) {
     const data = (await response.json()) as { error?: string };

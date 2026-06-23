@@ -41,6 +41,7 @@ import {
   persistOrder,
   removeOrder,
 } from "@/lib/server/orderRepository";
+import { generateOrderTrackingToken } from "@/lib/server/orderTrackingToken";
 import type { OrderInventoryLine } from "@/types/inventory";
 import type {
   CreateOrderPayload,
@@ -160,6 +161,7 @@ function buildOrderRecord(
   return {
     userId,
     email: payload.email.trim().toLowerCase(),
+    trackingToken: generateOrderTrackingToken(),
     customerName,
     customerPhone,
     isGuestOrder: !userId,

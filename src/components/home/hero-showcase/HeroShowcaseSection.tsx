@@ -7,7 +7,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   HERO_SHOWCASE_SCENES,
   MARKETING_HERO_ROTATE_MS,
@@ -65,9 +65,11 @@ export default function HeroShowcaseSection() {
 
   useEffect(() => {
     if (COUNT <= 1 || isPaused || reduceMotion) return;
-    const timer = window.setInterval(goNext, MARKETING_HERO_ROTATE_MS);
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => wrapSceneIndex(current + 1, COUNT));
+    }, MARKETING_HERO_ROTATE_MS);
     return () => window.clearInterval(timer);
-  }, [goNext, isPaused, reduceMotion]);
+  }, [isPaused, reduceMotion]);
 
   useEffect(() => {
     const next = SCENES[(activeIndex + 1) % COUNT];
@@ -151,13 +153,7 @@ export default function HeroShowcaseSection() {
       aria-roledescription="carousel"
       aria-label="Featured gear showcase"
       data-vibe-section="hero-showcase"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => {
-        setIsPaused(false);
-        setPan({ x: 0, y: 0 });
-      }}
-      onFocusCapture={() => setIsPaused(true)}
-      onBlurCapture={() => setIsPaused(false)}
+      onMouseLeave={() => setPan({ x: 0, y: 0 })}
     >
       <div
         ref={stageRef}
@@ -194,16 +190,13 @@ export default function HeroShowcaseSection() {
                 imageFailed={Boolean(failedSrc[prevScene.src])}
                 onImageError={() => handleImageError(prevScene.src)}
               />
-              <AnimatePresence mode="popLayout" initial={false}>
-                <HeroPanel
-                  key={activeScene.id}
-                  scene={activeScene}
-                  variant="center"
-                  isActive
-                  imageFailed={Boolean(failedSrc[activeScene.src])}
-                  onImageError={() => handleImageError(activeScene.src)}
-                />
-              </AnimatePresence>
+              <HeroPanel
+                scene={activeScene}
+                variant="center"
+                isActive
+                imageFailed={Boolean(failedSrc[activeScene.src])}
+                onImageError={() => handleImageError(activeScene.src)}
+              />
               <HeroPanel
                 scene={nextScene}
                 variant="right"
@@ -212,27 +205,36 @@ export default function HeroShowcaseSection() {
               />
             </>
           ) : (
-            <AnimatePresence mode="wait" initial={false}>
-              <HeroPanel
-                key={activeScene.id}
-                scene={activeScene}
-                variant="center"
-                isActive
-                imageFailed={Boolean(failedSrc[activeScene.src])}
-                onImageError={() => handleImageError(activeScene.src)}
-              />
-            </AnimatePresence>
+            <HeroPanel
+              scene={activeScene}
+              variant="center"
+              isActive
+              imageFailed={Boolean(failedSrc[activeScene.src])}
+              onImageError={() => handleImageError(activeScene.src)}
+            />
           )}
         </motion.div>
 
-        <HeroNavControls onNext={goNext} onPrev={goPrev} />
+        <div
+          className="hero-showcase__controls"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onFocusCapture={() => setIsPaused(true)}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+              setIsPaused(false);
+            }
+          }}
+        >
+          <HeroNavControls onNext={goNext} onPrev={goPrev} />
 
-        <HeroThumbnailStrip
-          activeIndex={activeIndex}
-          failedSrc={failedSrc}
-          scenes={SCENES}
-          onSelect={goTo}
-        />
+          <HeroThumbnailStrip
+            activeIndex={activeIndex}
+            failedSrc={failedSrc}
+            scenes={SCENES}
+            onSelect={goTo}
+          />
+        </div>
       </div>
     </section>
   );

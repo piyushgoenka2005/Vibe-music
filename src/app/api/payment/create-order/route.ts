@@ -103,12 +103,17 @@ export async function POST(request: Request) {
 
     if (payload.paymentMethod === "cod") {
       void sendOrderConfirmationEmail(order);
-      return NextResponse.json({ orderId: order.id, order });
+      return NextResponse.json({
+        orderId: order.id,
+        trackingToken: order.trackingToken,
+        order,
+      });
     }
 
     if (demoMode) {
       return NextResponse.json({
         orderId: order.id,
+        trackingToken: order.trackingToken,
         demoMode: true,
       });
     }
@@ -122,6 +127,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       orderId: order.id,
+      trackingToken: order.trackingToken,
       razorpayOrderId,
       amount: toPaise(order.total),
       currency: "INR",

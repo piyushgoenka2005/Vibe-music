@@ -20,6 +20,7 @@ import "@/components/checkout/checkout.css";
 export default function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
+  const trackingTokenParam = searchParams.get("trackingToken");
   const emailParam = searchParams.get("email");
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const clearCart = useCartStore((s) => s.clearCart);
@@ -79,8 +80,8 @@ export default function CheckoutSuccessContent() {
   }, [orderId, emailParam, isAuthenticated]);
 
   const trackHref =
-    orderId && (emailParam || order?.email)
-      ? `${ROUTES.trackOrder}?orderId=${encodeURIComponent(orderId)}&email=${encodeURIComponent(emailParam ?? order?.email ?? "")}`
+    orderId && (trackingTokenParam || order?.trackingToken)
+      ? `${ROUTES.trackOrder}?orderId=${encodeURIComponent(orderId)}&trackingToken=${encodeURIComponent(trackingTokenParam ?? order?.trackingToken ?? "")}`
       : ROUTES.trackOrder;
 
   if (loading && !order) {

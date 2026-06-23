@@ -15,6 +15,7 @@ export const ROUTES = {
   trackOrder: "/track-order",
   account: "/account",
   accountOrders: "/account/orders",
+  accountOrder: (orderId: string) => `/account/orders/${orderId}`,
   accountProfile: "/account/profile",
   accountAddresses: "/account/addresses",
   accountSettings: "/account/settings",

@@ -85,14 +85,18 @@ export default function AccountOrders() {
                   {formatCurrency(order.total)}
                 </p>
                 <Link
-                  href={`${ROUTES.trackOrder}?orderId=${encodeURIComponent(order.id)}`}
+                  href={
+                    order.trackingToken
+                      ? `${ROUTES.trackOrder}?orderId=${encodeURIComponent(order.id)}&trackingToken=${encodeURIComponent(order.trackingToken)}`
+                      : `${ROUTES.trackOrder}?orderId=${encodeURIComponent(order.id)}`
+                  }
                   className="acct__btn acct__btn--secondary acct__btn--sm"
                   style={{ marginTop: 8, marginRight: 8 }}
                 >
                   Track shipment
                 </Link>
                 <Link
-                  href={`${ROUTES.checkoutSuccess}?orderId=${order.id}`}
+                  href={ROUTES.accountOrder(order.id)}
                   className="acct__btn acct__btn--secondary acct__btn--sm"
                   style={{ marginTop: 8 }}
                 >

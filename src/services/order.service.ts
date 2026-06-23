@@ -11,9 +11,9 @@ export interface OrderTrackingResult {
 
 export async function trackOrder(
   orderId: string,
-  email: string
+  trackingToken: string
 ): Promise<OrderTrackingResult | null> {
-  const params = new URLSearchParams({ orderId, email });
+  const params = new URLSearchParams({ orderId, trackingToken });
   const response = await fetch(`/api/orders/track?${params.toString()}`);
 
   if (response.status === 404) {

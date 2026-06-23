@@ -22,11 +22,11 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    const admin = await requireAdmin("orders:write", request);
     const { id } = await context.params;
     const body = await request.json();
 
     if (body.note) {
+      const admin = await requireAdmin("orders:write", request);
       const parsed = adminNoteSchema.parse(body);
       await addOrderNote(id, parsed.note, admin.email);
       const order = await getOrderById(id);
@@ -34,6 +34,9 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const parsed = adminOrderStatusSchema.parse(body);
+    const permission =
+      parsed.status === "refunded" ? "orders:refund" : "orders:write";
+    const admin = await requireAdmin(permission, request);
     const order = await updateOrderStatus(
       id,
       parsed.status,
