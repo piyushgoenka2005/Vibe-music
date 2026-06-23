@@ -308,6 +308,7 @@ body.site-nav-open .site-header--scroll-hidden {
 }
 
 .site-header__bar {
+  border-bottom: 1px solid var(--border-default);
   overflow: visible;
 }
 
