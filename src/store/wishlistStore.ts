@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist } from "zustand/middleware";
+import { createSafeJSONStorage } from "@/lib/storage/safeLocalStorage";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";
@@ -232,7 +233,7 @@ export const useWishlistStore = create<WishlistState>()(
     }),
     {
       name: "vibe-wishlist-guest",
-      storage: createJSONStorage(() => localStorage),
+      storage: createSafeJSONStorage(),
       partialize: (state) => ({ items: state.items }),
       onRehydrateStorage: () => (state) => {
         state?._setHydrated();

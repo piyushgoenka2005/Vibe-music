@@ -1,6 +1,9 @@
 import "server-only";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import {
+  tryFirestoreFast,
+} from "@/lib/server/firestoreErrors";
 import type { ProductReviewStats } from "@/types/review";
 
 const STATS_COLLECTION = "product_review_stats";
@@ -9,6 +12,19 @@ const PRODUCTS_COLLECTION = "products";
 
 function emptyDistribution(): ProductReviewStats["distribution"] {
   return { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 };
+}
+
+export function emptyProductReviewStats(productId: string): ProductReviewStats {
+  return {
+    productId,
+    totalReviews: 0,
+    averageRating: 0,
+    distribution: emptyDistribution(),
+    verifiedCount: 0,
+    withImagesCount: 0,
+    lastReviewAt: null,
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 export function buildStatsFromReviews(
@@ -52,7 +68,7 @@ export function buildStatsFromReviews(
   };
 }
 
-export async function getProductReviewStats(
+async function getProductReviewStatsFromFirestore(
   productId: string
 ): Promise<ProductReviewStats> {
   const db = getAdminFirestore();
@@ -90,16 +106,20 @@ export async function getProductReviewStats(
     return recalculateProductReviewStats(productId);
   }
 
-  return {
-    productId,
-    totalReviews: 0,
-    averageRating: 0,
-    distribution: emptyDistribution(),
-    verifiedCount: 0,
-    withImagesCount: 0,
-    lastReviewAt: null,
-    updatedAt: new Date().toISOString(),
-  };
+  return emptyProductReviewStats(productId);
+}
+
+export async function getProductReviewStats(
+  productId: string
+): Promise<ProductReviewStats> {
+  return tryFirestoreFast(
+    () => getProductReviewStatsFromFirestore(productId),
+    {
+      domain: "reviews",
+      context: `stats for ${productId}`,
+      fallback: () => emptyProductReviewStats(productId),
+    }
+  );
 }
 
 export async function recalculateProductReviewStats(

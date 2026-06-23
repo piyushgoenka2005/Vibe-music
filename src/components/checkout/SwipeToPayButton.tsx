@@ -24,6 +24,7 @@ interface SwipeToPayButtonProps {
   disabled?: boolean;
   loading?: boolean;
   preparing?: boolean;
+  loadingLabel?: string;
   label?: string;
 }
 
@@ -43,6 +44,7 @@ export default function SwipeToPayButton({
   disabled = false,
   loading = false,
   preparing = false,
+  loadingLabel,
   label = "Swipe to Pay",
 }: SwipeToPayButtonProps) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -181,7 +183,7 @@ export default function SwipeToPayButton({
   }, [completed, dragX, finishSwipe, measureMaxDrag]);
 
   const displayLabel = loading
-    ? "Opening Razorpay…"
+    ? loadingLabel ?? "Opening Razorpay…"
     : preparing
       ? "Preparing secure checkout…"
       : completed

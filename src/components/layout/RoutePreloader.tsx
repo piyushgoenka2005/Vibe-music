@@ -8,6 +8,7 @@ const ROUTES_TO_PREFETCH = [
   "/compare",
   "/wishlist",
   "/cart",
+  "/checkout",
   "/account",
   "/deals",
   "/brands",

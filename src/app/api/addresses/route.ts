@@ -32,7 +32,14 @@ export async function GET() {
     }
 
     const addresses = await getUserAddresses(sessionUser.uid);
-    return NextResponse.json({ addresses });
+    return NextResponse.json(
+      { addresses },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+        },
+      }
+    );
   } catch (error) {
     const { message, status } = formatRouteError(error);
     return NextResponse.json({ error: message }, { status });

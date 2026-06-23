@@ -1,6 +1,11 @@
 import "server-only";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import {
+  isGlobalFirestoreCircuitOpen,
+  logFirestoreWarning,
+  tryFirestoreFast,
+} from "@/lib/server/firestoreErrors";
 import type { Order, OrderStatus } from "@/types/order";
 
 const VERIFIED_STATUSES: OrderStatus[] = ["delivered", "shipped", "confirmed"];
@@ -10,7 +15,7 @@ export interface PurchaseVerification {
   orderId?: string;
 }
 
-export async function hasPurchasedProduct(
+async function queryPurchasedProduct(
   userId: string,
   email: string | null | undefined,
   productId: string
@@ -46,4 +51,30 @@ export async function hasPurchasedProduct(
   }
 
   return { verified: false };
+}
+
+export async function hasPurchasedProduct(
+  userId: string,
+  email: string | null | undefined,
+  productId: string
+): Promise<PurchaseVerification> {
+  if (isGlobalFirestoreCircuitOpen()) {
+    return { verified: false };
+  }
+
+  return tryFirestoreFast(
+    () => queryPurchasedProduct(userId, email, productId),
+    {
+      domain: "orders",
+      context: "Unable to verify purchase history",
+      fallback: () => {
+        logFirestoreWarning(
+          "orders",
+          new Error("Firestore unavailable"),
+          "Purchase verification skipped — Firestore unavailable"
+        );
+        return { verified: false };
+      },
+    }
+  );
 }

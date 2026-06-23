@@ -32,7 +32,7 @@ function enrichStory(
     id: seed.id,
     title: seed.title,
     productId: product.id,
-    videoUrl: reel?.videoSrc ?? seed.videoUrl,
+    videoUrl: reel?.videoSrc?.trim() ? reel.videoSrc : seed.videoUrl,
     posterUrl,
     category: product.category,
     price: product.price,
@@ -55,7 +55,12 @@ function enrichStory(
 function buildPlaceholderStory(seed: GearStorySeed, index: number): GearStory {
   const reel = STYLE_STORY_REELS[index];
   const videoUrl = reel?.videoSrc ?? seed.videoUrl;
-  const posterUrl = reel?.thumbnailSrc ?? "";
+  const posterUrl =
+    reel?.thumbnailSrc && !reel.thumbnailSrc.startsWith("/images/style-story/")
+      ? reel.thumbnailSrc
+      : index % 2 === 0
+        ? "/images/guitar-1.webp"
+        : "/images/guitar-2.webp";
 
   return {
     id: seed.id,

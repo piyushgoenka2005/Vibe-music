@@ -2,10 +2,12 @@ import Razorpay from "razorpay";
 import { getAdminFirestore, isFirebaseAdminConfigured } from "@/lib/firebase/admin";
 import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
 import {
-  isFirestoreFastFailError,
+  isFirestoreDegraded,
   isFirestoreUnavailableError,
+  isFirestoreFastFailError,
   isGlobalFirestoreCircuitOpen,
   logFirestoreWarning,
+  markFirestoreUnavailable,
   withFirestoreDeadline,
 } from "@/lib/server/firestoreErrors";
 import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
@@ -33,6 +35,12 @@ import {
   logPaymentError,
   logRazorpayEnvPresence,
 } from "@/lib/server/paymentDiagnostics";
+import {
+  fetchOrderById,
+  listOrdersForUser as listStoredOrdersForUser,
+  persistOrder,
+  removeOrder,
+} from "@/lib/server/orderRepository";
 import type { OrderInventoryLine } from "@/types/inventory";
 import type {
   CreateOrderPayload,
@@ -177,6 +185,33 @@ function buildOrderRecord(
   };
 }
 
+async function createRazorpayPaymentOrder(
+  order: Order,
+  payload: CreateOrderPayload,
+  orderId: string
+): Promise<string> {
+  const razorpay = getRazorpayInstance();
+  try {
+    const razorpayOrder = (await razorpay.orders.create({
+      amount: toPaise(order.total),
+      currency: "INR",
+      receipt: orderId,
+      notes: {
+        email: payload.email,
+        orderId,
+      },
+    })) as { id: string };
+    return razorpayOrder.id;
+  } catch (razorpayError) {
+    const description = extractRazorpayError(razorpayError);
+    throw new Error(
+      description
+        ? `Razorpay: ${description}`
+        : "Unable to create Razorpay payment order"
+    );
+  }
+}
+
 export async function createOrder(
   payload: CreateOrderPayload,
   userId?: string
@@ -192,86 +227,76 @@ export async function createOrder(
     firebaseConfigured: isFirebaseAdminConfigured(),
   });
 
-  const db = getAdminFirestore();
   logPayment("Allocating order ID");
   const orderId = await allocateNextOrderId();
   logPayment("Order ID allocated", { orderId });
-
-  const orderRef = db.collection("orders").doc(orderId);
   const orderData = buildOrderRecord(orderId, payload, userId);
   const inventoryLines = toInventoryLines(payload.items);
 
   const order: Order = { id: orderId, ...orderData };
-  logPayment("Firestore write started", { orderId });
-  await withFirestoreRetry(
-    () => orderRef.set(sanitizeForFirestore(order)),
-    { maxRetries: 3, baseDelayMs: 200 }
-  );
-  logPayment("Firestore write completed", { orderId });
+  let razorpayOrderId: string | undefined;
+  let demoMode: boolean | undefined;
+  let persisted = false;
 
   try {
-    try {
-      if (payload.paymentMethod === "cod") {
-        logPayment("Inventory reservation started (COD)", { orderId });
-        await reserveAndFulfillStockForOrder(orderId, inventoryLines);
-        order.inventoryStatus = "fulfilled";
-      } else {
-        logPayment("Inventory reservation started (online)", { orderId });
-        await reserveStockForOrder(orderId, inventoryLines);
-        order.inventoryStatus = "reserved";
-      }
-      logPayment("Inventory reservation completed", { orderId });
-    } catch (inventoryError) {
-      if (isFirestoreUnavailableError(inventoryError)) {
-        logFirestoreWarning(
-          "orders",
-          inventoryError,
-          "Skipping inventory reservation — Firestore quota exceeded"
-        );
-        order.inventoryStatus = "none";
-      } else {
-        throw inventoryError;
-      }
-    }
-
-    let razorpayOrderId: string | undefined;
-
     if (payload.paymentMethod === "razorpay") {
       if (isRazorpayConfigured()) {
         logPayment("Creating Razorpay order", { orderId, amountPaise: toPaise(order.total) });
-        const razorpay = getRazorpayInstance();
-        let razorpayOrder: { id: string };
-        try {
-          razorpayOrder = (await razorpay.orders.create({
-            amount: toPaise(order.total),
-            currency: "INR",
-            receipt: orderId,
-            notes: {
-              email: payload.email,
-              orderId,
-            },
-          })) as { id: string };
-        } catch (razorpayError) {
-          logPaymentError(razorpayError, { orderId, step: "razorpay.orders.create" });
-          const description = extractRazorpayError(razorpayError);
-          throw new Error(
-            description
-              ? `Razorpay: ${description}`
-              : "Unable to create Razorpay payment order"
-          );
-        }
-        razorpayOrderId = razorpayOrder.id;
+        razorpayOrderId = await createRazorpayPaymentOrder(
+          order,
+          payload,
+          orderId
+        );
         logPayment("Razorpay order created", { orderId, razorpayOrderId });
-        await orderRef.update({
-          razorpayOrderId,
-          updatedAt: new Date().toISOString(),
-        });
         order.razorpayOrderId = razorpayOrderId;
-      } else if (!canUseDemoPayments()) {
+      } else if (canUseDemoPayments()) {
+        demoMode = true;
+      } else {
         throw new Error(
           "Online payments are not configured. Add Razorpay keys to .env.local."
         );
       }
+    }
+
+    logPayment("Firestore write started", { orderId });
+    await persistOrder(order);
+    persisted = true;
+    logPayment("Firestore write completed", { orderId });
+
+    const skipInventory = isGlobalFirestoreCircuitOpen();
+
+    const reserveInventory = async (): Promise<void> => {
+      if (skipInventory) return;
+
+      try {
+        if (payload.paymentMethod === "cod") {
+          logPayment("Inventory reservation started (COD)", { orderId });
+          await reserveAndFulfillStockForOrder(orderId, inventoryLines);
+          order.inventoryStatus = "fulfilled";
+        } else {
+          logPayment("Inventory reservation started (online)", { orderId });
+          await reserveStockForOrder(orderId, inventoryLines);
+          order.inventoryStatus = "reserved";
+        }
+        logPayment("Inventory reservation completed", { orderId });
+      } catch (inventoryError) {
+        if (isFirestoreDegraded(inventoryError)) {
+          logFirestoreWarning(
+            "orders",
+            inventoryError,
+            "Skipping inventory reservation — Firestore quota exceeded"
+          );
+          order.inventoryStatus = "none";
+        } else {
+          throw inventoryError;
+        }
+      }
+    };
+
+    if (payload.paymentMethod === "razorpay") {
+      void reserveInventory();
+    } else {
+      await reserveInventory();
     }
 
     logPayment("Create order completed", { orderId, paymentMethod: payload.paymentMethod });
@@ -284,12 +309,14 @@ export async function createOrder(
       demoMode:
         payload.paymentMethod === "razorpay" && canUseDemoPayments()
           ? true
-          : undefined,
+          : demoMode,
     };
   } catch (error) {
     logPaymentError(error, { orderId, step: "createOrder" });
-    await releaseOrderReservation(orderId).catch(() => undefined);
-    await orderRef.delete().catch(() => undefined);
+    if (persisted) {
+      await releaseOrderReservation(orderId).catch(() => undefined);
+      await removeOrder(orderId).catch(() => undefined);
+    }
     throw error;
   }
 }
@@ -352,78 +379,55 @@ export async function releaseOrderReservation(
   orderId: string,
   email?: string
 ): Promise<void> {
-  const order = await getOrderById(orderId);
-  if (!order) {
-    throw new Error("Order not found");
+  if (isGlobalFirestoreCircuitOpen()) {
+    return;
   }
 
-  if (email) {
-    const normalized = email.trim().toLowerCase();
-    if (order.email !== normalized) {
-      throw new Error("Order email does not match");
+  try {
+    const order = await fetchOrderById(orderId);
+    if (!order) {
+      return;
     }
-  }
 
-  if (order.inventoryStatus !== "reserved") {
-    return;
-  }
+    if (email) {
+      const normalized = email.trim().toLowerCase();
+      if (order.email !== normalized) {
+        return;
+      }
+    }
 
-  if (order.paymentStatus === "paid") {
-    return;
-  }
+    if (order.inventoryStatus !== "reserved") {
+      return;
+    }
 
-  const inventoryLines = toInventoryLines(order.items);
-  await releaseReservedStockForOrder(orderId, inventoryLines);
+    if (order.paymentStatus === "paid") {
+      return;
+    }
+
+    const inventoryLines = toInventoryLines(order.items);
+    await releaseReservedStockForOrder(orderId, inventoryLines);
+  } catch (error) {
+    if (isFirestoreDegraded(error)) {
+      logFirestoreWarning(
+        "orders",
+        error,
+        "Skipping reservation release — Firestore unavailable"
+      );
+      return;
+    }
+    throw error;
+  }
 }
 
 export async function getOrderById(orderId: string): Promise<Order | null> {
-  const db = getAdminFirestore();
-  const doc = await db.collection("orders").doc(orderId).get();
-  if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() } as Order;
+  return fetchOrderById(orderId);
 }
 
 export async function listOrdersForUser(
   uid?: string,
   email?: string
 ): Promise<Order[]> {
-  const db = getAdminFirestore();
-  const byId = new Map<string, Order>();
-
-  if (uid) {
-    const snapshot = await db
-      .collection("orders")
-      .where("userId", "==", uid)
-      .get();
-    for (const doc of snapshot.docs) {
-      byId.set(doc.id, { id: doc.id, ...doc.data() } as Order);
-    }
-  }
-
-  const normalizedEmail = email?.trim().toLowerCase();
-  const emailVariants = email
-    ? Array.from(
-        new Set([normalizedEmail, email.trim()].filter(Boolean) as string[])
-      )
-    : [];
-
-  for (const variant of emailVariants) {
-    const snapshot = await db
-      .collection("orders")
-      .where("email", "==", variant)
-      .get();
-    for (const doc of snapshot.docs) {
-      if (!byId.has(doc.id)) {
-        byId.set(doc.id, { id: doc.id, ...doc.data() } as Order);
-      }
-    }
-  }
-
-  return Array.from(byId.values()).sort(
-    (a, b) =>
-      new Date(b.createdAt ?? 0).getTime() -
-      new Date(a.createdAt ?? 0).getTime()
-  );
+  return listStoredOrdersForUser(uid, email);
 }
 
 export function normalizeGstRate(rate: number | undefined): GSTRate {

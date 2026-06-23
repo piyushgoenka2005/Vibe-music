@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent } fro
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import { preloadRazorpayCheckout } from "@/hooks/useRazorpay";
 import CheckoutSummary, {
   computeCheckoutInvoice,
 } from "@/components/checkout/CheckoutSummary";
@@ -131,7 +132,6 @@ export default function CheckoutPageContent() {
   const {
     addresses,
     defaultAddress,
-    isLoading: addressesLoading,
     createAddress,
     deleteAddress,
     isDeleting,
@@ -158,8 +158,14 @@ export default function CheckoutPageContent() {
     useState<OnlinePaymentChannel>("upi");
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
-  const [isSavingAddress, setIsSavingAddress] = useState(false);
   const [addressError, setAddressError] = useState<string | null>(null);
+
+  useEffect(() => {
+    preloadRazorpayCheckout();
+    if (step === "summary" || step === "payment") {
+      void import("@/components/checkout/SwipeToPayButton");
+    }
+  }, [step]);
 
   useEffect(() => {
     const fromUrl = searchParams.get("coupon") ?? searchParams.get("code");
@@ -255,6 +261,11 @@ export default function CheckoutPageContent() {
     paymentMethod,
     disabled:
       step !== "payment" || !resolvedAddress || !hasValidContact,
+    prefetchEnabled:
+      step === "payment" &&
+      paymentMethod === "razorpay" &&
+      Boolean(resolvedAddress) &&
+      hasValidContact,
   });
 
   useEffect(() => {
@@ -276,6 +287,7 @@ export default function CheckoutPageContent() {
     }
 
     let shipping: ShippingAddress | null = null;
+    let pendingAddressSave: Parameters<typeof createAddress>[0] | null = null;
 
     if (useNewAddress || savedAddresses.length === 0) {
       if (!isAddressComplete(addressDraft)) {
@@ -290,32 +302,20 @@ export default function CheckoutPageContent() {
         );
 
         if (!alreadySaved) {
-          setIsSavingAddress(true);
-          try {
-            await createAddress({
-              label: "Checkout",
-              fullName: shipping.name,
-              phone: shipping.phone ?? "",
-              addressLine1: shipping.line1,
-              ...(shipping.line2?.trim()
-                ? { addressLine2: shipping.line2.trim() }
-                : {}),
-              city: shipping.city,
-              state: shipping.state,
-              postalCode: shipping.postalCode,
-              country: shipping.country || "India",
-              isDefault: savedAddresses.length === 0,
-            });
-          } catch (error) {
-            showToast(
-              error instanceof Error
-                ? `Address not saved (${error.message}). Continuing checkout.`
-                : "Address not saved. Continuing checkout.",
-              "info"
-            );
-          } finally {
-            setIsSavingAddress(false);
-          }
+          pendingAddressSave = {
+            label: "Checkout",
+            fullName: shipping.name,
+            phone: shipping.phone ?? "",
+            addressLine1: shipping.line1,
+            ...(shipping.line2?.trim()
+              ? { addressLine2: shipping.line2.trim() }
+              : {}),
+            city: shipping.city,
+            state: shipping.state,
+            postalCode: shipping.postalCode,
+            country: shipping.country || "India",
+            isDefault: savedAddresses.length === 0,
+          };
         }
       }
     } else {
@@ -330,6 +330,17 @@ export default function CheckoutPageContent() {
     setConfirmedAddress(shipping);
     setStep("summary");
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    if (pendingAddressSave) {
+      void createAddress(pendingAddressSave).catch((error) => {
+        showToast(
+          error instanceof Error
+            ? `Address not saved (${error.message}). Continuing checkout.`
+            : "Address not saved. Continuing checkout.",
+          "info"
+        );
+      });
+    }
   }
 
   function handleEditAddress() {
@@ -500,10 +511,6 @@ export default function CheckoutPageContent() {
           {step === "address" ? (
             <>
               <h2 className="checkout-panel__title">Delivery Address</h2>
-
-              {isAuthenticated && addressesLoading ? (
-                <p>Loading saved addresses…</p>
-              ) : null}
 
               {savedAddresses.length > 0 ? (
                 <div className="checkout-address-list">
@@ -697,11 +704,11 @@ export default function CheckoutPageContent() {
                   Back to Cart
                 </CheckoutGlassButton>
                 <CheckoutGlassButton
-                  disabled={!canProceedFromAddress || isSavingAddress}
+                  disabled={!canProceedFromAddress}
                   onClick={() => void handleContinueFromAddress()}
                   variant="solid"
                 >
-                  {isSavingAddress ? "Saving address…" : "Continue to Review"}
+                  Continue to Review
                 </CheckoutGlassButton>
               </div>
             </>
@@ -820,8 +827,9 @@ export default function CheckoutPageContent() {
                   onPay: payment.pay,
                   disabled: payment.isDisabled,
                   loading: payment.isProcessing || payment.isLoading,
-                  preparing:
-                    paymentMethod === "razorpay" && !payment.isReady,
+                  loadingLabel:
+                    payment.processingLabel ??
+                    (payment.isLoading ? "Opening Razorpay…" : undefined),
                   paymentMethod,
                   error: payment.error,
                 }
@@ -841,10 +849,10 @@ export default function CheckoutPageContent() {
           {step === "address" ? (
             <CheckoutGlassButton
               className="checkout-mobile-bar__cta"
-              disabled={!canProceedFromAddress || isSavingAddress}
+              disabled={!canProceedFromAddress}
               onClick={() => void handleContinueFromAddress()}
             >
-              {isSavingAddress ? "Saving…" : "Continue"}
+              Continue
             </CheckoutGlassButton>
           ) : (
             <CheckoutGlassButton

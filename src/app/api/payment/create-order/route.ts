@@ -39,8 +39,10 @@ export async function POST(request: Request) {
       return csrfError;
     }
 
-    const sessionUser = await getSessionUser();
-    const body = (await request.json()) as CreateOrderPayload;
+    const [sessionUser, body] = await Promise.all([
+      getSessionUser(),
+      request.json() as Promise<CreateOrderPayload>,
+    ]);
     logPayment("Request parsed", {
       paymentMethod: body.paymentMethod,
       itemCount: body.items?.length ?? 0,

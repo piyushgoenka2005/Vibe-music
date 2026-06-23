@@ -27,6 +27,7 @@ export function getIntegrationChecks(): IntegrationChecks {
       process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID
     ),
     razorpayWebhook: configured(process.env.RAZORPAY_WEBHOOK_SECRET),
+
     cloudinary: configured(
       process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
       process.env.CLOUDINARY_API_KEY,

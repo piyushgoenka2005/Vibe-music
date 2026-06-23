@@ -4,7 +4,6 @@ export async function register() {
     validateEnv();
 
     const { getIntegrationChecks } = await import("@/lib/server/integrationConfig");
-    const { logWarn } = await import("@/lib/server/logger");
     const integrations = getIntegrationChecks();
 
     if (process.env.NODE_ENV === "production") {
@@ -27,6 +26,14 @@ export async function register() {
         "@/lib/server/firestoreHealth"
       );
       const firestoreHealth = await verifyFirestoreConnection();
+      if (!firestoreHealth.ok && process.env.NODE_ENV !== "production") {
+        const { logInfo } = await import("@/lib/server/logger");
+        logInfo(
+          "Dev mode: Firestore degraded — APIs will use local JSON / file fallbacks",
+          "instrumentation",
+          { error: firestoreHealth.error }
+        );
+      }
       if (!firestoreHealth.ok && process.env.NODE_ENV === "production") {
         throw new Error(
           `Firestore initialization failed: ${firestoreHealth.error ?? "unknown"}`

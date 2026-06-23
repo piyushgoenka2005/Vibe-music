@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const sessionCookie = await createSessionCookie(idToken);
 
     if (decoded.uid && decoded.email) {
-      await linkGuestOrdersToUser(decoded.uid, decoded.email);
+      void linkGuestOrdersToUser(decoded.uid, decoded.email).catch(() => undefined);
     }
 
     invalidateSessionCache(sessionCookie);

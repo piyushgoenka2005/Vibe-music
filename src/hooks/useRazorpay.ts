@@ -60,6 +60,8 @@ declare global {
   }
 }
 
+let scriptLoadPromise: Promise<void> | null = null;
+
 function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
   if (window.Razorpay) {
     return Promise.resolve();
@@ -93,7 +95,7 @@ function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
   });
 }
 
-function loadRazorpayScript(): Promise<void> {
+function injectRazorpayScript(): Promise<void> {
   if (typeof window === "undefined") {
     return Promise.reject(new Error("Razorpay can only load in the browser"));
   }
@@ -130,19 +132,45 @@ function loadRazorpayScript(): Promise<void> {
       reject(new Error("Failed to load Razorpay SDK"));
     };
 
-    document.body.appendChild(script);
+    document.head.appendChild(script);
   });
+}
+
+/** Shared loader — dedupes concurrent script requests across the app. */
+export function ensureRazorpayScriptLoaded(): Promise<void> {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Razorpay can only load in the browser"));
+  }
+
+  if (window.Razorpay) {
+    return Promise.resolve();
+  }
+
+  if (!scriptLoadPromise) {
+    scriptLoadPromise = injectRazorpayScript().catch((error) => {
+      scriptLoadPromise = null;
+      throw error;
+    });
+  }
+
+  return scriptLoadPromise;
 }
 
 export function preloadRazorpayCheckout(): void {
   if (typeof window === "undefined") return;
-  void loadRazorpayScript().catch(() => undefined);
+  void ensureRazorpayScriptLoaded().catch(() => undefined);
 
-  if (!document.querySelector('link[data-razorpay-preconnect="true"]')) {
+  for (const href of [
+    "https://checkout.razorpay.com",
+    "https://api.razorpay.com",
+  ]) {
+    if (document.querySelector(`link[data-razorpay-preconnect="${href}"]`)) {
+      continue;
+    }
     const preconnect = document.createElement("link");
     preconnect.rel = "preconnect";
-    preconnect.href = "https://checkout.razorpay.com";
-    preconnect.dataset.razorpayPreconnect = "true";
+    preconnect.href = href;
+    preconnect.dataset.razorpayPreconnect = href;
     document.head.appendChild(preconnect);
   }
 }
@@ -156,7 +184,7 @@ export function useRazorpay() {
   useEffect(() => {
     let cancelled = false;
 
-    loadRazorpayScript()
+    ensureRazorpayScriptLoaded()
       .then(() => {
         if (!cancelled) {
           setIsReady(true);
@@ -184,7 +212,7 @@ export function useRazorpay() {
       setError(null);
 
       try {
-        await loadRazorpayScript();
+        await ensureRazorpayScriptLoaded();
 
         if (!window.Razorpay) {
           throw new Error("Razorpay SDK unavailable");

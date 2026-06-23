@@ -34,25 +34,39 @@ export default function GearStoryCard({
   onOpen,
 }: GearStoryCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hasVideo = Boolean(story.videoUrl?.trim());
 
-  useContinuousVideo(videoRef, { forcePaused: isPaused, playDelayMs });
+  useContinuousVideo(videoRef, {
+    forcePaused: isPaused || !hasVideo,
+    playDelayMs,
+  });
 
   return (
     <article className="gear-story-card" data-story-id={story.id}>
       <div className="gear-story-card__media">
-        <video
-          ref={videoRef}
-          className="gear-story-card__video"
-          src={story.videoUrl}
-          poster={story.posterUrl || undefined}
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          disablePictureInPicture
-          controls={false}
-          aria-hidden="true"
-        />
+        {hasVideo ? (
+          <video
+            ref={videoRef}
+            className="gear-story-card__video"
+            src={story.videoUrl}
+            poster={story.posterUrl || undefined}
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            disablePictureInPicture
+            controls={false}
+            aria-hidden="true"
+          />
+        ) : story.posterUrl ? (
+          <img
+            className="gear-story-card__video"
+            src={story.posterUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
+        ) : null}
         <div className="gear-story-card__overlay">
           <a
             href={SOCIAL_LINKS.instagram}

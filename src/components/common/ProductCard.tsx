@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import { formatCurrency } from "@/utils/currency";
@@ -36,8 +37,18 @@ function availabilityClass(availability: Product["availability"]): string {
 }
 
 export default function ProductCard({ product, view }: ProductCardProps) {
+  const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
   const openDrawer = useCartStore((s) => s.openDrawer);
+  const productHref = `/product/${product.slug}`;
+
+  function prefetchProduct() {
+    try {
+      router.prefetch(productHref);
+    } catch {
+      /* prefetch is best-effort */
+    }
+  }
 
   function handleAdd() {
     if (product.availability === "out-of-stock") return;
@@ -53,10 +64,13 @@ export default function ProductCard({ product, view }: ProductCardProps) {
     >
       <div style={{ position: "relative" }}>
         <Link
-          href={`/product/${product.slug}`}
+          href={productHref}
           className="cat-product-card__image"
           aria-hidden="true"
           tabIndex={-1}
+          prefetch
+          onMouseEnter={prefetchProduct}
+          onFocus={prefetchProduct}
         >
           <img
             src={optimizeImageUrl(product.image, "productCard")}
@@ -71,7 +85,13 @@ export default function ProductCard({ product, view }: ProductCardProps) {
       <div className="cat-product-card__body">
         <div className="cat-product-card__brand">{product.brand}</div>
         <h3 className="cat-product-card__name">
-          <Link href={`/product/${product.slug}`} style={{ color: "inherit", textDecoration: "none" }}>
+          <Link
+            href={productHref}
+            prefetch
+            onMouseEnter={prefetchProduct}
+            onFocus={prefetchProduct}
+            style={{ color: "inherit", textDecoration: "none" }}
+          >
             {product.name}
           </Link>
         </h3>

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { createSafeJSONStorage } from "@/lib/storage/safeLocalStorage";
 import { useToastStore } from "@/store/toastStore";
 import { getCartLineId } from "@/lib/variants";
 import {
@@ -232,6 +233,7 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: "vibe-cart-guest",
+      storage: createSafeJSONStorage(),
       partialize: (state) => ({
         items: state.items,
         couponCode: state.couponCode,

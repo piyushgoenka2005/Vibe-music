@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { createSafeJSONStorage } from "@/lib/storage/safeLocalStorage";
 
 export type AdminTheme = "light" | "dark";
 
@@ -26,6 +27,6 @@ export const useAdminUiStore = create<AdminUiState>()(
       toggleSidebar: () =>
         set({ sidebarCollapsed: !get().sidebarCollapsed }),
     }),
-    { name: "vibe-admin-ui" }
+    { name: "vibe-admin-ui", storage: createSafeJSONStorage() }
   )
 );

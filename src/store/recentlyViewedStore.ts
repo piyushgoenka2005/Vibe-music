@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { createSafeJSONStorage } from "@/lib/storage/safeLocalStorage";
 import type { Product } from "@/types/product";
 
 const MAX_ITEMS = 8;
@@ -24,6 +25,6 @@ export const useRecentlyViewedStore = create<RecentlyViewedState>()(
       },
       getIds: () => get().productIds,
     }),
-    { name: "vibe-recently-viewed" }
+    { name: "vibe-recently-viewed", storage: createSafeJSONStorage() }
   )
 );

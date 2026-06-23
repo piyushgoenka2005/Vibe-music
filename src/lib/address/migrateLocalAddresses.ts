@@ -50,22 +50,24 @@ function clearLegacyAddressesFromStorage(): void {
   }
 }
 
-export async function migrateLocalAddressesIfNeeded(): Promise<void> {
-  if (typeof window === "undefined") return;
-  if (sessionStorage.getItem(MIGRATION_FLAG_KEY) === "done") return;
+export async function migrateLocalAddressesIfNeeded(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  if (sessionStorage.getItem(MIGRATION_FLAG_KEY) === "done") return false;
 
   const { addresses, phone } = readLegacyAddresses();
   if (addresses.length === 0) {
     sessionStorage.setItem(MIGRATION_FLAG_KEY, "done");
-    return;
+    return false;
   }
 
   try {
     await migrateLegacyAddresses({ addresses, phone });
     clearLegacyAddressesFromStorage();
     sessionStorage.setItem(MIGRATION_FLAG_KEY, "done");
+    return true;
   } catch (error) {
     console.error("[addresses] Migration failed:", error);
+    return false;
   }
 }
 

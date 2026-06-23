@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { tryFirestoreFast } from "@/lib/server/firestoreErrors";
 import type {
   AdminReviewListParams,
   PublicReview,
@@ -162,6 +163,19 @@ function sortReviewList(
 async function listProductReviewsInMemory(
   params: ReviewListParams
 ): Promise<{ reviews: PublicReview[]; hasMore: boolean; nextCursor?: string }> {
+  return tryFirestoreFast(
+    () => listProductReviewsInMemoryFromFirestore(params),
+    {
+      domain: "reviews",
+      context: `in-memory list for ${params.productId}`,
+      fallback: () => ({ reviews: [], hasMore: false }),
+    }
+  );
+}
+
+async function listProductReviewsInMemoryFromFirestore(
+  params: ReviewListParams
+): Promise<{ reviews: PublicReview[]; hasMore: boolean; nextCursor?: string }> {
   const db = getAdminFirestore();
   const limit = Math.min(Math.max(params.limit ?? 10, 1), 20);
   const sort = params.sort ?? "newest";
@@ -229,6 +243,19 @@ export async function listProductReviews(
     return listProductReviewsInMemory(params);
   }
 
+  return tryFirestoreFast(
+    () => listProductReviewsFromFirestore(params),
+    {
+      domain: "reviews",
+      context: `list for ${params.productId}`,
+      fallback: () => ({ reviews: [], hasMore: false }),
+    }
+  );
+}
+
+async function listProductReviewsFromFirestore(
+  params: ReviewListParams
+): Promise<{ reviews: PublicReview[]; hasMore: boolean; nextCursor?: string }> {
   const db = getAdminFirestore();
   const limit = Math.min(Math.max(params.limit ?? 10, 1), 20);
   const sort = params.sort ?? "newest";
@@ -309,12 +336,21 @@ export async function hasUserReviewedProduct(
   userId: string,
   productId: string
 ): Promise<boolean> {
-  const db = getAdminFirestore();
-  const doc = await db
-    .collection(USER_PRODUCT_REVIEWS_COLLECTION)
-    .doc(userProductReviewLockId(userId, productId))
-    .get();
-  return doc.exists;
+  return tryFirestoreFast(
+    async () => {
+      const db = getAdminFirestore();
+      const doc = await db
+        .collection(USER_PRODUCT_REVIEWS_COLLECTION)
+        .doc(userProductReviewLockId(userId, productId))
+        .get();
+      return doc.exists;
+    },
+    {
+      domain: "reviews",
+      context: `review lock for ${userId}/${productId}`,
+      fallback: () => false,
+    }
+  );
 }
 
 export async function getUserReviewForProduct(

@@ -103,7 +103,9 @@ export default function ProductTabs({
         hidden={activeTab !== "reviews"}
         className="pdp-tabs__panel"
       >
-        <ProductReviewsSection productSlug={productSlug} productId={product.id} />
+        {activeTab === "reviews" ? (
+          <ProductReviewsSection productSlug={productSlug} productId={product.id} />
+        ) : null}
       </div>
 
       <div
