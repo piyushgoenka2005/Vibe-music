@@ -268,6 +268,10 @@
     padding-inline: 16px;
   }
 
+  .why-shop__card[aria-hidden="true"] {
+    display: none;
+  }
+
   .why-shop__card,
   .why-shop__icon-badge,
   .why-shop__card-cta {

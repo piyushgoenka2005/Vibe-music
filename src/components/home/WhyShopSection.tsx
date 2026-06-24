@@ -35,7 +35,9 @@ function WhyShopCard({
 
 export default function WhyShopSection() {
   const reduceMotion = useHydrationSafeReducedMotion();
-  const loop = [...WHY_SHOP_ITEMS, ...WHY_SHOP_ITEMS];
+  const items = reduceMotion
+    ? WHY_SHOP_ITEMS
+    : [...WHY_SHOP_ITEMS, ...WHY_SHOP_ITEMS];
 
   return (
     <section className="why-shop" aria-labelledby="why-shop-title">
@@ -53,7 +55,7 @@ export default function WhyShopSection() {
         aria-label="Store benefits"
       >
         <div className="why-shop__marquee-track">
-          {loop.map((item, index) => (
+          {items.map((item, index) => (
             <WhyShopCard
               key={`${item.id}-${index}`}
               item={item}
