@@ -11,6 +11,10 @@ import FooterAccordion, {
 import FooterClock from "@/components/layout/FooterClock";
 import FooterProductsPanel from "@/components/layout/FooterProductsPanel";
 import { useToastStore } from "@/store/toastStore";
+import {
+  submitNewsletterToWeb3Forms,
+  isWeb3FormsConfigured,
+} from "@/lib/web3formsClient";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -140,7 +144,22 @@ export default function SiteFooter() {
     }
 
     setSubmitting(true);
+
     try {
+      if (isWeb3FormsConfigured()) {
+        const result = await submitNewsletterToWeb3Forms({
+          firstName: trimmedFirstName,
+          lastName: trimmedLastName,
+          email: trimmedEmail,
+          marketingConsent,
+        });
+        setFirstName("");
+        setLastName("");
+        setEmail("");
+        showToast(result.message, "success");
+        return;
+      }
+
       const response = await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -160,8 +179,10 @@ export default function SiteFooter() {
       setLastName("");
       setEmail("");
       showToast(data.message ?? "Thanks for joining the Vibe Music list!", "success");
-    } catch {
-      showToast("Unable to subscribe right now.", "error");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not sign you up. Please try again.";
+      showToast(message, "error");
     } finally {
       setSubmitting(false);
     }

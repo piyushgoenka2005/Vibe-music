@@ -7,6 +7,7 @@ import {
   GUITAR_SHOWCASE_FIELD_LABELS,
   isGuitarProduct,
 } from "@/lib/product/guitarShowcaseSpecs";
+import { mergeProductSpecs } from "@/lib/product/productSpecs";
 import { slugify } from "@/lib/slug";
 import {
   batchDeleteProducts as fsBatchDelete,
@@ -230,7 +231,7 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
     msrp: detail.msrp,
     salePrice: detail.salePrice,
     description: catalogProduct.description,
-    specs: detail.specs,
+    specs: mergeProductSpecs(detail.specs, catalogProduct.specifications),
     inTheBox: detail.inTheBox,
     images: detail.gallery,
     videos: detail.videos,
@@ -615,6 +616,13 @@ export async function updateProduct(
     updatedAt: now,
   };
 
+  if (patch.specifications) {
+    updated.specifications = {
+      ...current.specifications,
+      ...patch.specifications,
+    };
+  }
+
   if (patch.images?.length) {
     updated.image = patch.images[0];
     updated.images = patch.images;
@@ -662,6 +670,16 @@ export async function updateProduct(
     updated.detail = {
       ...preservedDetail,
       variants: getVariantsFromProduct({ ...updated, detail: preservedDetail }),
+    };
+  }
+
+  if (patch.specifications) {
+    updated.detail = {
+      ...(updated.detail ?? preservedDetail),
+      specs: mergeProductSpecs(
+        updated.detail?.specs ?? preservedDetail.specs,
+        updated.specifications
+      ),
     };
   }
 

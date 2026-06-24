@@ -695,14 +695,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .site-footer-accordion__content,
-  .footer-roll-text__track,
   .footer-product-snippet,
   .footer-products-panel__shop-all {
     transition: none;
-  }
-
-  .site-footer-accordion__link:hover .footer-roll-text__track,
-  .site-footer-accordion__link:focus-visible .footer-roll-text__track {
-    transform: none;
   }
 }
