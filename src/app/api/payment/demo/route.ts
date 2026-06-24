@@ -42,7 +42,10 @@ export async function POST(request: Request) {
     }
 
     if (order.paymentStatus === "paid") {
-      const params = new URLSearchParams({ orderId: order.id, email: order.email });
+      const params = new URLSearchParams({ orderId: order.id });
+      if (order.trackingToken) {
+        params.set("trackingToken", order.trackingToken);
+      }
       return NextResponse.json({
         success: true,
         orderId: order.id,
@@ -65,8 +68,10 @@ export async function POST(request: Request) {
 
     const params = new URLSearchParams({
       orderId: completed.order.id,
-      email: completed.order.email,
     });
+    if (completed.order.trackingToken) {
+      params.set("trackingToken", completed.order.trackingToken);
+    }
 
     return NextResponse.json({
       success: true,

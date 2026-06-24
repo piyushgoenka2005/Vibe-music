@@ -139,13 +139,16 @@ export function useCheckoutPayment({
     return () => window.clearTimeout(timer);
   }, [prefetchEnabled, paymentMethod, disabled, buildPayload]);
 
-  function successUrl(orderId: string): string {
-    const params = new URLSearchParams({ orderId, email });
+  function successUrl(orderId: string, trackingToken?: string): string {
+    const params = new URLSearchParams({ orderId });
+    if (trackingToken) {
+      params.set("trackingToken", trackingToken);
+    }
     return `/checkout/success?${params.toString()}`;
   }
 
-  function goToOrderConfirmation(orderId: string) {
-    const url = successUrl(orderId);
+  function goToOrderConfirmation(orderId: string, trackingToken?: string) {
+    const url = successUrl(orderId, trackingToken);
     router.replace(url);
   }
 
@@ -157,6 +160,7 @@ export function useCheckoutPayment({
       paymentMethod === "razorpay" ? "Creating order…" : "Placing order…"
     );
     let pendingOrderId: string | null = null;
+    let pendingTrackingToken: string | undefined;
 
     try {
       const payload = buildPayload();
@@ -164,7 +168,7 @@ export function useCheckoutPayment({
       if (paymentMethod === "cod") {
         const { orderId, order } = await createCodOrder(payload);
         cacheOrderForConfirmation(order);
-        goToOrderConfirmation(orderId);
+        goToOrderConfirmation(orderId, order.trackingToken);
         return;
       }
 
@@ -179,6 +183,8 @@ export function useCheckoutPayment({
       ]);
 
       pendingOrderId = orderResponse.orderId;
+      pendingTrackingToken = orderResponse.trackingToken;
+      const trackingToken = pendingTrackingToken;
       setProcessingLabel("Opening Razorpay…");
 
       if (orderResponse.demoMode) {
@@ -224,9 +230,11 @@ export function useCheckoutPayment({
       });
 
       if (result.status !== "success") {
-        await releaseOrderReservation(orderResponse.orderId, email).catch(
-          () => undefined
-        );
+        if (trackingToken) {
+          await releaseOrderReservation(orderResponse.orderId, trackingToken).catch(
+            () => undefined
+          );
+        }
         showToast(
           result.status === "failed"
             ? result.message
@@ -247,10 +255,10 @@ export function useCheckoutPayment({
         cacheOrderForConfirmation(verified.order);
       }
 
-      goToOrderConfirmation(orderResponse.orderId);
+      goToOrderConfirmation(orderResponse.orderId, trackingToken);
     } catch (err) {
-      if (pendingOrderId) {
-        await releaseOrderReservation(pendingOrderId, email).catch(
+      if (pendingOrderId && pendingTrackingToken) {
+        await releaseOrderReservation(pendingOrderId, pendingTrackingToken).catch(
           () => undefined
         );
       }

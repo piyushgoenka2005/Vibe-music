@@ -52,8 +52,11 @@ export default function SiteFooter() {
   const footerRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const year = new Date().getFullYear();
 
   useEffect(() => {
@@ -122,37 +125,45 @@ export default function SiteFooter() {
 
   async function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    const value = email.trim();
-    const firstName = String(formData.get("firstName") ?? "").trim();
-    const lastName = String(formData.get("lastName") ?? "").trim();
-    const marketing = formData.get("marketing") === "on";
+    const trimmedEmail = email.trim();
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
 
-    if (!EMAIL_PATTERN.test(value)) {
+    if (!EMAIL_PATTERN.test(trimmedEmail)) {
       showToast("Please enter a valid email address.", "error");
       return;
     }
 
-    setIsSubmitting(true);
+    if (!marketingConsent) {
+      showToast("Please accept marketing communications to join the list.", "error");
+      return;
+    }
+
+    setSubmitting(true);
     try {
       const response = await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: value, firstName, lastName, marketing }),
+        body: JSON.stringify({
+          email: trimmedEmail,
+          firstName: trimmedFirstName,
+          lastName: trimmedLastName,
+          marketing: marketingConsent,
+        }),
       });
       const data = (await response.json()) as { message?: string; error?: string };
       if (!response.ok) {
         showToast(data.error ?? "Unable to subscribe right now.", "error");
         return;
       }
+      setFirstName("");
+      setLastName("");
       setEmail("");
-      form.reset();
       showToast(data.message ?? "Thanks for joining the Vibe Music list!", "success");
     } catch {
       showToast("Unable to subscribe right now.", "error");
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   }
 
@@ -183,6 +194,14 @@ export default function SiteFooter() {
               </div>
 
               <form className="site-footer-newsletter__form" onSubmit={onNewsletterSubmit}>
+                <input
+                  type="checkbox"
+                  name="botcheck"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden
+                  className="site-footer-newsletter__honeypot"
+                />
                 <div className="site-footer-newsletter__row">
                   <input
                     type="text"
@@ -190,6 +209,9 @@ export default function SiteFooter() {
                     autoComplete="given-name"
                     placeholder="FIRST NAME"
                     className="site-footer-newsletter__input"
+                    value={firstName}
+                    onChange={(event) => setFirstName(event.target.value)}
+                    disabled={submitting}
                   />
                   <input
                     type="text"
@@ -197,6 +219,9 @@ export default function SiteFooter() {
                     autoComplete="family-name"
                     placeholder="LAST NAME"
                     className="site-footer-newsletter__input"
+                    value={lastName}
+                    onChange={(event) => setLastName(event.target.value)}
+                    disabled={submitting}
                   />
                 </div>
                 <div className="site-footer-newsletter__row site-footer-newsletter__row--action">
@@ -209,14 +234,25 @@ export default function SiteFooter() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     required
+                    disabled={submitting}
                     suppressHydrationWarning
                   />
-                  <button type="submit" className="site-footer-newsletter__submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Signing up…" : "Sign up"}
+                  <button
+                    type="submit"
+                    className="site-footer-newsletter__submit"
+                    disabled={submitting}
+                  >
+                    {submitting ? "Signing up…" : "Sign up"}
                   </button>
                 </div>
                 <label className="site-footer-newsletter__consent">
-                  <input type="checkbox" name="marketing" defaultChecked />
+                  <input
+                    type="checkbox"
+                    name="marketing"
+                    checked={marketingConsent}
+                    onChange={(event) => setMarketingConsent(event.target.checked)}
+                    disabled={submitting}
+                  />
                   <span>Vibe Music can contact me about promotions and gear guides.</span>
                 </label>
               </form>

@@ -40,6 +40,7 @@
   --header-height: 58px;
   /* Stable default — updated precisely after mount via useSiteHeaderOffset */
   --site-header-offset: 118px;
+  --z-toast: 1000002;
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;

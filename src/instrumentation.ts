@@ -17,28 +17,35 @@ export async function register() {
       }
     }
 
-    const { verifyFirestoreConnection } = await import(
-      "@/lib/server/firestoreHealth"
-    );
-    const firestoreHealth = await verifyFirestoreConnection();
-    if (!firestoreHealth.ok && process.env.NODE_ENV !== "production") {
-      const { markFirestoreUnavailable } = await import(
-        "@/lib/server/firestoreErrors"
+    const shouldVerifyFirestoreOnStartup =
+      process.env.NODE_ENV === "production" ||
+      process.env.FIRESTORE_HEALTHCHECK_ON_STARTUP === "true" ||
+      process.env.NODE_ENV !== "production";
+
+    if (shouldVerifyFirestoreOnStartup) {
+      const { verifyFirestoreConnection } = await import(
+        "@/lib/server/firestoreHealth"
       );
-      markFirestoreUnavailable(
-        new Error(firestoreHealth.error ?? "Firestore unavailable in dev")
-      );
-      const { logInfo } = await import("@/lib/server/logger");
-      logInfo(
-        "Dev mode: Firestore degraded — APIs will use local JSON / file fallbacks",
-        "instrumentation",
-        { error: firestoreHealth.error }
-      );
-    }
-    if (!firestoreHealth.ok && process.env.NODE_ENV === "production") {
-      throw new Error(
-        `Firestore initialization failed: ${firestoreHealth.error ?? "unknown"}`
-      );
+      const firestoreHealth = await verifyFirestoreConnection();
+      if (!firestoreHealth.ok && process.env.NODE_ENV !== "production") {
+        const { markFirestoreUnavailable } = await import(
+          "@/lib/server/firestoreErrors"
+        );
+        markFirestoreUnavailable(
+          new Error(firestoreHealth.error ?? "Firestore unavailable in dev")
+        );
+        const { logInfo } = await import("@/lib/server/logger");
+        logInfo(
+          "Dev mode: Firestore degraded — APIs will use local JSON / file fallbacks",
+          "instrumentation",
+          { error: firestoreHealth.error }
+        );
+      }
+      if (!firestoreHealth.ok && process.env.NODE_ENV === "production") {
+        throw new Error(
+          `Firestore initialization failed: ${firestoreHealth.error ?? "unknown"}`
+        );
+      }
     }
   }
 }

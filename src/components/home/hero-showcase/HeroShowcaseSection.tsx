@@ -7,20 +7,35 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import {
   HERO_SHOWCASE_SCENES,
   MARKETING_HERO_ROTATE_MS,
+  getSlideDirection,
   wrapSceneIndex,
 } from "@/data/heroShowcaseScenes";
 import AnimatedCanvasBackdrop from "@/components/home/hero-showcase/AnimatedCanvasBackdrop";
 import HeroNavControls from "@/components/home/hero-showcase/HeroNavControls";
-import HeroPanel from "@/components/home/hero-showcase/HeroPanel";
+import HeroPanel, {
+  heroCenterSlideTransition,
+  heroCenterSlideVariants,
+} from "@/components/home/hero-showcase/HeroPanel";
 import HeroThumbnailStrip from "@/components/home/hero-showcase/HeroThumbnailStrip";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 
 const SCENES = HERO_SHOWCASE_SCENES;
 const COUNT = SCENES.length;
+
+const sidePanelNudgeVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? "-12%" : "12%",
+    opacity: 0.5,
+  }),
+  center: {
+    x: 0,
+    opacity: 0.72,
+  },
+};
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
@@ -39,6 +54,7 @@ export default function HeroShowcaseSection() {
   const pointerStartRef = useRef({ x: 0, y: 0 });
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
   const [failedSrc, setFailedSrc] = useState<Record<string, boolean>>({});
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
@@ -46,14 +62,34 @@ export default function HeroShowcaseSection() {
   const [isMobile, setIsMobile] = useState(false);
 
   const reduceMotion = useHydrationSafeReducedMotion();
+  const slideTransition = reduceMotion
+    ? { duration: 0 }
+    : heroCenterSlideTransition;
 
-  const goTo = useCallback((index: number) => {
+  const advanceTo = useCallback((index: number) => {
     if (COUNT === 0) return;
-    setActiveIndex(wrapSceneIndex(index, COUNT));
+    setActiveIndex((current) => {
+      const next = wrapSceneIndex(index, COUNT);
+      setDirection(getSlideDirection(current, next, COUNT));
+      return next;
+    });
   }, []);
 
-  const goNext = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo]);
-  const goPrev = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo]);
+  const goNext = useCallback(() => {
+    setActiveIndex((current) => {
+      const next = wrapSceneIndex(current + 1, COUNT);
+      setDirection(1);
+      return next;
+    });
+  }, []);
+
+  const goPrev = useCallback(() => {
+    setActiveIndex((current) => {
+      const next = wrapSceneIndex(current - 1, COUNT);
+      setDirection(-1);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -64,10 +100,16 @@ export default function HeroShowcaseSection() {
   }, []);
 
   useEffect(() => {
-    if (COUNT <= 1 || isPaused || reduceMotion) return;
-    const timer = window.setInterval(goNext, MARKETING_HERO_ROTATE_MS);
+    if (COUNT <= 1 || isPaused) return;
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => {
+        const next = wrapSceneIndex(current + 1, COUNT);
+        setDirection(1);
+        return next;
+      });
+    }, MARKETING_HERO_ROTATE_MS);
     return () => window.clearInterval(timer);
-  }, [goNext, isPaused, reduceMotion]);
+  }, [isPaused]);
 
   useEffect(() => {
     const next = SCENES[(activeIndex + 1) % COUNT];
@@ -146,94 +188,144 @@ export default function HeroShowcaseSection() {
   const parallaxY = reduceMotion ? 0 : pointer.y * 12 + pan.y * 10;
 
   return (
-    <section
-      className="hero-showcase"
-      aria-roledescription="carousel"
-      aria-label="Featured gear showcase"
-      data-vibe-section="hero-showcase"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => {
-        setIsPaused(false);
-        setPan({ x: 0, y: 0 });
-      }}
-      onFocusCapture={() => setIsPaused(true)}
-      onBlurCapture={() => setIsPaused(false)}
-    >
-      <div
-        ref={stageRef}
-        className="hero-showcase__stage"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
+    <MotionConfig reducedMotion="never">
+      <section
+        className="hero-showcase"
+        aria-roledescription="carousel"
+        aria-label="Featured gear showcase"
+        data-vibe-section="hero-showcase"
+        onMouseLeave={() => setPan({ x: 0, y: 0 })}
       >
-        <AnimatedCanvasBackdrop
-          panX={pan.x}
-          panY={pan.y}
-          pointerX={pointer.x}
-          pointerY={pointer.y}
-        />
-
-        <div className="hero-showcase__atmosphere" aria-hidden />
-        <div className="hero-showcase__grid" aria-hidden />
-        <div className="hero-showcase__noise" aria-hidden />
-
-        <motion.div
-          className={`hero-showcase__panels${isMobile ? " hero-showcase__panels--mobile" : ""}`}
-          style={{
-            x: parallaxX,
-            y: parallaxY,
-          }}
-          transition={{ type: "spring", stiffness: 120, damping: 22, mass: 0.6 }}
+        <div
+          ref={stageRef}
+          className="hero-showcase__stage"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
         >
-          {!isMobile ? (
-            <>
-              <HeroPanel
-                scene={prevScene}
-                variant="left"
-                imageFailed={Boolean(failedSrc[prevScene.src])}
-                onImageError={() => handleImageError(prevScene.src)}
-              />
-              <AnimatePresence mode="popLayout" initial={false}>
-                <HeroPanel
-                  key={activeScene.id}
-                  scene={activeScene}
-                  variant="center"
-                  isActive
-                  imageFailed={Boolean(failedSrc[activeScene.src])}
-                  onImageError={() => handleImageError(activeScene.src)}
-                />
-              </AnimatePresence>
-              <HeroPanel
-                scene={nextScene}
-                variant="right"
-                imageFailed={Boolean(failedSrc[nextScene.src])}
-                onImageError={() => handleImageError(nextScene.src)}
-              />
-            </>
-          ) : (
-            <AnimatePresence mode="wait" initial={false}>
-              <HeroPanel
-                key={activeScene.id}
-                scene={activeScene}
-                variant="center"
-                isActive
-                imageFailed={Boolean(failedSrc[activeScene.src])}
-                onImageError={() => handleImageError(activeScene.src)}
-              />
-            </AnimatePresence>
-          )}
-        </motion.div>
+          <AnimatedCanvasBackdrop
+            panX={pan.x}
+            panY={pan.y}
+            pointerX={pointer.x}
+            pointerY={pointer.y}
+          />
 
-        <HeroNavControls onNext={goNext} onPrev={goPrev} />
+          <div className="hero-showcase__atmosphere" aria-hidden />
+          <div className="hero-showcase__grid" aria-hidden />
+          <div className="hero-showcase__noise" aria-hidden />
 
-        <HeroThumbnailStrip
-          activeIndex={activeIndex}
-          failedSrc={failedSrc}
-          scenes={SCENES}
-          onSelect={goTo}
-        />
-      </div>
-    </section>
+          <motion.div
+            className="hero-showcase__panels-viewport"
+            style={{
+              x: parallaxX,
+              y: parallaxY,
+            }}
+            transition={{ type: "spring", stiffness: 120, damping: 22, mass: 0.6 }}
+          >
+            <div
+              className={`hero-showcase__panels${isMobile ? " hero-showcase__panels--mobile" : ""}`}
+            >
+              {!isMobile ? (
+                <>
+                  <motion.div
+                    key={`left-${prevScene.id}`}
+                    custom={direction}
+                    className="hero-showcase__panel-slot hero-showcase__panel-slot--left"
+                    variants={sidePanelNudgeVariants}
+                    initial="enter"
+                    animate="center"
+                    transition={slideTransition}
+                  >
+                    <HeroPanel
+                      scene={prevScene}
+                      variant="left"
+                      imageFailed={Boolean(failedSrc[prevScene.src])}
+                      onImageError={() => handleImageError(prevScene.src)}
+                    />
+                  </motion.div>
+
+                  <div className="hero-showcase__panel-slot hero-showcase__panel-slot--center">
+                    <AnimatePresence initial={false} custom={direction} mode="sync">
+                      <HeroPanel
+                        key={activeScene.id}
+                        scene={activeScene}
+                        variant="center"
+                        isActive
+                        imageFailed={Boolean(failedSrc[activeScene.src])}
+                        onImageError={() => handleImageError(activeScene.src)}
+                        custom={direction}
+                        variants={heroCenterSlideVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={slideTransition}
+                      />
+                    </AnimatePresence>
+                  </div>
+
+                  <motion.div
+                    key={`right-${nextScene.id}`}
+                    custom={direction}
+                    className="hero-showcase__panel-slot hero-showcase__panel-slot--right"
+                    variants={sidePanelNudgeVariants}
+                    initial="enter"
+                    animate="center"
+                    transition={slideTransition}
+                  >
+                    <HeroPanel
+                      scene={nextScene}
+                      variant="right"
+                      imageFailed={Boolean(failedSrc[nextScene.src])}
+                      onImageError={() => handleImageError(nextScene.src)}
+                    />
+                  </motion.div>
+                </>
+              ) : (
+                <div className="hero-showcase__panel-slot hero-showcase__panel-slot--center">
+                  <AnimatePresence initial={false} custom={direction} mode="sync">
+                    <HeroPanel
+                      key={activeScene.id}
+                      scene={activeScene}
+                      variant="center"
+                      isActive
+                      imageFailed={Boolean(failedSrc[activeScene.src])}
+                      onImageError={() => handleImageError(activeScene.src)}
+                      custom={direction}
+                      variants={heroCenterSlideVariants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={slideTransition}
+                    />
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          <div
+            className="hero-showcase__controls"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            onFocusCapture={() => setIsPaused(true)}
+            onBlurCapture={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                setIsPaused(false);
+              }
+            }}
+          >
+            <HeroNavControls onNext={goNext} onPrev={goPrev} />
+
+            <HeroThumbnailStrip
+              activeIndex={activeIndex}
+              failedSrc={failedSrc}
+              scenes={SCENES}
+              onSelect={advanceTo}
+            />
+          </div>
+        </div>
+      </section>
+    </MotionConfig>
   );
 }

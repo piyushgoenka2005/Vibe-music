@@ -132,5 +132,5 @@ export const MARKETING_HERO_FALLBACK = "/images/Electric Blue Guitar.png";
 
 
 
-export const MARKETING_HERO_ROTATE_MS = 4500;
+export const MARKETING_HERO_ROTATE_MS = 3500;
 

@@ -53,6 +53,8 @@ export interface Order {
   id: string;
   userId?: string;
   email: string;
+  /** Secret token for guest order tracking and reservation release. */
+  trackingToken?: string;
   /** Customer display name (shipping name or guest name). */
   customerName?: string;
   /** Customer phone for guest orders and notifications. */
@@ -113,6 +115,7 @@ export interface CreateOrderPayload {
 
 export interface CreateRazorpayOrderResponse {
   orderId: string;
+  trackingToken?: string;
   demoMode?: boolean;
   razorpayOrderId?: string;
   amount?: number;

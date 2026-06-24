@@ -9,6 +9,8 @@ export interface ServerErrorContext {
   meta?: Record<string, unknown>;
 }
 
+export type ErrorMonitoringContext = ServerErrorContext;
+
 const reportedErrors = new Set<string>();
 const MAX_TRACKED_ERRORS = 200;
 
@@ -52,8 +54,8 @@ async function notifyWebhook(
  * Central server error reporter for instrumentation hooks and API routes.
  */
 export function reportServerError(
-  error: unknown,
-  context: ServerErrorContext
+  error: unknown | Error,
+  context: ServerErrorContext | ErrorMonitoringContext
 ): void {
   const normalized =
     error instanceof Error ? error : new Error(String(error ?? "Unknown error"));
@@ -67,11 +69,16 @@ export function reportServerError(
   if (reportedErrors.has(dedupeKey)) return;
   trackErrorKey(dedupeKey);
 
-  logError(normalized.message, normalized, context.source, {
-    routePath: context.routePath,
-    requestId: context.requestId,
-    ...context.meta,
-  });
+  logError(
+    `Server error from ${context.source}: ${normalized.message}`,
+    normalized,
+    context.source,
+    {
+      routePath: context.routePath,
+      requestId: context.requestId,
+      ...context.meta,
+    }
+  );
 
   void notifyWebhook(normalized, context);
 }

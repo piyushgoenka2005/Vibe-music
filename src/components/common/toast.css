@@ -1,8 +1,8 @@
 .sw-toast-container {
   position: fixed;
-  top: 80px;
+  top: calc(var(--site-header-offset, 118px) + 0.75rem);
   right: 16px;
-  z-index: 1000002;
+  z-index: var(--z-toast, 1000002);
   display: flex;
   flex-direction: column;
   gap: 8px;

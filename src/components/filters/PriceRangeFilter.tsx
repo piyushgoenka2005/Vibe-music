@@ -21,9 +21,10 @@ export default function PriceRangeFilter({
   return (
     <FilterSection title="Price Range">
       <div className="cat-filter-price">
-        <label>
-          Min
+        <div className="cat-filter-price__field">
+          <label htmlFor="cat-filter-price-min">Min</label>
           <input
+            id="cat-filter-price-min"
             type="number"
             min={rangeMin}
             max={rangeMax}
@@ -37,10 +38,11 @@ export default function PriceRangeFilter({
             }
             aria-label="Minimum price"
           />
-        </label>
-        <label>
-          Max
+        </div>
+        <div className="cat-filter-price__field">
+          <label htmlFor="cat-filter-price-max">Max</label>
           <input
+            id="cat-filter-price-max"
             type="number"
             min={rangeMin}
             max={rangeMax}
@@ -54,7 +56,7 @@ export default function PriceRangeFilter({
             }
             aria-label="Maximum price"
           />
-        </label>
+        </div>
       </div>
     </FilterSection>
   );

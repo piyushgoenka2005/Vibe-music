@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getAdminFirestore, isFirebaseAdminConfigured } from "@/lib/firebase/admin";
+import { logError, logInfo, logWarn } from "@/lib/server/logger";
 import {
   isFirestoreUnavailableError,
   isFirestoreFastFailError,
@@ -9,10 +10,11 @@ import {
   withFirestoreDeadline,
   FIRESTORE_FAST_FAIL_MS,
 } from "@/lib/server/firestoreErrors";
-import { logInfo, logWarn } from "@/lib/server/logger";
 
 export interface FirestoreHealthResult {
   ok: boolean;
+  projectId?: string;
+  latencyMs?: number;
   error?: string;
   usingLocalFallback?: boolean;
 }
@@ -41,12 +43,21 @@ export async function verifyFirestoreConnection(): Promise<FirestoreHealthResult
     };
   }
 
+  const startedAt = Date.now();
   try {
     await withFirestoreDeadline(
       () => getAdminFirestore().collection("settings").doc("store").get(),
       FIRESTORE_FAST_FAIL_MS
     );
-    return { ok: true };
+    const latencyMs = Date.now() - startedAt;
+    const projectId = process.env.FIREBASE_PROJECT_ID?.trim();
+
+    logInfo("Firestore connection verified", "firestoreHealth", {
+      projectId,
+      latencyMs,
+    });
+
+    return { ok: true, projectId, latencyMs };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Firestore connection failed";

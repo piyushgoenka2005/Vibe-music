@@ -14,7 +14,11 @@ function formatInr(amount: number): string {
 }
 
 function buildOrderConfirmationHtml(order: Order): string {
-  const trackUrl = `${BRAND.siteUrl}/track-order?orderId=${encodeURIComponent(order.id)}&email=${encodeURIComponent(order.email)}`;
+  const trackParams = new URLSearchParams({ orderId: order.id });
+  if (order.trackingToken) {
+    trackParams.set("trackingToken", order.trackingToken);
+  }
+  const trackUrl = `${BRAND.siteUrl}/track-order?${trackParams.toString()}`;
   const invoiceUrl =
     buildInvoiceAccessUrl(
       order.id,

@@ -1,0 +1,39 @@
+.rolling-text {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  line-height: 1.25;
+  height: 1.25em;
+}
+
+.rolling-text__track {
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.rolling-text__line {
+  display: block;
+  white-space: nowrap;
+}
+
+a:hover .rolling-text__track,
+a:focus-visible .rolling-text__track,
+button:hover .rolling-text__track,
+button:focus-visible .rolling-text__track {
+  transform: translateY(-50%);
+}
+
+/* Intentional micro-interaction — keep rolling even when OS prefers-reduced-motion is on */
+@media (prefers-reduced-motion: reduce) {
+  .rolling-text--always .rolling-text__track {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  a:hover .rolling-text--always .rolling-text__track,
+  a:focus-visible .rolling-text--always .rolling-text__track,
+  button:hover .rolling-text--always .rolling-text__track,
+  button:focus-visible .rolling-text--always .rolling-text__track {
+    transform: translateY(-50%);
+  }
+}

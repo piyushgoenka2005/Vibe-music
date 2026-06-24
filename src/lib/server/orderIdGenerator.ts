@@ -13,6 +13,7 @@ import {
   tryFirestoreFast,
 } from "@/lib/server/firestoreErrors";
 import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
+import { logPayment, logPaymentError } from "@/lib/server/paymentDiagnostics";
 
 const COUNTERS_COLLECTION = "counters";
 
@@ -31,6 +32,8 @@ async function allocateFromFirestore(createdAt: Date): Promise<string> {
   const year = getOrderYear(createdAt);
   const db = getAdminFirestore();
   const counterRef = db.collection(COUNTERS_COLLECTION).doc(counterDocId(year));
+
+  logPayment("Firestore order counter transaction started", { year });
 
   return withFirestoreRetry(async () => {
     return db.runTransaction(async (transaction) => {
@@ -51,9 +54,14 @@ async function allocateFromFirestore(createdAt: Date): Promise<string> {
         { merge: true }
       );
 
-      return formatOrderId(nextSequence, year);
+      const orderId = formatOrderId(nextSequence, year);
+      logPayment("Firestore order counter transaction completed", { orderId });
+      return orderId;
     });
-  }, { maxRetries: 1, baseDelayMs: 100 });
+  }, { maxRetries: 4, baseDelayMs: 250 }).catch((error) => {
+    logPaymentError(error, { step: "allocateFromFirestore", year });
+    throw error;
+  });
 }
 
 export async function allocateNextOrderId(

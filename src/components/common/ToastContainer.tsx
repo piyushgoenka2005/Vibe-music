@@ -1,15 +1,20 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useToastStore } from "@/store/toastStore";
 import "./toast.css";
 
 export default function ToastContainer() {
   const toasts = useToastStore((s) => s.toasts);
   const dismiss = useToastStore((s) => s.dismiss);
+  const [mounted, setMounted] = useState(false);
 
-  if (toasts.length === 0) return null;
+  useEffect(() => setMounted(true), []);
 
-  return (
+  if (!mounted || toasts.length === 0) return null;
+
+  return createPortal(
     <div className="sw-toast-container" aria-live="polite" aria-atomic="true">
       {toasts.map((toast) => (
         <div
@@ -28,6 +33,7 @@ export default function ToastContainer() {
           </button>
         </div>
       ))}
-    </div>
+    </div>,
+    document.body
   );
 }
