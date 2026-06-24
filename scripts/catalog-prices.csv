@@ -1,0 +1,4 @@
+model,price,stock,sku
+# Add one row per product model before go-live checkout.
+# Example:
+# AD12 DSP,24999,10,VM-AD12DSP

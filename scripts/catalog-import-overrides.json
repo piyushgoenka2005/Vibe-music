@@ -1,0 +1,74 @@
+{
+  "folderMerges": {
+    "Adeon": {
+      "AMS84F": ["Ams 84F _WEB RENDER WHITE BG", "Web Render_AMS 84F"]
+    },
+    "Hertz": {
+      "HZAMS070": ["HZAMS070EQ", "HERTZ AMS - 070"]
+    }
+  },
+  "folderToModel": {
+    "Adeon": {
+      "ACM 24": "ACM - 24",
+      "AD 12": "AD12 DSP",
+      "AD 15": "AD15DSP",
+      "Adm 01": "ADM 01",
+      "Admic": "ADMIC",
+      "Aedan 1 Pro": "ADEON AEDAN PRO1",
+      "Hdm 50": "HDM 50"
+    },
+    "Avus": {
+      "AVUS  DAZYAN 18": "AVUS  DAZYAN 18\"",
+      "AVUS  DISTACK 10": "AVUS  DISTACK 10\"",
+      "AVUS  HATHOR 16": "AVUS  HATHOR 16\"",
+      "Crystone 6 inch": "AVUS CRYSTONE 6\"",
+      "cRYSTONE 8 INCH": "AVUS CRYSTONE 8\"",
+      "Neo I - gold": "NEO GOLD",
+      "Z GEN_600 PPI (AVUS GENEXT)": "Z GEN",
+      "Zap Crash_16": "AVUS  ZAPCRASH 16\""
+    },
+    "Hertz": {
+      "3600 NA": "HZA - 3600",
+      "3900 EQ R": "HZA3900EQ",
+      "3900 N": "HZA - 3900",
+      "3900 R": "HZA - 3900",
+      "4040 EQ NA": "HZA4040 eq",
+      "4060 BR": "HZA-4060",
+      "5100 bk": "HZA5100",
+      "ACM18": "ACM18",
+      "DG20": "DG 20",
+      "DG40": "DG40",
+      "HERTZ BEHZA - 4123": "HZA4123",
+      "HZA UK 24_AMAZONE": "HERTZ HZA - UK(24)",
+      "HZA UK 26_AMAZONE": "HZAUK 2 (UKULELE)",
+      "HZA-6000": "HZA-6000",
+      "HZA4040EQ": "HZA4040EQ",
+      "HZA4503": "HZA4503",
+      "HZR-3801E": "HzR-3801E",
+      "HZR-4002E": "HzR-4002E"
+    },
+    "Roland": {
+      "ROLAND EX 10": "ROLAND EX - 10",
+      "ROLAND EX - 20": "ROLAND EX - 20",
+      "ROLAND EX - 30": "ROLAND EX - 30"
+    },
+    "TRINITY": {
+      "Trinity PA-75X": "TRINITY PA- 75X"
+    }
+  },
+  "exactModelByFolder": {},
+  "brandAliases": {
+    "Adeon": ["ADEON", "ADEON MIXER"],
+    "Avus": ["AVUS", "AVUS DRUM STICK"],
+    "Hertz": ["HERTZ", "ADEON"],
+    "Roland": ["ROLAND", "ROLANDD"],
+    "TRINITY": ["TRINITY"]
+  },
+  "sheetByBrandFolder": {
+    "Adeon": "ADEON",
+    "Avus": "AVUS",
+    "Hertz": "HERTZ",
+    "Roland": "ROLAND",
+    "TRINITY": null
+  }
+}

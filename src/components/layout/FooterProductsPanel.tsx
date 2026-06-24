@@ -107,10 +107,6 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
           Shop all gear
           <ArrowUpRight size={14} strokeWidth={2.5} aria-hidden />
         </Link>
-
-        <p className="footer-products-panel__disclaimer">
-          Prices and availability shown for demo catalog items. Final pricing confirmed at checkout.
-        </p>
       </div>
     </div>
   );

@@ -54,3 +54,9 @@ ui-debug.log
 .data/
 
 *.log
+
+*.zip
+/Vibe images/
+/*.xlsx
+/catalog-import-manifest.json
+/migration-report.json

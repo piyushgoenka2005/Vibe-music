@@ -22,6 +22,7 @@ import type { CatalogProduct } from "../src/types/catalog";
 const ROOT = process.cwd();
 const CATALOG_DIR = join(ROOT, "src/data/catalog");
 const dryRun = process.argv.includes("--dry-run");
+const replaceExisting = process.argv.includes("--replace");
 
 interface MigrationReport {
   startedAt: string;
@@ -35,6 +36,7 @@ interface MigrationReport {
   products: { total: number; migrated: number };
   categories: { total: number; migrated: number };
   brands: { total: number; migrated: number };
+  removed?: { products: number; brands: number };
 }
 
 function getAdminApp() {
@@ -58,6 +60,38 @@ function getAdminApp() {
 function loadJson<T>(filename: string): T {
   const raw = readFileSync(join(CATALOG_DIR, filename), "utf8");
   return JSON.parse(raw) as T;
+}
+
+async function batchDeleteCollection(
+  db: FirebaseFirestore.Firestore,
+  collection: string
+): Promise<number> {
+  if (dryRun) {
+    const snapshot = await db.collection(collection).select().get();
+    return snapshot.size;
+  }
+
+  let deleted = 0;
+  let snapshot = await db.collection(collection).limit(400).get();
+
+  while (!snapshot.empty) {
+    let batch = db.batch();
+    let ops = 0;
+    for (const doc of snapshot.docs) {
+      batch.delete(doc.ref);
+      ops += 1;
+      deleted += 1;
+      if (ops >= 400) {
+        await batch.commit();
+        batch = db.batch();
+        ops = 0;
+      }
+    }
+    if (ops > 0) await batch.commit();
+    snapshot = await db.collection(collection).limit(400).get();
+  }
+
+  return deleted;
 }
 
 async function batchSet(
@@ -110,6 +144,17 @@ async function main() {
   };
 
   const db = getFirestore(getAdminApp());
+
+  if (replaceExisting) {
+    const removedProducts = await batchDeleteCollection(db, "products");
+    const removedBrands = await batchDeleteCollection(db, "brands");
+    report.removed = { products: removedProducts, brands: removedBrands };
+    console.log(
+      dryRun
+        ? `Would remove ${removedProducts} products and ${removedBrands} brands`
+        : `Removed ${removedProducts} products and ${removedBrands} brands`
+    );
+  }
 
   report.products.migrated = await batchSet(
     db,

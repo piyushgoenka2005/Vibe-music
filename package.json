@@ -18,6 +18,7 @@
     "download:images": "node scripts/download-essential-images.mjs",
     "download:style-story": "node scripts/download-style-story-thumbnails.mjs",
     "migrate:brand": "node scripts/migrate-brand.mjs && node scripts/migrate-content-brand.mjs",
+    "import:catalog": "npx tsx --env-file=.env.local scripts/import-catalog-from-excel.mts",
     "migrate:catalog": "npx tsx --env-file=.env.local scripts/migrate-products-to-firestore.ts",
     "firebase:deploy-indexes": "npx firebase-tools deploy --only firestore:indexes --project vibe-music-90bb5",
     "test": "vitest run",
@@ -66,8 +67,10 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "happy-dom": "^20.10.4",
+    "sharp": "^0.35.2",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^3.2.6"
+    "vitest": "^3.2.6",
+    "xlsx": "^0.18.5"
   }
 }
