@@ -98,3 +98,15 @@ export function wrapSceneIndex(index: number, length = HERO_SHOWCASE_SCENES.leng
   if (length === 0) return 0;
   return ((index % length) + length) % length;
 }
+
+/** Shortest-path direction for carousel slide (+1 forward, -1 backward). */
+export function getSlideDirection(
+  from: number,
+  to: number,
+  length = HERO_SHOWCASE_SCENES.length
+): number {
+  if (length <= 1 || from === to) return 1;
+  const forward = (to - from + length) % length;
+  const backward = (from - to + length) % length;
+  return forward <= backward ? 1 : -1;
+}
