@@ -9,6 +9,7 @@ import { categoryPath, productPath, ROUTES } from "@/lib/routes";
 import { fetchProducts } from "@/services/products.api";
 import { formatCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
+import RollingText from "@/components/common/RollingText";
 import type { Product } from "@/types/product";
 
 const PANEL_CATEGORIES = [
@@ -81,7 +82,7 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
           <p className="footer-products-panel__title">Trending at Vibe Music</p>
           <div className="footer-products-panel__details">
             <Link href={ROUTES.search} className="footer-products-panel__meta-link">
-              All categories
+              <RollingText>All categories</RollingText>
             </Link>
             <div className="footer-products-panel__meta">
               {PANEL_CATEGORIES.map((category) => (
@@ -90,7 +91,7 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
                   href={category.href}
                   className="footer-products-panel__category-link"
                 >
-                  {category.label}
+                  <RollingText>{category.label}</RollingText>
                 </Link>
               ))}
             </div>
@@ -104,7 +105,7 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
         </div>
 
         <Link href={ROUTES.search} className="footer-products-panel__shop-all">
-          Shop all gear
+          <RollingText>Shop all gear</RollingText>
           <ArrowUpRight size={14} strokeWidth={2.5} aria-hidden />
         </Link>
       </div>
