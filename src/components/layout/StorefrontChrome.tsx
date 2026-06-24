@@ -9,10 +9,9 @@ import SiteFooter from "@/components/layout/SiteFooter";
 import SkipToContent from "@/components/layout/SkipToContent";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
-const DeferredSplashCursor = dynamic(
-  () => import("@/components/layout/DeferredSplashCursor"),
-  { ssr: false }
-);
+const SplashCursor = dynamic(() => import("@/components/SplashCursor"), {
+  ssr: false,
+});
 
 const SocialRail = dynamic(() => import("@/components/layout/SocialRail"), {
   ssr: false,
@@ -56,19 +55,15 @@ export default function StorefrontChrome({
   return (
     <div className="storefront-shell">
       {splashEnabled ? (
-        <DeferredSplashCursor
-          SIM_RESOLUTION={64}
-          DYE_RESOLUTION={720}
-          CAPTURE_RESOLUTION={256}
+        <SplashCursor
           DENSITY_DISSIPATION={5}
           VELOCITY_DISSIPATION={2.75}
           PRESSURE={0.08}
           CURL={1.75}
-          SPLAT_RADIUS={0.12}
-          ZONE_SPLAT_RADIUS={0.09}
-          SPLAT_FALLOFF="tent"
+          SPLAT_RADIUS={0.14}
+          ZONE_SPLAT_RADIUS={0.1}
           SPLAT_FORCE={3200}
-          COLOR_INTENSITY={0.07}
+          COLOR_INTENSITY={0.12}
           COLOR_UPDATE_SPEED={10}
           SHADING
           RAINBOW_MODE={false}

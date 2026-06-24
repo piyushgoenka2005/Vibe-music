@@ -12,6 +12,10 @@
   --full-bleed-inline: max(0px, (100vw - 100%) / 2);
 }
 
+.premium-home > [data-vibe-section="hero-showcase"] {
+  overflow: visible;
+}
+
 /* Defer layout/paint for below-the-fold homepage sections */
 .premium-home > .gear-stories,
 .premium-home > .big-names-deals,

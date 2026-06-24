@@ -475,7 +475,250 @@
   }
 }
 
+.hero-showcase__orbit-viewport {
+  position: relative;
+  z-index: 3;
+  width: min(1480px, 100%);
+  min-height: clamp(420px, 62vh, 680px);
+  display: grid;
+  place-items: center;
+  transform-style: preserve-3d;
+}
+
+/* Continuous orbital product carousel */
+
+.hero-orbit {
+  position: relative;
+  width: 100%;
+  min-height: clamp(420px, 62vh, 680px);
+  display: grid;
+  place-items: center;
+  transform-style: preserve-3d;
+}
+
+.hero-orbit--compact {
+  min-height: clamp(300px, 42vw, 420px);
+}
+
+.hero-orbit__floor {
+  position: absolute;
+  inset: 18% 8% 8%;
+  transform: rotateX(72deg);
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.hero-orbit__ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 1px solid rgba(120, 170, 255, 0.14);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.hero-orbit__ring--1 {
+  width: min(92%, 760px);
+  height: min(42%, 220px);
+  opacity: 0.55;
+}
+
+.hero-orbit__ring--2 {
+  width: min(78%, 640px);
+  height: min(34%, 180px);
+  opacity: 0.38;
+}
+
+.hero-orbit__ring--3 {
+  width: min(64%, 520px);
+  height: min(26%, 140px);
+  opacity: 0.24;
+}
+
+.hero-orbit__stage {
+  position: relative;
+  width: min(100%, 980px);
+  height: clamp(380px, 58vh, 620px);
+  perspective: 1500px;
+  perspective-origin: 50% 46%;
+  transform-style: preserve-3d;
+}
+
+.hero-orbit--compact .hero-orbit__stage {
+  width: 100%;
+  height: clamp(280px, 38vw, 380px);
+  perspective: 1100px;
+}
+
+.hero-orbit__track {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translateZ(0);
+}
+
+.hero-orbit__card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(280px, 42vw);
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  transition:
+    opacity 280ms ease,
+    filter 280ms ease;
+  will-change: transform, opacity;
+}
+
+.hero-orbit--compact .hero-orbit__card {
+  width: min(200px, 52vw);
+}
+
+.hero-orbit__card--front {
+  filter: brightness(1.02) saturate(1.04);
+}
+
+.hero-orbit__card-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: clamp(16px, 2vw, 24px);
+  border: 1px solid rgba(140, 190, 255, 0.2);
+  background: #060b16;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 24px 70px rgba(0, 0, 0, 0.5),
+    0 0 48px rgba(18, 83, 237, 0.14);
+  aspect-ratio: 4 / 5;
+}
+
+.hero-orbit--compact .hero-orbit__card-frame {
+  border-radius: 18px;
+  border-color: rgba(18, 83, 237, 0.14);
+  background: #ffffff;
+  box-shadow:
+    0 12px 36px rgba(15, 23, 42, 0.14),
+    0 0 0 1px rgba(255, 255, 255, 0.85);
+  aspect-ratio: 1 / 1;
+}
+
+.hero-orbit__card-glow {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at 50% 30%, rgba(18, 83, 237, 0.28), transparent 62%);
+  pointer-events: none;
+}
+
+.hero-orbit--compact .hero-orbit__card-glow {
+  background: radial-gradient(circle at 50% 28%, rgba(18, 83, 237, 0.1), transparent 58%);
+}
+
+.hero-orbit__card-image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  padding: clamp(0.75rem, 2vw, 1.1rem);
+  box-sizing: border-box;
+}
+
+.hero-orbit__card-image--cover {
+  padding: 0;
+  object-fit: cover;
+}
+
+.hero-orbit__card-copy {
+  position: absolute;
+  inset: auto 0 0;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  background: linear-gradient(180deg, transparent 0%, rgba(3, 7, 17, 0.92) 42%);
+}
+
+.hero-orbit__eyebrow {
+  margin: 0 0 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(170, 205, 255, 0.88);
+}
+
+.hero-orbit__title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: #f8fbff;
+}
+
+.hero-orbit__subtitle {
+  margin: 0 0 0.85rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgba(220, 232, 255, 0.78);
+}
+
+.hero-orbit__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.35rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  background: #f8fbff;
+  color: #050a14;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.hero-orbit__cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(248, 251, 255, 0.2);
+}
+
+.hero-orbit__compact-label {
+  position: absolute;
+  bottom: 0.35rem;
+  left: 50%;
+  z-index: 4;
+  width: min(88%, 16rem);
+  margin: 0;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 767px) {
+  .hero-orbit__stage {
+    height: clamp(340px, 54vh, 480px);
+  }
+
+  .hero-orbit__card {
+    width: min(220px, 62vw);
+  }
+
+  .hero-orbit__floor {
+    inset: 24% 4% 6%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .hero-orbit__card {
+    transition: none;
+  }
+
   .hero-showcase__panel--center.hero-showcase__panel--active .hero-showcase__panel-frame {
     animation: none;
   }

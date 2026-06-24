@@ -10,6 +10,7 @@ import DeferredHtmlLinkInterceptor from "@/components/vibe/DeferredHtmlLinkInter
 import QueryProvider from "@/providers/QueryProvider";
 import WebVitalsReporter from "@/components/performance/WebVitalsReporter";
 import RoutePreloader from "@/components/layout/RoutePreloader";
+import PageLoadSplash from "@/components/layout/PageLoadSplash";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
@@ -27,6 +28,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <QueryProvider>
       <AuthProvider>
+        <PageLoadSplash />
         <WebVitalsReporter />
         <RoutePreloader />
         <StorefrontChrome>

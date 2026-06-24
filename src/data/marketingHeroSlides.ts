@@ -18,15 +18,35 @@ export interface MarketingHeroSlide {
 
 const PRODUCT = "/images/m/products/image";
 
-const DRUM_HERO =
-
-  "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg";
-
 const CAT = "/images/m/home/cats";
 
 
 
 export const MARKETING_HERO_SLIDES: MarketingHeroSlide[] = [
+
+  {
+
+    src: "/images/Tl 6 BUTTER BLONDIE1.png",
+
+    alt: "Hertz TL-6 electric guitar in butter blond finish",
+
+    fit: "contain",
+
+    objectPosition: "center center",
+
+  },
+
+  {
+
+    src: "/images/Tl 6 MNT GREEN Colored New_.png",
+
+    alt: "Hertz TL-6 electric guitar in mint green",
+
+    fit: "contain",
+
+    objectPosition: "center center",
+
+  },
 
   {
 
@@ -37,18 +57,6 @@ export const MARKETING_HERO_SLIDES: MarketingHeroSlide[] = [
     fit: "contain",
 
     objectPosition: "center bottom",
-
-  },
-
-  {
-
-    src: DRUM_HERO,
-
-    alt: "Professional acoustic drum kit",
-
-    fit: "cover",
-
-    objectPosition: "center 58%",
 
   },
 

@@ -21,17 +21,16 @@ export default function NotFound() {
           Head back home or search our catalog.
         </p>
         <div className="error-page__actions">
-          <div className="error-page__btn-chain">
+          <div className="error-page__btn-row">
             <Link
               href={ROUTES.home}
-              className="error-page__btn error-page__btn--primary error-page__btn--chain"
+              className="error-page__btn error-page__btn--primary"
             >
               Back to home
             </Link>
-            <span className="error-page__btn-bridge" aria-hidden />
             <Link
               href={ROUTES.search}
-              className="error-page__btn error-page__btn--secondary error-page__btn--chain"
+              className="error-page__btn error-page__btn--secondary"
             >
               Search products
             </Link>

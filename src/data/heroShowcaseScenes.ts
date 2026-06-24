@@ -15,6 +15,8 @@ export interface HeroShowcaseScene {
   fit?: MarketingHeroSlide["fit"];
   objectPosition?: string;
   eyebrow: string;
+  categoryTag: string;
+  hot?: boolean;
   title: string;
   subtitle: string;
   ctaLabel: string;
@@ -26,49 +28,68 @@ const SCENE_META: Omit<
   "id" | "src" | "alt" | "fit" | "objectPosition"
 >[] = [
   {
-    eyebrow: "Featured collection",
-    title: "Legendary tone.",
-    subtitle: "Flagship guitars and electric icons — curated for players who demand more.",
-    ctaLabel: "Shop guitars",
+    eyebrow: "New arrival",
+    categoryTag: "Guitars",
+    hot: true,
+    title: "Hertz TL-6.",
+    subtitle: "Tele-style tone in butter blond — built for stage and studio.",
+    ctaLabel: "Shop now",
     ctaHref: categoryPath("guitars"),
   },
   {
-    eyebrow: "Drum Month spotlight",
-    title: "Feel the impact.",
-    subtitle: "Acoustic kits, electronic rigs, and percussion built for the main stage.",
-    ctaLabel: "Shop drums",
-    ctaHref: categoryPath("drums-percussion"),
+    eyebrow: "Limited finish",
+    categoryTag: "Guitars",
+    hot: true,
+    title: "Mint green.",
+    subtitle: "A fresh take on classic electric guitar design.",
+    ctaLabel: "Shop now",
+    ctaHref: categoryPath("guitars"),
+  },
+  {
+    eyebrow: "Featured collection",
+    categoryTag: "Guitars",
+    title: "Legendary tone.",
+    subtitle: "Flagship guitars and electric icons — curated for players who demand more.",
+    ctaLabel: "Shop now",
+    ctaHref: categoryPath("guitars"),
   },
   {
     eyebrow: "Studio setup showcase",
+    categoryTag: "Studio",
+    hot: true,
     title: "Producer ready.",
     subtitle: "Samplers, keys, and production tools for modern beatmakers and composers.",
-    ctaLabel: "Shop studio",
+    ctaLabel: "Shop now",
     ctaHref: categoryPath("studio-recording"),
   },
   {
     eyebrow: "Pro audio launch",
+    categoryTag: "Studio",
     title: "Record without limits.",
     subtitle: "Interfaces and studio essentials trusted in rooms around the world.",
-    ctaLabel: "Shop interfaces",
+    ctaLabel: "Shop now",
     ctaHref: categoryPath("studio-recording"),
   },
   {
     eyebrow: "Artist-pick collection",
+    categoryTag: "Bass",
     title: "Low end. High impact.",
     subtitle: "Precision bass tone — from rehearsal room to sold-out venues.",
-    ctaLabel: "Shop bass",
+    ctaLabel: "Shop now",
     ctaHref: categoryPath("bass"),
   },
   {
     eyebrow: "Live sound spotlight",
+    categoryTag: "Live sound",
+    hot: true,
     title: "Own the stage.",
     subtitle: "PA systems and live rigs engineered for clarity at any scale.",
-    ctaLabel: "Shop live sound",
+    ctaLabel: "Shop now",
     ctaHref: categoryPath("live-sound-lighting"),
   },
   {
     eyebrow: "Limited drop",
+    categoryTag: "Deals",
     title: "Serious savings.",
     subtitle: "Big-name brands at prices that move fast — while stock lasts.",
     ctaLabel: "View deals",
@@ -76,9 +97,10 @@ const SCENE_META: Omit<
   },
   {
     eyebrow: "Best sellers spotlight",
+    categoryTag: "Trending",
     title: "Trending gear.",
     subtitle: "The instruments and tools creators are adding to their rigs right now.",
-    ctaLabel: "Explore gear",
+    ctaLabel: "Explore",
     ctaHref: ROUTES.search,
   },
 ];
