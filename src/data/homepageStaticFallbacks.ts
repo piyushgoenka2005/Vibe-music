@@ -167,7 +167,9 @@ export async function getHomepageStaticFallbacks(
     sections.push({
       key: "featured_categories",
       sectionId: "popular-categories",
-      title: "Shop by Category",
+      title: "Find Your Product",
+      subtitle:
+        "Curated departments for every stage — from bedroom studio to main stage.",
       layout: "category_grid",
       categories: featuredCategories,
     });

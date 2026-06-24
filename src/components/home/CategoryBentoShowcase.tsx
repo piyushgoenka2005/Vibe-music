@@ -15,15 +15,6 @@ function bentoIndexStyle(index: number): CSSProperties {
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
-const headerVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.8, ease: EASE_OUT },
-  },
-};
-
 const gridVariants = {
   hidden: {},
   visible: {
@@ -290,33 +281,13 @@ export default function CategoryBentoShowcase() {
   const reduceMotion = useHydrationSafeReducedMotion();
 
   return (
-    <section className="category-bento" aria-labelledby="category-bento-title">
+    <section className="category-bento" aria-label="Featured category departments">
       <div className="category-bento__atmosphere" aria-hidden>
         <span className="category-bento__grid-texture" />
         <span className="category-bento__noise" />
       </div>
 
       <div className="category-bento__inner">
-        <motion.header
-          className="category-bento__header"
-          initial={reduceMotion ? false : "hidden"}
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-          variants={reduceMotion ? undefined : headerVariants}
-        >
-          <p className="category-bento__eyebrow">
-            <span className="category-bento__eyebrow-line" aria-hidden />
-            Shop by category
-            <span className="category-bento__eyebrow-line" aria-hidden />
-          </p>
-          <h2 id="category-bento-title" className="category-bento__title">
-            Find Your Sound
-          </h2>
-          <p className="category-bento__subtitle">
-            Curated departments for every stage — from bedroom studio to main stage.
-          </p>
-        </motion.header>
-
         <div className="category-bento__showcase-scroll">
           <motion.div
             className="category-bento__grid"

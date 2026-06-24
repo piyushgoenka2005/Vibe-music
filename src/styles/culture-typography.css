@@ -1,9 +1,8 @@
-/* ─── Culture typography hero (Truck'N Roll reference) ─── */
+/* ─── Culture typography — continuous scroll runway ─── */
 
 .culture-typography {
   position: relative;
-  min-height: 100vh;
-  overflow: hidden;
+  height: var(--culture-scroll-height, 280vh);
   background: #1253ed;
   isolation: isolate;
   --spotlight-x: 50%;
@@ -11,26 +10,53 @@
   --spotlight-opacity: 0;
 }
 
+.culture-typography__sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
 .culture-typography__typography-stack {
   position: absolute;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
   pointer-events: none;
 }
 
-.culture-typography__bg-spotlight {
-  position: absolute;
-  inset: -6% -4%;
-  z-index: 1;
+.culture-typography__scroll-track {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: clamp(0.1rem, 0.3vw, 0.3rem);
+  width: 100%;
+  will-change: transform;
+}
+
+.culture-typography__scroll-track--spotlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.culture-typography__bg,
+.culture-typography__bg-spotlight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: clamp(0.05rem, 0.2vw, 0.25rem);
+  padding: clamp(2rem, 8vh, 5rem) 0;
   pointer-events: none;
   user-select: none;
-  will-change: transform, opacity;
+}
+
+.culture-typography__bg-spotlight {
   opacity: var(--spotlight-opacity, 0);
+  will-change: opacity;
   -webkit-mask-image: radial-gradient(
     circle clamp(140px, 22vw, 320px) at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
     #000 0%,
@@ -42,6 +68,35 @@
     #000 0%,
     rgba(0, 0, 0, 0.92) 38%,
     transparent 72%
+  );
+}
+
+.culture-typography__scroll-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: clamp(72px, 12vh, 120px);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.culture-typography__scroll-fade--top {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    #1253ed 0%,
+    rgba(18, 83, 237, 0.85) 40%,
+    transparent 100%
+  );
+}
+
+.culture-typography__scroll-fade--bottom {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    #1253ed 0%,
+    rgba(18, 83, 237, 0.85) 40%,
+    transparent 100%
   );
 }
 
@@ -93,20 +148,6 @@
   background-size: 180px 180px;
 }
 
-.culture-typography__bg {
-  position: absolute;
-  inset: -6% -4%;
-  z-index: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(0.1rem, 0.3vw, 0.3rem);
-  pointer-events: none;
-  user-select: none;
-  will-change: transform;
-}
-
 .culture-typography__word {
   margin: 0;
   font-family: var(--font-primary);
@@ -130,7 +171,8 @@
   position: relative;
   z-index: 2;
   display: flex;
-  min-height: 100vh;
+  height: 100%;
+  min-height: 100svh;
   align-items: center;
   justify-content: center;
   padding: clamp(2.5rem, 8vw, 5rem) clamp(1.25rem, 4vw, 2rem);
@@ -226,11 +268,6 @@
 }
 
 @media (max-width: 767px) {
-  .culture-typography__bg,
-  .culture-typography__bg-spotlight {
-    inset: -4% -10%;
-  }
-
   .culture-typography__bg-spotlight {
     -webkit-mask-image: radial-gradient(
       circle clamp(110px, 34vw, 220px) at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
@@ -264,8 +301,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .culture-typography__bg,
-  .culture-typography__bg-spotlight {
+  .culture-typography__scroll-track {
     will-change: auto;
   }
 

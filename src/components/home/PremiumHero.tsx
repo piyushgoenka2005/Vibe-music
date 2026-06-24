@@ -19,7 +19,10 @@ export default function PremiumHero() {
             creators who want gear that keeps up.
           </p>
           <div className="premium-hero__actions">
-            <Link href={ROUTES.search} className="premium-btn premium-btn--primary premium-btn--lg">
+            <Link
+              href={ROUTES.search}
+              className="premium-btn premium-btn--primary premium-btn--lg"
+            >
               Shop all gear
             </Link>
             <Link

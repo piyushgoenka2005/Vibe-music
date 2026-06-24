@@ -7,6 +7,7 @@ import {
   isGlobalFirestoreCircuitOpen,
   markFirestoreUnavailable,
   withFirestoreDeadline,
+  FIRESTORE_FAST_FAIL_MS,
 } from "@/lib/server/firestoreErrors";
 import { logInfo, logWarn } from "@/lib/server/logger";
 
@@ -43,7 +44,7 @@ export async function verifyFirestoreConnection(): Promise<FirestoreHealthResult
   try {
     await withFirestoreDeadline(
       () => getAdminFirestore().collection("settings").doc("store").get(),
-      800
+      FIRESTORE_FAST_FAIL_MS
     );
     return { ok: true };
   } catch (error) {

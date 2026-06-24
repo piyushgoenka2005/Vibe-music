@@ -21,17 +21,17 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
     links: [
       { label: "Track your order", href: ROUTES.trackOrder },
       { label: "Contact support", href: `mailto:${BRAND.email}` },
-      { label: "Shipping & delivery", href: `${ROUTES.search}?q=shipping` },
-      { label: "Returns & exchanges", href: `${ROUTES.search}?q=returns` },
+      { label: "Shipping & delivery", href: ROUTES.page("shipping") },
+      { label: "Returns & exchanges", href: ROUTES.page("returns") },
     ],
   },
   {
     id: "legal",
     label: "02 / Legal",
     links: [
-      { label: "Terms & conditions", href: `${ROUTES.search}?q=terms` },
-      { label: "Privacy policy", href: `${ROUTES.search}?q=privacy` },
-      { label: "Cookie policy", href: `${ROUTES.search}?q=cookies` },
+      { label: "Terms & conditions", href: ROUTES.page("terms") },
+      { label: "Privacy policy", href: ROUTES.page("privacy") },
+      { label: "Cookie policy", href: ROUTES.page("cookies") },
       { label: "Contact", href: `mailto:${BRAND.email}` },
     ],
   },
@@ -53,6 +53,7 @@ export default function SiteFooter() {
   const panelRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const year = new Date().getFullYear();
 
   useEffect(() => {
@@ -119,17 +120,40 @@ export default function SiteFooter() {
     };
   }, []);
 
-  function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const value = email.trim();
+    const firstName = String(formData.get("firstName") ?? "").trim();
+    const lastName = String(formData.get("lastName") ?? "").trim();
+    const marketing = formData.get("marketing") === "on";
 
     if (!EMAIL_PATTERN.test(value)) {
       showToast("Please enter a valid email address.", "error");
       return;
     }
 
-    setEmail("");
-    showToast("Thanks for joining the Vibe Music list!", "success");
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: value, firstName, lastName, marketing }),
+      });
+      const data = (await response.json()) as { message?: string; error?: string };
+      if (!response.ok) {
+        showToast(data.error ?? "Unable to subscribe right now.", "error");
+        return;
+      }
+      setEmail("");
+      form.reset();
+      showToast(data.message ?? "Thanks for joining the Vibe Music list!", "success");
+    } catch {
+      showToast("Unable to subscribe right now.", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -187,8 +211,8 @@ export default function SiteFooter() {
                     required
                     suppressHydrationWarning
                   />
-                  <button type="submit" className="site-footer-newsletter__submit">
-                    Sign up
+                  <button type="submit" className="site-footer-newsletter__submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Signing up…" : "Sign up"}
                   </button>
                 </div>
                 <label className="site-footer-newsletter__consent">

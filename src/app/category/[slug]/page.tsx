@@ -19,6 +19,9 @@ interface CategoryRouteProps {
 }
 
 export async function generateStaticParams() {
+  if (process.env.NODE_ENV === "development") {
+    return [];
+  }
   const categories = await getCategoryCatalog();
   return collectCategoryRouteSlugs(categories).map((slug) => ({ slug }));
 }

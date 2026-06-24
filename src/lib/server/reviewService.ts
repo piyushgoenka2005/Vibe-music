@@ -139,10 +139,9 @@ export async function submitProductReview(input: {
     hasImages: images.length > 0,
     verifiedPurchase: purchase.verified,
     orderId: purchase.orderId,
-    status: "approved",
+    status: "pending",
   });
 
-  await recalculateProductReviewStats(review.productId);
   return review;
 }
 

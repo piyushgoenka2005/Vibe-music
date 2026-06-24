@@ -9,6 +9,11 @@ export const DEFAULT_METADATA = {
   title: `${BRAND.name}: Musical Instruments, Pro Audio, Accessories & More`,
   description: BRAND.description,
   metadataBase: new URL(BRAND.siteUrl),
+  icons: {
+    icon: [{ url: BRAND.iconPath, type: "image/jpeg" }],
+    apple: [{ url: BRAND.iconPath, type: "image/jpeg" }],
+    shortcut: BRAND.iconPath,
+  },
   openGraph: {
     title: `${BRAND.name}: Musical Instruments, Pro Audio, Accessories & More`,
     description: BRAND.description,

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import FooterRollText from "@/components/layout/FooterRollText";
 
 export type FooterAccordionSection = {
   id: string;
@@ -67,12 +68,12 @@ export default function FooterAccordion({ sections }: FooterAccordionProps) {
                         className="site-footer-accordion__link"
                       >
                         <ArrowUpRight size={12} strokeWidth={2.5} aria-hidden />
-                        {link.label}
+                        <FooterRollText>{link.label}</FooterRollText>
                       </a>
                     ) : (
                       <Link href={link.href} className="site-footer-accordion__link">
                         <ArrowUpRight size={12} strokeWidth={2.5} aria-hidden />
-                        {link.label}
+                        <FooterRollText>{link.label}</FooterRollText>
                       </Link>
                     )}
                   </li>

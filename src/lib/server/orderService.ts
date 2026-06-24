@@ -18,11 +18,14 @@ import {
 import {
   calculateGST,
   DEFAULT_GST_RATE,
-  getShippingCharge,
   SELLER_STATE,
   toPaise,
   type GSTRate,
 } from "@/lib/gstCalculator";
+import {
+  getDefaultShippingMethod,
+  getShippingChargeForMethod,
+} from "@/lib/shipping/shippingMethods";
 import {
   reserveAndFulfillStockForOrder,
   reserveStockForOrder,
@@ -100,7 +103,12 @@ function buildOrderRecord(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const shippingCharge = getShippingCharge(subtotal, payload.couponDiscount);
+  const shippingMethod = payload.shippingMethod ?? getDefaultShippingMethod();
+  const shippingCharge = getShippingChargeForMethod(
+    shippingMethod,
+    subtotal,
+    payload.couponDiscount
+  );
 
   const invoice = calculateGST({
     items: payload.items.map((item) => ({
@@ -161,6 +169,7 @@ function buildOrderRecord(
     couponCode: payload.couponCode ?? null,
     couponDiscount: invoice.couponDiscount,
     shippingCharge: invoice.shippingCharge,
+    shippingMethod,
     platformFee: invoice.platformFee,
     totalGst: invoice.totalGst,
     cgst: invoice.totalCgst,

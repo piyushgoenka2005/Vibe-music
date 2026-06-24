@@ -18,14 +18,20 @@ import "@/styles/culture-typography.css";
 
 const EASE_PREMIUM = [0.16, 1, 0.3, 1] as const;
 
-const DEFAULT_BACKGROUND_WORDS = [
+/** One loop of background words — repeated for continuous scroll */
+const WORD_CYCLE = [
   "DISCOVER",
   "MUSIC",
   "GEAR",
-  "DISCOVER",
-  "MUSIC",
-  "GEAR",
-];
+  "CREATORS",
+  "STUDIO",
+] as const;
+
+/** How many times the cycle repeats in the scroll track */
+const CYCLE_REPEATS = 4;
+
+/** Viewport-heights of scroll runway (longer = more scroll distance) */
+const SCROLL_RUNWAY_VH = CYCLE_REPEATS * 72;
 
 export interface CultureTypographySectionProps {
   metadataLabel?: string;
@@ -87,7 +93,7 @@ export default function CultureTypographySection({
   subtitle,
   buttonLabel = "Explore Gear",
   buttonHref = ROUTES.search,
-  backgroundWords = DEFAULT_BACKGROUND_WORDS,
+  backgroundWords = WORD_CYCLE,
   className = "",
 }: CultureTypographySectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
@@ -107,24 +113,27 @@ export default function CultureTypographySection({
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ["start end", "end start"],
+    offset: ["start start", "end end"],
   });
 
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["-6%", "6%"]);
-  const backgroundScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.02, 1, 0.98]);
-  const isInView = useInView(contentRef, { once: true, amount: 0.35 });
-
-  const lines = useMemo(() => {
-    if (backgroundWords.length >= 6) {
-      return backgroundWords.slice(0, 6);
-    }
-
+  /** Duplicate track so -50% translate loops seamlessly */
+  const scrollLines = useMemo(() => {
+    const cycle =
+      backgroundWords.length > 0 ? [...backgroundWords] : [...WORD_CYCLE];
     const repeated: string[] = [];
-    while (repeated.length < 6) {
-      repeated.push(...backgroundWords);
+    for (let i = 0; i < CYCLE_REPEATS; i++) {
+      repeated.push(...cycle);
     }
-    return repeated.slice(0, 6);
+    return [...repeated, ...repeated];
   }, [backgroundWords]);
+
+  const backgroundY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    reduceMotion ? ["0%", "0%"] : ["0%", "-50%"]
+  );
+
+  const isInView = useInView(contentRef, { once: true, amount: 0.35 });
 
   useEffect(() => {
     if (reduceMotion) return undefined;
@@ -168,82 +177,101 @@ export default function CultureTypographySection({
     spotlightOpacity.set(0);
   }, [spotlightOpacity]);
 
-  const parallaxStyle = reduceMotion
+  const scrollTrackStyle = reduceMotion
     ? undefined
-    : {
-        y: backgroundY,
-        scale: backgroundScale,
-      };
+    : { y: backgroundY };
+
+  const sectionStyle = {
+    "--culture-scroll-height": reduceMotion
+      ? "130svh"
+      : `${SCROLL_RUNWAY_VH}vh`,
+  } as React.CSSProperties;
 
   return (
     <section
       ref={sectionRef}
       className={`culture-typography${className ? ` ${className}` : ""}`}
+      style={sectionStyle}
       aria-labelledby="culture-typography-title"
       data-vibe-section="culture-typography"
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
     >
-      <div className="culture-typography__atmosphere" aria-hidden />
-      <div className="culture-typography__noise" aria-hidden />
+      <div className="culture-typography__sticky">
+        <div className="culture-typography__atmosphere" aria-hidden />
+        <div className="culture-typography__noise" aria-hidden />
 
-      <div className="culture-typography__typography-stack" aria-hidden>
-        <motion.div className="culture-typography__bg" style={parallaxStyle}>
-          <BackgroundWords lines={lines} />
-        </motion.div>
-
-        {!reduceMotion ? (
-          <motion.div className="culture-typography__bg-spotlight" style={parallaxStyle}>
-            <BackgroundWords lines={lines} lit />
-          </motion.div>
-        ) : null}
-
-        {!reduceMotion ? (
-          <div className="culture-typography__spotlight-orb" />
-        ) : null}
-      </div>
-
-      <div className="culture-typography__content">
-        <motion.div
-          ref={contentRef}
-          className="culture-typography__content-inner"
-          initial={reduceMotion ? false : "hidden"}
-          animate={reduceMotion || isInView ? "visible" : "hidden"}
-          variants={contentVariants}
-        >
-          <motion.p className="culture-typography__meta" variants={itemVariants}>
-            {metadataLabel}
-          </motion.p>
-
-          <motion.h2
-            id="culture-typography-title"
-            className="culture-typography__title"
-            variants={itemVariants}
+        <div className="culture-typography__typography-stack" aria-hidden>
+          <motion.div
+            className="culture-typography__scroll-track"
+            style={scrollTrackStyle}
           >
-            {title}
-          </motion.h2>
+            <div className="culture-typography__bg">
+              <BackgroundWords lines={scrollLines} />
+            </div>
+          </motion.div>
 
-          {subtitle ? (
-            <motion.p className="culture-typography__subtitle" variants={itemVariants}>
-              {subtitle}
-            </motion.p>
+          {!reduceMotion ? (
+            <motion.div
+              className="culture-typography__scroll-track culture-typography__scroll-track--spotlight"
+              style={scrollTrackStyle}
+            >
+              <div className="culture-typography__bg-spotlight">
+                <BackgroundWords lines={scrollLines} lit />
+              </div>
+            </motion.div>
           ) : null}
 
-          <motion.div className="culture-typography__cta-wrap" variants={itemVariants}>
-            <motion.div
-              whileHover={reduceMotion ? undefined : { scale: 1.03, y: -2 }}
-              whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-              transition={{ duration: 0.35, ease: EASE_PREMIUM }}
+          {!reduceMotion ? (
+            <div className="culture-typography__spotlight-orb" />
+          ) : null}
+
+          <div className="culture-typography__scroll-fade culture-typography__scroll-fade--top" />
+          <div className="culture-typography__scroll-fade culture-typography__scroll-fade--bottom" />
+        </div>
+
+        <div className="culture-typography__content">
+          <motion.div
+            ref={contentRef}
+            className="culture-typography__content-inner"
+            initial={reduceMotion ? false : "hidden"}
+            animate={reduceMotion || isInView ? "visible" : "hidden"}
+            variants={contentVariants}
+          >
+            <motion.p className="culture-typography__meta" variants={itemVariants}>
+              {metadataLabel}
+            </motion.p>
+
+            <motion.h2
+              id="culture-typography-title"
+              className="culture-typography__title"
+              variants={itemVariants}
             >
-              <Link href={buttonHref} className="culture-typography__cta">
-                {buttonLabel}
-                <span className="culture-typography__cta-icon" aria-hidden>
-                  <ArrowRight size={18} strokeWidth={2.25} />
-                </span>
-              </Link>
+              {title}
+            </motion.h2>
+
+            {subtitle ? (
+              <motion.p className="culture-typography__subtitle" variants={itemVariants}>
+                {subtitle}
+              </motion.p>
+            ) : null}
+
+            <motion.div className="culture-typography__cta-wrap" variants={itemVariants}>
+              <motion.div
+                whileHover={reduceMotion ? undefined : { scale: 1.03, y: -2 }}
+                whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                transition={{ duration: 0.35, ease: EASE_PREMIUM }}
+              >
+                <Link href={buttonHref} className="culture-typography__cta">
+                  {buttonLabel}
+                  <span className="culture-typography__cta-icon" aria-hidden>
+                    <ArrowRight size={18} strokeWidth={2.25} />
+                  </span>
+                </Link>
+              </motion.div>
             </motion.div>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -22,6 +22,12 @@ export async function register() {
     );
     const firestoreHealth = await verifyFirestoreConnection();
     if (!firestoreHealth.ok && process.env.NODE_ENV !== "production") {
+      const { markFirestoreUnavailable } = await import(
+        "@/lib/server/firestoreErrors"
+      );
+      markFirestoreUnavailable(
+        new Error(firestoreHealth.error ?? "Firestore unavailable in dev")
+      );
       const { logInfo } = await import("@/lib/server/logger");
       logInfo(
         "Dev mode: Firestore degraded — APIs will use local JSON / file fallbacks",

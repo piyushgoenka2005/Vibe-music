@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { GlassFilter } from "@/components/ui/liquid-glass";
@@ -8,9 +9,10 @@ import SiteFooter from "@/components/layout/SiteFooter";
 import SkipToContent from "@/components/layout/SkipToContent";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
-const SplashCursor = dynamic(() => import("@/components/SplashCursor"), {
-  ssr: false,
-});
+const DeferredSplashCursor = dynamic(
+  () => import("@/components/layout/DeferredSplashCursor"),
+  { ssr: false }
+);
 
 const SocialRail = dynamic(() => import("@/components/layout/SocialRail"), {
   ssr: false,
@@ -37,10 +39,15 @@ export default function StorefrontChrome({
 }) {
   const pathname = usePathname() ?? "";
   const hideChrome = pathname.startsWith("/admin");
-  const isHomePage = pathname === "/";
+  const isLandingPage = pathname === "/";
   const prefersReducedMotion = usePrefersReducedMotion();
   const splashEnabled =
-    isHomePage && !SPLASH_CURSOR_DISABLED && !prefersReducedMotion && !hideChrome;
+    !SPLASH_CURSOR_DISABLED && !prefersReducedMotion && !hideChrome;
+
+  useEffect(() => {
+    document.body.classList.toggle("is-landing-page", isLandingPage);
+    return () => document.body.classList.remove("is-landing-page");
+  }, [isLandingPage]);
 
   if (hideChrome) {
     return <>{children}</>;
@@ -49,18 +56,26 @@ export default function StorefrontChrome({
   return (
     <div className="storefront-shell">
       {splashEnabled ? (
-        <SplashCursor
+        <DeferredSplashCursor
+          SIM_RESOLUTION={64}
+          DYE_RESOLUTION={720}
+          CAPTURE_RESOLUTION={256}
           DENSITY_DISSIPATION={5}
           VELOCITY_DISSIPATION={2.75}
           PRESSURE={0.08}
           CURL={1.75}
-          SPLAT_RADIUS={0.14}
+          SPLAT_RADIUS={0.12}
+          ZONE_SPLAT_RADIUS={0.09}
+          SPLAT_FALLOFF="tent"
           SPLAT_FORCE={3200}
           COLOR_INTENSITY={0.07}
           COLOR_UPDATE_SPEED={10}
           SHADING
           RAINBOW_MODE={false}
           COLOR="#1253ED"
+          ZONE_COLOR="#FFFFFF"
+          ZONE_COLOR_INTENSITY={0.11}
+          ZONE_SELECTORS='[data-vibe-section="footer"], [data-footer-panel]'
         />
       ) : null}
       <GlassFilter />

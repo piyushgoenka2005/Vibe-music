@@ -14,6 +14,7 @@ import {
 } from "@/services/orderService";
 import { useCartStore } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";
+import type { ShippingMethod } from "@/lib/shipping/shippingMethods";
 import type {
   CreateOrderPayload,
   CreateRazorpayOrderResponse,
@@ -25,6 +26,7 @@ import type { CheckoutSummaryItem } from "@/components/checkout/CheckoutSummary"
 export interface UseCheckoutPaymentOptions {
   items: CheckoutSummaryItem[];
   shippingAddress: ShippingAddress;
+  shippingMethod?: ShippingMethod;
   buyerState: string;
   email: string;
   customerName?: string;
@@ -44,6 +46,7 @@ function orderPayloadKey(payload: CreateOrderPayload): string {
     coupon: payload.couponCode,
     discount: payload.couponDiscount,
     method: payload.paymentMethod,
+    shippingMethod: payload.shippingMethod,
     buyerState: payload.buyerState,
   });
 }
@@ -51,6 +54,7 @@ function orderPayloadKey(payload: CreateOrderPayload): string {
 export function useCheckoutPayment({
   items,
   shippingAddress,
+  shippingMethod = "standard",
   buyerState,
   email,
   customerName,
@@ -94,6 +98,7 @@ export function useCheckoutPayment({
       couponDiscount,
       shippingAddress,
       paymentMethod,
+      shippingMethod,
       buyerState,
     };
   }, [
@@ -105,6 +110,7 @@ export function useCheckoutPayment({
     couponCode,
     couponDiscount,
     paymentMethod,
+    shippingMethod,
     buyerState,
   ]);
 

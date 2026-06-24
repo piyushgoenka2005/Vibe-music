@@ -4,6 +4,7 @@ import AppShell from "@/components/layout/AppShell";
 import { DEFAULT_METADATA } from "@/lib/site";
 import "./globals.css";
 import "@/styles/typography.css";
+import "@/styles/gooey-linkup.css";
 import "@/styles/site-layout.css";
 import "@/styles/site-footer.css";
 import "@/styles/social-rail.css";

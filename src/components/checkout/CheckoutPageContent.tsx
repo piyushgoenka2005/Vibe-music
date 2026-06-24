@@ -12,6 +12,8 @@ import CheckoutPaymentMethods, {
   type OnlinePaymentChannel,
 } from "@/components/checkout/CheckoutPaymentMethods";
 import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
+import AddressAutocompleteField from "@/components/checkout/AddressAutocompleteField";
+import ShippingMethodPicker from "@/components/checkout/ShippingMethodPicker";
 import { useCheckoutPayment } from "@/hooks/useCheckoutPayment";
 import {
   addressToShipping,
@@ -20,6 +22,11 @@ import {
 import { ROUTES } from "@/lib/routes";
 import { normalizeIndianPhone } from "@/lib/validations/address";
 import { DEFAULT_GST_RATE } from "@/lib/gstCalculator";
+import {
+  getShippingChargeForMethod,
+  SHIPPING_METHOD_IDS,
+  type ShippingMethod,
+} from "@/lib/shipping/shippingMethods";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
 import { useAuthStore } from "@/store/authStore";
@@ -154,6 +161,7 @@ export default function CheckoutPageContent() {
   const [confirmedAddress, setConfirmedAddress] =
     useState<ShippingAddress | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("razorpay");
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("standard");
   const [onlineChannel, setOnlineChannel] =
     useState<OnlinePaymentChannel>("upi");
   const [guestEmailInput, setGuestEmailInput] = useState("");
@@ -247,12 +255,26 @@ export default function CheckoutPageContent() {
   const invoice = computeCheckoutInvoice(
     checkoutItems,
     couponDiscount,
-    buyerState
+    buyerState,
+    0,
+    shippingMethod
   );
+
+  const checkoutSubtotal = checkoutItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const shippingCharges = Object.fromEntries(
+    SHIPPING_METHOD_IDS.map((id) => [
+      id,
+      getShippingChargeForMethod(id, checkoutSubtotal, couponDiscount),
+    ])
+  ) as Record<ShippingMethod, number>;
 
   const payment = useCheckoutPayment({
     items: checkoutItems,
     shippingAddress: resolvedAddress ?? EMPTY_ADDRESS,
+    shippingMethod,
     buyerState,
     email,
     customerName: resolvedAddress?.name,
@@ -597,11 +619,11 @@ export default function CheckoutPageContent() {
                   </label>
                   <label>
                     Address Line 1
-                    <input
+                    <AddressAutocompleteField
                       required
                       value={addressForm.line1}
-                      onChange={(e) =>
-                        setAddressForm((p) => ({ ...p, line1: e.target.value }))
+                      onChange={(line1) =>
+                        setAddressForm((p) => ({ ...p, line1 }))
                       }
                     />
                   </label>
@@ -762,6 +784,12 @@ export default function CheckoutPageContent() {
                 </div>
               ) : null}
 
+              <ShippingMethodPicker
+                value={shippingMethod}
+                onChange={setShippingMethod}
+                charges={shippingCharges}
+              />
+
               <div className="checkout-actions">
                 <CheckoutGlassButton onClick={handleEditAddress} variant="ghost">
                   Edit Address
@@ -821,6 +849,7 @@ export default function CheckoutPageContent() {
           couponDiscount={couponDiscount}
           displayItems={displayItems}
           items={checkoutItems}
+          shippingMethod={shippingMethod}
           paymentAction={
             step === "payment" && resolvedAddress && hasValidContact
               ? {

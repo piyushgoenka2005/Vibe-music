@@ -1,5 +1,44 @@
 /* Vertical column marquee — straight cards, alternating up/down scroll */
 
+.hero_marquee_block.hero_marquee_block--dropship {
+  padding: 0;
+  contain: none;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 920px;
+  background: transparent;
+  width: auto;
+  max-width: none;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  overflow-x: clip;
+}
+
+.hero_marquee_block--dropship .hero_marquee_header {
+  max-width: none;
+  margin: 0;
+  padding: clamp(2.75rem, 5vw, 3.75rem) 1.25rem clamp(2rem, 3.5vw, 2.75rem);
+  background:
+    radial-gradient(
+      ellipse 95% 72% at 50% 38%,
+      rgba(18, 83, 237, 0.09) 0%,
+      rgba(18, 83, 237, 0.04) 32%,
+      transparent 68%
+    ),
+    linear-gradient(
+      180deg,
+      #eff3ff 0%,
+      #f4f7fe 16%,
+      #f6f8fd 38%,
+      #f8faff 58%,
+      #fafcff 78%,
+      #ffffff 100%
+    );
+}
+
+.hero_marquee_block--dropship .dropship-hero {
+  margin-top: 0;
+}
+
 .hero_marquee_block {
   width: 100vw;
   max-width: 100vw;

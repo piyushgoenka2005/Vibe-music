@@ -5,14 +5,18 @@ import { createHmac, timingSafeEqual } from "crypto";
 const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 function getSecret(): string | null {
-  const secret = process.env.INVOICE_ACCESS_SECRET?.trim();
+  const secret =
+    process.env.INVOICE_ACCESS_SECRET?.trim() ||
+    process.env.GUEST_ORDER_ACCESS_SECRET?.trim();
   return secret || null;
 }
 
 function signPayload(payload: string): string {
   const secret = getSecret();
   if (!secret) {
-    throw new Error("INVOICE_ACCESS_SECRET is not configured");
+    throw new Error(
+      "GUEST_ORDER_ACCESS_SECRET (or INVOICE_ACCESS_SECRET) is not configured"
+    );
   }
   return createHmac("sha256", secret).update(payload).digest("base64url");
 }

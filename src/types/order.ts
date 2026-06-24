@@ -1,4 +1,5 @@
 import type { GSTRate, GSTInvoiceData } from "@/lib/gstCalculator";
+import type { ShippingMethod } from "@/lib/shipping/shippingMethods";
 
 import type { OrderInventoryStatus } from "@/types/inventory";
 
@@ -64,6 +65,7 @@ export interface Order {
   couponCode?: string | null;
   couponDiscount: number;
   shippingCharge: number;
+  shippingMethod?: ShippingMethod;
   platformFee: number;
   totalGst: number;
   cgst: number;
@@ -106,6 +108,7 @@ export interface CreateOrderPayload {
   shippingAddress: ShippingAddress;
   paymentMethod: PaymentMethod;
   buyerState: string;
+  shippingMethod?: ShippingMethod;
 }
 
 export interface CreateRazorpayOrderResponse {

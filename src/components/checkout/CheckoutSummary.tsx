@@ -3,15 +3,16 @@
 import { useState } from "react";
 import { Lock, Package, Tag } from "lucide-react";
 import { formatCurrencyPrecise } from "@/utils/currency";
+import type { ShippingMethod } from "@/lib/shipping/shippingMethods";
+import { getShippingChargeForMethod } from "@/lib/shipping/shippingMethods";
 import {
   calculateGST,
   DEFAULT_GST_RATE,
   FREE_SHIPPING_THRESHOLD,
-  getShippingCharge,
   SELLER_STATE,
   type GSTInvoiceData,
+  type GSTRate,
 } from "@/lib/gstCalculator";
-import type { GSTRate } from "@/lib/gstCalculator";
 import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
 import SwipeToPayButton from "@/components/checkout/SwipeToPayButton";
@@ -44,6 +45,7 @@ export interface CheckoutSummaryProps {
   showLineItems?: boolean;
   showPromo?: boolean;
   className?: string;
+  shippingMethod?: ShippingMethod;
   paymentAction?: {
     onPay: () => void | Promise<void>;
     disabled?: boolean;
@@ -82,13 +84,18 @@ export function computeCheckoutInvoice(
   items: CheckoutSummaryItem[],
   couponDiscount: number,
   buyerState: string,
-  platformFee = 0
+  platformFee = 0,
+  shippingMethod: ShippingMethod = "standard"
 ): GSTInvoiceData {
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const shippingCharge = getShippingCharge(subtotal, couponDiscount);
+  const shippingCharge = getShippingChargeForMethod(
+    shippingMethod,
+    subtotal,
+    couponDiscount
+  );
 
   return calculateGST({
     items: items.map((item) => ({
@@ -114,6 +121,7 @@ export default function CheckoutSummary({
   platformFee = 0,
   showLineItems = false,
   showPromo = false,
+  shippingMethod = "standard",
   className = "",
   paymentAction,
 }: CheckoutSummaryProps) {
@@ -121,7 +129,8 @@ export default function CheckoutSummary({
     items,
     couponDiscount,
     buyerState,
-    platformFee
+    platformFee,
+    shippingMethod
   );
 
   const couponCode = useCartStore((s) => s.couponCode);

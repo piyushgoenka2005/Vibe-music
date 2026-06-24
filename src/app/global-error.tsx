@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
+import { ROUTES } from "@/lib/routes";
 
 export default function GlobalError({
   error,
@@ -24,13 +26,19 @@ export default function GlobalError({
               The application encountered an unexpected error.
             </p>
             <div className="error-page__actions">
-              <button
-                type="button"
-                className="error-page__btn error-page__btn--primary"
-                onClick={reset}
-              >
-                Try again
-              </button>
+              <div className="error-page__btn-chain">
+                <button
+                  type="button"
+                  className="error-page__btn error-page__btn--primary error-page__btn--chain"
+                  onClick={reset}
+                >
+                  Try again
+                </button>
+                <span className="error-page__btn-bridge" aria-hidden />
+                <a href={ROUTES.home} className="error-page__btn error-page__btn--secondary error-page__btn--chain">
+                  Back to home
+                </a>
+              </div>
             </div>
           </div>
         </main>

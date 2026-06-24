@@ -38,6 +38,12 @@ export const ROUTES = {
   adminSettings: "/admin/settings",
   adminBlog: "/admin/blog",
   blog: "/blog",
+  gp9: "/gp9",
+  deals: "/deals",
+  brands: "/brands",
+  compare: "/compare",
+  careers: "/pages/careers",
+  page: (slug: string) => `/pages/${slug}`,
 } as const;
 
 export function categoryPath(slug: string): string {
@@ -49,12 +55,9 @@ export function productPath(slug: string): string {
 }
 
 const PLACEHOLDER_REDIRECTS: Record<string, string> = {
-  "/careers": ROUTES.home,
   "/categories": ROUTES.search,
   "/products": ROUTES.search,
-  "/deals": `${ROUTES.searchResults}?q=deals`,
   "/wishlist": ROUTES.accountWishlist,
-  "/gp9": ROUTES.home,
 };
 
 /** Longest-prefix shop paths → category slug */
@@ -91,12 +94,12 @@ const SHOP_PREFIX_RULES: Array<{ prefix: string; target: string }> = [
 
 const NAV_TOP_REDIRECTS: Record<string, string> = {
   "/whats-new": `${ROUTES.searchResults}?q=new`,
-  "/dealzone": `${ROUTES.searchResults}?q=deals`,
+  "/dealzone": ROUTES.deals,
   "/used": `${ROUTES.searchResults}?q=used`,
   "/instrument-rentals": `${ROUTES.search}?q=rentals`,
   "/insync": ROUTES.blog,
   "/sweetcare": `${ROUTES.search}?q=support`,
-  "/outlet-deals": `${ROUTES.searchResults}?q=outlet-deals`,
+  "/outlet-deals": ROUTES.deals,
   "/giveaway": `${ROUTES.search}?q=giveaway`,
   "/financing": `${ROUTES.search}?q=financing`,
   "/integration": ROUTES.search,
@@ -146,6 +149,9 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.accountWishlist) return true;
   if (path === ROUTES.login || path === ROUTES.register) return true;
   if (path === ROUTES.blog || path.startsWith("/blog/")) return true;
+  if (path === ROUTES.gp9 || path.startsWith(`${ROUTES.gp9}/`)) return true;
+  if (path === ROUTES.deals || path === ROUTES.brands || path === ROUTES.compare) return true;
+  if (path === "/careers" || path === ROUTES.careers || path.startsWith("/pages/")) return true;
   if (path === ROUTES.admin) return true;
   if (path.startsWith("/admin/")) return true;
 
@@ -181,8 +187,6 @@ export function resolveLegacyPath(pathname: string): string | null {
 
   if (PLACEHOLDER_REDIRECTS[path]) return PLACEHOLDER_REDIRECTS[path];
 
-  if (path === "/gp9" || path.startsWith("/gp9/")) return ROUTES.home;
-
   const storeDetail = resolveStoreDetail(path);
   if (storeDetail) return storeDetail;
 
@@ -206,7 +210,7 @@ export function resolveLegacyPath(pathname: string): string | null {
   if (shop) return shop;
 
   if (path.startsWith("/dealzone")) {
-    return `${ROUTES.searchResults}?q=deals`;
+    return ROUTES.deals;
   }
   if (path.startsWith("/used")) {
     return `${ROUTES.searchResults}?q=used`;

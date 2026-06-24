@@ -16,12 +16,18 @@ const nextConfig: NextConfig = {
       "firebase/auth",
       "firebase/firestore",
       "@tanstack/react-query",
+      "three",
+      "@react-three/fiber",
+      "@react-three/drei",
+      "gsap",
     ],
   },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "cdn.vibemusic.in" },
+      { protocol: "https", hostname: "static.roland.com", pathname: "/**" },
+      { protocol: "https", hostname: "framerusercontent.com", pathname: "/**" },
     ],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 3600,

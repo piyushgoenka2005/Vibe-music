@@ -43,7 +43,14 @@ export async function generateMetadata({
 
 export default async function ProductRoute({ params }: ProductRouteProps) {
   const { slug } = await params;
+  // #region agent log
+  const _pdpRouteStart = Date.now();
+  fetch('http://127.0.0.1:7828/ingest/1d696600-63a8-447a-b1d2-58422acef253',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'88ed4c'},body:JSON.stringify({sessionId:'88ed4c',location:'product/[slug]/page.tsx:route',message:'PDP SSR route start',data:{slug},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+  // #endregion
   const product = await loadProductCorePage(slug);
+  // #region agent log
+  fetch('http://127.0.0.1:7828/ingest/1d696600-63a8-447a-b1d2-58422acef253',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'88ed4c'},body:JSON.stringify({sessionId:'88ed4c',location:'product/[slug]/page.tsx:route',message:'PDP SSR loadProductCorePage done',data:{slug,found:Boolean(product),ms:Date.now()-_pdpRouteStart},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+  // #endregion
 
   if (!product) {
     notFound();

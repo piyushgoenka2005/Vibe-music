@@ -1,0 +1,37 @@
+/* Shop by category intro — centered header band above category grid + funnel */
+
+.shop-by-category-intro {
+  position: relative;
+  padding: clamp(2.75rem, 5.5vw, 4.25rem) clamp(1rem, 4vw, 1.5rem)
+    clamp(1.25rem, 2.5vw, 2rem);
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -8%, rgba(18, 83, 237, 0.1), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 92% 80%, rgba(99, 102, 241, 0.06), transparent 55%),
+    linear-gradient(180deg, var(--brand-primary-muted, #f4f7fe) 0%, #f8fafc 48%, #ffffff 100%);
+  overflow: hidden;
+}
+
+.shop-by-category-intro__inner {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.shop-by-category-intro .shop-by-category-header {
+  margin-bottom: 0;
+}
+
+.premium-home .shop-by-category-intro + .homepage-wrapper .popular-categories {
+  padding-top: 0;
+  border-bottom: none;
+  background: #ffffff;
+}
+
+.premium-home .shop-by-category-intro + .homepage-wrapper .popular-categories .shop-by-category-header {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .shop-by-category-intro {
+    padding: clamp(2.25rem, 6vw, 3rem) 1rem clamp(1rem, 3vw, 1.5rem);
+  }
+}

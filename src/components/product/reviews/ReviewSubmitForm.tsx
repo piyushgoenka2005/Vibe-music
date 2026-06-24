@@ -57,7 +57,7 @@ export default function ReviewSubmitForm({ productSlug }: ReviewSubmitFormProps)
     setIsSubmitting(true);
     try {
       await submitProductReview(productSlug, { rating, title, body, images });
-      showToast("Your review has been published", "success");
+      showToast("Thanks! Your review is pending moderation.", "success");
       setTitle("");
       setBody("");
       setImages([]);

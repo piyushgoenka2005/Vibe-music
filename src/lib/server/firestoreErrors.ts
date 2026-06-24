@@ -3,7 +3,8 @@ import "server-only";
 import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
 
 export const FIRESTORE_CIRCUIT_MS = 5 * 60 * 1000;
-export const FIRESTORE_FAST_FAIL_MS = 1_200;
+export const FIRESTORE_FAST_FAIL_MS =
+  process.env.NODE_ENV === "production" ? 1_200 : 350;
 
 const FIRESTORE_FAST_FAIL = "FIRESTORE_FAST_FAIL";
 

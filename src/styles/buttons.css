@@ -58,6 +58,8 @@ input[type="reset"],
 
 /* Search bar submit buttons stay fully curved (pill) */
 .sw-search-landing-bar__submit,
-.sw-search-bar__submit {
-  border-radius: var(--radius-pill) !important;
+.sw-search-bar__submit,
+.error-page__btn--chain,
+.gooey-linkup__hit {
+  border-radius: 999px !important;
 }

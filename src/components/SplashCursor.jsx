@@ -11,6 +11,8 @@ function SplashCursor({
   PRESSURE_ITERATIONS = 20,
   CURL = 3,
   SPLAT_RADIUS = 0.2,
+  ZONE_SPLAT_RADIUS,
+  SPLAT_FALLOFF = 'gaussian',
   SPLAT_FORCE = 6000,
   SHADING = true,
   COLOR_UPDATE_SPEED = 10,
@@ -18,7 +20,10 @@ function SplashCursor({
   TRANSPARENT = true,
   RAINBOW_MODE = false,
   COLOR = '#1253ED',
-  COLOR_INTENSITY = 0.15
+  COLOR_INTENSITY = 0.15,
+  ZONE_SELECTORS = '[data-vibe-section="footer"], [data-footer-panel]',
+  ZONE_COLOR = '#FFFFFF',
+  ZONE_COLOR_INTENSITY
 }) {
   const canvasRef = useRef(null);
   const animationFrameId = useRef(null);
@@ -53,6 +58,8 @@ function SplashCursor({
       PRESSURE_ITERATIONS,
       CURL,
       SPLAT_RADIUS,
+      ZONE_SPLAT_RADIUS,
+      SPLAT_FALLOFF: resolveSplatFalloff(SPLAT_FALLOFF),
       SPLAT_FORCE,
       SHADING,
       COLOR_UPDATE_SPEED,
@@ -61,10 +68,20 @@ function SplashCursor({
       TRANSPARENT,
       RAINBOW_MODE,
       COLOR,
-      COLOR_INTENSITY
+      COLOR_INTENSITY,
+      ZONE_SELECTORS,
+      ZONE_COLOR,
+      ZONE_COLOR_INTENSITY: ZONE_COLOR_INTENSITY ?? COLOR_INTENSITY
     };
 
     let pointers = [new pointerPrototype()];
+    let inZone = false;
+
+    function resolveSplatFalloff(mode) {
+      if (mode === 'laplace') return 1;
+      if (mode === 'tent') return 2;
+      return 0;
+    }
 
     const { gl, ext } = getWebGLContext(canvas);
     if (!ext.supportLinearFiltering) {
@@ -329,11 +346,23 @@ function SplashCursor({
         uniform vec3 color;
         uniform vec2 point;
         uniform float radius;
+        uniform float falloff;
+
+        float splatKernel(vec2 p, float r) {
+            float dist = length(p);
+            if (falloff < 0.5) {
+                return exp(-dot(p, p) / r);
+            }
+            if (falloff < 1.5) {
+                return exp(-dist / r);
+            }
+            return dist < r ? 1.0 - dist / r : 0.0;
+        }
 
         void main () {
             vec2 p = vUv - point.xy;
             p.x *= aspectRatio;
-            vec3 splat = exp(-dot(p, p) / radius) * color;
+            vec3 splat = splatKernel(p, radius) * color;
             vec3 base = texture2D(uTarget, vUv).xyz;
             gl_FragColor = vec4(base + splat, 1.0);
         }
@@ -824,13 +853,22 @@ function SplashCursor({
       splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
     }
 
+    function splatRadius() {
+      const base =
+        inZone && config.ZONE_SPLAT_RADIUS != null
+          ? config.ZONE_SPLAT_RADIUS
+          : config.SPLAT_RADIUS;
+      return correctRadius(base / 100.0);
+    }
+
     function splat(x, y, dx, dy, color) {
       splatProgram.bind();
       gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0));
       gl.uniform1f(splatProgram.uniforms.aspectRatio, canvas.width / canvas.height);
       gl.uniform2f(splatProgram.uniforms.point, x, y);
       gl.uniform3f(splatProgram.uniforms.color, dx, dy, 0.0);
-      gl.uniform1f(splatProgram.uniforms.radius, correctRadius(config.SPLAT_RADIUS / 100.0));
+      gl.uniform1f(splatProgram.uniforms.radius, splatRadius());
+      gl.uniform1f(splatProgram.uniforms.falloff, config.SPLAT_FALLOFF);
       blit(velocity.write);
       velocity.swap();
 
@@ -886,19 +924,38 @@ function SplashCursor({
       return delta;
     }
 
-    function hexToRGB(hex) {
+    function hexToRGB(hex, intensityOverride) {
       let val = hex.replace('#', '');
       if (val.length === 3) val = val[0] + val[0] + val[1] + val[1] + val[2] + val[2];
       const r = parseInt(val.slice(0, 2), 16) / 255;
       const g = parseInt(val.slice(2, 4), 16) / 255;
       const b = parseInt(val.slice(4, 6), 16) / 255;
-      const intensity = config.COLOR_INTENSITY ?? 0.15;
+      const intensity = intensityOverride ?? config.COLOR_INTENSITY ?? 0.15;
       return { r: r * intensity, g: g * intensity, b: b * intensity };
+    }
+
+    function isPointerInZone(clientX, clientY) {
+      if (!config.ZONE_COLOR || !config.ZONE_SELECTORS) return false;
+      try {
+        const elements = document.elementsFromPoint(clientX, clientY);
+        return elements.some(
+          (el) => el instanceof Element && el.closest(config.ZONE_SELECTORS)
+        );
+      } catch {
+        return false;
+      }
+    }
+
+    function syncZoneState(clientX, clientY) {
+      inZone = isPointerInZone(clientX, clientY);
     }
 
     function generateColor() {
       const intensity = config.COLOR_INTENSITY ?? 0.15;
       if (!config.RAINBOW_MODE) {
+        if (inZone && config.ZONE_COLOR) {
+          return hexToRGB(config.ZONE_COLOR, config.ZONE_COLOR_INTENSITY);
+        }
         return hexToRGB(config.COLOR);
       }
       let c = HSVtoRGB(Math.random(), 1.0, 1.0);
@@ -985,6 +1042,7 @@ function SplashCursor({
     // Named event handlers for proper cleanup
     function handleMouseDown(e) {
       let pointer = pointers[0];
+      syncZoneState(e.clientX, e.clientY);
       let posX = scaleByPixelRatio(e.clientX);
       let posY = scaleByPixelRatio(e.clientY);
       updatePointerDownData(pointer, -1, posX, posY);
@@ -994,14 +1052,15 @@ function SplashCursor({
     let firstMouseMoveHandled = false;
     function handleMouseMove(e) {
       let pointer = pointers[0];
+      syncZoneState(e.clientX, e.clientY);
       let posX = scaleByPixelRatio(e.clientX);
       let posY = scaleByPixelRatio(e.clientY);
+      let color = generateColor();
       if (!firstMouseMoveHandled) {
-        let color = generateColor();
         updatePointerMoveData(pointer, posX, posY, color);
         firstMouseMoveHandled = true;
       } else {
-        updatePointerMoveData(pointer, posX, posY, pointer.color);
+        updatePointerMoveData(pointer, posX, posY, color);
       }
     }
 
@@ -1009,6 +1068,7 @@ function SplashCursor({
       const touches = e.targetTouches;
       let pointer = pointers[0];
       for (let i = 0; i < touches.length; i++) {
+        syncZoneState(touches[i].clientX, touches[i].clientY);
         let posX = scaleByPixelRatio(touches[i].clientX);
         let posY = scaleByPixelRatio(touches[i].clientY);
         updatePointerDownData(pointer, touches[i].identifier, posX, posY);
@@ -1019,9 +1079,10 @@ function SplashCursor({
       const touches = e.targetTouches;
       let pointer = pointers[0];
       for (let i = 0; i < touches.length; i++) {
+        syncZoneState(touches[i].clientX, touches[i].clientY);
         let posX = scaleByPixelRatio(touches[i].clientX);
         let posY = scaleByPixelRatio(touches[i].clientY);
-        updatePointerMoveData(pointer, posX, posY, pointer.color);
+        updatePointerMoveData(pointer, posX, posY, generateColor());
       }
     }
 

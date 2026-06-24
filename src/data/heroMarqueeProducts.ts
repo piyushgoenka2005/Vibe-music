@@ -1,3 +1,5 @@
+import { productPath, ROUTES } from "@/lib/routes";
+
 export interface HeroMarqueeProduct {
   id: string;
   name: string;
@@ -6,6 +8,30 @@ export interface HeroMarqueeProduct {
   growth: string;
   image: string;
   imageAlt: string;
+  /** Direct product URL override */
+  href?: string;
+  /** Catalog slug — resolved to /product/[slug] */
+  slug?: string;
+}
+
+/** Curated catalog slugs for marquee cards with clear product matches */
+const HERO_MARQUEE_SLUGS: Record<string, string> = {
+  "t1-1": "universal-audio-apollo-twin-x-duo-heritage-edition",
+  "t1-3": "audio-technica-at2020-cardioid-condenser-microphone",
+  "t1-6": "sjc-custom-drums-pathfinder-3-piece-shell-pack-firecracker-red",
+  "t2-1": "pioneer-dj-ddj-flx4-2-deck-dj-controller",
+  "t2-2": "nord-stage-4-88-key-performance-keyboard",
+  "t2-8": "sabian-hhx-complex-cymbal-set-10-14-16-18-21",
+  "t4-3": "martin-d-28-acoustic-guitar-natural",
+};
+
+export function heroMarqueeProductHref(product: HeroMarqueeProduct): string {
+  if (product.href) return product.href;
+
+  const slug = product.slug ?? HERO_MARQUEE_SLUGS[product.id];
+  if (slug) return productPath(slug);
+
+  return `${ROUTES.searchResults}?q=${encodeURIComponent(product.name)}`;
 }
 
 const CAT = "/images/m/home/cats";

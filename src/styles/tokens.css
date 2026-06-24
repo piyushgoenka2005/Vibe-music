@@ -51,8 +51,8 @@
   --font-display: var(--font-primary);
 
   /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.72);
-  --glass-bg-scrolled: rgba(255, 255, 255, 0.88);
+  --glass-bg: #ffffff;
+  --glass-bg-scrolled: #ffffff;
   --glass-border: rgba(226, 232, 240, 0.5);
   --glass-border-strong: rgba(226, 232, 240, 0.8);
   --glass-blur: 16px;

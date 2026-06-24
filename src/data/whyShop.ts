@@ -15,7 +15,7 @@ export interface WhyShopItem {
   id: string;
   iconId: WhyShopIconId;
   title: string;
-  description: string;
+  subtitle: string;
   href: string;
 }
 
@@ -25,63 +25,57 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
   {
     id: "free-shipping",
     iconId: "shipping",
-    title: "Free Shipping",
-    description:
-      "Free shipping across India on qualifying orders. Fast, secure delivery on instruments and audio gear.",
+    title: "Fast, FREE Shipping",
+    subtitle: "Even on qualifying orders.",
     href: ROUTES.search,
   },
   {
     id: "easy-returns",
     iconId: "returns",
     title: "Easy Returns",
-    description:
-      "Simple return process with customer-first support. Shop confidently with hassle-free returns.",
+    subtitle: "Shop confidently with hassle-free returns.",
     href: ROUTES.accountOrders,
   },
   {
     id: "pay-your-way",
     iconId: "payments",
-    title: "Pay Your Way",
-    description: "Flexible payments via Razorpay, UPI, Cards, EMI and Net Banking.",
+    title: "Easy Payments",
+    subtitle: "UPI, cards, EMI & net banking.",
     href: ROUTES.checkout,
   },
   {
     id: "deals-on-deals",
     iconId: "deals",
     title: "Deals on Deals",
-    description:
-      "Exclusive discounts, bundle offers and seasonal promotions on top brands.",
+    subtitle: "Exclusive bundles and seasonal promos.",
     href: `${ROUTES.searchResults}?q=deals`,
   },
   {
     id: "price-match",
     iconId: "price-match",
-    title: "Price Match Guarantee",
-    description:
-      "Found a better deal? We'll work to match competitive pricing on eligible products.",
+    title: "Price Protection",
+    subtitle: "Worry-free shopping.",
     href: `mailto:${BRAND.email}?subject=Price%20Match%20Request`,
   },
   {
     id: "earn-rewards",
     iconId: "rewards",
     title: "Earn Rewards",
-    description: "Earn reward points on purchases and redeem them on future orders.",
+    subtitle: "Redeem points on future orders.",
     href: ROUTES.account,
   },
   {
     id: "expert-gear-support",
     iconId: "support",
-    title: "Expert Gear Support",
-    description:
-      "Talk to real musicians and gear experts for product recommendations and guidance.",
+    title: "FREE Product Support",
+    subtitle: "Got a question? We're here to help.",
     href: `mailto:${BRAND.email}`,
   },
   {
     id: "open-box-savings",
     iconId: "open-box",
     title: "Open Box Savings",
-    description:
-      "Save more with inspected open-box and B-stock products backed by quality checks.",
+    subtitle: "Inspected B-stock, backed by quality checks.",
     href: `${ROUTES.searchResults}?q=open-box`,
   },
 ];

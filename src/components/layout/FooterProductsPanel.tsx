@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { forwardRef, type MouseEvent } from "react";
+import { forwardRef, useEffect, useRef, useState, type MouseEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
 import { optimizeImageUrl } from "@/lib/images";
@@ -68,14 +68,45 @@ function FooterProductSnippet({ product }: { product: Product }) {
 }
 
 const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPanel(_, ref) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [fetchEnabled, setFetchEnabled] = useState(false);
+
+  useEffect(() => {
+    const node = panelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setFetchEnabled(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "240px 0px", threshold: 0.01 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   const { data: products = [] } = useQuery({
     queryKey: ["footer-trending-products"],
     queryFn: () => fetchProducts({ trending: true, limit: 4 }),
     staleTime: 60_000,
+    enabled: fetchEnabled,
   });
 
+  function setPanelRef(node: HTMLDivElement | null) {
+    panelRef.current = node;
+    if (typeof ref === "function") {
+      ref(node);
+    } else if (ref) {
+      ref.current = node;
+    }
+  }
+
   return (
-    <div ref={ref} className="footer-products-panel" data-footer-panel>
+    <div ref={setPanelRef} className="footer-products-panel" data-footer-panel>
       <div className="footer-products-panel__inner">
         <div className="footer-products-panel__header">
           <p className="footer-products-panel__title">Trending at Vibe Music</p>
