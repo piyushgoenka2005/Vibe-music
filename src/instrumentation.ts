@@ -17,10 +17,8 @@ export async function register() {
       }
     }
 
-    const shouldVerifyFirestoreOnStartup =
-      process.env.NODE_ENV === "production" ||
-      process.env.FIRESTORE_HEALTHCHECK_ON_STARTUP === "true" ||
-      process.env.NODE_ENV !== "production";
+    // Always verify on startup — fail hard in production, degrade gracefully in dev.
+    const shouldVerifyFirestoreOnStartup = true;
 
     if (shouldVerifyFirestoreOnStartup) {
       const { verifyFirestoreConnection } = await import(
