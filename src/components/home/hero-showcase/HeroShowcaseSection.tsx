@@ -10,16 +10,12 @@ import {
 import { motion } from "framer-motion";
 import {
   HERO_SHOWCASE_SCENES,
-  wrapSceneIndex,
 } from "@/data/heroShowcaseScenes";
 import AnimatedCanvasBackdrop from "@/components/home/hero-showcase/AnimatedCanvasBackdrop";
-import HeroNavControls from "@/components/home/hero-showcase/HeroNavControls";
 import HeroOrbitalCarousel, {
   indexFromRotation,
-  snapRotationToIndex,
   stepRotation,
 } from "@/components/home/hero-showcase/HeroOrbitalCarousel";
-import HeroThumbnailStrip from "@/components/home/hero-showcase/HeroThumbnailStrip";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 
 const SCENES = HERO_SHOWCASE_SCENES;
@@ -43,7 +39,6 @@ export default function HeroShowcaseSection() {
 
   const [rotation, setRotation] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [failedSrc, setFailedSrc] = useState<Record<string, boolean>>({});
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -53,12 +48,6 @@ export default function HeroShowcaseSection() {
   const handleRotationChange = useCallback((nextRotation: number) => {
     setRotation(nextRotation);
     setActiveIndex(indexFromRotation(nextRotation, COUNT));
-  }, []);
-
-  const advanceTo = useCallback((index: number) => {
-    if (COUNT === 0) return;
-    setRotation((current) => snapRotationToIndex(current, index, COUNT));
-    setActiveIndex(wrapSceneIndex(index, COUNT));
   }, []);
 
   const goNext = useCallback(() => {
@@ -186,7 +175,6 @@ export default function HeroShowcaseSection() {
           <HeroOrbitalCarousel
             scenes={SCENES}
             variant="showcase"
-            isPaused={isPaused}
             rotation={rotation}
             activeIndex={activeIndex}
             onRotationChange={handleRotationChange}
@@ -194,27 +182,6 @@ export default function HeroShowcaseSection() {
             onImageError={handleImageError}
           />
         </motion.div>
-
-        <div
-          className="hero-showcase__controls"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          onFocusCapture={() => setIsPaused(true)}
-          onBlurCapture={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-              setIsPaused(false);
-            }
-          }}
-        >
-          <HeroNavControls onNext={goNext} onPrev={goPrev} />
-
-          <HeroThumbnailStrip
-            activeIndex={activeIndex}
-            failedSrc={failedSrc}
-            scenes={SCENES}
-            onSelect={advanceTo}
-          />
-        </div>
       </div>
     </section>
   );

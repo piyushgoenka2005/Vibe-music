@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { MouseEvent } from "react";
-import { useCompareStore } from "@/store/compareStore";
 import { useCartStore } from "@/store/cartStore";
-import { useToastStore } from "@/store/toastStore";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import { formatCurrency } from "@/utils/currency";
 import { optimizeImageUrl } from "@/lib/images";
@@ -43,8 +40,6 @@ export default function ProductCard({ product, view }: ProductCardProps) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
   const openDrawer = useCartStore((s) => s.openDrawer);
-  const addToCompare = useCompareStore((s) => s.add);
-  const showToast = useToastStore((s) => s.show);
   const productHref = `/product/${product.slug}`;
 
   function prefetchProduct() {
@@ -59,16 +54,6 @@ export default function ProductCard({ product, view }: ProductCardProps) {
     if (product.availability === "out-of-stock") return;
     addItem(product);
     openDrawer();
-  }
-
-  function handleCompare(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-    const added = addToCompare(product);
-    showToast(
-      added ? "Added to compare" : "Compare list is full (max 4 items)",
-      added ? "success" : "error"
-    );
   }
 
   return (
@@ -103,6 +88,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           <Link
             href={productHref}
             prefetch
+            title={product.name}
             onMouseEnter={prefetchProduct}
             onFocus={prefetchProduct}
             style={{ color: "inherit", textDecoration: "none" }}
@@ -134,23 +120,6 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           aria-label={`Add ${product.name} to cart`}
         >
           Quick Add to Cart
-        </button>
-        <button
-          type="button"
-          className="cat-product-card__compare"
-          onClick={handleCompare}
-          aria-label={`Compare ${product.name}`}
-          style={{
-            marginTop: "0.35rem",
-            width: "100%",
-            background: "transparent",
-            border: "1px solid currentColor",
-            padding: "0.4rem",
-            cursor: "pointer",
-            fontSize: "0.8125rem",
-          }}
-        >
-          Compare
         </button>
       </div>
     </article>

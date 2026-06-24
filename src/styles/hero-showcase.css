@@ -23,7 +23,7 @@
   display: grid;
   place-items: start center;
   align-content: start;
-  padding: 0 clamp(0.75rem, 2vw, 1.5rem) clamp(5.5rem, 10vw, 7rem);
+  padding: 0 clamp(0.75rem, 2vw, 1.5rem) clamp(1.5rem, 4vw, 2.5rem);
   perspective: 1600px;
   perspective-origin: 50% 42%;
 }
@@ -430,7 +430,7 @@
   }
 
   .hero-showcase__stage {
-    padding-bottom: clamp(6.5rem, 16vw, 8rem);
+    padding-bottom: clamp(1.75rem, 5vw, 2.5rem);
   }
 
   .hero-showcase__nav-controls {

@@ -30,94 +30,6 @@ function formatRatingAttribute(rating: number): string {
   return Number.isInteger(rounded) ? rounded.toFixed(1) : String(rounded);
 }
 
-type DealPillTone = "hot" | "best" | "save" | "top" | "trending";
-
-function getDealHighlights({
-  sectionKey,
-  price,
-  salePrice,
-  rating,
-  reviewCount,
-  rank,
-  badgeLabel,
-}: {
-  sectionKey: string;
-  price: number;
-  salePrice?: number | null;
-  rating?: number;
-  reviewCount?: number;
-  rank?: number;
-  badgeLabel?: string;
-}): {
-  ratingPill: { label: string; tone: DealPillTone };
-  pricePill: { label: string; tone: DealPillTone };
-} {
-  const hasDiscount =
-    salePrice != null && salePrice > 0 && salePrice < price;
-  const discountPct = hasDiscount
-    ? Math.round((1 - salePrice! / price) * 100)
-    : 0;
-
-  let ratingLabel = "Hot Deal";
-  let ratingTone: DealPillTone = "hot";
-
-  if (badgeLabel) {
-    ratingLabel = badgeLabel;
-    ratingTone = "hot";
-  } else if (rank != null && rank <= 3) {
-    ratingLabel = "Best Seller";
-    ratingTone = "best";
-  } else if (rating != null && rating >= 4.6 && (reviewCount ?? 0) >= 800) {
-    ratingLabel = "Top Rated";
-    ratingTone = "top";
-  } else if (sectionKey === "trending") {
-    ratingLabel = "Trending";
-    ratingTone = "trending";
-  } else if (sectionKey === "staff_picks") {
-    ratingLabel = "Staff Pick";
-    ratingTone = "top";
-  } else if (hasDiscount && discountPct >= 12) {
-    ratingLabel = "Hot Deal";
-    ratingTone = "hot";
-  } else if (sectionKey === "best_sellers") {
-    ratingLabel = "Best Seller";
-    ratingTone = "best";
-  }
-
-  let priceLabel = "Best Deal";
-  let priceTone: DealPillTone = "best";
-
-  if (hasDiscount && discountPct >= 8) {
-    priceLabel = `${discountPct}% OFF`;
-    priceTone = "save";
-  } else if (hasDiscount) {
-    priceLabel = "Best Deal";
-    priceTone = "best";
-  } else if (sectionKey === "deals_of_the_day") {
-    priceLabel = "Hot Deal";
-    priceTone = "hot";
-  } else if (rank != null && rank <= 5) {
-    priceLabel = "Best Deal";
-    priceTone = "best";
-  } else {
-    priceLabel = "Hot Deal";
-    priceTone = "hot";
-  }
-
-  return {
-    ratingPill: { label: ratingLabel, tone: ratingTone },
-    pricePill: { label: priceLabel, tone: priceTone },
-  };
-}
-
-function DealPill({ label, tone }: { label: string; tone: DealPillTone }) {
-  return (
-    <span className={`new-arrivals-card__deal-pill new-arrivals-card__deal-pill--${tone}`}>
-      {label}
-    </span>
-  );
-}
-
 export default function NewArrivalsProductCard({
   id,
   href,
@@ -144,15 +56,6 @@ export default function NewArrivalsProductCard({
   const imageSrc = image ? optimizeImageUrl(image, "productCard") : "";
   const showRating =
     rating != null && reviewCount != null && reviewCount > 0;
-  const { ratingPill, pricePill } = getDealHighlights({
-    sectionKey,
-    price,
-    salePrice,
-    rating,
-    reviewCount,
-    rank,
-    badgeLabel,
-  });
 
   return (
     <Link
@@ -221,13 +124,8 @@ export default function NewArrivalsProductCard({
                 ({reviewCount!.toLocaleString("en-IN")})
               </span>
             </div>
-            <DealPill label={ratingPill.label} tone={ratingPill.tone} />
           </div>
-        ) : (
-          <div className="new-arrivals-card__meta-row new-arrivals-card__meta-row--solo">
-            <DealPill label={ratingPill.label} tone={ratingPill.tone} />
-          </div>
-        )}
+        ) : null}
 
         <div className="new-arrivals-card__meta-row new-arrivals-card__meta-row--price">
           <div className="new-arrivals-card__pricing">
@@ -240,7 +138,7 @@ export default function NewArrivalsProductCard({
               {priceNode ?? formatCurrency(displayPrice)}
             </span>
           </div>
-          <DealPill label={pricePill.label} tone={pricePill.tone} />
+          <span className="new-arrivals-card__stock-pill">Limited stock</span>
         </div>
       </div>
     </Link>
