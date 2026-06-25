@@ -1,11 +1,7 @@
-export interface GuitarStoryBanner {
-  id: string;
-  imageSrc: string;
-  imageAlt: string;
-}
+import type { AplusStoryBanner } from "@/components/common/AplusStoryBanners";
 
 /** Fixed guitar story banners shown on all guitar product pages. */
-export const GUITAR_STORY_BANNERS: GuitarStoryBanner[] = [
+export const GUITAR_STORY_BANNERS: AplusStoryBanner[] = [
   {
     id: "guitar-story-1",
     imageSrc: "/images/guitar-1.webp",

@@ -45,6 +45,10 @@ const OutletStorySection = dynamic(
 const EditorialSplit = dynamic(() => import("@/components/home/EditorialSplit"), {
   loading: () => null,
 });
+const HomepageAplusContent = dynamic(
+  () => import("@/components/home/HomepageAplusContent"),
+  { loading: () => null }
+);
 
 const ServiceStatusCarousel = dynamic(
   () => import("@/components/home/ServiceStatusCarousel"),
@@ -90,6 +94,8 @@ export default function HomePage() {
       <Suspense fallback={<HomepageSectionsSkeleton />}>
         <HomepageSectionsAsync />
       </Suspense>
+
+      <HomepageAplusContent />
 
       <EditorialSplit />
 
