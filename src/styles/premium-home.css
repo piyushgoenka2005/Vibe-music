@@ -12,7 +12,8 @@
   --full-bleed-inline: max(0px, (100vw - 100%) / 2);
 }
 
-.premium-home > [data-vibe-section="hero-showcase"] {
+.premium-home > [data-vibe-section="hero-showcase"],
+.premium-home > [data-vibe-section="homepage-banner-hero"] {
   overflow: visible;
 }
 

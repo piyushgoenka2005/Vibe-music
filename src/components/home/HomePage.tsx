@@ -5,6 +5,10 @@ import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 
+const HomepageBannerHero = dynamic(
+  () => import("@/components/home/homepage-banner-hero/HomepageBannerHero"),
+  { loading: () => null }
+);
 const HeroShowcaseSection = dynamic(
   () => import("@/components/home/hero-showcase"),
   { loading: () => null }
@@ -79,7 +83,8 @@ export default function HomePage() {
     <main className="premium-home">
       <h1 className="visually-hidden">Vibe Music — Musical Instruments & Pro Audio</h1>
 
-      <HeroShowcaseSection />
+      <HomepageBannerHero />
+      {/* <HeroShowcaseSection /> */}
       <PremiumHero />
       <HomepageStats />
       <HomepagePromoBanner />

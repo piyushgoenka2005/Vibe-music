@@ -64,7 +64,8 @@
 }
 
 .gooey-linkup__blob--accent {
-  background: rgba(18, 83, 237, 0.12);
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.07);
 }
 
 .gooey-linkup__blob--active {
@@ -138,7 +139,7 @@
 }
 
 .gooey-linkup__hit--accent {
-  color: var(--brand-primary, #1253ed);
+  color: #1c1917;
 }
 
 .gooey-linkup__hit:focus-visible {

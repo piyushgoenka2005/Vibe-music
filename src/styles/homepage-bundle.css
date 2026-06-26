@@ -1,6 +1,7 @@
 /* Homepage-only styles — imported from HomePage to avoid loading on account/admin routes */
 
 @import "./premium-home.css";
+@import "./homepage-banner-hero.css";
 @import "./hero-showcase.css";
 @import "./category-bento.css";
 @import "./service-status-carousel.css";
