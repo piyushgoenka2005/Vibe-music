@@ -464,3 +464,6 @@ export function trimMarqueeTrack(
 ): HeroMarqueeProduct[] {
   return track.slice(0, HERO_MARQUEE_ITEMS_PER_COLUMN);
 }
+
+/** Alias for Find Your Product scanner section */
+export const FIND_YOUR_PRODUCT_TRACKS = HERO_MARQUEE_TRACKS;

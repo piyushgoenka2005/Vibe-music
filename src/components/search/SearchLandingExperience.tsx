@@ -8,7 +8,16 @@ import {
   useRef,
   useState,
 } from "react";
-import { Search } from "lucide-react";
+import {
+  Drum,
+  Guitar,
+  Mic2,
+  Radio,
+  Search,
+  Sparkles,
+  Tag,
+  TrendingUp,
+} from "lucide-react";
 import { useSearch } from "@/hooks/useSearch";
 import {
   SEARCH_LANDING_QUICK_CHIPS,
@@ -19,6 +28,16 @@ import SearchLandingRollingPlaceholder, {
   SEARCH_LANDING_INPUT_ID,
 } from "@/components/search/SearchLandingRollingPlaceholder";
 import { searchStore } from "@/store/searchStore";
+import type { LucideIcon } from "lucide-react";
+
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  Guitars: Guitar,
+  Drums: Drum,
+  Studio: Mic2,
+  "Live sound": Radio,
+  Deals: Tag,
+  "New arrivals": Sparkles,
+};
 
 interface SearchLandingExperienceProps {
   autoFocus?: boolean;
@@ -45,7 +64,7 @@ export default function SearchLandingExperience({
     moveActiveIndex,
     handleEnter,
     recentSearches,
-  } = useSearch({ inlineSuggestions: isFocused || showPanel });
+  } = useSearch({ inlineSuggestions: showPanel });
 
   useEffect(() => {
     searchStore.hydrate();
@@ -132,7 +151,8 @@ export default function SearchLandingExperience({
   );
 
   const showRollingPlaceholder = !query && !isFocused;
-  const panelOpen = showPanel && (isFocused || query.length > 0);
+  const panelOpen = showPanel && query.length > 0;
+  const showDiscover = !panelOpen;
 
   return (
     <div ref={shellRef} className="sw-search-landing-bar">
@@ -214,50 +234,61 @@ export default function SearchLandingExperience({
         ) : null}
       </form>
 
-      <div className="sw-search-landing-bar__discover">
-        <p className="sw-search-landing-bar__discover-label">Browse by category</p>
-        <div className="sw-search-landing-bar__chips">
-          {SEARCH_LANDING_QUICK_CHIPS.map((chip) => (
-            <a key={chip.label} href={chip.href} className="sw-search-landing-bar__chip">
-              {chip.label}
-            </a>
-          ))}
-        </div>
-      </div>
+      {showDiscover ? (
+        <div className="sw-search-landing-bar__discover-card">
+          <div className="sw-search-landing-bar__discover-head">
+            <p className="sw-search-landing-bar__discover-eyebrow">Quick access</p>
+            <p className="sw-search-landing-bar__discover-title">Browse by category</p>
+          </div>
 
-      {recentSearches.length > 0 ? (
-        <div className="sw-search-landing-bar__discover">
-          <p className="sw-search-landing-bar__discover-label">Recent searches</p>
-          <div className="sw-search-landing-bar__chips">
-            {recentSearches.slice(0, 5).map((term) => (
-              <button
-                key={term}
-                type="button"
-                className="sw-search-landing-bar__chip sw-search-landing-bar__chip--ghost"
-                onClick={() => onTrendingClick(term)}
-              >
-                {term}
-              </button>
-            ))}
+          <div className="sw-search-landing-bar__category-grid">
+            {SEARCH_LANDING_QUICK_CHIPS.map((chip) => {
+              const Icon = CATEGORY_ICONS[chip.label] ?? Search;
+
+              return (
+                <a
+                  key={chip.label}
+                  href={chip.href}
+                  className="sw-search-landing-bar__category-tile"
+                >
+                  <span className="sw-search-landing-bar__category-icon" aria-hidden="true">
+                    <Icon size={18} strokeWidth={2} />
+                  </span>
+                  <span className="sw-search-landing-bar__category-label">{chip.label}</span>
+                </a>
+              );
+            })}
+          </div>
+
+          <div className="sw-search-landing-bar__discover-foot">
+            <p className="sw-search-landing-bar__discover-foot-label">
+              {recentSearches.length > 0 ? (
+                "Recent searches"
+              ) : (
+                <>
+                  <TrendingUp size={14} strokeWidth={2.25} aria-hidden="true" />
+                  Trending now
+                </>
+              )}
+            </p>
+            <div className="sw-search-landing-bar__trending-row">
+              {(recentSearches.length > 0
+                ? recentSearches.slice(0, 5)
+                : SEARCH_LANDING_TRENDING
+              ).map((term) => (
+                <button
+                  key={term}
+                  type="button"
+                  className="sw-search-landing-bar__trending-pill"
+                  onClick={() => onTrendingClick(term)}
+                >
+                  {term}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      ) : (
-        <div className="sw-search-landing-bar__discover">
-          <p className="sw-search-landing-bar__discover-label">Trending now</p>
-          <div className="sw-search-landing-bar__chips">
-            {SEARCH_LANDING_TRENDING.map((term) => (
-              <button
-                key={term}
-                type="button"
-                className="sw-search-landing-bar__chip sw-search-landing-bar__chip--ghost"
-                onClick={() => onTrendingClick(term)}
-              >
-                {term}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

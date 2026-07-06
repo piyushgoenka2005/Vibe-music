@@ -1,6 +1,8 @@
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import Reveal from "@/components/layout/Reveal";
 import BigNamesDealsShowcase from "@/components/home/BigNamesDealsShowcase";
-import { BIG_NAMES_DEALS } from "@/data/bigNamesDeals";
+import { BIG_NAMES_DEALS, BIG_NAMES_DEALS_CTA } from "@/data/bigNamesDeals";
 
 const HEADLINE_ID = "bigNamesDealsHeadline";
 
@@ -36,6 +38,17 @@ export default function BigNamesDealsSection() {
         </header>
 
         <BigNamesDealsShowcase items={BIG_NAMES_DEALS} />
+
+        <Reveal delay={120}>
+          <div className="big-names-deals__cta-wrap">
+            <Link className="big-names-deals__cta" href={BIG_NAMES_DEALS_CTA}>
+              Shop All Deals
+              <span className="big-names-deals__cta-arrow" aria-hidden>
+                <ArrowUpRight size={20} strokeWidth={2.75} />
+              </span>
+            </Link>
+          </div>
+        </Reveal>
       </div>
     </section>
   );

@@ -31,11 +31,29 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return (await getBySlug(slug)) ?? null;
 }
 
+async function trendingFromLocalCatalog(): Promise<Product[]> {
+  const { loadProducts } = await import("@/lib/server/catalogRepository");
+  const { toProduct } = await import("@/services/catalogService");
+  return loadProducts()
+    .filter((product) => product.status === "active" && product.trending)
+    .map(toProduct);
+}
+
 export async function getTrendingProducts(): Promise<Product[]> {
   const { getTrendingProducts: getTrending } = await import(
     "@/services/catalogService"
   );
-  return getTrending();
+
+  try {
+    return await Promise.race([
+      getTrending(),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("TRENDING_TIMEOUT")), SEARCH_TIMEOUT_MS);
+      }),
+    ]);
+  } catch {
+    return trendingFromLocalCatalog();
+  }
 }
 
 export async function searchProducts(

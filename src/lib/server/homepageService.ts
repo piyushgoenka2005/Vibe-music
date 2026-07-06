@@ -128,26 +128,34 @@ function resolveAutoProducts(
         .slice(0, maxItems)
         .map((product) => toProductItem(product));
 
-    case "deals_of_the_day":
-      return active
-        .filter(
-          (product) =>
-            product.discountPercentage > 0 ||
-            (product.detail?.salePrice != null &&
-              product.detail.salePrice < product.price)
-        )
-        .sort((a, b) => b.discountPercentage - a.discountPercentage)
-        .slice(0, maxItems)
-        .map((product) =>
-          toProductItem(product, {
-            badgeLabel: product.discountPercentage
-              ? `${product.discountPercentage}% Off`
-              : "Deal",
-            offerText: product.discountPercentage
-              ? `Save ${product.discountPercentage}%`
-              : undefined,
-          })
-        );
+    case "deals_of_the_day": {
+      const discounted = active.filter(
+        (product) =>
+          product.discountPercentage > 0 ||
+          (product.detail?.salePrice != null &&
+            product.detail.salePrice < product.price)
+      );
+      const source =
+        discounted.length > 0
+          ? discounted.sort(
+              (a, b) => b.discountPercentage - a.discountPercentage
+            )
+          : [...active].sort(
+              (a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating
+            );
+      return source.slice(0, maxItems).map((product) =>
+        toProductItem(product, {
+          badgeLabel: product.discountPercentage
+            ? `${product.discountPercentage}% Off`
+            : discounted.length > 0
+              ? "Deal"
+              : "Popular",
+          offerText: product.discountPercentage
+            ? `Save ${product.discountPercentage}%`
+            : undefined,
+        })
+      );
+    }
 
     default:
       return [];
@@ -221,10 +229,13 @@ async function resolveBrands(
       });
     }
 
-    return resolved;
+    return resolved.filter((brand) => brand.slug !== "roland");
   }
 
-  return brands.slice(0, section.maxItems).map((brand) => ({
+  return brands
+    .filter((brand) => brand.slug !== "roland")
+    .slice(0, section.maxItems)
+    .map((brand) => ({
     id: brand.id,
     name: brand.name,
     slug: brand.slug,

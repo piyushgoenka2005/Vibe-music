@@ -269,7 +269,7 @@
 
 @media (max-width: 767px) {
   .culture-typography {
-    height: 200vh;
+    height: clamp(120vh, 160vh, 180vh);
   }
 
   .culture-typography__bg-spotlight {

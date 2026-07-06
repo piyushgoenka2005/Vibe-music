@@ -72,6 +72,7 @@ export default function HomepageBannerHero() {
                 alt={slide.alt}
                 fill
                 priority={index === 0}
+                loading="eager"
                 sizes="(max-width: 767px) 100vw, (max-width: 1280px) 100vw, 1280px"
                 className="homepage-banner-hero__image"
               />

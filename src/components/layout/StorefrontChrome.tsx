@@ -50,6 +50,12 @@ export default function StorefrontChrome({
     return () => document.body.classList.remove("is-landing-page");
   }, [isLandingPage]);
 
+  useEffect(() => {
+    if (pathname.startsWith("/checkout") || pathname.startsWith("/cart")) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+  }, [pathname]);
+
   if (hideChrome) {
     return <>{children}</>;
   }
@@ -71,20 +77,20 @@ export default function StorefrontChrome({
           DYE_RESOLUTION={720}
           SIM_RESOLUTION={64}
           PRESSURE_ITERATIONS={10}
-          DENSITY_DISSIPATION={5}
+          DENSITY_DISSIPATION={6.5}
           VELOCITY_DISSIPATION={2.75}
           PRESSURE={0.08}
           CURL={1.75}
-          SPLAT_RADIUS={0.16}
-          ZONE_SPLAT_RADIUS={0.12}
-          SPLAT_FORCE={3600}
-          COLOR_INTENSITY={0.16}
+          SPLAT_RADIUS={0.11}
+          ZONE_SPLAT_RADIUS={0.09}
+          SPLAT_FORCE={2600}
+          COLOR_INTENSITY={0.08}
           COLOR_UPDATE_SPEED={10}
           SHADING
           RAINBOW_MODE={false}
           COLOR="#1253ED"
           ZONE_COLOR="#FFFFFF"
-          ZONE_COLOR_INTENSITY={0.14}
+          ZONE_COLOR_INTENSITY={0.07}
           ZONE_SELECTORS='[data-vibe-section="footer"], [data-footer-panel]'
         />
       ) : null}

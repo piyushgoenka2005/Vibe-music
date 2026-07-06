@@ -86,7 +86,9 @@ export default function HomePage() {
       <BigNamesDealsSection />
       <WhyShopSection />
       <BrowseCategoryCardsSection />
-      <GearStoriesReelsSection />
+      <Suspense fallback={null}>
+        <GearStoriesReelsSection />
+      </Suspense>
       <CategoryBento />
       <OutletStorySection />
 

@@ -1,8 +1,7 @@
-export default function DropshipLogoIcon() {
+export default function ScannerBagIcon() {
   return (
-    <svg width="38" height="38" viewBox="0 0 36 36" fill="none" aria-hidden>
-      <rect x="15" y="6" width="6" height="6" fill="white" />
-      <rect x="6" y="10" width="24" height="18" rx="4" fill="white" />
+    <svg viewBox="0 0 36 36" fill="none" aria-hidden>
+      <rect x="6" y="10" width="24" height="18" rx="4" fill="#ffffff" />
       <path
         d="M12 16C12 16 14 20 18 20C22 20 24 16 24 16"
         stroke="#1253ED"

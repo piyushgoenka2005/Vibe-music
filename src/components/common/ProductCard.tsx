@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
+import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import { formatCurrency } from "@/utils/currency";
 import { optimizeImageUrl } from "@/lib/images";
@@ -56,6 +57,8 @@ export default function ProductCard({ product, view }: ProductCardProps) {
     openDrawer();
   }
 
+  const displayName = formatProductCardTitle(product.name, product.brand);
+
   return (
     <article
       className="cat-product-card"
@@ -93,7 +96,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
             onFocus={prefetchProduct}
             style={{ color: "inherit", textDecoration: "none" }}
           >
-            {product.name}
+            {displayName}
           </Link>
         </h3>
         <div className="cat-product-card__rating">

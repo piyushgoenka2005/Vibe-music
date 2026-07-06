@@ -27,6 +27,7 @@ import {
   SHIPPING_METHOD_IDS,
   type ShippingMethod,
 } from "@/lib/shipping/shippingMethods";
+import { useCartHydrated } from "@/hooks/useCartHydrated";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
 import { useAuthStore } from "@/store/authStore";
@@ -144,6 +145,11 @@ export default function CheckoutPageContent() {
     isDeleting,
   } = useAddresses();
   const showToast = useToastStore((s) => s.show);
+  const cartHydrated = useCartHydrated();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
 
   const [step, setStep] = useState<CheckoutStep>("address");
   const savedAddresses = isAuthenticated ? addresses : [];
@@ -291,10 +297,11 @@ export default function CheckoutPageContent() {
   });
 
   useEffect(() => {
+    if (!cartHydrated) return;
     if (items.length === 0 && !payment.isProcessing) {
       router.replace(ROUTES.cart);
     }
-  }, [items.length, payment.isProcessing, router]);
+  }, [cartHydrated, items.length, payment.isProcessing, router]);
 
   async function handleContinueFromAddress() {
     setAddressError(null);
@@ -436,8 +443,25 @@ export default function CheckoutPageContent() {
     }
   }
 
-  if (items.length === 0) {
-    return null;
+  if (!cartHydrated || items.length === 0) {
+    return (
+      <div className="checkout-page checkout-page--loading" aria-busy="true">
+        <div className="checkout-skeleton checkout-skeleton--title" />
+        <div className="checkout-grid">
+          <div className="checkout-panel">
+            <div className="checkout-skeleton checkout-skeleton--line" />
+            <div className="checkout-skeleton checkout-skeleton--field" />
+            <div className="checkout-skeleton checkout-skeleton--field" />
+            <div className="checkout-skeleton checkout-skeleton--field" />
+          </div>
+          <aside className="checkout-summary">
+            <div className="checkout-skeleton checkout-skeleton--line" />
+            <div className="checkout-skeleton checkout-skeleton--line" />
+            <div className="checkout-skeleton checkout-skeleton--total" />
+          </aside>
+        </div>
+      </div>
+    );
   }
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);

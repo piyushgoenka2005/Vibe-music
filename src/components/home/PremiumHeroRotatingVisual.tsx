@@ -81,7 +81,7 @@ export default function PremiumHeroRotatingVisual() {
         <div className="premium-hero__dots" role="tablist" aria-label="Hero images">
           {slides.map((slide, index) => (
             <button
-              key={slide.src}
+              key={`hero-dot-${index}`}
               type="button"
               role="tab"
               aria-selected={index === activeIndex}

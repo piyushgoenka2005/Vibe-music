@@ -87,7 +87,26 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
     if (!header) return;
 
     const syncOffset = () => {
-      const height = Math.ceil(header.getBoundingClientRect().height);
+      const headerRect = header.getBoundingClientRect();
+      const chromeSelectors = [
+        ".announcement-bar",
+        ".site-header__bar",
+        ".site-header__nav",
+      ];
+
+      let bottom = headerRect.top;
+      for (const selector of chromeSelectors) {
+        const el = header.querySelector<HTMLElement>(selector);
+        if (!el) continue;
+
+        const style = getComputedStyle(el);
+        if (style.position === "fixed" || style.position === "absolute") continue;
+        if (style.display === "none") continue;
+
+        bottom = Math.max(bottom, el.getBoundingClientRect().bottom);
+      }
+
+      const height = Math.max(0, Math.ceil(bottom - headerRect.top));
       document.documentElement.style.setProperty(
         "--site-header-offset",
         `${height}px`

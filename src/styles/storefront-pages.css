@@ -191,6 +191,20 @@
   border-bottom-color: var(--brand-primary);
 }
 
+.storefront-page .pdp-tabs__shell {
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-card);
+}
+
+.storefront-page .pdp-tabs__btn--active .pdp-tabs__btn-label {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+}
+
+.storefront-page .pdp-description__highlight:hover {
+  border-color: rgba(18, 83, 237, 0.2);
+}
+
 .storefront-page .pdp-section__title {
   font-weight: 400;
   letter-spacing: -0.02em;
@@ -440,6 +454,11 @@
 .storefront-page .checkout-page {
   max-width: var(--content-max);
   padding: 1.5rem 1.25rem 4rem;
+  min-height: calc(100vh - var(--site-header-offset, 118px) - 4rem);
+}
+
+.storefront-main:has(> .storefront-page--subtle) {
+  min-height: calc(100vh - var(--site-header-offset, 118px));
 }
 
 .storefront-page .checkout-panel {

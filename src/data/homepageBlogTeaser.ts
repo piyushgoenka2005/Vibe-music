@@ -27,8 +27,7 @@ export const HOMEPAGE_BLOG_FALLBACK_POSTS: HomepageBlogTeaserPost[] = [
     title: "How to choose your first electric guitar",
     excerpt:
       "Body styles, pickups, and price tiers explained — so your first axe feels right from day one.",
-    coverImage:
-      "/images/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png?width=800&height=600&fit=cover&format=webp&quality=85",
+    coverImage: "/images/guitar-1.webp",
     tags: ["Guitars", "Beginner"],
     authorName: "Vibe Music Team",
     publishedAt: null,
@@ -41,8 +40,7 @@ export const HOMEPAGE_BLOG_FALLBACK_POSTS: HomepageBlogTeaserPost[] = [
     title: "Live sound checklist for small venues",
     excerpt:
       "PA placement, monitor mixes, and the gear we reach for when the room is tight on time.",
-    coverImage:
-      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg?width=800&height=600&fit=cover&format=webp&quality=85",
+    coverImage: "/images/drum-1.webp",
     tags: ["Live sound", "Guides"],
     authorName: "Vibe Music Team",
     publishedAt: null,

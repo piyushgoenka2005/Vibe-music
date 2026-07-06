@@ -6,6 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import RevealGroup from "@/components/layout/RevealGroup";
 import type { BigNamesDealBrand } from "@/data/bigNamesDeals";
 
+const PRODUCT_FALLBACK = "/images/guitar-1.webp";
+
 function BigNamesDealItem({
   item,
   index,
@@ -13,6 +15,8 @@ function BigNamesDealItem({
   item: BigNamesDealBrand;
   index: number;
 }) {
+  const [productSrc, setProductSrc] = useState(item.product);
+
   return (
     <div
       className="big-names-deals__item"
@@ -25,10 +29,6 @@ function BigNamesDealItem({
         href={item.href}
       >
         <div className="big-names-deals__hang-wrap">
-          <span className="big-names-deals__hanger" aria-hidden>
-            <span className="big-names-deals__hanger-hook" />
-            <span className="big-names-deals__hanger-plate" />
-          </span>
           <div className="big-names-deals__product-stage">
             <span className="big-names-deals__product-shadow">
               <img
@@ -36,7 +36,12 @@ function BigNamesDealItem({
                 className="big-names-deals__product"
                 decoding="async"
                 loading={index < 2 ? "eager" : "lazy"}
-                src={item.product}
+                src={productSrc}
+                onError={() => {
+                  if (productSrc !== PRODUCT_FALLBACK) {
+                    setProductSrc(PRODUCT_FALLBACK);
+                  }
+                }}
               />
             </span>
           </div>

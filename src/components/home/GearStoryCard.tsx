@@ -57,6 +57,7 @@ export default function GearStoryCard({
           ref={videoRef}
           className="gear-story-card__video"
           src={story.videoUrl}
+          poster={story.posterUrl || undefined}
           muted
           loop
           playsInline

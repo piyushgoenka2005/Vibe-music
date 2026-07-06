@@ -239,6 +239,32 @@
   }
 }
 
+@media (max-width: 767px) {
+  .why-shop__marquee {
+    mask-image: none;
+    -webkit-mask-image: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .why-shop__marquee::-webkit-scrollbar {
+    display: none;
+  }
+
+  .why-shop__marquee-track {
+    animation: none;
+    width: max-content;
+    flex-wrap: nowrap;
+    padding-top: 1.5rem;
+  }
+
+  .why-shop__card[aria-hidden="true"] {
+    display: none;
+  }
+}
+
 @media (max-width: 639px) {
   .why-shop__card {
     width: min(72vw, 196px);

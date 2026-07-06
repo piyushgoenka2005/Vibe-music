@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { formatDisplayPrice } from "@/utils/currency";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageProductItem } from "@/types/homepage";
@@ -19,6 +20,7 @@ export default function CarouselProductCard({
   sectionKey,
 }: CarouselProductCardProps) {
   const ratingAttr = formatRatingAttribute(item.rating);
+  const displayName = formatProductCardTitle(item.name, item.brand);
 
   return (
     <div className="product-suggest__item-wrap">
@@ -42,8 +44,8 @@ export default function CarouselProductCard({
           ) : null}
         </div>
         <div className="product-suggest__item-content">
-          <div className="product-suggest__name">
-            <strong>{item.brand}</strong> {item.name}
+          <div className="product-suggest__name" title={item.name}>
+            <strong>{item.brand}</strong> {displayName}
           </div>
           <div className="product-suggest__item-price">
             {formatDisplayPrice(item.price, item.salePrice)}

@@ -57,6 +57,24 @@ function CrystalShell() {
   );
 }
 
+const TAG_BADGES = new Set(["trending", "new", "bestseller"]);
+
+function isTagBadge(badge?: string): boolean {
+  return badge ? TAG_BADGES.has(badge.toLowerCase()) : false;
+}
+
+function CategoryBadge({ badge, tag = false }: { badge: string; tag?: boolean }) {
+  const key = badge.toLowerCase();
+
+  return (
+    <span
+      className={`category-bento__badge category-bento__badge--${key}${tag ? " category-bento__badge--tag" : ""}`}
+    >
+      {badge}
+    </span>
+  );
+}
+
 function ExploreButton({ dark = false }: { dark?: boolean }) {
   return (
     <span
@@ -90,10 +108,8 @@ function CategoryMeta({
 }) {
   return (
     <>
-      {cat.badge ? (
-        <span className={`category-bento__badge category-bento__badge--${cat.badge.toLowerCase()}`}>
-          {cat.badge}
-        </span>
+      {cat.badge && !isTagBadge(cat.badge) ? (
+        <CategoryBadge badge={cat.badge} />
       ) : null}
       <h3 className={`category-bento__name${dark ? " category-bento__name--hero" : ""}`}>
         {cat.title}
@@ -221,6 +237,7 @@ function CategoryBentoCard({
                 variant="card"
               />
             </div>
+            {isTagBadge(cat.badge) ? <CategoryBadge badge={cat.badge!} tag /> : null}
           </div>
           <div className="category-bento__card-body category-bento__card-body--wide">
             <CategoryMeta cat={cat} />
@@ -261,15 +278,14 @@ function CategoryBentoCard({
           <div className="category-bento__card-overlay" aria-hidden>
             <span className="category-bento__card-overlay-shade" />
           </div>
+          {isTagBadge(cat.badge) ? <CategoryBadge badge={cat.badge!} tag /> : null}
         </div>
         <div className="category-bento__card-caption">
-          {cat.badge ? (
-            <span className={`category-bento__badge category-bento__badge--${cat.badge.toLowerCase()}`}>
-              {cat.badge}
-            </span>
-          ) : null}
           <h3 className="category-bento__name">{cat.title}</h3>
           <p className="category-bento__desc">{cat.desc}</p>
+          {cat.brands ? (
+            <p className="category-bento__brands">{cat.brands}</p>
+          ) : null}
           <ExploreButton />
         </div>
       </Link>

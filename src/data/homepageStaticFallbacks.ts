@@ -134,6 +134,8 @@ export async function getHomepageStaticFallbacks(
     .slice(0, 12)
     .map((product) => toProductItem(product));
 
+  const dealsResolved = deals.length > 0 ? deals : bestSellers;
+
   const featuredCategories = categories
     .filter((category) => category.isFeatured)
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
@@ -173,7 +175,7 @@ export async function getHomepageStaticFallbacks(
       "deals_of_the_day",
       "sales-events",
       "Deals of the Day",
-      deals,
+      dealsResolved,
       "deals_slider"
     ),
   ]) {
@@ -197,7 +199,10 @@ export async function getHomepageStaticFallbacks(
     sectionId: "brand-strip",
     title: "Shop Top Brands",
     layout: "brand_strip",
-    brands: brands.slice(0, 8).map((brand) => ({
+    brands: brands
+      .filter((brand) => brand.slug !== "roland")
+      .slice(0, 8)
+      .map((brand) => ({
       id: brand.id,
       name: brand.name,
       slug: brand.slug,

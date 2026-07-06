@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { optimizeImageUrl } from "@/lib/images";
+import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { formatDisplayPrice } from "@/utils/currency";
 import { resolveLinkHref } from "@/lib/routes";
 
@@ -52,6 +53,7 @@ export default function NewArrivalsProductCard({
   priceNode,
 }: NewArrivalsProductCardProps) {
   const displayPrice = salePrice ?? price;
+  const displayName = formatProductCardTitle(name, brand);
   const hasDiscount =
     salePrice != null && salePrice > 0 && salePrice < price;
   const imageSrc = image ? optimizeImageUrl(image, "productCard") : "";
@@ -102,7 +104,9 @@ export default function NewArrivalsProductCard({
           <p className="new-arrivals-card__preorder">{preorderLabel}</p>
         ) : null}
         <p className="new-arrivals-card__brand">{brand}</p>
-        <h3 className="new-arrivals-card__name">{name}</h3>
+        <h3 className="new-arrivals-card__name" title={name}>
+          {displayName}
+        </h3>
 
         {showRating ? (
           <div className="new-arrivals-card__meta-row">

@@ -109,10 +109,16 @@ export async function seedCatalogFromJson(): Promise<CatalogSeedResult> {
 
 /** Returns true when any core catalog collection is empty. */
 export async function isCatalogEmpty(): Promise<boolean> {
-  const db = getAdminFirestore();
-  const [products, categories] = await Promise.all([
-    db.collection(PRODUCTS).limit(1).get(),
-    db.collection(CATEGORIES).limit(1).get(),
-  ]);
-  return products.empty || categories.empty;
+  const { withFirestoreDeadline } = await import("@/lib/server/firestoreErrors");
+  try {
+    const db = getAdminFirestore();
+    const [products, categories] = await Promise.all([
+      withFirestoreDeadline(() => db.collection(PRODUCTS).limit(1).get()),
+      withFirestoreDeadline(() => db.collection(CATEGORIES).limit(1).get()),
+    ]);
+    return products.empty || categories.empty;
+  } catch {
+    // Firestore unreachable — skip auto-seed rather than blocking catalog reads.
+    return false;
+  }
 }

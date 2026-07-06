@@ -74,11 +74,7 @@ export default function SearchAutocomplete({
   }
 
   if (!hasSuggestions && query.length === 0) {
-    return (
-      <div className="sw-search-status" role="status">
-        Search for products, categories, and brands
-      </div>
-    );
+    return null;
   }
 
   return (

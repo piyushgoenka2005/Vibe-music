@@ -192,6 +192,22 @@
 
 .premium-home .tile .product-name {
   margin: 0 0 0.35rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.premium-home .tile .product-brand {
+  margin: 0 0 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748b;
 }
 
 .premium-home .tile .special-offer {
@@ -357,8 +373,14 @@
 
 .premium-home .product-suggest__name {
   font-size: 0.875rem;
+  font-weight: 500;
   line-height: 1.4;
   color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .premium-home .product-suggest__name strong {
@@ -496,6 +518,75 @@
   .premium-home .tile--slider-controls,
   .premium-home .product-suggest__nav {
     display: none !important;
+  }
+
+  .premium-home .sale-events,
+  .premium-home .homepage-deals,
+  .premium-home .suggested-products {
+    padding: clamp(2rem, 6vw, 2.75rem) 0;
+  }
+
+  .premium-home .tile-block,
+  .premium-home .product-suggest__stage {
+    padding-inline: max(1rem, env(safe-area-inset-left, 0px))
+      max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .premium-home .tile--link {
+    width: min(240px, 78vw);
+  }
+
+  .premium-home .product-suggest__item-wrap {
+    width: min(200px, 74vw);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .premium-home .sale-events,
+  .premium-home .homepage-deals,
+  .premium-home .suggested-products {
+    padding: clamp(2.5rem, 5vw, 3rem) 0;
+  }
+
+  .premium-home .tile--link {
+    width: min(248px, 32vw);
+  }
+
+  .premium-home .product-suggest__item-wrap {
+    width: min(210px, 28vw);
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .premium-home .tile--link {
+    width: min(252px, 24vw);
+  }
+
+  .premium-home .product-suggest__item-wrap {
+    width: min(216px, 20vw);
+  }
+}
+
+@media (min-width: 1280px) {
+  .premium-home .tile-block,
+  .premium-home .product-suggest__stage {
+    padding-inline: clamp(1.25rem, 2.5vw, 2rem);
+  }
+
+  .premium-home .tile--link {
+    width: 260px;
+  }
+
+  .premium-home .product-suggest__item-wrap {
+    width: 220px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .premium-home .sale-events,
+  .premium-home .homepage-deals,
+  .premium-home .suggested-products {
+    padding: clamp(3rem, 4vw, 3.75rem) 0;
   }
 }
 
