@@ -9,10 +9,6 @@ const HomepageBannerHero = dynamic(
   () => import("@/components/home/homepage-banner-hero/HomepageBannerHero"),
   { loading: () => null }
 );
-const HeroShowcaseSection = dynamic(
-  () => import("@/components/home/hero-showcase"),
-  { loading: () => null }
-);
 const PremiumHero = dynamic(() => import("@/components/home/PremiumHero"), {
   loading: () => null,
 });
@@ -84,15 +80,13 @@ export default function HomePage() {
       <h1 className="visually-hidden">Vibe Music — Musical Instruments & Pro Audio</h1>
 
       <HomepageBannerHero />
-      {/* <HeroShowcaseSection /> */}
       <PremiumHero />
       <HomepageStats />
       <HomepagePromoBanner />
-      <ServiceStatusCarousel />
+      <BigNamesDealsSection />
       <WhyShopSection />
       <BrowseCategoryCardsSection />
       <GearStoriesReelsSection />
-      <BigNamesDealsSection />
       <CategoryBento />
       <OutletStorySection />
 
@@ -110,6 +104,7 @@ export default function HomePage() {
 
       <CultureTypographySection />
 
+      <ServiceStatusCarousel />
       <DiscoverLocationsSection />
       <SocialProofStrip />
     </main>

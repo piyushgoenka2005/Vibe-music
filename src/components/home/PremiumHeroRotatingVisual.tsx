@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   MARKETING_HERO_FALLBACK,
@@ -52,20 +53,26 @@ export default function PremiumHeroRotatingVisual() {
       {slides.map((slide, index) => {
         const isActive = index === activeIndex;
         return (
-          <img
-            key={slide.src}
-            src={failedSrc[slide.src] ? MARKETING_HERO_FALLBACK : slide.src}
-            alt={slide.alt}
-            className={`premium-hero__image premium-hero__slide${isActive ? " premium-hero__slide--active" : ""}${slide.fit === "cover" ? " premium-hero__slide--cover" : ""}`}
-            loading={index === 0 ? "eager" : "lazy"}
-            fetchPriority={index === 0 ? "high" : "auto"}
-            decoding="async"
+          <Link
+            key={`${slide.href}-${index}`}
+            href={slide.href}
+            className={`premium-hero__image premium-hero__slide premium-hero__slide-link${isActive ? " premium-hero__slide--active" : ""}${slide.fit === "cover" ? " premium-hero__slide--cover" : ""}`}
             aria-hidden={!isActive}
-            style={slide.objectPosition ? { objectPosition: slide.objectPosition } : undefined}
-            onError={() =>
-              setFailedSrc((prev) => ({ ...prev, [slide.src]: true }))
-            }
-          />
+            tabIndex={isActive ? 0 : -1}
+            aria-label={slide.alt}
+          >
+            <img
+              src={failedSrc[slide.src] ? MARKETING_HERO_FALLBACK : slide.src}
+              alt=""
+              loading={index === 0 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "high" : "auto"}
+              decoding="async"
+              style={slide.objectPosition ? { objectPosition: slide.objectPosition } : undefined}
+              onError={() =>
+                setFailedSrc((prev) => ({ ...prev, [slide.src]: true }))
+              }
+            />
+          </Link>
         );
       })}
 

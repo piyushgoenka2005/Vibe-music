@@ -109,8 +109,9 @@ export async function fetchSearchResults(
   filters?: { category?: string; brand?: string; sort?: string }
 ): Promise<SearchResultsData> {
   const trimmed = query.trim();
+  const hasFilter = Boolean(filters?.category?.trim() || filters?.brand?.trim());
 
-  if (trimmed.length < MIN_QUERY_LENGTH) {
+  if (trimmed.length < MIN_QUERY_LENGTH && !hasFilter) {
     return {
       query: trimmed,
       products: [],
@@ -120,7 +121,9 @@ export async function fetchSearchResults(
     };
   }
 
-  const params = new URLSearchParams({ q: trimmed, mode: "results" });
+  const params = new URLSearchParams();
+  if (trimmed) params.set("q", trimmed);
+  params.set("mode", "results");
   if (filters?.category) params.set("category", filters.category);
   if (filters?.brand) params.set("brand", filters.brand);
   if (filters?.sort && filters.sort !== "relevance") {

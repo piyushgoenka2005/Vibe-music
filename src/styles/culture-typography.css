@@ -268,6 +268,10 @@
 }
 
 @media (max-width: 767px) {
+  .culture-typography {
+    height: 200vh;
+  }
+
   .culture-typography__bg-spotlight {
     -webkit-mask-image: radial-gradient(
       circle clamp(110px, 34vw, 220px) at var(--spotlight-x, 50%) var(--spotlight-y, 50%),

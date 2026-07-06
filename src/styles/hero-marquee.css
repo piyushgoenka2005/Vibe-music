@@ -40,10 +40,10 @@
 }
 
 .hero_marquee_block {
-  width: 100vw;
+  width: calc(100% + (var(--full-bleed-inline, 0px) * 2));
   max-width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
+  margin-left: calc(-1 * var(--full-bleed-inline, 0px));
+  margin-right: calc(-1 * var(--full-bleed-inline, 0px));
   padding: clamp(2.75rem, 5vw, 3.75rem) 1.25rem clamp(1.25rem, 2.5vw, 1.75rem);
   contain: layout style paint;
   content-visibility: auto;

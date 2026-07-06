@@ -158,7 +158,7 @@
   min-width: 100%;
   padding-inline: var(--dropship-row-bleed);
   will-change: transform;
-  animation: dropship-roll-ltr var(--duration, 52s) linear infinite;
+  animation: dropship-roll-ltr var(--duration, 18s) linear infinite;
 }
 
 .dropship-c-track--empty {

@@ -1041,11 +1041,15 @@ body.site-nav-open .site-header--scroll-hidden {
     grid-template-columns: auto auto minmax(0, 1fr) auto;
     grid-template-areas: "menu logo search actions";
     gap: 0.4rem 0.5rem;
-    padding: 0.35rem 0.75rem;
+    padding:
+      0.35rem max(0.75rem, env(safe-area-inset-right, 0px))
+      0.35rem max(0.75rem, env(safe-area-inset-left, 0px));
   }
 
   .site-header__menu-btn {
     display: flex;
+    width: 2.75rem;
+    height: 2.75rem;
   }
 
   .site-header__search {
@@ -1071,17 +1075,22 @@ body.site-nav-open .site-header--scroll-hidden {
   }
 
   .site-header__search-submit {
-    width: 26px;
-    height: 26px;
+    width: 2.75rem;
+    height: 2.75rem;
     flex-shrink: 0;
+  }
+
+  .site-header__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.35rem;
   }
 
   .site-header__action-label {
     display: none;
-  }
-
-  .site-header__action {
-    padding: 0.35rem;
   }
 
   .site-header__action--account .site-header__action-label {
@@ -1102,7 +1111,7 @@ body.site-nav-open .site-header--scroll-hidden {
     left: 0;
     bottom: 0;
     width: min(320px, 88vw);
-    z-index: 101;
+    z-index: 201;
     padding-top: 4.25rem;
     background: var(--surface-base);
     border-right: 1px solid var(--border-default);
@@ -1142,7 +1151,7 @@ body.site-nav-open .site-header--scroll-hidden {
     display: block;
     position: fixed;
     inset: 0;
-    z-index: 100;
+    z-index: 199;
     border: none;
     background: rgba(15, 23, 42, 0.4);
     cursor: pointer;
@@ -1187,12 +1196,14 @@ body.site-nav-open .site-header--scroll-hidden {
   }
 
   .site-header__search-submit {
-    width: 22px;
-    height: 22px;
+    width: 2.75rem;
+    height: 2.75rem;
   }
 
   .site-header__action {
-    padding: 0.2rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.35rem;
   }
 
   .site-header__cart-count {

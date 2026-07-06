@@ -21,12 +21,17 @@ import {
   fetchProductBySlug,
   fetchProductsByCategory,
   fetchProductsByIds,
+  isCatalogUnavailable,
   removeProduct,
   skuExists,
   slugExists,
   writeProduct,
 } from "@/lib/server/firestoreCatalogRepository";
 import { getCachedCategories, getCachedProducts } from "@/lib/server/catalogSnapshotCache";
+import {
+  isFirestoreFastFailError,
+  isFirestoreUnavailableError,
+} from "@/lib/server/firestoreErrors";
 import { recordInventoryLogEntry } from "@/lib/server/inventoryRepository";
 import {
   applyVariantsToProduct,
@@ -250,10 +255,94 @@ export async function getAllProducts(
   return getCachedProducts(includeInactive);
 }
 
+async function loadLocalCatalogSnapshot(
+  includeInactive = false
+): Promise<CatalogProduct[]> {
+  const { loadProducts } = await import("@/lib/server/catalogRepository");
+  const products = loadProducts();
+  return includeInactive
+    ? products
+    : products.filter((product) => product.status === "active");
+}
+
 async function fetchCatalogSnapshot(
   includeInactive = false
 ): Promise<CatalogProduct[]> {
-  return getCachedProducts(includeInactive);
+  if (isCatalogUnavailable()) {
+    return loadLocalCatalogSnapshot(includeInactive);
+  }
+
+  try {
+    return await getCachedProducts(includeInactive);
+  } catch (error) {
+    if (isFirestoreUnavailableError(error) || isFirestoreFastFailError(error)) {
+      return loadLocalCatalogSnapshot(includeInactive);
+    }
+    throw error;
+  }
+}
+
+export function searchInCatalogProducts(
+  initialSource: CatalogProduct[],
+  options: ProductSearchOptions = {}
+): Product[] {
+  let source = initialSource;
+
+  if (options.category) {
+    const resolvedSlug = normalizeCategorySlug(options.category);
+    source = source.filter(
+      (product) =>
+        product.categorySlug === resolvedSlug ||
+        normalizeCategorySlug(product.category) === resolvedSlug
+    );
+  }
+
+  if (options.query) {
+    const normalized = options.query.trim().toLowerCase();
+    const tokens = normalized.split(/\s+/).filter(Boolean);
+    source = source
+      .map((product) => ({
+        product,
+        score: scoreProductMatch(toProduct(product), tokens),
+      }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map((entry) => entry.product);
+  }
+
+  if (options.brand) {
+    const brand = options.brand.toLowerCase();
+    source = source.filter(
+      (product) =>
+        product.brandSlug === brand ||
+        product.brand.toLowerCase().replace(/\s+/g, "-") === brand
+    );
+  }
+
+  if (options.condition) {
+    source = source.filter((product) => product.condition === options.condition);
+  }
+
+  if (options.sort === "price-asc") {
+    source = [...source].sort((a, b) => a.price - b.price);
+  } else if (options.sort === "price-desc") {
+    source = [...source].sort((a, b) => b.price - a.price);
+  } else if (options.sort === "rating-desc") {
+    source = [...source].sort((a, b) => b.rating - a.rating);
+  } else if (options.sort === "reviews-desc") {
+    source = [...source].sort((a, b) => b.reviewCount - a.reviewCount);
+  } else {
+    source = [...source].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  let products = source.map(toProduct);
+  if (options.limit && options.limit > 0) {
+    products = products.slice(0, options.limit);
+  }
+  return products;
 }
 
 export async function getProductById(
@@ -372,62 +461,8 @@ function scoreProductMatch(
 export async function searchProducts(
   options: ProductSearchOptions = {}
 ): Promise<Product[]> {
-  let source = await fetchCatalogSnapshot(options.includeInactive ?? false);
-
-  if (options.category) {
-    const categories = await fetchCategories();
-    const category = findCategoryInList(categories, options.category);
-    const resolvedSlug =
-      category?.slug ?? normalizeCategorySlug(options.category);
-    source = await fetchProductsByCategory(
-      resolvedSlug,
-      options.includeInactive ?? false
-    );
-  }
-
-  if (options.query) {
-    const normalized = options.query.trim().toLowerCase();
-    const tokens = normalized.split(/\s+/).filter(Boolean);
-    source = source
-      .map((p) => ({ product: p, score: scoreProductMatch(toProduct(p), tokens) }))
-      .filter((entry) => entry.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map((entry) => entry.product);
-  }
-
-  if (options.brand) {
-    const brand = options.brand.toLowerCase();
-    source = source.filter(
-      (p) =>
-        p.brandSlug === brand ||
-        p.brand.toLowerCase().replace(/\s+/g, "-") === brand
-    );
-  }
-
-  if (options.condition) {
-    source = source.filter((p) => p.condition === options.condition);
-  }
-
-  if (options.sort === "price-asc") {
-    source = [...source].sort((a, b) => a.price - b.price);
-  } else if (options.sort === "price-desc") {
-    source = [...source].sort((a, b) => b.price - a.price);
-  } else if (options.sort === "rating-desc") {
-    source = [...source].sort((a, b) => b.rating - a.rating);
-  } else if (options.sort === "reviews-desc") {
-    source = [...source].sort((a, b) => b.reviewCount - a.reviewCount);
-  } else {
-    source = [...source].sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-  }
-
-  let products = source.map(toProduct);
-  if (options.limit && options.limit > 0) {
-    products = products.slice(0, options.limit);
-  }
-  return products;
+  const source = await fetchCatalogSnapshot(options.includeInactive ?? false);
+  return searchInCatalogProducts(source, options);
 }
 
 export async function getBrands(): Promise<Brand[]> {

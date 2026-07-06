@@ -3,8 +3,25 @@ import "server-only";
 import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
 
 export const FIRESTORE_CIRCUIT_MS = 5 * 60 * 1000;
+
+function readPositiveIntEnv(name: string, fallback: number): number {
+  const raw = process.env[name]?.trim();
+  if (!raw) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+/** Startup health probe may need longer than per-request deadlines on cold VPS boots. */
+export const FIRESTORE_STARTUP_DEADLINE_MS = readPositiveIntEnv(
+  "FIRESTORE_STARTUP_DEADLINE_MS",
+  process.env.NODE_ENV === "production" ? 8_000 : 2_000
+);
+
 export const FIRESTORE_FAST_FAIL_MS =
-  process.env.NODE_ENV === "production" ? 1_200 : 350;
+  readPositiveIntEnv(
+    "FIRESTORE_DEADLINE_MS",
+    process.env.NODE_ENV === "production" ? 1_200 : 350
+  );
 
 const FIRESTORE_FAST_FAIL = "FIRESTORE_FAST_FAIL";
 

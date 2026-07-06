@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
@@ -16,9 +17,11 @@ import SiteHeaderNav from "@/components/layout/SiteHeaderNav";
 import SearchRollingPlaceholder, {
   SEARCH_ROLLING_ARIA_LABEL,
 } from "@/components/search/SearchRollingPlaceholder";
+import { MIN_QUERY_LENGTH } from "@/services/search.service";
 import WishlistCounter from "@/components/wishlist/WishlistCounter";
 
 export default function SiteHeader() {
+  const router = useRouter();
   const headerRef = useRef<HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -110,6 +113,17 @@ export default function SiteHeader() {
     [openCartDrawer]
   );
 
+  const handleSearchSubmit = useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      const query = String(formData.get("q") ?? "").trim();
+      if (query.length < MIN_QUERY_LENGTH) return;
+      router.push(`${ROUTES.searchResults}?q=${encodeURIComponent(query)}`);
+    },
+    [router]
+  );
+
   return (
     <header
       ref={headerRef}
@@ -146,7 +160,7 @@ export default function SiteHeader() {
             className="site-header__search assets-site-header__menu-search-form"
             action={ROUTES.searchResults}
             method="get"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={handleSearchSubmit}
           >
             <Search size={16} className="site-header__search-icon" aria-hidden />
             <div className="site-header__search-field">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Children, useEffect, useRef, type ReactNode } from "react";
+import { Children, useLayoutEffect, useRef, type ReactNode } from "react";
 import { initProductSuggestSliders } from "@/lib/productSuggestSlider";
 import { initTileSliders } from "@/lib/tileSlider";
 
@@ -10,28 +10,47 @@ interface HomepageSectionsShellProps {
 
 export default function HomepageSectionsShell({ children }: HomepageSectionsShellProps) {
   const items = Children.toArray(children).filter(Boolean);
-  const initializedRef = useRef(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (initializedRef.current) return;
+  useLayoutEffect(() => {
+    const root = wrapperRef.current;
+    if (!root) return;
 
-    const mainRoot = document.querySelector<HTMLElement>(".homepage-wrapper");
-    if (!mainRoot) return;
+    const cleanupTiles = initTileSliders(root);
+    let cleanupCarousels = initProductSuggestSliders(root);
 
-    initializedRef.current = true;
-    const cleanupTiles = initTileSliders(mainRoot);
-    const cleanupCarousels = initProductSuggestSliders(mainRoot);
+    const refreshCarousels = () => {
+      cleanupCarousels();
+      cleanupCarousels = initProductSuggestSliders(root);
+    };
+
+    const resizeObserver = new ResizeObserver(refreshCarousels);
+    resizeObserver.observe(root);
+
+    const idleId =
+      typeof window.requestIdleCallback === "function"
+        ? window.requestIdleCallback(refreshCarousels, { timeout: 500 })
+        : window.setTimeout(refreshCarousels, 120);
 
     return () => {
-      initializedRef.current = false;
+      resizeObserver.disconnect();
+      if (typeof idleId === "number") {
+        window.clearTimeout(idleId);
+      } else {
+        window.cancelIdleCallback(idleId);
+      }
       cleanupTiles();
       cleanupCarousels();
     };
-  }, []);
+  }, [items.length]);
 
   if (items.length === 0) {
     return null;
   }
 
-  return <div className="homepage-wrapper">{children}</div>;
+  return (
+    <div ref={wrapperRef} className="homepage-wrapper">
+      {children}
+    </div>
+  );
 }

@@ -8,7 +8,7 @@ import {
   isGlobalFirestoreCircuitOpen,
   markFirestoreUnavailable,
   withFirestoreDeadline,
-  FIRESTORE_FAST_FAIL_MS,
+  FIRESTORE_STARTUP_DEADLINE_MS,
 } from "@/lib/server/firestoreErrors";
 
 export interface FirestoreHealthResult {
@@ -47,7 +47,7 @@ export async function verifyFirestoreConnection(): Promise<FirestoreHealthResult
   try {
     await withFirestoreDeadline(
       () => getAdminFirestore().collection("settings").doc("store").get(),
-      FIRESTORE_FAST_FAIL_MS
+      FIRESTORE_STARTUP_DEADLINE_MS
     );
     const latencyMs = Date.now() - startedAt;
     const projectId = process.env.FIREBASE_PROJECT_ID?.trim();

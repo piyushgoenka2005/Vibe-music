@@ -9,7 +9,7 @@ const CARD_W = 300;
 const V_SPREAD = 520;
 const H_SPREAD = 42;
 const ANGLE_RANGE = 88;
-const SPEED = 0.011;
+const SPEED = 0.032;
 
 interface DropshipMarqueeColumnProps {
   products: HeroMarqueeProduct[];

@@ -2,6 +2,7 @@
 
 import { Bebas_Neue } from "next/font/google";
 import { useEffect, useState, type CSSProperties } from "react";
+import "@/styles/page-load-splash.css";
 import SplashMusicalItems from "@/components/layout/SplashMusicalItems";
 import SplashCornerAccents from "@/components/layout/SplashCornerAccents";
 import SplashEcommerceBeat from "@/components/layout/SplashEcommerceBeat";
@@ -19,6 +20,18 @@ const BRAND_EXIT_MS = 300;
 const TEASER_DELAY_MS = 720;
 const ITEMS_PHASE_MS = 2100;
 const FULL_EXIT_MS = 380;
+const SPLASH_SEEN_KEY = "vibe-splash-seen";
+const SPLASH_DISABLED = process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH === "false";
+
+function shouldShowInitialSplash(): boolean {
+  if (SPLASH_DISABLED) return false;
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(SPLASH_SEEN_KEY) !== "1";
+  } catch {
+    return true;
+  }
+}
 
 interface PageLoadSplashProps {
   variant?: "initial" | "inline";
@@ -121,7 +134,9 @@ export function PageLoadSplashScreen({
 
 export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [visible, setVisible] = useState(variant === "initial");
+  const [visible, setVisible] = useState(
+    () => variant === "initial" && shouldShowInitialSplash() && !prefersReducedMotion
+  );
   const [settled, setSettled] = useState(prefersReducedMotion);
   const [brandExiting, setBrandExiting] = useState(false);
   const [showItems, setShowItems] = useState(false);
@@ -156,7 +171,16 @@ export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashPr
       if (prefersReducedMotion) {
         fullExitTimer = window.setTimeout(() => {
           setExiting(true);
-          hideTimer = window.setTimeout(() => setVisible(false), 140);
+          hideTimer = window.setTimeout(() => {
+            if (!cancelled) {
+              setVisible(false);
+              try {
+                sessionStorage.setItem(SPLASH_SEEN_KEY, "1");
+              } catch {
+                /* ignore */
+              }
+            }
+          }, 140);
         }, 280);
         return;
       }
@@ -176,7 +200,14 @@ export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashPr
       fullExitTimer = window.setTimeout(() => {
         setExiting(true);
         hideTimer = window.setTimeout(() => {
-          if (!cancelled) setVisible(false);
+          if (!cancelled) {
+            setVisible(false);
+            try {
+              sessionStorage.setItem(SPLASH_SEEN_KEY, "1");
+            } catch {
+              /* ignore */
+            }
+          }
         }, FULL_EXIT_MS);
       }, itemsStart + ITEMS_PHASE_MS);
     };

@@ -8,11 +8,8 @@ import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SkipToContent from "@/components/layout/SkipToContent";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
-
-const DeferredSplashCursor = dynamic(
-  () => import("@/components/layout/DeferredSplashCursor"),
-  { ssr: false }
-);
+import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
+import DeferredSplashCursor from "@/components/layout/DeferredSplashCursor";
 
 const SocialRail = dynamic(() => import("@/components/layout/SocialRail"), {
   ssr: false,
@@ -41,8 +38,12 @@ export default function StorefrontChrome({
   const hideChrome = pathname.startsWith("/admin");
   const isLandingPage = pathname === "/";
   const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobileViewport = useIsMobileViewport();
   const splashEnabled =
-    !SPLASH_CURSOR_DISABLED && !prefersReducedMotion && !hideChrome;
+    !SPLASH_CURSOR_DISABLED &&
+    !prefersReducedMotion &&
+    !hideChrome &&
+    !isMobileViewport;
 
   useEffect(() => {
     document.body.classList.toggle("is-landing-page", isLandingPage);
@@ -55,29 +56,6 @@ export default function StorefrontChrome({
 
   return (
     <div className="storefront-shell">
-      {splashEnabled ? (
-        <DeferredSplashCursor
-          SIM_RESOLUTION={64}
-          DYE_RESOLUTION={720}
-          CAPTURE_RESOLUTION={256}
-          DENSITY_DISSIPATION={5}
-          VELOCITY_DISSIPATION={2.75}
-          PRESSURE={0.08}
-          CURL={1.75}
-          SPLAT_RADIUS={0.12}
-          ZONE_SPLAT_RADIUS={0.09}
-          SPLAT_FALLOFF="tent"
-          SPLAT_FORCE={3200}
-          COLOR_INTENSITY={0.1}
-          COLOR_UPDATE_SPEED={10}
-          SHADING
-          RAINBOW_MODE={false}
-          COLOR="#1253ED"
-          ZONE_COLOR="#FFFFFF"
-          ZONE_COLOR_INTENSITY={0.11}
-          ZONE_SELECTORS='[data-vibe-section="footer"], [data-footer-panel]'
-        />
-      ) : null}
       <GlassFilter />
       <SkipToContent />
       <SocialRail />
@@ -88,6 +66,28 @@ export default function StorefrontChrome({
       <SiteFooter />
       <BackToTop />
       <HelpWidget />
+      {splashEnabled ? (
+        <DeferredSplashCursor
+          DYE_RESOLUTION={720}
+          SIM_RESOLUTION={64}
+          PRESSURE_ITERATIONS={10}
+          DENSITY_DISSIPATION={5}
+          VELOCITY_DISSIPATION={2.75}
+          PRESSURE={0.08}
+          CURL={1.75}
+          SPLAT_RADIUS={0.16}
+          ZONE_SPLAT_RADIUS={0.12}
+          SPLAT_FORCE={3600}
+          COLOR_INTENSITY={0.16}
+          COLOR_UPDATE_SPEED={10}
+          SHADING
+          RAINBOW_MODE={false}
+          COLOR="#1253ED"
+          ZONE_COLOR="#FFFFFF"
+          ZONE_COLOR_INTENSITY={0.14}
+          ZONE_SELECTORS='[data-vibe-section="footer"], [data-footer-panel]'
+        />
+      ) : null}
     </div>
   );
 }

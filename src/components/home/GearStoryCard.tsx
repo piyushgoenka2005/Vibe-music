@@ -2,7 +2,8 @@
 
 import { useRef } from "react";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
-import { useContinuousVideo } from "@/hooks/useVisibleVideo";
+import { STYLE_STORY_REELS } from "@/data/styleStory";
+import { useVisibleVideo } from "@/hooks/useVisibleVideo";
 import type { GearStory } from "@/types/gear-story";
 import GearStoryHotspot from "./GearStoryHotspot";
 
@@ -33,43 +34,40 @@ export default function GearStoryCard({
   playDelayMs = 0,
   onOpen,
 }: GearStoryCardProps) {
+  const containerRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const hasVideo = Boolean(story.videoUrl?.trim());
+  const reelUrl =
+    STYLE_STORY_REELS.find((reel) => reel.videoSrc === story.videoUrl)?.reelUrl ??
+    SOCIAL_LINKS.instagram;
 
-  useContinuousVideo(videoRef, {
-    forcePaused: isPaused || !hasVideo,
+  useVisibleVideo(videoRef, containerRef, {
+    forcePaused: isPaused,
     playDelayMs,
+    visibilityRatio: 0.35,
   });
 
   return (
-    <article className="gear-story-card" data-story-id={story.id}>
+    <article
+      ref={containerRef}
+      className="gear-story-card"
+      data-story-id={story.id}
+    >
       <div className="gear-story-card__media">
-        {hasVideo ? (
-          <video
-            ref={videoRef}
-            className="gear-story-card__video"
-            src={story.videoUrl}
-            poster={story.posterUrl || undefined}
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            disablePictureInPicture
-            controls={false}
-            aria-hidden="true"
-          />
-        ) : story.posterUrl ? (
-          <img
-            className="gear-story-card__video"
-            src={story.posterUrl}
-            alt=""
-            loading="lazy"
-            decoding="async"
-          />
-        ) : null}
+        <video
+          ref={videoRef}
+          className="gear-story-card__video"
+          src={story.videoUrl}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          disablePictureInPicture
+          controls={false}
+          aria-hidden="true"
+        />
         <div className="gear-story-card__overlay">
           <a
-            href={SOCIAL_LINKS.instagram}
+            href={reelUrl}
             className="gear-story-card__handle"
             target="_blank"
             rel="noopener noreferrer"

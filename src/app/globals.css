@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@source "../gp9/**/*.{ts,tsx}";
 @import "../styles/tokens.css";
 
 @keyframes moveBackground {

@@ -9,7 +9,7 @@ import { productPath } from "@/lib/routes";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
 import type { GearStory } from "@/types/gear-story";
 import type { Product } from "@/types/product";
 
@@ -174,7 +174,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
 
             <div className="gear-story-modal__price-row">
               <span className="gear-story-modal__price">
-                {formatCurrency(displayPrice)}
+                {formatDisplayPrice(story.price, story.salePrice)}
               </span>
               {hasDiscount ? (
                 <>

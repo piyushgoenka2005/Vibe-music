@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import "@/styles/help-widget.css";
 import Link from "next/link";
 import {
   ChevronRight,

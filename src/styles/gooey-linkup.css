@@ -221,7 +221,7 @@
 @media (max-width: 767px) {
   .site-header__nav-gooey.gooey-linkup {
     width: 100%;
-    max-width: 18rem;
+    max-width: none;
   }
 
   .site-header__nav-gooey .gooey-linkup__blobs {

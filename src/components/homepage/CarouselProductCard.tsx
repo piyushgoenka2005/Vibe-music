@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatCurrency } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageProductItem } from "@/types/homepage";
 
@@ -18,7 +18,6 @@ export default function CarouselProductCard({
   sectionKey,
 }: CarouselProductCardProps) {
   const ratingAttr = formatRatingAttribute(item.rating);
-  const displayPrice = item.salePrice ?? item.price;
 
   return (
     <div className="product-suggest__item-wrap">
@@ -38,7 +37,7 @@ export default function CarouselProductCard({
             <strong>{item.brand}</strong> {item.name}
           </div>
           <div className="product-suggest__item-price">
-            {formatCurrency(displayPrice)}
+            {formatDisplayPrice(item.price, item.salePrice)}
           </div>
           <div className="product-suggest__item-reviews">
             <span

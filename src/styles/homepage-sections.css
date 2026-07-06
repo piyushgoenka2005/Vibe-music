@@ -138,6 +138,7 @@
   scroll-snap-type: x mandatory;
   padding: 0.25rem 0 0.75rem;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 .premium-home .tile--link {
@@ -303,6 +304,8 @@
   gap: 1rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
   padding: 0.5rem 0 1rem;
   -webkit-overflow-scrolling: touch;
 }

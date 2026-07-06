@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SmoothScrollProvider } from "@/gp9/components/smooth-scroll-provider";
+import "@/gp9/styles/gp9-tailwind.css";
 import "@/gp9/styles/gp9-globals.css";
 
 export const metadata: Metadata = {

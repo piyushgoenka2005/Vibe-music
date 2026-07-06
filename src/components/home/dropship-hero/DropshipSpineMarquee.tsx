@@ -3,9 +3,9 @@ import DropshipMarqueeColumn from "@/components/home/dropship-hero/DropshipMarqu
 import DropshipCenterRow from "@/components/home/dropship-hero/DropshipCenterRow";
 
 const DISPATCH_ROWS = [
-  { duration: 52, curve: "up" as const },
-  { duration: 58, curve: "flat" as const },
-  { duration: 46, curve: "down" as const },
+  { duration: 18, curve: "up" as const },
+  { duration: 20, curve: "flat" as const },
+  { duration: 16, curve: "down" as const },
 ] as const;
 
 export default function DropshipSpineMarquee() {

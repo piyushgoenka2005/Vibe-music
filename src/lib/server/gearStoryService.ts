@@ -1,3 +1,6 @@
+import "server-only";
+
+import { unstable_cache } from "next/cache";
 import { GEAR_STORIES_SECTION, GEAR_STORY_SEEDS } from "@/data/gearStories";
 import { STYLE_STORY_REELS } from "@/data/styleStory";
 import { getProductImage } from "@/data/productImages";
@@ -6,7 +9,6 @@ import {
   isFirestoreUnavailableError,
   logFirestoreWarning,
 } from "@/lib/server/firestoreErrors";
-import { getProductById } from "@/services/catalogService";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
   GearStoriesSectionData,
@@ -21,7 +23,9 @@ function enrichStory(
 ): GearStory {
   const reel = STYLE_STORY_REELS[index];
   const posterUrl =
-    product.image || getProductImage(product.slug, product.category);
+    reel?.thumbnailSrc?.trim() ||
+    product.image ||
+    getProductImage(product.slug, product.category);
   const images =
     product.images.length > 0 ? product.images : [posterUrl];
   const salePrice =
@@ -54,13 +58,10 @@ function enrichStory(
 
 function buildPlaceholderStory(seed: GearStorySeed, index: number): GearStory {
   const reel = STYLE_STORY_REELS[index];
-  const videoUrl = reel?.videoSrc ?? seed.videoUrl;
-  const posterUrl =
-    reel?.thumbnailSrc && !reel.thumbnailSrc.startsWith("/images/style-story/")
-      ? reel.thumbnailSrc
-      : index % 2 === 0
-        ? "/images/guitar-1.webp"
-        : "/images/guitar-2.webp";
+  const videoUrl = reel?.videoSrc?.trim() ? reel.videoSrc : seed.videoUrl;
+  const posterUrl = reel?.thumbnailSrc ?? (index % 2 === 0
+    ? "/images/guitar-1.webp"
+    : "/images/guitar-2.webp");
 
   return {
     id: seed.id,
@@ -112,9 +113,13 @@ async function resolveSeedProducts(): Promise<Array<CatalogProduct | undefined>>
   }
 
   try {
-    return await Promise.all(
-      GEAR_STORY_SEEDS.map((seed) => getProductById(seed.productId))
+    const ids = GEAR_STORY_SEEDS.map((seed) => seed.productId);
+    const { fetchProductsByIds } = await import(
+      "@/lib/server/firestoreCatalogRepository"
     );
+    const products = await fetchProductsByIds(ids);
+    const byId = new Map(products.map((product) => [product.id, product]));
+    return GEAR_STORY_SEEDS.map((seed) => byId.get(seed.productId));
   } catch (error) {
     if (!isFirestoreUnavailableError(error)) {
       throw error;
@@ -134,6 +139,14 @@ export async function listGearStories(): Promise<GearStoriesSectionData> {
 
   return buildStaticGearStories(products);
 }
+
+const GEAR_STORIES_REVALIDATE_SECONDS = 60;
+
+export const getCachedGearStories = unstable_cache(
+  listGearStories,
+  ["gear-stories-section"],
+  { revalidate: GEAR_STORIES_REVALIDATE_SECONDS, tags: ["gear-stories", "catalog"] }
+);
 
 /** Always returns all reel slots — used on the homepage without Firestore. */
 export async function buildStaticGearStories(

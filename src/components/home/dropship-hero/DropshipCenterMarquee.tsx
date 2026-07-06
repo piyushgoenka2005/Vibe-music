@@ -4,9 +4,9 @@ import DropshipCenterRow, {
 } from "@/components/home/dropship-hero/DropshipCenterRow";
 
 const ROWS: ReadonlyArray<{ duration: number; curve: DropshipRowCurve }> = [
-  { duration: 52, curve: "up" },
-  { duration: 58, curve: "flat" },
-  { duration: 46, curve: "down" },
+  { duration: 18, curve: "up" },
+  { duration: 20, curve: "flat" },
+  { duration: 16, curve: "down" },
 ];
 
 export default function DropshipCenterMarquee() {

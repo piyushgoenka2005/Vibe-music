@@ -49,10 +49,18 @@ export default function SearchResultsPage({
         <p className="storefront-page__eyebrow">Search</p>
         <h1 className="sw-search-results__title">Search Results</h1>
         <p className="sw-search-results__meta">
-          {query ? (
+          {query || effectiveFilters.category || effectiveFilters.brand ? (
             <>
-              Showing results for <strong>&ldquo;{query}&rdquo;</strong>
-              {status === "loading" ? " — loading..." : ` — ${productCount} products`}
+              {query ? (
+                <>
+                  Showing results for <strong>&ldquo;{query}&rdquo;</strong>
+                </>
+              ) : (
+                <>Showing filtered results</>
+              )}
+              {status === "loading"
+                ? " — loading..."
+                : ` — ${productCount} products`}
             </>
           ) : (
             "Enter a search term to see results."

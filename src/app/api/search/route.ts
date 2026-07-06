@@ -9,6 +9,7 @@ import type { SearchBrand, SearchCategory } from "@/types/search";
 
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 48;
+const MIN_QUERY_LENGTH = 2;
 
 function buildCategoryFacets(
   products: Awaited<ReturnType<typeof searchProducts>>
@@ -68,6 +69,21 @@ export async function GET(request: Request) {
       parsePositiveInt(searchParams.get("limit"), DEFAULT_LIMIT),
       MAX_LIMIT
     );
+
+    const hasFilter = Boolean(category?.trim() || brand?.trim());
+    if (query.length < MIN_QUERY_LENGTH && !hasFilter) {
+      return NextResponse.json({
+        query,
+        products: [],
+        categories: [],
+        brands: [],
+        total: 0,
+        page: 1,
+        limit,
+        totalPages: 1,
+        hasMore: false,
+      });
+    }
 
     const products = await searchProducts({ query, category, brand, sort });
     const categories = buildCategoryFacets(products);

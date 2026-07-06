@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { optimizeImageUrl } from "@/lib/images";
-import { formatCurrency } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import { resolveLinkHref } from "@/lib/routes";
 
 export interface NewArrivalsProductCardProps {
@@ -60,7 +60,7 @@ export default function NewArrivalsProductCard({
   return (
     <Link
       aria-hidden={ariaHidden || undefined}
-      aria-label={`${brand} ${name}, ${formatCurrency(displayPrice)}`}
+      aria-label={`${brand} ${name}, ${formatDisplayPrice(price, salePrice)}`}
       className={`new-arrivals-card${featured ? " new-arrivals-card--featured" : ""}`}
       tabIndex={ariaHidden ? -1 : undefined}
       data-hp-section={sectionKey}
@@ -131,11 +131,11 @@ export default function NewArrivalsProductCard({
           <div className="new-arrivals-card__pricing">
             {hasDiscount ? (
               <span className="new-arrivals-card__was">
-                {formatCurrency(price)}
+                {formatDisplayPrice(price)}
               </span>
             ) : null}
             <span className="new-arrivals-card__price">
-              {priceNode ?? formatCurrency(displayPrice)}
+              {priceNode ?? formatDisplayPrice(price, salePrice)}
             </span>
           </div>
           <span className="new-arrivals-card__stock-pill">Limited stock</span>

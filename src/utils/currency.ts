@@ -21,6 +21,18 @@ export function formatCurrencyPrecise(value: number): string {
   }).format(value);
 }
 
+/** Storefront price label — hides zero/invalid catalog prices. */
+export function formatDisplayPrice(
+  price: number,
+  salePrice?: number | null
+): string {
+  const value = salePrice ?? price;
+  if (!Number.isFinite(value) || value <= 0) {
+    return "Price on request";
+  }
+  return formatCurrency(value);
+}
+
 /** Convert legacy USD catalog prices to INR (approx. ₹83.33 per $1). */
 export function usdToInr(usd: number): number {
   return Math.round(usd * 83.33);

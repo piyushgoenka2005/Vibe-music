@@ -1,7 +1,6 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import RevealGroup from "@/components/layout/RevealGroup";
@@ -14,8 +13,6 @@ function BigNamesDealItem({
   item: BigNamesDealBrand;
   index: number;
 }) {
-  const [logoFailed, setLogoFailed] = useState(false);
-
   return (
     <div
       className="big-names-deals__item"
@@ -27,44 +24,20 @@ function BigNamesDealItem({
         className="big-names-deals__link"
         href={item.href}
       >
-        <div className="big-names-deals__spotlight" aria-hidden />
-        <div className="big-names-deals__logo-wrap">
-          {!logoFailed ? (
-            <Image
-              alt=""
-              className="big-names-deals__logo"
-              height={28}
-              onError={() => setLogoFailed(true)}
-              src={item.logo}
-              style={{ width: "auto", height: "auto" }}
-              width={120}
-            />
-          ) : null}
-          {logoFailed ? (
-            <span className="big-names-deals__brand-fallback">{item.brand}</span>
-          ) : null}
-        </div>
         <div className="big-names-deals__hang-wrap">
           <span className="big-names-deals__hanger" aria-hidden>
             <span className="big-names-deals__hanger-hook" />
             <span className="big-names-deals__hanger-plate" />
           </span>
           <div className="big-names-deals__product-stage">
-            <span className="big-names-deals__floor-shadow" aria-hidden />
-            <span
-              className={`big-names-deals__product-shadow${item.blendMultiply ? " big-names-deals__product-shadow--blend" : ""}`}
-            >
-              <span
-                className={`big-names-deals__product-wrap${item.blendMultiply ? " big-names-deals__product-wrap--blend" : ""}`}
-              >
-                <img
-                  alt={item.productAlt}
-                  className="big-names-deals__product"
-                  decoding="async"
-                  loading={index < 2 ? "eager" : "lazy"}
-                  src={item.product}
-                />
-              </span>
+            <span className="big-names-deals__product-shadow">
+              <img
+                alt={item.productAlt}
+                className="big-names-deals__product"
+                decoding="async"
+                loading={index < 2 ? "eager" : "lazy"}
+                src={item.product}
+              />
             </span>
           </div>
         </div>

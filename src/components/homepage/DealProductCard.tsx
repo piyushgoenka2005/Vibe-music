@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatCurrency } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageProductItem } from "@/types/homepage";
 
@@ -9,8 +9,6 @@ interface DealProductCardProps {
 }
 
 export default function DealProductCard({ item, slotPosition }: DealProductCardProps) {
-  const displayPrice = item.salePrice ?? item.price;
-
   return (
     <Link
       href={resolveLinkHref(item.href)}
@@ -43,7 +41,7 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
             ) : null}
             <div className="price-block">
               <span className="type-fixed-20 text-black weight-demi">
-                {formatCurrency(displayPrice)}
+                {formatDisplayPrice(item.price, item.salePrice)}
               </span>
             </div>
           </div>

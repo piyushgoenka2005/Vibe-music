@@ -2,9 +2,9 @@ import { HERO_MARQUEE_TRACKS } from "@/data/heroMarqueeProducts";
 import DropshipHorizontalRow from "@/components/home/dropship-hero/DropshipHorizontalRow";
 
 const ROWS = [
-  { direction: "left" as const, duration: 52 },
-  { direction: "right" as const, duration: 60 },
-  { direction: "left" as const, duration: 48 },
+  { direction: "left" as const, duration: 18 },
+  { direction: "right" as const, duration: 20 },
+  { direction: "left" as const, duration: 16 },
 ] as const;
 
 export default function DropshipHorizontalMarquee() {

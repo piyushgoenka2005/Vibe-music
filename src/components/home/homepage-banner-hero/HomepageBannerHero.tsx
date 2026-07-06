@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   HOMEPAGE_BANNER_ROTATION_MS,
   HOMEPAGE_BANNER_SLIDES,
 } from "@/data/homepageBannerHero";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
-import "@/styles/homepage-banner-hero.css";
 
 export default function HomepageBannerHero() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -45,10 +45,12 @@ export default function HomepageBannerHero() {
         {HOMEPAGE_BANNER_SLIDES.map((slide, index) => {
           const isActive = index === activeIndex;
           return (
-            <div
+            <Link
               key={slide.id}
+              href={slide.href}
               className={`homepage-banner-hero__slide${isActive ? " is-active" : ""}`}
               aria-hidden={!isActive}
+              tabIndex={isActive ? 0 : -1}
             >
               <Image
                 src={slide.src}
@@ -58,7 +60,7 @@ export default function HomepageBannerHero() {
                 sizes="100vw"
                 className="homepage-banner-hero__image"
               />
-            </div>
+            </Link>
           );
         })}
       </div>

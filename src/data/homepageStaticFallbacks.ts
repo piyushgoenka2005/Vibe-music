@@ -97,6 +97,13 @@ export async function getHomepageStaticFallbacks(
     .slice(0, 12)
     .map((product) => toProductItem(product));
 
+  const trendingResolved =
+    trending.length > 0
+      ? trending
+      : products
+          .slice(0, 12)
+          .map((product) => toProductItem(product));
+
   const staffPicks = products
     .filter((product) => product.featured)
     .sort(
@@ -105,6 +112,13 @@ export async function getHomepageStaticFallbacks(
     )
     .slice(0, 12)
     .map((product) => toProductItem(product));
+
+  const staffPicksResolved =
+    staffPicks.length > 0
+      ? staffPicks
+      : products
+          .slice(0, 12)
+          .map((product) => toProductItem(product));
 
   const deals = products
     .filter(
@@ -145,12 +159,12 @@ export async function getHomepageStaticFallbacks(
       }
     ),
     productSection("best_sellers", "best-sellers", "Best Sellers", bestSellers),
-    productSection("trending", "trending-products", "Trending Now", trending),
+    productSection("trending", "trending-products", "Trending Now", trendingResolved),
     productSection(
       "staff_picks",
       "suggested-products",
       "Staff Picks",
-      staffPicks
+      staffPicksResolved
     ),
     productSection(
       "deals_of_the_day",

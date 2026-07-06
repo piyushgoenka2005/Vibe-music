@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import "@/styles/social-rail.css";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
 
 interface IconProps {

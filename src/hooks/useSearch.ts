@@ -207,7 +207,9 @@ export function useSearchResults(
     let cancelled = false;
 
     async function run() {
-      if (query.trim().length < MIN_QUERY_LENGTH) {
+      const hasFilter = Boolean(category?.trim() || brand?.trim());
+
+      if (query.trim().length < MIN_QUERY_LENGTH && !hasFilter) {
         setResults({
           query: query.trim(),
           products: [],

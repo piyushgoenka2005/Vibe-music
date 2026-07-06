@@ -163,6 +163,7 @@
   scroll-padding-inline: 0.25rem;
   padding: 0.25rem 0.25rem 1rem;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 #f1f5f9;
 }
