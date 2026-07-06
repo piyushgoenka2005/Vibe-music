@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { formatDisplayPrice } from "@/utils/currency";
 import { resolveLinkHref } from "@/lib/routes";
@@ -29,7 +30,15 @@ export default function CarouselProductCard({
       >
         <div className="product-suggest__item-img">
           {item.image ? (
-            <img src={item.image} alt={item.imageAlt} loading="lazy" />
+            <Image
+              alt={item.imageAlt}
+              className="product-suggest__item-photo"
+              height={400}
+              loading="lazy"
+              sizes="(max-width: 767px) 45vw, 220px"
+              src={item.image}
+              width={400}
+            />
           ) : null}
         </div>
         <div className="product-suggest__item-content">

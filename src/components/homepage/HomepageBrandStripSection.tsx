@@ -1,4 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
+import Marquee from "@/components/common/Marquee";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageBrandItem, ResolvedHomepageSection } from "@/types/homepage";
 
@@ -14,11 +16,12 @@ function BrandStripLink({ brand }: { brand: HomepageBrandItem }) {
       href={resolveLinkHref(brand.href)}
     >
       {brand.logoUrl ? (
-        <img
+        <Image
           alt={brand.name}
           className="homepage-brand-strip__logo"
           height={40}
           loading="lazy"
+          sizes="(max-width: 767px) 120px, 148px"
           src={brand.logoUrl}
           width={120}
         />
@@ -26,16 +29,6 @@ function BrandStripLink({ brand }: { brand: HomepageBrandItem }) {
         <span className="homepage-brand-strip__wordmark">{brand.name}</span>
       )}
     </Link>
-  );
-}
-
-function BrandSequence({ brands }: { brands: HomepageBrandItem[] }) {
-  return (
-    <>
-      {brands.map((brand) => (
-        <BrandStripLink key={brand.id} brand={brand} />
-      ))}
-    </>
   );
 }
 
@@ -61,23 +54,18 @@ export default function HomepageBrandStripSection({
       </div>
 
       {brands.length > 0 ? (
-        <div
-          aria-label="Brand logos"
+        <Marquee
+          ariaLabel="Brand logos"
           className="homepage-brand-strip__marquee"
+          duration="48s"
           role="region"
+          sequenceClassName="homepage-brand-strip__sequence"
+          trackClassName="homepage-brand-strip__marquee-track"
         >
-          <div className="homepage-brand-strip__marquee-track">
-            <div className="homepage-brand-strip__sequence">
-              <BrandSequence brands={brands} />
-            </div>
-            <div
-              aria-hidden="true"
-              className="homepage-brand-strip__sequence homepage-brand-strip__sequence--clone"
-            >
-              <BrandSequence brands={brands} />
-            </div>
-          </div>
-        </div>
+          {brands.map((brand) => (
+            <BrandStripLink key={brand.id} brand={brand} />
+          ))}
+        </Marquee>
       ) : null}
     </section>
   );

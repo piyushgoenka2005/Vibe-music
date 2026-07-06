@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -61,12 +62,12 @@ export default function PremiumHeroRotatingVisual() {
             tabIndex={isActive ? 0 : -1}
             aria-label={slide.alt}
           >
-            <img
+            <Image
               src={failedSrc[slide.src] ? MARKETING_HERO_FALLBACK : slide.src}
               alt=""
-              loading={index === 0 ? "eager" : "lazy"}
-              fetchPriority={index === 0 ? "high" : "auto"}
-              decoding="async"
+              fill
+              sizes="(max-width: 767px) 90vw, 480px"
+              priority={index === 0}
               style={slide.objectPosition ? { objectPosition: slide.objectPosition } : undefined}
               onError={() =>
                 setFailedSrc((prev) => ({ ...prev, [slide.src]: true }))

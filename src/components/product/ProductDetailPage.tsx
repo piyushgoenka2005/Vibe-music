@@ -19,6 +19,7 @@ import type { ProductImage, ProductVariant } from "@/types/product";
 import type { ProductDetailResult } from "@/services/product.service";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
+import ProductStickyBar from "./ProductStickyBar";
 import ShippingEstimator from "./ShippingEstimator";
 import ProductTabs, { type TabId } from "./ProductTabs";
 import ProductCrossSell from "./ProductCrossSell";
@@ -66,6 +67,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabsRef = useRef<HTMLDivElement>(null);
+  const atcSentinelRef = useRef<HTMLDivElement>(null);
   const { data, isLoading, isError } = useProduct(slug, initialData);
   const showSkeleton = isLoading && !data;
   const addItem = useCartStore((s) => s.addItem);
@@ -77,11 +79,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   );
 
   const catalogProduct = data?.product;
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7828/ingest/1d696600-63a8-447a-b1d2-58422acef253',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'88ed4c'},body:JSON.stringify({sessionId:'88ed4c',location:'ProductDetailPage.tsx:mount',message:'PDP client mounted',data:{slug,hasInitial:Boolean(initialData?.product),isLoading,hasData:Boolean(data)},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
-  }, [slug, initialData?.product, isLoading, data]);
-  // #endregion
+
   const variantFromQuery = searchParams.get("variant");
 
   const defaultVariant = useMemo(() => {
@@ -208,6 +206,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
             onReviewsClick={scrollToReviews}
             liveRating={product.rating}
             liveReviewCount={product.reviewCount}
+            atcSentinelRef={atcSentinelRef}
           />
           <ShippingEstimator subtotal={variant.price * quantity} />
         </div>
@@ -245,6 +244,14 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
           <GuitarStorySections />
         </>
       ) : null}
+
+      <ProductStickyBar
+        inStock={variant.availability !== "out-of-stock"}
+        onAddToCart={handleAddToCart}
+        price={variant.price}
+        productName={product.name}
+        sentinelRef={atcSentinelRef}
+      />
     </>
   );
 }

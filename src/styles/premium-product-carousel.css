@@ -185,7 +185,8 @@
   pointer-events: none;
 }
 
-.premium-home .premium-product-carousel .product-suggest__item-img img {
+.premium-home .premium-product-carousel .product-suggest__item-img img,
+.premium-home .premium-product-carousel .product-suggest__item-img .product-suggest__item-photo {
   position: relative;
   z-index: 1;
   width: 100%;

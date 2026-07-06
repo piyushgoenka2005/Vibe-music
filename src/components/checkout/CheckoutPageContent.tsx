@@ -610,6 +610,7 @@ export default function CheckoutPageContent() {
                     Full Name
                     <input
                       required
+                      autoComplete="name"
                       value={addressForm.name}
                       onChange={(e) =>
                         setAddressForm((p) => ({ ...p, name: e.target.value }))
@@ -651,7 +652,9 @@ export default function CheckoutPageContent() {
                       PIN Code
                       <input
                         required
+                        inputMode="numeric"
                         pattern="[0-9]{6}"
+                        autoComplete="postal-code"
                         value={addressForm.postalCode}
                         onChange={(e) =>
                           setAddressForm((p) => ({
@@ -667,6 +670,8 @@ export default function CheckoutPageContent() {
                     <input
                       required
                       type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
                       pattern="[0-9]{10}"
                       value={addressForm.phone ?? ""}
                       onChange={(e) =>

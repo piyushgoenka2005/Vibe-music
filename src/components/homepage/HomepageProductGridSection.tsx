@@ -2,6 +2,7 @@ import Link from "next/link";
 import { resolveLinkHref } from "@/lib/routes";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import NewArrivalsProductCard from "@/components/homepage/NewArrivalsProductCard";
+import { isHomepageProductVisible } from "@/lib/homepage/productVisibility";
 import type {
   HomepageProductItem,
   ResolvedHomepageSection,
@@ -51,7 +52,7 @@ function ProductSequence({
 export default function HomepageProductGridSection({
   section,
 }: HomepageProductGridSectionProps) {
-  const products = section.products ?? [];
+  const products = (section.products ?? []).filter(isHomepageProductVisible);
   const titleId = `${section.sectionId}-title`;
   const eyebrow = section.accentLabel ?? "New arrivals";
 

@@ -14,9 +14,12 @@ import type {
   PublicHomepageData,
   ResolvedHomepageSection,
 } from "@/types/homepage";
+import { hasPositiveDisplayPrice } from "@/lib/homepage/productVisibility";
 
 function activeProducts(products: CatalogProduct[]): CatalogProduct[] {
-  return products.filter((product) => product.status === "active");
+  return products.filter(
+    (product) => product.status === "active" && hasPositiveDisplayPrice(product)
+  );
 }
 
 function toProductItem(

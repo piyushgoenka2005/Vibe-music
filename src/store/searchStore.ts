@@ -30,6 +30,7 @@ export interface SearchStoreState {
   recentSearches: string[];
   analytics: ClientSearchAnalyticsEvent[];
   filters: SearchFiltersState;
+  mobileFilterOpen: boolean;
 }
 
 type Listener = () => void;
@@ -72,6 +73,7 @@ let state: SearchStoreState = {
   recentSearches: EMPTY_RECENT,
   analytics: EMPTY_ANALYTICS,
   filters: defaultFilters,
+  mobileFilterOpen: false,
 };
 
 const SERVER_SNAPSHOT: SearchStoreState = {
@@ -83,6 +85,7 @@ const SERVER_SNAPSHOT: SearchStoreState = {
   recentSearches: EMPTY_RECENT,
   analytics: EMPTY_ANALYTICS,
   filters: defaultFilters,
+  mobileFilterOpen: false,
 };
 
 const listeners = new Set<Listener>();
@@ -216,6 +219,16 @@ export const searchStore = {
 
   resetFilters() {
     state = { ...state, filters: defaultFilters };
+    emit();
+  },
+
+  openMobileFilters() {
+    state = { ...state, mobileFilterOpen: true };
+    emit();
+  },
+
+  closeMobileFilters() {
+    state = { ...state, mobileFilterOpen: false };
     emit();
   },
 };

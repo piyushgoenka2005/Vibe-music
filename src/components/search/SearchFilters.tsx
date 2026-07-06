@@ -6,16 +6,18 @@ import type { SearchBrand, SearchCategory } from "@/types/search";
 interface SearchFiltersProps {
   categories?: SearchCategory[];
   brands?: SearchBrand[];
+  className?: string;
 }
 
 export default function SearchFilters({
   categories = [],
   brands = [],
+  className = "",
 }: SearchFiltersProps) {
   const filters = useSearchStore((s) => s.filters);
 
   return (
-    <aside className="sw-search-filters" aria-label="Search filters">
+    <aside className={`sw-search-filters${className ? ` ${className}` : ""}`} aria-label="Search filters">
       <h3>Filter Results</h3>
 
       <label htmlFor="search-filter-category">

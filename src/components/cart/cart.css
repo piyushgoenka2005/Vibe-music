@@ -48,6 +48,9 @@
   font-weight: 500;
   color: var(--brand-primary);
   cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem;
 }
 
 .cart-drawer__body {
@@ -133,8 +136,8 @@
 }
 
 .cart-qty button {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border: 0;
   background: transparent;
   cursor: pointer;
@@ -148,9 +151,9 @@
 }
 
 .cart-qty span {
-  min-width: 36px;
+  min-width: 44px;
   text-align: center;
-  line-height: 32px;
+  line-height: 44px;
   font-size: 13px;
   font-weight: 500;
   border-left: 1px solid var(--border-default);

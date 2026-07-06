@@ -1,0 +1,54 @@
+/* Shared infinite-scroll marquee — duplicates content once via clone */
+
+.marquee {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.marquee__track {
+  display: flex;
+  align-items: stretch;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-scroll var(--marquee-duration, 32s) linear infinite;
+}
+
+.marquee--pause-hover:hover .marquee__track,
+.marquee--pause-hover:focus-within .marquee__track {
+  animation-play-state: paused;
+}
+
+.marquee__sequence {
+  display: flex;
+  flex-shrink: 0;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee__track {
+    animation: none;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+  }
+
+  .marquee__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .marquee__sequence--clone {
+    display: none;
+  }
+}

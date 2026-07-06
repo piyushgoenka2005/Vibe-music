@@ -19,6 +19,7 @@ export default function ProductGallery({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [showVideo, setShowVideo] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const activeImage = images[activeIndex] ?? images[0];
 
@@ -83,9 +84,28 @@ export default function ProductGallery({
         className="pdp-gallery__main"
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
+        onTouchEnd={(e) => {
+          onTouchEnd(e);
+          if (touchStartX == null || images.length <= 1) return;
+          const endX = e.changedTouches[0]?.clientX ?? touchStartX;
+          const diff = endX - touchStartX;
+          if (Math.abs(diff) > 48) {
+            setActiveIndex((current) => {
+              if (diff < 0) return Math.min(images.length - 1, current + 1);
+              return Math.max(0, current - 1);
+            });
+            setShowVideo(false);
+          }
+          setTouchStartX(null);
+        }}
+        onTouchStart={(e) => {
+          setTouchStartX(e.touches[0]?.clientX ?? null);
+        }}
         onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onTouchCancel={onTouchEnd}
+        onTouchCancel={(e) => {
+          onTouchEnd(e);
+          setTouchStartX(null);
+        }}
         onClick={() => setLightboxOpen(true)}
         role="button"
         tabIndex={0}

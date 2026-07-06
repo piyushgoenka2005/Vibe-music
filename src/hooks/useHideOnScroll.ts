@@ -14,6 +14,8 @@ interface UseHideOnScrollOptions {
   minScroll?: number;
   /** Disable auto-hide (e.g. mobile menu open) */
   disabled?: boolean;
+  /** Keep header visible on viewports below 768px */
+  disableOnMobile?: boolean;
 }
 
 function readScrollY() {
@@ -24,6 +26,7 @@ export function useHideOnScroll({
   threshold = 8,
   minScroll = 72,
   disabled = false,
+  disableOnMobile = false,
 }: UseHideOnScrollOptions = {}) {
   const [hidden, setHidden] = useState(false);
   const lastScrollY = useRef(0);
@@ -38,6 +41,13 @@ export function useHideOnScroll({
     let ticking = false;
 
     const update = () => {
+      if (disableOnMobile && window.matchMedia("(max-width: 767px)").matches) {
+        setHidden(false);
+        lastScrollY.current = readScrollY();
+        ticking = false;
+        return;
+      }
+
       const currentY = readScrollY();
       const delta = currentY - lastScrollY.current;
 
@@ -66,7 +76,7 @@ export function useHideOnScroll({
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("app:scroll", onScroll);
     };
-  }, [disabled, minScroll, threshold]);
+  }, [disabled, disableOnMobile, minScroll, threshold]);
 
   return disabled ? false : hidden;
 }

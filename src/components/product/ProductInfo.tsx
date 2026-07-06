@@ -1,5 +1,6 @@
 "use client";
 
+import type { RefObject } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/utils/currency";
 import {
@@ -24,6 +25,7 @@ interface ProductInfoProps {
   onReviewsClick: () => void;
   liveRating?: number;
   liveReviewCount?: number;
+  atcSentinelRef?: RefObject<HTMLDivElement | null>;
 }
 
 function formatPrice(value: number): string {
@@ -69,6 +71,7 @@ export default function ProductInfo({
   onReviewsClick,
   liveRating,
   liveReviewCount,
+  atcSentinelRef,
 }: ProductInfoProps) {
   const displayPrice = selectedVariant.price;
   const ratingValue = liveRating ?? product.rating;
@@ -270,7 +273,7 @@ export default function ProductInfo({
         </div>
       </div>
 
-      <div className="pdp-actions">
+      <div ref={atcSentinelRef} className="pdp-actions">
         <button
           type="button"
           className="pdp-btn pdp-btn--buy pdp-buy-now"

@@ -11,6 +11,7 @@ import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMo
 
 export default function HomepageBannerHero() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const reduceMotion = useHydrationSafeReducedMotion();
   const slideCount = HOMEPAGE_BANNER_SLIDES.length;
 
@@ -41,7 +42,21 @@ export default function HomepageBannerHero() {
       aria-label="Featured promotions"
       aria-roledescription="carousel"
     >
-      <div className="homepage-banner-hero__viewport">
+      <div
+        className="homepage-banner-hero__viewport"
+        onTouchEnd={(event) => {
+          if (touchStartX == null || slideCount <= 1) return;
+          const delta = event.changedTouches[0]?.clientX ?? touchStartX;
+          const diff = delta - touchStartX;
+          if (Math.abs(diff) > 48) {
+            goTo(activeIndex + (diff < 0 ? 1 : -1));
+          }
+          setTouchStartX(null);
+        }}
+        onTouchStart={(event) => {
+          setTouchStartX(event.touches[0]?.clientX ?? null);
+        }}
+      >
         {HOMEPAGE_BANNER_SLIDES.map((slide, index) => {
           const isActive = index === activeIndex;
           return (
@@ -57,7 +72,7 @@ export default function HomepageBannerHero() {
                 alt={slide.alt}
                 fill
                 priority={index === 0}
-                sizes="100vw"
+                sizes="(max-width: 767px) 100vw, (max-width: 1280px) 100vw, 1280px"
                 className="homepage-banner-hero__image"
               />
             </Link>

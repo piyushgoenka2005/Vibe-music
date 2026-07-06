@@ -637,3 +637,9 @@
     animation: none !important;
   }
 }
+
+@media (max-width: 767px) {
+  .dropship-hero {
+    display: none;
+  }
+}

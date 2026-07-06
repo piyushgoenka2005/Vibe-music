@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Marquee from "@/components/common/Marquee";
 import { LANDING_LOCATIONS } from "@/data/landingStatus";
 import StatusChip from "@/components/home/StatusChip";
 import Reveal from "@/components/layout/Reveal";
@@ -49,31 +50,18 @@ export default function DiscoverLocationsSection() {
           </p>
         </header>
 
-        <div
+        <Marquee
+          ariaLabel="Store locations"
           className="locations-strip__marquee"
-          role="region"
-          aria-label="Store locations"
+          duration="42s"
+          role="list"
+          sequenceClassName="locations-strip__sequence"
+          trackClassName="locations-strip__marquee-track"
         >
-          <div className="locations-strip__marquee-track">
-            <div className="locations-strip__sequence" role="list">
-              {LANDING_LOCATIONS.map((location) => (
-                <LocationCard key={location.city} location={location} />
-              ))}
-            </div>
-            <div
-              aria-hidden="true"
-              className="locations-strip__sequence locations-strip__sequence--clone"
-            >
-              {LANDING_LOCATIONS.map((location) => (
-                <LocationCard
-                  key={`${location.city}-clone`}
-                  ariaHidden
-                  location={location}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+          {LANDING_LOCATIONS.map((location) => (
+            <LocationCard key={location.city} location={location} />
+          ))}
+        </Marquee>
 
         <Link href={ROUTES.search} className="locations-strip__cta premium-btn premium-btn--outline">
           Find a location

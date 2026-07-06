@@ -211,11 +211,16 @@
   padding: 0.45rem 0;
 }
 
+.page-load-splash__beat-sequence {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
 .page-load-splash__beat-marquee-track {
   display: flex;
+  align-items: center;
   width: max-content;
-  gap: 0.65rem;
-  animation: page-load-splash-marquee 18s linear infinite;
 }
 
 .page-load-splash__beat-chip {

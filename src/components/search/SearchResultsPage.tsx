@@ -5,6 +5,7 @@ import { useSearchResults } from "@/hooks/useSearch";
 import { searchStore, useSearchStore } from "@/store/searchStore";
 import SearchEmptyState from "./SearchEmptyState";
 import SearchFilters from "./SearchFilters";
+import SearchMobileFilterDrawer from "./SearchMobileFilterDrawer";
 import SearchResults from "./SearchResults";
 import "./search.css";
 
@@ -82,19 +83,39 @@ export default function SearchResultsPage({
       ) : null}
 
       {status !== "loading" && results ? (
-        <div className="sw-search-results__layout">
-          <SearchFilters
-            categories={results.categories}
-            brands={results.brands}
-          />
-          <div>
-            {productCount === 0 ? (
-              <SearchEmptyState query={query} />
-            ) : (
-              <SearchResults query={query} products={results.products} />
-            )}
+        <>
+          <div className="sw-search-mobile-toolbar">
+            <span className="sw-search-results__meta">
+              {productCount} product{productCount === 1 ? "" : "s"}
+            </span>
+            <button
+              type="button"
+              className="sw-search-mobile-filter-btn"
+              onClick={() => searchStore.openMobileFilters()}
+            >
+              Filter &amp; Sort
+            </button>
           </div>
-        </div>
+          <div className="sw-search-results__layout">
+            <SearchFilters
+              className="sw-search-filters--sidebar"
+              categories={results.categories}
+              brands={results.brands}
+            />
+            <div>
+              {productCount === 0 ? (
+                <SearchEmptyState query={query} />
+              ) : (
+                <SearchResults query={query} products={results.products} />
+              )}
+            </div>
+          </div>
+          <SearchMobileFilterDrawer
+            brands={results.brands}
+            categories={results.categories}
+            resultCount={productCount}
+          />
+        </>
       ) : null}
     </div>
   );

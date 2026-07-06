@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { optimizeImageUrl } from "@/lib/images";
@@ -79,12 +80,12 @@ export default function NewArrivalsProductCard({
           <span className="new-arrivals-card__badge">{badgeLabel}</span>
         ) : null}
         {imageSrc ? (
-          <img
+          <Image
             alt={imageAlt}
             className="new-arrivals-card__image"
-            decoding="async"
             height={400}
             loading="lazy"
+            sizes="(max-width: 767px) 45vw, 280px"
             src={imageSrc}
             width={400}
           />

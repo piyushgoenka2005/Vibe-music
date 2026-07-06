@@ -56,7 +56,7 @@
 .back-to-top {
   position: fixed;
   right: clamp(1rem, 2.5vw, 1.5rem);
-  bottom: calc(clamp(1rem, 2.5vw, 1.5rem) + 5.25rem);
+  bottom: calc(clamp(1rem, 2.5vw, 1.5rem) + 5.25rem + env(safe-area-inset-bottom, 0px));
   z-index: 150;
   display: inline-flex;
   align-items: center;
@@ -110,12 +110,18 @@
   overflow: hidden;
 }
 
+.announcement-bar__sequence {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+  padding-right: 1.5rem;
+}
+
 .announcement-bar__track {
   display: flex;
   align-items: center;
   width: max-content;
-  will-change: transform;
-  animation: announcement-marquee 32s linear infinite;
 }
 
 .announcement-bar__item {
@@ -145,15 +151,6 @@
   font-size: 0.8125rem;
   color: rgba(255, 255, 255, 0.95);
   white-space: nowrap;
-}
-
-@keyframes announcement-marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
 }
 
 /* Live ticker integrated in announcement bar */
@@ -212,8 +209,8 @@
     font-size: 0.6875rem;
   }
 
-  .announcement-bar__track {
-    animation-duration: 24s;
+  .announcement-bar .marquee__track {
+    --marquee-duration: 24s;
   }
 
   .landing-live-ticker--announcement .landing-live-ticker__track {
@@ -225,7 +222,31 @@
   }
 }
 
+@media (max-width: 479px) {
+  .announcement-bar .marquee__track {
+    animation: none;
+    width: 100%;
+    justify-content: center;
+    overflow-x: visible;
+  }
+
+  .announcement-bar .marquee__sequence--clone {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .announcement-bar .marquee__track {
+    animation: none;
+    width: 100%;
+    justify-content: center;
+    overflow-x: visible;
+  }
+
+  .announcement-bar .marquee__sequence--clone {
+    display: none;
+  }
+
   .landing-live-ticker--announcement .landing-live-ticker__track {
     animation: none;
   }
@@ -255,6 +276,7 @@ body.is-landing-page .site-header.site-header--scrolled {
   z-index: 200;
   width: 100%;
   flex-shrink: 0;
+  padding-top: env(safe-area-inset-top, 0px);
   background: var(--surface-base);
   border-bottom: 1px solid var(--border-default);
   box-shadow: var(--shadow-sm);
@@ -342,8 +364,8 @@ body.site-nav-open .site-header--scroll-hidden {
   grid-area: menu;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
   background: var(--surface-base);
@@ -1112,7 +1134,8 @@ body.site-nav-open .site-header--scroll-hidden {
     bottom: 0;
     width: min(320px, 88vw);
     z-index: 201;
-    padding-top: 4.25rem;
+    padding-top: calc(var(--site-header-offset, 118px) + env(safe-area-inset-top, 0px));
+    padding-left: env(safe-area-inset-left, 0px);
     background: var(--surface-base);
     border-right: 1px solid var(--border-default);
     transform: translateX(-100%);

@@ -25,7 +25,7 @@ export default function SiteHeader() {
   const headerRef = useRef<HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const headerHidden = useHideOnScroll({ disabled: mobileOpen });
+  const headerHidden = useHideOnScroll({ disabled: mobileOpen, disableOnMobile: true });
 
   useSiteHeaderOffset(headerRef);
 
@@ -48,7 +48,7 @@ export default function SiteHeader() {
   }, [mobileOpen]);
 
   useEffect(() => {
-    if (mobileOpen) return;
+    if (!mobileOpen) return;
     const onEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMobileOpen(false);
     };

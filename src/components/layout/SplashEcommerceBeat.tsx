@@ -1,5 +1,6 @@
 import { Bebas_Neue } from "next/font/google";
 import type { CSSProperties } from "react";
+import Marquee from "@/components/common/Marquee";
 import { BRAND } from "@/lib/brand";
 
 const beatFont = Bebas_Neue({
@@ -29,18 +30,21 @@ const VALUE_PROPS = [
 ] as const;
 
 function MarqueeTrack() {
-  const loop = [...CATEGORIES, ...CATEGORIES];
-
   return (
-    <div className="page-load-splash__beat-marquee" aria-hidden>
-      <div className="page-load-splash__beat-marquee-track">
-        {loop.map((label, index) => (
-          <span key={`${label}-${index}`} className="page-load-splash__beat-chip">
-            {label}
-          </span>
-        ))}
-      </div>
-    </div>
+    <Marquee
+      aria-hidden
+      className="page-load-splash__beat-marquee"
+      duration="18s"
+      pauseOnHover={false}
+      sequenceClassName="page-load-splash__beat-sequence"
+      trackClassName="page-load-splash__beat-marquee-track"
+    >
+      {CATEGORIES.map((label) => (
+        <span key={label} className="page-load-splash__beat-chip">
+          {label}
+        </span>
+      ))}
+    </Marquee>
   );
 }
 

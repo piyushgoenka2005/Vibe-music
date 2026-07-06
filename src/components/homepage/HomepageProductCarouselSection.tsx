@@ -1,4 +1,5 @@
 import CarouselProductCard from "@/components/homepage/CarouselProductCard";
+import { isHomepageProductVisible } from "@/lib/homepage/productVisibility";
 import type { HomepageSectionKey, ResolvedHomepageSection } from "@/types/homepage";
 
 const NAV_PREV_LABEL = "Scroll Previous";
@@ -47,7 +48,7 @@ interface HomepageProductCarouselSectionProps {
 export default function HomepageProductCarouselSection({
   section,
 }: HomepageProductCarouselSectionProps) {
-  const products = section.products ?? [];
+  const products = (section.products ?? []).filter(isHomepageProductVisible);
   const isPremium = PREMIUM_CAROUSEL_KEYS.has(section.key);
   const titleId = `${section.sectionId}-title`;
   const eyebrow = CAROUSEL_EYEBROWS[section.key] ?? section.accentLabel;
