@@ -4,19 +4,16 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   motion,
-  useInView,
   useMotionValue,
   useScroll,
   useSpring,
   useTransform,
-  type Variants,
 } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
+import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import { ROUTES } from "@/lib/routes";
 import "@/styles/culture-typography.css";
-
-const EASE_PREMIUM = [0.16, 1, 0.3, 1] as const;
 
 /** One loop of background words — repeated for continuous scroll */
 const WORD_CYCLE = [
@@ -30,9 +27,6 @@ const WORD_CYCLE = [
 /** How many times the cycle repeats in the scroll track */
 const CYCLE_REPEATS = 4;
 
-/** Viewport-heights of scroll runway (longer = more scroll distance) */
-const SCROLL_RUNWAY_VH = CYCLE_REPEATS * 72;
-
 export interface CultureTypographySectionProps {
   metadataLabel?: string;
   title?: string;
@@ -42,29 +36,6 @@ export interface CultureTypographySectionProps {
   backgroundWords?: readonly string[];
   className?: string;
 }
-
-const contentVariants: Variants = {
-  hidden: { opacity: 0, y: 56 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.95,
-      ease: EASE_PREMIUM,
-      staggerChildren: 0.12,
-      delayChildren: 0.08,
-    },
-  },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 28 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.75, ease: EASE_PREMIUM },
-  },
-};
 
 function BackgroundWords({
   lines,
@@ -97,8 +68,10 @@ export default function CultureTypographySection({
   className = "",
 }: CultureTypographySectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useHydrationSafeReducedMotion();
+  const isMobile = useIsMobileViewport();
+
+  const scrollRunwayVh = isMobile ? CYCLE_REPEATS * 56 : CYCLE_REPEATS * 80;
 
   const spotlightX = useMotionValue(50);
   const spotlightY = useMotionValue(50);
@@ -133,7 +106,25 @@ export default function CultureTypographySection({
     reduceMotion ? ["0%", "0%"] : ["0%", "-50%"]
   );
 
-  const isInView = useInView(contentRef, { once: true, amount: 0.35 });
+  const contentOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.08, 0.88, 1],
+    reduceMotion ? [1, 1, 1, 1] : [0, 1, 1, 0.9]
+  );
+
+  const contentY = useTransform(
+    scrollYProgress,
+    [0, 0.12],
+    reduceMotion ? [0, 0] : [48, 0]
+  );
+
+  const hintOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.03, 0.1, 0.2],
+    reduceMotion ? [0, 0, 0, 0] : [0, 1, 1, 0]
+  );
+
+  const progressScaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   useEffect(() => {
     if (reduceMotion) return undefined;
@@ -177,14 +168,12 @@ export default function CultureTypographySection({
     spotlightOpacity.set(0);
   }, [spotlightOpacity]);
 
-  const scrollTrackStyle = reduceMotion
-    ? undefined
-    : { y: backgroundY };
+  const scrollTrackStyle = reduceMotion ? undefined : { y: backgroundY };
 
   const sectionStyle = {
     "--culture-scroll-height": reduceMotion
       ? "130svh"
-      : `${SCROLL_RUNWAY_VH}vh`,
+      : `${scrollRunwayVh}vh`,
   } as React.CSSProperties;
 
   return (
@@ -230,48 +219,65 @@ export default function CultureTypographySection({
           <div className="culture-typography__scroll-fade culture-typography__scroll-fade--bottom" />
         </div>
 
-        <div className="culture-typography__content">
-          <motion.div
-            ref={contentRef}
-            className="culture-typography__content-inner"
-            initial={reduceMotion ? false : "hidden"}
-            animate={reduceMotion || isInView ? "visible" : "hidden"}
-            variants={contentVariants}
-          >
-            <motion.p className="culture-typography__meta" variants={itemVariants}>
-              {metadataLabel}
-            </motion.p>
+        <motion.div
+          className="culture-typography__content"
+          style={
+            reduceMotion
+              ? undefined
+              : { opacity: contentOpacity, y: contentY }
+          }
+        >
+          <div className="culture-typography__content-inner">
+            <p className="culture-typography__meta">{metadataLabel}</p>
 
-            <motion.h2
-              id="culture-typography-title"
-              className="culture-typography__title"
-              variants={itemVariants}
-            >
+            <h2 id="culture-typography-title" className="culture-typography__title">
               {title}
-            </motion.h2>
+            </h2>
 
             {subtitle ? (
-              <motion.p className="culture-typography__subtitle" variants={itemVariants}>
-                {subtitle}
-              </motion.p>
+              <p className="culture-typography__subtitle">{subtitle}</p>
             ) : null}
 
-            <motion.div className="culture-typography__cta-wrap" variants={itemVariants}>
-              <motion.div
-                whileHover={reduceMotion ? undefined : { scale: 1.03, y: -2 }}
-                whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-                transition={{ duration: 0.35, ease: EASE_PREMIUM }}
-              >
-                <Link href={buttonHref} className="culture-typography__cta">
-                  {buttonLabel}
-                  <span className="culture-typography__cta-icon" aria-hidden>
-                    <ArrowRight size={18} strokeWidth={2.25} />
-                  </span>
-                </Link>
-              </motion.div>
+            <div className="culture-typography__cta-wrap">
+              <Link href={buttonHref} className="culture-typography__cta">
+                {buttonLabel}
+                <span className="culture-typography__cta-icon" aria-hidden>
+                  <ArrowRight size={18} strokeWidth={2.25} />
+                </span>
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+
+        {!reduceMotion ? (
+          <>
+            <motion.div
+              className="culture-typography__scroll-hint"
+              style={{ opacity: hintOpacity }}
+              aria-hidden
+            >
+              <span className="culture-typography__scroll-hint-label">Scroll</span>
+              <ChevronDown
+                className="culture-typography__scroll-hint-icon"
+                size={20}
+                strokeWidth={2.25}
+              />
             </motion.div>
-          </motion.div>
-        </div>
+
+            <div
+              className="culture-typography__progress"
+              role="progressbar"
+              aria-label="Section scroll progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <motion.div
+                className="culture-typography__progress-bar"
+                style={{ scaleX: progressScaleX }}
+              />
+            </div>
+          </>
+        ) : null}
       </div>
     </section>
   );

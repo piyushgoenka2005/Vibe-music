@@ -19,7 +19,7 @@ export default function FooterNewsletter() {
     };
   }, []);
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const value = email.trim();
 
@@ -28,16 +28,34 @@ export default function FooterNewsletter() {
       return;
     }
 
-    setEmail("");
-    setSubmitted(true);
-    showToast("Thanks for subscribing to Vibe Music updates!", "success");
+    try {
+      const response = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: value, marketing: true }),
+      });
+      const data = (await response.json()) as { message?: string; error?: string };
+      if (!response.ok) {
+        showToast(data.error ?? "Unable to subscribe right now.", "error");
+        return;
+      }
 
-    if (resetTimer.current !== null) {
-      window.clearTimeout(resetTimer.current);
+      setEmail("");
+      setSubmitted(true);
+      showToast(
+        data.message ?? "You're subscribed! We'll email you about new products and deals.",
+        "success"
+      );
+
+      if (resetTimer.current !== null) {
+        window.clearTimeout(resetTimer.current);
+      }
+      resetTimer.current = window.setTimeout(() => {
+        setSubmitted(false);
+      }, 2400);
+    } catch {
+      showToast("Could not sign you up. Please try again.", "error");
     }
-    resetTimer.current = window.setTimeout(() => {
-      setSubmitted(false);
-    }, 2400);
   }
 
   return (

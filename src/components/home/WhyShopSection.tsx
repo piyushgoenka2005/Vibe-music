@@ -4,6 +4,8 @@ import Link from "next/link";
 import { WHY_SHOP_HEADING, WHY_SHOP_ITEMS } from "@/data/whyShop";
 import WhyShopValueIcon from "@/components/home/WhyShopValueIcons";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
+import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
+import FooterRollText from "@/components/layout/FooterRollText";
 import Reveal from "@/components/layout/Reveal";
 
 function WhyShopCard({
@@ -28,16 +30,29 @@ function WhyShopCard({
         <h3 className="why-shop__card-title">{item.title}</h3>
         <p className="why-shop__card-desc">{item.subtitle}</p>
       </div>
-      <span className="why-shop__card-cta">Learn More</span>
+      <span className="why-shop__card-cta">
+        <FooterRollText>Learn More</FooterRollText>
+      </span>
     </Link>
   );
 }
 
 export default function WhyShopSection() {
   const reduceMotion = useHydrationSafeReducedMotion();
-  const items = reduceMotion
-    ? WHY_SHOP_ITEMS
-    : [...WHY_SHOP_ITEMS, ...WHY_SHOP_ITEMS];
+  const isMobileViewport = useIsMobileViewport();
+  const useScrollRail = isMobileViewport && !reduceMotion;
+  const items =
+    reduceMotion || isMobileViewport
+      ? WHY_SHOP_ITEMS
+      : [...WHY_SHOP_ITEMS, ...WHY_SHOP_ITEMS];
+
+  const marqueeClass = [
+    "why-shop__marquee",
+    reduceMotion && "why-shop__marquee--static",
+    useScrollRail && "why-shop__marquee--scroll",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <section className="why-shop" aria-labelledby="why-shop-title">
@@ -49,11 +64,7 @@ export default function WhyShopSection() {
         </Reveal>
       </div>
 
-      <div
-        className={`why-shop__marquee${reduceMotion ? " why-shop__marquee--static" : ""}`}
-        role="list"
-        aria-label="Store benefits"
-      >
+      <div className={marqueeClass} role="list" aria-label="Store benefits">
         <div className="why-shop__marquee-track">
           {items.map((item, index) => (
             <WhyShopCard

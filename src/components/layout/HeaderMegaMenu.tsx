@@ -40,7 +40,12 @@ export default function HeaderMegaMenu({ menu, open }: HeaderMegaMenuProps) {
           <div className="header-mega__featured">
             {menu.featured.map((card) => (
               <Link key={card.href} href={card.href} className="header-mega__card">
-                <img src={card.image} alt="" className="header-mega__card-image" loading="lazy" />
+                <img
+                  src={card.image}
+                  alt=""
+                  className={`header-mega__card-image${card.imageClassName ? ` ${card.imageClassName}` : ""}`}
+                  loading="lazy"
+                />
                 <span className="header-mega__card-label">{card.title}</span>
               </Link>
             ))}

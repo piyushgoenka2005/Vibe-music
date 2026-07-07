@@ -7,6 +7,7 @@ import {
   parseJsonBody,
 } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { sendNewsletterWelcomeEmail } from "@/lib/server/newsletterEmailService";
 import { subscribeToNewsletter } from "@/lib/server/newsletterRepository";
 
 const subscribeSchema = z.object({
@@ -32,11 +33,20 @@ export async function POST(request: Request) {
 
   try {
     const { created } = await subscribeToNewsletter(parsed.data);
+
+    if (created) {
+      void sendNewsletterWelcomeEmail({
+        email: parsed.data.email,
+        firstName: parsed.data.firstName,
+      });
+    }
+
     return NextResponse.json({
       ok: true,
+      created,
       message: created
-        ? "Thanks for subscribing!"
-        : "You are already on the list.",
+        ? "You're subscribed! We'll email you about new products and deals."
+        : "You're already subscribed to Vibe Music updates.",
     });
   } catch (error) {
     console.error("[newsletter/subscribe]", error);

@@ -1,7 +1,7 @@
 "use client";
 
 import { Bebas_Neue } from "next/font/google";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
 import "@/styles/page-load-splash.css";
 import SplashMusicalItems from "@/components/layout/SplashMusicalItems";
 import SplashCornerAccents from "@/components/layout/SplashCornerAccents";
@@ -25,7 +25,6 @@ const SPLASH_DISABLED = process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH === "fal
 
 function shouldShowInitialSplash(): boolean {
   if (SPLASH_DISABLED) return false;
-  if (typeof window === "undefined") return false;
   try {
     return sessionStorage.getItem(SPLASH_SEEN_KEY) !== "1";
   } catch {
@@ -134,27 +133,41 @@ export function PageLoadSplashScreen({
 
 export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [visible, setVisible] = useState(
-    () => variant === "initial" && shouldShowInitialSplash() && !prefersReducedMotion
-  );
-  const [settled, setSettled] = useState(prefersReducedMotion);
+  const [visible, setVisible] = useState(variant === "initial");
+  const [settled, setSettled] = useState(false);
   const [brandExiting, setBrandExiting] = useState(false);
   const [showItems, setShowItems] = useState(false);
   const [showTeaser, setShowTeaser] = useState(false);
   const [exiting, setExiting] = useState(false);
 
+  useLayoutEffect(() => {
+    if (variant !== "initial") {
+      setVisible(false);
+      return;
+    }
+
+    if (!shouldShowInitialSplash() || prefersReducedMotion) {
+      setVisible(false);
+      if (prefersReducedMotion) {
+        setSettled(true);
+      }
+    }
+  }, [variant, prefersReducedMotion]);
+
   useEffect(() => {
-    if (prefersReducedMotion) {
-      setSettled(true);
+    if (!visible || prefersReducedMotion) {
+      if (prefersReducedMotion) {
+        setSettled(true);
+      }
       return;
     }
 
     const settleTimer = window.setTimeout(() => setSettled(true), WAVE_SETTLE_MS);
     return () => window.clearTimeout(settleTimer);
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, visible]);
 
   useEffect(() => {
-    if (variant !== "initial") return;
+    if (variant !== "initial" || !visible) return;
 
     let brandExitTimer = 0;
     let itemsTimer = 0;
@@ -222,7 +235,7 @@ export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashPr
       window.clearTimeout(fullExitTimer);
       window.clearTimeout(hideTimer);
     };
-  }, [prefersReducedMotion, variant]);
+  }, [prefersReducedMotion, variant, visible]);
 
   if (variant === "inline") {
     return <PageLoadSplashScreen variant="inline" settled showItems showTeaser />;

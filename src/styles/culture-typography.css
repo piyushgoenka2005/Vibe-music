@@ -2,9 +2,11 @@
 
 .culture-typography {
   position: relative;
-  height: var(--culture-scroll-height, 280vh);
+  height: var(--culture-scroll-height, 320vh);
   background: #1253ed;
   isolation: isolate;
+  content-visibility: visible;
+  contain-intrinsic-size: auto none;
   --spotlight-x: 50%;
   --spotlight-y: 50%;
   --spotlight-opacity: 0;
@@ -267,11 +269,67 @@
   transform: translateX(4px);
 }
 
-@media (max-width: 767px) {
-  .culture-typography {
-    height: clamp(120vh, 160vh, 180vh);
+.culture-typography__scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(2.5rem, 6vh, 4rem);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  transform: translateX(-50%);
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.culture-typography__scroll-hint-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.culture-typography__scroll-hint-icon {
+  animation: culture-scroll-hint-bounce 1.8s ease-in-out infinite;
+}
+
+@keyframes culture-scroll-hint-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.65;
   }
 
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
+
+.culture-typography__progress {
+  position: absolute;
+  left: clamp(1.25rem, 4vw, 2.5rem);
+  right: clamp(1.25rem, 4vw, 2.5rem);
+  bottom: clamp(1rem, 2.5vh, 1.5rem);
+  z-index: 3;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.culture-typography__progress-bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.55), #ffffff);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+}
+
+@media (max-width: 767px) {
   .culture-typography__bg-spotlight {
     -webkit-mask-image: radial-gradient(
       circle clamp(110px, 34vw, 220px) at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
@@ -307,6 +365,10 @@
 @media (prefers-reduced-motion: reduce) {
   .culture-typography__scroll-track {
     will-change: auto;
+  }
+
+  .culture-typography__scroll-hint-icon {
+    animation: none;
   }
 
   .culture-typography__cta,
