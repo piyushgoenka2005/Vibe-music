@@ -87,68 +87,55 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
     if (!header) return;
 
     const syncOffset = () => {
-      const headerRect = header.getBoundingClientRect();
-      const nav = header.querySelector<HTMLElement>(".site-header__nav");
-
-      const applyOffset = (value: number) => {
-        document.documentElement.style.setProperty(
-          "--site-header-offset",
-          `${Math.max(0, Math.round(value))}px`
-        );
-      };
-
-      if (nav) {
-        applyOffset(nav.getBoundingClientRect().bottom);
-
-        const hero = document.querySelector<HTMLElement>(".homepage-banner-hero");
-        if (hero) {
-          requestAnimationFrame(() => {
-            const gap =
-              hero.getBoundingClientRect().top -
-              nav.getBoundingClientRect().bottom;
-            if (gap > 0.5) {
-              const current = parseFloat(
-                getComputedStyle(document.documentElement).getPropertyValue(
-                  "--site-header-offset"
-                )
-              );
-              if (Number.isFinite(current)) {
-                applyOffset(current - gap);
-              }
-            }
-          });
-        }
-
-        return;
-      }
-
       const chromeSelectors = [
         ".announcement-bar",
         ".site-header__bar",
         ".site-header__nav",
       ];
 
-      let bottom = headerRect.top;
+      let chromeBottom = 0;
       for (const selector of chromeSelectors) {
         const el = header.querySelector<HTMLElement>(selector);
         if (!el) continue;
 
         const style = getComputedStyle(el);
-        if (style.position === "fixed" || style.position === "absolute") continue;
         if (style.display === "none") continue;
 
-        bottom = Math.max(bottom, el.getBoundingClientRect().bottom);
+        chromeBottom = Math.max(chromeBottom, el.getBoundingClientRect().bottom);
       }
 
-      applyOffset(bottom - headerRect.top);
+      let offset = Math.round(chromeBottom);
+
+      // Snap hero flush to nav bottom — removes white strip, prevents underlap
+      const hero = document.querySelector<HTMLElement>(".homepage-banner-hero");
+      const nav = header.querySelector<HTMLElement>(".site-header__nav");
+      if (hero && nav) {
+        const gap = hero.getBoundingClientRect().top - nav.getBoundingClientRect().bottom;
+        if (Math.abs(gap) > 0.5) {
+          offset = Math.round(offset - gap);
+        }
+      }
+
+      document.documentElement.style.setProperty(
+        "--site-header-offset",
+        `${Math.max(0, offset)}px`
+      );
     };
 
     syncOffset();
+
+    // Re-sync after hero mounts and layout settles
+    requestAnimationFrame(() => {
+      syncOffset();
+      requestAnimationFrame(syncOffset);
+    });
+
     header.classList.add("site-header--ready");
 
     const observer = new ResizeObserver(syncOffset);
     observer.observe(header);
     window.addEventListener("resize", syncOffset);
+    window.addEventListener("site-header:sync", syncOffset);
 
     if (document.fonts?.ready) {
       void document.fonts.ready.then(syncOffset);
@@ -157,6 +144,7 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", syncOffset);
+      window.removeEventListener("site-header:sync", syncOffset);
       header.classList.remove("site-header--ready");
     };
   }, [headerRef]);

@@ -13,12 +13,11 @@
   --full-bleed-inline: max(0px, (100vw - 100%) / 2);
 }
 
-/* Banner is first — skip top gradient so no light band shows above the hero */
-.premium-home:has(> .homepage-banner-hero:first-child) {
+/* Banner hero present — flat background so no light band above the hero */
+.premium-home:has(> .homepage-banner-hero) {
   background: var(--surface-base);
 }
 
-.premium-home > [data-vibe-section="hero-showcase"],
 .premium-home > [data-vibe-section="homepage-banner-hero"] {
   overflow: visible;
 }
@@ -27,8 +26,13 @@
 .premium-home > [data-vibe-section="homepage-banner-hero"] {
   width: 100%;
   max-width: 100%;
-  margin-left: 0;
-  margin-right: 0;
+  margin: 0;
+  padding: 0;
+}
+
+body.is-landing-page .premium-home > .homepage-banner-hero,
+body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] {
+  margin-top: var(--site-header-offset, 118px);
 }
 
 /* Defer layout/paint for below-the-fold homepage sections */

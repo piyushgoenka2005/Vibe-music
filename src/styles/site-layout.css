@@ -19,9 +19,13 @@
   isolation: isolate;
 }
 
-/* Homepage uses main padding-top for header offset (avoids margin-collapse gap). */
+/* Homepage — banner clears the fixed header; no double offset */
 .storefront-main:has(> .premium-home) {
   padding-top: var(--site-header-offset, 118px);
+}
+
+body.is-landing-page .storefront-main:has(> .premium-home) {
+  padding-top: 0;
 }
 
 .reveal {
@@ -235,19 +239,28 @@
   }
 }
 
-/* Landing page — solid white header over hero */
+/* Landing page — flush header over hero (no hairline / shadow seam) */
 body.is-landing-page .site-header {
   background: #ffffff;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border-bottom-color: #e5e7eb;
-  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06);
+  border-bottom: none;
+  box-shadow: none;
 }
 
 body.is-landing-page .site-header.site-header--scrolled {
   background: #ffffff;
-  border-bottom-color: #e2e8f0;
-  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+  border-bottom: none;
+  box-shadow: none;
+}
+
+body.is-landing-page .site-header__bar {
+  border-bottom: none;
+}
+
+body.is-landing-page .site-header__nav {
+  border-top: none;
+  border-bottom: none;
 }
 
 /* Header — fixed, solid white, hides on scroll down, returns on scroll up */
@@ -262,7 +275,7 @@ body.is-landing-page .site-header.site-header--scrolled {
   padding-top: env(safe-area-inset-top, 0px);
   background: var(--surface-base);
   border-bottom: none;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   transform: translate3d(0, 0, 0);
   contain: layout style;
   transition: box-shadow var(--duration-normal) var(--ease-premium),
@@ -326,7 +339,7 @@ body.site-nav-open .site-header--scroll-hidden {
 }
 
 .site-header__bar {
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: none;
   overflow: visible;
 }
 
@@ -622,8 +635,8 @@ body.site-nav-open .site-header--scroll-hidden {
   overflow: visible;
   --nav-chain-bg: var(--surface-base);
   background: var(--surface-base);
-  border-top: 1px solid #f1f5f9;
-  border-bottom: 1px solid var(--border-default);
+  border-top: none;
+  border-bottom: none;
   padding: 0;
 }
 

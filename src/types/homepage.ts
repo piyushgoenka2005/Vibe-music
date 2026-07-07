@@ -197,6 +197,9 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
   {
     sectionKey: "staff_picks",
     title: "Staff Picks",
+    subtitle: "Hand-picked by our team for practice rooms, stages, and studios.",
+    ctaText: "Shop all products",
+    ctaLink: "/search",
     isActive: true,
     sortOrder: 3,
     sourceMode: "auto",

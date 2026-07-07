@@ -20,7 +20,6 @@ import {
   isHomepageItemScheduledActive,
 } from "@/lib/server/homepageRepository";
 import { getHomepageStaticFallbacks } from "@/data/homepageStaticFallbacks";
-import { hasPositiveDisplayPrice } from "@/lib/homepage/productVisibility";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
   HomepageBrandItem,
@@ -40,9 +39,7 @@ export function invalidatePublicHomepageCache(): void {
 }
 
 function activeProducts(products: CatalogProduct[]): CatalogProduct[] {
-  return products.filter(
-    (product) => product.status === "active" && hasPositiveDisplayPrice(product)
-  );
+  return products.filter((product) => product.status === "active");
 }
 
 function toProductItem(
@@ -79,7 +76,7 @@ function resolveManualProducts(
     .map((item, index) => {
       if (!item.productId) return null;
       const product = productMap.get(item.productId);
-      if (!product || product.status !== "active" || !hasPositiveDisplayPrice(product)) return null;
+      if (!product || product.status !== "active") return null;
       return toProductItem(product, item, index + 1);
     })
     .filter((item): item is HomepageProductItem => item !== null);
@@ -103,8 +100,8 @@ function resolveAutoProducts(
         .slice(0, maxItems)
         .map((product, index) => toProductItem(product, undefined, index + 1));
 
-    case "trending":
-      return active
+    case "trending": {
+      const trending = active
         .filter((product) => product.trending)
         .sort(
           (a, b) =>
@@ -113,8 +110,15 @@ function resolveAutoProducts(
         .slice(0, maxItems)
         .map((product) => toProductItem(product));
 
-    case "staff_picks":
+      if (trending.length > 0) return trending;
+
       return active
+        .slice(0, maxItems)
+        .map((product) => toProductItem(product));
+    }
+
+    case "staff_picks": {
+      const staffPicks = active
         .filter((product) => product.featured)
         .sort(
           (a, b) =>
@@ -122,6 +126,13 @@ function resolveAutoProducts(
         )
         .slice(0, maxItems)
         .map((product) => toProductItem(product));
+
+      if (staffPicks.length > 0) return staffPicks;
+
+      return active
+        .slice(0, maxItems)
+        .map((product) => toProductItem(product));
+    }
 
     case "best_sellers":
       return [...active]

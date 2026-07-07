@@ -1,19 +1,16 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import "@/styles/homepage-bundle.css";
+import HomepageBannerHero from "@/components/home/homepage-banner-hero/HomepageBannerHero";
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 
-const HomepageBannerHero = dynamic(
-  () => import("@/components/home/homepage-banner-hero/HomepageBannerHero"),
-  { loading: () => null }
-);
 const PremiumHero = dynamic(() => import("@/components/home/PremiumHero"), {
   loading: () => null,
 });
-const HomepageBlogTeaser = dynamic(
-  () => import("@/components/home/HomepageBlogTeaser"),
+const HomepageTopProducts = dynamic(
+  () => import("@/components/home/HomepageTopProducts"),
   { loading: () => <BlogTeaserSkeleton /> }
 );
 
@@ -101,7 +98,7 @@ export default function HomePage() {
       <EditorialSplit />
 
       <Suspense fallback={<BlogTeaserSkeleton />}>
-        <HomepageBlogTeaser />
+        <HomepageTopProducts />
       </Suspense>
 
       <CultureTypographySection />

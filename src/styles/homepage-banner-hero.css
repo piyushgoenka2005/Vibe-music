@@ -1,23 +1,19 @@
-/* Homepage banner hero — auto-rotating full-width slides */
+/* Homepage banner hero — 1920×720 slides, flush under header */
 
 .homepage-banner-hero {
   position: relative;
-  width: calc(100% + (var(--full-bleed-inline, 0px) * 2));
+  display: block;
+  width: 100%;
   max-width: 100%;
-  margin-left: calc(-1 * var(--full-bleed-inline, 0px));
-  margin-right: calc(-1 * var(--full-bleed-inline, 0px));
-  margin-top: var(--site-header-offset, 118px);
-  background: transparent;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
-  isolation: isolate;
 }
 
 .homepage-banner-hero__viewport {
   position: relative;
   width: 100%;
   aspect-ratio: 1920 / 720;
-  min-height: clamp(280px, 38vw, 560px);
-  max-height: min(72vh, 640px);
 }
 
 .homepage-banner-hero__slide {
@@ -44,31 +40,13 @@
 
 .homepage-banner-hero__image {
   object-fit: cover;
-  object-position: center;
-}
-
-.homepage-banner-hero__image--contain {
-  object-fit: contain;
-}
-
-@media (min-width: 768px) {
-  .homepage-banner-hero__viewport--natural-fit {
-    aspect-ratio: var(--banner-aspect-ratio, 2 / 1);
-    min-height: 0;
-    max-height: none;
-    background: #d4b896;
-  }
-
-  .homepage-banner-hero__viewport--natural-fit .homepage-banner-hero__image--contain {
-    object-fit: contain;
-    object-position: center center;
-  }
+  object-position: center top;
 }
 
 .homepage-banner-hero__dots {
   position: absolute;
   left: 50%;
-  bottom: clamp(0.85rem, 2.5vw, 1.35rem);
+  bottom: 1rem;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -116,67 +94,9 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 767px) {
-  .homepage-banner-hero__viewport {
-    aspect-ratio: 4 / 3;
-    min-height: clamp(240px, 62vw, 420px);
-    max-height: none;
-  }
-
-  .homepage-banner-hero__image {
-    object-position: center top;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .homepage-banner-hero__viewport {
-    aspect-ratio: 16 / 7;
-    min-height: clamp(300px, 42vw, 480px);
-    max-height: min(65vh, 560px);
-  }
-}
-
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .homepage-banner-hero__viewport {
-    min-height: clamp(320px, 36vw, 500px);
-    max-height: min(68vh, 580px);
-  }
-}
-
-@media (min-width: 1280px) {
-  .homepage-banner-hero__viewport {
-    min-height: clamp(360px, 32vw, 560px);
-    max-height: min(72vh, 640px);
-  }
-}
-
-@media (max-height: 720px) and (min-width: 768px) {
-  .homepage-banner-hero__viewport {
-    max-height: 58vh;
-    min-height: clamp(220px, 48vh, 380px);
-  }
-}
-
-@media (max-width: 900px) and (orientation: landscape) {
-  .homepage-banner-hero__viewport {
-    aspect-ratio: 21 / 9;
-    min-height: clamp(180px, 72vh, 320px);
-    max-height: 72vh;
-  }
-
-  .homepage-banner-hero__dots {
-    bottom: clamp(0.5rem, 2vh, 0.85rem);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .homepage-banner-hero__slide {
     transition: none;
     transform: none;
   }
-}
-
-/* Landing — snap banner flush under navbar (no white strip) */
-body.is-landing-page .homepage-banner-hero {
-  margin-top: var(--site-header-offset, 118px);
 }

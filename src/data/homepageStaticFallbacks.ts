@@ -14,12 +14,9 @@ import type {
   PublicHomepageData,
   ResolvedHomepageSection,
 } from "@/types/homepage";
-import { hasPositiveDisplayPrice } from "@/lib/homepage/productVisibility";
 
 function activeProducts(products: CatalogProduct[]): CatalogProduct[] {
-  return products.filter(
-    (product) => product.status === "active" && hasPositiveDisplayPrice(product)
-  );
+  return products.filter((product) => product.status === "active");
 }
 
 function toProductItem(
@@ -163,13 +160,27 @@ export async function getHomepageStaticFallbacks(
         ctaLink: "/search/results?q=new",
       }
     ),
-    productSection("best_sellers", "best-sellers", "Best Sellers", bestSellers),
-    productSection("trending", "trending-products", "Trending Now", trendingResolved),
+    productSection("best_sellers", "best-sellers", "Best Sellers", bestSellers, "product_carousel", {
+      subtitle: "Top-rated gear musicians keep coming back for.",
+      ctaText: "View all best sellers",
+      ctaLink: "/search/results?q=best+sellers",
+    }),
+    productSection("trending", "trending-products", "Trending Now", trendingResolved, "product_carousel", {
+      subtitle: "Popular right now across guitars, PA, and studio gear.",
+      ctaText: "Explore trending",
+      ctaLink: "/search/results?q=trending",
+    }),
     productSection(
       "staff_picks",
       "suggested-products",
       "Staff Picks",
-      staffPicksResolved
+      staffPicksResolved,
+      "product_carousel",
+      {
+        subtitle: "Hand-picked by our team for practice rooms, stages, and studios.",
+        ctaText: "Shop all products",
+        ctaLink: "/search",
+      }
     ),
     productSection(
       "deals_of_the_day",
