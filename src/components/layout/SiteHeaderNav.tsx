@@ -171,7 +171,7 @@ export default function SiteHeaderNav({
       id="site-header-nav"
       className="site-header__nav assets-site-header__nav"
       aria-label="Shop categories"
-      aria-hidden={!megaEnabled && !mobileOpen ? true : undefined}
+      aria-hidden={compactNav && !mobileOpen ? true : undefined}
       onMouseLeave={
         compactNav
           ? undefined
