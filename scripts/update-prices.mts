@@ -3,6 +3,11 @@ import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { readFileSync } from "node:fs";
 
+interface FirestoreProduct {
+  id: string;
+  name?: string;
+}
+
 function getAdminApp() {
   if (getApps().length > 0) return getApps()[0]!;
 
@@ -65,11 +70,14 @@ async function main() {
   console.log(`Found ${data.length} rows in CSV.`);
   console.log("Fetching existing products from Firestore...");
   const productsSnapshot = await db.collection("products").get();
-  const dbProducts = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const dbProducts: FirestoreProduct[] = productsSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...(doc.data() as Omit<FirestoreProduct, "id">),
+  }));
   console.log(`Fetched ${dbProducts.length} products from DB.`);
 
   let updated = 0;
-  let notFound = [];
+  const notFound: string[] = [];
 
   for (const row of data as any[]) {
     const rawName = row["Product"];
@@ -78,7 +86,7 @@ async function main() {
     const cleanName = normalizeName(rawName);
     
     // Find matching product in DB
-    const match = dbProducts.find((p: any) => {
+    const match = dbProducts.find((p) => {
       if (!p.name) return false;
       const dbName = normalizeName(p.name);
       return dbName === cleanName || dbName.includes(cleanName) || cleanName.includes(dbName);
