@@ -44,7 +44,7 @@ export default function BigNamesDealsSection() {
             <Link className="big-names-deals__cta" href={BIG_NAMES_DEALS_CTA}>
               Shop All Deals
               <span className="big-names-deals__cta-arrow" aria-hidden>
-                <ArrowUpRight size={20} strokeWidth={2.75} />
+                <ArrowUpRight size={23} strokeWidth={2.75} />
               </span>
             </Link>
           </div>

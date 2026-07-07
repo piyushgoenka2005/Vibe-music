@@ -1,7 +1,7 @@
 "use client";
 
 import { Bebas_Neue } from "next/font/google";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
 import "@/styles/page-load-splash.css";
 import SplashMusicalItems from "@/components/layout/SplashMusicalItems";
 import SplashCornerAccents from "@/components/layout/SplashCornerAccents";
@@ -25,7 +25,6 @@ const SPLASH_DISABLED = process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH === "fal
 
 function shouldShowInitialSplash(): boolean {
   if (SPLASH_DISABLED) return false;
-  if (typeof window === "undefined") return false;
   try {
     return sessionStorage.getItem(SPLASH_SEEN_KEY) !== "1";
   } catch {
@@ -141,18 +140,28 @@ export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashPr
   const [showTeaser, setShowTeaser] = useState(false);
   const [exiting, setExiting] = useState(false);
 
-  useEffect(() => {
-    if (variant !== "initial" || SPLASH_DISABLED || prefersReducedMotion) return;
-    if (shouldShowInitialSplash()) {
-      setVisible(true);
+  useLayoutEffect(() => {
+    if (variant !== "initial") {
+      setVisible(false);
+      return;
     }
+
+    if (!shouldShowInitialSplash() || prefersReducedMotion) {
+      setVisible(false);
+      if (prefersReducedMotion) {
+        setSettled(true);
+      }
+      return;
+    }
+
+    setVisible(true);
   }, [prefersReducedMotion, variant]);
 
   useEffect(() => {
-    if (!visible) return;
-
-    if (prefersReducedMotion) {
-      setSettled(true);
+    if (!visible || prefersReducedMotion) {
+      if (prefersReducedMotion) {
+        setSettled(true);
+      }
       return;
     }
 

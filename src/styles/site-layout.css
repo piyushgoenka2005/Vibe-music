@@ -103,6 +103,8 @@
   color: var(--text-inverse, #ffffff);
   font-size: 0.75rem;
   overflow: hidden;
+  contain: none;
+  --announcement-marquee-duration: 18s;
 }
 
 .announcement-bar__viewport {
@@ -110,18 +112,17 @@
   overflow: hidden;
 }
 
-.announcement-bar__sequence {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  flex-shrink: 0;
-  padding-right: 1.5rem;
-}
-
 .announcement-bar__track {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   width: max-content;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.site-header .announcement-bar .announcement-bar__track {
+  animation: announcement-marquee var(--announcement-marquee-duration, 18s) linear infinite;
 }
 
 .announcement-bar__item {
@@ -199,18 +200,24 @@
   }
 }
 
+@keyframes announcement-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
 @media (max-width: 639px) {
   .announcement-bar {
     padding: 0.25rem 0;
+    --announcement-marquee-duration: 14s;
   }
 
   .announcement-bar__item {
     padding: 0 1rem;
     font-size: 0.6875rem;
-  }
-
-  .announcement-bar .marquee__track {
-    --marquee-duration: 24s;
   }
 
   .landing-live-ticker--announcement .landing-live-ticker__track {
@@ -222,31 +229,7 @@
   }
 }
 
-@media (max-width: 479px) {
-  .announcement-bar .marquee__track {
-    animation: none;
-    width: 100%;
-    justify-content: center;
-    overflow-x: visible;
-  }
-
-  .announcement-bar .marquee__sequence--clone {
-    display: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .announcement-bar .marquee__track {
-    animation: none;
-    width: 100%;
-    justify-content: center;
-    overflow-x: visible;
-  }
-
-  .announcement-bar .marquee__sequence--clone {
-    display: none;
-  }
-
   .landing-live-ticker--announcement .landing-live-ticker__track {
     animation: none;
   }
@@ -897,7 +880,18 @@ body.site-nav-open .site-header--scroll-hidden {
   transition: transform var(--duration-normal) var(--ease-premium);
 }
 
+.header-mega__card-image--horizontal {
+  object-fit: contain;
+  object-position: center center;
+  padding: 1.25rem 0.75rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+}
+
 .header-mega__card:hover .header-mega__card-image {
+  transform: scale(1.04);
+}
+
+.header-mega__card:hover .header-mega__card-image--horizontal {
   transform: scale(1.04);
 }
 
@@ -1317,6 +1311,7 @@ body.site-nav-open .site-header--scroll-hidden {
 
   .announcement-bar {
     padding: 0.15rem 0;
+    --announcement-marquee-duration: 12s;
   }
 
   .announcement-bar__item {

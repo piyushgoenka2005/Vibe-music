@@ -1,5 +1,5 @@
 import { ROUTES, categoryPath } from "@/lib/routes";
-import { getCategoryHeroImage } from "@/lib/categoryImages";
+import { getMegaMenuFeaturedImage } from "@/lib/categoryImages";
 
 export interface MegaMenuLink {
   label: string;
@@ -15,6 +15,7 @@ export interface MegaMenuFeatured {
   title: string;
   href: string;
   image: string;
+  imageClassName?: string;
 }
 
 export interface MegaMenuItem {
@@ -29,11 +30,18 @@ function subSearch(slug: string, query: string): string {
   return `${ROUTES.searchResults}?q=${encodeURIComponent(query)}&category=${slug}`;
 }
 
-function featured(slug: string, title: string, query: string): MegaMenuFeatured {
+function featured(
+  slug: string,
+  title: string,
+  query: string,
+  variant?: string,
+  imageClassName?: string
+): MegaMenuFeatured {
   return {
     title,
     href: subSearch(slug, query),
-    image: getCategoryHeroImage(slug),
+    image: getMegaMenuFeaturedImage(slug, variant),
+    imageClassName,
   };
 }
 
@@ -72,8 +80,8 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       },
     ],
     featured: [
-      featured("guitars", "Electric", "electric guitar"),
-      featured("guitars", "Acoustic", "acoustic guitar"),
+      featured("guitars", "Electric", "electric guitar", "electric"),
+      featured("guitars", "Acoustic", "acoustic guitar", "acoustic"),
     ],
   },
   {
@@ -111,7 +119,7 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
     ],
     featured: [
       featured("studio-recording", "Interfaces", "audio interface"),
-      featured("studio-recording", "Monitors", "studio monitor"),
+      featured("studio-recording", "Monitors", "studio monitor", "monitors"),
     ],
   },
   {
@@ -149,7 +157,7 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
     ],
     featured: [
       featured("drums-percussion", "Drum kits", "drum kit"),
-      featured("drums-percussion", "Electronic", "electronic drum"),
+      featured("drums-percussion", "Electronic", "electronic drum", "electronic"),
     ],
   },
   {
@@ -187,7 +195,7 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
     ],
     featured: [
       featured("keyboards-synthesizers", "Digital pianos", "digital piano"),
-      featured("keyboards-synthesizers", "Synthesizers", "synthesizer"),
+      featured("keyboards-synthesizers", "Synthesizers", "synthesizer", "synthesizer"),
     ],
   },
   {
@@ -225,7 +233,7 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
     ],
     featured: [
       featured("live-sound-lighting", "PA speakers", "powered speaker"),
-      featured("live-sound-lighting", "Lighting", "stage lighting"),
+      featured("live-sound-lighting", "Lighting", "stage lighting", "lighting", "header-mega__card-image--horizontal"),
     ],
   },
   {
@@ -263,7 +271,7 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
     ],
     featured: [
       featured("software-plug-ins", "DAWs", "daw"),
-      featured("software-plug-ins", "Plug-ins", "plugin"),
+      featured("software-plug-ins", "Plug-ins", "plugin", "plugin"),
     ],
   },
   {
@@ -301,7 +309,7 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
     ],
     featured: [
       featured("dj-equipment", "Controllers", "dj controller"),
-      featured("dj-equipment", "Turntables", "turntable"),
+      featured("dj-equipment", "Turntables", "turntable", "turntable"),
     ],
   },
   {
@@ -338,8 +346,8 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       },
     ],
     featured: [
-      featured("cables-cases-accessories", "Cables", "instrument cable"),
-      featured("cables-cases-accessories", "Cases", "guitar case"),
+      featured("cables-cases-accessories", "Cables", "instrument cable", "cables"),
+      featured("cables-cases-accessories", "Cases", "guitar case", "cases"),
     ],
   },
 ];

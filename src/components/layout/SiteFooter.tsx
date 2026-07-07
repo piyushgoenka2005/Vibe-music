@@ -146,20 +146,6 @@ export default function SiteFooter() {
     setSubmitting(true);
 
     try {
-      if (isWeb3FormsConfigured()) {
-        const result = await submitNewsletterToWeb3Forms({
-          firstName: trimmedFirstName,
-          lastName: trimmedLastName,
-          email: trimmedEmail,
-          marketingConsent,
-        });
-        setFirstName("");
-        setLastName("");
-        setEmail("");
-        showToast(result.message, "success");
-        return;
-      }
-
       const response = await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -175,10 +161,29 @@ export default function SiteFooter() {
         showToast(data.error ?? "Unable to subscribe right now.", "error");
         return;
       }
+
+      if (isWeb3FormsConfigured()) {
+        try {
+          await submitNewsletterToWeb3Forms({
+            firstName: trimmedFirstName,
+            lastName: trimmedLastName,
+            email: trimmedEmail,
+            marketingConsent,
+          });
+        } catch (web3Error) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[newsletter] Web3Forms notification failed:", web3Error);
+          }
+        }
+      }
+
       setFirstName("");
       setLastName("");
       setEmail("");
-      showToast(data.message ?? "Thanks for joining the Vibe Music list!", "success");
+      showToast(
+        data.message ?? "You're subscribed! We'll email you about new products and deals.",
+        "success"
+      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Could not sign you up. Please try again.";
@@ -209,8 +214,8 @@ export default function SiteFooter() {
                   Inside Vibe Music
                 </h2>
                 <p className="site-footer-newsletter__body">
-                  Join the list for launch drops, studio tips, and exclusive offers from
-                  India&apos;s trusted gear destination.
+                  Subscribe for the latest product drops, restock alerts, and exclusive
+                  deals from India&apos;s trusted gear destination.
                 </p>
               </div>
 
@@ -274,7 +279,7 @@ export default function SiteFooter() {
                     onChange={(event) => setMarketingConsent(event.target.checked)}
                     disabled={submitting}
                   />
-                  <span>Vibe Music can contact me about promotions and gear guides.</span>
+                  <span>Email me about new gear, restocks, and Vibe Music updates.</span>
                 </label>
               </form>
             </section>

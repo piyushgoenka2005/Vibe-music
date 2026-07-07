@@ -55,17 +55,26 @@ function BlogTeaserCard({
           ) : (
             <div className="blog-teaser__image blog-teaser__image--placeholder" />
           )}
-        </div>
-        <div className="blog-teaser__body">
           {post.tags.length > 0 ? (
-            <div className="blog-teaser__tags">
-              {post.tags.slice(0, 2).map((tag) => (
-                <span className="blog-teaser__tag" key={tag}>
-                  {tag}
-                </span>
-              ))}
+            <div
+              aria-label="Article categories"
+              className="blog-teaser__tags"
+            >
+              <span className="blog-teaser__tag blog-teaser__tag--primary">
+                {post.tags[0]}
+              </span>
+              {post.tags[1] ? (
+                <>
+                  <span aria-hidden="true" className="blog-teaser__tag-sep" />
+                  <span className="blog-teaser__tag blog-teaser__tag--secondary">
+                    {post.tags[1]}
+                  </span>
+                </>
+              ) : null}
             </div>
           ) : null}
+        </div>
+        <div className="blog-teaser__body">
           <h3 className="blog-teaser__post-title">{post.title}</h3>
           {post.excerpt ? (
             <p className="blog-teaser__excerpt">{post.excerpt}</p>

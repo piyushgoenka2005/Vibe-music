@@ -25,7 +25,7 @@ function buildFormData(data: NewsletterFormData, accessKey: string): FormData {
   const formData = new FormData();
 
   formData.append("access_key", accessKey);
-  formData.append("subject", "New Vibe Music Newsletter Signup");
+  formData.append("subject", "New Vibe Music product updates subscriber");
   formData.append("from_name", "Vibe Music Website");
   formData.append("name", fullName || data.email);
   formData.append("email", data.email);
