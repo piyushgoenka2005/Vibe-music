@@ -146,7 +146,7 @@ body {
   height: 100%;
   object-fit: contain;
   display: block;
-  background: #f7f7f6;
+  background: transparent;
 }
 
 .pdp-gallery__photo,
@@ -156,14 +156,14 @@ body {
   height: 100%;
   object-fit: contain;
   display: block;
-  background: #f7f7f6;
+  background: transparent;
 }
 
 .cart-item__photo {
   width: 72px;
   height: 72px;
   object-fit: contain;
-  background: #f7f7f6;
+  background: transparent;
   border: 1px solid #e8e7e6;
   border-radius: 4px;
 }

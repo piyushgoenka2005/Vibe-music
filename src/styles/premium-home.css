@@ -2200,7 +2200,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: #f3f0eb;
+  background: transparent;
   z-index: 0;
   pointer-events: none;
 }
@@ -4179,12 +4179,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    ellipse at 50% 28%,
-    #faf9f7 0%,
-    #f3f0eb 52%,
-    #ebe6df 100%
-  );
+  background: transparent;
   z-index: 0;
   pointer-events: none;
 }
@@ -4220,6 +4215,10 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   mix-blend-mode: multiply;
   transform: none;
   filter: none;
+}
+
+.premium-home .homepage-deals-section .tile--image {
+  background: transparent;
 }
 
 .premium-home .homepage-deals-section .tile--link:hover .homepage-deals-card__img-frame,

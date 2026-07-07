@@ -15,38 +15,13 @@
     "slug": "hertz"
   },
   {
-    "id": "trinity",
-    "name": "TRINITY",
-    "slug": "trinity"
-  },
-  {
     "id": "roland",
-    "name": "ROLAND",
+    "name": "Roland",
     "slug": "roland"
   },
   {
-    "id": "gibson",
-    "name": "GIBSON",
-    "slug": "gibson"
-  },
-  {
-    "id": "fender",
-    "name": "FENDER",
-    "slug": "fender"
-  },
-  {
-    "id": "ibanez",
-    "name": "IBANEZ",
-    "slug": "ibanez"
-  },
-  {
-    "id": "prs",
-    "name": "PRS",
-    "slug": "prs"
-  },
-  {
-    "id": "epiphone",
-    "name": "EPIPHONE",
-    "slug": "epiphone"
+    "id": "trinity",
+    "name": "TRINITY",
+    "slug": "trinity"
   }
 ]

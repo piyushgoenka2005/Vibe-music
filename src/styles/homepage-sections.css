@@ -177,7 +177,7 @@
   justify-content: center;
   aspect-ratio: 1;
   padding: 1rem;
-  background: var(--surface-base);
+  background: transparent;
 }
 
 .premium-home .tile--image img {
@@ -361,7 +361,7 @@
   aspect-ratio: 1;
   margin-bottom: 0.75rem;
   border-radius: var(--radius-sm);
-  background: var(--surface-subtle);
+  background: transparent;
   overflow: hidden;
 }
 

@@ -23,13 +23,19 @@ function toProductItem(
   product: CatalogProduct,
   rank?: number
 ): HomepageProductItem {
-  const salePrice = product.detail?.salePrice ?? null;
+  const originalPrice = product.originalPrice > 0 ? product.originalPrice : product.price;
+  const salePrice =
+    product.detail?.salePrice != null && product.detail.salePrice > 0
+      ? product.detail.salePrice
+      : originalPrice > product.price
+        ? product.price
+        : null;
   return {
     id: product.id,
     slug: product.slug,
     brand: product.brand,
     name: product.name,
-    price: product.price,
+    price: salePrice != null ? originalPrice : product.price,
     salePrice,
     image: product.image || product.images[0] || "",
     imageAlt: product.name,

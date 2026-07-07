@@ -92,6 +92,7 @@ interface ManifestEntry {
 
 interface PriceRow {
   model: string;
+  originalPrice: number;
   price: number;
   stock: number;
   sku?: string;
@@ -473,6 +474,7 @@ function loadPrices(): Map<string, PriceRow> {
   const lines = text.replace(/\r\n/g, "\n").split("\n");
   const headers = lines[0]!.split(",").map((h) => h.trim().toLowerCase());
   const modelIdx = headers.indexOf("model");
+  const originalPriceIdx = headers.indexOf("originalprice");
   const priceIdx = headers.indexOf("price");
   const stockIdx = headers.indexOf("stock");
   const skuIdx = headers.indexOf("sku");
@@ -483,9 +485,13 @@ function loadPrices(): Map<string, PriceRow> {
     const cols = line.split(",").map((c) => c.trim());
     const model = cols[modelIdx];
     if (!model) continue;
+    const originalPriceValue =
+      originalPriceIdx >= 0 ? Number(cols[originalPriceIdx] ?? 0) : Number(cols[priceIdx] ?? 0);
+    const salePriceValue = Number(cols[priceIdx] ?? 0);
     map.set(normalizeKey(model), {
       model,
-      price: Number(cols[priceIdx] ?? 0),
+      originalPrice: originalPriceValue,
+      price: salePriceValue,
       stock: Number(cols[stockIdx] ?? 0),
       sku: skuIdx >= 0 ? cols[skuIdx] : undefined,
     });
@@ -652,8 +658,13 @@ async function buildProducts(
     const productSlug = slugify(`${brand}-${row.model}-${folder.mergeKey}`);
     const priceEntry = prices.get(normalizeKey(row.model));
     const sku = priceEntry?.sku?.trim() || buildSku(row.model);
-    const price = priceEntry?.price ?? 0;
+    const originalPrice = priceEntry?.originalPrice ?? priceEntry?.price ?? 0;
+    const price = priceEntry?.price ?? originalPrice;
     const stock = priceEntry?.stock ?? 0;
+    const discountPercentage =
+      originalPrice > 0 && price > 0 && originalPrice > price
+        ? Math.round(((originalPrice - price) / originalPrice) * 100)
+        : 0;
     const status = price > 0 && stock > 0 ? "active" : "draft";
 
     const heroPath = selectHeroImage(folder.imagePaths);
@@ -713,8 +724,8 @@ async function buildProducts(
       category: categoryName,
       subcategory: row.productType,
       price,
-      originalPrice: price,
-      discountPercentage: 0,
+      originalPrice,
+      discountPercentage,
       rating: 0,
       reviewCount: 0,
       stock,
@@ -738,8 +749,8 @@ async function buildProducts(
       image: imageUrls[0]!,
       gstRate: 18,
       detail: {
-        msrp: price > 0 ? price : null,
-        salePrice: null,
+        msrp: originalPrice > 0 ? originalPrice : null,
+        salePrice: originalPrice > price ? price : null,
         specs: Object.entries(specifications).map(([label, value]) => ({ label, value })),
         inTheBox: [`${brand} ${row.model}`, "Manufacturer documentation"],
         gallery: imageUrls.map((src, index) => ({
@@ -784,13 +795,19 @@ function applyPriceUpdates(products: CatalogProduct[], prices: Map<string, Price
     const priceEntry = [...prices.values()].find(
       (p) => modelKey.includes(normalizeKey(p.model)) || normalizeKey(p.model).includes(modelKey)
     );
-    if (!priceEntry || priceEntry.price <= 0) return product;
+    if (!priceEntry || (priceEntry.price <= 0 && priceEntry.originalPrice <= 0)) return product;
 
+    const originalPrice = priceEntry.originalPrice > 0 ? priceEntry.originalPrice : priceEntry.price;
+    const price = priceEntry.price > 0 ? priceEntry.price : originalPrice;
     const stock = priceEntry.stock;
     return {
       ...product,
-      price: priceEntry.price,
-      originalPrice: priceEntry.price,
+      price,
+      originalPrice,
+      discountPercentage:
+        originalPrice > 0 && price > 0 && originalPrice > price
+          ? Math.round(((originalPrice - price) / originalPrice) * 100)
+          : 0,
       stock,
       sku: priceEntry.sku?.trim() || product.sku,
       status: stock > 0 ? "active" : product.status,
@@ -799,10 +816,11 @@ function applyPriceUpdates(products: CatalogProduct[], prices: Map<string, Price
       detail: product.detail
         ? {
             ...product.detail,
-            msrp: priceEntry.price,
+            msrp: originalPrice,
+            salePrice: originalPrice > price ? price : null,
             variants: product.detail.variants.map((v) => ({
               ...v,
-              price: priceEntry.price,
+              price,
               sku: priceEntry.sku?.trim() || v.sku,
               availability: stock > 0 ? "in-stock" : "out-of-stock",
             })),

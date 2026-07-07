@@ -258,12 +258,12 @@
     "brand": "ADEON",
     "category": "Live Sound & Lighting",
     "subcategory": "Audio Mixer",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 3266.56,
+    "originalPrice": 3712,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 165,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-ACON",
@@ -286,7 +286,7 @@
       "Keywords": "audio mixer, professional mixer console, dj mixer board, bluetooth mixer, usb audio mixer, live sound mixer, karaoke mixer, studio recording mixer, podcast mixer, pa system mixer, multi channel sound mixer, music mixing console, microphone mixer, portable audio mixer, adeon mixer, stage sound mixer, professional audio equipment, event sound mixer, home studio mixer, dj audio console"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "adeon",
     "categorySlug": "live-sound-lighting",
     "availability": "in-stock",
@@ -295,8 +295,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782289280/products/live-sound-lighting/adeon-acon-acon/01-artboard-3.png",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 3712,
+      "salePrice": 3266.56,
       "specs": [
         {
           "label": "Manufacturer",
@@ -351,7 +351,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-ACON",
-          "price": 0,
+          "price": 3266.56,
           "availability": "in-stock",
           "stock": 10
         }
@@ -370,12 +370,12 @@
     "brand": "ADEON",
     "category": "Live Sound & Lighting",
     "subcategory": "PA Speaker",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 31072.8,
+    "originalPrice": 35310,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 45,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-AD12DSP",
@@ -401,7 +401,7 @@
       "Keywords": "active pa speaker, dsp powered speaker, professional speaker system, dj speaker, live sound speaker, stage speaker, karaoke speaker, pa system speaker, powered loudspeaker, bass speaker, portable pa speaker, professional audio speaker, concert speaker, adeon speaker, event sound speaker, stage monitor speaker, live performance speaker, music speaker system, dj sound system, powered audio speaker"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "adeon",
     "categorySlug": "live-sound-lighting",
     "availability": "in-stock",
@@ -410,8 +410,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782290990/products/live-sound-lighting/adeon-ad12-dsp-ad12-dsp/01-ad12.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 35310,
+      "salePrice": 31072.8,
       "specs": [
         {
           "label": "Manufacturer",
@@ -484,7 +484,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-AD12DSP",
-          "price": 0,
+          "price": 31072.8,
           "availability": "in-stock",
           "stock": 10
         }
@@ -503,12 +503,12 @@
     "brand": "ADEON",
     "category": "Live Sound & Lighting",
     "subcategory": "PA Speaker",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 33396,
+    "originalPrice": 37950,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 89,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-AD15DSP",
@@ -534,7 +534,7 @@
       "Keywords": "active pa speaker, dsp speaker, powered speaker, professional speaker system, dj speaker, live sound speaker, stage speaker, karaoke speaker, pa system speaker, bass speaker, portable pa speaker, event speaker, professional audio speaker, powered loudspeaker, adeon speaker, stage monitor speaker, concert speaker, music speaker system, live performance speaker, dj sound system"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "adeon",
     "categorySlug": "live-sound-lighting",
     "availability": "in-stock",
@@ -543,8 +543,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782291003/products/live-sound-lighting/adeon-ad15dsp-ad15dsp/01-ad15.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 37950,
+      "salePrice": 33396,
       "specs": [
         {
           "label": "Manufacturer",
@@ -617,7 +617,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-AD15DSP",
-          "price": 0,
+          "price": 33396,
           "availability": "in-stock",
           "stock": 10
         }
@@ -1402,12 +1402,12 @@
     "brand": "ADEON",
     "category": "Live Sound & Lighting",
     "subcategory": "Audio Mixer",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 890.56,
+    "originalPrice": 1012,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 361,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-ADM01",
@@ -1429,7 +1429,7 @@
       "Keywords": "audio mixer, professional mixer console, dj mixer board, bluetooth mixer, usb audio mixer, live sound mixer, karaoke mixer, studio recording mixer, podcast mixer, pa system mixer, multi channel mixer, music mixing console, microphone mixer, portable audio mixer, stage sound mixer, adeon mixer, professional audio equipment, event sound mixer, home studio mixer, dj audio console"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "adeon",
     "categorySlug": "live-sound-lighting",
     "availability": "in-stock",
@@ -1438,8 +1438,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782291317/products/live-sound-lighting/adeon-adm01-adm-01/01-artboard-1.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 1012,
+      "salePrice": 890.56,
       "specs": [
         {
           "label": "Manufacturer",
@@ -1488,7 +1488,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-ADM01",
-          "price": 0,
+          "price": 890.56,
           "availability": "in-stock",
           "stock": 10
         }
@@ -1612,12 +1612,12 @@
     "brand": "ADEON",
     "category": "Live Sound & Lighting",
     "subcategory": "Audio Mixer",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 21384,
+    "originalPrice": 24300,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 61,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-AMS84F",
@@ -1646,7 +1646,7 @@
       "Keywords": "audio mixer, professional mixer console, dj mixer, bluetooth mixer board, usb audio mixer, live sound mixer, karaoke mixer, recording mixer, pa system mixer, multi channel sound mixer, music mixer console, podcast mixer, stage sound mixer, portable mixer console, professional audio equipment, adeon mixer, dj sound console, microphone mixer, studio audio mixer, event sound system"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "adeon",
     "categorySlug": "live-sound-lighting",
     "availability": "in-stock",
@@ -1655,8 +1655,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782291562/products/live-sound-lighting/adeon-ams84f-ams84f/01-artboard-4.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 24300,
+      "salePrice": 21384,
       "specs": [
         {
           "label": "Manufacturer",
@@ -1747,7 +1747,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-AMS84F",
-          "price": 0,
+          "price": 21384,
           "availability": "in-stock",
           "stock": 10
         }
@@ -1766,12 +1766,12 @@
     "brand": "AVUS",
     "category": "Drums & Percussion",
     "subcategory": "Cymbal",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 21384,
+    "originalPrice": 24300,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 21,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-AVUSDAZYAN18",
@@ -1793,7 +1793,7 @@
       "Product Type": "Cymbal"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "avus",
     "categorySlug": "drums-percussion",
     "availability": "in-stock",
@@ -1802,8 +1802,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292155/products/drums-percussion/avus-avus-dazyan-18-avus-dazyan-18/01-dazyan-01.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 24300,
+      "salePrice": 21384,
       "specs": [
         {
           "label": "Manufacturer",
@@ -1856,7 +1856,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-AVUSDAZYAN18",
-          "price": 0,
+          "price": 21384,
           "availability": "in-stock",
           "stock": 10
         }
@@ -1875,12 +1875,12 @@
     "brand": "AVUS",
     "category": "Drums & Percussion",
     "subcategory": "Cymbal",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 12295.8,
+    "originalPrice": 13972.5,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 20,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-AVUSDISTACK10",
@@ -1903,7 +1903,7 @@
       "Product Type": "Cymbal"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "avus",
     "categorySlug": "drums-percussion",
     "availability": "in-stock",
@@ -1912,8 +1912,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292163/products/drums-percussion/avus-avus-distack-10-avus-distack-10/01-distac-03.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 13972.5,
+      "salePrice": 12295.8,
       "specs": [
         {
           "label": "Manufacturer",
@@ -1972,7 +1972,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-AVUSDISTACK10",
-          "price": 0,
+          "price": 12295.8,
           "availability": "in-stock",
           "stock": 10
         }
@@ -1991,12 +1991,12 @@
     "brand": "AVUS",
     "category": "Drums & Percussion",
     "subcategory": "Cymbal",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 11226.6,
+    "originalPrice": 12757.5,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 24,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-AVUSHATHOR16",
@@ -2017,7 +2017,7 @@
       "Product Type": "Cymbal"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "avus",
     "categorySlug": "drums-percussion",
     "availability": "in-stock",
@@ -2026,8 +2026,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292172/products/drums-percussion/avus-avus-hathor-16-avus-hathor-16/01-hathor-front.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 12757.5,
+      "salePrice": 11226.6,
       "specs": [
         {
           "label": "Manufacturer",
@@ -2074,7 +2074,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-AVUSHATHOR16",
-          "price": 0,
+          "price": 11226.6,
           "availability": "in-stock",
           "stock": 10
         }
@@ -2093,12 +2093,12 @@
     "brand": "AVUS",
     "category": "Drums & Percussion",
     "subcategory": "Cymbal",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 12028.5,
+    "originalPrice": 13668.75,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 33,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-AVUSZAPCRASH16",
@@ -2120,7 +2120,7 @@
       "Product Type": "Cymbal"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "avus",
     "categorySlug": "drums-percussion",
     "availability": "in-stock",
@@ -2129,8 +2129,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292461/products/drums-percussion/avus-avus-zapcrash-16-avus-zapcrash-16/01-zap-crash-16-inch-01.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 13668.75,
+      "salePrice": 12028.5,
       "specs": [
         {
           "label": "Manufacturer",
@@ -2183,7 +2183,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-AVUSZAPCRASH16",
-          "price": 0,
+          "price": 12028.5,
           "availability": "in-stock",
           "stock": 10
         }
@@ -2202,12 +2202,12 @@
     "brand": "AVUS",
     "category": "Drums & Percussion",
     "subcategory": "Cymbal",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 2257.2,
+    "originalPrice": 2565,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 60,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-AVUSCRYSTONE6",
@@ -2229,7 +2229,7 @@
       "Product Type": "Cymbal"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "avus",
     "categorySlug": "drums-percussion",
     "availability": "in-stock",
@@ -2238,8 +2238,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292214/products/drums-percussion/avus-avus-crystone-6-avus-crystone-6/01-crystone-6-inch-01.png",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 2565,
+      "salePrice": 2257.2,
       "specs": [
         {
           "label": "Manufacturer",
@@ -2292,7 +2292,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-AVUSCRYSTONE6",
-          "price": 0,
+          "price": 2257.2,
           "availability": "in-stock",
           "stock": 10
         }
@@ -2311,12 +2311,12 @@
     "brand": "AVUS",
     "category": "Drums & Percussion",
     "subcategory": "Cymbal",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 2613.6,
+    "originalPrice": 2970,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 84,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-AVUSCRYSTONE8",
@@ -2338,7 +2338,7 @@
       "Product Type": "Cymbal"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "avus",
     "categorySlug": "drums-percussion",
     "availability": "in-stock",
@@ -2347,8 +2347,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292308/products/drums-percussion/avus-avus-crystone-8-avus-crystone-8/01-crystone-8-inch-01.png",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 2970,
+      "salePrice": 2613.6,
       "specs": [
         {
           "label": "Manufacturer",
@@ -2401,7 +2401,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-AVUSCRYSTONE8",
-          "price": 0,
+          "price": 2613.6,
           "availability": "in-stock",
           "stock": 10
         }
@@ -2420,12 +2420,12 @@
     "brand": "AVUS",
     "category": "Drums & Percussion",
     "subcategory": "Cymbal",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 3771.9,
+    "originalPrice": 4286.25,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 80,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-AVUSTHEO8",
@@ -2447,7 +2447,7 @@
       "Product Type": "Cymbal"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "avus",
     "categorySlug": "drums-percussion",
     "availability": "in-stock",
@@ -2456,8 +2456,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292439/products/drums-percussion/avus-avus-theo-8-theo/01-theo-01.png",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 4286.25,
+      "salePrice": 3771.9,
       "specs": [
         {
           "label": "Manufacturer",
@@ -2510,7 +2510,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-AVUSTHEO8",
-          "price": 0,
+          "price": 3771.9,
           "availability": "in-stock",
           "stock": 10
         }
@@ -2529,12 +2529,12 @@
     "brand": "AVUS",
     "category": "Drums & Percussion",
     "subcategory": "Hand Clap Percussion / Rhythm Effect Instrument / Studio Sound Effect Tool",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 18580.32,
+    "originalPrice": 21114,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 67,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-CLAPSTA",
@@ -2557,7 +2557,7 @@
       "Keywords": "hand clap instrument, AVUS clapsta, percussion clap sound effect, rhythm clap instrument, studio clap sound tool, live performance percussion effect, music production clap sound, electronic music percussion accessory, drum kit clap effect, acoustic clap instrument, sound effect percussion tool, beat making clap instrument, studio recording percussion, music rhythm enhancer tool, AVUS percussion series clapsta"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "avus",
     "categorySlug": "drums-percussion",
     "availability": "in-stock",
@@ -2566,8 +2566,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292187/products/drums-percussion/avus-clapsta-clapstack/01-clapstack-01.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 21114,
+      "salePrice": 18580.32,
       "specs": [
         {
           "label": "Manufacturer",
@@ -2622,7 +2622,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-CLAPSTA",
-          "price": 0,
+          "price": 18580.32,
           "availability": "in-stock",
           "stock": 10
         }
@@ -2641,12 +2641,12 @@
     "brand": "AVUS",
     "category": "Drums & Percussion",
     "subcategory": "Drumsticks / Designer Drumsticks / Professional Percussion Sticks",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 7722,
+    "originalPrice": 8775,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 490,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-NEOGOLD",
@@ -2675,7 +2675,7 @@
       "Keywords": "drumsticks NEO GOLD AVUS, gold drumsticks professional, hickory drumsticks designer series, premium drum sticks percussion, stage performance drumsticks gold, studio recording drumsticks, practice drumsticks AVUS, stylish drumsticks music, balanced grip drumsticks, rock drumsticks wood, jazz drumsticks percussion, beginner drumsticks set, luxury drumsticks instrument, music instrument drumsticks gold, AVUS drumstick series neo"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "avus",
     "categorySlug": "drums-percussion",
     "availability": "in-stock",
@@ -2684,8 +2684,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292356/products/drums-percussion/avus-neo-gold-neo-gold/01-neo-1-box.png",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 8775,
+      "salePrice": 7722,
       "specs": [
         {
           "label": "Manufacturer",
@@ -2776,7 +2776,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-NEOGOLD",
-          "price": 0,
+          "price": 7722,
           "availability": "in-stock",
           "stock": 10
         }
@@ -2795,12 +2795,12 @@
     "brand": "AVUS",
     "category": "Drums & Percussion",
     "subcategory": "Drumsticks / Advanced Drumsticks / Professional Percussion Sticks",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 24591.6,
+    "originalPrice": 27945,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 34,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-ZGEN",
@@ -2827,7 +2827,7 @@
       "Keywords": "drumsticks ZGEN AVUS, hickory drumsticks professional, advanced drumsticks percussion, studio recording drumsticks, stage performance drumsticks, practice drumsticks AVUS, fast response drum sticks, balanced grip drumsticks, rock drumsticks wood, jazz drumsticks percussion, beginner drumsticks set, music instrument drumsticks, durable hickory sticks, modern drumsticks design, AVUS drumstick series ZGEN"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "avus",
     "categorySlug": "drums-percussion",
     "availability": "in-stock",
@@ -2836,8 +2836,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292448/products/drums-percussion/avus-zgen-z-gen/01-gen-next-600ppiartboard-1.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 27945,
+      "salePrice": 24591.6,
       "specs": [
         {
           "label": "Manufacturer",
@@ -2916,7 +2916,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-ZGEN",
-          "price": 0,
+          "price": 24591.6,
           "availability": "in-stock",
           "stock": 10
         }
@@ -2935,12 +2935,12 @@
     "brand": "HERTZ",
     "category": "Guitars",
     "subcategory": "GUITAR AMPLIFIER",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 5340,
+    "originalPrice": 6000,
+    "discountPercentage": 11,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 800,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-DG20",
@@ -2967,7 +2967,7 @@
       "Keywords": "guitar amplifier, 20W guitar amplifier, portable guitar amp, acoustic guitar amplifier, electric guitar amplifier, guitar speaker amplifier, amplifier for beginners, practice guitar amp, musical instrument amplifier, compact guitar amp, professional guitar amplifier, Hertz amplifier, DG20 amplifier, guitar amp for home use, rehearsal amplifier, portable music amplifier, instrument amplifier, guitar accessories, amplifier for musicians, sound amplifier"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "hertz",
     "categorySlug": "guitars",
     "availability": "in-stock",
@@ -2976,8 +2976,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292512/products/guitars/hertz-dg-20-dg-20/01-rs-1631-x.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 6000,
+      "salePrice": 5340,
       "specs": [
         {
           "label": "Manufacturer",
@@ -3056,7 +3056,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-DG20",
-          "price": 0,
+          "price": 5340,
           "availability": "in-stock",
           "stock": 10
         }
@@ -3075,12 +3075,12 @@
     "brand": "HERTZ",
     "category": "Guitars",
     "subcategory": "GUITAR AMPLIFIER",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 9825.6,
+    "originalPrice": 11040,
+    "discountPercentage": 11,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 100,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-DG40",
@@ -3107,7 +3107,7 @@
       "Keywords": "guitar amplifier, 40W guitar amplifier, portable guitar amp, acoustic guitar amplifier, electric guitar amplifier, guitar speaker amplifier, amplifier for beginners, practice guitar amp, professional guitar amplifier, musical instrument amplifier, compact guitar amp, rehearsal amplifier, stage guitar amp, Hertz amplifier, DG40 amplifier, guitar amp for home use, portable music amplifier, sound amplifier, instrument amplifier, amplifier for musicians"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "hertz",
     "categorySlug": "guitars",
     "availability": "in-stock",
@@ -3116,8 +3116,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292523/products/guitars/hertz-dg40-dg40/01-rs-1640.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 11040,
+      "salePrice": 9825.6,
       "specs": [
         {
           "label": "Manufacturer",
@@ -3196,7 +3196,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-DG40",
-          "price": 0,
+          "price": 9825.6,
           "availability": "in-stock",
           "stock": 10
         }
@@ -3215,15 +3215,15 @@
     "brand": "HERTZ",
     "category": "Guitars",
     "subcategory": "Guitar",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 4041.4,
+    "originalPrice": 4592.5,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 176,
     "reservedStock": 0,
     "lowStockThreshold": 10,
-    "sku": "VM-HERTZHZAUK24",
+    "sku": "VM-HZAUK24",
     "status": "active",
     "featured": false,
     "trending": false,
@@ -3246,7 +3246,7 @@
       "Product Type": "Guitar"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "hertz",
     "categorySlug": "guitars",
     "availability": "in-stock",
@@ -3255,8 +3255,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292548/products/guitars/hertz-hertz-hza-uk-24-hertz-hza-uk-24/01-hza-uk24-amazonfrnt.png",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 4592.5,
+      "salePrice": 4041.4,
       "specs": [
         {
           "label": "Manufacturer",
@@ -3332,8 +3332,8 @@
         {
           "id": "var-default",
           "label": "Standard",
-          "sku": "VM-HERTZHZAUK24",
-          "price": 0,
+          "sku": "VM-HZAUK24",
+          "price": 4041.4,
           "availability": "in-stock",
           "stock": 10
         }
@@ -3511,12 +3511,12 @@
     "brand": "HERTZ",
     "category": "Guitars",
     "subcategory": "Acoustic Guitar",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 7623,
+    "originalPrice": 8662.5,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 36,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-HZA3600",
@@ -3541,7 +3541,7 @@
       "Keywords": "acoustic guitar, natural finish acoustic guitar, beginner guitar, full size acoustic guitar, wooden guitar, music instrument, guitar for beginners, acoustic music instrument, practice guitar, student guitar, stage performance guitar, recording guitar, learning guitar, six string acoustic guitar, hobby guitar, unplugged guitar, professional acoustic guitar, Hertz guitar, acoustic instrument, music practice guitar"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "hertz",
     "categorySlug": "guitars",
     "availability": "in-stock",
@@ -3550,8 +3550,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292466/products/guitars/hertz-hza-3600-hza-3600/01-rs-2188.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 8662.5,
+      "salePrice": 7623,
       "specs": [
         {
           "label": "Manufacturer",
@@ -3616,7 +3616,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-HZA3600",
-          "price": 0,
+          "price": 7623,
           "availability": "in-stock",
           "stock": 10
         }
@@ -3635,15 +3635,15 @@
     "brand": "HERTZ",
     "category": "Guitars",
     "subcategory": "Acoustic Guitar",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 7100.28,
+    "originalPrice": 8068.5,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 267,
     "reservedStock": 0,
     "lowStockThreshold": 10,
-    "sku": "VM-HZA3900",
+    "sku": "VM-HZA3900EQ",
     "status": "active",
     "featured": false,
     "trending": false,
@@ -3668,7 +3668,7 @@
       "Keywords": "acoustic guitar, tobacco sunburst guitar, black acoustic guitar, natural acoustic guitar, beginner acoustic guitar, full size guitar, wooden guitar, music instrument, acoustic music instrument, guitar for students, practice guitar, stage performance guitar, unplugged guitar, six string guitar, hobby guitar, recording guitar, learning guitar, professional acoustic guitar, Hertz guitar, acoustic performance guitar"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "hertz",
     "categorySlug": "guitars",
     "availability": "in-stock",
@@ -3677,8 +3677,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292473/products/guitars/hertz-hza-3900-hza-3900/01-rs-1928.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 8068.5,
+      "salePrice": 7100.28,
       "specs": [
         {
           "label": "Manufacturer",
@@ -3760,8 +3760,8 @@
         {
           "id": "var-default",
           "label": "Standard",
-          "sku": "VM-HZA3900",
-          "price": 0,
+          "sku": "VM-HZA3900EQ",
+          "price": 7100.28,
           "availability": "in-stock",
           "stock": 10
         }
@@ -3780,12 +3780,12 @@
     "brand": "HERTZ",
     "category": "Guitars",
     "subcategory": "Acoustic Guitar",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 11180.4,
+    "originalPrice": 12705,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 123,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-HZA4060",
@@ -3812,7 +3812,7 @@
       "Keywords": "solid top acoustic guitar, acoustic guitar, tobacco sunburst guitar, black acoustic guitar, natural acoustic guitar, full size acoustic guitar, beginner guitar, wooden guitar, acoustic music instrument, practice guitar, stage performance guitar, recording guitar, learning guitar, six string guitar, unplugged guitar, hobby guitar, professional acoustic guitar, Hertz guitar, studio acoustic guitar, acoustic performance guitar"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "hertz",
     "categorySlug": "guitars",
     "availability": "in-stock",
@@ -3821,8 +3821,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292490/products/guitars/hertz-hza-4060-hza-4060/01-rs-2182.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 12705,
+      "salePrice": 11180.4,
       "specs": [
         {
           "label": "Manufacturer",
@@ -3899,7 +3899,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-HZA4060",
-          "price": 0,
+          "price": 11180.4,
           "availability": "in-stock",
           "stock": 10
         }
@@ -4077,12 +4077,12 @@
     "brand": "HERTZ",
     "category": "Guitars",
     "subcategory": "Electro Acoustic Guitar",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 7100.28,
+    "originalPrice": 8068.5,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 267,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-HZA3900EQ",
@@ -4107,7 +4107,7 @@
       "Keywords": "electro acoustic guitar, EQ acoustic guitar, tobacco sunburst guitar, black acoustic guitar, natural acoustic guitar, acoustic pickup guitar, stage performance guitar, recording guitar, beginner electro acoustic guitar, wooden guitar, acoustic music instrument, practice guitar, six string guitar, unplugged guitar, hobby guitar, professional acoustic guitar, music instrument, Hertz guitar, studio acoustic guitar, amplified acoustic guitar"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "hertz",
     "categorySlug": "guitars",
     "availability": "in-stock",
@@ -4116,8 +4116,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292470/products/guitars/hertz-hza3900eq-hza3900eq/01-rs-1929.jpg",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 8068.5,
+      "salePrice": 7100.28,
       "specs": [
         {
           "label": "Manufacturer",
@@ -4182,7 +4182,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-HZA3900EQ",
-          "price": 0,
+          "price": 7100.28,
           "availability": "in-stock",
           "stock": 10
         }
@@ -4201,12 +4201,12 @@
     "brand": "HERTZ",
     "category": "Guitars",
     "subcategory": "Electro Acoustic Guitar",
-    "price": 0,
-    "originalPrice": 0,
-    "discountPercentage": 0,
+    "price": 8934.64,
+    "originalPrice": 10153,
+    "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
-    "stock": 10,
+    "stock": 13,
     "reservedStock": 0,
     "lowStockThreshold": 10,
     "sku": "VM-HZA4040EQ",
@@ -4236,7 +4236,7 @@
       "Keywords": "electro acoustic guitar, solid top acoustic guitar, EQ acoustic guitar, natural acoustic guitar, acoustic pickup guitar, stage performance guitar, recording guitar, beginner electro acoustic guitar, wooden guitar, acoustic music instrument, practice guitar, live performance guitar, six string guitar, unplugged guitar, hobby guitar, professional acoustic guitar, music instrument, Hertz guitar, studio acoustic guitar, amplified acoustic guitar"
     },
     "createdAt": "2026-06-24T08:48:22.565Z",
-    "updatedAt": "2026-06-24T09:47:47.531Z",
+    "updatedAt": "2026-07-07T20:12:43.120Z",
     "brandSlug": "hertz",
     "categorySlug": "guitars",
     "availability": "in-stock",
@@ -4245,8 +4245,8 @@
     "image": "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292480/products/guitars/hertz-hza4040-eq-hza4040-eq/01-hza-4040-eq-amazonfront.png",
     "gstRate": 18,
     "detail": {
-      "msrp": null,
-      "salePrice": null,
+      "msrp": 10153,
+      "salePrice": 8934.64,
       "specs": [
         {
           "label": "Manufacturer",
@@ -4341,7 +4341,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-HZA4040EQ",
-          "price": 0,
+          "price": 8934.64,
           "availability": "in-stock",
           "stock": 10
         }

@@ -59,6 +59,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
   }
 
   const displayName = formatProductCardTitle(product.name, product.brand);
+  const hasDiscount = product.originalPrice > product.price && product.price > 0;
 
   return (
     <article
@@ -111,9 +112,16 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           {product.rating.toFixed(1)} ({product.reviewCount})
         </div>
         <div className="cat-product-card__meta">
-          <span className="cat-product-card__price">
-            {formatCurrency(product.price)}
-          </span>
+          <div className="cat-product-card__pricing">
+            {hasDiscount ? (
+              <span className="cat-product-card__price cat-product-card__price--was">
+                {formatCurrency(product.originalPrice)}
+              </span>
+            ) : null}
+            <span className="cat-product-card__price cat-product-card__price--sale">
+              {formatCurrency(product.price)}
+            </span>
+          </div>
           <span
             className={`cat-product-card__badge ${availabilityClass(product.availability)}`}
           >
