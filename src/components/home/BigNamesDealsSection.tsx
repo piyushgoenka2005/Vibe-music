@@ -20,20 +20,23 @@ export default function BigNamesDealsSection() {
           </Reveal>
 
           <Reveal delay={40}>
-            <h2
+            <h1
               className="big-names-deals__headline typo-series"
               id={HEADLINE_ID}
             >
-              <span className="big-names-deals__headline-line">Big names.</span>
-              <span className="big-names-deals__headline-line">Serious savings.</span>
-            </h2>
+              Big names. Serious savings.
+            </h1>
           </Reveal>
 
           <Reveal delay={80}>
-            <p className="big-names-deals__subtitle">
-              Find all the top brands you already love, at prices that simply
-              can&apos;t be beat
-            </p>
+            <h2 className="big-names-deals__subtitle">
+              <span className="big-names-deals__subtitle-line">
+                Find all the top brands you already love, at prices that simply
+              </span>
+              <span className="big-names-deals__subtitle-line">
+                can&apos;t be beat
+              </span>
+            </h2>
           </Reveal>
         </header>
 

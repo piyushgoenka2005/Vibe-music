@@ -7,21 +7,13 @@ import { GlassFilter } from "@/components/ui/liquid-glass";
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SkipToContent from "@/components/layout/SkipToContent";
+import BackToTop from "@/components/layout/BackToTop";
+import HelpWidget from "@/components/layout/HelpWidget";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import DeferredSplashCursor from "@/components/layout/DeferredSplashCursor";
 
 const SocialRail = dynamic(() => import("@/components/layout/SocialRail"), {
-  ssr: false,
-  loading: () => null,
-});
-
-const BackToTop = dynamic(() => import("@/components/layout/BackToTop"), {
-  ssr: false,
-  loading: () => null,
-});
-
-const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
   ssr: false,
   loading: () => null,
 });

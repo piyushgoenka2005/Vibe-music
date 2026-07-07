@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { forwardRef, useEffect, useRef, useState, type MouseEvent } from "react";
+import { forwardRef, useEffect, useRef, type MouseEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
 import { optimizeImageUrl } from "@/lib/images";
@@ -11,6 +11,19 @@ import { formatCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import RollingText from "@/components/common/RollingText";
 import type { Product } from "@/types/product";
+
+const FOOTER_TRENDING_LIMIT = 4;
+const FOOTER_TRENDING_STALE_MS = 45_000;
+const FOOTER_TRENDING_REFETCH_MS = 5 * 60_000;
+
+async function fetchFooterTrendingProducts(): Promise<Product[]> {
+  const trending = await fetchProducts({
+    trending: true,
+    limit: FOOTER_TRENDING_LIMIT,
+  });
+  if (trending.length > 0) return trending;
+  return fetchProducts({ limit: FOOTER_TRENDING_LIMIT });
+}
 
 const PANEL_CATEGORIES = [
   { label: "01 / Pro audio", href: categoryPath("studio-recording") },
@@ -70,7 +83,16 @@ function FooterProductSnippet({ product }: { product: Product }) {
 
 const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPanel(_, ref) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [fetchEnabled, setFetchEnabled] = useState(false);
+
+  const { data: products = [], isLoading, refetch } = useQuery({
+    queryKey: ["footer-trending-products"],
+    queryFn: fetchFooterTrendingProducts,
+    staleTime: FOOTER_TRENDING_STALE_MS,
+    refetchInterval: FOOTER_TRENDING_REFETCH_MS,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
 
   useEffect(() => {
     const node = panelRef.current;
@@ -79,23 +101,15 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
-          setFetchEnabled(true);
-          observer.disconnect();
+          void refetch();
         }
       },
-      { rootMargin: "240px 0px", threshold: 0.01 }
+      { rootMargin: "120px 0px", threshold: 0.12 }
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
-
-  const { data: products = [] } = useQuery({
-    queryKey: ["footer-trending-products"],
-    queryFn: () => fetchProducts({ trending: true, limit: 4 }),
-    staleTime: 60_000,
-    enabled: fetchEnabled,
-  });
+  }, [refetch]);
 
   function setPanelRef(node: HTMLDivElement | null) {
     panelRef.current = node;
@@ -130,9 +144,17 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
         </div>
 
         <div className="footer-products-panel__products">
-          {products.map((product) => (
-            <FooterProductSnippet key={product.id} product={product} />
-          ))}
+          {isLoading
+            ? Array.from({ length: FOOTER_TRENDING_LIMIT }, (_, index) => (
+                <div
+                  key={`footer-product-skeleton-${index}`}
+                  className="footer-product-snippet footer-product-snippet--skeleton"
+                  aria-hidden
+                />
+              ))
+            : products.map((product) => (
+                <FooterProductSnippet key={product.id} product={product} />
+              ))}
         </div>
 
         <Link href={ROUTES.search} className="footer-products-panel__shop-all">

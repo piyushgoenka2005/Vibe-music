@@ -5,6 +5,10 @@ const BRAND_LOGO_BY_SLUG: Record<string, string> = {
   prs: "/images/big-names-deals/prs-logo.svg",
   ibanez: "/images/big-names-deals/ibanez-logo.svg",
   fender: "/images/big-names-deals/fender-logo.svg",
+  hertz: "/images/brands/hertz.webp",
+  avus: "/images/brands/avus.png",
+  trinity: "/images/brands/trinity.jpg",
+  roland: "/images/brands/roland.png",
 };
 
 export function getBrandLogoUrl(slug: string): string | undefined {

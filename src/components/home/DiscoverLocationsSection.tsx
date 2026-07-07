@@ -1,9 +1,24 @@
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import Marquee from "@/components/common/Marquee";
-import { LANDING_LOCATIONS } from "@/data/landingStatus";
-import StatusChip from "@/components/home/StatusChip";
+import { LANDING_LOCATIONS, type StatusTone } from "@/data/landingStatus";
 import Reveal from "@/components/layout/Reveal";
 import { ROUTES } from "@/lib/routes";
+
+function LocationStatusTag({
+  label,
+  tone,
+}: {
+  label: string;
+  tone: StatusTone;
+}) {
+  return (
+    <span className={`location-status-tag location-status-tag--${tone}`}>
+      {tone === "live" ? <span className="location-status-tag__dot" aria-hidden /> : null}
+      <span className="location-status-tag__label">{label}</span>
+    </span>
+  );
+}
 
 function LocationCard({
   location,
@@ -26,12 +41,7 @@ function LocationCard({
       />
       <div className="locations-strip__overlay" />
       <div className="locations-strip__meta">
-        <StatusChip
-          label={location.status}
-          tone={location.tone}
-          showDot={location.tone === "live"}
-          className="locations-strip__status"
-        />
+        <LocationStatusTag label={location.status} tone={location.tone} />
       </div>
       <p className="locations-strip__city">{location.city}</p>
     </article>
@@ -64,6 +74,7 @@ export default function DiscoverLocationsSection() {
         </Marquee>
 
         <Link href={ROUTES.search} className="locations-strip__cta premium-btn premium-btn--outline">
+          <MapPin className="locations-strip__cta-icon" size={16} strokeWidth={2.25} aria-hidden />
           Find a location
         </Link>
       </div>

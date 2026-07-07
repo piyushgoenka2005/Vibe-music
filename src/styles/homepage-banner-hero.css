@@ -6,7 +6,7 @@
   max-width: 100%;
   margin-left: calc(-1 * var(--full-bleed-inline, 0px));
   margin-right: calc(-1 * var(--full-bleed-inline, 0px));
-  margin-top: 0;
+  margin-top: var(--site-header-offset, 118px);
   background: transparent;
   overflow: hidden;
   isolation: isolate;
@@ -45,6 +45,24 @@
 .homepage-banner-hero__image {
   object-fit: cover;
   object-position: center;
+}
+
+.homepage-banner-hero__image--contain {
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .homepage-banner-hero__viewport--natural-fit {
+    aspect-ratio: var(--banner-aspect-ratio, 2 / 1);
+    min-height: 0;
+    max-height: none;
+    background: #d4b896;
+  }
+
+  .homepage-banner-hero__viewport--natural-fit .homepage-banner-hero__image--contain {
+    object-fit: contain;
+    object-position: center center;
+  }
 }
 
 .homepage-banner-hero__dots {
@@ -156,4 +174,9 @@
     transition: none;
     transform: none;
   }
+}
+
+/* Landing — snap banner flush under navbar (no white strip) */
+body.is-landing-page .homepage-banner-hero {
+  margin-top: var(--site-header-offset, 118px);
 }

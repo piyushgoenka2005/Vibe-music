@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 import { API_SECURITY_HEADERS, SECURITY_HEADERS } from "@/lib/security/headers";
 
+const isProd = process.env.NODE_ENV === "production";
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
@@ -51,15 +53,19 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
+      ...(isProd
+        ? [
+            {
+              source: "/_next/static/:path*",
+              headers: [
+                {
+                  key: "Cache-Control",
+                  value: "public, max-age=31536000, immutable",
+                },
+              ],
+            },
+          ]
+        : []),
       ...["svg", "png", "jpg", "jpeg", "gif", "webp", "ico", "woff2"].map(
         (ext) => ({
           source: `/:path*.${ext}`,

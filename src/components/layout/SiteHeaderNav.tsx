@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { HEADER_MEGA_MENUS, MEGA_MENU_BY_SLUG } from "@/data/headerMegaMenu";
 import { ROUTES } from "@/lib/routes";
 import HeaderMegaMenu from "@/components/layout/HeaderMegaMenu";
 import GooeyLinkupFilter from "@/components/ui/GooeyLinkupFilter";
+import { useCompactHeaderNav } from "@/hooks/useCompactHeaderNav";
 
 interface SiteHeaderNavProps {
   onNavigate?: () => void;
@@ -25,15 +27,35 @@ interface NavGooItem {
   active?: boolean;
 }
 
+const MOBILE_EXTRA_LINKS = [
+  {
+    key: "deals",
+    label: "Deals",
+    href: `${ROUTES.searchResults}?q=deals`,
+    accent: true,
+  },
+  {
+    key: "guides",
+    label: "Guides",
+    href: ROUTES.blog,
+  },
+  {
+    key: "gp9",
+    label: "Grand Piano",
+    href: ROUTES.gp9,
+  },
+] as const;
+
 export default function SiteHeaderNav({
   onNavigate,
   onMegaMenuOpenChange,
   mobileOpen = false,
 }: SiteHeaderNavProps) {
   const pathname = usePathname() ?? "";
+  const compactNav = useCompactHeaderNav();
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
-  const [megaEnabled, setMegaEnabled] = useState(false);
   const [scrollable, setScrollable] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navShellRef = useRef<HTMLDivElement>(null);
@@ -59,7 +81,7 @@ export default function SiteHeaderNav({
     },
     {
       key: "gp9",
-      label: "GP-9",
+      label: "Grand Piano",
       href: ROUTES.gp9,
       active:
         pathname === ROUTES.gp9 || pathname.startsWith(`${ROUTES.gp9}/`),
@@ -67,23 +89,21 @@ export default function SiteHeaderNav({
   ];
 
   useEffect(() => {
+    if (compactNav) return;
     const el = navShellRef.current?.querySelector(".site-header__nav-inner");
-    if (el) {
-      const check = () => setScrollable(el.scrollWidth > el.clientWidth);
-      check();
-      const ro = new ResizeObserver(check);
-      ro.observe(el);
-      return () => ro.disconnect();
-    }
-  }, []);
+    if (!el) return;
+
+    const check = () => setScrollable(el.scrollWidth > el.clientWidth);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [compactNav]);
 
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    const sync = () => setMegaEnabled(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
+    setExpandedSlug(null);
+    setActiveSlug(null);
+  }, [pathname]);
 
   const clearCloseTimer = useCallback(() => {
     if (closeTimerRef.current) {
@@ -94,24 +114,27 @@ export default function SiteHeaderNav({
 
   const openMenu = useCallback(
     (slug: string) => {
-      if (!megaEnabled) return;
       clearCloseTimer();
       setActiveSlug(slug);
     },
-    [clearCloseTimer, megaEnabled]
+    [clearCloseTimer]
   );
 
   const scheduleClose = useCallback(() => {
-    if (!megaEnabled) return;
     clearCloseTimer();
     closeTimerRef.current = setTimeout(() => setActiveSlug(null), HOVER_CLOSE_DELAY_MS);
-  }, [clearCloseTimer, megaEnabled]);
+  }, [clearCloseTimer]);
 
   const handleNavigate = useCallback(() => {
     setActiveSlug(null);
+    setExpandedSlug(null);
     setHoveredKey(null);
     onNavigate?.();
   }, [onNavigate]);
+
+  const toggleExpanded = useCallback((slug: string) => {
+    setExpandedSlug((current) => (current === slug ? null : slug));
+  }, []);
 
   const activeMenu = activeSlug ? MEGA_MENU_BY_SLUG[activeSlug] ?? null : null;
 
@@ -145,72 +168,147 @@ export default function SiteHeaderNav({
 
   return (
     <nav
+      id="site-header-nav"
       className="site-header__nav assets-site-header__nav"
       aria-label="Shop categories"
       aria-hidden={!megaEnabled && !mobileOpen ? true : undefined}
-      onMouseLeave={() => {
-        scheduleClose();
-        setHoveredKey(null);
-      }}
+      onMouseLeave={
+        compactNav
+          ? undefined
+          : () => {
+              scheduleClose();
+              setHoveredKey(null);
+            }
+      }
     >
-      <GooeyLinkupFilter id="gooey-linkup" />
-      <div
-        ref={navShellRef}
-        className={`site-header__nav-shell${scrollable ? " site-header__nav-shell--scrollable" : ""}`}
-      >
-        <div className="site-header__nav-inner">
-          <div
-            className="gooey-linkup site-header__nav-gooey"
-            role="list"
-            onMouseLeave={() => setHoveredKey(null)}
-          >
-            <div className="gooey-linkup__blobs" aria-hidden>
-              {navItems.map((item, index) => (
-                <span
-                  key={item.key}
-                  className={blobClass(item)}
-                  data-goo-pull={shouldPull(index) ? "" : undefined}
-                >
-                  <span className="gooey-linkup__blob-size">{item.label}</span>
-                </span>
-              ))}
-            </div>
-
-            <div className="gooey-linkup__hits">
-              {navItems.map((item, index) => (
-                <div
-                  key={item.key}
-                  className="gooey-linkup__unit"
-                  role="listitem"
-                  data-goo-pull={shouldPull(index) ? "" : undefined}
-                  onMouseEnter={() => {
-                    setHoveredKey(item.key);
-                    if (item.slug) openMenu(item.slug);
-                  }}
-                >
+      {compactNav ? (
+        <div className="site-header__mobile-nav">
+          {HEADER_MEGA_MENUS.map((menu) => {
+            const expanded = expandedSlug === menu.slug;
+            return (
+              <div
+                key={menu.slug}
+                className={`site-header__mobile-nav-group${expanded ? " is-expanded" : ""}`}
+              >
+                <div className="site-header__mobile-nav-row">
                   <Link
-                    href={item.href}
-                    className={hitClass(item)}
+                    href={menu.href}
+                    className="site-header__mobile-nav-link"
                     onClick={handleNavigate}
-                    aria-expanded={
-                      item.slug ? megaEnabled && activeSlug === item.slug : undefined
-                    }
-                    aria-haspopup={item.slug && megaEnabled ? "true" : undefined}
                   >
-                    {item.label}
+                    {menu.name}
                   </Link>
+                  <button
+                    type="button"
+                    className="site-header__mobile-nav-toggle"
+                    aria-expanded={expanded}
+                    aria-controls={`mobile-nav-panel-${menu.slug}`}
+                    aria-label={`${expanded ? "Hide" : "Show"} ${menu.name} subcategories`}
+                    onClick={() => toggleExpanded(menu.slug)}
+                  >
+                    <ChevronDown size={18} aria-hidden />
+                  </button>
                 </div>
-              ))}
+                {expanded ? (
+                  <div
+                    id={`mobile-nav-panel-${menu.slug}`}
+                    className="site-header__mobile-submenu"
+                  >
+                    {menu.columns.map((column) => (
+                      <div key={column.heading} className="site-header__mobile-submenu-section">
+                        <p className="site-header__mobile-submenu-heading">{column.heading}</p>
+                        <ul className="site-header__mobile-submenu-list">
+                          {column.links.map((link) => (
+                            <li key={link.href}>
+                              <Link
+                                href={link.href}
+                                className="site-header__mobile-submenu-link"
+                                onClick={handleNavigate}
+                              >
+                                {link.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+
+          {MOBILE_EXTRA_LINKS.map((link) => (
+            <Link
+              key={link.key}
+              href={link.href}
+              className={`site-header__mobile-nav-link site-header__mobile-nav-link--solo${"accent" in link && link.accent ? " site-header__mobile-nav-link--accent" : ""}`}
+              onClick={handleNavigate}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <>
+          <GooeyLinkupFilter id="gooey-linkup" />
+          <div
+            ref={navShellRef}
+            className={`site-header__nav-shell${scrollable ? " site-header__nav-shell--scrollable" : ""}`}
+          >
+            <div className="site-header__nav-inner">
+              <div
+                className="gooey-linkup site-header__nav-gooey"
+                role="list"
+                onMouseLeave={() => setHoveredKey(null)}
+              >
+                <div className="gooey-linkup__blobs" aria-hidden>
+                  {navItems.map((item, index) => (
+                    <span
+                      key={item.key}
+                      className={blobClass(item)}
+                      data-goo-pull={shouldPull(index) ? "" : undefined}
+                    >
+                      <span className="gooey-linkup__blob-size">{item.label}</span>
+                    </span>
+                  ))}
+                </div>
+
+                <div className="gooey-linkup__hits">
+                  {navItems.map((item, index) => (
+                    <div
+                      key={item.key}
+                      className="gooey-linkup__unit"
+                      role="listitem"
+                      data-goo-pull={shouldPull(index) ? "" : undefined}
+                      onMouseEnter={() => {
+                        setHoveredKey(item.key);
+                        if (item.slug) openMenu(item.slug);
+                      }}
+                    >
+                      <Link
+                        href={item.href}
+                        className={hitClass(item)}
+                        onClick={handleNavigate}
+                        aria-expanded={
+                          item.slug ? activeSlug === item.slug : undefined
+                        }
+                        aria-haspopup={item.slug ? "true" : undefined}
+                      >
+                        {item.label}
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div onMouseEnter={clearCloseTimer} onMouseLeave={scheduleClose}>
+              <HeaderMegaMenu menu={activeMenu} open={Boolean(activeMenu)} />
             </div>
           </div>
-        </div>
-
-        {megaEnabled ? (
-          <div onMouseEnter={clearCloseTimer} onMouseLeave={scheduleClose}>
-            <HeaderMegaMenu menu={activeMenu} open={Boolean(activeMenu)} />
-          </div>
-        ) : null}
-      </div>
+        </>
+      )}
     </nav>
   );
 }

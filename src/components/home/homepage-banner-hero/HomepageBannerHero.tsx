@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import {
   HOMEPAGE_BANNER_ROTATION_MS,
   HOMEPAGE_BANNER_SLIDES,
@@ -35,6 +35,14 @@ export default function HomepageBannerHero() {
 
   if (slideCount === 0) return null;
 
+  const activeSlide = HOMEPAGE_BANNER_SLIDES[activeIndex];
+  const viewportClassName = [
+    "homepage-banner-hero__viewport",
+    activeSlide.aspectRatio ? "homepage-banner-hero__viewport--natural-fit" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <section
       className="homepage-banner-hero"
@@ -43,7 +51,12 @@ export default function HomepageBannerHero() {
       aria-roledescription="carousel"
     >
       <div
-        className="homepage-banner-hero__viewport"
+        className={viewportClassName}
+        style={
+          activeSlide.aspectRatio
+            ? ({ "--banner-aspect-ratio": activeSlide.aspectRatio } as CSSProperties)
+            : undefined
+        }
         onTouchEnd={(event) => {
           if (touchStartX == null || slideCount <= 1) return;
           const delta = event.changedTouches[0]?.clientX ?? touchStartX;
@@ -74,7 +87,16 @@ export default function HomepageBannerHero() {
                 priority={index === 0}
                 loading="eager"
                 sizes="(max-width: 767px) 100vw, (max-width: 1280px) 100vw, 1280px"
-                className="homepage-banner-hero__image"
+                className={[
+                  "homepage-banner-hero__image",
+                  slide.fit === "contain" ? "homepage-banner-hero__image--contain" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                style={{
+                  ...(slide.fit ? { objectFit: slide.fit } : null),
+                  ...(slide.objectPosition ? { objectPosition: slide.objectPosition } : null),
+                }}
               />
             </Link>
           );

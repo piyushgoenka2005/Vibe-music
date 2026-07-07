@@ -347,6 +347,11 @@
 }
 
 @media (max-width: 767px) {
+  .help-widget {
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
+    bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
+
   .help-widget__panel {
     width: min(21rem, calc(100vw - 1.5rem));
     max-height: min(32rem, calc(100vh - 5.5rem));

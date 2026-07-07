@@ -1119,6 +1119,12 @@
     opacity: 1;
     transform: none;
   }
+
+  .category-bento__browse-btn:hover,
+  .category-bento__browse-btn:focus-visible {
+    min-width: 0;
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 479px) {

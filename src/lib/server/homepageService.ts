@@ -11,6 +11,7 @@ import {
 import { getCachedActiveProducts } from "@/lib/server/catalogSnapshotCache";
 import { listCategories } from "@/lib/server/categoryRepository";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
+import { buildTopBrandStripItems } from "@/data/topBrandStrip";
 import { getCategoryGridImage } from "@/lib/categoryImages";
 import { categoryPath, productPath } from "@/lib/routes";
 import {
@@ -229,13 +230,14 @@ async function resolveBrands(
       });
     }
 
-    return resolved.filter((brand) => brand.slug !== "roland");
+    return resolved;
   }
 
-  return brands
-    .filter((brand) => brand.slug !== "roland")
-    .slice(0, section.maxItems)
-    .map((brand) => ({
+  if (section.sectionKey === "brand_strip") {
+    return buildTopBrandStripItems(brands);
+  }
+
+  return brands.slice(0, section.maxItems).map((brand) => ({
     id: brand.id,
     name: brand.name,
     slug: brand.slug,

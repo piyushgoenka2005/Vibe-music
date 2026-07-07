@@ -16,15 +16,18 @@ function BrandStripLink({ brand }: { brand: HomepageBrandItem }) {
       href={resolveLinkHref(brand.href)}
     >
       {brand.logoUrl ? (
-        <Image
-          alt={brand.name}
-          className="homepage-brand-strip__logo"
-          height={40}
-          loading="lazy"
-          sizes="(max-width: 767px) 120px, 148px"
-          src={brand.logoUrl}
-          width={120}
-        />
+        <>
+          <Image
+            alt=""
+            className="homepage-brand-strip__logo"
+            height={40}
+            loading="lazy"
+            sizes="(max-width: 767px) 120px, 148px"
+            src={brand.logoUrl}
+            width={120}
+          />
+          <span className="visually-hidden">{brand.name}</span>
+        </>
       ) : (
         <span className="homepage-brand-strip__wordmark">{brand.name}</span>
       )}
@@ -57,7 +60,7 @@ export default function HomepageBrandStripSection({
         <Marquee
           ariaLabel="Brand logos"
           className="homepage-brand-strip__marquee"
-          duration="48s"
+          duration="42s"
           role="region"
           sequenceClassName="homepage-brand-strip__sequence"
           trackClassName="homepage-brand-strip__marquee-track"

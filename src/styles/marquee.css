@@ -52,3 +52,15 @@
     display: none;
   }
 }
+
+@media (max-width: 767px) {
+  .marquee {
+    overflow-x: clip;
+    overflow-y: visible;
+    padding-block: 0.25rem 0.75rem;
+  }
+
+  .marquee__track {
+    padding-bottom: 0.25rem;
+  }
+}

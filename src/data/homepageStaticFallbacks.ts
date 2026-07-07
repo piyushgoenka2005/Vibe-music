@@ -7,7 +7,7 @@ import {
 } from "@/lib/server/firestoreCatalogRepository";
 import { categoryPath, productPath } from "@/lib/routes";
 import { getCategoryGridImage } from "@/lib/categoryImages";
-import { getBrandLogoUrl } from "@/lib/brandLogos";
+import { buildTopBrandStripItems } from "@/data/topBrandStrip";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
   HomepageProductItem,
@@ -199,16 +199,7 @@ export async function getHomepageStaticFallbacks(
     sectionId: "brand-strip",
     title: "Shop Top Brands",
     layout: "brand_strip",
-    brands: brands
-      .filter((brand) => brand.slug !== "roland")
-      .slice(0, 8)
-      .map((brand) => ({
-      id: brand.id,
-      name: brand.name,
-      slug: brand.slug,
-      href: `/search?brand=${encodeURIComponent(brand.slug)}`,
-      logoUrl: getBrandLogoUrl(brand.slug),
-    })),
+    brands: buildTopBrandStripItems(brands),
   });
 
   return {

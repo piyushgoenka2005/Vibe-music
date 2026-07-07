@@ -376,3 +376,23 @@
     transition: none;
   }
 }
+
+@media (max-width: 479px) {
+  .culture-typography__word {
+    font-size: clamp(2.65rem, 14.5vw, 4.25rem);
+    letter-spacing: -0.03em;
+    opacity: 0.42;
+  }
+
+  .culture-typography__title {
+    font-size: clamp(1.5rem, 7vw, 1.85rem);
+  }
+
+  .culture-typography__subtitle {
+    font-size: 0.9375rem;
+  }
+
+  .culture-typography__scroll-hint {
+    bottom: 0.75rem;
+  }
+}

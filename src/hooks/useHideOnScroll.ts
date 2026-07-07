@@ -14,7 +14,7 @@ interface UseHideOnScrollOptions {
   minScroll?: number;
   /** Disable auto-hide (e.g. mobile menu open) */
   disabled?: boolean;
-  /** Keep header visible on viewports below 768px */
+  /** Keep header visible on viewports below 1024px (hamburger nav) */
   disableOnMobile?: boolean;
 }
 
@@ -41,7 +41,7 @@ export function useHideOnScroll({
     let ticking = false;
 
     const update = () => {
-      if (disableOnMobile && window.matchMedia("(max-width: 767px)").matches) {
+      if (disableOnMobile && window.matchMedia("(max-width: 1023px)").matches) {
         setHidden(false);
         lastScrollY.current = readScrollY();
         ticking = false;
@@ -88,6 +88,40 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
 
     const syncOffset = () => {
       const headerRect = header.getBoundingClientRect();
+      const nav = header.querySelector<HTMLElement>(".site-header__nav");
+
+      const applyOffset = (value: number) => {
+        document.documentElement.style.setProperty(
+          "--site-header-offset",
+          `${Math.max(0, Math.round(value))}px`
+        );
+      };
+
+      if (nav) {
+        applyOffset(nav.getBoundingClientRect().bottom);
+
+        const hero = document.querySelector<HTMLElement>(".homepage-banner-hero");
+        if (hero) {
+          requestAnimationFrame(() => {
+            const gap =
+              hero.getBoundingClientRect().top -
+              nav.getBoundingClientRect().bottom;
+            if (gap > 0.5) {
+              const current = parseFloat(
+                getComputedStyle(document.documentElement).getPropertyValue(
+                  "--site-header-offset"
+                )
+              );
+              if (Number.isFinite(current)) {
+                applyOffset(current - gap);
+              }
+            }
+          });
+        }
+
+        return;
+      }
+
       const chromeSelectors = [
         ".announcement-bar",
         ".site-header__bar",
@@ -106,11 +140,7 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
         bottom = Math.max(bottom, el.getBoundingClientRect().bottom);
       }
 
-      const height = Math.max(0, Math.ceil(bottom - headerRect.top));
-      document.documentElement.style.setProperty(
-        "--site-header-offset",
-        `${height}px`
-      );
+      applyOffset(bottom - headerRect.top);
     };
 
     syncOffset();
