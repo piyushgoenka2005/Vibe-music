@@ -1,13 +1,14 @@
 import { productPath, ROUTES } from "@/lib/routes";
 
-const ROLAND_GP9_HERO =
-  "https://static.roland.com/products/gp-9/images/gp-9_hero.jpg";
+const ROLAND_GP9_GALLERY =
+  "https://static.roland.com/products/gp-9/images/gallery";
+const ROLAND_GP9_PRODUCT = `${ROLAND_GP9_GALLERY}/gp-9_front_gal.jpg`;
 
 const HERTZ_GUITAR_FRONT =
-  "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292533/products/guitars/hertz-hz-ams070-hzams070/01-hza-ams-070-wrs-amazonfrnt-copy.png";
+  "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292587/products/guitars/hertz-hza4503-hza4503/01-hza-4503-na-amazonfront.png";
 
 const ADEON_PA_FRONT =
-  "https://res.cloudinary.com/piyushgoenka/image/upload/v1782290996/products/live-sound-lighting/adeon-ad12-dsp-ad12-dsp/03-ap-12-2.jpg";
+  "https://res.cloudinary.com/piyushgoenka/image/upload/v1782290990/products/live-sound-lighting/adeon-ad12-dsp-ad12-dsp/01-ad12.jpg";
 
 export interface HomepageTopProduct {
   id: string;
@@ -33,11 +34,11 @@ export const HOMEPAGE_TOP_PRODUCTS: HomepageTopProduct[] = [
       "Roland GP-9 digital grand piano with hybrid key action, immersive sound, and home-concert elegance.",
     tags: ["Pianos", "Featured"],
     href: ROUTES.gp9,
-    image: ROLAND_GP9_HERO,
+    image: ROLAND_GP9_PRODUCT,
     brandLabel: "Roland",
     pinImage: true,
     imageFit: "contain",
-    imageObjectPosition: "center bottom",
+    imageObjectPosition: "center center",
   },
   {
     id: "top-guitar",
@@ -45,10 +46,10 @@ export const HOMEPAGE_TOP_PRODUCTS: HomepageTopProduct[] = [
     excerpt:
       "Acoustic and electric guitars from Hertz and leading brands — built for stage, studio, and everyday play.",
     tags: ["Guitars", "Bestseller"],
-    href: productPath("hertz-hz-ams070-hzams070"),
+    href: productPath("hertz-hza4503-hza4503"),
     image: HERTZ_GUITAR_FRONT,
     brandLabel: "HERTZ",
-    productSlug: "hertz-hz-ams070-hzams070",
+    productSlug: "hertz-hza4503-hza4503",
     pinImage: true,
     imageFit: "contain",
     imageObjectPosition: "center center",

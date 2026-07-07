@@ -1643,6 +1643,29 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   pointer-events: none;
 }
 
+.blog-teaser__media--contain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.blog-teaser__media--contain::after {
+  height: 42%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(15, 23, 42, 0.1) 62%,
+    rgba(15, 23, 42, 0.28) 100%
+  );
+}
+
+.blog-teaser__image--contain {
+  object-fit: contain;
+  padding: 1.25rem 1.5rem 2.75rem;
+  background: transparent;
+}
+
 .blog-teaser__image {
   display: block;
   width: 100%;
@@ -2323,6 +2346,11 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--brand-primary, #1253ed);
+}
+
+.premium-home .new-arrivals-card__price--enquiry {
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .premium-home .new-arrivals-card--featured .new-arrivals-card__price {
@@ -4053,9 +4081,21 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   align-self: end;
   margin: 0;
   padding-top: 0;
+  line-height: 1.2;
+}
+
+.premium-home .homepage-price-enquiry,
+.premium-home .new-arrivals-card__price--enquiry,
+.premium-home .premium-product-carousel .product-suggest__item-price--enquiry {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--brand-primary, #1253ed);
+}
+
+.premium-home .homepage-deals-section .price-block .type-fixed-20.text-black {
   font-size: 1.0625rem;
   font-weight: 700;
-  line-height: 1.2;
   color: #0f172a;
 }
 

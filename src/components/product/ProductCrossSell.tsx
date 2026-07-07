@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ProductShareButton from "@/components/product/ProductShareButton";
 import { formatCurrency } from "@/utils/currency";
 import type { Product } from "@/types/product";
 
@@ -18,8 +19,14 @@ export default function ProductCrossSell({
       <h2 className="pdp-section__title">{title}</h2>
       <div className="pdp-cross-sell">
         {products.map((product) => (
-          <Link
-            key={product.id}
+          <div key={product.id} className="pdp-cross-sell__card-wrap">
+            <ProductShareButton
+              overlay
+              position="top-right"
+              title={`${product.brand} ${product.name}`}
+              url={`/product/${product.slug}`}
+            />
+            <Link
             href={`/product/${product.slug}`}
             className="pdp-cross-sell__card"
           >
@@ -45,6 +52,7 @@ export default function ProductCrossSell({
               {formatCurrency(product.price)}
             </div>
           </Link>
+          </div>
         ))}
       </div>
     </section>

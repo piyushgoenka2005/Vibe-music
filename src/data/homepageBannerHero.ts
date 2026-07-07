@@ -35,10 +35,10 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     href: ROUTES.gp9,
   },
   {
-    id: "banner-3",
-    src: "/images/banner-3.png",
-    alt: "Find Your Perfect Sound — grand piano collection at Vibe Music",
-    href: categoryPath("keyboards-pianos"),
+    id: "banner-hertz",
+    src: "/images/Hertz.png",
+    alt: "Hertz amplifiers — turn up the power and feel every beat at Vibe Music",
+    href: `${ROUTES.searchResults}?brand=hertz`,
   },
   {
     id: "banner-4",

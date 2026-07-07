@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Heart, X } from "lucide-react";
+import ProductShareButton from "@/components/product/ProductShareButton";
 import { optimizeImageUrl } from "@/lib/images";
 import { productPath } from "@/lib/routes";
 import { useIsClient } from "@/hooks/useIsClient";
@@ -224,6 +225,12 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
               >
                 View product
               </Link>
+              <ProductShareButton
+                className="gear-story-modal__btn gear-story-modal__btn--tertiary"
+                title={story.name}
+                url={productPath(story.slug)}
+                text={`Check out ${story.name} at Vibe Music`}
+              />
               <button
                 type="button"
                 className="gear-story-modal__btn gear-story-modal__btn--tertiary"

@@ -4,6 +4,7 @@ import { formatCurrency } from "@/utils/currency";
 
 import { useEffect } from "react";
 import Link from "next/link";
+import ProductShareButton from "@/components/product/ProductShareButton";
 import { ROUTES } from "@/lib/routes";
 import { createPortal } from "react-dom";
 import { useIsClient } from "@/hooks/useIsClient";
@@ -89,6 +90,11 @@ export default function WishlistDrawer() {
                     {formatCurrency(item.price)}
                   </div>
                   <div className="wl-drawer__actions">
+                    <ProductShareButton
+                      title={`${item.brand} ${item.name}`}
+                      url={`/product/${item.slug}`}
+                      size={16}
+                    />
                     <button
                       type="button"
                       onClick={() => moveToCart(item.productId)}

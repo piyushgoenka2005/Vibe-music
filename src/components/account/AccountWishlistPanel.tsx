@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ProductShareButton from "@/components/product/ProductShareButton";
 import { Heart } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -49,6 +50,13 @@ export default function AccountWishlistPanel() {
               const stock = stockLabel();
               return (
                 <article key={item.productId} className="acct__wishlist-card">
+                  <ProductShareButton
+                    overlay
+                    position="top-right"
+                    title={`${item.brand} ${item.name}`}
+                    url={`/product/${item.slug}`}
+                    size={16}
+                  />
                   <div className="acct__wishlist-img">
                     {item.image ? (
                       <img src={item.image} alt={item.name} />

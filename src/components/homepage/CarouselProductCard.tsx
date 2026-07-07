@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import ProductShareButton from "@/components/product/ProductShareButton";
 import { optimizeImageUrl } from "@/lib/images";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { formatDisplayPrice } from "@/utils/currency";
@@ -26,19 +27,37 @@ export default function CarouselProductCard({
     item.salePrice != null && item.salePrice > 0 && item.salePrice < item.price;
   const showRating = item.reviewCount > 0;
   const imageSrc = item.image ? optimizeImageUrl(item.image, "productCard") : "";
+  const badgeLabel =
+    item.badgeLabel ?? (sectionKey === "trending" ? "Trending" : undefined);
+  const isTrendingRibbon = sectionKey === "trending" && !item.badgeLabel;
+  const productHref = resolveLinkHref(item.href);
 
   return (
     <div className="product-suggest__item-wrap">
+      <ProductShareButton
+        overlay
+        position="top-right"
+        title={`${item.brand} ${item.name}`}
+        url={productHref}
+      />
       <Link
-        href={resolveLinkHref(item.href)}
+        href={productHref}
         className="product-suggest__item"
         data-hp-section={sectionKey}
         data-id={item.id}
       >
+        {badgeLabel ? (
+          <span
+            className={
+              isTrendingRibbon
+                ? "product-suggest__item-ribbon"
+                : "product-suggest__item-badge"
+            }
+          >
+            {badgeLabel}
+          </span>
+        ) : null}
         <div className="product-suggest__item-img">
-          {item.badgeLabel ? (
-            <span className="product-suggest__item-badge">{item.badgeLabel}</span>
-          ) : null}
           {imageSrc ? (
             <Image
               alt={item.imageAlt}

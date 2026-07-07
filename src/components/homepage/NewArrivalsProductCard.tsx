@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import ProductShareButton from "@/components/product/ProductShareButton";
 import { optimizeImageUrl } from "@/lib/images";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { formatDisplayPrice } from "@/utils/currency";
@@ -59,9 +60,17 @@ export default function NewArrivalsProductCard({
   const imageSrc = image ? optimizeImageUrl(image, "productCard") : "";
   const showRating =
     rating != null && reviewCount != null && reviewCount > 0;
+  const productHref = resolveLinkHref(href);
 
   return (
-    <Link
+    <div className="new-arrivals-card-wrap">
+      <ProductShareButton
+        overlay
+        position="top-right"
+        title={`${brand} ${name}`}
+        url={productHref}
+      />
+      <Link
       aria-hidden={ariaHidden || undefined}
       aria-label={`${brand} ${name}, ${formatDisplayPrice(price, salePrice)}`}
       className={`new-arrivals-card${featured ? " new-arrivals-card--featured" : ""}`}
@@ -69,7 +78,7 @@ export default function NewArrivalsProductCard({
       data-hp-section={sectionKey}
       data-hp-slot={hpSlot}
       data-key={id}
-      href={resolveLinkHref(href)}
+      href={productHref}
       role="listitem"
     >
       <div className="new-arrivals-card__media">
@@ -139,7 +148,11 @@ export default function NewArrivalsProductCard({
                 {formatDisplayPrice(price)}
               </span>
             ) : null}
-            <span className="new-arrivals-card__price">
+            <span
+              className={`new-arrivals-card__price${
+                displayPrice <= 0 ? " new-arrivals-card__price--enquiry" : ""
+              }`}
+            >
               {priceNode ?? formatDisplayPrice(price, salePrice)}
             </span>
           </div>
@@ -147,5 +160,6 @@ export default function NewArrivalsProductCard({
         </div>
       </div>
     </Link>
+    </div>
   );
 }

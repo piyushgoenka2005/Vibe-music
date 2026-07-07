@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import ProductShareButton from "@/components/product/ProductShareButton";
 import { heroMarqueeProductHref } from "@/data/heroMarqueeProducts";
 import GrowthArrowIcon from "@/components/home/find-your-product/GrowthArrowIcon";
 import type { ScannerProduct } from "@/components/home/find-your-product/types";
@@ -18,6 +19,12 @@ export default function ScannerProductCard({ product }: ScannerProductCardProps)
 
   return (
     <div className="scanner-card-wrap">
+      <ProductShareButton
+        className="scanner-card__share"
+        title={product.name}
+        url={href}
+        size={14}
+      />
       <Link
         className="scanner-card"
         href={href}

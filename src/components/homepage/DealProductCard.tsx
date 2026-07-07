@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ProductShareButton from "@/components/product/ProductShareButton";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { formatDisplayPrice } from "@/utils/currency";
 import { resolveLinkHref } from "@/lib/routes";
@@ -11,10 +12,20 @@ interface DealProductCardProps {
 
 export default function DealProductCard({ item, slotPosition }: DealProductCardProps) {
   const displayName = formatProductCardTitle(item.name, item.brand);
+  const displayPrice = item.salePrice ?? item.price;
+  const isEnquiry = !Number.isFinite(displayPrice) || displayPrice <= 0;
+  const productHref = resolveLinkHref(item.href);
 
   return (
-    <Link
-      href={resolveLinkHref(item.href)}
+    <div className="homepage-deals-card-wrap">
+      <ProductShareButton
+        overlay
+        position="top-right"
+        title={`${item.brand} ${item.name}`}
+        url={productHref}
+      />
+      <Link
+      href={productHref}
       className="tile--link"
       data-hp-section="sale events"
       data-hp-slot="slider"
@@ -48,7 +59,13 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
               {item.offerText ?? "\u00a0"}
             </div>
             <div className="price-block">
-              <span className="type-fixed-20 text-black weight-demi">
+              <span
+                className={
+                  isEnquiry
+                    ? "homepage-price-enquiry"
+                    : "type-fixed-20 text-black weight-demi"
+                }
+              >
                 {formatDisplayPrice(item.price, item.salePrice)}
               </span>
             </div>
@@ -56,5 +73,6 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
         </div>
       </div>
     </Link>
+    </div>
   );
 }

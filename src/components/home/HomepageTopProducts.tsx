@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ProductShareButton from "@/components/product/ProductShareButton";
 import {
   HOMEPAGE_TOP_PRODUCTS,
   HOMEPAGE_TOP_PRODUCTS_CTA,
@@ -12,11 +13,18 @@ import Reveal from "@/components/layout/Reveal";
 const HEADLINE_ID = "top-products-title";
 
 function TopProductCard({ product }: { product: HomepageTopProduct }) {
-  const imageSrc = optimizeImageUrl(product.image, "blogCover");
+  const imagePreset = product.imageFit === "contain" ? "productDetail" : "blogCover";
+  const imageSrc = optimizeImageUrl(product.image, imagePreset);
   const imageFit = product.imageFit ?? "cover";
 
   return (
     <article className="blog-teaser__card">
+      <ProductShareButton
+        overlay
+        position="top-right"
+        title={product.title}
+        url={product.href}
+      />
       <Link className="blog-teaser__link" href={product.href}>
         <div
           className={[
@@ -89,10 +97,7 @@ async function resolveTopProducts(): Promise<HomepageTopProduct[]> {
         const catalogProduct = await getProductBySlug(product.productSlug);
         if (!catalogProduct) return product;
 
-        const catalogImage =
-          catalogProduct.image ||
-          catalogProduct.images?.[0] ||
-          product.image;
+        const catalogImage = catalogProduct.image || product.image;
 
         return {
           ...product,

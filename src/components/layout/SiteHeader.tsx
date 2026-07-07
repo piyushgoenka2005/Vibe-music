@@ -143,7 +143,16 @@ export default function SiteHeader() {
 
       <div className="site-header__bar">
         <div className="site-header__inner">
-          <Link href={ROUTES.home} className="site-header__logo" aria-label={BRAND.name}>
+          <a
+            href={ROUTES.home}
+            className="site-header__logo"
+            aria-label={BRAND.name}
+            onClick={(event) => {
+              event.preventDefault();
+              // Always return to the landing page with a full page load.
+              window.location.href = ROUTES.home;
+            }}
+          >
             <Image
               src={BRAND.headerLogoPath}
               alt={BRAND.name}
@@ -152,7 +161,7 @@ export default function SiteHeader() {
               priority
               className="assets-site-header__menu-logo"
             />
-          </Link>
+          </a>
 
           <form
             className="site-header__search site-header__search--bar assets-site-header__menu-search-form"

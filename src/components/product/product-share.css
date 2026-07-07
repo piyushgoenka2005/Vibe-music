@@ -1,0 +1,105 @@
+.product-share-btn {
+  border: 0;
+  background: rgba(255, 255, 255, 0.96);
+  cursor: pointer;
+  padding: 6px;
+  color: #111827;
+  line-height: 1;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.14);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color var(--duration-fast, 150ms ease),
+    background var(--duration-fast, 150ms ease),
+    transform var(--duration-fast, 150ms ease);
+}
+
+.product-share-btn:hover {
+  color: var(--brand-primary, #2563eb);
+  background: #fff;
+}
+
+.product-share-btn:focus-visible {
+  outline: 2px solid var(--brand-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+.product-share-btn--overlay {
+  position: absolute;
+  z-index: 3;
+}
+
+.product-share-btn--top-right {
+  top: 8px;
+  right: 8px;
+}
+
+.product-share-btn--top-left {
+  top: 8px;
+  left: 8px;
+}
+
+.product-card-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.product-card-actions .product-share-btn,
+.product-card-actions .wl-heart-btn {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.14);
+}
+
+.product-card-actions .wl-heart-btn {
+  padding: 6px;
+}
+
+.product-suggest__item-wrap,
+.new-arrivals-card-wrap,
+.homepage-deals-card-wrap,
+.pdp-cross-sell__card-wrap,
+.pdp-fbt__card-wrap,
+.blog-teaser__card,
+.acct__wishlist-card,
+.scanner-card-wrap {
+  position: relative;
+}
+
+.scanner-card-wrap {
+  display: flex;
+  align-items: stretch;
+}
+
+.scanner-card-wrap .scanner-card {
+  flex: 1;
+}
+
+.scanner-card__share {
+  align-self: center;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.pdp-share-btn.product-share-btn {
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  padding: 0;
+  background: #fff;
+  border: 1.5px solid var(--border-default, var(--pdp-grey10));
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.pdp-share-btn.product-share-btn:hover {
+  background: #f8fafc;
+  color: var(--brand-primary, #2563eb);
+}

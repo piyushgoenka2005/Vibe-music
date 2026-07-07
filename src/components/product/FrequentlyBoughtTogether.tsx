@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ProductShareButton from "@/components/product/ProductShareButton";
 import { formatCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import type { ResolvedProductBundle } from "@/types/bundle";
@@ -50,7 +51,15 @@ export default function FrequentlyBoughtTogether({
                   +
                 </span>
               ) : null}
-              <Link
+              <div className="pdp-fbt__card-wrap">
+                <ProductShareButton
+                  overlay
+                  position="top-right"
+                  title={`${product.brand} ${product.name}`}
+                  url={`/product/${product.slug}`}
+                  size={16}
+                />
+                <Link
                 href={`/product/${product.slug}`}
                 className="pdp-cross-sell__card pdp-fbt__card"
               >
@@ -73,6 +82,7 @@ export default function FrequentlyBoughtTogether({
                   {formatCurrency(product.price)}
                 </div>
               </Link>
+              </div>
             </span>
           ))}
         </div>

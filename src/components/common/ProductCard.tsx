@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
+import ProductShareButton from "@/components/product/ProductShareButton";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import { formatCurrency } from "@/utils/currency";
 import { optimizeImageUrl } from "@/lib/images";
@@ -81,7 +82,11 @@ export default function ProductCard({ product, view }: ProductCardProps) {
             className="cat-product-card__image-photo"
           />
         </Link>
-        <div style={{ position: "absolute", top: 8, right: 8 }}>
+        <div className="product-card-actions">
+          <ProductShareButton
+            title={`${product.brand} ${product.name}`}
+            url={productHref}
+          />
           <WishlistButton product={product} />
         </div>
       </div>

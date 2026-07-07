@@ -190,6 +190,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
           images={galleryImages}
           videos={product.videos}
           productName={product.name}
+          productSlug={product.slug}
         />
         <div>
           <ProductInfo
