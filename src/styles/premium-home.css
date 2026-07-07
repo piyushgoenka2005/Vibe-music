@@ -1643,29 +1643,6 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   pointer-events: none;
 }
 
-.blog-teaser__media--contain {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-}
-
-.blog-teaser__media--contain::after {
-  height: 42%;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(15, 23, 42, 0.1) 62%,
-    rgba(15, 23, 42, 0.28) 100%
-  );
-}
-
-.blog-teaser__image--contain {
-  object-fit: contain;
-  padding: 1.25rem 1.5rem 2.75rem;
-  background: transparent;
-}
-
 .blog-teaser__image {
   display: block;
   width: 100%;
@@ -1676,14 +1653,61 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.blog-teaser__media--contain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 5;
+  min-height: 260px;
+  padding: 1rem 1rem 3.25rem;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.blog-teaser__media--contain::after {
+  height: 28%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(15, 23, 42, 0.06) 72%,
+    rgba(15, 23, 42, 0.16) 100%
+  );
+}
+
+.blog-teaser__media--contain .blog-teaser__image--contain {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  min-height: 0;
+  aspect-ratio: unset;
+  object-fit: contain;
+  object-position: center center;
+  padding: 0;
+  margin: auto;
+  background: transparent;
+}
+
+.blog-teaser__media--instrument {
+  aspect-ratio: 3 / 4;
+  min-height: 300px;
+  padding: 1.25rem 1.25rem 3.5rem;
+}
+
+.blog-teaser__media--instrument .blog-teaser__image--contain {
+  max-width: 92%;
+  max-height: 100%;
+}
+
 .blog-teaser__grid--one .blog-teaser__image,
 .blog-teaser__card--featured .blog-teaser__image {
   aspect-ratio: auto;
   min-height: 100%;
 }
 
-.blog-teaser__link:hover .blog-teaser__image,
-.blog-teaser__link:focus-visible .blog-teaser__image {
+.blog-teaser__link:hover .blog-teaser__image:not(.blog-teaser__image--contain),
+.blog-teaser__link:focus-visible .blog-teaser__image:not(.blog-teaser__image--contain) {
   transform: scale(1.03);
 }
 
@@ -1871,7 +1895,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
     grid-column: auto;
   }
 
-  .blog-teaser__image {
+  .blog-teaser__image:not(.blog-teaser__image--contain) {
     aspect-ratio: 16 / 10;
     min-height: 0;
   }

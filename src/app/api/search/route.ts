@@ -1,51 +1,18 @@
 import { NextResponse } from "next/server";
-import { searchProducts } from "@/lib/server/productRepository";
 import {
   enforceRateLimit,
   handleRouteError,
 } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
-import type { SearchBrand, SearchCategory } from "@/types/search";
+import {
+  buildBrandFacets,
+  buildCategoryFacets,
+  SEARCH_MIN_QUERY_LENGTH as MIN_QUERY_LENGTH,
+} from "@/lib/server/searchResultsService";
+import { searchProducts } from "@/lib/server/productRepository";
 
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 48;
-const MIN_QUERY_LENGTH = 2;
-
-function buildCategoryFacets(
-  products: Awaited<ReturnType<typeof searchProducts>>
-): SearchCategory[] {
-  const map = new Map<string, SearchCategory>();
-
-  products.forEach((product) => {
-    if (!map.has(product.categorySlug)) {
-      map.set(product.categorySlug, {
-        id: product.categorySlug,
-        name: product.category,
-        slug: product.categorySlug,
-      });
-    }
-  });
-
-  return Array.from(map.values());
-}
-
-function buildBrandFacets(
-  products: Awaited<ReturnType<typeof searchProducts>>
-): SearchBrand[] {
-  const map = new Map<string, SearchBrand>();
-
-  products.forEach((product) => {
-    if (!map.has(product.brandSlug)) {
-      map.set(product.brandSlug, {
-        id: product.brandSlug,
-        name: product.brand,
-        slug: product.brandSlug,
-      });
-    }
-  });
-
-  return Array.from(map.values());
-}
 
 function parsePositiveInt(value: string | null, fallback: number): number {
   const parsed = Number(value);

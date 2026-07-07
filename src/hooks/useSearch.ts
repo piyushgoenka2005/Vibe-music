@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -194,17 +194,57 @@ export function useSearchResults(
     category?: string;
     brand?: string;
     sort?: string;
+  },
+  options?: {
+    /** Server-rendered results matching the initial query/filters. */
+    initialResults?: SearchResultsData | null;
+    initialFilters?: { category?: string; brand?: string };
   }
 ) {
-  const [status, setStatus] = useState<SearchStatus>("idle");
+  const initialResults = options?.initialResults ?? null;
+  const [status, setStatus] = useState<SearchStatus>(
+    initialResults ? "success" : "idle"
+  );
   const [error, setError] = useState<string | null>(null);
-  const [results, setResults] = useState<SearchResultsData | null>(null);
+  const [results, setResults] = useState<SearchResultsData | null>(
+    initialResults
+  );
   const category = filters?.category;
   const brand = filters?.brand;
   const sort = filters?.sort;
+  const initialKeyRef = useRef<string | null>(
+    initialResults
+      ? [
+          query.trim(),
+          options?.initialFilters?.category ?? "",
+          options?.initialFilters?.brand ?? "",
+          "",
+        ].join("|")
+      : null
+  );
 
   useEffect(() => {
     let cancelled = false;
+
+    // Server already rendered these exact results — skip the duplicate fetch.
+    const requestKey = [
+      query.trim(),
+      category ?? "",
+      brand ?? "",
+      sort && sort !== "relevance" ? sort : "",
+    ].join("|");
+    if (initialKeyRef.current !== null && initialKeyRef.current === requestKey) {
+      initialKeyRef.current = null;
+      if (initialResults) {
+        searchStore.trackSearch({
+          query: initialResults.query,
+          resultCount: initialResults.total,
+          source: "results-page",
+        });
+      }
+      return;
+    }
+    initialKeyRef.current = null;
 
     async function run() {
       const hasFilter = Boolean(category?.trim() || brand?.trim());

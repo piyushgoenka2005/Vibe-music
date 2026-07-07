@@ -7,18 +7,22 @@ import SearchEmptyState from "./SearchEmptyState";
 import SearchFilters from "./SearchFilters";
 import SearchMobileFilterDrawer from "./SearchMobileFilterDrawer";
 import SearchResults from "./SearchResults";
+import type { SearchResultsData } from "@/types/search";
 import "./search.css";
 
 interface SearchResultsPageProps {
   query: string;
   initialCategory?: string;
   initialBrand?: string;
+  /** Server-rendered results for the initial query — skips the first client fetch. */
+  initialResults?: SearchResultsData | null;
 }
 
 export default function SearchResultsPage({
   query,
   initialCategory = "",
   initialBrand = "",
+  initialResults = null,
 }: SearchResultsPageProps) {
   const filters = useSearchStore((s) => s.filters);
 
@@ -40,7 +44,10 @@ export default function SearchResultsPage({
     [filters.brand, filters.category, filters.sort, initialBrand, initialCategory]
   );
 
-  const { status, error, results } = useSearchResults(query, effectiveFilters);
+  const { status, error, results } = useSearchResults(query, effectiveFilters, {
+    initialResults,
+    initialFilters: { category: initialCategory, brand: initialBrand },
+  });
 
   const productCount = results?.products.length ?? 0;
 

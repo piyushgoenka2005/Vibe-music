@@ -331,7 +331,8 @@ export function searchInCatalogProducts(
     source = [...source].sort((a, b) => b.rating - a.rating);
   } else if (options.sort === "reviews-desc") {
     source = [...source].sort((a, b) => b.reviewCount - a.reviewCount);
-  } else {
+  } else if (!options.query) {
+    // Keep relevance ordering for text queries; sort by newest otherwise.
     source = [...source].sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -452,6 +453,10 @@ function scoreProductMatch(
       slug.includes(token)
   );
   if (allTokensMatch) score += 25 * tokens.length;
+
+  // Popularity/stock boosts only apply to actual text matches; otherwise
+  // every in-stock product would match every query.
+  if (score === 0) return 0;
 
   score += product.rating * 2 + Math.min(product.reviewCount, 50) * 0.1;
   if (product.availability === "in-stock") score += 5;

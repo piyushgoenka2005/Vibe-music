@@ -30,6 +30,7 @@ function TopProductCard({ product }: { product: HomepageTopProduct }) {
           className={[
             "blog-teaser__media",
             imageFit === "contain" ? "blog-teaser__media--contain" : "",
+            product.imageMediaClass ?? "",
           ]
             .filter(Boolean)
             .join(" ")}

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import "@/styles/social-rail.css";
+import { useIsClient } from "@/hooks/useIsClient";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
 
 interface IconProps {
@@ -57,18 +58,12 @@ const SOCIAL_ITEMS = [
 ] as const;
 
 export default function SocialRail() {
-  const [visible, setVisible] = useState(false);
+  const isClient = useIsClient();
 
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setVisible(true));
-    return () => cancelAnimationFrame(frame);
-  }, []);
+  if (!isClient) return null;
 
-  return (
-    <aside
-      className={`social-rail${visible ? " social-rail--visible" : ""}`}
-      aria-label="Social navigation"
-    >
+  return createPortal(
+    <aside className="social-rail" aria-label="Social navigation">
       <nav aria-label="Social media">
         <ul className="social-rail__list">
           {SOCIAL_ITEMS.map(({ key, label, href, Icon }) => (
@@ -93,11 +88,15 @@ export default function SocialRail() {
         aria-label="Subscribe to newsletter"
         onClick={(event) => {
           event.preventDefault();
-          document.getElementById("newsletter")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          document.getElementById("newsletter")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
         }}
       >
         <span className="social-rail__newsletter-text">Newsletter</span>
       </a>
-    </aside>
+    </aside>,
+    document.body
   );
 }

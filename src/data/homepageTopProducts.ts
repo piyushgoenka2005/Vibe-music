@@ -24,6 +24,7 @@ export interface HomepageTopProduct {
   pinImage?: boolean;
   imageFit?: "cover" | "contain";
   imageObjectPosition?: string;
+  imageMediaClass?: string;
 }
 
 export const HOMEPAGE_TOP_PRODUCTS: HomepageTopProduct[] = [
@@ -53,6 +54,7 @@ export const HOMEPAGE_TOP_PRODUCTS: HomepageTopProduct[] = [
     pinImage: true,
     imageFit: "contain",
     imageObjectPosition: "center center",
+    imageMediaClass: "blog-teaser__media--instrument",
   },
   {
     id: "pa-speaker",
