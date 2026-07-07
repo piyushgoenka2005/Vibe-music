@@ -9,12 +9,16 @@ export async function register() {
 
     if (process.env.NODE_ENV === "production") {
       if (integrations.upstash !== "ok") {
-        throw new Error(
-          "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production"
+        logWarn(
+          "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are missing; using in-memory rate limiting",
+          "instrumentation"
         );
       }
       if (integrations.razorpayWebhook !== "ok") {
-        throw new Error("RAZORPAY_WEBHOOK_SECRET is required in production");
+        logWarn(
+          "RAZORPAY_WEBHOOK_SECRET is missing; webhook verification endpoints may fail",
+          "instrumentation"
+        );
       }
     }
 
@@ -23,8 +27,9 @@ export async function register() {
     );
     const firestoreHealth = await verifyFirestoreConnection();
     if (!firestoreHealth.ok && process.env.NODE_ENV === "production") {
-      throw new Error(
-        `Firestore initialization failed: ${firestoreHealth.error ?? "unknown"}`
+      logWarn(
+        `Firestore initialization failed at startup: ${firestoreHealth.error ?? "unknown"}`,
+        "instrumentation"
       );
     }
   }
