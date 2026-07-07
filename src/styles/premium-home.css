@@ -2841,12 +2841,19 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   }
 
   .premium-hero__actions {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: nowrap;
     align-items: stretch;
+    gap: 0.625rem;
   }
 
   .premium-hero__actions .premium-btn--lg {
-    width: 100%;
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    padding: 0.75rem 0.75rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
   }
 
   .premium-hero__card {
@@ -2973,6 +2980,17 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
     min-height: 52px;
     padding-inline: 1.5rem;
     font-size: 0.9375rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .premium-hero__actions {
+    gap: 0.5rem;
+  }
+
+  .premium-hero__actions .premium-btn--lg {
+    padding: 0.65rem 0.5rem;
+    font-size: 0.8125rem;
   }
 }
 
