@@ -134,16 +134,23 @@ export function PageLoadSplashScreen({
 
 export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [visible, setVisible] = useState(
-    () => variant === "initial" && shouldShowInitialSplash() && !prefersReducedMotion
-  );
-  const [settled, setSettled] = useState(prefersReducedMotion);
+  const [visible, setVisible] = useState(false);
+  const [settled, setSettled] = useState(false);
   const [brandExiting, setBrandExiting] = useState(false);
   const [showItems, setShowItems] = useState(false);
   const [showTeaser, setShowTeaser] = useState(false);
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
+    if (variant !== "initial" || SPLASH_DISABLED || prefersReducedMotion) return;
+    if (shouldShowInitialSplash()) {
+      setVisible(true);
+    }
+  }, [prefersReducedMotion, variant]);
+
+  useEffect(() => {
+    if (!visible) return;
+
     if (prefersReducedMotion) {
       setSettled(true);
       return;
@@ -151,10 +158,10 @@ export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashPr
 
     const settleTimer = window.setTimeout(() => setSettled(true), WAVE_SETTLE_MS);
     return () => window.clearTimeout(settleTimer);
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, visible]);
 
   useEffect(() => {
-    if (variant !== "initial") return;
+    if (variant !== "initial" || !visible) return;
 
     let brandExitTimer = 0;
     let itemsTimer = 0;
@@ -222,7 +229,7 @@ export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashPr
       window.clearTimeout(fullExitTimer);
       window.clearTimeout(hideTimer);
     };
-  }, [prefersReducedMotion, variant]);
+  }, [prefersReducedMotion, variant, visible]);
 
   if (variant === "inline") {
     return <PageLoadSplashScreen variant="inline" settled showItems showTeaser />;

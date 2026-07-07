@@ -11,6 +11,7 @@ import GooeyLinkupFilter from "@/components/ui/GooeyLinkupFilter";
 interface SiteHeaderNavProps {
   onNavigate?: () => void;
   onMegaMenuOpenChange?: (open: boolean) => void;
+  mobileOpen?: boolean;
 }
 
 const HOVER_CLOSE_DELAY_MS = 120;
@@ -27,6 +28,7 @@ interface NavGooItem {
 export default function SiteHeaderNav({
   onNavigate,
   onMegaMenuOpenChange,
+  mobileOpen = false,
 }: SiteHeaderNavProps) {
   const pathname = usePathname() ?? "";
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
@@ -145,6 +147,7 @@ export default function SiteHeaderNav({
     <nav
       className="site-header__nav assets-site-header__nav"
       aria-label="Shop categories"
+      aria-hidden={!megaEnabled && !mobileOpen ? true : undefined}
       onMouseLeave={() => {
         scheduleClose();
         setHoveredKey(null);

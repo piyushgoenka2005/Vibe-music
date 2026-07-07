@@ -18,11 +18,13 @@ import SearchRollingPlaceholder, {
   SEARCH_ROLLING_ARIA_LABEL,
 } from "@/components/search/SearchRollingPlaceholder";
 import { MIN_QUERY_LENGTH } from "@/services/search.service";
+import { searchStore } from "@/store/searchStore";
 import WishlistCounter from "@/components/wishlist/WishlistCounter";
 
 export default function SiteHeader() {
   const router = useRouter();
   const headerRef = useRef<HTMLElement>(null);
+  const searchToggleRef = useRef<HTMLButtonElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const headerHidden = useHideOnScroll({ disabled: mobileOpen, disableOnMobile: true });
@@ -80,7 +82,7 @@ export default function SiteHeader() {
   const cartCountRef = useRef<HTMLSpanElement>(null);
   const prevCartCountRef = useRef(cartCount);
 
-  const cartCountText = cartCount > 0 ? String(cartCount) : "";
+  const cartCountText = cartCount > 99 ? "99+" : String(cartCount);
   const cartDataCount = cartCount > 99 ? "99+" : String(cartCount);
   const cartLabel =
     cartCount === 0
@@ -124,6 +126,12 @@ export default function SiteHeader() {
     [router]
   );
 
+  const handleMobileSearchOpen = useCallback(() => {
+    setMobileOpen(false);
+    const rect = searchToggleRef.current?.getBoundingClientRect() ?? null;
+    searchStore.openOverlay(rect, "sw-search-input-mobile", true);
+  }, []);
+
   return (
     <header
       ref={headerRef}
@@ -135,16 +143,6 @@ export default function SiteHeader() {
 
       <div className="site-header__bar">
         <div className="site-header__inner">
-          <button
-            type="button"
-            className="site-header__menu-btn"
-            onClick={() => setMobileOpen((open) => !open)}
-            aria-expanded={mobileOpen}
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-
           <Link href={ROUTES.home} className="site-header__logo" aria-label={BRAND.name}>
             <Image
               src={BRAND.headerLogoPath}
@@ -157,7 +155,7 @@ export default function SiteHeader() {
           </Link>
 
           <form
-            className="site-header__search assets-site-header__menu-search-form"
+            className="site-header__search site-header__search--bar assets-site-header__menu-search-form"
             action={ROUTES.searchResults}
             method="get"
             onSubmit={handleSearchSubmit}
@@ -184,10 +182,20 @@ export default function SiteHeader() {
             </button>
           </form>
 
+          <button
+            ref={searchToggleRef}
+            type="button"
+            className="site-header__search-toggle"
+            onClick={handleMobileSearchOpen}
+            aria-label="Open search"
+          >
+            <Search size={22} aria-hidden />
+          </button>
+
           <div className="site-header__actions">
             <Link
               href={accountHref}
-              className="site-header__action assets-site-header__menu-account"
+              className="site-header__action site-header__action--desktop-only assets-site-header__menu-account"
               aria-label={accountLabel}
             >
               {accountPhotoUrl ? (
@@ -207,7 +215,7 @@ export default function SiteHeader() {
               </span>
             </Link>
 
-            <div className="assets-site-header__menu-cart-wrap">
+            <div className="site-header__action--desktop-only assets-site-header__menu-cart-wrap">
               <WishlistCounter onClick={openWishlistDrawer} />
             </div>
 
@@ -217,7 +225,7 @@ export default function SiteHeader() {
               aria-label={cartLabel}
               onClick={handleCartClick}
             >
-              <ShoppingCart size={18} />
+              <ShoppingCart size={20} />
               <span
                 ref={cartCountRef}
                 className="site-header__cart-count assets-site-header__menu-cart-count"
@@ -227,10 +235,25 @@ export default function SiteHeader() {
               </span>
             </Link>
           </div>
+
+          <button
+            type="button"
+            className="site-header__menu-btn"
+            onClick={() => {
+              searchStore.closeOverlay();
+              setMobileOpen((open) => !open);
+            }}
+            aria-expanded={mobileOpen}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            <span className="site-header__menu-label">{mobileOpen ? "Close" : "Menu"}</span>
+          </button>
         </div>
       </div>
 
       <SiteHeaderNav
+        mobileOpen={mobileOpen}
         onNavigate={() => setMobileOpen(false)}
         onMegaMenuOpenChange={handleMegaMenuOpenChange}
       />

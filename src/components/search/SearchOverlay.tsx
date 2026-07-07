@@ -25,6 +25,9 @@ interface SearchOverlayProps {
 }
 
 function isHeaderSearchTarget(target: Node): boolean {
+  const element = target as Element;
+  if (element.closest?.(".site-header__search-toggle")) return true;
+
   const inputs = document.querySelectorAll(HEADER_INPUT_SELECTORS);
   for (const input of inputs) {
     if (input.contains(target)) return true;
@@ -53,8 +56,9 @@ export default function SearchOverlay({
   const isClient = useIsClient();
 
   useEffect(() => {
-    if (!isOverlayOpen || isMobile) return;
-    inputRef.current?.focus();
+    if (!isOverlayOpen) return;
+    const timer = window.setTimeout(() => inputRef.current?.focus(), 0);
+    return () => window.clearTimeout(timer);
   }, [isMobile, isOverlayOpen]);
 
   useEffect(() => {

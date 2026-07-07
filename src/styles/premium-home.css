@@ -2286,10 +2286,85 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
 }
 
 @media (max-width: 767px) {
+  .premium-home .new-arrivals-section__inner {
+    padding-inline: max(0.875rem, env(safe-area-inset-left, 0px))
+      max(0.875rem, env(safe-area-inset-right, 0px));
+  }
+
   .premium-home .new-arrivals-section__header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: center;
+  }
+
+  .premium-home .new-arrivals-section__header-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .premium-home .new-arrivals-section__subtitle {
+    max-width: 34ch;
+  }
+
+  .premium-home .new-arrivals-section__cta-mobile {
+    width: 100%;
+    margin-top: 1.5rem;
+    padding-inline: max(0.875rem, env(safe-area-inset-left, 0px))
+      max(0.875rem, env(safe-area-inset-right, 0px));
+  }
+
+  .premium-home .new-arrivals-section__cta-mobile .homepage-section__cta-btn {
+    width: 100%;
+    min-height: 3.25rem;
+    justify-content: center;
+    border: none;
+    background: var(--brand-primary, #1253ed);
+    color: #ffffff !important;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 8px 24px rgba(18, 83, 237, 0.28);
+  }
+
+  .premium-home .new-arrivals-section__cta-mobile .homepage-section__cta-btn:hover,
+  .premium-home .new-arrivals-section__cta-mobile .homepage-section__cta-btn:focus-visible {
+    background: var(--brand-primary-hover, #0f47d4);
+    border-color: transparent;
+    color: #ffffff !important;
+  }
+
+  .premium-home .new-arrivals-marquee {
+    mask-image: none;
+    -webkit-mask-image: none;
+    overflow: visible;
+    padding-inline: max(0.875rem, env(safe-area-inset-left, 0px))
+      max(0.875rem, env(safe-area-inset-right, 0px));
+  }
+
+  .premium-home .new-arrivals-marquee__track {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    width: 100%;
+    overflow: visible;
+    animation: none;
+  }
+
+  .premium-home .new-arrivals-marquee__sequence {
+    display: contents;
+  }
+
+  .premium-home .new-arrivals-marquee__sequence--clone {
+    display: none;
+  }
+
+  .premium-home .new-arrivals-marquee__sequence > .new-arrivals-card {
+    width: auto;
+  }
+
+  .premium-home .new-arrivals-marquee__sequence > .new-arrivals-card:nth-child(n + 5) {
+    display: none;
   }
 
   .premium-home .new-arrivals-grid {
@@ -2302,17 +2377,36 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
     grid-column: span 2;
   }
 
-  .premium-home .new-arrivals-marquee__sequence > .new-arrivals-card {
-    width: clamp(220px, 72vw, 280px);
-  }
-
   .premium-home .new-arrivals-card {
-    padding: 0.75rem;
-    border-radius: 16px;
+    padding: 0.625rem;
+    border-radius: 14px;
+    border-color: rgba(15, 23, 42, 0.08);
+    box-shadow: none;
   }
 
   .premium-home .new-arrivals-card__media {
-    border-radius: 12px;
+    border-radius: 10px;
+    background: #f2f1f0;
+  }
+
+  .premium-home .new-arrivals-card__brand {
+    color: #0f172a;
+    letter-spacing: 0;
+    text-transform: none;
+    font-size: 0.8125rem;
+  }
+
+  .premium-home .new-arrivals-card__name {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .premium-home .new-arrivals-card__price {
+    color: #0f172a;
+    font-size: 1.125rem;
+    font-weight: 800;
   }
 
   .premium-home .new-arrivals-card--featured .new-arrivals-card__name {
@@ -3425,13 +3519,18 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   }
 
   .premium-home .new-arrivals-marquee__track {
-    animation: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
     width: 100%;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
+    animation: none;
+    overscroll-behavior: auto;
+    scroll-snap-type: none;
+  }
+
+  .premium-home .new-arrivals-marquee__sequence {
+    display: contents;
   }
 
   .premium-home .new-arrivals-marquee__track::-webkit-scrollbar {
