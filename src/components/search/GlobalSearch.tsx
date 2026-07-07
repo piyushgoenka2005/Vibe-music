@@ -180,7 +180,9 @@ export default function GlobalSearch() {
     (event: Event) => {
       event.preventDefault();
       event.stopPropagation();
-      submitSearch();
+      const form = event.currentTarget as HTMLFormElement;
+      const formQuery = String(new FormData(form).get("q") ?? "").trim();
+      submitSearch(formQuery || undefined);
     },
     [submitSearch]
   );
@@ -189,7 +191,12 @@ export default function GlobalSearch() {
     (event: Event) => {
       event.preventDefault();
       event.stopPropagation();
-      submitSearch();
+      const button = event.currentTarget as HTMLButtonElement;
+      const form = button.closest("form");
+      const formQuery = form
+        ? String(new FormData(form).get("q") ?? "").trim()
+        : "";
+      submitSearch(formQuery || undefined);
     },
     [submitSearch]
   );

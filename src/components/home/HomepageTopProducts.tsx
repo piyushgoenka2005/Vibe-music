@@ -80,7 +80,7 @@ function TopProductCard({ product }: { product: HomepageTopProduct }) {
             <p className="blog-teaser__meta">{product.brandLabel}</p>
             <span className="blog-teaser__read">
               View product
-              <span aria-hidden="true"> →</span>
+              {SECTION_CTA_ARROW}
             </span>
           </div>
         </div>

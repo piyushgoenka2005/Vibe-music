@@ -87,11 +87,14 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
     if (!header) return;
 
     const syncOffset = () => {
-      const chromeSelectors = [
-        ".announcement-bar",
-        ".site-header__bar",
-        ".site-header__nav",
-      ];
+      const nav = header.querySelector<HTMLElement>(".site-header__nav");
+      const navIsInFlow =
+        nav !== null && getComputedStyle(nav).position !== "fixed";
+
+      const chromeSelectors = [".announcement-bar", ".site-header__bar"];
+      if (navIsInFlow) {
+        chromeSelectors.push(".site-header__nav");
+      }
 
       let chromeBottom = 0;
       for (const selector of chromeSelectors) {
@@ -106,19 +109,21 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
 
       let offset = Math.round(chromeBottom);
 
-      // Snap hero flush to nav bottom — removes white strip, prevents underlap
+      // Snap hero flush to header bottom — trim only a small positive gap
       const hero = document.querySelector<HTMLElement>(".homepage-banner-hero");
-      const nav = header.querySelector<HTMLElement>(".site-header__nav");
-      if (hero && nav) {
-        const gap = hero.getBoundingClientRect().top - nav.getBoundingClientRect().bottom;
-        if (Math.abs(gap) > 0.5) {
+      if (hero) {
+        const headerBottom = header.getBoundingClientRect().bottom;
+        const gap = hero.getBoundingClientRect().top - headerBottom;
+        if (gap > 0.5 && gap < 48) {
           offset = Math.round(offset - gap);
         }
       }
 
+      const clamped = Math.max(56, Math.min(220, offset));
+
       document.documentElement.style.setProperty(
         "--site-header-offset",
-        `${Math.max(0, offset)}px`
+        `${clamped}px`
       );
     };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { GlassFilter } from "@/components/ui/liquid-glass";
@@ -37,7 +37,7 @@ export default function StorefrontChrome({
     !hideChrome &&
     !isMobileViewport;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.body.classList.toggle("is-landing-page", isLandingPage);
     return () => document.body.classList.remove("is-landing-page");
   }, [isLandingPage]);

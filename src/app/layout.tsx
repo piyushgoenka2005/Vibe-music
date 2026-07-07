@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
 import { DEFAULT_METADATA } from "@/lib/site";
@@ -7,11 +7,18 @@ import "@/styles/typography.css";
 import "@/styles/gooey-linkup.css";
 import "@/styles/marquee.css";
 import "@/styles/site-layout.css";
+import "@/styles/social-rail.css";
 import "@/styles/site-footer.css";
 import "@/styles/storefront-pages.css";
 import "@/styles/buttons.css";
 
 export const metadata: Metadata = DEFAULT_METADATA;
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export default function RootLayout({
   children,

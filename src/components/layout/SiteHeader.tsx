@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
@@ -23,6 +23,7 @@ import WishlistCounter from "@/components/wishlist/WishlistCounter";
 
 export default function SiteHeader() {
   const router = useRouter();
+  const pathname = usePathname() ?? "";
   const headerRef = useRef<HTMLElement>(null);
   const searchToggleRef = useRef<HTMLButtonElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -30,6 +31,10 @@ export default function SiteHeader() {
   const headerHidden = useHideOnScroll({ disabled: mobileOpen, disableOnMobile: true });
 
   useSiteHeaderOffset(headerRef);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -43,6 +48,7 @@ export default function SiteHeader() {
   useEffect(() => {
     document.body.classList.toggle("site-nav-open", mobileOpen);
     document.body.style.overflow = mobileOpen ? "hidden" : "";
+    window.dispatchEvent(new Event("site-header:sync"));
     return () => {
       document.body.classList.remove("site-nav-open");
       document.body.style.overflow = "";

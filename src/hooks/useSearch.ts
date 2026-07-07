@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
+import { ROUTES } from "@/lib/routes";
 import {
   fetchSearchResults,
   fetchSearchSuggestions,
@@ -15,6 +16,25 @@ import type {
   SearchSuggestion,
   SearchSuggestionGroups,
 } from "@/types/search";
+
+const HEADER_SEARCH_INPUT_SELECTORS =
+  "#sw-search-input, #sw-search-input-mobile, #autocomplete-0-input, .assets-site-header__menu-search-typeahead-field, .site-header__search-input";
+
+function readHeaderSearchQuery(): string {
+  if (typeof document === "undefined") return "";
+
+  const focused = document.querySelector<HTMLInputElement>(
+    `${HEADER_SEARCH_INPUT_SELECTORS}:focus`
+  );
+  if (focused?.value.trim()) return focused.value.trim();
+
+  for (const selector of HEADER_SEARCH_INPUT_SELECTORS.split(", ")) {
+    const input = document.querySelector<HTMLInputElement>(selector);
+    if (input?.value.trim()) return input.value.trim();
+  }
+
+  return "";
+}
 
 function flattenSuggestions(groups: SearchSuggestionGroups): SearchSuggestion[] {
   return [
@@ -68,7 +88,7 @@ export function useSearch(options: UseSearchOptions = {}) {
             id: `recent-${index}`,
             type: "recent" as const,
             label: item,
-            href: `/search/results?q=${encodeURIComponent(item)}`,
+            href: `${ROUTES.searchResults}?q=${encodeURIComponent(item)}`,
           })),
         });
         setActiveIndex(-1);
@@ -86,8 +106,20 @@ export function useSearch(options: UseSearchOptions = {}) {
         setActiveIndex(-1);
       } catch {
         if (cancelled) return;
-        setStatus("error");
-        setError("Search is temporarily unavailable. Please try again.");
+        setGroups({
+          products: [],
+          categories: [],
+          brands: [],
+          recent: recentSearches.slice(0, 5).map((item, index) => ({
+            id: `recent-${index}`,
+            type: "recent" as const,
+            label: item,
+            href: `${ROUTES.searchResults}?q=${encodeURIComponent(item)}`,
+          })),
+        });
+        setStatus("success");
+        setError(null);
+        setActiveIndex(-1);
       }
     }
 
@@ -115,11 +147,12 @@ export function useSearch(options: UseSearchOptions = {}) {
 
   const submitSearch = useCallback(
     (value?: string) => {
-      const next = (value ?? query).trim();
+      const next = String(value ?? readHeaderSearchQuery() ?? query ?? "").trim();
       if (next.length < MIN_QUERY_LENGTH) return;
+      searchStore.setQuery(next);
       searchStore.addRecentSearch(next);
       closeOverlay();
-      router.push(`/search/results?q=${encodeURIComponent(next)}`);
+      router.push(`${ROUTES.searchResults}?q=${encodeURIComponent(next)}`);
     },
     [closeOverlay, query, router]
   );

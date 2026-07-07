@@ -152,6 +152,26 @@
   font-size: 14px;
 }
 
+.sw-search-view-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  padding: 0.55rem 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand-primary, #1253ed);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sw-search-view-all:hover,
+.sw-search-view-all:focus-visible {
+  background: var(--brand-primary-hover, #0e42be);
+}
+
 .sw-search-spinner {
   width: 22px;
   height: 22px;

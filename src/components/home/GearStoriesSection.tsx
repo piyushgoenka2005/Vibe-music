@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Marquee from "@/components/common/Marquee";
 import type { GearStoriesSectionData, GearStory } from "@/types/gear-story";
 import GearStoryCard from "./GearStoryCard";
 import GearStoryModal from "./GearStoryModal";
 import Reveal from "@/components/layout/Reveal";
-import RevealGroup from "@/components/layout/RevealGroup";
 
 interface GearStoriesSectionProps {
   data: GearStoriesSectionData;
@@ -29,22 +29,35 @@ export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
       </Reveal>
 
       <div className="gear-stories__strip-outer">
-        <RevealGroup
-          className="gear-stories__strip"
-          as="div"
-          role="list"
+        <Marquee
+          ariaLabel="Gear style story reels"
+          className={[
+            "gear-stories__marquee",
+            modalOpen ? "gear-stories__marquee--paused" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          duration="42s"
+          pauseOnHover={false}
+          role="region"
+          sequenceClassName="gear-stories__sequence"
+          trackClassName="gear-stories__marquee-track"
         >
-          {data.stories.map((story, index) => (
-            <div key={story.id} className="gear-stories__item" role="listitem">
+          {[...data.stories, ...data.stories].map((story, index) => (
+            <div
+              key={`${story.id}-${index}`}
+              className="gear-stories__item"
+              role="listitem"
+            >
               <GearStoryCard
                 story={story}
                 isPaused={modalOpen}
-                playDelayMs={index * 120}
+                playDelayMs={(index % data.stories.length) * 120}
                 onOpen={setActiveStory}
               />
             </div>
           ))}
-        </RevealGroup>
+        </Marquee>
       </div>
 
       <GearStoryModal story={activeStory} onClose={() => setActiveStory(null)} />

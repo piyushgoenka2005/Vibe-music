@@ -21,6 +21,14 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     src: "/images/upto-60-off.png",
     alt: "Up to 60% off — sale starts July 8th at Vibe Music",
     href: ROUTES.deals,
+    objectPosition: "center center",
+  },
+  {
+    id: "banner-endless-sound",
+    src: "/images/3.3.png",
+    alt: "Endless Sound — premium electric guitars at Vibe Music",
+    href: categoryPath("guitars"),
+    objectPosition: "center center",
   },
   {
     id: "banner-play-everyday",
@@ -39,11 +47,5 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     src: "/images/Hertz.png",
     alt: "Hertz amplifiers — turn up the power and feel every beat at Vibe Music",
     href: `${ROUTES.searchResults}?brand=hertz`,
-  },
-  {
-    id: "banner-4",
-    src: "/images/banner-4.png",
-    alt: "Find Your Perfect Sound — premium acoustic guitars at Vibe Music",
-    href: categoryPath("guitars"),
   },
 ];

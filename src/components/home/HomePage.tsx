@@ -6,9 +6,7 @@ import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 
-const PremiumHero = dynamic(() => import("@/components/home/PremiumHero"), {
-  loading: () => null,
-});
+import PremiumHero from "@/components/home/PremiumHero";
 const HomepageTopProducts = dynamic(
   () => import("@/components/home/HomepageTopProducts"),
   { loading: () => <BlogTeaserSkeleton /> }

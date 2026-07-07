@@ -79,6 +79,9 @@ export default function HomepageBannerHero() {
                 loading="eager"
                 sizes="100vw"
                 className="homepage-banner-hero__image"
+                style={
+                  slide.objectPosition ? { objectPosition: slide.objectPosition } : undefined
+                }
               />
             </Link>
           );

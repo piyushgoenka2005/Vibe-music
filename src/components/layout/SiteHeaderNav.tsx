@@ -9,6 +9,8 @@ import { ROUTES } from "@/lib/routes";
 import HeaderMegaMenu from "@/components/layout/HeaderMegaMenu";
 import GooeyLinkupFilter from "@/components/ui/GooeyLinkupFilter";
 import { useCompactHeaderNav } from "@/hooks/useCompactHeaderNav";
+import { useAuthStore } from "@/store/authStore";
+import { useShallow } from "zustand/react/shallow";
 
 interface SiteHeaderNavProps {
   onNavigate?: () => void;
@@ -53,6 +55,12 @@ export default function SiteHeaderNav({
 }: SiteHeaderNavProps) {
   const pathname = usePathname() ?? "";
   const compactNav = useCompactHeaderNav();
+  const { isAuthenticated, isInitialized } = useAuthStore(
+    useShallow((state) => ({
+      isAuthenticated: state.isAuthenticated,
+      isInitialized: state.isInitialized,
+    }))
+  );
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
@@ -248,6 +256,35 @@ export default function SiteHeaderNav({
               {link.label}
             </Link>
           ))}
+
+          <div className="site-header__mobile-nav-footer">
+            {isInitialized && isAuthenticated ? (
+              <Link
+                href={ROUTES.account}
+                className="site-header__mobile-nav-footer-link site-header__mobile-nav-footer-link--primary"
+                onClick={handleNavigate}
+              >
+                My account
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href={ROUTES.login}
+                  className="site-header__mobile-nav-footer-link site-header__mobile-nav-footer-link--primary"
+                  onClick={handleNavigate}
+                >
+                  Log in
+                </Link>
+                <Link
+                  href={ROUTES.register}
+                  className="site-header__mobile-nav-footer-link site-header__mobile-nav-footer-link--secondary"
+                  onClick={handleNavigate}
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       ) : (
         <>

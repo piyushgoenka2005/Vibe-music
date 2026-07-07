@@ -1,5 +1,6 @@
 import Link from "next/link";
 import DealProductCard from "@/components/homepage/DealProductCard";
+import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import { resolveLinkHref } from "@/lib/routes";
 import type { ResolvedHomepageSection } from "@/types/homepage";
 
@@ -72,6 +73,7 @@ export default function HomepageDealsSection({ section }: HomepageDealsSectionPr
               href={resolveLinkHref(section.ctaLink)}
             >
               {section.ctaText}
+              {SECTION_CTA_ARROW}
             </Link>
           </div>
         ) : null}

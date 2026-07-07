@@ -1,14 +1,31 @@
 /* ─── Fixed vertical social rail (luxury editorial) ─── */
 
+:root {
+  --social-rail-inset-left: 10px;
+  --social-rail-track-width: 26px;
+  --social-rail-icon-gap: 1.15rem;
+  --social-rail-section-gap: 1.75rem;
+  --social-rail-content-gap: 2rem;
+  --social-rail-clearance: calc(
+    var(--social-rail-inset-left) + var(--social-rail-track-width) + var(--social-rail-content-gap)
+  );
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --social-rail-inset-left: 14px;
+  }
+}
+
 .social-rail {
   position: fixed;
-  left: 10px;
+  left: var(--social-rail-inset-left);
   top: 50%;
   z-index: 180;
   display: none;
   flex-direction: column;
   align-items: center;
-  gap: 1.35rem;
+  gap: var(--social-rail-section-gap);
   transform: translateY(-50%);
   pointer-events: auto;
 }
@@ -20,7 +37,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.15rem;
+  gap: var(--social-rail-icon-gap);
 }
 
 .social-rail__link svg {
@@ -51,7 +68,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
+  width: var(--social-rail-track-width);
   height: 76px;
   border: 1px solid #111111;
   border-radius: 7px;
@@ -99,7 +116,7 @@
 
 @media (min-width: 1280px) {
   .social-rail {
-    left: 14px;
+    left: var(--social-rail-inset-left);
   }
 }
 

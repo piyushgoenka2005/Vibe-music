@@ -46,17 +46,37 @@
   position: relative;
 }
 
-.gear-stories__strip {
+.gear-stories__marquee {
+  position: relative;
+  width: 100%;
+  overflow-x: clip;
+  overflow-y: visible;
+  padding-block: 0.5rem 1rem;
+}
+
+.gear-stories__marquee-track {
   display: flex;
+  align-items: stretch;
+  width: max-content;
+  padding-bottom: 0.25rem;
+  animation: marquee-scroll var(--marquee-duration, 42s) linear infinite;
+}
+
+.gear-stories__marquee--paused .gear-stories__marquee-track {
+  animation-play-state: paused;
+}
+
+.gear-stories__sequence {
+  display: flex;
+  align-items: stretch;
   gap: 20px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding: 0.5rem 1.25rem 1rem;
+  flex-shrink: 0;
+  padding-right: 20px;
+}
+
+.gear-stories__item {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
 }
 
 @media (min-width: 1024px) {
@@ -70,29 +90,18 @@
     padding-right: 2rem;
   }
 
-  .gear-stories__strip {
+  .gear-stories__sequence {
     gap: 24px;
-    padding-left: 3.5rem;
-    padding-right: 2rem;
+    padding-right: 24px;
   }
 }
 
 @media (min-width: 1280px) {
-  .gear-stories__strip {
-    padding-left: 4rem;
+  .gear-stories__marquee {
+    padding-left: 0.75rem;
   }
 }
 
-.gear-stories__strip::-webkit-scrollbar {
-  display: none;
-}
-
-.gear-stories__item {
-  flex: 0 0 auto;
-  scroll-snap-align: start;
-}
-
-/* ─── Reel card ─── */
 .gear-story-card {
   width: min(72vw, 280px);
   height: min(118vw, 480px);
@@ -503,8 +512,13 @@
     padding-inline: 0.5rem;
   }
 
-  .gear-stories__strip {
+  .gear-stories__strip-outer {
     padding-inline: 0.5rem;
+  }
+
+  .gear-stories__sequence {
+    gap: 16px;
+    padding-right: 16px;
   }
 
   .gear-story-card {
@@ -545,9 +559,13 @@
     text-align: left;
   }
 
-  .gear-stories__strip {
-    gap: 16px;
+  .gear-stories__strip-outer {
     padding-inline: 0.75rem;
+  }
+
+  .gear-stories__sequence {
+    gap: 16px;
+    padding-right: 16px;
   }
 
   .gear-story-card {
@@ -597,6 +615,10 @@
   .gear-story-modal,
   .gear-story-modal__panel {
     transition: none;
+    animation: none;
+  }
+
+  .gear-stories__marquee-track {
     animation: none;
   }
 

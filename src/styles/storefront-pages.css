@@ -92,11 +92,63 @@
 
 @media (max-width: 767px) {
   .storefront-page__inner {
-    padding-bottom: 3rem;
+    padding: 1.25rem max(1rem, env(safe-area-inset-left, 0px)) 3rem
+      max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .storefront-page__header {
+    margin-bottom: 1.25rem;
+  }
+
+  .storefront-page__title {
+    font-size: clamp(1.5rem, 6vw, 1.875rem);
+  }
+
+  .storefront-page .pdp {
+    padding: 1rem max(1rem, env(safe-area-inset-left, 0px)) 3rem
+      max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .storefront-page .cat-page {
+    padding: 1rem max(1rem, env(safe-area-inset-left, 0px)) 3rem
+      max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .storefront-page .cart-page {
+    padding: 1rem max(1rem, env(safe-area-inset-left, 0px)) 3rem
+      max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .storefront-page .checkout-page {
+    padding: 1rem max(1rem, env(safe-area-inset-left, 0px)) 3rem
+      max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .storefront-page .pdp-actions__row {
+    grid-template-columns: 1fr;
+  }
+
+  .storefront-page .pdp-btn--buy,
+  .storefront-page .pdp-buy-now,
+  .storefront-page .pdp-btn--primary,
+  .storefront-page .pdp-btn--secondary {
+    width: 100%;
+    min-height: 3rem;
   }
 
   .deals-page__header .storefront-page__title {
     font-size: clamp(1.5rem, 6vw, 1.875rem);
+  }
+}
+
+@media (max-width: 1023px) {
+  .storefront-main {
+    min-width: 0;
+  }
+
+  .storefront-page__inner {
+    padding-top: 1.5rem;
+    padding-bottom: 3.5rem;
   }
 }
 

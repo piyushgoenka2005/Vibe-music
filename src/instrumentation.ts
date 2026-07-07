@@ -1,60 +1,31 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    if (process.env.SKIP_INSTRUMENTATION_CHECKS === "true") {
-      return;
-    }
-
     const { validateEnv } = await import("@/env");
     validateEnv();
 
     const { getIntegrationChecks } = await import("@/lib/server/integrationConfig");
+    const { logWarn } = await import("@/lib/server/logger");
     const integrations = getIntegrationChecks();
 
     if (process.env.NODE_ENV === "production") {
-      const { logWarn } = await import("@/lib/server/logger");
       if (integrations.upstash !== "ok") {
-        logWarn(
-          "UPSTASH_REDIS_REST_URL/TOKEN missing — using in-memory rate limits",
-          "instrumentation"
+        throw new Error(
+          "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production"
         );
       }
       if (integrations.razorpayWebhook !== "ok") {
-        logWarn(
-          "RAZORPAY_WEBHOOK_SECRET missing — webhook verification disabled until configured",
-          "instrumentation"
-        );
+        throw new Error("RAZORPAY_WEBHOOK_SECRET is required in production");
       }
     }
 
-    // Always verify on startup — fail hard in production, degrade gracefully in dev.
-    const shouldVerifyFirestoreOnStartup = true;
-
-    if (shouldVerifyFirestoreOnStartup) {
-      const { verifyFirestoreConnection } = await import(
-        "@/lib/server/firestoreHealth"
+    const { verifyFirestoreConnection } = await import(
+      "@/lib/server/firestoreHealth"
+    );
+    const firestoreHealth = await verifyFirestoreConnection();
+    if (!firestoreHealth.ok && process.env.NODE_ENV === "production") {
+      throw new Error(
+        `Firestore initialization failed: ${firestoreHealth.error ?? "unknown"}`
       );
-      const firestoreHealth = await verifyFirestoreConnection();
-      if (!firestoreHealth.ok) {
-        const { markFirestoreUnavailable } = await import(
-          "@/lib/server/firestoreErrors"
-        );
-        markFirestoreUnavailable(
-          new Error(firestoreHealth.error ?? "Firestore unavailable at startup")
-        );
-        const { logInfo, logWarn } = await import("@/lib/server/logger");
-        const message =
-          "Firestore degraded at startup — serving from local JSON / file fallbacks";
-        if (process.env.NODE_ENV === "production") {
-          logWarn(message, "instrumentation", {
-            error: firestoreHealth.error,
-            usingLocalFallback: firestoreHealth.usingLocalFallback,
-          });
-        } else {
-          logInfo(message, "instrumentation", {
-            error: firestoreHealth.error,
-          });
-        }
-      }
     }
   }
 }

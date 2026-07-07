@@ -141,6 +141,7 @@ export default function SearchOverlay({
           activeIndex={activeIndex}
           onSelect={onSelect}
           onHover={onHover}
+          onSubmit={onSubmit}
         />
 
         {isMobile ? (
