@@ -42,7 +42,6 @@ import {
   triggerPedalHaptic,
   getPerformanceMode,
   createDefaultPhraseSteps,
-  PHRASE_STEP_COUNT,
   type Gp9ArpPattern,
   type Gp9CameraPresetId,
   type Gp9FinishId,
@@ -1544,7 +1543,6 @@ export function Gp9Piano3DView() {
 export function Gp9RecorderPanel() {
   const {
     state,
-    powerOn,
     startRecording,
     stopRecording,
     playSession,

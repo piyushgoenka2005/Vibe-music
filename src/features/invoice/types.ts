@@ -33,3 +33,10 @@ export interface InvoiceSafeOrder {
   invoice: GSTInvoiceData;
 }
 
+export type InvoiceUrls = {
+  html: string;
+  pdf: string;
+  print: string;
+  page: string;
+};
+

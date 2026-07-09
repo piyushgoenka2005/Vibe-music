@@ -2,10 +2,14 @@ import { notFound } from "next/navigation";
 import AccountOrderDetail from "@/components/account/AccountOrderDetail";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { formatOrderIdDisplay } from "@/lib/orderId";
-import { canAccessOrder } from "@/lib/server/orderAccess";
+import {
+  canAccessOrder,
+  isPlacedOrder,
+} from "@/lib/server/orderAccess";
 import { fetchProductsByIds } from "@/lib/server/firestoreCatalogRepository";
 import { getOrderById } from "@/lib/server/orderService";
 import { buildPublicOrderTracking } from "@/lib/server/shipmentService";
+import { buildInvoiceUrls } from "@/features/invoice/server/invoiceUrls";
 
 export async function generateMetadata({
   params,
@@ -37,6 +41,7 @@ export default async function AccountOrderDetailPage({
   const order = await getOrderById(id);
   if (
     !order ||
+    !isPlacedOrder(order) ||
     !canAccessOrder(order, {
       userId: sessionUser.uid,
       email: sessionUser.email ?? undefined,
@@ -54,6 +59,7 @@ export default async function AccountOrderDetailPage({
     <AccountOrderDetail
       order={order}
       shipment={shipment}
+      invoiceUrls={buildInvoiceUrls(order)}
       products={products.map((product) => ({
         id: product.id,
         slug: product.slug,

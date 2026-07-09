@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { formatCurrency } from "@/utils/currency";
+import { useIsClient } from "@/hooks/useIsClient";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 
 interface ProductStickyBarProps {
@@ -9,6 +11,7 @@ interface ProductStickyBarProps {
   productName: string;
   inStock: boolean;
   onAddToCart: () => void;
+  onBuyNow: () => void;
   sentinelRef: React.RefObject<HTMLElement | null>;
 }
 
@@ -17,9 +20,11 @@ export default function ProductStickyBar({
   productName,
   inStock,
   onAddToCart,
+  onBuyNow,
   sentinelRef,
 }: ProductStickyBarProps) {
   const isMobile = useIsMobileViewport();
+  const isClient = useIsClient();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -30,30 +35,49 @@ export default function ProductStickyBar({
       ([entry]) => {
         setVisible(!entry.isIntersecting);
       },
-      { root: null, threshold: 0, rootMargin: "0px 0px -40px 0px" }
+      { root: null, threshold: 0, rootMargin: "0px 0px -24px 0px" }
     );
 
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [sentinelRef]);
 
-  if (!isMobile || !visible) return null;
+  if (!isMobile || !isClient) return null;
 
-  return (
-    <div className="pdp-mobile-bar" role="region" aria-label="Add to cart">
+  return createPortal(
+    <div
+      className={`pdp-mobile-bar${visible ? " pdp-mobile-bar--visible" : ""}`}
+      role="region"
+      aria-label="Quick purchase"
+      aria-hidden={!visible}
+    >
       <div className="pdp-mobile-bar__price">
-        <span className="pdp-mobile-bar__label">Price</span>
+        <span className="pdp-mobile-bar__label">
+          {inStock ? "Price" : "Unavailable"}
+        </span>
         <strong>{formatCurrency(price)}</strong>
       </div>
-      <button
-        type="button"
-        className="pdp-mobile-bar__cta"
-        disabled={!inStock}
-        onClick={onAddToCart}
-        aria-label={`Add ${productName} to cart`}
-      >
-        {inStock ? "Add to Cart" : "Out of Stock"}
-      </button>
-    </div>
+      <div className="pdp-mobile-bar__actions">
+        <button
+          type="button"
+          className="pdp-mobile-bar__cta pdp-mobile-bar__cta--cart"
+          disabled={!inStock}
+          onClick={onAddToCart}
+          aria-label={`Add ${productName} to cart`}
+        >
+          {inStock ? "Add to Cart" : "Out of Stock"}
+        </button>
+        <button
+          type="button"
+          className="pdp-mobile-bar__cta pdp-mobile-bar__cta--buy"
+          disabled={!inStock}
+          onClick={onBuyNow}
+          aria-label={`Buy ${productName} now`}
+        >
+          Buy Now
+        </button>
+      </div>
+    </div>,
+    document.body
   );
 }

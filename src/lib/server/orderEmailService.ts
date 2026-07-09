@@ -2,6 +2,7 @@ import "server-only";
 
 import { BRAND } from "@/lib/brand";
 import { formatOrderIdDisplay } from "@/lib/orderId";
+import { isPlacedOrder } from "@/lib/orderPlacement";
 import { buildInvoiceAccessUrl } from "@/lib/security/invoiceAccessToken";
 import type { Order } from "@/types/order";
 
@@ -23,8 +24,9 @@ function buildOrderConfirmationHtml(order: Order): string {
     buildInvoiceAccessUrl(
       order.id,
       order.email,
-      `/orders/${order.id}/invoice`
-    ) ?? `${BRAND.siteUrl}/orders/${order.id}/invoice?email=${encodeURIComponent(order.email)}`;
+      `/api/invoices/${order.id}/html`
+    ) ?? `${BRAND.siteUrl}/orders/${order.id}/invoice`;
+  const invoiceNumber = order.invoice?.invoiceNumber;
   const itemRows = order.items
     .map(
       (item) =>
@@ -36,7 +38,7 @@ function buildOrderConfirmationHtml(order: Order): string {
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#222">
       <h1 style="color:var(--brand-primary)">Order Confirmed</h1>
       <p>Hi ${order.customerName ?? order.shippingAddress.name},</p>
-      <p>Thank you for shopping at ${BRAND.name}. Your order <strong>${formatOrderIdDisplay(order.id)}</strong> has been placed.</p>
+      <p>Thank you for shopping at ${BRAND.name}. Your order <strong>${formatOrderIdDisplay(order.id)}</strong> has been placed.${invoiceNumber ? ` Invoice <strong>${invoiceNumber}</strong>.` : ""}</p>
       <p><strong>Total:</strong> ${formatInr(order.total)}<br/>
       <strong>Payment:</strong> ${order.paymentStatus === "cod_pending" ? "Cash on Delivery" : order.paymentStatus}</p>
       <table style="width:100%;border-collapse:collapse;margin:16px 0">
@@ -48,19 +50,34 @@ function buildOrderConfirmationHtml(order: Order): string {
         <tbody>${itemRows}</tbody>
       </table>
       <p><a href="${trackUrl}" style="display:inline-block;background:var(--brand-primary);color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px">Track your order</a></p>
-      <p><a href="${invoiceUrl}" style="font-size:14px;color:#444">View invoice</a></p>
+      <p style="margin-top:20px">
+        <a href="${invoiceUrl}" style="display:inline-block;background:#1253ed;color:#fff;padding:12px 20px;text-decoration:none;border-radius:999px;font-weight:600">View invoice</a>
+      </p>
       <p style="font-size:13px;color:#666">Deliver to: ${order.shippingAddress.name}, ${order.shippingAddress.line1}, ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}</p>
     </div>
   `;
 }
 
 export async function sendOrderConfirmationEmail(order: Order): Promise<boolean> {
+  if (!isPlacedOrder(order)) {
+    if (process.env.NODE_ENV === "production") {
+      console.warn(
+        `[order-email] Skipped confirmation for unplaced order ${order.id}`
+      );
+    }
+    return false;
+  }
+
   const apiKey = process.env.RESEND_API_KEY;
   const from =
     process.env.ORDER_EMAIL_FROM ?? `${BRAND.name} <orders@${BRAND.domain}>`;
 
   if (!apiKey) {
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        `[order-email] RESEND_API_KEY missing — confirmation not sent for ${order.id}`
+      );
+    } else {
       console.info(
         `[order-email] Skipped (no RESEND_API_KEY). Order ${order.id} → ${order.email}`
       );
@@ -69,6 +86,7 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
   }
 
   try {
+    const invoiceNumber = order.invoice?.invoiceNumber;
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -78,7 +96,9 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
       body: JSON.stringify({
         from,
         to: [order.email],
-        subject: `Your ${BRAND.name} order ${formatOrderIdDisplay(order.id)} is confirmed`,
+        subject: invoiceNumber
+          ? `Order confirmed — Invoice ${invoiceNumber}`
+          : `Your ${BRAND.name} order ${formatOrderIdDisplay(order.id)} is confirmed`,
         html: buildOrderConfirmationHtml(order),
       }),
     });

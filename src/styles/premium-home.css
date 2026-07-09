@@ -822,34 +822,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
     padding-inline-end: clamp(1rem, 1.5vw, 1.5rem);
   }
 
-  .locations-strip__marquee {
-    width: 100%;
-    overflow: visible;
-    mask-image: none;
-    -webkit-mask-image: none;
-  }
-
-  .locations-strip__marquee .marquee__track {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 0.75rem;
-    width: 100%;
-    max-width: none;
-    animation: none;
-    transform: none;
-    will-change: auto;
-  }
-
-  .locations-strip__marquee .marquee__sequence {
-    display: contents;
-  }
-
-  .locations-strip__marquee .marquee__sequence--clone {
-    display: none;
-  }
-
   .locations-strip__card {
-    width: 100%;
     min-height: clamp(170px, 14vw, 220px);
   }
 }
@@ -1909,6 +1882,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
 .blog-teaser__read svg {
   width: 0.65rem;
   height: auto;
+  fill: currentColor;
   transform: rotate(-45deg);
   transition: transform 250ms ease;
 }
@@ -2702,12 +2676,45 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
     font-weight: 400;
     -webkit-line-clamp: 2;
     line-clamp: 2;
+    line-height: 1.35;
   }
 
   .premium-home .new-arrivals-card__price {
     color: #0f172a;
     font-size: 1.125rem;
     font-weight: 800;
+  }
+
+  .premium-home .new-arrivals-card__body {
+    gap: 0.4rem;
+  }
+
+  .premium-home .new-arrivals-card__meta-row--price {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .premium-home .new-arrivals-card__price--enquiry {
+    max-width: 9ch;
+    color: var(--brand-primary, #1253ed);
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .premium-home .new-arrivals-card__stock-pill {
+    align-self: flex-start;
+    max-width: 100%;
+    font-size: 0.625rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .premium-home .new-arrivals-card__rank {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1rem;
   }
 
   .premium-home .new-arrivals-card--featured .new-arrivals-card__name {
@@ -2807,6 +2814,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
 .premium-home .homepage-section__cta-btn svg {
   width: 0.65rem;
   height: auto;
+  fill: currentColor;
   transform: rotate(-45deg);
   transition: transform 250ms ease;
 }
@@ -3888,23 +3896,6 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
     display: none;
   }
 
-  .locations-strip__marquee-track {
-    animation: none;
-    width: 100%;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .locations-strip__marquee-track::-webkit-scrollbar {
-    display: none;
-  }
-
-  .locations-strip__sequence--clone {
-    display: none;
-  }
 }
 
 @media (max-width: 479px) {

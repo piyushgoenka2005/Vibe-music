@@ -36,7 +36,8 @@ export type Permission =
   | "blog:write"
   | "blog:delete"
   | "admins:read"
-  | "admins:write";
+  | "admins:write"
+  | "audit:read";
 
 export interface AdminProfile {
   uid: string;

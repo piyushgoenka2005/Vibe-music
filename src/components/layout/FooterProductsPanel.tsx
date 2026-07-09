@@ -6,23 +6,24 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
 import { optimizeImageUrl } from "@/lib/images";
 import { categoryPath, productPath, ROUTES } from "@/lib/routes";
-import { fetchProducts } from "@/services/products.api";
 import { formatCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import RollingText from "@/components/common/RollingText";
 import type { Product } from "@/types/product";
 
 const FOOTER_TRENDING_LIMIT = 4;
-const FOOTER_TRENDING_STALE_MS = 45_000;
+const FOOTER_TRENDING_STALE_MS = 60_000;
 const FOOTER_TRENDING_REFETCH_MS = 5 * 60_000;
 
 async function fetchFooterTrendingProducts(): Promise<Product[]> {
-  const trending = await fetchProducts({
-    trending: true,
-    limit: FOOTER_TRENDING_LIMIT,
-  });
-  if (trending.length > 0) return trending;
-  return fetchProducts({ limit: FOOTER_TRENDING_LIMIT });
+  const response = await fetch(
+    `/api/products/footer-trending?limit=${FOOTER_TRENDING_LIMIT}`
+  );
+  if (!response.ok) {
+    throw new Error("Unable to load trending products");
+  }
+  const data = (await response.json()) as { products?: Product[] };
+  return data.products ?? [];
 }
 
 const PANEL_CATEGORIES = [
@@ -152,9 +153,15 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
                   aria-hidden
                 />
               ))
-            : products.map((product) => (
-                <FooterProductSnippet key={product.id} product={product} />
-              ))}
+            : products.length === 0
+              ? (
+                <p className="footer-products-panel__empty">
+                  Curated picks with live pricing will appear here soon.
+                </p>
+              )
+              : products.map((product) => (
+                  <FooterProductSnippet key={product.id} product={product} />
+                ))}
         </div>
 
         <Link href={ROUTES.search} className="footer-products-panel__shop-all">

@@ -281,21 +281,6 @@ export async function validateStockAvailability(
   }
 }
 
-async function loadSnapshotsInTransaction(
-  tx: Transaction,
-  items: OrderInventoryLine[]
-): Promise<Map<string, ProductStockSnapshot>> {
-  const docs = await loadProductDocsInTransaction(
-    tx,
-    items.map((item) => item.productId)
-  );
-  const map = new Map<string, ProductStockSnapshot>();
-  for (const [productId, data] of docs) {
-    map.set(productId, readSnapshot(productId, data));
-  }
-  return map;
-}
-
 async function loadProductDocsInTransaction(
   tx: Transaction,
   productIds: string[]

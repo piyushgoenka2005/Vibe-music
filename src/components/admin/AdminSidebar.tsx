@@ -19,6 +19,11 @@ import {
   LayoutTemplate,
   PanelLeftClose,
   PanelLeftOpen,
+  ScrollText,
+  Tag,
+  RotateCcw,
+  MessageCircleQuestion,
+  UserCog,
 } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
@@ -30,14 +35,19 @@ const NAV_ITEMS = [
   { href: ROUTES.admin, label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:read" },
   { href: ROUTES.adminProducts, label: "Products", icon: Package, permission: "products:read" },
   { href: ROUTES.adminCategories, label: "Categories", icon: FolderTree, permission: "categories:read" },
+  { href: ROUTES.adminBrands, label: "Brands", icon: Tag, permission: "categories:read" },
   { href: ROUTES.adminOrders, label: "Orders", icon: ShoppingCart, permission: "orders:read" },
+  { href: ROUTES.adminReturns, label: "Returns", icon: RotateCcw, permission: "orders:read" },
   { href: ROUTES.adminCustomers, label: "Customers", icon: Users, permission: "customers:read" },
   { href: ROUTES.adminCoupons, label: "Coupons", icon: Ticket, permission: "coupons:read" },
   { href: ROUTES.adminBanners, label: "Banners", icon: ImageIcon, permission: "banners:read" },
   { href: ROUTES.adminHomepage, label: "Homepage", icon: LayoutTemplate, permission: "homepage:read" },
   { href: ROUTES.adminReviews, label: "Reviews", icon: Star, permission: "reviews:read" },
+  { href: ROUTES.adminQuestions, label: "Q&A", icon: MessageCircleQuestion, permission: "reviews:read" },
   { href: ROUTES.adminInventory, label: "Inventory", icon: Warehouse, permission: "inventory:read" },
   { href: ROUTES.adminAnalytics, label: "Analytics", icon: BarChart3, permission: "analytics:read" },
+  { href: ROUTES.adminAuditLogs, label: "Audit logs", icon: ScrollText, permission: "audit:read" },
+  { href: ROUTES.adminUsers, label: "Admin users", icon: UserCog, permission: "admins:read" },
   { href: ROUTES.adminSettings, label: "Settings", icon: Settings, permission: "settings:read" },
   { href: ROUTES.adminBlog, label: "Blog", icon: FileText, permission: "blog:read" },
 ] as const;

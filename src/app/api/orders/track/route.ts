@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOrderById } from "@/lib/server/orderService";
+import { isPlacedOrder } from "@/lib/server/orderAccess";
 import { buildPublicOrderTracking } from "@/lib/server/shipmentService";
 import {
   isLegacyOrderTrackingDevFallbackEnabled,
@@ -47,7 +48,7 @@ export async function GET(request: Request) {
   try {
     const order = await getOrderById(orderId);
 
-    if (!order || !canTrackOrder(order, trackingToken, email)) {
+    if (!order || !isPlacedOrder(order) || !canTrackOrder(order, trackingToken, email)) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 

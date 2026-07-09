@@ -24,7 +24,7 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
     label: "01 / Customer Service",
     links: [
       { label: "Track your order", href: ROUTES.trackOrder },
-      { label: "Contact support", href: `mailto:${BRAND.email}` },
+      { label: "Contact support", href: ROUTES.contact },
       { label: "Shipping & delivery", href: ROUTES.page("shipping") },
       { label: "Returns & exchanges", href: ROUTES.page("returns") },
     ],
@@ -36,7 +36,7 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
       { label: "Terms & conditions", href: ROUTES.page("terms") },
       { label: "Privacy policy", href: ROUTES.page("privacy") },
       { label: "Cookie policy", href: ROUTES.page("cookies") },
-      { label: "Contact", href: `mailto:${BRAND.email}` },
+      { label: "Contact", href: ROUTES.contact },
     ],
   },
   {

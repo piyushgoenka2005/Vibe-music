@@ -322,7 +322,7 @@ export function useSearchResults(
     return () => {
       cancelled = true;
     };
-  }, [query, category, brand, sort]);
+  }, [query, category, brand, sort, initialResults]);
 
   return { status, error, results };
 }

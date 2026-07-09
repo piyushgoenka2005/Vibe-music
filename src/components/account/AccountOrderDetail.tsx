@@ -1,10 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { formatOrderIdDisplay } from "@/lib/orderId";
 import { ROUTES, productPath } from "@/lib/routes";
 import { formatCurrency, formatCurrencyPrecise } from "@/utils/currency";
-import { isInvoiceAvailable } from "@/features/invoice/utils/invoice-utils";
+import { isInvoiceAvailable, withInvoiceReturnTo } from "@/features/invoice/utils/invoice-utils";
+import { useOrderDetail } from "@/hooks/useOrderDetail";
 import ShipmentTimeline from "@/components/tracking/ShipmentTimeline";
 import {
   formatOrderDate,
@@ -15,6 +18,8 @@ import {
   statusBadgeClass,
 } from "@/components/account/orderDisplay";
 import { buildOrderTimeline } from "@/components/account/orderTimeline";
+import ReturnRequestForm from "@/components/account/ReturnRequestForm";
+import type { InvoiceUrls } from "@/features/invoice/types";
 import type { CatalogProduct } from "@/types/catalog";
 import type { Order } from "@/types/order";
 import type { PublicShipmentTracking } from "@/types/shipment";
@@ -22,6 +27,7 @@ import type { PublicShipmentTracking } from "@/types/shipment";
 export interface AccountOrderDetailProps {
   order: Order;
   shipment: PublicShipmentTracking | null;
+  invoiceUrls: InvoiceUrls | null;
   products: Array<
     Pick<CatalogProduct, "id" | "slug" | "image" | "images" | "imageColor">
   >;
@@ -81,15 +87,27 @@ function OrderTimelineSection({
 }
 
 export default function AccountOrderDetail({
-  order,
-  shipment,
+  order: initialOrder,
+  shipment: initialShipment,
+  invoiceUrls: initialInvoiceUrls,
   products,
 }: AccountOrderDetailProps) {
+  const { data } = useOrderDetail(initialOrder.id, {
+    order: initialOrder,
+    invoiceUrls: initialInvoiceUrls,
+  });
+
+  const order = data?.order ?? initialOrder;
+  const invoiceUrls = data?.invoiceUrls ?? initialInvoiceUrls;
+  const shipment = initialShipment;
+
   const productById = new Map(products.map((product) => [product.id, product]));
   const resolvedTrackingNumber = shipment?.trackingNumber ?? "Not assigned yet";
   const canShowInvoice = isInvoiceAvailable(order);
-  const invoicePdfUrl = `/api/invoices/${encodeURIComponent(order.id)}/pdf`;
-  const invoiceViewUrl = `/orders/${encodeURIComponent(order.id)}/invoice`;
+  const invoicePdfUrl = invoiceUrls?.pdf;
+  const invoiceViewUrl = invoiceUrls?.html
+    ? withInvoiceReturnTo(invoiceUrls.html, ROUTES.accountOrder(order.id))
+    : undefined;
   const trackHref = order.trackingToken
     ? `${ROUTES.trackOrder}?orderId=${encodeURIComponent(order.id)}&trackingToken=${encodeURIComponent(order.trackingToken)}`
     : ROUTES.trackOrder;
@@ -119,20 +137,28 @@ export default function AccountOrderDetail({
       </div>
 
       <div className="acct__order-detail-actions">
-        {canShowInvoice ? (
+        {canShowInvoice && invoicePdfUrl ? (
           <a
             href={invoicePdfUrl}
             className="acct__btn acct__btn--primary"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Download Invoice
+            Download PDF
           </a>
         ) : (
           <span className="acct__btn acct__btn--secondary acct__btn--disabled">
-            Download Invoice
+            Download PDF
           </span>
         )}
+        {canShowInvoice && invoiceViewUrl ? (
+          <a
+            href={invoiceViewUrl}
+            className="acct__btn acct__btn--secondary"
+          >
+            View invoice
+          </a>
+        ) : null}
         <Link href={trackHref} className="acct__btn acct__btn--secondary">
           Track Order
         </Link>
@@ -208,6 +234,8 @@ export default function AccountOrderDetail({
       </div>
 
       <OrderTimelineSection order={order} shipment={shipment} />
+
+      <ReturnRequestForm order={order} />
 
       <section className="acct__card acct__card--spaced">
         <div className="acct__card-header">
@@ -305,10 +333,13 @@ export default function AccountOrderDetail({
       <section className="acct__card acct__card--spaced">
         <div className="acct__card-header">
           <h3 className="acct__card-title">Shipment tracking</h3>
-          {canShowInvoice ? (
-            <Link href={invoiceViewUrl} className="acct__card-link">
+          {canShowInvoice && invoiceViewUrl ? (
+            <a
+              href={invoiceViewUrl}
+              className="acct__card-link"
+            >
               View invoice
-            </Link>
+            </a>
           ) : null}
         </div>
         <div className="acct__card-body">

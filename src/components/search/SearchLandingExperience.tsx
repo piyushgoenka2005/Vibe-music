@@ -181,6 +181,7 @@ export default function SearchLandingExperience({
               ref={inputRef}
               id={SEARCH_LANDING_INPUT_ID}
               type="search"
+              role="combobox"
               className="sw-search-landing-bar__input"
               value={query}
               onChange={(event) => setQuery(event.target.value)}

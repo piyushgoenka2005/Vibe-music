@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getAdminFirestore, isFirebaseAdminConfigured } from "@/lib/firebase/admin";
-import { logError, logInfo, logWarn } from "@/lib/server/logger";
+import { logInfo, logWarn } from "@/lib/server/logger";
 import {
   isFirestoreUnavailableError,
   isFirestoreFastFailError,

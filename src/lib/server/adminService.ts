@@ -83,3 +83,18 @@ export async function listAdmins(): Promise<AdminProfile[]> {
     };
   });
 }
+
+export async function updateAdminProfile(
+  uid: string,
+  patch: Partial<Pick<AdminProfile, "displayName" | "role" | "isActive">>
+): Promise<AdminProfile> {
+  const db = getAdminFirestore();
+  const now = new Date().toISOString();
+  await db.collection(COLLECTION).doc(uid).update({
+    ...patch,
+    updatedAt: now,
+  });
+  const profile = await getAdminProfile(uid);
+  if (!profile) throw new Error("Admin not found after update");
+  return profile;
+}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useLayoutEffect } from "react";
-import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { GlassFilter } from "@/components/ui/liquid-glass";
 import SiteHeader from "@/components/layout/SiteHeader";
@@ -12,11 +11,6 @@ import HelpWidget from "@/components/layout/HelpWidget";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import DeferredSplashCursor from "@/components/layout/DeferredSplashCursor";
-
-const SocialRail = dynamic(() => import("@/components/layout/SocialRail"), {
-  ssr: false,
-  loading: () => null,
-});
 
 const SPLASH_CURSOR_DISABLED =
   process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR === "false";
@@ -39,6 +33,10 @@ export default function StorefrontChrome({
 
   useLayoutEffect(() => {
     document.body.classList.toggle("is-landing-page", isLandingPage);
+    window.dispatchEvent(new Event("site-header:sync"));
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("site-header:sync"));
+    });
     return () => document.body.classList.remove("is-landing-page");
   }, [isLandingPage]);
 
@@ -56,7 +54,6 @@ export default function StorefrontChrome({
     <div className="storefront-shell">
       <GlassFilter />
       <SkipToContent />
-      <SocialRail />
       <SiteHeader />
       <div className="storefront-main" tabIndex={-1}>
         {children}

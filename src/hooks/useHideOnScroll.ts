@@ -91,31 +91,29 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
       const navIsInFlow =
         nav !== null && getComputedStyle(nav).position !== "fixed";
 
-      const chromeSelectors = [".announcement-bar", ".site-header__bar"];
-      if (navIsInFlow) {
-        chromeSelectors.push(".site-header__nav");
-      }
+      const headerRect = header.getBoundingClientRect();
+      let chromeBottom = headerRect.bottom;
 
-      let chromeBottom = 0;
-      for (const selector of chromeSelectors) {
-        const el = header.querySelector<HTMLElement>(selector);
-        if (!el) continue;
+      if (!navIsInFlow) {
+        chromeBottom = headerRect.top;
+        for (const selector of [".announcement-bar", ".site-header__bar"]) {
+          const el = header.querySelector<HTMLElement>(selector);
+          if (!el) continue;
 
-        const style = getComputedStyle(el);
-        if (style.display === "none") continue;
+          const style = getComputedStyle(el);
+          if (style.display === "none") continue;
 
-        chromeBottom = Math.max(chromeBottom, el.getBoundingClientRect().bottom);
+          chromeBottom = Math.max(chromeBottom, el.getBoundingClientRect().bottom);
+        }
       }
 
       let offset = Math.round(chromeBottom);
 
-      // Snap hero flush to header bottom — trim only a small positive gap
       const hero = document.querySelector<HTMLElement>(".homepage-banner-hero");
-      if (hero) {
-        const headerBottom = header.getBoundingClientRect().bottom;
-        const gap = hero.getBoundingClientRect().top - headerBottom;
-        if (gap > 0.5 && gap < 48) {
-          offset = Math.round(offset - gap);
+      if (hero && document.body.classList.contains("is-landing-page")) {
+        const gap = hero.getBoundingClientRect().top - headerRect.bottom;
+        if (gap > 0.5) {
+          offset = Math.round(headerRect.bottom);
         }
       }
 

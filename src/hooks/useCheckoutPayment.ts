@@ -139,18 +139,21 @@ export function useCheckoutPayment({
     return () => window.clearTimeout(timer);
   }, [prefetchEnabled, paymentMethod, disabled, buildPayload]);
 
-  function successUrl(orderId: string, trackingToken?: string): string {
+  const goToOrderConfirmation = useCallback((
+    orderId: string,
+    trackingToken?: string,
+    orderEmail?: string
+  ) => {
     const params = new URLSearchParams({ orderId });
+    const resolvedEmail = (orderEmail ?? email).trim().toLowerCase();
+    if (resolvedEmail) {
+      params.set("email", resolvedEmail);
+    }
     if (trackingToken) {
       params.set("trackingToken", trackingToken);
     }
-    return `/checkout/success?${params.toString()}`;
-  }
-
-  function goToOrderConfirmation(orderId: string, trackingToken?: string) {
-    const url = successUrl(orderId, trackingToken);
-    router.replace(url);
-  }
+    router.replace(`/checkout/success?${params.toString()}`);
+  }, [email, router]);
 
   const pay = useCallback(async () => {
     if (disabled || isProcessing) return;
@@ -166,9 +169,13 @@ export function useCheckoutPayment({
       const payload = buildPayload();
 
       if (paymentMethod === "cod") {
-        const { orderId, order } = await createCodOrder(payload);
+        const { orderId, trackingToken, order } = await createCodOrder(payload);
+        goToOrderConfirmation(
+          orderId,
+          trackingToken ?? order.trackingToken,
+          order.email
+        );
         cacheOrderForConfirmation(order);
-        goToOrderConfirmation(orderId, order.trackingToken);
         return;
       }
 
@@ -188,7 +195,11 @@ export function useCheckoutPayment({
       setProcessingLabel("Opening Razorpay…");
 
       if (orderResponse.demoMode) {
-        const demo = await completeDemoPayment(orderResponse.orderId, email);
+        const demo = await completeDemoPayment(
+          orderResponse.orderId,
+          email,
+          orderResponse.trackingToken
+        );
         if (demo.order) {
           cacheOrderForConfirmation(demo.order);
         }
@@ -255,7 +266,7 @@ export function useCheckoutPayment({
         cacheOrderForConfirmation(verified.order);
       }
 
-      goToOrderConfirmation(orderResponse.orderId, trackingToken);
+      goToOrderConfirmation(orderResponse.orderId, trackingToken, email);
     } catch (err) {
       if (pendingOrderId && pendingTrackingToken) {
         await releaseOrderReservation(pendingOrderId, pendingTrackingToken).catch(
@@ -278,6 +289,7 @@ export function useCheckoutPayment({
     showToast,
     router,
     openCheckout,
+    goToOrderConfirmation,
   ]);
 
   return {

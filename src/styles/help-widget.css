@@ -50,8 +50,31 @@
   border-radius: 50%;
 }
 
-.help-widget__trigger-icon {
+.help-widget__trigger-icon,
+.help-widget__icon {
   flex-shrink: 0;
+}
+
+.help-widget__icon-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.help-widget__status {
+  position: absolute;
+  right: -0.125rem;
+  bottom: -0.0625rem;
+  width: 0.5625rem;
+  height: 0.5625rem;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.12);
 }
 
 .help-widget__trigger-label {
@@ -362,10 +385,21 @@
   }
 
   .help-widget__trigger:not(.help-widget__trigger--open) {
-    width: 3.25rem;
-    min-width: 3.25rem;
+    width: 2.875rem;
+    min-width: 2.875rem;
+    min-height: 2.875rem;
     padding: 0;
     border-radius: 50%;
+  }
+
+  .help-widget__icon-mark {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+
+  .help-widget__icon {
+    width: 1.375rem;
+    height: 1.375rem;
   }
 }
 

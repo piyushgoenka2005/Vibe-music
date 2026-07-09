@@ -1,0 +1,89 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import AdminGuard from "@/components/admin/AdminGuard";
+import AdminShell from "@/components/admin/AdminShell";
+import { LoadingState } from "@/components/admin/AdminUi";
+
+function AuditLogsContent() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-audit-logs"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/audit-logs?limit=100");
+      if (!res.ok) throw new Error("Failed to load audit logs");
+      return res.json() as Promise<{
+        logs: Array<{
+          id: string;
+          action: string;
+          actorEmail: string | null;
+          resourceType: string | null;
+          resourceId: string | null;
+          ip: string | null;
+          createdAt: string;
+        }>;
+      }>;
+    },
+  });
+
+  if (isLoading) return <LoadingState message="Loading audit logs…" />;
+  if (error) {
+    return (
+      <div className="admin-empty" role="alert">
+        Unable to load audit logs.
+      </div>
+    );
+  }
+
+  const logs = data?.logs ?? [];
+  if (logs.length === 0) {
+    return <div className="admin-empty">No audit events recorded yet.</div>;
+  }
+
+  return (
+    <div className="admin-table-wrap">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th scope="col">Time</th>
+            <th scope="col">Action</th>
+            <th scope="col">Actor</th>
+            <th scope="col">Resource</th>
+            <th scope="col">IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {logs.map((log) => (
+            <tr key={log.id}>
+              <td>{new Date(log.createdAt).toLocaleString("en-IN")}</td>
+              <td>
+                <code>{log.action}</code>
+              </td>
+              <td>{log.actorEmail ?? "—"}</td>
+              <td>
+                {log.resourceType
+                  ? `${log.resourceType}${log.resourceId ? ` · ${log.resourceId}` : ""}`
+                  : "—"}
+              </td>
+              <td>{log.ip ?? "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default function AdminAuditLogsPage() {
+  return (
+    <AdminGuard>
+      {(admin) => (
+        <AdminShell admin={admin} title="Audit logs">
+          <p className="admin-page-lead">
+            Security and admin activity trail for compliance review.
+          </p>
+          <AuditLogsContent />
+        </AdminShell>
+      )}
+    </AdminGuard>
+  );
+}

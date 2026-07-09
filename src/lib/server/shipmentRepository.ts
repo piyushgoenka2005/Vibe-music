@@ -65,10 +65,11 @@ export async function getTrackingEventsByOrderId(
   const snap = await db
     .collection(TRACKING_EVENTS_COLLECTION)
     .where("orderId", "==", orderId)
-    .orderBy("occurredAt", "desc")
     .get();
 
-  return snap.docs.map((doc) => normalizeTrackingEvent(doc.id, doc.data()));
+  return snap.docs
+    .map((doc) => normalizeTrackingEvent(doc.id, doc.data()))
+    .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 }
 
 export async function upsertShipmentRecord(

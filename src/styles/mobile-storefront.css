@@ -130,9 +130,11 @@
     min-height: 44px;
   }
 
-  .pdp-lightbox__image {
+  .pdp-lightbox__image,
+  .pdp-lightbox__photo {
     max-width: 100%;
     max-height: 80dvh;
+    object-fit: contain;
   }
 
   /* Cart drawer — full width on narrow phones */
@@ -192,6 +194,58 @@
   .blog-article__content img {
     max-width: 100%;
     height: auto;
+  }
+
+  /* Wishlist drawer — match cart drawer width behavior */
+  .wl-drawer {
+    width: 100%;
+    max-width: 100dvw;
+  }
+
+  /* Gear story quick-view modal */
+  .gear-story-modal__close {
+    top: max(10px, env(safe-area-inset-top, 0px));
+    right: max(10px, env(safe-area-inset-right, 0px));
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .gear-story-modal__actions .gear-story-modal__btn {
+    min-height: 48px;
+  }
+
+  /* PDP — FBT horizontal strip */
+  .pdp-fbt__items {
+    gap: 0.5rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .pdp-fbt__card {
+    width: min(140px, 42vw);
+    flex-shrink: 0;
+  }
+
+  .pdp-fbt__summary {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Search overlay */
+  .search-overlay__panel {
+    max-height: 92dvh;
+  }
+
+  /* Help widget — avoid viewport overflow */
+  .help-widget__panel {
+    max-width: calc(100dvw - 1.5rem);
+  }
+
+  /* Tables in storefront */
+  .storefront-page table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* GP9 showcase overflow */

@@ -7,11 +7,8 @@ import {
   isFirestoreFastFailError,
   isGlobalFirestoreCircuitOpen,
   logFirestoreWarning,
-  markFirestoreUnavailable,
   withFirestoreDeadline,
 } from "@/lib/server/firestoreErrors";
-import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
-import { sanitizeForFirestore } from "@/lib/server/firestoreSanitize";
 import {
   verifyRazorpayPaymentSignature,
 } from "@/lib/razorpay/signature";
@@ -43,7 +40,9 @@ import {
   listOrdersForUser as listStoredOrdersForUser,
   persistOrder,
   removeOrder,
+  updateOrder,
 } from "@/lib/server/orderRepository";
+import { isPlacedOrder } from "@/lib/server/orderAccess";
 import { generateOrderTrackingToken } from "@/lib/server/orderTrackingToken";
 import type { OrderInventoryLine } from "@/types/inventory";
 import type {
@@ -189,7 +188,7 @@ function buildOrderRecord(
     total: invoice.grandTotal,
     items,
     shippingAddress: payload.shippingAddress,
-    invoice,
+    invoice: payload.paymentMethod === "cod" ? invoice : undefined,
     inventoryStatus: "none",
     createdAt: now,
     updatedAt: now,
@@ -283,32 +282,31 @@ export async function createOrder(
         if (payload.paymentMethod === "cod") {
           logPayment("Inventory reservation started (COD)", { orderId });
           await reserveAndFulfillStockForOrder(orderId, inventoryLines);
-          order.inventoryStatus = "fulfilled";
+          await updateOrder(orderId, { inventoryStatus: "fulfilled" });
         } else {
           logPayment("Inventory reservation started (online)", { orderId });
           await reserveStockForOrder(orderId, inventoryLines);
-          order.inventoryStatus = "reserved";
+          await updateOrder(orderId, { inventoryStatus: "reserved" });
         }
         logPayment("Inventory reservation completed", { orderId });
       } catch (inventoryError) {
+        logPaymentError(inventoryError, {
+          orderId,
+          step: "backgroundInventory",
+          paymentMethod: payload.paymentMethod,
+        });
         if (isFirestoreDegraded(inventoryError)) {
           logFirestoreWarning(
             "orders",
             inventoryError,
             "Skipping inventory reservation — Firestore quota exceeded"
           );
-          order.inventoryStatus = "none";
-        } else {
-          throw inventoryError;
         }
+        await updateOrder(orderId, { inventoryStatus: "none" }).catch(() => undefined);
       }
     };
 
-    if (payload.paymentMethod === "razorpay") {
-      void reserveInventory();
-    } else {
-      await reserveInventory();
-    }
+    void reserveInventory();
 
     logPayment("Create order completed", { orderId, paymentMethod: payload.paymentMethod });
     return {
@@ -438,7 +436,8 @@ export async function listOrdersForUser(
   uid?: string,
   email?: string
 ): Promise<Order[]> {
-  return listStoredOrdersForUser(uid, email);
+  const orders = await listStoredOrdersForUser(uid, email);
+  return orders.filter(isPlacedOrder);
 }
 
 export function normalizeGstRate(rate: number | undefined): GSTRate {

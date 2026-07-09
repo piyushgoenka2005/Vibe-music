@@ -72,6 +72,24 @@ function OrdersContent() {
     },
   });
 
+  const refundMutation = useMutation({
+    mutationFn: async () => {
+      if (!selected) return;
+      const res = await fetch(`/api/admin/orders/${selected.id}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: note || undefined }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? "Refund failed");
+    },
+    onSuccess: () => {
+      setNote("");
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-order-detail", selectedId] });
+    },
+  });
+
   async function exportCsv() {
     const res = await fetch("/api/admin/orders", {
       method: "POST",
@@ -217,6 +235,32 @@ function OrdersContent() {
                 <button type="button" className="admin-btn admin-btn--primary" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate()}>
                   {updateMutation.isPending ? "Updating…" : "Update Order"}
                 </button>
+                {selected.paymentStatus === "paid" && selected.razorpayPaymentId ? (
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--danger"
+                    style={{ marginLeft: "0.5rem" }}
+                    disabled={refundMutation.isPending}
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Initiate a full Razorpay refund for this order? This cannot be undone."
+                        )
+                      ) {
+                        refundMutation.mutate();
+                      }
+                    }}
+                  >
+                    {refundMutation.isPending ? "Refunding…" : "Refund via Razorpay"}
+                  </button>
+                ) : null}
+                {refundMutation.isError ? (
+                  <p style={{ color: "var(--admin-danger)", marginTop: "0.5rem" }}>
+                    {refundMutation.error instanceof Error
+                      ? refundMutation.error.message
+                      : "Refund failed"}
+                  </p>
+                ) : null}
                 <AdminOrderShipment orderId={selected.id} />
               </>
             )}

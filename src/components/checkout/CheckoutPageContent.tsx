@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { useEffect, useMemo, useSyncExternalStore, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Trash2 } from "lucide-react";
@@ -13,7 +14,6 @@ import CheckoutPaymentMethods, {
 } from "@/components/checkout/CheckoutPaymentMethods";
 import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
 import AddressAutocompleteField from "@/components/checkout/AddressAutocompleteField";
-import ShippingMethodPicker from "@/components/checkout/ShippingMethodPicker";
 import { useCheckoutPayment } from "@/hooks/useCheckoutPayment";
 import {
   addressToShipping,
@@ -22,11 +22,7 @@ import {
 import { ROUTES } from "@/lib/routes";
 import { normalizeIndianPhone } from "@/lib/validations/address";
 import { DEFAULT_GST_RATE } from "@/lib/gstCalculator";
-import {
-  getShippingChargeForMethod,
-  SHIPPING_METHOD_IDS,
-  type ShippingMethod,
-} from "@/lib/shipping/shippingMethods";
+import { type ShippingMethod } from "@/lib/shipping/shippingMethods";
 import { useCartHydrated } from "@/hooks/useCartHydrated";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
@@ -152,7 +148,10 @@ export default function CheckoutPageContent() {
   }, []);
 
   const [step, setStep] = useState<CheckoutStep>("address");
-  const savedAddresses = isAuthenticated ? addresses : [];
+  const savedAddresses = useMemo(
+    () => (isAuthenticated ? addresses : []),
+    [isAuthenticated, addresses]
+  );
   const [useNewAddressOverride, setUseNewAddressOverride] = useState<boolean | null>(
     null
   );
@@ -167,12 +166,17 @@ export default function CheckoutPageContent() {
   const [confirmedAddress, setConfirmedAddress] =
     useState<ShippingAddress | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("razorpay");
-  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("standard");
+  const shippingMethod: ShippingMethod = "standard";
   const [onlineChannel, setOnlineChannel] =
     useState<OnlinePaymentChannel>("upi");
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
   const [addressError, setAddressError] = useState<string | null>(null);
+  const mobileBarReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
     preloadRazorpayCheckout();
@@ -265,17 +269,6 @@ export default function CheckoutPageContent() {
     0,
     shippingMethod
   );
-
-  const checkoutSubtotal = checkoutItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const shippingCharges = Object.fromEntries(
-    SHIPPING_METHOD_IDS.map((id) => [
-      id,
-      getShippingChargeForMethod(id, checkoutSubtotal, couponDiscount),
-    ])
-  ) as Record<ShippingMethod, number>;
 
   const payment = useCheckoutPayment({
     items: checkoutItems,
@@ -466,8 +459,43 @@ export default function CheckoutPageContent() {
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
 
+  const mobileBar =
+    step !== "payment" ? (
+      <div
+        className="checkout-mobile-bar"
+        role="region"
+        aria-label="Order total and continue"
+      >
+        <div className="checkout-mobile-bar__total">
+          <span className="checkout-mobile-bar__label">Total</span>
+          <strong className="checkout-mobile-bar__amount">
+            {formatCurrencyPrecise(invoice.grandTotal)}
+          </strong>
+        </div>
+        {step === "address" ? (
+          <CheckoutGlassButton
+            variant="solid"
+            className="checkout-mobile-bar__cta"
+            disabled={!canProceedFromAddress}
+            onClick={() => void handleContinueFromAddress()}
+          >
+            Continue
+          </CheckoutGlassButton>
+        ) : (
+          <CheckoutGlassButton
+            variant="solid"
+            className="checkout-mobile-bar__cta"
+            onClick={handleContinueToPayment}
+          >
+            Continue
+          </CheckoutGlassButton>
+        )}
+      </div>
+    ) : null;
+
   return (
-    <div className="checkout-page">
+    <>
+    <div className={`checkout-page checkout-page--${step}`}>
       <header className="checkout-hero">
         <div className="checkout-hero__copy storefront-page__header">
           <p className="storefront-page__eyebrow">Secure checkout</p>
@@ -813,12 +841,6 @@ export default function CheckoutPageContent() {
                 </div>
               ) : null}
 
-              <ShippingMethodPicker
-                value={shippingMethod}
-                onChange={setShippingMethod}
-                charges={shippingCharges}
-              />
-
               <div className="checkout-actions">
                 <CheckoutGlassButton onClick={handleEditAddress} variant="ghost">
                   Edit Address
@@ -898,30 +920,10 @@ export default function CheckoutPageContent() {
         />
       </div>
 
-      {step !== "payment" ? (
-        <div className="checkout-mobile-bar">
-          <div className="checkout-mobile-bar__total">
-            <span>Total</span>
-            <strong>{formatCurrencyPrecise(invoice.grandTotal)}</strong>
-          </div>
-          {step === "address" ? (
-            <CheckoutGlassButton
-              className="checkout-mobile-bar__cta"
-              disabled={!canProceedFromAddress}
-              onClick={() => void handleContinueFromAddress()}
-            >
-              Continue
-            </CheckoutGlassButton>
-          ) : (
-            <CheckoutGlassButton
-              className="checkout-mobile-bar__cta"
-              onClick={handleContinueToPayment}
-            >
-              Continue to Payment
-            </CheckoutGlassButton>
-          )}
-        </div>
-      ) : null}
     </div>
+    {mobileBarReady && mobileBar
+      ? createPortal(mobileBar, document.body)
+      : null}
+    </>
   );
 }

@@ -100,6 +100,28 @@
   outline-offset: 2px;
 }
 
+@media (max-width: 767px) {
+  .homepage-banner-hero__viewport {
+    min-height: clamp(10rem, 52vw, 22rem);
+    aspect-ratio: 16 / 9;
+  }
+
+  .homepage-banner-hero__dot {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 479px) {
+  .homepage-banner-hero__viewport {
+    min-height: clamp(9rem, 48vw, 18rem);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .homepage-banner-hero__slide {
     transition: none;

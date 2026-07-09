@@ -156,7 +156,7 @@ export function TechnologySection() {
               className="relative overflow-hidden will-change-transform image-vignette"
               style={{
                 width: `${centerWidth}%`,
-                height: "100%",
+                height: `${centerHeight}%`,
                 flex: "0 0 auto",
                 borderRadius: `${borderRadius}px`,
               }}

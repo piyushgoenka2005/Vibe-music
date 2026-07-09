@@ -21,8 +21,10 @@ export async function POST(
     const { orderId } = await context.params;
     const body = (await request.json().catch(() => ({}))) as {
       email?: string;
+      trackingToken?: string;
     };
     const guestEmail = body.email?.trim().toLowerCase();
+    const trackingToken = body.trackingToken?.trim();
 
     const order = await getOrderById(orderId);
     if (!order) {
@@ -39,6 +41,7 @@ export async function POST(
       canAccessOrder(order, {
         userId: sessionUser?.uid,
         email: guestEmail ?? sessionUser?.email?.toLowerCase(),
+        trackingToken,
       });
 
     if (!hasAccess) {
@@ -47,6 +50,9 @@ export async function POST(
 
     if (order.paymentStatus === "paid") {
       const params = new URLSearchParams({ orderId: order.id, email: order.email });
+      if (order.trackingToken) {
+        params.set("trackingToken", order.trackingToken);
+      }
       return NextResponse.json(
         {
           error: "This order is already paid.",

@@ -1,17 +1,29 @@
 import type { InvoiceStatusBadge } from "@/features/invoice/types";
 import type { GSTInvoiceData } from "@/lib/gstCalculator";
+import { isPlacedOrder, orderNeedsPlacementRefresh } from "@/lib/orderPlacement";
 import type { Order, PaymentStatus } from "@/types/order";
 import { formatInvoiceDate, formatInvoiceDateTime } from "@/features/invoice/utils/format";
 
-/** Tax invoice is available once the order is placed (paid or COD). */
+/** Tax invoice is available once the order is fully placed. */
 export function isInvoiceAvailable(order: {
   invoice?: Order["invoice"] | null;
   paymentStatus: PaymentStatus;
 }): boolean {
-  return (
-    Boolean(order.invoice?.invoiceNumber) &&
-    (order.paymentStatus === "paid" || order.paymentStatus === "cod_pending")
-  );
+  return isPlacedOrder(order);
+}
+
+export function withInvoiceReturnTo(url: string, returnTo: string): string {
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}returnTo=${encodeURIComponent(returnTo)}`;
+}
+
+/** Poll while payment verification or invoice issuance may still be in progress. */
+export function orderNeedsInvoiceRefresh(order: {
+  paymentStatus: Order["paymentStatus"];
+  status?: Order["status"];
+  invoice?: Order["invoice"] | null;
+}): boolean {
+  return orderNeedsPlacementRefresh(order);
 }
 
 /** Invoice brand tokens for HTML output. */

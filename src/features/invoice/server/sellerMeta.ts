@@ -1,42 +1,23 @@
 import "server-only";
+import { BRAND } from "@/lib/brand";
 import { getStoreSettings } from "@/lib/server/settingsService";
 import type { InvoiceSellerMeta } from "@/features/invoice/types";
 
 export async function getInvoiceSellerMeta(): Promise<InvoiceSellerMeta> {
   const settings = await getStoreSettings();
 
-  const STATE_CODE_MAP: Record<string, string> = {
-    Maharashtra: "27",
-    "Maharashtra ": "27",
-    Gujarat: "24",
-    Delhi: "07",
-    Karnataka: "29",
-    Telangana: "36",
-    "Tamil Nadu": "33",
-    Kerala: "32",
-    "West Bengal": "19",
-    "Madhya Pradesh": "23",
-    Bihar: "10",
-  };
-
-  const stateKey = settings.sellerState?.trim();
-  const stateCode =
-    (stateKey ? STATE_CODE_MAP[stateKey] : undefined) ??
-    (stateKey ? STATE_CODE_MAP[stateKey.replace(/\s+/g, " ")] : undefined) ??
-    "";
-
   return {
-    storeName: settings.storeName,
-    legalName: settings.storeName,
-    tagline: "Your Sound, Delivered",
-    address: settings.storeAddress,
-    email: settings.storeEmail,
-    phone: settings.storePhone,
-    website: undefined,
+    storeName: settings.storeName || BRAND.name,
+    legalName: settings.storeName || BRAND.name,
+    tagline: BRAND.tagline,
+    address: settings.storeAddress || BRAND.address,
+    email: settings.storeEmail || BRAND.email,
+    phone: settings.storePhone || BRAND.phoneDisplay,
+    website: BRAND.domain,
     gstin: settings.gstNumber || undefined,
     pan: undefined,
-    state: settings.sellerState,
-    stateCode,
+    state: settings.sellerState || "Maharashtra",
+    stateCode: "",
   };
 }
 

@@ -78,6 +78,13 @@ export function loadBrands(): Brand[] {
   return readBrandsRaw();
 }
 
+export function saveBrands(brands: Brand[]): void {
+  fs.mkdirSync(CATALOG_DIR, { recursive: true });
+  fs.writeFileSync(BRANDS_PATH, JSON.stringify(brands, null, 2) + "\n", "utf8");
+  brandsCache = brands;
+  brandsMtime = fs.statSync(BRANDS_PATH).mtimeMs;
+}
+
 export const catalogPaths = {
   products: PRODUCTS_PATH,
   categories: CATEGORIES_PATH,

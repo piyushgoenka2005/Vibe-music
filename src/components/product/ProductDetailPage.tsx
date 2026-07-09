@@ -235,7 +235,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
       </div>
 
       {isGuitarProduct(product.categorySlug, product.category) ? (
-        <>
+        <div className="pdp pdp--guitar-extensions">
           <GuitarSpecShowcase
             specs={product.specs}
             productName={product.name}
@@ -243,12 +243,13 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
           />
           <GuitarTonesInMotion />
           <GuitarStorySections />
-        </>
+        </div>
       ) : null}
 
       <ProductStickyBar
         inStock={variant.availability !== "out-of-stock"}
         onAddToCart={handleAddToCart}
+        onBuyNow={handleBuyNow}
         price={variant.price}
         productName={product.name}
         sentinelRef={atcSentinelRef}

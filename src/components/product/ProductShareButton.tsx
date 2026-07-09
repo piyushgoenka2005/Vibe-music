@@ -1,8 +1,8 @@
 "use client";
 
-import { SquareArrowUp } from "lucide-react";
 import { shareProduct } from "@/lib/share/shareProduct";
 import { useToastStore } from "@/store/toastStore";
+import ProductShareIcon from "@/components/product/ProductShareIcon";
 import "./product-share.css";
 
 interface ProductShareButtonProps {
@@ -13,16 +13,19 @@ interface ProductShareButtonProps {
   className?: string;
   overlay?: boolean;
   position?: "top-right" | "top-left";
+  /** Show icon + "Share" label (e.g. modal action rows). */
+  showLabel?: boolean;
 }
 
 export default function ProductShareButton({
   title,
   url,
   text,
-  size = 18,
+  size = 16,
   className = "",
   overlay = false,
   position = "top-right",
+  showLabel = false,
 }: ProductShareButtonProps) {
   const showToast = useToastStore((s) => s.show);
 
@@ -42,6 +45,8 @@ export default function ProductShareButton({
     }
   }
 
+  const iconSize = showLabel ? Math.max(size, 18) : size;
+
   return (
     <button
       type="button"
@@ -49,6 +54,7 @@ export default function ProductShareButton({
         "product-share-btn",
         overlay ? "product-share-btn--overlay" : "",
         overlay ? `product-share-btn--${position}` : "",
+        showLabel ? "product-share-btn--labeled" : "",
         className,
       ]
         .filter(Boolean)
@@ -56,7 +62,8 @@ export default function ProductShareButton({
       onClick={handleShare}
       aria-label={`Share ${title}`}
     >
-      <SquareArrowUp size={size} strokeWidth={1.75} aria-hidden="true" />
+      <ProductShareIcon className="product-share-btn__icon" size={iconSize} />
+      {showLabel ? <span className="product-share-btn__label">Share</span> : null}
     </button>
   );
 }

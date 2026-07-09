@@ -139,6 +139,15 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
               onMouseMove={handleImageMouseMove}
               onMouseLeave={resetImageZoom}
             >
+              <ProductShareButton
+                overlay
+                position="top-right"
+                title={story.name}
+                url={productPath(story.slug)}
+                text={`Check out ${story.name} at Vibe Music`}
+                size={18}
+                className="gear-story-modal__share"
+              />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={optimizeImageUrl(gallery[activeImage] ?? story.image, "productDetail")}
@@ -225,12 +234,6 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
               >
                 View product
               </Link>
-              <ProductShareButton
-                className="gear-story-modal__btn gear-story-modal__btn--tertiary"
-                title={story.name}
-                url={productPath(story.slug)}
-                text={`Check out ${story.name} at Vibe Music`}
-              />
               <button
                 type="button"
                 className="gear-story-modal__btn gear-story-modal__btn--tertiary"

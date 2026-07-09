@@ -26,6 +26,7 @@ const serverEnvSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
   ORDER_EMAIL_FROM: z.string().email().optional(),
+  GUEST_ORDER_ACCESS_SECRET: z.string().min(1).optional(),
   ALLOW_DEMO_PAYMENTS: z.enum(["true", "false"]).optional(),
 });
 
@@ -35,9 +36,15 @@ const productionRequiredSchema = z.object({
   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z.string().min(1),
   NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().min(1),
   NEXT_PUBLIC_FIREBASE_APP_ID: z.string().min(1),
+  NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().min(1),
   FIREBASE_PROJECT_ID: z.string().min(1),
   FIREBASE_CLIENT_EMAIL: z.string().email(),
   FIREBASE_PRIVATE_KEY: z.string().min(1),
+  RAZORPAY_KEY_ID: z.string().min(1),
+  RAZORPAY_KEY_SECRET: z.string().min(1),
+  RAZORPAY_WEBHOOK_SECRET: z.string().min(1),
+  GUEST_ORDER_ACCESS_SECRET: z.string().min(32),
+  RESEND_API_KEY: z.string().min(1),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
@@ -87,6 +94,7 @@ export function validateEnv(): void {
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     ORDER_EMAIL_FROM: process.env.ORDER_EMAIL_FROM,
+    GUEST_ORDER_ACCESS_SECRET: process.env.GUEST_ORDER_ACCESS_SECRET,
     ALLOW_DEMO_PAYMENTS: process.env.ALLOW_DEMO_PAYMENTS,
   });
 
@@ -101,9 +109,15 @@ export function validateEnv(): void {
       NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
       NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
       NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
       FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
       FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
+      RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
+      RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
+      RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
+      GUEST_ORDER_ACCESS_SECRET: process.env.GUEST_ORDER_ACCESS_SECRET,
+      RESEND_API_KEY: process.env.RESEND_API_KEY,
     });
 
     if (!productionResult.success) {

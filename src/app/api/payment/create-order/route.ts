@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { formatCheckoutError } from "@/lib/server/checkoutErrors";
 import { createOrder } from "@/lib/server/orderService";
+import { isPlacedOrder } from "@/lib/orderPlacement";
 import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
 import {
   resolveCouponDiscount,
@@ -101,7 +102,7 @@ export async function POST(request: Request) {
       hasRazorpayOrderId: Boolean(razorpayOrderId),
     });
 
-    if (payload.paymentMethod === "cod") {
+    if (payload.paymentMethod === "cod" && isPlacedOrder(order)) {
       void sendOrderConfirmationEmail(order);
       return NextResponse.json({
         orderId: order.id,

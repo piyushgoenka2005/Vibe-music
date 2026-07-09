@@ -1,5 +1,6 @@
 import "server-only";
 
+import { calculateGST, SELLER_STATE } from "@/lib/gstCalculator";
 import { incrementCouponUsage } from "@/lib/server/couponService";
 import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
 import {
@@ -15,9 +16,27 @@ import {
 import {
   fulfillReservedStockForOrder,
   releaseOrderInventory,
+  reserveAndFulfillStockForOrder,
 } from "@/lib/server/inventoryService";
 import type { OrderInventoryLine } from "@/types/inventory";
 import type { Order, OrderStatus, PaymentStatus } from "@/types/order";
+
+function issueInvoiceForOrder(order: Order) {
+  return calculateGST({
+    items: order.items.map((item) => ({
+      productId: item.productId,
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.price,
+      gstRate: item.gstRate,
+    })),
+    couponDiscount: order.couponDiscount,
+    shippingCharge: order.shippingCharge,
+    platformFee: order.platformFee,
+    sellerState: SELLER_STATE,
+    buyerState: order.shippingAddress.state,
+  });
+}
 
 function toInventoryLines(order: {
   items: Array<{
@@ -73,16 +92,28 @@ export async function completeOrderPayment(input: {
   }
 
   if (order.paymentStatus === "paid") {
+    if (!order.invoice?.invoiceNumber) {
+      const timestamp = new Date().toISOString();
+      const completedOrder = await updateOrder(order.id, {
+        invoice: issueInvoiceForOrder(order),
+        updatedAt: timestamp,
+      });
+      return { order: completedOrder, skipped: false };
+    }
+
     return { order, skipped: true, reason: "already_paid" };
   }
 
   const inventoryLines = toInventoryLines(order);
 
-  const inventoryState = order.inventoryStatus ?? "none";
+  const freshOrder = (await fetchOrderById(order.id)) ?? order;
+  const inventoryState = freshOrder.inventoryStatus ?? "none";
+  let inventoryFulfilled = inventoryState === "fulfilled";
 
   if (inventoryState === "reserved") {
     try {
       await fulfillReservedStockForOrder(order.id, inventoryLines);
+      inventoryFulfilled = true;
     } catch (error) {
       if (!isFirestoreUnavailableError(error)) {
         throw error;
@@ -93,7 +124,21 @@ export async function completeOrderPayment(input: {
         "Skipping inventory fulfillment — Firestore unavailable"
       );
     }
-  } else if (inventoryState !== "fulfilled" && inventoryState !== "none") {
+  } else if (inventoryState === "none") {
+    try {
+      await reserveAndFulfillStockForOrder(order.id, inventoryLines);
+      inventoryFulfilled = true;
+    } catch (error) {
+      if (!isFirestoreUnavailableError(error)) {
+        throw error;
+      }
+      logFirestoreWarning(
+        "inventory",
+        error,
+        "Skipping inventory fulfillment — Firestore unavailable"
+      );
+    }
+  } else if (inventoryState !== "fulfilled") {
     throw new Error(
       `Cannot fulfill inventory for order in state: ${inventoryState}`
     );
@@ -102,14 +147,19 @@ export async function completeOrderPayment(input: {
   await applyCouponUsageIfNeeded(order);
 
   const timestamp = new Date().toISOString();
+  const invoice =
+    order.invoice?.invoiceNumber != null
+      ? order.invoice
+      : issueInvoiceForOrder(order);
 
   const updated: Partial<Order> = {
     paymentStatus: "paid" satisfies PaymentStatus,
     status: "confirmed" satisfies OrderStatus,
     razorpayPaymentId: input.razorpayPaymentId,
-    inventoryStatus: "fulfilled",
+    inventoryStatus: inventoryFulfilled ? "fulfilled" : "none",
     paymentCompletedAt: timestamp,
     paymentSource: input.source,
+    invoice,
     updatedAt: timestamp,
   };
 

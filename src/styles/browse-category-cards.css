@@ -22,7 +22,7 @@
 
 @media (min-width: 1024px) {
   .category-cards-container .page-width {
-    padding-inline-start: var(--homepage-gutter-left, var(--homepage-gutter));
+    padding-inline-start: calc(var(--homepage-gutter-left, var(--homepage-gutter)) - 1.875rem);
     padding-inline-end: var(--category-cards-desktop-padding-end);
   }
 

@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrency } from "@/utils/currency";
-import { fetchUserOrders } from "@/services/orderService";
-import type { Order } from "@/types/order";
+import {
+  isInvoiceAvailable,
+  withInvoiceReturnTo,
+} from "@/features/invoice/utils/invoice-utils";
+import { useUserOrders } from "@/hooks/useUserOrders";
 import AccountEmptyState from "./AccountEmptyState";
 import {
   formatOrderDate,
@@ -15,32 +17,7 @@ import {
 } from "./orderDisplay";
 
 export default function AccountOrders() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchUserOrders()
-      .then((data) => {
-        if (!cancelled) setOrders(data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Unable to load orders"
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: orders = [], isLoading, error } = useUserOrders();
 
   return (
     <div>
@@ -50,13 +27,13 @@ export default function AccountOrders() {
       </p>
 
       <div className="acct__card">
-        {loading ? (
+        {isLoading ? (
           <p style={{ padding: 24, textAlign: "center", color: "#666" }}>
             Loading your orders...
           </p>
         ) : error ? (
           <p role="alert" style={{ padding: 24, color: "#c5221f" }}>
-            {error}
+            {error instanceof Error ? error.message : "Unable to load orders"}
           </p>
         ) : orders.length === 0 ? (
           <AccountEmptyState
@@ -104,11 +81,12 @@ export default function AccountOrders() {
                 </Link>
               </div>
 
-              {(order.paymentStatus === "paid" ||
-                order.paymentStatus === "cod_pending") &&
-              order.invoice?.invoiceNumber ? (
+              {isInvoiceAvailable(order) ? (
                 <Link
-                  href={`/orders/${order.id}/invoice`}
+                  href={withInvoiceReturnTo(
+                    `/orders/${order.id}/invoice`,
+                    ROUTES.accountOrders
+                  )}
                   className="acct__btn acct__btn--secondary acct__btn--sm"
                   style={{ marginTop: 8 }}
                 >

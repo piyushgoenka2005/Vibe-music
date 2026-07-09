@@ -1,5 +1,6 @@
 import type { Order, OrderStatus } from "@/types/order";
 import type { PublicShipmentTracking, ShipmentStatus } from "@/types/shipment";
+import { isPaymentVerified, isPlacedOrder } from "@/lib/orderPlacement";
 
 export type OrderTimelineStepId =
   | "placed"
@@ -34,11 +35,7 @@ const STANDARD_STEPS: Array<{ id: OrderTimelineStepId; label: string }> = [
 ];
 
 function isPaymentConfirmed(order: Order): boolean {
-  return (
-    order.paymentStatus === "paid" ||
-    order.paymentStatus === "cod_pending" ||
-    order.paymentStatus === "refunded"
-  );
+  return isPaymentVerified(order);
 }
 
 function shipmentReached(status: ShipmentStatus, target: ShipmentStatus): boolean {
@@ -69,7 +66,7 @@ function stepCompleted(
 ): boolean {
   switch (stepId) {
     case "placed":
-      return true;
+      return isPlacedOrder(order);
     case "payment_confirmed":
       return isPaymentConfirmed(order);
     case "packed":
@@ -116,7 +113,9 @@ function stepTimestamp(
 ): string | undefined {
   switch (stepId) {
     case "placed":
-      return order.createdAt;
+      return isPlacedOrder(order)
+        ? (order.paymentCompletedAt ?? order.createdAt)
+        : undefined;
     case "payment_confirmed":
       return (
         order.paymentCompletedAt ??

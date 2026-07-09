@@ -42,6 +42,13 @@ function AnalyticsContent() {
           <option value="30d">Last 30 days</option>
           <option value="90d">Last 90 days</option>
         </select>
+        <a
+          href={`/api/admin/analytics/export?period=${period}`}
+          className="admin-btn admin-btn--secondary"
+          download
+        >
+          Export CSV
+        </a>
       </div>
 
       <div className="admin-stat-grid">

@@ -7,7 +7,7 @@ import {
   ChevronRight,
   Clock,
   Gift,
-  Headphones,
+  Headset,
   MessageCircle,
   Package,
   Phone,
@@ -196,7 +196,10 @@ export default function HelpWidget() {
           <X aria-hidden className="help-widget__trigger-icon" size={22} strokeWidth={2.25} />
         ) : (
           <>
-            <Headphones aria-hidden className="help-widget__trigger-icon" size={20} strokeWidth={2} />
+            <span className="help-widget__icon-mark" aria-hidden>
+              <Headset className="help-widget__icon" size={22} strokeWidth={2.25} />
+              <span className="help-widget__status" />
+            </span>
             <span className="help-widget__trigger-label">Support</span>
           </>
         )}

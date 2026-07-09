@@ -1,0 +1,131 @@
+/* ─── Responsive utilities — shared breakpoints & safeguards ─── */
+/* Aligns with tokens.css: sm 640, md 768, lg 1024, xl 1280 */
+
+/* Prevent layout blowout from full-bleed sections */
+.premium-home,
+.homepage-banner-hero,
+.aplus-story-banner {
+  max-width: 100%;
+}
+
+/* Tablet bridge: drawer nav active but desktop-ish layouts (768–1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .storefront-page__inner {
+    padding-inline: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .cat-product-grid--grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .checkout-layout {
+    gap: 1.25rem;
+  }
+
+  .pdp-layout {
+    gap: 1.5rem;
+  }
+}
+
+/* Universal overflow guard for interactive shells */
+.storefront-page,
+.admin-main,
+.gp9-page {
+  min-width: 0;
+}
+
+/* Touch-friendly icon controls (44px minimum) */
+@media (max-width: 767px) {
+  .product-share-btn,
+  .wl-heart-btn,
+  .gear-story-hotspot,
+  .pdp-gallery__share {
+    min-width: var(--touch-target-min, 44px);
+    min-height: var(--touch-target-min, 44px);
+  }
+
+  /* Scrollable data regions */
+  .admin-table-wrap,
+  .pdp-fbt__items,
+  .pdp-cross-sell,
+  .compare-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  /* Long text safety */
+  .pdp-title,
+  .gear-story-modal__title,
+  .cat-product-card__name,
+  .checkout-hero__title {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* Modal / drawer safe areas */
+  .gear-story-modal,
+  .wl-drawer,
+  .cart-drawer,
+  .search-overlay {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .gear-story-modal__panel {
+    width: min(100%, calc(100vw - 1.5rem));
+    max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+    margin-inline: auto;
+  }
+
+  .gear-story-modal {
+    padding: max(0.75rem, env(safe-area-inset-top, 0px))
+      max(0.75rem, env(safe-area-inset-right, 0px))
+      max(0.75rem, env(safe-area-inset-bottom, 0px))
+      max(0.75rem, env(safe-area-inset-left, 0px));
+  }
+}
+
+/* Small phones (320–479px) */
+@media (max-width: 479px) {
+  .storefront-page__inner {
+    padding-inline: max(0.75rem, env(safe-area-inset-left, 0px))
+      max(0.75rem, env(safe-area-inset-right, 0px));
+  }
+
+  .gear-story-card {
+    width: min(82vw, 240px);
+    height: min(120vw, 380px);
+  }
+}
+
+/* Landscape phones */
+@media (max-width: 932px) and (orientation: landscape) and (max-height: 500px) {
+  .gear-story-modal__panel {
+    max-height: 96dvh;
+    overflow-y: auto;
+  }
+
+  .gear-story-modal__layout {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+
+  .gear-story-modal__gallery {
+    padding: 0.75rem;
+  }
+}
+
+/* Ultra-wide: cap content width rhythm */
+@media (min-width: 1920px) {
+  .storefront-page__inner--narrow {
+    max-width: 72rem;
+    margin-inline: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-share-btn,
+  .gear-story-card,
+  .cat-product-card {
+    transition: none !important;
+  }
+}

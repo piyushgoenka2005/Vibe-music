@@ -1,0 +1,47 @@
+import { NextResponse } from "next/server";
+import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
+import {
+  getProductQuestionById,
+  updateProductQuestion,
+} from "@/lib/server/productQuestionRepository";
+import { adminProductQuestionSchema } from "@/lib/validations/wrFeatures";
+
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(_request: Request, context: RouteContext) {
+  try {
+    await requireAdmin("reviews:read");
+    const { id } = await context.params;
+    const question = await getProductQuestionById(id);
+    if (!question) {
+      return NextResponse.json({ error: "Question not found" }, { status: 404 });
+    }
+    return NextResponse.json({ question });
+  } catch (error) {
+    return adminErrorResponse(error);
+  }
+}
+
+export async function PUT(request: Request, context: RouteContext) {
+  try {
+    const admin = await requireAdmin("reviews:write", request);
+    const { id } = await context.params;
+    const body = await request.json();
+    const parsed = adminProductQuestionSchema.parse(body);
+
+    const patch: Parameters<typeof updateProductQuestion>[1] = {};
+    if (parsed.status) patch.status = parsed.status;
+    if (parsed.answer !== undefined) {
+      patch.answer = parsed.answer;
+      patch.answeredBy = admin.email;
+      if (!parsed.status) {
+        patch.status = parsed.answer.trim() ? "approved" : "pending";
+      }
+    }
+
+    const question = await updateProductQuestion(id, patch);
+    return NextResponse.json({ question });
+  } catch (error) {
+    return adminErrorResponse(error);
+  }
+}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ProductDetail } from "@/types/product";
 import ProductDescription from "./ProductDescription";
 import ProductReviewsSection from "./reviews/ProductReviewsSection";
+import ProductQASection from "./qa/ProductQASection";
 import "@/styles/product-reviews.css";
 
 const TABS = [
@@ -122,18 +123,9 @@ export default function ProductTabs({
             hidden={activeTab !== "qa"}
             className="pdp-tabs__panel"
           >
-            {product.qa.length === 0 ? (
-              <p className="pdp-tabs__empty">No questions yet.</p>
-            ) : (
-              product.qa.map((item) => (
-                <article key={item.id} className="pdp-qa">
-                  <p className="pdp-qa__q">Q: {item.question}</p>
-                  <p className="pdp-qa__a">
-                    A: {item.answer} — <em>{item.author}</em>
-                  </p>
-                </article>
-              ))
-            )}
+            {activeTab === "qa" ? (
+              <ProductQASection productSlug={productSlug} staticQa={product.qa} />
+            ) : null}
           </div>
 
           <div

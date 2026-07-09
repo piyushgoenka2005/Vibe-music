@@ -13,7 +13,9 @@ interface GearStoriesSectionProps {
 
 export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
   const [activeStory, setActiveStory] = useState<GearStory | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
   const modalOpen = Boolean(activeStory);
+  const isPaused = modalOpen || isHovered;
 
   if (data.stories.length === 0) return null;
 
@@ -28,12 +30,16 @@ export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
         ) : null}
       </Reveal>
 
-      <div className="gear-stories__strip-outer">
+      <div
+        className="gear-stories__strip-outer"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <Marquee
           ariaLabel="Gear style story reels"
           className={[
             "gear-stories__marquee",
-            modalOpen ? "gear-stories__marquee--paused" : "",
+            isPaused ? "gear-stories__marquee--paused" : "",
           ]
             .filter(Boolean)
             .join(" ")}
@@ -51,7 +57,7 @@ export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
             >
               <GearStoryCard
                 story={story}
-                isPaused={modalOpen}
+                isPaused={isPaused}
                 playDelayMs={(index % data.stories.length) * 120}
                 onOpen={setActiveStory}
               />

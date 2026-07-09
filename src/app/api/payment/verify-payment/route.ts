@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
+import { getSessionUser } from "@/lib/auth/server-session";
 import { formatCheckoutError } from "@/lib/server/checkoutErrors";
-import { verifyAndCompletePayment } from "@/lib/server/orderService";
+import {
+  linkGuestOrdersToUser,
+  verifyAndCompletePayment,
+} from "@/lib/server/orderService";
 import {
   enforceMutationSecurity,
   enforceRateLimit,
@@ -35,6 +39,14 @@ export async function POST(request: Request) {
     }
 
     const order = await verifyAndCompletePayment(body);
+
+    const sessionUser = await getSessionUser();
+    if (sessionUser?.email) {
+      void linkGuestOrdersToUser(
+        sessionUser.uid,
+        sessionUser.email
+      ).catch(() => undefined);
+    }
 
     return NextResponse.json({
       success: true,

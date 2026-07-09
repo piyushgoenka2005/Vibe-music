@@ -260,12 +260,20 @@
 }
 
 .gear-story-modal__zoom {
+  position: relative;
   overflow: hidden;
   border-radius: 12px;
   background: #fff;
   cursor: zoom-in;
   --zoom-x: 50%;
   --zoom-y: 50%;
+}
+
+.gear-story-modal__share.product-share-btn--overlay {
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  cursor: pointer;
 }
 
 .gear-story-modal__image {

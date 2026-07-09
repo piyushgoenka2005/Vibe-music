@@ -14,11 +14,12 @@ export async function GET() {
   };
 
   const healthy = Object.values(checks).every((value) => value === "ok");
+  const isProduction = process.env.NODE_ENV === "production";
   const body = {
     status: healthy ? "healthy" : "degraded",
     timestamp,
     checks,
-    integrations,
+    integrations: isProduction ? undefined : integrations,
     version: process.env.VERCEL_GIT_COMMIT_SHA ?? "local",
   };
 

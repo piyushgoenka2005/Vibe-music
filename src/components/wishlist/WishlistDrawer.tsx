@@ -90,19 +90,22 @@ export default function WishlistDrawer() {
                     {formatCurrency(item.price)}
                   </div>
                   <div className="wl-drawer__actions">
-                    <ProductShareButton
-                      title={`${item.brand} ${item.name}`}
-                      url={`/product/${item.slug}`}
-                      size={16}
-                    />
                     <button
                       type="button"
+                      className="wl-drawer__action-btn wl-drawer__action-btn--primary"
                       onClick={() => moveToCart(item.productId)}
                     >
                       Move to Cart
                     </button>
+                    <ProductShareButton
+                      className="wl-drawer__share-btn"
+                      title={`${item.brand} ${item.name}`}
+                      url={`/product/${item.slug}`}
+                      size={15}
+                    />
                     <button
                       type="button"
+                      className="wl-drawer__action-btn"
                       onClick={() => remove(item.productId)}
                     >
                       Remove

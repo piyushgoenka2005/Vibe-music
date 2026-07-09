@@ -36,6 +36,11 @@ export const ROUTES = {
   adminAnalytics: "/admin/analytics",
   adminBanners: "/admin/banners",
   adminHomepage: "/admin/homepage",
+  adminAuditLogs: "/admin/audit-logs",
+  adminBrands: "/admin/brands",
+  adminReturns: "/admin/returns",
+  adminQuestions: "/admin/questions",
+  adminUsers: "/admin/users",
   adminSettings: "/admin/settings",
   adminBlog: "/admin/blog",
   blog: "/blog",
@@ -43,6 +48,7 @@ export const ROUTES = {
   deals: "/deals",
   brands: "/brands",
   compare: "/compare",
+  contact: "/contact",
   careers: "/pages/careers",
   page: (slug: string) => `/pages/${slug}`,
 } as const;
@@ -152,6 +158,7 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.blog || path.startsWith("/blog/")) return true;
   if (path === ROUTES.gp9 || path.startsWith(`${ROUTES.gp9}/`)) return true;
   if (path === ROUTES.deals || path === ROUTES.brands || path === ROUTES.compare) return true;
+  if (path === ROUTES.contact) return true;
   if (path === "/careers" || path === ROUTES.careers || path.startsWith("/pages/")) return true;
   if (path === ROUTES.admin) return true;
   if (path.startsWith("/admin/")) return true;

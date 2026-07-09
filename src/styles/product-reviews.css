@@ -304,4 +304,25 @@
     display: grid;
     grid-template-columns: 1fr;
   }
+
+  .pdp-review-card {
+    padding: 1rem 0;
+  }
+
+  .pdp-review-form textarea,
+  .pdp-review-form input[type="text"],
+  .pdp-review-form input[type="email"] {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .pdp-review-form__submit,
+  .pdp-reviews-section__footer button {
+    min-height: 44px;
+    width: 100%;
+  }
+
+  .pdp-review-summary__bar-row {
+    min-height: 44px;
+  }
 }

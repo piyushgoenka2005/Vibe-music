@@ -74,7 +74,10 @@ export async function getOrderShipmentDetails(orderId: string): Promise<{
 }> {
   const [shipment, events] = await Promise.all([
     getShipmentByOrderId(orderId),
-    getTrackingEventsByOrderId(orderId),
+    getTrackingEventsByOrderId(orderId).catch((error) => {
+      console.error("[shipment] Failed to load tracking events", orderId, error);
+      return [] as TrackingEvent[];
+    }),
   ]);
   return { shipment, events };
 }

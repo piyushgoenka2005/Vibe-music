@@ -51,7 +51,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(400px, 100vw);
+  width: min(400px, 100dvw);
   background: var(--surface-base);
   z-index: 1000001;
   display: flex;
@@ -170,11 +170,12 @@
 
 .wl-drawer__actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.wl-drawer__actions button {
+.wl-drawer__action-btn {
   font-size: 12px;
   font-weight: 500;
   padding: 8px 12px;
@@ -186,24 +187,50 @@
   transition:
     background var(--duration-fast),
     border-color var(--duration-fast),
-    color var(--duration-fast);
+    color var(--duration-fast),
+    box-shadow var(--duration-fast),
+    transform var(--duration-fast);
 }
 
-.wl-drawer__actions button:first-child {
+.wl-drawer__action-btn--primary {
   background: var(--brand-gradient, var(--brand-primary));
   color: var(--text-inverse);
   border-color: transparent;
   box-shadow: var(--shadow-sm);
 }
 
-.wl-drawer__actions button:first-child:hover {
+.wl-drawer__action-btn--primary:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
-.wl-drawer__actions button:not(:first-child):hover {
+.wl-drawer__action-btn:not(.wl-drawer__action-btn--primary):hover {
   border-color: var(--brand-primary);
   color: var(--brand-primary);
+}
+
+.wl-drawer__share-btn.product-share-btn {
+  --share-btn-size: 2.125rem;
+  border-radius: 50% !important;
+  background: var(--brand-primary-muted);
+  border: 1px solid rgba(18, 83, 237, 0.18);
+  color: var(--brand-primary);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.wl-drawer__share-btn.product-share-btn:hover {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(18, 83, 237, 0.22);
+}
+
+.wl-drawer__share-btn .product-share-btn__icon {
+  display: block;
+  flex-shrink: 0;
 }
 
 .wl-drawer__footer {
@@ -381,14 +408,19 @@
 
 @media (max-width: 767px) {
   .wl-drawer {
-    width: 100vw;
-    max-width: 100vw;
+    width: 100%;
+    max-width: 100dvw;
     padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  .wl-drawer__actions button {
+  .wl-drawer__action-btn {
     min-height: 44px;
     padding: 0.5rem 0.875rem;
+  }
+
+  .wl-drawer__share-btn.product-share-btn {
+    --share-btn-size: 2.5rem;
   }
 }
 

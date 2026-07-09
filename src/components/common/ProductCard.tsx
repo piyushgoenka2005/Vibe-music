@@ -6,7 +6,7 @@ import { useCartStore } from "@/store/cartStore";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import WishlistButton from "@/components/wishlist/WishlistButton";
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
 import { optimizeImageUrl } from "@/lib/images";
 import type { Product } from "@/types/product";
 import type { ViewMode } from "@/types/filters";
@@ -53,7 +53,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
   }
 
   function handleAdd() {
-    if (product.availability === "out-of-stock") return;
+    if (product.availability === "out-of-stock" || product.price <= 0) return;
     addItem(product);
     openDrawer();
   }
@@ -61,6 +61,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
   const displayName = formatProductCardTitle(product.name, product.brand);
   const originalPrice = product.originalPrice ?? product.price;
   const hasDiscount = originalPrice > product.price && product.price > 0;
+  const canQuickAdd = product.availability !== "out-of-stock" && product.price > 0;
 
   return (
     <article
@@ -119,8 +120,12 @@ export default function ProductCard({ product, view }: ProductCardProps) {
                 {formatCurrency(originalPrice)}
               </span>
             ) : null}
-            <span className="cat-product-card__price cat-product-card__price--sale">
-              {formatCurrency(product.price)}
+            <span
+              className={`cat-product-card__price cat-product-card__price--sale${
+                product.price <= 0 ? " cat-product-card__price--enquiry" : ""
+              }`}
+            >
+              {formatDisplayPrice(product.price)}
             </span>
           </div>
           <span
@@ -133,7 +138,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           type="button"
           className="cat-product-card__add"
           onClick={handleAdd}
-          disabled={product.availability === "out-of-stock"}
+          disabled={!canQuickAdd}
           aria-label={`Add ${product.name} to cart`}
         >
           Quick Add to Cart

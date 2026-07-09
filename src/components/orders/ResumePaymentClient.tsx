@@ -32,17 +32,27 @@ export function ResumePaymentClient({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const successUrl = `/checkout/success?orderId=${encodeURIComponent(order.id)}&email=${encodeURIComponent(email)}`;
+  const successParams = new URLSearchParams({
+    orderId: order.id,
+    email,
+  });
+  if (order.trackingToken) {
+    successParams.set("trackingToken", order.trackingToken);
+  }
+  const successUrl = `/checkout/success?${successParams.toString()}`;
 
   const resumeAndPay = useCallback(async () => {
     setIsProcessing(true);
     setError(null);
 
     try {
-      const session = await resumePayment(order.id, email);
+      const session = await resumePayment(order.id, {
+        email,
+        trackingToken: order.trackingToken,
+      });
 
       if (session.demoMode) {
-        const demo = await completeDemoPayment(order.id, email);
+        const demo = await completeDemoPayment(order.id, email, order.trackingToken);
         if (demo.order) {
           cacheOrderForConfirmation(demo.order);
         }

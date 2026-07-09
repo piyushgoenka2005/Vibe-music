@@ -14,12 +14,13 @@ export default async function InvoicePage({
   searchParams,
 }: {
   params: Promise<{ orderId: string }>;
-  searchParams?: Promise<{ email?: string; token?: string }>;
+  searchParams?: Promise<{ email?: string; token?: string; returnTo?: string }>;
 }) {
   const { orderId } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const email = resolvedSearchParams?.email?.trim().toLowerCase();
   const token = resolvedSearchParams?.token?.trim();
+  const returnTo = resolvedSearchParams?.returnTo?.trim();
 
   let allowed = false;
 
@@ -62,6 +63,10 @@ export default async function InvoicePage({
     htmlUrl = appendQueryParam(htmlUrl, "token", token);
   } else if (email) {
     htmlUrl = appendQueryParam(htmlUrl, "email", email);
+  }
+
+  if (returnTo) {
+    htmlUrl = appendQueryParam(htmlUrl, "returnTo", returnTo);
   }
 
   redirect(htmlUrl);

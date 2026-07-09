@@ -1,5 +1,5 @@
-/** First order sequence number each calendar year (→ 005001). */
-export const ORDER_ID_SEQUENCE_START = 5001;
+/** First order sequence number each calendar year (→ 005000). */
+export const ORDER_ID_SEQUENCE_START = 5000;
 
 const ORDER_ID_PATTERN = /^(\d{6})-(\d{4})$/;
 

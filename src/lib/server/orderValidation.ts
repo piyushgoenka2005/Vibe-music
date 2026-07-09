@@ -1,5 +1,7 @@
 import { getProductById } from "@/services/catalogService";
+import { loadProducts } from "@/lib/server/catalogRepository";
 import { getVariantFromProduct } from "@/lib/server/variantService";
+import type { CatalogProduct } from "@/types/catalog";
 import {
   getDefaultGstRateForCategory,
   type GSTRate,
@@ -14,18 +16,22 @@ import { validateCoupon } from "@/lib/server/couponService";
 import { validateStockAvailability } from "@/lib/server/inventoryService";
 import type { CreateOrderPayload } from "@/types/order";
 
-async function validateStockAvailabilityFromCatalog(
-  items: Array<{
-    productId: string;
-    variantId?: string;
-    quantity: number;
-    name: string;
-  }>
-): Promise<void> {
+type StockCheckLine = {
+  productId: string;
+  variantId?: string;
+  quantity: number;
+  name: string;
+};
+
+function validateStockFromLocalCatalog(
+  items: StockCheckLine[],
+  localProducts: CatalogProduct[]
+): void {
+  const byId = new Map(localProducts.map((product) => [product.id, product]));
   const errors: string[] = [];
 
   for (const item of items) {
-    const product = await getProductById(item.productId);
+    const product = byId.get(item.productId);
     if (!product || product.status !== "active") {
       errors.push(`${item.name}: product unavailable`);
       continue;
@@ -61,6 +67,12 @@ async function validateStockAvailabilityFromCatalog(
   }
 }
 
+async function validateStockAvailabilityFromCatalog(
+  items: StockCheckLine[]
+): Promise<void> {
+  validateStockFromLocalCatalog(items, loadProducts());
+}
+
 async function validateStockAvailabilityWithFallback(
   items: Array<{
     productId: string;
@@ -88,22 +100,22 @@ async function validateStockAvailabilityWithFallback(
 export async function resolveOrderItemsFromFirestore(
   items: CreateOrderPayload["items"]
 ): Promise<CreateOrderPayload["items"]> {
-  const { loadProducts } = await import("@/lib/server/catalogRepository");
   const localProducts = loadProducts();
+  const localById = new Map(localProducts.map((product) => [product.id, product]));
   const useLocalCatalog = isGlobalFirestoreCircuitOpen();
+  let usedFirestoreLookup = false;
 
   const resolved = await Promise.all(
     items.map(async (item) => {
-      let product =
-        localProducts.find((entry) => entry.id === item.productId) ?? null;
+      let product = localById.get(item.productId) ?? null;
 
       if (!product && !useLocalCatalog) {
+        usedFirestoreLookup = true;
         product = (await getProductById(item.productId)) ?? null;
       }
 
       if (!product) {
-        product =
-          localProducts.find((entry) => entry.id === item.productId) ?? null;
+        product = localById.get(item.productId) ?? null;
       }
 
       if (!product || product.status !== "active") {
@@ -136,26 +148,19 @@ export async function resolveOrderItemsFromFirestore(
     })
   );
 
-  if (isGlobalFirestoreCircuitOpen()) {
-    await validateStockAvailabilityFromCatalog(
-      resolved.map((item) => ({
-        productId: item.productId,
-        variantId: item.variantId,
-        quantity: item.quantity,
-        name: item.name,
-      }))
-    );
+  const stockLines: StockCheckLine[] = resolved.map((item) => ({
+    productId: item.productId,
+    variantId: item.variantId,
+    quantity: item.quantity,
+    name: item.name,
+  }));
+
+  if (isGlobalFirestoreCircuitOpen() || !usedFirestoreLookup) {
+    validateStockFromLocalCatalog(stockLines, localProducts);
     return resolved;
   }
 
-  await validateStockAvailabilityWithFallback(
-    resolved.map((item) => ({
-      productId: item.productId,
-      variantId: item.variantId,
-      quantity: item.quantity,
-      name: item.name,
-    }))
-  );
+  await validateStockAvailabilityWithFallback(stockLines);
 
   return resolved;
 }

@@ -1,7 +1,7 @@
 /* ─── Fixed vertical social rail (luxury editorial) ─── */
 
 :root {
-  --social-rail-inset-left: 10px;
+  --social-rail-inset-left: 4px;
   --social-rail-track-width: 26px;
   --social-rail-content-gap: 3.5rem;
   --social-rail-clearance: calc(
@@ -11,30 +11,22 @@
 
 @media (min-width: 1280px) {
   :root {
-    --social-rail-inset-left: 14px;
+    --social-rail-inset-left: 8px;
     --social-rail-content-gap: 3.75rem;
   }
 }
 
 .social-rail {
   position: fixed;
-  left: var(--social-rail-inset-left);  top: 50%;
+  left: var(--social-rail-inset-left);
+  top: 50%;
   z-index: 90;
   display: none;
   flex-direction: column;
   align-items: center;
   gap: 1.35rem;
-  opacity: 0;
-  transform: translateY(-50%) translateX(-10px);
-  transition:
-    opacity 600ms var(--ease-premium),
-    transform 600ms var(--ease-premium);
-  pointer-events: none;
-}
-
-.social-rail--visible {
   opacity: 1;
-  transform: translateY(-50%) translateX(0);
+  transform: translateY(-50%);
   pointer-events: auto;
 }
 
@@ -132,12 +124,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .social-rail {
-    transition: none;
-    opacity: 1;
-    transform: translateY(-50%);
-  }
-
   .social-rail__link,
   .social-rail__newsletter {
     transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease;

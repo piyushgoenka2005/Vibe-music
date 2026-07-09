@@ -112,6 +112,7 @@ export default function AddressAutocompleteField({
               <button
                 type="button"
                 role="option"
+                aria-selected={false}
                 onClick={() => selectPrediction(prediction)}
                 style={{
                   display: "block",

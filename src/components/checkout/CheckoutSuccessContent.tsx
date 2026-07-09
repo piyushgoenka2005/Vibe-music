@@ -1,20 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { fetchGuestOrder, fetchOrder } from "@/services/orderService";
+import { useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { formatOrderIdDisplay } from "@/lib/orderId";
+import {
+  isInvoiceGenerated,
+  isPaymentVerified,
+  isPlacedOrder,
+} from "@/lib/orderPlacement";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrencyPrecise } from "@/utils/currency";
 import {
   clearCachedOrderForConfirmation,
   readCachedOrderForConfirmation,
 } from "@/lib/checkout/orderConfirmationCache";
-import { isInvoiceAvailable } from "@/features/invoice/utils/invoice-utils";
-import type { Order } from "@/types/order";
+import { isInvoiceAvailable, withInvoiceReturnTo } from "@/features/invoice/utils/invoice-utils";
+import { useCheckoutSuccessOrder } from "@/hooks/useCheckoutSuccessOrder";
 import "@/components/checkout/checkout.css";
 
 export default function CheckoutSuccessContent() {
@@ -25,13 +29,25 @@ export default function CheckoutSuccessContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const clearCart = useCartStore((s) => s.clearCart);
   const missingOrderId = !orderId;
-  const [order, setOrder] = useState<Order | null>(() =>
-    orderId ? readCachedOrderForConfirmation(orderId) : null
-  );
-  const [error, setError] = useState<string | null>(
-    missingOrderId ? "Order ID missing" : null
-  );
-  const [loading, setLoading] = useState(!missingOrderId && !order);
+
+  const initial =
+    orderId != null
+      ? (() => {
+          const cached = readCachedOrderForConfirmation(orderId);
+          return cached ? { order: cached, invoiceUrls: null } : undefined;
+        })()
+      : undefined;
+
+  const { data, error, isLoading, isError } = useCheckoutSuccessOrder({
+    orderId,
+    email: emailParam,
+    trackingToken: trackingTokenParam,
+    isAuthenticated,
+    initial,
+  });
+
+  const order = data?.order ?? null;
+  const invoiceUrls = data?.invoiceUrls ?? null;
 
   useEffect(() => {
     if (orderId) {
@@ -44,47 +60,38 @@ export default function CheckoutSuccessContent() {
   }, []);
 
   useEffect(() => {
-    if (!orderId) return;
-
-    const resolvedOrderId = orderId;
-    const cached = readCachedOrderForConfirmation(resolvedOrderId);
-
-    async function loadOrder() {
-      try {
-        let loaded: Order;
-
-        if (isAuthenticated) {
-          loaded = await fetchOrder(resolvedOrderId);
-        } else {
-          if (!emailParam) {
-            if (!cached) {
-              setError("Email is required to view this order");
-            }
-            return;
-          }
-          loaded = await fetchGuestOrder(resolvedOrderId, emailParam);
-        }
-
-        setOrder(loaded);
-        clearCachedOrderForConfirmation(resolvedOrderId);
-      } catch (err: unknown) {
-        if (!cached) {
-          setError(err instanceof Error ? err.message : "Unable to load order");
-        }
-      } finally {
-        setLoading(false);
-      }
+    if (orderId && order && isPlacedOrder(order)) {
+      clearCachedOrderForConfirmation(orderId);
     }
-
-    void loadOrder();
-  }, [orderId, emailParam, isAuthenticated]);
+  }, [order, orderId]);
 
   const trackHref =
     orderId && (trackingTokenParam || order?.trackingToken)
       ? `${ROUTES.trackOrder}?orderId=${encodeURIComponent(orderId)}&trackingToken=${encodeURIComponent(trackingTokenParam ?? order?.trackingToken ?? "")}`
       : ROUTES.trackOrder;
 
-  if (loading && !order) {
+  const resumePaymentHref =
+    orderId != null
+      ? `/orders/${encodeURIComponent(orderId)}/pay${
+          trackingTokenParam
+            ? `?trackingToken=${encodeURIComponent(trackingTokenParam)}`
+            : ""
+        }`
+      : ROUTES.checkout;
+
+  if (missingOrderId) {
+    return (
+      <div className="checkout-success">
+        <h1>Order Confirmation</h1>
+        <p role="alert">Order ID missing</p>
+        <Link href={ROUTES.trackOrder} className="cart-btn cart-btn--checkout">
+          Track Order
+        </Link>
+      </div>
+    );
+  }
+
+  if (isLoading && !order) {
     return (
       <div className="checkout-success">
         <p className="checkout-success__loading">Confirming your order…</p>
@@ -92,11 +99,13 @@ export default function CheckoutSuccessContent() {
     );
   }
 
-  if (error || !order) {
+  if (isError || !order) {
     return (
       <div className="checkout-success">
         <h1>Order Confirmation</h1>
-        <p role="alert">{error ?? "Order not found"}</p>
+        <p role="alert">
+          {error instanceof Error ? error.message : "Unable to load order"}
+        </p>
         <Link href={trackHref} className="cart-btn cart-btn--checkout">
           Track Order
         </Link>
@@ -104,12 +113,13 @@ export default function CheckoutSuccessContent() {
     );
   }
 
-  const invoiceQuery = emailParam
-    ? `?email=${encodeURIComponent(emailParam)}`
-    : "";
-  const invoiceViewUrl = `/api/invoices/${encodeURIComponent(order.id)}/html${invoiceQuery}`;
-  const invoicePrintUrl = `${invoiceViewUrl}${invoiceQuery ? "&" : "?"}print=1`;
-
+  const placed = isPlacedOrder(order);
+  const paymentVerified = isPaymentVerified(order);
+  const invoiceReady = isInvoiceGenerated(order);
+  const invoicePrintUrl = invoiceUrls?.print
+    ? withInvoiceReturnTo(invoiceUrls.print, ROUTES.checkoutSuccess)
+    : undefined;
+  const invoicePdfUrl = invoiceUrls?.pdf;
   const canShowInvoice = isInvoiceAvailable(order);
   const paymentLabel =
     order.paymentStatus === "cod_pending"
@@ -117,6 +127,60 @@ export default function CheckoutSuccessContent() {
       : order.paymentStatus === "paid"
         ? "Paid"
         : order.paymentStatus;
+
+  if (!placed) {
+    return (
+      <div className="checkout-success">
+        <div className="checkout-success__hero">
+          <div
+            className="checkout-success__icon checkout-success__icon--pending"
+            aria-hidden="true"
+          >
+            …
+          </div>
+          <div>
+            <h1>
+              {!paymentVerified ? "Payment pending" : "Finalizing your order"}
+            </h1>
+            <p className="checkout-success__lead">
+              Order <strong>{formatOrderIdDisplay(order.id)}</strong> is not
+              placed yet.
+              {!paymentVerified
+                ? " Complete payment to confirm your purchase."
+                : " We are generating your tax invoice — this usually takes a moment."}
+            </p>
+            <ul className="checkout-success__meta">
+              <li>
+                <span>Email</span>
+                <strong>{order.email}</strong>
+              </li>
+              <li>
+                <span>Payment</span>
+                <strong>{paymentLabel}</strong>
+              </li>
+              <li>
+                <span>Invoice</span>
+                <strong>{invoiceReady ? "Ready" : "Pending"}</strong>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="checkout-actions checkout-success__actions">
+          {!paymentVerified ? (
+            <Link href={resumePaymentHref} className="cart-btn cart-btn--checkout">
+              Complete payment
+            </Link>
+          ) : (
+            <p className="checkout-success__loading">Updating order status…</p>
+          )}
+          <Link href={ROUTES.home} className="cart-btn cart-btn--secondary">
+            Continue Shopping
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="checkout-success">
@@ -152,22 +216,25 @@ export default function CheckoutSuccessContent() {
             ) : null}
           </ul>
 
-          {canShowInvoice ? (
+          {canShowInvoice && invoiceUrls ? (
             <div className="checkout-success__invoice-actions">
+              <a href={invoicePrintUrl} className="cart-btn cart-btn--checkout">
+                View invoice
+              </a>
               <a
-                href={invoicePrintUrl}
+                href={invoicePdfUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="cart-btn cart-btn--checkout"
+                className="cart-btn cart-btn--secondary"
               >
-                Print invoice
+                Download PDF
               </a>
             </div>
-          ) : (
+          ) : canShowInvoice ? (
             <p className="checkout-success__invoice-note">
               Your invoice will be ready shortly. Refresh this page in a moment.
             </p>
-          )}
+          ) : null}
         </div>
       </div>
 

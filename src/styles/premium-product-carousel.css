@@ -512,6 +512,43 @@
       999px
     );
   }
+
+  .premium-home .premium-product-carousel .product-suggest__item {
+    padding: 0.625rem;
+    border-radius: 14px;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-img {
+    margin-bottom: 0.625rem;
+    border-radius: 10px;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__brand {
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__name {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding-top: 0.5rem;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-price--enquiry {
+    max-width: 9ch;
+    font-size: 0.8125rem;
+    line-height: 1.15;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-action {
+    font-size: 0.6875rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

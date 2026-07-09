@@ -59,8 +59,6 @@ export function ProductSpinner({ className }: ProductSpinnerProps) {
     };
   }, []);
 
-  const frameCount = config?.frames.length ?? 0;
-
   const setFromProgress = useCallback(
     (p: number) => {
       if (!config) return;

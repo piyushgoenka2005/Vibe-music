@@ -23,11 +23,13 @@ export default async function ResumePaymentPage({
   searchParams,
 }: {
   params: Promise<{ orderId: string }>;
-  searchParams: Promise<{ email?: string }>;
+  searchParams: Promise<{ email?: string; trackingToken?: string }>;
 }) {
   const { orderId } = await params;
-  const { email: emailParam } = await searchParams;
+  const { email: emailParam, trackingToken: trackingTokenParam } =
+    await searchParams;
   const guestEmail = emailParam?.trim().toLowerCase();
+  const trackingToken = trackingTokenParam?.trim();
 
   const order = await getOrderById(orderId);
   if (!order) notFound();
@@ -42,6 +44,7 @@ export default async function ResumePaymentPage({
     canAccessOrder(order, {
       userId: sessionUser?.uid,
       email: guestEmail ?? sessionUser?.email?.toLowerCase(),
+      trackingToken,
     });
 
   if (!hasAccess) notFound();
@@ -49,8 +52,11 @@ export default async function ResumePaymentPage({
   const email = guestEmail ?? sessionUser?.email?.toLowerCase() ?? order.email;
 
   if (order.paymentStatus === "paid") {
-    const params = new URLSearchParams({ orderId: order.id, email });
-    redirect(`/checkout/success?${params.toString()}`);
+    const successParams = new URLSearchParams({ orderId: order.id, email });
+    if (order.trackingToken) {
+      successParams.set("trackingToken", order.trackingToken);
+    }
+    redirect(`/checkout/success?${successParams.toString()}`);
   }
 
   if (order.paymentStatus !== "pending" || order.paymentMethod !== "razorpay") {

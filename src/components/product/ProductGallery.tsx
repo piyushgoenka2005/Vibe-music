@@ -134,7 +134,7 @@ export default function ProductGallery({
     );
 
     return { width, height };
-  }, [mainSize.height, paneSize.height, paneSize.width]);
+  }, [mainSize.height, paneSize]);
 
   const lensDimensions = useMemo(() => {
     const baseWidth = imageRect.width > 0 ? imageRect.width : mainSize.width;
@@ -250,6 +250,9 @@ export default function ProductGallery({
 
   const onTouchMove = useCallback(
     (e: React.TouchEvent<HTMLDivElement>) => {
+      if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+        return;
+      }
       const touch = e.touches[0];
       if (!touch) return;
       updateLens(touch.clientX, touch.clientY);
@@ -324,12 +327,23 @@ export default function ProductGallery({
           onMouseMove={onMouseMove}
           onTouchStart={(e) => {
             setTouchStartX(e.touches[0]?.clientX ?? null);
-            if (canZoom) setZoomActive(true);
           }}
           onTouchMove={onTouchMove}
           onTouchEnd={(e) => {
+            if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+              const touch = e.changedTouches[0];
+              if (touch && touchStartX != null) {
+                const diff = touch.clientX - touchStartX;
+                if (Math.abs(diff) < 12) {
+                  openLightbox();
+                }
+              }
+            }
             setZoomActive(false);
-            if (touchStartX == null || images.length <= 1) return;
+            if (touchStartX == null || images.length <= 1) {
+              setTouchStartX(null);
+              return;
+            }
             const endX = e.changedTouches[0]?.clientX ?? touchStartX;
             const diff = endX - touchStartX;
             if (Math.abs(diff) > 48) {
@@ -345,7 +359,11 @@ export default function ProductGallery({
             setZoomActive(false);
             setTouchStartX(null);
           }}
-          onClick={openLightbox}
+          onClick={() => {
+            if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+              openLightbox();
+            }
+          }}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === "Enter" && openLightbox()}
@@ -444,6 +462,23 @@ export default function ProductGallery({
           aria-modal="true"
           aria-label="Image lightbox"
           onClick={() => setLightboxOpen(false)}
+          onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
+          onTouchEnd={(e) => {
+            if (touchStartX == null || images.length <= 1) {
+              setTouchStartX(null);
+              return;
+            }
+            const endX = e.changedTouches[0]?.clientX ?? touchStartX;
+            const diff = endX - touchStartX;
+            if (Math.abs(diff) > 48) {
+              setActiveIndex((current) => {
+                if (diff < 0) return Math.min(images.length - 1, current + 1);
+                return Math.max(0, current - 1);
+              });
+              setShowVideo(false);
+            }
+            setTouchStartX(null);
+          }}
         >
           <button
             type="button"
@@ -453,6 +488,34 @@ export default function ProductGallery({
           >
             ×
           </button>
+          {images.length > 1 ? (
+            <>
+              <button
+                type="button"
+                className="pdp-lightbox__nav pdp-lightbox__nav--prev"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveIndex((current) => Math.max(0, current - 1));
+                  setShowVideo(false);
+                }}
+                aria-label="Previous image"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                className="pdp-lightbox__nav pdp-lightbox__nav--next"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveIndex((current) => Math.min(images.length - 1, current + 1));
+                  setShowVideo(false);
+                }}
+                aria-label="Next image"
+              >
+                ›
+              </button>
+            </>
+          ) : null}
           <div
             className="pdp-lightbox__swatch"
             onClick={(e) => e.stopPropagation()}

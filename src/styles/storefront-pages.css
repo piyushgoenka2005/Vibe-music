@@ -106,7 +106,7 @@
 
   .storefront-page .pdp {
     padding: 1rem max(1rem, env(safe-area-inset-left, 0px))
-      calc(5.5rem + env(safe-area-inset-bottom, 0px))
+      calc(6.25rem + env(safe-area-inset-bottom, 0px))
       max(1rem, env(safe-area-inset-right, 0px));
   }
 
@@ -124,6 +124,7 @@
     padding: 1rem max(1rem, env(safe-area-inset-left, 0px))
       calc(5.5rem + env(safe-area-inset-bottom, 0px))
       max(1rem, env(safe-area-inset-right, 0px));
+    min-height: 0;
   }
 
   .storefront-page .pdp-actions__row {
@@ -181,11 +182,11 @@
   .storefront-page .pdp {
     padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
     padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
-    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
   }
 
   .storefront-page .pdp-info {
-    padding: 1rem;
+    padding: 0;
   }
 
   .storefront-page .pdp-price {
@@ -207,6 +208,7 @@
     padding: 0.75rem max(0.75rem, env(safe-area-inset-left, 0px))
       calc(5.5rem + env(safe-area-inset-bottom, 0px))
       max(0.75rem, env(safe-area-inset-right, 0px));
+    min-height: 0;
   }
 }
 
@@ -557,10 +559,15 @@
 .storefront-page .checkout-page {
   max-width: var(--content-max);
   padding: 1.5rem 1.25rem 4rem;
-  min-height: calc(100vh - var(--site-header-offset, 118px) - 4rem);
 }
 
-.storefront-main:has(> .storefront-page--subtle) {
+@media (min-width: 768px) {
+  .storefront-page .checkout-page {
+    min-height: calc(100vh - var(--site-header-offset, 118px) - 4rem);
+  }
+}
+
+.storefront-main:has(> .storefront-page--subtle:not(:has(.checkout-page))) {
   min-height: calc(100vh - var(--site-header-offset, 118px));
 }
 
