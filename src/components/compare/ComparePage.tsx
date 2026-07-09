@@ -1,25 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { formatCurrency } from "@/utils/currency";
 import { ROUTES } from "@/lib/routes";
 import { useCompareStore } from "@/store/compareStore";
+import { useIsClient } from "@/hooks/useIsClient";
+import "@/styles/compare.css";
+
+function availabilityLabel(availability: string): string {
+  if (availability === "in-stock") return "In stock";
+  if (availability === "limited") return "Limited";
+  return "Out of stock";
+}
 
 export default function ComparePage() {
   const items = useCompareStore((s) => s.items);
   const remove = useCompareStore((s) => s.remove);
   const clear = useCompareStore((s) => s.clear);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const mounted = useIsClient();
 
   if (!mounted) {
-    return <main className="storefront-page"><p className="storefront-loading">Loading…</p></main>;
+    return (
+      <main className="storefront-page">
+        <p className="storefront-loading">Loading…</p>
+      </main>
+    );
   }
 
   return (
-    <main className="storefront-page storefront-page--subtle">
+    <main className="storefront-page storefront-page--subtle compare-page">
       <header className="storefront-page__header">
         <p className="storefront-page__eyebrow">Compare</p>
         <h1 className="storefront-page__title">Compare Products</h1>
@@ -29,7 +38,7 @@ export default function ComparePage() {
       </header>
 
       {items.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
+        <div className="compare-page__empty">
           <p>No products to compare yet.</p>
           <p style={{ marginTop: "1rem" }}>
             <Link href={ROUTES.search}>Browse products</Link>
@@ -37,18 +46,28 @@ export default function ComparePage() {
         </div>
       ) : (
         <>
-          <div style={{ overflowX: "auto", marginBottom: "1rem" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "40rem" }}>
+          <div
+            className="compare-table-wrap"
+            role="region"
+            aria-label="Product comparison table"
+            aria-describedby="compare-table-scroll-hint"
+            tabIndex={0}
+          >
+            <p id="compare-table-scroll-hint" className="compare-table__hint">
+              Scroll horizontally to compare product details.
+            </p>
+            <table className="compare-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: "left", padding: "0.75rem" }}>Feature</th>
+                  <th scope="col">Feature</th>
                   {items.map((item) => (
-                    <th key={item.productId} style={{ padding: "0.75rem", minWidth: "10rem" }}>
+                    <th key={item.productId} scope="col">
                       <Link href={`/product/${item.slug}`}>{item.name}</Link>
                       <button
                         type="button"
+                        className="compare-table__remove"
+                        aria-label={`Remove ${item.name} from compare`}
                         onClick={() => remove(item.productId)}
-                        style={{ display: "block", marginTop: "0.5rem", fontSize: "0.75rem" }}
                       >
                         Remove
                       </button>
@@ -67,20 +86,57 @@ export default function ComparePage() {
                 />
                 <CompareRow
                   label="Availability"
-                  values={items.map((i) =>
-                    i.availability === "in-stock"
-                      ? "In stock"
-                      : i.availability === "limited"
-                        ? "Limited"
-                        : "Out of stock"
-                  )}
+                  values={items.map((i) => availabilityLabel(i.availability))}
                 />
               </tbody>
             </table>
           </div>
-          <button type="button" onClick={clear}>
-            Clear all
-          </button>
+
+          <div className="compare-mobile-cards" aria-label="Product comparison cards">
+            {items.map((item) => (
+              <article key={item.productId} className="compare-mobile-card">
+                <h2 className="compare-mobile-card__title">
+                  <Link href={`/product/${item.slug}`}>{item.name}</Link>
+                </h2>
+                <button
+                  type="button"
+                  className="compare-mobile-card__remove"
+                  aria-label={`Remove ${item.name} from compare`}
+                  onClick={() => remove(item.productId)}
+                >
+                  Remove from compare
+                </button>
+                <dl className="compare-mobile-card__rows">
+                  <div className="compare-mobile-card__row">
+                    <dt>Brand</dt>
+                    <dd>{item.brand}</dd>
+                  </div>
+                  <div className="compare-mobile-card__row">
+                    <dt>Price</dt>
+                    <dd>{formatCurrency(item.price)}</dd>
+                  </div>
+                  <div className="compare-mobile-card__row">
+                    <dt>Rating</dt>
+                    <dd>
+                      {item.reviewCount > 0
+                        ? `${item.rating.toFixed(1)} (${item.reviewCount})`
+                        : "—"}
+                    </dd>
+                  </div>
+                  <div className="compare-mobile-card__row">
+                    <dt>Availability</dt>
+                    <dd>{availabilityLabel(item.availability)}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+
+          <div className="compare-page__actions">
+            <button type="button" className="compare-page__clear" onClick={clear}>
+              Clear all
+            </button>
+          </div>
         </>
       )}
     </main>
@@ -90,11 +146,11 @@ export default function ComparePage() {
 function CompareRow({ label, values }: { label: string; values: string[] }) {
   return (
     <tr>
-      <td style={{ padding: "0.75rem", fontWeight: 600, borderTop: "1px solid #eee" }}>{label}</td>
+      <th scope="row" className="compare-table__feature">
+        {label}
+      </th>
       {values.map((value, index) => (
-        <td key={index} style={{ padding: "0.75rem", borderTop: "1px solid #eee" }}>
-          {value}
-        </td>
+        <td key={index}>{value}</td>
       ))}
     </tr>
   );

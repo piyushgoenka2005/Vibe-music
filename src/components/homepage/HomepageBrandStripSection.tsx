@@ -20,11 +20,11 @@ function BrandStripLink({ brand }: { brand: HomepageBrandItem }) {
           <Image
             alt=""
             className="homepage-brand-strip__logo"
-            height={40}
+            height={48}
             loading="lazy"
-            sizes="(max-width: 767px) 120px, 148px"
+            sizes="(max-width: 767px) 136px, 168px"
             src={brand.logoUrl}
-            width={120}
+            width={140}
           />
           <span className="visually-hidden">{brand.name}</span>
         </>

@@ -10,7 +10,11 @@ const HEADLINE_ID = "browse-category-cards-title";
 
 export default function BrowseCategoryCardsSection() {
   return (
-    <Reveal as="section" className="category-cards-container" aria-labelledby={HEADLINE_ID}>
+    <Reveal
+      as="section"
+      className="browse-category-cards category-cards-container"
+      aria-labelledby={HEADLINE_ID}
+    >
       <div className="category-cards-container__header page-width">
         <div className="category-cards-container__header-content">
           <h2 className="category-cards-container__title" id={HEADLINE_ID}>

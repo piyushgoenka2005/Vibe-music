@@ -2,16 +2,15 @@ import { getBrandLogoUrl } from "@/lib/brandLogos";
 import type { HomepageBrandItem } from "@/types/homepage";
 
 export const TOP_BRAND_STRIP_SLUGS = [
+  "roland",
   "hertz",
   "avus",
-  "roland",
-  "trinity",
+  "zoom",
+  "gibraltar",
   "adeon",
-  "gibson",
-  "fender",
-  "ibanez",
-  "prs",
-  "epiphone",
+  "zildjian",
+  "hartke",
+  "m-audio",
 ] as const;
 
 export type TopBrandStripSlug = (typeof TOP_BRAND_STRIP_SLUGS)[number];
@@ -30,11 +29,14 @@ export const ROLAND_BRAND_FALLBACK = {
 
 const BRAND_STRIP_FALLBACKS: Record<string, BrandLike> = {
   roland: ROLAND_BRAND_FALLBACK,
-  gibson: { id: "gibson", name: "GIBSON", slug: "gibson" },
-  fender: { id: "fender", name: "FENDER", slug: "fender" },
-  ibanez: { id: "ibanez", name: "IBANEZ", slug: "ibanez" },
-  prs: { id: "prs", name: "PRS", slug: "prs" },
-  epiphone: { id: "epiphone", name: "EPIPHONE", slug: "epiphone" },
+  hertz: { id: "hertz", name: "HERTZ", slug: "hertz" },
+  avus: { id: "avus", name: "AVUS", slug: "avus" },
+  zoom: { id: "zoom", name: "ZOOM", slug: "zoom" },
+  gibraltar: { id: "gibraltar", name: "GIBRALTAR", slug: "gibraltar" },
+  adeon: { id: "adeon", name: "ADEON", slug: "adeon" },
+  zildjian: { id: "zildjian", name: "ZILDJIAN", slug: "zildjian" },
+  hartke: { id: "hartke", name: "HARTKE", slug: "hartke" },
+  "m-audio": { id: "m-audio", name: "M-AUDIO", slug: "m-audio" },
 };
 
 export function buildTopBrandStripItems(brands: BrandLike[]): HomepageBrandItem[] {

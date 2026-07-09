@@ -50,8 +50,8 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  gap: clamp(0.05rem, 0.2vw, 0.25rem);
-  padding: clamp(2rem, 8vh, 5rem) 0;
+  gap: clamp(0.1rem, 0.35vh, 0.5rem);
+  padding: clamp(2rem, 8vh, 5rem) clamp(1.25rem, 3vw, 2.5rem);
   pointer-events: none;
   user-select: none;
 }
@@ -151,9 +151,15 @@
 }
 
 .culture-typography__word {
+  --word-scale: 1;
   margin: 0;
+  max-width: 100%;
   font-family: var(--font-primary);
-  font-size: clamp(7.25rem, 14.2vw, 22.5rem);
+  font-size: clamp(
+    calc(7.25rem * var(--word-scale)),
+    calc(14.2vw * var(--word-scale)),
+    calc(22.5rem * var(--word-scale))
+  );
   font-weight: 900;
   line-height: 0.82;
   letter-spacing: -0.045em;
@@ -188,7 +194,8 @@
 @media (min-width: 1024px) {
   .culture-typography__content {
     justify-content: flex-end;
-    padding-right: clamp(3rem, 12vw, 8rem);
+    padding-inline-start: clamp(2rem, 6vw, 4rem);
+    padding-inline-end: clamp(3rem, 12vw, 8rem);
   }
 
   .culture-typography__content-inner {
@@ -214,6 +221,7 @@
   line-height: 1.08;
   letter-spacing: -0.03em;
   color: #ffffff;
+  white-space: pre-line;
 }
 
 .culture-typography__subtitle {
@@ -329,26 +337,104 @@
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
 }
 
+.culture-typography--static .culture-typography__scroll-track {
+  transform: none !important;
+}
+
+.culture-typography--scrollable {
+  --culture-scroll-height: calc(100svh + 240vh);
+}
+
+.culture-typography--scrollable .culture-typography__scroll-track {
+  will-change: transform;
+}
+
+.culture-typography--scrollable .culture-typography__typography-stack {
+  overflow: hidden;
+}
+
+.culture-typography--static .culture-typography__typography-stack {
+  overflow: hidden;
+}
+
+.culture-typography--desktop-quote.culture-typography--static .culture-typography__word:nth-child(n + 8) {
+  display: none;
+}
+
 @media (max-width: 767px) {
-  .culture-typography__bg-spotlight {
-    -webkit-mask-image: radial-gradient(
-      circle clamp(110px, 34vw, 220px) at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
-      #000 0%,
-      rgba(0, 0, 0, 0.9) 40%,
-      transparent 74%
-    );
-    mask-image: radial-gradient(
-      circle clamp(110px, 34vw, 220px) at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
-      #000 0%,
-      rgba(0, 0, 0, 0.9) 40%,
-      transparent 74%
-    );
+  .culture-typography--mobile-hero.culture-typography--scrollable {
+    min-height: 100svh;
+  }
+
+  .culture-typography--mobile-hero .culture-typography__sticky {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    min-height: 100svh;
+  }
+
+  .culture-typography--mobile-hero .culture-typography__content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(2rem, 8vw, 3rem) clamp(1.25rem, 5vw, 1.75rem)
+      clamp(3.5rem, 10vh, 4.5rem);
+  }
+
+  .culture-typography--mobile-hero .culture-typography__content-inner {
+    margin-inline: auto;
+    text-align: center;
+    max-width: 18.5rem;
+  }
+
+  .culture-typography--mobile-hero .culture-typography__meta {
+    margin-bottom: 1rem;
+    font-size: 0.8125rem;
+    text-align: center;
+  }
+
+  .culture-typography--mobile-hero .culture-typography__title {
+    max-width: none;
+    font-size: clamp(1.65rem, 7.2vw, 2rem);
+    line-height: 1.12;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .culture-typography--mobile-hero .culture-typography__subtitle {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .culture-typography--mobile-hero .culture-typography__cta-wrap {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .culture-typography--mobile-hero .culture-typography__scroll-fade--top {
+    height: clamp(72px, 14vh, 110px);
+  }
+
+  .culture-typography--mobile-hero .culture-typography__scroll-fade--bottom {
+    height: clamp(64px, 12vh, 96px);
+  }
+
+  .culture-typography--mobile-hero .culture-typography__progress {
+    left: clamp(1rem, 4vw, 1.5rem);
+    right: clamp(1rem, 4vw, 1.5rem);
+    bottom: clamp(0.85rem, 2.5vh, 1.25rem);
   }
 
   .culture-typography__word {
-    font-size: clamp(3.85rem, 18.5vw, 7.75rem);
-    letter-spacing: -0.035em;
-    opacity: 0.46;
+    font-size: clamp(
+      calc(2.35rem * var(--word-scale)),
+      calc(11.5vw * var(--word-scale)),
+      calc(4.35rem * var(--word-scale))
+    );
+    line-height: 0.88;
+    letter-spacing: -0.03em;
+    opacity: 0.68;
   }
 
   .culture-typography__content-inner {
@@ -378,8 +464,21 @@
 }
 
 @media (max-width: 479px) {
+  .culture-typography--mobile-hero .culture-typography__title {
+    font-size: clamp(1.5rem, 7vw, 1.85rem);
+  }
+
+  .culture-typography--mobile-hero .culture-typography__content-inner {
+    max-width: 17rem;
+  }
+
   .culture-typography__word {
-    font-size: clamp(2.65rem, 14.5vw, 4.25rem);
+    font-size: clamp(
+      calc(2rem * var(--word-scale)),
+      calc(10vw * var(--word-scale)),
+      calc(3.25rem * var(--word-scale))
+    );
+    line-height: 0.86;
     letter-spacing: -0.03em;
     opacity: 0.42;
   }

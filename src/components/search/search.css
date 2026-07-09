@@ -270,6 +270,20 @@
   .sw-search-empty__recommended {
     padding: 20px 16px;
   }
+
+  .sw-search-panel__close {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sw-search-filters select {
+    min-height: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
 }
 
 .sw-search-mobile-toolbar {
@@ -548,6 +562,7 @@
 
 .sw-search-recent__clear {
   margin: 4px 0 0;
+  min-height: 2.75rem;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-pill);
   background: var(--surface-subtle);
@@ -1383,6 +1398,20 @@
     min-width: 5.5rem;
     padding-inline: 1.1rem;
     font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .sw-search-result-card__link {
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .sw-search-result-card__price {
+    grid-column: 2;
+    white-space: normal;
+    font-size: 1rem;
+    margin-top: 0.25rem;
   }
 }
 

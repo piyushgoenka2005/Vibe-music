@@ -46,53 +46,56 @@
   object-position: center center;
 }
 
-.homepage-banner-hero__dots {
+.homepage-banner-hero__nav {
   position: absolute;
-  left: 50%;
-  bottom: 1rem;
+  top: 50%;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  transform: translateX(-50%);
-  padding: 0.35rem 0.55rem;
-  border-radius: 999px;
-  background: rgba(2, 4, 9, 0.45);
-  backdrop-filter: blur(8px);
-}
-
-.homepage-banner-hero__dot {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.25rem;
-  min-height: 2.25rem;
+  width: 3rem;
+  height: 3rem;
   padding: 0;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.42);
   border-radius: 999px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
   cursor: pointer;
-  transition: background-color 0.25s ease;
-}
-
-.homepage-banner-hero__dot::after {
-  content: "";
-  display: block;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.45);
+  transform: translateY(-50%);
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
   transition:
-    width 0.25s ease,
-    background-color 0.25s ease;
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
 }
 
-.homepage-banner-hero__dot.is-active::after {
-  width: 1.35rem;
-  background: #ffffff;
+.homepage-banner-hero__nav:hover {
+  background: rgba(255, 255, 255, 0.32);
+  border-color: rgba(255, 255, 255, 0.62);
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  transform: translateY(-50%) scale(1.04);
 }
 
-.homepage-banner-hero__dot:focus-visible {
+.homepage-banner-hero__nav:active {
+  transform: translateY(-50%) scale(0.98);
+}
+
+.homepage-banner-hero__nav--prev {
+  left: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.homepage-banner-hero__nav--next {
+  right: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.homepage-banner-hero__nav:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.9);
   outline-offset: 2px;
 }

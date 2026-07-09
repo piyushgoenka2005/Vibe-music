@@ -286,6 +286,13 @@
   transition: color 0.2s ease;
 }
 
+@media (max-width: 1023px) {
+  .site-footer-accordion__link {
+    min-height: 2.75rem;
+    padding-block: 0.5rem;
+  }
+}
+
 .site-footer-accordion__link:hover,
 .site-footer-accordion__link:focus-visible {
   color: #fff;
@@ -461,6 +468,21 @@
 .footer-products-panel__meta-link:hover,
 .footer-products-panel__category-link:hover {
   color: #fff;
+}
+
+@media (max-width: 1023px) {
+  .footer-products-panel__meta-link,
+  .footer-products-panel__category-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-block: 0.35rem;
+  }
+
+  .footer-product-snippet__add {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
 }
 
 .footer-products-panel__products {

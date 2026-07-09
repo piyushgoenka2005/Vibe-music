@@ -141,26 +141,30 @@ export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashPr
   const [exiting, setExiting] = useState(false);
 
   useLayoutEffect(() => {
-    if (variant !== "initial") {
-      setVisible(false);
-      return;
-    }
-
-    if (!shouldShowInitialSplash() || prefersReducedMotion) {
-      setVisible(false);
-      if (prefersReducedMotion) {
-        setSettled(true);
+    const applyVisibility = () => {
+      if (variant !== "initial") {
+        setVisible(false);
+        return;
       }
-      return;
-    }
 
-    setVisible(true);
+      if (!shouldShowInitialSplash() || prefersReducedMotion) {
+        setVisible(false);
+        if (prefersReducedMotion) {
+          setSettled(true);
+        }
+        return;
+      }
+
+      setVisible(true);
+    };
+
+    queueMicrotask(applyVisibility);
   }, [prefersReducedMotion, variant]);
 
   useEffect(() => {
     if (!visible || prefersReducedMotion) {
       if (prefersReducedMotion) {
-        setSettled(true);
+        queueMicrotask(() => setSettled(true));
       }
       return;
     }

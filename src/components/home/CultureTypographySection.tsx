@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   motion,
   useMotionValue,
@@ -15,8 +15,19 @@ import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import { ROUTES } from "@/lib/routes";
 import "@/styles/culture-typography.css";
 
-/** One loop of background words — repeated for continuous scroll */
-const WORD_CYCLE = [
+/** Desktop dotted scroll quote */
+const DESKTOP_WORD_CYCLE = [
+  "MUSICIANS",
+  "DON'T REMEMBER",
+  "PRICES.",
+  "THEY",
+  "REMEMBER",
+  "THE",
+  "BRAND.",
+] as const;
+
+/** Mobile dotted scroll pattern */
+const MOBILE_WORD_CYCLE = [
   "DISCOVER",
   "MUSIC",
   "GEAR",
@@ -24,8 +35,7 @@ const WORD_CYCLE = [
   "STUDIO",
 ] as const;
 
-/** How many times the cycle repeats in the scroll track */
-const CYCLE_REPEATS = 4;
+const MOBILE_CYCLE_REPEATS = 4;
 
 export interface CultureTypographySectionProps {
   metadataLabel?: string;
@@ -37,12 +47,21 @@ export interface CultureTypographySectionProps {
   className?: string;
 }
 
+/** Scale long lines so they fit within the viewport without cropping. */
+function getWordScale(word: string, isMobile = false): number {
+  if (word.length <= 9) return 1;
+  const divisor = isMobile ? 12 : 10.5;
+  return Math.min(1, divisor / word.length);
+}
+
 function BackgroundWords({
   lines,
   lit = false,
+  isMobile = false,
 }: {
   lines: string[];
   lit?: boolean;
+  isMobile?: boolean;
 }) {
   return (
     <>
@@ -50,6 +69,9 @@ function BackgroundWords({
         <p
           key={`${word}-${index}${lit ? "-lit" : ""}`}
           className={`culture-typography__word${lit ? " culture-typography__word--lit" : ""}`}
+          style={
+            { "--word-scale": getWordScale(word, isMobile) } as React.CSSProperties
+          }
         >
           {word}
         </p>
@@ -60,18 +82,38 @@ function BackgroundWords({
 
 export default function CultureTypographySection({
   metadataLabel = "( N°2 )",
-  title = "Discover the gear, creators and stories behind modern music.",
+  title = "Discover the\ngear, creators\nand stories\nbehind\nmodern\nmusic.",
   subtitle,
   buttonLabel = "Explore Gear",
   buttonHref = ROUTES.search,
-  backgroundWords = WORD_CYCLE,
+  backgroundWords = DESKTOP_WORD_CYCLE,
   className = "",
 }: CultureTypographySectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useHydrationSafeReducedMotion();
   const isMobile = useIsMobileViewport();
+  const showScrollExperience = !reduceMotion;
+  const [scrollShiftPx, setScrollShiftPx] = useState(0);
+  const [scrollProgressValue, setScrollProgressValue] = useState(0);
 
-  const scrollRunwayVh = isMobile ? CYCLE_REPEATS * 56 : CYCLE_REPEATS * 80;
+  const desktopQuoteLines = useMemo(
+    () => (backgroundWords.length > 0 ? [...backgroundWords] : [...DESKTOP_WORD_CYCLE]),
+    [backgroundWords]
+  );
+
+  const scrollLines = useMemo(() => {
+    if (isMobile) {
+      const repeated: string[] = [];
+      for (let i = 0; i < MOBILE_CYCLE_REPEATS; i++) {
+        repeated.push(...MOBILE_WORD_CYCLE);
+      }
+      return [...repeated, ...repeated];
+    }
+    return desktopQuoteLines;
+  }, [desktopQuoteLines, isMobile]);
+
+  const displayTitle = isMobile ? title.replace(/\n/g, " ") : title;
 
   const spotlightX = useMotionValue(50);
   const spotlightY = useMotionValue(50);
@@ -89,22 +131,41 @@ export default function CultureTypographySection({
     offset: ["start start", "end end"],
   });
 
-  /** Duplicate track so -50% translate loops seamlessly */
-  const scrollLines = useMemo(() => {
-    const cycle =
-      backgroundWords.length > 0 ? [...backgroundWords] : [...WORD_CYCLE];
-    const repeated: string[] = [];
-    for (let i = 0; i < CYCLE_REPEATS; i++) {
-      repeated.push(...cycle);
+  useLayoutEffect(() => {
+    if (!showScrollExperience || isMobile) {
+      const frame = window.requestAnimationFrame(() => setScrollShiftPx(0));
+      return () => window.cancelAnimationFrame(frame);
     }
-    return [...repeated, ...repeated];
-  }, [backgroundWords]);
 
-  const backgroundY = useTransform(
-    scrollYProgress,
-    [0, 1],
-    reduceMotion ? ["0%", "0%"] : ["0%", "-50%"]
-  );
+    const track = trackRef.current;
+    const sticky = sectionRef.current?.querySelector<HTMLElement>(
+      ".culture-typography__sticky"
+    );
+    if (!track || !sticky) return undefined;
+
+    const update = () => {
+      const overflow = Math.max(0, track.scrollHeight - sticky.clientHeight);
+      setScrollShiftPx(overflow);
+    };
+
+    const frame = window.requestAnimationFrame(update);
+    const observer = new ResizeObserver(update);
+    observer.observe(track);
+    observer.observe(sticky);
+    window.addEventListener("resize", update);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [isMobile, showScrollExperience, scrollLines]);
+
+  const backgroundY = useTransform(scrollYProgress, (progress) => {
+    if (!showScrollExperience) return 0;
+    if (isMobile) return `${-50 * progress}%`;
+    return -scrollShiftPx * progress;
+  });
 
   const contentOpacity = useTransform(
     scrollYProgress,
@@ -127,7 +188,14 @@ export default function CultureTypographySection({
   const progressScaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   useEffect(() => {
-    if (reduceMotion) return undefined;
+    if (!showScrollExperience) return undefined;
+    return scrollYProgress.on("change", (value) => {
+      setScrollProgressValue(Math.round(value * 100));
+    });
+  }, [scrollYProgress, showScrollExperience]);
+
+  useEffect(() => {
+    if (reduceMotion || isMobile) return undefined;
 
     const section = sectionRef.current;
     if (!section) return undefined;
@@ -148,11 +216,11 @@ export default function CultureTypographySection({
       unsubY();
       unsubO();
     };
-  }, [reduceMotion, springOpacity, springX, springY]);
+  }, [isMobile, reduceMotion, springOpacity, springX, springY]);
 
   const handleMouseMove = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
-      if (reduceMotion) return;
+      if (reduceMotion || isMobile) return;
 
       const rect = sectionRef.current?.getBoundingClientRect();
       if (!rect) return;
@@ -161,30 +229,46 @@ export default function CultureTypographySection({
       spotlightY.set(((event.clientY - rect.top) / rect.height) * 100);
       spotlightOpacity.set(1);
     },
-    [reduceMotion, spotlightOpacity, spotlightX, spotlightY]
+    [isMobile, reduceMotion, spotlightOpacity, spotlightX, spotlightY]
   );
 
   const handleMouseLeave = useCallback(() => {
     spotlightOpacity.set(0);
   }, [spotlightOpacity]);
 
-  const scrollTrackStyle = reduceMotion ? undefined : { y: backgroundY };
+  const scrollTrackStyle = showScrollExperience ? { y: backgroundY } : undefined;
+
+  const mobileScrollRunwayVh = MOBILE_CYCLE_REPEATS * 56;
+  const desktopScrollRunwayPx = Math.max(scrollShiftPx, desktopQuoteLines.length * 280);
 
   const sectionStyle = {
-    "--culture-scroll-height": reduceMotion
-      ? "130svh"
-      : `${scrollRunwayVh}vh`,
+    "--culture-scroll-height": !showScrollExperience
+      ? isMobile
+        ? "100svh"
+        : "130svh"
+      : isMobile
+        ? `${mobileScrollRunwayVh}vh`
+        : `calc(100svh + ${desktopScrollRunwayPx}px)`,
   } as React.CSSProperties;
+
+  const sectionClassName = [
+    "culture-typography",
+    showScrollExperience ? "culture-typography--scrollable" : "culture-typography--static",
+    isMobile ? "culture-typography--mobile-hero" : "culture-typography--desktop-quote",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <section
       ref={sectionRef}
-      className={`culture-typography${className ? ` ${className}` : ""}`}
+      className={sectionClassName}
       style={sectionStyle}
       aria-labelledby="culture-typography-title"
       data-vibe-section="culture-typography"
-      onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseMove}
+      onMouseLeave={showScrollExperience && !isMobile ? handleMouseLeave : undefined}
+      onMouseMove={showScrollExperience && !isMobile ? handleMouseMove : undefined}
     >
       <div className="culture-typography__sticky">
         <div className="culture-typography__atmosphere" aria-hidden />
@@ -192,26 +276,27 @@ export default function CultureTypographySection({
 
         <div className="culture-typography__typography-stack" aria-hidden>
           <motion.div
+            ref={trackRef}
             className="culture-typography__scroll-track"
             style={scrollTrackStyle}
           >
             <div className="culture-typography__bg">
-              <BackgroundWords lines={scrollLines} />
+              <BackgroundWords isMobile={isMobile} lines={scrollLines} />
             </div>
           </motion.div>
 
-          {!reduceMotion ? (
+          {showScrollExperience && !isMobile ? (
             <motion.div
               className="culture-typography__scroll-track culture-typography__scroll-track--spotlight"
               style={scrollTrackStyle}
             >
               <div className="culture-typography__bg-spotlight">
-                <BackgroundWords lines={scrollLines} lit />
+                <BackgroundWords isMobile={isMobile} lines={scrollLines} lit />
               </div>
             </motion.div>
           ) : null}
 
-          {!reduceMotion ? (
+          {showScrollExperience && !isMobile ? (
             <div className="culture-typography__spotlight-orb" />
           ) : null}
 
@@ -222,7 +307,7 @@ export default function CultureTypographySection({
         <motion.div
           className="culture-typography__content"
           style={
-            reduceMotion
+            reduceMotion || isMobile
               ? undefined
               : { opacity: contentOpacity, y: contentY }
           }
@@ -231,7 +316,7 @@ export default function CultureTypographySection({
             <p className="culture-typography__meta">{metadataLabel}</p>
 
             <h2 id="culture-typography-title" className="culture-typography__title">
-              {title}
+              {displayTitle}
             </h2>
 
             {subtitle ? (
@@ -249,20 +334,22 @@ export default function CultureTypographySection({
           </div>
         </motion.div>
 
-        {!reduceMotion ? (
+        {showScrollExperience ? (
           <>
-            <motion.div
-              className="culture-typography__scroll-hint"
-              style={{ opacity: hintOpacity }}
-              aria-hidden
-            >
-              <span className="culture-typography__scroll-hint-label">Scroll</span>
-              <ChevronDown
-                className="culture-typography__scroll-hint-icon"
-                size={20}
-                strokeWidth={2.25}
-              />
-            </motion.div>
+            {!isMobile ? (
+              <motion.div
+                className="culture-typography__scroll-hint"
+                style={{ opacity: hintOpacity }}
+                aria-hidden
+              >
+                <span className="culture-typography__scroll-hint-label">Scroll</span>
+                <ChevronDown
+                  className="culture-typography__scroll-hint-icon"
+                  size={20}
+                  strokeWidth={2.25}
+                />
+              </motion.div>
+            ) : null}
 
             <div
               className="culture-typography__progress"
@@ -270,6 +357,7 @@ export default function CultureTypographySection({
               aria-label="Section scroll progress"
               aria-valuemin={0}
               aria-valuemax={100}
+              aria-valuenow={scrollProgressValue}
             >
               <motion.div
                 className="culture-typography__progress-bar"

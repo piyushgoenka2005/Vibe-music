@@ -61,7 +61,10 @@ export default function HeroOrbitalCarousel({
   const reduceMotion = useHydrationSafeReducedMotion();
   const count = scenes.length;
   const rotationRef = useRef(rotation);
-  rotationRef.current = rotation;
+
+  useEffect(() => {
+    rotationRef.current = rotation;
+  }, [rotation]);
 
   useEffect(() => {
     if (reduceMotion || isPaused || count <= 1) return;

@@ -191,9 +191,14 @@ export async function getHomepageStaticFallbacks(
     productSection(
       "deals_of_the_day",
       "sales-events",
-      "Deals of the Day",
+      "Deals Of The Day",
       dealsResolved,
-      "deals_slider"
+      "deals_slider",
+      {
+        accentLabel: "Limited Time",
+        ctaText: "Shop All Deals",
+        ctaLink: "/search/results?q=deals",
+      }
     ),
   ]) {
     if (section) sections.push(section);

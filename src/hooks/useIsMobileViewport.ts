@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useState } from "react";
 
-const MOBILE_VIEWPORT_QUERY = "(max-width: 767px), (pointer: coarse)";
+const MOBILE_VIEWPORT_QUERY = "(max-width: 767px)";
 
 function readMobileViewport(): boolean {
   if (typeof window === "undefined") return true;

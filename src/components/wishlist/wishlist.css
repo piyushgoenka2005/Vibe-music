@@ -3,8 +3,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border: 0;
   background: transparent;
   color: var(--text-primary);
@@ -81,6 +83,11 @@
   cursor: pointer;
   padding: 8px;
   border-radius: var(--radius-sm);
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .wl-drawer__close:hover {
@@ -369,6 +376,19 @@
 
   .wl-page__card-actions {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .wl-drawer {
+    width: 100vw;
+    max-width: 100vw;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .wl-drawer__actions button {
+    min-height: 44px;
+    padding: 0.5rem 0.875rem;
   }
 }
 

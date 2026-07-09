@@ -1,5 +1,6 @@
 "use client";
 
+import { Menu } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminThemeToggle from "@/components/admin/AdminThemeToggle";
 import { useAdminUiStore } from "@/store/adminUiStore";
@@ -16,6 +17,7 @@ interface AdminShellProps {
 export default function AdminShell({ admin, title, children, actions }: AdminShellProps) {
   const theme = useAdminUiStore((s) => s.theme);
   const sidebarCollapsed = useAdminUiStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useAdminUiStore((s) => s.setSidebarCollapsed);
 
   return (
     <div
@@ -23,9 +25,27 @@ export default function AdminShell({ admin, title, children, actions }: AdminShe
     >
       <div className="admin-layout">
         <AdminSidebar admin={admin} collapsed={sidebarCollapsed} />
+        {!sidebarCollapsed ? (
+          <button
+            type="button"
+            className="admin-sidebar-backdrop"
+            aria-label="Close admin navigation"
+            onClick={() => setSidebarCollapsed(true)}
+          />
+        ) : null}
         <div className="admin-main">
           <header className="admin-header">
             <div className="admin-header__left">
+              <button
+                type="button"
+                className="admin-header__menu"
+                aria-label={sidebarCollapsed ? "Open admin navigation" : "Close admin navigation"}
+                aria-controls="admin-sidebar"
+                aria-expanded={!sidebarCollapsed}
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              >
+                <Menu size={20} aria-hidden />
+              </button>
               <h1 className="admin-header__title">{title}</h1>
             </div>
             <div className="admin-header__actions">

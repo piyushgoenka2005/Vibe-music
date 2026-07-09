@@ -521,6 +521,16 @@
     padding-top: 1rem;
   }
 
+  .blog-page {
+    padding: 1.5rem max(0.875rem, env(safe-area-inset-left, 0px)) 3rem
+      max(0.875rem, env(safe-area-inset-right, 0px));
+  }
+
+  .blog-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
   .blog-article__prose {
     padding: 1.25rem 1rem;
     border-radius: 18px;

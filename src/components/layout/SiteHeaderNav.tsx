@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useIsClient } from "@/hooks/useIsClient";
 import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { HEADER_MEGA_MENUS, MEGA_MENU_BY_SLUG } from "@/data/headerMegaMenu";
@@ -54,6 +56,7 @@ export default function SiteHeaderNav({
   mobileOpen = false,
 }: SiteHeaderNavProps) {
   const pathname = usePathname() ?? "";
+  const isClient = useIsClient();
   const compactNav = useCompactHeaderNav();
   const { isAuthenticated, isInitialized } = useAuthStore(
     useShallow((state) => ({
@@ -101,7 +104,7 @@ export default function SiteHeaderNav({
     const el = navShellRef.current?.querySelector(".site-header__nav-inner");
     if (!el) return;
 
-    const check = () => setScrollable(el.scrollWidth > el.clientWidth);
+    const check = () => queueMicrotask(() => setScrollable(el.scrollWidth > el.clientWidth));
     check();
     const ro = new ResizeObserver(check);
     ro.observe(el);
@@ -109,8 +112,10 @@ export default function SiteHeaderNav({
   }, [compactNav]);
 
   useEffect(() => {
-    setExpandedSlug(null);
-    setActiveSlug(null);
+    queueMicrotask(() => {
+      setExpandedSlug(null);
+      setActiveSlug(null);
+    });
   }, [pathname]);
 
   const clearCloseTimer = useCallback(() => {
@@ -174,12 +179,13 @@ export default function SiteHeaderNav({
     return classes.join(" ");
   };
 
-  return (
+  const navElement = (
     <nav
       id="site-header-nav"
-      className="site-header__nav assets-site-header__nav"
+      className={`site-header__nav assets-site-header__nav${compactNav && mobileOpen ? " site-header__nav--mobile-open" : ""}`}
       aria-label="Shop categories"
-      aria-hidden={compactNav && !mobileOpen ? true : undefined}
+      aria-hidden={compactNav ? !mobileOpen : undefined}
+      inert={compactNav && !mobileOpen ? true : undefined}
       onMouseLeave={
         compactNav
           ? undefined
@@ -191,71 +197,75 @@ export default function SiteHeaderNav({
     >
       {compactNav ? (
         <div className="site-header__mobile-nav">
-          {HEADER_MEGA_MENUS.map((menu) => {
-            const expanded = expandedSlug === menu.slug;
-            return (
-              <div
-                key={menu.slug}
-                className={`site-header__mobile-nav-group${expanded ? " is-expanded" : ""}`}
-              >
-                <div className="site-header__mobile-nav-row">
-                  <Link
-                    href={menu.href}
-                    className="site-header__mobile-nav-link"
-                    onClick={handleNavigate}
-                  >
-                    {menu.name}
-                  </Link>
-                  <button
-                    type="button"
-                    className="site-header__mobile-nav-toggle"
-                    aria-expanded={expanded}
-                    aria-controls={`mobile-nav-panel-${menu.slug}`}
-                    aria-label={`${expanded ? "Hide" : "Show"} ${menu.name} subcategories`}
-                    onClick={() => toggleExpanded(menu.slug)}
-                  >
-                    <ChevronDown size={18} aria-hidden />
-                  </button>
-                </div>
-                {expanded ? (
-                  <div
-                    id={`mobile-nav-panel-${menu.slug}`}
-                    className="site-header__mobile-submenu"
-                  >
-                    {menu.columns.map((column) => (
-                      <div key={column.heading} className="site-header__mobile-submenu-section">
-                        <p className="site-header__mobile-submenu-heading">{column.heading}</p>
-                        <ul className="site-header__mobile-submenu-list">
-                          {column.links.map((link) => (
-                            <li key={link.href}>
-                              <Link
-                                href={link.href}
-                                className="site-header__mobile-submenu-link"
-                                onClick={handleNavigate}
-                              >
-                                {link.label}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
+          <div className="site-header__mobile-nav-scroll">
+            {HEADER_MEGA_MENUS.map((menu) => {
+              const expanded = expandedSlug === menu.slug;
+              return (
+                <div
+                  key={menu.slug}
+                  className={`site-header__mobile-nav-group${expanded ? " is-expanded" : ""}`}
+                >
+                  <div className="site-header__mobile-nav-row">
+                    <Link
+                      href={menu.href}
+                      className="site-header__mobile-nav-link"
+                      onClick={handleNavigate}
+                    >
+                      {menu.name}
+                    </Link>
+                    <button
+                      type="button"
+                      className="site-header__mobile-nav-toggle"
+                      aria-expanded={expanded}
+                      aria-controls={`mobile-nav-panel-${menu.slug}`}
+                      aria-label={`${expanded ? "Hide" : "Show"} ${menu.name} subcategories`}
+                      onClick={() => toggleExpanded(menu.slug)}
+                    >
+                      <ChevronDown size={18} aria-hidden />
+                    </button>
                   </div>
-                ) : null}
-              </div>
-            );
-          })}
+                  {expanded ? (
+                    <div
+                      id={`mobile-nav-panel-${menu.slug}`}
+                      className="site-header__mobile-submenu"
+                    >
+                      {menu.columns.map((column) => (
+                        <div key={column.heading} className="site-header__mobile-submenu-section">
+                          <p className="site-header__mobile-submenu-heading">{column.heading}</p>
+                          <ul className="site-header__mobile-submenu-list">
+                            {column.links.map((link) => (
+                              <li key={link.href}>
+                                <Link
+                                  href={link.href}
+                                  className="site-header__mobile-submenu-link"
+                                  onClick={handleNavigate}
+                                >
+                                  {link.label}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
 
-          {MOBILE_EXTRA_LINKS.map((link) => (
-            <Link
-              key={link.key}
-              href={link.href}
-              className={`site-header__mobile-nav-link site-header__mobile-nav-link--solo${"accent" in link && link.accent ? " site-header__mobile-nav-link--accent" : ""}`}
-              onClick={handleNavigate}
-            >
-              {link.label}
-            </Link>
-          ))}
+          <div className="site-header__mobile-nav-extras" aria-label="Quick links">
+            {MOBILE_EXTRA_LINKS.map((link) => (
+              <Link
+                key={link.key}
+                href={link.href}
+                className={`site-header__mobile-nav-link site-header__mobile-nav-link--solo${"accent" in link && link.accent ? " site-header__mobile-nav-link--accent" : ""}`}
+                onClick={handleNavigate}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
 
           <div className="site-header__mobile-nav-footer">
             {isInitialized && isAuthenticated ? (
@@ -348,4 +358,12 @@ export default function SiteHeaderNav({
       )}
     </nav>
   );
+
+  // Portal mobile drawer to <body> so `contain: layout` on .site-header cannot
+  // trap position:fixed and clip the slide-out panel.
+  if (compactNav && isClient) {
+    return createPortal(navElement, document.body);
+  }
+
+  return navElement;
 }

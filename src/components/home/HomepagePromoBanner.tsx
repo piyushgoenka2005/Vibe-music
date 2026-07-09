@@ -3,7 +3,7 @@ import Link from "next/link";
 import Reveal from "@/components/layout/Reveal";
 import { resolveLinkHref } from "@/lib/routes";
 
-const BANNER_SRC = "/images/banner.png";
+const BANNER_SRC = "/images/win%20this%20rig.jpeg";
 const BANNER_WIDTH = 1500;
 const BANNER_HEIGHT = 200;
 

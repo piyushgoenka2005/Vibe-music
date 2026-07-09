@@ -815,35 +815,43 @@
     );
   }
 
+  /* Stretch the funnel wider than the viewport so the white
+     content text always sits on the blue area */
+  .find-your-product__beam {
+    inset: 0 -50%;
+  }
+
   .find-your-product__content {
     width: min(100%, 92vw);
     padding: 0 max(1.25rem, env(safe-area-inset-right, 0px))
-      clamp(88px, 14vh, 112px);
+      clamp(72px, 11vh, 96px);
     padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
-    transform: translateY(-18px);
+    transform: translateY(-12px);
   }
 
   .find-your-product__content-title {
-    font-size: clamp(1.05rem, 4.8vw, 1.35rem);
+    font-size: clamp(1rem, 4.4vw, 1.25rem);
     white-space: normal;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
 
   .find-your-product__content-actions {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     width: 100%;
-    max-width: min(100%, 18rem);
+    max-width: none;
     margin-inline: auto;
   }
 
   .find-your-product__cta {
-    flex: 1 1 auto;
-    width: 100%;
+    flex: 0 1 auto;
+    width: auto;
     min-height: 44px;
-    padding: 11px 16px;
-    font-size: 0.875rem;
+    padding: 10px 18px;
+    font-size: 0.8125rem;
   }
 
   .find-your-product__label {

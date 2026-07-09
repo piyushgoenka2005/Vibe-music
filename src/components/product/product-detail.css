@@ -493,14 +493,17 @@
 }
 
 .pdp-variants__swatch {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   border: 2px solid var(--pdp-grey10);
   background: #fff;
   cursor: pointer;
   font-size: 11px;
   padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pdp-variants__swatch--active {
@@ -1075,6 +1078,24 @@
   .pdp-specs tr:nth-child(even) {
     background: transparent;
   }
+
+  .pdp-trust__arrow {
+    width: 44px;
+    height: 44px;
+  }
+
+  .pdp-info {
+    padding: 1rem;
+  }
+
+  .pdp-title {
+    font-size: clamp(1.25rem, 5.5vw, 1.625rem);
+    line-height: 1.25;
+  }
+
+  .pdp-actions__row {
+    gap: 0.5rem;
+  }
 }
 
 .pdp-review {
@@ -1365,6 +1386,11 @@
     backdrop-filter: blur(8px);
   }
 
+  .storefront-page .pdp,
+  .pdp {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .pdp-mobile-bar__price {
     display: flex;
     flex-direction: column;
@@ -1401,6 +1427,30 @@
   .pdp-mobile-bar__cta:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+  }
+
+  .pdp-fbt {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+
+  .pdp-fbt__items {
+    justify-content: center;
+  }
+
+  .pdp-fbt__card {
+    width: min(160px, 42vw);
+  }
+
+  .pdp-fbt__summary {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .pdp-trust-carousel__arrow {
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 

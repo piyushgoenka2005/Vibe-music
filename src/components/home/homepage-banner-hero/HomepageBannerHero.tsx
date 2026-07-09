@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -89,19 +90,24 @@ export default function HomepageBannerHero() {
       </div>
 
       {slideCount > 1 ? (
-        <div className="homepage-banner-hero__dots" role="tablist" aria-label="Banner slides">
-          {HOMEPAGE_BANNER_SLIDES.map((slide, index) => (
-            <button
-              key={slide.id}
-              type="button"
-              role="tab"
-              className={`homepage-banner-hero__dot${index === activeIndex ? " is-active" : ""}`}
-              aria-selected={index === activeIndex}
-              aria-label={`Show banner ${index + 1}`}
-              onClick={() => goTo(index)}
-            />
-          ))}
-        </div>
+        <>
+          <button
+            type="button"
+            className="homepage-banner-hero__nav homepage-banner-hero__nav--prev"
+            aria-label="Previous banner"
+            onClick={() => goTo(activeIndex - 1)}
+          >
+            <ChevronLeft size={22} strokeWidth={2} aria-hidden />
+          </button>
+          <button
+            type="button"
+            className="homepage-banner-hero__nav homepage-banner-hero__nav--next"
+            aria-label="Next banner"
+            onClick={() => goTo(activeIndex + 1)}
+          >
+            <ChevronRight size={22} strokeWidth={2} aria-hidden />
+          </button>
+        </>
       ) : null}
     </section>
   );

@@ -295,7 +295,7 @@
 }
 
 /* Product carousel sections */
-.premium-home .suggested-products {
+.premium-home .suggested-products:not(.premium-product-carousel) {
   padding: 3rem 0;
   border-bottom: 1px solid var(--border-default);
 }

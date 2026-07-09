@@ -302,6 +302,56 @@
 @media (max-width: 767px) {
   .cart-page__layout {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .cart-page__title {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    margin-bottom: 1rem;
+  }
+
+  .cart-page__section {
+    margin-top: 2rem;
+  }
+
+  .cart-coupon {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cart-coupon button {
+    width: 100%;
+  }
+
+  .cart-item {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 10px;
+    padding: 14px 0;
+  }
+
+  .cart-item__swatch {
+    width: 64px;
+    height: 64px;
+  }
+
+  .cart-item__row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .cart-summary {
+    padding: 1rem;
+  }
+
+  .cart-cross-sell {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 399px) {
+  .cart-cross-sell {
+    grid-template-columns: 1fr;
   }
 }
 

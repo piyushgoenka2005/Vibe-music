@@ -472,7 +472,7 @@ export function ShowroomCameraRig({
 
     const smooth = 1 - Math.exp(-delta / (CAMERA_BLEND_TAU * 0.32));
     let px = desiredPos.current.x;
-    let py = desiredPos.current.y;
+    const py = desiredPos.current.y;
     let pz = desiredPos.current.z;
 
     if (choreography === "night-orbit" && !orbitEnabled.current) {

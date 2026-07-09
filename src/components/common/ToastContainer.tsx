@@ -1,16 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useToastStore } from "@/store/toastStore";
+import { useIsClient } from "@/hooks/useIsClient";
 import "./toast.css";
 
 export default function ToastContainer() {
   const toasts = useToastStore((s) => s.toasts);
   const dismiss = useToastStore((s) => s.dismiss);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const mounted = useIsClient();
 
   if (!mounted || toasts.length === 0) return null;
 

@@ -99,9 +99,13 @@
   left: 0;
   bottom: 0;
   z-index: 40;
-  transition: width 0.2s ease;
+  transition: width 0.2s ease, transform 0.2s ease;
   overflow: hidden;
   color-scheme: dark;
+}
+
+.admin-sidebar-backdrop {
+  display: none;
 }
 
 .admin-root--light .admin-sidebar {
@@ -290,6 +294,20 @@
   align-items: center;
   gap: 0.75rem;
   min-width: 0;
+}
+
+.admin-header__menu {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border: 1px solid var(--admin-border);
+  border-radius: 0.5rem;
+  background: var(--admin-surface-2);
+  color: var(--admin-text);
+  cursor: pointer;
 }
 
 .admin-header__title {
@@ -611,16 +629,52 @@
 }
 
 @media (max-width: 768px) {
-  .admin-root:not(.admin-root--sidebar-collapsed) .admin-sidebar {
-    transform: translateX(-100%);
-  }
-
-  .admin-root:not(.admin-root--sidebar-collapsed) .admin-main {
-    margin-left: 0;
+  .admin-sidebar {
+    width: min(280px, 86vw);
+    z-index: 70;
+    transform: translateX(0);
   }
 
   .admin-root--sidebar-collapsed .admin-sidebar {
-    transform: none;
+    transform: translateX(-100%);
+  }
+
+  .admin-main {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .admin-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    border: 0;
+    background: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+  }
+
+  .admin-header {
+    padding: 0 0.75rem;
+    z-index: 50;
+  }
+
+  .admin-header__menu {
+    display: inline-flex;
+  }
+
+  .admin-sidebar__toggle,
+  .admin-icon-btn,
+  .admin-input,
+  .admin-select,
+  .admin-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .admin-input,
+  .admin-select {
+    font-size: 16px;
   }
 }
 
@@ -666,6 +720,28 @@
 @media (max-width: 640px) {
   .admin-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.5rem;
+  }
+
+  .admin-table-wrap table {
+    min-width: 36rem;
+  }
+
+  .admin-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    text-align: center;
+  }
+
+  .admin-pagination button {
+    min-height: 44px;
   }
 }
 
@@ -848,4 +924,32 @@
 .admin-review-images__thumb {
   border-radius: 8px;
   object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar__toggle,
+  .admin-icon-btn,
+  .admin-input,
+  .admin-select,
+  .admin-btn,
+  .admin-field input,
+  .admin-field textarea {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .admin-input,
+  .admin-select,
+  .admin-field input,
+  .admin-field textarea {
+    font-size: 16px;
+  }
+
+  .admin-content {
+    padding: 1rem;
+  }
+
+  .admin-toolbar {
+    align-items: stretch;
+  }
 }

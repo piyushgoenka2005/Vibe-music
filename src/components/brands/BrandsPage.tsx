@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 import type { BrandWithCount } from "@/lib/server/brandsPageLoader";
+import "@/components/category/category.css";
 
 interface BrandsPageProps {
   brands: BrandWithCount[];
@@ -10,7 +11,7 @@ interface BrandsPageProps {
 
 export default function BrandsPage({ brands }: BrandsPageProps) {
   return (
-    <main className="storefront-page storefront-page--subtle">
+    <main className="storefront-page storefront-page--subtle brands-page">
       <header className="storefront-page__header">
         <p className="storefront-page__eyebrow">Shop by brand</p>
         <h1 className="storefront-page__title">Brands</h1>
@@ -19,26 +20,15 @@ export default function BrandsPage({ brands }: BrandsPageProps) {
         </p>
       </header>
 
-      <ul
-        className="cat-grid cat-grid--grid"
-        style={{ listStyle: "none", padding: 0, margin: 0 }}
-      >
+      <ul className="cat-product-grid cat-product-grid--grid brands-page__grid">
         {brands.map((brand) => (
           <li key={brand.id}>
             <Link
               href={`${ROUTES.searchResults}?brand=${encodeURIComponent(brand.slug)}`}
-              className="cat-product-card"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                minHeight: "8rem",
-                padding: "1.5rem",
-                textDecoration: "none",
-              }}
+              className="cat-product-card brands-page__card"
             >
-              <span style={{ fontWeight: 600, fontSize: "1.125rem" }}>{brand.name}</span>
-              <span style={{ color: "var(--color-text-muted, #666)", marginTop: "0.25rem" }}>
+              <span className="brands-page__name">{brand.name}</span>
+              <span className="brands-page__count">
                 {brand.productCount} {brand.productCount === 1 ? "product" : "products"}
               </span>
             </Link>

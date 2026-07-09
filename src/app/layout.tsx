@@ -10,6 +10,7 @@ import "@/styles/site-layout.css";
 import "@/styles/social-rail.css";
 import "@/styles/site-footer.css";
 import "@/styles/storefront-pages.css";
+import "@/styles/mobile-storefront.css";
 import "@/styles/buttons.css";
 
 export const metadata: Metadata = DEFAULT_METADATA;

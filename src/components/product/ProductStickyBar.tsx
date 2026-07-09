@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatCurrency } from "@/utils/currency";
+import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 
 interface ProductStickyBarProps {
   price: number;
@@ -18,6 +19,7 @@ export default function ProductStickyBar({
   onAddToCart,
   sentinelRef,
 }: ProductStickyBarProps) {
+  const isMobile = useIsMobileViewport();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function ProductStickyBar({
     return () => observer.disconnect();
   }, [sentinelRef]);
 
-  if (!visible) return null;
+  if (!isMobile || !visible) return null;
 
   return (
     <div className="pdp-mobile-bar" role="region" aria-label="Add to cart">

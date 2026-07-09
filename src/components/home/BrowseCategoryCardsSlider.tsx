@@ -80,7 +80,7 @@ export default function BrowseCategoryCardsSlider({
                 height={item.height}
                 loading="lazy"
                 role="presentation"
-                sizes="(min-width: 1200px) 25vw, (min-width: 768px) 33vw, 85vw"
+                sizes="(min-width: 1400px) 380px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 84vw"
                 src={item.image}
                 srcSet={item.srcSet}
                 width={item.width}

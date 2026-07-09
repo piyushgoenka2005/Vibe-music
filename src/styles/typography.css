@@ -8,35 +8,47 @@
   --font-weight-medium: 500;
 
   /* Type scale */
-  --text-display-size: 4rem;
+
+  --text-display-size: clamp(2.25rem, 5vw, 4rem);
   --text-display-tracking: -0.04em;
   --text-display-leading: 1.05;
 
-  --text-section-size: 2.5rem;
+  --text-section-size: clamp(1.625rem, 3.5vw, 2.5rem);
   --text-section-tracking: -0.03em;
   --text-section-leading: 1.1;
 
-  --text-page-size: 2rem;
+  --text-page-size: clamp(1.375rem, 3vw, 2rem);
   --text-page-tracking: -0.03em;
   --text-page-leading: 1.15;
 
-  --text-product-size: 1.75rem;
+  --text-product-size: clamp(1.25rem, 2.5vw, 1.75rem);
   --text-product-tracking: -0.02em;
   --text-product-leading: 1.2;
 
-  --text-card-title-size: 1.25rem;
+  --text-card-title-size: clamp(1rem, 2.5vw, 1.25rem);
   --text-card-title-leading: 1.3;
 
-  --text-body-size: 1rem;
+  --text-body-size: clamp(0.9375rem, 1.5vw, 1rem);
   --text-body-leading: 1.5;
   --text-body-tracking: 0;
 
-  --text-small-size: 0.875rem;
+  --text-small-size: clamp(0.8125rem, 1.25vw, 0.875rem);
   --text-small-leading: 1.45;
 
-  --text-label-size: 0.8125rem;
+  --text-label-size: clamp(0.75rem, 1.25vw, 0.8125rem);
   --text-label-leading: 1.35;
   --text-label-tracking: 0.02em;
+}
+
+@media (max-width: 479px) {
+  :root {
+    --text-display-size: clamp(1.75rem, 7vw, 2.25rem);
+    --text-section-size: clamp(1.375rem, 5vw, 1.625rem);
+    --text-page-size: clamp(1.125rem, 4.5vw, 1.375rem);
+    --text-product-size: clamp(1.125rem, 4vw, 1.25rem);
+    --text-card-title-size: clamp(0.9375rem, 3.5vw, 1rem);
+    --text-body-size: clamp(0.875rem, 3.5vw, 0.9375rem);
+  }
 }
 
 /* ─── Semantic type roles ─── */

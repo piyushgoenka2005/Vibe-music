@@ -207,8 +207,10 @@ export default function ProductGallery({
   }, [activeIndex, showVideo, zoomActive]);
 
   useEffect(() => {
-    setImageMetrics({ naturalWidth: 0, naturalHeight: 0 });
-    setImageRect(EMPTY_IMAGE_RECT);
+    queueMicrotask(() => {
+      setImageMetrics({ naturalWidth: 0, naturalHeight: 0 });
+      setImageRect(EMPTY_IMAGE_RECT);
+    });
   }, [activeIndex, activeImage?.src]);
 
   useEffect(() => {

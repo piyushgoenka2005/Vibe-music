@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -33,7 +34,7 @@ export default function SiteHeader() {
   useSiteHeaderOffset(headerRef);
 
   useEffect(() => {
-    setMobileOpen(false);
+    queueMicrotask(() => setMobileOpen(false));
   }, [pathname]);
 
   useEffect(() => {
@@ -259,6 +260,7 @@ export default function SiteHeader() {
               setMobileOpen((open) => !open);
             }}
             aria-expanded={mobileOpen}
+            aria-controls="site-header-nav"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
@@ -296,14 +298,17 @@ export default function SiteHeader() {
         </div>
       </div>
 
-      {mobileOpen ? (
-        <button
-          type="button"
-          className="site-header__backdrop"
-          onClick={() => setMobileOpen(false)}
-          aria-label="Close menu"
-        />
-      ) : null}
+      {mobileOpen
+        ? createPortal(
+            <button
+              type="button"
+              className="site-header__backdrop"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+            />,
+            document.body,
+          )
+        : null}
     </header>
   );
 }

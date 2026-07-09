@@ -576,17 +576,10 @@ export async function fetchProductBySlug(
 ): Promise<CatalogProduct | null> {
   const normalizedSlug = normalizeProductSlug(slug);
   if (!normalizedSlug) return null;
-  // #region agent log
-  const _slugStart = Date.now();
-  const _useLocal = shouldUseLocalCatalog();
-  // #endregion
 
   if (shouldUseLocalCatalog()) {
     const local = await loadLocalCatalogProducts();
     const hit = local.find((product) => productMatchesSlug(product, normalizedSlug));
-    // #region agent log
-    fetch('http://127.0.0.1:7828/ingest/1d696600-63a8-447a-b1d2-58422acef253',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'88ed4c'},body:JSON.stringify({sessionId:'88ed4c',location:'firestoreCatalogRepository.ts:fetchProductBySlug',message:'slug fetch local path',data:{slug:normalizedSlug,branch:'local',hit:Boolean(hit),ms:Date.now()-_slugStart},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
     return hit && hit.status === "active" ? hit : null;
   }
 
@@ -625,9 +618,6 @@ export async function fetchProductBySlug(
     await ensureCatalogSeeded();
 
     const firestoreHit = await queryActiveProductBySlugFromFirestore(normalizedSlug);
-    // #region agent log
-    fetch('http://127.0.0.1:7828/ingest/1d696600-63a8-447a-b1d2-58422acef253',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'88ed4c'},body:JSON.stringify({sessionId:'88ed4c',location:'firestoreCatalogRepository.ts:fetchProductBySlug',message:'slug fetch firestore path',data:{slug:normalizedSlug,branch:'firestore',hit:Boolean(firestoreHit),ms:Date.now()-_slugStart,useLocal:_useLocal},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
     if (firestoreHit) {
       productBySlugCache.set(normalizedSlug, firestoreHit);
       productByIdCache.set(firestoreHit.id, firestoreHit);

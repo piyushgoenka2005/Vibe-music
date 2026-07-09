@@ -1,13 +1,8 @@
 [
   {
-    "id": "adeon",
-    "name": "ADEON",
-    "slug": "adeon"
-  },
-  {
-    "id": "avus",
-    "name": "AVUS",
-    "slug": "avus"
+    "id": "roland",
+    "name": "Roland",
+    "slug": "roland"
   },
   {
     "id": "hertz",
@@ -15,13 +10,38 @@
     "slug": "hertz"
   },
   {
-    "id": "roland",
-    "name": "Roland",
-    "slug": "roland"
+    "id": "avus",
+    "name": "AVUS",
+    "slug": "avus"
   },
   {
-    "id": "trinity",
-    "name": "TRINITY",
-    "slug": "trinity"
+    "id": "zoom",
+    "name": "ZOOM",
+    "slug": "zoom"
+  },
+  {
+    "id": "gibraltar",
+    "name": "GIBRALTAR",
+    "slug": "gibraltar"
+  },
+  {
+    "id": "adeon",
+    "name": "ADEON",
+    "slug": "adeon"
+  },
+  {
+    "id": "zildjian",
+    "name": "ZILDJIAN",
+    "slug": "zildjian"
+  },
+  {
+    "id": "hartke",
+    "name": "HARTKE",
+    "slug": "hartke"
+  },
+  {
+    "id": "m-audio",
+    "name": "M-AUDIO",
+    "slug": "m-audio"
   }
 ]

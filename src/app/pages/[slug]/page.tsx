@@ -29,27 +29,27 @@ export default async function ContentPageRoute({ params }: ContentPageRouteProps
   if (!page) notFound();
 
   return (
-    <main className="storefront-page storefront-page--subtle">
-      <article className="storefront-page__header" style={{ maxWidth: "48rem", margin: "0 auto" }}>
-        <p className="storefront-page__eyebrow">{page.eyebrow}</p>
-        <h1 className="storefront-page__title">{page.title}</h1>
-        <div style={{ marginTop: "2rem", lineHeight: 1.7 }}>
+    <main className="storefront-page storefront-page--subtle cms-page">
+      <article className="storefront-page__inner cms-page__article">
+        <header className="storefront-page__header cms-page__header">
+          <p className="storefront-page__eyebrow">{page.eyebrow}</p>
+          <h1 className="storefront-page__title">{page.title}</h1>
+        </header>
+        <div className="cms-page__content">
           {page.sections.map((section, index) => (
-            <section key={index} style={{ marginBottom: "1.75rem" }}>
+            <section key={index} className="cms-page__section">
               {section.heading ? (
-                <h2 style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: "0.5rem" }}>
-                  {section.heading}
-                </h2>
+                <h2 className="cms-page__section-title">{section.heading}</h2>
               ) : null}
               {section.paragraphs.map((paragraph, pIndex) => (
-                <p key={pIndex} style={{ marginBottom: "0.75rem", color: "var(--color-text-muted, #666)" }}>
+                <p key={pIndex} className="cms-page__paragraph">
                   {paragraph}
                 </p>
               ))}
             </section>
           ))}
         </div>
-        <p style={{ marginTop: "2rem" }}>
+        <p className="cms-page__back">
           <Link href={ROUTES.home}>← Back to home</Link>
         </p>
       </article>

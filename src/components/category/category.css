@@ -26,6 +26,15 @@
   text-decoration: none;
 }
 
+@media (max-width: 1023px) {
+  .cat-breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-block: 0.35rem;
+  }
+}
+
 .cat-breadcrumb a:hover {
   text-decoration: underline;
 }
@@ -281,7 +290,8 @@
 
 .cat-product-card__add {
   margin-top: 10px;
-  height: 38px;
+  min-height: 2.75rem;
+  height: 2.75rem;
   border: 0;
   border-radius: var(--radius-pill);
   background: var(--brand-gradient, var(--cat-blue));
@@ -315,8 +325,9 @@
 }
 
 .cat-pagination button {
-  min-width: 38px;
-  height: 38px;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  height: 2.75rem;
   border: 1px solid var(--cat-grey10);
   border-radius: var(--radius-pill);
   background: #fff;

@@ -20,6 +20,7 @@ import {
   isHomepageItemScheduledActive,
 } from "@/lib/server/homepageRepository";
 import { getHomepageStaticFallbacks } from "@/data/homepageStaticFallbacks";
+import { DEFAULT_HOMEPAGE_SECTIONS } from "@/types/homepage";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
   HomepageBrandItem,
@@ -319,6 +320,29 @@ async function resolveSection(
   return { ...base, products: resolvedProducts };
 }
 
+function buildFeaturedCategoriesFallbackSection(at: Date): HomepageSection {
+  const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
+    (section) => section.sectionKey === "featured_categories"
+  );
+
+  return {
+    id: "featured_categories",
+    sectionKey: "featured_categories",
+    title: defaults?.title ?? "Popular Categories",
+    subtitle: defaults?.subtitle,
+    accentLabel: defaults?.accentLabel,
+    ctaText: defaults?.ctaText,
+    ctaLink: defaults?.ctaLink,
+    isActive: true,
+    sortOrder: defaults?.sortOrder ?? 4,
+    sourceMode: defaults?.sourceMode ?? "auto",
+    maxItems: defaults?.maxItems ?? 12,
+    layout: defaults?.layout ?? "category_grid",
+    createdAt: at.toISOString(),
+    updatedAt: at.toISOString(),
+  };
+}
+
 export async function getPublicHomepageData(
   at = new Date()
 ): Promise<PublicHomepageData> {
@@ -337,9 +361,19 @@ export async function getPublicHomepageData(
         listAllSectionItems(),
       ]);
 
+      const hasFeaturedCategories = sections.some(
+        (section) => section.sectionKey === "featured_categories"
+      );
+
+      const orderedSections = hasFeaturedCategories
+        ? sections
+        : [...sections, buildFeaturedCategoriesFallbackSection(at)].sort(
+            (a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title)
+          );
+
       const resolved = (
         await Promise.all(
-          sections.map((section) =>
+          orderedSections.map((section) =>
             resolveSection(section, products, at, allSectionItems)
           )
         )

@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import "@/styles/homepage-bundle.css";
 import HomepageBannerHero from "@/components/home/homepage-banner-hero/HomepageBannerHero";
+import BrowseCategoryCardsSection from "@/components/home/BrowseCategoryCardsSection";
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
@@ -22,10 +23,6 @@ const HomepagePromoBanner = dynamic(
 const WhyShopSection = dynamic(() => import("@/components/home/WhyShopSection"), {
   loading: () => null,
 });
-const BrowseCategoryCardsSection = dynamic(
-  () => import("@/components/home/BrowseCategoryCardsSection"),
-  { loading: () => null }
-);
 const SocialProofStrip = dynamic(() => import("@/components/home/SocialProofStrip"), {
   loading: () => null,
 });

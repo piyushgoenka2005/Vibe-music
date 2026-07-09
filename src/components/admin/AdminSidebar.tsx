@@ -51,6 +51,14 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const toggleSidebar = useAdminUiStore((s) => s.toggleSidebar);
+  const setSidebarCollapsed = useAdminUiStore((s) => s.setSidebarCollapsed);
+
+  function closeSidebarOnMobile() {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(max-width: 768px)").matches) {
+      setSidebarCollapsed(true);
+    }
+  }
 
   async function handleLogout() {
     await fetch("/api/auth/session", { method: "DELETE" });
@@ -63,7 +71,10 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
   );
 
   return (
-    <aside className={`admin-sidebar${collapsed ? " admin-sidebar--collapsed" : ""}`}>
+    <aside
+      id="admin-sidebar"
+      className={`admin-sidebar${collapsed ? " admin-sidebar--collapsed" : ""}`}
+    >
       <div className="admin-sidebar__brand">
         {!collapsed ? (
           <Link href={ROUTES.admin} className="admin-sidebar__brand-text">
@@ -93,6 +104,7 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
               href={item.href}
               className={`admin-sidebar__link${isActive ? " admin-sidebar__link--active" : ""}`}
               title={collapsed ? item.label : undefined}
+              onClick={closeSidebarOnMobile}
             >
               <Icon size={18} className="admin-sidebar__link-icon" />
               <span className="admin-sidebar__link-label">{item.label}</span>
