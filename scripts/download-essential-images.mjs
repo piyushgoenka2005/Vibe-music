@@ -131,6 +131,17 @@ async function main() {
   }
 
   console.log(`\nDone. OK: ${ok}, failed: ${failed}`);
+
+  if (fs.existsSync(path.join(PUBLIC, "logo.jpeg"))) {
+    const { spawnSync } = await import("node:child_process");
+    const result = spawnSync("node", ["scripts/generate-favicons.mjs"], {
+      cwd: ROOT,
+      stdio: "inherit",
+    });
+    if (result.status !== 0) {
+      process.exit(result.status ?? 1);
+    }
+  }
 }
 
 main().catch((error) => {

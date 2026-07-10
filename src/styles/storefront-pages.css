@@ -111,8 +111,13 @@
   }
 
   .storefront-page .cat-page {
-    padding: 1rem max(1rem, env(safe-area-inset-left, 0px)) 3rem
+    padding: 1rem max(1rem, env(safe-area-inset-left, 0px))
+      calc(5rem + env(safe-area-inset-bottom, 0px))
       max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .premium-home {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
   }
 
   .storefront-page .cart-page {
@@ -152,13 +157,22 @@
   }
 
   .storefront-page .pdp-actions__row {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     gap: 0.5rem;
   }
 
   .storefront-page .pdp-btn--wishlist {
     width: 100%;
     justify-content: center;
+    min-width: 0;
+  }
+
+  .storefront-page .pdp-btn {
+    width: 100%;
+    height: auto !important;
+    min-height: 3rem !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
   }
 }
 
@@ -182,7 +196,7 @@
   .storefront-page .pdp {
     padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
     padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
-    padding-bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .storefront-page .pdp-info {
@@ -253,6 +267,15 @@
   background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--shadow-card);
   backdrop-filter: blur(8px);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .storefront-page .pdp-info {
+    padding: 1rem;
+  }
 }
 
 @media (min-width: 768px) {
@@ -378,9 +401,11 @@
   gap: 8px !important;
 }
 
-.storefront-page .pdp-actions__row {
-  flex-wrap: nowrap !important;
-  gap: 8px !important;
+@media (min-width: 768px) {
+  .storefront-page .pdp-actions__row {
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+  }
 }
 
 .storefront-page .pdp-btn--primary {
@@ -1068,7 +1093,7 @@
   background: var(--brand-primary-muted);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 479px) {
   .error-page__btn-row {
     flex-direction: column;
     width: 100%;

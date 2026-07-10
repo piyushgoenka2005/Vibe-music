@@ -119,6 +119,48 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /supportTickets/{ticketId} {
+      allow read, write: if false;
+    }
+
+    match /newsletter_subscribers/{subscriberId} {
+      allow read, write: if false;
+    }
+
+    match /userNotifications/{notificationId} {
+      allow read, write: if false;
+    }
+
+    match /adminNotifications/{notificationId} {
+      allow read, write: if false;
+    }
+
+    match /contentPages/{pageId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /shippingZones/{zoneId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /returnRequests/{requestId} {
+      allow read, write: if false;
+    }
+
+    match /contactMessages/{messageId} {
+      allow read, write: if false;
+    }
+
+    match /productQuestions/{questionId} {
+      allow read, write: if false;
+    }
+
+    match /auditLogs/{logId} {
+      allow read, write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -1,12 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/gstCalculator";
 import { formatCurrencyPrecise } from "@/utils/currency";
-
-const METRO_PIN_PREFIXES = [
-  "110", "400", "411", "500", "560", "600", "700", "122", "201", "380",
-];
 
 interface ShippingQuoteMethod {
   id: string;
@@ -18,11 +13,6 @@ interface ShippingQuoteMethod {
 
 interface ShippingEstimatorProps {
   subtotal?: number;
-}
-
-function isMetroPincode(pin: string): boolean {
-  const prefix = pin.slice(0, 3);
-  return METRO_PIN_PREFIXES.includes(prefix);
 }
 
 export default function ShippingEstimator({ subtotal = 0 }: ShippingEstimatorProps) {
@@ -44,7 +34,11 @@ export default function ShippingEstimator({ subtotal = 0 }: ShippingEstimatorPro
       const response = await fetch("/api/shipping/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subtotal, discount: 0 }),
+        body: JSON.stringify({
+          subtotal,
+          discount: 0,
+          postalCode: trimmed,
+        }),
       });
 
       if (!response.ok) {
@@ -54,29 +48,24 @@ export default function ShippingEstimator({ subtotal = 0 }: ShippingEstimatorPro
 
       const data = (await response.json()) as {
         methods?: ShippingQuoteMethod[];
+        zone?: { name: string } | null;
       };
       const methods = data.methods ?? [];
       const standard = methods.find((m) => m.id === "standard");
       const express = methods.find((m) => m.id === "express");
-      const metro = isMetroPincode(trimmed);
 
       const standardCharge =
         standard?.charge === 0
           ? "free"
           : formatCurrencyPrecise(standard?.charge ?? 100);
-      const expressNote = metro && express
+      const expressNote = express
         ? ` Express from ${formatCurrencyPrecise(express.charge)} (${express.description.toLowerCase()}).`
-        : metro
-          ? " Express delivery available at checkout."
-          : "";
+        : "";
 
-      const freeNote =
-        subtotal >= FREE_SHIPPING_THRESHOLD
-          ? ""
-          : ` Free standard shipping on orders over ${formatCurrencyPrecise(FREE_SHIPPING_THRESHOLD)}.`;
+      const zoneNote = data.zone?.name ? ` Zone: ${data.zone.name}.` : "";
 
       setResult(
-        `Delivering to PIN ${trimmed}: Standard ${standardCharge} — ${standard?.description ?? "5–7 business days"}.${expressNote}${freeNote}`
+        `Delivering to PIN ${trimmed}: Standard ${standardCharge} — ${standard?.description ?? "5–7 business days"}.${expressNote}${zoneNote}`
       );
     } catch {
       setResult("Unable to fetch shipping options. Please try again.");

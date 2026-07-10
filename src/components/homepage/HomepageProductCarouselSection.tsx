@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import CarouselProductCard from "@/components/homepage/CarouselProductCard";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
+import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
+import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import { isHomepageProductVisible } from "@/lib/homepage/productVisibility";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageSectionKey, ResolvedHomepageSection } from "@/types/homepage";
@@ -74,14 +78,38 @@ interface HomepageProductCarouselSectionProps {
 export default function HomepageProductCarouselSection({
   section,
 }: HomepageProductCarouselSectionProps) {
+  const reduceMotion = useHydrationSafeReducedMotion();
+  const isMobileViewport = useIsMobileViewport();
   const products = (section.products ?? []).filter(isHomepageProductVisible);
   const isPremium = PREMIUM_CAROUSEL_KEYS.has(section.key);
+  const isTrending = section.key === "trending";
+  const enableMobileAuto =
+    isTrending && isMobileViewport && !reduceMotion && products.length > 1;
+  const carouselProducts = enableMobileAuto
+    ? [...products, ...products]
+    : products;
   const titleId = `${section.sectionId}-title`;
   const eyebrow = CAROUSEL_EYEBROWS[section.key] ?? section.accentLabel;
   const defaults = SECTION_DEFAULTS[section.key];
   const subtitle = section.subtitle ?? defaults?.subtitle;
   const ctaText = section.ctaText ?? defaults?.ctaText;
   const ctaLink = section.ctaLink ?? defaults?.ctaLink;
+
+  const carouselClassName = [
+    "product-suggest__carousel",
+    enableMobileAuto && "product-suggest__carousel--mobile-auto",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const itemsClassName = [
+    "product-suggest__items",
+    "paged",
+    "scrollbar-minimal",
+    enableMobileAuto && "product-suggest__items--mobile-auto",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   if (products.length === 0) {
     return null;
@@ -125,15 +153,20 @@ export default function HomepageProductCarouselSection({
           </>
         )}
 
-        <div className="product-suggest__carousel">
-          <ProductSuggestNav />
-          <div className="product-suggest__items paged scrollbar-minimal">
-            {products.map((item) => (
-              <CarouselProductCard key={item.id} item={item} sectionKey={section.key} />
+        <div className={carouselClassName}>
+          {!enableMobileAuto ? <ProductSuggestNav /> : null}
+          <div className={itemsClassName}>
+            {carouselProducts.map((item, index) => (
+              <CarouselProductCard
+                key={`${item.id}-${index}`}
+                item={item}
+                sectionKey={section.key}
+                isDuplicate={enableMobileAuto && index >= products.length}
+              />
             ))}
-            <div className="product-suggest__end-spacer"></div>
+            {!enableMobileAuto ? <div className="product-suggest__end-spacer" /> : null}
           </div>
-          <ProductSuggestNav next />
+          {!enableMobileAuto ? <ProductSuggestNav next /> : null}
         </div>
 
         {isPremium && ctaText && ctaLink ? (

@@ -22,8 +22,9 @@ import {
 } from "@/lib/gstCalculator";
 import {
   getDefaultShippingMethod,
-  getShippingChargeForMethod,
 } from "@/lib/shipping/shippingMethods";
+import { notifyAdminNewOrder } from "@/lib/server/orderNotificationService";
+import { resolveAuthoritativeShippingCharge } from "@/lib/server/shippingQuoteService";
 import {
   reserveAndFulfillStockForOrder,
   reserveStockForOrder,
@@ -107,18 +108,10 @@ function toInventoryLines(
 function buildOrderRecord(
   orderId: string,
   payload: CreateOrderPayload,
-  userId?: string
+  userId: string | undefined,
+  shippingCharge: number
 ): Omit<Order, "id"> {
-  const subtotal = payload.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
   const shippingMethod = payload.shippingMethod ?? getDefaultShippingMethod();
-  const shippingCharge = getShippingChargeForMethod(
-    shippingMethod,
-    subtotal,
-    payload.couponDiscount
-  );
 
   const invoice = calculateGST({
     items: payload.items.map((item) => ({
@@ -241,7 +234,21 @@ export async function createOrder(
   logPayment("Allocating order ID");
   const orderId = await allocateNextOrderId();
   logPayment("Order ID allocated", { orderId });
-  const orderData = buildOrderRecord(orderId, payload, userId);
+
+  const subtotal = payload.items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const shippingMethod = payload.shippingMethod ?? getDefaultShippingMethod();
+  const shippingCharge = await resolveAuthoritativeShippingCharge({
+    method: shippingMethod,
+    subtotal,
+    discount: payload.couponDiscount,
+    postalCode: payload.shippingAddress.postalCode,
+    state: payload.shippingAddress.state,
+  });
+
+  const orderData = buildOrderRecord(orderId, payload, userId, shippingCharge);
   const inventoryLines = toInventoryLines(payload.items);
 
   const order: Order = { id: orderId, ...orderData };
@@ -273,6 +280,7 @@ export async function createOrder(
     await persistOrder(order);
     persisted = true;
     logPayment("Firestore write completed", { orderId });
+    void notifyAdminNewOrder(order);
 
     const skipInventory = isGlobalFirestoreCircuitOpen();
 

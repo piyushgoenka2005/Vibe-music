@@ -101,7 +101,7 @@
   position: absolute;
   right: 0;
   bottom: calc(100% + 0.85rem);
-  width: min(23.5rem, calc(100vw - 2rem));
+  width: min(23.5rem, calc(100dvw - 2rem));
   max-height: min(36rem, calc(100vh - 6rem));
   overflow: auto;
   border: 1px solid var(--border-default);
@@ -109,6 +109,10 @@
   background: var(--surface-elevated);
   box-shadow: var(--shadow-lg);
   animation: help-widget-panel-in 0.32s var(--ease-premium);
+}
+
+.help-widget__backdrop {
+  display: none;
 }
 
 @keyframes help-widget-panel-in {
@@ -375,8 +379,107 @@
     bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
   }
 
+  .help-widget--open {
+    inset: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    top: 0;
+    z-index: 220;
+    pointer-events: none;
+  }
+
+  .help-widget__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    background: rgba(15, 23, 42, 0.48);
+    cursor: pointer;
+    pointer-events: auto;
+    animation: help-widget-backdrop-in 0.24s ease;
+  }
+
+  .help-widget--open .help-widget__panel {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    max-height: min(88dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 0.75rem));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 0;
+    border-radius: 1.25rem 1.25rem 0 0;
+    box-shadow: 0 -18px 48px rgba(15, 23, 42, 0.22);
+    pointer-events: auto;
+    animation: help-widget-sheet-in 0.32s var(--ease-premium);
+  }
+
+  .help-widget--open .help-widget__header {
+    flex-shrink: 0;
+    padding: 1rem 1rem 0.9rem;
+    border-radius: 1.25rem 1.25rem 0 0;
+  }
+
+  .help-widget--open .help-widget__title {
+    font-size: 1.125rem;
+  }
+
+  .help-widget--open .help-widget__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.85rem 1rem max(1rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .help-widget--open .help-widget__intro {
+    margin-bottom: 0.85rem;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.8125rem;
+  }
+
+  .help-widget--open .help-widget__links {
+    gap: 0.25rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .help-widget--open .help-widget__link {
+    padding: 0.625rem 0.7rem;
+    font-size: 0.8125rem;
+  }
+
+  .help-widget--open .help-widget__actions {
+    gap: 0.45rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .help-widget--open .help-widget__action-btn {
+    min-height: 2.65rem;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.8125rem;
+  }
+
+  .help-widget--open .help-widget__hours {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .help-widget--open .help-widget__disclaimer {
+    margin-top: 0.75rem;
+    font-size: 0.625rem;
+  }
+
+  .help-widget--open .help-widget__trigger {
+    display: none;
+  }
+
   .help-widget__panel {
-    width: min(21rem, calc(100vw - 1.5rem));
+    width: min(21rem, calc(100dvw - 1.5rem));
     max-height: min(32rem, calc(100vh - 5.5rem));
   }
 
@@ -403,13 +506,72 @@
   }
 }
 
+@keyframes help-widget-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes help-widget-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.help-widget__ticket-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--help-border) 70%, transparent);
+}
+
+.help-widget__ticket-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.help-widget__ticket-form input,
+.help-widget__ticket-form textarea {
+  width: 100%;
+  border: 1px solid var(--help-border);
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+  background: var(--help-surface);
+  color: var(--help-text);
+}
+
+.help-widget__ticket-form button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  background: var(--help-accent);
+  color: #fff;
+  cursor: pointer;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .help-widget__trigger:hover,
   .help-widget__action-btn--primary:hover {
     transform: none;
   }
 
-  .help-widget__panel {
+  .help-widget__panel,
+  .help-widget__backdrop {
     animation: none;
   }
 

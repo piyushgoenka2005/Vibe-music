@@ -40,16 +40,14 @@ function WhyShopCard({
 export default function WhyShopSection() {
   const reduceMotion = useHydrationSafeReducedMotion();
   const isMobileViewport = useIsMobileViewport();
-  const useScrollRail = isMobileViewport && !reduceMotion;
-  const items =
-    reduceMotion || isMobileViewport
-      ? WHY_SHOP_ITEMS
-      : [...WHY_SHOP_ITEMS, ...WHY_SHOP_ITEMS];
+  const items = reduceMotion
+    ? WHY_SHOP_ITEMS
+    : [...WHY_SHOP_ITEMS, ...WHY_SHOP_ITEMS];
 
   const marqueeClass = [
     "why-shop__marquee",
     reduceMotion && "why-shop__marquee--static",
-    useScrollRail && "why-shop__marquee--scroll",
+    isMobileViewport && !reduceMotion && "why-shop__marquee--mobile-auto",
   ]
     .filter(Boolean)
     .join(" ");

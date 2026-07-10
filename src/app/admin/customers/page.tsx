@@ -58,6 +58,15 @@ function CustomersContent() {
     <>
       <div className="admin-toolbar">
         <input className="admin-input" placeholder="Search customers…" value={search} onChange={(e) => { setSearch(e.target.value); reset(); }} />
+        <button
+          type="button"
+          className="admin-btn admin-btn--secondary"
+          onClick={() => {
+            window.location.href = "/api/admin/customers?export=csv";
+          }}
+        >
+          Export CSV
+        </button>
       </div>
       <div className="admin-grid-2">
         <div className="admin-panel">

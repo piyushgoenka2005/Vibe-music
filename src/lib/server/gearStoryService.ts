@@ -81,7 +81,7 @@ function buildPlaceholderStory(seed: GearStorySeed, index: number): GearStory {
     name: seed.title,
     rating: 0,
     reviewCount: 0,
-    availability: "in-stock",
+    availability: "out-of-stock",
     image: posterUrl,
     images: posterUrl ? [posterUrl] : [],
   };

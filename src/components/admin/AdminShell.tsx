@@ -3,6 +3,7 @@
 import { Menu } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminThemeToggle from "@/components/admin/AdminThemeToggle";
+import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
 import { useAdminUiStore } from "@/store/adminUiStore";
 import type { AdminSession } from "@/types/admin";
 import "@/components/admin/admin.css";
@@ -49,6 +50,7 @@ export default function AdminShell({ admin, title, children, actions }: AdminShe
               <h1 className="admin-header__title">{title}</h1>
             </div>
             <div className="admin-header__actions">
+              <AdminNotificationBell />
               <AdminThemeToggle />
               {actions}
             </div>

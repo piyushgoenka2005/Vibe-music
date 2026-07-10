@@ -2,19 +2,45 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Shield, Bell, Lock, KeyRound } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { useAuthStore } from "@/store/authStore";
-import { useAccountProfileStore } from "@/store/accountProfileStore";
+import type { NotificationPreferences } from "@/types/notification";
 
 export default function AccountSettings() {
+  const queryClient = useQueryClient();
   const resetPassword = useAuthStore((s) => s.resetPassword);
   const user = useAuthStore((s) => s.user);
-  const notifications = useAccountProfileStore((s) => s.notifications);
-  const updateNotifications = useAccountProfileStore((s) => s.updateNotifications);
 
   const [resetSent, setResetSent] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+
+  const { data } = useQuery({
+    queryKey: ["account-notification-preferences"],
+    queryFn: async () => {
+      const res = await fetch("/api/account/notifications");
+      if (!res.ok) throw new Error("Failed to load preferences");
+      return res.json() as Promise<{ preferences: NotificationPreferences }>;
+    },
+    enabled: Boolean(user),
+  });
+
+  const prefsMutation = useMutation({
+    mutationFn: async (patch: Partial<NotificationPreferences>) => {
+      const res = await fetch("/api/account/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) throw new Error("Save failed");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["account-notification-preferences"] });
+    },
+  });
+
+  const notifications = data?.preferences;
 
   async function handlePasswordReset() {
     if (!user?.email) return;
@@ -43,47 +69,55 @@ export default function AccountSettings() {
             </h3>
           </div>
           <div className="acct__card-body">
-            {(
-              [
-                {
-                  key: "orderUpdates" as const,
-                  title: "Order Updates",
-                  desc: "Shipping confirmations and delivery alerts",
-                },
-                {
-                  key: "promotions" as const,
-                  title: "Deals & Promotions",
-                  desc: "Sales, coupons, and special offers",
-                },
-                {
-                  key: "productAlerts" as const,
-                  title: "Product Alerts",
-                  desc: "Back-in-stock and price drop notifications",
-                },
-                {
-                  key: "newsletter" as const,
-                  title: "Newsletter",
-                  desc: "Weekly gear picks and music industry news",
-                },
-              ] as const
-            ).map((item) => (
-              <div key={item.key} className="acct__setting-row">
-                <div className="acct__setting-info">
-                  <h4>{item.title}</h4>
-                  <p>{item.desc}</p>
+            <p className="acct__section-sub" style={{ marginBottom: "1rem" }}>
+              Preferences sync to your account. View your inbox on the{" "}
+              <Link href={ROUTES.accountNotifications}>Notifications page</Link>.
+            </p>
+            {!notifications ? (
+              <p className="acct__section-sub">Loading preferences…</p>
+            ) : (
+              (
+                [
+                  {
+                    key: "orderUpdates" as const,
+                    title: "Order Updates",
+                    desc: "Shipping confirmations and delivery alerts",
+                  },
+                  {
+                    key: "promotions" as const,
+                    title: "Deals & Promotions",
+                    desc: "Sales, coupons, and special offers",
+                  },
+                  {
+                    key: "productAlerts" as const,
+                    title: "Product Alerts",
+                    desc: "Back-in-stock and price drop notifications",
+                  },
+                  {
+                    key: "newsletter" as const,
+                    title: "Newsletter",
+                    desc: "Weekly gear picks and music industry news",
+                  },
+                ] as const
+              ).map((item) => (
+                <div key={item.key} className="acct__setting-row">
+                  <div className="acct__setting-info">
+                    <h4>{item.title}</h4>
+                    <p>{item.desc}</p>
+                  </div>
+                  <label className="acct__toggle">
+                    <input
+                      type="checkbox"
+                      checked={notifications[item.key]}
+                      onChange={(e) =>
+                        prefsMutation.mutate({ [item.key]: e.target.checked })
+                      }
+                    />
+                    <span className="acct__toggle-slider" />
+                  </label>
                 </div>
-                <label className="acct__toggle">
-                  <input
-                    type="checkbox"
-                    checked={notifications[item.key]}
-                    onChange={(e) =>
-                      updateNotifications({ [item.key]: e.target.checked })
-                    }
-                  />
-                  <span className="acct__toggle-slider" />
-                </label>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </section>
 

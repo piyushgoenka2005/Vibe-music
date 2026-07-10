@@ -13,17 +13,27 @@ export async function GET() {
     firestore: firestoreHealth.ok ? "ok" : "error",
   };
 
-  const healthy = Object.values(checks).every((value) => value === "ok");
+  const fullyHealthy = checks.app === "ok" && checks.firestore === "ok";
+  const canServeTraffic =
+    checks.app === "ok" &&
+    (firestoreHealth.ok || firestoreHealth.usingLocalFallback === true);
   const isProduction = process.env.NODE_ENV === "production";
   const body = {
-    status: healthy ? "healthy" : "degraded",
+    status: fullyHealthy ? "healthy" : canServeTraffic ? "degraded" : "unhealthy",
     timestamp,
     checks,
+    firestore: {
+      ok: firestoreHealth.ok,
+      usingLocalFallback: firestoreHealth.usingLocalFallback ?? false,
+      error: firestoreHealth.error,
+    },
     integrations: isProduction ? undefined : integrations,
     version: process.env.VERCEL_GIT_COMMIT_SHA ?? "local",
   };
 
   logInfo("Health check", "api/health", body);
 
-  return NextResponse.json(body, { status: healthy ? 200 : 503 });
+  return NextResponse.json(body, {
+    status: canServeTraffic ? 200 : 503,
+  });
 }

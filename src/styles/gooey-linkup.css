@@ -271,7 +271,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 479px) {
   .gooey-linkup--hero {
     width: 100%;
     max-width: 18rem;

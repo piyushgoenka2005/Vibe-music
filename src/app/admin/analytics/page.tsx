@@ -42,13 +42,15 @@ function AnalyticsContent() {
           <option value="30d">Last 30 days</option>
           <option value="90d">Last 90 days</option>
         </select>
-        <a
-          href={`/api/admin/analytics/export?period=${period}`}
+        <button
+          type="button"
           className="admin-btn admin-btn--secondary"
-          download
+          onClick={() => {
+            window.location.href = `/api/admin/analytics/export?period=${period}`;
+          }}
         >
           Export CSV
-        </a>
+        </button>
       </div>
 
       <div className="admin-stat-grid">

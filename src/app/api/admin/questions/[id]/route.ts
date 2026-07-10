@@ -4,6 +4,7 @@ import {
   getProductQuestionById,
   updateProductQuestion,
 } from "@/lib/server/productQuestionRepository";
+import { notifyUserIfAllowed } from "@/lib/server/notificationRepository";
 import { adminProductQuestionSchema } from "@/lib/validations/wrFeatures";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -29,6 +30,11 @@ export async function PUT(request: Request, context: RouteContext) {
     const body = await request.json();
     const parsed = adminProductQuestionSchema.parse(body);
 
+    const existing = await getProductQuestionById(id);
+    if (!existing) {
+      return NextResponse.json({ error: "Question not found" }, { status: 404 });
+    }
+
     const patch: Parameters<typeof updateProductQuestion>[1] = {};
     if (parsed.status) patch.status = parsed.status;
     if (parsed.answer !== undefined) {
@@ -40,6 +46,21 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const question = await updateProductQuestion(id, patch);
+
+    if (
+      existing.userId &&
+      parsed.answer?.trim() &&
+      parsed.answer !== existing.answer
+    ) {
+      void notifyUserIfAllowed({
+        userId: existing.userId,
+        type: "product_alert",
+        title: "Your product question was answered",
+        body: `${existing.productName}: ${parsed.answer.slice(0, 120)}`,
+        link: `/product/${existing.productSlug}`,
+      });
+    }
+
     return NextResponse.json({ question });
   } catch (error) {
     return adminErrorResponse(error);

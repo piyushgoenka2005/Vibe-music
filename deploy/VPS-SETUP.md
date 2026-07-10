@@ -58,3 +58,23 @@ Then: `ssh vibe-vps`
 | Updates | Unattended security upgrades |
 
 Never commit `.env`, passwords, or private keys to git.
+
+## Release checklist
+
+Before/after deploy, follow **`docs/release/FINAL_DEPLOYMENT_CHECKLIST.md`** in the repo root.
+
+## Firebase (run from dev machine with Firebase CLI auth)
+
+```bash
+npm run firebase:deploy-firestore   # rules + indexes
+# or separately:
+npm run firebase:deploy-rules
+npm run firebase:deploy-indexes
+```
+
+## Local validation before push
+
+```bash
+npm run validate        # type-check, lint, test, build
+npm run test:e2e        # with npm run dev or npm run start running
+```

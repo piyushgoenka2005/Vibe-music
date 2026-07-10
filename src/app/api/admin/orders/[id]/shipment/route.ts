@@ -6,6 +6,7 @@ import {
   getOrderShipmentDetails,
   upsertOrderShipment,
 } from "@/lib/server/shipmentService";
+import { notifyUserIfAllowed } from "@/lib/server/notificationRepository";
 import {
   addTrackingEventSchema,
   upsertShipmentSchema,
@@ -50,6 +51,16 @@ export async function PUT(request: Request, context: RouteContext) {
       },
       admin.email
     );
+
+    if (order.userId) {
+      void notifyUserIfAllowed({
+        userId: order.userId,
+        type: "order_update",
+        title: "Shipment update",
+        body: `Tracking ${parsed.trackingNumber} — status ${parsed.status ?? result.shipment.status}.`,
+        link: `/account/orders/${id}`,
+      });
+    }
 
     return NextResponse.json(result);
   } catch (error) {

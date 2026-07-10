@@ -206,6 +206,7 @@
 }
 
 .admin-sidebar__link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -224,7 +225,33 @@
 }
 
 .admin-sidebar__link-label {
+  flex: 1;
   transition: opacity 0.15s ease;
+}
+
+.admin-sidebar__badge {
+  margin-left: auto;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--admin-danger, #dc2626);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-sidebar--collapsed .admin-sidebar__badge {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  min-width: 0.875rem;
+  height: 0.875rem;
+  padding: 0 0.2rem;
+  font-size: 0.5625rem;
 }
 
 .admin-sidebar__logout {
@@ -904,7 +931,7 @@
 }
 
 .admin-drawer {
-  width: min(100vw, 480px);
+  width: min(100dvw, 480px);
   height: 100%;
   overflow-y: auto;
   background: var(--admin-surface);
@@ -973,4 +1000,35 @@
   .admin-toolbar {
     align-items: stretch;
   }
+}
+
+.admin-notification-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  text-decoration: none;
+}
+
+.admin-notification-bell__badge {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--admin-danger, #dc2626);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

@@ -10,6 +10,9 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/reports/lighthouse/
 
 # next.js
 /.next/
@@ -22,6 +25,7 @@
 .DS_Store
 *.pem
 .cursor/
+debug-*.log
 
 # debug
 npm-debug.log*
@@ -60,3 +64,4 @@ ui-debug.log
 /*.xlsx
 /catalog-import-manifest.json
 /migration-report.json
+tmp-out.css

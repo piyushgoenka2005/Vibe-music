@@ -170,6 +170,10 @@ export default function CheckoutPageContent() {
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>(
     getDefaultShippingMethod()
   );
+  const [zoneQuote, setZoneQuote] = useState<{
+    key: string;
+    charges: Partial<Record<ShippingMethod, number>>;
+  } | null>(null);
   const [onlineChannel, setOnlineChannel] =
     useState<OnlinePaymentChannel>("upi");
   const [guestEmailInput, setGuestEmailInput] = useState("");
@@ -269,19 +273,71 @@ export default function CheckoutPageContent() {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const shippingMethodCharges = Object.fromEntries(
+
+  const fallbackShippingCharges = Object.fromEntries(
     SHIPPING_METHOD_IDS.map((id) => [
       id,
       getShippingChargeForMethod(id, cartSubtotal, couponDiscount),
     ])
   ) as Partial<Record<ShippingMethod, number>>;
 
+  const shippingQuoteKey = resolvedAddress?.postalCode
+    ? `${resolvedAddress.postalCode}:${resolvedAddress.state}:${cartSubtotal}:${couponDiscount}`
+    : null;
+
+  const shippingMethodCharges =
+    zoneQuote?.key === shippingQuoteKey
+      ? zoneQuote.charges
+      : fallbackShippingCharges;
+
+  useEffect(() => {
+    if (!shippingQuoteKey || !resolvedAddress?.postalCode) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch("/api/shipping/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subtotal: cartSubtotal,
+            discount: couponDiscount,
+            postalCode: resolvedAddress.postalCode,
+            state: resolvedAddress.state,
+          }),
+        });
+        if (!response.ok || cancelled) return;
+        const data = (await response.json()) as {
+          methods?: Array<{ id: ShippingMethod; charge: number }>;
+        };
+        if (!data.methods?.length || cancelled) return;
+        setZoneQuote({
+          key: shippingQuoteKey,
+          charges: Object.fromEntries(
+            data.methods.map((method) => [method.id, method.charge])
+          ),
+        });
+      } catch {
+        // Keep fallback charges until the next successful quote fetch.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [shippingQuoteKey, resolvedAddress?.postalCode, resolvedAddress?.state, cartSubtotal, couponDiscount]);
+
+  const activeShippingCharge =
+    shippingMethodCharges[shippingMethod] ??
+    getShippingChargeForMethod(shippingMethod, cartSubtotal, couponDiscount);
+
   const invoice = computeCheckoutInvoice(
     checkoutItems,
     couponDiscount,
     buyerState,
     0,
-    shippingMethod
+    shippingMethod,
+    activeShippingCharge
   );
 
   const payment = useCheckoutPayment({
@@ -921,6 +977,7 @@ export default function CheckoutPageContent() {
           displayItems={displayItems}
           items={checkoutItems}
           shippingMethod={shippingMethod}
+          shippingChargeOverride={activeShippingCharge}
           paymentAction={
             step === "payment" && resolvedAddress && hasValidContact
               ? {

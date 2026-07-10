@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   Package,
@@ -24,6 +25,11 @@ import {
   RotateCcw,
   MessageCircleQuestion,
   UserCog,
+  Shield,
+  Headset,
+  Bell,
+  FilePenLine,
+  Truck,
 } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
@@ -38,6 +44,7 @@ const NAV_ITEMS = [
   { href: ROUTES.adminBrands, label: "Brands", icon: Tag, permission: "categories:read" },
   { href: ROUTES.adminOrders, label: "Orders", icon: ShoppingCart, permission: "orders:read" },
   { href: ROUTES.adminReturns, label: "Returns", icon: RotateCcw, permission: "orders:read" },
+  { href: ROUTES.adminSupport, label: "Support", icon: Headset, permission: "orders:read" },
   { href: ROUTES.adminCustomers, label: "Customers", icon: Users, permission: "customers:read" },
   { href: ROUTES.adminCoupons, label: "Coupons", icon: Ticket, permission: "coupons:read" },
   { href: ROUTES.adminBanners, label: "Banners", icon: ImageIcon, permission: "banners:read" },
@@ -46,8 +53,12 @@ const NAV_ITEMS = [
   { href: ROUTES.adminQuestions, label: "Q&A", icon: MessageCircleQuestion, permission: "reviews:read" },
   { href: ROUTES.adminInventory, label: "Inventory", icon: Warehouse, permission: "inventory:read" },
   { href: ROUTES.adminAnalytics, label: "Analytics", icon: BarChart3, permission: "analytics:read" },
+  { href: ROUTES.adminNotifications, label: "Notifications", icon: Bell, permission: "dashboard:read" },
   { href: ROUTES.adminAuditLogs, label: "Audit logs", icon: ScrollText, permission: "audit:read" },
   { href: ROUTES.adminUsers, label: "Admin users", icon: UserCog, permission: "admins:read" },
+  { href: ROUTES.adminRoles, label: "Roles", icon: Shield, permission: "admins:read" },
+  { href: ROUTES.adminCms, label: "CMS", icon: FilePenLine, permission: "settings:write" },
+  { href: ROUTES.adminShipping, label: "Shipping zones", icon: Truck, permission: "settings:write" },
   { href: ROUTES.adminSettings, label: "Settings", icon: Settings, permission: "settings:read" },
   { href: ROUTES.adminBlog, label: "Blog", icon: FileText, permission: "blog:read" },
 ] as const;
@@ -79,6 +90,23 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
   const visibleItems = NAV_ITEMS.filter((item) =>
     admin.permissions.includes(item.permission as (typeof admin.permissions)[number])
   );
+
+  const showNotificationBadge = visibleItems.some(
+    (item) => item.href === ROUTES.adminNotifications
+  );
+
+  const { data: notificationData } = useQuery({
+    queryKey: ["admin-notifications-count"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/notifications");
+      if (!res.ok) throw new Error("Failed");
+      return res.json() as Promise<{ unreadCount: number }>;
+    },
+    enabled: showNotificationBadge,
+    refetchInterval: 60_000,
+  });
+
+  const unreadNotifications = notificationData?.unreadCount ?? 0;
 
   return (
     <aside
@@ -118,6 +146,11 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
             >
               <Icon size={18} className="admin-sidebar__link-icon" />
               <span className="admin-sidebar__link-label">{item.label}</span>
+              {item.href === ROUTES.adminNotifications && unreadNotifications > 0 ? (
+                <span className="admin-sidebar__badge" aria-hidden>
+                  {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                </span>
+              ) : null}
             </Link>
           );
         })}

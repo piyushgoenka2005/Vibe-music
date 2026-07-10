@@ -12,6 +12,8 @@ import {
   createReturnRequest,
   listReturnRequestsByOrderId,
 } from "@/lib/server/returnRequestRepository";
+import { createAdminNotification } from "@/lib/server/notificationRepository";
+import { ROUTES } from "@/lib/routes";
 import { createReturnRequestSchema } from "@/lib/validations/wrFeatures";
 
 type RouteContext = { params: Promise<{ orderId: string }> };
@@ -103,6 +105,13 @@ export async function POST(request: Request, context: RouteContext) {
       email: order.email,
       reason: body.data.reason,
       details: body.data.details,
+    });
+
+    void createAdminNotification({
+      type: "return",
+      title: "New return request",
+      body: `Order ${orderId.slice(0, 8)}… — ${body.data.reason}`,
+      link: ROUTES.adminReturns,
     });
 
     return NextResponse.json({ returnRequest }, { status: 201 });

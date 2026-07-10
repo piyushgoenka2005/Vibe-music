@@ -4,7 +4,6 @@ import Link from "next/link";
 import { formatCurrency } from "@/utils/currency";
 import { ROUTES } from "@/lib/routes";
 import { useCompareStore } from "@/store/compareStore";
-import { useIsClient } from "@/hooks/useIsClient";
 import "@/styles/compare.css";
 
 function availabilityLabel(availability: string): string {
@@ -17,15 +16,6 @@ export default function ComparePage() {
   const items = useCompareStore((s) => s.items);
   const remove = useCompareStore((s) => s.remove);
   const clear = useCompareStore((s) => s.clear);
-  const mounted = useIsClient();
-
-  if (!mounted) {
-    return (
-      <main className="storefront-page">
-        <p className="storefront-loading">Loading…</p>
-      </main>
-    );
-  }
 
   return (
     <main className="storefront-page storefront-page--subtle compare-page">

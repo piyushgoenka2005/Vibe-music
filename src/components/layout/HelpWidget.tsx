@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
+import { useAuthStore } from "@/store/authStore";
 import {
   HELP_WIDGET_DISCLAIMER,
   HELP_WIDGET_HOURS,
@@ -36,8 +37,19 @@ const LINK_ICONS = {
 export default function HelpWidget() {
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const user = useAuthStore((s) => s.user);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showTicketForm, setShowTicketForm] = useState(false);
+  const [ticketForm, setTicketForm] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const [ticketStatus, setTicketStatus] = useState<string | null>(null);
+  const [ticketSubmitting, setTicketSubmitting] = useState(false);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -47,8 +59,15 @@ export default function HelpWidget() {
   const openPanel = useCallback(() => {
     setLoading(true);
     setOpen(true);
+    if (user) {
+      setTicketForm((current) => ({
+        ...current,
+        name: current.name || user.name || "",
+        email: current.email || user.email || "",
+      }));
+    }
     window.setTimeout(() => setLoading(false), 380);
-  }, []);
+  }, [user]);
 
   const toggle = useCallback(() => {
     if (open) {
@@ -57,6 +76,47 @@ export default function HelpWidget() {
     }
     openPanel();
   }, [close, open, openPanel]);
+
+  async function submitTicket(event: React.FormEvent) {
+    event.preventDefault();
+    setTicketSubmitting(true);
+    setTicketStatus(null);
+    try {
+      const res = await fetch("/api/support/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...ticketForm,
+          category: "other",
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? "Unable to submit ticket");
+      setTicketStatus(body.message ?? "Ticket submitted.");
+      setTicketForm((current) => ({
+        ...current,
+        subject: "",
+        message: "",
+      }));
+      setShowTicketForm(false);
+    } catch (error) {
+      setTicketStatus(
+        error instanceof Error ? error.message : "Unable to submit ticket."
+      );
+    } finally {
+      setTicketSubmitting(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const frame = requestAnimationFrame(() => {
+      closeButtonRef.current?.focus();
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -72,6 +132,20 @@ export default function HelpWidget() {
   useEffect(() => {
     if (!open) return undefined;
 
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    if (!isMobile) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
     const onPointerDown = (event: MouseEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) {
         close();
@@ -83,14 +157,22 @@ export default function HelpWidget() {
   }, [close, open]);
 
   return (
-    <div className="help-widget" ref={rootRef}>
+    <div className={`help-widget${open ? " help-widget--open" : ""}`} ref={rootRef}>
       {open ? (
-        <div
-          aria-labelledby={`${panelId}-title`}
-          className="help-widget__panel"
-          id={panelId}
-          role="dialog"
-        >
+        <>
+          <button
+            aria-label="Close support panel"
+            className="help-widget__backdrop"
+            onClick={close}
+            type="button"
+          />
+          <div
+            aria-labelledby={`${panelId}-title`}
+            className="help-widget__panel"
+            id={panelId}
+            role="dialog"
+            aria-modal="true"
+          >
           <header className="help-widget__header">
             <div className="help-widget__header-copy">
               <p className="help-widget__eyebrow">{BRAND.supportRole}</p>
@@ -102,6 +184,7 @@ export default function HelpWidget() {
               aria-label="Close support panel"
               className="help-widget__close"
               onClick={close}
+              ref={closeButtonRef}
               type="button"
             >
               <X aria-hidden size={18} strokeWidth={2.25} />
@@ -137,13 +220,31 @@ export default function HelpWidget() {
             </nav>
 
             <div className="help-widget__actions">
-              <a
+              {user ? (
+                <Link
+                  className="help-widget__action-btn help-widget__action-btn--secondary"
+                  href={ROUTES.accountSupport}
+                  onClick={close}
+                >
+                  <Headset aria-hidden size={18} strokeWidth={2} />
+                  My support tickets
+                </Link>
+              ) : null}
+              <button
+                type="button"
                 className="help-widget__action-btn help-widget__action-btn--primary"
+                onClick={() => setShowTicketForm((value) => !value)}
+              >
+                <MessageCircle aria-hidden size={18} strokeWidth={2} />
+                Open support ticket
+              </button>
+              <a
+                className="help-widget__action-btn help-widget__action-btn--secondary"
                 href={`mailto:${BRAND.email}?subject=Live%20Chat%20Support`}
                 onClick={close}
               >
                 <MessageCircle aria-hidden size={18} strokeWidth={2} />
-                Chat with an advisor
+                Email support
               </a>
               <a
                 className="help-widget__action-btn help-widget__action-btn--secondary"
@@ -154,6 +255,62 @@ export default function HelpWidget() {
                 {BRAND.phoneDisplay}
               </a>
             </div>
+
+            {showTicketForm ? (
+              <form className="help-widget__ticket-form" onSubmit={submitTicket}>
+                <label>
+                  Name
+                  <input
+                    required
+                    value={ticketForm.name}
+                    onChange={(e) =>
+                      setTicketForm({ ...ticketForm, name: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Email
+                  <input
+                    required
+                    type="email"
+                    value={ticketForm.email}
+                    onChange={(e) =>
+                      setTicketForm({ ...ticketForm, email: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Subject
+                  <input
+                    required
+                    value={ticketForm.subject}
+                    onChange={(e) =>
+                      setTicketForm({ ...ticketForm, subject: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Message
+                  <textarea
+                    required
+                    rows={4}
+                    value={ticketForm.message}
+                    onChange={(e) =>
+                      setTicketForm({ ...ticketForm, message: e.target.value })
+                    }
+                  />
+                </label>
+                <button type="submit" disabled={ticketSubmitting}>
+                  {ticketSubmitting ? "Submitting…" : "Submit ticket"}
+                </button>
+              </form>
+            ) : null}
+
+            {ticketStatus ? (
+              <p className="help-widget__intro" role="status">
+                {ticketStatus}
+              </p>
+            ) : null}
 
             <div className="help-widget__hours">
               <div className="help-widget__hours-head">
@@ -182,6 +339,7 @@ export default function HelpWidget() {
             </p>
           </div>
         </div>
+        </>
       ) : null}
 
       <button

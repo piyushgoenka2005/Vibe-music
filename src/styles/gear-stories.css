@@ -350,6 +350,12 @@
   color: var(--brand-primary);
 }
 
+.gear-story-modal__price--muted {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 .gear-story-modal__price-was {
   font-size: 0.9375rem;
   color: var(--text-tertiary);

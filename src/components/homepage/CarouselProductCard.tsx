@@ -10,6 +10,7 @@ import type { HomepageProductItem } from "@/types/homepage";
 interface CarouselProductCardProps {
   item: HomepageProductItem;
   sectionKey: string;
+  isDuplicate?: boolean;
 }
 
 function formatRatingAttribute(rating: number): string {
@@ -20,6 +21,7 @@ function formatRatingAttribute(rating: number): string {
 export default function CarouselProductCard({
   item,
   sectionKey,
+  isDuplicate = false,
 }: CarouselProductCardProps) {
   const displayName = formatProductCardTitle(item.name, item.brand);
   const displayPrice = item.salePrice ?? item.price;
@@ -33,7 +35,10 @@ export default function CarouselProductCard({
   const productHref = resolveLinkHref(item.href);
 
   return (
-    <div className="product-suggest__item-wrap">
+    <div
+      className="product-suggest__item-wrap"
+      aria-hidden={isDuplicate ? true : undefined}
+    >
       <ProductShareButton
         overlay
         position="top-right"
@@ -45,6 +50,7 @@ export default function CarouselProductCard({
         className="product-suggest__item"
         data-hp-section={sectionKey}
         data-id={item.id}
+        tabIndex={isDuplicate ? -1 : undefined}
       >
         {badgeLabel ? (
           <span

@@ -5,6 +5,8 @@ import {
   User,
   MapPin,
   Settings,
+  Bell,
+  Headset,
   LogOut,
 } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
@@ -38,7 +40,19 @@ export const ACCOUNT_NAV_ITEMS = [
     href: ROUTES.accountAddresses,
     label: "Addresses",
     icon: MapPin,
-    mobile: false,
+    mobile: true,
+  },
+  {
+    href: ROUTES.accountNotifications,
+    label: "Notifications",
+    icon: Bell,
+    mobile: true,
+  },
+  {
+    href: ROUTES.accountSupport,
+    label: "Support",
+    icon: Headset,
+    mobile: true,
   },
   {
     href: ROUTES.accountSettings,

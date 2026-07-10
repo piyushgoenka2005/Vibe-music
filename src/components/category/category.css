@@ -76,7 +76,7 @@
 }
 
 .cat-product-grid--grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
 @media (max-width: 900px) {
@@ -85,64 +85,288 @@
   }
 }
 
+/* Desktop/tablet — compact, square-ish cards */
+@media (min-width: 768px) {
+  [data-view="grid"] .cat-product-card__brand--desktop {
+    display: block;
+  }
+
+  [data-view="grid"] .cat-product-card__category-pill,
+  [data-view="grid"] .cat-product-card__descriptor {
+    display: none;
+  }
+
+  [data-view="grid"] .cat-product-card__price-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    margin-top: auto;
+  }
+
+  [data-view="grid"] .cat-product-card__discount {
+    display: none;
+  }
+
+  [data-view="grid"] .cat-product-card__deal-tag {
+    display: inline-flex;
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 2;
+    padding: 0.2rem 0.45rem;
+    border-radius: 999px;
+    background: #16a34a;
+    color: #ffffff;
+    font-size: 0.625rem;
+    font-weight: 700;
+  }
+
+  .cat-product-grid--grid .cat-product-card__image {
+    aspect-ratio: 4 / 3;
+  }
+
+  .cat-product-grid--grid .cat-product-card__image-photo {
+    object-fit: contain;
+    padding: 10px;
+  }
+
+  .cat-product-grid--grid .cat-product-card__body {
+    padding: 12px;
+  }
+
+  .cat-product-grid--grid .cat-product-card__name {
+    margin: 4px 0;
+    font-size: 0.875rem;
+    line-height: 1.35;
+  }
+
+  .cat-product-grid--grid .cat-product-card__rating {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .cat-product-grid--grid .cat-product-card__price {
+    font-size: 1rem;
+  }
+
+  .cat-product-grid--grid .cat-product-card__add {
+    margin-top: 8px;
+    min-height: 2.5rem;
+    height: 2.5rem;
+    font-size: 12px;
+  }
+}
+
 @media (max-width: 767px) {
   .cat-product-grid--grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    gap: 12px;
+  }
+
+  .cat-product-grid--grid > .cat-product-card,
+  .cat-product-card {
+    min-width: 0;
+  }
+
+  .cat-product-grid--grid .cat-product-card {
+    border-color: #eceff3;
+    border-radius: 14px;
+    box-shadow: none;
+  }
+
+  .cat-product-grid--grid .cat-product-card__media-wrap {
+    position: relative;
+  }
+
+  .cat-product-grid--grid .cat-product-card__image {
+    aspect-ratio: 1;
+    background: #f3f4f6;
+  }
+
+  .cat-product-grid--grid .cat-product-card__deal-tag {
+    display: inline-flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    padding: 0.3rem 0.55rem;
+    border-radius: 0 0 0.55rem 0;
+    background: #16a34a;
+    color: #ffffff;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+  }
+
+  .cat-product-grid--grid .cat-product-card__brand--desktop {
+    display: none;
+  }
+
+  .cat-product-grid--grid .cat-product-card__category-pill {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-bottom: 0.15rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-transform: capitalize;
   }
 
   .cat-product-card__name {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    line-height: 1.32;
+    line-height: 1.35;
+    overflow-wrap: normal;
+    word-break: normal;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .cat-product-grid--grid .cat-product-card__descriptor {
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.35;
+    color: #94a3b8;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .cat-product-card__body {
-    padding: 0.75rem;
+    padding: 0.65rem 0.7rem 0.75rem;
+    gap: 0.3rem;
   }
 
-  .cat-product-card__price {
+  .cat-product-grid--grid .cat-product-card__rating {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    margin: 0;
+    font-size: 0.6875rem;
+    color: #64748b;
+  }
+
+  .cat-product-grid--grid .cat-product-card__rating-stars {
+    color: #f59e0b;
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .cat-product-grid--grid .cat-product-card__rating-value {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .cat-product-grid--grid .cat-product-card__price-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.4rem;
+    margin-top: 0.15rem;
+  }
+
+  .cat-product-grid--grid .cat-product-card__price--sale {
     font-size: 0.9375rem;
-    line-height: 1.1;
+    font-weight: 700;
+    color: #0f172a;
   }
 
-  .cat-product-card__add {
-    height: 44px;
-    font-size: 12px;
+  .cat-product-grid--grid .cat-product-card__price--was {
+    font-size: 0.6875rem;
+    color: #94a3b8;
+  }
+
+  .cat-product-grid--grid .cat-product-card__discount {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #dc2626;
+  }
+
+  .cat-product-grid--grid .cat-product-card__add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 2.35rem;
+    height: auto;
+    margin-top: 0.45rem;
+    padding: 0.5rem 0.65rem;
+    border: 0;
+    border-radius: 10px;
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .cat-product-grid--grid .cat-product-card__add:hover:not(:disabled) {
+    background: #1e293b;
   }
 
   .cat-product-card__brand {
-    font-size: 0.6875rem;
+    font-size: 0.625rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
-  .cat-product-card__rating {
-    display: none;
+  .cat-product-card__price {
+    font-size: 0.875rem;
+    line-height: 1.15;
+    font-weight: 600;
+  }
+
+  .cat-product-grid--list .cat-product-card__add {
+    display: flex;
+  }
+
+  .cat-product-grid--list .cat-product-card__rating {
+    display: block;
   }
 
   .cat-product-card__meta {
     align-items: flex-start;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: 0.35rem;
   }
 
   .cat-product-card__pricing {
     width: 100%;
+    min-width: 0;
   }
 
   .cat-product-card__badge {
     align-self: flex-start;
     max-width: 100%;
-    font-size: 0.625rem;
-    line-height: 1;
-    white-space: nowrap;
+    font-size: 0.5625rem;
+    line-height: 1.2;
+    white-space: normal;
+    text-align: center;
   }
-}
 
-@media (max-width: 520px) {
-  .cat-product-grid--grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+  .cat-page__layout > div:last-child {
+    min-width: 0;
+  }
+
+  .cat-product-card__image-photo {
+    object-fit: contain;
+    object-position: center;
+    padding: 0.5rem;
+  }
+
+  .cat-product-card:hover {
+    transform: none;
   }
 }
 
@@ -173,6 +397,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
@@ -187,6 +413,10 @@
 
 .cat-product-grid--list .cat-product-card {
   flex-direction: row;
+}
+
+.cat-product-card__media-wrap {
+  position: relative;
 }
 
 .cat-product-card__image {
@@ -234,6 +464,38 @@
   color: var(--cat-grey60);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.cat-product-card__brand--desktop {
+  display: none;
+}
+
+.cat-product-card__category-pill {
+  display: none;
+}
+
+.cat-product-card__descriptor {
+  display: none;
+}
+
+.cat-product-card__deal-tag {
+  display: none;
+}
+
+.cat-product-card__price-row {
+  display: none;
+}
+
+.cat-product-card__discount {
+  font-weight: 600;
+}
+
+.cat-product-card__rating-value {
+  font-weight: 600;
+}
+
+.cat-product-card__rating-count {
+  color: var(--cat-grey60);
 }
 
 .cat-product-card__name {

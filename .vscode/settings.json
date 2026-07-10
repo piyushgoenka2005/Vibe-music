@@ -1,0 +1,20 @@
+{
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/.data": true,
+    "**/test-results": true,
+    "**/playwright-report": true,
+    "**/coverage": true,
+    "**/.cursor": true,
+    "AGENTS.md": true,
+    "CLAUDE.md": true
+  },
+  "search.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/.data": true,
+    "**/test-results": true,
+    "**/playwright-report": true
+  }
+}

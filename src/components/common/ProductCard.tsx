@@ -39,6 +39,22 @@ function availabilityClass(availability: Product["availability"]): string {
   }
 }
 
+function conditionLabel(condition: Product["condition"]): string {
+  switch (condition) {
+    case "used":
+      return "Pre-owned";
+    case "open-box":
+      return "Open box";
+    default:
+      return "New";
+  }
+}
+
+function discountPercent(original: number, current: number): number {
+  if (original <= 0 || current <= 0 || current >= original) return 0;
+  return Math.round(((original - current) / original) * 100);
+}
+
 export default function ProductCard({ product, view }: ProductCardProps) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
@@ -62,7 +78,9 @@ export default function ProductCard({ product, view }: ProductCardProps) {
   const displayName = formatProductCardTitle(product.name, product.brand);
   const originalPrice = product.originalPrice ?? product.price;
   const hasDiscount = originalPrice > product.price && product.price > 0;
+  const savingsPercent = discountPercent(originalPrice, product.price);
   const canQuickAdd = product.availability !== "out-of-stock" && product.price > 0;
+  const isGrid = view === "grid";
 
   return (
     <article
@@ -70,7 +88,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
       data-view={view}
       aria-label={`${product.brand} ${product.name}`}
     >
-      <div style={{ position: "relative" }}>
+      <div className="cat-product-card__media-wrap">
         <Link
           href={productHref}
           className="cat-product-card__image"
@@ -80,6 +98,9 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           onMouseEnter={prefetchProduct}
           onFocus={prefetchProduct}
         >
+          {isGrid && savingsPercent > 0 ? (
+            <span className="cat-product-card__deal-tag">{savingsPercent}% off</span>
+          ) : null}
           <img
             src={optimizeImageUrl(product.image, "productCard")}
             alt=""
@@ -96,7 +117,16 @@ export default function ProductCard({ product, view }: ProductCardProps) {
         </div>
       </div>
       <div className="cat-product-card__body">
-        <div className="cat-product-card__brand">{product.brand}</div>
+        {isGrid ? (
+          <>
+            <div className="cat-product-card__brand cat-product-card__brand--desktop">
+              {product.brand}
+            </div>
+            <span className="cat-product-card__category-pill">{product.category}</span>
+          </>
+        ) : (
+          <div className="cat-product-card__brand">{product.brand}</div>
+        )}
         <h3 className="cat-product-card__name">
           <Link
             href={productHref}
@@ -109,19 +139,26 @@ export default function ProductCard({ product, view }: ProductCardProps) {
             {displayName}
           </Link>
         </h3>
-        <div className="cat-product-card__rating">
-          <span className="cat-product-card__rating-stars" aria-hidden="true">
-            {"★".repeat(Math.round(product.rating))}
-          </span>{" "}
-          {product.rating.toFixed(1)} ({product.reviewCount})
-        </div>
-        <div className="cat-product-card__meta">
-          <div className="cat-product-card__pricing">
-            {hasDiscount ? (
-              <span className="cat-product-card__price cat-product-card__price--was">
-                {formatCurrency(originalPrice)}
-              </span>
-            ) : null}
+        {isGrid ? (
+          <p className="cat-product-card__descriptor">
+            {conditionLabel(product.condition)} · {availabilityLabel(product.availability)}
+          </p>
+        ) : null}
+        {product.reviewCount > 0 ? (
+          <div className="cat-product-card__rating">
+            <span className="cat-product-card__rating-stars" aria-hidden="true">
+              ★
+            </span>
+            <span className="cat-product-card__rating-value">
+              {product.rating.toFixed(1)}
+            </span>
+            <span className="cat-product-card__rating-count">
+              | {product.reviewCount.toLocaleString("en-IN")}
+            </span>
+          </div>
+        ) : null}
+        {isGrid ? (
+          <div className="cat-product-card__price-row">
             <span
               className={`cat-product-card__price cat-product-card__price--sale${
                 product.price <= 0 ? " cat-product-card__price--enquiry" : ""
@@ -129,13 +166,38 @@ export default function ProductCard({ product, view }: ProductCardProps) {
             >
               {formatDisplayPrice(product.price)}
             </span>
+            {hasDiscount ? (
+              <>
+                <span className="cat-product-card__price cat-product-card__price--was">
+                  {formatCurrency(originalPrice)}
+                </span>
+                <span className="cat-product-card__discount">{savingsPercent}% off</span>
+              </>
+            ) : null}
           </div>
-          <span
-            className={`cat-product-card__badge ${availabilityClass(product.availability)}`}
-          >
-            {availabilityLabel(product.availability)}
-          </span>
-        </div>
+        ) : (
+          <div className="cat-product-card__meta">
+            <div className="cat-product-card__pricing">
+              {hasDiscount ? (
+                <span className="cat-product-card__price cat-product-card__price--was">
+                  {formatCurrency(originalPrice)}
+                </span>
+              ) : null}
+              <span
+                className={`cat-product-card__price cat-product-card__price--sale${
+                  product.price <= 0 ? " cat-product-card__price--enquiry" : ""
+                }`}
+              >
+                {formatDisplayPrice(product.price)}
+              </span>
+            </div>
+            <span
+              className={`cat-product-card__badge ${availabilityClass(product.availability)}`}
+            >
+              {availabilityLabel(product.availability)}
+            </span>
+          </div>
+        )}
         <button
           type="button"
           className="cat-product-card__add"
@@ -143,7 +205,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           disabled={!canQuickAdd}
           aria-label={`Add ${product.name} to cart`}
         >
-          Quick Add to Cart
+          {canQuickAdd ? "Add to cart" : "Out of stock"}
         </button>
       </div>
     </article>

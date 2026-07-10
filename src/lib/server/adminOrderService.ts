@@ -1,5 +1,6 @@
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { releaseOrderInventory } from "@/lib/server/inventoryService";
+import { notifyOrderRefunded } from "@/lib/server/orderNotificationService";
 import type { Order, OrderStatus } from "@/types/order";
 
 export interface OrderTimelineEvent {
@@ -128,6 +129,10 @@ export async function updateOrderStatus(
     await releaseOrderInventory(existingOrder);
   }
 
+  if (status === "refunded" && existingOrder.status !== "refunded") {
+    await releaseOrderInventory(existingOrder);
+  }
+
   const now = new Date().toISOString();
   const timelineEvent: OrderTimelineEvent = {
     id: `${Date.now()}`,
@@ -139,14 +144,28 @@ export async function updateOrderStatus(
 
   const existingTimeline = (orderDoc.data()?.timeline as OrderTimelineEvent[]) ?? [];
 
-  await orderRef.update({
+  const patch: Record<string, unknown> = {
     status,
     updatedAt: now,
     timeline: [...existingTimeline, timelineEvent],
-  });
+  };
+
+  if (status === "refunded" && existingOrder.paymentStatus !== "refunded") {
+    patch.paymentStatus = "refunded";
+    patch.refundedAt = now;
+    patch.inventoryStatus = "released";
+  }
+
+  await orderRef.update(patch);
 
   const updated = await orderRef.get();
-  return { id: updated.id, ...updated.data() } as Order;
+  const order = { id: updated.id, ...updated.data() } as Order;
+
+  if (status === "refunded" && existingOrder.status !== "refunded") {
+    void notifyOrderRefunded(order);
+  }
+
+  return order;
 }
 
 export async function addOrderNote(

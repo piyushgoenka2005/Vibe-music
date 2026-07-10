@@ -167,6 +167,11 @@
     right: 0.45rem;
     gap: 0.35rem;
   }
+
+  .cat-product-grid--grid .product-card-actions,
+  .new-arrivals-card-wrap .product-share-btn--overlay {
+    display: none;
+  }
 }
 
 .product-suggest__item-wrap,

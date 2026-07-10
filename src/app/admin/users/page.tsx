@@ -8,7 +8,7 @@ import { LoadingState, EmptyState, formatDate } from "@/components/admin/AdminUi
 import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
 import type { AdminProfile, AdminRole } from "@/types/admin";
 
-function UsersContent() {
+function UsersContent({ canInvite }: { canInvite: boolean }) {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<AdminProfile | null>(null);
   const [form, setForm] = useState({
@@ -16,6 +16,13 @@ function UsersContent() {
     role: "admin" as AdminRole,
     isActive: true,
   });
+  const [inviteForm, setInviteForm] = useState({
+    email: "",
+    displayName: "",
+    role: "admin" as AdminRole,
+    password: "",
+  });
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users"],
@@ -45,12 +52,108 @@ function UsersContent() {
     },
   });
 
+  const inviteMutation = useMutation({
+    mutationFn: async () => {
+      setInviteError(null);
+      const res = await fetch("/api/admin/admins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(inviteForm),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Invite failed");
+      }
+    },
+    onSuccess: () => {
+      setInviteForm({ email: "", displayName: "", role: "admin", password: "" });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (error) => {
+      setInviteError(error instanceof Error ? error.message : "Invite failed");
+    },
+  });
+
   if (isLoading) return <LoadingState />;
 
   const admins = data?.admins ?? [];
 
   return (
-    <div className="admin-grid-2">
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {canInvite ? (
+      <div className="admin-panel">
+        <div className="admin-panel__header">
+          <h2 className="admin-panel__title">Invite admin</h2>
+        </div>
+        <div className="admin-panel__body">
+          <div className="admin-form-grid">
+            <div className="admin-form-group">
+              <label>Email</label>
+              <input
+                className="admin-input"
+                style={{ width: "100%" }}
+                type="email"
+                value={inviteForm.email}
+                onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+              />
+            </div>
+            <div className="admin-form-group">
+              <label>Display name</label>
+              <input
+                className="admin-input"
+                style={{ width: "100%" }}
+                value={inviteForm.displayName}
+                onChange={(e) =>
+                  setInviteForm({ ...inviteForm, displayName: e.target.value })
+                }
+              />
+            </div>
+            <div className="admin-form-group">
+              <label>Role</label>
+              <select
+                className="admin-select"
+                value={inviteForm.role}
+                onChange={(e) =>
+                  setInviteForm({ ...inviteForm, role: e.target.value as AdminRole })
+                }
+              >
+                {Object.entries(ADMIN_ROLE_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="admin-form-group">
+              <label>Temporary password</label>
+              <input
+                className="admin-input"
+                style={{ width: "100%" }}
+                type="password"
+                value={inviteForm.password}
+                onChange={(e) =>
+                  setInviteForm({ ...inviteForm, password: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          {inviteError ? (
+            <p style={{ color: "var(--admin-danger)", marginTop: "0.75rem" }}>{inviteError}</p>
+          ) : null}
+          <button
+            type="button"
+            className="admin-btn admin-btn--primary"
+            style={{ marginTop: "1rem" }}
+            disabled={inviteMutation.isPending}
+            onClick={() => inviteMutation.mutate()}
+          >
+            {inviteMutation.isPending ? "Creating…" : "Create admin user"}
+          </button>
+        </div>
+      </div>
+      ) : null}
+
+      <div className="admin-grid-2">
       <div className="admin-panel">
         {admins.length === 0 ? (
           <EmptyState message="No admin users found." />
@@ -161,6 +264,7 @@ function UsersContent() {
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
@@ -170,7 +274,7 @@ export default function AdminUsersPage() {
       {(admin) => (
         <AdminShell admin={admin} title="Admin users">
           {admin.permissions.includes("admins:read") ? (
-            <UsersContent />
+            <UsersContent canInvite={admin.permissions.includes("admins:write")} />
           ) : (
             <EmptyState message="Insufficient permissions to view admin users." />
           )}

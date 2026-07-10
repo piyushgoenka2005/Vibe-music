@@ -6,6 +6,8 @@
   flex: 1;
   min-height: 100vh;
   position: relative;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .storefront-main {
@@ -17,6 +19,9 @@
   padding-top: var(--site-header-offset, 118px);
   background-color: var(--surface-base, #ffffff);
   isolation: isolate;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 /* Homepage — hero banner carries the header offset; avoid double padding */
@@ -443,14 +448,6 @@ body.site-nav-open .site-header--scroll-hidden {
   max-width: min(168px, 34vw);
   object-fit: contain;
   object-position: left center;
-}
-
-@media (max-width: 767px) {
-  .site-header__logo img,
-  .site-header__logo .assets-site-header__menu-logo {
-    max-height: 32px;
-    max-width: min(108px, 26vw);
-  }
 }
 
 .site-header__search {
@@ -1540,12 +1537,6 @@ body.site-nav-open .site-header--scroll-hidden {
   }
 }
 
-@media (max-width: 480px) {
-  .site-footer__columns {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 767px) {
   .back-to-top {
     right: max(0.75rem, env(safe-area-inset-right, 0px));
@@ -1579,6 +1570,10 @@ body.site-nav-open .site-header--scroll-hidden {
 }
 
 @media (max-width: 479px) {
+  .site-footer__columns {
+    grid-template-columns: 1fr;
+  }
+
   .site-header__inner {
     gap: 0.1rem 0.25rem;
     padding:

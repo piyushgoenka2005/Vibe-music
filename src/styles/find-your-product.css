@@ -226,6 +226,11 @@
   animation-play-state: paused;
 }
 
+.find-your-product:has(.scanner-card-wrap:hover) .scanner-row__track,
+.find-your-product:has(.scanner-card-wrap:focus-within) .scanner-row__track {
+  animation-play-state: paused;
+}
+
 .find-your-product--active .scanner-row__track {
   will-change: transform;
 }

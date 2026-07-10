@@ -4,6 +4,7 @@ import { formatCheckoutError } from "@/lib/server/checkoutErrors";
 import { createOrder } from "@/lib/server/orderService";
 import { isPlacedOrder } from "@/lib/orderPlacement";
 import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
+import { notifyCustomerOrderPlaced } from "@/lib/server/orderNotificationService";
 import {
   resolveCouponDiscount,
   resolveOrderItemsFromFirestore,
@@ -104,6 +105,7 @@ export async function POST(request: Request) {
 
     if (payload.paymentMethod === "cod" && isPlacedOrder(order)) {
       void sendOrderConfirmationEmail(order);
+      void notifyCustomerOrderPlaced(order);
       return NextResponse.json({
         orderId: order.id,
         trackingToken: order.trackingToken,

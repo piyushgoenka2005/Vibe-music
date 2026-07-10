@@ -41,6 +41,19 @@ const nextConfig: NextConfig = {
         headers: [...SECURITY_HEADERS],
       },
       {
+        source: "/(favicon.ico|icon-48.png|icon-192.png|apple-icon.png)",
+        headers: [
+          {
+            key: "Cross-Origin-Resource-Policy",
+            value: "cross-origin",
+          },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, immutable",
+          },
+        ],
+      },
+      {
         source: "/api/:path*",
         headers: [...API_SECURITY_HEADERS],
       },

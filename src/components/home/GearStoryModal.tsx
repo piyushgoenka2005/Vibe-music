@@ -76,7 +76,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
   }, [open, story?.id, onClose]);
 
   const handleAddToCart = useCallback(() => {
-    if (!story || story.availability === "out-of-stock") return;
+    if (!story || story.availability === "out-of-stock" || story.price <= 0) return;
     addItem(storyToProduct(story), 1);
     openCart();
     onClose();
@@ -102,6 +102,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
 
   const product = storyToProduct(story);
   const displayPrice = story.salePrice ?? story.price;
+  const hasCatalogPrice = displayPrice > 0;
   const hasDiscount =
     story.discountPercentage > 0 && story.originalPrice > displayPrice;
   const gallery =
@@ -183,19 +184,27 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
             </h2>
 
             <div className="gear-story-modal__price-row">
-              <span className="gear-story-modal__price">
-                {formatDisplayPrice(story.price, story.salePrice)}
-              </span>
-              {hasDiscount ? (
+              {hasCatalogPrice ? (
                 <>
-                  <span className="gear-story-modal__price-was">
-                    {formatCurrency(story.originalPrice)}
+                  <span className="gear-story-modal__price">
+                    {formatDisplayPrice(story.price, story.salePrice)}
                   </span>
-                  <span className="gear-story-modal__discount">
-                    {story.discountPercentage}% off
-                  </span>
+                  {hasDiscount ? (
+                    <>
+                      <span className="gear-story-modal__price-was">
+                        {formatCurrency(story.originalPrice)}
+                      </span>
+                      <span className="gear-story-modal__discount">
+                        {story.discountPercentage}% off
+                      </span>
+                    </>
+                  ) : null}
                 </>
-              ) : null}
+              ) : (
+                <span className="gear-story-modal__price gear-story-modal__price--muted">
+                  View product page for pricing
+                </span>
+              )}
             </div>
 
             <div className="gear-story-modal__meta">
@@ -223,7 +232,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                 type="button"
                 className="gear-story-modal__btn gear-story-modal__btn--primary"
                 onClick={handleAddToCart}
-                disabled={story.availability === "out-of-stock"}
+                disabled={story.availability === "out-of-stock" || !hasCatalogPrice}
               >
                 Add to cart
               </button>

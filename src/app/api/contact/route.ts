@@ -8,6 +8,8 @@ import {
 } from "@/lib/api/route-utils";
 import { BRAND } from "@/lib/brand";
 import { createContactMessage } from "@/lib/server/contactRepository";
+import { createAdminNotification } from "@/lib/server/notificationRepository";
+import { ROUTES } from "@/lib/routes";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 
 const contactSchema = z.object({
@@ -64,6 +66,12 @@ export async function POST(request: Request) {
   try {
     const record = await createContactMessage(parsed.data);
     void notifySupportEmail(parsed.data);
+    void createAdminNotification({
+      type: "contact",
+      title: "New contact message",
+      body: `${parsed.data.name}: ${parsed.data.subject}`,
+      link: ROUTES.adminSupport,
+    });
 
     return NextResponse.json({
       ok: true,

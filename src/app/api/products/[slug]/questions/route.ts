@@ -12,6 +12,8 @@ import {
   createProductQuestion,
   listApprovedQuestionsForProduct,
 } from "@/lib/server/productQuestionRepository";
+import { createAdminNotification } from "@/lib/server/notificationRepository";
+import { ROUTES } from "@/lib/routes";
 import { createProductQuestionSchema } from "@/lib/validations/wrFeatures";
 
 type RouteContext = { params: Promise<{ slug: string }> };
@@ -65,6 +67,13 @@ export async function POST(request: Request, context: RouteContext) {
       userId: sessionUser.uid,
       author: sessionUser.name ?? sessionUser.email ?? "Customer",
       question: body.data.question,
+    });
+
+    void createAdminNotification({
+      type: "system",
+      title: "New product question",
+      body: `${product.name}: ${body.data.question.slice(0, 80)}…`,
+      link: ROUTES.adminQuestions,
     });
 
     return NextResponse.json({ question }, { status: 201 });

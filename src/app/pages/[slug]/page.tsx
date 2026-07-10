@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getContentPage, CONTENT_PAGE_SLUGS } from "@/data/contentPages";
+import { resolveContentPage } from "@/lib/server/contentPageRepository";
+import { CONTENT_PAGE_SLUGS } from "@/data/contentPages";
 import { ROUTES } from "@/lib/routes";
 
 export const dynamicParams = false;
@@ -18,14 +19,14 @@ export async function generateMetadata({
   params,
 }: ContentPageRouteProps): Promise<Metadata> {
   const { slug } = await params;
-  const page = getContentPage(slug);
+  const page = await resolveContentPage(slug);
   if (!page) return {};
   return { title: page.title, description: page.sections[0]?.paragraphs[0] };
 }
 
 export default async function ContentPageRoute({ params }: ContentPageRouteProps) {
   const { slug } = await params;
-  const page = getContentPage(slug);
+  const page = await resolveContentPage(slug);
   if (!page) notFound();
 
   return (

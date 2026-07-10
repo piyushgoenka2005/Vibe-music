@@ -10,9 +10,13 @@ export const DEFAULT_METADATA = {
   description: BRAND.description,
   metadataBase: new URL(BRAND.siteUrl),
   icons: {
-    icon: [{ url: BRAND.iconPath, type: "image/jpeg" }],
-    apple: [{ url: BRAND.iconPath, type: "image/jpeg" }],
-    shortcut: BRAND.iconPath,
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-48.png", type: "image/png", sizes: "48x48" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+    shortcut: "/favicon.ico",
   },
   openGraph: {
     title: `${BRAND.name}: Musical Instruments, Pro Audio, Accessories & More`,

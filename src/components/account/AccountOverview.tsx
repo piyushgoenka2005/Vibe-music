@@ -9,6 +9,8 @@ import {
   Star,
   ShoppingBag,
   ArrowRight,
+  Bell,
+  Headset,
 } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { useAuthStore } from "@/store/authStore";
@@ -108,6 +110,27 @@ export default function AccountOverview() {
             </Link>
           );
         })}
+      </div>
+
+      <div className="acct__stats" style={{ marginTop: "1.5rem" }}>
+        <Link href={ROUTES.accountNotifications} className="acct__stat-card">
+          <div className="acct__stat-icon acct__stat-icon--blue">
+            <Bell size={20} strokeWidth={2} />
+          </div>
+          <p className="acct__stat-label">Notifications</p>
+          <p className="acct__stat-value" style={{ fontSize: "0.875rem" }}>
+            View inbox
+          </p>
+        </Link>
+        <Link href={ROUTES.accountSupport} className="acct__stat-card">
+          <div className="acct__stat-icon acct__stat-icon--green">
+            <Headset size={20} strokeWidth={2} />
+          </div>
+          <p className="acct__stat-label">Support</p>
+          <p className="acct__stat-value" style={{ fontSize: "0.875rem" }}>
+            Your tickets
+          </p>
+        </Link>
       </div>
 
       <div className="acct__grid-2">

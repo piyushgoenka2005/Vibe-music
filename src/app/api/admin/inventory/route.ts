@@ -16,6 +16,24 @@ export async function GET(request: Request) {
       const adjustments = await listAdjustments();
       return NextResponse.json({ adjustments });
     }
+
+    if (searchParams.get("export") === "csv") {
+      const inventory = await listInventory();
+      const header = "productId,productName,sku,stockQuantity,availableQuantity,lowStockThreshold\n";
+      const rows = inventory
+        .map(
+          (item) =>
+            `${item.productId},${item.productName},${item.sku ?? ""},${item.stockQuantity},${item.availableQuantity ?? item.stockQuantity},${item.lowStockThreshold}`
+        )
+        .join("\n");
+      return new NextResponse(header + rows, {
+        headers: {
+          "Content-Type": "text/csv",
+          "Content-Disposition": 'attachment; filename="inventory.csv"',
+        },
+      });
+    }
+
     const [inventory, stats] = await Promise.all([
       listInventory(),
       getInventoryStats(),

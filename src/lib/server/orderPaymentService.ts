@@ -3,6 +3,7 @@ import "server-only";
 import { calculateGST, SELLER_STATE } from "@/lib/gstCalculator";
 import { incrementCouponUsage } from "@/lib/server/couponService";
 import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
+import { notifyCustomerOrderPlaced, notifyOrderRefunded } from "@/lib/server/orderNotificationService";
 import {
   isFirestoreUnavailableError,
   logFirestoreWarning,
@@ -169,6 +170,7 @@ export async function completeOrderPayment(input: {
 
   const completedOrder = await updateOrder(order.id, updated);
   void sendOrderConfirmationEmail(completedOrder);
+  void notifyCustomerOrderPlaced(completedOrder);
 
   return {
     order: completedOrder,
@@ -250,6 +252,7 @@ export async function refundOrderPayment(input: {
   }
 
   const refundedOrder = await updateOrder(order.id, updated);
+  void notifyOrderRefunded(refundedOrder);
 
   return {
     order: refundedOrder,

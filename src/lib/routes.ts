@@ -19,6 +19,8 @@ export const ROUTES = {
   accountProfile: "/account/profile",
   accountAddresses: "/account/addresses",
   accountSettings: "/account/settings",
+  accountNotifications: "/account/notifications",
+  accountSupport: "/account/support",
   accountWishlist: "/account/wishlist",
   login: "/login",
   register: "/register",
@@ -41,6 +43,11 @@ export const ROUTES = {
   adminReturns: "/admin/returns",
   adminQuestions: "/admin/questions",
   adminUsers: "/admin/users",
+  adminRoles: "/admin/roles",
+  adminSupport: "/admin/support",
+  adminNotifications: "/admin/notifications",
+  adminCms: "/admin/cms",
+  adminShipping: "/admin/shipping",
   adminSettings: "/admin/settings",
   adminBlog: "/admin/blog",
   blog: "/blog",
@@ -154,6 +161,8 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.accountAddresses) return true;
   if (path === ROUTES.accountSettings) return true;
   if (path === ROUTES.accountWishlist) return true;
+  if (path === ROUTES.accountNotifications) return true;
+  if (path === ROUTES.accountSupport) return true;
   if (path === ROUTES.login || path === ROUTES.register) return true;
   if (path === ROUTES.blog || path.startsWith("/blog/")) return true;
   if (path === ROUTES.gp9 || path.startsWith(`${ROUTES.gp9}/`)) return true;

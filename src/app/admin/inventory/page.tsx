@@ -71,6 +71,18 @@ function InventoryContent() {
         </div>
       ) : null}
 
+      <div className="admin-toolbar">
+        <button
+          type="button"
+          className="admin-btn admin-btn--secondary"
+          onClick={() => {
+            window.location.href = "/api/admin/inventory?export=csv";
+          }}
+        >
+          Export CSV
+        </button>
+      </div>
+
       <div className="admin-panel">
         {inventory.length === 0 ? (
           <EmptyState message="No inventory records." />

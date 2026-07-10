@@ -17,15 +17,21 @@
     "seed:demo": "npx tsx --env-file=.env.local scripts/seed-demo-content.mts",
     "sync:homepage": "node scripts/extract-homepage-html.mjs",
     "download:images": "node scripts/download-essential-images.mjs",
+    "generate:favicons": "node scripts/generate-favicons.mjs",
     "download:style-story": "node scripts/download-style-story-thumbnails.mjs",
     "migrate:brand": "node scripts/migrate-brand.mjs && node scripts/migrate-content-brand.mjs",
     "import:catalog": "npx tsx --env-file=.env.local scripts/import-catalog-from-excel.mts",
     "migrate:catalog": "npx tsx --env-file=.env.local scripts/migrate-products-to-firestore.ts",
     "firebase:deploy-indexes": "npx firebase-tools deploy --only firestore:indexes --project vibe-music-90bb5",
+    "firebase:deploy-rules": "npx firebase-tools deploy --only firestore:rules --project vibe-music-90bb5",
+    "firebase:deploy-firestore": "npx firebase-tools deploy --only firestore --project vibe-music-90bb5",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "audit:lighthouse": "node scripts/lighthouse-audit.mjs",
     "verify:integrations": "npx tsx --env-file=.env.local scripts/verify-integrations.mts",
-    "validate": "npm run type-check && npm run lint && npm run test && npm run build"
+    "validate": "npm run type-check && npm run lint && npm run test && npm run build",
+    "validate:ci": "npm run validate && npm run test:e2e"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -69,6 +75,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/adm-zip": "^0.5.8",
     "@types/node": "^20",
@@ -81,6 +88,7 @@
     "playwright": "^1.61.1",
     "sharp": "^0.35.2",
     "tailwindcss": "^4",
+    "to-ico": "^1.1.5",
     "typescript": "^5",
     "vitest": "^3.2.6",
     "xlsx": "^0.18.5"

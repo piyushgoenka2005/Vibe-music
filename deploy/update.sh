@@ -13,6 +13,9 @@ git pull --ff-only origin main
 echo "==> Installing dependencies"
 npm ci
 
+echo "==> Type-check"
+npm run type-check
+
 echo "==> Building"
 export NODE_ENV=production
 npm run build

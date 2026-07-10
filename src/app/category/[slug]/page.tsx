@@ -54,7 +54,7 @@ export default async function CategoryRoute({ params }: CategoryRouteProps) {
   const initialData = await loadCategoryProducts(category.slug, DEFAULT_FILTERS);
 
   return (
-    <main className="storefront-page" id="main-content">
+    <main className="storefront-page">
       <CategoryPage category={category} initialData={initialData} />
     </main>
   );

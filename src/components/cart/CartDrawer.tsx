@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
-import { ROUTES } from "@/lib/routes";
 import { createPortal } from "react-dom";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useCartStore } from "@/store/cartStore";
 import CartItem from "./CartItem";
+import CartEmptyState from "./CartEmptyState";
 import OrderSummary from "./OrderSummary";
 import "./cart.css";
 
@@ -66,16 +65,7 @@ export default function CartDrawer() {
           ) : null}
 
           {items.length === 0 ? (
-            <div className="cart-drawer__empty">
-              <p>Your cart is empty.</p>
-              <Link
-                href={ROUTES.search}
-                style={{ color: "var(--brand-primary)", fontWeight: 700 }}
-                onClick={close}
-              >
-                Continue Shopping
-              </Link>
-            </div>
+            <CartEmptyState onBrowse={close} />
           ) : (
             items.map((item) => (
               <CartItem key={item.lineId} item={item} compact />

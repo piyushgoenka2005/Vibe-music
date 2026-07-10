@@ -46,6 +46,7 @@ export interface CheckoutSummaryProps {
   showPromo?: boolean;
   className?: string;
   shippingMethod?: ShippingMethod;
+  shippingChargeOverride?: number;
   paymentAction?: {
     onPay: () => void | Promise<void>;
     disabled?: boolean;
@@ -85,17 +86,16 @@ export function computeCheckoutInvoice(
   couponDiscount: number,
   buyerState: string,
   platformFee = 0,
-  shippingMethod: ShippingMethod = "standard"
+  shippingMethod: ShippingMethod = "standard",
+  shippingChargeOverride?: number
 ): GSTInvoiceData {
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const shippingCharge = getShippingChargeForMethod(
-    shippingMethod,
-    subtotal,
-    couponDiscount
-  );
+  const shippingCharge =
+    shippingChargeOverride ??
+    getShippingChargeForMethod(shippingMethod, subtotal, couponDiscount);
 
   return calculateGST({
     items: items.map((item) => ({
@@ -122,6 +122,7 @@ export default function CheckoutSummary({
   showLineItems = false,
   showPromo = false,
   shippingMethod = "standard",
+  shippingChargeOverride,
   className = "",
   paymentAction,
 }: CheckoutSummaryProps) {
@@ -130,7 +131,8 @@ export default function CheckoutSummary({
     couponDiscount,
     buyerState,
     platformFee,
-    shippingMethod
+    shippingMethod,
+    shippingChargeOverride
   );
 
   const couponCode = useCartStore((s) => s.couponCode);

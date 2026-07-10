@@ -23,8 +23,17 @@ export default function StorefrontChrome({
   const pathname = usePathname() ?? "";
   const hideChrome = pathname.startsWith("/admin");
   const isLandingPage = pathname === "/";
+  const isProductPage = /^\/product\/[^/]+$/.test(pathname);
+  const isListingPage =
+    /^\/category\/[^/]+$/.test(pathname) ||
+    pathname.startsWith("/search") ||
+    pathname === "/deals";
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobileViewport = useIsMobileViewport();
+  const hideMobileFloatingUi =
+    isMobileViewport && (isProductPage || isLandingPage || isListingPage);
+  const showHelpWidget = !hideMobileFloatingUi;
+  const showBackToTop = !hideMobileFloatingUi;
   const splashEnabled =
     !SPLASH_CURSOR_DISABLED &&
     !prefersReducedMotion &&
@@ -55,12 +64,12 @@ export default function StorefrontChrome({
       <GlassFilter />
       <SkipToContent />
       <SiteHeader />
-      <div className="storefront-main" tabIndex={-1}>
+      <div className="storefront-main" id="main-content" tabIndex={-1}>
         {children}
       </div>
       <SiteFooter />
-      <BackToTop />
-      <HelpWidget />
+      {showBackToTop ? <BackToTop /> : null}
+      {showHelpWidget ? <HelpWidget /> : null}
       {splashEnabled ? (
         <DeferredSplashCursor
           DYE_RESOLUTION={720}
@@ -79,7 +88,7 @@ export default function StorefrontChrome({
           RAINBOW_MODE={false}
           COLOR="#1253ED"
           ZONE_COLOR="#FFFFFF"
-          ZONE_COLOR_INTENSITY={0.07}
+          ZONE_COLOR_INTENSITY={0.08}
           ZONE_SELECTORS='[data-vibe-section="footer"], [data-footer-panel]'
         />
       ) : null}

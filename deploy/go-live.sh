@@ -47,6 +47,7 @@ ensure_env "NODE_ENV" "production"
 ensure_env "PORT" "3000"
 ensure_env "HOSTNAME" "127.0.0.1"
 ensure_env "NEXT_PUBLIC_SITE_URL" "https://${DOMAIN}"
+ensure_env "ALLOW_DEMO_PAYMENTS" "false"
 
 if ! grep -q "^FIRESTORE_STARTUP_DEADLINE_MS=" "$ENV_FILE"; then
   echo "FIRESTORE_STARTUP_DEADLINE_MS=15000" >> "$ENV_FILE"
@@ -56,6 +57,9 @@ fi
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
   log "Installing dependencies"
   npm ci
+
+  log "Type-check"
+  npm run type-check
 
   log "Building Next.js"
   export NODE_ENV=production
