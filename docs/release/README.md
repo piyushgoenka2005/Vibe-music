@@ -1,12 +1,13 @@
 # Release documentation — ViBE Music
 
-Production release engineering reports for the **11 July 2026** enterprise launch.
+Production release engineering reports for the **11 July 2026 RC (Release Candidate)** enterprise launch.
 
 ## Start here
 
 | Document | Purpose |
 |----------|---------|
-| [FINAL_PRODUCTION_READINESS_REPORT.md](./FINAL_PRODUCTION_READINESS_REPORT.md) | **Executive verdict** — production ready |
+| [RC_RELEASE_CANDIDATE_VERIFICATION.md](./RC_RELEASE_CANDIDATE_VERIFICATION.md) | **RC sign-off** — independent audit + gate results |
+| [FINAL_PRODUCTION_READINESS_REPORT.md](./FINAL_PRODUCTION_READINESS_REPORT.md) | Executive verdict — production ready |
 | [FINAL_DEPLOYMENT_CHECKLIST.md](./FINAL_DEPLOYMENT_CHECKLIST.md) | Pre/post deploy steps for DevOps |
 | [FINAL_RELEASE_NOTES.md](./FINAL_RELEASE_NOTES.md) | What shipped in v1.0 |
 
@@ -29,6 +30,6 @@ Production release engineering reports for the **11 July 2026** enterprise launc
 
 ```bash
 npm run validate      # type-check + lint + test + build
-npm run test:e2e      # Playwright smoke (11 tests)
+npm run test:e2e      # Playwright smoke (17 tests)
 npm run validate:ci   # validate + E2E
 ```

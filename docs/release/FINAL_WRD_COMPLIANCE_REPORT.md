@@ -38,7 +38,7 @@
 
 ---
 
-## Validation results (11 July 2026 — final)
+## Validation results (RC — 11 July 2026)
 
 ```
 npm run type-check  → PASS
@@ -143,7 +143,17 @@ New unit tests: `gearStoryService.test.ts` (placeholder + catalog pricing behavi
 
 ---
 
-## Changes made this pass (11 July 2026)
+## Changes made this pass (11 July 2026 — RC)
+
+| File | Change |
+|------|--------|
+| `src/lib/server/shippingZoneRepository.ts` | Default zone fallback when Firestore circuit open/unconfigured |
+| `src/app/api/health/route.ts` | 200 degraded liveness when local fallback active |
+| `src/lib/server/gearStoryService.test.ts` | Unit tests for placeholder + catalog stories |
+| `src/components/compare/ComparePage.tsx` | Removed hydration gate (P1 compare loading fix) |
+| `e2e/smoke.spec.ts` | Expanded to 17 tests |
+
+## Changes made (prior pass)
 
 | File | Change |
 |------|--------|

@@ -34,7 +34,10 @@
 | Order notifications | Split admin/customer timing | `orderNotificationService.ts` |
 | Manual refund notify | Admin status → customer alert | `adminOrderService.updateOrderStatus` |
 | TypeScript error in cart empty state | `originalPrice` field fix | `CartEmptyState.tsx` |
-| E2E flakiness | Playwright config + navigation | 11/11 passing |
+| E2E flakiness | Playwright config + navigation | 17/17 passing |
+| Shipping quote 500 without Firestore | Default zone fallback | `shippingZoneRepository.ts` (RC) |
+| Health 503 in degraded mode | 200 degraded liveness | `api/health/route.ts` (RC) |
+| Compare page infinite loading | Removed hydration gate | `ComparePage.tsx` (RC) |
 
 ---
 
