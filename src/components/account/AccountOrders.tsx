@@ -16,8 +16,14 @@ import {
   statusBadgeClass,
 } from "./orderDisplay";
 
-export default function AccountOrders() {
-  const { data: orders = [], isLoading, error } = useUserOrders();
+import type { Order } from "@/types/order";
+
+interface AccountOrdersProps {
+  initialOrders?: Order[];
+}
+
+export default function AccountOrders({ initialOrders }: AccountOrdersProps) {
+  const { data: orders = [], isLoading, error } = useUserOrders(initialOrders);
 
   return (
     <div>
@@ -44,9 +50,17 @@ export default function AccountOrders() {
             actionHref={ROUTES.search}
           />
         ) : (
-          orders.map((order) => (
+          orders.map((order) => {
+            const invoiceHref = isInvoiceAvailable(order)
+              ? withInvoiceReturnTo(
+                  `/orders/${order.id}/invoice`,
+                  ROUTES.accountOrders
+                )
+              : null;
+
+            return (
             <div key={order.id} className="acct__order">
-              <div>
+              <div className="acct__order-main">
                 <p className="acct__order-id">Order #{order.id}</p>
                 <p className="acct__order-meta">
                   {formatOrderDate(order.createdAt)} · {order.items.length} item
@@ -57,10 +71,11 @@ export default function AccountOrders() {
               <span className={statusBadgeClass(order.status)}>
                 {order.status}
               </span>
-              <div style={{ textAlign: "right" }}>
+              <div className="acct__order-summary">
                 <p className="acct__order-total">
                   {formatCurrency(order.total)}
                 </p>
+                <div className="acct__order-actions">
                 <Link
                   href={
                     order.trackingToken
@@ -68,33 +83,28 @@ export default function AccountOrders() {
                       : `${ROUTES.trackOrder}?orderId=${encodeURIComponent(order.id)}`
                   }
                   className="acct__btn acct__btn--secondary acct__btn--sm"
-                  style={{ marginTop: 8, marginRight: 8 }}
                 >
                   Track shipment
                 </Link>
                 <Link
                   href={ROUTES.accountOrder(order.id)}
                   className="acct__btn acct__btn--secondary acct__btn--sm"
-                  style={{ marginTop: 8 }}
                 >
                   View Details
                 </Link>
+                {invoiceHref ? (
+                  <Link
+                    href={invoiceHref}
+                    className="acct__btn acct__btn--secondary acct__btn--sm"
+                  >
+                    View invoice
+                  </Link>
+                ) : null}
+                </div>
               </div>
-
-              {isInvoiceAvailable(order) ? (
-                <Link
-                  href={withInvoiceReturnTo(
-                    `/orders/${order.id}/invoice`,
-                    ROUTES.accountOrders
-                  )}
-                  className="acct__btn acct__btn--secondary acct__btn--sm"
-                  style={{ marginTop: 8 }}
-                >
-                  View invoice
-                </Link>
-              ) : null}
             </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

@@ -560,10 +560,42 @@
   background: var(--acct-bg);
 }
 
+.acct__order-main {
+  min-width: 0;
+}
+
+.acct__order-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  text-align: right;
+}
+
+.acct__order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 @media (max-width: 639px) {
   .acct__order {
     grid-template-columns: 1fr;
     gap: 10px;
+  }
+
+  .acct__order-summary {
+    align-items: stretch;
+    text-align: left;
+  }
+
+  .acct__order-actions {
+    justify-content: flex-start;
+  }
+
+  .acct__order-actions .acct__btn {
+    flex: 1 1 9rem;
   }
 }
 

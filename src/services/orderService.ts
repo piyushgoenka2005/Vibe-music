@@ -8,10 +8,12 @@ import type {
   VerifyPaymentResponse,
 } from "@/types/order";
 import type { InvoiceUrls } from "@/features/invoice/types";
+import type { PublicShipmentTracking } from "@/types/shipment";
 
 export type OrderFetchResult = {
   order: Order;
   invoiceUrls: InvoiceUrls | null;
+  shipment?: PublicShipmentTracking | null;
 };
 
 async function parseJson<T>(response: Response): Promise<T> {

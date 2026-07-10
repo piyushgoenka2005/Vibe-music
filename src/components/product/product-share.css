@@ -104,7 +104,8 @@
   --share-btn-size: 2rem;
 }
 
-.product-card-actions .wl-heart-btn {
+.product-card-actions .wl-heart-btn,
+.product-card-actions .compare-btn {
   width: var(--share-btn-size, 2rem);
   min-width: var(--share-btn-size, 2rem);
   height: var(--share-btn-size, 2rem);
@@ -122,9 +123,38 @@
     0 4px 12px rgba(15, 23, 42, 0.1);
 }
 
+.compare-btn {
+  color: #334155;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.compare-btn--active,
+.compare-btn:hover {
+  color: #1d4ed8;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.compare-btn--pop {
+  animation: compare-btn-pop 0.42s ease;
+}
+
+@keyframes compare-btn-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 767px) {
   .product-card-actions .product-share-btn,
-  .product-card-actions .wl-heart-btn {
+  .product-card-actions .wl-heart-btn,
+  .product-card-actions .compare-btn {
     --share-btn-size: 2.375rem;
     width: var(--share-btn-size);
     min-width: var(--share-btn-size);

@@ -5,7 +5,12 @@ export function createRequestId(): string {
 }
 
 export function getRequestId(request: Request): string {
-  return request.headers.get(REQUEST_ID_HEADER) ?? createRequestId();
+  const headers = request.headers as Request["headers"] | undefined;
+  if (typeof headers?.get !== "function") {
+    return createRequestId();
+  }
+
+  return headers.get(REQUEST_ID_HEADER) ?? createRequestId();
 }
 
 export interface RequestLogEntry {

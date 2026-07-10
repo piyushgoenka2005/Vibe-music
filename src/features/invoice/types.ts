@@ -35,7 +35,7 @@ export interface InvoiceSafeOrder {
 
 export type InvoiceUrls = {
   html: string;
-  pdf: string;
+  pdf?: string;
   print: string;
   page: string;
 };

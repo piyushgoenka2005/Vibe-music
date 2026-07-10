@@ -6,15 +6,21 @@ import { fetchUserOrders } from "@/services/orderService";
 import type { Order } from "@/types/order";
 
 const ACTIVE_REFETCH_MS = 5_000;
-const IDLE_REFETCH_MS = 30_000;
+const IDLE_REFETCH_MS = 60_000;
+const INITIAL_STALE_MS = 60_000;
 
 export function useUserOrders(initialOrders?: Order[]) {
+  const hasInitial = initialOrders !== undefined;
+
   return useQuery({
     queryKey: ["user-orders"],
     queryFn: fetchUserOrders,
     initialData: initialOrders,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: hasInitial ? INITIAL_STALE_MS : 0,
+    refetchOnWindowFocus: (query) => {
+      const orders = query.state.data ?? [];
+      return orders.some(orderNeedsInvoiceRefresh);
+    },
     refetchIntervalInBackground: false,
     refetchInterval: (query) => {
       const orders = query.state.data ?? [];

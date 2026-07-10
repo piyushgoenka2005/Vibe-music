@@ -1,9 +1,11 @@
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { SELLER_STATE, DEFAULT_GST_RATE } from "@/lib/gstCalculator";
 import {
+  isFirestoreFastFailError,
   isGlobalFirestoreCircuitOpen,
   logFirestoreWarning,
   markFirestoreUnavailable,
+  withFirestoreDeadline,
 } from "@/lib/server/firestoreErrors";
 import type { AnalyticsReport, StoreSettings } from "@/types/admin";
 import { getRevenueChartData } from "@/lib/server/dashboardService";
@@ -32,13 +34,18 @@ export async function getStoreSettings(): Promise<StoreSettings> {
 
   try {
     const db = getAdminFirestore();
-    const doc = await db.collection(COLLECTION).doc(SETTINGS_DOC).get();
+    const doc = await withFirestoreDeadline(() =>
+      db.collection(COLLECTION).doc(SETTINGS_DOC).get()
+    );
     if (!doc.exists) {
       return DEFAULT_SETTINGS;
     }
     return { ...DEFAULT_SETTINGS, ...doc.data() } as StoreSettings;
   } catch (error) {
-    if (markFirestoreUnavailable(error)) {
+    if (
+      markFirestoreUnavailable(error) ||
+      isFirestoreFastFailError(error)
+    ) {
       logFirestoreWarning(
         "settings",
         error,

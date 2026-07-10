@@ -3,10 +3,18 @@ import { BRAND } from "@/lib/brand";
 import { getStoreSettings } from "@/lib/server/settingsService";
 import type { InvoiceSellerMeta } from "@/features/invoice/types";
 
+const SELLER_META_TTL_MS = 5 * 60 * 1000;
+let cachedSellerMeta: { value: InvoiceSellerMeta; expiresAt: number } | null =
+  null;
+
 export async function getInvoiceSellerMeta(): Promise<InvoiceSellerMeta> {
+  if (cachedSellerMeta && cachedSellerMeta.expiresAt > Date.now()) {
+    return cachedSellerMeta.value;
+  }
+
   const settings = await getStoreSettings();
 
-  return {
+  const meta: InvoiceSellerMeta = {
     storeName: settings.storeName || BRAND.name,
     legalName: settings.storeName || BRAND.name,
     tagline: BRAND.tagline,
@@ -19,5 +27,12 @@ export async function getInvoiceSellerMeta(): Promise<InvoiceSellerMeta> {
     state: settings.sellerState || "Maharashtra",
     stateCode: "",
   };
+
+  cachedSellerMeta = {
+    value: meta,
+    expiresAt: Date.now() + SELLER_META_TTL_MS,
+  };
+
+  return meta;
 }
 

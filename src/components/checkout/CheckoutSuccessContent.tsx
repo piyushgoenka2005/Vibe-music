@@ -18,6 +18,7 @@ import {
   readCachedOrderForConfirmation,
 } from "@/lib/checkout/orderConfirmationCache";
 import { isInvoiceAvailable, withInvoiceReturnTo } from "@/features/invoice/utils/invoice-utils";
+import { getInvoiceDownloadAction } from "@/features/invoice/utils/invoice-actions";
 import { useCheckoutSuccessOrder } from "@/hooks/useCheckoutSuccessOrder";
 import "@/components/checkout/checkout.css";
 
@@ -119,7 +120,7 @@ export default function CheckoutSuccessContent() {
   const invoicePrintUrl = invoiceUrls?.print
     ? withInvoiceReturnTo(invoiceUrls.print, ROUTES.checkoutSuccess)
     : undefined;
-  const invoicePdfUrl = invoiceUrls?.pdf;
+  const invoiceDownload = getInvoiceDownloadAction(invoiceUrls);
   const canShowInvoice = isInvoiceAvailable(order);
   const paymentLabel =
     order.paymentStatus === "cod_pending"
@@ -221,14 +222,16 @@ export default function CheckoutSuccessContent() {
               <a href={invoicePrintUrl} className="cart-btn cart-btn--checkout">
                 View invoice
               </a>
-              <a
-                href={invoicePdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="cart-btn cart-btn--secondary"
-              >
-                Download PDF
-              </a>
+              {invoiceDownload ? (
+                <a
+                  href={invoiceDownload.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cart-btn cart-btn--secondary"
+                >
+                  {invoiceDownload.label}
+                </a>
+              ) : null}
             </div>
           ) : canShowInvoice ? (
             <p className="checkout-success__invoice-note">

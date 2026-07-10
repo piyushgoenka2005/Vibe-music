@@ -7,6 +7,7 @@ import { formatOrderIdDisplay } from "@/lib/orderId";
 import { ROUTES, productPath } from "@/lib/routes";
 import { formatCurrency, formatCurrencyPrecise } from "@/utils/currency";
 import { isInvoiceAvailable, withInvoiceReturnTo } from "@/features/invoice/utils/invoice-utils";
+import { getInvoiceDownloadAction } from "@/features/invoice/utils/invoice-actions";
 import { useOrderDetail } from "@/hooks/useOrderDetail";
 import ShipmentTimeline from "@/components/tracking/ShipmentTimeline";
 import {
@@ -95,16 +96,17 @@ export default function AccountOrderDetail({
   const { data } = useOrderDetail(initialOrder.id, {
     order: initialOrder,
     invoiceUrls: initialInvoiceUrls,
+    shipment: initialShipment,
   });
 
   const order = data?.order ?? initialOrder;
   const invoiceUrls = data?.invoiceUrls ?? initialInvoiceUrls;
-  const shipment = initialShipment;
+  const shipment = data?.shipment ?? initialShipment;
+  const invoiceDownload = getInvoiceDownloadAction(invoiceUrls);
 
   const productById = new Map(products.map((product) => [product.id, product]));
   const resolvedTrackingNumber = shipment?.trackingNumber ?? "Not assigned yet";
   const canShowInvoice = isInvoiceAvailable(order);
-  const invoicePdfUrl = invoiceUrls?.pdf;
   const invoiceViewUrl = invoiceUrls?.html
     ? withInvoiceReturnTo(invoiceUrls.html, ROUTES.accountOrder(order.id))
     : undefined;
@@ -137,18 +139,18 @@ export default function AccountOrderDetail({
       </div>
 
       <div className="acct__order-detail-actions">
-        {canShowInvoice && invoicePdfUrl ? (
+        {canShowInvoice && invoiceDownload ? (
           <a
-            href={invoicePdfUrl}
+            href={invoiceDownload.href}
             className="acct__btn acct__btn--primary"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Download PDF
+            {invoiceDownload.label}
           </a>
         ) : (
           <span className="acct__btn acct__btn--secondary acct__btn--disabled">
-            Download PDF
+            Print invoice
           </span>
         )}
         {canShowInvoice && invoiceViewUrl ? (

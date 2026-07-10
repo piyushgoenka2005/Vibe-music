@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import CompareButton from "@/components/compare/CompareButton";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
 import { optimizeImageUrl } from "@/lib/images";
@@ -90,6 +91,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
             title={`${product.brand} ${product.name}`}
             url={productHref}
           />
+          <CompareButton product={product} />
           <WishlistButton product={product} />
         </div>
       </div>

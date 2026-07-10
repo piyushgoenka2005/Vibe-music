@@ -22,7 +22,8 @@ import {
 import { ROUTES } from "@/lib/routes";
 import { normalizeIndianPhone } from "@/lib/validations/address";
 import { DEFAULT_GST_RATE } from "@/lib/gstCalculator";
-import { type ShippingMethod } from "@/lib/shipping/shippingMethods";
+import { type ShippingMethod, getDefaultShippingMethod, getShippingChargeForMethod, SHIPPING_METHOD_IDS } from "@/lib/shipping/shippingMethods";
+import ShippingMethodPicker from "@/components/checkout/ShippingMethodPicker";
 import { useCartHydrated } from "@/hooks/useCartHydrated";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
@@ -166,7 +167,9 @@ export default function CheckoutPageContent() {
   const [confirmedAddress, setConfirmedAddress] =
     useState<ShippingAddress | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("razorpay");
-  const shippingMethod: ShippingMethod = "standard";
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>(
+    getDefaultShippingMethod()
+  );
   const [onlineChannel, setOnlineChannel] =
     useState<OnlinePaymentChannel>("upi");
   const [guestEmailInput, setGuestEmailInput] = useState("");
@@ -261,6 +264,17 @@ export default function CheckoutPageContent() {
     image: item.image,
     imageColor: item.imageColor,
   }));
+
+  const cartSubtotal = checkoutItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const shippingMethodCharges = Object.fromEntries(
+    SHIPPING_METHOD_IDS.map((id) => [
+      id,
+      getShippingChargeForMethod(id, cartSubtotal, couponDiscount),
+    ])
+  ) as Partial<Record<ShippingMethod, number>>;
 
   const invoice = computeCheckoutInvoice(
     checkoutItems,
@@ -840,6 +854,12 @@ export default function CheckoutPageContent() {
                   </p>
                 </div>
               ) : null}
+
+              <ShippingMethodPicker
+                value={shippingMethod}
+                onChange={setShippingMethod}
+                charges={shippingMethodCharges}
+              />
 
               <div className="checkout-actions">
                 <CheckoutGlassButton onClick={handleEditAddress} variant="ghost">

@@ -9,7 +9,7 @@ import fs from "fs";
 import path from "path";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
-import type { WriteResult } from "firebase-admin/firestore";
+import type { QuerySnapshot, WriteResult } from "firebase-admin/firestore";
 import {
   createFirestoreCircuitBreaker,
   isFirestoreDegraded,
@@ -125,29 +125,38 @@ export async function persistOrder(order: Order): Promise<void> {
 }
 
 export async function fetchOrderById(orderId: string): Promise<Order | null> {
-  if (!isOrdersFirestoreDisabled()) {
-    try {
-      const doc = await withFirestoreDeadline(() =>
-        withFirestoreRetry(
-          () =>
-            getAdminFirestore()
-              .collection(COLLECTION)
-              .doc(orderId)
-              .get(),
-          { maxRetries: 1, baseDelayMs: 100 }
-        )
-      );
-      if (doc.exists) {
-        const order = { id: doc.id, ...doc.data() } as Order;
-        writeLocalOrder(order);
-        return order;
-      }
-    } catch (error) {
-      if (isFirestoreDegraded(error)) {
-        openOrdersCircuit(error, "Reading orders from local store");
-      } else {
-        throw error;
-      }
+  const local = readLocalOrder(orderId);
+
+  if (isOrdersFirestoreDisabled()) {
+    return local;
+  }
+
+  // Local JSON is written on every persist — skip slow Firestore when we already have the order.
+  if (local) {
+    return local;
+  }
+
+  try {
+    const doc = await withFirestoreDeadline(() =>
+      withFirestoreRetry(
+        () =>
+          getAdminFirestore()
+            .collection(COLLECTION)
+            .doc(orderId)
+            .get(),
+        { maxRetries: 1, baseDelayMs: 100 }
+      )
+    );
+    if (doc.exists) {
+      const order = { id: doc.id, ...doc.data() } as Order;
+      writeLocalOrder(order);
+      return order;
+    }
+  } catch (error) {
+    if (isFirestoreDegraded(error)) {
+      openOrdersCircuit(error, "Reading orders from local store");
+    } else {
+      throw error;
     }
   }
 
@@ -268,6 +277,18 @@ export async function findOrderByRazorpayPaymentId(
   );
 }
 
+function orderMatchesUser(
+  order: Order,
+  uid?: string,
+  normalizedEmail?: string
+): boolean {
+  const matchesUser = uid ? order.userId === uid : false;
+  const matchesEmail = normalizedEmail
+    ? order.email?.toLowerCase() === normalizedEmail
+    : false;
+  return matchesUser || matchesEmail;
+}
+
 export async function listOrdersForUser(
   uid?: string,
   email?: string
@@ -275,18 +296,23 @@ export async function listOrdersForUser(
   const byId = new Map<string, Order>();
   const normalizedEmail = email?.trim().toLowerCase();
 
-  if (!isOrdersFirestoreDisabled()) {
+  for (const order of listLocalOrders()) {
+    if (orderMatchesUser(order, uid, normalizedEmail)) {
+      byId.set(order.id, order);
+    }
+  }
+
+  if (!isOrdersFirestoreDisabled() && byId.size === 0) {
     try {
       const db = getAdminFirestore();
+      const queries: Array<Promise<QuerySnapshot>> = [];
 
       if (uid) {
-        const snapshot = await db
-          .collection(COLLECTION)
-          .where("userId", "==", uid)
-          .get();
-        for (const doc of snapshot.docs) {
-          byId.set(doc.id, { id: doc.id, ...doc.data() } as Order);
-        }
+        queries.push(
+          withFirestoreDeadline(() =>
+            db.collection(COLLECTION).where("userId", "==", uid).get()
+          )
+        );
       }
 
       const emailVariants = email
@@ -296,32 +322,27 @@ export async function listOrdersForUser(
         : [];
 
       for (const variant of emailVariants) {
-        const snapshot = await db
-          .collection(COLLECTION)
-          .where("email", "==", variant)
-          .get();
+        queries.push(
+          withFirestoreDeadline(() =>
+            db.collection(COLLECTION).where("email", "==", variant).get()
+          )
+        );
+      }
+
+      const snapshots = await Promise.all(queries);
+      for (const snapshot of snapshots) {
         for (const doc of snapshot.docs) {
-          if (!byId.has(doc.id)) {
-            byId.set(doc.id, { id: doc.id, ...doc.data() } as Order);
-          }
+          const order = { id: doc.id, ...doc.data() } as Order;
+          byId.set(doc.id, order);
+          writeLocalOrder(order);
         }
       }
     } catch (error) {
-      if (isFirestoreUnavailableError(error)) {
+      if (isFirestoreDegraded(error)) {
         openOrdersCircuit(error, "Listing orders from local store");
       } else {
         throw error;
       }
-    }
-  }
-
-  for (const order of listLocalOrders()) {
-    const matchesUser = uid ? order.userId === uid : false;
-    const matchesEmail = normalizedEmail
-      ? order.email?.toLowerCase() === normalizedEmail
-      : false;
-    if (matchesUser || matchesEmail) {
-      byId.set(order.id, order);
     }
   }
 

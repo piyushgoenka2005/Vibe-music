@@ -1,6 +1,7 @@
 import "server-only";
 
 import { isInvoiceAvailable } from "@/features/invoice/utils/invoice-utils";
+import { isInvoicePdfEnabled } from "@/features/invoice/server/resolveInvoiceOrder";
 import type { InvoiceUrls } from "@/features/invoice/types";
 import { createInvoiceAccessToken } from "@/lib/security/invoiceAccessToken";
 import type { Order } from "@/types/order";
@@ -29,7 +30,12 @@ export function buildInvoiceUrls(order: Order): InvoiceUrls | null {
     ? `${html}&print=1`
     : `${html}?print=1`;
 
-  return { html, pdf, print, page };
+  const urls: InvoiceUrls = { html, print, page };
+  if (isInvoicePdfEnabled()) {
+    urls.pdf = pdf;
+  }
+
+  return urls;
 }
 
 export function buildInvoiceDownloadFilename(order: Order): string {

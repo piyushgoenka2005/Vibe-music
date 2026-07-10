@@ -1,4 +1,5 @@
 import Razorpay from "razorpay";
+import { cache } from "react";
 import { getAdminFirestore, isFirebaseAdminConfigured } from "@/lib/firebase/admin";
 import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
 import {
@@ -428,9 +429,9 @@ export async function releaseOrderReservation(
   }
 }
 
-export async function getOrderById(orderId: string): Promise<Order | null> {
+export const getOrderById = cache(async (orderId: string): Promise<Order | null> => {
   return fetchOrderById(orderId);
-}
+});
 
 export async function listOrdersForUser(
   uid?: string,

@@ -33,7 +33,7 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
       {
         heading: "Tracking",
         paragraphs: [
-          "You will receive a tracking link by email and SMS once your order ships. You can also track any order from the Track Order page using your order ID and email.",
+          "You will receive a tracking link by email and SMS once your order ships. You can also track any order from the Track Order page using your order ID and tracking token from your confirmation email.",
         ],
       },
     ],

@@ -5,7 +5,31 @@ import { getOrderById } from "@/lib/server/orderService";
 import { canAccessOrder } from "@/lib/server/orderAccess";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { getAdminSession } from "@/lib/server/adminService";
+import { raceWithTimeout } from "@/lib/server/raceWithTimeout";
+import { buildPublicOrderTracking } from "@/lib/server/shipmentService";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import type { Order } from "@/types/order";
+import type { PublicShipmentTracking } from "@/types/shipment";
+import { toOrderTracking } from "@/types/orderTracking";
+
+const SHIPMENT_LOOKUP_MS = 400;
+
+async function loadOrderShipment(order: Order): Promise<PublicShipmentTracking | null> {
+  const result = await raceWithTimeout(
+    buildPublicOrderTracking(order),
+    { order: toOrderTracking(order), shipment: null },
+    SHIPMENT_LOOKUP_MS
+  );
+  return result.shipment;
+}
+
+function orderDetailPayload(order: Order, shipment: PublicShipmentTracking | null) {
+  return {
+    order,
+    invoiceUrls: buildInvoiceUrls(order),
+    shipment,
+  };
+}
 
 export async function GET(
   request: Request,
@@ -37,20 +61,16 @@ export async function GET(
           trackingToken,
         })
       ) {
-        return NextResponse.json({
-          order,
-          invoiceUrls: buildInvoiceUrls(order),
-        });
+        const shipment = await loadOrderShipment(order);
+        return NextResponse.json(orderDetailPayload(order, shipment));
       }
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
     const adminSession = await getAdminSession(sessionUser.uid);
     if (adminSession) {
-      return NextResponse.json({
-        order,
-        invoiceUrls: buildInvoiceUrls(order),
-      });
+      const shipment = await loadOrderShipment(order);
+      return NextResponse.json(orderDetailPayload(order, shipment));
     }
 
     if (
@@ -60,10 +80,8 @@ export async function GET(
         trackingToken,
       })
     ) {
-      return NextResponse.json({
-        order,
-        invoiceUrls: buildInvoiceUrls(order),
-      });
+      const shipment = await loadOrderShipment(order);
+      return NextResponse.json(orderDetailPayload(order, shipment));
     }
 
     return NextResponse.json({ error: "Order not found" }, { status: 404 });

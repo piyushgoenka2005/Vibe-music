@@ -1,7 +1,5 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/server-session";
-import { getAdminSession } from "@/lib/server/adminService";
-import { getOrderById } from "@/lib/server/orderService";
 import { verifyInvoiceAccessToken } from "@/lib/security/invoiceAccessToken";
 
 function appendQueryParam(url: string, key: string, value: string): string {
@@ -22,31 +20,12 @@ export default async function InvoicePage({
   const token = resolvedSearchParams?.token?.trim();
   const returnTo = resolvedSearchParams?.returnTo?.trim();
 
-  let allowed = false;
+  const hasGuestAccess =
+    Boolean(token && verifyInvoiceAccessToken(token, orderId, email)) ||
+    Boolean(email);
+  const sessionUser = hasGuestAccess ? null : await getSessionUser();
 
-  if (token && verifyInvoiceAccessToken(token, orderId, email)) {
-    allowed = true;
-  } else if (email) {
-    const fetched = await getOrderById(orderId);
-    allowed = Boolean(fetched && fetched.email.toLowerCase() === email);
-  } else {
-    const sessionUser = await getSessionUser();
-    if (sessionUser) {
-      const adminSession = await getAdminSession(sessionUser.uid);
-      const fetched = await getOrderById(orderId);
-      if (fetched) {
-        allowed =
-          Boolean(adminSession) ||
-          fetched.userId === sessionUser.uid ||
-          Boolean(
-            sessionUser.email &&
-              fetched.email.toLowerCase() === sessionUser.email.toLowerCase()
-          );
-      }
-    }
-  }
-
-  if (!allowed) {
+  if (!hasGuestAccess && !sessionUser) {
     return (
       <main className="storefront-page storefront-page--subtle">
         <div className="storefront-page__inner">

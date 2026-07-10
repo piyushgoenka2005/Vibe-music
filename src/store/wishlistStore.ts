@@ -14,6 +14,7 @@ export interface WishlistItem {
   price: number;
   imageColor: string;
   image: string;
+  availability?: Product["availability"];
   addedAt: number;
 }
 
@@ -48,7 +49,7 @@ function wishlistItemToProduct(item: WishlistItem): Product {
     price: item.price,
     rating: 0,
     reviewCount: 0,
-    availability: "in-stock",
+    availability: item.availability ?? "in-stock",
     condition: "new",
     imageColor: item.imageColor,
     image: item.image,
@@ -64,6 +65,7 @@ function productToWishlistItem(product: Product): WishlistItem {
     price: product.price,
     imageColor: product.imageColor,
     image: product.image,
+    availability: product.availability,
     addedAt: Date.now(),
   };
 }

@@ -1,6 +1,10 @@
 import "server-only";
 
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import {
+  isFirestoreUnavailableError,
+  logFirestoreWarning,
+} from "@/lib/server/firestoreErrors";
 import type { Shipment, ShipmentCarrier, ShipmentStatus, TrackingEvent } from "@/types/shipment";
 import { carrierLabel } from "@/types/shipment";
 
@@ -53,7 +57,20 @@ export async function getShipmentByOrderId(
   orderId: string
 ): Promise<Shipment | null> {
   const db = getAdminFirestore();
-  const doc = await db.collection(SHIPMENTS_COLLECTION).doc(orderId).get();
+  let doc;
+  try {
+    doc = await db.collection(SHIPMENTS_COLLECTION).doc(orderId).get();
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      logFirestoreWarning(
+        "shipment",
+        error,
+        "Shipment lookup unavailable; returning no shipment"
+      );
+      return null;
+    }
+    throw error;
+  }
   if (!doc.exists) return null;
   return normalizeShipment(doc.id, doc.data()!);
 }
@@ -62,10 +79,23 @@ export async function getTrackingEventsByOrderId(
   orderId: string
 ): Promise<TrackingEvent[]> {
   const db = getAdminFirestore();
-  const snap = await db
-    .collection(TRACKING_EVENTS_COLLECTION)
-    .where("orderId", "==", orderId)
-    .get();
+  let snap;
+  try {
+    snap = await db
+      .collection(TRACKING_EVENTS_COLLECTION)
+      .where("orderId", "==", orderId)
+      .get();
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      logFirestoreWarning(
+        "shipment",
+        error,
+        "Tracking events lookup unavailable; returning empty tracking events"
+      );
+      return [];
+    }
+    throw error;
+  }
 
   return snap.docs
     .map((doc) => normalizeTrackingEvent(doc.id, doc.data()))

@@ -1,12 +1,29 @@
 import { getAdminFirestore } from "@/lib/firebase/admin";
 import { getPermissionsForRole } from "@/lib/auth/permissions";
+import {
+  isFirestoreUnavailableError,
+  logFirestoreWarning,
+} from "@/lib/server/firestoreErrors";
 import type { AdminProfile, AdminRole, AdminSession } from "@/types/admin";
 
 const COLLECTION = "admins";
 
 export async function getAdminProfile(uid: string): Promise<AdminProfile | null> {
   const db = getAdminFirestore();
-  const doc = await db.collection(COLLECTION).doc(uid).get();
+  let doc;
+  try {
+    doc = await db.collection(COLLECTION).doc(uid).get();
+  } catch (error) {
+    if (isFirestoreUnavailableError(error)) {
+      logFirestoreWarning(
+        "admin",
+        error,
+        "Admin profile lookup unavailable; continuing as non-admin"
+      );
+      return null;
+    }
+    throw error;
+  }
   if (!doc.exists) return null;
 
   const data = doc.data();

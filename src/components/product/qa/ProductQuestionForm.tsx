@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
+import { getLoginRedirectUrl } from "@/lib/auth/protected-routes";
+import { useAuthStore } from "@/store/authStore";
 
 interface ProductQuestionFormProps {
   productSlug: string;
@@ -14,6 +17,9 @@ export default function ProductQuestionForm({
 }: ProductQuestionFormProps) {
   const [question, setQuestion] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const productPath = `/product/${productSlug}`;
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -23,12 +29,17 @@ export default function ProductQuestionForm({
         body: JSON.stringify({ question }),
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        setNeedsLogin(true);
+        throw new Error("Sign in to ask a question.");
+      }
       if (!res.ok) {
         throw new Error(data.error ?? "Unable to submit question");
       }
     },
     onSuccess: () => {
       setQuestion("");
+      setNeedsLogin(false);
       setMessage("Thanks! Your question was submitted and will appear after review.");
       onSubmitted?.();
     },
@@ -37,12 +48,31 @@ export default function ProductQuestionForm({
     },
   });
 
+  if (!isAuthenticated) {
+    return (
+      <div className="pdp-qa-form">
+        <h4 className="pdp-qa-form__title">Ask a question</h4>
+        <p className="pdp-qa-form__message">
+          Sign in to ask about this product. We&apos;ll notify you when it&apos;s answered.
+        </p>
+        <Link
+          href={getLoginRedirectUrl(productPath)}
+          className="pdp-qa-form__submit"
+          style={{ display: "inline-block", textAlign: "center", textDecoration: "none" }}
+        >
+          Sign in to ask
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <form
       className="pdp-qa-form"
       onSubmit={(e) => {
         e.preventDefault();
         setMessage(null);
+        setNeedsLogin(false);
         mutation.mutate();
       }}
     >
@@ -64,6 +94,11 @@ export default function ProductQuestionForm({
       >
         {mutation.isPending ? "Submitting…" : "Submit question"}
       </button>
+      {needsLogin ? (
+        <p className="pdp-qa-form__message">
+          <Link href={getLoginRedirectUrl(productPath)}>Sign in</Link> to submit your question.
+        </p>
+      ) : null}
       {message ? <p className="pdp-qa-form__message">{message}</p> : null}
     </form>
   );
