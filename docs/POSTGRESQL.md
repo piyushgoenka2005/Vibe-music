@@ -1,21 +1,19 @@
-# PostgreSQL Guide
+# PostgreSQL Guide (VPS self-hosted)
 
-Vibe Music uses **PostgreSQL as the sole database** via Prisma. All catalog, orders, reviews, content, and user data is read and written through `src/lib/server/prisma/*` repositories.
+Vibe Music uses **self-hosted PostgreSQL on the VPS** as the sole database via Prisma. All catalog, orders, reviews, content, and user data is read and written through `src/lib/server/prisma/*` repositories.
+
+There is no external managed database service. Postgres runs on the same VPS as the Next.js application.
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Next.js Application                      │
+│                     VPS (vibemusic.in)                       │
 ├─────────────────────────────────────────────────────────────┤
-│  catalogService, orderService, reviewService, homepage, …   │
-│         │                                                    │
-│         ▼                                                    │
-│  firestoreCatalogRepository (Prisma facade — legacy filename) │
-│  orderRepository, prisma/* repositories                       │
-│         │                                                    │
-│         ▼                                                    │
-│     PostgreSQL (authoritative)                               │
+│  Next.js (PM2)  ──►  Prisma  ──►  PostgreSQL (localhost)  │
+│  nginx (443)              │              :5432               │
+│  CDN (/var/www/cdn)       ▼                                  │
+│                    src/lib/server/prisma/*                   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -23,15 +21,57 @@ Vibe Music uses **PostgreSQL as the sole database** via Prisma. All catalog, ord
 |-------|------|------|
 | Prisma schema | `prisma/schema.prisma` | Database models |
 | Migrations | `prisma/migrations/` | Versioned SQL schema |
-| Client | `src/lib/db/prisma.ts` | Singleton `PrismaClient` |
+| Client | `src/lib/db/prisma.ts` | Lazy `PrismaClient` |
 | Repositories | `src/lib/server/prisma/` | Data access layer |
 
-## Prerequisites
+## Connection string
 
-- PostgreSQL 14+ (local, Docker, or VPS)
-- Node.js 20+
+On the **VPS**, the app connects to Postgres on the same machine:
 
-### Local PostgreSQL with Docker
+```env
+DATABASE_URL=postgresql://vibe:<password>@localhost:5432/vibe?schema=public
+```
+
+On **local dev**, use Docker (see below). If port `5432` is already in use, map Docker to `5433` and adjust the URL accordingly.
+
+## VPS PostgreSQL setup (production)
+
+Run once on the server (Ubuntu/Debian):
+
+```bash
+sudo apt update
+sudo apt install -y postgresql postgresql-contrib
+
+sudo -u postgres psql <<'SQL'
+CREATE USER vibe WITH PASSWORD 'your-strong-password';
+CREATE DATABASE vibe OWNER vibe;
+GRANT ALL PRIVILEGES ON DATABASE vibe TO vibe;
+SQL
+```
+
+Add to the VPS `.env` (same directory as the app, **not** committed to git):
+
+```env
+DATABASE_URL=postgresql://vibe:your-strong-password@localhost:5432/vibe?schema=public
+```
+
+Apply migrations after each deploy:
+
+```bash
+cd ~/Vibe-music
+npm ci
+npm run db:migrate
+```
+
+Optional hardening:
+
+- Bind Postgres to `127.0.0.1` only (default on most installs)
+- Do **not** expose port `5432` in UFW/public firewall
+- Schedule `pg_dump` backups (see [DEPLOYMENT.md](./DEPLOYMENT.md))
+
+Full VPS steps: [deploy/VPS-SETUP.md](../deploy/VPS-SETUP.md).
+
+## Local development (Docker)
 
 ```bash
 docker run -d \
@@ -49,6 +89,13 @@ Add to `.env.local`:
 DATABASE_URL=postgresql://vibe:vibe@localhost:5432/vibe?schema=public
 ```
 
+If port `5432` is taken locally:
+
+```bash
+docker run -d ... -p 5433:5432 postgres:16
+# DATABASE_URL=postgresql://vibe:vibe@localhost:5433/vibe?schema=public
+```
+
 ## Setup
 
 ### 1. Install dependencies
@@ -57,9 +104,27 @@ DATABASE_URL=postgresql://vibe:vibe@localhost:5432/vibe?schema=public
 npm install
 ```
 
-`postinstall` runs `prisma generate` automatically.
+`postinstall` runs `prisma generate` via `scripts/prisma-generate.mjs`.
 
-### 2. Apply migrations
+### 2. Prisma CLI and env files
+
+Prisma reads `.env`; the app reads `.env.local`. Sync before CLI commands:
+
+```bash
+npm run sync:prisma-env
+```
+
+Or use the wrapped commands (recommended):
+
+| Command | Purpose |
+|---------|---------|
+| `npm run db:generate` | Regenerate Prisma Client |
+| `npm run db:migrate:dev` | Dev migrations (`migrate dev`) |
+| `npm run db:migrate` | Production migrations (`migrate deploy`) |
+| `npm run db:push` | Push schema without migration files |
+| `npm run db:studio` / `npm run studio` | Prisma Studio |
+
+### 3. Apply migrations
 
 **Development:**
 
@@ -73,7 +138,13 @@ npm run db:migrate:dev
 npm run db:migrate
 ```
 
-### 3. Seed admin access
+### 4. Seed catalog (optional)
+
+```bash
+npm run seed:catalog
+```
+
+### 5. Seed admin access
 
 Register a user via the site, then promote them:
 
@@ -88,7 +159,7 @@ npm run seed:admin -- <user-id> <email> "Super Admin"
 
 ## Local JSON catalog fallback
 
-When `DATABASE_URL` is unset (local dev without Postgres), some features fall back to `src/data/catalog/products.json`. Production **requires** `DATABASE_URL`.
+When `DATABASE_URL` is unset (local dev without Postgres), storefront reads fall back to `src/data/catalog/products.json`. **Production on the VPS requires `DATABASE_URL`.**
 
 ## Deployment
 
@@ -96,11 +167,11 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for production deploy, backup, and rollback
 
 ## Auth.js tables
 
-User sessions, OAuth accounts, and password hashes live in PostgreSQL. See the Auth.js migration in `prisma/migrations/20260711120000_authjs/`.
+User sessions, OAuth accounts, and password hashes live in PostgreSQL. See `prisma/migrations/20260711120000_authjs/`.
 
 ## Email
 
-Transactional email uses self-hosted SMTP. See [SMTP.md](./SMTP.md).
+Transactional email uses self-hosted SMTP on the VPS. See [SMTP.md](./SMTP.md).
 
 ## Images
 

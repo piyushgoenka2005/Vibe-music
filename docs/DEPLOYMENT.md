@@ -1,11 +1,12 @@
 # Production Deployment Checklist
 
-Use this checklist when deploying Vibe Music to production after the PostgreSQL + Auth.js + SMTP stack cutover.
+Use this checklist when deploying Vibe Music to production on the **VPS** with **self-hosted PostgreSQL**, Auth.js, and SMTP.
 
 ## Pre-deploy
 
 - [ ] Merge and review all migration-related changes on the release branch
 - [ ] Confirm Firebase, Firestore, and Cloudinary are fully decommissioned (no env vars, no SDK usage)
+- [ ] **VPS PostgreSQL** is installed, running, and reachable at `localhost:5432` on the server
 - [ ] Take a full PostgreSQL backup (see [Backup checklist](#backup-checklist))
 - [ ] Export a snapshot of CDN assets from the VPS (`/var/www/cdn` or your `CDN_STORAGE_ROOT`)
 - [ ] Verify Razorpay live keys and webhook secret are ready for production
@@ -18,7 +19,7 @@ Use this checklist when deploying Vibe Music to production after the PostgreSQL 
 | Variable | Purpose |
 |----------|---------|
 | `NEXT_PUBLIC_SITE_URL` | Public site URL |
-| `DATABASE_URL` | PostgreSQL connection string |
+| `DATABASE_URL` | **VPS PostgreSQL** — `postgresql://vibe:<password>@localhost:5432/vibe?schema=public` |
 | `AUTH_SECRET` | Auth.js session signing |
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Client Razorpay key |
 | `RAZORPAY_KEY_ID` | Server Razorpay key |
@@ -36,7 +37,9 @@ Recommended:
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Google OAuth |
 | `SMTP_ADMIN_TO` | Admin alert recipient |
 
-## Database
+## Database (VPS PostgreSQL)
+
+PostgreSQL runs on the same VPS as the app. See [POSTGRESQL.md](./POSTGRESQL.md) for install and [deploy/VPS-SETUP.md](../deploy/VPS-SETUP.md) for server setup.
 
 ```bash
 npm ci

@@ -2,7 +2,20 @@
 
 Enterprise ecommerce platform for musical instruments and pro audio.
 
-**Stack:** Next.js 16 (App Router) · React 19 · Firebase/Firestore · Razorpay · TypeScript
+**Stack:** Next.js 16 (App Router) · React 19 · PostgreSQL (VPS) · Auth.js · Prisma · Razorpay · TypeScript
+
+---
+
+## Database
+
+Production uses **self-hosted PostgreSQL on the VPS** — not a third-party DB host. The Next.js app and Postgres run on the same server; `DATABASE_URL` uses `localhost:5432`.
+
+See **[docs/POSTGRESQL.md](docs/POSTGRESQL.md)** for install, migrations, and backup.  
+VPS deploy steps: **[deploy/VPS-SETUP.md](deploy/VPS-SETUP.md)**.
+
+```env
+DATABASE_URL=postgresql://vibe:<password>@localhost:5432/vibe?schema=public
+```
 
 ---
 
@@ -10,24 +23,16 @@ Enterprise ecommerce platform for musical instruments and pro audio.
 
 ```
 src/            Application source (pages, components, API, server logic)
+prisma/         Schema and migrations (PostgreSQL)
 public/         Static assets (images, favicons)
-deploy/         Production VPS scripts & nginx config
-docs/release/   Release reports for stakeholders
+deploy/         VPS scripts, nginx, PostgreSQL notes
+docs/           Deployment, PostgreSQL, SMTP guides
 e2e/            Playwright smoke tests
 scripts/        Seed, migrate, and tooling scripts
 .github/        CI validation workflow
 ```
 
-**Root config files** (`.env.example`, `firebase.json`, `next.config.ts`, `package.json`, etc.) are standard for Next.js + Firebase projects — one file per concern, not bloat.
-
-**Not part of the codebase** (generated locally, hidden in VS Code via `.vscode/settings.json`):
-
-| Folder | Purpose |
-|--------|---------|
-| `node_modules/` | npm dependencies (~100k files) — recreated by `npm install` |
-| `.next/` | Build cache — recreated by `npm run dev` / `npm run build` |
-| `.data/` | Local Firestore fallback cache (dev only) |
-| `test-results/` | Playwright output (dev only) |
+**Generated locally (gitignored):** `node_modules/`, `.next/`, `.env`, `.env.local`
 
 ---
 
@@ -35,7 +40,9 @@ scripts/        Seed, migrate, and tooling scripts
 
 ```bash
 npm install
-cp .env.example .env.local   # configure Firebase, Razorpay, secrets
+cp .env.example .env.local   # configure DATABASE_URL, Auth, Razorpay, SMTP
+npm run db:migrate:dev       # apply migrations (requires PostgreSQL)
+npm run seed:catalog         # optional — seed catalog from products.json
 npm run dev
 ```
 
@@ -47,7 +54,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```bash
 npm run validate          # type-check + lint + unit tests + production build
-npm run test:e2e          # Playwright smoke (11 tests; server must be running)
+npm run test:e2e          # Playwright smoke (server must be running)
 npm run validate:ci       # validate + E2E (matches GitHub Actions)
 ```
 
@@ -55,17 +62,16 @@ CI workflow: `.github/workflows/validate.yml`
 
 ---
 
-## Production deployment
+## Production deployment (VPS)
 
 | Step | Command / doc |
 |------|----------------|
-| Release checklist | [`docs/release/FINAL_DEPLOYMENT_CHECKLIST.md`](docs/release/FINAL_DEPLOYMENT_CHECKLIST.md) |
-| Executive sign-off | [`docs/release/FINAL_PRODUCTION_READINESS_REPORT.md`](docs/release/FINAL_PRODUCTION_READINESS_REPORT.md) |
-| VPS deploy | [`deploy/VPS-SETUP.md`](deploy/VPS-SETUP.md) |
-| Firestore rules + indexes | `npm run firebase:deploy-firestore` |
-| Seed admin user | `npm run seed:admin` |
-
-All release reports: [`docs/release/`](docs/release/)
+| VPS + PostgreSQL setup | [`deploy/VPS-SETUP.md`](deploy/VPS-SETUP.md) |
+| PostgreSQL guide | [`docs/POSTGRESQL.md`](docs/POSTGRESQL.md) |
+| Deploy checklist | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) |
+| Apply migrations | `npm run db:migrate` |
+| Seed admin | `npm run seed:admin` |
+| Build & start | `npm run build && npm run start` (or PM2 via `deploy/update.sh`) |
 
 ---
 
@@ -73,9 +79,12 @@ All release reports: [`docs/release/`](docs/release/)
 
 | Script | Purpose |
 |--------|---------|
-| `npm run build` | Production build (426 routes) |
-| `npm run seed:admin` | Create first admin user |
-| `npm run firebase:deploy-firestore` | Deploy Firestore rules + indexes |
+| `npm run build` | Production build |
+| `npm run db:migrate` | Apply migrations (production / VPS) |
+| `npm run db:migrate:dev` | Apply migrations (local dev) |
+| `npm run db:studio` | Prisma Studio (reads `.env.local` via sync script) |
+| `npm run seed:catalog` | Seed products/categories/brands from JSON |
+| `npm run seed:admin` | Promote user to admin |
 | `npm run verify:integrations` | Validate external service configuration |
 
 ---
@@ -84,10 +93,11 @@ All release reports: [`docs/release/`](docs/release/)
 
 Copy `.env.example` to `.env.local` and fill in:
 
-- Firebase (client + admin SDK)
-- Razorpay (keys + webhook secret)
-- `GUEST_ORDER_ACCESS_SECRET` (min 32 chars)
-- `RESEND_API_KEY` (transactional email)
-- `UPSTASH_REDIS_*` (rate limiting)
+- **`DATABASE_URL`** — VPS PostgreSQL (`localhost:5432` on the server)
+- **Auth.js** — `AUTH_SECRET`, optional Google OAuth
+- **Razorpay** — keys + webhook secret
+- **SMTP** — self-hosted mail (see `docs/SMTP.md`)
+- **`GUEST_ORDER_ACCESS_SECRET`** (min 32 chars)
+- **`UPSTASH_REDIS_*`** (rate limiting)
 
 See `.env.example` for the full list.

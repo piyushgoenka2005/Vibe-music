@@ -4,11 +4,67 @@ Server: `root@87.232.72.14`
 App path: `~/Vibe-music`  
 PM2 app: `vibe`
 
+**Database:** Self-hosted **PostgreSQL on this VPS** (`localhost:5432`). See [docs/POSTGRESQL.md](../docs/POSTGRESQL.md).
+
+---
+
 ## One-command deploy (after SSH key works)
 
 ```bash
 cd ~/Vibe-music && bash deploy/update.sh
 ```
+
+Each deploy should run migrations:
+
+```bash
+cd ~/Vibe-music
+npm ci
+npm run db:migrate
+npm run build
+pm2 restart vibe
+```
+
+---
+
+## PostgreSQL (first-time on VPS)
+
+Install and create the database user (run once):
+
+```bash
+sudo apt update
+sudo apt install -y postgresql postgresql-contrib
+
+sudo -u postgres psql <<'SQL'
+CREATE USER vibe WITH PASSWORD 'your-strong-password';
+CREATE DATABASE vibe OWNER vibe;
+GRANT ALL PRIVILEGES ON DATABASE vibe TO vibe;
+SQL
+```
+
+In `~/Vibe-music/.env` (never commit):
+
+```env
+DATABASE_URL=postgresql://vibe:your-strong-password@localhost:5432/vibe?schema=public
+```
+
+Apply schema:
+
+```bash
+cd ~/Vibe-music
+npm run db:migrate
+npm run seed:catalog    # optional first-time catalog seed
+```
+
+Verify:
+
+```bash
+curl -s http://127.0.0.1:3000/api/health | jq .
+# expect checks.database: "ok"
+```
+
+Do **not** open port `5432` in UFW — Postgres is localhost-only.
+
+---
 
 ## First-time hardening (run once on server)
 
@@ -56,25 +112,18 @@ Then: `ssh vibe-vps`
 | fail2ban | 5 tries / 10 min → 1 h ban |
 | PM2 | Survives reboot |
 | Updates | Unattended security upgrades |
+| PostgreSQL | localhost only — not exposed publicly |
 
 Never commit `.env`, passwords, or private keys to git.
 
 ## Release checklist
 
-Before/after deploy, follow **`docs/release/FINAL_DEPLOYMENT_CHECKLIST.md`** in the repo root.
-
-## Firebase (run from dev machine with Firebase CLI auth)
-
-```bash
-npm run firebase:deploy-firestore   # rules + indexes
-# or separately:
-npm run firebase:deploy-rules
-npm run firebase:deploy-indexes
-```
+Before/after deploy, follow **`docs/DEPLOYMENT.md`** and **`docs/POSTGRESQL.md`**.
 
 ## Local validation before push
 
 ```bash
 npm run validate        # type-check, lint, test, build
+npm run db:migrate      # against local or VPS Postgres
 npm run test:e2e        # with npm run dev or npm run start running
 ```

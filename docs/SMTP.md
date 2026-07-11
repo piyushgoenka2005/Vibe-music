@@ -1,6 +1,6 @@
 # Self-Hosted SMTP Setup Guide
 
-Vibe Music sends transactional email through a **self-hosted SMTP server** using [Nodemailer](https://nodemailer.com/). Resend is no longer used.
+Vibe Music runs on a **VPS** with **self-hosted PostgreSQL** and **self-hosted SMTP**. Transactional email uses [Nodemailer](https://nodemailer.com/) against your mail server (e.g. `mail.vibemusic.in`). See [POSTGRESQL.md](./POSTGRESQL.md) for the database setup.
 
 ## Mailbox addresses
 

@@ -2,6 +2,8 @@
 
 Production release engineering reports for the **11 July 2026 RC (Release Candidate)** enterprise launch.
 
+> **Database (current stack):** Self-hosted **PostgreSQL on the VPS** (`DATABASE_URL=postgresql://vibe:<password>@localhost:5432/vibe?schema=public`). Operational guide: [../POSTGRESQL.md](../POSTGRESQL.md). Some reports below reference the earlier Firestore stack historically.
+
 ## Start here
 
 | Document | Purpose |

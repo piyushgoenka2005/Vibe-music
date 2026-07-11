@@ -1,7 +1,8 @@
 # FINAL Deployment Checklist — ViBE Music
 
 **Date:** 11 July 2026  
-**Release:** Enterprise production v1.0
+**Release:** Enterprise production v1.0  
+**Database:** Self-hosted **PostgreSQL on the VPS** — see [POSTGRESQL.md](../POSTGRESQL.md)
 
 ---
 
@@ -22,37 +23,37 @@
 ### Required
 
 - [ ] `NEXT_PUBLIC_SITE_URL` — production URL (e.g. `https://vibemusic.in`)
-- [ ] `FIREBASE_PROJECT_ID`
-- [ ] `FIREBASE_CLIENT_EMAIL`
-- [ ] `FIREBASE_PRIVATE_KEY`
+- [ ] `DATABASE_URL` — **VPS PostgreSQL:** `postgresql://vibe:<password>@localhost:5432/vibe?schema=public`
+- [ ] `AUTH_SECRET` — min 32 chars
 - [ ] `RAZORPAY_KEY_ID` — live keys for production
 - [ ] `RAZORPAY_KEY_SECRET`
 - [ ] `RAZORPAY_WEBHOOK_SECRET`
 - [ ] `GUEST_ORDER_ACCESS_SECRET` — min 32 chars, cryptographically random
+- [ ] `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` — self-hosted SMTP on VPS
 
 ### Recommended
 
-- [ ] `RESEND_API_KEY` — order, contact, newsletter emails
-- [ ] `NEXT_PUBLIC_FIREBASE_*` — client SDK config
-- [ ] `CLOUDINARY_*` — if using CDN image transforms
+- [ ] `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` — Google OAuth
+- [ ] `CDN_STORAGE_ROOT`, `CDN_PUBLIC_BASE_URL` — image uploads
+- [ ] `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` — rate limiting
 
 ### Production safety
 
 - [ ] `ALLOW_DEMO_PAYMENTS=false`
 - [ ] `NODE_ENV=production`
-- [ ] Verify `/api/debug/payment` returns 404 in production (`NODE_ENV === "production"` guard)
+- [ ] Verify `/api/debug/payment` returns 404 in production
 
 ---
 
-## Firebase / Firestore
+## VPS PostgreSQL
 
-- [ ] Deploy Firestore: `npm run firebase:deploy-firestore` (rules + indexes)
-- [ ] Or separately: `npm run firebase:deploy-rules` and `npm run firebase:deploy-indexes`
+- [ ] PostgreSQL installed and running on the VPS (`localhost:5432`)
+- [ ] `DATABASE_URL` set in server `.env` (not committed to git)
+- [ ] Migrations applied: `npm run db:migrate`
 - [ ] Seed admin if needed: `npm run seed:admin`
-- [ ] Verify collections exist (auto-created on first write):
-  - `supportTickets`, `userNotifications`, `adminNotifications`
-  - `contentPages`, `shippingZones`, `returnRequests`
-  - `contactMessages`, `productQuestions`, `newsletter_subscribers`
+- [ ] Optional catalog seed: `npm run seed:catalog`
+- [ ] `/api/health` returns `checks.database: ok`
+- [ ] Scheduled `pg_dump` backups configured
 
 ---
 
@@ -68,7 +69,7 @@
 1. [ ] Homepage loads (< 3s on 4G)
 2. [ ] Search → category → PDP → add to cart
 3. [ ] Checkout with test Razorpay payment (or COD in staging)
-4. [ ] Order success page + email (if Resend configured)
+4. [ ] Order success page + email (SMTP)
 5. [ ] Track order (guest + authenticated)
 6. [ ] Invoice download
 7. [ ] Contact form submission
@@ -94,8 +95,8 @@ Target: LCP < 2.0s, CLS < 0.05 on homepage and PDP (manual verification)
 
 ## Rollback plan
 
-- **Vercel/hosting:** Revert to previous deployment
-- **Firestore:** CMS/shipping/notification docs are additive — no destructive migration
+- **VPS app:** Revert to previous git commit / PM2 deployment
+- **PostgreSQL:** Restore from pre-deploy `pg_dump` if migrations caused issues
 - **Razorpay:** Webhook idempotency handled in payment service
 
 ---
@@ -106,6 +107,6 @@ Target: LCP < 2.0s, CLS < 0.05 on homepage and PDP (manual verification)
 |------|------|------|--------|
 | Engineering | Release pass complete | 11 Jul 2026 | Automated gates PASS |
 | QA | Manual smoke | | Pending |
-| DevOps | Env + Firebase deploy | | Pending |
+| DevOps | VPS PostgreSQL + env | | Pending |
 
-**Production readiness:** Ready after env configuration and manual smoke tests.
+**Production readiness:** Ready after VPS PostgreSQL setup and manual smoke tests.
