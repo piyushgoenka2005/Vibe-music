@@ -106,11 +106,16 @@ export async function listCategories(): Promise<AdminCategory[]> {
   if (!isPostgresConfigured()) {
     return staticCategories();
   }
-  const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
-  if (rows.length === 0) {
-    return seedCategoriesFromStatic();
+
+  try {
+    const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+    if (rows.length === 0) {
+      return seedCategoriesFromStatic();
+    }
+    return rows.map(mapAdminCategory);
+  } catch {
+    return staticCategories();
   }
-  return rows.map(mapAdminCategory);
 }
 
 export async function getCategoryById(id: string): Promise<AdminCategory | null> {

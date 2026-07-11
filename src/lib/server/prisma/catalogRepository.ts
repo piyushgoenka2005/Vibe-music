@@ -44,8 +44,12 @@ export async function fetchAllProducts(
     return sortByName(await loadLocalProducts(includeInactive));
   }
 
-  const rows = await prisma.product.findMany({ orderBy: { name: "asc" } });
-  return filterActive(rows.map(prismaToProduct), includeInactive);
+  try {
+    const rows = await prisma.product.findMany({ orderBy: { name: "asc" } });
+    return filterActive(rows.map(prismaToProduct), includeInactive);
+  } catch {
+    return sortByName(await loadLocalProducts(includeInactive));
+  }
 }
 
 export async function fetchProductById(id: string): Promise<CatalogProduct | null> {
@@ -232,8 +236,13 @@ export async function fetchCategories(): Promise<Category[]> {
     return loadCategories();
   }
 
-  const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
-  return rows.map(prismaToCategory);
+  try {
+    const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+    return rows.map(prismaToCategory);
+  } catch {
+    const { loadCategories } = await import("@/lib/server/catalogRepository");
+    return loadCategories();
+  }
 }
 
 export async function fetchExistingSlugsAndSkus(): Promise<{
