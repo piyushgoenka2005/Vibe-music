@@ -5,10 +5,6 @@ import { incrementCouponUsage } from "@/lib/server/couponService";
 import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
 import { notifyCustomerOrderPlaced, notifyOrderRefunded } from "@/lib/server/orderNotificationService";
 import {
-  isFirestoreUnavailableError,
-  logFirestoreWarning,
-} from "@/lib/server/firestoreErrors";
-import {
   fetchOrderById,
   findOrderByRazorpayOrderId as findOrderByRazorpayOrderIdFromStore,
   findOrderByRazorpayPaymentId as findOrderByRazorpayPaymentIdFromStore,
@@ -112,33 +108,11 @@ export async function completeOrderPayment(input: {
   let inventoryFulfilled = inventoryState === "fulfilled";
 
   if (inventoryState === "reserved") {
-    try {
-      await fulfillReservedStockForOrder(order.id, inventoryLines);
-      inventoryFulfilled = true;
-    } catch (error) {
-      if (!isFirestoreUnavailableError(error)) {
-        throw error;
-      }
-      logFirestoreWarning(
-        "inventory",
-        error,
-        "Skipping inventory fulfillment — Firestore unavailable"
-      );
-    }
+    await fulfillReservedStockForOrder(order.id, inventoryLines);
+    inventoryFulfilled = true;
   } else if (inventoryState === "none") {
-    try {
-      await reserveAndFulfillStockForOrder(order.id, inventoryLines);
-      inventoryFulfilled = true;
-    } catch (error) {
-      if (!isFirestoreUnavailableError(error)) {
-        throw error;
-      }
-      logFirestoreWarning(
-        "inventory",
-        error,
-        "Skipping inventory fulfillment — Firestore unavailable"
-      );
-    }
+    await reserveAndFulfillStockForOrder(order.id, inventoryLines);
+    inventoryFulfilled = true;
   } else if (inventoryState !== "fulfilled") {
     throw new Error(
       `Cannot fulfill inventory for order in state: ${inventoryState}`
@@ -270,19 +244,7 @@ async function applyCouponUsageIfNeeded(order: Order): Promise<void> {
     return;
   }
 
-  try {
-    await incrementCouponUsage(order.couponCode);
-  } catch (error) {
-    if (isFirestoreUnavailableError(error)) {
-      logFirestoreWarning(
-        "coupons",
-        error,
-        "Skipping coupon usage increment — Firestore unavailable"
-      );
-    } else {
-      throw error;
-    }
-  }
+  await incrementCouponUsage(order.couponCode);
 
   await updateOrder(order.id, {
     couponUsageApplied: true,

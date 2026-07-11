@@ -20,15 +20,21 @@ export async function register() {
           "instrumentation"
         );
       }
+      if (integrations.database !== "ok") {
+        logWarn(
+          "DATABASE_URL is missing; the application cannot persist data",
+          "instrumentation"
+        );
+      }
     }
 
-    const { verifyFirestoreConnection } = await import(
-      "@/lib/server/firestoreHealth"
+    const { verifyPostgresConnection } = await import(
+      "@/lib/server/postgresHealth"
     );
-    const firestoreHealth = await verifyFirestoreConnection();
-    if (!firestoreHealth.ok && process.env.NODE_ENV === "production") {
+    const databaseHealth = await verifyPostgresConnection();
+    if (!databaseHealth.ok && process.env.NODE_ENV === "production") {
       logWarn(
-        `Firestore initialization failed at startup: ${firestoreHealth.error ?? "unknown"}`,
+        `PostgreSQL initialization failed at startup: ${databaseHealth.error ?? "unknown"}`,
         "instrumentation"
       );
     }

@@ -5,169 +5,26 @@ import {
   getOrderYear,
   ORDER_ID_SEQUENCE_START,
 } from "@/lib/orderId";
-import fs from "fs";
-import path from "path";
-
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import type { QuerySnapshot, WriteResult } from "firebase-admin/firestore";
-import {
-  createFirestoreCircuitBreaker,
-  isFirestoreDegraded,
-  isFirestoreUnavailableError,
-  isGlobalFirestoreCircuitOpen,
-  logFirestoreWarning,
-  openGlobalFirestoreCircuit,
-  tryFirestoreFast,
-  withFirestoreDeadline,
-} from "@/lib/server/firestoreErrors";
-import { withFirestoreRetry } from "@/lib/server/firestoreRetry";
-import { sanitizeForFirestore } from "@/lib/server/firestoreSanitize";
+import * as pg from "@/lib/server/prisma/orderRepository";
 import type { Order } from "@/types/order";
-
-const COLLECTION = "orders";
-const ORDERS_DIR = path.join(process.cwd(), ".data", "orders");
-
-const ordersCircuit = createFirestoreCircuitBreaker();
-
-function isOrdersFirestoreDisabled(): boolean {
-  return (
-    process.env.DISABLE_FIRESTORE_ORDERS === "true" ||
-    ordersCircuit.isOpen() ||
-    isGlobalFirestoreCircuitOpen()
-  );
-}
-
-function ensureOrdersDir(): void {
-  fs.mkdirSync(ORDERS_DIR, { recursive: true });
-}
-
-function localOrderPath(orderId: string): string {
-  return path.join(ORDERS_DIR, `${orderId}.json`);
-}
-
-function readLocalOrder(orderId: string): Order | null {
-  const filePath = localOrderPath(orderId);
-  if (!fs.existsSync(filePath)) return null;
-  return JSON.parse(fs.readFileSync(filePath, "utf8")) as Order;
-}
-
-function writeLocalOrder(order: Order): void {
-  ensureOrdersDir();
-  fs.writeFileSync(
-    localOrderPath(order.id),
-    `${JSON.stringify(order, null, 2)}\n`,
-    "utf8"
-  );
-}
-
-function deleteLocalOrder(orderId: string): void {
-  const filePath = localOrderPath(orderId);
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-  }
-}
-
-function listLocalOrders(): Order[] {
-  ensureOrdersDir();
-  return fs
-    .readdirSync(ORDERS_DIR)
-    .filter((name) => name.endsWith(".json"))
-    .map((name) =>
-      JSON.parse(
-        fs.readFileSync(path.join(ORDERS_DIR, name), "utf8")
-      ) as Order
-    );
-}
-
-function openOrdersCircuit(error: unknown, context: string): void {
-  const wasOpen = isOrdersFirestoreDisabled();
-  ordersCircuit.open();
-  openGlobalFirestoreCircuit();
-  if (!wasOpen) {
-    logFirestoreWarning("orders", error, context);
-  }
-}
 
 export function generateOrderId(date = new Date()): string {
   return formatOrderId(ORDER_ID_SEQUENCE_START, getOrderYear(date));
 }
 
 export async function persistOrder(order: Order): Promise<void> {
-  if (isOrdersFirestoreDisabled()) {
-    writeLocalOrder(order);
-    return;
-  }
-
-  try {
-    await tryFirestoreFast(
-      () =>
-        getAdminFirestore()
-          .collection(COLLECTION)
-          .doc(order.id)
-          .set(sanitizeForFirestore(order)),
-      {
-        domain: "orders",
-        context: "Persisting order locally — Firestore unavailable",
-        fallback: (): WriteResult => {
-          writeLocalOrder(order);
-          return {} as WriteResult;
-        },
-      }
-    );
-  } catch (error) {
-    if (isFirestoreDegraded(error)) {
-      openOrdersCircuit(error, "Persisting order locally — Firestore unavailable");
-      writeLocalOrder(order);
-      return;
-    }
-    throw error;
-  }
+  await pg.upsertOrder(order);
 }
 
 export async function fetchOrderById(orderId: string): Promise<Order | null> {
-  const local = readLocalOrder(orderId);
-
-  if (isOrdersFirestoreDisabled()) {
-    return local;
-  }
-
-  // Local JSON is written on every persist — skip slow Firestore when we already have the order.
-  if (local) {
-    return local;
-  }
-
-  try {
-    const doc = await withFirestoreDeadline(() =>
-      withFirestoreRetry(
-        () =>
-          getAdminFirestore()
-            .collection(COLLECTION)
-            .doc(orderId)
-            .get(),
-        { maxRetries: 1, baseDelayMs: 100 }
-      )
-    );
-    if (doc.exists) {
-      const order = { id: doc.id, ...doc.data() } as Order;
-      writeLocalOrder(order);
-      return order;
-    }
-  } catch (error) {
-    if (isFirestoreDegraded(error)) {
-      openOrdersCircuit(error, "Reading orders from local store");
-    } else {
-      throw error;
-    }
-  }
-
-  return readLocalOrder(orderId);
+  return pg.fetchOrderById(orderId);
 }
 
 export async function updateOrder(
   orderId: string,
   patch: Partial<Order>
 ): Promise<Order> {
-  const existing = await fetchOrderById(orderId);
+  const existing = await pg.fetchOrderById(orderId);
   if (!existing) {
     throw new Error("Order not found");
   }
@@ -179,114 +36,24 @@ export async function updateOrder(
     updatedAt: patch.updatedAt ?? new Date().toISOString(),
   };
 
-  if (!isOrdersFirestoreDisabled()) {
-    try {
-      await getAdminFirestore()
-        .collection(COLLECTION)
-        .doc(orderId)
-        .update(sanitizeForFirestore(patch));
-      return updated;
-    } catch (error) {
-      if (isFirestoreUnavailableError(error)) {
-        openOrdersCircuit(error, "Updating order locally — Firestore unavailable");
-      } else {
-        throw error;
-      }
-    }
-  }
-
-  writeLocalOrder(updated);
+  await pg.updateOrder(updated);
   return updated;
 }
 
 export async function removeOrder(orderId: string): Promise<void> {
-  deleteLocalOrder(orderId);
-
-  if (isOrdersFirestoreDisabled()) {
-    return;
-  }
-
-  try {
-    await getAdminFirestore().collection(COLLECTION).doc(orderId).delete();
-  } catch (error) {
-    if (!isFirestoreUnavailableError(error)) {
-      throw error;
-    }
-  }
+  await pg.deleteOrder(orderId);
 }
 
 export async function findOrderByRazorpayOrderId(
   razorpayOrderId: string
 ): Promise<Order | null> {
-  if (!isOrdersFirestoreDisabled()) {
-    try {
-      const snap = await getAdminFirestore()
-        .collection(COLLECTION)
-        .where("razorpayOrderId", "==", razorpayOrderId)
-        .limit(1)
-        .get();
-
-      if (!snap.empty) {
-        const doc = snap.docs[0]!;
-        return { id: doc.id, ...doc.data() } as Order;
-      }
-    } catch (error) {
-      if (isFirestoreUnavailableError(error)) {
-        openOrdersCircuit(error, "Searching local orders by Razorpay order id");
-      } else {
-        throw error;
-      }
-    }
-  }
-
-  return (
-    listLocalOrders().find(
-      (order) => order.razorpayOrderId === razorpayOrderId
-    ) ?? null
-  );
+  return pg.findOrderByRazorpayOrderId(razorpayOrderId);
 }
 
 export async function findOrderByRazorpayPaymentId(
   razorpayPaymentId: string
 ): Promise<Order | null> {
-  if (!isOrdersFirestoreDisabled()) {
-    try {
-      const snap = await getAdminFirestore()
-        .collection(COLLECTION)
-        .where("razorpayPaymentId", "==", razorpayPaymentId)
-        .limit(1)
-        .get();
-
-      if (!snap.empty) {
-        const doc = snap.docs[0]!;
-        return { id: doc.id, ...doc.data() } as Order;
-      }
-    } catch (error) {
-      if (isFirestoreUnavailableError(error)) {
-        openOrdersCircuit(error, "Searching local orders by Razorpay payment id");
-      } else {
-        throw error;
-      }
-    }
-  }
-
-  return (
-    listLocalOrders().find(
-      (order) => order.razorpayPaymentId === razorpayPaymentId
-    ) ?? null
-  );
-}
-
-function orderMatchesUser(
-  order: Order,
-  uid?: string,
-  normalizedEmail?: string
-): boolean {
-  const matchesUser = uid ? order.userId === uid : false;
-  const matchesEmail = normalizedEmail
-    ? order.email?.toLowerCase() === normalizedEmail
-    : false;
-  return matchesUser || matchesEmail;
+  return pg.findOrderByRazorpayPaymentId(razorpayPaymentId);
 }
 
 export async function listOrdersForUser(
@@ -294,61 +61,20 @@ export async function listOrdersForUser(
   email?: string
 ): Promise<Order[]> {
   const byId = new Map<string, Order>();
-  const normalizedEmail = email?.trim().toLowerCase();
 
-  for (const order of listLocalOrders()) {
-    if (orderMatchesUser(order, uid, normalizedEmail)) {
+  if (uid) {
+    for (const order of await pg.listOrdersForUser(uid)) {
       byId.set(order.id, order);
     }
   }
 
-  if (!isOrdersFirestoreDisabled() && byId.size === 0) {
-    try {
-      const db = getAdminFirestore();
-      const queries: Array<Promise<QuerySnapshot>> = [];
-
-      if (uid) {
-        queries.push(
-          withFirestoreDeadline(() =>
-            db.collection(COLLECTION).where("userId", "==", uid).get()
-          )
-        );
-      }
-
-      const emailVariants = email
-        ? Array.from(
-            new Set([normalizedEmail, email.trim()].filter(Boolean) as string[])
-          )
-        : [];
-
-      for (const variant of emailVariants) {
-        queries.push(
-          withFirestoreDeadline(() =>
-            db.collection(COLLECTION).where("email", "==", variant).get()
-          )
-        );
-      }
-
-      const snapshots = await Promise.all(queries);
-      for (const snapshot of snapshots) {
-        for (const doc of snapshot.docs) {
-          const order = { id: doc.id, ...doc.data() } as Order;
-          byId.set(doc.id, order);
-          writeLocalOrder(order);
-        }
-      }
-    } catch (error) {
-      if (isFirestoreDegraded(error)) {
-        openOrdersCircuit(error, "Listing orders from local store");
-      } else {
-        throw error;
-      }
+  if (email) {
+    for (const order of await pg.listOrdersByEmail(email.trim().toLowerCase())) {
+      byId.set(order.id, order);
     }
   }
 
-  return Array.from(byId.values()).sort(
-    (a, b) =>
-      new Date(b.createdAt ?? 0).getTime() -
-      new Date(a.createdAt ?? 0).getTime()
+  return Array.from(byId.values()).sort((a, b) =>
+    String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? ""))
   );
 }

@@ -7,7 +7,7 @@ import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
 import { notifyCustomerOrderPlaced } from "@/lib/server/orderNotificationService";
 import {
   resolveCouponDiscount,
-  resolveOrderItemsFromFirestore,
+  resolveOrderItems,
 } from "@/lib/server/orderValidation";
 import { toPaise } from "@/lib/gstCalculator";
 import {
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const resolvedItems = await resolveOrderItemsFromFirestore(body.items);
+    const resolvedItems = await resolveOrderItems(body.items);
     logPayment("Order items resolved", { count: resolvedItems.length });
     const subtotal = resolvedItems.reduce(
       (sum, item) => sum + item.price * item.quantity,

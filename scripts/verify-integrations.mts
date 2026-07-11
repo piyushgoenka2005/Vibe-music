@@ -30,7 +30,7 @@ async function fetchCheck(path: string): Promise<CheckResult> {
           checks?: Record<string, string>;
           integrations?: Record<string, string>;
         };
-        detail = `${json.status ?? "unknown"} firestore=${json.checks?.firestore ?? "?"} integrations=${JSON.stringify(json.integrations ?? {})}`;
+        detail = `${json.status ?? "unknown"} database=${json.checks?.database ?? "?"} integrations=${JSON.stringify(json.integrations ?? {})}`;
       } catch {
         detail = `HTTP ${response.status} (invalid JSON)`;
       }
@@ -61,17 +61,14 @@ async function fetchCheck(path: string): Promise<CheckResult> {
 }
 
 const envChecks = [
-  "FIREBASE_PROJECT_ID",
-  "FIREBASE_CLIENT_EMAIL",
-  "FIREBASE_PRIVATE_KEY",
-  "NEXT_PUBLIC_FIREBASE_API_KEY",
+  "DATABASE_URL",
+  "AUTH_SECRET",
   "RAZORPAY_KEY_ID",
   "RAZORPAY_KEY_SECRET",
   "NEXT_PUBLIC_RAZORPAY_KEY_ID",
-  "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME",
-  "CLOUDINARY_API_KEY",
-  "CLOUDINARY_API_SECRET",
-  "RESEND_API_KEY",
+  "SMTP_HOST",
+  "SMTP_USER",
+  "SMTP_PASS",
 ].map(envOk);
 
 const routeChecks = await Promise.all([

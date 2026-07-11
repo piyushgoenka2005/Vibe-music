@@ -1,6 +1,7 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { randomUUID } from "crypto";
+import { prisma } from "@/lib/db/prisma";
 import type {
   SupportTicket,
   SupportTicketCategory,
@@ -10,26 +11,39 @@ import type {
 
 export const SUPPORT_TICKETS_COLLECTION = "supportTickets";
 
-function normalizeTicket(
-  id: string,
-  data: FirebaseFirestore.DocumentData
-): SupportTicket {
+function mapSupportTicket(row: {
+  id: string;
+  userId: string | null;
+  email: string;
+  name: string;
+  subject: string;
+  message: string;
+  category: string;
+  orderId: string | null;
+  status: string;
+  priority: string;
+  adminNote: string | null;
+  assignedTo: string | null;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt: string | null;
+}): SupportTicket {
   return {
-    id,
-    userId: data.userId ? String(data.userId) : undefined,
-    email: String(data.email ?? ""),
-    name: String(data.name ?? ""),
-    subject: String(data.subject ?? ""),
-    message: String(data.message ?? ""),
-    category: (data.category as SupportTicketCategory) ?? "other",
-    orderId: data.orderId ? String(data.orderId) : undefined,
-    status: (data.status as SupportTicketStatus) ?? "open",
-    priority: (data.priority as SupportTicketPriority) ?? "normal",
-    adminNote: data.adminNote ? String(data.adminNote) : undefined,
-    assignedTo: data.assignedTo ? String(data.assignedTo) : undefined,
-    createdAt: String(data.createdAt ?? ""),
-    updatedAt: String(data.updatedAt ?? ""),
-    resolvedAt: data.resolvedAt ? String(data.resolvedAt) : undefined,
+    id: row.id,
+    userId: row.userId ?? undefined,
+    email: row.email,
+    name: row.name,
+    subject: row.subject,
+    message: row.message,
+    category: row.category as SupportTicketCategory,
+    orderId: row.orderId ?? undefined,
+    status: row.status as SupportTicketStatus,
+    priority: row.priority as SupportTicketPriority,
+    adminNote: row.adminNote ?? undefined,
+    assignedTo: row.assignedTo ?? undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    resolvedAt: row.resolvedAt ?? undefined,
   };
 }
 
@@ -39,28 +53,45 @@ export async function createSupportTicket(
     "id" | "status" | "priority" | "createdAt" | "updatedAt"
   >
 ): Promise<SupportTicket> {
-  const db = getAdminFirestore();
-  const ref = db.collection(SUPPORT_TICKETS_COLLECTION).doc();
   const now = new Date().toISOString();
   const record: SupportTicket = {
-    id: ref.id,
+    id: randomUUID(),
     ...input,
+    email: input.email.trim().toLowerCase(),
     status: "open",
     priority: "normal",
     createdAt: now,
     updatedAt: now,
   };
-  await ref.set(record);
+
+  await prisma.supportTicket.create({
+    data: {
+      id: record.id,
+      userId: record.userId ?? null,
+      email: record.email,
+      name: record.name,
+      subject: record.subject,
+      message: record.message,
+      category: record.category,
+      orderId: record.orderId ?? null,
+      status: record.status,
+      priority: record.priority,
+      adminNote: record.adminNote ?? null,
+      assignedTo: record.assignedTo ?? null,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+      resolvedAt: record.resolvedAt ?? null,
+    },
+  });
+
   return record;
 }
 
 export async function getSupportTicketById(
   id: string
 ): Promise<SupportTicket | null> {
-  const db = getAdminFirestore();
-  const doc = await db.collection(SUPPORT_TICKETS_COLLECTION).doc(id).get();
-  if (!doc.exists) return null;
-  return normalizeTicket(doc.id, doc.data()!);
+  const row = await prisma.supportTicket.findUnique({ where: { id } });
+  return row ? mapSupportTicket(row) : null;
 }
 
 export async function listSupportTickets(options: {
@@ -89,23 +120,17 @@ export async function listSupportTickets(options: {
       .slice(0, limit);
   }
 
-  const db = getAdminFirestore();
-  let query: FirebaseFirestore.Query = db.collection(SUPPORT_TICKETS_COLLECTION);
+  const rows = await prisma.supportTicket.findMany({
+    where: {
+      ...(options.status ? { status: options.status } : {}),
+      ...(options.userId ? { userId: options.userId } : {}),
+      ...(options.email ? { email: options.email.toLowerCase() } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
 
-  if (options.status) {
-    query = query.where("status", "==", options.status);
-  }
-  if (options.userId) {
-    query = query.where("userId", "==", options.userId);
-  }
-  if (options.email) {
-    query = query.where("email", "==", options.email.toLowerCase());
-  }
-
-  const snap = await query.limit(limit).get();
-  return snap.docs
-    .map((doc) => normalizeTicket(doc.id, doc.data()))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return rows.map(mapSupportTicket);
 }
 
 export async function updateSupportTicket(
@@ -121,15 +146,23 @@ export async function updateSupportTicket(
     >
   >
 ): Promise<SupportTicket> {
-  const db = getAdminFirestore();
   const now = new Date().toISOString();
-  const update: Record<string, unknown> = { ...patch, updatedAt: now };
+  const resolvedAt =
+    patch.resolvedAt ??
+    (patch.status === "resolved" || patch.status === "closed" ? now : undefined);
 
-  if (patch.status === "resolved" || patch.status === "closed") {
-    update.resolvedAt = now;
-  }
+  await prisma.supportTicket.update({
+    where: { id },
+    data: {
+      ...(patch.status !== undefined ? { status: patch.status } : {}),
+      ...(patch.priority !== undefined ? { priority: patch.priority } : {}),
+      ...(patch.adminNote !== undefined ? { adminNote: patch.adminNote } : {}),
+      ...(patch.assignedTo !== undefined ? { assignedTo: patch.assignedTo } : {}),
+      ...(resolvedAt !== undefined ? { resolvedAt } : {}),
+      updatedAt: now,
+    },
+  });
 
-  await db.collection(SUPPORT_TICKETS_COLLECTION).doc(id).update(update);
   const ticket = await getSupportTicketById(id);
   if (!ticket) throw new Error("Ticket not found after update");
   return ticket;

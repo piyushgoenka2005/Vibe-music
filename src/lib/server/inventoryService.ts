@@ -7,6 +7,7 @@ import {
   restoreStockForCancelledOrder,
   setProductStock,
 } from "@/lib/server/inventoryRepository";
+import { sendLowStockAdminNotification } from "@/lib/server/adminNotificationEmailService";
 import { getAllProducts, getProductById } from "@/services/catalogService";
 import {
   getAvailableStock as calcAvailable,
@@ -68,11 +69,26 @@ export async function adjustStock(
   if (!product) throw new Error("Product not found");
 
   const previousQuantity = product.stock;
+  const reservedStock = product.reservedStock ?? 0;
+  const threshold = product.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD;
+  const wasLowStock = isLowStock(previousQuantity, reservedStock, threshold);
+
   const log = await setProductStock(productId, newQuantity, {
     action: "manual_adjustment",
     adminId: adjustedBy,
     note: reason,
   });
+
+  const isNowLowStock = isLowStock(newQuantity, reservedStock, threshold);
+  if (!wasLowStock && isNowLowStock) {
+    void sendLowStockAdminNotification({
+      productId,
+      productName: product.name,
+      sku: product.sku,
+      availableQuantity: calcAvailable(newQuantity, reservedStock),
+      lowStockThreshold: threshold,
+    }).catch(() => undefined);
+  }
 
   return {
     id: log.id,

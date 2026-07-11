@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { uploadReviewImages } from "@/services/review.service";
 import { MAX_REVIEW_IMAGES } from "@/lib/validations/review";
-import { buildCloudinaryTransformUrl, CLOUDINARY_PRESETS } from "@/lib/cloudinary-url";
+import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
 
 interface ReviewImageUploadProps {
   productSlug: string;
@@ -57,7 +57,7 @@ export default function ReviewImageUpload({
         {images.map((url, index) => (
           <div key={`${url}-${index}`} className="pdp-review-upload__preview">
             <Image
-              src={buildCloudinaryTransformUrl(url, CLOUDINARY_PRESETS.reviewThumbnail)}
+              src={buildMediaTransformUrl(url, MEDIA_PRESETS.reviewThumbnail)}
               alt={`Upload preview ${index + 1}`}
               width={72}
               height={72}

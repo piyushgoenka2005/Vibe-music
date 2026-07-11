@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,12 +17,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
+import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
 import { ROUTES } from "@/lib/routes";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/authStore";
 
-export default function LoginForm() {
+interface LoginFormProps {
+  googleAuthEnabled?: boolean;
+}
+
+export default function LoginForm({ googleAuthEnabled = false }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || ROUTES.account;
@@ -38,9 +42,16 @@ export default function LoginForm() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const authError = searchParams.get("error");
+    if (authError) {
+      setError(getAuthErrorMessage(authError, "Sign in failed."));
+    }
+  }, [searchParams]);
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: "", password: "", rememberMe: false },
   });
 
   async function onSubmit(values: LoginFormValues) {
@@ -49,17 +60,22 @@ export default function LoginForm() {
       await signIn(values);
       router.push(redirectTo);
     } catch (err) {
-      setError(getFirebaseErrorMessage(err, "Sign in failed."));
+      setError(getAuthErrorMessage(err, "Sign in failed."));
     }
   }
 
   async function handleGoogleSignIn() {
+    if (!googleAuthEnabled) {
+      setError(
+        "Google sign-in is not configured. Add AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET to .env.local."
+      );
+      return;
+    }
     setError(null);
     try {
-      await signInWithGoogle();
-      router.push(redirectTo);
+      await signInWithGoogle(redirectTo);
     } catch (err) {
-      setError(getFirebaseErrorMessage(err, "Google sign in failed."));
+      setError(getAuthErrorMessage(err, "Google sign in failed."));
     }
   }
 
@@ -71,9 +87,12 @@ export default function LoginForm() {
         </Alert>
       ) : null}
 
-      <GoogleSignInButton onClick={handleGoogleSignIn} disabled={isLoading} />
-
-      <AuthDivider />
+      {googleAuthEnabled ? (
+        <>
+          <GoogleSignInButton onClick={handleGoogleSignIn} disabled={isLoading} />
+          <AuthDivider />
+        </>
+      ) : null}
 
       <Form {...form}>
         <form
@@ -120,6 +139,24 @@ export default function LoginForm() {
                   />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="rememberMe"
+            render={({ field }) => (
+              <FormItem className="auth-shell__field">
+                <label className="auth-shell__field-row">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(field.value)}
+                    onChange={(event) => field.onChange(event.target.checked)}
+                    disabled={isLoading}
+                  />
+                  <span>Remember me</span>
+                </label>
               </FormItem>
             )}
           />

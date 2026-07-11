@@ -1,6 +1,8 @@
 import "server-only";
 
 import { BRAND } from "@/lib/brand";
+import { formatMailboxFrom } from "@/lib/server/email/mailboxes";
+import { sendMail } from "@/lib/server/email/smtp";
 
 function buildWelcomeHtml(firstName?: string): string {
   const greeting = firstName?.trim() ? `Hi ${firstName.trim()},` : "Hi there,";
@@ -12,7 +14,7 @@ function buildWelcomeHtml(firstName?: string): string {
       <p>${greeting}</p>
       <p>Thanks for subscribing to <strong>${BRAND.name}</strong>. We'll email you when new products land, popular gear is back in stock, and exclusive offers go live.</p>
       <p><a href="${shopUrl}" style="display:inline-block;background:#1a3a8f;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px">Shop latest gear</a></p>
-      <p style="font-size:13px;color:#666">You can unsubscribe anytime by replying to any update email.</p>
+      <p style="font-size:13px;color:#666">You can unsubscribe anytime by replying to this email.</p>
     </div>
   `;
 }
@@ -21,45 +23,13 @@ export async function sendNewsletterWelcomeEmail(input: {
   email: string;
   firstName?: string;
 }): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from =
-    process.env.NEWSLETTER_EMAIL_FROM?.trim() ||
-    process.env.ORDER_EMAIL_FROM?.trim() ||
-    `${BRAND.name} <updates@${BRAND.domain}>`;
+  const result = await sendMail({
+    from: formatMailboxFrom("info"),
+    to: input.email,
+    replyTo: formatMailboxFrom("info"),
+    subject: `You're subscribed to ${BRAND.name} updates`,
+    html: buildWelcomeHtml(input.firstName),
+  });
 
-  if (!apiKey) {
-    if (process.env.NODE_ENV !== "production") {
-      console.info(
-        `[newsletter-email] Skipped (no RESEND_API_KEY). Welcome → ${input.email}`
-      );
-    }
-    return false;
-  }
-
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to: [input.email],
-        subject: `You're subscribed to ${BRAND.name} updates`,
-        html: buildWelcomeHtml(input.firstName),
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      console.error("[newsletter-email] Resend error:", response.status, body);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("[newsletter-email] Failed to send:", error);
-    return false;
-  }
+  return result.ok;
 }

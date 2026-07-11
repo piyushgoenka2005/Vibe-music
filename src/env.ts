@@ -2,55 +2,61 @@ import { z } from "zod";
 
 const publicEnvSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
-  NEXT_PUBLIC_FIREBASE_API_KEY: z.string().min(1).optional(),
-  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z.string().min(1).optional(),
-  NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().min(1).optional(),
-  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().min(1).optional(),
-  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().min(1).optional(),
-  NEXT_PUBLIC_FIREBASE_APP_ID: z.string().min(1).optional(),
-  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
   NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().min(1).optional(),
 });
 
 const serverEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  FIREBASE_PROJECT_ID: z.string().min(1).optional(),
-  FIREBASE_CLIENT_EMAIL: z.string().email().optional(),
-  FIREBASE_PRIVATE_KEY: z.string().min(1).optional(),
-  CLOUDINARY_API_KEY: z.string().min(1).optional(),
-  CLOUDINARY_API_SECRET: z.string().min(1).optional(),
+  AUTH_SECRET: z.string().min(1).optional(),
+  AUTH_URL: z.string().url().optional(),
+  AUTH_GOOGLE_ID: z.string().min(1).optional(),
+  AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+  CDN_STORAGE_ROOT: z.string().min(1).optional(),
+  CDN_PUBLIC_BASE_URL: z.string().url().optional(),
   RAZORPAY_KEY_ID: z.string().min(1).optional(),
   RAZORPAY_KEY_SECRET: z.string().min(1).optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(1).optional(),
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
-  RESEND_API_KEY: z.string().min(1).optional(),
-  ORDER_EMAIL_FROM: z.string().email().optional(),
+  SMTP_HOST: z.string().min(1).optional(),
+  SMTP_PORT: z.string().min(1).optional(),
+  SMTP_USER: z.string().min(1).optional(),
+  SMTP_PASS: z.string().min(1).optional(),
+  SMTP_SECURE: z.enum(["true", "false"]).optional(),
+  SMTP_TLS_REJECT_UNAUTHORIZED: z.enum(["true", "false"]).optional(),
+  SMTP_ADMIN_TO: z.string().email().optional(),
+  ADMIN_NOTIFICATION_EMAIL: z.string().email().optional(),
   GUEST_ORDER_ACCESS_SECRET: z.string().min(1).optional(),
   ALLOW_DEMO_PAYMENTS: z.enum(["true", "false"]).optional(),
+  DATABASE_URL: z.string().min(1).optional(),
 });
 
 const productionRequiredSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url(),
-  NEXT_PUBLIC_FIREBASE_API_KEY: z.string().min(1),
-  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z.string().min(1),
-  NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().min(1),
-  NEXT_PUBLIC_FIREBASE_APP_ID: z.string().min(1),
+  AUTH_SECRET: z.string().min(32),
+  DATABASE_URL: z.string().min(1),
   NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().min(1),
-  FIREBASE_PROJECT_ID: z.string().min(1),
-  FIREBASE_CLIENT_EMAIL: z.string().email(),
-  FIREBASE_PRIVATE_KEY: z.string().min(1),
   RAZORPAY_KEY_ID: z.string().min(1),
   RAZORPAY_KEY_SECRET: z.string().min(1),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(1),
   GUEST_ORDER_ACCESS_SECRET: z.string().min(32),
-  RESEND_API_KEY: z.string().min(1),
+  SMTP_HOST: z.string().min(1),
+  SMTP_USER: z.string().min(1),
+  SMTP_PASS: z.string().min(1),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
 
 let validated = false;
+
+/** Treat blank env values as unset — `.env.local` often has `KEY=` placeholders. */
+function envValue(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
 
 function formatZodErrors(error: z.ZodError): string {
   return error.issues
@@ -62,18 +68,8 @@ export function validateEnv(): void {
   if (validated) return;
 
   const publicResult = publicEnvSchema.safeParse({
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:
-      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:
-      process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME:
-      process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-    NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+    NEXT_PUBLIC_SITE_URL: envValue(process.env.NEXT_PUBLIC_SITE_URL),
+    NEXT_PUBLIC_RAZORPAY_KEY_ID: envValue(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID),
   });
 
   if (!publicResult.success) {
@@ -82,20 +78,35 @@ export function validateEnv(): void {
 
   const serverResult = serverEnvSchema.safeParse({
     NODE_ENV: process.env.NODE_ENV,
-    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
-    FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
-    FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
-    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
-    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
-    RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
-    RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
-    RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
-    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
-    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
-    RESEND_API_KEY: process.env.RESEND_API_KEY,
-    ORDER_EMAIL_FROM: process.env.ORDER_EMAIL_FROM,
-    GUEST_ORDER_ACCESS_SECRET: process.env.GUEST_ORDER_ACCESS_SECRET,
-    ALLOW_DEMO_PAYMENTS: process.env.ALLOW_DEMO_PAYMENTS,
+    AUTH_SECRET: envValue(process.env.AUTH_SECRET),
+    AUTH_URL: envValue(process.env.AUTH_URL),
+    AUTH_GOOGLE_ID: envValue(process.env.AUTH_GOOGLE_ID),
+    AUTH_GOOGLE_SECRET: envValue(process.env.AUTH_GOOGLE_SECRET),
+    GOOGLE_CLIENT_ID: envValue(process.env.GOOGLE_CLIENT_ID),
+    GOOGLE_CLIENT_SECRET: envValue(process.env.GOOGLE_CLIENT_SECRET),
+    CDN_STORAGE_ROOT: envValue(process.env.CDN_STORAGE_ROOT),
+    CDN_PUBLIC_BASE_URL: envValue(process.env.CDN_PUBLIC_BASE_URL),
+    RAZORPAY_KEY_ID: envValue(process.env.RAZORPAY_KEY_ID),
+    RAZORPAY_KEY_SECRET: envValue(process.env.RAZORPAY_KEY_SECRET),
+    RAZORPAY_WEBHOOK_SECRET: envValue(process.env.RAZORPAY_WEBHOOK_SECRET),
+    UPSTASH_REDIS_REST_URL: envValue(process.env.UPSTASH_REDIS_REST_URL),
+    UPSTASH_REDIS_REST_TOKEN: envValue(process.env.UPSTASH_REDIS_REST_TOKEN),
+    SMTP_HOST: envValue(process.env.SMTP_HOST),
+    SMTP_PORT: envValue(process.env.SMTP_PORT),
+    SMTP_USER: envValue(process.env.SMTP_USER),
+    SMTP_PASS: envValue(process.env.SMTP_PASS),
+    SMTP_SECURE: envValue(process.env.SMTP_SECURE) as "true" | "false" | undefined,
+    SMTP_TLS_REJECT_UNAUTHORIZED: envValue(
+      process.env.SMTP_TLS_REJECT_UNAUTHORIZED
+    ) as "true" | "false" | undefined,
+    SMTP_ADMIN_TO: envValue(process.env.SMTP_ADMIN_TO),
+    ADMIN_NOTIFICATION_EMAIL: envValue(process.env.ADMIN_NOTIFICATION_EMAIL),
+    GUEST_ORDER_ACCESS_SECRET: envValue(process.env.GUEST_ORDER_ACCESS_SECRET),
+    ALLOW_DEMO_PAYMENTS: envValue(process.env.ALLOW_DEMO_PAYMENTS) as
+      | "true"
+      | "false"
+      | undefined,
+    DATABASE_URL: envValue(process.env.DATABASE_URL),
   });
 
   if (!serverResult.success) {
@@ -104,20 +115,17 @@ export function validateEnv(): void {
 
   if (serverResult.data.NODE_ENV === "production") {
     const productionResult = productionRequiredSchema.safeParse({
-      NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-      NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-      NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
-      FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
-      FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
-      RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
-      RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
-      RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
-      GUEST_ORDER_ACCESS_SECRET: process.env.GUEST_ORDER_ACCESS_SECRET,
-      RESEND_API_KEY: process.env.RESEND_API_KEY,
+      NEXT_PUBLIC_SITE_URL: envValue(process.env.NEXT_PUBLIC_SITE_URL),
+      AUTH_SECRET: envValue(process.env.AUTH_SECRET),
+      DATABASE_URL: envValue(process.env.DATABASE_URL),
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: envValue(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID),
+      RAZORPAY_KEY_ID: envValue(process.env.RAZORPAY_KEY_ID),
+      RAZORPAY_KEY_SECRET: envValue(process.env.RAZORPAY_KEY_SECRET),
+      RAZORPAY_WEBHOOK_SECRET: envValue(process.env.RAZORPAY_WEBHOOK_SECRET),
+      GUEST_ORDER_ACCESS_SECRET: envValue(process.env.GUEST_ORDER_ACCESS_SECRET),
+      SMTP_HOST: envValue(process.env.SMTP_HOST),
+      SMTP_USER: envValue(process.env.SMTP_USER),
+      SMTP_PASS: envValue(process.env.SMTP_PASS),
     });
 
     if (!productionResult.success) {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
-import { deleteImageFromCloudinary } from "@/lib/cloudinary";
+import { deleteImageFromCdn, isCdnUrl } from "@/lib/server/cdnStorage";
 
 interface DeleteImagesPayload {
   urls?: string[];
@@ -25,7 +25,10 @@ export async function POST(request: Request) {
     const results = await Promise.all(
       urls.map(async (url) => {
         try {
-          const ok = await deleteImageFromCloudinary(url);
+          if (!isCdnUrl(url)) {
+            return { url, deleted: false, skipped: true };
+          }
+          const ok = await deleteImageFromCdn(url);
           return { url, deleted: ok };
         } catch {
           return { url, deleted: false };
@@ -42,4 +45,3 @@ export async function POST(request: Request) {
     return adminErrorResponse(error);
   }
 }
-

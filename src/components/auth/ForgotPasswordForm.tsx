@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
+import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
 import { ROUTES } from "@/lib/routes";
 import {
   forgotPasswordSchema,
@@ -40,7 +40,7 @@ export default function ForgotPasswordForm() {
       await resetPassword(values.email);
       setSentEmail(values.email);
     } catch (err) {
-      setError(getFirebaseErrorMessage(err, "Password reset failed."));
+      setError(getAuthErrorMessage(err, "Password reset failed."));
     }
   }
 

@@ -1,13 +1,6 @@
 import "server-only";
 
-import { isFirebaseAdminConfigured } from "@/lib/firebase/admin";
-import {
-  isGlobalFirestoreCircuitOpen,
-  tryFirestoreFast,
-} from "@/lib/server/firestoreErrors";
-import {
-  fetchBrands,
-} from "@/lib/server/firestoreCatalogRepository";
+import { fetchBrands } from "@/lib/server/firestoreCatalogRepository";
 import { getCachedActiveProducts } from "@/lib/server/catalogSnapshotCache";
 import { listCategories } from "@/lib/server/categoryRepository";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
@@ -349,51 +342,42 @@ export async function getPublicHomepageData(
   const staticFallback = (): Promise<PublicHomepageData> =>
     getHomepageStaticFallbacks(at);
 
-  if (!isFirebaseAdminConfigured() || isGlobalFirestoreCircuitOpen()) {
+  try {
+    const [sections, products, allSectionItems] = await Promise.all([
+      listActiveSections(),
+      getCachedActiveProducts(),
+      listAllSectionItems(),
+    ]);
+
+    const hasFeaturedCategories = sections.some(
+      (section) => section.sectionKey === "featured_categories"
+    );
+
+    const orderedSections = hasFeaturedCategories
+      ? sections
+      : [...sections, buildFeaturedCategoriesFallbackSection(at)].sort(
+          (a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title)
+        );
+
+    const resolved = (
+      await Promise.all(
+        orderedSections.map((section) =>
+          resolveSection(section, products, at, allSectionItems)
+        )
+      )
+    ).filter((section): section is ResolvedHomepageSection => section !== null);
+
+    if (resolved.length === 0) {
+      return staticFallback();
+    }
+
+    return {
+      sections: resolved,
+      fetchedAt: at.toISOString(),
+    };
+  } catch {
     return staticFallback();
   }
-
-  return tryFirestoreFast(
-    async () => {
-      const [sections, products, allSectionItems] = await Promise.all([
-        listActiveSections(),
-        getCachedActiveProducts(),
-        listAllSectionItems(),
-      ]);
-
-      const hasFeaturedCategories = sections.some(
-        (section) => section.sectionKey === "featured_categories"
-      );
-
-      const orderedSections = hasFeaturedCategories
-        ? sections
-        : [...sections, buildFeaturedCategoriesFallbackSection(at)].sort(
-            (a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title)
-          );
-
-      const resolved = (
-        await Promise.all(
-          orderedSections.map((section) =>
-            resolveSection(section, products, at, allSectionItems)
-          )
-        )
-      ).filter((section): section is ResolvedHomepageSection => section !== null);
-
-      if (resolved.length === 0) {
-        return staticFallback();
-      }
-
-      return {
-        sections: resolved,
-        fetchedAt: at.toISOString(),
-      };
-    },
-    {
-      domain: "homepage",
-      context: "Firestore unavailable — skipping dynamic homepage sections",
-      fallback: staticFallback,
-    }
-  );
 }
 
 export {

@@ -3,9 +3,9 @@ import AdmZip from "adm-zip";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { csvRowToImportRow, parseCsv } from "@/lib/csv";
 import {
-  categoryUploadFolder,
-  uploadBufferToCloudinary,
-} from "@/lib/cloudinary";
+  productUploadFolder,
+  uploadBufferToCdn,
+} from "@/lib/server/cdnStorage";
 import {
   bulkImportProducts,
   previewBulkImport,
@@ -68,8 +68,9 @@ export async function POST(request: Request) {
           const buffer = zipMap.get(ref.toLowerCase());
           if (buffer) {
             const categorySlug = row.category.toLowerCase().replace(/\s+/g, "-");
-            const url = await uploadBufferToCloudinary(buffer, ref, {
-              folder: categoryUploadFolder(categorySlug),
+            const productSlug = row.name.toLowerCase().replace(/\s+/g, "-");
+            const url = await uploadBufferToCdn(buffer, ref, {
+              folder: productUploadFolder(categorySlug, productSlug),
             });
             resolvedImages.push(url);
           }

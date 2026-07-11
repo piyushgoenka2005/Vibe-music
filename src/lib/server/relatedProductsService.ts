@@ -1,12 +1,7 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import {
-  isFirestoreUnavailableError,
-  logFirestoreWarning,
-  markFirestoreUnavailable,
-  tryFirestoreFast,
-} from "@/lib/server/firestoreErrors";
+import { prisma } from "@/lib/db/prisma";
+import { asJsonValue } from "@/lib/server/prisma/mappers";
 import {
   fetchProductsByBrandSlug,
   fetchProductsByCategory,
@@ -24,8 +19,6 @@ import {
   type ResolvedRelatedProducts,
   type UpsertProductRelatedListInput,
 } from "@/types/relatedProducts";
-
-const COLLECTION = "product_relations";
 
 const CACHE_TTL_MS = 45_000;
 
@@ -45,23 +38,29 @@ export function invalidateRelatedProductsCache(): void {
   relationsCacheAt = 0;
 }
 
-function normalizeRelation(
-  id: string,
-  data: FirebaseFirestore.DocumentData
-): ProductRelatedList {
-  const relatedProductIds = Array.isArray(data.relatedProductIds)
-    ? (data.relatedProductIds as string[]).filter(Boolean).slice(0, MAX_RELATED_PRODUCTS)
+function mapRelation(row: {
+  id: string;
+  productId: string;
+  productName: string | null;
+  productSlug: string | null;
+  relatedProductIds: unknown;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}): ProductRelatedList {
+  const relatedProductIds = Array.isArray(row.relatedProductIds)
+    ? (row.relatedProductIds as string[]).filter(Boolean).slice(0, MAX_RELATED_PRODUCTS)
     : [];
 
   return {
-    id,
-    productId: String(data.productId ?? id),
-    productName: data.productName ? String(data.productName) : undefined,
-    productSlug: data.productSlug ? String(data.productSlug) : undefined,
+    id: row.id,
+    productId: row.productId,
+    productName: row.productName ?? undefined,
+    productSlug: row.productSlug ?? undefined,
     relatedProductIds,
-    isActive: data.isActive !== false,
-    createdAt: String(data.createdAt ?? ""),
-    updatedAt: String(data.updatedAt ?? ""),
+    isActive: row.isActive,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
 }
 
@@ -76,20 +75,8 @@ export async function getRelatedListByProductId(
     return relationsCache.get(productId) ?? null;
   }
 
-  const relation = await tryFirestoreFast(
-    async () => {
-      const doc = await getAdminFirestore()
-        .collection(COLLECTION)
-        .doc(productId)
-        .get();
-      return doc.exists ? normalizeRelation(doc.id, doc.data()!) : null;
-    },
-    {
-      domain: "related-products",
-      context: `Unable to fetch related products for ${productId}`,
-      fallback: () => null,
-    }
-  );
+  const row = await prisma.productRelation.findUnique({ where: { productId } });
+  const relation = row ? mapRelation(row) : null;
 
   if (!relationsCache || !isFresh(relationsCacheAt)) {
     relationsCache = new Map();
@@ -104,9 +91,7 @@ export async function upsertProductRelatedList(
   productId: string,
   input: UpsertProductRelatedListInput
 ): Promise<ProductRelatedList> {
-  const db = getAdminFirestore();
-  const ref = db.collection(COLLECTION).doc(productId);
-  const existing = await ref.get();
+  const existing = await prisma.productRelation.findUnique({ where: { productId } });
   const timestamp = now();
 
   const relation: ProductRelatedList = {
@@ -118,13 +103,31 @@ export async function upsertProductRelatedList(
       .filter(Boolean)
       .slice(0, MAX_RELATED_PRODUCTS),
     isActive: input.isActive ?? true,
-    createdAt: existing.exists
-      ? String(existing.data()?.createdAt ?? timestamp)
-      : timestamp,
+    createdAt: existing?.createdAt ?? timestamp,
     updatedAt: timestamp,
   };
 
-  await ref.set(relation);
+  await prisma.productRelation.upsert({
+    where: { productId },
+    create: {
+      id: productId,
+      productId,
+      productName: relation.productName ?? null,
+      productSlug: relation.productSlug ?? null,
+      relatedProductIds: asJsonValue(relation.relatedProductIds),
+      isActive: relation.isActive,
+      createdAt: relation.createdAt,
+      updatedAt: relation.updatedAt,
+    },
+    update: {
+      productName: relation.productName ?? null,
+      productSlug: relation.productSlug ?? null,
+      relatedProductIds: asJsonValue(relation.relatedProductIds),
+      isActive: relation.isActive,
+      updatedAt: relation.updatedAt,
+    },
+  });
+
   invalidateRelatedProductsCache();
   return relation;
 }
@@ -132,7 +135,7 @@ export async function upsertProductRelatedList(
 export async function deleteProductRelatedList(
   productId: string
 ): Promise<void> {
-  await getAdminFirestore().collection(COLLECTION).doc(productId).delete();
+  await prisma.productRelation.delete({ where: { productId } });
   invalidateRelatedProductsCache();
 }
 
@@ -163,25 +166,12 @@ async function seedRelationFromProductDetail(
   const fromDetail = relationFromProductDetail(product);
   if (!fromDetail) return null;
 
-  try {
-    return await upsertProductRelatedList(productId, {
-      relatedProductIds: fromDetail.relatedProductIds,
-      productName: product.name,
-      productSlug: product.slug,
-      isActive: true,
-    });
-  } catch (error) {
-    if (isFirestoreUnavailableError(error)) {
-      markFirestoreUnavailable(error);
-      logFirestoreWarning(
-        "related-products",
-        error,
-        `Unable to seed related products for ${productId} — using product detail fallback`
-      );
-      return fromDetail;
-    }
-    throw error;
-  }
+  return upsertProductRelatedList(productId, {
+    relatedProductIds: fromDetail.relatedProductIds,
+    productName: product.name,
+    productSlug: product.slug,
+    isActive: true,
+  });
 }
 
 function appendUniqueProducts(
@@ -233,9 +223,7 @@ export async function resolveRelatedProductsForProduct(
   }
 
   if (resolved.length < limit && product.categorySlug) {
-    const categoryProducts = await fetchProductsByCategory(
-      product.categorySlug
-    );
+    const categoryProducts = await fetchProductsByCategory(product.categorySlug);
     resolved = appendUniqueProducts(
       resolved,
       categoryProducts.map(toProduct),
@@ -245,13 +233,11 @@ export async function resolveRelatedProductsForProduct(
   }
 
   if (resolved.length < limit && product.brandSlug) {
-    const brandProducts = await fetchProductsByBrandSlug(product.brandSlug, {
-      excludeProductId: product.id,
-      limit: limit - resolved.length + 4,
-    });
+    const brandProducts = await fetchProductsByBrandSlug(product.brandSlug);
+    const filtered = brandProducts.filter((candidate) => candidate.id !== product.id);
     resolved = appendUniqueProducts(
       resolved,
-      brandProducts.map(toProduct),
+      filtered.map(toProduct),
       seenIds,
       limit
     );

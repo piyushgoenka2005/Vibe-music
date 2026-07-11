@@ -1,15 +1,6 @@
 import Razorpay from "razorpay";
 import { cache } from "react";
-import { getAdminFirestore, isFirebaseAdminConfigured } from "@/lib/firebase/admin";
 import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
-import {
-  isFirestoreDegraded,
-  isFirestoreUnavailableError,
-  isFirestoreFastFailError,
-  isGlobalFirestoreCircuitOpen,
-  logFirestoreWarning,
-  withFirestoreDeadline,
-} from "@/lib/server/firestoreErrors";
 import {
   verifyRazorpayPaymentSignature,
 } from "@/lib/razorpay/signature";
@@ -44,6 +35,7 @@ import {
   removeOrder,
   updateOrder,
 } from "@/lib/server/orderRepository";
+import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import { isPlacedOrder } from "@/lib/server/orderAccess";
 import { generateOrderTrackingToken } from "@/lib/server/orderTrackingToken";
 import type { OrderInventoryLine } from "@/types/inventory";
@@ -228,7 +220,6 @@ export async function createOrder(
   logPayment("Starting create order", {
     paymentMethod: payload.paymentMethod,
     itemCount: payload.items.length,
-    firebaseConfigured: isFirebaseAdminConfigured(),
   });
 
   logPayment("Allocating order ID");
@@ -276,17 +267,13 @@ export async function createOrder(
       }
     }
 
-    logPayment("Firestore write started", { orderId });
+    logPayment("Persisting order", { orderId });
     await persistOrder(order);
     persisted = true;
-    logPayment("Firestore write completed", { orderId });
+    logPayment("Order persisted", { orderId });
     void notifyAdminNewOrder(order);
 
-    const skipInventory = isGlobalFirestoreCircuitOpen();
-
     const reserveInventory = async (): Promise<void> => {
-      if (skipInventory) return;
-
       try {
         if (payload.paymentMethod === "cod") {
           logPayment("Inventory reservation started (COD)", { orderId });
@@ -304,13 +291,6 @@ export async function createOrder(
           step: "backgroundInventory",
           paymentMethod: payload.paymentMethod,
         });
-        if (isFirestoreDegraded(inventoryError)) {
-          logFirestoreWarning(
-            "orders",
-            inventoryError,
-            "Skipping inventory reservation — Firestore quota exceeded"
-          );
-        }
         await updateOrder(orderId, { inventoryStatus: "none" }).catch(() => undefined);
       }
     };
@@ -381,8 +361,7 @@ export async function verifyAndCompletePayment(
     return result.order;
   }
 
-  const db = getAdminFirestore();
-  await db.collection("orders").doc(payload.orderId).update({
+  await updateOrder(payload.orderId, {
     razorpaySignature: payload.razorpaySignature,
     updatedAt: new Date().toISOString(),
   });
@@ -397,44 +376,28 @@ export async function releaseOrderReservation(
   orderId: string,
   email?: string
 ): Promise<void> {
-  if (isGlobalFirestoreCircuitOpen()) {
+  const order = await fetchOrderById(orderId);
+  if (!order) {
     return;
   }
 
-  try {
-    const order = await fetchOrderById(orderId);
-    if (!order) {
+  if (email) {
+    const normalized = email.trim().toLowerCase();
+    if (order.email !== normalized) {
       return;
     }
-
-    if (email) {
-      const normalized = email.trim().toLowerCase();
-      if (order.email !== normalized) {
-        return;
-      }
-    }
-
-    if (order.inventoryStatus !== "reserved") {
-      return;
-    }
-
-    if (order.paymentStatus === "paid") {
-      return;
-    }
-
-    const inventoryLines = toInventoryLines(order.items);
-    await releaseReservedStockForOrder(orderId, inventoryLines);
-  } catch (error) {
-    if (isFirestoreDegraded(error)) {
-      logFirestoreWarning(
-        "orders",
-        error,
-        "Skipping reservation release — Firestore unavailable"
-      );
-      return;
-    }
-    throw error;
   }
+
+  if (order.inventoryStatus !== "reserved") {
+    return;
+  }
+
+  if (order.paymentStatus === "paid") {
+    return;
+  }
+
+  const inventoryLines = toInventoryLines(order.items);
+  await releaseReservedStockForOrder(orderId, inventoryLines);
 }
 
 export const getOrderById = cache(async (orderId: string): Promise<Order | null> => {
@@ -458,55 +421,7 @@ export async function linkGuestOrdersToUser(
   userId: string,
   email: string
 ): Promise<number> {
-  if (isGlobalFirestoreCircuitOpen()) {
-    return 0;
-  }
-
-  try {
-    const db = getAdminFirestore();
-    const normalizedEmail = email.trim().toLowerCase();
-    const snapshot = await withFirestoreDeadline(() =>
-      db.collection("orders").where("email", "==", normalizedEmail).get()
-    );
-
-    if (snapshot.empty) return 0;
-
-    const batch = db.batch();
-    let linked = 0;
-    const timestamp = new Date().toISOString();
-
-    for (const doc of snapshot.docs) {
-      const data = doc.data();
-      if (!data.userId) {
-        batch.update(doc.ref, {
-          userId,
-          isGuestOrder: false,
-          updatedAt: timestamp,
-        });
-        linked += 1;
-      }
-    }
-
-    if (linked > 0) {
-      await batch.commit();
-    }
-
-    return linked;
-  } catch (error) {
-    if (
-      isFirestoreUnavailableError(error) ||
-      isFirestoreFastFailError(error)
-    ) {
-      logFirestoreWarning(
-        "orders",
-        error,
-        "Unable to link guest orders — skipping"
-      );
-      return 0;
-    }
-
-    throw error;
-  }
+  return pgOrder.linkGuestOrdersToUser(userId, email);
 }
 
 export type { PaymentMethod, PaymentStatus };

@@ -1,14 +1,10 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import {
-  tryFirestoreFast,
-} from "@/lib/server/firestoreErrors";
+import { prisma } from "@/lib/db/prisma";
+import { invalidateCatalogCache } from "@/lib/server/firestoreCatalogRepository";
+import * as pgContent from "@/lib/server/prisma/contentRepository";
+import { prismaToReview } from "@/lib/server/prisma/mappers";
 import type { ProductReviewStats } from "@/types/review";
-
-const STATS_COLLECTION = "product_review_stats";
-const REVIEWS_COLLECTION = "reviews";
-const PRODUCTS_COLLECTION = "products";
 
 function emptyDistribution(): ProductReviewStats["distribution"] {
   return { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 };
@@ -68,95 +64,56 @@ export function buildStatsFromReviews(
   };
 }
 
-async function getProductReviewStatsFromFirestore(
-  productId: string
-): Promise<ProductReviewStats> {
-  const db = getAdminFirestore();
-  const doc = await db.collection(STATS_COLLECTION).doc(productId).get();
-  if (doc.exists) {
-    const data = doc.data()!;
-    const stats: ProductReviewStats = {
-      productId,
-      totalReviews: Number(data.totalReviews ?? 0),
-      averageRating: Number(data.averageRating ?? 0),
-      distribution: {
-        "1": Number(data.distribution?.["1"] ?? 0),
-        "2": Number(data.distribution?.["2"] ?? 0),
-        "3": Number(data.distribution?.["3"] ?? 0),
-        "4": Number(data.distribution?.["4"] ?? 0),
-        "5": Number(data.distribution?.["5"] ?? 0),
-      },
-      verifiedCount: Number(data.verifiedCount ?? 0),
-      withImagesCount: Number(data.withImagesCount ?? 0),
-      lastReviewAt: data.lastReviewAt ? String(data.lastReviewAt) : null,
-      updatedAt: String(data.updatedAt ?? ""),
-    };
-
-    if (stats.totalReviews > 0) return stats;
-  }
-
-  const approvedSnap = await db
-    .collection(REVIEWS_COLLECTION)
-    .where("productId", "==", productId)
-    .where("status", "==", "approved")
-    .limit(1)
-    .get();
-
-  if (!approvedSnap.empty) {
-    return recalculateProductReviewStats(productId);
-  }
-
-  return emptyProductReviewStats(productId);
-}
-
 export async function getProductReviewStats(
   productId: string
 ): Promise<ProductReviewStats> {
-  return tryFirestoreFast(
-    () => getProductReviewStatsFromFirestore(productId),
-    {
-      domain: "reviews",
-      context: `stats for ${productId}`,
-      fallback: () => emptyProductReviewStats(productId),
-    }
-  );
+  const stats = await pgContent.getProductReviewStats(productId);
+  if (!stats) return emptyProductReviewStats(productId);
+
+  return {
+    productId: stats.productId,
+    totalReviews: stats.totalReviews,
+    averageRating: stats.averageRating,
+    distribution: {
+      "1": Number((stats.distribution as Record<string, number>)["1"] ?? 0),
+      "2": Number((stats.distribution as Record<string, number>)["2"] ?? 0),
+      "3": Number((stats.distribution as Record<string, number>)["3"] ?? 0),
+      "4": Number((stats.distribution as Record<string, number>)["4"] ?? 0),
+      "5": Number((stats.distribution as Record<string, number>)["5"] ?? 0),
+    },
+    verifiedCount: stats.verifiedCount,
+    withImagesCount: stats.withImagesCount,
+    lastReviewAt: stats.lastReviewAt,
+    updatedAt: stats.updatedAt,
+  };
 }
 
 export async function recalculateProductReviewStats(
   productId: string
 ): Promise<ProductReviewStats> {
-  const db = getAdminFirestore();
-  const snap = await db
-    .collection(REVIEWS_COLLECTION)
-    .where("productId", "==", productId)
-    .where("status", "==", "approved")
-    .get();
+  const rows = await prisma.review.findMany({
+    where: { productId, status: "approved" },
+  });
 
-  const reviews = snap.docs.map((doc) => {
-    const data = doc.data();
+  const reviews = rows.map((row) => {
+    const review = prismaToReview(row);
     return {
-      rating: Number(data.rating ?? 0),
-      verifiedPurchase: Boolean(data.verifiedPurchase),
-      hasImages: Boolean(data.hasImages),
-      createdAt: String(data.createdAt ?? ""),
+      rating: review.rating,
+      verifiedPurchase: review.verifiedPurchase,
+      hasImages: review.hasImages,
+      createdAt: review.createdAt,
     };
   });
 
   const stats = buildStatsFromReviews(productId, reviews);
 
-  const batch = db.batch();
-  batch.set(db.collection(STATS_COLLECTION).doc(productId), stats, { merge: true });
-  batch.update(db.collection(PRODUCTS_COLLECTION).doc(productId), {
-    rating: stats.averageRating,
-    reviewCount: stats.totalReviews,
-    updatedAt: new Date().toISOString(),
-  });
-
-  try {
-    await batch.commit();
-  } catch {
-    await db.collection(STATS_COLLECTION).doc(productId).set(stats, { merge: true });
-  }
+  await pgContent.upsertProductReviewStatsRecord(stats);
+  await pgContent.updateProductReviewAggregates(
+    productId,
+    stats.averageRating,
+    stats.totalReviews
+  );
+  invalidateCatalogCache();
 
   return stats;
 }

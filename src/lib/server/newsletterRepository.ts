@@ -1,15 +1,7 @@
 import "server-only";
 
-import { createHash } from "crypto";
-import { mkdir, readFile, writeFile } from "fs/promises";
-import path from "path";
-
-import { getAdminFirestore, isFirebaseAdminConfigured } from "@/lib/firebase/admin";
-import { withFirestoreDeadline } from "@/lib/server/firestoreErrors";
-
-const COLLECTION = "newsletter_subscribers";
-const DATA_DIR = path.join(process.cwd(), ".data", "newsletter");
-const SUBSCRIBERS_FILE = path.join(DATA_DIR, "subscribers.json");
+import { randomUUID } from "crypto";
+import { prisma } from "@/lib/db/prisma";
 
 export interface SubscriberRecord {
   email: string;
@@ -18,59 +10,6 @@ export interface SubscriberRecord {
   marketing: boolean;
   subscribedAt: string;
   source: "website";
-}
-
-function emailDocId(email: string): string {
-  return createHash("sha256").update(email).digest("hex").slice(0, 40);
-}
-
-async function ensureDataDir(): Promise<void> {
-  await mkdir(DATA_DIR, { recursive: true });
-}
-
-async function readLocalSubscribers(): Promise<SubscriberRecord[]> {
-  try {
-    const raw = await readFile(SUBSCRIBERS_FILE, "utf8");
-    const parsed = JSON.parse(raw) as SubscriberRecord[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-async function writeLocalSubscribers(records: SubscriberRecord[]): Promise<void> {
-  await ensureDataDir();
-  await writeFile(SUBSCRIBERS_FILE, JSON.stringify(records, null, 2), "utf8");
-}
-
-async function subscribeWithFirestore(
-  record: SubscriberRecord
-): Promise<{ created: boolean }> {
-  const db = getAdminFirestore();
-  const ref = db.collection(COLLECTION).doc(emailDocId(record.email));
-  const existing = await withFirestoreDeadline(() => ref.get());
-
-  if (existing.exists) {
-    return { created: false };
-  }
-
-  await withFirestoreDeadline(() => ref.set(record));
-  return { created: true };
-}
-
-async function subscribeWithLocalFile(
-  record: SubscriberRecord
-): Promise<{ created: boolean }> {
-  const subscribers = await readLocalSubscribers();
-  const existing = subscribers.find((entry) => entry.email === record.email);
-
-  if (existing) {
-    return { created: false };
-  }
-
-  subscribers.push(record);
-  await writeLocalSubscribers(subscribers);
-  return { created: true };
 }
 
 export async function subscribeToNewsletter(input: {
@@ -89,13 +28,24 @@ export async function subscribeToNewsletter(input: {
     source: "website",
   };
 
-  if (isFirebaseAdminConfigured()) {
-    try {
-      return await subscribeWithFirestore(record);
-    } catch (error) {
-      console.error("[newsletter] Firestore subscribe failed, using local file:", error);
-    }
+  const existing = await prisma.newsletterSubscriber.findUnique({
+    where: { email },
+  });
+  if (existing) {
+    return { created: false };
   }
 
-  return subscribeWithLocalFile(record);
+  await prisma.newsletterSubscriber.create({
+    data: {
+      id: randomUUID(),
+      email: record.email,
+      firstName: record.firstName ?? null,
+      lastName: record.lastName ?? null,
+      marketing: record.marketing,
+      subscribedAt: record.subscribedAt,
+      source: record.source,
+    },
+  });
+
+  return { created: true };
 }

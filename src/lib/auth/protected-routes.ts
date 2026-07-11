@@ -1,7 +1,18 @@
 import { ROUTES } from "@/lib/routes";
+import {
+  AUTH_SESSION_REMEMBER_MAX_AGE_SECONDS,
+  AUTHJS_SESSION_COOKIE,
+  AUTHJS_SESSION_COOKIE_SECURE,
+} from "@/lib/auth/session-config";
 
-export const AUTH_SESSION_COOKIE = "__session";
-export const AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 5;
+/** @deprecated Auth.js session cookie (dev). */
+export const AUTH_SESSION_COOKIE = AUTHJS_SESSION_COOKIE;
+
+/** @deprecated Auth.js session cookie (secure production). */
+export const AUTH_SESSION_COOKIE_SECURE = AUTHJS_SESSION_COOKIE_SECURE;
+
+/** Maximum session lifetime when "Remember me" is enabled. */
+export const AUTH_SESSION_MAX_AGE_SECONDS = AUTH_SESSION_REMEMBER_MAX_AGE_SECONDS;
 
 export const PROTECTED_ROUTE_PREFIXES = [
   ROUTES.account,
@@ -12,6 +23,7 @@ export const AUTH_GUEST_ROUTES = [
   ROUTES.login,
   ROUTES.register,
   ROUTES.forgotPassword,
+  ROUTES.resetPassword,
 ] as const;
 
 /** @deprecated Use AUTH_GUEST_ROUTES */

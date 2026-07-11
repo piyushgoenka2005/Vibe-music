@@ -34,7 +34,7 @@ import {
 import { ROUTES } from "@/lib/routes";
 import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
 import type { AdminSession } from "@/types/admin";
-import { logout } from "@/services/auth/auth.service";
+import { useAuthStore } from "@/store/authStore";
 import { useAdminUiStore } from "@/store/adminUiStore";
 
 const NAV_ITEMS = [
@@ -81,8 +81,9 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
     }
   }
 
+  const logout = useAuthStore((s) => s.logout);
+
   async function handleLogout() {
-    await fetch("/api/auth/session", { method: "DELETE" });
     await logout();
     router.replace(ROUTES.adminLogin);
   }

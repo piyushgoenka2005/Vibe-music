@@ -1,21 +1,21 @@
 import {
-  buildCloudinaryTransformUrl,
-  CLOUDINARY_PRESETS,
-  type CloudinaryTransformOptions,
-} from "@/lib/cloudinary-url";
+  buildMediaTransformUrl,
+  MEDIA_PRESETS,
+  type MediaTransformOptions,
+} from "@/lib/media-url";
 
 export function optimizeImageUrl(
   url: string,
-  preset: keyof typeof CLOUDINARY_PRESETS = "productCard"
+  preset: keyof typeof MEDIA_PRESETS = "productCard"
 ): string {
   if (!url) return url;
-  return buildCloudinaryTransformUrl(url, CLOUDINARY_PRESETS[preset]);
+  return buildMediaTransformUrl(url, MEDIA_PRESETS[preset]);
 }
 
 export function optimizeImage(
   url: string,
-  options: CloudinaryTransformOptions
+  options: MediaTransformOptions
 ): string {
   if (!url) return url;
-  return buildCloudinaryTransformUrl(url, options);
+  return buildMediaTransformUrl(url, options);
 }

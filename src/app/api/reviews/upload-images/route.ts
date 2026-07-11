@@ -6,7 +6,7 @@ import {
   handleRouteError,
   jsonError,
 } from "@/lib/api/route-utils";
-import { reviewUploadFolder, uploadBufferToCloudinary } from "@/lib/cloudinary";
+import { reviewUploadFolder, uploadBufferToCdn } from "@/lib/server/cdnStorage";
 import { MAX_REVIEW_IMAGES } from "@/lib/validations/review";
 import { getProductDetailBySlug } from "@/services/catalogService";
 
@@ -63,7 +63,10 @@ export async function POST(request: Request) {
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
-      const url = await uploadBufferToCloudinary(buffer, file.name, { folder });
+      const url = await uploadBufferToCdn(buffer, file.name, {
+        folder,
+        contentType: file.type,
+      });
       urls.push(url);
     }
 

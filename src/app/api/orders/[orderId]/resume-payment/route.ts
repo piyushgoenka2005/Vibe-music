@@ -11,7 +11,7 @@ import {
 import { canAccessOrder } from "@/lib/server/orderAccess";
 import { getOrderById } from "@/lib/server/orderService";
 import { toPaise } from "@/lib/gstCalculator";
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { updateOrder } from "@/lib/server/orderRepository";
 
 export async function POST(
   request: Request,
@@ -107,8 +107,7 @@ export async function POST(
       },
     });
 
-    const db = getAdminFirestore();
-    await db.collection("orders").doc(order.id).update({
+    await updateOrder(order.id, {
       razorpayOrderId: razorpayOrder.id,
       updatedAt: new Date().toISOString(),
     });

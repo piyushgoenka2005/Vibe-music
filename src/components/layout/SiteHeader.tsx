@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -15,6 +14,7 @@ import { useWishlistStore } from "@/store/wishlistStore";
 import { useHideOnScroll, useSiteHeaderOffset } from "@/hooks/useHideOnScroll";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import SiteHeaderNav from "@/components/layout/SiteHeaderNav";
+import SiteHeaderMobileDrawer from "@/components/layout/SiteHeaderMobileDrawer";
 import SearchRollingPlaceholder, {
   SEARCH_ROLLING_ARIA_LABEL,
 } from "@/components/search/SearchRollingPlaceholder";
@@ -269,10 +269,12 @@ export default function SiteHeader() {
         </div>
       </div>
 
-      <SiteHeaderNav
-        mobileOpen={mobileOpen}
+      <SiteHeaderNav onMegaMenuOpenChange={handleMegaMenuOpenChange} />
+
+      <SiteHeaderMobileDrawer
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
         onNavigate={() => setMobileOpen(false)}
-        onMegaMenuOpenChange={handleMegaMenuOpenChange}
       />
 
       {/* Mobile nav account states (legacy CSS hooks) */}
@@ -297,18 +299,6 @@ export default function SiteHeader() {
           </a>
         </div>
       </div>
-
-      {mobileOpen
-        ? createPortal(
-            <button
-              type="button"
-              className="site-header__backdrop"
-              onClick={() => setMobileOpen(false)}
-              aria-label="Close menu"
-            />,
-            document.body,
-          )
-        : null}
     </header>
   );
 }

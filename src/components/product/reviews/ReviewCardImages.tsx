@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { buildCloudinaryTransformUrl, CLOUDINARY_PRESETS } from "@/lib/cloudinary-url";
+import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
 
 interface ReviewCardImagesProps {
   images: string[];
@@ -26,7 +26,7 @@ export default function ReviewCardImages({ images, title }: ReviewCardImagesProp
             aria-label={`View review image ${index + 1}`}
           >
             <Image
-              src={buildCloudinaryTransformUrl(url, CLOUDINARY_PRESETS.reviewThumbnail)}
+              src={buildMediaTransformUrl(url, MEDIA_PRESETS.reviewThumbnail)}
               alt={`${title} review image ${index + 1}`}
               width={72}
               height={72}
@@ -56,9 +56,9 @@ export default function ReviewCardImages({ images, title }: ReviewCardImagesProp
               ×
             </button>
             <Image
-              src={buildCloudinaryTransformUrl(
+              src={buildMediaTransformUrl(
                 images[activeIndex]!,
-                CLOUDINARY_PRESETS.reviewGallery
+                MEDIA_PRESETS.reviewGallery
               )}
               alt={`${title} review image`}
               width={600}

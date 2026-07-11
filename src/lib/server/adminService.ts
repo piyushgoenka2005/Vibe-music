@@ -1,44 +1,9 @@
-import { getAdminFirestore } from "@/lib/firebase/admin";
 import { getPermissionsForRole } from "@/lib/auth/permissions";
-import {
-  isFirestoreUnavailableError,
-  logFirestoreWarning,
-} from "@/lib/server/firestoreErrors";
+import * as pg from "@/lib/server/prisma/usersRepository";
 import type { AdminProfile, AdminRole, AdminSession } from "@/types/admin";
 
-const COLLECTION = "admins";
-
 export async function getAdminProfile(uid: string): Promise<AdminProfile | null> {
-  const db = getAdminFirestore();
-  let doc;
-  try {
-    doc = await db.collection(COLLECTION).doc(uid).get();
-  } catch (error) {
-    if (isFirestoreUnavailableError(error)) {
-      logFirestoreWarning(
-        "admin",
-        error,
-        "Admin profile lookup unavailable; continuing as non-admin"
-      );
-      return null;
-    }
-    throw error;
-  }
-  if (!doc.exists) return null;
-
-  const data = doc.data();
-  if (!data?.isActive) return null;
-
-  return {
-    uid: doc.id,
-    email: String(data.email ?? ""),
-    displayName: String(data.displayName ?? ""),
-    role: data.role as AdminRole,
-    isActive: Boolean(data.isActive),
-    createdAt: String(data.createdAt ?? ""),
-    updatedAt: String(data.updatedAt ?? ""),
-    lastLoginAt: data.lastLoginAt ? String(data.lastLoginAt) : undefined,
-  };
+  return pg.getAdminProfile(uid);
 }
 
 export async function getAdminSession(uid: string): Promise<AdminSession | null> {
@@ -55,19 +20,13 @@ export async function getAdminSession(uid: string): Promise<AdminSession | null>
 }
 
 export async function updateAdminLastLogin(uid: string): Promise<void> {
-  const db = getAdminFirestore();
-  const now = new Date().toISOString();
-  await db.collection(COLLECTION).doc(uid).update({
-    lastLoginAt: now,
-    updatedAt: now,
-  });
+  await pg.updateAdminLastLoginRecord(uid);
 }
 
 export async function createAdminProfile(
   uid: string,
   data: Pick<AdminProfile, "email" | "displayName" | "role">
 ): Promise<AdminProfile> {
-  const db = getAdminFirestore();
   const now = new Date().toISOString();
   const profile: AdminProfile = {
     uid,
@@ -79,39 +38,18 @@ export async function createAdminProfile(
     updatedAt: now,
   };
 
-  await db.collection(COLLECTION).doc(uid).set(profile);
-  return profile;
+  return pg.createAdminProfileRecord(profile);
 }
 
 export async function listAdmins(): Promise<AdminProfile[]> {
-  const db = getAdminFirestore();
-  const snap = await db.collection(COLLECTION).get();
-  return snap.docs.map((doc) => {
-    const data = doc.data();
-    return {
-      uid: doc.id,
-      email: String(data.email ?? ""),
-      displayName: String(data.displayName ?? ""),
-      role: data.role as AdminRole,
-      isActive: Boolean(data.isActive),
-      createdAt: String(data.createdAt ?? ""),
-      updatedAt: String(data.updatedAt ?? ""),
-      lastLoginAt: data.lastLoginAt ? String(data.lastLoginAt) : undefined,
-    };
-  });
+  return pg.listAdmins();
 }
 
 export async function updateAdminProfile(
   uid: string,
   patch: Partial<Pick<AdminProfile, "displayName" | "role" | "isActive">>
 ): Promise<AdminProfile> {
-  const db = getAdminFirestore();
-  const now = new Date().toISOString();
-  await db.collection(COLLECTION).doc(uid).update({
-    ...patch,
-    updatedAt: now,
-  });
-  const profile = await getAdminProfile(uid);
-  if (!profile) throw new Error("Admin not found after update");
-  return profile;
+  return pg.updateAdminProfileRecord(uid, patch);
 }
+
+export type { AdminRole };

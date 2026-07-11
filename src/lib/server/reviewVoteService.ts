@@ -1,56 +1,56 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import { FieldValue } from "firebase-admin/firestore";
+import { randomUUID } from "crypto";
+import { prisma } from "@/lib/db/prisma";
 
 export const REVIEW_VOTES_COLLECTION = "reviewVotes";
-const REVIEWS_COLLECTION = "reviews";
-
-function voteDocId(reviewId: string, userId: string): string {
-  return `${reviewId}_${userId}`;
-}
 
 export async function hasUserVotedReview(
   reviewId: string,
   userId: string
 ): Promise<boolean> {
-  const db = getAdminFirestore();
-  const doc = await db
-    .collection(REVIEW_VOTES_COLLECTION)
-    .doc(voteDocId(reviewId, userId))
-    .get();
-  return doc.exists;
+  const vote = await prisma.reviewVote.findUnique({
+    where: { reviewId_userId: { reviewId, userId } },
+  });
+  return Boolean(vote);
 }
 
 export async function voteReviewHelpful(
   reviewId: string,
   userId: string
 ): Promise<{ helpfulCount: number }> {
-  const db = getAdminFirestore();
-  const voteRef = db
-    .collection(REVIEW_VOTES_COLLECTION)
-    .doc(voteDocId(reviewId, userId));
-  const reviewRef = db.collection(REVIEWS_COLLECTION).doc(reviewId);
-
-  const existingVote = await voteRef.get();
-  if (existingVote.exists) {
-    throw new Error("You have already marked this review as helpful");
-  }
-
-  const reviewDoc = await reviewRef.get();
-  if (!reviewDoc.exists || reviewDoc.data()?.status !== "approved") {
+  const review = await prisma.review.findUnique({ where: { id: reviewId } });
+  if (!review || review.status !== "approved") {
     throw new Error("Review not found");
   }
 
+  const existing = await prisma.reviewVote.findUnique({
+    where: { reviewId_userId: { reviewId, userId } },
+  });
+  if (existing) {
+    throw new Error("You have already marked this review as helpful");
+  }
+
   const now = new Date().toISOString();
-  await voteRef.set({ reviewId, userId, createdAt: now });
-  await reviewRef.update({
-    helpfulCount: FieldValue.increment(1),
-    updatedAt: now,
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.reviewVote.create({
+      data: {
+        id: randomUUID(),
+        reviewId,
+        userId,
+        createdAt: now,
+      },
+    });
+    return tx.review.update({
+      where: { id: reviewId },
+      data: {
+        helpfulCount: { increment: 1 },
+        updatedAt: now,
+      },
+    });
   });
 
-  const updated = await reviewRef.get();
-  return { helpfulCount: Number(updated.data()?.helpfulCount ?? 0) };
+  return { helpfulCount: updated.helpfulCount };
 }
 
 export async function getUserVotesForReviews(
@@ -58,46 +58,14 @@ export async function getUserVotesForReviews(
   userId: string
 ): Promise<Set<string>> {
   if (reviewIds.length === 0) return new Set();
-  const db = getAdminFirestore();
-  const voted = new Set<string>();
-
-  await Promise.all(
-    reviewIds.map(async (reviewId) => {
-      const doc = await db
-        .collection(REVIEW_VOTES_COLLECTION)
-        .doc(voteDocId(reviewId, userId))
-        .get();
-      if (doc.exists) voted.add(reviewId);
-    })
-  );
-
-  return voted;
+  const votes = await prisma.reviewVote.findMany({
+    where: { userId, reviewId: { in: reviewIds } },
+    select: { reviewId: true },
+  });
+  return new Set(votes.map((vote) => vote.reviewId));
 }
 
 export async function deleteVotesForReview(reviewId: string): Promise<number> {
-  const db = getAdminFirestore();
-  const snap = await db
-    .collection(REVIEW_VOTES_COLLECTION)
-    .where("reviewId", "==", reviewId)
-    .get();
-
-  if (snap.empty) return 0;
-
-  let batch = db.batch();
-  let ops = 0;
-  let count = 0;
-
-  for (const doc of snap.docs) {
-    batch.delete(doc.ref);
-    ops += 1;
-    count += 1;
-    if (ops >= 400) {
-      await batch.commit();
-      batch = db.batch();
-      ops = 0;
-    }
-  }
-
-  if (ops > 0) await batch.commit();
-  return count;
+  const result = await prisma.reviewVote.deleteMany({ where: { reviewId } });
+  return result.count;
 }

@@ -1,13 +1,8 @@
 import "server-only";
 
-import { getAdminFirestore, isFirebaseAdminConfigured } from "@/lib/firebase/admin";
-import {
-  isFirestoreFastFailError,
-  isGlobalFirestoreCircuitOpen,
-  logFirestoreWarning,
-  markFirestoreUnavailable,
-  withFirestoreDeadline,
-} from "@/lib/server/firestoreErrors";
+import { randomUUID } from "crypto";
+import { prisma } from "@/lib/db/prisma";
+import { asJsonValue } from "@/lib/server/prisma/mappers";
 import type { ShippingZone } from "@/types/shippingZone";
 
 export const SHIPPING_ZONES_COLLECTION = "shippingZones";
@@ -47,34 +42,39 @@ const DEFAULT_ZONES: Omit<ShippingZone, "createdAt" | "updatedAt">[] = [
   },
 ];
 
-function normalizeZone(
-  id: string,
-  data: FirebaseFirestore.DocumentData
-): ShippingZone {
+function mapShippingZone(row: {
+  id: string;
+  name: string;
+  description: string | null;
+  states: unknown;
+  pinCodePrefixes: unknown;
+  methodCharges: unknown;
+  freeShippingThreshold: number | null;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}): ShippingZone {
   return {
-    id,
-    name: String(data.name ?? ""),
-    description: data.description ? String(data.description) : undefined,
-    states: Array.isArray(data.states) ? data.states.map(String) : [],
-    pinCodePrefixes: Array.isArray(data.pinCodePrefixes)
-      ? data.pinCodePrefixes.map(String)
+    id: row.id,
+    name: row.name,
+    description: row.description ?? undefined,
+    states: Array.isArray(row.states) ? row.states.map(String) : [],
+    pinCodePrefixes: Array.isArray(row.pinCodePrefixes)
+      ? row.pinCodePrefixes.map(String)
       : [],
     methodCharges:
-      data.methodCharges && typeof data.methodCharges === "object"
-        ? {
-            standard: data.methodCharges.standard,
-            express: data.methodCharges.express,
-            overnight: data.methodCharges.overnight,
-          }
+      row.methodCharges && typeof row.methodCharges === "object"
+        ? (row.methodCharges as ShippingZone["methodCharges"])
         : {},
     freeShippingThreshold:
-      typeof data.freeShippingThreshold === "number"
-        ? data.freeShippingThreshold
+      typeof row.freeShippingThreshold === "number"
+        ? row.freeShippingThreshold
         : undefined,
-    isActive: data.isActive !== false,
-    sortOrder: Number(data.sortOrder ?? 0),
-    createdAt: String(data.createdAt ?? ""),
-    updatedAt: String(data.updatedAt ?? ""),
+    isActive: row.isActive,
+    sortOrder: row.sortOrder,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
 }
 
@@ -84,70 +84,46 @@ function defaultZonesWithTimestamps(): ShippingZone[] {
 }
 
 export async function listShippingZones(): Promise<ShippingZone[]> {
-  if (!isFirebaseAdminConfigured() || isGlobalFirestoreCircuitOpen()) {
-    return defaultZonesWithTimestamps();
-  }
-
   try {
-    const db = getAdminFirestore();
-    const snap = await withFirestoreDeadline(() =>
-      db.collection(SHIPPING_ZONES_COLLECTION).get()
-    );
-    if (snap.empty) {
-      return defaultZonesWithTimestamps();
-    }
-    return snap.docs
-      .map((doc) => normalizeZone(doc.id, doc.data()))
-      .filter((zone) => zone.isActive)
-      .sort((a, b) => a.sortOrder - b.sortOrder);
-  } catch (error) {
-    if (markFirestoreUnavailable(error) || isFirestoreFastFailError(error)) {
-      logFirestoreWarning(
-        "shipping-zones",
-        error,
-        "Using default shipping zones — Firestore unavailable"
-      );
-      return defaultZonesWithTimestamps();
-    }
-    throw error;
+    const rows = await prisma.shippingZone.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    if (rows.length === 0) return defaultZonesWithTimestamps();
+    return rows.map(mapShippingZone);
+  } catch {
+    return defaultZonesWithTimestamps();
   }
 }
 
 export async function listAllShippingZones(): Promise<ShippingZone[]> {
-  const db = getAdminFirestore();
-  const snap = await db.collection(SHIPPING_ZONES_COLLECTION).get();
-  if (snap.empty) {
-    const now = new Date().toISOString();
-    return DEFAULT_ZONES.map((zone) => ({ ...zone, createdAt: now, updatedAt: now }));
-  }
-  return snap.docs
-    .map((doc) => normalizeZone(doc.id, doc.data()))
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const rows = await prisma.shippingZone.findMany({ orderBy: { sortOrder: "asc" } });
+  if (rows.length === 0) return defaultZonesWithTimestamps();
+  return rows.map(mapShippingZone);
 }
 
 export async function getShippingZoneById(id: string): Promise<ShippingZone | null> {
-  const db = getAdminFirestore();
-  const doc = await db.collection(SHIPPING_ZONES_COLLECTION).doc(id).get();
-  if (!doc.exists) {
+  const row = await prisma.shippingZone.findUnique({ where: { id } });
+  if (!row) {
     const fallback = DEFAULT_ZONES.find((zone) => zone.id === id);
     if (!fallback) return null;
     const now = new Date().toISOString();
     return { ...fallback, createdAt: now, updatedAt: now };
   }
-  return normalizeZone(doc.id, doc.data()!);
+  return mapShippingZone(row);
 }
 
 export async function upsertShippingZone(
   zone: Omit<ShippingZone, "createdAt" | "updatedAt" | "id"> & { id?: string }
 ): Promise<ShippingZone> {
-  const db = getAdminFirestore();
-  const ref = zone.id
-    ? db.collection(SHIPPING_ZONES_COLLECTION).doc(zone.id)
-    : db.collection(SHIPPING_ZONES_COLLECTION).doc();
   const now = new Date().toISOString();
-  const existing = zone.id ? await ref.get() : null;
+  const id = zone.id ?? randomUUID();
+  const existing = zone.id
+    ? await prisma.shippingZone.findUnique({ where: { id: zone.id } })
+    : null;
+
   const record: ShippingZone = {
-    id: ref.id,
+    id,
     name: zone.name,
     description: zone.description,
     states: zone.states,
@@ -156,16 +132,41 @@ export async function upsertShippingZone(
     freeShippingThreshold: zone.freeShippingThreshold,
     isActive: zone.isActive,
     sortOrder: zone.sortOrder,
-    createdAt: existing?.exists
-      ? String(existing.data()?.createdAt ?? now)
-      : now,
+    createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
-  await ref.set(record);
+
+  await prisma.shippingZone.upsert({
+    where: { id },
+    create: {
+      id: record.id,
+      name: record.name,
+      description: record.description ?? null,
+      states: asJsonValue(record.states),
+      pinCodePrefixes: asJsonValue(record.pinCodePrefixes),
+      methodCharges: asJsonValue(record.methodCharges),
+      freeShippingThreshold: record.freeShippingThreshold ?? null,
+      isActive: record.isActive,
+      sortOrder: record.sortOrder,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    },
+    update: {
+      name: record.name,
+      description: record.description ?? null,
+      states: asJsonValue(record.states),
+      pinCodePrefixes: asJsonValue(record.pinCodePrefixes),
+      methodCharges: asJsonValue(record.methodCharges),
+      freeShippingThreshold: record.freeShippingThreshold ?? null,
+      isActive: record.isActive,
+      sortOrder: record.sortOrder,
+      updatedAt: record.updatedAt,
+    },
+  });
+
   return record;
 }
 
 export async function deleteShippingZone(id: string): Promise<void> {
-  const db = getAdminFirestore();
-  await db.collection(SHIPPING_ZONES_COLLECTION).doc(id).delete();
+  await prisma.shippingZone.delete({ where: { id } });
 }

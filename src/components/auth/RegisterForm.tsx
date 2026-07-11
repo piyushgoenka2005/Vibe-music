@@ -18,12 +18,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
+import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
 import { ROUTES } from "@/lib/routes";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/authStore";
 
-export default function RegisterForm() {
+interface RegisterFormProps {
+  googleAuthEnabled?: boolean;
+}
+
+export default function RegisterForm({ googleAuthEnabled = false }: RegisterFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || ROUTES.account;
@@ -56,17 +60,22 @@ export default function RegisterForm() {
       });
       router.push(redirectTo);
     } catch (err) {
-      setError(getFirebaseErrorMessage(err, "Sign up failed."));
+      setError(getAuthErrorMessage(err, "Sign up failed."));
     }
   }
 
   async function handleGoogleSignIn() {
+    if (!googleAuthEnabled) {
+      setError(
+        "Google sign-in is not configured. Add AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET to .env.local."
+      );
+      return;
+    }
     setError(null);
     try {
-      await signInWithGoogle();
-      router.push(redirectTo);
+      await signInWithGoogle(redirectTo);
     } catch (err) {
-      setError(getFirebaseErrorMessage(err, "Google sign up failed."));
+      setError(getAuthErrorMessage(err, "Google sign up failed."));
     }
   }
 
@@ -78,13 +87,16 @@ export default function RegisterForm() {
         </Alert>
       ) : null}
 
-      <GoogleSignInButton
-        onClick={handleGoogleSignIn}
-        disabled={isLoading}
-        label="Sign up with Google"
-      />
-
-      <AuthDivider />
+      {googleAuthEnabled ? (
+        <>
+          <GoogleSignInButton
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+            label="Sign up with Google"
+          />
+          <AuthDivider />
+        </>
+      ) : null}
 
       <Form {...form}>
         <form

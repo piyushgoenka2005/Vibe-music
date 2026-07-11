@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
-  AUTH_SESSION_COOKIE,
   getProtectedLoginRedirectUrl,
   isProtectedRoute,
 } from "@/lib/auth/protected-routes";
-import { isSessionCookiePlausible } from "@/lib/auth/session-cookie";
+import { hasAuthSessionCookie } from "@/lib/auth/session-cookie";
 import { resolveLegacyPath } from "@/lib/routes";
 import { edgeCheckRateLimit } from "@/lib/security/edge-rate-limit";
 import { API_SECURITY_HEADERS } from "@/lib/security/headers";
@@ -111,12 +110,12 @@ function handleProtectedPage(request: NextRequest): NextResponse | null {
     return null;
   }
 
-  const sessionCookie = request.cookies.get(AUTH_SESSION_COOKIE)?.value;
-  if (!sessionCookie || !isSessionCookiePlausible(sessionCookie)) {
+  const secure = request.nextUrl.protocol === "https:";
+  if (!hasAuthSessionCookie(request.cookies, secure)) {
     logSecurityEvent("session_rejected", {
       path: pathname,
       ip: getClientIp(request),
-      reason: sessionCookie ? "invalid_or_expired" : "missing",
+      reason: "missing",
     });
     return NextResponse.redirect(
       new URL(getProtectedLoginRedirectUrl(pathname), request.url)

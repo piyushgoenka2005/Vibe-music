@@ -1,6 +1,7 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { randomUUID } from "crypto";
+import { prisma } from "@/lib/db/prisma";
 
 export const CONTACT_MESSAGES_COLLECTION = "contactMessages";
 
@@ -21,10 +22,8 @@ export interface ContactMessageRecord extends ContactMessageInput {
 export async function createContactMessage(
   input: ContactMessageInput
 ): Promise<ContactMessageRecord> {
-  const db = getAdminFirestore();
-  const ref = db.collection(CONTACT_MESSAGES_COLLECTION).doc();
   const record: ContactMessageRecord = {
-    id: ref.id,
+    id: randomUUID(),
     name: input.name.trim(),
     email: input.email.trim().toLowerCase(),
     phone: input.phone?.trim() || undefined,
@@ -33,6 +32,19 @@ export async function createContactMessage(
     status: "new",
     createdAt: new Date().toISOString(),
   };
-  await ref.set(record);
+
+  await prisma.contactMessage.create({
+    data: {
+      id: record.id,
+      name: record.name,
+      email: record.email,
+      phone: record.phone ?? null,
+      subject: record.subject,
+      message: record.message,
+      status: record.status,
+      createdAt: record.createdAt,
+    },
+  });
+
   return record;
 }

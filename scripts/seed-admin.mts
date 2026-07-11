@@ -1,12 +1,12 @@
 /**
- * Seed the first Super Admin in Firestore.
+ * Seed the first Super Admin in PostgreSQL.
  *
  * Usage:
- *   npx tsx --env-file=.env.local scripts/seed-admin.mts <firebase-uid> <email> [displayName]
+ *   npx tsx --env-file=.env.local scripts/seed-admin.mts <user-id> <email> [displayName]
  *
- * The Firebase user must already exist (create via Firebase Console or register first).
+ * The user must already exist in the `users` table (register first or use Auth.js Google sign-in).
  */
-import { getAdminFirestore } from "../src/lib/firebase/admin";
+import { PrismaClient } from "@prisma/client";
 
 const [uid, email, displayName = "Super Admin"] = process.argv.slice(2);
 
@@ -18,20 +18,34 @@ if (!uid || !email) {
 }
 
 async function main() {
-  const db = getAdminFirestore();
+  const prisma = new PrismaClient();
   const now = new Date().toISOString();
 
-  await db.collection("admins").doc(uid).set({
-    uid,
-    email,
-    displayName,
-    role: "super_admin",
-    isActive: true,
-    createdAt: now,
-    updatedAt: now,
-  });
+  try {
+    await prisma.admin.upsert({
+      where: { uid },
+      create: {
+        uid,
+        email,
+        displayName,
+        role: "super_admin",
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      update: {
+        email,
+        displayName,
+        role: "super_admin",
+        isActive: true,
+        updatedAt: now,
+      },
+    });
 
-  console.log(`Super Admin created: ${email} (${uid})`);
+    console.log(`Super Admin created: ${email} (${uid})`);
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
 main().catch((err) => {

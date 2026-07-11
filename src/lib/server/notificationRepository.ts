@@ -1,6 +1,8 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { randomUUID } from "crypto";
+import { prisma } from "@/lib/db/prisma";
+import { asJsonValue } from "@/lib/server/prisma/mappers";
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   type AdminNotification,
@@ -13,45 +15,54 @@ import { isNotificationAllowed } from "@/lib/notifications/preferencesLogic";
 export const USER_NOTIFICATIONS_COLLECTION = "userNotifications";
 export const ADMIN_NOTIFICATIONS_COLLECTION = "adminNotifications";
 
-function normalizeUserNotification(
-  id: string,
-  data: FirebaseFirestore.DocumentData
-): UserNotification {
+function mapUserNotification(row: {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  body: string;
+  link: string | null;
+  read: boolean;
+  createdAt: string;
+}): UserNotification {
   return {
-    id,
-    userId: String(data.userId ?? ""),
-    type: (data.type as NotificationType) ?? "system",
-    title: String(data.title ?? ""),
-    body: String(data.body ?? ""),
-    link: data.link ? String(data.link) : undefined,
-    read: Boolean(data.read),
-    createdAt: String(data.createdAt ?? ""),
+    id: row.id,
+    userId: row.userId,
+    type: row.type as NotificationType,
+    title: row.title,
+    body: row.body,
+    link: row.link ?? undefined,
+    read: row.read,
+    createdAt: row.createdAt,
   };
 }
 
-function normalizeAdminNotification(
-  id: string,
-  data: FirebaseFirestore.DocumentData
-): AdminNotification {
+function mapAdminNotification(row: {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  link: string | null;
+  read: boolean;
+  createdAt: string;
+}): AdminNotification {
   return {
-    id,
-    type: (data.type as AdminNotification["type"]) ?? "system",
-    title: String(data.title ?? ""),
-    body: String(data.body ?? ""),
-    link: data.link ? String(data.link) : undefined,
-    read: Boolean(data.read),
-    createdAt: String(data.createdAt ?? ""),
+    id: row.id,
+    type: row.type as AdminNotification["type"],
+    title: row.title,
+    body: row.body,
+    link: row.link ?? undefined,
+    read: row.read,
+    createdAt: row.createdAt,
   };
 }
 
 export async function getNotificationPreferences(
   userId: string
 ): Promise<NotificationPreferences> {
-  const db = getAdminFirestore();
-  const doc = await db.collection("users").doc(userId).get();
-  if (!doc.exists) return DEFAULT_NOTIFICATION_PREFERENCES;
-  const prefs = doc.data()?.notificationPreferences;
-  if (!prefs || typeof prefs !== "object") return DEFAULT_NOTIFICATION_PREFERENCES;
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user?.notificationPreferences) return DEFAULT_NOTIFICATION_PREFERENCES;
+  const prefs = user.notificationPreferences as Partial<NotificationPreferences>;
   return { ...DEFAULT_NOTIFICATION_PREFERENCES, ...prefs };
 }
 
@@ -59,13 +70,15 @@ export async function updateNotificationPreferences(
   userId: string,
   patch: Partial<NotificationPreferences>
 ): Promise<NotificationPreferences> {
-  const db = getAdminFirestore();
   const current = await getNotificationPreferences(userId);
   const updated = { ...current, ...patch };
-  await db.collection("users").doc(userId).set(
-    { notificationPreferences: updated, updatedAt: new Date().toISOString() },
-    { merge: true }
-  );
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      notificationPreferences: asJsonValue(updated),
+      updatedAt: new Date().toISOString(),
+    },
+  });
   return updated;
 }
 
@@ -76,10 +89,8 @@ export async function createUserNotification(input: {
   body: string;
   link?: string;
 }): Promise<UserNotification> {
-  const db = getAdminFirestore();
-  const ref = db.collection(USER_NOTIFICATIONS_COLLECTION).doc();
   const record: UserNotification = {
-    id: ref.id,
+    id: randomUUID(),
     userId: input.userId,
     type: input.type,
     title: input.title,
@@ -88,7 +99,20 @@ export async function createUserNotification(input: {
     read: false,
     createdAt: new Date().toISOString(),
   };
-  await ref.set(record);
+
+  await prisma.userNotification.create({
+    data: {
+      id: record.id,
+      userId: record.userId,
+      type: record.type,
+      title: record.title,
+      body: record.body,
+      link: record.link ?? null,
+      read: record.read,
+      createdAt: record.createdAt,
+    },
+  });
+
   return record;
 }
 
@@ -96,42 +120,33 @@ export async function listUserNotifications(
   userId: string,
   limit = 30
 ): Promise<UserNotification[]> {
-  const db = getAdminFirestore();
-  const snap = await db
-    .collection(USER_NOTIFICATIONS_COLLECTION)
-    .where("userId", "==", userId)
-    .limit(Math.min(limit, 100))
-    .get();
-  return snap.docs
-    .map((doc) => normalizeUserNotification(doc.id, doc.data()))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const rows = await prisma.userNotification.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: Math.min(limit, 100),
+  });
+  return rows.map(mapUserNotification);
 }
 
 export async function markUserNotificationRead(
   userId: string,
   notificationId: string
 ): Promise<void> {
-  const db = getAdminFirestore();
-  const ref = db.collection(USER_NOTIFICATIONS_COLLECTION).doc(notificationId);
-  const doc = await ref.get();
-  if (!doc.exists || doc.data()?.userId !== userId) {
-    throw new Error("Notification not found");
-  }
-  await ref.update({ read: true });
+  const row = await prisma.userNotification.findFirst({
+    where: { id: notificationId, userId },
+  });
+  if (!row) throw new Error("Notification not found");
+  await prisma.userNotification.update({
+    where: { id: notificationId },
+    data: { read: true },
+  });
 }
 
 export async function markAllUserNotificationsRead(userId: string): Promise<void> {
-  const db = getAdminFirestore();
-  const snap = await db
-    .collection(USER_NOTIFICATIONS_COLLECTION)
-    .where("userId", "==", userId)
-    .where("read", "==", false)
-    .limit(100)
-    .get();
-  if (snap.empty) return;
-  const batch = db.batch();
-  snap.docs.forEach((doc) => batch.update(doc.ref, { read: true }));
-  await batch.commit();
+  await prisma.userNotification.updateMany({
+    where: { userId, read: false },
+    data: { read: true },
+  });
 }
 
 export async function createAdminNotification(input: {
@@ -140,10 +155,8 @@ export async function createAdminNotification(input: {
   body: string;
   link?: string;
 }): Promise<AdminNotification> {
-  const db = getAdminFirestore();
-  const ref = db.collection(ADMIN_NOTIFICATIONS_COLLECTION).doc();
   const record: AdminNotification = {
-    id: ref.id,
+    id: randomUUID(),
     type: input.type,
     title: input.title,
     body: input.body,
@@ -151,37 +164,42 @@ export async function createAdminNotification(input: {
     read: false,
     createdAt: new Date().toISOString(),
   };
-  await ref.set(record);
+
+  await prisma.adminNotification.create({
+    data: {
+      id: record.id,
+      type: record.type,
+      title: record.title,
+      body: record.body,
+      link: record.link ?? null,
+      read: record.read,
+      createdAt: record.createdAt,
+    },
+  });
+
   return record;
 }
 
 export async function listAdminNotifications(limit = 50): Promise<AdminNotification[]> {
-  const db = getAdminFirestore();
-  const snap = await db
-    .collection(ADMIN_NOTIFICATIONS_COLLECTION)
-    .limit(Math.min(limit, 100))
-    .get();
-  return snap.docs
-    .map((doc) => normalizeAdminNotification(doc.id, doc.data()))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const rows = await prisma.adminNotification.findMany({
+    orderBy: { createdAt: "desc" },
+    take: Math.min(limit, 100),
+  });
+  return rows.map(mapAdminNotification);
 }
 
 export async function markAdminNotificationRead(id: string): Promise<void> {
-  const db = getAdminFirestore();
-  await db.collection(ADMIN_NOTIFICATIONS_COLLECTION).doc(id).update({ read: true });
+  await prisma.adminNotification.update({
+    where: { id },
+    data: { read: true },
+  });
 }
 
 export async function markAllAdminNotificationsRead(): Promise<void> {
-  const db = getAdminFirestore();
-  const snap = await db
-    .collection(ADMIN_NOTIFICATIONS_COLLECTION)
-    .where("read", "==", false)
-    .limit(100)
-    .get();
-  if (snap.empty) return;
-  const batch = db.batch();
-  snap.docs.forEach((doc) => batch.update(doc.ref, { read: true }));
-  await batch.commit();
+  await prisma.adminNotification.updateMany({
+    where: { read: false },
+    data: { read: true },
+  });
 }
 
 export async function notifyUserIfAllowed(input: {

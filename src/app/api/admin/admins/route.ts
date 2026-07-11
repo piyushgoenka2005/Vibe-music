@@ -4,7 +4,7 @@ import {
   createAdminProfile,
   listAdmins,
 } from "@/lib/server/adminService";
-import { getAdminAuth } from "@/lib/firebase/admin";
+import { createAuthUser, findUserByEmail } from "@/lib/server/userService";
 import { adminInviteSchema } from "@/lib/validations/wrFeatures";
 
 export async function GET() {
@@ -23,8 +23,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = adminInviteSchema.parse(body);
 
-    const auth = getAdminAuth();
-    const existing = await auth.getUserByEmail(parsed.email).catch(() => null);
+    const existing = await findUserByEmail(parsed.email);
     if (existing) {
       return NextResponse.json(
         { error: "A user with this email already exists" },
@@ -32,14 +31,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const userRecord = await auth.createUser({
+    const user = await createAuthUser({
       email: parsed.email,
       password: parsed.password,
-      displayName: parsed.displayName,
-      emailVerified: true,
+      name: parsed.displayName,
     });
 
-    const admin = await createAdminProfile(userRecord.uid, {
+    const admin = await createAdminProfile(user.id, {
       email: parsed.email,
       displayName: parsed.displayName,
       role: parsed.role,

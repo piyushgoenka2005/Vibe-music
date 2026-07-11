@@ -7,11 +7,6 @@ import {
   type GSTRate,
 } from "@/lib/gstCalculator";
 import { getAvailableStock } from "@/lib/inventory/stockMath";
-import {
-  isFirestoreUnavailableError,
-  isGlobalFirestoreCircuitOpen,
-  logFirestoreWarning,
-} from "@/lib/server/firestoreErrors";
 import { validateCoupon } from "@/lib/server/couponService";
 import { validateStockAvailability } from "@/lib/server/inventoryService";
 import type { CreateOrderPayload } from "@/types/order";
@@ -67,55 +62,18 @@ function validateStockFromLocalCatalog(
   }
 }
 
-async function validateStockAvailabilityFromCatalog(
-  items: StockCheckLine[]
-): Promise<void> {
-  validateStockFromLocalCatalog(items, loadProducts());
-}
-
-async function validateStockAvailabilityWithFallback(
-  items: Array<{
-    productId: string;
-    variantId?: string;
-    quantity: number;
-    name: string;
-  }>
-): Promise<void> {
-  try {
-    await validateStockAvailability(items);
-  } catch (error) {
-    if (isFirestoreUnavailableError(error)) {
-      logFirestoreWarning(
-        "inventory",
-        error,
-        "Firestore unavailable — validating stock from catalog"
-      );
-      await validateStockAvailabilityFromCatalog(items);
-      return;
-    }
-    throw error;
-  }
-}
-
-export async function resolveOrderItemsFromFirestore(
+export async function resolveOrderItems(
   items: CreateOrderPayload["items"]
 ): Promise<CreateOrderPayload["items"]> {
   const localProducts = loadProducts();
   const localById = new Map(localProducts.map((product) => [product.id, product]));
-  const useLocalCatalog = isGlobalFirestoreCircuitOpen();
-  let usedFirestoreLookup = false;
 
   const resolved = await Promise.all(
     items.map(async (item) => {
       let product = localById.get(item.productId) ?? null;
 
-      if (!product && !useLocalCatalog) {
-        usedFirestoreLookup = true;
-        product = (await getProductById(item.productId)) ?? null;
-      }
-
       if (!product) {
-        product = localById.get(item.productId) ?? null;
+        product = (await getProductById(item.productId)) ?? null;
       }
 
       if (!product || product.status !== "active") {
@@ -155,15 +113,17 @@ export async function resolveOrderItemsFromFirestore(
     name: item.name,
   }));
 
-  if (isGlobalFirestoreCircuitOpen() || !usedFirestoreLookup) {
+  try {
+    await validateStockAvailability(stockLines);
+  } catch {
     validateStockFromLocalCatalog(stockLines, localProducts);
-    return resolved;
   }
-
-  await validateStockAvailabilityWithFallback(stockLines);
 
   return resolved;
 }
+
+/** @deprecated Use resolveOrderItems */
+export const resolveOrderItemsFromFirestore = resolveOrderItems;
 
 export async function resolveCouponDiscount(
   couponCode: string | null | undefined,

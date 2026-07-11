@@ -1,15 +1,8 @@
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import {
-  isGlobalFirestoreCircuitOpen,
-  logFirestoreWarning,
-  markFirestoreUnavailable,
-  tryFirestoreFast,
-} from "@/lib/server/firestoreErrors";
+import { randomUUID } from "crypto";
+import * as pg from "@/lib/server/prisma/contentRepository";
 import type { Coupon } from "@/types/admin";
 import type { AppliedCouponSnapshot, CouponValidationResult } from "@/types/coupon";
 import { validateCouponForSubtotal } from "@/lib/coupons/couponMath";
-
-const COLLECTION = "coupons";
 
 const STATIC_COUPONS: Record<string, Omit<Coupon, "id">> = {
   SAVE10: {
@@ -55,22 +48,48 @@ function staticCoupon(code: string): Coupon | null {
   };
 }
 
-function normalizeCoupon(id: string, data: FirebaseFirestore.DocumentData): Coupon {
-  return {
-    id,
-    code: String(data.code ?? "").toUpperCase(),
-    label: String(data.label ?? ""),
-    type: data.type === "flat" ? "flat" : "percentage",
-    value: Number(data.value ?? 0),
-    minOrderAmount: data.minOrderAmount != null ? Number(data.minOrderAmount) : undefined,
-    maxUses: data.maxUses != null ? Number(data.maxUses) : undefined,
-    usedCount: Number(data.usedCount ?? 0),
-    isActive: Boolean(data.isActive ?? true),
-    startsAt: data.startsAt ? String(data.startsAt) : undefined,
-    expiresAt: data.expiresAt ? String(data.expiresAt) : undefined,
-    createdAt: String(data.createdAt ?? ""),
-    updatedAt: String(data.updatedAt ?? ""),
-  };
+async function seedDefaultCoupons(): Promise<Coupon[]> {
+  const now = new Date().toISOString();
+  const defaults: Omit<Coupon, "id">[] = [
+    {
+      code: "SAVE10",
+      label: "10% off",
+      type: "percentage",
+      value: 10,
+      usedCount: 0,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      code: "SWEET15",
+      label: "15% off",
+      type: "percentage",
+      value: 15,
+      usedCount: 0,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      code: "GEAR20",
+      label: "20% off",
+      type: "percentage",
+      value: 20,
+      usedCount: 0,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+
+  const coupons: Coupon[] = [];
+  for (const coupon of defaults) {
+    const record = { ...coupon, id: randomUUID() };
+    await pg.createCouponRecord(record);
+    coupons.push(record);
+  }
+  return coupons;
 }
 
 export async function listCoupons(
@@ -80,127 +99,33 @@ export async function listCoupons(
   hasMore: boolean;
   nextCursor?: string;
 }> {
-  const db = getAdminFirestore();
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
-  let query: FirebaseFirestore.Query = db
-    .collection(COLLECTION)
-    .orderBy("createdAt", "desc");
+  let coupons = await pg.listCoupons();
+
+  if (coupons.length === 0) {
+    coupons = await seedDefaultCoupons();
+  }
 
   if (options.cursor) {
-    const cursorDoc = await db.collection(COLLECTION).doc(options.cursor).get();
-    if (cursorDoc.exists) {
-      query = query.startAfter(cursorDoc);
-    }
+    const index = coupons.findIndex((coupon) => coupon.id === options.cursor);
+    if (index >= 0) coupons = coupons.slice(index + 1);
   }
 
-  const snap = await query.limit(limit + 1).get();
-  if (snap.empty) {
-    const seeded = await seedDefaultCoupons();
-    return { coupons: seeded.slice(0, limit), hasMore: false };
-  }
-
-  const docs = snap.docs;
-  const hasMore = docs.length > limit;
-  const pageDocs = docs.slice(0, limit);
-  const coupons = pageDocs.map((doc) => normalizeCoupon(doc.id, doc.data()));
+  const page = coupons.slice(0, limit + 1);
+  const hasMore = page.length > limit;
+  const items = page.slice(0, limit);
 
   return {
-    coupons,
+    coupons: items,
     hasMore,
-    nextCursor:
-      hasMore && pageDocs.length > 0
-        ? pageDocs[pageDocs.length - 1]!.id
-        : undefined,
+    nextCursor: hasMore && items.length > 0 ? items[items.length - 1]!.id : undefined,
   };
-}
-
-async function seedDefaultCoupons(): Promise<Coupon[]> {
-  const defaults: Omit<Coupon, "id">[] = [
-    {
-      code: "SAVE10",
-      label: "10% off",
-      type: "percentage",
-      value: 10,
-      usedCount: 0,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      code: "SWEET15",
-      label: "15% off",
-      type: "percentage",
-      value: 15,
-      usedCount: 0,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      code: "GEAR20",
-      label: "20% off",
-      type: "percentage",
-      value: 20,
-      usedCount: 0,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ];
-
-  const db = getAdminFirestore();
-  const batch = db.batch();
-  const coupons: Coupon[] = [];
-
-  defaults.forEach((coupon) => {
-    const ref = db.collection(COLLECTION).doc();
-    const record = { ...coupon, id: ref.id };
-    batch.set(ref, record);
-    coupons.push(record);
-  });
-
-  await batch.commit();
-  return coupons;
 }
 
 export async function getCouponByCode(code: string): Promise<Coupon | null> {
   const normalized = code.toUpperCase();
-
-  if (isGlobalFirestoreCircuitOpen()) {
-    return staticCoupon(normalized);
-  }
-
-  try {
-    const coupon = await tryFirestoreFast(
-      async () => {
-        const db = getAdminFirestore();
-        const snap = await db
-          .collection(COLLECTION)
-          .where("code", "==", normalized)
-          .limit(1)
-          .get();
-        if (snap.empty) return null;
-        const doc = snap.docs[0]!;
-        return normalizeCoupon(doc.id, doc.data());
-      },
-      {
-        domain: "coupons",
-        context: "Using static coupon fallback — Firestore unavailable",
-        fallback: () => staticCoupon(normalized),
-      }
-    );
-    return coupon ?? staticCoupon(normalized);
-  } catch (error) {
-    if (markFirestoreUnavailable(error)) {
-      logFirestoreWarning(
-        "coupons",
-        error,
-        "Using static coupon fallback — Firestore unavailable"
-      );
-      return staticCoupon(normalized);
-    }
-    throw error;
-  }
+  const coupon = await pg.getCouponByCode(normalized);
+  return coupon ?? staticCoupon(normalized);
 }
 
 export async function validateCoupon(
@@ -235,51 +160,29 @@ export async function validateCoupon(
 export async function createCoupon(
   input: Omit<Coupon, "id" | "usedCount" | "createdAt" | "updatedAt">
 ): Promise<Coupon> {
-  const db = getAdminFirestore();
-  const ref = db.collection(COLLECTION).doc();
   const now = new Date().toISOString();
   const record: Coupon = {
     ...input,
-    id: ref.id,
+    id: randomUUID(),
     code: input.code.toUpperCase(),
     usedCount: 0,
     createdAt: now,
     updatedAt: now,
   };
-  await ref.set(record);
-  return record;
+  return pg.createCouponRecord(record);
 }
 
 export async function updateCoupon(
   id: string,
   patch: Partial<Coupon>
 ): Promise<Coupon> {
-  const db = getAdminFirestore();
-  const now = new Date().toISOString();
-  const rest = { ...patch };
-  delete rest.id;
-  delete rest.usedCount;
-  delete rest.createdAt;
-  if (rest.code) rest.code = rest.code.toUpperCase();
-  await db.collection(COLLECTION).doc(id).update({ ...rest, updatedAt: now });
-  const doc = await db.collection(COLLECTION).doc(id).get();
-  return normalizeCoupon(doc.id, doc.data()!);
+  return pg.updateCouponRecord(id, patch);
 }
 
 export async function deleteCoupon(id: string): Promise<void> {
-  const db = getAdminFirestore();
-  await db.collection(COLLECTION).doc(id).delete();
+  await pg.deleteCouponRecord(id);
 }
 
 export async function incrementCouponUsage(code: string): Promise<void> {
-  const coupon = await getCouponByCode(code);
-  if (!coupon) return;
-  const db = getAdminFirestore();
-  await db
-    .collection(COLLECTION)
-    .doc(coupon.id)
-    .update({
-      usedCount: coupon.usedCount + 1,
-      updatedAt: new Date().toISOString(),
-    });
+  await pg.incrementCouponUsageRecord(code);
 }

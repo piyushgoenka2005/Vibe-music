@@ -1,31 +1,39 @@
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import {
-  isFirestoreFastFailError,
-  isFirestoreUnavailableError,
-  isGlobalFirestoreCircuitOpen,
-  withFirestoreDeadline,
-} from "@/lib/server/firestoreErrors";
+import { randomUUID } from "crypto";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import { invalidateCatalogCache } from "@/lib/server/firestoreCatalogRepository";
+import { categoryToPrisma, prismaToCategory } from "@/lib/server/prisma/mappers";
 import { slugify } from "@/lib/slug";
 import type { AdminCategory } from "@/types/admin";
 
-const COLLECTION = "categories";
-
-function normalizeCategory(id: string, data: FirebaseFirestore.DocumentData): AdminCategory {
+function mapAdminCategory(row: {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  parentId: string | null;
+  imageUrl: string | null;
+  isFeatured: boolean;
+  sortOrder: number;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  productCount: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+}): AdminCategory {
   return {
-    id,
-    name: String(data.name ?? ""),
-    slug: String(data.slug ?? slugify(String(data.name ?? ""))),
-    description: data.description ? String(data.description) : undefined,
-    parentId: data.parentId ?? null,
-    imageUrl: data.imageUrl ? String(data.imageUrl) : undefined,
-    isFeatured: Boolean(data.isFeatured),
-    sortOrder: Number(data.sortOrder ?? 0),
-    metaTitle: data.metaTitle ? String(data.metaTitle) : undefined,
-    metaDescription: data.metaDescription ? String(data.metaDescription) : undefined,
-    productCount: Number(data.productCount ?? 0),
-    createdAt: data.createdAt ? String(data.createdAt) : undefined,
-    updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description ?? undefined,
+    parentId: row.parentId,
+    imageUrl: row.imageUrl ?? undefined,
+    isFeatured: row.isFeatured,
+    sortOrder: row.sortOrder,
+    metaTitle: row.metaTitle ?? undefined,
+    metaDescription: row.metaDescription ?? undefined,
+    productCount: row.productCount,
+    createdAt: row.createdAt ?? undefined,
+    updatedAt: row.updatedAt ?? undefined,
   };
 }
 
@@ -44,42 +52,18 @@ async function staticCategories(): Promise<AdminCategory[]> {
   }));
 }
 
-export async function listCategories(): Promise<AdminCategory[]> {
-  if (isGlobalFirestoreCircuitOpen()) {
-    return staticCategories();
-  }
-
-  try {
-    const db = getAdminFirestore();
-    const snap = await withFirestoreDeadline(() =>
-      db.collection(COLLECTION).orderBy("sortOrder", "asc").get()
-    );
-    if (snap.empty) {
-      return seedCategoriesFromStatic();
-    }
-    return snap.docs.map((doc) => normalizeCategory(doc.id, doc.data()));
-  } catch (error) {
-    if (isFirestoreUnavailableError(error) || isFirestoreFastFailError(error)) {
-      return staticCategories();
-    }
-    throw error;
-  }
-}
-
 async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
   const { loadCategories } = await import("@/lib/server/catalogRepository");
   const { getAllProducts } = await import("@/services/catalogService");
   const staticCategories = loadCategories();
   const products = await getAllProducts(true);
-  const db = getAdminFirestore();
   const now = new Date().toISOString();
-  const batch = db.batch();
 
   const categories: AdminCategory[] = staticCategories.map((cat, index) => {
     const productCount = products.filter(
       (p) => p.categorySlug === cat.slug && p.status === "active"
     ).length;
-    const record: AdminCategory = {
+    return {
       id: cat.id,
       name: cat.name,
       slug: cat.slug,
@@ -91,36 +75,74 @@ async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
       createdAt: now,
       updatedAt: now,
     };
-    batch.set(db.collection(COLLECTION).doc(cat.id), record);
-    return record;
   });
 
-  await batch.commit();
+  await prisma.$transaction(
+    categories.map((category) =>
+      prisma.category.upsert({
+        where: { id: category.id },
+        create: {
+          ...categoryToPrisma(category),
+          parentId: null,
+          metaTitle: null,
+          metaDescription: null,
+          productCount: category.productCount ?? 0,
+          createdAt: now,
+          updatedAt: now,
+        },
+        update: {
+          ...categoryToPrisma(category),
+          productCount: category.productCount ?? 0,
+          updatedAt: now,
+        },
+      })
+    )
+  );
+
   return categories;
 }
 
+export async function listCategories(): Promise<AdminCategory[]> {
+  if (!isPostgresConfigured()) {
+    return staticCategories();
+  }
+  const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+  if (rows.length === 0) {
+    return seedCategoriesFromStatic();
+  }
+  return rows.map(mapAdminCategory);
+}
+
 export async function getCategoryById(id: string): Promise<AdminCategory | null> {
-  const db = getAdminFirestore();
-  const doc = await db.collection(COLLECTION).doc(id).get();
-  if (!doc.exists) return null;
-  return normalizeCategory(doc.id, doc.data()!);
+  const row = await prisma.category.findUnique({ where: { id } });
+  return row ? mapAdminCategory(row) : null;
 }
 
 export async function createCategory(
   input: Omit<AdminCategory, "id" | "createdAt" | "updatedAt">
 ): Promise<AdminCategory> {
-  const db = getAdminFirestore();
-  const ref = db.collection(COLLECTION).doc();
   const now = new Date().toISOString();
   const slug = input.slug || slugify(input.name);
   const record: AdminCategory = {
     ...input,
-    id: ref.id,
+    id: randomUUID(),
     slug,
     createdAt: now,
     updatedAt: now,
   };
-  await ref.set(record);
+
+  await prisma.category.create({
+    data: {
+      ...categoryToPrisma(record),
+      parentId: record.parentId ?? null,
+      metaTitle: record.metaTitle ?? null,
+      metaDescription: record.metaDescription ?? null,
+      productCount: record.productCount ?? 0,
+      createdAt: now,
+      updatedAt: now,
+    },
+  });
+
   invalidateCatalogCache();
   return record;
 }
@@ -129,12 +151,30 @@ export async function updateCategory(
   id: string,
   patch: Partial<AdminCategory>
 ): Promise<AdminCategory> {
-  const db = getAdminFirestore();
   const now = new Date().toISOString();
   const rest = { ...patch };
   delete rest.id;
   delete rest.createdAt;
-  await db.collection(COLLECTION).doc(id).update({ ...rest, updatedAt: now });
+
+  await prisma.category.update({
+    where: { id },
+    data: {
+      ...(rest.name !== undefined ? { name: rest.name } : {}),
+      ...(rest.slug !== undefined ? { slug: rest.slug } : {}),
+      ...(rest.description !== undefined ? { description: rest.description ?? null } : {}),
+      ...(rest.parentId !== undefined ? { parentId: rest.parentId } : {}),
+      ...(rest.imageUrl !== undefined ? { imageUrl: rest.imageUrl ?? null } : {}),
+      ...(rest.isFeatured !== undefined ? { isFeatured: rest.isFeatured } : {}),
+      ...(rest.sortOrder !== undefined ? { sortOrder: rest.sortOrder } : {}),
+      ...(rest.metaTitle !== undefined ? { metaTitle: rest.metaTitle ?? null } : {}),
+      ...(rest.metaDescription !== undefined
+        ? { metaDescription: rest.metaDescription ?? null }
+        : {}),
+      ...(rest.productCount !== undefined ? { productCount: rest.productCount } : {}),
+      updatedAt: now,
+    },
+  });
+
   invalidateCatalogCache();
   const updated = await getCategoryById(id);
   if (!updated) throw new Error("Category not found after update");
@@ -142,15 +182,10 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(id: string): Promise<void> {
-  const db = getAdminFirestore();
-  const children = await db
-    .collection(COLLECTION)
-    .where("parentId", "==", id)
-    .limit(1)
-    .get();
-  if (!children.empty) {
+  const children = await prisma.category.count({ where: { parentId: id } });
+  if (children > 0) {
     throw new Error("Cannot delete category with subcategories");
   }
-  await db.collection(COLLECTION).doc(id).delete();
+  await prisma.category.delete({ where: { id } });
   invalidateCatalogCache();
 }

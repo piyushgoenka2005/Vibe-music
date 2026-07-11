@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
   blogUploadFolder,
-  uploadBufferToCloudinary,
-} from "@/lib/cloudinary";
+  uploadBufferToCdn,
+} from "@/lib/server/cdnStorage";
 
 export async function POST(request: Request) {
   try {
@@ -23,8 +23,9 @@ export async function POST(request: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const url = await uploadBufferToCloudinary(buffer, file.name, {
+    const url = await uploadBufferToCdn(buffer, file.name, {
       folder: blogUploadFolder(),
+      contentType: file.type,
     });
 
     return NextResponse.json({ url });

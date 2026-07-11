@@ -2,11 +2,14 @@ import { z } from "zod";
 
 export const MAX_REVIEW_IMAGES = 4;
 
-const cloudinaryUrl = z
+const reviewImageUrl = z
   .string()
   .url()
   .refine(
-    (url) => url.includes("res.cloudinary.com") || url.startsWith("https://"),
+    (url) =>
+      url.startsWith("https://cdn.vibemusic.in/") ||
+      url.includes("res.cloudinary.com") ||
+      url.startsWith("https://"),
     "Invalid image URL"
   );
 
@@ -14,7 +17,7 @@ export const createReviewSchema = z.object({
   rating: z.number().int().min(1).max(5),
   title: z.string().trim().min(1).max(120),
   body: z.string().trim().min(20).max(2000),
-  images: z.array(cloudinaryUrl).max(MAX_REVIEW_IMAGES).optional().default([]),
+  images: z.array(reviewImageUrl).max(MAX_REVIEW_IMAGES).optional().default([]),
 });
 
 export const reviewListQuerySchema = z.object({

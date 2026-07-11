@@ -6,7 +6,7 @@ import {
   jsonError,
   parseJsonBody,
 } from "@/lib/api/route-utils";
-import { BRAND } from "@/lib/brand";
+import { sendContactFormAdminNotification } from "@/lib/server/adminNotificationEmailService";
 import { createContactMessage } from "@/lib/server/contactRepository";
 import { createAdminNotification } from "@/lib/server/notificationRepository";
 import { ROUTES } from "@/lib/routes";
@@ -19,35 +19,6 @@ const contactSchema = z.object({
   subject: z.string().min(3).max(160),
   message: z.string().min(10).max(4000),
 });
-
-async function notifySupportEmail(input: z.infer<typeof contactSchema>) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return;
-
-  const from =
-    process.env.ORDER_EMAIL_FROM ?? `${BRAND.name} <orders@${BRAND.domain}>`;
-
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [BRAND.email],
-      reply_to: input.email,
-      subject: `[Contact] ${input.subject}`,
-      html: `
-        <p><strong>Name:</strong> ${input.name}</p>
-        <p><strong>Email:</strong> ${input.email}</p>
-        ${input.phone ? `<p><strong>Phone:</strong> ${input.phone}</p>` : ""}
-        <p><strong>Subject:</strong> ${input.subject}</p>
-        <p>${input.message.replace(/\n/g, "<br/>")}</p>
-      `,
-    }),
-  });
-}
 
 export async function POST(request: Request) {
   const rateLimited = await enforceRateLimit(
@@ -65,7 +36,7 @@ export async function POST(request: Request) {
 
   try {
     const record = await createContactMessage(parsed.data);
-    void notifySupportEmail(parsed.data);
+    void sendContactFormAdminNotification(parsed.data);
     void createAdminNotification({
       type: "contact",
       title: "New contact message",

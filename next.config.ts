@@ -6,7 +6,6 @@ const isProd = process.env.NODE_ENV === "production";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
-  serverExternalPackages: ["firebase-admin"],
   experimental: {
     optimizePackageImports: [
       "lucide-react",
@@ -15,8 +14,6 @@ const nextConfig: NextConfig = {
       "@radix-ui/react-slot",
       "recharts",
       "framer-motion",
-      "firebase/auth",
-      "firebase/firestore",
       "@tanstack/react-query",
       "three",
       "@react-three/fiber",

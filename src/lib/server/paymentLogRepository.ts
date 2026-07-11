@@ -1,23 +1,54 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { prisma } from "@/lib/db/prisma";
+import { asJsonValue } from "@/lib/server/prisma/mappers";
 import type { PaymentLog, PaymentLogStatus } from "@/types/payment";
-
-const COLLECTION = "payment_logs";
 
 function now(): string {
   return new Date().toISOString();
 }
 
+function mapPaymentLog(row: {
+  id: string;
+  razorpayEventId: string;
+  eventType: string;
+  status: string;
+  orderId: string | null;
+  razorpayOrderId: string | null;
+  razorpayPaymentId: string | null;
+  razorpayRefundId: string | null;
+  payload: unknown;
+  error: string | null;
+  attemptCount: number;
+  createdAt: string;
+  updatedAt: string;
+  processedAt: string | null;
+}): PaymentLog {
+  return {
+    id: row.id,
+    razorpayEventId: row.razorpayEventId,
+    eventType: row.eventType,
+    status: row.status as PaymentLogStatus,
+    orderId: row.orderId,
+    razorpayOrderId: row.razorpayOrderId,
+    razorpayPaymentId: row.razorpayPaymentId,
+    razorpayRefundId: row.razorpayRefundId,
+    payload: (row.payload as Record<string, unknown>) ?? {},
+    error: row.error,
+    attemptCount: row.attemptCount,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    processedAt: row.processedAt,
+  };
+}
+
 export async function getPaymentLogByEventId(
   razorpayEventId: string
 ): Promise<PaymentLog | null> {
-  const doc = await getAdminFirestore()
-    .collection(COLLECTION)
-    .doc(razorpayEventId)
-    .get();
-  if (!doc.exists) return null;
-  return doc.data() as PaymentLog;
+  const row = await prisma.paymentLog.findUnique({
+    where: { razorpayEventId },
+  });
+  return row ? mapPaymentLog(row) : null;
 }
 
 export async function createOrGetPaymentLog(input: {
@@ -29,11 +60,11 @@ export async function createOrGetPaymentLog(input: {
   razorpayPaymentId?: string | null;
   razorpayRefundId?: string | null;
 }): Promise<{ log: PaymentLog; isNew: boolean }> {
-  const ref = getAdminFirestore().collection(COLLECTION).doc(input.razorpayEventId);
-  const existing = await ref.get();
-
-  if (existing.exists) {
-    return { log: existing.data() as PaymentLog, isNew: false };
+  const existing = await prisma.paymentLog.findUnique({
+    where: { razorpayEventId: input.razorpayEventId },
+  });
+  if (existing) {
+    return { log: mapPaymentLog(existing), isNew: false };
   }
 
   const timestamp = now();
@@ -54,7 +85,25 @@ export async function createOrGetPaymentLog(input: {
     processedAt: null,
   };
 
-  await ref.create(log);
+  await prisma.paymentLog.create({
+    data: {
+      id: log.id,
+      razorpayEventId: log.razorpayEventId,
+      eventType: log.eventType,
+      status: log.status,
+      orderId: log.orderId,
+      razorpayOrderId: log.razorpayOrderId,
+      razorpayPaymentId: log.razorpayPaymentId,
+      razorpayRefundId: log.razorpayRefundId,
+      payload: asJsonValue(log.payload),
+      error: log.error,
+      attemptCount: log.attemptCount,
+      createdAt: log.createdAt,
+      updatedAt: log.updatedAt,
+      processedAt: log.processedAt,
+    },
+  });
+
   return { log, isNew: true };
 }
 
@@ -74,55 +123,46 @@ export async function updatePaymentLogStatus(
     >
   >
 ): Promise<void> {
-  await getAdminFirestore()
-    .collection(COLLECTION)
-    .doc(razorpayEventId)
-    .update({
+  await prisma.paymentLog.update({
+    where: { razorpayEventId },
+    data: {
       ...patch,
       updatedAt: now(),
-    });
+    },
+  });
 }
 
 export async function listPaymentLogs(limit = 50): Promise<PaymentLog[]> {
-  const snap = await getAdminFirestore()
-    .collection(COLLECTION)
-    .orderBy("createdAt", "desc")
-    .limit(limit)
-    .get();
-
-  return snap.docs.map((doc) => doc.data() as PaymentLog);
+  const rows = await prisma.paymentLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+  return rows.map(mapPaymentLog);
 }
 
 export async function countPaymentLogsByStatus(
   status: PaymentLogStatus
 ): Promise<number> {
-  const snap = await getAdminFirestore()
-    .collection(COLLECTION)
-    .where("status", "==", status)
-    .get();
-  return snap.size;
+  return prisma.paymentLog.count({ where: { status } });
 }
 
 export async function getRecentFailedPaymentLogs(
   limit = 10
 ): Promise<PaymentLog[]> {
-  const snap = await getAdminFirestore()
-    .collection(COLLECTION)
-    .where("status", "==", "failed")
-    .orderBy("createdAt", "desc")
-    .limit(limit)
-    .get();
-
-  return snap.docs.map((doc) => doc.data() as PaymentLog);
+  const rows = await prisma.paymentLog.findMany({
+    where: { status: "failed" },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+  return rows.map(mapPaymentLog);
 }
 
 export async function getPaymentLogsSince(
   sinceIso: string
 ): Promise<PaymentLog[]> {
-  const snap = await getAdminFirestore()
-    .collection(COLLECTION)
-    .where("createdAt", ">=", sinceIso)
-    .get();
-
-  return snap.docs.map((doc) => doc.data() as PaymentLog);
+  const rows = await prisma.paymentLog.findMany({
+    where: { createdAt: { gte: sinceIso } },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(mapPaymentLog);
 }

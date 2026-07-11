@@ -1,14 +1,7 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import {
-  createFirestoreCircuitBreaker,
-  isFirestoreFastFailError,
-  isFirestoreUnavailableError,
-  logFirestoreWarning,
-  markFirestoreUnavailable,
-  withFirestoreDeadline,
-} from "@/lib/server/firestoreErrors";
+import { randomUUID } from "crypto";
+import * as pg from "@/lib/server/prisma/contentRepository";
 import { slugify } from "@/lib/slug";
 import type {
   BlogPost,
@@ -17,55 +10,6 @@ import type {
   CreateBlogPostInput,
   UpdateBlogPostInput,
 } from "@/types/blog";
-
-const COLLECTION = "blog_posts";
-
-const blogCircuit = createFirestoreCircuitBreaker();
-
-function isBlogFirestoreDisabled(): boolean {
-  return process.env.DISABLE_FIRESTORE_BLOG === "true";
-}
-
-export function isBlogUnavailable(): boolean {
-  return isBlogFirestoreDisabled() || blogCircuit.isOpen();
-}
-
-function handleBlogUnavailable<T>(
-  error: unknown,
-  context: string,
-  fallback: T
-): T {
-  if (isFirestoreUnavailableError(error) || isFirestoreFastFailError(error)) {
-    markFirestoreUnavailable(error);
-    const wasOpen = blogCircuit.isOpen();
-    blogCircuit.open();
-    if (!wasOpen) {
-      logFirestoreWarning("blog", error, context);
-    }
-    return fallback;
-  }
-  throw error;
-}
-
-async function runBlogRead<T>(
-  context: string,
-  fallback: T,
-  read: () => Promise<T>
-): Promise<T> {
-  if (isBlogFirestoreDisabled() || blogCircuit.isOpen()) {
-    return fallback;
-  }
-
-  try {
-    return await withFirestoreDeadline(read);
-  } catch (error) {
-    return handleBlogUnavailable(error, context, fallback);
-  }
-}
-
-function ensureBlogPostSummaries(value: unknown): BlogPostSummary[] {
-  return Array.isArray(value) ? value : [];
-}
 
 function now(): string {
   return new Date().toISOString();
@@ -76,34 +20,13 @@ function normalizeTags(value: unknown): string[] {
   return [...new Set(value.map((tag) => String(tag).trim()).filter(Boolean))];
 }
 
-function normalizePost(
-  id: string,
-  data: FirebaseFirestore.DocumentData
-): BlogPost {
-  return {
-    id,
-    slug: String(data.slug ?? ""),
-    title: String(data.title ?? ""),
-    excerpt: String(data.excerpt ?? ""),
-    content: String(data.content ?? ""),
-    contentFormat: "tiptap_json",
-    coverImage: String(data.coverImage ?? ""),
-    tags: normalizeTags(data.tags),
-    seoTitle: String(data.seoTitle ?? ""),
-    seoDescription: String(data.seoDescription ?? ""),
-    status: normalizeStatus(data.status),
-    authorId: String(data.authorId ?? ""),
-    authorName: String(data.authorName ?? ""),
-    publishedAt: data.publishedAt ? String(data.publishedAt) : null,
-    scheduledAt: data.scheduledAt ? String(data.scheduledAt) : null,
-    createdAt: String(data.createdAt ?? ""),
-    updatedAt: String(data.updatedAt ?? ""),
-  };
-}
-
 function normalizeStatus(value: unknown): BlogPostStatus {
   if (value === "published" || value === "scheduled") return value;
   return "draft";
+}
+
+export function isBlogUnavailable(): boolean {
+  return false;
 }
 
 export function isBlogPostPublic(post: BlogPost, at = new Date()): boolean {
@@ -160,115 +83,27 @@ function resolvePublishFields(
   };
 }
 
-async function slugExists(slug: string, excludeId?: string): Promise<boolean> {
-  const snap = await getAdminFirestore()
-    .collection(COLLECTION)
-    .where("slug", "==", slug)
-    .limit(1)
-    .get();
-
-  if (snap.empty) return false;
-  if (excludeId && snap.docs[0]?.id === excludeId) return false;
-  return true;
-}
-
 export async function listAllBlogPosts(): Promise<BlogPost[]> {
-  const snap = await getAdminFirestore().collection(COLLECTION).get();
-  return snap.docs
-    .map((doc) => normalizePost(doc.id, doc.data()))
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return pg.listAllBlogPosts() as Promise<BlogPost[]>;
 }
 
 export async function listPublicBlogPosts(
   at = new Date(),
   options?: { limit?: number }
 ): Promise<BlogPostSummary[]> {
-  const queryLimit =
-    options?.limit && options.limit > 0
-      ? Math.min(Math.max(options.limit * 3, options.limit), 50)
-      : undefined;
-
-  const result = await runBlogRead("Unable to list public blog posts", [], async () => {
-    const db = getAdminFirestore();
-    const isoNow = at.toISOString();
-
-    const fetchPublished = async () => {
-      try {
-        let query = db
-          .collection(COLLECTION)
-          .where("status", "==", "published")
-          .orderBy("publishedAt", "desc");
-        if (queryLimit) query = query.limit(queryLimit);
-        return await query.get();
-      } catch (error) {
-        if (isFirestoreUnavailableError(error)) throw error;
-        let query = db.collection(COLLECTION).where("status", "==", "published");
-        if (queryLimit) query = query.limit(queryLimit);
-        return query.get();
-      }
-    };
-
-    const fetchScheduled = async () => {
-      try {
-        let query = db
-          .collection(COLLECTION)
-          .where("status", "==", "scheduled")
-          .where("scheduledAt", "<=", isoNow)
-          .orderBy("scheduledAt", "desc");
-        if (queryLimit) query = query.limit(queryLimit);
-        return await query.get();
-      } catch (error) {
-        if (isFirestoreUnavailableError(error)) throw error;
-        let query = db.collection(COLLECTION).where("status", "==", "scheduled");
-        if (queryLimit) query = query.limit(queryLimit);
-        return query.get();
-      }
-    };
-
-    const [publishedSnap, scheduledSnap] = await Promise.all([
-      fetchPublished(),
-      fetchScheduled(),
-    ]);
-
-    const posts = [
-      ...publishedSnap.docs.map((doc) => normalizePost(doc.id, doc.data())),
-      ...scheduledSnap.docs
-        .map((doc) => normalizePost(doc.id, doc.data()))
-        .filter((post) => isBlogPostPublic(post, at)),
-    ];
-
-    const unique = new Map<string, BlogPost>();
-    posts.forEach((post) => unique.set(post.id, post));
-
-    return [...unique.values()]
-      .map((post) => toSummary(post, at))
-      .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
-      .slice(0, options?.limit && options.limit > 0 ? options.limit : undefined);
-  });
-
-  return ensureBlogPostSummaries(result);
+  const posts = (await listAllBlogPosts()).filter((post) => isBlogPostPublic(post, at));
+  return posts
+    .map((post) => toSummary(post, at))
+    .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
+    .slice(0, options?.limit && options.limit > 0 ? options.limit : undefined);
 }
 
 export async function getBlogPostById(id: string): Promise<BlogPost | null> {
-  const doc = await getAdminFirestore().collection(COLLECTION).doc(id).get();
-  if (!doc.exists) return null;
-  return normalizePost(doc.id, doc.data()!);
+  return pg.getBlogPostById(id) as Promise<BlogPost | null>;
 }
 
-export async function getBlogPostBySlug(
-  slug: string
-): Promise<BlogPost | null> {
-  return runBlogRead(`Unable to load blog post ${slug}`, null, async () => {
-    const snap = await getAdminFirestore()
-      .collection(COLLECTION)
-      .where("slug", "==", slug)
-      .limit(1)
-      .get();
-
-    if (snap.empty) return null;
-    const doc = snap.docs[0]!;
-    return normalizePost(doc.id, doc.data());
-  });
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  return pg.getBlogPostBySlug(slug) as Promise<BlogPost | null>;
 }
 
 export async function getPublicBlogPostBySlug(
@@ -283,29 +118,19 @@ export async function getPublicBlogPostBySlug(
 export async function listPublicBlogSlugs(): Promise<
   Array<{ slug: string; updatedAt: string }>
 > {
-  return runBlogRead("Unable to list public blog slugs", [], async () => {
-    const db = getAdminFirestore();
-    const [publishedSnap, scheduledSnap] = await Promise.all([
-      db.collection(COLLECTION).where("status", "==", "published").get(),
-      db.collection(COLLECTION).where("status", "==", "scheduled").get(),
-    ]);
-
-    const at = new Date();
-    return [...publishedSnap.docs, ...scheduledSnap.docs]
-      .map((doc) => normalizePost(doc.id, doc.data()))
-      .filter((post) => isBlogPostPublic(post, at))
-      .map((post) => ({ slug: post.slug, updatedAt: post.updatedAt }));
-  });
+  const at = new Date();
+  return (await listAllBlogPosts())
+    .filter((post) => isBlogPostPublic(post, at))
+    .map((post) => ({ slug: post.slug, updatedAt: post.updatedAt }));
 }
 
 export async function createBlogPost(
   input: CreateBlogPostInput
 ): Promise<BlogPost> {
-  const db = getAdminFirestore();
   const slug = slugify(input.slug || input.title);
   if (!slug) throw new Error("Slug is required");
 
-  if (await slugExists(slug)) {
+  if (await pg.blogSlugExists(slug)) {
     throw new Error("A post with this slug already exists");
   }
 
@@ -313,7 +138,6 @@ export async function createBlogPost(
     throw new Error("Scheduled posts require a publish date");
   }
 
-  const ref = db.collection(COLLECTION).doc();
   const timestamp = now();
   const publishFields = resolvePublishFields(
     input.status,
@@ -322,13 +146,12 @@ export async function createBlogPost(
     timestamp
   );
 
-  const post: BlogPost = {
-    id: ref.id,
+  return pg.createBlogPostRecord({
+    id: randomUUID(),
     slug,
     title: input.title.trim(),
     excerpt: input.excerpt?.trim() ?? "",
     content: input.content,
-    contentFormat: "tiptap_json",
     coverImage: input.coverImage?.trim() ?? "",
     tags: normalizeTags(input.tags),
     seoTitle: input.seoTitle?.trim() ?? "",
@@ -340,10 +163,7 @@ export async function createBlogPost(
     scheduledAt: publishFields.scheduledAt,
     createdAt: timestamp,
     updatedAt: timestamp,
-  };
-
-  await ref.set(post);
-  return post;
+  });
 }
 
 export async function updateBlogPost(
@@ -365,7 +185,7 @@ export async function updateBlogPost(
   if (input.slug !== undefined) {
     nextSlug = slugify(input.slug);
     if (!nextSlug) throw new Error("Slug is required");
-    if (nextSlug !== existing.slug && (await slugExists(nextSlug, id))) {
+    if (nextSlug !== existing.slug && (await pg.blogSlugExists(nextSlug, id))) {
       throw new Error("A post with this slug already exists");
     }
   }
@@ -378,33 +198,26 @@ export async function updateBlogPost(
     timestamp
   );
 
-  const patch: Record<string, unknown> = {
-    updatedAt: timestamp,
+  return pg.updateBlogPostRecord(id, {
+    ...(input.title !== undefined ? { title: input.title.trim() } : {}),
+    ...(input.slug !== undefined ? { slug: nextSlug } : {}),
+    ...(input.excerpt !== undefined ? { excerpt: input.excerpt.trim() } : {}),
+    ...(input.content !== undefined ? { content: input.content } : {}),
+    ...(input.coverImage !== undefined ? { coverImage: input.coverImage.trim() } : {}),
+    ...(input.tags !== undefined ? { tags: normalizeTags(input.tags) } : {}),
+    ...(input.seoTitle !== undefined ? { seoTitle: input.seoTitle.trim() } : {}),
+    ...(input.seoDescription !== undefined
+      ? { seoDescription: input.seoDescription.trim() }
+      : {}),
+    ...(input.status !== undefined ? { status: normalizeStatus(input.status) } : {}),
     publishedAt: publishFields.publishedAt,
     scheduledAt: publishFields.scheduledAt,
-  };
-
-  if (input.title !== undefined) patch.title = input.title.trim();
-  if (input.slug !== undefined) patch.slug = nextSlug;
-  if (input.excerpt !== undefined) patch.excerpt = input.excerpt.trim();
-  if (input.content !== undefined) patch.content = input.content;
-  if (input.coverImage !== undefined) patch.coverImage = input.coverImage.trim();
-  if (input.tags !== undefined) patch.tags = normalizeTags(input.tags);
-  if (input.seoTitle !== undefined) patch.seoTitle = input.seoTitle.trim();
-  if (input.seoDescription !== undefined) {
-    patch.seoDescription = input.seoDescription.trim();
-  }
-  if (input.status !== undefined) patch.status = input.status;
-
-  await getAdminFirestore().collection(COLLECTION).doc(id).update(patch);
-
-  const updated = await getBlogPostById(id);
-  if (!updated) throw new Error("Blog post not found after update");
-  return updated;
+    updatedAt: timestamp,
+  });
 }
 
 export async function deleteBlogPost(id: string): Promise<void> {
   const existing = await getBlogPostById(id);
   if (!existing) throw new Error("Blog post not found");
-  await getAdminFirestore().collection(COLLECTION).doc(id).delete();
+  await pg.deleteBlogPostRecord(id);
 }

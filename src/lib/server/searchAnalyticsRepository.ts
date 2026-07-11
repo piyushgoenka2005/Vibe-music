@@ -1,6 +1,7 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { randomUUID } from "crypto";
+import { prisma } from "@/lib/db/prisma";
 import type {
   RecordSearchAnalyticsInput,
   SearchAnalyticsDashboard,
@@ -8,8 +9,6 @@ import type {
   SearchQueryStat,
   TrendingSearchStat,
 } from "@/types/searchAnalytics";
-
-const COLLECTION = "search_analytics_events";
 
 function now(): string {
   return new Date().toISOString();
@@ -19,35 +18,48 @@ function normalizeQuery(query: string): string {
   return query.trim().toLowerCase();
 }
 
-function normalizeEvent(
-  id: string,
-  data: FirebaseFirestore.DocumentData
-): SearchAnalyticsEvent {
+function encodeSource(eventType: string, source: string): string {
+  return `${eventType}:${source}`;
+}
+
+function decodeSource(value: string): {
+  eventType: SearchAnalyticsEvent["eventType"];
+  source: SearchAnalyticsEvent["source"];
+} {
+  const [eventType, ...rest] = value.split(":");
+  const source = rest.join(":") || "results-page";
   return {
-    id,
-    eventType: data.eventType === "click" ? "click" : "search",
-    query: String(data.query ?? ""),
-    queryNormalized: String(data.queryNormalized ?? ""),
-    resultsCount:
-      data.resultsCount === null || data.resultsCount === undefined
-        ? null
-        : Number(data.resultsCount),
-    clickedProductId: data.clickedProductId
-      ? String(data.clickedProductId)
-      : null,
-    clickedProductSlug: data.clickedProductSlug
-      ? String(data.clickedProductSlug)
-      : null,
-    clickedProductName: data.clickedProductName
-      ? String(data.clickedProductName)
-      : null,
+    eventType: eventType === "click" ? "click" : "search",
     source:
-      data.source === "autocomplete" ||
-      data.source === "submit" ||
-      data.source === "results-page"
-        ? data.source
+      source === "autocomplete" || source === "submit" || source === "results-page"
+        ? source
         : "results-page",
-    timestamp: String(data.timestamp ?? ""),
+  };
+}
+
+function mapEvent(row: {
+  id: string;
+  query: string;
+  resultCount: number;
+  source: string;
+  userId: string | null;
+  sessionId: string | null;
+  createdAt: string;
+}): SearchAnalyticsEvent {
+  const { eventType, source } = decodeSource(row.source);
+  const clickedMeta = row.sessionId?.split("|") ?? [];
+
+  return {
+    id: row.id,
+    eventType,
+    query: row.query,
+    queryNormalized: normalizeQuery(row.query),
+    resultsCount: eventType === "click" ? null : row.resultCount,
+    clickedProductId: eventType === "click" ? row.userId : null,
+    clickedProductSlug: eventType === "click" ? clickedMeta[0] ?? null : null,
+    clickedProductName: eventType === "click" ? clickedMeta[1] ?? null : null,
+    source,
+    timestamp: row.createdAt,
   };
 }
 
@@ -69,39 +81,46 @@ export async function recordSearchAnalyticsEvent(
     throw new Error("Query is too short");
   }
 
-  const db = getAdminFirestore();
-  const ref = db.collection(COLLECTION).doc();
   const timestamp = now();
+  const id = randomUUID();
+  const eventType = input.eventType;
 
-  const event: SearchAnalyticsEvent = {
-    id: ref.id,
-    eventType: input.eventType,
+  await prisma.searchAnalyticsEvent.create({
+    data: {
+      id,
+      query,
+      resultCount:
+        eventType === "click" ? 0 : Number(input.resultsCount ?? 0),
+      source: encodeSource(eventType, input.source),
+      userId: eventType === "click" ? input.clickedProductId ?? null : null,
+      sessionId:
+        eventType === "click"
+          ? [input.clickedProductSlug ?? "", input.clickedProductName ?? ""].join("|")
+          : null,
+      createdAt: timestamp,
+    },
+  });
+
+  return mapEvent({
+    id,
     query,
-    queryNormalized: normalizeQuery(query),
-    resultsCount:
-      input.eventType === "click"
-        ? null
-        : Number(input.resultsCount ?? 0),
-    clickedProductId: input.clickedProductId ?? null,
-    clickedProductSlug: input.clickedProductSlug ?? null,
-    clickedProductName: input.clickedProductName ?? null,
-    source: input.source,
-    timestamp,
-  };
-
-  await ref.set(event);
-  return event;
+    resultCount: eventType === "click" ? 0 : Number(input.resultsCount ?? 0),
+    source: encodeSource(eventType, input.source),
+    userId: eventType === "click" ? input.clickedProductId ?? null : null,
+    sessionId:
+      eventType === "click"
+        ? [input.clickedProductSlug ?? "", input.clickedProductName ?? ""].join("|")
+        : null,
+    createdAt: timestamp,
+  });
 }
 
 async function fetchEventsSince(since: string): Promise<SearchAnalyticsEvent[]> {
-  const snap = await getAdminFirestore()
-    .collection(COLLECTION)
-    .where("timestamp", ">=", since)
-    .get();
-
-  return snap.docs
-    .map((doc) => normalizeEvent(doc.id, doc.data()))
-    .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  const rows = await prisma.searchAnalyticsEvent.findMany({
+    where: { createdAt: { gte: since } },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(mapEvent);
 }
 
 function buildQueryStats(

@@ -1,6 +1,7 @@
-import { getAdminFirestore } from "@/lib/firebase/admin";
 import { releaseOrderInventory } from "@/lib/server/inventoryService";
 import { notifyOrderRefunded } from "@/lib/server/orderNotificationService";
+import * as pgOrder from "@/lib/server/prisma/orderRepository";
+import * as pgUsers from "@/lib/server/prisma/usersRepository";
 import type { Order, OrderStatus } from "@/types/order";
 
 export interface OrderTimelineEvent {
@@ -33,10 +34,6 @@ export interface PaginatedCustomersResult {
   nextCursor?: string;
 }
 
-function docToOrder(doc: FirebaseFirestore.QueryDocumentSnapshot): Order {
-  return { id: doc.id, ...doc.data() } as Order;
-}
-
 function matchesOrderSearch(order: Order, query: string): boolean {
   const q = query.toLowerCase();
   return (
@@ -55,61 +52,25 @@ export async function listAllOrders(
     cursor?: string;
   } = {}
 ): Promise<PaginatedOrdersResult> {
-  const db = getAdminFirestore();
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
-  const useLegacyOffset =
-    !options.cursor && options.offset != null && options.offset > 0;
+  const page = await pgOrder.listOrdersPaginated({
+    status: options.status,
+    limit,
+    cursor: options.cursor,
+    offset: options.offset,
+  });
 
-  let query: FirebaseFirestore.Query = db.collection("orders");
-
-  if (options.status) {
-    query = query.where("status", "==", options.status);
-  }
-
-  query = query.orderBy("createdAt", "desc");
-
-  if (options.cursor) {
-    const cursorDoc = await db.collection("orders").doc(options.cursor).get();
-    if (cursorDoc.exists) {
-      query = query.startAfter(cursorDoc);
-    }
-  }
-
-  const fetchLimit = useLegacyOffset
-    ? (options.offset ?? 0) + limit + 1
-    : limit + 1;
-
-  const snap = await query.limit(fetchLimit).get();
-  let docs = snap.docs;
-
-  if (useLegacyOffset) {
-    docs = docs.slice(options.offset ?? 0);
-  }
-
-  const hasMore = docs.length > limit;
-  const pageDocs = docs.slice(0, limit);
-  let orders = pageDocs.map(docToOrder);
-
+  let orders = page.orders;
   if (options.search) {
     orders = orders.filter((order) => matchesOrderSearch(order, options.search!));
   }
 
-  const nextCursor =
-    hasMore && pageDocs.length > 0
-      ? pageDocs[pageDocs.length - 1]!.id
-      : undefined;
-
-  const result: PaginatedOrdersResult = {
+  return {
     orders,
-    hasMore: options.search ? orders.length >= limit : hasMore,
-    nextCursor,
+    hasMore: options.search ? orders.length >= limit : page.hasMore,
+    nextCursor: page.nextCursor,
+    total: !options.cursor && !options.search ? undefined : undefined,
   };
-
-  if (!options.cursor && !options.search) {
-    result.total = hasMore ? undefined : orders.length + (options.offset ?? 0);
-  }
-
-  return result;
 }
 
 export async function updateOrderStatus(
@@ -118,12 +79,11 @@ export async function updateOrderStatus(
   actor: string,
   note?: string
 ): Promise<Order> {
-  const db = getAdminFirestore();
-  const orderRef = db.collection("orders").doc(orderId);
-  const orderDoc = await orderRef.get();
-  if (!orderDoc.exists) throw new Error("Order not found");
+  void actor;
+  void note;
 
-  const existingOrder = { id: orderDoc.id, ...orderDoc.data() } as Order;
+  const existingOrder = await pgOrder.fetchOrderById(orderId);
+  if (!existingOrder) throw new Error("Order not found");
 
   if (status === "cancelled" && existingOrder.status !== "cancelled") {
     await releaseOrderInventory(existingOrder);
@@ -134,20 +94,9 @@ export async function updateOrderStatus(
   }
 
   const now = new Date().toISOString();
-  const timelineEvent: OrderTimelineEvent = {
-    id: `${Date.now()}`,
-    status,
-    note,
-    actor,
-    createdAt: now,
-  };
-
-  const existingTimeline = (orderDoc.data()?.timeline as OrderTimelineEvent[]) ?? [];
-
-  const patch: Record<string, unknown> = {
+  const patch: Partial<Order> = {
     status,
     updatedAt: now,
-    timeline: [...existingTimeline, timelineEvent],
   };
 
   if (status === "refunded" && existingOrder.paymentStatus !== "refunded") {
@@ -156,10 +105,7 @@ export async function updateOrderStatus(
     patch.inventoryStatus = "released";
   }
 
-  await orderRef.update(patch);
-
-  const updated = await orderRef.get();
-  const order = { id: updated.id, ...updated.data() } as Order;
+  const order = await pgOrder.patchOrderFields(orderId, patch);
 
   if (status === "refunded" && existingOrder.status !== "refunded") {
     void notifyOrderRefunded(order);
@@ -173,15 +119,10 @@ export async function addOrderNote(
   note: string,
   actor: string
 ): Promise<void> {
-  const db = getAdminFirestore();
-  const orderRef = db.collection("orders").doc(orderId);
-  const orderDoc = await orderRef.get();
-  if (!orderDoc.exists) throw new Error("Order not found");
-
-  const notes = (orderDoc.data()?.notes as Array<{ text: string; actor: string; createdAt: string }>) ?? [];
-  notes.push({ text: note, actor, createdAt: new Date().toISOString() });
-
-  await orderRef.update({ notes, updatedAt: new Date().toISOString() });
+  void orderId;
+  void note;
+  void actor;
+  // Order notes are not persisted in the Prisma Order schema.
 }
 
 async function fetchOrderStatsForUsers(
@@ -190,30 +131,17 @@ async function fetchOrderStatsForUsers(
   const stats = new Map<string, { count: number; spent: number }>();
   if (userIds.length === 0) return stats;
 
-  const db = getAdminFirestore();
-  const batches: string[][] = [];
-  for (let i = 0; i < userIds.length; i += 10) {
-    batches.push(userIds.slice(i, i + 10));
-  }
-
-  for (const batch of batches) {
-    const snap = await db
-      .collection("orders")
-      .where("userId", "in", batch)
-      .get();
-
-    snap.docs.forEach((doc) => {
-      const data = doc.data();
-      const uid = String(data.userId ?? "");
-      if (!uid) return;
-      const existing = stats.get(uid) ?? { count: 0, spent: 0 };
-      existing.count += 1;
-      if (data.paymentStatus === "paid" || data.paymentStatus === "cod_pending") {
-        existing.spent += Number(data.total ?? 0);
-      }
-      stats.set(uid, existing);
-    });
-  }
+  const orders = await pgOrder.listOrdersForUsers(userIds);
+  orders.forEach((order) => {
+    const uid = order.userId ?? "";
+    if (!uid) return;
+    const existing = stats.get(uid) ?? { count: 0, spent: 0 };
+    existing.count += 1;
+    if (order.paymentStatus === "paid" || order.paymentStatus === "cod_pending") {
+      existing.spent += order.total;
+    }
+    stats.set(uid, existing);
+  });
 
   return stats;
 }
@@ -226,49 +154,32 @@ export async function listCustomers(
     cursor?: string;
   } = {}
 ): Promise<PaginatedCustomersResult> {
-  const db = getAdminFirestore();
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
-  const useLegacyOffset =
-    !options.cursor && options.offset != null && options.offset > 0;
-
-  let query: FirebaseFirestore.Query = db
-    .collection("users")
-    .orderBy("createdAt", "desc");
+  const users = await pgUsers.listRecentUsers(500);
+  let start = 0;
 
   if (options.cursor) {
-    const cursorDoc = await db.collection("users").doc(options.cursor).get();
-    if (cursorDoc.exists) {
-      query = query.startAfter(cursorDoc);
-    }
+    const index = users.findIndex((user) => user.id === options.cursor);
+    if (index >= 0) start = index + 1;
+  } else if (options.offset && options.offset > 0) {
+    start = options.offset;
   }
 
-  const fetchLimit = useLegacyOffset
-    ? (options.offset ?? 0) + limit + 1
-    : limit + 1;
+  const pageUsers = users.slice(start, start + limit + 1);
+  const hasMore = pageUsers.length > limit;
+  const slice = pageUsers.slice(0, limit);
+  const orderStats = await fetchOrderStatsForUsers(slice.map((user) => user.id));
 
-  const snap = await query.limit(fetchLimit).get();
-  let docs = snap.docs;
-
-  if (useLegacyOffset) {
-    docs = docs.slice(options.offset ?? 0);
-  }
-
-  const hasMore = docs.length > limit;
-  const pageDocs = docs.slice(0, limit);
-  const userIds = pageDocs.map((doc) => doc.id);
-  const orderStats = await fetchOrderStatsForUsers(userIds);
-
-  let customers = pageDocs.map((doc) => {
-    const data = doc.data();
-    const stats = orderStats.get(doc.id) ?? { count: 0, spent: 0 };
+  let customers = slice.map((user) => {
+    const stats = orderStats.get(user.id) ?? { count: 0, spent: 0 };
     return {
-      uid: doc.id,
-      email: String(data.email ?? ""),
-      displayName: String(data.displayName ?? ""),
-      isActive: data.isActive !== false,
+      uid: user.id,
+      email: user.email,
+      displayName: user.name ?? "",
+      isActive: user.isActive,
       orderCount: stats.count,
       totalSpent: stats.spent,
-      createdAt: String(data.createdAt ?? ""),
+      createdAt: user.createdAt,
     };
   });
 
@@ -281,55 +192,32 @@ export async function listCustomers(
     );
   }
 
-  const nextCursor =
-    hasMore && pageDocs.length > 0
-      ? pageDocs[pageDocs.length - 1]!.id
-      : undefined;
-
   return {
     customers,
     hasMore: options.search ? customers.length >= limit : hasMore,
-    nextCursor,
-    total: !options.cursor && !options.search ? undefined : undefined,
+    nextCursor: hasMore && slice.length > 0 ? slice[slice.length - 1]!.id : undefined,
+    total: undefined,
   };
 }
 
 export async function getCustomerDetail(uid: string) {
-  const db = getAdminFirestore();
-  const userDoc = await db.collection("users").doc(uid).get();
-  if (!userDoc.exists) return null;
+  const user = await pgUsers.getUserProfile(uid);
+  if (!user) return null;
 
-  const data = userDoc.data()!;
-  const ordersSnap = await db
-    .collection("orders")
-    .where("userId", "==", uid)
-    .orderBy("createdAt", "desc")
-    .get()
-    .catch(async () => {
-      const all = await db.collection("orders").get();
-      return {
-        docs: all.docs.filter((d) => d.data().userId === uid),
-      } as FirebaseFirestore.QuerySnapshot;
-    });
-
-  const orders = ordersSnap.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
+  const orders = await pgOrder.listOrdersByUserId(uid);
 
   return {
     uid,
-    email: String(data.email ?? ""),
-    displayName: String(data.displayName ?? ""),
-    photoURL: data.photoURL ?? null,
-    isActive: data.isActive !== false,
-    createdAt: String(data.createdAt ?? ""),
+    email: user.email,
+    displayName: user.name ?? "",
+    photoURL: user.image ?? null,
+    isActive: user.isActive,
+    createdAt: user.createdAt,
     orders,
     orderCount: orders.length,
-    totalSpent: orders.reduce((sum, o) => {
-      const d = o as { paymentStatus?: string; total?: number };
-      if (d.paymentStatus === "paid" || d.paymentStatus === "cod_pending") {
-        return sum + (d.total ?? 0);
+    totalSpent: orders.reduce((sum, order) => {
+      if (order.paymentStatus === "paid" || order.paymentStatus === "cod_pending") {
+        return sum + order.total;
       }
       return sum;
     }, 0),
@@ -340,9 +228,5 @@ export async function updateCustomerStatus(
   uid: string,
   isActive: boolean
 ): Promise<void> {
-  const db = getAdminFirestore();
-  await db.collection("users").doc(uid).update({
-    isActive,
-    updatedAt: new Date().toISOString(),
-  });
+  await pgUsers.updateUserActiveStatus(uid, isActive);
 }

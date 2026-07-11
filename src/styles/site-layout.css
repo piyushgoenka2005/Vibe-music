@@ -301,8 +301,7 @@ body.is-landing-page .site-header__nav-gooey .gooey-linkup__hit {
   background: var(--surface-base);
   border-bottom: none;
   box-shadow: none;
-  transform: translate3d(0, 0, 0);
-  contain: layout style;
+  contain: style;
   transition: box-shadow var(--duration-normal) var(--ease-premium),
               border-color var(--duration-normal) var(--ease-premium);
 }
@@ -954,6 +953,51 @@ body.site-nav-open .site-header--scroll-hidden {
   display: none;
 }
 
+/* Portaled mobile drawer — fixed to viewport, not trapped in header */
+.site-header__nav--portaled {
+  position: fixed;
+  top: var(--site-header-offset, 118px);
+  left: 0;
+  bottom: 0;
+  width: min(320px, 88vw);
+  z-index: 199;
+  padding: 0;
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--surface-base);
+  border-right: 1px solid var(--border-default);
+  border-top: 1px solid var(--border-default);
+  box-shadow: var(--shadow-lg);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  transform: translateX(0);
+}
+
+.site-header__backdrop--portaled {
+  display: block;
+  position: fixed;
+  top: var(--site-header-offset, 118px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 198;
+  border: none;
+  background: rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.site-nav-open .site-header {
+  z-index: 201;
+}
+
+body.site-nav-open .site-header--hidden {
+  transform: none;
+  pointer-events: auto;
+}
+
 .assets-site-header__menu-cart-wrap {
   display: contents;
 }
@@ -1201,44 +1245,8 @@ body.site-nav-open .site-header--scroll-hidden {
     display: none;
   }
 
-  .site-header__nav {
-    position: fixed;
-    top: var(--site-header-offset, 118px);
-    left: 0;
-    bottom: 0;
-    width: min(320px, 88vw);
-    z-index: 199;
-    padding: 0;
-    padding-left: env(safe-area-inset-left, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: var(--surface-base);
-    border-right: 1px solid var(--border-default);
-    border-top: 1px solid var(--border-default);
-    transform: translateX(-100%);
-    visibility: hidden;
-    pointer-events: none;
-    transition:
-      transform var(--duration-normal) var(--ease-premium),
-      visibility 0s linear var(--duration-normal);
-    box-shadow: var(--shadow-lg);
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
-
-  .site-header__nav:not([aria-hidden="true"]),
-  .site-header__nav.site-header__nav--mobile-open {
-    transform: translateX(0);
-    visibility: visible;
-    pointer-events: auto;
-    z-index: 202;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transition:
-      transform var(--duration-normal) var(--ease-premium),
-      visibility 0s;
+  .site-header__nav--desktop {
+    display: none;
   }
 
   body.site-nav-open {
@@ -1256,17 +1264,6 @@ body.site-nav-open .site-header--scroll-hidden {
   body.site-nav-open .site-header--hidden {
     transform: none;
     pointer-events: auto;
-  }
-
-  .site-header__backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 198;
-    border: none;
-    background: rgba(15, 23, 42, 0.45);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
   }
 
   /* Mobile drawer accordion */

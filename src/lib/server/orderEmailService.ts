@@ -4,6 +4,8 @@ import { BRAND } from "@/lib/brand";
 import { formatOrderIdDisplay } from "@/lib/orderId";
 import { isPlacedOrder } from "@/lib/orderPlacement";
 import { buildInvoiceAccessUrl } from "@/lib/security/invoiceAccessToken";
+import { formatMailboxFrom } from "@/lib/server/email/mailboxes";
+import { sendMail } from "@/lib/server/email/smtp";
 import type { Order } from "@/types/order";
 
 function formatInr(amount: number): string {
@@ -54,6 +56,7 @@ function buildOrderConfirmationHtml(order: Order): string {
         <a href="${invoiceUrl}" style="display:inline-block;background:#1253ed;color:#fff;padding:12px 20px;text-decoration:none;border-radius:999px;font-weight:600">View invoice</a>
       </p>
       <p style="font-size:13px;color:#666">Deliver to: ${order.shippingAddress.name}, ${order.shippingAddress.line1}, ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}</p>
+      <p style="font-size:13px;color:#666">Questions? Reply to this email or write to ${formatMailboxFrom("support")}.</p>
     </div>
   `;
 }
@@ -68,50 +71,16 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
     return false;
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const from =
-    process.env.ORDER_EMAIL_FROM ?? `${BRAND.name} <orders@${BRAND.domain}>`;
+  const invoiceNumber = order.invoice?.invoiceNumber;
+  const result = await sendMail({
+    from: formatMailboxFrom("orders"),
+    to: order.email,
+    replyTo: formatMailboxFrom("support"),
+    subject: invoiceNumber
+      ? `Order confirmed — Invoice ${invoiceNumber}`
+      : `Your ${BRAND.name} order ${formatOrderIdDisplay(order.id)} is confirmed`,
+    html: buildOrderConfirmationHtml(order),
+  });
 
-  if (!apiKey) {
-    if (process.env.NODE_ENV === "production") {
-      console.error(
-        `[order-email] RESEND_API_KEY missing — confirmation not sent for ${order.id}`
-      );
-    } else {
-      console.info(
-        `[order-email] Skipped (no RESEND_API_KEY). Order ${order.id} → ${order.email}`
-      );
-    }
-    return false;
-  }
-
-  try {
-    const invoiceNumber = order.invoice?.invoiceNumber;
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to: [order.email],
-        subject: invoiceNumber
-          ? `Order confirmed — Invoice ${invoiceNumber}`
-          : `Your ${BRAND.name} order ${formatOrderIdDisplay(order.id)} is confirmed`,
-        html: buildOrderConfirmationHtml(order),
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      console.error("[order-email] Resend error:", response.status, body);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("[order-email] Failed to send:", error);
-    return false;
-  }
+  return result.ok;
 }

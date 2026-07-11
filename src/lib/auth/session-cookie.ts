@@ -1,26 +1,23 @@
+import {
+  AUTHJS_SESSION_COOKIE,
+  AUTHJS_SESSION_COOKIE_SECURE,
+} from "@/lib/auth/session-config";
+
 export function isSessionCookiePlausible(sessionCookie: string | undefined): boolean {
-  if (!sessionCookie || sessionCookie.length < 32) {
+  if (!sessionCookie || sessionCookie.length < 16) {
     return false;
   }
 
-  const parts = sessionCookie.split(".");
-  if (parts.length !== 3) {
-    return false;
-  }
+  // Auth.js database/JWT session tokens are opaque strings — presence is enough for edge routing.
+  return true;
+}
 
-  try {
-    const payloadSegment = parts[1]!;
-    const normalized = payloadSegment.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = normalized.padEnd(
-      normalized.length + ((4 - (normalized.length % 4)) % 4),
-      "="
-    );
-    const payload = JSON.parse(atob(padded)) as { exp?: number };
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
+export function hasAuthSessionCookie(
+  cookies: { get: (name: string) => { value: string } | undefined },
+  secure: boolean
+): boolean {
+  const primary = secure ? AUTHJS_SESSION_COOKIE_SECURE : AUTHJS_SESSION_COOKIE;
+  const fallback = secure ? AUTHJS_SESSION_COOKIE : AUTHJS_SESSION_COOKIE_SECURE;
+  const value = cookies.get(primary)?.value ?? cookies.get(fallback)?.value;
+  return isSessionCookiePlausible(value);
 }

@@ -1,17 +1,8 @@
-import { getAdminFirestore } from "@/lib/firebase/admin";
 import { SELLER_STATE, DEFAULT_GST_RATE } from "@/lib/gstCalculator";
-import {
-  isFirestoreFastFailError,
-  isGlobalFirestoreCircuitOpen,
-  logFirestoreWarning,
-  markFirestoreUnavailable,
-  withFirestoreDeadline,
-} from "@/lib/server/firestoreErrors";
+import * as pgContent from "@/lib/server/prisma/contentRepository";
+import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import type { AnalyticsReport, StoreSettings } from "@/types/admin";
 import { getRevenueChartData } from "@/lib/server/dashboardService";
-
-const SETTINGS_DOC = "store";
-const COLLECTION = "settings";
 
 const DEFAULT_SETTINGS: StoreSettings = {
   storeName: "Vibe Music",
@@ -28,60 +19,26 @@ const DEFAULT_SETTINGS: StoreSettings = {
 };
 
 export async function getStoreSettings(): Promise<StoreSettings> {
-  if (isGlobalFirestoreCircuitOpen()) {
-    return DEFAULT_SETTINGS;
-  }
-
-  try {
-    const db = getAdminFirestore();
-    const doc = await withFirestoreDeadline(() =>
-      db.collection(COLLECTION).doc(SETTINGS_DOC).get()
-    );
-    if (!doc.exists) {
-      return DEFAULT_SETTINGS;
-    }
-    return { ...DEFAULT_SETTINGS, ...doc.data() } as StoreSettings;
-  } catch (error) {
-    if (
-      markFirestoreUnavailable(error) ||
-      isFirestoreFastFailError(error)
-    ) {
-      logFirestoreWarning(
-        "settings",
-        error,
-        "Using default store settings — Firestore unavailable"
-      );
-      return DEFAULT_SETTINGS;
-    }
-    throw error;
-  }
+  const settings = await pgContent.getStoreSettings();
+  return { ...DEFAULT_SETTINGS, ...(settings ?? {}) };
 }
 
 export async function updateStoreSettings(
   patch: Partial<StoreSettings>
 ): Promise<StoreSettings> {
-  const db = getAdminFirestore();
   const current = await getStoreSettings();
   const updated: StoreSettings = {
     ...current,
     ...patch,
     updatedAt: new Date().toISOString(),
   };
-  await db.collection(COLLECTION).doc(SETTINGS_DOC).set(updated);
+  await pgContent.upsertStoreSettingsRecord(updated);
   return updated;
 }
 
 export async function getAnalyticsReport(period = "30d"): Promise<AnalyticsReport> {
-  const db = getAdminFirestore();
   const days = period === "7d" ? 7 : period === "90d" ? 90 : 30;
-  const snap = await db.collection("orders").get();
-
-  const orders = snap.docs.map((doc) => doc.data()) as Array<{
-    total: number;
-    status: string;
-    paymentStatus: string;
-    items: Array<{ name: string; quantity: number; price: number; productId: string }>;
-  }>;
+  const orders = await pgOrder.listAllOrders();
 
   const paidOrders = orders.filter(
     (o) => o.paymentStatus === "paid" || o.paymentStatus === "cod_pending"
@@ -106,8 +63,8 @@ export async function getAnalyticsReport(period = "30d"): Promise<AnalyticsRepor
   });
 
   const ordersByStatus: Record<string, number> = {};
-  snap.docs.forEach((doc) => {
-    const status = String(doc.data().status ?? "pending");
+  orders.forEach((order) => {
+    const status = String(order.status ?? "pending");
     ordersByStatus[status] = (ordersByStatus[status] ?? 0) + 1;
   });
 

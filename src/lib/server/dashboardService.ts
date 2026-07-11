@@ -1,32 +1,20 @@
-import { getAdminFirestore } from "@/lib/firebase/admin";
 import {
   getInventoryStats,
   getLowStockProducts as getInventoryLowStock,
   getOutOfStockProducts,
 } from "@/lib/server/inventoryService";
+import * as pgOrder from "@/lib/server/prisma/orderRepository";
+import * as pgUsers from "@/lib/server/prisma/usersRepository";
 import { getAllProducts } from "@/services/catalogService";
 import type { DashboardStats, RevenueDataPoint } from "@/types/admin";
 import type { Order } from "@/types/order";
 
-function parseOrder(doc: FirebaseFirestore.DocumentSnapshot): Order | null {
-  const data = doc.data();
-  if (!data) return null;
-  return { id: doc.id, ...data } as Order;
-}
-
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const db = getAdminFirestore();
-
-  const [ordersSnap, usersSnap] = await Promise.all([
-    db.collection("orders").get(),
-    db.collection("users").get(),
+  const [orders, totalCustomers, catalogProducts] = await Promise.all([
+    pgOrder.listAllOrders(),
+    pgUsers.countUsers(),
+    getAllProducts(true),
   ]);
-
-  const catalogProducts = await getAllProducts(true);
-
-  const orders = ordersSnap.docs
-    .map(parseOrder)
-    .filter((o): o is Order => o !== null);
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now);
@@ -76,16 +64,12 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         ? 100
         : 0;
 
-  let lowStockProducts = 0;
-  let outOfStockProducts = 0;
   const inventoryStats = await getInventoryStats();
-  lowStockProducts = inventoryStats.lowStock;
-  outOfStockProducts = inventoryStats.outOfStock;
 
   return {
     totalRevenue,
     totalOrders: orders.length,
-    totalCustomers: usersSnap.size,
+    totalCustomers,
     totalProducts: catalogProducts.filter((p) => p.status === "active").length,
     pendingOrders: orders.filter((o) => o.status === "pending").length,
     processingOrders: orders.filter((o) => o.status === "processing").length,
@@ -93,8 +77,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       (o) => o.status === "delivered" || o.status === "shipped"
     ).length,
     cancelledOrders: orders.filter((o) => o.status === "cancelled").length,
-    lowStockProducts,
-    outOfStockProducts,
+    lowStockProducts: inventoryStats.lowStock,
+    outOfStockProducts: inventoryStats.outOfStock,
     revenueChangePercent,
     ordersChangePercent,
   };
@@ -103,16 +87,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 export async function getRevenueChartData(
   days = 30
 ): Promise<RevenueDataPoint[]> {
-  const db = getAdminFirestore();
-  const snap = await db.collection("orders").get();
-  const orders = snap.docs
-    .map(parseOrder)
-    .filter((o): o is Order => o !== null)
-    .filter(
-      (o) =>
-        (o.paymentStatus === "paid" || o.paymentStatus === "cod_pending") &&
-        o.createdAt
-    );
+  const orders = (await pgOrder.findPaidOrders()).filter((o) => o.createdAt);
 
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days + 1);
@@ -140,35 +115,18 @@ export async function getRevenueChartData(
 }
 
 export async function getRecentOrders(limit = 10): Promise<Order[]> {
-  const db = getAdminFirestore();
-  const snap = await db
-    .collection("orders")
-    .orderBy("createdAt", "desc")
-    .limit(limit)
-    .get();
-
-  return snap.docs
-    .map(parseOrder)
-    .filter((o): o is Order => o !== null);
+  const orders = await pgOrder.listAllOrders();
+  return orders.slice(0, limit);
 }
 
 export async function getRecentCustomers(limit = 10) {
-  const db = getAdminFirestore();
-  const snap = await db
-    .collection("users")
-    .orderBy("createdAt", "desc")
-    .limit(limit)
-    .get();
-
-  return snap.docs.map((doc) => {
-    const data = doc.data();
-    return {
-      uid: doc.id,
-      email: String(data.email ?? ""),
-      displayName: String(data.displayName ?? ""),
-      createdAt: String(data.createdAt ?? ""),
-    };
-  });
+  const users = await pgUsers.listRecentUsers(limit);
+  return users.map((user) => ({
+    uid: user.id,
+    email: user.email,
+    displayName: user.name ?? "",
+    createdAt: user.createdAt,
+  }));
 }
 
 export async function getLowStockProducts(limit = 10) {
@@ -180,25 +138,20 @@ export async function getOutOfStockProductList(limit = 10) {
 }
 
 export async function getTopProducts(limit = 5) {
-  const db = getAdminFirestore();
-  const snap = await db.collection("orders").get();
+  const orders = await pgOrder.findPaidOrders();
   const counts = new Map<string, { name: string; units: number; revenue: number }>();
 
-  snap.docs.forEach((doc) => {
-    const data = doc.data();
-    if (data.paymentStatus !== "paid" && data.paymentStatus !== "cod_pending") return;
-    (data.items as Array<{ productId: string; name: string; quantity: number; price: number }> ?? []).forEach(
-      (item) => {
-        const existing = counts.get(item.productId) ?? {
-          name: item.name,
-          units: 0,
-          revenue: 0,
-        };
-        existing.units += item.quantity;
-        existing.revenue += item.price * item.quantity;
-        counts.set(item.productId, existing);
-      }
-    );
+  orders.forEach((order) => {
+    order.items.forEach((item) => {
+      const existing = counts.get(item.productId) ?? {
+        name: item.name,
+        units: 0,
+        revenue: 0,
+      };
+      existing.units += item.quantity;
+      existing.revenue += item.price * item.quantity;
+      counts.set(item.productId, existing);
+    });
   });
 
   return Array.from(counts.values())

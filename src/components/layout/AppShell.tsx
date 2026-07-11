@@ -8,6 +8,7 @@ import DeferredGlobalSearch from "@/components/layout/DeferredGlobalSearch";
 import StorefrontChrome from "@/components/layout/StorefrontChrome";
 import DeferredHtmlLinkInterceptor from "@/components/vibe/DeferredHtmlLinkInterceptor";
 import QueryProvider from "@/providers/QueryProvider";
+import NextAuthSessionProvider from "@/providers/SessionProvider";
 import WebVitalsReporter from "@/components/performance/WebVitalsReporter";
 import RoutePreloader from "@/components/layout/RoutePreloader";
 import PageLoadSplash from "@/components/layout/PageLoadSplash";
@@ -24,26 +25,32 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (isAdmin) {
     return (
       <QueryProvider>
-        <ToastContainer />
-        {children}
+        <NextAuthSessionProvider>
+          <AuthProvider>
+            <ToastContainer />
+            {children}
+          </AuthProvider>
+        </NextAuthSessionProvider>
       </QueryProvider>
     );
   }
 
   return (
     <QueryProvider>
-      <AuthProvider>
-        <PageLoadSplash />
-        <WebVitalsReporter />
-        <RoutePreloader />
-        <StorefrontChrome>
-          <DeferredHtmlLinkInterceptor />
-          <DeferredGlobalSearch />
-          <StorefrontDrawers />
-          <ToastContainer />
-          {children}
-        </StorefrontChrome>
-      </AuthProvider>
+      <NextAuthSessionProvider>
+        <AuthProvider>
+          <PageLoadSplash />
+          <WebVitalsReporter />
+          <RoutePreloader />
+          <StorefrontChrome>
+            <DeferredHtmlLinkInterceptor />
+            <DeferredGlobalSearch />
+            <StorefrontDrawers />
+            <ToastContainer />
+            {children}
+          </StorefrontChrome>
+        </AuthProvider>
+      </NextAuthSessionProvider>
     </QueryProvider>
   );
 }

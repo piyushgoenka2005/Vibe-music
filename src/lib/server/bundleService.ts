@@ -1,12 +1,7 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import {
-  isFirestoreUnavailableError,
-  logFirestoreWarning,
-  markFirestoreUnavailable,
-  tryFirestoreFast,
-} from "@/lib/server/firestoreErrors";
+import { prisma } from "@/lib/db/prisma";
+import { asJsonValue } from "@/lib/server/prisma/mappers";
 import { getProductById, getProductSummaries } from "@/services/catalogService";
 import { toProduct } from "@/services/catalogService";
 import type {
@@ -15,8 +10,6 @@ import type {
   UpsertProductBundleInput,
 } from "@/types/bundle";
 import { DEFAULT_BUNDLE_DISCOUNT_PERCENT } from "@/types/bundle";
-
-const COLLECTION = "product_bundles";
 
 const CACHE_TTL_MS = 45_000;
 
@@ -36,24 +29,31 @@ export function invalidateBundleCache(): void {
   bundleCacheAt = 0;
 }
 
-function normalizeBundle(
-  id: string,
-  data: FirebaseFirestore.DocumentData
-): ProductBundle {
-  const relatedProductIds = Array.isArray(data.relatedProductIds)
-    ? (data.relatedProductIds as string[]).filter(Boolean)
+function mapBundle(row: {
+  id: string;
+  productId: string;
+  productName: string | null;
+  productSlug: string | null;
+  relatedProductIds: unknown;
+  discountPercent: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}): ProductBundle {
+  const relatedProductIds = Array.isArray(row.relatedProductIds)
+    ? (row.relatedProductIds as string[]).filter(Boolean)
     : [];
 
   return {
-    id,
-    productId: String(data.productId ?? id),
-    productName: data.productName ? String(data.productName) : undefined,
-    productSlug: data.productSlug ? String(data.productSlug) : undefined,
+    id: row.id,
+    productId: row.productId,
+    productName: row.productName ?? undefined,
+    productSlug: row.productSlug ?? undefined,
     relatedProductIds,
-    discountPercent: Number(data.discountPercent ?? DEFAULT_BUNDLE_DISCOUNT_PERCENT),
-    isActive: data.isActive !== false,
-    createdAt: String(data.createdAt ?? ""),
-    updatedAt: String(data.updatedAt ?? ""),
+    discountPercent: row.discountPercent,
+    isActive: row.isActive,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
 }
 
@@ -64,20 +64,8 @@ export async function getBundleByProductId(
     return bundleCache.get(productId) ?? null;
   }
 
-  const bundle = await tryFirestoreFast(
-    async () => {
-      const doc = await getAdminFirestore()
-        .collection(COLLECTION)
-        .doc(productId)
-        .get();
-      return doc.exists ? normalizeBundle(doc.id, doc.data()!) : null;
-    },
-    {
-      domain: "bundles",
-      context: `Unable to fetch bundle for ${productId}`,
-      fallback: () => null,
-    }
-  );
+  const row = await prisma.productBundle.findUnique({ where: { productId } });
+  const bundle = row ? mapBundle(row) : null;
 
   if (!bundleCache || !isFresh(bundleCacheAt)) {
     bundleCache = new Map();
@@ -89,9 +77,9 @@ export async function getBundleByProductId(
 }
 
 export async function listAllBundles(): Promise<ProductBundle[]> {
-  const snap = await getAdminFirestore().collection(COLLECTION).get();
-  return snap.docs
-    .map((doc) => normalizeBundle(doc.id, doc.data()))
+  const rows = await prisma.productBundle.findMany();
+  return rows
+    .map(mapBundle)
     .sort((a, b) => a.productName?.localeCompare(b.productName ?? "") ?? 0);
 }
 
@@ -99,9 +87,7 @@ export async function upsertProductBundle(
   productId: string,
   input: UpsertProductBundleInput
 ): Promise<ProductBundle> {
-  const db = getAdminFirestore();
-  const ref = db.collection(COLLECTION).doc(productId);
-  const existing = await ref.get();
+  const existing = await prisma.productBundle.findUnique({ where: { productId } });
   const timestamp = now();
 
   const bundle: ProductBundle = {
@@ -112,19 +98,39 @@ export async function upsertProductBundle(
     relatedProductIds: input.relatedProductIds.filter(Boolean),
     discountPercent: input.discountPercent ?? DEFAULT_BUNDLE_DISCOUNT_PERCENT,
     isActive: input.isActive ?? true,
-    createdAt: existing.exists
-      ? String(existing.data()?.createdAt ?? timestamp)
-      : timestamp,
+    createdAt: existing?.createdAt ?? timestamp,
     updatedAt: timestamp,
   };
 
-  await ref.set(bundle);
+  await prisma.productBundle.upsert({
+    where: { productId },
+    create: {
+      id: productId,
+      productId,
+      productName: bundle.productName ?? null,
+      productSlug: bundle.productSlug ?? null,
+      relatedProductIds: asJsonValue(bundle.relatedProductIds),
+      discountPercent: bundle.discountPercent,
+      isActive: bundle.isActive,
+      createdAt: bundle.createdAt,
+      updatedAt: bundle.updatedAt,
+    },
+    update: {
+      productName: bundle.productName ?? null,
+      productSlug: bundle.productSlug ?? null,
+      relatedProductIds: asJsonValue(bundle.relatedProductIds),
+      discountPercent: bundle.discountPercent,
+      isActive: bundle.isActive,
+      updatedAt: bundle.updatedAt,
+    },
+  });
+
   invalidateBundleCache();
   return bundle;
 }
 
 export async function deleteProductBundle(productId: string): Promise<void> {
-  await getAdminFirestore().collection(COLLECTION).doc(productId).delete();
+  await prisma.productBundle.delete({ where: { productId } });
   invalidateBundleCache();
 }
 
@@ -156,26 +162,13 @@ async function seedBundleFromProductDetail(
   const fromDetail = bundleFromProductDetail(product);
   if (!fromDetail) return null;
 
-  try {
-    return await upsertProductBundle(productId, {
-      relatedProductIds: fromDetail.relatedProductIds,
-      productName: product.name,
-      productSlug: product.slug,
-      discountPercent: DEFAULT_BUNDLE_DISCOUNT_PERCENT,
-      isActive: true,
-    });
-  } catch (error) {
-    if (isFirestoreUnavailableError(error)) {
-      markFirestoreUnavailable(error);
-      logFirestoreWarning(
-        "bundles",
-        error,
-        `Unable to seed bundle for ${productId} — using product detail fallback`
-      );
-      return fromDetail;
-    }
-    throw error;
-  }
+  return upsertProductBundle(productId, {
+    relatedProductIds: fromDetail.relatedProductIds,
+    productName: product.name,
+    productSlug: product.slug,
+    discountPercent: DEFAULT_BUNDLE_DISCOUNT_PERCENT,
+    isActive: true,
+  });
 }
 
 export async function resolveBundleForProduct(

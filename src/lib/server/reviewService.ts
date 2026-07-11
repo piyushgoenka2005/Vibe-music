@@ -28,15 +28,11 @@ import type {
   ReviewListResponse,
   ReviewStatus,
 } from "@/types/review";
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import { REVIEWS_COLLECTION } from "@/lib/server/reviewRepository";
 
 async function seedReviewsFromStatic(): Promise<Review[]> {
   const { getAllProducts, getProductDetailBySlug } = await import(
     "@/services/catalogService"
   );
-  const db = getAdminFirestore();
-  const batch = db.batch();
   const reviews: Review[] = [];
   const now = new Date().toISOString();
 
@@ -44,10 +40,9 @@ async function seedReviewsFromStatic(): Promise<Review[]> {
   for (const product of products) {
     const detail = await getProductDetailBySlug(product.slug);
     if (!detail) continue;
-    detail.reviews.slice(0, 2).forEach((review, index) => {
-      const ref = db.collection(REVIEWS_COLLECTION).doc();
+    for (const [index, review] of detail.reviews.slice(0, 2).entries()) {
       const record: Review = {
-        id: ref.id,
+        id: `seed-${product.slug}-${index}`,
         productId: detail.id,
         productName: detail.name,
         productSlug: detail.slug,
@@ -64,13 +59,12 @@ async function seedReviewsFromStatic(): Promise<Review[]> {
         createdAt: review.date || now,
         updatedAt: now,
       };
-      batch.set(ref, record);
+      await createReviewRecord(record);
       reviews.push(record);
-    });
+    }
   }
 
   if (reviews.length > 0) {
-    await batch.commit();
     const productIds = [...new Set(reviews.map((r) => r.productId))];
     await Promise.all(productIds.map((id) => recalculateProductReviewStats(id)));
   }

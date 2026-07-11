@@ -1,6 +1,7 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { prisma } from "@/lib/db/prisma";
+import { asJsonValue } from "@/lib/server/prisma/mappers";
 import { invalidateCatalogCache } from "@/lib/server/firestoreCatalogRepository";
 import {
   getAvailableStock,
@@ -15,32 +16,33 @@ import type {
 } from "@/types/inventory";
 import { DEFAULT_LOW_STOCK_THRESHOLD } from "@/types/inventory";
 import type { OrderInventoryStatus } from "@/types/inventory";
-import type { DocumentReference, Transaction } from "firebase-admin/firestore";
 
-const PRODUCTS = "products";
-const ORDERS = "orders";
-const INVENTORY_LOGS = "inventory_logs";
+export { getAvailableStock };
 
-function productRef(productId: string): DocumentReference {
-  return getAdminFirestore().collection(PRODUCTS).doc(productId);
-}
+type ProductRow = {
+  id: string;
+  name: string;
+  sku: string;
+  stock: number;
+  stockQuantity: number | null;
+  reservedStock: number | null;
+  lowStockThreshold: number | null;
+  status: string;
+  availability: string;
+  detail: unknown;
+};
 
-function readSnapshot(
-  productId: string,
-  data: FirebaseFirestore.DocumentData
-): ProductStockSnapshot {
-  const stock = Number(data.stock ?? data.stockQuantity ?? 0);
-  const reservedStock = Number(data.reservedStock ?? 0);
+function readSnapshot(productId: string, row: ProductRow): ProductStockSnapshot {
+  const stock = Number(row.stock ?? row.stockQuantity ?? 0);
+  const reservedStock = Number(row.reservedStock ?? 0);
   return {
     productId,
-    sku: String(data.sku ?? ""),
-    name: String(data.name ?? ""),
+    sku: row.sku,
+    name: row.name,
     stock,
     reservedStock,
-    lowStockThreshold: Number(
-      data.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD
-    ),
-    status: String(data.status ?? "active"),
+    lowStockThreshold: Number(row.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD),
+    status: row.status,
   };
 }
 
@@ -48,57 +50,9 @@ function createLogId(): string {
   return `inv-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function writeLogInTransaction(
-  tx: Transaction,
-  log: Omit<InventoryLog, "id"> & { id?: string }
-): void {
-  const id = log.id ?? createLogId();
-  const ref = getAdminFirestore().collection(INVENTORY_LOGS).doc(id);
-  tx.set(ref, {
-    id,
-    productId: log.productId,
-    sku: log.sku,
-    orderId: log.orderId ?? null,
-    previousStock: log.previousStock,
-    newStock: log.newStock,
-    quantityChanged: log.quantityChanged,
-    action: log.action,
-    adminId: log.adminId ?? null,
-    timestamp: log.timestamp,
-    previousReserved: log.previousReserved ?? null,
-    newReserved: log.newReserved ?? null,
-    note: log.note ?? null,
-  });
-}
-
-export async function fetchProductStockSnapshots(
-  productIds: string[]
-): Promise<Map<string, ProductStockSnapshot>> {
-  const db = getAdminFirestore();
-  const uniqueIds = [...new Set(productIds.filter(Boolean))];
-  const map = new Map<string, ProductStockSnapshot>();
-
-  if (uniqueIds.length === 0) return map;
-
-  const CHUNK_SIZE = 30;
-  for (let index = 0; index < uniqueIds.length; index += CHUNK_SIZE) {
-    const chunk = uniqueIds.slice(index, index + CHUNK_SIZE);
-    const refs = chunk.map((productId) => db.collection(PRODUCTS).doc(productId));
-    const docs = await db.getAll(...refs);
-    docs.forEach((doc) => {
-      if (!doc.exists) return;
-      map.set(doc.id, readSnapshot(doc.id, doc.data()!));
-    });
-  }
-
-  return map;
-}
-
-function readVariantStock(
-  data: FirebaseFirestore.DocumentData,
-  variantId: string
-): number | null {
-  const variants = data.detail?.variants;
+function readVariantStock(row: ProductRow, variantId: string): number | null {
+  const detail = row.detail as { variants?: Array<{ id: string; stock?: number }> } | null;
+  const variants = detail?.variants;
   if (!Array.isArray(variants)) return null;
   const variant = variants.find((entry) => entry.id === variantId);
   if (!variant) return null;
@@ -107,27 +61,29 @@ function readVariantStock(
     return Number(variant.stock);
   }
 
-  const parentStock = Number(data.stock ?? data.stockQuantity ?? 0);
-  const reservedStock = Number(data.reservedStock ?? 0);
+  const parentStock = Number(row.stock ?? row.stockQuantity ?? 0);
+  const reservedStock = Number(row.reservedStock ?? 0);
   return getAvailableStock(parentStock, reservedStock);
 }
 
 function buildVariantStockPatch(
-  data: FirebaseFirestore.DocumentData,
+  row: ProductRow,
   variantId: string,
   delta: number
 ): Record<string, unknown> {
-  const detail = data.detail ?? {};
-  const variants = Array.isArray(detail.variants) ? [...detail.variants] : [];
+  const detail = (row.detail as Record<string, unknown> | null) ?? {};
+  const variants = Array.isArray((detail as { variants?: unknown }).variants)
+    ? [...((detail as { variants: Array<Record<string, unknown>> }).variants)]
+    : [];
   const index = variants.findIndex((entry) => entry.id === variantId);
   if (index < 0) {
     throw new Error(`Variant not found: ${variantId}`);
   }
 
   const currentStock =
-    variants[index].stock !== undefined && variants[index].stock !== null
-      ? Number(variants[index].stock)
-      : (readVariantStock(data, variantId) ?? 0);
+    variants[index]!.stock !== undefined && variants[index]!.stock !== null
+      ? Number(variants[index]!.stock)
+      : (readVariantStock(row, variantId) ?? 0);
   const newStock = currentStock + delta;
   if (newStock < 0) {
     throw new Error(`Invalid variant stock for ${variantId}`);
@@ -144,7 +100,7 @@ function buildVariantStockPatch(
     (sum, entry) => sum + Number(entry.stock ?? 0),
     0
   );
-  const reservedStock = Number(data.reservedStock ?? 0);
+  const reservedStock = Number(row.reservedStock ?? 0);
   const now = new Date().toISOString();
 
   return {
@@ -156,49 +112,117 @@ function buildVariantStockPatch(
   };
 }
 
-async function reserveVariantStockInTransaction(
-  tx: Transaction,
-  orderId: string,
-  items: OrderInventoryLine[],
-  productDocs: Map<string, FirebaseFirestore.DocumentData>,
-  now: string
+async function writeInventoryLog(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  log: Omit<InventoryLog, "id"> & { id?: string }
 ): Promise<void> {
-  applyVariantStockChangesInTransaction(
-    tx,
-    orderId,
-    items,
-    productDocs,
-    (item) => -item.quantity,
-    "order_created",
-    now
-  );
+  const id = log.id ?? createLogId();
+  await tx.inventoryLog.create({
+    data: {
+      id,
+      productId: log.productId,
+      sku: log.sku,
+      orderId: log.orderId ?? null,
+      previousStock: log.previousStock,
+      newStock: log.newStock,
+      quantityChanged: log.quantityChanged,
+      action: log.action,
+      adminId: log.adminId ?? null,
+      timestamp: log.timestamp,
+      previousReserved: log.previousReserved ?? null,
+      newReserved: log.newReserved ?? null,
+      note: log.note ?? null,
+    },
+  });
 }
 
-async function fulfillVariantStockInTransaction(
-  tx: Transaction,
+async function loadProductRows(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  productIds: string[]
+): Promise<Map<string, ProductRow>> {
+  const uniqueIds = [...new Set(productIds)];
+  const rows = await tx.product.findMany({ where: { id: { in: uniqueIds } } });
+  const map = new Map<string, ProductRow>();
+  for (const row of rows) {
+    map.set(row.id, row);
+  }
+  for (const productId of uniqueIds) {
+    if (!map.has(productId)) {
+      throw new Error(`Product not found: ${productId}`);
+    }
+  }
+  return map;
+}
+
+async function applyVariantStockChanges(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
   orderId: string,
   items: OrderInventoryLine[],
-  productDocs: Map<string, FirebaseFirestore.DocumentData>,
+  productRows: Map<string, ProductRow>,
+  deltaForItem: (item: OrderInventoryLine) => number,
   action: InventoryLogAction,
   now: string,
   adminId?: string | null
 ): Promise<void> {
-  applyVariantStockChangesInTransaction(
-    tx,
-    orderId,
-    items,
-    productDocs,
-    (item) => (action === "order_cancelled" ? item.quantity : -item.quantity),
-    action,
-    now,
-    adminId
-  );
+  const byProduct = new Map<string, OrderInventoryLine[]>();
+  for (const item of items) {
+    if (!item.variantId) continue;
+    const list = byProduct.get(item.productId) ?? [];
+    list.push(item);
+    byProduct.set(item.productId, list);
+  }
+
+  for (const [productId, productItems] of byProduct) {
+    let row = { ...productRows.get(productId)! };
+    for (const item of productItems) {
+      if (!item.variantId) continue;
+      const previousStock = readVariantStock(row, item.variantId) ?? 0;
+      const delta = deltaForItem(item);
+      const patch = buildVariantStockPatch(row, item.variantId, delta);
+      row = { ...row, ...patch, detail: patch.detail } as ProductRow;
+      productRows.set(productId, row);
+      await tx.product.update({
+        where: { id: productId },
+        data: {
+          detail: asJsonValue(patch.detail),
+          stock: Number(patch.stock),
+          stockQuantity: Number(patch.stockQuantity),
+          availability: String(patch.availability),
+          updatedAt: String(patch.updatedAt),
+        },
+      });
+      await writeInventoryLog(tx, {
+        productId,
+        sku: item.variantId,
+        orderId,
+        previousStock,
+        newStock: previousStock + delta,
+        quantityChanged: delta,
+        action,
+        adminId: adminId ?? null,
+        timestamp: now,
+      });
+    }
+  }
+}
+
+export async function fetchProductStockSnapshots(
+  productIds: string[]
+): Promise<Map<string, ProductStockSnapshot>> {
+  const uniqueIds = [...new Set(productIds.filter(Boolean))];
+  const map = new Map<string, ProductStockSnapshot>();
+  if (uniqueIds.length === 0) return map;
+
+  const rows = await prisma.product.findMany({ where: { id: { in: uniqueIds } } });
+  rows.forEach((row) => {
+    map.set(row.id, readSnapshot(row.id, row));
+  });
+  return map;
 }
 
 export async function validateStockAvailability(
   items: OrderInventoryLine[]
 ): Promise<void> {
-  const db = getAdminFirestore();
   const variantErrors: string[] = [];
   const parentItems: OrderInventoryLine[] = [];
   const variantItems: OrderInventoryLine[] = [];
@@ -213,21 +237,19 @@ export async function validateStockAvailability(
 
   if (variantItems.length > 0) {
     const variantProductIds = [...new Set(variantItems.map((item) => item.productId))];
-    const variantDocRefs = variantProductIds.map((productId) =>
-      db.collection(PRODUCTS).doc(productId)
-    );
-    const fullDocs =
-      variantDocRefs.length > 0 ? await db.getAll(...variantDocRefs) : [];
-    const fullDocMap = new Map(fullDocs.map((doc) => [doc.id, doc]));
+    const rows = await prisma.product.findMany({
+      where: { id: { in: variantProductIds } },
+    });
+    const rowMap = new Map(rows.map((row) => [row.id, row]));
 
     for (const item of variantItems) {
-      const doc = fullDocMap.get(item.productId);
-      if (!doc?.exists) {
+      const row = rowMap.get(item.productId);
+      if (!row) {
         variantErrors.push(`${item.name ?? item.productId}: product not found`);
         continue;
       }
 
-      const available = readVariantStock(doc.data()!, item.variantId!);
+      const available = readVariantStock(row, item.variantId!);
       if (available === null) {
         variantErrors.push(`${item.name ?? item.productId}: variant not found`);
         continue;
@@ -272,105 +294,9 @@ export async function validateStockAvailability(
 
   if (errors.length > 0) {
     const detail = errors
-      .map(
-        (e) =>
-          `${e.name}: requested ${e.quantity}, available ${e.available}`
-      )
+      .map((e) => `${e.name}: requested ${e.quantity}, available ${e.available}`)
       .join("; ");
     throw new Error(`Insufficient stock: ${detail}`);
-  }
-}
-
-async function loadProductDocsInTransaction(
-  tx: Transaction,
-  productIds: string[]
-): Promise<Map<string, FirebaseFirestore.DocumentData>> {
-  const map = new Map<string, FirebaseFirestore.DocumentData>();
-  const uniqueIds = [...new Set(productIds)];
-
-  for (const productId of uniqueIds) {
-    const doc = await tx.get(productRef(productId));
-    if (!doc.exists) {
-      throw new Error(`Product not found: ${productId}`);
-    }
-    map.set(productId, doc.data()!);
-  }
-
-  return map;
-}
-
-function cloneProductData(
-  data: FirebaseFirestore.DocumentData
-): FirebaseFirestore.DocumentData {
-  return JSON.parse(JSON.stringify(data)) as FirebaseFirestore.DocumentData;
-}
-
-function writeVariantStockChangeInTransaction(
-  tx: Transaction,
-  orderId: string,
-  item: OrderInventoryLine,
-  data: FirebaseFirestore.DocumentData,
-  delta: number,
-  action: InventoryLogAction,
-  now: string,
-  adminId?: string | null
-): FirebaseFirestore.DocumentData {
-  if (!item.variantId) {
-    throw new Error("Variant ID required");
-  }
-
-  const previousStock = readVariantStock(data, item.variantId) ?? 0;
-  const patch = buildVariantStockPatch(data, item.variantId, delta);
-  const newStock = previousStock + delta;
-
-  tx.update(productRef(item.productId), patch);
-  writeLogInTransaction(tx, {
-    productId: item.productId,
-    sku: item.variantId,
-    orderId,
-    previousStock,
-    newStock,
-    quantityChanged: delta,
-    action,
-    adminId: adminId ?? null,
-    timestamp: now,
-  });
-
-  return { ...data, ...patch };
-}
-
-function applyVariantStockChangesInTransaction(
-  tx: Transaction,
-  orderId: string,
-  items: OrderInventoryLine[],
-  productDocs: Map<string, FirebaseFirestore.DocumentData>,
-  deltaForItem: (item: OrderInventoryLine) => number,
-  action: InventoryLogAction,
-  now: string,
-  adminId?: string | null
-): void {
-  const byProduct = new Map<string, OrderInventoryLine[]>();
-  for (const item of items) {
-    if (!item.variantId) continue;
-    const list = byProduct.get(item.productId) ?? [];
-    list.push(item);
-    byProduct.set(item.productId, list);
-  }
-
-  for (const [productId, productItems] of byProduct) {
-    let data = cloneProductData(productDocs.get(productId)!);
-    for (const item of productItems) {
-      data = writeVariantStockChangeInTransaction(
-        tx,
-        orderId,
-        item,
-        data,
-        deltaForItem(item),
-        action,
-        now,
-        adminId
-      );
-    }
   }
 }
 
@@ -378,26 +304,19 @@ export async function reserveStockForOrder(
   orderId: string,
   items: OrderInventoryLine[]
 ): Promise<void> {
-  const db = getAdminFirestore();
-  const orderRef = db.collection(ORDERS).doc(orderId);
   const parentItems = items.filter((item) => !item.variantId);
   const variantItems = items.filter((item) => item.variantId);
 
-  await db.runTransaction(async (tx) => {
-    const orderDoc = await tx.get(orderRef);
-    if (!orderDoc.exists) {
-      throw new Error("Order not found");
-    }
+  await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new Error("Order not found");
 
-    const orderData = orderDoc.data()!;
-    const currentStatus = (orderData.inventoryStatus ??
-      "none") as OrderInventoryStatus;
-
+    const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
     if (currentStatus === "reserved" || currentStatus === "fulfilled") {
       return;
     }
 
-    const productDocs = await loadProductDocsInTransaction(
+    const productRows = await loadProductRows(
       tx,
       items.map((item) => item.productId)
     );
@@ -405,8 +324,7 @@ export async function reserveStockForOrder(
     if (parentItems.length > 0) {
       const snapshots = new Map<string, ProductStockSnapshot>();
       for (const item of parentItems) {
-        const data = productDocs.get(item.productId)!;
-        snapshots.set(item.productId, readSnapshot(item.productId, data));
+        snapshots.set(item.productId, readSnapshot(item.productId, productRows.get(item.productId)!));
       }
 
       const errors = validateAvailability(
@@ -430,18 +348,15 @@ export async function reserveStockForOrder(
 
       if (errors.length > 0) {
         const detail = errors
-          .map(
-            (e) =>
-              `${e.name}: requested ${e.quantity}, available ${e.available}`
-          )
+          .map((e) => `${e.name}: requested ${e.quantity}, available ${e.available}`)
           .join("; ");
         throw new Error(`Insufficient stock: ${detail}`);
       }
     }
 
     for (const item of variantItems) {
-      const data = productDocs.get(item.productId)!;
-      const available = readVariantStock(data, item.variantId!) ?? 0;
+      const row = productRows.get(item.productId)!;
+      const available = readVariantStock(row, item.variantId!) ?? 0;
       if (item.quantity > available) {
         throw new Error(
           `Insufficient variant stock for ${item.name ?? item.variantId}: requested ${item.quantity}, available ${available}`
@@ -452,16 +367,16 @@ export async function reserveStockForOrder(
     const now = new Date().toISOString();
 
     for (const item of parentItems) {
-      const snapshot = readSnapshot(item.productId, productDocs.get(item.productId)!);
+      const snapshot = readSnapshot(item.productId, productRows.get(item.productId)!);
       const previousReserved = snapshot.reservedStock;
       const newReserved = previousReserved + item.quantity;
 
-      tx.update(productRef(item.productId), {
-        reservedStock: newReserved,
-        updatedAt: now,
+      await tx.product.update({
+        where: { id: item.productId },
+        data: { reservedStock: newReserved, updatedAt: now },
       });
 
-      writeLogInTransaction(tx, {
+      await writeInventoryLog(tx, {
         productId: item.productId,
         sku: snapshot.sku,
         orderId,
@@ -476,18 +391,19 @@ export async function reserveStockForOrder(
       });
     }
 
-    await reserveVariantStockInTransaction(
+    await applyVariantStockChanges(
       tx,
       orderId,
       variantItems,
-      productDocs,
+      productRows,
+      (item) => -item.quantity,
+      "order_created",
       now
     );
 
-    tx.update(orderRef, {
-      inventoryStatus: "reserved",
-      variantInventoryHeld: variantItems.length > 0,
-      updatedAt: now,
+    await tx.order.update({
+      where: { id: orderId },
+      data: { inventoryStatus: "reserved", updatedAt: now },
     });
   });
 
@@ -498,47 +414,28 @@ export async function fulfillReservedStockForOrder(
   orderId: string,
   items: OrderInventoryLine[]
 ): Promise<void> {
-  const db = getAdminFirestore();
-  const orderRef = db.collection(ORDERS).doc(orderId);
+  const parentItems = items.filter((item) => !item.variantId);
+  const variantItems = items.filter((item) => item.variantId);
 
-  await db.runTransaction(async (tx) => {
-    const orderDoc = await tx.get(orderRef);
-    if (!orderDoc.exists) {
-      throw new Error("Order not found");
-    }
+  await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new Error("Order not found");
 
-    const orderData = orderDoc.data()!;
-    const currentStatus = (orderData.inventoryStatus ??
-      "none") as OrderInventoryStatus;
-    const variantInventoryHeld = Boolean(orderData.variantInventoryHeld);
-
-    if (currentStatus === "fulfilled") {
-      return;
-    }
-
+    const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
+    if (currentStatus === "fulfilled") return;
     if (currentStatus !== "reserved") {
-      throw new Error(
-        `Cannot fulfill inventory for order in status: ${currentStatus}`
-      );
+      throw new Error(`Cannot fulfill inventory for order in status: ${currentStatus}`);
     }
 
-    const parentItems = items.filter((item) => !item.variantId);
-    const variantItems = items.filter((item) => item.variantId);
-    const productDocs = await loadProductDocsInTransaction(
+    const productRows = await loadProductRows(
       tx,
       items.map((item) => item.productId)
     );
-    const snapshots = new Map<string, ProductStockSnapshot>();
-    for (const item of parentItems) {
-      snapshots.set(
-        item.productId,
-        readSnapshot(item.productId, productDocs.get(item.productId)!)
-      );
-    }
     const now = new Date().toISOString();
+    const variantInventoryHeld = variantItems.length > 0;
 
     for (const item of parentItems) {
-      const snap = snapshots.get(item.productId)!;
+      const snap = readSnapshot(item.productId, productRows.get(item.productId)!);
       const previousStock = snap.stock;
       const previousReserved = snap.reservedStock;
       const newStock = previousStock - item.quantity;
@@ -548,15 +445,18 @@ export async function fulfillReservedStockForOrder(
         throw new Error(`Invalid stock state for product ${item.productId}`);
       }
 
-      tx.update(productRef(item.productId), {
-        stock: newStock,
-        stockQuantity: newStock,
-        reservedStock: newReserved,
-        availability: stockToAvailability(newStock, newReserved),
-        updatedAt: now,
+      await tx.product.update({
+        where: { id: item.productId },
+        data: {
+          stock: newStock,
+          stockQuantity: newStock,
+          reservedStock: newReserved,
+          availability: stockToAvailability(newStock, newReserved),
+          updatedAt: now,
+        },
       });
 
-      writeLogInTransaction(tx, {
+      await writeInventoryLog(tx, {
         productId: item.productId,
         sku: snap.sku,
         orderId,
@@ -572,54 +472,44 @@ export async function fulfillReservedStockForOrder(
     }
 
     if (!variantInventoryHeld) {
-      await fulfillVariantStockInTransaction(
+      await applyVariantStockChanges(
         tx,
         orderId,
         variantItems,
-        productDocs,
+        productRows,
+        (item) => -item.quantity,
         "order_paid",
         now
       );
     }
 
-    tx.update(orderRef, {
-      inventoryStatus: "fulfilled",
-      updatedAt: now,
+    await tx.order.update({
+      where: { id: orderId },
+      data: { inventoryStatus: "fulfilled", updatedAt: now },
     });
   });
 
   invalidateCatalogCache();
 }
 
-/** COD and other immediate-commit flows: reserve + fulfill atomically. */
 export async function reserveAndFulfillStockForOrder(
   orderId: string,
   items: OrderInventoryLine[]
 ): Promise<void> {
-  const db = getAdminFirestore();
-  const orderRef = db.collection(ORDERS).doc(orderId);
+  await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new Error("Order not found");
 
-  await db.runTransaction(async (tx) => {
-    const orderDoc = await tx.get(orderRef);
-    if (!orderDoc.exists) {
-      throw new Error("Order not found");
-    }
+    const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
+    if (currentStatus === "fulfilled") return;
 
-    const orderData = orderDoc.data()!;
-    const currentStatus = (orderData.inventoryStatus ??
-      "none") as OrderInventoryStatus;
-
-    if (currentStatus === "fulfilled") {
-      return;
-    }
-
-    const productDocs = await loadProductDocsInTransaction(
+    const productRows = await loadProductRows(
       tx,
       items.map((item) => item.productId)
     );
     const snapshots = new Map<string, ProductStockSnapshot>();
-    for (const [productId, data] of productDocs) {
-      snapshots.set(productId, readSnapshot(productId, data));
+    for (const [productId, row] of productRows) {
+      snapshots.set(productId, readSnapshot(productId, row));
     }
 
     const parentItems = items.filter((item) => !item.variantId);
@@ -646,17 +536,14 @@ export async function reserveAndFulfillStockForOrder(
 
     if (errors.length > 0) {
       const detail = errors
-        .map(
-          (e) =>
-            `${e.name}: requested ${e.quantity}, available ${e.available}`
-        )
+        .map((e) => `${e.name}: requested ${e.quantity}, available ${e.available}`)
         .join("; ");
       throw new Error(`Insufficient stock: ${detail}`);
     }
 
     for (const item of variantItems) {
-      const data = productDocs.get(item.productId)!;
-      const available = readVariantStock(data, item.variantId!) ?? 0;
+      const row = productRows.get(item.productId)!;
+      const available = readVariantStock(row, item.variantId!) ?? 0;
       if (item.quantity > available) {
         throw new Error(
           `Insufficient variant stock for ${item.name ?? item.variantId}: requested ${item.quantity}, available ${available}`
@@ -671,15 +558,17 @@ export async function reserveAndFulfillStockForOrder(
       const previousStock = snap.stock;
       const newStock = previousStock - item.quantity;
 
-      tx.update(productRef(item.productId), {
-        stock: newStock,
-        stockQuantity: newStock,
-        reservedStock: snap.reservedStock,
-        availability: stockToAvailability(newStock, snap.reservedStock),
-        updatedAt: now,
+      await tx.product.update({
+        where: { id: item.productId },
+        data: {
+          stock: newStock,
+          stockQuantity: newStock,
+          availability: stockToAvailability(newStock, snap.reservedStock),
+          updatedAt: now,
+        },
       });
 
-      writeLogInTransaction(tx, {
+      await writeInventoryLog(tx, {
         productId: item.productId,
         sku: snap.sku,
         orderId,
@@ -694,18 +583,19 @@ export async function reserveAndFulfillStockForOrder(
       });
     }
 
-    await fulfillVariantStockInTransaction(
+    await applyVariantStockChanges(
       tx,
       orderId,
       variantItems,
-      productDocs,
+      productRows,
+      (item) => -item.quantity,
       "order_paid",
       now
     );
 
-    tx.update(orderRef, {
-      inventoryStatus: "fulfilled",
-      updatedAt: now,
+    await tx.order.update({
+      where: { id: orderId },
+      data: { inventoryStatus: "fulfilled", updatedAt: now },
     });
   });
 
@@ -716,55 +606,39 @@ export async function releaseReservedStockForOrder(
   orderId: string,
   items: OrderInventoryLine[]
 ): Promise<void> {
-  const db = getAdminFirestore();
-  const orderRef = db.collection(ORDERS).doc(orderId);
+  const parentItems = items.filter((item) => !item.variantId);
+  const variantItems = items.filter((item) => item.variantId);
 
-  await db.runTransaction(async (tx) => {
-    const orderDoc = await tx.get(orderRef);
-    if (!orderDoc.exists) {
-      throw new Error("Order not found");
-    }
+  await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new Error("Order not found");
 
-    const orderData = orderDoc.data()!;
-    const currentStatus = (orderData.inventoryStatus ??
-      "none") as OrderInventoryStatus;
-    const variantInventoryHeld = Boolean(orderData.variantInventoryHeld);
+    const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
+    if (currentStatus === "released" || currentStatus === "fulfilled") return;
+    if (currentStatus !== "reserved") return;
 
-    if (currentStatus === "released" || currentStatus === "fulfilled") {
-      return;
-    }
-
-    if (currentStatus !== "reserved") {
-      return;
-    }
-
-    const parentItems = items.filter((item) => !item.variantId);
-    const variantItems = items.filter((item) => item.variantId);
-    const productDocs = await loadProductDocsInTransaction(
+    const productRows = await loadProductRows(
       tx,
       items.map((item) => item.productId)
     );
-    const snapshots = new Map<string, ProductStockSnapshot>();
-    for (const item of parentItems) {
-      snapshots.set(
-        item.productId,
-        readSnapshot(item.productId, productDocs.get(item.productId)!)
-      );
-    }
     const now = new Date().toISOString();
+    const variantInventoryHeld = variantItems.length > 0;
 
     for (const item of parentItems) {
-      const snap = snapshots.get(item.productId)!;
+      const snap = readSnapshot(item.productId, productRows.get(item.productId)!);
       const previousReserved = snap.reservedStock;
       const newReserved = Math.max(0, previousReserved - item.quantity);
 
-      tx.update(productRef(item.productId), {
-        reservedStock: newReserved,
-        availability: stockToAvailability(snap.stock, newReserved),
-        updatedAt: now,
+      await tx.product.update({
+        where: { id: item.productId },
+        data: {
+          reservedStock: newReserved,
+          availability: stockToAvailability(snap.stock, newReserved),
+          updatedAt: now,
+        },
       });
 
-      writeLogInTransaction(tx, {
+      await writeInventoryLog(tx, {
         productId: item.productId,
         sku: snap.sku,
         orderId,
@@ -780,19 +654,20 @@ export async function releaseReservedStockForOrder(
     }
 
     if (variantInventoryHeld) {
-      await fulfillVariantStockInTransaction(
+      await applyVariantStockChanges(
         tx,
         orderId,
         variantItems,
-        productDocs,
+        productRows,
+        (item) => item.quantity,
         "order_cancelled",
         now
       );
     }
 
-    tx.update(orderRef, {
-      inventoryStatus: "released",
-      updatedAt: now,
+    await tx.order.update({
+      where: { id: orderId },
+      data: { inventoryStatus: "released", updatedAt: now },
     });
   });
 
@@ -804,51 +679,38 @@ export async function restoreStockForCancelledOrder(
   items: OrderInventoryLine[],
   adminId?: string
 ): Promise<void> {
-  const db = getAdminFirestore();
-  const orderRef = db.collection(ORDERS).doc(orderId);
+  const parentItems = items.filter((item) => !item.variantId);
+  const variantItems = items.filter((item) => item.variantId);
 
-  await db.runTransaction(async (tx) => {
-    const orderDoc = await tx.get(orderRef);
-    if (!orderDoc.exists) {
-      throw new Error("Order not found");
-    }
+  await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new Error("Order not found");
 
-    const orderData = orderDoc.data()!;
-    const currentStatus = (orderData.inventoryStatus ??
-      "none") as OrderInventoryStatus;
+    const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
+    if (currentStatus !== "fulfilled") return;
 
-    if (currentStatus !== "fulfilled") {
-      return;
-    }
-
-    const parentItems = items.filter((item) => !item.variantId);
-    const variantItems = items.filter((item) => item.variantId);
-    const productDocs = await loadProductDocsInTransaction(
+    const productRows = await loadProductRows(
       tx,
       items.map((item) => item.productId)
     );
-    const snapshots = new Map<string, ProductStockSnapshot>();
-    for (const item of parentItems) {
-      snapshots.set(
-        item.productId,
-        readSnapshot(item.productId, productDocs.get(item.productId)!)
-      );
-    }
     const now = new Date().toISOString();
 
     for (const item of parentItems) {
-      const snap = snapshots.get(item.productId)!;
+      const snap = readSnapshot(item.productId, productRows.get(item.productId)!);
       const previousStock = snap.stock;
       const newStock = previousStock + item.quantity;
 
-      tx.update(productRef(item.productId), {
-        stock: newStock,
-        stockQuantity: newStock,
-        availability: stockToAvailability(newStock, snap.reservedStock),
-        updatedAt: now,
+      await tx.product.update({
+        where: { id: item.productId },
+        data: {
+          stock: newStock,
+          stockQuantity: newStock,
+          availability: stockToAvailability(newStock, snap.reservedStock),
+          updatedAt: now,
+        },
       });
 
-      writeLogInTransaction(tx, {
+      await writeInventoryLog(tx, {
         productId: item.productId,
         sku: snap.sku,
         orderId,
@@ -863,19 +725,20 @@ export async function restoreStockForCancelledOrder(
       });
     }
 
-    await fulfillVariantStockInTransaction(
+    await applyVariantStockChanges(
       tx,
       orderId,
       variantItems,
-      productDocs,
+      productRows,
+      (item) => item.quantity,
       "order_cancelled",
       now,
       adminId
     );
 
-    tx.update(orderRef, {
-      inventoryStatus: "released",
-      updatedAt: now,
+    await tx.order.update({
+      where: { id: orderId },
+      data: { inventoryStatus: "released", updatedAt: now },
     });
   });
 
@@ -892,25 +755,24 @@ export async function setProductStock(
     note?: string;
   }
 ): Promise<InventoryLog> {
-  const db = getAdminFirestore();
-  const ref = productRef(productId);
   let log!: InventoryLog;
 
-  await db.runTransaction(async (tx) => {
-    const doc = await tx.get(ref);
-    if (!doc.exists) {
-      throw new Error("Product not found");
-    }
+  await prisma.$transaction(async (tx) => {
+    const row = await tx.product.findUnique({ where: { id: productId } });
+    if (!row) throw new Error("Product not found");
 
-    const snap = readSnapshot(productId, doc.data()!);
+    const snap = readSnapshot(productId, row);
     const now = new Date().toISOString();
     const quantityChanged = newStock - snap.stock;
 
-    tx.update(ref, {
-      stock: newStock,
-      stockQuantity: newStock,
-      availability: stockToAvailability(newStock, snap.reservedStock),
-      updatedAt: now,
+    await tx.product.update({
+      where: { id: productId },
+      data: {
+        stock: newStock,
+        stockQuantity: newStock,
+        availability: stockToAvailability(newStock, snap.reservedStock),
+        updatedAt: now,
+      },
     });
 
     log = {
@@ -929,7 +791,7 @@ export async function setProductStock(
       newReserved: snap.reservedStock,
     };
 
-    writeLogInTransaction(tx, log);
+    await writeInventoryLog(tx, log);
   });
 
   invalidateCatalogCache();
@@ -937,22 +799,48 @@ export async function setProductStock(
 }
 
 export async function listInventoryLogs(limit = 50): Promise<InventoryLog[]> {
-  const snap = await getAdminFirestore()
-    .collection(INVENTORY_LOGS)
-    .orderBy("timestamp", "desc")
-    .limit(limit)
-    .get();
+  const rows = await prisma.inventoryLog.findMany({
+    orderBy: { timestamp: "desc" },
+    take: limit,
+  });
 
-  return snap.docs.map((doc) => doc.data() as InventoryLog);
+  return rows.map((row) => ({
+    id: row.id,
+    productId: row.productId,
+    sku: row.sku,
+    orderId: row.orderId,
+    previousStock: row.previousStock,
+    newStock: row.newStock,
+    quantityChanged: row.quantityChanged,
+    action: row.action as InventoryLogAction,
+    adminId: row.adminId,
+    timestamp: row.timestamp,
+    previousReserved: row.previousReserved ?? undefined,
+    newReserved: row.newReserved ?? undefined,
+    note: row.note ?? undefined,
+  }));
 }
 
 export async function recordInventoryLogEntry(
   entry: Omit<InventoryLog, "id">
 ): Promise<InventoryLog> {
-  const id = createLogId();
-  const log: InventoryLog = { ...entry, id };
-  await getAdminFirestore().collection(INVENTORY_LOGS).doc(id).set(log);
+  const log: InventoryLog = { ...entry, id: createLogId() };
+  await prisma.inventoryLog.create({
+    data: {
+      id: log.id,
+      productId: log.productId,
+      sku: log.sku,
+      orderId: log.orderId ?? null,
+      previousStock: log.previousStock,
+      newStock: log.newStock,
+      quantityChanged: log.quantityChanged,
+      action: log.action,
+      adminId: log.adminId ?? null,
+      timestamp: log.timestamp,
+      previousReserved: log.previousReserved ?? null,
+      newReserved: log.newReserved ?? null,
+      note: log.note ?? null,
+    },
+  });
   return log;
 }
-
-export { getAvailableStock };

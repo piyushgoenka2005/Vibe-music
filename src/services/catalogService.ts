@@ -28,10 +28,6 @@ import {
   writeProduct,
 } from "@/lib/server/firestoreCatalogRepository";
 import { getCachedCategories, getCachedProducts } from "@/lib/server/catalogSnapshotCache";
-import {
-  isFirestoreFastFailError,
-  isFirestoreUnavailableError,
-} from "@/lib/server/firestoreErrors";
 import { recordInventoryLogEntry } from "@/lib/server/inventoryRepository";
 import {
   applyVariantsToProduct,
@@ -274,11 +270,8 @@ async function fetchCatalogSnapshot(
 
   try {
     return await getCachedProducts(includeInactive);
-  } catch (error) {
-    if (isFirestoreUnavailableError(error) || isFirestoreFastFailError(error)) {
-      return loadLocalCatalogSnapshot(includeInactive);
-    }
-    throw error;
+  } catch {
+    return loadLocalCatalogSnapshot(includeInactive);
   }
 }
 
@@ -723,7 +716,7 @@ export async function updateProduct(
     };
   }
 
-  return writeProduct(updated, id);
+  return writeProduct({ ...updated, id });
 }
 
 export async function deleteProduct(id: string): Promise<void> {
@@ -922,6 +915,6 @@ export async function bulkImportProducts(
   };
 }
 
-export type CatalogDataSource = "firestore" | "postgres";
+export type CatalogDataSource = "postgres" | "local";
 
 export { batchWriteProducts };

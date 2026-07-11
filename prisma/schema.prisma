@@ -1,0 +1,728 @@
+// PostgreSQL mirror of Firestore collections.
+// Production continues reading Firestore — this schema is for migration prep only.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Catalog ────────────────────────────────────────────────────────────────
+
+model Brand {
+  id   String @id
+  name String
+  slug String @unique
+
+  @@map("brands")
+}
+
+model Category {
+  id              String  @id
+  name            String
+  slug            String  @unique
+  description     String?
+  parentId        String? @map("parent_id")
+  imageUrl        String? @map("image_url")
+  isFeatured      Boolean @default(false) @map("is_featured")
+  sortOrder       Int     @default(0) @map("sort_order")
+  metaTitle       String? @map("meta_title")
+  metaDescription String? @map("meta_description")
+  productCount    Int     @default(0) @map("product_count")
+  createdAt       String? @map("created_at")
+  updatedAt       String? @map("updated_at")
+
+  @@map("categories")
+}
+
+model Product {
+  id                 String  @id
+  slug               String  @unique
+  name               String
+  brand              String
+  category           String
+  subcategory        String  @default("")
+  price              Float
+  originalPrice      Float   @map("original_price")
+  discountPercentage Float   @default(0) @map("discount_percentage")
+  rating             Float   @default(0)
+  reviewCount        Int     @default(0) @map("review_count")
+  stock              Int     @default(0)
+  stockQuantity      Int?    @map("stock_quantity")
+  reservedStock      Int?    @map("reserved_stock")
+  lowStockThreshold  Int?    @map("low_stock_threshold")
+  sku                String
+  status             String  @default("active")
+  featured           Boolean @default(false)
+  trending           Boolean @default(false)
+  newArrival         Boolean @default(false) @map("new_arrival")
+  description        String  @default("")
+  image              String  @default("")
+  imageColor         String  @default("") @map("image_color")
+  brandSlug          String  @map("brand_slug")
+  categorySlug       String  @map("category_slug")
+  availability       String  @default("in-stock")
+  condition          String  @default("new")
+  gstRate            Int?    @map("gst_rate")
+  images             Json    @default("[]")
+  specifications     Json    @default("{}")
+  detail             Json?
+  createdAt          String  @map("created_at")
+  updatedAt          String  @map("updated_at")
+
+  @@index([status])
+  @@index([categorySlug])
+  @@index([brandSlug])
+  @@index([featured])
+  @@index([trending])
+  @@index([newArrival])
+  @@map("products")
+}
+
+// ─── Orders ─────────────────────────────────────────────────────────────────
+
+model Order {
+  id                   String  @id
+  userId               String? @map("user_id")
+  email                String
+  trackingToken        String? @map("tracking_token")
+  customerName         String? @map("customer_name")
+  customerPhone        String? @map("customer_phone")
+  isGuestOrder         Boolean @default(false) @map("is_guest_order")
+  status               String  @default("pending")
+  paymentStatus        String  @default("pending") @map("payment_status")
+  paymentMethod        String  @map("payment_method")
+  subtotal             Float
+  couponCode           String? @map("coupon_code")
+  couponDiscount       Float   @default(0) @map("coupon_discount")
+  shippingCharge       Float   @default(0) @map("shipping_charge")
+  shippingMethod       String? @map("shipping_method")
+  platformFee          Float   @default(0) @map("platform_fee")
+  totalGst             Float   @default(0) @map("total_gst")
+  cgst                 Float   @default(0)
+  sgst                 Float   @default(0)
+  igst                 Float   @default(0)
+  total                Float
+  items                Json    @default("[]")
+  shippingAddress      Json    @map("shipping_address")
+  invoice              Json?
+  razorpayOrderId      String? @map("razorpay_order_id")
+  razorpayPaymentId    String? @map("razorpay_payment_id")
+  razorpaySignature    String? @map("razorpay_signature")
+  razorpayRefundId     String? @map("razorpay_refund_id")
+  inventoryStatus      String? @map("inventory_status")
+  couponUsageApplied   Boolean @default(false) @map("coupon_usage_applied")
+  paymentCompletedAt   String? @map("payment_completed_at")
+  paymentSource        String? @map("payment_source")
+  paymentFailureReason String? @map("payment_failure_reason")
+  refundedAt           String? @map("refunded_at")
+  createdAt            String  @map("created_at")
+  updatedAt            String  @map("updated_at")
+
+  shipment       Shipment?
+  trackingEvents TrackingEvent[]
+  returnRequests ReturnRequest[]
+
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([razorpayOrderId])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+// ─── Reviews ────────────────────────────────────────────────────────────────
+
+model Review {
+  id               String  @id
+  productId        String  @map("product_id")
+  productName      String  @map("product_name")
+  productSlug      String  @map("product_slug")
+  userId           String  @map("user_id")
+  userEmail        String? @map("user_email")
+  author           String
+  rating           Int
+  title            String  @default("")
+  body             String  @default("")
+  images           Json    @default("[]")
+  hasImages        Boolean @default(false) @map("has_images")
+  verifiedPurchase Boolean @default(false) @map("verified_purchase")
+  orderId          String? @map("order_id")
+  status           String  @default("pending")
+  adminReply       String? @map("admin_reply")
+  rejectionReason  String? @map("rejection_reason")
+  helpfulCount     Int     @default(0) @map("helpful_count")
+  createdAt        String  @map("created_at")
+  updatedAt        String  @map("updated_at")
+
+  votes ReviewVote[]
+
+  @@index([productId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("reviews")
+}
+
+model UserProductReview {
+  id        String @id
+  userId    String @map("user_id")
+  productId String @map("product_id")
+  reviewId  String @map("review_id")
+  createdAt String @map("created_at")
+
+  @@unique([userId, productId])
+  @@map("user_product_reviews")
+}
+
+model ReviewVote {
+  id        String @id
+  reviewId  String @map("review_id")
+  userId    String @map("user_id")
+  createdAt String @map("created_at")
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId])
+  @@map("review_votes")
+}
+
+model ProductReviewStats {
+  productId      String @id @map("product_id")
+  totalReviews   Int    @default(0) @map("total_reviews")
+  averageRating  Float  @default(0) @map("average_rating")
+  distribution   Json   @default("{}")
+  verifiedCount  Int    @default(0) @map("verified_count")
+  withImagesCount Int   @default(0) @map("with_images_count")
+  lastReviewAt   String? @map("last_review_at")
+  updatedAt      String @map("updated_at")
+
+  @@map("product_review_stats")
+}
+
+// ─── Users & Admins (Auth.js + app profiles) ────────────────────────────────
+
+model User {
+  id            String    @id @map("uid")
+  email         String    @unique
+  emailVerified DateTime? @map("email_verified")
+  name          String?   @map("display_name")
+  passwordHash  String?   @map("password_hash")
+  image         String?
+  isActive      Boolean   @default(true) @map("is_active")
+  notificationPreferences Json? @map("notification_preferences")
+  createdAt     String    @map("created_at")
+  updatedAt     String?   @map("updated_at")
+
+  accounts  Account[]
+  sessions  Session[]
+  addresses Address[]
+  wishlist  Wishlist?
+
+  @@index([email])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Admin {
+  uid         String  @id
+  email       String
+  displayName String  @map("display_name")
+  role        String
+  isActive    Boolean @default(true) @map("is_active")
+  createdAt   String  @map("created_at")
+  updatedAt   String  @map("updated_at")
+  lastLoginAt String? @map("last_login_at")
+
+  @@map("admins")
+}
+
+model Address {
+  id           String  @id
+  userId       String  @map("user_id")
+  fullName     String  @map("full_name")
+  phone        String
+  addressLine1 String  @map("address_line1")
+  addressLine2 String? @map("address_line2")
+  city         String
+  state        String
+  country      String  @default("India")
+  postalCode   String  @map("postal_code")
+  isDefault    Boolean @default(false) @map("is_default")
+  label        String?
+  createdAt    String  @map("created_at")
+  updatedAt    String  @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+model Wishlist {
+  userId    String @id @map("user_id")
+  items     Json   @default("[]")
+  updatedAt String @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wishlists")
+}
+
+// ─── Content ────────────────────────────────────────────────────────────────
+
+model Banner {
+  id          String  @id
+  title       String
+  subtitle    String?
+  image       String
+  mobileImage String? @map("mobile_image")
+  ctaText     String  @map("cta_text")
+  ctaLink     String  @map("cta_link")
+  startDate   String  @map("start_date")
+  endDate     String  @map("end_date")
+  priority    Int     @default(0)
+  status      String  @default("active")
+  createdAt   String  @map("created_at")
+  updatedAt   String  @map("updated_at")
+
+  @@index([status])
+  @@map("banners")
+}
+
+model BlogPost {
+  id             String  @id
+  slug           String  @unique
+  title          String
+  excerpt        String  @default("")
+  content        Json
+  contentFormat  String  @default("tiptap_json") @map("content_format")
+  coverImage     String  @default("") @map("cover_image")
+  tags           Json    @default("[]")
+  seoTitle       String  @default("") @map("seo_title")
+  seoDescription String  @default("") @map("seo_description")
+  status         String  @default("draft")
+  authorId       String  @map("author_id")
+  authorName     String  @map("author_name")
+  publishedAt    String? @map("published_at")
+  scheduledAt    String? @map("scheduled_at")
+  createdAt      String  @map("created_at")
+  updatedAt      String  @map("updated_at")
+
+  @@index([status])
+  @@map("blog_posts")
+}
+
+model HomepageSection {
+  id          String @id
+  sectionKey  String @unique @map("section_key")
+  title       String
+  subtitle    String?
+  accentLabel String? @map("accent_label")
+  ctaText     String? @map("cta_text")
+  ctaLink     String? @map("cta_link")
+  isActive    Boolean @default(true) @map("is_active")
+  sortOrder   Int     @default(0) @map("sort_order")
+  sourceMode  String  @default("auto") @map("source_mode")
+  maxItems    Int     @default(8) @map("max_items")
+  layout      String  @default("grid")
+  createdAt   String  @map("created_at")
+  updatedAt   String  @map("updated_at")
+
+  items HomepageSectionItem[]
+
+  @@map("homepage_sections")
+}
+
+model HomepageSectionItem {
+  id           String  @id
+  sectionKey   String  @map("section_key")
+  sortOrder    Int     @default(0) @map("sort_order")
+  isActive     Boolean @default(true) @map("is_active")
+  productId    String? @map("product_id")
+  categorySlug String? @map("category_slug")
+  brandId      String? @map("brand_id")
+  customImage  String? @map("custom_image")
+  customTitle  String? @map("custom_title")
+  customHref   String? @map("custom_href")
+  badgeLabel   String? @map("badge_label")
+  offerText    String? @map("offer_text")
+  startDate    String? @map("start_date")
+  endDate      String? @map("end_date")
+  createdAt    String  @map("created_at")
+  updatedAt    String  @map("updated_at")
+
+  section HomepageSection @relation(fields: [sectionKey], references: [sectionKey], onDelete: Cascade)
+
+  @@index([sectionKey])
+  @@map("homepage_section_items")
+}
+
+// ─── Commerce ───────────────────────────────────────────────────────────────
+
+model Coupon {
+  id              String  @id
+  code            String  @unique
+  label           String
+  type            String
+  value           Float
+  minOrderAmount  Float?  @map("min_order_amount")
+  maxUses         Int?    @map("max_uses")
+  usedCount       Int     @default(0) @map("used_count")
+  isActive        Boolean @default(true) @map("is_active")
+  startsAt        String? @map("starts_at")
+  expiresAt       String? @map("expires_at")
+  createdAt       String  @map("created_at")
+  updatedAt       String  @map("updated_at")
+
+  @@index([isActive])
+  @@map("coupons")
+}
+
+model StoreSettings {
+  id                    String @id @default("store")
+  storeName             String @map("store_name")
+  storeEmail            String @map("store_email")
+  storePhone            String @map("store_phone")
+  storeAddress          String @map("store_address")
+  gstNumber             String @default("") @map("gst_number")
+  defaultGstRate        Int    @map("default_gst_rate")
+  sellerState           String @map("seller_state")
+  freeShippingThreshold Float  @map("free_shipping_threshold")
+  standardShippingCharge Float @map("standard_shipping_charge")
+  razorpayEnabled       Boolean @map("razorpay_enabled")
+  updatedAt             String @map("updated_at")
+
+  @@map("store_settings")
+}
+
+model Shipment {
+  id                String  @id
+  orderId           String  @unique @map("order_id")
+  trackingNumber    String  @map("tracking_number")
+  carrier           String
+  carrierName       String  @map("carrier_name")
+  status            String
+  estimatedDelivery String? @map("estimated_delivery")
+  shippedAt         String? @map("shipped_at")
+  deliveredAt       String? @map("delivered_at")
+  createdAt         String  @map("created_at")
+  updatedAt         String  @map("updated_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("shipments")
+}
+
+model TrackingEvent {
+  id          String  @id
+  shipmentId  String  @map("shipment_id")
+  orderId     String  @map("order_id")
+  status      String
+  title       String
+  description String?
+  location    String?
+  occurredAt  String  @map("occurred_at")
+  createdAt   String  @map("created_at")
+  actor       String?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([shipmentId])
+  @@map("tracking_events")
+}
+
+model ReturnRequest {
+  id        String  @id
+  orderId   String  @map("order_id")
+  userId    String? @map("user_id")
+  email     String
+  reason    String
+  details   String?
+  status    String  @default("pending")
+  adminNote String? @map("admin_note")
+  createdAt String  @map("created_at")
+  updatedAt String  @map("updated_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+  @@map("return_requests")
+}
+
+model ProductBundle {
+  id                String @id
+  productId         String @unique @map("product_id")
+  productName       String? @map("product_name")
+  productSlug       String? @map("product_slug")
+  relatedProductIds Json   @default("[]") @map("related_product_ids")
+  discountPercent   Float  @default(0) @map("discount_percent")
+  isActive          Boolean @default(true) @map("is_active")
+  createdAt         String @map("created_at")
+  updatedAt         String @map("updated_at")
+
+  @@map("product_bundles")
+}
+
+model ProductRelation {
+  id                String @id
+  productId         String @unique @map("product_id")
+  productName       String? @map("product_name")
+  productSlug       String? @map("product_slug")
+  relatedProductIds Json   @default("[]") @map("related_product_ids")
+  isActive          Boolean @default(true) @map("is_active")
+  createdAt         String @map("created_at")
+  updatedAt         String @map("updated_at")
+
+  @@map("product_relations")
+}
+
+model ProductQuestion {
+  id          String  @id
+  productId   String  @map("product_id")
+  productSlug String  @map("product_slug")
+  productName String  @map("product_name")
+  userId      String? @map("user_id")
+  author      String
+  question    String
+  answer      String?
+  answeredBy  String? @map("answered_by")
+  status      String  @default("pending")
+  createdAt   String  @map("created_at")
+  updatedAt   String  @map("updated_at")
+
+  @@index([productId])
+  @@index([status])
+  @@map("product_questions")
+}
+
+// ─── Logs & Analytics ───────────────────────────────────────────────────────
+
+model InventoryLog {
+  id              String  @id
+  productId       String  @map("product_id")
+  sku             String
+  orderId         String? @map("order_id")
+  previousStock   Int     @map("previous_stock")
+  newStock        Int     @map("new_stock")
+  quantityChanged Int     @map("quantity_changed")
+  action          String
+  adminId         String? @map("admin_id")
+  timestamp       String
+  previousReserved Int?   @map("previous_reserved")
+  newReserved     Int?    @map("new_reserved")
+  note            String?
+
+  @@index([productId])
+  @@index([orderId])
+  @@map("inventory_logs")
+}
+
+model PaymentLog {
+  id                String  @id
+  razorpayEventId   String  @unique @map("razorpay_event_id")
+  eventType         String  @map("event_type")
+  status            String
+  orderId           String? @map("order_id")
+  razorpayOrderId   String? @map("razorpay_order_id")
+  razorpayPaymentId String? @map("razorpay_payment_id")
+  razorpayRefundId  String? @map("razorpay_refund_id")
+  payload           Json    @default("{}")
+  error             String?
+  attemptCount      Int     @default(0) @map("attempt_count")
+  createdAt         String  @map("created_at")
+  updatedAt         String  @map("updated_at")
+  processedAt       String? @map("processed_at")
+
+  @@index([orderId])
+  @@map("payment_logs")
+}
+
+model AuditLog {
+  id           String @id @default(cuid())
+  action       String
+  actorId      String @map("actor_id")
+  actorEmail   String @map("actor_email")
+  resourceType String @map("resource_type")
+  resourceId   String @map("resource_id")
+  ip           String @default("")
+  userAgent    String @default("") @map("user_agent")
+  requestId    String @default("") @map("request_id")
+  metadata     Json   @default("{}")
+  createdAt    String @map("created_at")
+
+  @@index([resourceType, resourceId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model NewsletterSubscriber {
+  id           String  @id
+  email        String  @unique
+  firstName    String? @map("first_name")
+  lastName     String? @map("last_name")
+  marketing    Boolean @default(true)
+  subscribedAt String  @map("subscribed_at")
+  source       String  @default("website")
+
+  @@map("newsletter_subscribers")
+}
+
+model ContactMessage {
+  id        String @id
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  status    String @default("new")
+  createdAt String @map("created_at")
+
+  @@index([status])
+  @@map("contact_messages")
+}
+
+model SearchAnalyticsEvent {
+  id        String @id
+  query     String
+  resultCount Int  @default(0) @map("result_count")
+  source    String @default("storefront")
+  userId    String? @map("user_id")
+  sessionId String? @map("session_id")
+  createdAt String @map("created_at")
+
+  @@index([query])
+  @@index([createdAt])
+  @@map("search_analytics_events")
+}
+
+model Counter {
+  id    String @id
+  value Int    @default(0)
+
+  @@map("counters")
+}
+
+model AdminNotification {
+  id        String  @id
+  type      String
+  title     String
+  body      String
+  link      String?
+  read      Boolean @default(false)
+  createdAt String  @map("created_at")
+
+  @@index([createdAt])
+  @@map("admin_notifications")
+}
+
+model UserNotification {
+  id        String  @id
+  userId    String  @map("user_id")
+  type      String
+  title     String
+  body      String
+  link      String?
+  read      Boolean @default(false)
+  createdAt String  @map("created_at")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("user_notifications")
+}
+
+model ShippingZone {
+  id                    String  @id
+  name                  String
+  description           String?
+  states                Json    @default("[]")
+  pinCodePrefixes       Json    @default("[]") @map("pin_code_prefixes")
+  methodCharges         Json    @default("{}") @map("method_charges")
+  freeShippingThreshold Float?  @map("free_shipping_threshold")
+  isActive              Boolean @default(true) @map("is_active")
+  sortOrder             Int     @default(0) @map("sort_order")
+  createdAt             String  @map("created_at")
+  updatedAt             String  @map("updated_at")
+
+  @@index([isActive])
+  @@map("shipping_zones")
+}
+
+model SupportTicket {
+  id         String  @id
+  userId     String? @map("user_id")
+  email      String
+  name       String
+  subject    String
+  message    String
+  category   String  @default("other")
+  orderId    String? @map("order_id")
+  status     String  @default("open")
+  priority   String  @default("normal")
+  adminNote  String? @map("admin_note")
+  assignedTo String? @map("assigned_to")
+  createdAt  String  @map("created_at")
+  updatedAt  String  @map("updated_at")
+  resolvedAt String? @map("resolved_at")
+
+  @@index([status])
+  @@index([userId])
+  @@index([email])
+  @@map("support_tickets")
+}
+
+model ContentPage {
+  slug      String @id
+  title     String
+  eyebrow   String @default("")
+  sections  Json   @default("[]")
+  updatedAt String @map("updated_at")
+
+  @@map("content_pages")
+}

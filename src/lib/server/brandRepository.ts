@@ -1,24 +1,11 @@
 import "server-only";
 
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { prisma } from "@/lib/db/prisma";
 import { loadBrands, saveBrands } from "@/lib/server/catalogRepository";
 import { invalidateCatalogCache } from "@/lib/server/firestoreCatalogRepository";
+import { brandToPrisma, prismaToBrand } from "@/lib/server/prisma/mappers";
 import { slugify } from "@/lib/slug";
 import type { Brand } from "@/types/brand";
-
-const COLLECTION = "brands";
-
-function normalizeBrand(id: string, data: FirebaseFirestore.DocumentData): Brand {
-  return {
-    id,
-    name: String(data.name ?? ""),
-    slug: String(data.slug ?? slugify(String(data.name ?? ""))),
-  };
-}
-
-async function staticBrands(): Promise<Brand[]> {
-  return loadBrands();
-}
 
 async function syncBrandsJson(brands: Brand[]): Promise<void> {
   saveBrands([...brands].sort((a, b) => a.name.localeCompare(b.name)));
@@ -26,50 +13,45 @@ async function syncBrandsJson(brands: Brand[]): Promise<void> {
 }
 
 async function seedBrandsFromStatic(): Promise<Brand[]> {
-  const brands = await staticBrands();
+  const brands = await loadBrands();
   if (brands.length === 0) return [];
 
-  const db = getAdminFirestore();
-  const batch = db.batch();
-  for (const brand of brands) {
-    batch.set(db.collection(COLLECTION).doc(brand.id), brand);
-  }
-  await batch.commit();
+  await prisma.$transaction(
+    brands.map((brand) =>
+      prisma.brand.upsert({
+        where: { id: brand.id },
+        create: brandToPrisma(brand),
+        update: brandToPrisma(brand),
+      })
+    )
+  );
   return brands;
 }
 
 export async function listBrands(): Promise<Brand[]> {
-  try {
-    const db = getAdminFirestore();
-    const snap = await db.collection(COLLECTION).orderBy("name", "asc").get();
-    if (snap.empty) {
-      return seedBrandsFromStatic();
-    }
-    return snap.docs.map((doc) => normalizeBrand(doc.id, doc.data()));
-  } catch {
-    return staticBrands();
+  const rows = await prisma.brand.findMany({ orderBy: { name: "asc" } });
+  if (rows.length === 0) {
+    return seedBrandsFromStatic();
   }
+  return rows.map(prismaToBrand);
 }
 
 export async function getBrandById(id: string): Promise<Brand | null> {
-  const db = getAdminFirestore();
-  const doc = await db.collection(COLLECTION).doc(id).get();
-  if (!doc.exists) return null;
-  return normalizeBrand(doc.id, doc.data()!);
+  const row = await prisma.brand.findUnique({ where: { id } });
+  return row ? prismaToBrand(row) : null;
 }
 
 export async function createBrand(input: {
   name: string;
   slug?: string;
 }): Promise<Brand> {
-  const db = getAdminFirestore();
   const slug = (input.slug?.trim() || slugify(input.name)).toLowerCase();
   const record: Brand = {
     id: slug,
     name: input.name.trim(),
     slug,
   };
-  await db.collection(COLLECTION).doc(slug).set(record);
+  await prisma.brand.create({ data: brandToPrisma(record) });
   await syncBrandsJson(await listBrands());
   return record;
 }
@@ -78,7 +60,6 @@ export async function updateBrand(
   id: string,
   patch: Partial<Pick<Brand, "name" | "slug">>
 ): Promise<Brand> {
-  const db = getAdminFirestore();
   const existing = await getBrandById(id);
   if (!existing) throw new Error("Brand not found");
 
@@ -87,12 +68,14 @@ export async function updateBrand(
   const record: Brand = { id, name: nextName, slug: nextSlug };
 
   if (nextSlug !== id) {
-    await db.collection(COLLECTION).doc(nextSlug).set(record);
-    await db.collection(COLLECTION).doc(id).delete();
+    await prisma.$transaction([
+      prisma.brand.create({ data: brandToPrisma({ ...record, id: nextSlug }) }),
+      prisma.brand.delete({ where: { id } }),
+    ]);
   } else {
-    await db.collection(COLLECTION).doc(id).update({
-      name: nextName,
-      slug: nextSlug,
+    await prisma.brand.update({
+      where: { id },
+      data: brandToPrisma(record),
     });
   }
 
@@ -101,7 +84,6 @@ export async function updateBrand(
 }
 
 export async function deleteBrand(id: string): Promise<void> {
-  const db = getAdminFirestore();
-  await db.collection(COLLECTION).doc(id).delete();
+  await prisma.brand.delete({ where: { id } });
   await syncBrandsJson(await listBrands());
 }

@@ -4,11 +4,10 @@ import { unstable_cache } from "next/cache";
 import { GEAR_STORIES_SECTION, GEAR_STORY_SEEDS } from "@/data/gearStories";
 import { STYLE_STORY_REELS } from "@/data/styleStory";
 import { getProductImage } from "@/data/productImages";
-import { isCatalogUnavailable } from "@/lib/server/firestoreCatalogRepository";
 import {
-  isFirestoreUnavailableError,
-  logFirestoreWarning,
-} from "@/lib/server/firestoreErrors";
+  fetchProductsByIds,
+  isCatalogUnavailable,
+} from "@/lib/server/firestoreCatalogRepository";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
   GearStoriesSectionData,
@@ -114,22 +113,10 @@ async function resolveSeedProducts(): Promise<Array<CatalogProduct | undefined>>
 
   try {
     const ids = GEAR_STORY_SEEDS.map((seed) => seed.productId);
-    const { fetchProductsByIds } = await import(
-      "@/lib/server/firestoreCatalogRepository"
-    );
     const products = await fetchProductsByIds(ids);
     const byId = new Map(products.map((product) => [product.id, product]));
     return GEAR_STORY_SEEDS.map((seed) => byId.get(seed.productId));
-  } catch (error) {
-    if (!isFirestoreUnavailableError(error)) {
-      throw error;
-    }
-
-    logFirestoreWarning(
-      "gear-stories",
-      error,
-      "Firestore unavailable — using local catalog for gear stories"
-    );
+  } catch {
     return resolveFromLocalCatalog();
   }
 }
@@ -148,7 +135,6 @@ export const getCachedGearStories = unstable_cache(
   { revalidate: GEAR_STORIES_REVALIDATE_SECONDS, tags: ["gear-stories", "catalog"] }
 );
 
-/** Always returns all reel slots — used on the homepage without Firestore. */
 export async function buildStaticGearStories(
   products?: Array<CatalogProduct | undefined>
 ): Promise<GearStoriesSectionData> {

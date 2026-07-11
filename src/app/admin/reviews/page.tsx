@@ -13,7 +13,7 @@ import {
   formatDate,
 } from "@/components/admin/AdminUi";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
-import { buildCloudinaryTransformUrl, CLOUDINARY_PRESETS } from "@/lib/cloudinary-url";
+import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
 import type { ReviewDocument } from "@/types/admin";
 import type { AdminReviewStats, ReviewSortOption } from "@/types/review";
 
@@ -344,7 +344,7 @@ function ReviewsContent() {
                 {selectedReview.images.map((url, index) => (
                   <Image
                     key={`${url}-${index}`}
-                    src={buildCloudinaryTransformUrl(url, CLOUDINARY_PRESETS.reviewGallery)}
+                    src={buildMediaTransformUrl(url, MEDIA_PRESETS.reviewGallery)}
                     alt={`Review image ${index + 1}`}
                     width={120}
                     height={120}

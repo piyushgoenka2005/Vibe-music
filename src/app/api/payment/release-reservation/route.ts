@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/server-session";
-import { isFirestoreDegraded } from "@/lib/server/firestoreErrors";
 import { getOrderById, releaseOrderReservation } from "@/lib/server/orderService";
 import { verifyOrderTrackingToken } from "@/lib/server/orderTrackingToken";
 
@@ -67,10 +66,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    if (isFirestoreDegraded(error)) {
-      return NextResponse.json({ ok: true, skipped: true });
-    }
-
     const message =
       error instanceof Error ? error.message : "Unable to release reservation";
     return NextResponse.json({ error: message }, { status: 500 });

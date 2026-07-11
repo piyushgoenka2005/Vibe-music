@@ -16,7 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { getFirebaseErrorMessage } from "@/lib/auth/firebase-errors";
+import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
 import { ROUTES } from "@/lib/routes";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/authStore";
@@ -41,7 +41,6 @@ export default function AdminLoginForm() {
 
       const adminRes = await fetch("/api/admin/me");
       if (!adminRes.ok) {
-        await fetch("/api/auth/session", { method: "DELETE" });
         await useAuthStore.getState().logout();
         throw new Error("This account does not have admin access.");
       }
@@ -54,7 +53,7 @@ export default function AdminLoginForm() {
       setError(
         err instanceof Error && err.message.includes("admin access")
           ? err.message
-          : getFirebaseErrorMessage(err, "Admin sign in failed.")
+          : getAuthErrorMessage(err, "Admin sign in failed.")
       );
     }
   }
