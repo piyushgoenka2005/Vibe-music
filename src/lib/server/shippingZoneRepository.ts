@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/db/prisma";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import type { ShippingZone } from "@/types/shippingZone";
 
@@ -84,6 +84,10 @@ function defaultZonesWithTimestamps(): ShippingZone[] {
 }
 
 export async function listShippingZones(): Promise<ShippingZone[]> {
+  if (!isPostgresConfigured()) {
+    return defaultZonesWithTimestamps();
+  }
+
   try {
     const rows = await prisma.shippingZone.findMany({
       where: { isActive: true },
@@ -97,6 +101,10 @@ export async function listShippingZones(): Promise<ShippingZone[]> {
 }
 
 export async function listAllShippingZones(): Promise<ShippingZone[]> {
+  if (!isPostgresConfigured()) {
+    return defaultZonesWithTimestamps();
+  }
+
   const rows = await prisma.shippingZone.findMany({ orderBy: { sortOrder: "asc" } });
   if (rows.length === 0) return defaultZonesWithTimestamps();
   return rows.map(mapShippingZone);

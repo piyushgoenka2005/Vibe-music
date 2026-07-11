@@ -6,7 +6,17 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+export function isPostgresConfigured(): boolean {
+  return Boolean(process.env.DATABASE_URL?.trim());
+}
+
 function createPrismaClient(): PrismaClient {
+  if (!isPostgresConfigured()) {
+    throw new Error(
+      "DATABASE_URL is not configured. Add it to .env.local (dev) or your deployment environment."
+    );
+  }
+
   return new PrismaClient({
     log:
       process.env.NODE_ENV === "development"
@@ -15,12 +25,20 @@ function createPrismaClient(): PrismaClient {
   });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+function getPrismaClient(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient();
+  }
+  return globalForPrisma.prisma;
 }
 
-export function isPostgresConfigured(): boolean {
-  return Boolean(process.env.DATABASE_URL?.trim());
-}
+/** Lazy Prisma client — avoids crashing import-time when DATABASE_URL is unset (e.g. CI build). */
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getPrismaClient();
+    const value = Reflect.get(client, prop, receiver);
+    return typeof value === "function"
+      ? (value as (...args: unknown[]) => unknown).bind(client)
+      : value;
+  },
+});

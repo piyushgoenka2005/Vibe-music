@@ -52,6 +52,14 @@ export type ServerEnv = z.infer<typeof serverEnvSchema>;
 
 let validated = false;
 
+/** Next.js sets this during `next build`; skip strict production checks until runtime. */
+function isProductionBuildPhase(): boolean {
+  return (
+    process.env.NEXT_PHASE === "phase-production-build" ||
+    process.env.NEXT_PRIVATE_BUILD_WORKER === "1"
+  );
+}
+
 /** Treat blank env values as unset — `.env.local` often has `KEY=` placeholders. */
 function envValue(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
@@ -113,7 +121,7 @@ export function validateEnv(): void {
     throw new Error(`Invalid server environment: ${formatZodErrors(serverResult.error)}`);
   }
 
-  if (serverResult.data.NODE_ENV === "production") {
+  if (serverResult.data.NODE_ENV === "production" && !isProductionBuildPhase()) {
     const productionResult = productionRequiredSchema.safeParse({
       NEXT_PUBLIC_SITE_URL: envValue(process.env.NEXT_PUBLIC_SITE_URL),
       AUTH_SECRET: envValue(process.env.AUTH_SECRET),
