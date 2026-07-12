@@ -17,6 +17,20 @@ export const HOMEPAGE_BANNER_ROTATION_MS = 3500;
 /** Client-approved homepage hero banner carousel slides. */
 export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
   {
+    id: "banner-zoom-ms-90-lp",
+    src: "/zoom-ms-90-lp.png",
+    alt: "Zoom MultiStomp MS-90LP+ Looper Pedal — Create. Loop. Perform. at Vibe Music",
+    href: `${ROUTES.searchResults}?q=zoom+ms-90`,
+    objectPosition: "center center",
+  },
+  {
+    id: "banner-zoom-ms-200d",
+    src: "/zoom-ms-200d-plus.png",
+    alt: "Zoom MS-200D+ MultiStomp Multi Effects Processor — Feel Every Beat at Vibe Music",
+    href: `${ROUTES.searchResults}?q=zoom+ms-200`,
+    objectPosition: "center center",
+  },
+  {
     id: "banner-sale-july",
     src: "/images/upto-60-off.png",
     alt: "Up to 60% off — sale starts July 8th at Vibe Music",

@@ -48,7 +48,7 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
     iconId: "deals",
     title: "Deals on Deals",
     subtitle: "Exclusive bundles and seasonal promos.",
-    href: `${ROUTES.searchResults}?q=deals`,
+    href: ROUTES.deals,
   },
   {
     id: "price-match",

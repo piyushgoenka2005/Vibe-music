@@ -1,7 +1,7 @@
 import Link from "next/link";
 import DealProductCard from "@/components/homepage/DealProductCard";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
-import { resolveLinkHref } from "@/lib/routes";
+import { ROUTES, resolveLinkHref } from "@/lib/routes";
 import type { ResolvedHomepageSection } from "@/types/homepage";
 
 interface HomepageDealsSectionProps {
@@ -12,6 +12,8 @@ export default function HomepageDealsSection({ section }: HomepageDealsSectionPr
   const products = section.products ?? [];
   const sliderId = `${section.sectionId}-slider`;
   const titleId = `${section.sectionId}-title`;
+  const ctaText = section.ctaText ?? "Shop All Deals";
+  const ctaLink = resolveLinkHref(section.ctaLink || ROUTES.deals);
 
   return (
     <section
@@ -66,17 +68,15 @@ export default function HomepageDealsSection({ section }: HomepageDealsSectionPr
           </div>
         </div>
 
-        {section.ctaText && section.ctaLink ? (
-          <div className="homepage-deals-section__cta-wrap">
-            <Link
-              className="premium-btn premium-btn--primary homepage-deals-section__cta"
-              href={resolveLinkHref(section.ctaLink)}
-            >
-              {section.ctaText}
-              {SECTION_CTA_ARROW}
-            </Link>
-          </div>
-        ) : null}
+        <div className="homepage-deals-section__cta-wrap">
+          <Link
+            className="premium-btn premium-btn--primary homepage-deals-section__cta"
+            href={ctaLink}
+          >
+            {ctaText}
+            {SECTION_CTA_ARROW}
+          </Link>
+        </div>
       </div>
     </section>
   );

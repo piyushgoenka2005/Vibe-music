@@ -1,16 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import CarouselProductCard from "@/components/homepage/CarouselProductCard";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
-import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
-import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import { isHomepageProductVisible } from "@/lib/homepage/productVisibility";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageSectionKey, ResolvedHomepageSection } from "@/types/homepage";
 
-const NAV_PREV_LABEL = "Scroll Previous";
-const NAV_NEXT_LABEL = "Scroll Next";
+const NAV_PREV_LABEL = "Scroll previous products";
+const NAV_NEXT_LABEL = "Scroll next products";
 
 const CAROUSEL_EYEBROWS: Partial<Record<HomepageSectionKey, string>> = {
   trending: "Hot right now",
@@ -47,16 +46,33 @@ const PREMIUM_CAROUSEL_KEYS = new Set<HomepageSectionKey>([
   "staff_picks",
 ]);
 
-function ProductSuggestNav({ next = false }: { next?: boolean }) {
-  const className = next
-    ? "product-suggest__nav product-suggest__nav--next"
-    : "product-suggest__nav";
+interface ProductSuggestNavProps {
+  next?: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}
+
+function ProductSuggestNav({
+  next = false,
+  disabled,
+  onClick,
+}: ProductSuggestNavProps) {
+  const className = [
+    "product-suggest__nav",
+    next && "product-suggest__nav--next",
+    "visible",
+    disabled && "disabled",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <button
       type="button"
       className={className}
       aria-label={next ? NAV_NEXT_LABEL : NAV_PREV_LABEL}
+      disabled={disabled}
+      onClick={onClick}
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" aria-hidden>
         <g fill="none" strokeLinecap="round" strokeWidth="2">
@@ -78,16 +94,13 @@ interface HomepageProductCarouselSectionProps {
 export default function HomepageProductCarouselSection({
   section,
 }: HomepageProductCarouselSectionProps) {
-  const reduceMotion = useHydrationSafeReducedMotion();
-  const isMobileViewport = useIsMobileViewport();
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
   const products = (section.products ?? []).filter(isHomepageProductVisible);
   const isPremium = PREMIUM_CAROUSEL_KEYS.has(section.key);
-  const isTrending = section.key === "trending";
-  const enableMobileAuto =
-    isTrending && isMobileViewport && !reduceMotion && products.length > 1;
-  const carouselProducts = enableMobileAuto
-    ? [...products, ...products]
-    : products;
   const titleId = `${section.sectionId}-title`;
   const eyebrow = CAROUSEL_EYEBROWS[section.key] ?? section.accentLabel;
   const defaults = SECTION_DEFAULTS[section.key];
@@ -95,21 +108,45 @@ export default function HomepageProductCarouselSection({
   const ctaText = section.ctaText ?? defaults?.ctaText;
   const ctaLink = section.ctaLink ?? defaults?.ctaLink;
 
-  const carouselClassName = [
-    "product-suggest__carousel",
-    enableMobileAuto && "product-suggest__carousel--mobile-auto",
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const updateScrollState = useCallback(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
 
-  const itemsClassName = [
-    "product-suggest__items",
-    "paged",
-    "scrollbar-minimal",
-    enableMobileAuto && "product-suggest__items--mobile-auto",
-  ]
-    .filter(Boolean)
-    .join(" ");
+    const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+    const overflow = maxScroll > 2;
+    setHasOverflow(overflow);
+    setCanScrollPrev(scroller.scrollLeft > 2);
+    setCanScrollNext(scroller.scrollLeft < maxScroll - 2);
+  }, []);
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    updateScrollState();
+    scroller.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(scroller);
+
+    return () => {
+      scroller.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+      resizeObserver.disconnect();
+    };
+  }, [products.length, updateScrollState]);
+
+  const scrollByCard = useCallback((direction: -1 | 1) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const firstWrap = scroller.querySelector<HTMLElement>(
+      ".product-suggest__item-wrap"
+    );
+    const amount =
+      firstWrap?.offsetWidth ?? Math.max(scroller.clientWidth * 0.8, 200);
+    scroller.scrollBy({ left: direction * amount, behavior: "smooth" });
+  }, []);
 
   if (products.length === 0) {
     return null;
@@ -153,20 +190,33 @@ export default function HomepageProductCarouselSection({
           </>
         )}
 
-        <div className={carouselClassName}>
-          {!enableMobileAuto ? <ProductSuggestNav /> : null}
-          <div className={itemsClassName}>
-            {carouselProducts.map((item, index) => (
+        <div className="product-suggest__carousel">
+          {hasOverflow ? (
+            <ProductSuggestNav
+              disabled={!canScrollPrev}
+              onClick={() => scrollByCard(-1)}
+            />
+          ) : null}
+          <div
+            ref={scrollerRef}
+            className="product-suggest__items paged scrollbar-minimal"
+          >
+            {products.map((item) => (
               <CarouselProductCard
-                key={`${item.id}-${index}`}
+                key={item.id}
                 item={item}
                 sectionKey={section.key}
-                isDuplicate={enableMobileAuto && index >= products.length}
               />
             ))}
-            {!enableMobileAuto ? <div className="product-suggest__end-spacer" /> : null}
+            <div className="product-suggest__end-spacer" />
           </div>
-          {!enableMobileAuto ? <ProductSuggestNav next /> : null}
+          {hasOverflow ? (
+            <ProductSuggestNav
+              next
+              disabled={!canScrollNext}
+              onClick={() => scrollByCard(1)}
+            />
+          ) : null}
         </div>
 
         {isPremium && ctaText && ctaLink ? (

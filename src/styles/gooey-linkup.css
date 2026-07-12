@@ -219,6 +219,11 @@
 }
 
 @media (max-width: 767px) {
+  /* Desktop gooey strip is hidden on mobile; keep these inert if it ever reappears */
+  .site-header__nav--desktop .site-header__nav-gooey.gooey-linkup {
+    display: none;
+  }
+
   .site-header__nav-gooey.gooey-linkup {
     width: 100%;
     max-width: none;

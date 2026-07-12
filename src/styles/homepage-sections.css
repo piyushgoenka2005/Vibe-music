@@ -523,21 +523,44 @@
   .premium-home .sale-events,
   .premium-home .homepage-deals,
   .premium-home .suggested-products {
-    padding: clamp(2rem, 6vw, 2.75rem) 0;
+    padding: clamp(1.75rem, 5vw, 2.5rem) 0;
+    overflow-x: clip;
+    max-width: 100%;
   }
 
   .premium-home .tile-block,
   .premium-home .product-suggest__stage {
-    padding-inline: max(1rem, env(safe-area-inset-left, 0px))
-      max(1rem, env(safe-area-inset-right, 0px));
+    max-width: 100%;
+    padding-inline: max(0.875rem, env(safe-area-inset-left, 0px))
+      max(0.875rem, env(safe-area-inset-right, 0px));
+  }
+
+  .premium-home .product-suggest__items {
+    gap: 0.625rem;
+    padding-block: 0.25rem 0.85rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
   }
 
   .premium-home .tile--link {
-    width: min(240px, 78vw);
+    width: min(200px, 72vw);
   }
 
   .premium-home .product-suggest__item-wrap {
-    width: min(200px, 74vw);
+    width: min(176px, 46vw);
+    max-width: 72vw;
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+
+  .premium-home .product-suggest__item {
+    min-width: 0;
+  }
+
+  .premium-home .product-suggest__name {
+    overflow-wrap: anywhere;
   }
 }
 

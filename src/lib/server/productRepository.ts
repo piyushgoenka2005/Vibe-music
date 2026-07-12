@@ -34,9 +34,21 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 async function trendingFromLocalCatalog(): Promise<Product[]> {
   const { loadProducts } = await import("@/lib/server/catalogRepository");
   const { toProduct } = await import("@/services/catalogService");
-  return loadProducts()
-    .filter((product) => product.status === "active" && product.trending)
-    .map(toProduct);
+  const active = loadProducts().filter((product) => product.status === "active");
+  const trending = active.filter((product) => product.trending);
+  const source =
+    trending.length > 0
+      ? trending
+      : [...active]
+          .filter((product) => product.price > 0)
+          .sort(
+            (a, b) =>
+              b.reviewCount - a.reviewCount ||
+              b.rating - a.rating ||
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+          .slice(0, 12);
+  return source.map(toProduct);
 }
 
 export async function getTrendingProducts(): Promise<Product[]> {

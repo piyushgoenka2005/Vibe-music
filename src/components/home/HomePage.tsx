@@ -78,15 +78,16 @@ export default function HomePage() {
       <BigNamesDealsSection />
       <WhyShopSection />
       <BrowseCategoryCardsSection />
+
+      <Suspense fallback={<HomepageSectionsSkeleton />}>
+        <HomepageSectionsAsync />
+      </Suspense>
+
       <Suspense fallback={null}>
         <GearStoriesReelsSection />
       </Suspense>
       <CategoryBento />
       <OutletStorySection />
-
-      <Suspense fallback={<HomepageSectionsSkeleton />}>
-        <HomepageSectionsAsync />
-      </Suspense>
 
       <HomepageAplusContent />
 

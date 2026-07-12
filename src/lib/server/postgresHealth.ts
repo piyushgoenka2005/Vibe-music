@@ -1,6 +1,7 @@
 import "server-only";
 
-import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
+import { isPostgresConfigured } from "@/lib/db/postgresConfig";
+import { prisma } from "@/lib/db/prisma";
 
 export async function verifyPostgresConnection(): Promise<{
   ok: boolean;

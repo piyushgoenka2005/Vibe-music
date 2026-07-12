@@ -2,6 +2,9 @@ import "server-only";
 
 import nodemailer from "nodemailer";
 import type Mail from "nodemailer/lib/mailer";
+import { isSmtpConfigured } from "@/lib/server/email/smtpConfig";
+
+export { isSmtpConfigured };
 
 type SmtpTransport = ReturnType<typeof nodemailer.createTransport>;
 
@@ -37,13 +40,14 @@ function isSecureSmtp(): boolean {
   return parseSmtpPort() === 465;
 }
 
-export function isSmtpConfigured(): boolean {
-  return Boolean(process.env.SMTP_HOST?.trim());
-}
-
 export function getSmtpTransport(): SmtpTransport | null {
   if (cachedTransport !== undefined) {
     return cachedTransport;
+  }
+
+  if (!isSmtpConfigured()) {
+    cachedTransport = null;
+    return null;
   }
 
   const host = process.env.SMTP_HOST?.trim();
