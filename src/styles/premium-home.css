@@ -3461,6 +3461,8 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   transform: scale(1.12) !important;
   filter: none;
   opacity: 1;
+  /* Hide accidental light/matte backgrounds on white logo cards */
+  mix-blend-mode: multiply;
 }
 
 .premium-home .homepage-brand-strip__item:hover .homepage-brand-strip__logo,
