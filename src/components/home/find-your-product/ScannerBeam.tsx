@@ -49,7 +49,7 @@ export default function ScannerBeam() {
       </div>
 
       <p className="find-your-product__label">
-        <Link href={ROUTES.deals} className="find-your-product__label-link">
+          <Link href={ROUTES.search} className="find-your-product__label-link">
           Find your gear
           <ArrowUpRight
             className="find-your-product__label-arrow"

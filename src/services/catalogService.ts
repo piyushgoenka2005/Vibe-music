@@ -292,15 +292,54 @@ export function searchInCatalogProducts(
 
   if (options.query) {
     const normalized = options.query.trim().toLowerCase();
-    const tokens = normalized.split(/\s+/).filter(Boolean);
-    source = source
-      .map((product) => ({
-        product,
-        score: scoreProductMatch(toProduct(product), tokens),
-      }))
-      .filter((entry) => entry.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map((entry) => entry.product);
+    const merchandisingQuery =
+      normalized === "trending" ||
+      normalized === "best sellers" ||
+      normalized === "bestsellers" ||
+      normalized === "best+sellers" ||
+      normalized === "new" ||
+      normalized === "deals";
+
+    if (merchandisingQuery) {
+      if (normalized === "trending") {
+        const flagged = source.filter((product) => product.trending);
+        source =
+          flagged.length > 0
+            ? flagged
+            : sortByPopularity(source.filter((product) => product.price > 0));
+      } else if (
+        normalized === "best sellers" ||
+        normalized === "bestsellers" ||
+        normalized === "best+sellers"
+      ) {
+        source = sortByPopularity(source);
+      } else if (normalized === "new") {
+        source = source.filter((product) => product.newArrival);
+      } else if (normalized === "deals") {
+        const discounted = source.filter(
+          (product) =>
+            product.discountPercentage > 0 ||
+            (product.detail?.salePrice != null &&
+              product.detail.salePrice < product.price)
+        );
+        source =
+          discounted.length > 0
+            ? discounted.sort(
+                (a, b) => b.discountPercentage - a.discountPercentage
+              )
+            : sortByPopularity(source);
+      }
+    } else {
+      const tokens = normalized.split(/\s+/).filter(Boolean);
+      source = source
+        .map((product) => ({
+          product,
+          score: scoreProductMatch(toProduct(product), tokens),
+        }))
+        .filter((entry) => entry.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map((entry) => entry.product);
+    }
   }
 
   if (options.brand) {
@@ -379,14 +418,35 @@ export async function getProductsByCategory(
   return products.map(toProduct);
 }
 
+function sortByPopularity(products: CatalogProduct[]): CatalogProduct[] {
+  return [...products].sort(
+    (a, b) =>
+      b.reviewCount - a.reviewCount ||
+      b.rating - a.rating ||
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
 export async function getFeaturedProducts(): Promise<Product[]> {
   const products = await fetchCatalogSnapshot();
-  return products.filter((p) => p.featured).map(toProduct);
+  const featured = products.filter((p) => p.featured);
+  const source =
+    featured.length > 0
+      ? featured
+      : sortByPopularity(products.filter((p) => p.price > 0)).slice(0, 12);
+  return source.map(toProduct);
 }
 
 export async function getTrendingProducts(): Promise<Product[]> {
   const products = await fetchCatalogSnapshot();
-  return products.filter((p) => p.trending).map(toProduct);
+  const trending = products.filter((p) => p.trending);
+  if (trending.length > 0) {
+    return trending.map(toProduct);
+  }
+  // Keep storefront rails populated when no products are flagged yet.
+  return sortByPopularity(products.filter((p) => p.price > 0))
+    .slice(0, 12)
+    .map(toProduct);
 }
 
 export async function getNewArrivals(): Promise<Product[]> {

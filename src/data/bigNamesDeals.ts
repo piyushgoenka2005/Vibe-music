@@ -11,7 +11,7 @@ export interface BigNamesDealBrand {
   blendMultiply?: boolean;
 }
 
-export const BIG_NAMES_DEALS_CTA = `${ROUTES.searchResults}?q=deals`;
+export const BIG_NAMES_DEALS_CTA = ROUTES.deals;
 
 export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
   {

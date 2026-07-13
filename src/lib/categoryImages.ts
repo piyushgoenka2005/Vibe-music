@@ -1,18 +1,24 @@
 import { POPULAR_CATEGORY_ITEMS } from "@/data/popularCategories";
+import { categoryPath } from "@/lib/routes";
 
-/** Map bento / nav slugs to popular-category hrefs (paths may differ slightly). */
+/** Map bento / nav slugs to popular-category hrefs. */
 const SLUG_TO_HREF: Record<string, string> = {
-  guitars: "/shop/guitars/",
-  bass: "/shop/bass/",
-  "studio-recording": "/shop/studio-recording/",
-  "drums-percussion": "/shop/drums-percussion/",
-  "keyboards-synthesizers": "/shop/keyboards-synthesizers/",
-  "live-sound-lighting": "/shop/live-sound/",
-  "live-sound": "/shop/live-sound/",
-  "software-plug-ins": "/shop/software-plugins/",
-  "software-plugins": "/shop/software-plugins/",
-  "dj-equipment": "/shop/dj-equipment/",
-  "cables-cases-accessories": "/shop/accessories/",
+  guitars: categoryPath("guitars"),
+  bass: categoryPath("bass"),
+  "studio-recording": categoryPath("studio-recording"),
+  "drums-percussion": categoryPath("drums-percussion"),
+  "keyboards-synthesizers": categoryPath("keyboards-synthesizers"),
+  "live-sound-lighting": categoryPath("live-sound-lighting"),
+  "live-sound": categoryPath("live-sound-lighting"),
+  "software-plug-ins": categoryPath("software-plug-ins"),
+  "software-plugins": categoryPath("software-plug-ins"),
+  "dj-equipment": categoryPath("dj-equipment"),
+  "cables-cases-accessories": categoryPath("cables-cases-accessories"),
+  "microphones-wireless": categoryPath("microphones-wireless"),
+  "band-orchestra": categoryPath("band-orchestra"),
+  "home-audio-electronics": categoryPath("home-audio-electronics"),
+  "commercial-audio-installation": categoryPath("commercial-audio-installation"),
+  "video-cameras": categoryPath("video-cameras"),
 };
 
 const FALLBACK_IMAGE =
@@ -56,7 +62,7 @@ function withHeroParams(path: string): string {
 
 function hrefForCategorySlug(slug: string): string {
   const normalized = slug.toLowerCase();
-  return SLUG_TO_HREF[normalized] ?? `/shop/${normalized}/`;
+  return SLUG_TO_HREF[normalized] ?? categoryPath(normalized);
 }
 
 function imageFromPopularCategories(

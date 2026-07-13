@@ -46,6 +46,11 @@ const googleProvider = isGoogleAuthConfigured()
 
 export const authConfig = {
   trustHost: true,
+  // Prefer AUTH_SECRET; fall back to NEXTAUTH_SECRET for Auth.js v4 aliases.
+  secret:
+    process.env.AUTH_SECRET?.trim() ||
+    process.env.NEXTAUTH_SECRET?.trim() ||
+    undefined,
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",

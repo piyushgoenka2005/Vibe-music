@@ -106,7 +106,14 @@ function resolveAutoProducts(
 
       if (trending.length > 0) return trending;
 
-      return active
+      return [...active]
+        .filter((product) => product.price > 0)
+        .sort(
+          (a, b) =>
+            b.reviewCount - a.reviewCount ||
+            b.rating - a.rating ||
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
         .slice(0, maxItems)
         .map((product) => toProductItem(product));
     }
@@ -123,7 +130,14 @@ function resolveAutoProducts(
 
       if (staffPicks.length > 0) return staffPicks;
 
-      return active
+      return [...active]
+        .filter((product) => product.price > 0)
+        .sort(
+          (a, b) =>
+            b.reviewCount - a.reviewCount ||
+            b.rating - a.rating ||
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
         .slice(0, maxItems)
         .map((product) => toProductItem(product));
     }
@@ -230,7 +244,7 @@ async function resolveBrands(
         id: brand.id,
         name: item.customTitle || brand.name,
         slug: brand.slug,
-        href: item.customHref || `/search?brand=${encodeURIComponent(brand.slug)}`,
+        href: item.customHref || `/search/results?brand=${encodeURIComponent(brand.slug)}`,
         logoUrl: item.customImage || getBrandLogoUrl(brand.slug),
       });
     }
@@ -246,7 +260,7 @@ async function resolveBrands(
     id: brand.id,
     name: brand.name,
     slug: brand.slug,
-    href: `/search?brand=${encodeURIComponent(brand.slug)}`,
+    href: `/search/results?brand=${encodeURIComponent(brand.slug)}`,
     logoUrl: getBrandLogoUrl(brand.slug),
   }));
 }

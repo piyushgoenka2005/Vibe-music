@@ -1,3 +1,5 @@
+import { categoryPath } from "@/lib/routes";
+
 export interface PopularCategoryItem {
   slot: number;
   href: string;
@@ -27,70 +29,70 @@ const CAT = "/images/m/home/cats";
 export const POPULAR_CATEGORY_ITEMS: PopularCategoryItem[] = [
   {
     slot: 0,
-    href: "/shop/guitars/",
+    href: categoryPath("guitars"),
     title: "Guitars",
     imageSrc: imgSrc(`${CAT}/LPR59VOWCSNH.png`),
     imageSrcSet: `${CAT}/LPR59VOWCSNH.png?width=202&height=350&quality=75&optimize=high&fit=bounds&format=jpg&optimize=high&auto=webp&quality=70 202w, ${CAT}/LPR59VOWCSNH.png?width=151&height=350&quality=75&optimize=high&fit=bounds&format=jpg&optimize=high&auto=webp&quality=70 151w, ${CAT}/LPR59VOWCSNH.png?width=101&height=350&quality=75&optimize=high&fit=bounds&format=jpg&optimize=high&auto=webp&quality=70 101w`,
   },
   {
     slot: 1,
-    href: "/shop/studio-recording/",
+    href: categoryPath("studio-recording"),
     title: "Studio & Recording",
     imageSrc: imgSrc(`${CAT}/Arrow-small.png`),
     imageSrcSet: webpSrcSet(`${CAT}/Arrow-small.png`),
   },
   {
     slot: 2,
-    href: "/shop/drums-percussion/",
+    href: categoryPath("drums-percussion"),
     title: "Drums & Percussion",
     imageSrc: imgSrc(`${CAT}/LM402.png`),
     imageSrcSet: webpSrcSet(`${CAT}/LM402.png`),
   },
   {
     slot: 3,
-    href: "/shop/bass/",
+    href: categoryPath("bass"),
     title: "Bass",
     imageSrc: imgSrc(`${CAT}/PBassAPR3SB.png`),
     imageSrcSet: webpSrcSet(`${CAT}/PBassAPR3SB.png`),
   },
   {
     slot: 4,
-    href: "/shop/keyboards-synthesizers/",
+    href: categoryPath("keyboards-synthesizers"),
     title: "Keyboards & Synth",
     imageSrc: imgSrc(`${CAT}/Matriarch.png`),
     imageSrcSet: webpSrcSet(`${CAT}/Matriarch.png`),
   },
   {
     slot: 5,
-    href: "/shop/live-sound/",
+    href: categoryPath("live-sound-lighting"),
     title: "Live Sound & Lights",
     imageSrc: imgSrc(`${CAT}/k12_2.png`),
     imageSrcSet: webpSrcSet(`${CAT}/k12_2.png`),
   },
   {
     slot: 6,
-    href: "/shop/software-plugins/",
+    href: categoryPath("software-plug-ins"),
     title: "Software & Plug-ins",
     imageSrc: imgSrc(`${CAT}/ptstudioann.jpg`),
     imageSrcSet: webpSrcSet(`${CAT}/ptstudioann.jpg`),
   },
   {
     slot: 7,
-    href: "/shop/dj-equipment/",
+    href: categoryPath("dj-equipment"),
     title: "DJ Equipment",
     imageSrc: imgSrc(`${CAT}/ATLP120XUSBSV.png`),
     imageSrcSet: webpSrcSet(`${CAT}/ATLP120XUSBSV.png`),
   },
   {
     slot: 8,
-    href: "/shop/studio-recording/microphones/",
+    href: categoryPath("microphones-wireless"),
     title: "Microphones & Wireless",
     imageSrc: imgSrc(`${CAT}/SM58-cat.png`),
     imageSrcSet: webpSrcSet(`${CAT}/SM58-cat.png`),
   },
   {
     slot: 9,
-    href: "/shop/band-and-orchestra/",
+    href: categoryPath("band-orchestra"),
     title: "Band & Orchestra",
     imageSrc: imgSrc(`${CAT}/KingSlvFlTr.png`),
     imageSrcSet: webpSrcSet(`${CAT}/KingSlvFlTr.png`),
@@ -98,7 +100,7 @@ export const POPULAR_CATEGORY_ITEMS: PopularCategoryItem[] = [
   },
   {
     slot: 10,
-    href: "/shop/home-audio-and-electronics/",
+    href: categoryPath("home-audio-electronics"),
     title: "Home Audio & Electronics",
     imageSrc: imgSrc(`${CAT}/TourOneM2Bk.png`),
     imageSrcSet: webpSrcSet(`${CAT}/TourOneM2Bk.png`),
@@ -106,21 +108,21 @@ export const POPULAR_CATEGORY_ITEMS: PopularCategoryItem[] = [
   },
   {
     slot: 11,
-    href: "/shop/commercial-audio-installed-sound/",
+    href: categoryPath("commercial-audio-installation"),
     title: "Commercial Audio & Install",
     imageSrc: imgSrc(`${CAT}/Control28.png`),
     imageSrcSet: webpSrcSet(`${CAT}/Control28.png`),
   },
   {
     slot: 12,
-    href: "/shop/accessories/",
+    href: categoryPath("cables-cases-accessories"),
     title: "Cables, Cases, Stands & More",
     imageSrc: imgSrc(`${CAT}/M4WP006.png`),
     imageSrcSet: webpSrcSet(`${CAT}/M4WP006.png`),
   },
   {
     slot: 13,
-    href: "/shop/video-equipment/",
+    href: categoryPath("video-cameras"),
     title: "Video & Cameras",
     imageSrc: imgSrc(`${CAT}/EOSR82450Kit.png`),
     imageSrcSet: webpSrcSet(`${CAT}/EOSR82450Kit.png`),

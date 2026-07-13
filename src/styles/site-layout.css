@@ -238,6 +238,16 @@
   .landing-live-ticker--announcement .landing-live-ticker__track {
     animation: none;
   }
+
+  .site-header .announcement-bar .announcement-bar__track {
+    animation: none;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .announcement-bar__item:not(:first-child) {
+    display: none;
+  }
 }
 
 /* Landing page — flush header over hero (no hairline / shadow seam) */
@@ -658,7 +668,9 @@ body.site-nav-open .site-header--scroll-hidden {
   padding: 0;
 }
 
-.site-header__nav:not([aria-hidden="true"]) {
+/* Open mobile drawer only — do not force-show the desktop category strip */
+.site-header__nav--portaled:not([aria-hidden="true"]),
+.site-header__nav--open:not([aria-hidden="true"]) {
   display: block;
 }
 
@@ -1245,8 +1257,10 @@ body.site-nav-open .site-header--hidden {
     display: none;
   }
 
-  .site-header__nav--desktop {
-    display: none;
+  /* Beat any leftover display:block — desktop strip must never paint on tablet/phone */
+  .site-header__nav--desktop,
+  .site-header__nav.site-header__nav--desktop:not([aria-hidden="true"]) {
+    display: none !important;
   }
 
   body.site-nav-open {
@@ -1563,6 +1577,11 @@ body.site-nav-open .site-header--hidden {
   body:has(.pdp-mobile-bar) .back-to-top,
   body:has(.checkout-mobile-bar) .back-to-top {
     bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + 9rem);
+  }
+
+  body.is-landing-page .back-to-top,
+  body.is-landing-page .help-widget {
+    display: none !important;
   }
 }
 

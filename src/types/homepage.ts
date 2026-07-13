@@ -222,7 +222,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     title: "Deals Of The Day",
     accentLabel: "Limited Time",
     ctaText: "Shop All Deals",
-    ctaLink: "/search/results?q=deals",
+    ctaLink: "/deals",
     isActive: true,
     sortOrder: 5,
     sourceMode: "auto",

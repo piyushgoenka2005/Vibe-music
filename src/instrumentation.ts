@@ -28,13 +28,20 @@ export async function register() {
       }
     }
 
-    const { verifyPostgresConnection } = await import(
-      "@/lib/server/postgresHealth"
-    );
-    const databaseHealth = await verifyPostgresConnection();
-    if (!databaseHealth.ok && process.env.NODE_ENV === "production") {
+    try {
+      const { verifyPostgresConnection } = await import(
+        "@/lib/server/postgresHealth"
+      );
+      const databaseHealth = await verifyPostgresConnection();
+      if (!databaseHealth.ok && process.env.NODE_ENV === "production") {
+        logWarn(
+          `PostgreSQL initialization failed at startup: ${databaseHealth.error ?? "unknown"}`,
+          "instrumentation"
+        );
+      }
+    } catch (error) {
       logWarn(
-        `PostgreSQL initialization failed at startup: ${databaseHealth.error ?? "unknown"}`,
+        `PostgreSQL health check skipped: ${error instanceof Error ? error.message : String(error)}`,
         "instrumentation"
       );
     }

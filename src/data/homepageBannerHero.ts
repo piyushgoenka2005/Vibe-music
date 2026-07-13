@@ -17,6 +17,20 @@ export const HOMEPAGE_BANNER_ROTATION_MS = 3500;
 /** Client-approved homepage hero banner carousel slides. */
 export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
   {
+    id: "banner-zoom-ms-200d",
+    src: "/images/banner-5.jpeg",
+    alt: "Zoom MS-200D+ MultiStomp — Feel Every Beat multi effects processor at Vibe Music",
+    href: `${ROUTES.searchResults}?brand=zoom`,
+    objectPosition: "center center",
+  },
+  {
+    id: "banner-zoom-ms-90lp",
+    src: "/images/banner-6.jpeg",
+    alt: "Zoom MultiStomp MS-90LP+ Looper Pedal — Create. Loop. Perform. at Vibe Music",
+    href: `${ROUTES.searchResults}?brand=zoom`,
+    objectPosition: "center center",
+  },
+  {
     id: "banner-sale-july",
     src: "/images/upto-60-off.png",
     alt: "Up to 60% off — sale starts July 8th at Vibe Music",
@@ -47,19 +61,5 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     src: "/images/Hertz.png",
     alt: "Hertz amplifiers — turn up the power and feel every beat at Vibe Music",
     href: `${ROUTES.searchResults}?brand=hertz`,
-  },
-  {
-    id: "banner-zoom-ms-200d",
-    src: "/images/banner-5.jpeg",
-    alt: "Zoom MS-200D+ MultiStomp — Feel Every Beat multi effects processor at Vibe Music",
-    href: `${ROUTES.searchResults}?brand=zoom`,
-    objectPosition: "center center",
-  },
-  {
-    id: "banner-zoom-ms-90lp",
-    src: "/images/banner-6.jpeg",
-    alt: "Zoom MultiStomp MS-90LP+ Looper Pedal — Create. Loop. Perform. at Vibe Music",
-    href: `${ROUTES.searchResults}?brand=zoom`,
-    objectPosition: "center center",
   },
 ];

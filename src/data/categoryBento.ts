@@ -1,4 +1,5 @@
 import { POPULAR_CATEGORY_ITEMS } from "@/data/popularCategories";
+import { categoryPath } from "@/lib/routes";
 
 export type CategoryBentoSize = "large" | "small";
 export type CategoryBentoVariant = "hero-light" | "image-card";
@@ -23,16 +24,16 @@ export interface CategoryBentoItem {
 
 const CAT = "/images/m/home/cats";
 
-/** Map bento slugs to popular-category hrefs. */
+/** Map bento slugs to popular-category hrefs for image lookup. */
 const SLUG_TO_HREF: Record<string, string> = {
-  guitars: "/shop/guitars/",
-  "studio-recording": "/shop/studio-recording/",
-  "drums-percussion": "/shop/drums-percussion/",
-  "keyboards-synthesizers": "/shop/keyboards-synthesizers/",
-  "live-sound-lighting": "/shop/live-sound/",
-  "software-plug-ins": "/shop/software-plugins/",
-  "dj-equipment": "/shop/dj-equipment/",
-  "cables-cases-accessories": "/shop/accessories/",
+  guitars: categoryPath("guitars"),
+  "studio-recording": categoryPath("studio-recording"),
+  "drums-percussion": categoryPath("drums-percussion"),
+  "keyboards-synthesizers": categoryPath("keyboards-synthesizers"),
+  "live-sound-lighting": categoryPath("live-sound-lighting"),
+  "software-plug-ins": categoryPath("software-plug-ins"),
+  "dj-equipment": categoryPath("dj-equipment"),
+  "cables-cases-accessories": categoryPath("cables-cases-accessories"),
 };
 
 const BENTO_IMAGE_FILES: Record<string, string> = {

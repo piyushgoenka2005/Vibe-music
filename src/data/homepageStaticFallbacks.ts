@@ -106,7 +106,14 @@ export async function getHomepageStaticFallbacks(
   const trendingResolved =
     trending.length > 0
       ? trending
-      : products
+      : [...products]
+          .filter((product) => product.price > 0)
+          .sort(
+            (a, b) =>
+              b.reviewCount - a.reviewCount ||
+              b.rating - a.rating ||
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
           .slice(0, 12)
           .map((product) => toProductItem(product));
 
@@ -122,7 +129,14 @@ export async function getHomepageStaticFallbacks(
   const staffPicksResolved =
     staffPicks.length > 0
       ? staffPicks
-      : products
+      : [...products]
+          .filter((product) => product.price > 0)
+          .sort(
+            (a, b) =>
+              b.reviewCount - a.reviewCount ||
+              b.rating - a.rating ||
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
           .slice(0, 12)
           .map((product) => toProductItem(product));
 
@@ -197,7 +211,7 @@ export async function getHomepageStaticFallbacks(
       {
         accentLabel: "Limited Time",
         ctaText: "Shop All Deals",
-        ctaLink: "/search/results?q=deals",
+        ctaLink: "/deals",
       }
     ),
   ]) {
