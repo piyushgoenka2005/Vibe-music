@@ -5,10 +5,18 @@ const BRAND_LOGO_BY_SLUG: Record<string, string> = {
   prs: "/images/big-names-deals/prs-logo.svg",
   ibanez: "/images/big-names-deals/ibanez-logo.svg",
   fender: "/images/big-names-deals/fender-logo.svg",
-  hertz: "/images/brands/hertz.webp",
+  // Shop top brands strip — from Vibe images/LOGO - Copy
+  hertz: "/images/brands/hertz.png",
   avus: "/images/brands/avus.png",
-  trinity: "/images/brands/trinity.jpg",
   roland: "/images/brands/roland.png",
+  zoom: "/images/brands/zoom.png",
+  gibraltar: "/images/brands/gibraltar.png",
+  adeon: "/images/brands/adeon.png",
+  zildjian: "/images/brands/zildjian.png",
+  hartke: "/images/brands/hartke.png",
+  "m-audio": "/images/brands/m-audio.png",
+  "sound-x": "/images/brands/sound-x.png",
+  trinity: "/images/brands/trinity.jpg",
 };
 
 export function getBrandLogoUrl(slug: string): string | undefined {

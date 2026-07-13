@@ -16,7 +16,7 @@ import { ROUTES } from "@/lib/routes";
 import { useAuthStore } from "@/store/authStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useAddresses } from "@/hooks/useAddresses";
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
 import { fetchUserOrders } from "@/services/orderService";
 import type { Order } from "@/types/order";
 import {
@@ -238,7 +238,7 @@ export default function AccountOverview() {
                         {item.name}
                       </Link>
                       <span className="acct__preview-price">
-                        {formatCurrency(item.price)}
+                        {formatDisplayPrice(item.price)}
                       </span>
                     </div>
                   </li>

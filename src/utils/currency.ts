@@ -21,14 +21,14 @@ export function formatCurrencyPrecise(value: number): string {
   }).format(value);
 }
 
-/** Storefront price label — hides zero/invalid catalog prices. */
+/** Storefront price label — zero/invalid catalog prices show as Coming Soon. */
 export function formatDisplayPrice(
   price: number,
   salePrice?: number | null
 ): string {
   const value = salePrice ?? price;
   if (!Number.isFinite(value) || value <= 0) {
-    return "Price on request";
+    return "Coming Soon";
   }
   return formatCurrency(value);
 }

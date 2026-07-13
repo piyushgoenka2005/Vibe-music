@@ -5,7 +5,7 @@ import ProductShareButton from "@/components/product/ProductShareButton";
 import { Heart } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { useWishlistStore } from "@/store/wishlistStore";
-import { formatCurrency } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import type { Product } from "@/types/product";
 import AccountEmptyState from "./AccountEmptyState";
 
@@ -88,7 +88,7 @@ export default function AccountWishlistPanel() {
                       {item.name}
                     </Link>
                     <p className="acct__wishlist-price">
-                      {formatCurrency(item.price)}
+                      {formatDisplayPrice(item.price)}
                     </p>
                     <p
                       className={`acct__stock${stock.inStock ? " acct__stock--in" : " acct__stock--out"}`}

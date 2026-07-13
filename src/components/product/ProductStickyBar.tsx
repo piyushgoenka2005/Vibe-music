@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { formatCurrency } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 
@@ -55,7 +55,7 @@ export default function ProductStickyBar({
         <span className="pdp-mobile-bar__label">
           {inStock ? "Price" : "Unavailable"}
         </span>
-        <strong>{formatCurrency(price)}</strong>
+        <strong>{formatDisplayPrice(price)}</strong>
       </div>
       <div className="pdp-mobile-bar__actions">
         <button

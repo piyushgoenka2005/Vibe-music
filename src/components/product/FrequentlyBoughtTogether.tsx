@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import type { ResolvedProductBundle } from "@/types/bundle";
 import type { Product, ProductDetail, ProductVariant } from "@/types/product";
@@ -79,7 +79,7 @@ export default function FrequentlyBoughtTogether({
                 <div className="pdp-cross-sell__brand">{product.brand}</div>
                 <div className="pdp-cross-sell__name">{product.name}</div>
                 <div className="pdp-cross-sell__price">
-                  {formatCurrency(product.price)}
+                  {formatDisplayPrice(product.price)}
                 </div>
               </Link>
               </div>

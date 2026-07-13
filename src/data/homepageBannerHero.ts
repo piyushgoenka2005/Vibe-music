@@ -48,4 +48,18 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     alt: "Hertz amplifiers — turn up the power and feel every beat at Vibe Music",
     href: `${ROUTES.searchResults}?brand=hertz`,
   },
+  {
+    id: "banner-zoom-ms-200d",
+    src: "/images/banner-5.jpeg",
+    alt: "Zoom MS-200D+ MultiStomp — Feel Every Beat multi effects processor at Vibe Music",
+    href: `${ROUTES.searchResults}?brand=zoom`,
+    objectPosition: "center center",
+  },
+  {
+    id: "banner-zoom-ms-90lp",
+    src: "/images/banner-6.jpeg",
+    alt: "Zoom MultiStomp MS-90LP+ Looper Pedal — Create. Loop. Perform. at Vibe Music",
+    href: `${ROUTES.searchResults}?brand=zoom`,
+    objectPosition: "center center",
+  },
 ];

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatCurrency } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import { optimizeImageUrl } from "@/lib/images";
 import { productPath } from "@/lib/routes";
 import { searchStore } from "@/store/searchStore";
@@ -66,7 +66,7 @@ export default function SearchResults({ query, products }: SearchResultsProps) {
               ) : null}
             </div>
             <div className="sw-search-result-card__price">
-              {formatCurrency(product.price)}
+              {formatDisplayPrice(product.price)}
             </div>
           </Link>
         </article>

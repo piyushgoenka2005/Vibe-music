@@ -37,41 +37,59 @@ async function loadLocalProducts(includeInactive: boolean): Promise<CatalogProdu
   return filterActive(loadProducts(), includeInactive);
 }
 
-export async function fetchAllProducts(
-  includeInactive = false
-): Promise<CatalogProduct[]> {
+/** Prefer Postgres; fall back to local JSON when DB is unreachable (e.g. Docker stopped). */
+async function withProductFallback<T>(
+  dbQuery: () => Promise<T>,
+  localFallback: () => Promise<T> | T
+): Promise<T> {
   if (!isPostgresConfigured()) {
-    return sortByName(await loadLocalProducts(includeInactive));
+    return localFallback();
   }
-
   try {
-    const rows = await prisma.product.findMany({ orderBy: { name: "asc" } });
-    return filterActive(rows.map(prismaToProduct), includeInactive);
+    return await dbQuery();
   } catch {
-    return sortByName(await loadLocalProducts(includeInactive));
+    return localFallback();
   }
 }
 
-export async function fetchProductById(id: string): Promise<CatalogProduct | null> {
-  if (!isPostgresConfigured()) {
-    const { loadProducts } = await import("@/lib/server/catalogRepository");
-    return loadProducts().find((product) => product.id === id) ?? null;
-  }
+export async function fetchAllProducts(
+  includeInactive = false
+): Promise<CatalogProduct[]> {
+  return withProductFallback(
+    async () => {
+      const rows = await prisma.product.findMany({ orderBy: { name: "asc" } });
+      return filterActive(rows.map(prismaToProduct), includeInactive);
+    },
+    async () => sortByName(await loadLocalProducts(includeInactive))
+  );
+}
 
-  const row = await prisma.product.findUnique({ where: { id } });
-  return row ? prismaToProduct(row) : null;
+export async function fetchProductById(id: string): Promise<CatalogProduct | null> {
+  return withProductFallback(
+    async () => {
+      const row = await prisma.product.findUnique({ where: { id } });
+      return row ? prismaToProduct(row) : null;
+    },
+    async () => {
+      const { loadProducts } = await import("@/lib/server/catalogRepository");
+      return loadProducts().find((product) => product.id === id) ?? null;
+    }
+  );
 }
 
 export async function fetchProductBySlug(
   slug: string
 ): Promise<CatalogProduct | null> {
-  if (!isPostgresConfigured()) {
-    const { loadProducts } = await import("@/lib/server/catalogRepository");
-    return loadProducts().find((product) => product.slug === slug) ?? null;
-  }
-
-  const row = await prisma.product.findUnique({ where: { slug } });
-  return row ? prismaToProduct(row) : null;
+  return withProductFallback(
+    async () => {
+      const row = await prisma.product.findUnique({ where: { slug } });
+      return row ? prismaToProduct(row) : null;
+    },
+    async () => {
+      const { loadProducts } = await import("@/lib/server/catalogRepository");
+      return loadProducts().find((product) => product.slug === slug) ?? null;
+    }
+  );
 }
 
 export async function fetchProductsByIds(
@@ -80,21 +98,24 @@ export async function fetchProductsByIds(
 ): Promise<CatalogProduct[]> {
   if (ids.length === 0) return [];
 
-  if (!isPostgresConfigured()) {
-    const { loadProducts } = await import("@/lib/server/catalogRepository");
-    const byId = new Map(loadProducts().map((product) => [product.id, product]));
-    return ids
-      .map((id) => byId.get(id))
-      .filter((product): product is CatalogProduct => Boolean(product))
-      .filter((product) => includeInactive || product.status === "active");
-  }
-
-  const rows = await prisma.product.findMany({ where: { id: { in: ids } } });
-  const byId = new Map(rows.map((row) => [row.id, prismaToProduct(row)]));
-  return ids
-    .map((id) => byId.get(id))
-    .filter((product): product is CatalogProduct => Boolean(product))
-    .filter((product) => includeInactive || product.status === "active");
+  return withProductFallback(
+    async () => {
+      const rows = await prisma.product.findMany({ where: { id: { in: ids } } });
+      const byId = new Map(rows.map((row) => [row.id, prismaToProduct(row)]));
+      return ids
+        .map((id) => byId.get(id))
+        .filter((product): product is CatalogProduct => Boolean(product))
+        .filter((product) => includeInactive || product.status === "active");
+    },
+    async () => {
+      const { loadProducts } = await import("@/lib/server/catalogRepository");
+      const byId = new Map(loadProducts().map((product) => [product.id, product]));
+      return ids
+        .map((id) => byId.get(id))
+        .filter((product): product is CatalogProduct => Boolean(product))
+        .filter((product) => includeInactive || product.status === "active");
+    }
+  );
 }
 
 export async function fetchProductsByCategory(
@@ -103,36 +124,42 @@ export async function fetchProductsByCategory(
 ): Promise<CatalogProduct[]> {
   const resolved = normalizeCategorySlug(categorySlug);
 
-  if (!isPostgresConfigured()) {
-    const { loadProducts } = await import("@/lib/server/catalogRepository");
-    const products = loadProducts().filter(
-      (product) => normalizeCategorySlug(product.category) === resolved
-    );
-    return filterActive(products, includeInactive);
-  }
-
-  const rows = await prisma.product.findMany({
-    where: { categorySlug: resolved },
-    orderBy: { name: "asc" },
-  });
-  return filterActive(rows.map(prismaToProduct), includeInactive);
+  return withProductFallback(
+    async () => {
+      const rows = await prisma.product.findMany({
+        where: { categorySlug: resolved },
+        orderBy: { name: "asc" },
+      });
+      return filterActive(rows.map(prismaToProduct), includeInactive);
+    },
+    async () => {
+      const { loadProducts } = await import("@/lib/server/catalogRepository");
+      const products = loadProducts().filter(
+        (product) => normalizeCategorySlug(product.category) === resolved
+      );
+      return filterActive(products, includeInactive);
+    }
+  );
 }
 
 export async function fetchProductsByBrandSlug(
   brandSlug: string,
   includeInactive = false
 ): Promise<CatalogProduct[]> {
-  if (!isPostgresConfigured()) {
-    const { loadProducts } = await import("@/lib/server/catalogRepository");
-    const products = loadProducts().filter((product) => product.brandSlug === brandSlug);
-    return filterActive(products, includeInactive);
-  }
-
-  const rows = await prisma.product.findMany({
-    where: { brandSlug },
-    orderBy: { name: "asc" },
-  });
-  return filterActive(rows.map(prismaToProduct), includeInactive);
+  return withProductFallback(
+    async () => {
+      const rows = await prisma.product.findMany({
+        where: { brandSlug },
+        orderBy: { name: "asc" },
+      });
+      return filterActive(rows.map(prismaToProduct), includeInactive);
+    },
+    async () => {
+      const { loadProducts } = await import("@/lib/server/catalogRepository");
+      const products = loadProducts().filter((product) => product.brandSlug === brandSlug);
+      return filterActive(products, includeInactive);
+    }
+  );
 }
 
 export async function fetchProductsPage(options: {
@@ -149,7 +176,7 @@ export async function fetchProductsPage(options: {
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
   const includeInactive = options.includeInactive ?? false;
 
-  if (!isPostgresConfigured()) {
+  const fromLocal = async () => {
     let products = await loadLocalProducts(includeInactive);
     if (options.categorySlug) {
       const resolved = normalizeCategorySlug(options.categorySlug);
@@ -179,90 +206,96 @@ export async function fetchProductsPage(options: {
       hasMore,
       nextCursor: hasMore && items.length > 0 ? items[items.length - 1]!.id : undefined,
     };
-  }
-
-  const where: {
-    categorySlug?: string;
-    status?: string;
-  } = {};
-
-  if (options.categorySlug) {
-    where.categorySlug = normalizeCategorySlug(options.categorySlug);
-  }
-  if (options.status) {
-    where.status = options.status;
-  } else if (!includeInactive) {
-    where.status = "active";
-  }
-
-  let products = (await prisma.product.findMany({ where })).map(prismaToProduct);
-  products.sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() ||
-      b.id.localeCompare(a.id)
-  );
-
-  if (options.cursor) {
-    const index = products.findIndex((product) => product.id === options.cursor);
-    if (index >= 0) {
-      products = products.slice(index + 1);
-    }
-  }
-
-  const page = products.slice(0, limit + 1);
-  const hasMore = page.length > limit;
-  const items = page.slice(0, limit);
-
-  return {
-    products: items,
-    hasMore,
-    nextCursor: hasMore && items.length > 0 ? items[items.length - 1]!.id : undefined,
   };
+
+  return withProductFallback(async () => {
+    const where: {
+      categorySlug?: string;
+      status?: string;
+    } = {};
+
+    if (options.categorySlug) {
+      where.categorySlug = normalizeCategorySlug(options.categorySlug);
+    }
+    if (options.status) {
+      where.status = options.status;
+    } else if (!includeInactive) {
+      where.status = "active";
+    }
+
+    let products = (await prisma.product.findMany({ where })).map(prismaToProduct);
+    products.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() ||
+        b.id.localeCompare(a.id)
+    );
+
+    if (options.cursor) {
+      const index = products.findIndex((product) => product.id === options.cursor);
+      if (index >= 0) {
+        products = products.slice(index + 1);
+      }
+    }
+
+    const page = products.slice(0, limit + 1);
+    const hasMore = page.length > limit;
+    const items = page.slice(0, limit);
+
+    return {
+      products: items,
+      hasMore,
+      nextCursor: hasMore && items.length > 0 ? items[items.length - 1]!.id : undefined,
+    };
+  }, fromLocal);
 }
 
 export async function fetchBrands(): Promise<Brand[]> {
-  if (!isPostgresConfigured()) {
-    const { loadBrands } = await import("@/lib/server/catalogRepository");
-    return loadBrands();
-  }
-
-  const rows = await prisma.brand.findMany({ orderBy: { name: "asc" } });
-  return rows.map(prismaToBrand);
+  return withProductFallback(
+    async () => {
+      const rows = await prisma.brand.findMany({ orderBy: { name: "asc" } });
+      return rows.map(prismaToBrand);
+    },
+    async () => {
+      const { loadBrands } = await import("@/lib/server/catalogRepository");
+      return loadBrands();
+    }
+  );
 }
 
 export async function fetchCategories(): Promise<Category[]> {
-  if (!isPostgresConfigured()) {
-    const { loadCategories } = await import("@/lib/server/catalogRepository");
-    return loadCategories();
-  }
-
-  try {
-    const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
-    return rows.map(prismaToCategory);
-  } catch {
-    const { loadCategories } = await import("@/lib/server/catalogRepository");
-    return loadCategories();
-  }
+  return withProductFallback(
+    async () => {
+      const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+      return rows.map(prismaToCategory);
+    },
+    async () => {
+      const { loadCategories } = await import("@/lib/server/catalogRepository");
+      return loadCategories();
+    }
+  );
 }
 
 export async function fetchExistingSlugsAndSkus(): Promise<{
   slugs: Set<string>;
   skus: Set<string>;
 }> {
-  if (!isPostgresConfigured()) {
-    const { loadProducts } = await import("@/lib/server/catalogRepository");
-    const products = loadProducts();
-    return {
-      slugs: new Set(products.map((product) => product.slug)),
-      skus: new Set(products.map((product) => product.sku)),
-    };
-  }
-
-  const rows = await prisma.product.findMany({ select: { slug: true, sku: true } });
-  return {
-    slugs: new Set(rows.map((row) => row.slug)),
-    skus: new Set(rows.map((row) => row.sku)),
-  };
+  return withProductFallback(
+    async () => {
+      const rows = await prisma.product.findMany({ select: { slug: true, sku: true } });
+      return {
+        slugs: new Set(rows.map((row) => row.slug)),
+        skus: new Set(rows.map((row) => row.sku)),
+      };
+    },
+    async () => {
+      const { loadProducts } = await import("@/lib/server/catalogRepository");
+      const products = loadProducts();
+      return {
+        slugs: new Set(products.map((product) => product.slug)),
+        skus: new Set(products.map((product) => product.sku)),
+      };
+    }
+  );
 }
 
 export async function writeProduct(product: CatalogProduct): Promise<CatalogProduct> {
@@ -354,37 +387,43 @@ export async function batchDeleteProducts(ids: string[]): Promise<number> {
 }
 
 export async function slugExists(slug: string, excludeId?: string): Promise<boolean> {
-  if (!isPostgresConfigured()) {
-    const { loadProducts } = await import("@/lib/server/catalogRepository");
-    return loadProducts().some(
-      (product) => product.slug === slug && product.id !== excludeId
-    );
-  }
-
-  const count = await prisma.product.count({
-    where: {
-      slug,
-      ...(excludeId ? { id: { not: excludeId } } : {}),
+  return withProductFallback(
+    async () => {
+      const count = await prisma.product.count({
+        where: {
+          slug,
+          ...(excludeId ? { id: { not: excludeId } } : {}),
+        },
+      });
+      return count > 0;
     },
-  });
-  return count > 0;
+    async () => {
+      const { loadProducts } = await import("@/lib/server/catalogRepository");
+      return loadProducts().some(
+        (product) => product.slug === slug && product.id !== excludeId
+      );
+    }
+  );
 }
 
 export async function skuExists(sku: string, excludeId?: string): Promise<boolean> {
-  if (!isPostgresConfigured()) {
-    const { loadProducts } = await import("@/lib/server/catalogRepository");
-    return loadProducts().some(
-      (product) => product.sku === sku && product.id !== excludeId
-    );
-  }
-
-  const count = await prisma.product.count({
-    where: {
-      sku,
-      ...(excludeId ? { id: { not: excludeId } } : {}),
+  return withProductFallback(
+    async () => {
+      const count = await prisma.product.count({
+        where: {
+          sku,
+          ...(excludeId ? { id: { not: excludeId } } : {}),
+        },
+      });
+      return count > 0;
     },
-  });
-  return count > 0;
+    async () => {
+      const { loadProducts } = await import("@/lib/server/catalogRepository");
+      return loadProducts().some(
+        (product) => product.sku === sku && product.id !== excludeId
+      );
+    }
+  );
 }
 
 export { sortByName };

@@ -68,11 +68,10 @@ export default function CarouselProductCard({
             <Image
               alt={item.imageAlt}
               className="product-suggest__item-photo"
-              height={400}
+              fill
               loading="lazy"
               sizes="(max-width: 767px) 45vw, 240px"
               src={imageSrc}
-              width={400}
             />
           ) : null}
         </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
-import { formatCurrency } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import type { Product } from "@/types/product";
 
 interface ProductCrossSellProps {
@@ -49,7 +49,7 @@ export default function ProductCrossSell({
             <div className="pdp-cross-sell__brand">{product.brand}</div>
             <div className="pdp-cross-sell__name">{product.name}</div>
             <div className="pdp-cross-sell__price">
-              {formatCurrency(product.price)}
+              {formatDisplayPrice(product.price)}
             </div>
           </Link>
           </div>

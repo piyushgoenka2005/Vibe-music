@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ROUTES } from "@/lib/routes";
 import { fetchProductSummaries, fetchProducts } from "@/services/products.api";
-import { formatCurrency } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import type { Product } from "@/types/product";
@@ -99,7 +99,7 @@ export default function CartPage() {
                 </div>
                 <div style={{ fontSize: 14 }}>{product.name}</div>
                 <div style={{ fontWeight: 700, color: "var(--brand-primary)" }}>
-                  {formatCurrency(product.price)}
+                  {formatDisplayPrice(product.price)}
                 </div>
               </Link>
             ))}
@@ -126,7 +126,7 @@ export default function CartPage() {
                 </div>
                 <div style={{ fontSize: 14 }}>{product.name}</div>
                 <div style={{ fontWeight: 700, color: "var(--brand-primary)" }}>
-                  {formatCurrency(product.price)}
+                  {formatDisplayPrice(product.price)}
                 </div>
               </Link>
             ))}

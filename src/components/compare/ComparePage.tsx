@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatCurrency } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import { ROUTES } from "@/lib/routes";
 import { useCompareStore } from "@/store/compareStore";
 import "@/styles/compare.css";
@@ -67,7 +67,7 @@ export default function ComparePage() {
               </thead>
               <tbody>
                 <CompareRow label="Brand" values={items.map((i) => i.brand)} />
-                <CompareRow label="Price" values={items.map((i) => formatCurrency(i.price))} />
+                <CompareRow label="Price" values={items.map((i) => formatDisplayPrice(i.price))} />
                 <CompareRow
                   label="Rating"
                   values={items.map((i) =>
@@ -103,7 +103,7 @@ export default function ComparePage() {
                   </div>
                   <div className="compare-mobile-card__row">
                     <dt>Price</dt>
-                    <dd>{formatCurrency(item.price)}</dd>
+                    <dd>{formatDisplayPrice(item.price)}</dd>
                   </div>
                   <div className="compare-mobile-card__row">
                     <dt>Rating</dt>

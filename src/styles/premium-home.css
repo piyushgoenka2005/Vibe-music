@@ -2185,7 +2185,9 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   width: 100%;
   max-width: var(--homepage-content-max);
   margin-inline: auto;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
+  padding-block: 1.75rem 0.75rem;
   padding-inline-start: max(
     var(--homepage-gutter-left, var(--homepage-gutter)),
     clamp(1.25rem, 3vw, 2rem)
@@ -2277,11 +2279,13 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 0.5rem;
   align-items: stretch;
+  overflow: visible;
 }
 
 .premium-home .new-arrivals-grid__cell {
   min-width: 0;
   grid-column: span 3;
+  overflow: visible;
 }
 
 .premium-home .new-arrivals-grid__cell:first-child {
@@ -2299,11 +2303,8 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   text-decoration: none;
   color: inherit;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-  overflow: hidden;
-  transition:
-    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 320ms ease,
-    border-color 320ms ease;
+  overflow: visible;
+  isolation: isolate;
 }
 
 .premium-home .new-arrivals-card--featured {
@@ -2315,9 +2316,8 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
 
 .premium-home .new-arrivals-card:hover,
 .premium-home .new-arrivals-card:focus-visible {
-  transform: translateY(-4px);
-  border-color: rgba(15, 23, 42, 0.1);
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.1);
+  position: relative;
+  z-index: 3;
 }
 
 .premium-home .new-arrivals-card:focus-visible {
@@ -2368,14 +2368,15 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   transform-origin: center bottom;
   filter: drop-shadow(0 10px 14px rgba(15, 23, 42, 0.14));
   transition:
-    transform 450ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 450ms ease;
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 520ms ease;
+  will-change: transform;
 }
 
 .premium-home .new-arrivals-card:hover .new-arrivals-card__image,
 .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
-  transform: translateX(-50%) translateY(-11%) scale(1.08);
-  filter: drop-shadow(0 14px 18px rgba(15, 23, 42, 0.18));
+  transform: translateX(-50%) translateY(-22%) scale(1.32);
+  filter: drop-shadow(0 28px 36px rgba(15, 23, 42, 0.28));
 }
 
 .premium-home .new-arrivals-card__image--placeholder {
@@ -2762,22 +2763,29 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   .premium-home .new-arrivals-card__media {
     border-radius: 10px;
     background: #f8fafc;
-    overflow: hidden;
+    overflow: visible;
     margin-bottom: 0.375rem;
   }
 
   .premium-home .new-arrivals-card__image {
     position: absolute;
     inset: 0;
-    left: auto;
-    bottom: auto;
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100%;
-    transform: none;
+    left: 50%;
+    bottom: 0;
+    width: 92% !important;
+    height: 108% !important;
+    max-width: none;
+    transform: translateX(-50%) scale(1);
+    transform-origin: center bottom;
     object-fit: contain;
-    object-position: center center;
-    filter: none;
+    object-position: center bottom;
+    filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.12));
+  }
+
+  .premium-home .new-arrivals-card:hover .new-arrivals-card__image,
+  .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
+    transform: translateX(-50%) translateY(-18%) scale(1.28);
+    filter: drop-shadow(0 22px 28px rgba(15, 23, 42, 0.26));
   }
 
   .premium-home .new-arrivals-card__brand {
@@ -4221,8 +4229,6 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   }
 
   .premium-btn:hover,
-  .premium-home .new-arrivals-card:hover,
-  .premium-home .new-arrivals-card:focus-visible,
   .premium-home .popcat-item:hover,
   .premium-home .homepage-brand-strip__item:hover,
   .blog-teaser__link:hover,
@@ -4234,7 +4240,11 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   }
 
   .premium-home .new-arrivals-card:hover .new-arrivals-card__image,
-  .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image,
+  .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
+    transform: translateX(-50%) translateY(-8%) scale(1.04);
+    filter: drop-shadow(0 10px 14px rgba(15, 23, 42, 0.14));
+  }
+
   .blog-teaser__link:hover .blog-teaser__image,
   .blog-teaser__link:focus-visible .blog-teaser__image {
     transform: none;

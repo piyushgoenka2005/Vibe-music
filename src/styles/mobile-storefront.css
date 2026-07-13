@@ -36,20 +36,26 @@
 
   .premium-home .new-arrivals-card__image {
     position: absolute;
-    inset: 0;
-    left: auto;
-    bottom: auto;
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100%;
-    transform: none;
+    left: 50%;
+    bottom: 0;
+    width: 92% !important;
+    height: 108% !important;
+    max-width: none;
+    transform: translateX(-50%) scale(1);
+    transform-origin: center bottom;
     object-fit: contain;
-    object-position: center center;
-    filter: none;
+    object-position: center bottom;
+    filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.12));
+  }
+
+  .premium-home .new-arrivals-card:hover .new-arrivals-card__image,
+  .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
+    transform: translateX(-50%) translateY(-18%) scale(1.28);
+    filter: drop-shadow(0 22px 28px rgba(15, 23, 42, 0.26));
   }
 
   .premium-home .new-arrivals-card__media {
-    overflow: hidden;
+    overflow: visible;
     margin-bottom: 0.375rem;
   }
 
@@ -82,7 +88,7 @@
     overflow-x: clip;
   }
 
-  .storefront-page img:not(.pdp-gallery__photo):not(.pdp-gallery__thumb-photo):not(.pdp-lightbox__photo):not(.cat-product-card__image-photo):not(.new-arrivals-card__image),
+  .storefront-page img:not(.pdp-gallery__photo):not(.pdp-gallery__thumb-photo):not(.pdp-lightbox__photo):not(.cat-product-card__image-photo):not(.new-arrivals-card__image):not(.product-suggest__item-photo),
   .storefront-page video,
   .storefront-page iframe {
     max-width: 100%;

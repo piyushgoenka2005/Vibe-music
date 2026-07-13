@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
 import { optimizeImageUrl } from "@/lib/images";
 import { categoryPath, productPath, ROUTES } from "@/lib/routes";
-import { formatCurrency } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import RollingText from "@/components/common/RollingText";
 import type { Product } from "@/types/product";
@@ -66,7 +66,7 @@ function FooterProductSnippet({ product }: { product: Product }) {
             <p className="footer-product-snippet__title">{product.name}</p>
             <p className="footer-product-snippet__subtitle">{product.brand}</p>
           </div>
-          <p className="footer-product-snippet__price">{formatCurrency(product.price)}</p>
+          <p className="footer-product-snippet__price">{formatDisplayPrice(product.price)}</p>
         </div>
       </Link>
       <button

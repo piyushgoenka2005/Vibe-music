@@ -2,7 +2,7 @@
 
 import type { RefObject } from "react";
 import Link from "next/link";
-import { formatCurrency } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import {
   attributeKey,
   findVariantBySelection,
@@ -29,7 +29,7 @@ interface ProductInfoProps {
 }
 
 function formatPrice(value: number): string {
-  return formatCurrency(value);
+  return formatDisplayPrice(value);
 }
 
 function availabilityClass(av: ProductVariant["availability"]): string {

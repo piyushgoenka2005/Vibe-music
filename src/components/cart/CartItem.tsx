@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
 import { useCartStore, type CartItem as CartItemType } from "@/store/cartStore";
 
 interface CartItemProps {
@@ -45,8 +45,8 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
           {item.name}
         </Link>
         <div className="cart-item__price">
-          {formatCurrency(item.price)}
-          {!compact ? (
+          {formatDisplayPrice(item.price)}
+          {!compact && item.price > 0 ? (
             <span style={{ fontWeight: 400, color: "#807f7e", fontSize: 13 }}>
               {" "}
               × {item.quantity} = {formatCurrency(lineTotal)}
