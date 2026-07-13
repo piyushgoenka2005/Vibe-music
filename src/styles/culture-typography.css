@@ -363,14 +363,14 @@
 
 @media (max-width: 767px) {
   .culture-typography--mobile-hero.culture-typography--scrollable {
-    min-height: 100svh;
+    min-height: calc(100svh - var(--site-header-offset, 90px));
   }
 
   .culture-typography--mobile-hero .culture-typography__sticky {
     position: sticky;
-    top: 0;
-    height: 100svh;
-    min-height: 100svh;
+    top: var(--site-header-offset, 90px);
+    height: calc(100svh - var(--site-header-offset, 90px));
+    min-height: calc(100svh - var(--site-header-offset, 90px));
   }
 
   .culture-typography--mobile-hero .culture-typography__content {

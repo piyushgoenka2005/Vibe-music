@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
 
@@ -34,7 +34,7 @@ function ProfileFormFields({
     text: string;
   } | null>(null);
 
-  async function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setSaving(true);
     setMessage(null);
@@ -143,11 +143,49 @@ function ProfileFormFields({
 
 export default function AccountProfileForm() {
   const user = useAuthStore((s) => s.user);
-  const updateDisplayName = useAuthStore((s) => s.updateDisplayName);
+  const setSessionUser = useAuthStore((s) => s.setSessionUser);
   const phone = useAccountProfileStore((s) => s.phone);
   const dateOfBirth = useAccountProfileStore((s) => s.dateOfBirth);
   const setPhone = useAccountProfileStore((s) => s.setPhone);
   const setDateOfBirth = useAccountProfileStore((s) => s.setDateOfBirth);
+  const [serverPhone, setServerPhone] = useState(phone);
+  const [serverDob, setServerDob] = useState(dateOfBirth);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/account/profile");
+        if (!response.ok) return;
+        const data = (await response.json()) as {
+          user?: { phone?: string; dateOfBirth?: string; name?: string | null };
+        };
+        if (cancelled) return;
+        const nextPhone = data.user?.phone ?? phone;
+        const nextDob = data.user?.dateOfBirth ?? dateOfBirth;
+        setServerPhone(nextPhone);
+        setServerDob(nextDob);
+        setPhone(nextPhone);
+        setDateOfBirth(nextDob);
+        if (data.user?.name && data.user.name !== user.name) {
+          setSessionUser({ ...user, name: data.user.name });
+        }
+      } catch {
+        // Keep local persisted values if the profile API is unavailable.
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Intentionally load once per user session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   if (!user) return null;
 
@@ -160,21 +198,45 @@ export default function AccountProfileForm() {
 
       <div className="acct__card">
         <div className="acct__card-body">
-          <ProfileFormFields
-            key={`${user.id}-${phone}-${dateOfBirth}-${user.name ?? ""}`}
-            userId={user.id}
-            userEmail={user.email}
-            initialName={user.name ?? ""}
-            initialPhone={phone}
-            initialDob={dateOfBirth}
-            onSave={async ({ name, phone: nextPhone, dateOfBirth: nextDob }) => {
-              if (name && name !== user.name) {
-                await updateDisplayName(name);
-              }
-              setPhone(nextPhone);
-              setDateOfBirth(nextDob);
-            }}
-          />
+          {loaded ? (
+            <ProfileFormFields
+              key={`${user.id}-${serverPhone}-${serverDob}-${user.name ?? ""}`}
+              userId={user.id}
+              userEmail={user.email}
+              initialName={user.name ?? ""}
+              initialPhone={serverPhone}
+              initialDob={serverDob}
+              onSave={async ({ name, phone: nextPhone, dateOfBirth: nextDob }) => {
+                const response = await fetch("/api/account/profile", {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    displayName: name || undefined,
+                    phone: nextPhone,
+                    dateOfBirth: nextDob,
+                  }),
+                });
+                if (!response.ok) {
+                  const data = (await response.json().catch(() => null)) as {
+                    error?: string;
+                  } | null;
+                  throw new Error(data?.error ?? "Save failed");
+                }
+                const payload = (await response.json()) as {
+                  user?: { name?: string | null };
+                };
+                if (payload.user?.name != null) {
+                  setSessionUser({ ...user, name: payload.user.name });
+                }
+                setPhone(nextPhone);
+                setDateOfBirth(nextDob);
+                setServerPhone(nextPhone);
+                setServerDob(nextDob);
+              }}
+            />
+          ) : (
+            <p className="acct__section-sub">Loading profile…</p>
+          )}
         </div>
       </div>
     </div>

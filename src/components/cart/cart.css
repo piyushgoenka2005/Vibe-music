@@ -380,6 +380,12 @@
   font-size: 12px;
   cursor: pointer;
   text-decoration: underline;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cart-summary {
@@ -513,6 +519,13 @@
 }
 
 @media (max-width: 767px) {
+  .cart-drawer {
+    width: 100%;
+    max-width: 100dvw;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
   .cart-page__layout {
     grid-template-columns: 1fr;
     gap: 1.5rem;

@@ -40,14 +40,29 @@ export default function LoginForm({ googleAuthEnabled = false }: LoginFormProps)
   const signIn = useAuthStore((s) => s.signIn);
   const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);
   const isLoading = useAuthStore((s) => s.isLoading);
-  const [error, setError] = useState<string | null>(null);
+  const authErrorParam = searchParams.get("error");
+  const [formError, setFormError] = useState<string | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [seenErrorParam, setSeenErrorParam] = useState<string | null>(null);
+
+  if (authErrorParam && authErrorParam !== seenErrorParam) {
+    setSeenErrorParam(authErrorParam);
+    setUrlError(getAuthErrorMessage(authErrorParam, "Sign in failed."));
+  }
+
+  const error = formError ?? urlError;
 
   useEffect(() => {
-    const authError = searchParams.get("error");
-    if (authError) {
-      setError(getAuthErrorMessage(authError, "Sign in failed."));
-    }
-  }, [searchParams]);
+    if (!authErrorParam) return;
+
+    // Drop ?error= from the URL so a refresh doesn't re-show the banner.
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("error");
+    const query = params.toString();
+    router.replace(query ? `${ROUTES.login}?${query}` : ROUTES.login, {
+      scroll: false,
+    });
+  }, [authErrorParam, searchParams, router]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -55,27 +70,27 @@ export default function LoginForm({ googleAuthEnabled = false }: LoginFormProps)
   });
 
   async function onSubmit(values: LoginFormValues) {
-    setError(null);
+    setFormError(null);
     try {
       await signIn(values);
       router.push(redirectTo);
     } catch (err) {
-      setError(getAuthErrorMessage(err, "Sign in failed."));
+      setFormError(getAuthErrorMessage(err, "Sign in failed."));
     }
   }
 
   async function handleGoogleSignIn() {
     if (!googleAuthEnabled) {
-      setError(
+      setFormError(
         "Google sign-in is not configured. Add AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET to .env.local."
       );
       return;
     }
-    setError(null);
+    setFormError(null);
     try {
       await signInWithGoogle(redirectTo);
     } catch (err) {
-      setError(getAuthErrorMessage(err, "Google sign in failed."));
+      setFormError(getAuthErrorMessage(err, "Google sign in failed."));
     }
   }
 

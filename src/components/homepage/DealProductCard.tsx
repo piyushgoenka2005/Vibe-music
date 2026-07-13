@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
+import { resolveDealBadgeLabel } from "@/lib/product/resolveDealBadgeLabel";
 import { formatDisplayPrice } from "@/utils/currency";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageProductItem } from "@/types/homepage";
@@ -15,6 +16,7 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
   const displayPrice = item.salePrice ?? item.price;
   const isEnquiry = !Number.isFinite(displayPrice) || displayPrice <= 0;
   const productHref = resolveLinkHref(item.href);
+  const badgeLabel = resolveDealBadgeLabel(item);
 
   return (
     <div className="homepage-deals-card-wrap">
@@ -33,6 +35,9 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
       data-hp-slot-position={slotPosition}
     >
       <div className="tile multi multi--slider radius-lg bg-white homepage-deals-card">
+        <span className="homepage-deals-card__ribbon" aria-hidden="true">
+          <span className="homepage-deals-card__ribbon-text">{badgeLabel}</span>
+        </span>
         <div className="tile--body">
           <div className="tile--image bg-white homepage-deals-card__media">
             <div className="homepage-deals-card__img-frame">

@@ -31,7 +31,7 @@ export const LANDING_STATS = [
 
 export const LANDING_LIVE_TICKER = [
   "Store open — dispatching orders across India",
-  "Free shipping on orders over ₹2,999",
+  "Free shipping on orders over ₹9,999",
   "Secure checkout via Razorpay · UPI · Cards · EMI",
   "1,200+ musicians served this month",
   "Track any order in under 60 seconds",
@@ -63,7 +63,7 @@ export const LANDING_TRUST_ITEMS = [
     icon: "headphones" as const,
     title: "Expert advice",
     desc: "Real musicians on our support team",
-    status: "Live chat",
+    status: "Email support",
     tone: "live" as StatusTone,
   },
 ] as const;
@@ -120,30 +120,30 @@ export const LANDING_LOCATIONS = [
     city: "Delhi",
     status: "Open",
     tone: "live" as StatusTone,
-    image: "/images/locations/delhi.jpg",
+    accent: "#1e3a8a",
   },
   {
     city: "Kolkata",
     status: "Open",
     tone: "live" as StatusTone,
-    image: "/images/locations/kolkata.jpg",
+    accent: "#0f766e",
   },
   {
     city: "Nagpur",
     status: "Open",
     tone: "live" as StatusTone,
-    image: "/images/locations/nagpur.jpg",
+    accent: "#9a3412",
   },
   {
     city: "North East",
     status: "Partner hub",
     tone: "info" as StatusTone,
-    image: "/images/locations/north-east.jpg",
+    accent: "#5b21b6",
   },
   {
     city: "Mumbai",
     status: "Flagship",
     tone: "success" as StatusTone,
-    image: "/images/locations/mumbai.jpg",
+    accent: "#1253ed",
   },
 ] as const;

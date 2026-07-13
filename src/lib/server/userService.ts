@@ -61,6 +61,36 @@ export async function updateUserDisplayName(
   });
 }
 
+export async function updateUserProfile(
+  userId: string,
+  input: {
+    displayName?: string;
+    phone?: string;
+    dateOfBirth?: string;
+  }
+): Promise<{ name: string | null; phone: string | null; dateOfBirth: string | null }> {
+  const now = new Date().toISOString();
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      ...(input.displayName != null
+        ? { name: input.displayName.trim() }
+        : {}),
+      ...(input.phone != null ? { phone: input.phone.trim() || null } : {}),
+      ...(input.dateOfBirth != null
+        ? { dateOfBirth: input.dateOfBirth.trim() || null }
+        : {}),
+      updatedAt: now,
+    },
+    select: {
+      name: true,
+      phone: true,
+      dateOfBirth: true,
+    },
+  });
+  return user;
+}
+
 export async function updateUserPassword(
   userId: string,
   password: string

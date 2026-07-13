@@ -8,6 +8,10 @@ import {
 import { categoryPath, productPath } from "@/lib/routes";
 import { getCategoryGridImage } from "@/lib/categoryImages";
 import { buildTopBrandStripItems } from "@/data/topBrandStrip";
+import {
+  getHomepagePopularCategoryItems,
+  HOMEPAGE_POPULAR_CATEGORY_COUNT,
+} from "@/data/popularCategories";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
   HomepageProductItem,
@@ -149,14 +153,34 @@ export async function getHomepageStaticFallbacks(
     )
     .sort((a, b) => b.discountPercentage - a.discountPercentage)
     .slice(0, 12)
-    .map((product) => toProductItem(product));
+    .map((product) => {
+      const item = toProductItem(product);
+      const sale = item.salePrice;
+      const pct =
+        product.discountPercentage > 0
+          ? product.discountPercentage
+          : sale != null && sale > 0 && item.price > sale
+            ? Math.round(((item.price - sale) / item.price) * 100)
+            : 0;
+      return {
+        ...item,
+        badgeLabel: pct > 0 ? `${pct}% Off` : "Hot Deal",
+        offerText: pct > 0 ? `Save ${pct}%` : undefined,
+      };
+    });
 
-  const dealsResolved = deals.length > 0 ? deals : bestSellers;
+  const dealsResolved =
+    deals.length > 0
+      ? deals
+      : bestSellers.map((item) => ({
+          ...item,
+          badgeLabel: "Today's Deal",
+        }));
 
   const featuredCategories = categories
     .filter((category) => category.isFeatured)
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-    .slice(0, 8)
+    .slice(0, HOMEPAGE_POPULAR_CATEGORY_COUNT)
     .map((category) => ({
       id: category.id,
       slug: category.slug,
@@ -164,6 +188,11 @@ export async function getHomepageStaticFallbacks(
       href: categoryPath(category.slug),
       imageSrc: category.imageUrl || getCategoryGridImage(category.slug),
     }));
+
+  const popularCategories =
+    featuredCategories.length > 0
+      ? featuredCategories
+      : getHomepagePopularCategoryItems();
 
   for (const section of [
     productSection(
@@ -218,17 +247,15 @@ export async function getHomepageStaticFallbacks(
     if (section) sections.push(section);
   }
 
-  if (featuredCategories.length > 0) {
-    sections.push({
-      key: "featured_categories",
-      sectionId: "popular-categories",
-      title: "Find Your Product",
-      subtitle:
-        "Curated departments for every stage — from bedroom studio to main stage.",
-      layout: "category_grid",
-      categories: featuredCategories,
-    });
-  }
+  sections.push({
+    key: "featured_categories",
+    sectionId: "popular-categories",
+    title: "Popular Categories",
+    ctaText: "Browse All Categories",
+    ctaLink: "/categories",
+    layout: "category_grid",
+    categories: popularCategories,
+  });
 
   sections.push({
     key: "brand_strip",

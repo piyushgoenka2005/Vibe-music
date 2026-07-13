@@ -131,40 +131,38 @@ export default function CarouselProductCard({
             ) : (
               <p className="product-suggest__item-availability">In stock</p>
             )}
-
-            <div className="product-suggest__item-footer">
-              <div className="product-suggest__item-pricing">
-                {hasDiscount ? (
-                  <span className="product-suggest__item-was">
-                    {formatDisplayPrice(item.price)}
-                  </span>
-                ) : null}
-                <span
-                  className={`product-suggest__item-price${
-                    displayPrice <= 0 ? " product-suggest__item-price--enquiry" : ""
-                  }`}
-                >
-                  {formatDisplayPrice(item.price, item.salePrice)}
-                </span>
-              </div>
-            </div>
           </div>
         </Link>
-
-        {canQuickAdd ? (
-          <button
-            type="button"
-            className="product-suggest__item-action product-suggest__item-action--button"
-            onClick={handleAddToCart}
-            aria-label={`Add ${item.name} to cart`}
-          >
-            Add to cart
-          </button>
-        ) : (
-          <Link href={productHref} className="product-suggest__item-action">
-            View
-          </Link>
-        )}
+        <div className="product-suggest__item-footer">
+          <div className="product-suggest__item-pricing">
+            {hasDiscount ? (
+              <span className="product-suggest__item-was">
+                {formatDisplayPrice(item.price)}
+              </span>
+            ) : null}
+            <span
+              className={`product-suggest__item-price${
+                displayPrice <= 0 ? " product-suggest__item-price--enquiry" : ""
+              }`}
+            >
+              {formatDisplayPrice(item.price, item.salePrice)}
+            </span>
+          </div>
+          {canQuickAdd ? (
+            <button
+              type="button"
+              className="product-suggest__item-action product-suggest__item-action--button"
+              onClick={handleAddToCart}
+              aria-label={`Add ${item.name} to cart`}
+            >
+              Add to cart
+            </button>
+          ) : (
+            <Link href={productHref} className="product-suggest__item-action">
+              View
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   );

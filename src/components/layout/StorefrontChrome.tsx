@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { GlassFilter } from "@/components/ui/liquid-glass";
 import SiteHeader from "@/components/layout/SiteHeader";
@@ -15,6 +15,14 @@ import DeferredSplashCursor from "@/components/layout/DeferredSplashCursor";
 const SPLASH_CURSOR_DISABLED =
   process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR === "false";
 
+function subscribeNoop() {
+  return () => {};
+}
+
+function useHasMounted() {
+  return useSyncExternalStore(subscribeNoop, () => true, () => false);
+}
+
 export default function StorefrontChrome({
   children,
 }: {
@@ -28,13 +36,21 @@ export default function StorefrontChrome({
     /^\/category\/[^/]+$/.test(pathname) ||
     pathname.startsWith("/search") ||
     pathname === "/deals";
+  const isCheckoutOrCart =
+    pathname.startsWith("/checkout") || pathname.startsWith("/cart");
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobileViewport = useIsMobileViewport();
+  // Viewport/media queries can differ between SSR and the first client paint.
+  const hasMounted = useHasMounted();
+
   const hideMobileFloatingUi =
-    isMobileViewport && (isProductPage || isLandingPage || isListingPage);
+    hasMounted &&
+    isMobileViewport &&
+    (isProductPage || isLandingPage || isListingPage || isCheckoutOrCart);
   const showHelpWidget = !hideMobileFloatingUi;
   const showBackToTop = !hideMobileFloatingUi;
   const splashEnabled =
+    hasMounted &&
     !SPLASH_CURSOR_DISABLED &&
     !prefersReducedMotion &&
     !hideChrome &&

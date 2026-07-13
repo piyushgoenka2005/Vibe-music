@@ -918,7 +918,7 @@
   padding: 1.35rem;
 }
 
-@media (min-width: 961px) {
+@media (min-width: 1024px) {
   .checkout-summary {
     position: sticky;
     top: calc(var(--header-height, 64px) + 1rem);
@@ -1994,48 +1994,4 @@
 .checkout-invoice th:last-child,
 .checkout-invoice td:last-child {
   text-align: right;
-}
-
-.checkout-shipping-methods {
-  margin: 1.25rem 0;
-  border: none;
-  padding: 0;
-}
-
-.checkout-shipping-methods__legend {
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-}
-
-.checkout-shipping-methods__list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.checkout-shipping-methods__option {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 0.75rem;
-  align-items: center;
-  padding: 0.75rem;
-  border: 1px solid var(--border-subtle, #e5e5e5);
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.checkout-shipping-methods__label {
-  display: block;
-  font-weight: 600;
-}
-
-.checkout-shipping-methods__desc {
-  display: block;
-  font-size: 0.875rem;
-  color: var(--color-text-muted, #666);
-}
-
-.checkout-shipping-methods__price {
-  font-weight: 600;
-  white-space: nowrap;
 }

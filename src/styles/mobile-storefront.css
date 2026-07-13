@@ -69,6 +69,18 @@
     filter: drop-shadow(0 22px 28px rgba(15, 23, 42, 0.26));
   }
 
+  @media (hover: none), (pointer: coarse) {
+    .premium-home .new-arrivals-card__media {
+      overflow: hidden;
+    }
+
+    .premium-home .new-arrivals-card:hover .new-arrivals-card__image,
+    .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
+      transform: translateX(-50%) scale(1);
+      filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.12));
+    }
+  }
+
   .premium-home .new-arrivals-card__media {
     overflow: visible;
     margin-bottom: 0.375rem;
@@ -455,7 +467,7 @@
   }
 
   .pdp-breadcrumb {
-    font-size: 12px;
+    font-size: 13px;
     gap: 4px;
   }
 

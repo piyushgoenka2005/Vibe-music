@@ -6,7 +6,6 @@ import {
   Package,
   Heart,
   MapPin,
-  Star,
   ShoppingBag,
   ArrowRight,
   Bell,
@@ -57,7 +56,6 @@ export default function AccountOverview() {
 
   const orderCount = orders.length;
   const recentOrders = orders.slice(0, RECENT_ORDERS_LIMIT);
-  const rewardPoints = wishlistCount * 25 + addresses.length * 50;
 
   const stats = [
     {
@@ -82,10 +80,10 @@ export default function AccountOverview() {
       variant: "green" as const,
     },
     {
-      href: ROUTES.accountSettings,
-      label: "Reward Points",
-      value: rewardPoints,
-      icon: Star,
+      href: ROUTES.accountNotifications,
+      label: "Notifications",
+      value: "Inbox",
+      icon: Bell,
       variant: "purple" as const,
     },
   ];

@@ -64,10 +64,12 @@ export default function ContactPageContent() {
               <Mail size={18} aria-hidden />
               <a href={`mailto:${BRAND.email}`}>{BRAND.email}</a>
             </li>
-            <li>
-              <Phone size={18} aria-hidden />
-              <a href={`tel:${BRAND.phoneTel}`}>{BRAND.phoneDisplay}</a>
-            </li>
+            {BRAND.phoneTel ? (
+              <li>
+                <Phone size={18} aria-hidden />
+                <a href={`tel:${BRAND.phoneTel}`}>{BRAND.phoneDisplay}</a>
+              </li>
+            ) : null}
             <li>
               <MapPin size={18} aria-hidden />
               <span>{BRAND.address}</span>

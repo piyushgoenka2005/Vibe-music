@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   ChevronRight,
   Clock,
-  Gift,
   Headset,
   MessageCircle,
   Package,
@@ -30,8 +29,8 @@ const LINK_ICONS = {
   package: Package,
   rotate: RotateCcw,
   truck: Truck,
-  gift: Gift,
   shield: ShieldAlert,
+  headset: Headset,
 } as const;
 
 export default function HelpWidget() {
@@ -240,20 +239,22 @@ export default function HelpWidget() {
               </button>
               <a
                 className="help-widget__action-btn help-widget__action-btn--secondary"
-                href={`mailto:${BRAND.email}?subject=Live%20Chat%20Support`}
+                href={`mailto:${BRAND.email}?subject=Support%20request`}
                 onClick={close}
               >
                 <MessageCircle aria-hidden size={18} strokeWidth={2} />
                 Email support
               </a>
-              <a
-                className="help-widget__action-btn help-widget__action-btn--secondary"
-                href={BRAND.phoneTel}
-                onClick={close}
-              >
-                <Phone aria-hidden size={18} strokeWidth={2} />
-                {BRAND.phoneDisplay}
-              </a>
+              {BRAND.phoneTel ? (
+                <a
+                  className="help-widget__action-btn help-widget__action-btn--secondary"
+                  href={`tel:${BRAND.phoneTel}`}
+                  onClick={close}
+                >
+                  <Phone aria-hidden size={18} strokeWidth={2} />
+                  {BRAND.phoneDisplay}
+                </a>
+              ) : null}
             </div>
 
             {showTicketForm ? (

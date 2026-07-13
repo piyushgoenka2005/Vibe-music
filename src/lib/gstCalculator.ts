@@ -246,8 +246,9 @@ export function toPaise(amountInr: number): number {
   return Math.round(amountInr * 100);
 }
 
+/** Single source of truth for storefront free-shipping messaging and fallback quotes. */
 export const FREE_SHIPPING_THRESHOLD = 9999;
-export const STANDARD_SHIPPING_CHARGE = 100;
+export const STANDARD_SHIPPING_CHARGE = 99;
 
 export function getShippingCharge(
   subtotal: number,

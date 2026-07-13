@@ -99,6 +99,13 @@
   --bp-xl: 1280px;
 }
 
+/* Closer SSR fallback for compact header + announcement bar */
+@media (max-width: 1023px) {
+  :root {
+    --site-header-offset: 90px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-fast: 0ms;

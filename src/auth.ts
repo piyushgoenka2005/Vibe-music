@@ -1,16 +1,16 @@
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { prisma } from "@/lib/db/prisma";
+import { createAuthPrismaAdapter } from "@/lib/auth/prisma-adapter";
 import { verifyPassword } from "@/lib/auth/password";
 import { resolveSessionMaxAgeSeconds } from "@/lib/auth/session-config";
 import {
   ensureOAuthUserProfile,
   findUserByEmail,
 } from "@/lib/server/userService";
-import { isGoogleAuthConfigured } from "@/lib/auth/google-config";
+import { isGoogleAuthConfigured, getGoogleAuthCredentials } from "@/lib/auth/google-config";
 import { linkGuestOrdersToUser } from "@/lib/server/orderService";
 import { logAuditEvent } from "@/lib/server/auditLog";
 import { loginSchema } from "@/lib/validations/auth";
@@ -35,32 +35,8 @@ declare module "next-auth" {
   }
 }
 
-const googleProvider = isGoogleAuthConfigured()
-  ? Google({
-      clientId: (process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID)!,
-      clientSecret: (process.env.AUTH_GOOGLE_SECRET ??
-        process.env.GOOGLE_CLIENT_SECRET)!,
-      allowDangerousEmailAccountLinking: false,
-    })
-  : null;
-
-export const authConfig = {
-  trustHost: true,
-  // Prefer AUTH_SECRET; fall back to NEXTAUTH_SECRET for Auth.js v4 aliases.
-  secret:
-    process.env.AUTH_SECRET?.trim() ||
-    process.env.NEXTAUTH_SECRET?.trim() ||
-    undefined,
-  adapter: PrismaAdapter(prisma),
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
-  providers: [
-    ...(googleProvider ? [googleProvider] : []),
+function buildProviders(): NextAuthConfig["providers"] {
+  const providers: NextAuthConfig["providers"] = [
     Credentials({
       id: "credentials",
       name: "Email and Password",
@@ -98,21 +74,67 @@ export const authConfig = {
         };
       },
     }),
-  ],
+  ];
+
+  if (isGoogleAuthConfigured()) {
+    const google = getGoogleAuthCredentials();
+    if (google) {
+      providers.unshift(
+        Google({
+          clientId: google.clientId,
+          clientSecret: google.clientSecret,
+          // Allows Google sign-in when the shopper already registered with the same email.
+          // Prefer keeping email verification strict; do not remove without a linking UX.
+          allowDangerousEmailAccountLinking: true,
+        })
+      );
+    }
+  }
+
+  return providers;
+}
+
+function resolveAuthSecret(): string | undefined {
+  const fromEnv =
+    process.env.AUTH_SECRET?.trim() || process.env.NEXTAUTH_SECRET?.trim();
+  if (fromEnv) return fromEnv;
+  // Local/dev only — Auth.js throws Configuration without a secret.
+  if (process.env.NODE_ENV !== "production") {
+    return "dev-only-auth-secret-not-for-production";
+  }
+  return undefined;
+}
+
+export const authConfig = {
+  trustHost: true,
+  secret: resolveAuthSecret(),
+  adapter: createAuthPrismaAdapter(prisma),
+  session: {
+    strategy: "jwt" as const,
+  },
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
+  providers: buildProviders(),
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.provider === "google" && user.email && user.id) {
-        const existing = await findUserByEmail(user.email);
-        if (existing && existing.id !== user.id) {
-          return "/login?error=OAuthAccountNotLinked";
+      if (account?.provider === "google" && user.email) {
+        // Ensure profile row exists / is refreshed after adapter create or link.
+        if (user.id) {
+          await ensureOAuthUserProfile({
+            id: user.id,
+            email: user.email,
+            name: user.name ?? profile?.name,
+            image: user.image,
+          });
         }
 
-        await ensureOAuthUserProfile({
-          id: user.id,
-          email: user.email,
-          name: user.name ?? profile?.name,
-          image: user.image,
-        });
+        if (user.id && user.email) {
+          void linkGuestOrdersToUser(user.id, user.email).catch(() => undefined);
+        }
+
+        return true;
       }
 
       if (user.id && user.email) {

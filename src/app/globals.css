@@ -133,7 +133,7 @@ body {
 
 @media (max-width: 479px) {
   body {
-    font-size: clamp(0.875rem, 3.5vw, 0.9375rem);
+    font-size: clamp(0.9375rem, 3.8vw, 1rem);
   }
 }
 

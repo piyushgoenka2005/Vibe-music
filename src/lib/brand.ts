@@ -5,9 +5,11 @@ export const BRAND = {
   description:
     "Vibe Music is India's trusted destination for musical instruments, pro audio, accessories, and expert gear advice.",
   supportRole: "Gear Advisor",
-  phone: "+91-9876543210",
-  phoneDisplay: "+91-9876543210",
-  phoneTel: "+919876543210",
+  phone: process.env.NEXT_PUBLIC_STORE_PHONE ?? "",
+  phoneDisplay: process.env.NEXT_PUBLIC_STORE_PHONE ?? "",
+  phoneTel: process.env.NEXT_PUBLIC_STORE_PHONE
+    ? `+${process.env.NEXT_PUBLIC_STORE_PHONE.replace(/\D/g, "")}`
+    : "",
   email: "support@vibemusic.in",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic.in",
   domain: "vibemusic.in",

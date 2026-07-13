@@ -377,10 +377,12 @@ export default function AccountOrderDetail({
               <Mail size={16} aria-hidden />
               {BRAND.email}
             </a>
-            <a href={`tel:${BRAND.phoneTel}`} className="acct__support-link">
-              <Phone size={16} aria-hidden />
-              {BRAND.phoneDisplay}
-            </a>
+            {BRAND.phoneTel ? (
+              <a href={`tel:${BRAND.phoneTel}`} className="acct__support-link">
+                <Phone size={16} aria-hidden />
+                {BRAND.phoneDisplay}
+              </a>
+            ) : null}
           </div>
         </div>
       </section>

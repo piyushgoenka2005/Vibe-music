@@ -797,7 +797,7 @@
   }
 
   .scanner-card__price {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .scanner-card__right {
@@ -820,10 +820,15 @@
     );
   }
 
-  /* Stretch the funnel wider than the viewport so the white
-     content text always sits on the blue area */
+  /* Stretch the funnel wider than the content so title sits on blue;
+     clip at the beam zone so negative inset cannot scroll the page */
+  .find-your-product__beam-zone {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+
   .find-your-product__beam {
-    inset: 0 -50%;
+    inset: 0 -20%;
   }
 
   .find-your-product__content {
@@ -899,11 +904,11 @@
 
   .scanner-card__growth {
     padding: 2px 4px;
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .scanner-card__rev-label {
-    font-size: 9px;
+    font-size: 11px;
   }
 }
 

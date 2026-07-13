@@ -23,7 +23,6 @@ import { ROUTES } from "@/lib/routes";
 import { normalizeIndianPhone } from "@/lib/validations/address";
 import { DEFAULT_GST_RATE } from "@/lib/gstCalculator";
 import { type ShippingMethod, getDefaultShippingMethod, getShippingChargeForMethod, SHIPPING_METHOD_IDS } from "@/lib/shipping/shippingMethods";
-import ShippingMethodPicker from "@/components/checkout/ShippingMethodPicker";
 import { useCartHydrated } from "@/hooks/useCartHydrated";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
@@ -167,9 +166,7 @@ export default function CheckoutPageContent() {
   const [confirmedAddress, setConfirmedAddress] =
     useState<ShippingAddress | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("razorpay");
-  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>(
-    getDefaultShippingMethod()
-  );
+  const shippingMethod = getDefaultShippingMethod();
   const [zoneQuote, setZoneQuote] = useState<{
     key: string;
     charges: Partial<Record<ShippingMethod, number>>;
@@ -910,12 +907,6 @@ export default function CheckoutPageContent() {
                   </p>
                 </div>
               ) : null}
-
-              <ShippingMethodPicker
-                value={shippingMethod}
-                onChange={setShippingMethod}
-                charges={shippingMethodCharges}
-              />
 
               <div className="checkout-actions">
                 <CheckoutGlassButton onClick={handleEditAddress} variant="ghost">

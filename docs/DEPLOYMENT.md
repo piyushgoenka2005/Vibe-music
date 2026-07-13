@@ -5,6 +5,7 @@ Use this checklist when deploying Vibe Music to production on the **VPS** with *
 ## Pre-deploy
 
 - [ ] Merge and review all migration-related changes on the release branch
+- [ ] Confirm the Auth.js Prisma adapter (`src/lib/auth/prisma-adapter.ts`) is included — required for Google OAuth user creation
 - [ ] Confirm Firebase, Firestore, and Cloudinary are fully decommissioned (no env vars, no SDK usage)
 - [ ] **VPS PostgreSQL** is installed, running, and reachable at `localhost:5432` on the server
 - [ ] Take a full PostgreSQL backup (see [Backup checklist](#backup-checklist))
@@ -13,6 +14,8 @@ Use this checklist when deploying Vibe Music to production on the **VPS** with *
 - [ ] Generate a new `AUTH_SECRET` (min 32 chars) if rotating credentials
 - [ ] Generate a new `GUEST_ORDER_ACCESS_SECRET` (min 32 chars) if rotating credentials
 - [ ] Confirm SMTP mailboxes (`info@`, `support@`, `orders@`, etc.) are configured and tested
+- [ ] **Do not copy** local `.env.local` to the VPS — especially never ship `AUTH_URL=http://localhost:3000`
+- [ ] Google Cloud OAuth production redirect URI: `https://vibemusic.in/api/auth/callback/google`
 
 ## Environment variables (production required)
 
@@ -21,6 +24,7 @@ Use this checklist when deploying Vibe Music to production on the **VPS** with *
 | `NEXT_PUBLIC_SITE_URL` | Public site URL |
 | `DATABASE_URL` | **VPS PostgreSQL** — `postgresql://vibe:<password>@localhost:5432/vibe?schema=public` |
 | `AUTH_SECRET` | Auth.js session signing |
+| `AUTH_URL` | Optional public auth base URL — use `https://vibemusic.in` or omit. **Never localhost in production** (startup validation rejects it) |
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Client Razorpay key |
 | `RAZORPAY_KEY_ID` | Server Razorpay key |
 | `RAZORPAY_KEY_SECRET` | Razorpay secret |

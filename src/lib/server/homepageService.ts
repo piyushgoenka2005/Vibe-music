@@ -13,6 +13,10 @@ import {
   isHomepageItemScheduledActive,
 } from "@/lib/server/homepageRepository";
 import { getHomepageStaticFallbacks } from "@/data/homepageStaticFallbacks";
+import {
+  getHomepagePopularCategoryItems,
+  HOMEPAGE_POPULAR_CATEGORY_COUNT,
+} from "@/data/popularCategories";
 import { DEFAULT_HOMEPAGE_SECTIONS } from "@/types/homepage";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
@@ -163,18 +167,25 @@ function resolveAutoProducts(
           : [...active].sort(
               (a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating
             );
-      return source.slice(0, maxItems).map((product) =>
-        toProductItem(product, {
-          badgeLabel: product.discountPercentage
-            ? `${product.discountPercentage}% Off`
-            : discounted.length > 0
-              ? "Deal"
-              : "Popular",
-          offerText: product.discountPercentage
-            ? `Save ${product.discountPercentage}%`
-            : undefined,
-        })
-      );
+      return source.slice(0, maxItems).map((product) => {
+        const salePrice = product.detail?.salePrice ?? null;
+        const computedPct =
+          product.discountPercentage > 0
+            ? product.discountPercentage
+            : salePrice != null && salePrice > 0 && product.price > salePrice
+              ? Math.round(((product.price - salePrice) / product.price) * 100)
+              : 0;
+
+        return toProductItem(product, {
+          badgeLabel:
+            computedPct > 0
+              ? `${computedPct}% Off`
+              : discounted.length > 0
+                ? "Hot Deal"
+                : "Today's Deal",
+          offerText: computedPct > 0 ? `Save ${computedPct}%` : undefined,
+        });
+      });
     }
 
     default:
@@ -307,9 +318,27 @@ async function resolveSection(
     section.sectionKey === "featured_categories" ||
     section.layout === "category_grid"
   ) {
-    const categories = await resolveCategories(section, items);
+    let categories = await resolveCategories(section, items);
+    if (
+      categories.length === 0 &&
+      section.sectionKey === "featured_categories"
+    ) {
+      categories = getHomepagePopularCategoryItems(
+        section.maxItems || HOMEPAGE_POPULAR_CATEGORY_COUNT
+      );
+    }
     if (categories.length === 0) return null;
-    return { ...base, categories };
+    return {
+      ...base,
+      ...(section.sectionKey === "featured_categories"
+        ? {
+            title: "Popular Categories",
+            ctaText: "Browse All Categories",
+            ctaLink: section.ctaLink || "/categories",
+          }
+        : null),
+      categories,
+    };
   }
 
   if (section.sectionKey === "brand_strip" || section.layout === "brand_strip") {

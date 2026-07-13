@@ -91,7 +91,7 @@ export default function AccountSettings() {
                   {
                     key: "productAlerts" as const,
                     title: "Product Alerts",
-                    desc: "Back-in-stock and price drop notifications",
+                    desc: "Opt in for restock and price updates when available",
                   },
                   {
                     key: "newsletter" as const,

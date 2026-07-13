@@ -19,15 +19,14 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
       {
         heading: "Delivery timelines",
         paragraphs: [
-          "Standard delivery: 5–7 business days to most pin codes.",
-          "Express delivery: 2–3 business days (available at checkout).",
-          "Overnight delivery: next business day in select metro cities (available at checkout).",
+          "Standard delivery: 5–7 business days to most pin codes across India.",
+          "Metro cities often arrive faster depending on courier capacity and stock location.",
         ],
       },
       {
         heading: "Free shipping",
         paragraphs: [
-          "Standard shipping is free on orders above ₹9,999 after discounts. Express and overnight options are charged at checkout.",
+          "Shipping is free on orders above ₹9,999 after discounts. Below that threshold, standard shipping is charged at checkout based on your delivery pin code.",
         ],
       },
       {

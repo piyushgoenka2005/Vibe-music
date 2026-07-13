@@ -1,6 +1,6 @@
-/** Rotating hero visuals for the split marketing hero. */
+/** Rotating hero visuals — curated top catalog products available on the site. */
 
-import { categoryPath, ROUTES } from "@/lib/routes";
+import { productPath } from "@/lib/routes";
 
 export interface MarketingHeroSlide {
   src: string;
@@ -11,75 +11,67 @@ export interface MarketingHeroSlide {
   objectPosition?: string;
 }
 
-const PRODUCT = "/images/m/products/image";
-const CAT = "/images/m/home/cats";
-
+/** Selected top / new-arrival products from the live catalog (CDN). */
 export const MARKETING_HERO_SLIDES: MarketingHeroSlide[] = [
   {
-    src: "/images/Tl 6 BUTTER BLONDIE1.png",
-    alt: "Hertz TL-6 electric guitar in butter blond finish",
-    href: categoryPath("guitars"),
+    src: "https://cdn.vibemusic.in/products/guitars/hertz-hza-3900-hza-3900/bda6138f-71bc-4c26-aa76-b84be96c9c74.png",
+    alt: "HERTZ HZA-3900 acoustic guitar in tobacco sunburst",
+    href: productPath("hertz-hza-3900-hza-3900"),
+    fit: "contain",
+    objectPosition: "center bottom",
+  },
+  {
+    src: "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-ams84f-ams84f/e5cbfc73-4ff2-4822-a93c-320d6607cd06.png",
+    alt: "ADEON AMS84F professional audio mixer console",
+    href: productPath("adeon-ams84f-ams84f"),
     fit: "contain",
     objectPosition: "center center",
   },
   {
-    src: "/images/Tl 6 MNT GREEN Colored New_.png",
-    alt: "Hertz TL-6 electric guitar in mint green",
-    href: categoryPath("guitars"),
+    src: "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-hathor-16-avus-hathor-16/7cc17c11-e64d-4aed-b820-682165bb8d26.png",
+    alt: "AVUS HATHOR 16 inch professional cymbal",
+    href: productPath("avus-avus-hathor-16-avus-hathor-16"),
     fit: "contain",
     objectPosition: "center center",
   },
   {
-    src: "/images/New Guitar.png",
-    alt: "Fender Stratocaster electric guitar in sunburst",
-    href: `${ROUTES.searchResults}?brand=fender`,
+    src: "https://cdn.vibemusic.in/products/microphones-wireless/adeon-adeon-aedan-pro1-adeon-aedan-pro1/e46688bd-9712-4eac-b0e1-2f9d9384cbae.png",
+    alt: "ADEON AEDAN PRO1 professional microphone",
+    href: productPath("adeon-adeon-aedan-pro1-adeon-aedan-pro1"),
     fit: "contain",
     objectPosition: "center bottom",
   },
   {
-    src: `${PRODUCT}/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png`,
-    alt: "Akai MPC sampler and keyboard",
-    href: categoryPath("studio-recording"),
-    fit: "contain",
-    objectPosition: "center bottom",
-  },
-  {
-    src: `${PRODUCT}/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg`,
-    alt: "Universal Audio Apollo studio interface",
-    href: categoryPath("studio-recording"),
+    src: "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-ad15dsp-ad15dsp/515381f7-f845-46c3-abef-a78cad31d6a7.png",
+    alt: "ADEON AD15DSP professional active PA speaker",
+    href: productPath("adeon-ad15dsp-ad15dsp"),
     fit: "contain",
     objectPosition: "center center",
   },
   {
-    src: `${CAT}/PBassAPR3SB.png`,
-    alt: "Fender Precision bass guitar",
-    href: categoryPath("bass"),
+    src: "https://cdn.vibemusic.in/products/home-audio-electronics/adeon-adeon-hdm-50-hdm-50/82b29098-de08-4906-abeb-471d4ea81120.png",
+    alt: "ADEON HDM-50 professional headphones",
+    href: productPath("adeon-adeon-hdm-50-hdm-50"),
+    fit: "contain",
+    objectPosition: "center center",
+  },
+  {
+    src: "https://cdn.vibemusic.in/products/guitars/hertz-hza-3600-hza-3600/32de32ce-98b0-423c-8f2e-48659dc622ba.png",
+    alt: "HERTZ HZA-3600 natural finish acoustic guitar",
+    href: productPath("hertz-hza-3600-hza-3600"),
     fit: "contain",
     objectPosition: "center bottom",
   },
   {
-    src: `${PRODUCT}/6c9d9ecdf8KxbYZ66Y2FbzDnGWRM90iaN4Xlc84X.jpg`,
-    alt: "QSC live sound PA speaker",
-    href: categoryPath("live-sound-lighting"),
+    src: "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-acm18-acm18/bd28f237-9020-4c54-828b-13ec89f0aca5.png",
+    alt: "ADEON ACM18 professional audio mixer console",
+    href: productPath("adeon-acm18-acm18"),
     fit: "contain",
-    objectPosition: "center 35%",
-  },
-  {
-    src: "/images/Tl 6 MNT GREEN Colored New_.png",
-    alt: "PRS electric guitar in seafoam green",
-    href: `${ROUTES.searchResults}?brand=prs`,
-    fit: "contain",
-    objectPosition: "center bottom",
-  },
-  {
-    src: `${CAT}/LM402.png`,
-    alt: "Roland electronic drum module",
-    href: categoryPath("drums-percussion"),
-    fit: "contain",
-    objectPosition: "center bottom",
+    objectPosition: "center center",
   },
 ];
 
-export const MARKETING_HERO_FALLBACK = "/images/Electric Blue Guitar.png";
+export const MARKETING_HERO_FALLBACK =
+  "https://cdn.vibemusic.in/products/guitars/hertz-hza-3900-hza-3900/bda6138f-71bc-4c26-aa76-b84be96c9c74.png";
 
 export const MARKETING_HERO_ROTATE_MS = 3500;

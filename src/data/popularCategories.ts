@@ -9,6 +9,9 @@ export interface PopularCategoryItem {
   badge?: "New";
 }
 
+/** First eight cards shown in the homepage Popular Categories strip. */
+export const HOMEPAGE_POPULAR_CATEGORY_COUNT = 8;
+
 const SIZES = "(max-width:768px) 101px, (max-width:1000px) 10vw, 101px";
 
 function webpSrcSet(path: string): string {
@@ -58,14 +61,14 @@ export const POPULAR_CATEGORY_ITEMS: PopularCategoryItem[] = [
   {
     slot: 4,
     href: categoryPath("keyboards-synthesizers"),
-    title: "Keyboards & Synth",
+    title: "Keyboards & Synthesizers",
     imageSrc: imgSrc(`${CAT}/Matriarch.png`),
     imageSrcSet: webpSrcSet(`${CAT}/Matriarch.png`),
   },
   {
     slot: 5,
     href: categoryPath("live-sound-lighting"),
-    title: "Live Sound & Lights",
+    title: "Live Sound & Lighting",
     imageSrc: imgSrc(`${CAT}/k12_2.png`),
     imageSrcSet: webpSrcSet(`${CAT}/k12_2.png`),
   },
@@ -131,3 +134,28 @@ export const POPULAR_CATEGORY_ITEMS: PopularCategoryItem[] = [
 ];
 
 export const POPULAR_CATEGORY_IMAGE_SIZES = SIZES;
+
+/** Static strip used when CMS/catalog featured categories are unavailable. */
+export function getHomepagePopularCategoryItems(
+  limit = HOMEPAGE_POPULAR_CATEGORY_COUNT
+): Array<{
+  id: string;
+  slug: string;
+  title: string;
+  href: string;
+  imageSrc: string;
+  badge?: string;
+}> {
+  return POPULAR_CATEGORY_ITEMS.slice(0, limit).map((item) => {
+    const slug =
+      item.href.split("/").filter(Boolean).pop() ?? `category-${item.slot}`;
+    return {
+      id: `popular-cat-${item.slot}`,
+      slug,
+      title: item.title,
+      href: item.href,
+      imageSrc: item.imageSrc,
+      badge: item.badge,
+    };
+  });
+}

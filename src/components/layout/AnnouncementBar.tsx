@@ -1,5 +1,5 @@
 const ANNOUNCEMENT_MESSAGE =
-  "Free shipping on orders over ₹2,999 · Authorized brands · Secure checkout";
+  "Free shipping on orders over ₹9,999 · Authorized brands · Secure checkout";
 
 const MARQUEE_COPIES = 8;
 

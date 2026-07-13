@@ -145,6 +145,20 @@ export function validateEnv(): void {
     if (serverResult.data.ALLOW_DEMO_PAYMENTS === "true") {
       throw new Error("ALLOW_DEMO_PAYMENTS must not be enabled in production");
     }
+
+    const authUrl = envValue(process.env.AUTH_URL);
+    if (authUrl && /localhost|127\.0\.0\.1/i.test(authUrl)) {
+      throw new Error(
+        "AUTH_URL must be the public site URL in production (not localhost). Set AUTH_URL=https://vibemusic.in or omit it."
+      );
+    }
+
+    const siteUrl = envValue(process.env.NEXT_PUBLIC_SITE_URL);
+    if (siteUrl && /localhost|127\.0\.0\.1/i.test(siteUrl)) {
+      throw new Error(
+        "NEXT_PUBLIC_SITE_URL must be the public site URL in production (not localhost)."
+      );
+    }
   }
 
   validated = true;

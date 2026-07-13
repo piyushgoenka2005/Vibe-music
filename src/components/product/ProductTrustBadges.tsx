@@ -22,7 +22,7 @@ const TRUST_BADGES: TrustBadge[] = [
   {
     icon: Truck,
     label: "Free Shipping",
-    detail: "Free delivery on orders over ₹2,999",
+    detail: "Free delivery on orders over ₹9,999",
   },
   {
     icon: CreditCard,
@@ -32,7 +32,7 @@ const TRUST_BADGES: TrustBadge[] = [
   {
     icon: RotateCcw,
     label: "Easy Returns",
-    detail: "10-day easy returns on eligible gear",
+    detail: "7-day easy returns on eligible gear",
   },
   {
     icon: ShieldCheck,

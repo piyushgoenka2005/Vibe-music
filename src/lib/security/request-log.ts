@@ -25,6 +25,9 @@ export interface RequestLogEntry {
 }
 
 export function logRequestStart(entry: RequestLogEntry): void {
+  // Keep production request traces; skip routine noise in local next-dev output.
+  if (process.env.NODE_ENV !== "production") return;
+
   console.info(
     JSON.stringify({
       level: "info",

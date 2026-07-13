@@ -32,6 +32,6 @@ export const DEFAULT_METADATA = {
     description: BRAND.description,
   },
   alternates: {
-    canonical: "/",
+    // Per-page routes set their own canonical; avoid forcing "/" globally.
   },
 };

@@ -937,10 +937,26 @@ function SplashCursor({
     function isPointerInZone(clientX, clientY) {
       if (!config.ZONE_COLOR || !config.ZONE_SELECTORS) return false;
       try {
-        const elements = document.elementsFromPoint(clientX, clientY);
-        return elements.some(
-          (el) => el instanceof Element && el.closest(config.ZONE_SELECTORS)
-        );
+        // Use geometry (not elementsFromPoint) so white splash still applies when
+        // footer/panel use pointer-events:none during the layered scroll reveal.
+        const zones = document.querySelectorAll(config.ZONE_SELECTORS);
+        for (let i = 0; i < zones.length; i++) {
+          const el = zones[i];
+          if (!(el instanceof Element)) continue;
+          const style = window.getComputedStyle(el);
+          if (style.visibility === 'hidden' || style.display === 'none') continue;
+          const rect = el.getBoundingClientRect();
+          if (rect.width <= 0 || rect.height <= 0) continue;
+          if (
+            clientX >= rect.left &&
+            clientX <= rect.right &&
+            clientY >= rect.top &&
+            clientY <= rect.bottom
+          ) {
+            return true;
+          }
+        }
+        return false;
       } catch {
         return false;
       }

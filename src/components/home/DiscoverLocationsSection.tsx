@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { MapPin } from "lucide-react";
 import Marquee from "@/components/common/Marquee";
 import { LANDING_LOCATIONS, type StatusTone } from "@/data/landingStatus";
@@ -32,13 +33,13 @@ function LocationCard({
       className="locations-strip__card"
       aria-hidden={ariaHidden || undefined}
       role="listitem"
+      style={
+        {
+          "--location-accent": location.accent,
+        } as CSSProperties
+      }
     >
-      <img
-        src={location.image}
-        alt={ariaHidden ? "" : `${location.city} location`}
-        className="locations-strip__image"
-        loading="lazy"
-      />
+      <div className="locations-strip__visual" aria-hidden />
       <div className="locations-strip__overlay" />
       <div className="locations-strip__meta">
         <LocationStatusTag label={location.status} tone={location.tone} />
@@ -73,9 +74,9 @@ export default function DiscoverLocationsSection() {
           ))}
         </Marquee>
 
-        <Link href={ROUTES.search} className="locations-strip__cta premium-btn premium-btn--outline">
+        <Link href={ROUTES.contact} className="locations-strip__cta premium-btn premium-btn--outline">
           <MapPin className="locations-strip__cta-icon" size={16} strokeWidth={2.25} aria-hidden />
-          Find a location
+          Contact a store advisor
         </Link>
       </div>
     </Reveal>

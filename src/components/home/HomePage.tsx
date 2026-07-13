@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import "@/styles/homepage-bundle.css";
 import HomepageBannerHero from "@/components/home/homepage-banner-hero/HomepageBannerHero";
 import BrowseCategoryCardsSection from "@/components/home/BrowseCategoryCardsSection";
+import HomepageOutletCategoriesBlock from "@/components/homepage/HomepageOutletCategoriesBlock";
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
@@ -28,10 +29,6 @@ const SocialProofStrip = dynamic(() => import("@/components/home/SocialProofStri
 });
 const DiscoverLocationsSection = dynamic(
   () => import("@/components/home/DiscoverLocationsSection"),
-  { loading: () => null }
-);
-const OutletStorySection = dynamic(
-  () => import("@/components/home/OutletStorySection"),
   { loading: () => null }
 );
 const EditorialSplit = dynamic(() => import("@/components/home/EditorialSplit"), {
@@ -79,15 +76,19 @@ export default function HomePage() {
       <WhyShopSection />
       <BrowseCategoryCardsSection />
 
-      <Suspense fallback={<HomepageSectionsSkeleton />}>
-        <HomepageSectionsAsync />
-      </Suspense>
-
       <Suspense fallback={null}>
         <GearStoriesReelsSection />
       </Suspense>
+
       <CategoryBento />
-      <OutletStorySection />
+
+      <Suspense fallback={null}>
+        <HomepageOutletCategoriesBlock />
+      </Suspense>
+
+      <Suspense fallback={<HomepageSectionsSkeleton />}>
+        <HomepageSectionsAsync />
+      </Suspense>
 
       <HomepageAplusContent />
 

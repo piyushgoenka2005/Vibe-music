@@ -1,14 +1,13 @@
-import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 
 export const HELP_WIDGET_LINKS = [
   { label: "Track your order", href: ROUTES.trackOrder, icon: "package" },
-  { label: "Returns & exchanges", href: `${ROUTES.searchResults}?q=returns`, icon: "rotate" },
-  { label: "Shipping policy", href: `${ROUTES.searchResults}?q=shipping`, icon: "truck" },
-  { label: `${BRAND.name} Rewards`, href: `${ROUTES.searchResults}?q=rewards`, icon: "gift" },
+  { label: "Returns & exchanges", href: ROUTES.page("returns"), icon: "rotate" },
+  { label: "Shipping policy", href: ROUTES.page("shipping"), icon: "truck" },
+  { label: "Contact support", href: ROUTES.contact, icon: "headset" },
   {
-    label: "Fraudulent websites warning",
-    href: `${ROUTES.searchResults}?q=fraud`,
+    label: "Privacy policy",
+    href: ROUTES.page("privacy"),
     icon: "shield",
   },
 ] as const;
@@ -23,4 +22,4 @@ export const HELP_WIDGET_INTRO =
   "Questions about gear, orders, or setup? Our advisors are musicians too — happy to point you in the right direction.";
 
 export const HELP_WIDGET_DISCLAIMER =
-  "Chat sessions may be recorded for training, quality, and service improvement.";
+  "Support requests may be retained for training, quality, and service improvement.";

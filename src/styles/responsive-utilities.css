@@ -39,7 +39,13 @@
   .product-share-btn,
   .wl-heart-btn,
   .gear-story-hotspot,
-  .pdp-gallery__share {
+  .pdp-gallery__share,
+  .cat-product-card__add,
+  .product-suggest__item-action,
+  .product-suggest__item-action--button,
+  .cart-item__remove,
+  .homepage-banner-hero__nav,
+  .category-cards__bullet {
     min-width: var(--touch-target-min, 44px);
     min-height: var(--touch-target-min, 44px);
   }
@@ -67,6 +73,7 @@
   .wl-drawer,
   .cart-drawer,
   .search-overlay {
+    padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
@@ -110,7 +117,7 @@
 
   .gear-story-card {
     width: min(82vw, 240px);
-    height: min(120vw, 380px);
+    height: min(110vw, 340px);
   }
 }
 

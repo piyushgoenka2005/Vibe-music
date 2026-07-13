@@ -1094,7 +1094,7 @@
   .category-bento__tile--small,
   .category-bento__grid > .category-bento__tile:nth-child(n) {
     flex: 0 0 min(82vw, 300px);
-    min-height: 320px;
+    min-height: 260px;
     scroll-snap-align: start;
     grid-column: auto;
     grid-row: auto;
@@ -1103,7 +1103,7 @@
   .category-bento__link--hero,
   .category-bento__link--overlay,
   .category-bento__link--wide {
-    min-height: 320px;
+    min-height: 260px;
   }
 
   .category-bento__name {

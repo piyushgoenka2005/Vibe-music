@@ -130,8 +130,10 @@
   }
 
   .homepage-banner-hero__nav {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .homepage-banner-hero__nav--prev {
@@ -154,8 +156,8 @@
 
 @media (max-width: 479px) {
   .homepage-banner-hero__viewport {
-    aspect-ratio: 1920 / 720;
-    min-height: 0;
+    aspect-ratio: 16 / 9;
+    min-height: 160px;
   }
 }
 

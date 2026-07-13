@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import SearchLandingExperience from "@/components/search/SearchLandingExperience";
+import { BRAND } from "@/lib/brand";
 import "@/components/search/search.css";
+
+export const metadata: Metadata = {
+  title: `Search | ${BRAND.name}`,
+  description: "Find instruments, pro audio, software, and accessories at Vibe Music.",
+  alternates: { canonical: "/search" },
+};
 
 export default function SearchPage() {
   return (

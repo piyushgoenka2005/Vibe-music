@@ -68,7 +68,11 @@ export default function PremiumHeroRotatingVisual() {
               fill
               sizes="(max-width: 767px) 90vw, 480px"
               priority={index === 0}
-              style={slide.objectPosition ? { objectPosition: slide.objectPosition } : undefined}
+              style={
+                slide.objectPosition
+                  ? { objectPosition: slide.objectPosition }
+                  : undefined
+              }
               onError={() =>
                 setFailedSrc((prev) => ({ ...prev, [slide.src]: true }))
               }

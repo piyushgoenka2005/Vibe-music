@@ -1,24 +1,28 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const MOBILE_VIEWPORT_QUERY = "(max-width: 767px)";
 
-function readMobileViewport(): boolean {
-  if (typeof window === "undefined") return false;
+function subscribeMobileViewport(onStoreChange: () => void) {
+  const media = window.matchMedia(MOBILE_VIEWPORT_QUERY);
+  media.addEventListener("change", onStoreChange);
+  return () => media.removeEventListener("change", onStoreChange);
+}
+
+function getMobileViewportSnapshot() {
   return window.matchMedia(MOBILE_VIEWPORT_QUERY).matches;
 }
 
+function getMobileViewportServerSnapshot() {
+  return false;
+}
+
+/** SSR-safe mobile viewport detection without hydration mismatches. */
 export function useIsMobileViewport(): boolean {
-  const [isMobile, setIsMobile] = useState(readMobileViewport);
-
-  useLayoutEffect(() => {
-    const media = window.matchMedia(MOBILE_VIEWPORT_QUERY);
-    const update = () => setIsMobile(media.matches);
-    update();
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-
-  return isMobile;
+  return useSyncExternalStore(
+    subscribeMobileViewport,
+    getMobileViewportSnapshot,
+    getMobileViewportServerSnapshot
+  );
 }

@@ -60,7 +60,8 @@ export function buildShippingQuotes(
   subtotal: number,
   discount: number,
   zone: ShippingZone | null,
-  defaultThreshold: number
+  defaultThreshold: number,
+  options?: { standardChargeFallback?: number; methods?: ShippingMethod[] }
 ): Array<{
   id: ShippingMethod;
   label: string;
@@ -68,14 +69,33 @@ export function buildShippingQuotes(
   charge: number;
   etaDays: string;
 }> {
-  return (Object.keys(SHIPPING_METHODS) as ShippingMethod[]).map((method) => ({
-    ...SHIPPING_METHODS[method],
-    charge: getZoneShippingCharge(
+  const methodIds =
+    options?.methods ?? (["standard"] as ShippingMethod[]);
+
+  return methodIds.map((method) => {
+    const config = SHIPPING_METHODS[method];
+    let charge = getZoneShippingCharge(
       method,
       subtotal,
       discount,
       zone,
       defaultThreshold
-    ),
-  }));
+    );
+
+    // When zone has no explicit standard charge, prefer store settings fallback.
+    if (
+      method === "standard" &&
+      typeof options?.standardChargeFallback === "number" &&
+      !(typeof zone?.methodCharges?.standard === "number")
+    ) {
+      const afterDiscount = subtotal - discount;
+      const threshold = zone?.freeShippingThreshold ?? defaultThreshold;
+      charge = afterDiscount >= threshold ? 0 : options.standardChargeFallback;
+    }
+
+    return {
+      ...config,
+      charge,
+    };
+  });
 }

@@ -34,7 +34,11 @@ export async function getShippingQuotes(input: ShippingQuoteInput) {
     input.subtotal,
     discount,
     zone,
-    settings.freeShippingThreshold
+    settings.freeShippingThreshold,
+    {
+      standardChargeFallback: settings.standardShippingCharge,
+      methods: ["standard"],
+    }
   );
   const selected = methods.find((item) => item.id === method) ?? methods[0];
 

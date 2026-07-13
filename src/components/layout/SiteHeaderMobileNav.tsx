@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
@@ -41,10 +41,11 @@ export default function SiteHeaderMobileNav({ onNavigate }: SiteHeaderMobileNavP
     }))
   );
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
-
-  useEffect(() => {
+  const [expandedForPath, setExpandedForPath] = useState(pathname);
+  if (expandedForPath !== pathname) {
+    setExpandedForPath(pathname);
     setExpandedSlug(null);
-  }, [pathname]);
+  }
 
   const handleNavigate = useCallback(() => {
     setExpandedSlug(null);

@@ -42,7 +42,7 @@ describe("shippingMethods", () => {
 
   it("applies free standard shipping above threshold", () => {
     expect(getShippingChargeForMethod("standard", 10000, 0)).toBe(0);
-    expect(getShippingChargeForMethod("express", 10000, 0)).toBe(199);
+    expect(getShippingChargeForMethod("standard", 5000, 0)).toBe(99);
   });
 });
 

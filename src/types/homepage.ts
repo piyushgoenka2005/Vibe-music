@@ -210,7 +210,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     sectionKey: "featured_categories",
     title: "Popular Categories",
     ctaText: "Browse All Categories",
-    ctaLink: "/search",
+    ctaLink: "/categories",
     isActive: true,
     sortOrder: 4,
     sourceMode: "auto",

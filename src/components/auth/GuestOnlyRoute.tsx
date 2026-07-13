@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthLoading from "@/components/auth/AuthLoading";
 import { ROUTES } from "@/lib/routes";
@@ -11,6 +11,8 @@ interface GuestOnlyRouteProps {
   fallback?: string;
 }
 
+const INIT_TIMEOUT_MS = 7000;
+
 function GuestOnlyRouteInner({
   children,
   fallback = ROUTES.account,
@@ -20,15 +22,22 @@ function GuestOnlyRouteInner({
   const redirectTo = searchParams.get("redirect") || fallback;
   const isInitialized = useAuthStore((s) => s.isInitialized);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
-    if (!isInitialized) return;
+    if (isInitialized) return;
+    const timer = window.setTimeout(() => setTimedOut(true), INIT_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, [isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized && !timedOut) return;
     if (isAuthenticated) {
       router.replace(redirectTo);
     }
-  }, [isAuthenticated, isInitialized, redirectTo, router]);
+  }, [isAuthenticated, isInitialized, timedOut, redirectTo, router]);
 
-  if (!isInitialized || isAuthenticated) {
+  if ((!isInitialized && !timedOut) || isAuthenticated) {
     return <AuthLoading />;
   }
 

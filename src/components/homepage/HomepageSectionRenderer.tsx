@@ -8,11 +8,19 @@ import type { ResolvedHomepageSection } from "@/types/homepage";
 
 interface HomepageSectionRendererProps {
   section: ResolvedHomepageSection;
+  /** When deals is missing, Find Your Product still renders above Shop Top Brands. */
+  attachFindYourProduct?: boolean;
 }
 
 export default function HomepageSectionRenderer({
   section,
+  attachFindYourProduct = false,
 }: HomepageSectionRendererProps) {
+  // featured_categories is rendered in HomepageOutletCategoriesBlock after Gear Stories
+  if (section.key === "featured_categories") {
+    return null;
+  }
+
   switch (section.layout) {
     case "product_grid":
       return <HomepageProductGridSection section={section} />;
@@ -21,14 +29,25 @@ export default function HomepageSectionRenderer({
     case "category_grid":
       return <HomepageCategoryGridSection section={section} />;
     case "deals_slider":
+      if (section.key === "deals_of_the_day" && attachFindYourProduct) {
+        return (
+          <>
+            <FindYourProductSectionLazy />
+            <HomepageDealsSection section={section} />
+          </>
+        );
+      }
       return <HomepageDealsSection section={section} />;
     case "brand_strip":
-      return (
-        <>
-          <FindYourProductSectionLazy />
-          <HomepageBrandStripSection section={section} />
-        </>
-      );
+      if (attachFindYourProduct) {
+        return (
+          <>
+            <FindYourProductSectionLazy />
+            <HomepageBrandStripSection section={section} />
+          </>
+        );
+      }
+      return <HomepageBrandStripSection section={section} />;
     default:
       return null;
   }

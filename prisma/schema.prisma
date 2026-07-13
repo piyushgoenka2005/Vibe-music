@@ -211,6 +211,8 @@ model User {
   email         String    @unique
   emailVerified DateTime? @map("email_verified")
   name          String?   @map("display_name")
+  phone         String?
+  dateOfBirth   String?   @map("date_of_birth")
   passwordHash  String?   @map("password_hash")
   image         String?
   isActive      Boolean   @default(true) @map("is_active")

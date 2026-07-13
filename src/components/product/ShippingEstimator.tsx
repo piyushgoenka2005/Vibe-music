@@ -51,21 +51,17 @@ export default function ShippingEstimator({ subtotal = 0 }: ShippingEstimatorPro
         zone?: { name: string } | null;
       };
       const methods = data.methods ?? [];
-      const standard = methods.find((m) => m.id === "standard");
-      const express = methods.find((m) => m.id === "express");
+      const standard = methods.find((m) => m.id === "standard") ?? methods[0];
 
       const standardCharge =
         standard?.charge === 0
           ? "free"
-          : formatCurrencyPrecise(standard?.charge ?? 100);
-      const expressNote = express
-        ? ` Express from ${formatCurrencyPrecise(express.charge)} (${express.description.toLowerCase()}).`
-        : "";
+          : formatCurrencyPrecise(standard?.charge ?? 99);
 
       const zoneNote = data.zone?.name ? ` Zone: ${data.zone.name}.` : "";
 
       setResult(
-        `Delivering to PIN ${trimmed}: Standard ${standardCharge} — ${standard?.description ?? "5–7 business days"}.${expressNote}${zoneNote}`
+        `Delivering to PIN ${trimmed}: Standard ${standardCharge} — ${standard?.description ?? "5–7 business days"}.${zoneNote}`
       );
     } catch {
       setResult("Unable to fetch shipping options. Please try again.");

@@ -296,7 +296,7 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 2.35rem;
+    min-height: 44px;
     height: auto;
     margin-top: 0.45rem;
     padding: 0.5rem 0.65rem;
@@ -314,7 +314,7 @@
   }
 
   .cat-product-card__brand {
-    font-size: 0.625rem;
+    font-size: 0.6875rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -380,9 +380,9 @@
   }
 
   .cat-product-card__add {
-    min-height: 2.25rem;
-    height: 2.25rem;
-    font-size: 0.6875rem;
+    min-height: 44px;
+    height: auto;
+    font-size: 0.75rem;
   }
 }
 

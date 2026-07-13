@@ -289,6 +289,30 @@
   opacity: 0.7;
 }
 
+@media (max-width: 767px) {
+  .auth-page {
+    padding: 2rem 1rem 4rem;
+  }
+
+  .auth-shell__header {
+    padding: 1.5rem 1.25rem 0.5rem;
+  }
+
+  .auth-shell__body {
+    padding: 1.25rem 1.25rem 1.75rem;
+    gap: 1.125rem;
+  }
+
+  .auth-footer-note,
+  .auth-inline-footer {
+    padding: 1rem 1.25rem;
+  }
+
+  .auth-inline-footer {
+    margin: 0.5rem -1.25rem -1.75rem;
+  }
+}
+
 @media (max-width: 479px) {
   .auth-page {
     padding: 1.5rem 0.75rem 3rem;

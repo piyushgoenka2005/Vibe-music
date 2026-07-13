@@ -112,11 +112,11 @@ export default function HomepageProductCarouselSection({
     const scroller = scrollerRef.current;
     if (!scroller) return;
 
-    const maxScroll = scroller.scrollWidth - scroller.clientWidth;
-    const overflow = maxScroll > 2;
+    const maxScroll = Math.ceil(scroller.scrollWidth - scroller.clientWidth);
+    const overflow = maxScroll > 4;
     setHasOverflow(overflow);
-    setCanScrollPrev(scroller.scrollLeft > 2);
-    setCanScrollNext(scroller.scrollLeft < maxScroll - 2);
+    setCanScrollPrev(overflow && scroller.scrollLeft > 2);
+    setCanScrollNext(overflow && scroller.scrollLeft < maxScroll - 2);
   }, []);
 
   useEffect(() => {
@@ -124,13 +124,17 @@ export default function HomepageProductCarouselSection({
     if (!scroller) return;
 
     updateScrollState();
+    const raf = window.requestAnimationFrame(updateScrollState);
     scroller.addEventListener("scroll", updateScrollState, { passive: true });
     window.addEventListener("resize", updateScrollState);
 
-    const resizeObserver = new ResizeObserver(updateScrollState);
+    const resizeObserver = new ResizeObserver(() => {
+      window.requestAnimationFrame(updateScrollState);
+    });
     resizeObserver.observe(scroller);
 
     return () => {
+      window.cancelAnimationFrame(raf);
       scroller.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", updateScrollState);
       resizeObserver.disconnect();

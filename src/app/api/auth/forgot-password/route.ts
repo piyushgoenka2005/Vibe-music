@@ -47,7 +47,12 @@ export async function POST(request: Request) {
         data: { identifier: email, token, expires },
       });
 
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "").trim();
+      if (!siteUrl) {
+        throw new Error(
+          "NEXT_PUBLIC_SITE_URL is required to send password reset emails."
+        );
+      }
       const resetUrl = `${siteUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
       await sendPasswordResetEmail(email, resetUrl);
     }
