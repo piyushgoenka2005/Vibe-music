@@ -71,29 +71,20 @@ Optional hardening:
 
 Full VPS steps: [deploy/VPS-SETUP.md](../deploy/VPS-SETUP.md).
 
-## Local development (Docker)
+## Local development bootstrap
 
 ```bash
-docker run -d \
-  --name vibe-postgres \
-  -e POSTGRES_USER=vibe \
-  -e POSTGRES_PASSWORD=vibe \
-  -e POSTGRES_DB=vibe \
-  -p 5432:5432 \
-  postgres:16
-```
+# Start Postgres (requires Docker Desktop running)
+docker compose up -d postgres
 
-Add to `.env.local`:
+# Create vibe DB/user if needed, sync .env.local, apply migrations
+npm run setup:local
 
-```env
-DATABASE_URL=postgresql://vibe:vibe@localhost:5432/vibe?schema=public
-```
+# Report missing env keys (values hidden)
+npm run check:env
 
-If port `5432` is taken locally:
-
-```bash
-docker run -d ... -p 5433:5432 postgres:16
-# DATABASE_URL=postgresql://vibe:vibe@localhost:5433/vibe?schema=public
+# Smoke-test APIs (dev server must be running)
+npm run verify:integrations
 ```
 
 ## Setup

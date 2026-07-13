@@ -6,6 +6,7 @@ Use this checklist when deploying Vibe Music to production on the **VPS** with *
 
 - [ ] Merge and review all migration-related changes on the release branch
 - [ ] Confirm the Auth.js Prisma adapter (`src/lib/auth/prisma-adapter.ts`) is included — required for Google OAuth user creation
+- [ ] Copy [`.env.production.example`](../.env.production.example) to the VPS `.env` and fill real secrets (never copy local `.env.local`)
 - [ ] Confirm Firebase, Firestore, and Cloudinary are fully decommissioned (no env vars, no SDK usage)
 - [ ] **VPS PostgreSQL** is installed, running, and reachable at `localhost:5432` on the server
 - [ ] Take a full PostgreSQL backup (see [Backup checklist](#backup-checklist))
@@ -16,6 +17,8 @@ Use this checklist when deploying Vibe Music to production on the **VPS** with *
 - [ ] Confirm SMTP mailboxes (`info@`, `support@`, `orders@`, etc.) are configured and tested
 - [ ] **Do not copy** local `.env.local` to the VPS — especially never ship `AUTH_URL=http://localhost:3000`
 - [ ] Google Cloud OAuth production redirect URI: `https://vibemusic.in/api/auth/callback/google`
+- [ ] Optional but recommended: Upstash Redis for distributed rate limiting across PM2 workers
+
 
 ## Environment variables (production required)
 

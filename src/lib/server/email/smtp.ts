@@ -2,9 +2,12 @@ import "server-only";
 
 import nodemailer from "nodemailer";
 import type Mail from "nodemailer/lib/mailer";
-import { isSmtpConfigured } from "@/lib/server/email/smtpConfig";
+import {
+  isSmtpConfigured,
+  resolveSmtpConfig,
+} from "@/lib/server/email/smtpConfig";
 
-export { isSmtpConfigured };
+export { isSmtpConfigured, resolveSmtpConfig };
 
 type SmtpTransport = ReturnType<typeof nodemailer.createTransport>;
 
@@ -27,46 +30,28 @@ export interface SendMailResult {
 
 let cachedTransport: SmtpTransport | null | undefined;
 
-function parseSmtpPort(): number {
-  const raw = process.env.SMTP_PORT?.trim();
-  if (!raw) return 587;
-  const port = Number(raw);
-  return Number.isFinite(port) && port > 0 ? port : 587;
-}
-
-function isSecureSmtp(): boolean {
-  if (process.env.SMTP_SECURE === "true") return true;
-  if (process.env.SMTP_SECURE === "false") return false;
-  return parseSmtpPort() === 465;
-}
-
 export function getSmtpTransport(): SmtpTransport | null {
   if (cachedTransport !== undefined) {
     return cachedTransport;
   }
 
-  if (!isSmtpConfigured()) {
+  const config = resolveSmtpConfig();
+  if (!config?.host || !config.pass) {
     cachedTransport = null;
     return null;
   }
-
-  const host = process.env.SMTP_HOST?.trim();
-  if (!host) {
-    cachedTransport = null;
-    return null;
-  }
-
-  const user = process.env.SMTP_USER?.trim();
-  const pass = process.env.SMTP_PASS;
 
   cachedTransport = nodemailer.createTransport({
-    host,
-    port: parseSmtpPort(),
-    secure: isSecureSmtp(),
-    auth: user && pass ? { user, pass } : undefined,
-    tls: process.env.SMTP_TLS_REJECT_UNAUTHORIZED === "false"
-      ? { rejectUnauthorized: false }
-      : undefined,
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    auth: config.user
+      ? { user: config.user, pass: config.pass }
+      : { user: "resend", pass: config.pass },
+    tls:
+      process.env.SMTP_TLS_REJECT_UNAUTHORIZED === "false"
+        ? { rejectUnauthorized: false }
+        : undefined,
   });
 
   return cachedTransport;
@@ -86,11 +71,11 @@ export async function sendMail(input: SendMailInput): Promise<SendMailResult> {
   if (!transport) {
     if (process.env.NODE_ENV === "production") {
       console.error(
-        `[smtp] SMTP_HOST missing — email not sent: "${input.subject}" → ${normalizeRecipients(input.to)}`
+        `[smtp] Email not configured — not sent: "${input.subject}" → ${normalizeRecipients(input.to)}`
       );
     } else {
       console.info(
-        `[smtp] Skipped (SMTP not configured): "${input.subject}" → ${normalizeRecipients(input.to)}`
+        `[smtp] Skipped (SMTP/Resend not configured): "${input.subject}" → ${normalizeRecipients(input.to)}`
       );
     }
     return { ok: false, skipped: true };

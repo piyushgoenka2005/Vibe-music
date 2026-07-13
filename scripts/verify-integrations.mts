@@ -8,6 +8,30 @@ const BASE_URL = process.env.VERIFY_BASE_URL ?? "http://localhost:3000";
 type CheckResult = { name: string; ok: boolean; detail: string };
 
 function envOk(name: string): CheckResult {
+  if (name === "SMTP_PASS") {
+    const ok = Boolean(
+      process.env.SMTP_PASS?.trim() || process.env.RESEND_API_KEY?.trim()
+    );
+    return {
+      name: `env:${name}`,
+      ok,
+      detail: process.env.SMTP_PASS?.trim()
+        ? "set"
+        : process.env.RESEND_API_KEY?.trim()
+          ? "set via RESEND_API_KEY"
+          : "missing",
+    };
+  }
+  if (name === "SMTP_HOST" || name === "SMTP_USER") {
+    const direct = Boolean(process.env[name]?.trim());
+    const viaResend = Boolean(process.env.RESEND_API_KEY?.trim());
+    const ok = direct || viaResend;
+    return {
+      name: `env:${name}`,
+      ok,
+      detail: direct ? "set" : viaResend ? "set via RESEND_API_KEY" : "missing",
+    };
+  }
   const value = process.env[name];
   const ok = Boolean(value?.trim());
   return {
@@ -63,12 +87,18 @@ async function fetchCheck(path: string): Promise<CheckResult> {
 const envChecks = [
   "DATABASE_URL",
   "AUTH_SECRET",
+  "GUEST_ORDER_ACCESS_SECRET",
   "RAZORPAY_KEY_ID",
   "RAZORPAY_KEY_SECRET",
   "NEXT_PUBLIC_RAZORPAY_KEY_ID",
+  "RAZORPAY_WEBHOOK_SECRET",
   "SMTP_HOST",
   "SMTP_USER",
   "SMTP_PASS",
+  "AUTH_GOOGLE_ID",
+  "AUTH_GOOGLE_SECRET",
+  "CDN_STORAGE_ROOT",
+  "CDN_PUBLIC_BASE_URL",
 ].map(envOk);
 
 const routeChecks = await Promise.all([

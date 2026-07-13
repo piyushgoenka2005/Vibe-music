@@ -33,6 +33,9 @@
     "test:e2e": "playwright test",
     "audit:lighthouse": "node scripts/lighthouse-audit.mjs",
     "verify:integrations": "npx tsx --env-file=.env.local scripts/verify-integrations.mts",
+    "check:env": "node scripts/check-env.mjs",
+    "setup:local": "node scripts/setup-local-config.mjs",
+    "db:probe": "node scripts/probe-db.mjs",
     "validate": "npm run type-check && npm run lint && npm run test && npm run build",
     "validate:ci": "npm run validate && npm run test:e2e"
   },

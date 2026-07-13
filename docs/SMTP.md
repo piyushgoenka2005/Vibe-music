@@ -29,7 +29,8 @@ SMTP_PASS=your-app-password
 # SMTP_ADMIN_TO=support@vibemusic.in
 ```
 
-Production requires `SMTP_HOST`, `SMTP_USER`, and `SMTP_PASS` (validated in `src/env.ts`).
+Production requires `SMTP_HOST` + `SMTP_USER` + `SMTP_PASS`, **or** a `RESEND_API_KEY` (uses Resend SMTP relay automatically).
+
 
 ### Verify from the app server
 

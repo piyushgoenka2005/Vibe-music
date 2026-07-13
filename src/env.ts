@@ -31,6 +31,7 @@ const serverEnvSchema = z.object({
   GUEST_ORDER_ACCESS_SECRET: z.string().min(1).optional(),
   ALLOW_DEMO_PAYMENTS: z.enum(["true", "false"]).optional(),
   DATABASE_URL: z.string().min(1).optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
 });
 
 const productionRequiredSchema = z.object({
@@ -115,6 +116,7 @@ export function validateEnv(): void {
       | "false"
       | undefined,
     DATABASE_URL: envValue(process.env.DATABASE_URL),
+    RESEND_API_KEY: envValue(process.env.RESEND_API_KEY),
   });
 
   if (!serverResult.success) {
@@ -131,9 +133,9 @@ export function validateEnv(): void {
       RAZORPAY_KEY_SECRET: envValue(process.env.RAZORPAY_KEY_SECRET),
       RAZORPAY_WEBHOOK_SECRET: envValue(process.env.RAZORPAY_WEBHOOK_SECRET),
       GUEST_ORDER_ACCESS_SECRET: envValue(process.env.GUEST_ORDER_ACCESS_SECRET),
-      SMTP_HOST: envValue(process.env.SMTP_HOST),
-      SMTP_USER: envValue(process.env.SMTP_USER),
-      SMTP_PASS: envValue(process.env.SMTP_PASS),
+      SMTP_HOST: envValue(process.env.SMTP_HOST) ?? (envValue(process.env.RESEND_API_KEY) ? "smtp.resend.com" : undefined),
+      SMTP_USER: envValue(process.env.SMTP_USER) ?? (envValue(process.env.RESEND_API_KEY) ? "resend" : undefined),
+      SMTP_PASS: envValue(process.env.SMTP_PASS) ?? envValue(process.env.RESEND_API_KEY),
     });
 
     if (!productionResult.success) {
