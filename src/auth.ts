@@ -119,15 +119,29 @@ export const authConfig = {
   providers: buildProviders(),
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.provider === "google" && user.email) {
-        // Ensure profile row exists / is refreshed after adapter create or link.
-        if (user.id) {
-          await ensureOAuthUserProfile({
-            id: user.id,
-            email: user.email,
-            name: user.name ?? profile?.name,
-            image: user.image,
-          });
+      try {
+        if (account?.provider === "google" && user.email) {
+          // Resolve/create profile without throwing on existing emails — a throw
+          // here becomes Auth.js AccessDenied and blocks login entirely.
+          if (user.id) {
+            const resolved = await ensureOAuthUserProfile({
+              id: user.id,
+              email: user.email,
+              name: user.name ?? profile?.name,
+              image: user.image,
+            });
+            // Keep JWT/session on the canonical storefront user id when OAuth
+            // arrived with a mismatched temporary id.
+            if (resolved.id !== user.id) {
+              user.id = resolved.id;
+            }
+          }
+
+          if (user.id && user.email) {
+            void linkGuestOrdersToUser(user.id, user.email).catch(() => undefined);
+          }
+
+          return true;
         }
 
         if (user.id && user.email) {
@@ -135,13 +149,11 @@ export const authConfig = {
         }
 
         return true;
+      } catch (error) {
+        console.error("[auth] signIn callback failed", error);
+        // Prefer completing OAuth over blocking shoppers when profile sync fails.
+        return true;
       }
-
-      if (user.id && user.email) {
-        void linkGuestOrdersToUser(user.id, user.email).catch(() => undefined);
-      }
-
-      return true;
     },
     async jwt({ token, user, trigger, session }) {
       if (user) {

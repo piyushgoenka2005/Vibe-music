@@ -8,7 +8,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   EmailCreateAccount: "Could not create account. Please try again.",
   CallbackRouteError:
     "Google sign-in could not finish. Please try again or use email and password.",
-  AccessDenied: "Access denied.",
+  AccessDenied:
+    "We could not finish Google sign-in for this account. Try again, or sign in with email and password.",
   Configuration:
     "Google sign-in is temporarily unavailable. Please use email and password.",
   Verification: "The verification link is invalid or has expired.",

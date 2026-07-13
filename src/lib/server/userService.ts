@@ -108,28 +108,72 @@ export async function ensureOAuthUserProfile(input: {
   email: string;
   name?: string | null;
   image?: string | null;
-}): Promise<void> {
+}): Promise<{ id: string }> {
   const now = new Date().toISOString();
   const email = input.email.trim().toLowerCase();
+  const displayName = input.name?.trim() || email.split("@")[0] || "User";
 
-  await prisma.user.upsert({
-    where: { id: input.id },
-    create: {
+  const byId = await prisma.user.findUnique({ where: { id: input.id } });
+  if (byId) {
+    // Avoid unique collisions if another row already owns this email.
+    const emailOwner =
+      byId.email === email
+        ? byId
+        : await prisma.user.findUnique({ where: { email } });
+    if (emailOwner && emailOwner.id !== byId.id) {
+      await prisma.user.update({
+        where: { id: emailOwner.id },
+        data: {
+          name: displayName || emailOwner.name,
+          image: input.image ?? emailOwner.image,
+          emailVerified: new Date(),
+          isActive: true,
+          updatedAt: now,
+        },
+      });
+      return { id: emailOwner.id };
+    }
+
+    await prisma.user.update({
+      where: { id: byId.id },
+      data: {
+        email,
+        name: displayName || byId.name,
+        image: input.image ?? byId.image,
+        emailVerified: new Date(),
+        isActive: true,
+        updatedAt: now,
+      },
+    });
+    return { id: byId.id };
+  }
+
+  const byEmail = await prisma.user.findUnique({ where: { email } });
+  if (byEmail) {
+    await prisma.user.update({
+      where: { id: byEmail.id },
+      data: {
+        name: displayName || byEmail.name,
+        image: input.image ?? byEmail.image,
+        emailVerified: new Date(),
+        isActive: true,
+        updatedAt: now,
+      },
+    });
+    return { id: byEmail.id };
+  }
+
+  await prisma.user.create({
+    data: {
       id: input.id,
       email,
-      name: input.name?.trim() || email.split("@")[0] || "User",
+      name: displayName,
       image: input.image ?? null,
       emailVerified: new Date(),
       isActive: true,
       createdAt: now,
       updatedAt: now,
     },
-    update: {
-      email,
-      name: input.name?.trim() || undefined,
-      image: input.image ?? undefined,
-      emailVerified: new Date(),
-      updatedAt: now,
-    },
   });
+  return { id: input.id };
 }
