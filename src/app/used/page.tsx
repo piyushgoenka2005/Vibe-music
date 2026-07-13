@@ -6,7 +6,7 @@ import { searchProducts } from "@/lib/server/productRepository";
 import { ROUTES, categoryPath } from "@/lib/routes";
 import "@/styles/storefront-pages.css";
 import "@/styles/program-landing.css";
-import "@/styles/category.css";
+import "@/components/category/category.css";
 
 export const metadata: Metadata = {
   title: "Used & Open-Box Gear",
