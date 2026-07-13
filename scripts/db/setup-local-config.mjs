@@ -2,7 +2,7 @@
  * Configure local Postgres, sync env files, ensure secrets, run migrations.
  * Never prints connection secrets.
  *
- * Usage: node scripts/setup-local-config.mjs
+ * Usage: node scripts/db/setup-local-config.mjs
  */
 import { execSync } from "node:child_process";
 import fs from "node:fs";

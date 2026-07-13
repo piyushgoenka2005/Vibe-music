@@ -67,7 +67,9 @@ ui-debug.log
 /catalog-import-manifest.json
 /migration-report.json
 tmp-out.css
-/tmp/
+# local runtime / scratch
+.data/
 .tmp-db-port
 .tmp-db-default
-
+cdn-upload-manifest.json
+/tmp/

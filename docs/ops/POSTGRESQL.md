@@ -69,7 +69,7 @@ Optional hardening:
 - Do **not** expose port `5432` in UFW/public firewall
 - Schedule `pg_dump` backups (see [DEPLOYMENT.md](./DEPLOYMENT.md))
 
-Full VPS steps: [deploy/VPS-SETUP.md](../deploy/VPS-SETUP.md).
+Full VPS steps: [VPS-SETUP.md](./VPS-SETUP.md).
 
 ## Local development bootstrap
 
@@ -95,7 +95,7 @@ npm run verify:integrations
 npm install
 ```
 
-`postinstall` runs `prisma generate` via `scripts/prisma-generate.mjs`.
+`postinstall` runs `prisma generate` via `scripts/db/prisma-generate.mjs`.
 
 ### 2. Prisma CLI and env files
 

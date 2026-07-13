@@ -1,7 +1,7 @@
 /**
  * Lightweight Lighthouse audit helper.
  * Requires: npm run build && npm run start (in another terminal)
- * Usage: node scripts/lighthouse-audit.mjs
+ * Usage: node scripts/ops/lighthouse-audit.mjs
  */
 import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";

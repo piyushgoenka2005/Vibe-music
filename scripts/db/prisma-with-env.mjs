@@ -6,7 +6,7 @@ const prismaEntry = path.join(process.cwd(), "node_modules", "prisma", "build", 
 const envFile = path.join(process.cwd(), ".env.local");
 
 // Prisma CLI (incl. Studio) reads `.env` only — keep it in sync with `.env.local`.
-spawnSync(process.execPath, [path.join(process.cwd(), "scripts", "sync-prisma-env.mjs")], {
+spawnSync(process.execPath, [path.join(process.cwd(), "scripts", "db", "sync-prisma-env.mjs")], {
   stdio: "inherit",
   cwd: process.cwd(),
 });

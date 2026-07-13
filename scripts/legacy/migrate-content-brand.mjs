@@ -3,7 +3,8 @@ import path from "path";
 
 const dirs = [
   path.join(process.cwd(), "src", "content"),
-  path.join(process.cwd(), "scripts"),
+  path.join(process.cwd(), "scripts", "legacy"),
+  path.join(process.cwd(), "scripts", "catalog"),
 ];
 
 const EXTRA = [

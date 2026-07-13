@@ -2,7 +2,7 @@
  * Seed the first Super Admin in PostgreSQL.
  *
  * Usage:
- *   npx tsx --env-file=.env.local scripts/seed-admin.mts <user-id> <email> [displayName]
+ *   npx tsx --env-file=.env.local scripts/db/seed-admin.mts <user-id> <email> [displayName]
  *
  * The user must already exist in the `users` table (register first or use Auth.js Google sign-in).
  */
@@ -12,7 +12,7 @@ const [uid, email, displayName = "Super Admin"] = process.argv.slice(2);
 
 if (!uid || !email) {
   console.error(
-    "Usage: npx tsx --env-file=.env.local scripts/seed-admin.mts <uid> <email> [displayName]"
+    "Usage: npx tsx --env-file=.env.local scripts/db/seed-admin.mts <uid> <email> [displayName]"
   );
   process.exit(1);
 }

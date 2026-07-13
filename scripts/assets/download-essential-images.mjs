@@ -134,7 +134,7 @@ async function main() {
 
   if (fs.existsSync(path.join(PUBLIC, "logo.jpeg"))) {
     const { spawnSync } = await import("node:child_process");
-    const result = spawnSync("node", ["scripts/generate-favicons.mjs"], {
+    const result = spawnSync("node", ["scripts/assets/generate-favicons.mjs"], {
       cwd: ROOT,
       stdio: "inherit",
     });

@@ -9,10 +9,10 @@ import {
   brandToPrisma,
   categoryToPrisma,
   productToPrisma,
-} from "../src/lib/server/prisma/mappers";
-import type { Brand } from "../src/types/brand";
-import type { CatalogProduct } from "../src/types/catalog";
-import type { Category } from "../src/types/category";
+} from "../../src/lib/server/prisma/mappers";
+import type { Brand } from "../../src/types/brand";
+import type { CatalogProduct } from "../../src/types/catalog";
+import type { Category } from "../../src/types/category";
 
 const prisma = new PrismaClient();
 const catalogDir = path.join(process.cwd(), "src", "data", "catalog");

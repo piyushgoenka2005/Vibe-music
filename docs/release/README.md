@@ -2,7 +2,9 @@
 
 Production release engineering reports for the **11 July 2026 RC (Release Candidate)** enterprise launch.
 
-> **Database (current stack):** Self-hosted **PostgreSQL on the VPS** (`DATABASE_URL=postgresql://vibe:<password>@localhost:5432/vibe?schema=public`). Operational guide: [../POSTGRESQL.md](../POSTGRESQL.md). Some reports below reference the earlier Firestore stack historically.
+> **Database (current stack):** Self-hosted **PostgreSQL on the VPS** (`DATABASE_URL=postgresql://vibe:<password>@localhost:5432/vibe?schema=public`). Operational guide: [../ops/POSTGRESQL.md](../ops/POSTGRESQL.md). Some reports below reference the earlier Firestore stack historically.
+>
+> **Current deploy process:** use [../ops/DEPLOYMENT.md](../ops/DEPLOYMENT.md) — the `FINAL_DEPLOYMENT_CHECKLIST.md` below is a historical RC artifact.
 
 ## Start here
 

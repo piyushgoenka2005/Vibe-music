@@ -1,6 +1,6 @@
 /**
  * One-time: merge category JSON files into products.json (single source of truth).
- * Run: npx tsx scripts/consolidate-catalog.mts
+ * Run: npx tsx scripts/catalog/consolidate-catalog.mts
  */
 import fs from "fs";
 import path from "path";

@@ -6,7 +6,7 @@ Use this checklist when deploying Vibe Music to production on the **VPS** with *
 
 - [ ] Merge and review all migration-related changes on the release branch
 - [ ] Confirm the Auth.js Prisma adapter (`src/lib/auth/prisma-adapter.ts`) is included — required for Google OAuth user creation
-- [ ] Copy [`.env.production.example`](../.env.production.example) to the VPS `.env` and fill real secrets (never copy local `.env.local`)
+- [ ] Copy [`.env.production.example`](../../.env.production.example) to the VPS `.env` and fill real secrets (never copy local `.env.local`)
 - [ ] Confirm Firebase, Firestore, and Cloudinary are fully decommissioned (no env vars, no SDK usage)
 - [ ] **VPS PostgreSQL** is installed, running, and reachable at `localhost:5432` on the server
 - [ ] Take a full PostgreSQL backup (see [Backup checklist](#backup-checklist))
@@ -46,7 +46,7 @@ Recommended:
 
 ## Database (VPS PostgreSQL)
 
-PostgreSQL runs on the same VPS as the app. See [POSTGRESQL.md](./POSTGRESQL.md) for install and [deploy/VPS-SETUP.md](../deploy/VPS-SETUP.md) for server setup.
+PostgreSQL runs on the same VPS as the app. See [POSTGRESQL.md](./POSTGRESQL.md) for install and [VPS-SETUP.md](./VPS-SETUP.md) for server setup.
 
 ```bash
 npm ci

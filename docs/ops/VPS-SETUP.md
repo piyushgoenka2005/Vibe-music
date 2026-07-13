@@ -4,7 +4,7 @@ Server: `root@87.232.72.14`
 App path: `~/Vibe-music`  
 PM2 app: `vibe`
 
-**Database:** Self-hosted **PostgreSQL on this VPS** (`localhost:5432`). See [docs/POSTGRESQL.md](../docs/POSTGRESQL.md).
+**Database:** Self-hosted **PostgreSQL on this VPS** (`localhost:5432`). See [POSTGRESQL.md](./POSTGRESQL.md).
 
 ---
 
@@ -118,7 +118,7 @@ Never commit `.env`, passwords, or private keys to git.
 
 ## Release checklist
 
-Before/after deploy, follow **`docs/DEPLOYMENT.md`** and **`docs/POSTGRESQL.md`**.
+Before/after deploy, follow **[DEPLOYMENT.md](./DEPLOYMENT.md)** and **[POSTGRESQL.md](./POSTGRESQL.md)**.
 
 ## Local validation before push
 

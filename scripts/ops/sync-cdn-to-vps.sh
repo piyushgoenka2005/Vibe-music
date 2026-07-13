@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Sync locally staged CDN files to the VPS static root.
 # Usage (from project root on your PC, after upload migration):
-#   bash scripts/sync-cdn-to-vps.sh
-#   VPS_HOST=root@87.232.72.14 bash scripts/sync-cdn-to-vps.sh
+#   bash scripts/ops/sync-cdn-to-vps.sh
+#   VPS_HOST=root@87.232.72.14 bash scripts/ops/sync-cdn-to-vps.sh
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SOURCE="${CDN_SOURCE:-$ROOT/.data/cdn}"
 TARGET="${CDN_TARGET:-/var/www/cdn}"
 VPS_HOST="${VPS_HOST:-root@87.232.72.14}"

@@ -1,8 +1,8 @@
 /**
  * Validates products.json catalog integrity.
- * Run: npx tsx scripts/validate-catalog.mts
+ * Run: npx tsx scripts/catalog/validate-catalog.mts
  */
-import { loadProducts, loadCategories } from "../src/lib/server/catalogRepository";
+import { loadProducts, loadCategories } from "../../src/lib/server/catalogRepository";
 
 function main() {
   const products = loadProducts();

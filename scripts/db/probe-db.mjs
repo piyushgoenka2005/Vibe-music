@@ -7,6 +7,12 @@ import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 
 const root = process.cwd();
+const dataDir = path.join(root, ".data");
+
+function writeProbeMarker(name, contents) {
+  fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(path.join(dataDir, name), contents);
+}
 
 function readUrl(file) {
   const full = path.join(root, file);
@@ -43,7 +49,7 @@ for (const url of candidates) {
     await prisma.$queryRawUnsafe("SELECT 1");
     const port = portOf(url);
     console.log(`REACHABLE_PORT=${port}`);
-    fs.writeFileSync(path.join(root, ".tmp-db-port"), `${port}\n`);
+    writeProbeMarker("db-port", `${port}\n`);
     await prisma.$disconnect();
     process.exit(0);
   } catch (error) {
@@ -65,8 +71,8 @@ for (const url of defaults) {
   try {
     await prisma.$queryRawUnsafe("SELECT 1");
     console.log(`REACHABLE_DEFAULT_PORT=${portOf(url)}`);
-    fs.writeFileSync(path.join(root, ".tmp-db-port"), `${portOf(url)}\n`);
-    fs.writeFileSync(path.join(root, ".tmp-db-default"), "vibe:vibe\n");
+    writeProbeMarker("db-port", `${portOf(url)}\n`);
+    writeProbeMarker("db-default", "vibe:vibe\n");
     await prisma.$disconnect();
     process.exit(0);
   } catch (error) {
