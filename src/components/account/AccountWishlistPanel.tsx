@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { Heart } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -70,7 +71,12 @@ export default function AccountWishlistPanel() {
                   />
                   <div className="acct__wishlist-img">
                     {item.image ? (
-                      <img src={item.image} alt={item.name} />
+                      <StorefrontThumbImage
+                        src={item.image}
+                        alt={item.name}
+                        width={120}
+                        height={120}
+                      />
                     ) : (
                       <div
                         className="acct__wishlist-swatch"

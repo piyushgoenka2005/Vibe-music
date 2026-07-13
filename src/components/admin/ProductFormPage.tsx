@@ -254,6 +254,23 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             </select>
           </div>
           <div className="admin-form-group">
+            <label>Condition</label>
+            <select
+              className="admin-select"
+              value={form.condition}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  condition: e.target.value as typeof form.condition,
+                })
+              }
+            >
+              <option value="new">New</option>
+              <option value="used">Used / pre-owned</option>
+              <option value="open-box">Open box</option>
+            </select>
+          </div>
+          <div className="admin-form-group">
             <label>GST Rate (%)</label>
             <select className="admin-select" value={form.gstRate} onChange={(e) => setForm({ ...form, gstRate: Number(e.target.value) as typeof form.gstRate })}>
               <option value={5}>5%</option>

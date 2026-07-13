@@ -74,7 +74,7 @@ function resolveManualProducts(
     .map((item, index) => {
       if (!item.productId) return null;
       const product = productMap.get(item.productId);
-      if (!product || product.status !== "active") return null;
+      if (!product || product.status !== "active" || product.price <= 0) return null;
       return toProductItem(product, item, index + 1);
     })
     .filter((item): item is HomepageProductItem => item !== null);
@@ -90,7 +90,7 @@ function resolveAutoProducts(
   switch (sectionKey) {
     case "new_arrivals":
       return active
-        .filter((product) => product.newArrival)
+        .filter((product) => product.newArrival && product.price > 0)
         .sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -100,7 +100,7 @@ function resolveAutoProducts(
 
     case "trending": {
       const trending = active
-        .filter((product) => product.trending)
+        .filter((product) => product.trending && product.price > 0)
         .sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -124,7 +124,7 @@ function resolveAutoProducts(
 
     case "staff_picks": {
       const staffPicks = active
-        .filter((product) => product.featured)
+        .filter((product) => product.featured && product.price > 0)
         .sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -148,6 +148,7 @@ function resolveAutoProducts(
 
     case "best_sellers":
       return [...active]
+        .filter((product) => product.price > 0)
         .sort((a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating)
         .slice(0, maxItems)
         .map((product) => toProductItem(product));
@@ -155,18 +156,21 @@ function resolveAutoProducts(
     case "deals_of_the_day": {
       const discounted = active.filter(
         (product) =>
-          product.discountPercentage > 0 ||
-          (product.detail?.salePrice != null &&
-            product.detail.salePrice < product.price)
+          product.price > 0 &&
+          (product.discountPercentage > 0 ||
+            (product.detail?.salePrice != null &&
+              product.detail.salePrice < product.price))
       );
       const source =
         discounted.length > 0
           ? discounted.sort(
               (a, b) => b.discountPercentage - a.discountPercentage
             )
-          : [...active].sort(
-              (a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating
-            );
+          : [...active]
+              .filter((product) => product.price > 0)
+              .sort(
+                (a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating
+              );
       return source.slice(0, maxItems).map((product) => {
         const salePrice = product.detail?.salePrice ?? null;
         const computedPct =

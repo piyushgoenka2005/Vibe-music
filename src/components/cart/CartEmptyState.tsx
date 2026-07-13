@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { optimizeImageUrl } from "@/lib/images";
 import { productPath, ROUTES } from "@/lib/routes";
 import { fetchProducts } from "@/services/products.api";
@@ -26,11 +27,10 @@ function CartSuggestionCard({ product }: { product: Product }) {
       <Link href={href} className="cart-empty__product-link">
         <div className="cart-empty__product-thumb">
           {product.image ? (
-            <img
+            <StorefrontThumbImage
               src={optimizeImageUrl(product.image, "productCard")}
-              alt=""
-              loading="lazy"
-              decoding="async"
+              width={72}
+              height={72}
             />
           ) : (
             <span

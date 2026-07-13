@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { formatDisplayPrice } from "@/utils/currency";
 import { optimizeImageUrl } from "@/lib/images";
 import { productPath } from "@/lib/routes";
@@ -38,11 +39,11 @@ export default function SearchResults({ query, products }: SearchResultsProps) {
           >
             <div className="sw-search-result-card__media">
               {product.image ? (
-                <img
+                <StorefrontThumbImage
                   src={optimizeImageUrl(product.image, "productCard")}
-                  alt=""
                   className="sw-search-result-card__image"
-                  loading="lazy"
+                  width={96}
+                  height={96}
                 />
               ) : (
                 <div

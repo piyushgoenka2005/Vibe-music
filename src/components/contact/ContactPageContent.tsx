@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Mail, MapPin, Phone } from "lucide-react";
+import { NavArrowIcon } from "@/gp9/components/ui/nav-arrow-icon";
 import { BRAND } from "@/lib/brand";
 
 export default function ContactPageContent() {
@@ -21,6 +22,10 @@ export default function ContactPageContent() {
     const fromQuery = searchParams.get("subject")?.trim();
     if (fromQuery) {
       setSubject(fromQuery.slice(0, 160));
+    }
+    const bodyFromQuery = searchParams.get("body")?.trim();
+    if (bodyFromQuery) {
+      setMessage(bodyFromQuery.slice(0, 4000));
     }
   }, [searchParams]);
 
@@ -138,10 +143,16 @@ export default function ContactPageContent() {
             </label>
             <button
               type="submit"
-              className="contact-page__submit"
+              className="contact-page__submit group"
               disabled={status === "loading"}
             >
-              {status === "loading" ? "Sending…" : "Send message"}
+              <span className="contact-page__submit-label">
+                {status === "loading" ? "Sending…" : "Send message"}
+              </span>
+              <NavArrowIcon
+                size="sm"
+                className="contact-page__submit-arrow"
+              />
             </button>
             {feedback ? (
               <p

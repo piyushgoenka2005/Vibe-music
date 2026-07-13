@@ -12,6 +12,7 @@ import {
   Headset,
 } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { useAuthStore } from "@/store/authStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useAddresses } from "@/hooks/useAddresses";
@@ -220,7 +221,11 @@ export default function AccountOverview() {
                   <li key={item.productId} className="acct__preview-item">
                     <div className="acct__preview-thumb">
                       {item.image ? (
-                        <img src={item.image} alt="" />
+                        <StorefrontThumbImage
+                          src={item.image}
+                          width={48}
+                          height={48}
+                        />
                       ) : (
                         <div
                           className="acct__wishlist-swatch"

@@ -61,7 +61,10 @@ async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
 
   const categories: AdminCategory[] = staticCategories.map((cat, index) => {
     const productCount = products.filter(
-      (p) => p.categorySlug === cat.slug && p.status === "active"
+      (p) =>
+        p.categorySlug === cat.slug &&
+        p.status === "active" &&
+        p.price > 0
     ).length;
     return {
       id: cat.id,

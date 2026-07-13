@@ -173,7 +173,7 @@ async function main() {
     rating: number;
     title: string;
     body: string;
-    images: unknown;
+    images: string[];
     hasImages: boolean;
     verifiedPurchase: boolean;
     orderId: null;
@@ -223,7 +223,7 @@ async function main() {
     const location = entry.state
       ? `${entry.city}, ${entry.state}`
       : entry.city;
-    const author = `${entry.name} · ${location}`;
+    const author = `${entry.name} - ${location}`;
 
     rows.push({
       id,

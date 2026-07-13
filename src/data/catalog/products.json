@@ -6022,5 +6022,219 @@
       "similarProductIds": [],
       "relatedProductIds": []
     }
+  },
+  {
+    "id": "prod-avus-distack-10-open-box",
+    "slug": "avus-distack-10-open-box",
+    "name": "AVUS DISTACK 10\" Cymbal — Open Box",
+    "brand": "AVUS",
+    "category": "Drums & Percussion",
+    "subcategory": "Cymbal",
+    "price": 10820,
+    "originalPrice": 12296,
+    "discountPercentage": 12,
+    "rating": 0,
+    "reviewCount": 0,
+    "stock": 3,
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "sku": "AVUS-DISTACK-10-OB",
+    "status": "active",
+    "featured": false,
+    "trending": false,
+    "newArrival": false,
+    "images": [
+      "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-distack-10-avus-distack-10/89281a94-4bc7-4643-afda-cba36d528f3c.png",
+      "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-distack-10-avus-distack-10/1930fd88-2333-4f5c-9987-96f5e599896e.png",
+      "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-distack-10-avus-distack-10/831b91a7-aee8-4a14-929c-6214866d4985.png"
+    ],
+    "description": "Open-box / inspected unit from Vibe Music. Fully tested, cosmetically good, and sold as open-box with the same support window where the listing allows.\n\nThe AVUS AVUS  DISTACK 10\" is a versatile cymbal developed for musicians and audio professionals. Combining dependable construction with practical functionality, it is suitable for practice sessions, live performances, studio work and educational environments. Designed with usability and reliability in mind, this product delivers consistent performance across a wide range of applications.\n\nDesigned to deliver reliable performance for cymbal users in practice and professional environments.\n\nBuilt using quality materials to provide durability and long service life.\n\nSuitable for beginners, enthusiasts and professional performers.\n\nOptimized for consistent results in rehearsal, recording and stage applications.\n\nAn excellent choice for educational institutions, studios, events and personal use.",
+    "specifications": {
+      "Manufacturer": "AVUS",
+      "Category": "Drums & Percussion",
+      "SKU": "VM-AVUSDISTACK10",
+      "Model": "AVUS  DISTACK 10\"",
+      "Product Type": "Cymbal"
+    },
+    "createdAt": "2026-07-13T18:34:52.786Z",
+    "updatedAt": "2026-07-13T18:34:52.786Z",
+    "brandSlug": "avus",
+    "categorySlug": "drums-percussion",
+    "availability": "limited",
+    "condition": "open-box",
+    "imageColor": "#e8e8e8",
+    "image": "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-distack-10-avus-distack-10/89281a94-4bc7-4643-afda-cba36d528f3c.png",
+    "gstRate": 18,
+    "detail": {
+      "msrp": 12296,
+      "salePrice": 10820,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "AVUS"
+        },
+        {
+          "label": "Category",
+          "value": "Drums & Percussion"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-AVUSDISTACK10"
+        },
+        {
+          "label": "Model",
+          "value": "AVUS  DISTACK 10\""
+        },
+        {
+          "label": "Product Type",
+          "value": "Cymbal"
+        }
+      ],
+      "inTheBox": [
+        "AVUS AVUS  DISTACK 10\"",
+        "Manufacturer documentation"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "AVUS AVUS  DISTACK 10\" Professional Cymbal for Musicians, Live Performance and Studio Applications view 1",
+          "color": "#e8e8e8",
+          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-distack-10-avus-distack-10/89281a94-4bc7-4643-afda-cba36d528f3c.png"
+        },
+        {
+          "id": "img-1",
+          "alt": "AVUS AVUS  DISTACK 10\" Professional Cymbal for Musicians, Live Performance and Studio Applications view 2",
+          "color": "#e8e8e8",
+          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-distack-10-avus-distack-10/1930fd88-2333-4f5c-9987-96f5e599896e.png"
+        },
+        {
+          "id": "img-2",
+          "alt": "AVUS AVUS  DISTACK 10\" Professional Cymbal for Musicians, Live Performance and Studio Applications view 3",
+          "color": "#e8e8e8",
+          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-distack-10-avus-distack-10/831b91a7-aee8-4a14-929c-6214866d4985.png"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-AVUSDISTACK10",
+          "price": 12295.8,
+          "availability": "in-stock",
+          "stock": 10
+        }
+      ],
+      "reviews": [],
+      "qa": [],
+      "frequentlyBoughtTogether": [],
+      "similarProductIds": [],
+      "relatedProductIds": []
+    }
+  },
+  {
+    "id": "prod-adeon-adm01-open-box",
+    "slug": "adeon-adm01-open-box",
+    "name": "ADEON ADM01 Mixer — Open Box",
+    "brand": "ADEON",
+    "category": "Live Sound & Lighting",
+    "subcategory": "Audio Mixer",
+    "price": 784,
+    "originalPrice": 891,
+    "discountPercentage": 12,
+    "rating": 0,
+    "reviewCount": 0,
+    "stock": 3,
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "sku": "ADEON-ADM01-OB",
+    "status": "active",
+    "featured": false,
+    "trending": false,
+    "newArrival": false,
+    "images": [
+      "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-adm01-adm-01/0128ddac-f204-4fd1-ab18-aab2433d5ea8.png"
+    ],
+    "description": "Open-box / inspected unit from Vibe Music. Fully tested, cosmetically good, and sold as open-box with the same support window where the listing allows.\n\nThe ADEON ADM01 Professional Audio Mixer Console is engineered for reliable sound performance and smooth audio control in professional and home environments. Equipped with USB and Bluetooth connectivity, this mixer allows seamless integration with microphones, smartphones, laptops, speakers, and musical instruments for versatile sound management.Designed with a compact and durable body, the ADEON ADM01 is suitable for DJs, musicians, churches, schools, rehearsal spaces, event organizers, and home studios. Whether for stage performances or personal recording setups, this mixer provides dependable performance, easy operation, and professional-grade audio output.\n\nClear & Professional Sound Mixing\r\nADEON ADM01 delivers balanced and high-quality audio output suitable for DJs, musicians, karaoke sessions, podcasts, studio recording, and live performances.\n\nUSB & Bluetooth Connectivity\r\nSupports easy connection with smartphones, laptops, microphones, speakers, and musical instruments through built-in USB and Bluetooth functionality.\n\nAdvanced Audio Control System\r\nFeatures user-friendly controls for volume, bass, treble, echo, and channel tuning for accurate sound customization and enhanced audio clarity.\n\nVersatile for Multiple Applications\r\nIdeal for stage events, PA systems, church audio, rehearsal studios, home recording setups, online streaming, and public speaking applications.\n\nDurable & Portable Design\r\nCompact and sturdy mixer console designed for reliable long-term performance and convenient portability for professional and personal use.",
+    "specifications": {
+      "Manufacturer": "ADEON",
+      "Category": "Live Sound & Lighting",
+      "SKU": "VM-ADM01",
+      "Model": "ADM01",
+      "Product Type": "Audio Mixer",
+      "Instrument": "Audio Mixer",
+      "Keywords": "audio mixer, professional mixer console, dj mixer board, bluetooth mixer, usb audio mixer, live sound mixer, karaoke mixer, studio recording mixer, podcast mixer, pa system mixer, multi channel mixer, music mixing console, microphone mixer, portable audio mixer, stage sound mixer, adeon mixer, professional audio equipment, event sound mixer, home studio mixer, dj audio console"
+    },
+    "createdAt": "2026-07-13T18:34:52.791Z",
+    "updatedAt": "2026-07-13T18:34:52.791Z",
+    "brandSlug": "adeon",
+    "categorySlug": "live-sound-lighting",
+    "availability": "limited",
+    "condition": "open-box",
+    "imageColor": "#e8e8e8",
+    "image": "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-adm01-adm-01/0128ddac-f204-4fd1-ab18-aab2433d5ea8.png",
+    "gstRate": 18,
+    "detail": {
+      "msrp": 891,
+      "salePrice": 784,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "ADEON"
+        },
+        {
+          "label": "Category",
+          "value": "Live Sound & Lighting"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-ADM01"
+        },
+        {
+          "label": "Model",
+          "value": "ADM01"
+        },
+        {
+          "label": "Product Type",
+          "value": "Audio Mixer"
+        },
+        {
+          "label": "Instrument",
+          "value": "Audio Mixer"
+        },
+        {
+          "label": "Keywords",
+          "value": "audio mixer, professional mixer console, dj mixer board, bluetooth mixer, usb audio mixer, live sound mixer, karaoke mixer, studio recording mixer, podcast mixer, pa system mixer, multi channel mixer, music mixing console, microphone mixer, portable audio mixer, stage sound mixer, adeon mixer, professional audio equipment, event sound mixer, home studio mixer, dj audio console"
+        }
+      ],
+      "inTheBox": [
+        "ADEON ADM01",
+        "Manufacturer documentation"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "ADEON ADM01 Professional Audio Mixer Console with USB, Bluetooth & Multi-Channel Sound Control for DJ, Karaoke, Studio Recording, Live Performance & PA Systems view 1",
+          "color": "#e8e8e8",
+          "src": "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-adm01-adm-01/0128ddac-f204-4fd1-ab18-aab2433d5ea8.png"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "Standard",
+          "sku": "VM-ADM01",
+          "price": 890.56,
+          "availability": "in-stock",
+          "stock": 10
+        }
+      ],
+      "reviews": [],
+      "qa": [],
+      "frequentlyBoughtTogether": [],
+      "similarProductIds": [],
+      "relatedProductIds": []
+    }
   }
 ]

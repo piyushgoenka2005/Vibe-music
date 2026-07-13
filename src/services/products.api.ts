@@ -10,7 +10,7 @@ export async function fetchProducts(params?: {
   category?: string;
   brand?: string;
   sort?: string;
-  condition?: Product["condition"];
+  condition?: Product["condition"] | Product["condition"][];
   limit?: number;
   trending?: boolean;
 }): Promise<Product[]> {
@@ -20,7 +20,14 @@ export async function fetchProducts(params?: {
   if (params?.category) searchParams.set("category", params.category);
   if (params?.brand) searchParams.set("brand", params.brand);
   if (params?.sort) searchParams.set("sort", params.sort);
-  if (params?.condition) searchParams.set("condition", params.condition);
+  if (params?.condition) {
+    searchParams.set(
+      "condition",
+      Array.isArray(params.condition)
+        ? params.condition.join(",")
+        : params.condition
+    );
+  }
   if (params?.limit) searchParams.set("limit", String(params.limit));
   if (params?.trending) searchParams.set("trending", "true");
 

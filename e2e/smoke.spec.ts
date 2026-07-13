@@ -112,4 +112,58 @@ test.describe("api smoke", () => {
     });
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
+
+  test("checkout capabilities exposes payment flags", async ({ request }) => {
+    const response = await request.get("/api/checkout/capabilities");
+    expect(response.ok()).toBeTruthy();
+    const body = await response.json();
+    expect(typeof body.onlinePaymentsAvailable).toBe("boolean");
+    expect(typeof body.placesAutocomplete).toBe("boolean");
+    expect(body.cod).toBeTruthy();
+    expect(typeof body.cod.enabled).toBe("boolean");
+    expect(typeof body.cod.maxOrderValue).toBe("number");
+  });
+
+  test("create-order rejects empty cart", async ({ request }) => {
+    const response = await request.post("/api/payment/create-order", {
+      data: {
+        items: [],
+        email: "buyer@example.com",
+        paymentMethod: "cod",
+        shippingAddress: {
+          name: "Test Buyer",
+          line1: "1 Test Street",
+          city: "Mumbai",
+          state: "Maharashtra",
+          postalCode: "400001",
+          country: "India",
+        },
+      },
+    });
+    expect(response.status()).toBeGreaterThanOrEqual(400);
+  });
+});
+
+test.describe("program landings", () => {
+  test("giveaway page loads honest status", async ({ page }) => {
+    await page.goto("/giveaway", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByText(/no live giveaway|no active contest/i)).toBeVisible();
+  });
+
+  test("financing page loads payment honesty", async ({ page }) => {
+    await page.goto("/financing", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByText(/not live|Razorpay|UPI/i).first()).toBeVisible();
+  });
+
+  test("used gear page loads", async ({ page }) => {
+    await page.goto("/used", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  });
+
+  test("rentals page loads", async ({ page }) => {
+    await page.goto("/rentals", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  });
 });

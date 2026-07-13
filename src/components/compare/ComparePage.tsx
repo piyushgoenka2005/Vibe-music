@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { formatDisplayPrice } from "@/utils/currency";
 import { ROUTES } from "@/lib/routes";
+import { fetchProductDetail } from "@/services/product.service";
 import { useCompareStore } from "@/store/compareStore";
+import type { ProductSpec } from "@/types/product";
 import "@/styles/compare.css";
 
 function availabilityLabel(availability: string): string {
@@ -12,10 +15,84 @@ function availabilityLabel(availability: string): string {
   return "Out of stock";
 }
 
+function conditionLabel(condition: string | undefined): string {
+  if (condition === "used") return "Pre-owned";
+  if (condition === "open-box") return "Open box";
+  if (condition === "new") return "New";
+  return "—";
+}
+
 export default function ComparePage() {
   const items = useCompareStore((s) => s.items);
   const remove = useCompareStore((s) => s.remove);
   const clear = useCompareStore((s) => s.clear);
+  const [specsBySlug, setSpecsBySlug] = useState<Record<string, ProductSpec[]>>(
+    {}
+  );
+  const [conditionsBySlug, setConditionsBySlug] = useState<
+    Record<string, string>
+  >({});
+  const [specsLoading, setSpecsLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (items.length === 0) {
+      setSpecsBySlug({});
+      setConditionsBySlug({});
+      return;
+    }
+
+    setSpecsLoading(true);
+    void Promise.all(
+      items.map(async (item) => {
+        const detail = await fetchProductDetail(item.slug);
+        return {
+          slug: item.slug,
+          specs: detail?.product.specs ?? [],
+          condition: detail?.product.condition ?? "new",
+        };
+      })
+    )
+      .then((rows) => {
+        if (cancelled) return;
+        const nextSpecs: Record<string, ProductSpec[]> = {};
+        const nextConditions: Record<string, string> = {};
+        for (const row of rows) {
+          nextSpecs[row.slug] = row.specs;
+          nextConditions[row.slug] = row.condition;
+        }
+        setSpecsBySlug(nextSpecs);
+        setConditionsBySlug(nextConditions);
+      })
+      .finally(() => {
+        if (!cancelled) setSpecsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [items]);
+
+  const specLabels = useMemo(() => {
+    const labels: string[] = [];
+    const seen = new Set<string>();
+    for (const item of items) {
+      for (const spec of specsBySlug[item.slug] ?? []) {
+        const label = spec.label.trim();
+        if (!label || seen.has(label)) continue;
+        seen.add(label);
+        labels.push(label);
+      }
+    }
+    return labels;
+  }, [items, specsBySlug]);
+
+  function specValue(slug: string, label: string): string {
+    const match = (specsBySlug[slug] ?? []).find(
+      (spec) => spec.label.trim() === label
+    );
+    return match?.value?.trim() || "—";
+  }
 
   return (
     <main className="storefront-page storefront-page--subtle compare-page">
@@ -23,7 +100,7 @@ export default function ComparePage() {
         <p className="storefront-page__eyebrow">Compare</p>
         <h1 className="storefront-page__title">Compare Products</h1>
         <p className="storefront-page__meta">
-          Side-by-side comparison of up to 4 products.
+          Side-by-side comparison of up to 4 products, including catalog specs.
         </p>
       </header>
 
@@ -45,6 +122,7 @@ export default function ComparePage() {
           >
             <p id="compare-table-scroll-hint" className="compare-table__hint">
               Scroll horizontally to compare product details.
+              {specsLoading ? " Loading specs…" : null}
             </p>
             <table className="compare-table">
               <thead>
@@ -67,17 +145,35 @@ export default function ComparePage() {
               </thead>
               <tbody>
                 <CompareRow label="Brand" values={items.map((i) => i.brand)} />
-                <CompareRow label="Price" values={items.map((i) => formatDisplayPrice(i.price))} />
+                <CompareRow
+                  label="Price"
+                  values={items.map((i) => formatDisplayPrice(i.price))}
+                />
+                <CompareRow
+                  label="Condition"
+                  values={items.map((i) =>
+                    conditionLabel(conditionsBySlug[i.slug])
+                  )}
+                />
                 <CompareRow
                   label="Rating"
                   values={items.map((i) =>
-                    i.reviewCount > 0 ? `${i.rating.toFixed(1)} (${i.reviewCount})` : "—"
+                    i.reviewCount > 0
+                      ? `${i.rating.toFixed(1)} (${i.reviewCount})`
+                      : "—"
                   )}
                 />
                 <CompareRow
                   label="Availability"
                   values={items.map((i) => availabilityLabel(i.availability))}
                 />
+                {specLabels.map((label) => (
+                  <CompareRow
+                    key={label}
+                    label={label}
+                    values={items.map((i) => specValue(i.slug, label))}
+                  />
+                ))}
               </tbody>
             </table>
           </div>
@@ -106,6 +202,10 @@ export default function ComparePage() {
                     <dd>{formatDisplayPrice(item.price)}</dd>
                   </div>
                   <div className="compare-mobile-card__row">
+                    <dt>Condition</dt>
+                    <dd>{conditionLabel(conditionsBySlug[item.slug])}</dd>
+                  </div>
+                  <div className="compare-mobile-card__row">
                     <dt>Rating</dt>
                     <dd>
                       {item.reviewCount > 0
@@ -117,6 +217,12 @@ export default function ComparePage() {
                     <dt>Availability</dt>
                     <dd>{availabilityLabel(item.availability)}</dd>
                   </div>
+                  {specLabels.map((label) => (
+                    <div key={label} className="compare-mobile-card__row">
+                      <dt>{label}</dt>
+                      <dd>{specValue(item.slug, label)}</dd>
+                    </div>
+                  ))}
                 </dl>
               </article>
             ))}

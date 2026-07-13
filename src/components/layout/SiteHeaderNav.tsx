@@ -46,7 +46,7 @@ export default function SiteHeaderNav({
     {
       key: "deals",
       label: "Deals",
-      href: `${ROUTES.searchResults}?q=deals`,
+      href: ROUTES.deals,
       accent: true,
     },
     {

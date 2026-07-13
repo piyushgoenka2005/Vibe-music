@@ -4,15 +4,15 @@ export type StatusTone = "live" | "success" | "info" | "neutral";
 
 export const LANDING_STATS = [
   {
-    value: "10K+",
-    label: "Products in stock",
-    status: "Updated daily",
+    value: "Curated",
+    label: "Pro gear catalog",
+    status: "Priced SKUs ready to buy",
     tone: "live" as StatusTone,
   },
   {
-    value: "48hr",
-    label: "Avg. dispatch time",
-    status: "Shipping today",
+    value: "Fast",
+    label: "Dispatch on in-stock",
+    status: "Warehouses across India",
     tone: "success" as StatusTone,
   },
   {
@@ -22,10 +22,10 @@ export const LANDING_STATS = [
     tone: "success" as StatusTone,
   },
   {
-    value: "24/7",
+    value: "Mon–Sat",
     label: "Gear support",
-    status: "Advisors online",
-    tone: "live" as StatusTone,
+    status: "Email within 1–2 days",
+    tone: "info" as StatusTone,
   },
 ] as const;
 
@@ -33,8 +33,8 @@ export const LANDING_LIVE_TICKER = [
   "Store open — dispatching orders across India",
   "Free shipping on orders over ₹9,999",
   "Secure checkout via Razorpay · UPI · Cards",
-  "1,200+ musicians served this month",
-  "Track any order in under 60 seconds",
+  "Gear advisors reply by email Mon–Sat",
+  "Track orders from your account after dispatch",
 ] as const;
 
 export const LANDING_TRUST_ITEMS = [
@@ -64,7 +64,7 @@ export const LANDING_TRUST_ITEMS = [
     title: "Expert advice",
     desc: "Real musicians on our support team",
     status: "Email support",
-    tone: "live" as StatusTone,
+    tone: "info" as StatusTone,
   },
 ] as const;
 
@@ -72,7 +72,7 @@ export const LANDING_SERVICE_STATUS = [
   {
     icon: "package" as const,
     title: "Track your order",
-    desc: "Real-time status from dispatch to doorstep",
+    desc: "Shipment updates once your order is packed and dispatched",
     status: "Available",
     tone: "success" as StatusTone,
     href: ROUTES.trackOrder,
@@ -84,35 +84,35 @@ export const LANDING_SERVICE_STATUS = [
     desc: "Razorpay checkout with UPI, cards & net banking",
     status: "Protected",
     tone: "success" as StatusTone,
-    href: ROUTES.checkout,
-    cta: "Learn more",
+    href: ROUTES.financing,
+    cta: "Payment options",
   },
   {
     icon: "clock" as const,
-    title: "48-hour dispatch",
-    desc: "In-stock gear ships fast from our warehouses",
+    title: "In-stock dispatch",
+    desc: "Priced, in-stock gear ships from our warehouses",
     status: "On schedule",
-    tone: "live" as StatusTone,
+    tone: "info" as StatusTone,
     href: ROUTES.search,
     cta: "Shop in-stock",
   },
   {
     icon: "message" as const,
     title: "Gear advisors",
-    desc: "Talk to musicians before you buy",
-    status: "Online now",
-    tone: "live" as StatusTone,
-    href: `mailto:support@vibemusic.in`,
+    desc: "Talk to musicians before you buy — email Mon–Sat",
+    status: "Email support",
+    tone: "info" as StatusTone,
+    href: ROUTES.contact,
     cta: "Get help",
   },
 ] as const;
 
 export const LANDING_SOCIAL_PROOF = {
   rating: "4.8",
-  reviewCount: "2,400+",
-  musicians: "12K+",
-  cities: "120+",
-  brands: "200+",
+  reviewCountLabel: "customer reviews on product pages",
+  musicians: "India-wide",
+  cities: "Pan-India",
+  brands: "Authorized",
 } as const;
 
 export const LANDING_LOCATIONS = [

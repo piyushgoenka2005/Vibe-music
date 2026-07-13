@@ -9,7 +9,9 @@ export function getInvoiceDownloadAction(
 ): { href: string; label: string } | null {
   if (!invoiceUrls) return null;
 
-  if (isClientInvoicePdfEnabled() && invoiceUrls.pdf) {
+  // Prefer PDF whenever the server attached a pdf URL (INVOICE_PDF_ENABLED and/or
+  // NEXT_PUBLIC_INVOICE_PDF_ENABLED). Do not hide the button when only the server flag is set.
+  if (invoiceUrls.pdf) {
     return { href: invoiceUrls.pdf, label: "Download PDF" };
   }
 

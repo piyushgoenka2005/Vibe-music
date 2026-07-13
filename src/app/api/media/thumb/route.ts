@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import sharp from "sharp";
 import {
   enforceRateLimit,
   handleRouteError,
@@ -51,20 +50,31 @@ async function buildThumb(url: string, width: number): Promise<CachedThumb> {
   }
 
   const input = Buffer.from(await upstream.arrayBuffer());
-  const body = await sharp(input)
-    .rotate()
-    .resize(width, width, {
-      fit: "inside",
-      withoutEnlargement: true,
-    })
-    .webp({ quality: 72 })
-    .toBuffer();
 
-  return {
-    body,
-    contentType: "image/webp",
-    createdAt: Date.now(),
-  };
+  try {
+    const sharp = (await import("sharp")).default;
+    const body = await sharp(input)
+      .rotate()
+      .resize(width, width, {
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 72 })
+      .toBuffer();
+
+    return {
+      body,
+      contentType: "image/webp",
+      createdAt: Date.now(),
+    };
+  } catch {
+    // Keep serving originals if the Sharp native binary is unavailable.
+    return {
+      body: input,
+      contentType: upstream.headers.get("content-type") || "image/png",
+      createdAt: Date.now(),
+    };
+  }
 }
 
 export async function GET(request: Request) {

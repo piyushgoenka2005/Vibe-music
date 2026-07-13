@@ -2,11 +2,9 @@ import { Star } from "lucide-react";
 import { LANDING_SOCIAL_PROOF } from "@/data/landingStatus";
 
 const PROOF_ITEMS = [
-  { value: LANDING_SOCIAL_PROOF.rating, label: "Average rating", suffix: "/5" },
-  { value: LANDING_SOCIAL_PROOF.reviewCount, label: "Verified reviews" },
-  { value: LANDING_SOCIAL_PROOF.musicians, label: "Musicians served" },
-  { value: LANDING_SOCIAL_PROOF.cities, label: "Cities delivered" },
-  { value: LANDING_SOCIAL_PROOF.brands, label: "Authorized brands" },
+  { value: LANDING_SOCIAL_PROOF.musicians, label: "Delivery reach" },
+  { value: LANDING_SOCIAL_PROOF.cities, label: "Shipping coverage" },
+  { value: LANDING_SOCIAL_PROOF.brands, label: "Brand partners" },
 ] as const;
 
 export default function SocialProofStrip() {
@@ -20,12 +18,12 @@ export default function SocialProofStrip() {
             <span className="social-proof-strip__rating-suffix">/5</span>
           </span>
           <span className="social-proof-strip__rating-label">
-            from {LANDING_SOCIAL_PROOF.reviewCount} reviews
+            {LANDING_SOCIAL_PROOF.reviewCountLabel}
           </span>
         </div>
 
         <ul className="social-proof-strip__metrics">
-          {PROOF_ITEMS.slice(1).map((item) => (
+          {PROOF_ITEMS.map((item) => (
             <li key={item.label} className="social-proof-strip__metric">
               <span className="social-proof-strip__metric-value">{item.value}</span>
               <span className="social-proof-strip__metric-label">{item.label}</span>

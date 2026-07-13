@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { StatusBadge, LoadingState, EmptyState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
+import {
+  StatusBadge,
+  LoadingState,
+  EmptyState,
+  formatCurrency,
+  formatDate,
+} from "@/components/admin/AdminUi";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 
 async function fetchCustomers(params: { search: string; cursor?: string }) {
@@ -28,11 +34,13 @@ async function fetchCustomers(params: { search: string; cursor?: string }) {
   }>;
 }
 
-function CustomersContent() {
+function CustomersContent({ canWrite }: { canWrite: boolean }) {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
     useAdminCursorPagination();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-customers", search, cursor],
@@ -49,15 +57,69 @@ function CustomersContent() {
     enabled: !!selectedId,
   });
 
+  const statusMutation = useMutation({
+    mutationFn: async (isActive: boolean) => {
+      if (!selectedId) throw new Error("No customer selected");
+      const res = await fetch(`/api/admin/customers/${selectedId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(body?.error ?? "Status update failed");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setStatusError(null);
+      void queryClient.invalidateQueries({ queryKey: ["admin-customers"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["admin-customer", selectedId],
+      });
+    },
+    onError: (error) => {
+      setStatusError(
+        error instanceof Error ? error.message : "Status update failed"
+      );
+    },
+  });
+
   if (isLoading) return <LoadingState />;
 
   const customers = data?.customers ?? [];
   const hasMore = data?.hasMore ?? false;
+  const customer = detail?.customer as
+    | {
+        displayName: string;
+        email: string;
+        orderCount: number;
+        totalSpent: number;
+        createdAt: string;
+        isActive: boolean;
+        orders?: Array<{
+          id: string;
+          total: number;
+          status: string;
+          createdAt: string;
+        }>;
+      }
+    | undefined;
 
   return (
     <>
       <div className="admin-toolbar">
-        <input className="admin-input" placeholder="Search customers…" value={search} onChange={(e) => { setSearch(e.target.value); reset(); }} />
+        <input
+          className="admin-input"
+          placeholder="Search customers…"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            reset();
+          }}
+        />
         <button
           type="button"
           className="admin-btn admin-btn--secondary"
@@ -86,13 +148,24 @@ function CustomersContent() {
                     </tr>
                   </thead>
                   <tbody>
-                    {customers.map((c: { uid: string; displayName: string; email: string; orderCount: number; totalSpent: number; isActive: boolean }) => (
-                      <tr key={c.uid} onClick={() => setSelectedId(c.uid)} style={{ cursor: "pointer" }}>
+                    {customers.map((c) => (
+                      <tr
+                        key={c.uid}
+                        onClick={() => {
+                          setSelectedId(c.uid);
+                          setStatusError(null);
+                        }}
+                        style={{ cursor: "pointer" }}
+                      >
                         <td>{c.displayName || "—"}</td>
                         <td>{c.email}</td>
                         <td>{c.orderCount}</td>
                         <td>{formatCurrency(c.totalSpent)}</td>
-                        <td><StatusBadge status={c.isActive ? "active" : "cancelled"} /></td>
+                        <td>
+                          <StatusBadge
+                            status={c.isActive ? "active" : "cancelled"}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -101,31 +174,111 @@ function CustomersContent() {
               <div className="admin-pagination">
                 <span>Page {pageIndex + 1}</span>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <button type="button" className="admin-btn admin-btn--secondary" disabled={!canGoPrev} onClick={goPrev}>Previous</button>
-                  <button type="button" className="admin-btn admin-btn--secondary" disabled={!hasMore} onClick={() => goNext(data?.nextCursor)}>Next</button>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary"
+                    disabled={!canGoPrev}
+                    onClick={goPrev}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary"
+                    disabled={!hasMore}
+                    onClick={() => goNext(data?.nextCursor)}
+                  >
+                    Next
+                  </button>
                 </div>
               </div>
             </>
           )}
         </div>
         <div className="admin-panel">
-          <div className="admin-panel__header"><h2 className="admin-panel__title">Customer Detail</h2></div>
+          <div className="admin-panel__header">
+            <h2 className="admin-panel__title">Customer Detail</h2>
+          </div>
           <div className="admin-panel__body">
-            {!selectedId || !detail?.customer ? (
+            {!selectedId || !customer ? (
               <EmptyState message="Select a customer." />
             ) : (
               <>
-                <p><strong>{detail.customer.displayName}</strong></p>
-                <p>{detail.customer.email}</p>
-                <p>Orders: {detail.customer.orderCount} · Spent: {formatCurrency(detail.customer.totalSpent)}</p>
-                <p>Joined: {formatDate(detail.customer.createdAt)}</p>
-                <h3 style={{ fontSize: "0.875rem", marginTop: "1rem" }}>Order History</h3>
-                {detail.customer.orders?.length === 0 ? (
-                  <p style={{ color: "var(--admin-muted)", fontSize: "0.875rem" }}>No orders</p>
+                <p>
+                  <strong>{customer.displayName}</strong>
+                </p>
+                <p>{customer.email}</p>
+                <p>
+                  Orders: {customer.orderCount} · Spent:{" "}
+                  {formatCurrency(customer.totalSpent)}
+                </p>
+                <p>Joined: {formatDate(customer.createdAt)}</p>
+                <p>
+                  Account:{" "}
+                  <StatusBadge
+                    status={customer.isActive ? "active" : "cancelled"}
+                  />
+                </p>
+                {canWrite ? (
+                  <div style={{ marginTop: "0.75rem" }}>
+                    <button
+                      type="button"
+                      className={
+                        customer.isActive
+                          ? "admin-btn admin-btn--secondary"
+                          : "admin-btn admin-btn--primary"
+                      }
+                      disabled={statusMutation.isPending}
+                      onClick={() => statusMutation.mutate(!customer.isActive)}
+                    >
+                      {statusMutation.isPending
+                        ? "Updating…"
+                        : customer.isActive
+                          ? "Deactivate account"
+                          : "Activate account"}
+                    </button>
+                    {statusError ? (
+                      <p
+                        role="alert"
+                        style={{
+                          color: "var(--admin-danger)",
+                          fontSize: "0.8125rem",
+                          marginTop: "0.5rem",
+                        }}
+                      >
+                        {statusError}
+                      </p>
+                    ) : null}
+                    <p
+                      style={{
+                        color: "var(--admin-muted)",
+                        fontSize: "0.75rem",
+                        marginTop: "0.35rem",
+                      }}
+                    >
+                      Deactivated customers cannot sign in with email/password.
+                    </p>
+                  </div>
+                ) : null}
+                <h3 style={{ fontSize: "0.875rem", marginTop: "1rem" }}>
+                  Order History
+                </h3>
+                {customer.orders?.length === 0 ? (
+                  <p
+                    style={{
+                      color: "var(--admin-muted)",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    No orders
+                  </p>
                 ) : (
                   <ul style={{ fontSize: "0.875rem" }}>
-                    {(detail.customer.orders as Array<{ id: string; total: number; status: string; createdAt: string }>).map((o) => (
-                      <li key={o.id}>{formatDate(o.createdAt)} — {formatCurrency(o.total)} — <StatusBadge status={o.status} /></li>
+                    {(customer.orders ?? []).map((o) => (
+                      <li key={o.id}>
+                        {formatDate(o.createdAt)} — {formatCurrency(o.total)} —{" "}
+                        <StatusBadge status={o.status} />
+                      </li>
                     ))}
                   </ul>
                 )}
@@ -143,7 +296,9 @@ export default function AdminCustomersPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Customers">
-          <CustomersContent />
+          <CustomersContent
+            canWrite={admin.permissions.includes("customers:write")}
+          />
         </AdminShell>
       )}
     </AdminGuard>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
 import { useCartStore, type CartItem as CartItemType } from "@/store/cartStore";
 
@@ -25,7 +26,7 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
       aria-label={`${item.brand} ${item.name}`}
     >
       {image ? (
-        <img src={image} alt="" className="cart-item__photo" />
+        <StorefrontThumbImage src={image} className="cart-item__photo" width={88} height={88} />
       ) : (
         <div
           className="cart-item__swatch"

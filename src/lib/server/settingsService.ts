@@ -3,6 +3,7 @@ import * as pgContent from "@/lib/server/prisma/contentRepository";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import type { AnalyticsReport, StoreSettings } from "@/types/admin";
 import { getRevenueChartData } from "@/lib/server/dashboardService";
+import { isRazorpayConfigured } from "@/lib/server/env";
 
 const DEFAULT_SETTINGS: StoreSettings = {
   storeName: "Vibe Music",
@@ -14,13 +15,18 @@ const DEFAULT_SETTINGS: StoreSettings = {
   sellerState: SELLER_STATE,
   freeShippingThreshold: 9999,
   standardShippingCharge: 99,
-  razorpayEnabled: Boolean(process.env.RAZORPAY_KEY_ID),
+  razorpayEnabled: isRazorpayConfigured(),
   updatedAt: new Date().toISOString(),
 };
 
 export async function getStoreSettings(): Promise<StoreSettings> {
   const settings = await pgContent.getStoreSettings();
-  return { ...DEFAULT_SETTINGS, ...(settings ?? {}) };
+  return {
+    ...DEFAULT_SETTINGS,
+    ...(settings ?? {}),
+    // Always reflect live env — do not trust a stale DB copy of this flag.
+    razorpayEnabled: isRazorpayConfigured(),
+  };
 }
 
 export async function updateStoreSettings(

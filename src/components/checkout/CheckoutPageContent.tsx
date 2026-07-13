@@ -12,8 +12,11 @@ import CheckoutSummary, {
 import CheckoutPaymentMethods, {
   type OnlinePaymentChannel,
 } from "@/components/checkout/CheckoutPaymentMethods";
+import { evaluateCodEligibilityClient } from "@/lib/checkout/codEligibilityClient";
+import type { CodCapabilities } from "@/lib/checkout/codEligibilityClient";
 import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
 import AddressAutocompleteField from "@/components/checkout/AddressAutocompleteField";
+import { INDIAN_STATES } from "@/lib/address/indianStates";
 import { useCheckoutPayment } from "@/hooks/useCheckoutPayment";
 import {
   addressToShipping,
@@ -32,41 +35,6 @@ import { useToastStore } from "@/store/toastStore";
 import { formatCurrencyPrecise } from "@/utils/currency";
 import type { PaymentMethod, ShippingAddress } from "@/types/order";
 import "@/components/checkout/checkout.css";
-
-const INDIAN_STATES = [
-  "Andhra Pradesh",
-  "Arunachal Pradesh",
-  "Assam",
-  "Bihar",
-  "Chhattisgarh",
-  "Goa",
-  "Gujarat",
-  "Haryana",
-  "Himachal Pradesh",
-  "Jharkhand",
-  "Karnataka",
-  "Kerala",
-  "Madhya Pradesh",
-  "Maharashtra",
-  "Manipur",
-  "Meghalaya",
-  "Mizoram",
-  "Nagaland",
-  "Odisha",
-  "Punjab",
-  "Rajasthan",
-  "Sikkim",
-  "Tamil Nadu",
-  "Telangana",
-  "Tripura",
-  "Uttar Pradesh",
-  "Uttarakhand",
-  "West Bengal",
-  "Delhi",
-  "Jammu and Kashmir",
-  "Ladakh",
-  "Puducherry",
-] as const;
 
 type CheckoutStep = "address" | "summary" | "payment";
 
@@ -178,6 +146,7 @@ export default function CheckoutPageContent() {
     razorpayConfigured: boolean;
     demoPaymentsAllowed: boolean;
     onlinePaymentsAvailable: boolean;
+    cod?: CodCapabilities;
   } | null>(null);
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
@@ -198,6 +167,7 @@ export default function CheckoutPageContent() {
           razorpayConfigured: boolean;
           demoPaymentsAllowed: boolean;
           onlinePaymentsAvailable: boolean;
+          cod?: CodCapabilities;
         }>;
       })
       .then((data) => {
@@ -229,12 +199,12 @@ export default function CheckoutPageContent() {
   }, [searchParams, couponCode, applyCoupon]);
 
   const placesAutocomplete =
-    checkoutCapabilities?.placesAutocomplete ?? true;
+    checkoutCapabilities?.placesAutocomplete ?? false;
   const razorpayConfigured =
     checkoutCapabilities?.razorpayConfigured ??
     Boolean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith("rzp_"));
   const onlinePaymentsAvailable =
-    checkoutCapabilities?.onlinePaymentsAvailable ?? true;
+    checkoutCapabilities?.onlinePaymentsAvailable ?? razorpayConfigured;
   const demoPaymentsLikely =
     onlinePaymentsAvailable &&
     !razorpayConfigured &&
@@ -277,6 +247,31 @@ export default function CheckoutPageContent() {
     effectiveSelectedAddressId,
   ]);
 
+  const cartSubtotal = checkoutItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  const orderValueForCod = Math.max(0, cartSubtotal - couponDiscount);
+  const codCheck = evaluateCodEligibilityClient(checkoutCapabilities?.cod, {
+    orderValue: orderValueForCod,
+    postalCode: resolvedAddress?.postalCode ?? addressForm.postalCode,
+  });
+  const codAvailable = codCheck.eligible;
+
+  useEffect(() => {
+    if (paymentMethod === "cod" && !codAvailable && onlinePaymentsAvailable) {
+      setPaymentMethod("razorpay");
+    }
+    if (
+      paymentMethod === "razorpay" &&
+      !onlinePaymentsAvailable &&
+      codAvailable
+    ) {
+      setPaymentMethod("cod");
+    }
+  }, [paymentMethod, codAvailable, onlinePaymentsAvailable]);
+
   const buyerState = resolvedAddress?.state ?? "Maharashtra";
   const email = (user?.email ?? guestEmail).trim().toLowerCase();
   const contactPhone = resolvedAddress?.phone || phone || "";
@@ -307,11 +302,6 @@ export default function CheckoutPageContent() {
     image: item.image,
     imageColor: item.imageColor,
   }));
-
-  const cartSubtotal = checkoutItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
 
   const fallbackShippingCharges = Object.fromEntries(
     SHIPPING_METHOD_IDS.map((id) => [
@@ -788,6 +778,17 @@ export default function CheckoutPageContent() {
                       onChange={(line1) =>
                         setAddressForm((p) => ({ ...p, line1 }))
                       }
+                      onResolvedAddress={(resolved) => {
+                        setAddressForm((p) => ({
+                          ...p,
+                          line1: resolved.line1 || p.line1,
+                          line2: resolved.line2 || p.line2,
+                          city: resolved.city || p.city,
+                          state: resolved.state || p.state,
+                          postalCode: resolved.postalCode || p.postalCode,
+                          country: resolved.country || p.country || "India",
+                        }));
+                      }}
                     />
                   </label>
                   <label>
@@ -973,6 +974,8 @@ export default function CheckoutPageContent() {
               <CheckoutPaymentMethods
                 onlineChannel={onlineChannel}
                 onlinePaymentsAvailable={onlinePaymentsAvailable}
+                codAvailable={codAvailable}
+                codUnavailableReason={codCheck.reason}
                 onOnlineChannelChange={setOnlineChannel}
                 onPaymentMethodChange={setPaymentMethod}
                 paymentMethod={paymentMethod}
@@ -981,8 +984,16 @@ export default function CheckoutPageContent() {
               {!onlinePaymentsAvailable ? (
                 <p className="checkout-panel__alert" role="alert">
                   <strong>Online payments unavailable:</strong> Razorpay is not
-                  configured on this store. Please use Cash on Delivery, or
-                  contact support if you need to pay online.
+                  configured on this store. Please use Cash on Delivery if
+                  eligible, or contact support if you need to pay online.
+                </p>
+              ) : null}
+
+              {!codAvailable && paymentMethod !== "cod" ? (
+                <p className="checkout-panel__alert" role="status">
+                  <strong>COD unavailable:</strong>{" "}
+                  {codCheck.reason ??
+                    "Cash on delivery is not available for this order."}
                 </p>
               ) : null}
 

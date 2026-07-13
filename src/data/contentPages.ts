@@ -86,7 +86,7 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
       {
         heading: "Payments",
         paragraphs: [
-          "Online payments are processed securely through Razorpay. Cash on delivery may be offered for eligible orders and pin codes.",
+          "Online payments are processed securely through Razorpay. Cash on delivery may be offered when enabled for your order value and PIN (see checkout). Default COD limit is ₹50,000 unless configured otherwise.",
         ],
       },
       {

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import type { ResolvedProductBundle } from "@/types/bundle";
@@ -64,11 +65,11 @@ export default function FrequentlyBoughtTogether({
                 className="pdp-cross-sell__card pdp-fbt__card"
               >
                 {product.image ? (
-                  <img
+                  <StorefrontThumbImage
                     src={product.image}
-                    alt=""
                     className="pdp-fbt__image"
-                    loading="lazy"
+                    width={120}
+                    height={120}
                   />
                 ) : (
                   <div

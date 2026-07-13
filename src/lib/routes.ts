@@ -61,6 +61,8 @@ export const ROUTES = {
   used: "/used",
   rentals: "/rentals",
   instrumentRentals: "/instrument-rentals",
+  giveaway: "/giveaway",
+  financing: "/financing",
   page: (slug: string) => `/pages/${slug}`,
 } as const;
 
@@ -84,7 +86,10 @@ const SHOP_PREFIX_RULES: Array<{ prefix: string; target: string }> = [
   { prefix: "/shop/guitars", target: categoryPath("guitars") },
   { prefix: "/shop/guitar", target: categoryPath("guitars") },
   { prefix: "/shop/bass", target: categoryPath("bass") },
-  { prefix: "/shop/amplifiers-effects", target: categoryPath("guitars") },
+  {
+    prefix: "/shop/amplifiers-effects",
+    target: `${ROUTES.searchResults}?q=${encodeURIComponent("amplifier")}`,
+  },
   { prefix: "/shop/studio-recording", target: categoryPath("studio-recording") },
   { prefix: "/shop/software", target: categoryPath("software-plug-ins") },
   { prefix: "/shop/pro-tools", target: categoryPath("software-plug-ins") },
@@ -117,8 +122,6 @@ const NAV_TOP_REDIRECTS: Record<string, string> = {
   "/insync": ROUTES.blog,
   "/sweetcare": `${ROUTES.search}?q=support`,
   "/outlet-deals": ROUTES.deals,
-  "/giveaway": ROUTES.deals,
-  "/financing": ROUTES.checkout,
   "/integration": ROUTES.search,
   "/tracking": ROUTES.trackOrder,
 };
@@ -171,6 +174,9 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.gp9 || path.startsWith(`${ROUTES.gp9}/`)) return true;
   if (path === ROUTES.deals || path === ROUTES.brands || path === ROUTES.compare) return true;
   if (path === ROUTES.contact) return true;
+  if (path === ROUTES.used || path === ROUTES.rentals) return true;
+  if (path === ROUTES.giveaway || path === ROUTES.financing) return true;
+  if (path === ROUTES.forgotPassword || path === ROUTES.resetPassword) return true;
   if (path === "/careers" || path === ROUTES.careers || path.startsWith("/pages/")) return true;
   if (path === ROUTES.admin) return true;
   if (path.startsWith("/admin/")) return true;
@@ -249,9 +255,6 @@ export function resolveLegacyPath(pathname: string): string | null {
   }
   if (path.startsWith("/newgearday")) {
     return `${ROUTES.searchResults}?q=new`;
-  }
-  if (path.startsWith("/financing")) {
-    return ROUTES.checkout;
   }
 
   return null;

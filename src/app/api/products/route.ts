@@ -42,16 +42,29 @@ export async function GET(request: Request) {
     const category = searchParams.get("category") ?? undefined;
     const brand = searchParams.get("brand") ?? undefined;
     const sort = searchParams.get("sort") ?? undefined;
-    const condition = searchParams.get("condition") ?? undefined;
+    const conditionParam = searchParams.get("condition") ?? undefined;
     const limitParam = searchParams.get("limit");
     const limit = limitParam ? Number(limitParam) : undefined;
+
+    const conditionValues = conditionParam
+      ? conditionParam
+          .split(",")
+          .map((value) => value.trim())
+          .filter(
+            (value): value is "new" | "used" | "open-box" =>
+              value === "new" || value === "used" || value === "open-box"
+          )
+      : [];
 
     const products = await searchProducts({
       query,
       category,
       brand,
       sort,
-      condition: condition as "new" | "used" | "open-box" | undefined,
+      condition:
+        conditionValues.length === 1 ? conditionValues[0] : undefined,
+      conditions:
+        conditionValues.length > 1 ? conditionValues : undefined,
       limit: Number.isFinite(limit) ? limit : undefined,
     });
 

@@ -17,6 +17,7 @@ import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
 import SwipeToPayButton from "@/components/checkout/SwipeToPayButton";
 import CheckoutStaticPayButton from "@/components/checkout/CheckoutStaticPayButton";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import type { PaymentMethod } from "@/types/order";
 
 export interface CheckoutSummaryItem {
@@ -187,11 +188,11 @@ export default function CheckoutSummary({
               return (
                 <li key={key} className="checkout-summary__product">
                   {item.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <StorefrontThumbImage
                       src={item.image}
-                      alt=""
                       className="checkout-summary__thumb"
+                      width={48}
+                      height={48}
                     />
                   ) : (
                     <div

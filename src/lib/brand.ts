@@ -18,7 +18,10 @@ export const BRAND = {
   headerLogoPath: "/brand/header-logo.webp",
   iconPath: "/icon-48.png",
   cardName: "Vibe Music Card",
+  /** Display name only — no in-house financing product is live (see /financing). */
   financingName: "Vibe Music Financing",
+  /** Reserved brand name — no Gear Exchange storefront yet. */
   gearExchangeName: "Vibe Music Gear Exchange",
+  /** Reserved brand name — no Studios booking surface yet. */
   studiosName: "Vibe Music Studios",
 } as const;

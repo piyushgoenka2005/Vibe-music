@@ -3,6 +3,7 @@
 import type { CategoryFilters } from "@/types/filters";
 import AvailabilityFilter from "./AvailabilityFilter";
 import BrandFilter from "./BrandFilter";
+import ConditionFilter from "./ConditionFilter";
 import PriceRangeFilter from "./PriceRangeFilter";
 import RatingFilter from "./RatingFilter";
 
@@ -38,6 +39,10 @@ export default function FilterSidebar({
         rangeMin={facets.priceRange.min}
         rangeMax={facets.priceRange.max}
         onChange={(minPrice, maxPrice) => onUpdate({ minPrice, maxPrice })}
+      />
+      <ConditionFilter
+        selected={filters.conditions}
+        onChange={(conditions) => onUpdate({ conditions })}
       />
       <RatingFilter
         selected={filters.rating}

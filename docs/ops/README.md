@@ -4,6 +4,7 @@ Current production runbooks (VPS + PostgreSQL + Auth.js + Razorpay + SMTP).
 
 | Guide | Purpose |
 |-------|---------|
+| [GO_LIVE.md](./GO_LIVE.md) | Short production secrets + verify checklist |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Pre-deploy checklist, env vars, smoke tests |
 | [POSTGRESQL.md](./POSTGRESQL.md) | Database install, migrations, local Docker |
 | [SMTP.md](./SMTP.md) | Self-hosted mail + Resend SMTP fallback |

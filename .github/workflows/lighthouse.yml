@@ -1,0 +1,54 @@
+# Optional Lighthouse audit (manual / scheduled — not a hard PR gate)
+name: Lighthouse
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 1"
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://example.com
+          GUEST_ORDER_ACCESS_SECRET: ci-guest-order-secret-min-32-chars-long
+          ALLOW_DEMO_PAYMENTS: "true"
+          AUTH_SECRET: ci-auth-secret-min-32-characters-long
+      - name: Start server
+        run: |
+          npm run start &
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:3000/api/health >/dev/null; then
+              echo "Server ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Server failed to start"
+          exit 1
+        env:
+          NEXT_PUBLIC_SITE_URL: https://example.com
+          GUEST_ORDER_ACCESS_SECRET: ci-guest-order-secret-min-32-chars-long
+          ALLOW_DEMO_PAYMENTS: "true"
+          AUTH_SECRET: ci-auth-secret-min-32-characters-long
+      - name: Run Lighthouse
+        run: npm run audit:lighthouse
+        env:
+          LIGHTHOUSE_BASE_URL: http://127.0.0.1:3000
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: reports/lighthouse

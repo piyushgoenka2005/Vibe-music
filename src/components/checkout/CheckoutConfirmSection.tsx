@@ -10,8 +10,9 @@ import {
   Package,
   Smartphone,
 } from "lucide-react";
-import { formatCurrencyPrecise } from "@/utils/currency";
 import type { OnlinePaymentChannel } from "@/components/checkout/CheckoutPaymentMethods";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
+import { formatCurrencyPrecise } from "@/utils/currency";
 import type { PaymentMethod, ShippingAddress } from "@/types/order";
 
 export interface ConfirmLineItem {
@@ -83,8 +84,12 @@ export default function CheckoutConfirmSection({
           {items.map((item) => (
             <li key={item.lineId} className="checkout-confirm__item">
               {item.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.image} alt="" className="checkout-confirm__thumb" />
+                <StorefrontThumbImage
+                  src={item.image}
+                  className="checkout-confirm__thumb"
+                  width={56}
+                  height={56}
+                />
               ) : (
                 <div
                   className="checkout-confirm__thumb"

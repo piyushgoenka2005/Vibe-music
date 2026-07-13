@@ -756,6 +756,23 @@
   pointer-events: none;
 }
 
+.gp9-model-status {
+  position: relative;
+  z-index: 1;
+  margin: 0.75rem auto 0;
+  max-width: 36rem;
+  padding: 0 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: rgba(0, 0, 0, 0.62);
+  pointer-events: none;
+}
+
+.gp9-model-status code {
+  font-size: 0.75rem;
+}
+
 .midlife-parallax-backdrop {
   pointer-events: none;
   position: absolute;

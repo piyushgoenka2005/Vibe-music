@@ -47,8 +47,8 @@
 
 | ID | Gap | Recommendation | Files affected |
 |----|-----|----------------|----------------|
-| P2-1 | 35 ESLint `@next/next/no-img-element` warnings | Incremental migration to `next/image` or approved loader | 20+ components |
-| P2-2 | No Lighthouse CI gate | Run `npm run audit:lighthouse` pre-deploy; optional GitHub Action | `scripts/lighthouse-audit.mjs` |
+| P2-1 | Remaining ESLint `@next/next/no-img-element` warnings | Incremental migration to `next/image` / `StorefrontThumbImage` (cart, wishlist, search, cross-sell, checkout confirm done) | 20+ components |
+| P2-2 | No Lighthouse CI gate | Run `npm run audit:lighthouse` (`scripts/ops/lighthouse-audit.mjs`) pre-deploy; optional GitHub Action | `scripts/ops/lighthouse-audit.mjs` |
 | P2-3 | CWV targets not measured in pipeline | Manual Lighthouse on homepage, PDP, checkout before go-live | — |
 
 ### P2 — Testing

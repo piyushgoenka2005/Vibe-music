@@ -19,6 +19,8 @@ export default async function sitemap() {
   "/gp9/showcase",
   "/used",
   "/rentals",
+  "/giveaway",
+  "/financing",
   "/contact",
   "/pages/shipping",
     "/pages/returns",

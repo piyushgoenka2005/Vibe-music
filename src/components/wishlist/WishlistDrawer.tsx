@@ -5,6 +5,7 @@ import { formatDisplayPrice } from "@/utils/currency";
 import { useEffect } from "react";
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import WishlistEmptyState from "@/components/wishlist/WishlistEmptyState";
 import { ROUTES } from "@/lib/routes";
 import { createPortal } from "react-dom";
@@ -65,7 +66,12 @@ export default function WishlistDrawer() {
             items.map((item) => (
               <div key={item.productId} className="wl-drawer__item">
                 {item.image ? (
-                  <img src={item.image} alt="" className="wl-drawer__photo" />
+                  <StorefrontThumbImage
+                    src={item.image}
+                    className="wl-drawer__photo"
+                    width={64}
+                    height={64}
+                  />
                 ) : (
                   <div
                     className="wl-drawer__swatch"

@@ -16,6 +16,9 @@ interface CheckoutPaymentMethodsProps {
   onOnlineChannelChange: (channel: OnlinePaymentChannel) => void;
   /** When false, online/Razorpay cannot be selected. */
   onlinePaymentsAvailable?: boolean;
+  /** When false, COD cannot be selected. */
+  codAvailable?: boolean;
+  codUnavailableReason?: string | null;
 }
 
 const ONLINE_CHANNELS: Array<{
@@ -125,6 +128,8 @@ export default function CheckoutPaymentMethods({
   onPaymentMethodChange,
   onOnlineChannelChange,
   onlinePaymentsAvailable = true,
+  codAvailable = true,
+  codUnavailableReason = null,
 }: CheckoutPaymentMethodsProps) {
   return (
     <div className="checkout-pay-stage">
@@ -149,16 +154,24 @@ export default function CheckoutPaymentMethods({
               subtitle={
                 onlinePaymentsAvailable
                   ? "UPI, cards, net banking via Razorpay"
-                  : "Online payments unavailable — use COD"
+                  : "Online payments unavailable — use COD if eligible"
               }
               title="Pay Online"
               wide
             />
             <PaymentGlassCard
+              disabled={!codAvailable}
               icon={Banknote}
-              onClick={() => onPaymentMethodChange("cod")}
+              onClick={() => {
+                if (!codAvailable) return;
+                onPaymentMethodChange("cod");
+              }}
               selected={paymentMethod === "cod"}
-              subtitle="Pay in cash when your order arrives"
+              subtitle={
+                codAvailable
+                  ? "Pay in cash when your order arrives"
+                  : codUnavailableReason ?? "Not available for this order"
+              }
               title="Cash on Delivery"
               wide
             />
@@ -188,7 +201,11 @@ export default function CheckoutPaymentMethods({
               256-bit SSL · PCI-DSS compliant
             </span>
             <span>
-              {onlinePaymentsAvailable ? "Powered by Razorpay" : "COD available"}
+              {onlinePaymentsAvailable
+                ? "Powered by Razorpay"
+                : codAvailable
+                  ? "COD available"
+                  : "Choose an eligible payment method"}
             </span>
           </div>
         </div>

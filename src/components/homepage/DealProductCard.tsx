@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { resolveDealBadgeLabel } from "@/lib/product/resolveDealBadgeLabel";
 import { formatDisplayPrice } from "@/utils/currency";
@@ -42,12 +43,11 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
           <div className="tile--image bg-white homepage-deals-card__media">
             <div className="homepage-deals-card__img-frame">
               {item.image ? (
-                <img
+                <StorefrontThumbImage
                   src={item.image}
                   alt={item.imageAlt}
                   width={300}
                   height={300}
-                  loading="lazy"
                 />
               ) : null}
             </div>

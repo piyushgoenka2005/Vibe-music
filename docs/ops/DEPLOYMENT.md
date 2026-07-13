@@ -57,14 +57,18 @@ npm i -D playwright
 npx playwright install chromium
 ```
 
-Then set in production `.env`:
+Then set in production `.env` (prefer **both** flags):
 
 ```
 INVOICE_PDF_ENABLED=true
 NEXT_PUBLIC_INVOICE_PDF_ENABLED=true
 ```
 
+`INVOICE_PDF_ENABLED` alone is enough for the API to attach a `pdf` URL and show **Download PDF**. Setting only `NEXT_PUBLIC_*` without the server flag is treated as **partial** in Admin → Settings → Production integrations.
+
 If the engine is missing while flags are on, `/api/invoices/.../pdf` redirects to the HTML invoice with a clear fallback notice.
+
+See also the short [GO_LIVE.md](./GO_LIVE.md) checklist.
 
 ## Optional: GP-9 GLB model
 

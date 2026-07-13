@@ -9,6 +9,7 @@ import { categoryPath, productPath, ROUTES } from "@/lib/routes";
 import { formatDisplayPrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import RollingText from "@/components/common/RollingText";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import type { Product } from "@/types/product";
 
 const FOOTER_TRENDING_LIMIT = 4;
@@ -53,11 +54,10 @@ function FooterProductSnippet({ product }: { product: Product }) {
       <Link href={href} className="footer-product-snippet__link">
         <div className="footer-product-snippet__thumb">
           {image ? (
-            <img
+            <StorefrontThumbImage
               src={optimizeImageUrl(image, "productCard")}
-              alt=""
-              loading="lazy"
-              decoding="async"
+              width={64}
+              height={64}
             />
           ) : null}
         </div>

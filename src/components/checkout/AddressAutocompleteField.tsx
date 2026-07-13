@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ParsedPlaceAddress } from "@/lib/address/parseGoogleAddressComponents";
 
 interface AddressPrediction {
   description: string;
@@ -10,6 +11,8 @@ interface AddressPrediction {
 interface AddressAutocompleteFieldProps {
   value: string;
   onChange: (value: string) => void;
+  /** Fills city / state / PIN (and line2) when Place Details succeeds. */
+  onResolvedAddress?: (address: ParsedPlaceAddress) => void;
   required?: boolean;
   placeholder?: string;
   id?: string;
@@ -20,6 +23,7 @@ interface AddressAutocompleteFieldProps {
 export default function AddressAutocompleteField({
   value,
   onChange,
+  onResolvedAddress,
   required,
   placeholder = "Street address",
   id,
@@ -28,6 +32,7 @@ export default function AddressAutocompleteField({
   const [predictions, setPredictions] = useState<AddressPrediction[]>([]);
   const [open, setOpen] = useState(false);
   const [placesOff, setPlacesOff] = useState(!autocompleteAvailable);
+  const [resolving, setResolving] = useState(false);
   const debounceRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -35,41 +40,44 @@ export default function AddressAutocompleteField({
     setPlacesOff(!autocompleteAvailable);
   }, [autocompleteAvailable]);
 
-  const fetchPredictions = useCallback(async (input: string) => {
-    if (!autocompleteAvailable || placesOff) {
-      setPredictions([]);
-      return;
-    }
-
-    if (input.trim().length < 3) {
-      setPredictions([]);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `/api/address/autocomplete?input=${encodeURIComponent(input.trim())}`
-      );
-      if (!response.ok) {
+  const fetchPredictions = useCallback(
+    async (input: string) => {
+      if (!autocompleteAvailable || placesOff) {
         setPredictions([]);
         return;
       }
-      const data = (await response.json()) as {
-        predictions?: AddressPrediction[];
-        available?: boolean;
-      };
-      if (data.available === false) {
-        setPlacesOff(true);
+
+      if (input.trim().length < 3) {
         setPredictions([]);
-        setOpen(false);
         return;
       }
-      setPredictions(data.predictions ?? []);
-      setOpen((data.predictions?.length ?? 0) > 0);
-    } catch {
-      setPredictions([]);
-    }
-  }, [autocompleteAvailable, placesOff]);
+
+      try {
+        const response = await fetch(
+          `/api/address/autocomplete?input=${encodeURIComponent(input.trim())}`
+        );
+        if (!response.ok) {
+          setPredictions([]);
+          return;
+        }
+        const data = (await response.json()) as {
+          predictions?: AddressPrediction[];
+          available?: boolean;
+        };
+        if (data.available === false) {
+          setPlacesOff(true);
+          setPredictions([]);
+          setOpen(false);
+          return;
+        }
+        setPredictions(data.predictions ?? []);
+        setOpen((data.predictions?.length ?? 0) > 0);
+      } catch {
+        setPredictions([]);
+      }
+    },
+    [autocompleteAvailable, placesOff]
+  );
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -91,10 +99,38 @@ export default function AddressAutocompleteField({
     }, 300);
   }
 
-  function selectPrediction(prediction: AddressPrediction) {
+  async function selectPrediction(prediction: AddressPrediction) {
     onChange(prediction.description);
     setPredictions([]);
     setOpen(false);
+
+    if (!onResolvedAddress || placesOff) return;
+
+    setResolving(true);
+    try {
+      const response = await fetch(
+        `/api/address/details?placeId=${encodeURIComponent(prediction.placeId)}`
+      );
+      if (!response.ok) return;
+      const data = (await response.json()) as {
+        available?: boolean;
+        address?: ParsedPlaceAddress | null;
+      };
+      if (data.available === false) {
+        setPlacesOff(true);
+        return;
+      }
+      if (data.address) {
+        if (data.address.line1) {
+          onChange(data.address.line1);
+        }
+        onResolvedAddress(data.address);
+      }
+    } catch {
+      /* Keep description in line1; user fills the rest. */
+    } finally {
+      setResolving(false);
+    }
   }
 
   return (
@@ -109,13 +145,20 @@ export default function AddressAutocompleteField({
         onFocus={() => {
           if (predictions.length > 0) setOpen(true);
         }}
+        aria-busy={resolving}
       />
       {placesOff ? (
         <span className="checkout-field-hint">
           Enter your full street address manually. Address suggestions are not
           available right now.
         </span>
-      ) : null}
+      ) : resolving ? (
+        <span className="checkout-field-hint">Filling city, state &amp; PIN…</span>
+      ) : (
+        <span className="checkout-field-hint">
+          Pick a suggestion to auto-fill city, state, and PIN when available.
+        </span>
+      )}
       {open && predictions.length > 0 ? (
         <ul
           role="listbox"
@@ -141,7 +184,7 @@ export default function AddressAutocompleteField({
                 type="button"
                 role="option"
                 aria-selected={false}
-                onClick={() => selectPrediction(prediction)}
+                onClick={() => void selectPrediction(prediction)}
                 style={{
                   display: "block",
                   width: "100%",

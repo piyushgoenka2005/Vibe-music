@@ -3,6 +3,7 @@ import {
   isDemoPaymentsAllowed,
   isRazorpayConfigured,
 } from "@/lib/server/env";
+import { getCodCapabilitiesSummary } from "@/lib/server/codEligibility";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export async function GET() {
   const placesAutocomplete = Boolean(
     process.env.GOOGLE_PLACES_API_KEY?.trim()
   );
+  const cod = getCodCapabilitiesSummary();
 
   return NextResponse.json({
     placesAutocomplete,
@@ -20,5 +22,6 @@ export async function GET() {
     demoPaymentsAllowed,
     /** True when Razorpay is live, or demo checkout is allowed without keys. */
     onlinePaymentsAvailable: razorpayConfigured || demoPaymentsAllowed,
+    cod,
   });
 }

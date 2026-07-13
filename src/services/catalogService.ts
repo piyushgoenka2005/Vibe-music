@@ -287,6 +287,11 @@ export function searchInCatalogProducts(
 ): Product[] {
   let source = initialSource;
 
+  const purchasableOnly = options.purchasableOnly ?? !options.includeInactive;
+  if (purchasableOnly) {
+    source = source.filter((product) => product.price > 0);
+  }
+
   if (options.category) {
     const resolvedSlug = normalizeCategorySlug(options.category);
     source = source.filter(
@@ -357,7 +362,10 @@ export function searchInCatalogProducts(
     );
   }
 
-  if (options.condition) {
+  if (options.conditions && options.conditions.length > 0) {
+    const allowed = new Set(options.conditions);
+    source = source.filter((product) => allowed.has(product.condition));
+  } else if (options.condition) {
     source = source.filter((product) => product.condition === options.condition);
   }
 
@@ -477,8 +485,12 @@ export interface ProductSearchOptions {
   brand?: string;
   sort?: string;
   condition?: Product["condition"];
+  /** Prefer over single `condition` when filtering used + open-box together. */
+  conditions?: Product["condition"][];
   limit?: number;
   includeInactive?: boolean;
+  /** When true (default on storefront), hide ₹0 Coming Soon SKUs from listings. */
+  purchasableOnly?: boolean;
 }
 
 function scoreProductMatch(
