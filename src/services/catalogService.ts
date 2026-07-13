@@ -269,7 +269,13 @@ async function fetchCatalogSnapshot(
   }
 
   try {
-    return await getCachedProducts(includeInactive);
+    const products = await getCachedProducts(includeInactive);
+    // Unseeded / emptied Postgres can be cached as []. Prefer local JSON until DB has data.
+    if (products.length === 0) {
+      const local = await loadLocalCatalogSnapshot(includeInactive);
+      if (local.length > 0) return local;
+    }
+    return products;
   } catch {
     return loadLocalCatalogSnapshot(includeInactive);
   }

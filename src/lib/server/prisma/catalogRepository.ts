@@ -32,17 +32,44 @@ function assertPostgresForWrite(): void {
   }
 }
 
+/** Cached empty-DB probe so an unseeded Postgres doesn't hide the local JSON catalog. */
+let emptyCatalogProbe: { checkedAt: number; empty: boolean } | null = null;
+const EMPTY_CATALOG_PROBE_TTL_MS = 30_000;
+
+export function invalidateEmptyCatalogProbe(): void {
+  emptyCatalogProbe = null;
+}
+
+async function isPostgresCatalogEmpty(): Promise<boolean> {
+  const now = Date.now();
+  if (
+    emptyCatalogProbe &&
+    now - emptyCatalogProbe.checkedAt < EMPTY_CATALOG_PROBE_TTL_MS
+  ) {
+    return emptyCatalogProbe.empty;
+  }
+
+  try {
+    const count = await prisma.product.count();
+    emptyCatalogProbe = { checkedAt: now, empty: count === 0 };
+    return count === 0;
+  } catch {
+    emptyCatalogProbe = { checkedAt: now, empty: true };
+    return true;
+  }
+}
+
 async function loadLocalProducts(includeInactive: boolean): Promise<CatalogProduct[]> {
   const { loadProducts } = await import("@/lib/server/catalogRepository");
   return filterActive(loadProducts(), includeInactive);
 }
 
-/** Prefer Postgres; fall back to local JSON when DB is unreachable (e.g. Docker stopped). */
+/** Prefer Postgres; fall back to local JSON when DB is missing, empty, or unreachable. */
 async function withProductFallback<T>(
   dbQuery: () => Promise<T>,
   localFallback: () => Promise<T> | T
 ): Promise<T> {
-  if (!isPostgresConfigured()) {
+  if (!isPostgresConfigured() || (await isPostgresCatalogEmpty())) {
     return localFallback();
   }
   try {
@@ -305,6 +332,7 @@ export async function writeProduct(product: CatalogProduct): Promise<CatalogProd
     create: productToPrisma(product),
     update: productToPrisma(product),
   });
+  invalidateEmptyCatalogProbe();
   return prismaToProduct(row);
 }
 
@@ -324,6 +352,7 @@ export async function batchWriteProducts(products: CatalogProduct[]): Promise<vo
       })
     )
   );
+  invalidateEmptyCatalogProbe();
 }
 
 export async function batchWriteCategories(categories: Category[]): Promise<void> {
