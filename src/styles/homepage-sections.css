@@ -370,7 +370,8 @@
     border-color var(--duration-fast);
 }
 
-.premium-home .product-suggest__item:hover {
+/* Card lift for legacy grids only — premium carousel pops the image instead */
+.premium-home .suggested-products:not(.premium-product-carousel) .product-suggest__item:hover {
   transform: translateY(-4px);
   border-color: rgba(18, 83, 237, 0.2);
   box-shadow: var(--shadow-md);
@@ -669,7 +670,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .premium-home .tile--link:hover .tile,
-  .premium-home .product-suggest__item:hover {
+  .premium-home .suggested-products:not(.premium-product-carousel) .product-suggest__item:hover {
     transform: none;
   }
 }

@@ -5,8 +5,8 @@
   padding: clamp(1.25rem, 2.5vw, 1.75rem) 0 clamp(1.35rem, 2.75vw, 2rem);
   border-bottom: 0;
   background: #ffffff;
-  overflow-x: clip;
-  overflow-y: visible;
+  /* Allow card lift/shadow to paint outside the section */
+  overflow: visible;
 }
 
 .premium-home .premium-product-carousel[data-section="trending"],
@@ -163,7 +163,8 @@
   --carousel-edge: 0px;
   gap: var(--carousel-gap);
   margin: 0;
-  padding: 0.35rem 0 0.65rem;
+  /* Room for image pop (overflow-x:auto forces y clipping — keep paint inside padding) */
+  padding: 1.75rem 0 1.5rem;
   scroll-padding-inline: 0;
   scrollbar-width: none;
   overflow-x: auto;
@@ -184,6 +185,7 @@
     999px
   );
   animation: trending-card-enter 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: z-index 0s linear 280ms;
 }
 
 .premium-home .premium-product-carousel .product-suggest__items::-webkit-scrollbar {
@@ -238,7 +240,10 @@
   background: #ffffff;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   overflow: visible;
-  isolation: isolate;
+  transform: none;
+  transition:
+    border-color 280ms ease,
+    box-shadow 280ms ease;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-link {
@@ -288,17 +293,51 @@
     .product-suggest__item:hover
   ),
 .premium-home .premium-product-carousel .product-suggest__item-wrap:has(
-    .product-suggest__item:focus-visible
+    .product-suggest__item:focus-within
   ) {
   position: relative;
-  z-index: 5;
+  z-index: 8;
+  transition-delay: 0s;
 }
 
-.premium-home .premium-product-carousel .product-suggest__item:hover,
-.premium-home .premium-product-carousel .product-suggest__item:focus-visible {
-  transform: none;
-  border-color: #e2e8f0;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+/* Soft card chrome on hover — card stays put; only the image scales */
+@media (hover: hover) and (pointer: fine) {
+  .premium-home .premium-product-carousel .product-suggest__item:hover,
+  .premium-home .premium-product-carousel .product-suggest__item:focus-within {
+    transform: none;
+    border-color: rgba(18, 83, 237, 0.16);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img::before,
+  .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-img::before {
+    background:
+      radial-gradient(ellipse 75% 60% at 50% 55%, #ffffff 0%, #eef4ff 68%, #e2ebf8 100%);
+  }
+
+  /* Only the gear image pops — rest is inset so the jump reads clearly */
+  .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img,
+  .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-img {
+    overflow: visible;
+    z-index: 5;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img img,
+  .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-img img,
+  .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img .product-suggest__item-photo,
+  .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-img .product-suggest__item-photo {
+    z-index: 6;
+    transform: scale(1.34) translateY(-14px);
+    filter: drop-shadow(0 26px 40px rgba(15, 23, 42, 0.32));
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-action--button,
+  .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-action--button {
+    background: var(--brand-primary, #1253ed);
+    border-color: var(--brand-primary, #1253ed);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(18, 83, 237, 0.28);
+  }
 }
 
 .premium-home .premium-product-carousel .product-suggest__item:focus-visible {
@@ -318,9 +357,9 @@
   max-height: none;
   margin-bottom: 0.875rem;
   border-radius: 12px;
-  /* Frame stays put; only the photo may paint outside on hover */
   overflow: hidden;
   background: transparent;
+  transition: z-index 0s;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-img::before {
@@ -328,10 +367,12 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: #f8fafc;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 58%, #ffffff 0%, #f1f5f9 72%, #e8eef6 100%);
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
   z-index: 0;
   pointer-events: none;
+  transition: background 320ms ease;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-badge {
@@ -370,33 +411,25 @@
   height: 100% !important;
   max-width: none;
   max-height: none;
-  padding: 0.5rem;
+  padding: 0.75rem;
   box-sizing: border-box;
   margin: 0 !important;
   object-fit: contain;
   object-position: center center;
-  transform: scale(1);
-  transform-origin: center center;
-  filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.1));
+  /* Inset at rest so hover scale reads as a clear pop */
+  transform: scale(0.84) translateY(0);
+  transform-origin: center 62%;
+  filter: drop-shadow(0 6px 10px rgba(15, 23, 42, 0.08));
   transition:
-    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 520ms ease;
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 420ms ease;
+  will-change: transform;
 }
 
-/* Keep photos framed inside the card media area */
+/* Keep frame clipped at rest; hover opens overflow so the photo can pop out */
 .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img,
-.premium-home .premium-product-carousel .product-suggest__item:focus-visible .product-suggest__item-img {
-  overflow: hidden;
+.premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-img {
   background: transparent;
-}
-
-.premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img img,
-.premium-home .premium-product-carousel .product-suggest__item:focus-visible .product-suggest__item-img img,
-.premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img .product-suggest__item-photo,
-.premium-home .premium-product-carousel .product-suggest__item:focus-visible .product-suggest__item-img .product-suggest__item-photo {
-  z-index: 3;
-  transform: scale(1.06);
-  filter: drop-shadow(0 14px 20px rgba(15, 23, 42, 0.16));
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-content {
@@ -497,17 +530,21 @@
   cursor: pointer;
   text-decoration: none;
   transition:
-    background 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease;
+    background 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms ease;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-action--button:hover,
 .premium-home .premium-product-carousel .product-suggest__item-action--button:focus-visible {
-  background: var(--brand-primary, #1253ed);
-  border-color: var(--brand-primary, #1253ed);
+  background: #0b46d4;
+  border-color: #0b46d4;
   color: #ffffff;
   text-decoration: none;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(18, 83, 237, 0.34);
 }
 
 .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-action:not(.product-suggest__item-action--button),
@@ -732,9 +769,11 @@
     width: 100% !important;
     height: 100% !important;
     margin: auto !important;
+    padding: 0.5rem;
     object-fit: contain;
     object-position: center;
-    transform: none;
+    transform: scale(0.9);
+    will-change: auto;
   }
 
   .premium-home .premium-product-carousel .product-suggest__brand {
@@ -810,17 +849,33 @@
     animation: none;
   }
 
-  .premium-home .premium-product-carousel .product-suggest__item:hover,
-  .premium-home .premium-product-carousel .product-suggest__item:focus-visible {
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  .premium-home .premium-product-carousel .product-suggest__item {
+    transition: border-color 180ms ease, box-shadow 180ms ease;
   }
 
+  .premium-home .premium-product-carousel .product-suggest__item:hover,
+  .premium-home .premium-product-carousel .product-suggest__item:focus-within {
+    transform: none;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img,
+  .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-img {
+    overflow: hidden;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-img img,
+  .premium-home .premium-product-carousel .product-suggest__item-img .product-suggest__item-photo,
   .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img img,
-  .premium-home .premium-product-carousel .product-suggest__item:focus-visible .product-suggest__item-img img,
+  .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-img img,
   .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img .product-suggest__item-photo,
-  .premium-home .premium-product-carousel .product-suggest__item:focus-visible .product-suggest__item-img .product-suggest__item-photo {
-    transform: scale(1) translateY(0);
-    filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.1));
+  .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-img .product-suggest__item-photo {
+    transform: scale(0.9) translateY(0);
+    filter: drop-shadow(0 6px 10px rgba(15, 23, 42, 0.08));
+    will-change: auto;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-action--button {
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
   }
 
   .premium-home .premium-product-carousel .product-suggest__nav:not(.disabled):hover {
