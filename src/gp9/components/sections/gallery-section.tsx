@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Gp9Image as Image } from "@/gp9/components/gp9-image";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { SectionHeading } from "@/gp9/components/ui/section-heading";
 import { Dialog, DialogContent, DialogTitle } from "@/gp9/components/ui/dialog";
@@ -33,7 +33,9 @@ export function GallerySection() {
     () =>
       GALLERY_SHOTS.map((shot) => {
         const prefix = shot.shared ? "gp-9" : FINISHES[activeFinish].galleryPrefix;
-        return { ...shot, src: `${ROLAND_GALLERY}/${prefix}_${shot.name}` };
+        const src = `${ROLAND_GALLERY}/${prefix}_${shot.name}`;
+        const ebonySrc = `${ROLAND_GALLERY}/gp-9_${shot.name}`;
+        return { ...shot, src, ebonySrc };
       }),
     [activeFinish]
   );
@@ -137,7 +139,19 @@ export function GallerySection() {
                       transition: "transform 0.4s ease, opacity 0.4s ease",
                     }}
                   >
-                    <Image src={image.src} alt={image.alt} fill className="object-cover transition-transform duration-700 group-hover:scale-105" priority={index < 3} />
+                    <Image
+                      src={image.src}
+                      alt={image.alt}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      priority={index < 3}
+                      onError={(event) => {
+                        const img = event.currentTarget;
+                        if (img.src !== image.ebonySrc) {
+                          img.src = image.ebonySrc;
+                        }
+                      }}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                     <div className="absolute bottom-0 left-0 right-0 translate-y-full p-6 transition-transform duration-500 group-hover:translate-y-0">
                       <p className="text-xs uppercase tracking-[0.3em] text-white/60">{String(index + 1).padStart(2, "0")}</p>

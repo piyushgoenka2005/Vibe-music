@@ -1,129 +1,244 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { Suspense, useMemo } from "react";
+import Link from "next/link";
+import { useFilterStore } from "@/store/filterStore";
+import { useSearchListingFilters } from "@/hooks/useSearchListingFilters";
 import { useSearchResults } from "@/hooks/useSearch";
-import { searchStore, useSearchStore } from "@/store/searchStore";
+import { buildCategoryProductsResult } from "@/lib/catalog/categoryProductsCore";
+import { ROUTES } from "@/lib/routes";
+import { slugify } from "@/lib/slug";
+import ProductCard from "@/components/common/ProductCard";
+import {
+  FilterChips,
+  FilterSidebar,
+  MobileFilterDrawer,
+  SortDropdown,
+  ViewToggle,
+} from "@/components/filters";
+import CategoryPagination from "@/components/category/CategoryPagination";
 import SearchEmptyState from "./SearchEmptyState";
-import SearchFilters from "./SearchFilters";
-import SearchMobileFilterDrawer from "./SearchMobileFilterDrawer";
-import SearchResults from "./SearchResults";
-import type { SearchResultsData } from "@/types/search";
-import "./search.css";
+import type { Product } from "@/types/product";
+import type { SearchProduct, SearchResultsData } from "@/types/search";
+import "../filters/filters.css";
+import "../category/category.css";
 
 interface SearchResultsPageProps {
   query: string;
   initialCategory?: string;
-  initialBrand?: string;
   /** Server-rendered results for the initial query — skips the first client fetch. */
   initialResults?: SearchResultsData | null;
 }
 
-export default function SearchResultsPage({
+function toListingProduct(product: SearchProduct): Product {
+  const full = product as SearchProduct & Partial<Product>;
+  return {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    brand: product.brand,
+    brandSlug: full.brandSlug ?? slugify(product.brand),
+    category: product.category,
+    categorySlug: full.categorySlug ?? slugify(product.category),
+    price: product.price,
+    originalPrice: full.originalPrice,
+    gstRate: full.gstRate,
+    rating: product.rating ?? full.rating ?? 0,
+    reviewCount: product.reviewCount ?? full.reviewCount ?? 0,
+    availability: product.availability ?? full.availability ?? "in-stock",
+    condition: full.condition ?? "new",
+    imageColor: product.imageColor ?? full.imageColor ?? "#e8e8e8",
+    image: product.image,
+  };
+}
+
+function SearchResultsPageContent({
   query,
   initialCategory = "",
-  initialBrand = "",
   initialResults = null,
 }: SearchResultsPageProps) {
-  const filters = useSearchStore((s) => s.filters);
+  const {
+    filters,
+    updateFilters,
+    clearAllFilters,
+    removeBrand,
+    removeCondition,
+    hasActive,
+    categorySlug,
+  } = useSearchListingFilters();
+  const openMobileDrawer = useFilterStore((s) => s.openMobileDrawer);
 
-  useEffect(() => {
-    if (initialCategory || initialBrand) {
-      searchStore.setFilters({
-        category: initialCategory,
-        brand: initialBrand,
-      });
+  const urlCategory = categorySlug || initialCategory;
+
+  const { status, error, results } = useSearchResults(
+    query,
+    { category: urlCategory || undefined, all: true },
+    {
+      initialResults,
+      initialFilters: { category: initialCategory },
     }
-  }, [initialBrand, initialCategory]);
-
-  const effectiveFilters = useMemo(
-    () => ({
-      category: filters.category || initialCategory,
-      brand: filters.brand || initialBrand,
-      sort: filters.sort,
-    }),
-    [filters.brand, filters.category, filters.sort, initialBrand, initialCategory]
   );
 
-  const { status, error, results } = useSearchResults(query, effectiveFilters, {
-    initialResults,
-    initialFilters: { category: initialCategory, brand: initialBrand },
-  });
+  const listingProducts = useMemo(
+    () => (results?.products ?? []).map(toListingProduct),
+    [results?.products]
+  );
 
-  const productCount = results?.products.length ?? 0;
+  const data = useMemo(
+    () => buildCategoryProductsResult(listingProducts, filters),
+    [listingProducts, filters]
+  );
+
+  const facets = data.facets;
+  const total = data.total;
+  const isLoading = status === "loading";
+  const isError = status === "error";
+  const hasQuery = query.trim().length >= 2 || Boolean(urlCategory);
 
   return (
-    <div className="sw-search-results-page">
-      <header className="sw-search-results__header storefront-page__header">
-        <p className="storefront-page__eyebrow">Search</p>
-        <h1 className="sw-search-results__title">Search Results</h1>
-        <p className="sw-search-results__meta">
-          {query || effectiveFilters.category || effectiveFilters.brand ? (
-            <>
-              {query ? (
-                <>
-                  Showing results for <strong>&ldquo;{query}&rdquo;</strong>
-                </>
-              ) : (
-                <>Showing filtered results</>
-              )}
-              {status === "loading"
-                ? " — loading..."
-                : ` — ${productCount} products`}
-            </>
-          ) : (
-            "Enter a search term to see results."
-          )}
-        </p>
-      </header>
+    <div className="cat-page">
+      <nav className="cat-breadcrumb" aria-label="Breadcrumb">
+        <Link href={ROUTES.home}>Home</Link>
+        <span className="cat-breadcrumb__sep" aria-hidden="true">
+          /
+        </span>
+        <span aria-current="page">Search</span>
+      </nav>
 
-      {status === "error" && error ? (
-        <div className="sw-search-status" role="alert">
-          {error}
+      <h1 className="cat-page__title">
+        {query.trim() ? (
+          <>
+            Results for &ldquo;{query.trim()}&rdquo;
+          </>
+        ) : (
+          "Search Results"
+        )}
+      </h1>
+      <p className="cat-page__desc">
+        {hasQuery
+          ? "Browse matching products and refine with filters."
+          : "Enter a search term to see products."}
+      </p>
+
+      <div className="cat-toolbar">
+        <div className="cat-toolbar__left">
+          <button
+            type="button"
+            className="cat-toolbar__mobile-btn"
+            onClick={openMobileDrawer}
+          >
+            Filters {hasActive ? "•" : ""}
+          </button>
+          <span className="cat-toolbar__count" aria-live="polite">
+            {isLoading ? "Loading..." : `${total} products`}
+          </span>
         </div>
-      ) : null}
+        <div className="cat-toolbar__left">
+          <SortDropdown
+            value={filters.sort}
+            onChange={(sort) => updateFilters({ sort })}
+          />
+          <ViewToggle
+            value={filters.view}
+            onChange={(view) => updateFilters({ view }, false)}
+          />
+        </div>
+      </div>
 
-      {status === "loading" ? (
-        <div className="sw-search-status" role="status" aria-live="polite">
-          <div className="sw-search-spinner" aria-hidden="true" />
+      <FilterChips
+        filters={filters}
+        onRemoveBrand={removeBrand}
+        onRemoveCondition={removeCondition}
+        onUpdate={updateFilters}
+        onClearAll={clearAllFilters}
+      />
+
+      <div className="cat-page__layout">
+        <FilterSidebar
+          filters={filters}
+          facets={facets}
+          onUpdate={updateFilters}
+        />
+
+        <div>
+          {isLoading ? (
+            <div className="cat-loading" role="status" aria-live="polite">
+              <div className="cat-loading__spinner" aria-hidden="true" />
+              Loading products...
+            </div>
+          ) : null}
+
+          {isError ? (
+            <div className="cat-empty" role="alert">
+              <p>{error ?? "Unable to load products. Please try again."}</p>
+            </div>
+          ) : null}
+
+          {!isLoading && !isError && hasQuery && data.products.length === 0 ? (
+            hasActive ? (
+              <div className="cat-empty">
+                <h2 style={{ margin: "0 0 8px" }}>No products match your filters</h2>
+                <p style={{ margin: 0, color: "#807f7e" }}>
+                  Try adjusting or clearing your filters.
+                </p>
+                <button
+                  type="button"
+                  className="cat-filter-clear"
+                  style={{ marginTop: 16 }}
+                  onClick={clearAllFilters}
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            ) : (
+              <SearchEmptyState query={query} />
+            )
+          ) : null}
+
+          {!isLoading && !isError && data.products.length > 0 ? (
+            <>
+              <div
+                className={`cat-product-grid cat-product-grid--${filters.view}`}
+                role="list"
+              >
+                {data.products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    view={filters.view}
+                  />
+                ))}
+              </div>
+              <CategoryPagination
+                page={data.page}
+                totalPages={data.totalPages}
+                onPageChange={(page) => updateFilters({ page }, false)}
+              />
+            </>
+          ) : null}
+        </div>
+      </div>
+
+      <MobileFilterDrawer
+        filters={filters}
+        facets={facets}
+        onUpdate={updateFilters}
+        resultCount={total}
+      />
+    </div>
+  );
+}
+
+export default function SearchResultsPage(props: SearchResultsPageProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="cat-loading" style={{ padding: 48 }}>
           Loading search results...
         </div>
-      ) : null}
-
-      {status !== "loading" && results ? (
-        <>
-          <div className="sw-search-mobile-toolbar">
-            <span className="sw-search-results__meta">
-              {productCount} product{productCount === 1 ? "" : "s"}
-            </span>
-            <button
-              type="button"
-              className="sw-search-mobile-filter-btn"
-              onClick={() => searchStore.openMobileFilters()}
-            >
-              Filter &amp; Sort
-            </button>
-          </div>
-          <div className="sw-search-results__layout">
-            <SearchFilters
-              className="sw-search-filters--sidebar"
-              categories={results.categories}
-              brands={results.brands}
-            />
-            <div>
-              {productCount === 0 ? (
-                <SearchEmptyState query={query} />
-              ) : (
-                <SearchResults query={query} products={results.products} />
-              )}
-            </div>
-          </div>
-          <SearchMobileFilterDrawer
-            brands={results.brands}
-            categories={results.categories}
-            resultCount={productCount}
-          />
-        </>
-      ) : null}
-    </div>
+      }
+    >
+      <SearchResultsPageContent {...props} />
+    </Suspense>
   );
 }

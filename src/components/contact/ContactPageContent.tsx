@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 
 export default function ContactPageContent() {
+  const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -14,6 +16,13 @@ export default function ContactPageContent() {
     "idle"
   );
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fromQuery = searchParams.get("subject")?.trim();
+    if (fromQuery) {
+      setSubject(fromQuery.slice(0, 160));
+    }
+  }, [searchParams]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

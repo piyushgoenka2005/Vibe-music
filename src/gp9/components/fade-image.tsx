@@ -1,7 +1,8 @@
 "use client";
 
-import Image, { type ImageProps } from "next/image";
+import { type ImageProps } from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { Gp9Image } from "@/gp9/components/gp9-image";
 
 interface FadeImageProps extends Omit<ImageProps, "onLoad"> {
   fadeDelay?: number;
@@ -42,7 +43,7 @@ export function FadeImage({
 
   return (
     <div ref={ref} className="relative h-full w-full">
-      <Image
+      <Gp9Image
         {...props}
         alt={alt}
         className={`${className || ""} transition-all duration-700 ease-out ${

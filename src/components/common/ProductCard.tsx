@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
@@ -8,7 +9,6 @@ import ProductShareButton from "@/components/product/ProductShareButton";
 import CompareButton from "@/components/compare/CompareButton";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
-import { optimizeImageUrl } from "@/lib/images";
 import type { Product } from "@/types/product";
 import type { ViewMode } from "@/types/filters";
 
@@ -101,11 +101,16 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           {isGrid && savingsPercent > 0 ? (
             <span className="cat-product-card__deal-tag">{savingsPercent}% off</span>
           ) : null}
-          <img
-            src={optimizeImageUrl(product.image, "productCard")}
-            alt=""
-            className="cat-product-card__image-photo"
-          />
+          {product.image ? (
+            <Image
+              src={product.image}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"
+              loading="lazy"
+              className="cat-product-card__image-photo"
+            />
+          ) : null}
         </Link>
         <div className="product-card-actions">
           <ProductShareButton

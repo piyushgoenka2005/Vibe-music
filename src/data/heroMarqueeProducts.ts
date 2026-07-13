@@ -34,9 +34,13 @@ export function heroMarqueeProductHref(product: HeroMarqueeProduct): string {
   return `${ROUTES.searchResults}?q=${encodeURIComponent(product.name)}`;
 }
 
-const CAT = "/images/m/home/cats";
-const IMG = (path: string) =>
-  `/images/m/products/image/${path}?format=webp&optimize=high&width=120`;
+/** Pre-generated 96px WebP thumbs — avoid multi‑MB masters for 44px cards. */
+const THUMB = "/images/m/products/thumbs";
+const IMG = (filename: string) => {
+  const base = filename.replace(/\.(png|jpe?g|webp)$/i, "");
+  return `${THUMB}/${base}.webp`;
+};
+const CAT = (name: string) => `${THUMB}/${name}.webp`;
 
 /** Product rows for horizontal marquee tracks */
 export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
@@ -47,7 +51,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹79,999",
       revenue: "₹3,84,920",
       growth: "18.4%",
-      image: `${CAT}/Arrow-small.png`,
+      image: CAT("Arrow-small"),
       imageAlt: "Universal Audio Apollo Twin audio interface",
     },
     {
@@ -56,7 +60,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹19,999",
       revenue: "₹72,614",
       growth: "6.8%",
-      image: `${CAT}/k12_2.png`,
+      image: CAT("k12_2"),
       imageAlt: "QSC live sound speaker",
     },
     {
@@ -74,7 +78,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹34,999",
       revenue: "₹1,28,450",
       growth: "11.6%",
-      image: `${CAT}/Matriarch.png`,
+      image: CAT("Matriarch"),
       imageAlt: "Synthesizer keyboard controller",
     },
     {
@@ -83,7 +87,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹39,999",
       revenue: "₹3,01,540",
       growth: "15.7%",
-      image: "/images/Electric Orange Guitar.png",
+      image: CAT("Electric-Orange-Guitar"),
       imageAlt: "Electric guitar",
     },
     {
@@ -92,7 +96,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹18,999",
       revenue: "₹1,34,882",
       growth: "17.2%",
-      image: `${CAT}/LM402.png`,
+      image: CAT("LM402"),
       imageAlt: "Premium snare drum",
     },
     {
@@ -130,7 +134,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹27,999",
       revenue: "₹24,700",
       growth: "4.6%",
-      image: `${CAT}/ATLP120XUSBSV.png`,
+      image: CAT("ATLP120XUSBSV"),
       imageAlt: "DJ turntable controller",
     },
     {
@@ -139,7 +143,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹32,999",
       revenue: "₹4,21,766",
       growth: "24.6%",
-      image: `${CAT}/Matriarch.png`,
+      image: CAT("Matriarch"),
       imageAlt: "Stage piano keyboard",
     },
     {
@@ -184,7 +188,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹34,999",
       revenue: "₹2,01,012",
       growth: "22.7%",
-      image: `${CAT}/k12_2.png`,
+      image: CAT("k12_2"),
       imageAlt: "PA loudspeaker",
     },
     {
@@ -202,7 +206,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹14,999",
       revenue: "₹19,472",
       growth: "9.3%",
-      image: `${CAT}/ptstudioann.jpg`,
+      image: CAT("ptstudioann"),
       imageAlt: "DAW software box",
     },
   ],
@@ -258,7 +262,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹21,999",
       revenue: "₹19,918",
       growth: "4.7%",
-      image: `${CAT}/LM402.png`,
+      image: CAT("LM402"),
       imageAlt: "Guitar loop pedal",
     },
     {
@@ -285,7 +289,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹24,999",
       revenue: "₹43,817",
       growth: "11.5%",
-      image: `${CAT}/ptstudioann.jpg`,
+      image: CAT("ptstudioann"),
       imageAlt: "Studio monitor stands",
     },
   ],
@@ -305,7 +309,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹42,999",
       revenue: "₹2,14,880",
       growth: "19.1%",
-      image: `${CAT}/k12_2.png`,
+      image: CAT("k12_2"),
       imageAlt: "Powered subwoofer",
     },
     {
@@ -314,7 +318,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹18,999",
       revenue: "₹67,310",
       growth: "5.4%",
-      image: "/images/Electric Orange Guitar.png",
+      image: CAT("Electric-Orange-Guitar"),
       imageAlt: "Acoustic guitar",
     },
     {
@@ -323,7 +327,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹49,999",
       revenue: "₹1,78,640",
       growth: "14.2%",
-      image: `${CAT}/Matriarch.png`,
+      image: CAT("Matriarch"),
       imageAlt: "Modular synthesizer",
     },
     {
@@ -341,7 +345,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹36,999",
       revenue: "₹1,09,774",
       growth: "10.8%",
-      image: `${CAT}/ATLP120XUSBSV.png`,
+      image: CAT("ATLP120XUSBSV"),
       imageAlt: "DJ turntable bundle",
     },
     {
@@ -359,7 +363,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹11,999",
       revenue: "₹47,662",
       growth: "4.9%",
-      image: `${CAT}/LM402.png`,
+      image: CAT("LM402"),
       imageAlt: "Hi-hat cymbals",
     },
     {
@@ -379,7 +383,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹54,999",
       revenue: "₹2,48,120",
       growth: "21.3%",
-      image: `${CAT}/Arrow-small.png`,
+      image: CAT("Arrow-small"),
       imageAlt: "Vacuum tube preamp",
     },
     {
@@ -424,7 +428,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹7,999",
       revenue: "₹28,640",
       growth: "4.2%",
-      image: `${CAT}/ptstudioann.jpg`,
+      image: CAT("ptstudioann"),
       imageAlt: "Heavy-duty keyboard stand",
     },
     {
@@ -433,7 +437,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       price: "₹38,999",
       revenue: "₹1,56,220",
       growth: "13.4%",
-      image: "/images/Electric Orange Guitar.png",
+      image: CAT("Electric-Orange-Guitar"),
       imageAlt: "Five-string bass guitar",
     },
     {

@@ -22,6 +22,56 @@
   padding-inline: clamp(1rem, 3vw, 1.5rem);
 }
 
+/* Staff Picks / Trending / Best Sellers — fill viewport edge-to-edge */
+.premium-home .premium-product-carousel[data-section="staff_picks"],
+.premium-home .premium-product-carousel[data-section="trending"],
+.premium-home .premium-product-carousel[data-section="best_sellers"] {
+  width: 100%;
+  max-width: none;
+}
+
+.premium-home .premium-product-carousel[data-section="staff_picks"] .product-suggest__stage,
+.premium-home .premium-product-carousel[data-section="trending"] .product-suggest__stage,
+.premium-home .premium-product-carousel[data-section="best_sellers"] .product-suggest__stage {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding-inline: clamp(0.875rem, 2vw, 1.25rem);
+}
+
+@media (min-width: 1024px) {
+  .premium-home .premium-product-carousel[data-section="staff_picks"] .product-suggest__stage,
+  .premium-home .premium-product-carousel[data-section="trending"] .product-suggest__stage,
+  .premium-home .premium-product-carousel[data-section="best_sellers"] .product-suggest__stage {
+    padding-inline-start: calc(
+      var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) + 0.65rem
+    );
+    padding-inline-end: 0.75rem;
+  }
+
+  .premium-home .premium-product-carousel[data-section="staff_picks"] .product-suggest__items,
+  .premium-home .premium-product-carousel[data-section="trending"] .product-suggest__items,
+  .premium-home .premium-product-carousel[data-section="best_sellers"] .product-suggest__items {
+    --carousel-visible: 6;
+  }
+}
+
+@media (min-width: 1440px) {
+  .premium-home .premium-product-carousel[data-section="staff_picks"] .product-suggest__items,
+  .premium-home .premium-product-carousel[data-section="trending"] .product-suggest__items,
+  .premium-home .premium-product-carousel[data-section="best_sellers"] .product-suggest__items {
+    --carousel-visible: 7;
+  }
+}
+
+@media (min-width: 1720px) {
+  .premium-home .premium-product-carousel[data-section="staff_picks"] .product-suggest__items,
+  .premium-home .premium-product-carousel[data-section="trending"] .product-suggest__items,
+  .premium-home .premium-product-carousel[data-section="best_sellers"] .product-suggest__items {
+    --carousel-visible: 8;
+  }
+}
+
 .premium-home .premium-product-carousel__header {
   display: flex;
   align-items: flex-start;
@@ -208,28 +258,28 @@
   display: inline-flex;
   align-items: center;
   margin: 0;
-  padding: 0.4rem 0.8rem 0.4rem 0.62rem;
+  padding: 0.45rem 0.9rem 0.45rem 0.7rem;
   border-radius: 0 999px 999px 0;
-  background: var(--brand-primary, #1253ed);
+  background: #ff8c00;
   color: #ffffff;
   font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-weight: 800;
+  letter-spacing: 0.11em;
   line-height: 1;
   text-transform: uppercase;
-  box-shadow: 0 6px 16px rgba(18, 83, 237, 0.28);
+  box-shadow: none;
   pointer-events: none;
-  --badge-fold: var(--brand-primary-hover, #0e42be);
+  --badge-fold: #e06f00;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-ribbon::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: -6px;
-  width: 6px;
-  height: 6px;
-  background: var(--badge-fold, #0e42be);
+  bottom: -7px;
+  width: 7px;
+  height: 7px;
+  background: var(--badge-fold, #e06f00);
   clip-path: polygon(0 0, 100% 0, 0 100%);
   pointer-events: none;
 }
@@ -316,27 +366,27 @@
   position: absolute !important;
   inset: 0 !important;
   z-index: 2;
-  width: 88% !important;
-  height: 92% !important;
+  width: 100% !important;
+  height: 100% !important;
   max-width: none;
   max-height: none;
-  padding: 0;
-  margin: auto !important;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  margin: 0 !important;
   object-fit: contain;
   object-position: center center;
-  transform: scale(1) translateY(0);
+  transform: scale(1);
   transform-origin: center center;
   filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.1));
   transition:
     transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
     filter 520ms ease;
-  will-change: transform;
 }
 
-/* Allow only the cutout photo to escape the grey frame — never lift the frame itself */
+/* Keep photos framed inside the card media area */
 .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img,
 .premium-home .premium-product-carousel .product-suggest__item:focus-visible .product-suggest__item-img {
-  overflow: visible;
+  overflow: hidden;
   background: transparent;
 }
 
@@ -345,8 +395,8 @@
 .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-img .product-suggest__item-photo,
 .premium-home .premium-product-carousel .product-suggest__item:focus-visible .product-suggest__item-img .product-suggest__item-photo {
   z-index: 3;
-  transform: scale(1.34) translateY(-14%);
-  filter: drop-shadow(0 26px 34px rgba(15, 23, 42, 0.28));
+  transform: scale(1.06);
+  filter: drop-shadow(0 14px 20px rgba(15, 23, 42, 0.16));
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-content {

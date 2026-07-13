@@ -17,15 +17,17 @@ function BrandStripLink({ brand }: { brand: HomepageBrandItem }) {
     >
       {brand.logoUrl ? (
         <>
-          <Image
-            alt=""
-            className="homepage-brand-strip__logo"
-            height={110}
-            loading="lazy"
-            sizes="(max-width: 479px) 190px, (max-width: 767px) 210px, 230px"
-            src={brand.logoUrl}
-            width={300}
-          />
+          <span className="homepage-brand-strip__logo-wrap">
+            <Image
+              alt=""
+              className="homepage-brand-strip__logo"
+              height={140}
+              loading="lazy"
+              sizes="(max-width: 479px) 200px, (max-width: 767px) 210px, 260px"
+              src={brand.logoUrl}
+              width={260}
+            />
+          </span>
           <span className="visually-hidden">{brand.name}</span>
         </>
       ) : (
@@ -54,22 +56,22 @@ export default function HomepageBrandStripSection({
             <p className="homepage-brand-strip__subtitle">{section.subtitle}</p>
           ) : null}
         </header>
-      </div>
 
-      {brands.length > 0 ? (
-        <Marquee
-          ariaLabel="Brand logos"
-          className="homepage-brand-strip__marquee"
-          duration="42s"
-          role="region"
-          sequenceClassName="homepage-brand-strip__sequence"
-          trackClassName="homepage-brand-strip__marquee-track"
-        >
-          {brands.map((brand) => (
-            <BrandStripLink key={brand.id} brand={brand} />
-          ))}
-        </Marquee>
-      ) : null}
+        {brands.length > 0 ? (
+          <Marquee
+            ariaLabel="Brand logos"
+            className="homepage-brand-strip__marquee"
+            duration="42s"
+            role="region"
+            sequenceClassName="homepage-brand-strip__sequence"
+            trackClassName="homepage-brand-strip__marquee-track"
+          >
+            {brands.map((brand) => (
+              <BrandStripLink key={brand.id} brand={brand} />
+            ))}
+          </Marquee>
+        ) : null}
+      </div>
     </section>
   );
 }

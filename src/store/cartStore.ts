@@ -12,6 +12,7 @@ import { validateCouponCode } from "@/services/coupon.service";
 import type { AppliedCouponSnapshot } from "@/types/coupon";
 import type { Product, ProductVariant } from "@/types/product";
 import { getDefaultGstRateForCategory, type GSTRate } from "@/lib/gstCalculator";
+import { isPurchasablePrice } from "@/utils/currency";
 
 export interface CartItem {
   lineId: string;
@@ -110,6 +111,13 @@ export const useCartStore = create<CartState>()(
       isUpdating: false,
 
       addItem: (product, quantity = 1, variant) => {
+        const unitPrice = variant?.price ?? product.price;
+        if (!isPurchasablePrice(unitPrice)) {
+          useToastStore
+            .getState()
+            .show("This product is Coming Soon and can’t be added yet.", "info");
+          return;
+        }
         const qty = Math.max(1, quantity);
         const lineId = getCartLineId(product.id, variant?.id);
         set((state) => {

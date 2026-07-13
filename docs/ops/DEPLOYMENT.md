@@ -16,7 +16,10 @@ Use this checklist when deploying Vibe Music to production on the **VPS** with *
 - [ ] Generate a new `GUEST_ORDER_ACCESS_SECRET` (min 32 chars) if rotating credentials
 - [ ] Confirm SMTP mailboxes (`info@`, `support@`, `orders@`, etc.) are configured and tested
 - [ ] **Do not copy** local `.env.local` to the VPS — especially never ship `AUTH_URL=http://localhost:3000`
-- [ ] Google Cloud OAuth production redirect URI: `https://vibemusic.in/api/auth/callback/google`
+- [ ] Google Cloud project for production OAuth: **vibemusic2026** (`VIBE MUSIC`)
+- [ ] Google Cloud OAuth **Web application** client — authorized origins + redirect URIs:
+  - Origins: `https://vibemusic.in`, `https://www.vibemusic.in`
+  - Redirect: `https://vibemusic.in/api/auth/callback/google` (and www if used)
 - [ ] Optional but recommended: Upstash Redis for distributed rate limiting across PM2 workers
 
 
@@ -41,8 +44,34 @@ Recommended:
 |----------|---------|
 | `CDN_STORAGE_ROOT`, `CDN_PUBLIC_BASE_URL` | Image uploads |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Distributed rate limiting |
-| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Google OAuth |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Google OAuth (login/register show a clear note if unset) |
 | `SMTP_ADMIN_TO` | Admin alert recipient |
+| `INVOICE_PDF_ENABLED` + `NEXT_PUBLIC_INVOICE_PDF_ENABLED` | Optional PDF downloads (needs Chromium via Playwright/Puppeteer) |
+
+## Optional: Invoice PDF downloads
+
+HTML invoices and browser **Print → Save as PDF** always work. Native `Download PDF` needs a headless browser on the VPS:
+
+```bash
+npm i -D playwright
+npx playwright install chromium
+```
+
+Then set in production `.env`:
+
+```
+INVOICE_PDF_ENABLED=true
+NEXT_PUBLIC_INVOICE_PDF_ENABLED=true
+```
+
+If the engine is missing while flags are on, `/api/invoices/.../pdf` redirects to the HTML invoice with a clear fallback notice.
+
+## Optional: GP-9 GLB model
+
+Sound Lab ships a polished **procedural** grand by default. To use a real GLB:
+
+1. Place the file at `public/models/gp9-grand.glb` (see that folder’s README for mesh naming)
+2. Leave `NEXT_PUBLIC_GP9_GLB` unset (`auto`) — the client HEAD-probes and loads it when present
 
 ## Database (VPS PostgreSQL)
 

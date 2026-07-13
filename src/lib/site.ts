@@ -12,12 +12,15 @@ export const DEFAULT_METADATA = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
+      { url: "/Favicon.png", type: "image/png", sizes: "1024x1024" },
       { url: "/icon-48.png", type: "image/png", sizes: "48x48" },
       { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
     ],
     apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
     shortcut: "/favicon.ico",
   },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: `${BRAND.name}: Musical Instruments, Pro Audio, Accessories & More`,
     description: BRAND.description,

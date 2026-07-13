@@ -1039,7 +1039,7 @@ export function Gp9InstrumentConsole() {
       </div>
 
       <div className="gp9-phase-tag" aria-hidden>
-        Phase 7 · A11y · Mobile · Performance
+        Sound Lab · accessible · mobile-ready
       </div>
     </div>
   );
@@ -1530,7 +1530,7 @@ export function Gp9Piano3DView() {
         playingBoost={playingBoost}
       />
       <p className="gp9-scene-3d-hint">
-        Mode camera · choreography · keys sync live
+        Interactive showroom · drag finishes &amp; play keys live
       </p>
     </div>
   );
@@ -1931,7 +1931,7 @@ function Gp9InstrumentInner() {
       <div className="gp9-instrument-header">
         <h3 className="gp9-instrument-title">Grand Piano 9</h3>
         <p className="gp9-instrument-sub">
-          Phase 7 · Keyboard nav · 44px touch · reduced-motion safe
+          Playable keyboard · touch-friendly · reduced-motion safe
         </p>
       </div>
 

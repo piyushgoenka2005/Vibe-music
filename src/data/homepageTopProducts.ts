@@ -1,8 +1,6 @@
 import { productPath, ROUTES } from "@/lib/routes";
 
-const ROLAND_GP9_GALLERY =
-  "https://static.roland.com/products/gp-9/images/gallery";
-const ROLAND_GP9_PRODUCT = `${ROLAND_GP9_GALLERY}/gp-9_front_gal.jpg`;
+const ROLAND_GP9_PRODUCT = "/images/products/roland-gp9-front.webp";
 
 const HERTZ_GUITAR_FRONT =
   "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292587/products/guitars/hertz-hza4503-hza4503/01-hza-4503-na-amazonfront.png";
@@ -53,7 +51,7 @@ export const HOMEPAGE_TOP_PRODUCTS: HomepageTopProduct[] = [
     productSlug: "hertz-hza4503-hza4503",
     pinImage: true,
     imageFit: "contain",
-    imageObjectPosition: "center center",
+    imageObjectPosition: "center bottom",
   },
   {
     id: "pa-speaker",

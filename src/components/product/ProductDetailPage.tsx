@@ -17,6 +17,7 @@ import {
 } from "@/lib/variants";
 import type { ProductImage, ProductVariant } from "@/types/product";
 import type { ProductDetailResult } from "@/services/product.service";
+import { isPurchasablePrice } from "@/utils/currency";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import ProductStickyBar from "./ProductStickyBar";
@@ -163,11 +164,13 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   }
 
   function handleAddToCart() {
+    if (!isPurchasablePrice(variant.price)) return;
     addItem(product, quantity, variant);
     openCartDrawer();
   }
 
   function handleBuyNow() {
+    if (!isPurchasablePrice(variant.price)) return;
     addItem(product, quantity, variant);
     router.push("/checkout");
   }

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { resolveLinkHref } from "@/lib/routes";
 import HomepageSectionHeader from "@/components/homepage/HomepageSectionHeader";
@@ -42,12 +43,13 @@ export default function HomepageCategoryGridSection({
                 <span className="popcat-badge">{item.badge}</span>
               ) : null}
               <div className="popcat-image">
-                <img
+                <Image
                   alt=""
                   height={120}
                   loading="lazy"
-                  src={item.imageSrc}
+                  src={item.imageSrc.split("?")[0]}
                   width={120}
+                  sizes="120px"
                 />
               </div>
               <div className="popcat-name">

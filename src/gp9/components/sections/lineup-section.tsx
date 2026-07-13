@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Gp9Image as Image } from "@/gp9/components/gp9-image";
 import Link from "next/link";
 import { NavArrowIcon } from "@/gp9/components/ui/nav-arrow-icon";
 import { ScrollReveal } from "@/gp9/components/ui/scroll-reveal";

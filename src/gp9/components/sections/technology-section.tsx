@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Gp9Image as Image } from "@/gp9/components/gp9-image";
 import { useEffect, useRef, useState } from "react";
 import { ScrollReveal } from "@/gp9/components/ui/scroll-reveal";
 import { subscribeScroll } from "@/gp9/lib/scroll-performance";

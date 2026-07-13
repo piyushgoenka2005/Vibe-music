@@ -15,7 +15,7 @@ export const BRAND = {
   domain: "vibemusic.in",
   address: "Mumbai, Maharashtra, India",
   logoPath: "/brand/vibemusic-logo.svg",
-  headerLogoPath: "/images/FINAL LOGO VIBE MUSIC GUITAR 2.png",
+  headerLogoPath: "/brand/header-logo.webp",
   iconPath: "/icon-48.png",
   cardName: "Vibe Music Card",
   financingName: "Vibe Music Financing",

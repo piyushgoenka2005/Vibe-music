@@ -309,6 +309,16 @@ const INVOICE_CSS = `
     color: #111;
   }
   .invoice__toolbar-cancel { display: none; }
+  .invoice__pdf-fallback {
+    max-width: 210mm;
+    margin: 0 auto 12px;
+    padding: 10px 14px;
+    border: 1px solid #c9a227;
+    background: #fff8e6;
+    color: #5c4813;
+    font-size: 12px;
+    line-height: 1.4;
+  }
   @media (max-width: 640px) {
     .invoice__toolbar {
       position: sticky;
@@ -882,7 +892,7 @@ function renderInvoiceBody(data: InvoiceViewModel, logo: string): string {
       </section>
 
       <section class="invoice__notes">
-        <p><strong>Delivery:</strong> Shipment will be dispatched to the address mentioned above. Tracking details will be shared via email and SMS once the order ships.</p>
+        <p><strong>Delivery:</strong> Shipment will be dispatched to the address mentioned above. Tracking details will be shared by email once the order ships.</p>
         <p><strong>Returns &amp; Warranty:</strong> For returns, exchanges, or warranty claims, contact support within 7 days of delivery with your order ID and invoice number.</p>
         <p><strong>Customer Support:</strong> ${escapeHtml(data.seller.email)} · ${escapeHtml(data.seller.phone)} · ${escapeHtml(data.seller.website)}</p>
       </section>
@@ -911,6 +921,7 @@ export function generateInvoiceHtml(
     showActions?: boolean;
     downloadUrl?: string;
     returnTo?: string;
+    pdfFallbackNotice?: string;
   }
 ): string {
   const data = buildViewModel(order, seller);
@@ -921,6 +932,10 @@ export function generateInvoiceHtml(
 
   const downloadAction = options?.downloadUrl
     ? `<a href="${escapeHtml(options.downloadUrl)}" download>Download PDF</a>`
+    : "";
+
+  const fallbackBanner = options?.pdfFallbackNotice
+    ? `<div class="invoice__pdf-fallback no-print" role="status">${escapeHtml(options.pdfFallbackNotice)}</div>`
     : "";
 
   const navScript = `<script>
@@ -942,8 +957,8 @@ function invoiceGoBack(){
           <button type="button" onclick="window.print()">Print Invoice</button>
           ${downloadAction}
         </div>
-      </header>${navScript}`
-    : "";
+      </header>${fallbackBanner}${navScript}`
+    : fallbackBanner;
 
   const printScript = options?.autoPrint
     ? `<script>window.addEventListener("load",function(){window.print();});</script>`

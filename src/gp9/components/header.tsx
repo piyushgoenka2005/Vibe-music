@@ -9,16 +9,28 @@ import { GP9_BASE, gp9Path } from "@/gp9/lib/base-path";
 import { cn } from "@/gp9/lib/utils";
 import { subscribeScroll } from "@/gp9/lib/scroll-performance";
 
+/** Full set — used in the mobile drawer. */
 const navLinks = [
-  { href: "#about", label: "About" },
-  { href: "#products", label: "Models" },
-  { href: "#technology", label: "Technology" },
-  { href: "#gallery", label: "Gallery" },
-  { href: "#midlife", label: "Sound Lab" },
-  { href: "#spinner", label: "360°" },
-  { href: "#experience", label: "3D" },
-  { href: "#series", label: "Series" },
-  { href: "#specs", label: "Specs" },
+  { href: `${GP9_BASE}/#about`, label: "About" },
+  { href: `${GP9_BASE}/#products`, label: "Models" },
+  { href: `${GP9_BASE}/#technology`, label: "Technology" },
+  { href: `${GP9_BASE}/#gallery`, label: "Gallery" },
+  { href: `${GP9_BASE}/#midlife`, label: "Sound Lab" },
+  { href: `${GP9_BASE}/#spinner`, label: "360°" },
+  { href: `${GP9_BASE}/#experience`, label: "Explore" },
+  { href: `${GP9_BASE}/#series`, label: "Series" },
+  { href: `${GP9_BASE}/#specs`, label: "Specs" },
+];
+
+/** Compact desktop set so links never collide with the brand / CTAs. */
+const desktopNavLinks = [
+  { href: `${GP9_BASE}/#products`, label: "Models" },
+  { href: `${GP9_BASE}/#technology`, label: "Technology" },
+  { href: `${GP9_BASE}/#gallery`, label: "Gallery" },
+  { href: `${GP9_BASE}/#midlife`, label: "Sound Lab" },
+  { href: `${GP9_BASE}/#spinner`, label: "360°" },
+  { href: `${GP9_BASE}/#experience`, label: "Explore", xlOnly: true },
+  { href: `${GP9_BASE}/#specs`, label: "Specs", xlOnly: true },
 ];
 
 export function Header() {
@@ -45,7 +57,7 @@ export function Header() {
 
   const linkClass = (scrolled: boolean) =>
     cn(
-      "group inline-flex items-center gap-1.5 whitespace-nowrap text-xs transition-colors lg:text-sm",
+      "group inline-flex items-center gap-1 whitespace-nowrap text-[11px] transition-colors xl:text-xs 2xl:text-sm",
       scrolled
         ? "text-muted-foreground hover:text-foreground"
         : "text-white/70 hover:text-white"
@@ -54,7 +66,7 @@ export function Header() {
   return (
     <header
       className={cn(
-        "fixed top-2 left-1/2 z-50 w-[calc(100%-2.4rem)] -translate-x-1/2 transition-all duration-300 sm:top-3 sm:w-[calc(100%-2rem)] sm:max-w-6xl lg:top-4",
+        "fixed top-2 left-1/2 z-50 w-[calc(100%-2.4rem)] -translate-x-1/2 transition-all duration-300 sm:top-3 sm:w-[calc(100%-2rem)] sm:max-w-6xl lg:top-4 lg:max-w-7xl",
         isScrolled || isMenuOpen
           ? "rounded-full bg-background/85 shadow-sm backdrop-blur-md"
           : "bg-transparent max-lg:rounded-full max-lg:bg-background/85 max-lg:shadow-sm max-lg:backdrop-blur-md max-lg:[box-shadow:rgba(14,63,126,0.04)_0px_0px_0px_1px,rgba(42,51,69,0.04)_0px_1px_1px_-0.5px]",
@@ -67,35 +79,39 @@ export function Header() {
             : undefined,
       }}
     >
-      <div className="flex items-center justify-between gap-2 px-4 py-1 sm:gap-3 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-1.5 sm:gap-4 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5">
         <Link
           href={gp9Path()}
           className={cn(
-            "shrink-0 text-xs font-medium tracking-tight transition-colors duration-300 sm:text-sm lg:text-lg",
+            "relative z-10 shrink-0 whitespace-nowrap text-sm font-medium tracking-tight transition-colors duration-300 lg:text-base",
             isScrolled || isMenuOpen
               ? "text-foreground"
               : "text-foreground lg:text-white"
           )}
         >
-          Grand Piano
+          <span className="lg:hidden">GP-9</span>
+          <span className="hidden lg:inline">Grand Piano</span>
         </Link>
 
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-4 xl:gap-8 lg:flex">
-          {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className={linkClass(isScrolled)}>
+        <nav
+          className="hidden min-w-0 items-center justify-center gap-2.5 overflow-hidden xl:gap-4 lg:flex"
+          aria-label="GP-9 sections"
+        >
+          {desktopNavLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                linkClass(isScrolled),
+                link.xlOnly && "hidden xl:inline-flex"
+              )}
+            >
               <span>{link.label}</span>
-              <ArrowUpRight
-                aria-hidden
-                className={cn(
-                  "h-3 w-3 shrink-0 opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100",
-                  isScrolled ? "text-foreground" : "text-white"
-                )}
-              />
             </Link>
           ))}
         </nav>
 
-        <div className="hidden shrink-0 items-center gap-3 lg:flex">
+        <div className="hidden shrink-0 items-center gap-2 lg:flex xl:gap-3">
           <div
             className={cn(
               "gp9-header-mode-toggle",
@@ -120,16 +136,16 @@ export function Header() {
           <Link
             href="#dealers"
             className={cn(
-              "group inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-all lg:text-sm",
+              "group inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition-all xl:gap-2 xl:px-4",
               isScrolled
                 ? "bg-foreground text-background hover:opacity-80"
                 : "bg-white text-foreground hover:bg-white/90"
             )}
           >
-            <span>Where to Buy</span>
+            <span className="whitespace-nowrap">Where to Buy</span>
             <ArrowUpRight
               aria-hidden
-              className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+              className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
             />
           </Link>
         </div>
@@ -138,8 +154,8 @@ export function Header() {
           type="button"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className={cn(
-            "flex h-7 w-7 shrink-0 items-center justify-center transition-colors lg:hidden",
-            isScrolled || isMenuOpen ? "text-foreground" : "text-foreground lg:text-white"
+            "col-start-3 flex h-8 w-8 shrink-0 items-center justify-center justify-self-end transition-colors lg:hidden",
+            isScrolled || isMenuOpen ? "text-foreground" : "text-foreground"
           )}
           aria-label="Toggle menu"
           aria-expanded={isMenuOpen}

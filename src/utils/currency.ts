@@ -21,13 +21,18 @@ export function formatCurrencyPrecise(value: number): string {
   }).format(value);
 }
 
+/** True when a catalog/unit price can be added to cart or checked out. */
+export function isPurchasablePrice(price: number): boolean {
+  return Number.isFinite(price) && price > 0;
+}
+
 /** Storefront price label — zero/invalid catalog prices show as Coming Soon. */
 export function formatDisplayPrice(
   price: number,
   salePrice?: number | null
 ): string {
   const value = salePrice ?? price;
-  if (!Number.isFinite(value) || value <= 0) {
+  if (!isPurchasablePrice(value)) {
     return "Coming Soon";
   }
   return formatCurrency(value);

@@ -39,7 +39,7 @@ export const BROWSE_CATEGORY_CARDS: BrowseCategoryCard[] = [
   {
     id: "vintage-used",
     title: "Vintage & Used",
-    href: `${ROUTES.searchResults}?q=vintage`,
+    href: ROUTES.used,
     ...cmeImage(
       "03.2_4.20_-_Vintage_Guitar_Group-2_c18c0982-991b-4306-bdf1-2ecfb37a8411",
       "1714497704",

@@ -14,6 +14,8 @@
     "type-check": "tsc --noEmit",
     "seed:admin": "npx tsx --env-file=.env.local scripts/db/seed-admin.mts",
     "seed:catalog": "npx tsx --env-file=.env.local scripts/catalog/seed-catalog.mts",
+    "generate:reviews": "npx tsx scripts/catalog/generate-synthetic-reviews.mts",
+    "seed:reviews": "npx tsx --env-file=.env.local scripts/catalog/seed-reviews.mts",
     "sync:prisma-env": "node scripts/db/sync-prisma-env.mjs",
     "sync:homepage": "node scripts/legacy/extract-homepage-html.mjs",
     "download:images": "node scripts/assets/download-essential-images.mjs",

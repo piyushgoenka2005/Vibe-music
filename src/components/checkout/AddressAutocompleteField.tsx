@@ -13,6 +13,8 @@ interface AddressAutocompleteFieldProps {
   required?: boolean;
   placeholder?: string;
   id?: string;
+  /** When false, skip Places calls and show a manual-entry hint. */
+  autocompleteAvailable?: boolean;
 }
 
 export default function AddressAutocompleteField({
@@ -21,13 +23,24 @@ export default function AddressAutocompleteField({
   required,
   placeholder = "Street address",
   id,
+  autocompleteAvailable = true,
 }: AddressAutocompleteFieldProps) {
   const [predictions, setPredictions] = useState<AddressPrediction[]>([]);
   const [open, setOpen] = useState(false);
+  const [placesOff, setPlacesOff] = useState(!autocompleteAvailable);
   const debounceRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    setPlacesOff(!autocompleteAvailable);
+  }, [autocompleteAvailable]);
+
   const fetchPredictions = useCallback(async (input: string) => {
+    if (!autocompleteAvailable || placesOff) {
+      setPredictions([]);
+      return;
+    }
+
     if (input.trim().length < 3) {
       setPredictions([]);
       return;
@@ -41,13 +54,22 @@ export default function AddressAutocompleteField({
         setPredictions([]);
         return;
       }
-      const data = (await response.json()) as { predictions?: AddressPrediction[] };
+      const data = (await response.json()) as {
+        predictions?: AddressPrediction[];
+        available?: boolean;
+      };
+      if (data.available === false) {
+        setPlacesOff(true);
+        setPredictions([]);
+        setOpen(false);
+        return;
+      }
       setPredictions(data.predictions ?? []);
       setOpen((data.predictions?.length ?? 0) > 0);
     } catch {
       setPredictions([]);
     }
-  }, []);
+  }, [autocompleteAvailable, placesOff]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -88,6 +110,12 @@ export default function AddressAutocompleteField({
           if (predictions.length > 0) setOpen(true);
         }}
       />
+      {placesOff ? (
+        <span className="checkout-field-hint">
+          Enter your full street address manually. Address suggestions are not
+          available right now.
+        </span>
+      ) : null}
       {open && predictions.length > 0 ? (
         <ul
           role="listbox"

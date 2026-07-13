@@ -3,12 +3,12 @@ import { Suspense } from "react";
 import "@/styles/homepage-bundle.css";
 import HomepageBannerHero from "@/components/home/homepage-banner-hero/HomepageBannerHero";
 import BrowseCategoryCardsSection from "@/components/home/BrowseCategoryCardsSection";
-import HomepageOutletCategoriesBlock from "@/components/homepage/HomepageOutletCategoriesBlock";
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 
 import PremiumHero from "@/components/home/PremiumHero";
+import HomepagePromoBanner from "@/components/home/HomepagePromoBanner";
 const HomepageTopProducts = dynamic(
   () => import("@/components/home/HomepageTopProducts"),
   { loading: () => <BlogTeaserSkeleton /> }
@@ -17,10 +17,6 @@ const HomepageTopProducts = dynamic(
 const HomepageStats = dynamic(() => import("@/components/home/HomepageStats"), {
   loading: () => null,
 });
-const HomepagePromoBanner = dynamic(
-  () => import("@/components/home/HomepagePromoBanner"),
-  { loading: () => null }
-);
 const WhyShopSection = dynamic(() => import("@/components/home/WhyShopSection"), {
   loading: () => null,
 });
@@ -71,7 +67,6 @@ export default function HomePage() {
       <HomepageBannerHero />
       <PremiumHero />
       <HomepageStats />
-      <HomepagePromoBanner />
       <BigNamesDealsSection />
       <WhyShopSection />
       <BrowseCategoryCardsSection />
@@ -82,9 +77,7 @@ export default function HomePage() {
 
       <CategoryBento />
 
-      <Suspense fallback={null}>
-        <HomepageOutletCategoriesBlock />
-      </Suspense>
+      <HomepagePromoBanner />
 
       <Suspense fallback={<HomepageSectionsSkeleton />}>
         <HomepageSectionsAsync />

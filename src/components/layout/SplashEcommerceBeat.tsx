@@ -25,7 +25,7 @@ const CATEGORIES = [
 const VALUE_PROPS = [
   "Free Shipping",
   "Expert Gear Advice",
-  "Easy EMI",
+  "Secure checkout",
   "Easy Returns",
 ] as const;
 

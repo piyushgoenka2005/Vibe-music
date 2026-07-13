@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import ContactPageContent from "@/components/contact/ContactPageContent";
 import "@/styles/contact-page.css";
 
@@ -9,7 +10,9 @@ export const metadata = {
 export default function ContactPage() {
   return (
     <main className="storefront-page storefront-page--subtle">
-      <ContactPageContent />
+      <Suspense fallback={<div className="storefront-page__inner contact-page">Loading…</div>}>
+        <ContactPageContent />
+      </Suspense>
     </main>
   );
 }

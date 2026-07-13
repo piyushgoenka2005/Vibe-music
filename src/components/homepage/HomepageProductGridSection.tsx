@@ -26,7 +26,7 @@ function ProductSequence({
 }) {
   return (
     <>
-      {products.map((item) => (
+      {products.map((item, index) => (
         <NewArrivalsProductCard
           key={ariaHidden ? `${item.id}-clone` : item.id}
           ariaHidden={ariaHidden}
@@ -36,6 +36,7 @@ function ProductSequence({
           id={item.id}
           image={item.image}
           imageAlt={item.imageAlt}
+          imagePriority={!ariaHidden && index < 4}
           name={item.name}
           price={item.price}
           rank={item.rank}

@@ -5,6 +5,7 @@ import { formatDisplayPrice } from "@/utils/currency";
 import { useEffect } from "react";
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import WishlistEmptyState from "@/components/wishlist/WishlistEmptyState";
 import { ROUTES } from "@/lib/routes";
 import { createPortal } from "react-dom";
 import { useIsClient } from "@/hooks/useIsClient";
@@ -59,12 +60,7 @@ export default function WishlistDrawer() {
 
         <div className="wl-drawer__body">
           {items.length === 0 ? (
-            <div className="wl-drawer__empty">
-              <p>Your wishlist is empty.</p>
-              <p style={{ fontSize: 14 }}>
-                Save items you love and come back anytime.
-              </p>
-            </div>
+            <WishlistEmptyState onBrowse={close} />
           ) : (
             items.map((item) => (
               <div key={item.productId} className="wl-drawer__item">

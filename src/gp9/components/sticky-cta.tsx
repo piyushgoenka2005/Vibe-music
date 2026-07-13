@@ -30,7 +30,7 @@ export function StickyCta() {
         className="group cursor-target flex items-center gap-2.5 rounded-full border border-foreground/10 bg-background/90 px-6 py-3 text-sm font-medium text-foreground shadow-lg backdrop-blur-md transition-all hover:bg-foreground hover:text-background"
         data-cursor-target
       >
-        <span>Where to Buy GP-9</span>
+        <span>Enquire about GP-9</span>
         <NavArrowIcon size="sm" />
       </Link>
     </div>

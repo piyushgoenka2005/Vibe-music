@@ -3,7 +3,8 @@ import Link from "next/link";
 import Reveal from "@/components/layout/Reveal";
 import { resolveLinkHref } from "@/lib/routes";
 
-const BANNER_SRC = "/images/win%20this%20rig.jpeg";
+/** Space-free path — avoids Next image optimizer encoding quirks. */
+const BANNER_SRC = "/images/win-this-rig.jpeg";
 const BANNER_WIDTH = 1500;
 const BANNER_HEIGHT = 200;
 
@@ -13,6 +14,7 @@ export default function HomepagePromoBanner() {
       as="section"
       className="homepage-promo-banner"
       aria-label="Win this Rig giveaway"
+      immediate
     >
       <div className="homepage-promo-banner__inner">
         <Link href={resolveLinkHref("/giveaway")} className="homepage-promo-banner__link">
@@ -23,7 +25,7 @@ export default function HomepagePromoBanner() {
             height={BANNER_HEIGHT}
             sizes="(max-width: 1320px) 100vw, 1320px"
             priority
-            loading="eager"
+            fetchPriority="high"
             className="homepage-promo-banner__image"
           />
         </Link>

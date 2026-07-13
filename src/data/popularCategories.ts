@@ -13,122 +13,118 @@ export interface PopularCategoryItem {
 export const HOMEPAGE_POPULAR_CATEGORY_COUNT = 8;
 
 const SIZES = "(max-width:768px) 101px, (max-width:1000px) 10vw, 101px";
+const THUMB = "/images/m/home/cats/thumbs";
 
-function webpSrcSet(path: string): string {
-  return [202, 151, 101]
-    .map(
-      (w) =>
-        `${path}?format=jpg&optimize=high&auto=webp&quality=70&width=${w} ${w}w`
-    )
-    .join(", ");
+/** Pre-generated 200px WebP thumbs (static hosting ignores ?width= query params). */
+function thumb(name: string): string {
+  return `${THUMB}/${name}.webp`;
 }
 
-function imgSrc(path: string): string {
-  return `${path}?width=200&height=200&fit=bounds&format=webp`;
+function thumbSrcSet(name: string): string {
+  const src = thumb(name);
+  return `${src} 200w`;
 }
-
-const CAT = "/images/m/home/cats";
 
 export const POPULAR_CATEGORY_ITEMS: PopularCategoryItem[] = [
   {
     slot: 0,
     href: categoryPath("guitars"),
     title: "Guitars",
-    imageSrc: imgSrc(`${CAT}/LPR59VOWCSNH.png`),
-    imageSrcSet: `${CAT}/LPR59VOWCSNH.png?width=202&height=350&quality=75&optimize=high&fit=bounds&format=jpg&optimize=high&auto=webp&quality=70 202w, ${CAT}/LPR59VOWCSNH.png?width=151&height=350&quality=75&optimize=high&fit=bounds&format=jpg&optimize=high&auto=webp&quality=70 151w, ${CAT}/LPR59VOWCSNH.png?width=101&height=350&quality=75&optimize=high&fit=bounds&format=jpg&optimize=high&auto=webp&quality=70 101w`,
+    imageSrc: thumb("LPR59VOWCSNH"),
+    imageSrcSet: thumbSrcSet("LPR59VOWCSNH"),
   },
   {
     slot: 1,
     href: categoryPath("studio-recording"),
     title: "Studio & Recording",
-    imageSrc: imgSrc(`${CAT}/Arrow-small.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/Arrow-small.png`),
+    imageSrc: thumb("Arrow-small"),
+    imageSrcSet: thumbSrcSet("Arrow-small"),
   },
   {
     slot: 2,
     href: categoryPath("drums-percussion"),
     title: "Drums & Percussion",
-    imageSrc: imgSrc(`${CAT}/LM402.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/LM402.png`),
+    imageSrc: thumb("LM402"),
+    imageSrcSet: thumbSrcSet("LM402"),
   },
   {
     slot: 3,
     href: categoryPath("bass"),
     title: "Bass",
-    imageSrc: imgSrc(`${CAT}/PBassAPR3SB.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/PBassAPR3SB.png`),
+    imageSrc: thumb("PBassAPR3SB"),
+    imageSrcSet: thumbSrcSet("PBassAPR3SB"),
   },
   {
     slot: 4,
     href: categoryPath("keyboards-synthesizers"),
     title: "Keyboards & Synthesizers",
-    imageSrc: imgSrc(`${CAT}/Matriarch.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/Matriarch.png`),
+    imageSrc: thumb("Matriarch"),
+    imageSrcSet: thumbSrcSet("Matriarch"),
   },
   {
     slot: 5,
     href: categoryPath("live-sound-lighting"),
     title: "Live Sound & Lighting",
-    imageSrc: imgSrc(`${CAT}/k12_2.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/k12_2.png`),
+    imageSrc: thumb("k12_2"),
+    imageSrcSet: thumbSrcSet("k12_2"),
   },
   {
     slot: 6,
     href: categoryPath("software-plug-ins"),
     title: "Software & Plug-ins",
-    imageSrc: imgSrc(`${CAT}/ptstudioann.jpg`),
-    imageSrcSet: webpSrcSet(`${CAT}/ptstudioann.jpg`),
+    imageSrc: thumb("ptstudioann"),
+    imageSrcSet: thumbSrcSet("ptstudioann"),
   },
   {
     slot: 7,
     href: categoryPath("dj-equipment"),
     title: "DJ Equipment",
-    imageSrc: imgSrc(`${CAT}/ATLP120XUSBSV.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/ATLP120XUSBSV.png`),
+    imageSrc: thumb("ATLP120XUSBSV"),
+    imageSrcSet: thumbSrcSet("ATLP120XUSBSV"),
   },
   {
     slot: 8,
     href: categoryPath("microphones-wireless"),
     title: "Microphones & Wireless",
-    imageSrc: imgSrc(`${CAT}/SM58-cat.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/SM58-cat.png`),
+    imageSrc: thumb("SM58-cat"),
+    imageSrcSet: thumbSrcSet("SM58-cat"),
   },
   {
     slot: 9,
     href: categoryPath("band-orchestra"),
     title: "Band & Orchestra",
-    imageSrc: imgSrc(`${CAT}/KingSlvFlTr.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/KingSlvFlTr.png`),
+    imageSrc: thumb("KingSlvFlTr"),
+    imageSrcSet: thumbSrcSet("KingSlvFlTr"),
     badge: "New",
   },
   {
     slot: 10,
     href: categoryPath("home-audio-electronics"),
     title: "Home Audio & Electronics",
-    imageSrc: imgSrc(`${CAT}/TourOneM2Bk.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/TourOneM2Bk.png`),
+    imageSrc: thumb("TourOneM2Bk"),
+    imageSrcSet: thumbSrcSet("TourOneM2Bk"),
     badge: "New",
   },
   {
     slot: 11,
     href: categoryPath("commercial-audio-installation"),
     title: "Commercial Audio & Install",
-    imageSrc: imgSrc(`${CAT}/Control28.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/Control28.png`),
+    imageSrc: thumb("Control28"),
+    imageSrcSet: thumbSrcSet("Control28"),
   },
   {
     slot: 12,
     href: categoryPath("cables-cases-accessories"),
     title: "Cables, Cases, Stands & More",
-    imageSrc: imgSrc(`${CAT}/M4WP006.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/M4WP006.png`),
+    imageSrc: thumb("M4WP006"),
+    imageSrcSet: thumbSrcSet("M4WP006"),
   },
   {
     slot: 13,
     href: categoryPath("video-cameras"),
     title: "Video & Cameras",
-    imageSrc: imgSrc(`${CAT}/EOSR82450Kit.png`),
-    imageSrcSet: webpSrcSet(`${CAT}/EOSR82450Kit.png`),
+    imageSrc: thumb("EOSR82450Kit"),
+    imageSrcSet: thumbSrcSet("EOSR82450Kit"),
     badge: "New",
   },
 ];

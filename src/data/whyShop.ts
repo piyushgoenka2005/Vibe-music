@@ -40,7 +40,7 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
     id: "pay-your-way",
     iconId: "payments",
     title: "Easy Payments",
-    subtitle: "UPI, cards, EMI & net banking.",
+    subtitle: "UPI, cards & net banking at checkout.",
     href: ROUTES.checkout,
   },
   {
@@ -76,6 +76,6 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
     iconId: "open-box",
     title: "Open Box Savings",
     subtitle: "Inspected B-stock, backed by quality checks.",
-    href: `${ROUTES.searchResults}?q=open-box`,
+    href: ROUTES.used,
   },
 ];

@@ -173,6 +173,12 @@ export default function CheckoutPageContent() {
   } | null>(null);
   const [onlineChannel, setOnlineChannel] =
     useState<OnlinePaymentChannel>("upi");
+  const [checkoutCapabilities, setCheckoutCapabilities] = useState<{
+    placesAutocomplete: boolean;
+    razorpayConfigured: boolean;
+    demoPaymentsAllowed: boolean;
+    onlinePaymentsAvailable: boolean;
+  } | null>(null);
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
   const [addressError, setAddressError] = useState<string | null>(null);
@@ -181,6 +187,33 @@ export default function CheckoutPageContent() {
     () => true,
     () => false
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/checkout/capabilities")
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return response.json() as Promise<{
+          placesAutocomplete: boolean;
+          razorpayConfigured: boolean;
+          demoPaymentsAllowed: boolean;
+          onlinePaymentsAvailable: boolean;
+        }>;
+      })
+      .then((data) => {
+        if (cancelled || !data) return;
+        setCheckoutCapabilities(data);
+        if (!data.onlinePaymentsAvailable) {
+          setPaymentMethod("cod");
+        }
+      })
+      .catch(() => {
+        /* Keep optimistic defaults if capabilities fail to load. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     preloadRazorpayCheckout();
@@ -195,9 +228,18 @@ export default function CheckoutPageContent() {
     void applyCoupon(fromUrl);
   }, [searchParams, couponCode, applyCoupon]);
 
+  const placesAutocomplete =
+    checkoutCapabilities?.placesAutocomplete ?? true;
+  const razorpayConfigured =
+    checkoutCapabilities?.razorpayConfigured ??
+    Boolean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith("rzp_"));
+  const onlinePaymentsAvailable =
+    checkoutCapabilities?.onlinePaymentsAvailable ?? true;
   const demoPaymentsLikely =
-    process.env.NODE_ENV !== "production" &&
-    !process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith("rzp_");
+    onlinePaymentsAvailable &&
+    !razorpayConfigured &&
+    (checkoutCapabilities?.demoPaymentsAllowed ??
+      process.env.NODE_ENV !== "production");
 
   const checkoutItems = items.map((item) => ({
     productId: item.productId,
@@ -741,6 +783,7 @@ export default function CheckoutPageContent() {
                     Address Line 1
                     <AddressAutocompleteField
                       required
+                      autocompleteAvailable={placesAutocomplete}
                       value={addressForm.line1}
                       onChange={(line1) =>
                         setAddressForm((p) => ({ ...p, line1 }))
@@ -929,10 +972,19 @@ export default function CheckoutPageContent() {
 
               <CheckoutPaymentMethods
                 onlineChannel={onlineChannel}
+                onlinePaymentsAvailable={onlinePaymentsAvailable}
                 onOnlineChannelChange={setOnlineChannel}
                 onPaymentMethodChange={setPaymentMethod}
                 paymentMethod={paymentMethod}
               />
+
+              {!onlinePaymentsAvailable ? (
+                <p className="checkout-panel__alert" role="alert">
+                  <strong>Online payments unavailable:</strong> Razorpay is not
+                  configured on this store. Please use Cash on Delivery, or
+                  contact support if you need to pay online.
+                </p>
+              ) : null}
 
               {demoPaymentsLikely && paymentMethod === "razorpay" ? (
                 <p className="checkout-panel__alert" role="note">

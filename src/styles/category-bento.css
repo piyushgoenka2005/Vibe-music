@@ -1,13 +1,15 @@
 /* Find Your Sound — crystal premium category bento */
 
 .category-bento {
-  --bento-radius: 24px;
-  --bento-radius-sm: 18px;
+  --bento-radius: 20px;
+  --bento-radius-sm: 16px;
   --bento-ease: var(--ease-premium, cubic-bezier(0.16, 1, 0.3, 1));
-  --bento-gap: 16px;
+  --bento-gap: clamp(0.55rem, 0.9vw, 0.85rem);
+  --bento-rail-offset: calc(
+    var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) + 0.65rem
+  );
   position: relative;
-  padding: clamp(3rem, 6vw, 4.75rem) clamp(1rem, 2.5vw, 1.5rem)
-    clamp(2.5rem, 4.5vw, 3.75rem);
+  padding: clamp(1.75rem, 3vw, 2.5rem) 0 clamp(1.5rem, 2.5vw, 2.25rem);
   background:
     radial-gradient(ellipse 90% 55% at 50% -8%, rgba(18, 83, 237, 0.1), transparent 58%),
     radial-gradient(ellipse 50% 40% at 92% 80%, rgba(99, 102, 241, 0.06), transparent 55%),
@@ -70,14 +72,23 @@
 .category-bento__inner {
   position: relative;
   z-index: 1;
-  max-width: var(--content-max, 1180px);
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding-inline: clamp(0.875rem, 2vw, 1.25rem);
+}
+
+@media (min-width: 1024px) {
+  .category-bento__inner {
+    padding-inline-start: var(--bento-rail-offset);
+    padding-inline-end: 0.75rem;
+  }
 }
 
 /* Header */
 .category-bento__header {
   text-align: center;
-  margin-bottom: clamp(2.25rem, 4vw, 3rem);
+  margin-bottom: clamp(1.25rem, 2.5vw, 1.75rem);
 }
 
 .category-bento__eyebrow {
@@ -147,7 +158,9 @@
 
 .category-bento__tile {
   will-change: transform;
-  min-height: clamp(220px, 22vw, 280px);
+  min-height: 0;
+  height: auto;
+  align-self: stretch;
 }
 
 .category-bento__tile--large {
@@ -161,8 +174,8 @@
 }
 
 .category-bento__tile--wide {
-  grid-column: 6 / span 4;
-  grid-row: 3;
+  grid-column: auto;
+  grid-row: auto;
 }
 
 /* Shared link shell */
@@ -170,7 +183,7 @@
   position: relative;
   display: block;
   height: 100%;
-  min-height: inherit;
+  min-height: 0;
   border-radius: var(--bento-radius);
   overflow: hidden;
   text-decoration: none;
@@ -266,11 +279,13 @@
 
 .category-bento__card-visual--overlay {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 78px;
-  max-height: 130px;
-  overflow: visible;
-  margin: 0.6rem 0.6rem 0;
+  flex: 0 0 auto;
+  width: auto;
+  height: clamp(100px, 11vw, 140px);
+  min-height: 0;
+  max-height: 140px;
+  overflow: hidden;
+  margin: 0.55rem 0.55rem 0;
   border-radius: var(--bento-radius-sm);
   background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%);
   border: 1px solid rgba(18, 83, 237, 0.06);
@@ -316,8 +331,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  flex-shrink: 0;
-  padding: 0.8rem 0.95rem 0.95rem;
+  flex: 0 0 auto;
+  margin-top: 0;
+  padding: 0.7rem 0.85rem 0.8rem;
 }
 
 .category-bento__link--overlay .category-bento__badge:not(.category-bento__badge--tag) {
@@ -432,7 +448,7 @@
 .category-bento__link--wide .category-bento__image {
   object-fit: contain;
   object-position: center center;
-  padding: clamp(0.45rem, 1vw, 0.75rem);
+  padding: clamp(0.3rem, 0.7vw, 0.5rem);
 }
 
 .category-bento__link--overlay:hover .category-bento__image,
@@ -667,12 +683,12 @@
   position: absolute;
   z-index: 6;
   margin: 0;
-  padding: 0.5rem 1rem 0.5rem 0.88rem;
+  padding: 0.5rem 1rem 0.5rem 0.78rem;
   font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-weight: 800;
+  letter-spacing: 0.11em;
   line-height: 1;
-  border-radius: var(--bento-radius-sm) 999px 999px 0;
+  border-radius: 0 999px 999px 0;
   border: none;
   box-shadow: none;
   backdrop-filter: none;
@@ -1019,7 +1035,7 @@
     width: 100%;
     max-width: none;
     height: 100%;
-    min-height: 210px;
+    min-height: 240px;
   }
 }
 
@@ -1032,7 +1048,7 @@
   }
 
   .category-bento__tile {
-    min-height: clamp(210px, 32vw, 260px);
+    min-height: 0;
   }
 
   .category-bento__tile--large,

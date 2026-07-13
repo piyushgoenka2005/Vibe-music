@@ -19,7 +19,7 @@ export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
     brand: "Gibson",
     href: `${ROUTES.searchResults}?brand=gibson`,
     logo: "/images/big-names-deals/gibson-logo.svg",
-    product: "/images/big-names-deals/gibson-product.png",
+    product: "/images/big-names-deals/gibson-product.webp",
     productAlt: "Gibson SG electric guitar in TV yellow",
   },
   {
@@ -27,7 +27,7 @@ export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
     brand: "Epiphone",
     href: `${ROUTES.searchResults}?brand=epiphone`,
     logo: "/images/big-names-deals/epiphone-logo.svg",
-    product: "/images/big-names-deals/epiphone-product.png",
+    product: "/images/big-names-deals/epiphone-product.webp",
     productAlt: "Epiphone Les Paul in amber sunburst",
   },
   {
@@ -35,7 +35,7 @@ export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
     brand: "PRS",
     href: `${ROUTES.searchResults}?brand=prs`,
     logo: "/images/big-names-deals/prs-logo.svg",
-    product: "/images/big-names-deals/prs-product.png",
+    product: "/images/big-names-deals/prs-product.webp",
     productAlt: "PRS SE Studio electric guitar in seafoam green",
   },
   {
@@ -43,7 +43,7 @@ export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
     brand: "Ibanez",
     href: `${ROUTES.searchResults}?brand=ibanez`,
     logo: "/images/big-names-deals/ibanez-logo.svg",
-    product: "/images/big-names-deals/ibanez-product.png",
+    product: "/images/big-names-deals/ibanez-product.webp",
     productAlt: "Ibanez electric guitar in tobacco sunburst",
   },
   {
@@ -51,7 +51,7 @@ export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
     brand: "Fender",
     href: `${ROUTES.searchResults}?brand=fender`,
     logo: "/images/big-names-deals/fender-logo.svg",
-    product: "/images/big-names-deals/fender-product.png",
+    product: "/images/big-names-deals/fender-product.webp",
     productAlt: "Fender Stratocaster electric guitar in 3-color sunburst",
   },
 ];

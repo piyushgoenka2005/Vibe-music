@@ -32,7 +32,7 @@ export const LANDING_STATS = [
 export const LANDING_LIVE_TICKER = [
   "Store open — dispatching orders across India",
   "Free shipping on orders over ₹9,999",
-  "Secure checkout via Razorpay · UPI · Cards · EMI",
+  "Secure checkout via Razorpay · UPI · Cards",
   "1,200+ musicians served this month",
   "Track any order in under 60 seconds",
 ] as const;
@@ -81,7 +81,7 @@ export const LANDING_SERVICE_STATUS = [
   {
     icon: "credit-card" as const,
     title: "Secure payments",
-    desc: "Razorpay checkout with UPI, cards & EMI",
+    desc: "Razorpay checkout with UPI, cards & net banking",
     status: "Protected",
     tone: "success" as StatusTone,
     href: ROUTES.checkout,
@@ -121,29 +121,34 @@ export const LANDING_LOCATIONS = [
     status: "Open",
     tone: "live" as StatusTone,
     accent: "#1e3a8a",
+    image: "/images/locations/delhi.jpg",
   },
   {
     city: "Kolkata",
     status: "Open",
     tone: "live" as StatusTone,
     accent: "#0f766e",
+    image: "/images/locations/kolkata.jpg",
   },
   {
     city: "Nagpur",
     status: "Open",
     tone: "live" as StatusTone,
     accent: "#9a3412",
+    image: "/images/locations/nagpur.jpg",
   },
   {
     city: "North East",
     status: "Partner hub",
     tone: "info" as StatusTone,
     accent: "#5b21b6",
+    image: "/images/locations/north-east.jpg",
   },
   {
     city: "Mumbai",
     status: "Flagship",
     tone: "success" as StatusTone,
     accent: "#1253ed",
+    image: "/images/locations/mumbai.jpg",
   },
 ] as const;

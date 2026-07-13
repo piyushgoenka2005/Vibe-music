@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Gp9Image as Image } from "@/gp9/components/gp9-image";
 import { useEffect, useRef, useState } from "react";
 import { LazyVideo } from "@/gp9/components/ui/lazy-video";
 import { GP9_VIDEOS, ROLAND_GP9 } from "@/gp9/lib/gp9-assets";

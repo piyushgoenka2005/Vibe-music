@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import AuthDivider from "@/components/auth/AuthDivider";
+import GoogleAuthUnavailableNote from "@/components/auth/GoogleAuthUnavailableNote";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -67,7 +68,7 @@ export default function RegisterForm({ googleAuthEnabled = false }: RegisterForm
   async function handleGoogleSignIn() {
     if (!googleAuthEnabled) {
       setError(
-        "Google sign-in is not configured. Add AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET to .env.local."
+        "Google sign-in is unavailable right now. Please create an account with email."
       );
       return;
     }
@@ -96,7 +97,9 @@ export default function RegisterForm({ googleAuthEnabled = false }: RegisterForm
           />
           <AuthDivider />
         </>
-      ) : null}
+      ) : (
+        <GoogleAuthUnavailableNote />
+      )}
 
       <Form {...form}>
         <form

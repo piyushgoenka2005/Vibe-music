@@ -3,7 +3,6 @@ import {
   getHomepagePopularCategoryItems,
   HOMEPAGE_POPULAR_CATEGORY_COUNT,
 } from "@/data/popularCategories";
-import OutletStorySection from "@/components/home/OutletStorySection";
 import HomepageCategoryGridSection from "@/components/homepage/HomepageCategoryGridSection";
 import type { ResolvedHomepageSection } from "@/types/homepage";
 
@@ -19,17 +18,12 @@ function fallbackPopularCategoriesSection(): ResolvedHomepageSection {
   };
 }
 
-/** Welcome + Popular Categories — sits after Category Bento / Gear Stories. */
+/** Popular Categories fallback block (homepage order uses HomepageSectionsAsync). */
 export default async function HomepageOutletCategoriesBlock() {
   const data = await getCachedPublicHomepageData();
   const section =
     data.sections.find((item) => item.key === "featured_categories") ??
     fallbackPopularCategoriesSection();
 
-  return (
-    <>
-      <OutletStorySection />
-      <HomepageCategoryGridSection section={section} />
-    </>
-  );
+  return <HomepageCategoryGridSection section={section} />;
 }

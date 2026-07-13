@@ -27,6 +27,13 @@ export async function GET(
     const token = searchParams.get("token")?.trim() ?? undefined;
     const autoPrint = searchParams.get("print") === "1";
     const returnTo = searchParams.get("returnTo")?.trim() ?? undefined;
+    const pdfFallbackParam = searchParams.get("pdfFallback");
+    const pdfFallbackNotice =
+      pdfFallbackParam === "unavailable"
+        ? "PDF download is temporarily unavailable. Use Print Invoice (Save as PDF) instead."
+        : pdfFallbackParam === "disabled"
+          ? "PDF download is not enabled on this server. Use Print Invoice (Save as PDF) instead."
+          : undefined;
 
     if (!orderId) {
       return NextResponse.json({ error: "orderId is required" }, { status: 400 });
@@ -47,6 +54,7 @@ export async function GET(
       showActions: true,
       downloadUrl: invoiceUrls?.pdf,
       returnTo,
+      pdfFallbackNotice,
     });
 
     return new NextResponse(html, {

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Gp9Image as Image } from "@/gp9/components/gp9-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/gp9/lib/utils";
 import {

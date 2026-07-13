@@ -21,11 +21,7 @@ const SLUG_TO_HREF: Record<string, string> = {
   "video-cameras": categoryPath("video-cameras"),
 };
 
-const FALLBACK_IMAGE =
-  "/images/m/home/cats/LPR59VOWCSNH.png?width=800&height=600&fit=cover&format=webp&quality=80";
-
-const GRID_IMAGE_PARAMS = "width=200&height=200&fit=bounds&format=webp&quality=82";
-const HERO_IMAGE_PARAMS = "width=800&height=600&fit=cover&format=webp&quality=80";
+const FALLBACK_IMAGE = "/images/m/home/cats/LPR59VOWCSNH.png";
 
 const GUITAR_MEGA_ELECTRIC_IMAGE =
   "https://res.cloudinary.com/piyushgoenka/image/upload/c_fill,w_800,h_600,g_center,q_82,f_auto/v1782292639/products/guitars/hertz-hzr-4002e-hzr-4002e/03-hza-4001-e-na-amazonfnt.png";
@@ -54,10 +50,9 @@ const MEGA_MENU_VARIANT_OVERRIDES: Record<string, string> = {
     "/images/m/products/image/2f51071997sqxE3R3gW9W0nTbFJsJVxfRgVdqWBU.jpg",
 };
 
-function withHeroParams(path: string): string {
+function cleanLocalPath(path: string): string {
   if (path.startsWith("http")) return path;
-  const basePath = path.split("?")[0];
-  return `${basePath}?${HERO_IMAGE_PARAMS}`;
+  return path.split("?")[0];
 }
 
 function hrefForCategorySlug(slug: string): string {
@@ -65,46 +60,53 @@ function hrefForCategorySlug(slug: string): string {
   return SLUG_TO_HREF[normalized] ?? categoryPath(normalized);
 }
 
-function imageFromPopularCategories(
-  href: string,
-  params: string
-): string | undefined {
+function imageFromPopularCategories(href: string): string | undefined {
   const item = POPULAR_CATEGORY_ITEMS.find((category) => category.href === href);
   if (!item?.imageSrc) return undefined;
-  const basePath = item.imageSrc.split("?")[0];
-  return `${basePath}?${params}`;
+  return cleanLocalPath(item.imageSrc);
 }
 
 /** Fallback hero when no Firestore banners are configured. */
 export const MARKETING_HERO_IMAGE =
-  "/images/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png?width=1200&height=900&fit=cover&format=webp&quality=85";
+  "/images/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png";
 
 /** Editorial split section image. */
 export const MARKETING_EDITORIAL_IMAGE = "/images/New Guitar.png";
 
+/** Full-resolution category art for mega menus / larger placements. */
+const HERO_IMAGE_BY_SLUG: Record<string, string> = {
+  guitars: "/images/m/home/cats/LPR59VOWCSNH.png",
+  "studio-recording": "/images/m/home/cats/Arrow-small.png",
+  "drums-percussion": "/images/m/home/cats/LM402.png",
+  bass: "/images/m/home/cats/PBassAPR3SB.png",
+  "keyboards-synthesizers": "/images/m/home/cats/Matriarch.png",
+  "live-sound-lighting": "/images/m/home/cats/k12_2.png",
+  "software-plug-ins": "/images/m/home/cats/ptstudioann.jpg",
+  "dj-equipment": "/images/m/home/cats/ATLP120XUSBSV.png",
+  "microphones-wireless": "/images/m/home/cats/SM58-cat.png",
+  "band-orchestra": "/images/m/home/cats/KingSlvFlTr.png",
+  "home-audio-electronics": "/images/m/home/cats/TourOneM2Bk.png",
+  "commercial-audio-installation": "/images/m/home/cats/Control28.png",
+  "cables-cases-accessories": "/images/m/home/cats/M4WP006.png",
+  "video-cameras": "/images/m/home/cats/EOSR82450Kit.png",
+};
+
 /** Grid / carousel category thumbnail (popular categories strip). */
 export function getCategoryGridImage(slug: string): string {
   const href = hrefForCategorySlug(slug);
-  return (
-    imageFromPopularCategories(href, GRID_IMAGE_PARAMS) ??
-    `${FALLBACK_IMAGE.split("?")[0]}?${GRID_IMAGE_PARAMS}`
-  );
+  return imageFromPopularCategories(href) ?? FALLBACK_IMAGE;
 }
 
 /** Hero-sized category image for bento tiles and marketing blocks. */
 export function getCategoryHeroImage(slug: string): string {
-  const href = hrefForCategorySlug(slug);
-  return (
-    imageFromPopularCategories(href, HERO_IMAGE_PARAMS) ??
-    withHeroParams(FALLBACK_IMAGE)
-  );
+  return HERO_IMAGE_BY_SLUG[slug.toLowerCase()] ?? FALLBACK_IMAGE;
 }
 
 /** Mega menu featured cards — supports per-category variants (e.g. electric vs acoustic). */
 export function getMegaMenuFeaturedImage(slug: string, variant?: string): string {
   if (variant) {
     const override = MEGA_MENU_VARIANT_OVERRIDES[`${slug}:${variant}`];
-    if (override) return withHeroParams(override);
+    if (override) return cleanLocalPath(override);
   }
 
   return getCategoryHeroImage(slug);

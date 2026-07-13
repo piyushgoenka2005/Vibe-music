@@ -29,7 +29,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "framerusercontent.com", pathname: "/**" },
     ],
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 3600,
+    minimumCacheTTL: 86400,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   async headers() {
     return [
@@ -38,7 +40,7 @@ const nextConfig: NextConfig = {
         headers: [...SECURITY_HEADERS],
       },
       {
-        source: "/(favicon.ico|icon-48.png|icon-192.png|apple-icon.png)",
+        source: "/(favicon.ico|icon-48.png|icon-192.png|icon-512.png|apple-icon.png|site.webmanifest)",
         headers: [
           {
             key: "Cross-Origin-Resource-Policy",

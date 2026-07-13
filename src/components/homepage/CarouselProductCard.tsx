@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import type { MouseEvent } from "react";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import HomepageProductImage from "@/components/homepage/HomepageProductImage";
 import { optimizeImageUrl } from "@/lib/images";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { resolveLinkHref } from "@/lib/routes";
@@ -92,11 +92,9 @@ export default function CarouselProductCard({
           ) : null}
           <div className="product-suggest__item-img">
             {imageSrc ? (
-              <Image
-                alt={item.imageAlt}
+              <HomepageProductImage
                 className="product-suggest__item-photo"
                 fill
-                loading="lazy"
                 sizes="(max-width: 767px) 46vw, 240px"
                 src={imageSrc}
               />

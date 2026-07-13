@@ -72,6 +72,12 @@ const recommended = [
   "CDN_STORAGE_ROOT",
   "CDN_PUBLIC_BASE_URL",
   "SMTP_ADMIN_TO",
+  "GOOGLE_PLACES_API_KEY",
+];
+
+const optional = [
+  "INVOICE_PDF_ENABLED",
+  "NEXT_PUBLIC_INVOICE_PDF_ENABLED",
 ];
 
 console.log("\nVibe Music env check (values hidden)\n");
@@ -81,6 +87,10 @@ for (const key of requiredProd) {
 }
 console.log("\nRecommended:");
 for (const key of recommended) {
+  console.log(`  ${status(key).padEnd(44)} ${key}`);
+}
+console.log("\nOptional:");
+for (const key of optional) {
   console.log(`  ${status(key).padEnd(44)} ${key}`);
 }
 

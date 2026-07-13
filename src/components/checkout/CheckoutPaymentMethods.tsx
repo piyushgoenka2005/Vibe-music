@@ -14,6 +14,8 @@ interface CheckoutPaymentMethodsProps {
   onlineChannel: OnlinePaymentChannel;
   onPaymentMethodChange: (method: PaymentMethod) => void;
   onOnlineChannelChange: (channel: OnlinePaymentChannel) => void;
+  /** When false, online/Razorpay cannot be selected. */
+  onlinePaymentsAvailable?: boolean;
 }
 
 const ONLINE_CHANNELS: Array<{
@@ -50,6 +52,7 @@ interface PaymentGlassCardProps {
   selected: boolean;
   wide?: boolean;
   channel?: boolean;
+  disabled?: boolean;
   onClick: () => void;
   icon: typeof CreditCard;
   iconSize?: number;
@@ -62,6 +65,7 @@ function PaymentGlassCard({
   selected,
   wide = false,
   channel = false,
+  disabled = false,
   onClick,
   icon: Icon,
   iconSize = 22,
@@ -71,15 +75,18 @@ function PaymentGlassCard({
 }: PaymentGlassCardProps) {
   return (
     <GlassEffectButton
+      aria-disabled={disabled}
       aria-pressed={selected}
       className={[
         "checkout-pay-card",
         wide ? "checkout-pay-card--wide" : "",
         channel ? "checkout-pay-card--channel" : "",
         selected ? "checkout-pay-card--selected" : "",
+        disabled ? "checkout-pay-card--disabled" : "",
       ]
         .filter(Boolean)
         .join(" ")}
+      disabled={disabled}
       onClick={onClick}
       selected={selected}
       tone="light"
@@ -117,6 +124,7 @@ export default function CheckoutPaymentMethods({
   onlineChannel,
   onPaymentMethodChange,
   onOnlineChannelChange,
+  onlinePaymentsAvailable = true,
 }: CheckoutPaymentMethodsProps) {
   return (
     <div className="checkout-pay-stage">
@@ -131,10 +139,18 @@ export default function CheckoutPaymentMethods({
         <div className="checkout-pay-methods">
           <div className="checkout-pay-methods__primary">
             <PaymentGlassCard
+              disabled={!onlinePaymentsAvailable}
               icon={CreditCard}
-              onClick={() => onPaymentMethodChange("razorpay")}
+              onClick={() => {
+                if (!onlinePaymentsAvailable) return;
+                onPaymentMethodChange("razorpay");
+              }}
               selected={paymentMethod === "razorpay"}
-              subtitle="UPI, cards, net banking via Razorpay"
+              subtitle={
+                onlinePaymentsAvailable
+                  ? "UPI, cards, net banking via Razorpay"
+                  : "Online payments unavailable — use COD"
+              }
               title="Pay Online"
               wide
             />
@@ -148,7 +164,7 @@ export default function CheckoutPaymentMethods({
             />
           </div>
 
-          {paymentMethod === "razorpay" ? (
+          {paymentMethod === "razorpay" && onlinePaymentsAvailable ? (
             <div className="checkout-pay-methods__channels">
               {ONLINE_CHANNELS.map((channel) => (
                 <PaymentGlassCard
@@ -171,7 +187,9 @@ export default function CheckoutPaymentMethods({
               <Lock size={12} strokeWidth={2} aria-hidden />
               256-bit SSL · PCI-DSS compliant
             </span>
-            <span>Powered by Razorpay</span>
+            <span>
+              {onlinePaymentsAvailable ? "Powered by Razorpay" : "COD available"}
+            </span>
           </div>
         </div>
       </GlassEffect>

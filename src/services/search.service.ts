@@ -106,7 +106,13 @@ export async function fetchSearchSuggestions(
 
 export async function fetchSearchResults(
   query: string,
-  filters?: { category?: string; brand?: string; sort?: string }
+  filters?: {
+    category?: string;
+    brand?: string;
+    sort?: string;
+    /** Return every match for client-side listing filters (category layout). */
+    all?: boolean;
+  }
 ): Promise<SearchResultsData> {
   const trimmed = query.trim();
   const hasFilter = Boolean(filters?.category?.trim() || filters?.brand?.trim());
@@ -124,10 +130,13 @@ export async function fetchSearchResults(
   const params = new URLSearchParams();
   if (trimmed) params.set("q", trimmed);
   params.set("mode", "results");
+  if (filters?.all) params.set("all", "1");
   if (filters?.category) params.set("category", filters.category);
-  if (filters?.brand) params.set("brand", filters.brand);
-  if (filters?.sort && filters.sort !== "relevance") {
-    params.set("sort", filters.sort);
+  if (!filters?.all) {
+    if (filters?.brand) params.set("brand", filters.brand);
+    if (filters?.sort && filters.sort !== "relevance") {
+      params.set("sort", filters.sort);
+    }
   }
 
   return readSearchApi<SearchApiResultsResponse>(

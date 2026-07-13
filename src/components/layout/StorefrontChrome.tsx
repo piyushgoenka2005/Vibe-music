@@ -29,7 +29,8 @@ export default function StorefrontChrome({
   children: React.ReactNode;
 }) {
   const pathname = usePathname() ?? "";
-  const hideChrome = pathname.startsWith("/admin");
+  const hideChrome =
+    pathname.startsWith("/admin") || pathname.startsWith("/gp9");
   const isLandingPage = pathname === "/";
   const isProductPage = /^\/product\/[^/]+$/.test(pathname);
   const isListingPage =

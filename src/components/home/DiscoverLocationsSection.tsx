@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { MapPin } from "lucide-react";
@@ -39,7 +40,15 @@ function LocationCard({
         } as CSSProperties
       }
     >
-      <div className="locations-strip__visual" aria-hidden />
+      <Image
+        alt=""
+        className="locations-strip__image"
+        fill
+        loading="lazy"
+        src={location.image}
+        sizes="(max-width: 767px) 70vw, 280px"
+        style={{ objectFit: "cover" }}
+      />
       <div className="locations-strip__overlay" />
       <div className="locations-strip__meta">
         <LocationStatusTag label={location.status} tone={location.tone} />

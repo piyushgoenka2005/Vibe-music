@@ -11,7 +11,7 @@ const footerLinks = {
     { label: "Gallery", href: "#gallery" },
     { label: "Sound Lab", href: "#midlife" },
     { label: "360° View", href: "#spinner" },
-    { label: "3D Experience", href: "#experience" },
+    { label: "Cinematic Showcase", href: "/gp9/showcase" },
     { label: "GP-9M", href: "#moving-keys" },
     { label: "Series", href: "#series" },
     { label: "Specs", href: "#specs" },

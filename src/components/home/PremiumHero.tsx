@@ -34,15 +34,9 @@ export default function PremiumHero() {
           </div>
         </div>
         <div className="premium-hero__visual">
-          <div className="premium-hero__card">
+          <div className="premium-hero__card premium-hero__card--mosaic">
             <div className="premium-hero__mesh" aria-hidden />
             <div className="premium-hero__orb" aria-hidden />
-            <span
-              className="premium-hero__badge premium-hero__badge--top premium-hero__badge--trending"
-              aria-hidden
-            >
-              New arrivals weekly
-            </span>
             <PremiumHeroRotatingVisual />
           </div>
         </div>

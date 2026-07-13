@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import {
   HOMEPAGE_TOP_PRODUCTS,
@@ -16,6 +17,13 @@ function TopProductCard({ product }: { product: HomepageTopProduct }) {
   const imagePreset = product.imageFit === "contain" ? "productDetail" : "blogCover";
   const imageSrc = optimizeImageUrl(product.image, imagePreset);
   const imageFit = product.imageFit ?? "cover";
+  const usePlainImg = imageSrc.startsWith("/api/media/thumb");
+  const imageClassName = [
+    "blog-teaser__image",
+    imageFit === "contain" ? "blog-teaser__image--contain" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <article className="blog-teaser__card">
@@ -36,22 +44,36 @@ function TopProductCard({ product }: { product: HomepageTopProduct }) {
             .join(" ")}
         >
           {product.image ? (
-            <img
-              alt=""
-              className={[
-                "blog-teaser__image",
-                imageFit === "contain" ? "blog-teaser__image--contain" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              loading="lazy"
-              src={imageSrc}
-              style={
-                product.imageObjectPosition
-                  ? { objectPosition: product.imageObjectPosition }
-                  : undefined
-              }
-            />
+            usePlainImg ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                alt=""
+                className={imageClassName}
+                loading="lazy"
+                decoding="async"
+                src={imageSrc}
+                style={
+                  product.imageObjectPosition
+                    ? { objectPosition: product.imageObjectPosition }
+                    : undefined
+                }
+              />
+            ) : (
+              <Image
+                alt=""
+                className={imageClassName}
+                fill
+                loading="lazy"
+                sizes="(max-width: 767px) 92vw, 360px"
+                src={imageSrc}
+                style={{
+                  objectFit: imageFit,
+                  ...(product.imageObjectPosition
+                    ? { objectPosition: product.imageObjectPosition }
+                    : null),
+                }}
+              />
+            )
           ) : (
             <div className="blog-teaser__image blog-teaser__image--placeholder" />
           )}

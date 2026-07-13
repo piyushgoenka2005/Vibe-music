@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import Link from "next/link";
 import { Heart, X } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
-import { optimizeImageUrl } from "@/lib/images";
 import { productPath } from "@/lib/routes";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useCartStore } from "@/store/cartStore";
@@ -44,9 +44,18 @@ function availabilityLabel(availability: GearStory["availability"]): string {
   return "Out of stock";
 }
 
+function gallerySources(story: GearStory): string[] {
+  const sources =
+    story.images.length > 0
+      ? story.images
+      : [story.image || story.posterUrl].filter(Boolean);
+  return Array.from(new Set(sources.filter((src) => Boolean(src?.trim()))));
+}
+
 export default function GearStoryModal({ story, onClose }: GearStoryModalProps) {
   const isClient = useIsClient();
   const [activeImage, setActiveImage] = useState(0);
+  const [failedSrc, setFailedSrc] = useState<Record<string, boolean>>({});
   const zoomRef = useRef<HTMLDivElement>(null);
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openDrawer);
@@ -59,7 +68,10 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
 
   useEffect(() => {
     if (!open) return;
-    const frame = requestAnimationFrame(() => setActiveImage(0));
+    const frame = requestAnimationFrame(() => {
+      setActiveImage(0);
+      setFailedSrc({});
+    });
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -105,8 +117,12 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
   const hasCatalogPrice = displayPrice > 0;
   const hasDiscount =
     story.discountPercentage > 0 && story.originalPrice > displayPrice;
-  const gallery =
-    story.images.length > 0 ? story.images : [story.image || story.posterUrl];
+  const gallery = gallerySources(story);
+  const activeSrc = gallery[activeImage] ?? story.image ?? story.posterUrl;
+  const mainSrc =
+    failedSrc[activeSrc] && story.posterUrl && story.posterUrl !== activeSrc
+      ? story.posterUrl
+      : activeSrc;
 
   return createPortal(
     <div
@@ -149,12 +165,19 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                 size={18}
                 className="gear-story-modal__share"
               />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={optimizeImageUrl(gallery[activeImage] ?? story.image, "productDetail")}
-                alt={story.name}
-                className="gear-story-modal__image"
-              />
+              {mainSrc ? (
+                <Image
+                  src={mainSrc}
+                  alt={story.name}
+                  fill
+                  sizes="(max-width: 768px) 90vw, 420px"
+                  priority
+                  className="gear-story-modal__image"
+                  onError={() =>
+                    setFailedSrc((prev) => ({ ...prev, [activeSrc]: true }))
+                  }
+                />
+              ) : null}
             </div>
             {gallery.length > 1 ? (
               <div className="gear-story-modal__thumbs" role="list">
@@ -169,8 +192,14 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                     onClick={() => setActiveImage(index)}
                     aria-label={`View image ${index + 1}`}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={optimizeImageUrl(src, "productCard")} alt="" />
+                    <Image
+                      src={src}
+                      alt=""
+                      width={112}
+                      height={112}
+                      sizes="56px"
+                      loading="lazy"
+                    />
                   </button>
                 ))}
               </div>

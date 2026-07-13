@@ -1,5 +1,11 @@
 import "server-only";
 
+type PdfEngine = "playwright" | "puppeteer";
+
+export type GenerateInvoicePdfResult =
+  | { ok: true; buffer: Buffer; engine: PdfEngine }
+  | { ok: false; reason: string };
+
 async function renderWithPlaywright(html: string): Promise<Buffer | null> {
   try {
     const playwrightName = "playwright";
@@ -29,7 +35,11 @@ async function renderWithPlaywright(html: string): Promise<Buffer | null> {
     } finally {
       await browser.close();
     }
-  } catch {
+  } catch (error) {
+    console.warn(
+      "[invoice-pdf] Playwright unavailable:",
+      error instanceof Error ? error.message : error
+    );
     return null;
   }
 }
@@ -64,13 +74,38 @@ async function renderWithPuppeteer(html: string): Promise<Buffer | null> {
     } finally {
       await browser.close();
     }
-  } catch {
+  } catch (error) {
+    console.warn(
+      "[invoice-pdf] Puppeteer unavailable:",
+      error instanceof Error ? error.message : error
+    );
     return null;
   }
 }
 
-export async function generateInvoicePdf(html: string): Promise<Buffer | null> {
+/** Prefer Playwright, then Puppeteer. Both are optional peer deps on the VPS. */
+export async function generateInvoicePdfResult(
+  html: string
+): Promise<GenerateInvoicePdfResult> {
   const playwrightPdf = await renderWithPlaywright(html);
-  if (playwrightPdf) return playwrightPdf;
-  return renderWithPuppeteer(html);
+  if (playwrightPdf) {
+    return { ok: true, buffer: playwrightPdf, engine: "playwright" };
+  }
+
+  const puppeteerPdf = await renderWithPuppeteer(html);
+  if (puppeteerPdf) {
+    return { ok: true, buffer: puppeteerPdf, engine: "puppeteer" };
+  }
+
+  return {
+    ok: false,
+    reason:
+      "No PDF engine available. Install Playwright (`npx playwright install chromium`) or Puppeteer on the server, then set INVOICE_PDF_ENABLED=true.",
+  };
+}
+
+/** @deprecated Prefer generateInvoicePdfResult for diagnostics. */
+export async function generateInvoicePdf(html: string): Promise<Buffer | null> {
+  const result = await generateInvoicePdfResult(html);
+  return result.ok ? result.buffer : null;
 }

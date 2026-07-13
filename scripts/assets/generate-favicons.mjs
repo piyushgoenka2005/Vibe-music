@@ -1,5 +1,6 @@
 /**
  * Build square favicon assets for browsers and Google Search.
+ * Source: public/Favicon.png
  * Run: npm run generate:favicons
  */
 import fs from "node:fs";
@@ -8,11 +9,13 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import toIco from "to-ico";
 
-const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const PUBLIC = path.join(ROOT, "public");
 const APP = path.join(ROOT, "src/app");
 
 const LOGO_CANDIDATES = [
+  path.join(PUBLIC, "Favicon.png"),
+  path.join(PUBLIC, "favicon.png"),
   path.join(PUBLIC, "images/FINAL LOGO VIBE MUSIC GUITAR 2.png"),
   path.join(PUBLIC, "logo.jpeg"),
 ];
@@ -24,31 +27,20 @@ function resolveLogoSource() {
     if (fs.existsSync(candidate)) return candidate;
   }
   throw new Error(
-    "Missing logo source. Expected public/images/FINAL LOGO VIBE MUSIC GUITAR 2.png or public/logo.jpeg."
+    "Missing logo source. Expected public/Favicon.png (or fallback logo files)."
   );
 }
 
 async function buildSquareLogo(size) {
   const source = resolveLogoSource();
-  const meta = await sharp(source).metadata();
-  const width = meta.width ?? size;
-  const height = meta.height ?? size;
-
-  // Wide header marks read better in tabs when we favor the left brand/guitar lockup.
-  const cropWidth = width > height * 1.2 ? Math.round(width * 0.42) : width;
 
   return sharp(source)
-    .extract({
-      left: 0,
-      top: 0,
-      width: Math.min(cropWidth, width),
-      height,
-    })
     .resize(size, size, {
       fit: "contain",
       background: SQUARE_BACKGROUND,
     })
-    .png()
+    .ensureAlpha()
+    .png({ force: true })
     .toBuffer();
 }
 
@@ -57,6 +49,7 @@ async function writeSquarePng(size, relativePath) {
   fs.mkdirSync(path.dirname(output), { recursive: true });
   const buffer = await buildSquareLogo(size);
   fs.writeFileSync(output, buffer);
+  console.log(`  ${relativePath} (${size}x${size})`);
 }
 
 async function main() {
@@ -65,23 +58,52 @@ async function main() {
 
   await writeSquarePng(48, "public/icon-48.png");
   await writeSquarePng(192, "public/icon-192.png");
+  await writeSquarePng(512, "public/icon-512.png");
   await writeSquarePng(180, "public/apple-icon.png");
-  await writeSquarePng(48, "src/app/icon.png");
+  await writeSquarePng(32, "src/app/icon.png");
   await writeSquarePng(180, "src/app/apple-icon.png");
 
   const icoBuffers = await Promise.all([16, 32, 48].map((size) => buildSquareLogo(size)));
   const ico = await toIco(icoBuffers);
   fs.writeFileSync(path.join(APP, "favicon.ico"), ico);
   fs.writeFileSync(path.join(PUBLIC, "favicon.ico"), ico);
-
-  console.log("Generated favicon assets:");
-  console.log("  public/favicon.ico");
   console.log("  src/app/favicon.ico");
-  console.log("  public/icon-48.png");
-  console.log("  public/icon-192.png");
-  console.log("  public/apple-icon.png");
-  console.log("  src/app/icon.png");
-  console.log("  src/app/apple-icon.png");
+  console.log("  public/favicon.ico");
+
+  const manifest = {
+    name: "Vibe Music",
+    short_name: "VibeMusic",
+    description:
+      "Vibe Music is India's trusted destination for musical instruments, pro audio, accessories, and expert gear advice.",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#ffffff",
+    theme_color: "#1253ed",
+    icons: [
+      {
+        src: "/icon-48.png",
+        sizes: "48x48",
+        type: "image/png",
+      },
+      {
+        src: "/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        src: "/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any maskable",
+      },
+    ],
+  };
+  fs.writeFileSync(
+    path.join(PUBLIC, "site.webmanifest"),
+    `${JSON.stringify(manifest, null, 2)}\n`
+  );
+  console.log("  public/site.webmanifest");
+  console.log("Favicon assets generated.");
 }
 
 main().catch((error) => {

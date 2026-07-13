@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Gp9Image as Image } from "@/gp9/components/gp9-image";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { ScrollReveal } from "@/gp9/components/ui/scroll-reveal";
 import { SectionHeading } from "@/gp9/components/ui/section-heading";
@@ -84,21 +84,31 @@ export function PhilosophySection() {
                 }}
               >
                 Ebony &amp; White
+                <span className="mt-3 block font-sans text-[0.28em] font-medium uppercase tracking-[0.35em] text-muted-foreground md:text-[0.22em]">
+                  Viewing {FINISHES[activeFinish].label}
+                </span>
               </h2>
             </div>
 
             <div className="relative z-10 grid grid-cols-1 gap-4 px-6 md:grid-cols-2 md:px-12 lg:px-20">
-              {cards.map(({ key, translateX }) => (
+              {cards.map(({ key, translateX }) => {
+                const isActive = activeFinish === key;
+                return (
                 <TiltCard key={key}>
-                  <div
+                  <button
+                    type="button"
+                    onClick={() => setActiveFinish(key)}
                     className={cn(
-                      "group relative aspect-[4/3] overflow-hidden rounded-2xl card-shine card-border-reveal cursor-target transition-all duration-500",
-                      activeFinish === key ? "ring-2 ring-foreground/20" : "md:opacity-100 opacity-80"
+                      "group relative aspect-[4/3] w-full overflow-hidden rounded-2xl card-shine card-border-reveal cursor-target text-left transition-all duration-500",
+                      isActive
+                        ? "z-20 scale-[1.02] ring-2 ring-primary shadow-xl"
+                        : "z-10 opacity-55 grayscale-[0.35] hover:opacity-80 md:opacity-70"
                     )}
                     data-cursor-target
+                    aria-pressed={isActive}
                     style={{
-                      transform: `translate3d(${translateX}%, 0, 0)`,
-                      WebkitTransform: `translate3d(${translateX}%, 0, 0)`,
+                      transform: `translate3d(${translateX}%, 0, 0) scale(${isActive ? 1.02 : 0.98})`,
+                      WebkitTransform: `translate3d(${translateX}%, 0, 0) scale(${isActive ? 1.02 : 0.98})`,
                     }}
                   >
                     <Image
@@ -114,12 +124,13 @@ export function PhilosophySection() {
                         <p className="mt-1 text-xl font-medium text-white">{FINISHES[key].label}</p>
                       </div>
                       <span className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-medium text-white backdrop-blur-md">
-                        GP-9
+                        {isActive ? "Selected" : "GP-9"}
                       </span>
                     </div>
-                  </div>
+                  </button>
                 </TiltCard>
-              ))}
+              );
+              })}
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import type { ProductImage, ProductVideo } from "@/types/product";
@@ -291,7 +292,15 @@ export default function ProductGallery({
             aria-current={index === activeIndex && !showVideo}
           >
             {image.src ? (
-              <img src={image.src} alt="" className="pdp-gallery__thumb-photo" />
+              <Image
+                src={image.src}
+                alt=""
+                width={112}
+                height={112}
+                sizes="64px"
+                loading="lazy"
+                className="pdp-gallery__thumb-photo"
+              />
             ) : (
               <div
                 className="pdp-gallery__thumb-swatch"
@@ -389,14 +398,16 @@ export default function ProductGallery({
                 />
               </div>
             ) : activeImage.src ? (
-              <img
+              <Image
                 ref={photoRef}
                 src={activeImage.src}
                 alt={activeImage.alt}
+                fill
+                sizes="(max-width: 767px) 100vw, 560px"
+                priority
                 className="pdp-gallery__photo"
                 draggable={false}
-                onLoad={(event) => {
-                  const image = event.currentTarget;
+                onLoadingComplete={(image) => {
                   setImageMetrics({
                     naturalWidth: image.naturalWidth,
                     naturalHeight: image.naturalHeight,

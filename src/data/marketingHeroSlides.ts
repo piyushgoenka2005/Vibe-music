@@ -6,6 +6,11 @@ export interface MarketingHeroSlide {
   src: string;
   alt: string;
   href: string;
+  brand?: string;
+  title?: string;
+  description?: string;
+  /** Small label shown on the mosaic cell, e.g. New / Bestseller / Trending. */
+  badge?: string;
   /** Default `contain` keeps product shots fully visible; use `cover` for banner art. */
   fit?: "contain" | "cover";
   objectPosition?: string;
@@ -16,34 +21,53 @@ export const MARKETING_HERO_SLIDES: MarketingHeroSlide[] = [
   {
     src: "https://cdn.vibemusic.in/products/guitars/hertz-hza-3900-hza-3900/bda6138f-71bc-4c26-aa76-b84be96c9c74.png",
     alt: "HERTZ HZA-3900 acoustic guitar in tobacco sunburst",
+    brand: "Hertz",
+    title: "HZA-3900 Acoustic Guitar",
+    description: "Tobacco sunburst dreadnought built for stage and studio.",
     href: productPath("hertz-hza-3900-hza-3900"),
+    badge: "New arrivals weekly",
     fit: "contain",
     objectPosition: "center bottom",
   },
   {
     src: "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-ams84f-ams84f/e5cbfc73-4ff2-4822-a93c-320d6607cd06.png",
     alt: "ADEON AMS84F professional audio mixer console",
+    brand: "Adeon",
+    title: "AMS84F Mixer Console",
+    description: "Professional multichannel mixer for live and recording.",
     href: productPath("adeon-ams84f-ams84f"),
+    badge: "New",
     fit: "contain",
     objectPosition: "center center",
   },
   {
     src: "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-hathor-16-avus-hathor-16/7cc17c11-e64d-4aed-b820-682165bb8d26.png",
     alt: "AVUS HATHOR 16 inch professional cymbal",
+    brand: "Avus",
+    title: "Hathor 16″ Cymbal",
+    description: "Professional crash with clear cut and controlled wash.",
     href: productPath("avus-avus-hathor-16-avus-hathor-16"),
+    badge: "Bestseller",
     fit: "contain",
     objectPosition: "center center",
   },
   {
     src: "https://cdn.vibemusic.in/products/microphones-wireless/adeon-adeon-aedan-pro1-adeon-aedan-pro1/e46688bd-9712-4eac-b0e1-2f9d9384cbae.png",
     alt: "ADEON AEDAN PRO1 professional microphone",
+    brand: "Adeon",
+    title: "AEDAN PRO1 Microphone",
+    description: "Studio-ready vocal mic with clear, focused response.",
     href: productPath("adeon-adeon-aedan-pro1-adeon-aedan-pro1"),
+    badge: "Trending",
     fit: "contain",
     objectPosition: "center bottom",
   },
   {
     src: "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-ad15dsp-ad15dsp/515381f7-f845-46c3-abef-a78cad31d6a7.png",
     alt: "ADEON AD15DSP professional active PA speaker",
+    brand: "Adeon",
+    title: "AD15DSP Active PA Speaker",
+    description: "Powered PA speaker with onboard DSP for live sets.",
     href: productPath("adeon-ad15dsp-ad15dsp"),
     fit: "contain",
     objectPosition: "center center",
@@ -51,6 +75,9 @@ export const MARKETING_HERO_SLIDES: MarketingHeroSlide[] = [
   {
     src: "https://cdn.vibemusic.in/products/home-audio-electronics/adeon-adeon-hdm-50-hdm-50/82b29098-de08-4906-abeb-471d4ea81120.png",
     alt: "ADEON HDM-50 professional headphones",
+    brand: "Adeon",
+    title: "HDM-50 Headphones",
+    description: "Closed-back monitoring headphones for mixing and practice.",
     href: productPath("adeon-adeon-hdm-50-hdm-50"),
     fit: "contain",
     objectPosition: "center center",
@@ -58,6 +85,9 @@ export const MARKETING_HERO_SLIDES: MarketingHeroSlide[] = [
   {
     src: "https://cdn.vibemusic.in/products/guitars/hertz-hza-3600-hza-3600/32de32ce-98b0-423c-8f2e-48659dc622ba.png",
     alt: "HERTZ HZA-3600 natural finish acoustic guitar",
+    brand: "Hertz",
+    title: "HZA-3600 Acoustic Guitar",
+    description: "Natural-finish acoustic with balanced tone and playability.",
     href: productPath("hertz-hza-3600-hza-3600"),
     fit: "contain",
     objectPosition: "center bottom",
@@ -65,6 +95,9 @@ export const MARKETING_HERO_SLIDES: MarketingHeroSlide[] = [
   {
     src: "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-acm18-acm18/bd28f237-9020-4c54-828b-13ec89f0aca5.png",
     alt: "ADEON ACM18 professional audio mixer console",
+    brand: "Adeon",
+    title: "ACM18 Mixer Console",
+    description: "Compact pro mixer for rehearsal rooms and small venues.",
     href: productPath("adeon-acm18-acm18"),
     fit: "contain",
     objectPosition: "center center",

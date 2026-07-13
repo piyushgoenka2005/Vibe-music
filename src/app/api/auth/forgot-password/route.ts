@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { isSmtpConfigured } from "@/lib/server/email/smtp";
 import { sendPasswordResetEmail } from "@/lib/server/passwordResetEmailService";
 import { findUserByEmail } from "@/lib/server/userService";
 import { forgotPasswordSchema } from "@/lib/validations/auth";
@@ -12,6 +13,9 @@ import {
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+
+const UNAVAILABLE_MESSAGE =
+  "Password reset email is temporarily unavailable. Please try again later or contact support.";
 
 export async function POST(request: Request) {
   try {
@@ -25,6 +29,11 @@ export async function POST(request: Request) {
     const csrfError = enforceMutationSecurity(request);
     if (csrfError) return csrfError;
 
+    // Fail closed before looking up the user so we never pretend an email was sent.
+    if (!isSmtpConfigured()) {
+      return NextResponse.json({ error: UNAVAILABLE_MESSAGE }, { status: 503 });
+    }
+
     const body = (await request.json()) as unknown;
     const parsed = forgotPasswordSchema.safeParse(body);
     if (!parsed.success) {
@@ -37,7 +46,7 @@ export async function POST(request: Request) {
     const email = parsed.data.email.trim().toLowerCase();
     const user = await findUserByEmail(email);
 
-    // Always return success to avoid email enumeration.
+    // Always return success when the account is unknown to avoid email enumeration.
     if (user?.passwordHash) {
       const token = randomBytes(32).toString("hex");
       const expires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
@@ -54,7 +63,11 @@ export async function POST(request: Request) {
         );
       }
       const resetUrl = `${siteUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
-      await sendPasswordResetEmail(email, resetUrl);
+      const sent = await sendPasswordResetEmail(email, resetUrl);
+      if (!sent) {
+        await prisma.verificationToken.deleteMany({ where: { identifier: email, token } });
+        return NextResponse.json({ error: UNAVAILABLE_MESSAGE }, { status: 503 });
+      }
     }
 
     return NextResponse.json({ ok: true });

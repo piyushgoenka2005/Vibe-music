@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import RevealGroup from "@/components/layout/RevealGroup";
@@ -37,12 +38,15 @@ function BigNamesDealItem({
         <div className="big-names-deals__hang-wrap">
           <div className="big-names-deals__product-stage">
             <span className="big-names-deals__product-shadow">
-              <img
+              <Image
                 alt={item.productAlt}
                 className="big-names-deals__product"
                 decoding="async"
                 loading={index < 2 ? "eager" : "lazy"}
                 src={productSrc}
+                width={320}
+                height={420}
+                sizes="(max-width: 767px) 42vw, 220px"
                 onError={() => {
                   if (productSrc !== PRODUCT_FALLBACK) {
                     setProductSrc(PRODUCT_FALLBACK);

@@ -9,7 +9,6 @@ interface SearchResultsRouteProps {
   searchParams: Promise<{
     q?: string;
     category?: string;
-    brand?: string;
   }>;
 }
 
@@ -19,14 +18,14 @@ export default async function SearchResultsRoute({
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
   const category = params.category ?? "";
-  const brand = params.brand ?? "";
 
   let initialResults: SearchResultsData | null = null;
-  const hasFilter = Boolean(category || brand);
+  const hasFilter = Boolean(category);
 
   if (query.length >= SEARCH_MIN_QUERY_LENGTH || hasFilter) {
     try {
-      initialResults = await getSearchResults({ query, category, brand });
+      // Fetch full match set; brand/price/rating filters apply client-side.
+      initialResults = await getSearchResults({ query, category });
     } catch {
       // Fall back to client-side fetching if the server lookup fails.
       initialResults = null;
@@ -38,7 +37,6 @@ export default async function SearchResultsRoute({
       <SearchResultsPage
         query={query}
         initialCategory={category}
-        initialBrand={brand}
         initialResults={initialResults}
       />
     </main>

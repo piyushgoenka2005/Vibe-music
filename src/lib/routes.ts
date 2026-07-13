@@ -58,6 +58,9 @@ export const ROUTES = {
   compare: "/compare",
   contact: "/contact",
   careers: "/pages/careers",
+  used: "/used",
+  rentals: "/rentals",
+  instrumentRentals: "/instrument-rentals",
   page: (slug: string) => `/pages/${slug}`,
 } as const;
 
@@ -110,13 +113,12 @@ const SHOP_PREFIX_RULES: Array<{ prefix: string; target: string }> = [
 const NAV_TOP_REDIRECTS: Record<string, string> = {
   "/whats-new": `${ROUTES.searchResults}?q=new`,
   "/dealzone": ROUTES.deals,
-  "/used": `${ROUTES.searchResults}?q=used`,
-  "/instrument-rentals": `${ROUTES.search}?q=rentals`,
+  "/instrument-rentals": ROUTES.rentals,
   "/insync": ROUTES.blog,
   "/sweetcare": `${ROUTES.search}?q=support`,
   "/outlet-deals": ROUTES.deals,
-  "/giveaway": `${ROUTES.search}?q=giveaway`,
-  "/financing": `${ROUTES.search}?q=financing`,
+  "/giveaway": ROUTES.deals,
+  "/financing": ROUTES.checkout,
   "/integration": ROUTES.search,
   "/tracking": ROUTES.trackOrder,
 };
@@ -230,8 +232,8 @@ export function resolveLegacyPath(pathname: string): string | null {
   if (path.startsWith("/dealzone")) {
     return ROUTES.deals;
   }
-  if (path.startsWith("/used")) {
-    return `${ROUTES.searchResults}?q=used`;
+  if (path.startsWith("/instrument-rentals")) {
+    return ROUTES.rentals;
   }
   if (path.startsWith("/nowshipping")) {
     return `${ROUTES.searchResults}?q=new`;
@@ -249,7 +251,7 @@ export function resolveLegacyPath(pathname: string): string | null {
     return `${ROUTES.searchResults}?q=new`;
   }
   if (path.startsWith("/financing")) {
-    return `${ROUTES.search}?q=financing`;
+    return ROUTES.checkout;
   }
 
   return null;

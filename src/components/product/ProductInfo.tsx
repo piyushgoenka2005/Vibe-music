@@ -2,7 +2,8 @@
 
 import type { RefObject } from "react";
 import Link from "next/link";
-import { formatDisplayPrice } from "@/utils/currency";
+import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import { ROUTES } from "@/lib/routes";
 import {
   attributeKey,
   findVariantBySelection,
@@ -74,6 +75,10 @@ export default function ProductInfo({
   atcSentinelRef,
 }: ProductInfoProps) {
   const displayPrice = selectedVariant.price;
+  const canPurchase =
+    isPurchasablePrice(displayPrice) &&
+    selectedVariant.availability !== "out-of-stock";
+  const isComingSoon = !isPurchasablePrice(displayPrice);
   const ratingValue = liveRating ?? product.rating;
   const reviewCountValue = liveReviewCount ?? product.reviewCount;
   const onSale = product.salePrice !== null && product.msrp !== null;
@@ -274,22 +279,31 @@ export default function ProductInfo({
       </div>
 
       <div ref={atcSentinelRef} className="pdp-actions">
-        <button
-          type="button"
-          className="pdp-btn pdp-btn--buy pdp-buy-now"
-          onClick={onBuyNow}
-          disabled={selectedVariant.availability === "out-of-stock"}
-        >
-          Buy Now
-        </button>
+        {isComingSoon ? (
+          <Link
+            href={`${ROUTES.contact}?subject=${encodeURIComponent(`Price enquiry: ${product.name}`)}`}
+            className="pdp-btn pdp-btn--buy pdp-buy-now"
+          >
+            Enquire for price
+          </Link>
+        ) : (
+          <button
+            type="button"
+            className="pdp-btn pdp-btn--buy pdp-buy-now"
+            onClick={onBuyNow}
+            disabled={!canPurchase}
+          >
+            Buy Now
+          </button>
+        )}
         <div className="pdp-actions__row">
           <button
             type="button"
             className="pdp-btn pdp-btn--primary"
             onClick={onAddToCart}
-            disabled={selectedVariant.availability === "out-of-stock"}
+            disabled={!canPurchase}
           >
-            Add to Cart
+            {isComingSoon ? "Coming Soon" : "Add to Cart"}
           </button>
           <button
             type="button"

@@ -12,10 +12,24 @@ export interface HomepageBannerSlide {
   objectPosition?: string;
 }
 
-export const HOMEPAGE_BANNER_ROTATION_MS = 3500;
+export const HOMEPAGE_BANNER_ROTATION_MS = 5500;
 
 /** Client-approved homepage hero banner carousel slides. */
 export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
+  {
+    id: "banner-hertz-electrix-guitar",
+    src: "/electrix-guitar.webp",
+    alt: "Hertz Super Strat electric guitar — Indian rosewood fretboard, 21 precision frets, PJ pickups at Vibe Music",
+    href: categoryPath("guitars"),
+    objectPosition: "center center",
+  },
+  {
+    id: "banner-hertz-hg-20",
+    src: "/hertz-hg-20.webp",
+    alt: "Hertz HG 20 portable guitar amplifier — delay & reverb, 20W powerful sound at Vibe Music",
+    href: `${ROUTES.searchResults}?brand=hertz`,
+    objectPosition: "center center",
+  },
   {
     id: "banner-zoom-ms-200d",
     src: "/images/banner-5.jpeg",
@@ -31,34 +45,15 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     objectPosition: "center center",
   },
   {
-    id: "banner-sale-july",
-    src: "/images/upto-60-off.png",
-    alt: "Up to 60% off — sale starts July 8th at Vibe Music",
-    href: ROUTES.deals,
-    objectPosition: "center center",
-  },
-  {
     id: "banner-endless-sound",
-    src: "/images/3.3.png",
+    src: "/images/3.3.webp",
     alt: "Endless Sound — premium electric guitars at Vibe Music",
     href: categoryPath("guitars"),
     objectPosition: "center center",
   },
   {
-    id: "banner-play-everyday",
-    src: "/images/Play Music Everyday.png",
-    alt: "Play Music Everyday — bringing happiness through the language of music at Vibe Music",
-    href: ROUTES.search,
-  },
-  {
-    id: "banner-grand-piano-9",
-    src: "/images/grand-piano-9.png",
-    alt: "Grand Piano-9 — fun and easy piano with hybrid mechanism for all ages at Vibe Music",
-    href: ROUTES.gp9,
-  },
-  {
     id: "banner-hertz",
-    src: "/images/Hertz.png",
+    src: "/images/Hertz.webp",
     alt: "Hertz amplifiers — turn up the power and feel every beat at Vibe Music",
     href: `${ROUTES.searchResults}?brand=hertz`,
   },

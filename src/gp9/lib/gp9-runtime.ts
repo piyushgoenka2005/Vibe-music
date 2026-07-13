@@ -309,8 +309,8 @@ export function buildSalamanderUrls(): Record<string, string> {
 // MODEL CONFIG
 // ============================================================================
 
-/** GLB path — drop a Draco-compressed grand piano at public/models/gp9-grand.glb */
-export const GP9_GRAND_GLB_PATH = "/models/gp9-grand.glb";
+/** GLB path — see `@/gp9/lib/gp9-model` (re-exported for scene imports). */
+export { GP9_GRAND_GLB_PATH } from "@/gp9/lib/gp9-model";
 
 export type Gp9FinishId = "ebony" | "polished_ebony" | "white";
 

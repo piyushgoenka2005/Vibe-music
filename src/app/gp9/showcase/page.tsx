@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Gp9RouteErrorBoundary } from "@/gp9/components/gp9-route-error-boundary";
 import Gp9ShowcasePage from "@/gp9/components/gp9-cinematics/gp9-showcase-page";
 
 export const metadata: Metadata = {
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function Gp9ShowcaseRoute() {
-  return <Gp9ShowcasePage />;
+  return (
+    <Gp9RouteErrorBoundary>
+      <Gp9ShowcasePage />
+    </Gp9RouteErrorBoundary>
+  );
 }

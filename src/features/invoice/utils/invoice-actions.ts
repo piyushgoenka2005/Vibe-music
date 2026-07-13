@@ -14,7 +14,7 @@ export function getInvoiceDownloadAction(
   }
 
   if (invoiceUrls.print) {
-    return { href: invoiceUrls.print, label: "Print invoice" };
+    return { href: invoiceUrls.print, label: "Print / Save as PDF" };
   }
 
   return invoiceUrls.html

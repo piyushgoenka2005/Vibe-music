@@ -38,7 +38,7 @@ export default function HomepageDealsSection({ section }: HomepageDealsSectionPr
 
         <div className="homepage-deals-section__stage">
           <div
-            className="homepage-deals-section__track tiles tiles--slider flex-container flex-row flex-nowrap scrollbar-minimal horizontal cols-4 product-peak-3"
+            className="homepage-deals-section__track tiles tiles--slider flex-container flex-row flex-nowrap scrollbar-minimal horizontal"
             id={sliderId}
           >
             {products.map((item, index) => (

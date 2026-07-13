@@ -48,3 +48,50 @@ export async function createContactMessage(
 
   return record;
 }
+
+export async function listContactMessages(options?: {
+  status?: "new" | "read";
+  limit?: number;
+}): Promise<ContactMessageRecord[]> {
+  const limit = Math.min(Math.max(options?.limit ?? 50, 1), 200);
+  const rows = await prisma.contactMessage.findMany({
+    where: options?.status ? { status: options.status } : undefined,
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone ?? undefined,
+    subject: row.subject,
+    message: row.message,
+    status: row.status === "read" ? "read" : "new",
+    createdAt: row.createdAt,
+  }));
+}
+
+export async function updateContactMessageStatus(
+  id: string,
+  status: "new" | "read"
+): Promise<ContactMessageRecord | null> {
+  try {
+    const row = await prisma.contactMessage.update({
+      where: { id },
+      data: { status },
+    });
+    return {
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone ?? undefined,
+      subject: row.subject,
+      message: row.message,
+      status: row.status === "read" ? "read" : "new",
+      createdAt: row.createdAt,
+    };
+  } catch {
+    return null;
+  }
+}

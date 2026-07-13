@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import ProductShareButton from "@/components/product/ProductShareButton";
@@ -14,8 +15,9 @@ interface ScannerProductCardProps {
 }
 
 export default function ScannerProductCard({ product }: ScannerProductCardProps) {
-  const [imageSrc, setImageSrc] = useState(product.image);
+  const [failed, setFailed] = useState(false);
   const href = heroMarqueeProductHref(product);
+  const imageSrc = failed ? IMAGE_FALLBACK : product.image;
 
   return (
     <div className="scanner-card-wrap">
@@ -31,18 +33,15 @@ export default function ScannerProductCard({ product }: ScannerProductCardProps)
         prefetch
         aria-label={`View ${product.name}`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           className="scanner-card__img"
           src={imageSrc}
           alt={product.imageAlt}
           loading="lazy"
-          decoding="async"
           width={44}
           height={44}
-          onError={() => {
-            if (imageSrc !== IMAGE_FALLBACK) setImageSrc(IMAGE_FALLBACK);
-          }}
+          sizes="44px"
+          onError={() => setFailed(true)}
         />
         <div className="scanner-card__left">
           <div className="scanner-card__name">{product.name}</div>

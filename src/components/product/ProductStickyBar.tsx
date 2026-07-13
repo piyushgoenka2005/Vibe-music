@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { formatDisplayPrice } from "@/utils/currency";
+import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 
@@ -26,6 +26,8 @@ export default function ProductStickyBar({
   const isMobile = useIsMobileViewport();
   const isClient = useIsClient();
   const [visible, setVisible] = useState(false);
+  const canPurchase = inStock && isPurchasablePrice(price);
+  const isComingSoon = !isPurchasablePrice(price);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -53,7 +55,7 @@ export default function ProductStickyBar({
     >
       <div className="pdp-mobile-bar__price">
         <span className="pdp-mobile-bar__label">
-          {inStock ? "Price" : "Unavailable"}
+          {isComingSoon ? "Price" : canPurchase ? "Price" : "Unavailable"}
         </span>
         <strong>{formatDisplayPrice(price)}</strong>
       </div>
@@ -61,16 +63,20 @@ export default function ProductStickyBar({
         <button
           type="button"
           className="pdp-mobile-bar__cta pdp-mobile-bar__cta--cart"
-          disabled={!inStock}
+          disabled={!canPurchase}
           onClick={onAddToCart}
-          aria-label={`Add ${productName} to cart`}
+          aria-label={
+            isComingSoon
+              ? `${productName} coming soon`
+              : `Add ${productName} to cart`
+          }
         >
-          {inStock ? "Add to Cart" : "Out of Stock"}
+          {isComingSoon ? "Coming Soon" : canPurchase ? "Add to Cart" : "Out of Stock"}
         </button>
         <button
           type="button"
           className="pdp-mobile-bar__cta pdp-mobile-bar__cta--buy"
-          disabled={!inStock}
+          disabled={!canPurchase}
           onClick={onBuyNow}
           aria-label={`Buy ${productName} now`}
         >

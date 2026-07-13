@@ -18,8 +18,9 @@ export function isGoogleAuthConfigured(): boolean {
   const clientId = readEnv("AUTH_GOOGLE_ID", "GOOGLE_CLIENT_ID");
   const clientSecret = readEnv("AUTH_GOOGLE_SECRET", "GOOGLE_CLIENT_SECRET");
   if (!clientId || !clientSecret) return false;
-  // Real Google client IDs are long and usually end with this suffix.
   if (clientId.length < 20 || clientSecret.length < 10) return false;
+  // Client secret accidentally pasted into the ID field.
+  if (clientId.startsWith("GOCSPX-")) return false;
   return true;
 }
 

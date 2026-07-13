@@ -453,8 +453,8 @@ body.site-nav-open .site-header--scroll-hidden {
   display: block;
   height: auto;
   width: auto;
-  max-height: 42px;
-  max-width: min(168px, 34vw);
+  max-height: 56px;
+  max-width: min(220px, 42vw);
   object-fit: contain;
   object-position: left center;
 }
@@ -1525,8 +1525,8 @@ body.site-nav-open .site-header--hidden {
 
   .site-header__logo img,
   .site-header__logo .assets-site-header__menu-logo {
-    max-height: 34px;
-    max-width: min(128px, 34vw);
+    max-height: 44px;
+    max-width: min(168px, 40vw);
   }
 
   .site-header__search--bar {
@@ -1640,8 +1640,8 @@ body.site-nav-open .site-header--hidden {
 
   .site-header__logo img,
   .site-header__logo .assets-site-header__menu-logo {
-    max-height: 30px;
-    max-width: min(104px, 30vw);
+    max-height: 40px;
+    max-width: min(148px, 38vw);
   }
 
   .site-header__search-toggle,

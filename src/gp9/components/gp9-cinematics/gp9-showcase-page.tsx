@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Header } from "@/gp9/components/header";
 import { CinematicShotSequence } from "@/gp9/components/gp9-cinematics/cinematic-shot-sequence";
 import { useCinematicScroll } from "@/gp9/components/gp9-cinematics/use-cinematic-scroll";
 import {
@@ -63,6 +64,7 @@ export default function Gp9ShowcasePage() {
 
   return (
     <main className="premium-home gp9-page gp9-showcase-page" data-lenis-prevent>
+      <Header />
       <div className="gp9-showcase-hero">
         <span className="gp9-showcase-hero-badge">GP-9 CINEMATIC</span>
         <h1 className="gp9-showcase-hero-title">Seven showcase shots</h1>
@@ -125,7 +127,7 @@ export default function Gp9ShowcasePage() {
       </div>
 
       <footer className="gp9-showcase-footer">
-        <p>Phase 6 · GSAP ScrollTrigger · ShowroomCanvas</p>
+        <p>Cinematic showcase · live showroom canvas</p>
         <Link href={gp9Path("/#midlife")} className="gp9-showcase-footer-link">
           Open Sound Lab → Play
         </Link>

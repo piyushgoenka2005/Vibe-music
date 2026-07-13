@@ -31,6 +31,7 @@ export async function GET(request: Request) {
     const brand = searchParams.get("brand") ?? undefined;
     const sort = searchParams.get("sort") ?? undefined;
     const mode = searchParams.get("mode") ?? "results";
+    const returnAll = searchParams.get("all") === "1";
     const page = parsePositiveInt(searchParams.get("page"), 1);
     const limit = Math.min(
       parsePositiveInt(searchParams.get("limit"), DEFAULT_LIMIT),
@@ -52,7 +53,15 @@ export async function GET(request: Request) {
       });
     }
 
-    const products = await searchProducts({ query, category, brand, sort });
+    // Listing page applies brand/sort client-side; only narrow by category here.
+    const apiBrand = returnAll ? undefined : brand;
+    const apiSort = returnAll ? undefined : sort;
+    const products = await searchProducts({
+      query,
+      category,
+      brand: apiBrand,
+      sort: apiSort,
+    });
     const categories = buildCategoryFacets(products);
     const brands = buildBrandFacets(products);
 
@@ -80,6 +89,28 @@ export async function GET(request: Request) {
     }
 
     const total = products.length;
+
+    if (returnAll) {
+      return NextResponse.json(
+        {
+          query,
+          products,
+          categories,
+          brands,
+          total,
+          page: 1,
+          limit: total,
+          totalPages: 1,
+          hasMore: false,
+        },
+        {
+          headers: {
+            "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+          },
+        }
+      );
+    }
+
     const offset = (page - 1) * limit;
     const paginated = products.slice(offset, offset + limit);
 

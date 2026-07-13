@@ -14,7 +14,11 @@ import { LineupSection } from "@/gp9/components/sections/lineup-section";
 import { SpecsSection } from "@/gp9/components/sections/specs-section";
 import { TestimonialsSection } from "@/gp9/components/sections/testimonials-section";
 import { CtaSection } from "@/gp9/components/sections/cta-section";
+import { FooterSection } from "@/gp9/components/sections/footer-section";
 import { Marquee } from "@/gp9/components/ui/marquee";
+import { StickyCta } from "@/gp9/components/sticky-cta";
+import { MobileFixedFooter } from "@/gp9/components/mobile-fixed-footer";
+import { Header } from "@/gp9/components/header";
 
 const heroMarquee = [
   "Roland GP-9",
@@ -37,12 +41,13 @@ const productJsonLd = {
 
 export default function Gp9HomePage() {
   return (
-    <main className="premium-home gp9-page relative min-h-screen w-full max-w-full overflow-x-clip">
+    <main className="premium-home gp9-page relative min-h-screen w-full max-w-full overflow-x-clip pb-20 lg:pb-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
       <h1 className="visually-hidden">Roland GP-9 Digital Grand Piano | Vibe Music</h1>
+      <Header />
       <HeroSection />
       <Marquee items={heroMarquee} speed="slow" />
       <PhilosophySection />
@@ -60,6 +65,9 @@ export default function Gp9HomePage() {
       <SpecsSection />
       <TestimonialsSection />
       <CtaSection />
+      <FooterSection />
+      <StickyCta />
+      <MobileFixedFooter />
     </main>
   );
 }

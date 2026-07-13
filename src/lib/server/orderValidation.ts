@@ -88,8 +88,11 @@ export async function resolveOrderItems(
       }
 
       const unitPrice = variant?.price ?? product.price;
-      const salePrice =
-        product.originalPrice > unitPrice ? unitPrice : unitPrice;
+      if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+        throw new Error(
+          `"${product.name}" is not available for purchase yet (Coming Soon)`
+        );
+      }
 
       return {
         productId: item.productId,
@@ -98,7 +101,7 @@ export async function resolveOrderItems(
         variantLabel: variant?.label ?? item.variantLabel,
         name: variant?.label ? `${product.name} — ${variant.label}` : product.name,
         quantity: item.quantity,
-        price: salePrice,
+        price: unitPrice,
         gstRate: (product.gstRate ??
           item.gstRate ??
           getDefaultGstRateForCategory(product.category)) as GSTRate,

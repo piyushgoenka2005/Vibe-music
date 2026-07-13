@@ -7,6 +7,7 @@ import {
   upsertOrderShipment,
 } from "@/lib/server/shipmentService";
 import { notifyUserIfAllowed } from "@/lib/server/notificationRepository";
+import { sendShipmentUpdateEmail } from "@/lib/server/shipmentEmailService";
 import {
   addTrackingEventSchema,
   upsertShipmentSchema,
@@ -62,6 +63,14 @@ export async function PUT(request: Request, context: RouteContext) {
       });
     }
 
+    void sendShipmentUpdateEmail({
+      order,
+      trackingNumber: parsed.trackingNumber,
+      carrier: parsed.carrier,
+      carrierName: parsed.carrierName,
+      status: parsed.status ?? result.shipment.status,
+    });
+
     return NextResponse.json(result);
   } catch (error) {
     return adminErrorResponse(error);
@@ -89,6 +98,17 @@ export async function POST(request: Request, context: RouteContext) {
       },
       admin.email
     );
+
+    const { shipment } = await getOrderShipmentDetails(id);
+    if (shipment?.trackingNumber) {
+      void sendShipmentUpdateEmail({
+        order,
+        trackingNumber: shipment.trackingNumber,
+        carrier: shipment.carrier,
+        carrierName: shipment.carrierName,
+        status: parsed.status || parsed.title,
+      });
+    }
 
     return NextResponse.json(result);
   } catch (error) {

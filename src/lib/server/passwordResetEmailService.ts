@@ -26,13 +26,17 @@ export async function sendPasswordResetEmail(
     text: `Reset your ${BRAND.name} password: ${resetUrl}\n\nThis link expires in one hour.`,
   });
 
-  if (!result.ok && !result.skipped) {
-    console.error(`[auth] Password reset email failed for ${email}`);
-  }
-
   if (result.skipped) {
-    console.warn(`[auth] Password reset link (SMTP not configured): ${resetUrl}`);
+    console.error(
+      `[auth] Password reset skipped — SMTP not configured (link not emailed): ${email}`
+    );
+    return false;
   }
 
-  return result.ok;
+  if (!result.ok) {
+    console.error(`[auth] Password reset email failed for ${email}`);
+    return false;
+  }
+
+  return true;
 }

@@ -227,6 +227,7 @@ export function useSearchResults(
     category?: string;
     brand?: string;
     sort?: string;
+    all?: boolean;
   },
   options?: {
     /** Server-rendered results matching the initial query/filters. */
@@ -245,13 +246,14 @@ export function useSearchResults(
   const category = filters?.category;
   const brand = filters?.brand;
   const sort = filters?.sort;
+  const all = filters?.all === true;
   const initialKeyRef = useRef<string | null>(
     initialResults
       ? [
           query.trim(),
           options?.initialFilters?.category ?? "",
-          options?.initialFilters?.brand ?? "",
-          "",
+          all ? "" : (options?.initialFilters?.brand ?? ""),
+          all ? "all" : "",
         ].join("|")
       : null
   );
@@ -263,8 +265,8 @@ export function useSearchResults(
     const requestKey = [
       query.trim(),
       category ?? "",
-      brand ?? "",
-      sort && sort !== "relevance" ? sort : "",
+      all ? "" : (brand ?? ""),
+      all ? "all" : sort && sort !== "relevance" ? sort : "",
     ].join("|");
     if (initialKeyRef.current !== null && initialKeyRef.current === requestKey) {
       initialKeyRef.current = null;
@@ -280,7 +282,7 @@ export function useSearchResults(
     initialKeyRef.current = null;
 
     async function run() {
-      const hasFilter = Boolean(category?.trim() || brand?.trim());
+      const hasFilter = Boolean(category?.trim() || (!all && brand?.trim()));
 
       if (query.trim().length < MIN_QUERY_LENGTH && !hasFilter) {
         setResults({
@@ -300,8 +302,9 @@ export function useSearchResults(
       try {
         const data = await fetchSearchResults(query, {
           category,
-          brand,
-          sort,
+          brand: all ? undefined : brand,
+          sort: all ? undefined : sort,
+          all,
         });
         if (cancelled) return;
         setResults(data);
@@ -322,7 +325,7 @@ export function useSearchResults(
     return () => {
       cancelled = true;
     };
-  }, [query, category, brand, sort, initialResults]);
+  }, [query, category, brand, sort, all, initialResults]);
 
   return { status, error, results };
 }

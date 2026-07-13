@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
   const apiKey = process.env.GOOGLE_PLACES_API_KEY?.trim();
   if (!apiKey) {
-    return NextResponse.json({ predictions: [] });
+    return NextResponse.json({ predictions: [], available: false });
   }
 
   const input = new URL(request.url).searchParams.get("input")?.trim();
@@ -51,6 +51,7 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({
+    available: true,
     predictions: (data.predictions ?? []).map((p) => ({
       description: p.description,
       placeId: p.place_id,

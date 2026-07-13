@@ -10,7 +10,7 @@ export function SpinnerSection() {
       <SectionHeading
         label="360° View"
         title="Every side, in your hands."
-        subtitle="Drag to rotate the GP-9 — explore the cabinet from every angle, just like on Roland's product experience."
+        subtitle="Drag to rotate through GP-9 studio angles. When Roland’s full spin sequence is available we use it; otherwise you get a smooth multi-angle gallery rotation."
         className="py-20 md:py-28 lg:pb-12"
       />
 

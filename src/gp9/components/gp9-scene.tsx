@@ -7,7 +7,6 @@ import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNo
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   ContactShadows,
-  Environment,
   MeshReflectorMaterial,
   OrbitControls,
   PerformanceMonitor,
@@ -20,10 +19,8 @@ import {
   buildMeshRegistry,
   getKeyPressOffset,
   getCameraPreset,
-  getEnvironmentHdrPath,
   getFinish,
   getPerformanceMode,
-  GP9_GRAND_GLB_PATH,
   isBlackKey,
   PIANO_KEYS,
   whiteKeyIndex,
@@ -32,6 +29,11 @@ import {
   type Gp9PerformanceModeId,
   type Gp9SceneChoreography,
 } from "@/gp9/lib/gp9-runtime";
+import {
+  GP9_GRAND_GLB_PATH,
+  probeGp9GlbAvailable,
+  resolveGp9GlbMode,
+} from "@/gp9/lib/gp9-model";
 
 // ============================================================================
 // MODEL ERROR BOUNDARY
@@ -211,6 +213,7 @@ export function PianoModel({
 
   return (
     <group position={[0, -0.6, 0]} scale={1.1}>
+      {/* Case body */}
       <mesh position={[0, 0.35, 0]} castShadow receiveShadow>
         <boxGeometry args={[4.4, 0.55, 1.6]} />
         <meshStandardMaterial
@@ -223,15 +226,35 @@ export function PianoModel({
         />
       </mesh>
 
+      {/* Soft rim / cheek blocks */}
+      <mesh position={[-2.15, 0.48, 0.35]} castShadow>
+        <boxGeometry args={[0.12, 0.35, 1.1]} />
+        <meshStandardMaterial
+          color={finish.bodyLight}
+          metalness={finish.metalness}
+          roughness={finish.roughness}
+        />
+      </mesh>
+      <mesh position={[2.15, 0.48, 0.35]} castShadow>
+        <boxGeometry args={[0.12, 0.35, 1.1]} />
+        <meshStandardMaterial
+          color={finish.bodyLight}
+          metalness={finish.metalness}
+          roughness={finish.roughness}
+        />
+      </mesh>
+
+      {/* Fallboard */}
       <mesh position={[0, 0.62, 0.55]} castShadow>
         <boxGeometry args={[4.2, 0.12, 0.5]} />
         <meshStandardMaterial
           color={finish.bodyLight}
           metalness={finish.metalness + 0.05}
-          roughness={finish.roughness - 0.05}
+          roughness={Math.max(0.12, finish.roughness - 0.08)}
         />
       </mesh>
 
+      {/* Keybed */}
       <mesh position={[0, KEYBOARD_Y - 0.01, KEYBOARD_Z]} castShadow receiveShadow>
         <boxGeometry args={[KEYBOARD_WIDTH + 0.08, 0.03, WHITE_DEPTH + 0.06]} />
         <meshStandardMaterial color="#1a1814" metalness={0.2} roughness={0.7} />
@@ -275,7 +298,16 @@ export function PianoModel({
           <meshStandardMaterial
             color={finish.body}
             metalness={finish.metalness + 0.1}
-            roughness={finish.roughness - 0.08}
+            roughness={Math.max(0.1, finish.roughness - 0.1)}
+          />
+        </mesh>
+        {/* Inner lid reflection panel */}
+        <mesh position={[0, 0.04, 0.4]} castShadow>
+          <boxGeometry args={[4.05, 0.02, 1.2]} />
+          <meshStandardMaterial
+            color={finish.bodyLight}
+            metalness={0.65}
+            roughness={0.18}
           />
         </mesh>
         <mesh position={[0, 0.22, 0.1]} castShadow>
@@ -284,18 +316,26 @@ export function PianoModel({
         </mesh>
       </group>
 
+      {/* Legs + feet */}
       {[
         [-1.2, -0.05, 0.5],
         [1.2, -0.05, 0.5],
         [-1.2, -0.05, -0.5],
         [1.2, -0.05, -0.5],
       ].map((pos, i) => (
-        <mesh key={i} position={pos as [number, number, number]} castShadow>
-          <cylinderGeometry args={[0.06, 0.08, 0.5, 12]} />
-          <meshStandardMaterial color={finish.body} metalness={0.3} roughness={0.5} />
-        </mesh>
+        <group key={i} position={pos as [number, number, number]}>
+          <mesh castShadow position={[0, 0, 0]}>
+            <cylinderGeometry args={[0.055, 0.075, 0.52, 14]} />
+            <meshStandardMaterial color={finish.body} metalness={0.35} roughness={0.45} />
+          </mesh>
+          <mesh castShadow position={[0, -0.28, 0]}>
+            <cylinderGeometry args={[0.11, 0.12, 0.04, 16]} />
+            <meshStandardMaterial color={finish.accent} metalness={0.45} roughness={0.4} />
+          </mesh>
+        </group>
       ))}
 
+      {/* Music desk */}
       <mesh position={[0, 0.95, -0.15]} rotation={[-0.25, 0, 0]} castShadow>
         <boxGeometry args={[1.4, 0.03, 0.5]} />
         <meshStandardMaterial color={finish.bodyLight} metalness={0.35} roughness={0.45} />
@@ -406,20 +446,46 @@ export function PianoModelGlb(props: PianoModelProps) {
   return <primitive object={cloned} />;
 }
 
-useGLTF.preload(GP9_GRAND_GLB_PATH);
+// GLB is auto-detected when public/models/gp9-grand.glb exists.
+// NEXT_PUBLIC_GP9_GLB=0 forces procedural; =1 forces GLB attempt.
 
-// ============================================================================
-// PIANO MODEL UNIFIED
-// ============================================================================
+function usePreferGp9Glb(): boolean {
+  const mode = resolveGp9GlbMode();
+  const [available, setAvailable] = useState(mode === "on");
 
-const USE_GLB = process.env.NEXT_PUBLIC_GP9_GLB !== "0";
+  useEffect(() => {
+    if (mode === "off") {
+      setAvailable(false);
+      return;
+    }
+    if (mode === "on") {
+      setAvailable(true);
+      useGLTF.preload(GP9_GRAND_GLB_PATH);
+      return;
+    }
+
+    let cancelled = false;
+    void probeGp9GlbAvailable().then((ok) => {
+      if (cancelled) return;
+      setAvailable(ok);
+      if (ok) useGLTF.preload(GP9_GRAND_GLB_PATH);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [mode]);
+
+  return available;
+}
 
 function ProceduralFallback(props: PianoModelProps) {
   return <PianoModel {...props} />;
 }
 
 export function PianoModelUnified(props: PianoModelProps) {
-  if (!USE_GLB) return <ProceduralFallback {...props} />;
+  const preferGlb = usePreferGp9Glb();
+
+  if (!preferGlb) return <ProceduralFallback {...props} />;
 
   return (
     <ModelErrorBoundary fallback={<ProceduralFallback {...props} />}>
@@ -773,11 +839,11 @@ function PerformanceLights({
 
   return (
     <>
-      <ambientLight ref={ambientRef} intensity={lighting.ambient} />
+      <ambientLight ref={ambientRef} intensity={lighting.ambient * 1.55} />
       <directionalLight
         ref={keyRef}
         position={lighting.keyLightPosition}
-        intensity={lighting.keyLightIntensity}
+        intensity={lighting.keyLightIntensity * 1.2}
         color={lighting.accent}
         castShadow
         shadow-mapSize={[1024, 1024]}
@@ -856,7 +922,7 @@ function SceneContent({
         blur={2.8}
         far={4.5}
       />
-      <Environment files={getEnvironmentHdrPath(mode.lighting.environment)} />
+      {/* No HDR Environment — remote drei presets fail offline / CSP and crash the page. */}
       {highQuality && (
         <ShowroomParticles
           playingBoost={playingBoost}
@@ -953,36 +1019,44 @@ export function ShowroomCanvas({
   }, []);
 
   return (
-    <Canvas
-      shadows
-      dpr={dpr}
-      camera={{ position: [0, 1.8, 5.2], fov: 42, near: 0.1, far: 50 }}
-      className={className}
-      gl={{
-        antialias: true,
-        alpha: true,
-        powerPreference: "high-performance",
-        stencil: false,
-      }}
-      performance={{ min: 0.5, max: 1, debounce: 200 }}
+    <ModelErrorBoundary
+      fallback={
+        <div className="flex h-full min-h-[240px] w-full items-center justify-center bg-secondary/40 text-xs uppercase tracking-[0.3em] text-muted-foreground">
+          3D preview unavailable
+        </div>
+      }
     >
-      <Suspense fallback={null}>
-        <ShowroomScene
-          lidOpen={lidOpen}
-          activeNotes={activeNotes}
-          performanceModeId={performanceModeId}
-          finishId={finishId}
-          sustain={sustain}
-          softPedal={softPedal}
-          sostenuto={sostenuto}
-          enableOrbit={enableOrbit}
-          playingBoost={playingBoost}
-          cameraPreset={cameraPreset}
-          quality={quality}
-          effectsEnabled={quality === "high"}
-        />
-      </Suspense>
-    </Canvas>
+      <Canvas
+        shadows
+        dpr={dpr}
+        camera={{ position: [0, 1.8, 5.2], fov: 42, near: 0.1, far: 50 }}
+        className={className}
+        gl={{
+          antialias: true,
+          alpha: true,
+          powerPreference: "high-performance",
+          stencil: false,
+        }}
+        performance={{ min: 0.5, max: 1, debounce: 200 }}
+      >
+        <Suspense fallback={null}>
+          <ShowroomScene
+            lidOpen={lidOpen}
+            activeNotes={activeNotes}
+            performanceModeId={performanceModeId}
+            finishId={finishId}
+            sustain={sustain}
+            softPedal={softPedal}
+            sostenuto={sostenuto}
+            enableOrbit={enableOrbit}
+            playingBoost={playingBoost}
+            cameraPreset={cameraPreset}
+            quality={quality}
+            effectsEnabled={quality === "high"}
+          />
+        </Suspense>
+      </Canvas>
+    </ModelErrorBoundary>
   );
 }
 

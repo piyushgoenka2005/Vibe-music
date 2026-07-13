@@ -1,7 +1,7 @@
-import Image from "next/image";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import HomepageProductImage from "@/components/homepage/HomepageProductImage";
 import { optimizeImageUrl } from "@/lib/images";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { formatDisplayPrice } from "@/utils/currency";
@@ -26,6 +26,8 @@ export interface NewArrivalsProductCardProps {
   ariaHidden?: boolean;
   hpSlot?: number;
   priceNode?: ReactNode;
+  /** Eager-load image for above-the-fold / first marquee cards. */
+  imagePriority?: boolean;
 }
 
 function formatRatingAttribute(rating: number): string {
@@ -41,7 +43,7 @@ export default function NewArrivalsProductCard({
   price,
   salePrice,
   image,
-  imageAlt,
+  imageAlt: _imageAlt,
   sectionKey,
   rank,
   rating,
@@ -52,6 +54,7 @@ export default function NewArrivalsProductCard({
   ariaHidden = false,
   hpSlot,
   priceNode,
+  imagePriority = false,
 }: NewArrivalsProductCardProps) {
   const displayPrice = salePrice ?? price;
   const displayName = formatProductCardTitle(name, brand);
@@ -90,12 +93,11 @@ export default function NewArrivalsProductCard({
         {badgeLabel ? (
           <span className="new-arrivals-card__badge">{badgeLabel}</span>
         ) : null}
-        {imageSrc ? (
-          <Image
-            alt={imageAlt}
+        {imageSrc && !ariaHidden ? (
+          <HomepageProductImage
             className="new-arrivals-card__image"
             height={400}
-            loading="lazy"
+            priority={imagePriority}
             sizes="(max-width: 767px) 45vw, 280px"
             src={imageSrc}
             width={400}
