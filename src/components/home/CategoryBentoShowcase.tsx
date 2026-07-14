@@ -1,11 +1,14 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { CATEGORY_BENTO_ITEMS, type CategoryBentoItem } from "@/data/categoryBento";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
+import { attachAxisLockedRailScroll } from "@/lib/axisLockedRailScroll";
+import { attachHorizontalWheelScroll } from "@/lib/horizontalWheelScroll";
 import { categoryPath, ROUTES } from "@/lib/routes";
 import CategoryBentoImage from "@/components/home/CategoryBentoImage";
 
@@ -295,6 +298,18 @@ function CategoryBentoCard({
 
 export default function CategoryBentoShowcase() {
   const reduceMotion = useHydrationSafeReducedMotion();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const detachAxis = attachAxisLockedRailScroll(el);
+    const detachWheel = attachHorizontalWheelScroll(el);
+    return () => {
+      detachAxis();
+      detachWheel();
+    };
+  }, []);
 
   return (
     <section className="category-bento" aria-label="Featured category departments">
@@ -304,7 +319,7 @@ export default function CategoryBentoShowcase() {
       </div>
 
       <div className="category-bento__inner">
-        <div className="category-bento__showcase-scroll">
+        <div ref={scrollRef} className="category-bento__showcase-scroll">
           <motion.div
             className="category-bento__grid"
             initial={reduceMotion ? false : "hidden"}

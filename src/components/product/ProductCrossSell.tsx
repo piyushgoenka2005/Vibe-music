@@ -37,8 +37,8 @@ export default function ProductCrossSell({
                     src={product.image}
                     alt={product.name}
                     className="pdp-cross-sell__image"
-                    width={480}
-                    height={480}
+                    width={240}
+                    height={240}
                     fill
                     preferOriginal
                   />
@@ -50,10 +50,14 @@ export default function ProductCrossSell({
                   />
                 )}
               </div>
-              <div className="pdp-cross-sell__brand">{product.brand}</div>
-              <div className="pdp-cross-sell__name">{product.name}</div>
-              <div className="pdp-cross-sell__price">
-                {formatDisplayPrice(product.price)}
+              <div className="pdp-cross-sell__body">
+                <div className="pdp-cross-sell__brand">{product.brand}</div>
+                <div className="pdp-cross-sell__name" title={product.name}>
+                  {product.name}
+                </div>
+                <div className="pdp-cross-sell__price">
+                  {formatDisplayPrice(product.price)}
+                </div>
               </div>
             </Link>
           </div>

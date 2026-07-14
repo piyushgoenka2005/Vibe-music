@@ -4610,11 +4610,38 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
     animation: none;
   }
 
-  .premium-home .homepage-brand-strip__marquee .marquee__track {
-    width: 100%;
-    max-width: var(--homepage-content-max);
-    margin: 0 auto;
-    padding: 0.375rem var(--homepage-gutter) 0.75rem;
+  .premium-home .homepage-brand-strip__marquee .marquee__track,
+  .premium-home .homepage-brand-strip__marquee-track {
+    animation: none !important;
+    transform: none !important;
+    width: max-content;
+    max-width: none;
+    margin: 0;
+    padding: 0.375rem 0 0.75rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .premium-home .homepage-brand-strip__marquee {
+    overflow-x: auto;
+    mask-image: none;
+    -webkit-mask-image: none;
+    touch-action: pan-x pan-y;
+  }
+
+  .premium-home .homepage-brand-strip__marquee .marquee__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .premium-home .homepage-brand-strip__sequence--clone,
+  .premium-home .homepage-brand-strip__marquee .marquee__sequence--clone {
+    display: none;
+  }
+
+  .premium-home .homepage-brand-strip__item {
+    scroll-snap-align: start;
   }
 
   .premium-home .new-arrivals-marquee__track {
@@ -5369,37 +5396,52 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
 
   .premium-home .homepage-brand-strip__marquee {
     margin-inline: 0;
-    overflow-x: auto;
+    overflow-x: clip;
     overflow-y: visible;
-    -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    touch-action: pan-x pan-y;
-    mask-image: none;
-    -webkit-mask-image: none;
+    scroll-snap-type: none;
+    touch-action: pan-y;
     padding-inline: 0;
-    scrollbar-width: none;
-  }
-
-  .premium-home .homepage-brand-strip__marquee::-webkit-scrollbar {
-    display: none;
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      #000 4%,
+      #000 96%,
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      #000 4%,
+      #000 96%,
+      transparent 100%
+    );
   }
 
   .premium-home .homepage-brand-strip__marquee .marquee__track,
   .premium-home .homepage-brand-strip__marquee-track {
-    animation: none !important;
     width: max-content;
-    transform: none !important;
   }
+}
 
-  .premium-home .homepage-brand-strip__sequence {
-    gap: 0.625rem;
-    padding-right: 0.25rem;
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  .premium-home .homepage-brand-strip__marquee .marquee__track,
+  .premium-home .homepage-brand-strip__marquee-track {
+    --marquee-duration: 32s;
+    animation: marquee-scroll var(--marquee-duration, 32s) linear infinite;
   }
 
   .premium-home .homepage-brand-strip__sequence--clone,
   .premium-home .homepage-brand-strip__marquee .marquee__sequence--clone {
-    display: none;
+    display: flex;
+  }
+}
+
+
+@media (max-width: 767px) {
+  .premium-home .homepage-brand-strip__sequence {
+    gap: 0.625rem;
+    padding-right: 0.625rem;
   }
 
   .premium-home .homepage-brand-strip__item {
@@ -5408,7 +5450,6 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
     aspect-ratio: auto;
     border-radius: 18px;
     padding: 0.2rem 0.3rem;
-    scroll-snap-align: start;
   }
 
   .premium-home .homepage-wrapper .product-share-btn--overlay,
@@ -5437,6 +5478,33 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
     height: auto;
     max-height: none;
     object-fit: cover;
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .premium-home .homepage-brand-strip__marquee {
+    overflow-x: auto;
+    mask-image: none;
+    -webkit-mask-image: none;
+    touch-action: pan-x pan-y;
+    scroll-snap-type: x mandatory;
+  }
+
+  .premium-home .homepage-brand-strip__marquee .marquee__track,
+  .premium-home .homepage-brand-strip__marquee-track {
+    animation: none !important;
+    transform: none !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .premium-home .homepage-brand-strip__sequence--clone,
+  .premium-home .homepage-brand-strip__marquee .marquee__sequence--clone {
+    display: none;
+  }
+
+  .premium-home .homepage-brand-strip__item {
+    scroll-snap-align: start;
   }
 }
 

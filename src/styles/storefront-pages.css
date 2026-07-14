@@ -8,7 +8,9 @@
 }
 
 .storefront-page--subtle {
-  background:
+  /* Solid base so fixed chrome never shows through gradient stops */
+  background-color: var(--surface-base);
+  background-image:
     radial-gradient(ellipse 70% 45% at 50% -5%, rgba(18, 83, 237, 0.1), transparent),
     linear-gradient(180deg, var(--brand-primary-muted) 0%, var(--surface-base) 320px);
 }

@@ -234,11 +234,23 @@
     display: flex;
     gap: 10px;
     overflow-x: auto;
+    overflow-y: hidden;
     scroll-snap-type: x mandatory;
     scroll-padding-inline: 0;
     padding-bottom: 0.25rem;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    /* Page owns vertical; JS axis-lock drives sideways swipes */
+    touch-action: pan-y;
     scrollbar-width: none;
+  }
+
+  .category-cards-inner.is-dragging {
+    scroll-snap-type: none;
+  }
+
+  .category-cards-inner.is-dragging a {
+    pointer-events: none;
   }
 
   .category-cards-inner::-webkit-scrollbar {

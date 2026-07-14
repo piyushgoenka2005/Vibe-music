@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
@@ -55,6 +56,8 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
 ];
 
 export default function SiteFooter() {
+  const pathname = usePathname() ?? "";
+  const isLandingPage = pathname === "/";
   const showToast = useToastStore((state) => state.show);
   const footerRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -71,6 +74,16 @@ export default function SiteFooter() {
     const footer = footerRef.current;
     const spacer = spacerRef.current;
     if (!panel || !footer || !spacer) return;
+
+    /* Non-homepage: panel stays in-flow — no fixed scroll-reveal chrome */
+    if (!isLandingPage) {
+      spacer.style.height = "0px";
+      panel.classList.add("is-ready", "is-interactive");
+      return () => {
+        panel.classList.remove("is-ready", "is-interactive");
+        spacer.style.height = "";
+      };
+    }
 
     const shell = footer.querySelector<HTMLElement>(".site-footer__shell");
 
@@ -130,8 +143,10 @@ export default function SiteFooter() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", syncSpacer);
       window.removeEventListener("resize", updateInteractive);
+      panel.classList.remove("is-ready", "is-interactive");
+      spacer.style.height = "";
     };
-  }, []);
+  }, [isLandingPage]);
 
   async function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

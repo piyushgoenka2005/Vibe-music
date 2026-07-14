@@ -441,6 +441,35 @@ body.is-landing-page
   background-position: center;
 }
 
+/*
+ * Scroll-reveal is homepage-only. On Shop All Gear / other routes the fixed
+ * navy panel was painting through translucent search UI (Quick Access tiles,
+ * ghosted "New arrivals", mid-page product rows). Keep it in document flow.
+ */
+body:not(.is-landing-page) .footer-products-panel {
+  position: relative;
+  inset: auto;
+  z-index: 0;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+body:not(.is-landing-page) .footer-products-panel:not(.is-ready),
+body:not(.is-landing-page) .footer-products-panel.is-ready {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+body:not(.is-landing-page) .footer-products-panel.is-ready.is-interactive {
+  z-index: 0;
+}
+
+body:not(.is-landing-page) .site-footer__panel-spacer {
+  display: none;
+  height: 0 !important;
+  min-height: 0 !important;
+}
+
 .footer-products-panel:not(.is-ready) {
   visibility: hidden;
   pointer-events: none;

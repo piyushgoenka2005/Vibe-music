@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { BrowseCategoryCard } from "@/data/browseCategoryCards";
+import { attachAxisLockedRailScroll } from "@/lib/axisLockedRailScroll";
+import { attachHorizontalWheelScroll } from "@/lib/horizontalWheelScroll";
 
 interface BrowseCategoryCardsSliderProps {
   items: BrowseCategoryCard[];
@@ -34,10 +36,14 @@ export default function BrowseCategoryCardsSlider({
     updateActiveIndex();
     track.addEventListener("scroll", updateActiveIndex, { passive: true });
     window.addEventListener("resize", updateActiveIndex);
+    const detachAxis = attachAxisLockedRailScroll(track);
+    const detachWheel = attachHorizontalWheelScroll(track);
 
     return () => {
       track.removeEventListener("scroll", updateActiveIndex);
       window.removeEventListener("resize", updateActiveIndex);
+      detachAxis();
+      detachWheel();
     };
   }, [updateActiveIndex]);
 

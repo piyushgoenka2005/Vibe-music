@@ -1081,6 +1081,7 @@
 
   .category-bento__showcase-scroll {
     overflow-x: auto;
+    overflow-y: hidden;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     margin-inline: calc(-1 * max(0.875rem, env(safe-area-inset-left, 0px)))
@@ -1089,7 +1090,17 @@
       max(0.875rem, env(safe-area-inset-right, 0px));
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    touch-action: pan-x;
+    /* Page owns vertical; JS axis-lock drives sideways swipes */
+    touch-action: pan-y;
+  }
+
+  .category-bento__showcase-scroll.is-dragging {
+    scroll-snap-type: none;
+    cursor: grabbing;
+  }
+
+  .category-bento__showcase-scroll.is-dragging a {
+    pointer-events: none;
   }
 
   .category-bento__showcase-scroll::-webkit-scrollbar {
