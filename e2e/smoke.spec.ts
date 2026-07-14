@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 test.describe("storefront smoke", () => {
   test("homepage loads", async ({ page }) => {
@@ -145,16 +145,18 @@ test.describe("api smoke", () => {
 });
 
 test.describe("program landings", () => {
-  test("giveaway page loads honest status", async ({ page }) => {
+  test("giveaway page loads", async ({ page }) => {
     await page.goto("/giveaway", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.getByText(/no live giveaway|no active contest/i)).toBeVisible();
+    await expect(
+      page.getByText(/no live giveaway|live now|giveaways & contests/i).first()
+    ).toBeVisible();
   });
 
-  test("financing page loads payment honesty", async ({ page }) => {
+  test("financing page loads EMI hub", async ({ page }) => {
     await page.goto("/financing", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.getByText(/not live|Razorpay|UPI/i).first()).toBeVisible();
+    await expect(page.getByText(/EMI|finance|Compare plans/i).first()).toBeVisible();
   });
 
   test("used gear page loads", async ({ page }) => {

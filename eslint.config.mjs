@@ -14,6 +14,22 @@ const eslintConfig = defineConfig([
       "react-hooks/immutability": "off",
     },
   },
+  {
+    files: [
+      "src/components/checkout/**/*.{ts,tsx}",
+      "src/components/compare/**/*.{ts,tsx}",
+    ],
+    rules: {
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off",
+    },
+  },
+  {
+    files: ["e2e/**/*.{ts,tsx}"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

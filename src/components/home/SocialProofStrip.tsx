@@ -31,7 +31,7 @@ export default function SocialProofStrip() {
               {LANDING_SOCIAL_PROOF.rating}
             </span>
             <span className="social-proof-strip__rating-suffix">
-              / {LANDING_SOCIAL_PROOF.ratingScale}
+              /{LANDING_SOCIAL_PROOF.ratingScale}
             </span>
           </p>
           <span className="social-proof-strip__rating-label">

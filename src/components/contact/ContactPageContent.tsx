@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { NavArrowIcon } from "@/gp9/components/ui/nav-arrow-icon";
@@ -11,23 +11,16 @@ export default function ContactPageContent() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
+  const querySubject = searchParams.get("subject")?.trim().slice(0, 160) ?? "";
+  const queryMessage = searchParams.get("body")?.trim().slice(0, 4000) ?? "";
+  const [subjectOverride, setSubjectOverride] = useState<string | null>(null);
+  const [messageOverride, setMessageOverride] = useState<string | null>(null);
+  const subject = subjectOverride ?? querySubject;
+  const message = messageOverride ?? queryMessage;
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle"
   );
   const [feedback, setFeedback] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fromQuery = searchParams.get("subject")?.trim();
-    if (fromQuery) {
-      setSubject(fromQuery.slice(0, 160));
-    }
-    const bodyFromQuery = searchParams.get("body")?.trim();
-    if (bodyFromQuery) {
-      setMessage(bodyFromQuery.slice(0, 4000));
-    }
-  }, [searchParams]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,8 +42,8 @@ export default function ContactPageContent() {
       setName("");
       setEmail("");
       setPhone("");
-      setSubject("");
-      setMessage("");
+      setSubjectOverride("");
+      setMessageOverride("");
     } catch (error) {
       setStatus("error");
       setFeedback(
@@ -129,7 +122,7 @@ export default function ContactPageContent() {
               <input
                 required
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
+                onChange={(e) => setSubjectOverride(e.target.value)}
               />
             </label>
             <label>
@@ -138,7 +131,7 @@ export default function ContactPageContent() {
                 required
                 rows={6}
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={(e) => setMessageOverride(e.target.value)}
               />
             </label>
             <button

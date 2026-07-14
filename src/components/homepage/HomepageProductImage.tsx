@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { cdnThumbUrl } from "@/lib/images";
+import { storefrontImageUrl } from "@/lib/storefrontImages";
 
 type HomepageProductImageProps = {
   src: string;
@@ -17,8 +17,7 @@ type HomepageProductImageProps = {
 
 /**
  * Product images for homepage carousels/grids.
- * Large CDN masters are served via `/api/media/thumb` so cards don't hang on
- * multi‑MB PNGs. Local / Cloudinary URLs use next/image for AVIF/WebP.
+ * Prefer CDN derivatives, then `/api/media/thumb`. Never fall back to multi‑MB masters.
  */
 export default function HomepageProductImage({
   src,
@@ -29,15 +28,35 @@ export default function HomepageProductImage({
   height = 320,
   priority = false,
 }: HomepageProductImageProps) {
-  const thumbSrc = useMemo(() => cdnThumbUrl(src, width), [src, width]);
-  const [mode, setMode] = useState<"thumb" | "original" | "failed">(
-    thumbSrc === src ? "original" : "thumb"
+  const primary = useMemo(
+    () => storefrontImageUrl(src, width),
+    [src, width]
   );
+  const thumbApiSrc = useMemo(() => {
+    try {
+      if (new URL(src).hostname !== "cdn.vibemusic.in") return null;
+      const params = new URLSearchParams({
+        url: src,
+        w: String(Math.min(800, width)),
+      });
+      return `/api/media/thumb?${params.toString()}`;
+    } catch {
+      return null;
+    }
+  }, [src, width]);
 
-  const activeSrc = mode === "thumb" ? thumbSrc : src;
+  const [mode, setMode] = useState<"primary" | "thumb" | "failed">("primary");
+
+  const activeSrc =
+    mode === "thumb" && thumbApiSrc
+      ? thumbApiSrc
+      : mode === "failed"
+        ? ""
+        : primary.src;
+
   const usePlainImg = activeSrc.startsWith("/api/media/thumb");
 
-  if (!src || mode === "failed") {
+  if (!src || mode === "failed" || !activeSrc) {
     return (
       <div
         aria-hidden
@@ -48,7 +67,9 @@ export default function HomepageProductImage({
 
   const onError = () => {
     setMode((current) => {
-      if (current === "thumb" && thumbSrc !== src) return "original";
+      if (current === "primary" && thumbApiSrc && primary.src !== thumbApiSrc) {
+        return "thumb";
+      }
       return "failed";
     });
   };

@@ -4,12 +4,25 @@ import { randomUUID } from "crypto";
 import * as pg from "@/lib/server/prisma/contentRepository";
 import { slugify } from "@/lib/slug";
 import type {
+  BlogAnalyticsSummary,
+  BlogComment,
+  BlogCommentStatus,
+  BlogListQuery,
+  BlogListResult,
   BlogPost,
   BlogPostStatus,
   BlogPostSummary,
   CreateBlogPostInput,
   UpdateBlogPostInput,
 } from "@/types/blog";
+import {
+  BLOG_PAGE_SIZE,
+  computeReadingMinutes,
+  matchesBlogSearch,
+  paginateBlogPosts,
+  resolveCategoryLabel,
+  scoreRelatedPosts,
+} from "@/lib/blog/blogEngine";
 
 function now(): string {
   return new Date().toISOString();
@@ -56,9 +69,13 @@ function toSummary(post: BlogPost, at = new Date()): BlogPostSummary {
     excerpt: post.excerpt,
     coverImage: post.coverImage,
     tags: post.tags,
+    categorySlug: post.categorySlug,
+    categoryLabel: post.categoryLabel,
+    featured: post.featured,
     authorName: post.authorName,
     publishedAt: effectivePublishedAt(post, at),
     status: post.status,
+    readingMinutes: computeReadingMinutes(post.content),
   };
 }
 
@@ -89,13 +106,115 @@ export async function listAllBlogPosts(): Promise<BlogPost[]> {
 
 export async function listPublicBlogPosts(
   at = new Date(),
-  options?: { limit?: number }
+  options?: { limit?: number; featured?: boolean }
 ): Promise<BlogPostSummary[]> {
-  const posts = (await listAllBlogPosts()).filter((post) => isBlogPostPublic(post, at));
+  let posts = (await listAllBlogPosts()).filter((post) => isBlogPostPublic(post, at));
+  if (options?.featured) {
+    posts = posts.filter((post) => post.featured);
+  }
   return posts
     .map((post) => toSummary(post, at))
     .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
     .slice(0, options?.limit && options.limit > 0 ? options.limit : undefined);
+}
+
+export async function listPublicBlogPostsPaginated(
+  query: BlogListQuery = {},
+  at = new Date()
+): Promise<BlogListResult> {
+  const page = Math.max(1, query.page ?? 1);
+  const pageSize = Math.min(24, Math.max(1, query.limit ?? BLOG_PAGE_SIZE));
+
+  let posts = (await listAllBlogPosts())
+    .filter((post) => isBlogPostPublic(post, at))
+    .map((post) => toSummary(post, at));
+
+  if (query.category) {
+    posts = posts.filter((post) => post.categorySlug === query.category);
+  }
+  if (query.featured) {
+    posts = posts.filter((post) => post.featured);
+  }
+  if (query.q) {
+    posts = posts.filter((post) => matchesBlogSearch(post, query.q!));
+  }
+
+  posts.sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
+
+  const paged = paginateBlogPosts(posts, page, pageSize);
+  return {
+    posts: paged.items,
+    total: paged.total,
+    page: paged.page,
+    pageSize: paged.pageSize,
+    totalPages: paged.totalPages,
+  };
+}
+
+export async function getRelatedPublicPosts(
+  post: BlogPost,
+  limit = 3,
+  at = new Date()
+): Promise<BlogPostSummary[]> {
+  const candidates = await listPublicBlogPosts(at);
+  return scoreRelatedPosts(post, candidates, limit);
+}
+
+export async function recordBlogView(postId: string): Promise<void> {
+  await pg.incrementBlogPostViewCount(postId);
+  await pg.createBlogPostEvent({
+    id: randomUUID(),
+    postId,
+    type: "view",
+    metadata: {},
+    createdAt: now(),
+  });
+}
+
+export async function recordBlogShare(postId: string, channel: string): Promise<void> {
+  await pg.createBlogPostEvent({
+    id: randomUUID(),
+    postId,
+    type: "share",
+    metadata: { channel },
+    createdAt: now(),
+  });
+}
+
+export async function createBlogComment(input: {
+  postId: string;
+  authorName: string;
+  email: string;
+  body: string;
+}): Promise<BlogComment> {
+  return pg.createBlogCommentRecord({
+    id: randomUUID(),
+    postId: input.postId,
+    authorName: input.authorName,
+    email: input.email,
+    body: input.body,
+    status: "pending",
+    createdAt: now(),
+  });
+}
+
+export async function listApprovedBlogComments(postId: string): Promise<BlogComment[]> {
+  return pg.listBlogCommentsByPost(postId, "approved");
+}
+
+export async function listBlogCommentsForAdmin(): Promise<BlogComment[]> {
+  return pg.listAllBlogComments();
+}
+
+export async function updateBlogCommentStatus(
+  id: string,
+  status: BlogCommentStatus
+): Promise<BlogComment> {
+  return pg.updateBlogCommentStatus(id, status);
+}
+
+export async function getBlogAnalytics(): Promise<BlogAnalyticsSummary> {
+  return pg.getBlogAnalyticsSummary();
 }
 
 export async function getBlogPostById(id: string): Promise<BlogPost | null> {
@@ -146,6 +265,10 @@ export async function createBlogPost(
     timestamp
   );
 
+  const categorySlug = input.categorySlug?.trim() ?? "";
+  const categoryLabel =
+    input.categoryLabel?.trim() || resolveCategoryLabel(categorySlug);
+
   return pg.createBlogPostRecord({
     id: randomUUID(),
     slug,
@@ -154,6 +277,11 @@ export async function createBlogPost(
     content: input.content,
     coverImage: input.coverImage?.trim() ?? "",
     tags: normalizeTags(input.tags),
+    categorySlug,
+    categoryLabel,
+    featured: Boolean(input.featured),
+    authorBio: input.authorBio?.trim() ?? "",
+    authorAvatar: input.authorAvatar?.trim() ?? "",
     seoTitle: input.seoTitle?.trim() ?? "",
     seoDescription: input.seoDescription?.trim() ?? "",
     status: input.status,
@@ -198,6 +326,17 @@ export async function updateBlogPost(
     timestamp
   );
 
+  const nextCategorySlug =
+    input.categorySlug !== undefined
+      ? input.categorySlug.trim()
+      : existing.categorySlug;
+  const nextCategoryLabel =
+    input.categoryLabel !== undefined
+      ? input.categoryLabel.trim()
+      : input.categorySlug !== undefined
+        ? resolveCategoryLabel(nextCategorySlug)
+        : existing.categoryLabel;
+
   return pg.updateBlogPostRecord(id, {
     ...(input.title !== undefined ? { title: input.title.trim() } : {}),
     ...(input.slug !== undefined ? { slug: nextSlug } : {}),
@@ -205,6 +344,15 @@ export async function updateBlogPost(
     ...(input.content !== undefined ? { content: input.content } : {}),
     ...(input.coverImage !== undefined ? { coverImage: input.coverImage.trim() } : {}),
     ...(input.tags !== undefined ? { tags: normalizeTags(input.tags) } : {}),
+    ...(input.categorySlug !== undefined ? { categorySlug: nextCategorySlug } : {}),
+    ...(input.categorySlug !== undefined || input.categoryLabel !== undefined
+      ? { categoryLabel: nextCategoryLabel }
+      : {}),
+    ...(input.featured !== undefined ? { featured: Boolean(input.featured) } : {}),
+    ...(input.authorBio !== undefined ? { authorBio: input.authorBio.trim() } : {}),
+    ...(input.authorAvatar !== undefined
+      ? { authorAvatar: input.authorAvatar.trim() }
+      : {}),
     ...(input.seoTitle !== undefined ? { seoTitle: input.seoTitle.trim() } : {}),
     ...(input.seoDescription !== undefined
       ? { seoDescription: input.seoDescription.trim() }

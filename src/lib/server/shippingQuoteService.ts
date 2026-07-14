@@ -50,19 +50,13 @@ export async function getShippingQuotes(input: ShippingQuoteInput) {
   };
 }
 
-export async function resolveAuthoritativeShippingCharge(input: {
+export async function resolveAuthoritativeShippingCharge(_input: {
   method: ShippingMethod;
   subtotal: number;
   discount: number;
   postalCode?: string;
   state?: string;
 }): Promise<number> {
-  const quote = await getShippingQuotes({
-    subtotal: input.subtotal,
-    discount: input.discount,
-    method: input.method,
-    postalCode: input.postalCode,
-    state: input.state,
-  });
-  return quote.charge;
+  // Storefront orders ship free — keep quote API for ETA/zone messaging only.
+  return 0;
 }

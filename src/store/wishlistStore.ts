@@ -186,6 +186,12 @@ export const useWishlistStore = create<WishlistState>()(
       moveToCart: (productId) => {
         const item = get().items.find((i) => i.productId === productId);
         if (!item) return;
+        if (!(item.price > 0)) {
+          useToastStore
+            .getState()
+            .show("This product isn’t available to buy yet — use Notify me on the product page.", "info");
+          return;
+        }
         useCartStore.getState().addItem(wishlistItemToProduct(item), 1);
         get().remove(productId);
         useToastStore.getState().show(`${item.name} moved to cart`);
@@ -193,15 +199,32 @@ export const useWishlistStore = create<WishlistState>()(
 
       moveAllToCart: () => {
         const items = get().items;
-        items.forEach((item) => {
+        const purchasable = items.filter((item) => item.price > 0);
+        const skipped = items.length - purchasable.length;
+        purchasable.forEach((item) => {
           useCartStore.getState().addItem(wishlistItemToProduct(item), 1);
         });
-        set({ items: [], drawerOpen: false });
-        useToastStore.getState().show(
-          `${items.length} item${items.length === 1 ? "" : "s"} moved to cart`
-        );
+        set({
+          items: items.filter((item) => !(item.price > 0)),
+          drawerOpen: false,
+        });
+        if (purchasable.length > 0) {
+          useToastStore.getState().show(
+            `${purchasable.length} item${purchasable.length === 1 ? "" : "s"} moved to cart`
+          );
+        }
+        if (skipped > 0) {
+          useToastStore
+            .getState()
+            .show(
+              `${skipped} Coming Soon item${skipped === 1 ? "" : "s"} stayed on your wishlist.`,
+              "info"
+            );
+        }
         const user = useAuthStore.getState().user;
-        if (user) saveAccountWishlist(user.id, []);
+        if (user) {
+          saveAccountWishlist(user.id, get().items);
+        }
       },
 
       clear: () => {

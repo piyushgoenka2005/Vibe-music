@@ -2,46 +2,55 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { formatDisplayPrice } from "@/utils/currency";
+import { useMutation } from "@tanstack/react-query";
+import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { ROUTES } from "@/lib/routes";
 import { fetchProductDetail } from "@/services/product.service";
-import { useCompareStore } from "@/store/compareStore";
+import {
+  availabilityLabel,
+  collectSpecLabels,
+  conditionLabel,
+  specValue,
+} from "@/lib/compare/compareEngine";
+import { useCompareStore, type CompareItem } from "@/store/compareStore";
+import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
+import { useToastStore } from "@/store/toastStore";
+import NotifyMeButton from "@/components/product/NotifyMeButton";
 import type { ProductSpec } from "@/types/product";
 import "@/styles/compare.css";
 
-function availabilityLabel(availability: string): string {
-  if (availability === "in-stock") return "In stock";
-  if (availability === "limited") return "Limited";
-  return "Out of stock";
+interface ComparePageProps {
+  initialItems?: CompareItem[];
+  sharedTitle?: string;
+  readOnly?: boolean;
 }
 
-function conditionLabel(condition: string | undefined): string {
-  if (condition === "used") return "Pre-owned";
-  if (condition === "open-box") return "Open box";
-  if (condition === "new") return "New";
-  return "—";
-}
-
-export default function ComparePage() {
-  const items = useCompareStore((s) => s.items);
+export default function ComparePage({
+  initialItems,
+  sharedTitle,
+  readOnly = false,
+}: ComparePageProps) {
+  const storeItems = useCompareStore((s) => s.items);
   const remove = useCompareStore((s) => s.remove);
   const clear = useCompareStore((s) => s.clear);
-  const [specsBySlug, setSpecsBySlug] = useState<Record<string, ProductSpec[]>>(
-    {}
-  );
-  const [conditionsBySlug, setConditionsBySlug] = useState<
-    Record<string, string>
-  >({});
+  const setItems = useCompareStore((s) => s.setItems);
+  const addToCart = useCartStore((s) => s.addItem);
+  const wishlistToggle = useWishlistStore((s) => s.toggle);
+  const wishlistHas = useWishlistStore((s) => s.has);
+  const showToast = useToastStore((s) => s.show);
+
+  const items = initialItems ?? storeItems;
+
+  const [specsBySlug, setSpecsBySlug] = useState<Record<string, ProductSpec[]>>({});
+  const [conditionsBySlug, setConditionsBySlug] = useState<Record<string, string>>({});
   const [specsLoading, setSpecsLoading] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    if (items.length === 0) {
-      setSpecsBySlug({});
-      setConditionsBySlug({});
-      return;
-    }
+    if (items.length === 0) return;
 
+    let cancelled = false;
     setSpecsLoading(true);
     void Promise.all(
       items.map(async (item) => {
@@ -73,34 +82,83 @@ export default function ComparePage() {
     };
   }, [items]);
 
-  const specLabels = useMemo(() => {
-    const labels: string[] = [];
-    const seen = new Set<string>();
-    for (const item of items) {
-      for (const spec of specsBySlug[item.slug] ?? []) {
-        const label = spec.label.trim();
-        if (!label || seen.has(label)) continue;
-        seen.add(label);
-        labels.push(label);
-      }
-    }
-    return labels;
-  }, [items, specsBySlug]);
+  const specLabels = useMemo(
+    () =>
+      collectSpecLabels(
+        Object.fromEntries(
+          Object.entries(specsBySlug).map(([slug, specs]) => [
+            slug,
+            specs.map((s) => ({ label: s.label, value: s.value })),
+          ])
+        )
+      ),
+    [specsBySlug]
+  );
 
-  function specValue(slug: string, label: string): string {
-    const match = (specsBySlug[slug] ?? []).find(
-      (spec) => spec.label.trim() === label
-    );
-    return match?.value?.trim() || "—";
+  const shareMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/compare/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Share failed");
+      return json.share as { url: string };
+    },
+    onSuccess: async (share) => {
+      setShareUrl(share.url);
+      try {
+        await navigator.clipboard.writeText(share.url);
+        showToast("Share link copied", "success");
+      } catch {
+        showToast("Share link created", "success");
+      }
+    },
+    onError: (err) => showToast(err instanceof Error ? err.message : "Share failed", "error"),
+  });
+
+  function openPrintExport() {
+    const slugs = items.map((i) => i.slug).join(",");
+    const url = `/api/compare/export/html?slugs=${encodeURIComponent(slugs)}&print=1`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function saveSharedToMyCompare() {
+    if (!initialItems?.length) return;
+    setItems(initialItems);
+    showToast("Comparison saved to your list", "success");
+  }
+
+  function productFromItem(item: CompareItem) {
+    return {
+      id: item.productId,
+      slug: item.slug,
+      name: item.name,
+      brand: item.brand,
+      brandSlug: item.brand.toLowerCase().replace(/\s+/g, "-"),
+      category: "",
+      categorySlug: "",
+      price: item.price,
+      rating: item.rating,
+      reviewCount: item.reviewCount,
+      availability: item.availability,
+      condition: (conditionsBySlug[item.slug] as "new" | "used" | "open-box") ?? "new",
+      imageColor: item.imageColor,
+      image: item.image,
+    };
   }
 
   return (
     <main className="storefront-page storefront-page--subtle compare-page">
       <header className="storefront-page__header">
         <p className="storefront-page__eyebrow">Compare</p>
-        <h1 className="storefront-page__title">Compare Products</h1>
+        <h1 className="storefront-page__title">
+          {sharedTitle ?? "Compare Products"}
+        </h1>
         <p className="storefront-page__meta">
-          Side-by-side comparison of up to 4 products, including catalog specs.
+          Side-by-side comparison of up to 4 products with specs, pricing, reviews, and availability.
+          {readOnly ? " Shared view — save to your list to edit." : " Syncs across devices when signed in."}
         </p>
       </header>
 
@@ -131,14 +189,16 @@ export default function ComparePage() {
                   {items.map((item) => (
                     <th key={item.productId} scope="col">
                       <Link href={`/product/${item.slug}`}>{item.name}</Link>
-                      <button
-                        type="button"
-                        className="compare-table__remove"
-                        aria-label={`Remove ${item.name} from compare`}
-                        onClick={() => remove(item.productId)}
-                      >
-                        Remove
-                      </button>
+                      {!readOnly ? (
+                        <button
+                          type="button"
+                          className="compare-table__remove"
+                          aria-label={`Remove ${item.name} from compare`}
+                          onClick={() => remove(item.productId)}
+                        >
+                          Remove
+                        </button>
+                      ) : null}
                     </th>
                   ))}
                 </tr>
@@ -151,9 +211,7 @@ export default function ComparePage() {
                 />
                 <CompareRow
                   label="Condition"
-                  values={items.map((i) =>
-                    conditionLabel(conditionsBySlug[i.slug])
-                  )}
+                  values={items.map((i) => conditionLabel(conditionsBySlug[i.slug]))}
                 />
                 <CompareRow
                   label="Rating"
@@ -171,7 +229,18 @@ export default function ComparePage() {
                   <CompareRow
                     key={label}
                     label={label}
-                    values={items.map((i) => specValue(i.slug, label))}
+                    values={items.map((i) =>
+                      specValue(
+                        Object.fromEntries(
+                          Object.entries(specsBySlug).map(([slug, specs]) => [
+                            slug,
+                            specs.map((s) => ({ label: s.label, value: s.value })),
+                          ])
+                        ),
+                        i.slug,
+                        label
+                      )
+                    )}
                   />
                 ))}
               </tbody>
@@ -184,55 +253,111 @@ export default function ComparePage() {
                 <h2 className="compare-mobile-card__title">
                   <Link href={`/product/${item.slug}`}>{item.name}</Link>
                 </h2>
-                <button
-                  type="button"
-                  className="compare-mobile-card__remove"
-                  aria-label={`Remove ${item.name} from compare`}
-                  onClick={() => remove(item.productId)}
-                >
-                  Remove from compare
-                </button>
+                {!readOnly ? (
+                  <button
+                    type="button"
+                    className="compare-mobile-card__remove"
+                    aria-label={`Remove ${item.name} from compare`}
+                    onClick={() => remove(item.productId)}
+                  >
+                    Remove from compare
+                  </button>
+                ) : null}
                 <dl className="compare-mobile-card__rows">
-                  <div className="compare-mobile-card__row">
-                    <dt>Brand</dt>
-                    <dd>{item.brand}</dd>
-                  </div>
-                  <div className="compare-mobile-card__row">
-                    <dt>Price</dt>
-                    <dd>{formatDisplayPrice(item.price)}</dd>
-                  </div>
-                  <div className="compare-mobile-card__row">
-                    <dt>Condition</dt>
-                    <dd>{conditionLabel(conditionsBySlug[item.slug])}</dd>
-                  </div>
-                  <div className="compare-mobile-card__row">
-                    <dt>Rating</dt>
-                    <dd>
-                      {item.reviewCount > 0
+                  <Row dt="Brand" dd={item.brand} />
+                  <Row dt="Price" dd={formatDisplayPrice(item.price)} />
+                  <Row dt="Condition" dd={conditionLabel(conditionsBySlug[item.slug])} />
+                  <Row
+                    dt="Rating"
+                    dd={
+                      item.reviewCount > 0
                         ? `${item.rating.toFixed(1)} (${item.reviewCount})`
-                        : "—"}
-                    </dd>
-                  </div>
-                  <div className="compare-mobile-card__row">
-                    <dt>Availability</dt>
-                    <dd>{availabilityLabel(item.availability)}</dd>
-                  </div>
+                        : "—"
+                    }
+                  />
+                  <Row dt="Availability" dd={availabilityLabel(item.availability)} />
                   {specLabels.map((label) => (
-                    <div key={label} className="compare-mobile-card__row">
-                      <dt>{label}</dt>
-                      <dd>{specValue(item.slug, label)}</dd>
-                    </div>
+                    <Row
+                      key={label}
+                      dt={label}
+                      dd={specValue(
+                        Object.fromEntries(
+                          Object.entries(specsBySlug).map(([slug, specs]) => [
+                            slug,
+                            specs.map((s) => ({ label: s.label, value: s.value })),
+                          ])
+                        ),
+                        item.slug,
+                        label
+                      )}
+                    />
                   ))}
                 </dl>
+                <div className="compare-page__actions">
+                  {isPurchasablePrice(item.price) ? (
+                    <button
+                      type="button"
+                      className="compare-page__clear"
+                      onClick={() => addToCart(productFromItem(item), 1)}
+                    >
+                      Add to cart
+                    </button>
+                  ) : (
+                    <NotifyMeButton
+                      variant="inline"
+                      className="compare-page__clear"
+                      productId={item.productId}
+                      productSlug={item.slug}
+                      productName={item.name}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    className="compare-page__clear"
+                    onClick={() => wishlistToggle(productFromItem(item))}
+                  >
+                    {wishlistHas(item.productId) ? "In wishlist" : "Add to wishlist"}
+                  </button>
+                </div>
               </article>
             ))}
           </div>
 
           <div className="compare-page__actions">
-            <button type="button" className="compare-page__clear" onClick={clear}>
-              Clear all
-            </button>
+            {!readOnly ? (
+              <>
+                <button
+                  type="button"
+                  className="compare-page__clear"
+                  onClick={() => shareMutation.mutate()}
+                  disabled={shareMutation.isPending}
+                >
+                  {shareMutation.isPending ? "Sharing…" : "Share comparison"}
+                </button>
+                <button type="button" className="compare-page__clear" onClick={openPrintExport}>
+                  Print / Save PDF
+                </button>
+                <button type="button" className="compare-page__clear" onClick={clear}>
+                  Clear all
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" className="compare-page__clear" onClick={saveSharedToMyCompare}>
+                  Save to my compare
+                </button>
+                <Link href={ROUTES.compare} className="compare-page__clear">
+                  Open my compare
+                </Link>
+              </>
+            )}
           </div>
+
+          {shareUrl ? (
+            <p className="compare-page__share-url">
+              Share link: <a href={shareUrl}>{shareUrl}</a>
+            </p>
+          ) : null}
         </>
       )}
     </main>
@@ -249,5 +374,14 @@ function CompareRow({ label, values }: { label: string; values: string[] }) {
         <td key={index}>{value}</td>
       ))}
     </tr>
+  );
+}
+
+function Row({ dt, dd }: { dt: string; dd: string }) {
+  return (
+    <div className="compare-mobile-card__row">
+      <dt>{dt}</dt>
+      <dd>{dd}</dd>
+    </div>
   );
 }

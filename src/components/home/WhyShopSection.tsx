@@ -40,14 +40,13 @@ function WhyShopCard({
 export default function WhyShopSection() {
   const reduceMotion = useHydrationSafeReducedMotion();
   const isMobileViewport = useIsMobileViewport();
-  const items = reduceMotion
-    ? WHY_SHOP_ITEMS
-    : [...WHY_SHOP_ITEMS, ...WHY_SHOP_ITEMS];
+  // Always duplicate so the track stays one horizontal line (never wraps to a grid).
+  const items = [...WHY_SHOP_ITEMS, ...WHY_SHOP_ITEMS];
 
   const marqueeClass = [
     "why-shop__marquee",
     reduceMotion && "why-shop__marquee--static",
-    isMobileViewport && !reduceMotion && "why-shop__marquee--mobile-auto",
+    isMobileViewport && "why-shop__marquee--mobile-auto",
   ]
     .filter(Boolean)
     .join(" ");

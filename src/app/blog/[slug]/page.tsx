@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import BlogCommentSection from "@/components/blog/BlogCommentSection";
+import BlogNewsletterCta from "@/components/blog/BlogNewsletterCta";
+import BlogShareBar from "@/components/blog/BlogShareBar";
+import { computeReadingMinutes } from "@/lib/blog/blogEngine";
 import { renderBlogContentHtml } from "@/lib/blog/render";
 import { optimizeImageUrl } from "@/lib/images";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
-import { getPublicBlogPostBySlug } from "@/lib/server/blogService";
+import {
+  getPublicBlogPostBySlug,
+  getRelatedPublicPosts,
+  recordBlogView,
+} from "@/lib/server/blogService";
 import "../blog.css";
 
 type PageProps = {
@@ -20,6 +28,8 @@ function buildArticleJsonLd(post: {
   updatedAt: string;
   slug: string;
   seoDescription: string;
+  categoryLabel: string;
+  readingMinutes: number;
 }) {
   const url = `${SITE_URL}/blog/${post.slug}`;
   return {
@@ -27,6 +37,7 @@ function buildArticleJsonLd(post: {
     "@type": "BlogPosting",
     headline: post.title,
     description: post.seoDescription || post.excerpt,
+    articleSection: post.categoryLabel || undefined,
     image: post.coverImage ? [post.coverImage] : undefined,
     author: {
       "@type": "Person",
@@ -39,6 +50,7 @@ function buildArticleJsonLd(post: {
     },
     datePublished: post.publishedAt ?? post.updatedAt,
     dateModified: post.updatedAt,
+    timeRequired: `PT${post.readingMinutes}M`,
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": url,
@@ -73,6 +85,8 @@ export async function generateMetadata({
       publishedTime: post.publishedAt ?? undefined,
       modifiedTime: post.updatedAt,
       authors: [post.authorName],
+      section: post.categoryLabel || undefined,
+      tags: post.tags,
       images: post.coverImage ? [{ url: post.coverImage, alt: post.title }] : undefined,
     },
     twitter: {
@@ -89,10 +103,11 @@ export default async function BlogPostPage({ params }: PageProps) {
   const post = await getPublicBlogPostBySlug(slug);
   if (!post) notFound();
 
+  void recordBlogView(post.id);
+
+  const relatedPosts = await getRelatedPublicPosts(post);
   const html = renderBlogContentHtml(post.content);
-  const plainText = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  const wordCount = plainText ? plainText.split(" ").length : 0;
-  const readingMinutes = Math.max(1, Math.ceil(wordCount / 200));
+  const readingMinutes = computeReadingMinutes(post.content);
   const publishedLabel = post.publishedAt
     ? new Date(post.publishedAt).toLocaleDateString("en-IN", {
         day: "numeric",
@@ -100,6 +115,7 @@ export default async function BlogPostPage({ params }: PageProps) {
         year: "numeric",
       })
     : null;
+  const articleUrl = `${SITE_URL}/blog/${post.slug}`;
 
   const jsonLd = buildArticleJsonLd({
     title: post.title,
@@ -110,12 +126,12 @@ export default async function BlogPostPage({ params }: PageProps) {
     updatedAt: post.updatedAt,
     slug: post.slug,
     seoDescription: post.seoDescription,
+    categoryLabel: post.categoryLabel,
+    readingMinutes,
   });
 
   return (
-    <main
-      className="storefront-page blog-page blog-page--article"
-    >
+    <main className="storefront-page blog-page blog-page--article">
       <article className="blog-article">
         <div className="blog-article__hero">
           <div className="blog-page__inner blog-article__inner">
@@ -124,6 +140,9 @@ export default async function BlogPostPage({ params }: PageProps) {
             </Link>
 
             <header className="blog-article__header">
+              {post.categoryLabel ? (
+                <p className="blog-article__category">{post.categoryLabel}</p>
+              ) : null}
               {post.tags.length > 0 ? (
                 <div className="blog-card__tags blog-article__tags">
                   {post.tags.map((tag) => (
@@ -133,18 +152,13 @@ export default async function BlogPostPage({ params }: PageProps) {
                   ))}
                 </div>
               ) : null}
-              <p className="blog-article__eyebrow">Gear guide</p>
-              <h1 className="blog-article__title blog-post__title">
-                {post.title}
-              </h1>
+              <h1 className="blog-article__title blog-post__title">{post.title}</h1>
               <div className="blog-article__meta-row">
                 <p className="blog-article__meta">
                   By <strong>{post.authorName}</strong>
                   {publishedLabel ? ` · ${publishedLabel}` : ""}
                 </p>
-                <span className="blog-article__reading">
-                  {readingMinutes} min read
-                </span>
+                <span className="blog-article__reading">{readingMinutes} min read</span>
               </div>
             </header>
 
@@ -159,13 +173,32 @@ export default async function BlogPostPage({ params }: PageProps) {
               </figure>
             ) : null}
 
-            {post.excerpt ? (
-              <p className="blog-article__lead">{post.excerpt}</p>
-            ) : null}
+            {post.excerpt ? <p className="blog-article__lead">{post.excerpt}</p> : null}
           </div>
         </div>
 
         <div className="blog-page__inner blog-article__inner">
+          <div className="blog-article__author">
+            {post.authorAvatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={post.authorAvatar}
+                alt=""
+                className="blog-article__author-avatar"
+              />
+            ) : (
+              <div className="blog-article__author-avatar blog-article__author-avatar--placeholder" />
+            )}
+            <div>
+              <p className="blog-article__author-name">{post.authorName}</p>
+              {post.authorBio ? (
+                <p className="blog-article__author-bio">{post.authorBio}</p>
+              ) : null}
+            </div>
+          </div>
+
+          <BlogShareBar url={articleUrl} title={post.title} slug={post.slug} />
+
           <div className="blog-article__prose">
             <div
               className="blog-article__content"
@@ -173,10 +206,28 @@ export default async function BlogPostPage({ params }: PageProps) {
             />
           </div>
 
+          {relatedPosts.length > 0 ? (
+            <section className="blog-related" aria-labelledby="blog-related-title">
+              <h2 id="blog-related-title" className="blog-related__title">
+                Related articles
+              </h2>
+              <div className="blog-related__grid">
+                {relatedPosts.map((related) => (
+                  <Link key={related.id} href={`/blog/${related.slug}`} className="blog-related__card">
+                    <h3>{related.title}</h3>
+                    {related.excerpt ? <p>{related.excerpt}</p> : null}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          <BlogNewsletterCta />
+          <BlogCommentSection slug={post.slug} />
+
           <footer className="blog-article__footer">
             <p className="blog-article__footer-copy">
-              Ready to build your rig? Explore studio gear curated by the Vibe
-              Music team.
+              Ready to build your rig? Explore studio gear curated by the Vibe Music team.
             </p>
             <div className="blog-article__footer-actions">
               <Link

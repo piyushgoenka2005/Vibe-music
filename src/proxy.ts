@@ -13,7 +13,7 @@ import {
   isWebhookPath,
   verifyMutationOrigin,
 } from "@/lib/security/mutation-origin";
-import { getClientIp, RATE_LIMITS } from "@/lib/security/rate-limit-core";
+import { getClientIp, RATE_LIMITS, type RateLimitResult } from "@/lib/security/rate-limit-core";
 import {
   createRequestId,
   logRequestStart,
@@ -39,6 +39,9 @@ function resolveRateLimitScope(pathname: string): {
   }
   if (pathname.startsWith("/api/search")) {
     return { scope: "search-api", options: RATE_LIMITS.search };
+  }
+  if (pathname.startsWith("/api/media/thumb")) {
+    return { scope: "media-thumb", options: RATE_LIMITS.mediaThumb };
   }
   return { scope: "public-api", options: RATE_LIMITS.publicApi };
 }
@@ -81,13 +84,20 @@ async function handleApiRequest(request: NextRequest): Promise<NextResponse | nu
   });
 
   const { scope, options } = resolveRateLimitScope(pathname);
-  const rateLimit = await edgeCheckRateLimit(`${scope}:${ip}`, options);
-  if (!rateLimit.allowed) {
-    logSecurityEvent("rate_limit_exceeded", { requestId, path: pathname, ip, scope });
-    return jsonApiError(requestId, "Too many requests. Please try again later.", 429, {
-      "X-RateLimit-Remaining": "0",
-      "X-RateLimit-Reset": String(rateLimit.resetAt),
-    });
+  let rateLimit: RateLimitResult = {
+    allowed: true,
+    remaining: options.limit,
+    resetAt: Date.now() + options.windowMs,
+  };
+  if (process.env.DISABLE_RATE_LIMIT !== "true") {
+    rateLimit = await edgeCheckRateLimit(`${scope}:${ip}`, options);
+    if (!rateLimit.allowed) {
+      logSecurityEvent("rate_limit_exceeded", { requestId, path: pathname, ip, scope });
+      return jsonApiError(requestId, "Too many requests. Please try again later.", 429, {
+        "X-RateLimit-Remaining": "0",
+        "X-RateLimit-Reset": String(rateLimit.resetAt),
+      });
+    }
   }
 
   if (isMutationMethod(request.method) && !isWebhookPath(pathname)) {

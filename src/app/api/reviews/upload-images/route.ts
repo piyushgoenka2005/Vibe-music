@@ -6,7 +6,8 @@ import {
   handleRouteError,
   jsonError,
 } from "@/lib/api/route-utils";
-import { reviewUploadFolder, uploadBufferToCdn } from "@/lib/server/cdnStorage";
+import { reviewUploadFolder } from "@/lib/server/cdnStorage";
+import { uploadOptimizedImageToCdn } from "@/lib/server/cdnImageOptimize";
 import { MAX_REVIEW_IMAGES } from "@/lib/validations/review";
 import { getProductDetailBySlug } from "@/services/catalogService";
 
@@ -63,11 +64,11 @@ export async function POST(request: Request) {
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
-      const url = await uploadBufferToCdn(buffer, file.name, {
+      const uploaded = await uploadOptimizedImageToCdn(buffer, {
         folder,
-        contentType: file.type,
+        filenameHint: file.name,
       });
-      urls.push(url);
+      urls.push(uploaded.url);
     }
 
     return NextResponse.json({ urls });

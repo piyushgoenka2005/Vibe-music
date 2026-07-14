@@ -26,7 +26,7 @@
 
 .site-footer__shell {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   max-width: 100%;
   margin: 0 auto;
   color: #fff;
@@ -44,9 +44,11 @@
 }
 
 /*
- * Kill the white/subpixel hairline between homepage tour ribbon and footer.
- * Pull the footer under the ribbon and lock the top band to solid brand blue.
+ * Homepage → footer seam: white trust bar sits flush into the blue footer.
+ * Pull the footer under the strip and lock the top band to solid brand blue.
  */
+body.is-landing-page
+  .storefront-main:has(> .premium-home > .social-proof-strip),
 body.is-landing-page .storefront-main:has(> .premium-home > .tour-ribbon) {
   margin-bottom: 0;
   padding-bottom: 0;
@@ -55,14 +57,21 @@ body.is-landing-page .storefront-main:has(> .premium-home > .tour-ribbon) {
 }
 
 body.is-landing-page
+  .storefront-main:has(> .premium-home > .social-proof-strip)
+  + .site-footer.site-footer--layered,
+body.is-landing-page
   .storefront-main:has(> .premium-home > .tour-ribbon)
   + .site-footer.site-footer--layered {
-  margin-top: -6px !important;
+  margin-top: 0 !important;
   border: none !important;
   background-color: #1253ed;
   box-shadow: none !important;
 }
 
+body.is-landing-page
+  .storefront-main:has(> .premium-home > .social-proof-strip)
+  + .site-footer.site-footer--layered
+  .site-footer__shell,
 body.is-landing-page
   .storefront-main:has(> .premium-home > .tour-ribbon)
   + .site-footer.site-footer--layered
@@ -81,6 +90,10 @@ body.is-landing-page
   background-position: top left, top left, top left, top left !important;
 }
 
+body.is-landing-page
+  .storefront-main:has(> .premium-home > .social-proof-strip)
+  + .site-footer.site-footer--layered
+  .site-footer__shell::before,
 body.is-landing-page
   .storefront-main:has(> .premium-home > .tour-ribbon)
   + .site-footer.site-footer--layered
@@ -454,7 +467,7 @@ body.is-landing-page
   background: transparent;
 }
 
-/* Fixed products panel — deep navy reveal section (pinned to viewport bottom) */
+/* Fixed products panel — pinned under main/ribbon (never inside footer stacking). */
 .footer-products-panel {
   position: fixed;
   inset: auto 0 0;
@@ -486,7 +499,8 @@ body.is-landing-page
 }
 
 .footer-products-panel.is-ready.is-interactive {
-  z-index: 2;
+  /* Above footer chrome only after shell has scrolled away — stay under storefront-main (z:1) until then via z:0 default */
+  z-index: 1;
   pointer-events: auto;
 }
 
@@ -810,23 +824,43 @@ body.is-landing-page
     display: none;
   }
 
+  /*
+   * Mobile: trending panel sits in normal document flow between homepage and footer shell.
+   * Avoids the transparent-spacer white band; desktop keeps fixed scroll-reveal under ribbon.
+   */
+  .site-footer__panel-spacer {
+    display: none;
+    height: 0 !important;
+    min-height: 0 !important;
+  }
+
   .footer-products-panel {
-    max-height: min(62dvh, calc(100dvh - 5.5rem));
-    overflow-x: clip;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    position: relative;
+    inset: auto;
+    z-index: 1;
+    max-height: none;
+    overflow: visible;
+    visibility: visible;
+    pointer-events: auto;
     padding:
       1.25rem
       max(1rem, env(safe-area-inset-right, 0px))
-      calc(1rem + env(safe-area-inset-bottom, 0px))
+      calc(1.25rem + env(safe-area-inset-bottom, 0px))
       max(1rem, env(safe-area-inset-left, 0px));
+  }
+
+  .footer-products-panel:not(.is-ready),
+  .footer-products-panel.is-ready,
+  .footer-products-panel.is-ready.is-interactive {
+    visibility: visible;
+    pointer-events: auto;
+    z-index: 1;
   }
 
   body:has(.checkout-mobile-bar) .footer-products-panel,
   body:has(.pdp-mobile-bar--visible) .footer-products-panel {
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-    max-height: min(52dvh, calc(100dvh - 7.5rem));
+    max-height: none;
   }
 
   .footer-products-panel__header {
@@ -862,18 +896,26 @@ body.is-landing-page
     font-size: 1.125rem;
   }
 
+  .footer-product-snippet__add .notify-me-btn__glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
   .footer-products-panel__shop-all {
     min-height: 2.75rem;
   }
 
-  /* Sticky commerce bars own the bottom edge — keep panel pass-through */
+  /* Sticky commerce bars — allow scrolling content under them */
   body:has(.pdp-mobile-bar--visible) .footer-products-panel.is-ready.is-interactive,
   body:has(.checkout-mobile-bar) .footer-products-panel.is-ready.is-interactive {
-    z-index: 0;
-    pointer-events: none;
+    z-index: 1;
+    pointer-events: auto;
   }
 
-  /* Quick-add stays usable but below sticky Pay CTA (z-index 200) */
   body:has(.pdp-mobile-bar--visible) .footer-products-panel.is-ready .footer-product-snippet__add,
   body:has(.checkout-mobile-bar) .footer-products-panel.is-ready .footer-product-snippet__add {
     pointer-events: auto;

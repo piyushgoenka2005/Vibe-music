@@ -1389,9 +1389,9 @@
   }
 
   .sw-search-landing-bar__trending-pill {
-    min-height: 2rem;
-    padding: 0.35rem 0.7rem;
-    font-size: 0.75rem;
+    min-height: 44px;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.8125rem;
   }
 
   .sw-search-landing-bar__submit {

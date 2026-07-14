@@ -44,15 +44,16 @@ describe("shippingZoneResolver", () => {
     expect(zone?.id).toBe("rest-of-india");
   });
 
-  it("applies free standard shipping above threshold", () => {
+  it("returns free shipping for every zone charge lookup", () => {
     const zone = zones[0];
     expect(getZoneShippingCharge("standard", 12000, 0, zone, 9999)).toBe(0);
+    expect(getZoneShippingCharge("standard", 500, 0, zone, 9999)).toBe(0);
   });
 
-  it("builds standard shipping quotes for a zone", () => {
+  it("builds standard shipping quotes as free", () => {
     const quotes = buildShippingQuotes(5000, 0, zones[0], 9999);
     expect(quotes).toHaveLength(1);
     expect(quotes[0]?.id).toBe("standard");
-    expect(quotes[0]?.charge).toBe(99);
+    expect(quotes[0]?.charge).toBe(0);
   });
 });

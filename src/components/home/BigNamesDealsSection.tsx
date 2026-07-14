@@ -11,7 +11,7 @@ export default function BigNamesDealsSection() {
     <section className="big-names-deals" aria-labelledby={HEADLINE_ID}>
       <div className="big-names-deals__inner">
         <header className="big-names-deals__header">
-          <Reveal>
+          <Reveal immediate>
             <p className="big-names-deals__eyebrow">
               <span className="big-names-deals__eyebrow-line" aria-hidden />
               Shop top brands
@@ -19,7 +19,7 @@ export default function BigNamesDealsSection() {
             </p>
           </Reveal>
 
-          <Reveal delay={40}>
+          <Reveal immediate delay={40}>
             <h1
               className="big-names-deals__headline typo-series"
               id={HEADLINE_ID}
@@ -28,7 +28,7 @@ export default function BigNamesDealsSection() {
             </h1>
           </Reveal>
 
-          <Reveal delay={80}>
+          <Reveal immediate delay={80}>
             <h2 className="big-names-deals__subtitle">
               <span className="big-names-deals__subtitle-line">
                 Find all the top brands you already love, at prices that simply

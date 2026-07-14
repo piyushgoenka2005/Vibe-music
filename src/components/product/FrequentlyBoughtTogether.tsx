@@ -3,7 +3,8 @@
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
-import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
+import { optimizeImageUrl } from "@/lib/storefrontImages";
+import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import type { ResolvedProductBundle } from "@/types/bundle";
 import type { Product, ProductDetail, ProductVariant } from "@/types/product";
@@ -21,7 +22,9 @@ export default function FrequentlyBoughtTogether({
 }: FrequentlyBoughtTogetherProps) {
   const addItem = useCartStore((s) => s.addItem);
 
-  if (bundle.items.length === 0) return null;
+  const purchasableExtras = bundle.items.filter((product) =>
+    isPurchasablePrice(product.price)
+  );
 
   const mainLine: Product = {
     ...mainProduct,
@@ -29,7 +32,14 @@ export default function FrequentlyBoughtTogether({
     image: mainVariant?.images?.[0] || mainProduct.image,
   };
 
-  const bundleProducts = [mainLine, ...bundle.items];
+  if (
+    purchasableExtras.length === 0 ||
+    !isPurchasablePrice(mainLine.price)
+  ) {
+    return null;
+  }
+
+  const bundleProducts = [mainLine, ...purchasableExtras];
   const subtotal = bundleProducts.reduce((sum, product) => sum + product.price, 0);
   const bundlePrice =
     Math.round(subtotal * (1 - bundle.discountPercent / 100) * 100) / 100;
@@ -37,7 +47,7 @@ export default function FrequentlyBoughtTogether({
 
   function addBundle() {
     addItem(mainLine, 1, mainVariant);
-    bundle.items.forEach((product) => addItem(product, 1));
+    purchasableExtras.forEach((product) => addItem(product, 1));
   }
 
   return (
@@ -66,7 +76,7 @@ export default function FrequentlyBoughtTogether({
               >
                 {product.image ? (
                   <StorefrontThumbImage
-                    src={product.image}
+                    src={optimizeImageUrl(product.image, "productCard")}
                     className="pdp-fbt__image"
                     width={120}
                     height={120}

@@ -40,9 +40,10 @@ describe("shippingMethods", () => {
     expect(isShippingMethod("invalid")).toBe(false);
   });
 
-  it("applies free standard shipping above threshold", () => {
+  it("keeps standard shipping free for all cart totals", () => {
     expect(getShippingChargeForMethod("standard", 10000, 0)).toBe(0);
-    expect(getShippingChargeForMethod("standard", 5000, 0)).toBe(99);
+    expect(getShippingChargeForMethod("standard", 5000, 0)).toBe(0);
+    expect(getShippingChargeForMethod("express", 5000, 0)).toBe(0);
   });
 });
 

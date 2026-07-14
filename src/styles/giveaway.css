@@ -1,0 +1,130 @@
+.giveaway-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.giveaway-hero {
+  margin-bottom: 1.5rem;
+}
+
+.giveaway-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.giveaway-grid--split {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .giveaway-grid--split {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.giveaway-card {
+  background: var(--surface-elevated, #fff);
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.giveaway-card__image {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.giveaway-card__eyebrow {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+.giveaway-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.giveaway-form label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.giveaway-form input {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border-subtle, #d1d5db);
+  border-radius: 8px;
+}
+
+.giveaway-checkbox {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.giveaway-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.giveaway-countdown__grid {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.giveaway-countdown__grid div {
+  display: grid;
+  text-align: center;
+  min-width: 3rem;
+}
+
+.giveaway-countdown--ended {
+  color: #b45309;
+}
+
+.giveaway-error {
+  color: #b91c1c;
+}
+
+.giveaway-faqs details {
+  margin-bottom: 0.5rem;
+}
+
+.giveaway-back {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.giveaway-empty {
+  text-align: center;
+}
+
+.giveaway-note {
+  font-size: 0.875rem;
+  opacity: 0.8;
+  margin-top: 0.75rem;
+}
+
+.giveaway-social {
+  margin-top: 1rem;
+}
+
+.giveaway-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.giveaway-list-item {
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: 8px;
+  padding: 0.75rem;
+}

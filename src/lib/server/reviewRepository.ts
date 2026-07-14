@@ -3,10 +3,8 @@ import "server-only";
 import * as pg from "@/lib/server/prisma/reviewRepository";
 import { prismaToReview } from "@/lib/server/prisma/mappers";
 import type {
-  AdminReviewListParams,
   PublicReview,
   Review,
-  ReviewListParams,
   ReviewStatus,
 } from "@/types/review";
 

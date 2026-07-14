@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useIsClient } from "@/hooks/useIsClient";
+import { useCartCatalogReprice } from "@/hooks/useCartCatalogReprice";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ROUTES } from "@/lib/routes";
@@ -19,6 +20,7 @@ export default function CartPage() {
   const isUpdating = useCartStore((s) => s.isUpdating);
   const recentlyViewedIds = useRecentlyViewedStore((s) => s.productIds);
   const isClient = useIsClient();
+  useCartCatalogReprice(true);
 
   const recentlyViewedKey = useMemo(
     () => recentlyViewedIds.slice(0, 12).join(","),

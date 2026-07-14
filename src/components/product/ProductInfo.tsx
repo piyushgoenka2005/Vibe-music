@@ -3,7 +3,6 @@
 import type { RefObject } from "react";
 import Link from "next/link";
 import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
-import { ROUTES } from "@/lib/routes";
 import {
   attributeKey,
   findVariantBySelection,
@@ -11,6 +10,7 @@ import {
 } from "@/lib/variants";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 import ProductTrustBadges from "./ProductTrustBadges";
+import NotifyMeButton from "./NotifyMeButton";
 
 interface ProductInfoProps {
   product: ProductDetail;
@@ -280,41 +280,60 @@ export default function ProductInfo({
 
       <div ref={atcSentinelRef} className="pdp-actions">
         {isComingSoon ? (
-          <Link
-            href={`${ROUTES.contact}?subject=${encodeURIComponent(`Price enquiry: ${product.name}`)}`}
-            className="pdp-btn pdp-btn--buy pdp-buy-now"
-          >
-            Enquire for price
-          </Link>
+          <>
+            <NotifyMeButton
+              variant="pdp-primary"
+              productId={product.id}
+              productSlug={product.slug}
+              productName={product.name}
+            />
+            <div className="pdp-actions__row">
+              <button
+                type="button"
+                className="pdp-btn pdp-btn--secondary pdp-btn--wishlist"
+                onClick={onToggleWishlist}
+                aria-pressed={isWishlisted}
+                aria-label={
+                  isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+                }
+              >
+                {isWishlisted ? "♥ Wishlisted" : "♡ Wishlist"}
+              </button>
+            </div>
+          </>
         ) : (
-          <button
-            type="button"
-            className="pdp-btn pdp-btn--buy pdp-buy-now"
-            onClick={onBuyNow}
-            disabled={!canPurchase}
-          >
-            Buy Now
-          </button>
+          <>
+            <button
+              type="button"
+              className="pdp-btn pdp-btn--buy pdp-buy-now"
+              onClick={onBuyNow}
+              disabled={!canPurchase}
+            >
+              Buy Now
+            </button>
+            <div className="pdp-actions__row">
+              <button
+                type="button"
+                className="pdp-btn pdp-btn--primary"
+                onClick={onAddToCart}
+                disabled={!canPurchase}
+              >
+                Add to Cart
+              </button>
+              <button
+                type="button"
+                className="pdp-btn pdp-btn--secondary pdp-btn--wishlist"
+                onClick={onToggleWishlist}
+                aria-pressed={isWishlisted}
+                aria-label={
+                  isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+                }
+              >
+                {isWishlisted ? "♥ Wishlisted" : "♡ Wishlist"}
+              </button>
+            </div>
+          </>
         )}
-        <div className="pdp-actions__row">
-          <button
-            type="button"
-            className="pdp-btn pdp-btn--primary"
-            onClick={onAddToCart}
-            disabled={!canPurchase}
-          >
-            {isComingSoon ? "Coming Soon" : "Add to Cart"}
-          </button>
-          <button
-            type="button"
-            className="pdp-btn pdp-btn--secondary pdp-btn--wishlist"
-            onClick={onToggleWishlist}
-            aria-pressed={isWishlisted}
-            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          >
-            {isWishlisted ? "♥ Wishlisted" : "♡ Wishlist"}
-          </button>
-        </div>
       </div>
 
       <ProductTrustBadges />

@@ -1,5 +1,5 @@
 const ANNOUNCEMENT_MESSAGE =
-  "Free shipping on orders over ₹9,999 · Authorized brands · Secure checkout";
+  "Free shipping on all orders · Authorized brands · Secure checkout";
 
 const MARQUEE_COPIES = 8;
 
@@ -14,9 +14,11 @@ export default function AnnouncementBar() {
   }));
 
   return (
-    <div className="announcement-bar" role="region" aria-label="Store announcement">
-      <p className="visually-hidden">{ANNOUNCEMENT_MESSAGE}</p>
-
+    <div
+      className="announcement-bar"
+      role="region"
+      aria-label={`Store announcement: ${ANNOUNCEMENT_MESSAGE}`}
+    >
       <div className="announcement-bar__viewport" aria-hidden="true">
         <div className="announcement-bar__track">
           {items.map((item) => (

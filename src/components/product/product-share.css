@@ -155,7 +155,7 @@
   .product-card-actions .product-share-btn,
   .product-card-actions .wl-heart-btn,
   .product-card-actions .compare-btn {
-    --share-btn-size: 2.375rem;
+    --share-btn-size: 2.75rem;
     width: var(--share-btn-size);
     min-width: var(--share-btn-size);
     height: var(--share-btn-size);

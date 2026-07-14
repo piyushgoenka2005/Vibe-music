@@ -246,16 +246,18 @@ export function toPaise(amountInr: number): number {
   return Math.round(amountInr * 100);
 }
 
-/** Single source of truth for storefront free-shipping messaging and fallback quotes. */
-export const FREE_SHIPPING_THRESHOLD = 9999;
-export const STANDARD_SHIPPING_CHARGE = 99;
+/**
+ * Shipping is free for all storefront/checkout orders.
+ * Threshold kept at 0 so legacy “add more for free shipping” UIs stay satisfied.
+ */
+export const FREE_SHIPPING_THRESHOLD = 0;
+export const STANDARD_SHIPPING_CHARGE = 0;
 
 export function getShippingCharge(
-  subtotal: number,
-  discount: number
+  _subtotal: number,
+  _discount: number
 ): number {
-  const afterDiscount = subtotal - discount;
-  return afterDiscount >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_CHARGE;
+  return 0;
 }
 
 /** Default GST rate by product category slug. */

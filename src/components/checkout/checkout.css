@@ -466,8 +466,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -1680,8 +1682,27 @@
 }
 
 @media (max-width: 767px) {
-  .checkout-actions:not(.checkout-success__actions) {
+  .checkout-actions:not(.checkout-success__actions):not(.checkout-actions--payment) {
     display: none;
+  }
+
+  .checkout-actions--payment {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .checkout-actions--payment .checkout-glass-btn {
+    min-height: 44px;
+    width: 100%;
+  }
+
+  .checkout-address-card__delete {
+    width: 2.75rem;
+    height: 2.75rem;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .checkout-page,
@@ -1717,9 +1738,9 @@
     z-index: 200;
     box-sizing: border-box;
     min-height: calc(4.25rem + env(safe-area-inset-bottom, 0px));
-    padding: 0.625rem max(1rem, env(safe-area-inset-left, 0px))
+    padding: 0.625rem max(1rem, env(safe-area-inset-right, 0px))
       calc(0.625rem + env(safe-area-inset-bottom, 0px))
-      max(1rem, env(safe-area-inset-right, 0px));
+      max(1rem, env(safe-area-inset-left, 0px));
     background: rgba(255, 255, 255, 0.98);
     border-top: 1px solid #e2e8f0;
     box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.1);
@@ -1755,7 +1776,9 @@
     line-height: 1.2;
     color: #0f172a;
     white-space: nowrap;
-    overflow: visible;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   .checkout-mobile-bar__cta {
@@ -1778,6 +1801,10 @@
   .checkout-mobile-bar__cta .checkout-glass-btn__label {
     color: #ffffff;
     font-weight: 600;
+  }
+
+  .checkout-page--payment .checkout-summary__pay {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .checkout-panel {
@@ -1804,6 +1831,30 @@
   .checkout-form textarea {
     font-size: 16px;
     min-height: 44px;
+  }
+}
+
+@media (max-width: 390px) {
+  .checkout-mobile-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    min-height: 0;
+  }
+
+  .checkout-mobile-bar__total {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-right: 0;
+    width: 100%;
+  }
+
+  .checkout-mobile-bar__cta,
+  .checkout-mobile-bar__cta.checkout-glass-btn {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
   }
 }
 

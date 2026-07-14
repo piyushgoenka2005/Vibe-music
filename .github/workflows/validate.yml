@@ -8,7 +8,32 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: vibe
+          POSTGRES_PASSWORD: vibe
+          POSTGRES_DB: vibe
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://vibe:vibe@localhost:5432/vibe?schema=public
+      AUTH_SECRET: ci-auth-secret-minimum-32-characters-long
+      NEXTAUTH_SECRET: ci-auth-secret-minimum-32-characters-long
+      NEXTAUTH_URL: http://localhost:3000
+      GUEST_ORDER_ACCESS_SECRET: ci-guest-order-secret-min-32-chars-long
+      COD_ENABLED: "true"
+      E2E_ADMIN_EMAIL: e2e-admin@vibemusic.test
+      E2E_ADMIN_PASSWORD: E2eAdminPassword!123456
 
     steps:
       - uses: actions/checkout@v4
@@ -30,20 +55,33 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      - name: Apply database migrations
+        run: npm run db:migrate
+
+      - name: Seed catalog and E2E admin
+        run: |
+          npx tsx scripts/catalog/seed-catalog.mts
+          npm run seed:e2e-admin
+
       - name: Production build
         run: npm run build
         env:
           NEXT_PUBLIC_SITE_URL: https://example.com
           GUEST_ORDER_ACCESS_SECRET: ci-guest-order-secret-min-32-chars-long
-          ALLOW_DEMO_PAYMENTS: "true"
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
-      - name: E2E smoke tests
+      - name: E2E tests
         run: npm run test:e2e
         env:
           CI: "true"
-          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
-          GUEST_ORDER_ACCESS_SECRET: ci-guest-order-secret-min-32-chars-long
-          ALLOW_DEMO_PAYMENTS: "true"
+          DISABLE_RATE_LIMIT: "true"
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

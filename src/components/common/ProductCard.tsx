@@ -8,7 +8,9 @@ import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import CompareButton from "@/components/compare/CompareButton";
 import WishlistButton from "@/components/wishlist/WishlistButton";
-import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
+import NotifyMeButton from "@/components/product/NotifyMeButton";
+import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import { optimizeImageUrl } from "@/lib/storefrontImages";
 import type { Product } from "@/types/product";
 import type { ViewMode } from "@/types/filters";
 
@@ -70,7 +72,9 @@ export default function ProductCard({ product, view }: ProductCardProps) {
   }
 
   function handleAdd() {
-    if (product.availability === "out-of-stock" || product.price <= 0) return;
+    if (product.availability === "out-of-stock" || !isPurchasablePrice(product.price)) {
+      return;
+    }
     addItem(product);
     openDrawer();
   }
@@ -79,8 +83,17 @@ export default function ProductCard({ product, view }: ProductCardProps) {
   const originalPrice = product.originalPrice ?? product.price;
   const hasDiscount = originalPrice > product.price && product.price > 0;
   const savingsPercent = discountPercent(originalPrice, product.price);
-  const canQuickAdd = product.availability !== "out-of-stock" && product.price > 0;
+  const isComingSoon = !isPurchasablePrice(product.price);
+  const canQuickAdd =
+    product.availability !== "out-of-stock" && isPurchasablePrice(product.price);
   const isGrid = view === "grid";
+  const imageSrc = product.image
+    ? optimizeImageUrl(product.image, "productCard")
+    : "";
+  const imageUnoptimized =
+    imageSrc.startsWith("http://") ||
+    imageSrc.startsWith("https://") ||
+    imageSrc.includes("/api/media/thumb");
 
   return (
     <article
@@ -101,13 +114,14 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           {isGrid && savingsPercent > 0 ? (
             <span className="cat-product-card__deal-tag">{savingsPercent}% off</span>
           ) : null}
-          {product.image ? (
+          {imageSrc ? (
             <Image
-              src={product.image}
+              src={imageSrc}
               alt=""
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"
               loading="lazy"
+              unoptimized={imageUnoptimized}
               className="cat-product-card__image-photo"
             />
           ) : null}
@@ -203,15 +217,23 @@ export default function ProductCard({ product, view }: ProductCardProps) {
             </span>
           </div>
         )}
-        <button
-          type="button"
-          className="cat-product-card__add"
-          onClick={handleAdd}
-          disabled={!canQuickAdd}
-          aria-label={`Add ${product.name} to cart`}
-        >
-          {canQuickAdd ? "Add to cart" : "Out of stock"}
-        </button>
+        {isComingSoon ? (
+          <NotifyMeButton
+            productId={product.id}
+            productSlug={product.slug}
+            productName={product.name}
+          />
+        ) : (
+          <button
+            type="button"
+            className="cat-product-card__add"
+            onClick={handleAdd}
+            disabled={!canQuickAdd}
+            aria-label={`Add ${product.name} to cart`}
+          >
+            {canQuickAdd ? "Add to cart" : "Out of stock"}
+          </button>
+        )}
       </div>
     </article>
   );

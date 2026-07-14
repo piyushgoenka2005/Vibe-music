@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
+import { optimizeImageUrl } from "@/lib/storefrontImages";
 import { formatDisplayPrice } from "@/utils/currency";
 import type { Product } from "@/types/product";
 
@@ -34,7 +35,7 @@ export default function ProductCrossSell({
             <div className="pdp-cross-sell__media">
               {product.image ? (
                 <StorefrontThumbImage
-                  src={product.image}
+                  src={optimizeImageUrl(product.image, "productCard")}
                   className="pdp-cross-sell__image"
                   width={160}
                   height={160}

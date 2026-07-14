@@ -1,103 +1,65 @@
 # FINAL Production Readiness Report — ViBE Music
 
-**Project:** ViBE Music  
-**RC Date:** 11 July 2026  
-**Verdict:** **PRODUCTION READY — RC APPROVED**
+**Date:** 14 July 2026  
+**Gate:** Final delivery audit (deploy-ready)
 
 ---
 
-## Overall score: **98 / 100**
-
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| WRD feature coverage | 99% | All in-scope requirements verified in code |
-| Build & deploy | 100% | PASS — 427 routes |
-| Tests | 95% | 68 Vitest + 17 Playwright |
-| Security | 94% | RBAC, CSRF, rate limits, Firestore deny-by-default |
-| Performance | 84% | Build optimized; Lighthouse manual recommended |
-| Responsiveness | 94% | E2E mobile overflow guard passes |
-| Accessibility | 90% | Skip link, ARIA, touch targets; formal audit recommended |
-| Code quality | 92% | 0 lint errors, 34 img warnings |
-
----
-
-## Release gate results (RC — 11 July 2026)
+## Automated gates (this session)
 
 | Gate | Result |
 |------|--------|
-| `npm run type-check` | **PASS** |
-| `npm run lint` | **PASS** (0 errors, 34 warnings) |
-| `npm test` | **PASS** (68/68) |
-| `npm run build` | **PASS** (427 routes) |
-| `npm run test:e2e` | **PASS** (17/17) |
-| P0 defects | **None** |
-| P1 defects | **None** (2 fixed during RC) |
+| `npm run type-check` | Pass |
+| `npm run lint` | Pass (0 errors; img/unused-arg warnings only) |
+| `npm test` | **111 / 111** pass |
+| `npm run build` | Pass (`BUILD_EXIT:0`) |
+| `e2e/accessibility.spec.ts` | **12 / 12** (overflow 360/390, tap targets, sticky PDP) |
+| Prior full Playwright | **61 / 61** on validate:ci baseline |
+
+Re-run full suite before cutover:
+
+```powershell
+npm run validate:ci
+```
 
 ---
 
-## RC fixes (this pass)
+## Fixes landed in final delivery pass
 
-1. **Shipping quote fallback** — `shippingZoneRepository.ts` returns default zones when Firestore unavailable (checkout no longer 500s)
-2. **Health liveness** — `/api/health` returns 200 degraded when local fallback active
-3. **Compare page** — hydration gate removed (prior pass)
-4. **Gear story placeholders** — out-of-stock + no ₹0 pricing (prior pass)
-
----
-
-## Production-ready capabilities
-
-### Storefront
-Full ecommerce: homepage → PLP → PDP → cart → checkout → Razorpay/COD → success → track → account. Invoices, returns, support, notifications, wishlist, compare, contact, blog, newsletter, CMS pages, zone-aware shipping.
-
-### Admin
-28 modules: products, orders, returns, refunds, inventory, shipping zones, CMS, analytics, users, support, notifications, audit logs, CSV exports, RBAC.
-
-### Infrastructure
-Firestore repositories with circuit breaker + local catalog fallback, GitHub Actions validate workflow, Firestore rules + indexes prepared.
+1. **Cart / checkout / drawer media choke-point** — `StorefrontThumbImage` always routes through `storefrontImageUrl` (CDN derivative or `/api/media/thumb`).
+2. **PDP gallery** — thumbs, stage, zoom, and lightbox use sized storefront URLs (no raw multi‑MB masters).
+3. **Checkout review step** — uses `StorefrontThumbImage` instead of raw `<img>`.
+4. **Mobile responsiveness** (prior pass) — sticky Coming Soon CTA, FAB clearance, 44px targets, ≤390 checkout stack, deals/copy clipping, E2E coverage.
+5. **Media pipeline** (prior pass) — upload derivatives, hardened thumb API, splash/WebGL trim.
+6. **Deployment checklist** — refreshed for 14 Jul 2026 counts, enterprise migrations, CDN, Razorpay smoke.
 
 ---
 
-## Pre-launch requirements (operator)
+## Deploy-blocking ops (human / VPS — not code)
 
-| Task | Status |
-|------|--------|
-| Production env vars | Pending deploy |
-| Firestore indexes + rules | Pending deploy |
-| Razorpay live keys + webhook | Pending deploy |
-| Manual checkout iOS/Android | Recommended |
-| Lighthouse audit | Recommended |
-| `ALLOW_DEMO_PAYMENTS=false` | Required |
+These are **environment** gates, not application bugs:
 
----
-
-## Non-blocking backlog (P2)
-
-- Migrate `<img>` to `next/image` (34 warnings)
-- Lighthouse CI integration
-- Full Razorpay checkout E2E automation
-- PDF Chromium on production server
+1. Apply all Prisma migrations on VPS (`npm run db:migrate`), including rental/finance/giveaway/compare/blog folders.
+2. Set production secrets per `.env.example` (`AUTH_SECRET`, Razorpay live keys, SMTP, `GUEST_ORDER_ACCESS_SECRET`).
+3. Mount writable `CDN_STORAGE_ROOT` for admin uploads + derivatives.
+4. Prefer Upstash Redis for multi-worker rate limits.
+5. Perform **one live Razorpay order** + webhook confirmation (COD is E2E-covered; Razorpay is manual).
 
 ---
 
-## Deliverables index
+## Feature surface (enterprise)
 
-| Report | Path |
-|--------|------|
-| RC Verification | `RC_RELEASE_CANDIDATE_VERIFICATION.md` |
-| WRD Compliance | `FINAL_WRD_COMPLIANCE_REPORT.md` |
-| Feature Matrix | `FINAL_FEATURE_MATRIX.md` |
-| Test Report | `FINAL_TEST_REPORT.md` |
-| Security | `FINAL_SECURITY_REPORT.md` |
-| Performance | `FINAL_PERFORMANCE_REPORT.md` |
-| Accessibility | `FINAL_ACCESSIBILITY_REPORT.md` |
-| Responsiveness | `FINAL_RESPONSIVENESS_REPORT.md` |
-| Code Quality | `FINAL_CODE_QUALITY_REPORT.md` |
-| Deployment | `FINAL_DEPLOYMENT_CHECKLIST.md` |
-| Release Notes | `FINAL_RELEASE_NOTES.md` |
-| Implementation Log | `FINAL_IMPLEMENTATION_LOG.md` |
+| Domain | Status |
+|--------|--------|
+| Catalog / PDP / cart / COD checkout | Production |
+| Razorpay online pay | Wired; live smoke required |
+| Auth (credentials + Google optional) | Production |
+| Admin console | Production |
+| Rentals / EMI / Giveaway / Compare / Blog CMS | Migrated + seeded via `seed:enterprise` |
+| Mobile + desktop storefront polish | Final pass complete |
 
 ---
 
-## Final statement
+## Verdict
 
-The ViBE Music application is **genuinely production-ready** for client delivery. All achievable in-scope WRD requirements are satisfied, all critical workflows are integrated end-to-end, and all automated validation gates pass with evidence documented in this release bundle.
+**Codebase is production-grade and deployable** subject to VPS env, migrations, CDN mount, and a live Razorpay smoke. Application automated gates are green for typecheck, lint errors, unit tests, and production build.

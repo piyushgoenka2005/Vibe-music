@@ -8,7 +8,8 @@ import { productPath, ROUTES } from "@/lib/routes";
 import { fetchProducts } from "@/services/products.api";
 import { useCartStore } from "@/store/cartStore";
 import type { Product } from "@/types/product";
-import { formatDisplayPrice } from "@/utils/currency";
+import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import NotifyMeButton from "@/components/product/NotifyMeButton";
 
 interface CartEmptyStateProps {
   onBrowse?: () => void;
@@ -17,6 +18,7 @@ interface CartEmptyStateProps {
 function CartSuggestionCard({ product }: { product: Product }) {
   const addItem = useCartStore((state) => state.addItem);
   const outOfStock = product.availability === "out-of-stock";
+  const comingSoon = !isPurchasablePrice(product.price);
   const href = productPath(product.slug);
   const hasDeal =
     product.originalPrice != null &&
@@ -51,15 +53,25 @@ function CartSuggestionCard({ product }: { product: Product }) {
           </p>
         </div>
       </Link>
-      <button
-        type="button"
-        className="cart-empty__product-add"
-        disabled={outOfStock}
-        onClick={() => addItem(product)}
-        aria-label={`Add ${product.name} to cart`}
-      >
-        {outOfStock ? "Sold out" : "Add"}
-      </button>
+      {comingSoon ? (
+        <NotifyMeButton
+          variant="inline"
+          className="cart-empty__product-add"
+          productId={product.id}
+          productSlug={product.slug}
+          productName={product.name}
+        />
+      ) : (
+        <button
+          type="button"
+          className="cart-empty__product-add"
+          disabled={outOfStock}
+          onClick={() => addItem(product)}
+          aria-label={`Add ${product.name} to cart`}
+        >
+          {outOfStock ? "Sold out" : "Add"}
+        </button>
+      )}
     </article>
   );
 }

@@ -549,6 +549,12 @@
     width: 100%;
   }
 
+  .cart-empty__product-add {
+    min-height: 44px;
+    min-width: 4.5rem;
+    padding: 0.55rem 1rem;
+  }
+
   .cart-item {
     grid-template-columns: 64px minmax(0, 1fr);
     gap: 10px;

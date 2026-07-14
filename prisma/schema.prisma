@@ -224,6 +224,7 @@ model User {
   sessions  Session[]
   addresses Address[]
   wishlist  Wishlist?
+  productCompareList ProductCompareList?
 
   @@index([email])
   @@map("users")
@@ -344,6 +345,12 @@ model BlogPost {
   contentFormat  String  @default("tiptap_json") @map("content_format")
   coverImage     String  @default("") @map("cover_image")
   tags           Json    @default("[]")
+  categorySlug   String  @default("") @map("category_slug")
+  categoryLabel  String  @default("") @map("category_label")
+  featured       Boolean @default(false)
+  authorBio      String  @default("") @map("author_bio")
+  authorAvatar   String  @default("") @map("author_avatar")
+  viewCount      Int     @default(0) @map("view_count")
   seoTitle       String  @default("") @map("seo_title")
   seoDescription String  @default("") @map("seo_description")
   status         String  @default("draft")
@@ -355,7 +362,34 @@ model BlogPost {
   updatedAt      String  @map("updated_at")
 
   @@index([status])
+  @@index([categorySlug])
+  @@index([featured])
   @@map("blog_posts")
+}
+
+model BlogComment {
+  id         String @id
+  postId     String @map("post_id")
+  authorName String @map("author_name")
+  email      String
+  body       String
+  status     String @default("pending")
+  createdAt  String @map("created_at")
+
+  @@index([postId, status])
+  @@map("blog_comments")
+}
+
+model BlogPostEvent {
+  id        String @id
+  postId    String? @map("post_id")
+  type      String
+  metadata  Json   @default("{}")
+  createdAt String @map("created_at")
+
+  @@index([type, createdAt])
+  @@index([postId])
+  @@map("blog_post_events")
 }
 
 model HomepageSection {
@@ -727,4 +761,489 @@ model ContentPage {
   updatedAt String @map("updated_at")
 
   @@map("content_pages")
+}
+
+// ─── Rentals ────────────────────────────────────────────────────────────────
+
+model RentalCategory {
+  id              String          @id
+  name            String
+  slug            String          @unique
+  description     String          @default("")
+  imageUrl        String?         @map("image_url")
+  sortOrder       Int             @default(0) @map("sort_order")
+  status          String          @default("active")
+  metaTitle       String?         @map("meta_title")
+  metaDescription String?         @map("meta_description")
+  createdAt       String          @map("created_at")
+  updatedAt       String          @map("updated_at")
+  products        RentalProduct[]
+
+  @@index([status])
+  @@map("rental_categories")
+}
+
+model RentalProduct {
+  id               String                    @id
+  slug             String                    @unique
+  name             String
+  categoryId       String                    @map("category_id")
+  catalogProductId String?                   @map("catalog_product_id")
+  description      String                    @default("")
+  image            String                    @default("")
+  images           Json                      @default("[]")
+  specifications   Json                      @default("{}")
+  status           String                    @default("active")
+  totalUnits       Int                       @default(1) @map("total_units")
+  availableUnits   Int                       @default(1) @map("available_units")
+  reservedUnits    Int                       @default(0) @map("reserved_units")
+  minDurationHours Int                       @default(24) @map("min_duration_hours")
+  maxDurationDays  Int                       @default(30) @map("max_duration_days")
+  depositAmount    Float                     @default(0) @map("deposit_amount")
+  hourlyRate       Float                     @default(0) @map("hourly_rate")
+  dailyRate        Float                     @default(0) @map("daily_rate")
+  weeklyRate       Float                     @default(0) @map("weekly_rate")
+  monthlyRate      Float                     @default(0) @map("monthly_rate")
+  pickupAvailable  Boolean                   @default(true) @map("pickup_available")
+  deliveryAvailable Boolean                  @default(true) @map("delivery_available")
+  deliveryFee      Float                     @default(0) @map("delivery_fee")
+  pickupFee        Float                     @default(0) @map("pickup_fee")
+  lateFeePerDay    Float                     @default(0) @map("late_fee_per_day")
+  damagePolicy     String                    @default("") @map("damage_policy")
+  termsText        String                    @default("") @map("terms_text")
+  agreementText    String                    @default("") @map("agreement_text")
+  featured         Boolean                   @default(false)
+  createdAt        String                    @map("created_at")
+  updatedAt        String                    @map("updated_at")
+  category         RentalCategory            @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  units            RentalInventoryUnit[]
+  blocks           RentalAvailabilityBlock[]
+  bookingItems     RentalBookingItem[]
+  inventoryLocks   RentalInventoryLock[]
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([featured])
+  @@map("rental_products")
+}
+
+model RentalInventoryUnit {
+  id           String                @id
+  productId    String                @map("product_id")
+  serialNumber String?               @map("serial_number")
+  label        String                @default("")
+  status       String                @default("available")
+  createdAt    String                @map("created_at")
+  updatedAt    String                @map("updated_at")
+  product      RentalProduct         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  locks        RentalInventoryLock[]
+
+  @@index([productId])
+  @@index([status])
+  @@map("rental_inventory_units")
+}
+
+model RentalAvailabilityBlock {
+  id        String        @id
+  productId String        @map("product_id")
+  unitId    String?       @map("unit_id")
+  startAt   String        @map("start_at")
+  endAt     String        @map("end_at")
+  reason    String        @default("maintenance")
+  createdAt String        @map("created_at")
+  product   RentalProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([startAt])
+  @@index([endAt])
+  @@map("rental_availability_blocks")
+}
+
+model RentalBooking {
+  id                  String              @id
+  bookingNumber       String              @unique @map("booking_number")
+  userId              String?             @map("user_id")
+  email               String
+  customerName        String              @map("customer_name")
+  customerPhone       String              @map("customer_phone")
+  isGuest             Boolean             @default(false) @map("is_guest")
+  status              String              @default("pending")
+  paymentStatus       String              @default("pending") @map("payment_status")
+  paymentMethod       String?             @map("payment_method")
+  durationType        String              @map("duration_type")
+  startAt             String              @map("start_at")
+  endAt               String              @map("end_at")
+  fulfillment         String              @default("pickup")
+  address             Json?
+  subtotal            Float
+  depositAmount       Float               @map("deposit_amount")
+  deliveryFee         Float               @default(0) @map("delivery_fee")
+  pickupFee           Float               @default(0) @map("pickup_fee")
+  totalGst            Float               @default(0) @map("total_gst")
+  total               Float
+  lateFees            Float               @default(0) @map("late_fees")
+  damageCharges       Float               @default(0) @map("damage_charges")
+  refundAmount        Float               @default(0) @map("refund_amount")
+  agreementAcceptedAt String?             @map("agreement_accepted_at")
+  termsAcceptedAt     String?             @map("terms_accepted_at")
+  razorpayOrderId     String?             @map("razorpay_order_id")
+  razorpayPaymentId   String?             @map("razorpay_payment_id")
+  razorpaySignature   String?             @map("razorpay_signature")
+  trackingToken       String?             @map("tracking_token")
+  cancelledAt         String?             @map("cancelled_at")
+  cancellationReason  String?             @map("cancellation_reason")
+  returnedAt          String?             @map("returned_at")
+  notes               String?
+  createdAt           String              @map("created_at")
+  updatedAt           String              @map("updated_at")
+  items               RentalBookingItem[]
+  charges             RentalCharge[]
+  events              RentalStatusEvent[]
+  locks               RentalInventoryLock[]
+
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([startAt])
+  @@index([createdAt])
+  @@map("rental_bookings")
+}
+
+model RentalBookingItem {
+  id            String        @id
+  bookingId     String        @map("booking_id")
+  productId     String        @map("product_id")
+  productName   String        @map("product_name")
+  productSlug   String        @map("product_slug")
+  unitId        String?       @map("unit_id")
+  quantity      Int           @default(1)
+  durationType  String        @map("duration_type")
+  durationUnits Float         @map("duration_units")
+  unitRate      Float         @map("unit_rate")
+  lineSubtotal  Float         @map("line_subtotal")
+  depositAmount Float         @map("deposit_amount")
+  booking       RentalBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  product       RentalProduct @relation(fields: [productId], references: [id])
+
+  @@index([bookingId])
+  @@index([productId])
+  @@map("rental_booking_items")
+}
+
+model RentalInventoryLock {
+  id        String               @id
+  unitId    String?              @map("unit_id")
+  productId String               @map("product_id")
+  bookingId String               @map("booking_id")
+  startAt   String               @map("start_at")
+  endAt     String               @map("end_at")
+  status    String               @default("held")
+  expiresAt String?              @map("expires_at")
+  createdAt String               @map("created_at")
+  booking   RentalBooking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  product   RentalProduct        @relation(fields: [productId], references: [id])
+  unit      RentalInventoryUnit? @relation(fields: [unitId], references: [id])
+
+  @@index([productId])
+  @@index([bookingId])
+  @@index([startAt])
+  @@index([endAt])
+  @@index([status])
+  @@map("rental_inventory_locks")
+}
+
+model RentalCharge {
+  id          String        @id
+  bookingId   String        @map("booking_id")
+  type        String
+  amount      Float
+  description String        @default("")
+  createdBy   String?       @map("created_by")
+  createdAt   String        @map("created_at")
+  booking     RentalBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@map("rental_charges")
+}
+
+model RentalStatusEvent {
+  id        String        @id
+  bookingId String        @map("booking_id")
+  status    String
+  note      String?
+  createdBy String?       @map("created_by")
+  createdAt String        @map("created_at")
+  booking   RentalBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([createdAt])
+  @@map("rental_status_events")
+}
+
+model RentalPolicy {
+  id                 String @id @default("default")
+  title              String @default("Rental Terms")
+  termsHtml          String @default("") @map("terms_html")
+  agreementHtml      String @default("") @map("agreement_html")
+  cancellationPolicy String @default("") @map("cancellation_policy")
+  lateFeePolicy      String @default("") @map("late_fee_policy")
+  damagePolicy       String @default("") @map("damage_policy")
+  updatedAt          String @map("updated_at")
+
+  @@map("rental_policies")
+}
+
+// ─── Finance / EMI ──────────────────────────────────────────────────────────
+
+model FinanceProvider {
+  id              String        @id
+  name            String
+  slug            String        @unique
+  type            String        @default("bank")
+  logoUrl         String?       @map("logo_url")
+  description     String        @default("")
+  status          String        @default("active")
+  minOrderValue   Float         @default(5000) @map("min_order_value")
+  maxOrderValue   Float         @default(500000) @map("max_order_value")
+  processingFeePct Float        @default(0) @map("processing_fee_pct")
+  sortOrder       Int           @default(0) @map("sort_order")
+  createdAt       String        @map("created_at")
+  updatedAt       String        @map("updated_at")
+  plans           FinancePlan[]
+  applications    FinanceApplication[]
+
+  @@index([status])
+  @@map("finance_providers")
+}
+
+model FinancePlan {
+  id                String          @id
+  providerId        String          @map("provider_id")
+  name              String
+  tenureMonths      Int             @map("tenure_months")
+  interestRateAnnual Float          @default(0) @map("interest_rate_annual")
+  isNoCostEmi       Boolean         @default(false) @map("is_no_cost_emi")
+  emiType           String          @default("card") @map("emi_type")
+  minOrderValue     Float           @default(5000) @map("min_order_value")
+  maxOrderValue     Float           @default(500000) @map("max_order_value")
+  downPaymentMinPct Float           @default(0) @map("down_payment_min_pct")
+  status            String          @default("active")
+  createdAt         String          @map("created_at")
+  updatedAt         String          @map("updated_at")
+  provider          FinanceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  applications      FinanceApplication[]
+
+  @@index([providerId])
+  @@index([status])
+  @@index([emiType])
+  @@map("finance_plans")
+}
+
+model FinanceApplication {
+  id                  String               @id
+  applicationNumber   String               @unique @map("application_number")
+  userId              String?              @map("user_id")
+  email               String
+  customerName        String               @map("customer_name")
+  customerPhone       String               @map("customer_phone")
+  isGuest             Boolean              @default(false) @map("is_guest")
+  productName         String               @map("product_name")
+  productSlug         String?              @map("product_slug")
+  orderValue          Float                @map("order_value")
+  downPayment         Float                @default(0) @map("down_payment")
+  tenureMonths        Int                  @map("tenure_months")
+  providerId          String               @map("provider_id")
+  planId              String               @map("plan_id")
+  emiType             String               @map("emi_type")
+  monthlyInstallment  Float                @map("monthly_installment")
+  totalPayable        Float                @map("total_payable")
+  interestAmount      Float                @default(0) @map("interest_amount")
+  processingFee       Float                @default(0) @map("processing_fee")
+  status              String               @default("submitted")
+  rejectionReason     String?              @map("rejection_reason")
+  panNumber           String?              @map("pan_number")
+  employmentType      String?              @map("employment_type")
+  monthlyIncome       Float?               @map("monthly_income")
+  documents           Json                 @default("[]")
+  notes               String?
+  approvedAt          String?              @map("approved_at")
+  rejectedAt          String?              @map("rejected_at")
+  createdAt           String               @map("created_at")
+  updatedAt           String               @map("updated_at")
+  provider            FinanceProvider      @relation(fields: [providerId], references: [id])
+  plan                FinancePlan          @relation(fields: [planId], references: [id])
+  events              FinanceApplicationEvent[]
+
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@index([providerId])
+  @@index([createdAt])
+  @@map("finance_applications")
+}
+
+model FinanceApplicationEvent {
+  id            String             @id
+  applicationId String             @map("application_id")
+  status        String
+  note          String?
+  createdBy     String?            @map("created_by")
+  createdAt     String             @map("created_at")
+  application   FinanceApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([createdAt])
+  @@map("finance_application_events")
+}
+
+// ─── Giveaway Engine ────────────────────────────────────────────────────────
+
+model GiveawayCampaign {
+  id                       String                  @id
+  slug                     String                  @unique
+  title                    String
+  subtitle                 String                  @default("")
+  description              String                  @default("")
+  status                   String                  @default("draft")
+  prizeTitle               String                  @map("prize_title")
+  prizeDescription         String                  @default("") @map("prize_description")
+  prizeImageUrl            String?                 @map("prize_image_url")
+  productSlug              String?                 @map("product_slug")
+  productName              String?                 @map("product_name")
+  prizeValue               Float?                  @map("prize_value")
+  winnerCount              Int                     @default(1) @map("winner_count")
+  maxEntries               Int?                    @map("max_entries")
+  startsAt                 String                  @map("starts_at")
+  endsAt                   String                  @map("ends_at")
+  drawAt                   String?                 @map("draw_at")
+  requireLogin             Boolean                 @default(false) @map("require_login")
+  requireEmailVerification Boolean                 @default(true) @map("require_email_verification")
+  referralBonusEntries     Int                     @default(1) @map("referral_bonus_entries")
+  socialBonusEntries       Int                     @default(1) @map("social_bonus_entries")
+  allowedSocialPlatforms   Json                    @default("[\"instagram\",\"youtube\",\"facebook\",\"x\"]") @map("allowed_social_platforms")
+  eligibilityRules         Json                    @default("{}") @map("eligibility_rules")
+  termsHtml                String                  @default("") @map("terms_html")
+  faqs                     Json                    @default("[]")
+  featured                 Boolean                 @default(false)
+  winnersAnnounced         Boolean                 @default(false) @map("winners_announced")
+  createdAt                String                  @map("created_at")
+  updatedAt                String                  @map("updated_at")
+  entries                  GiveawayEntry[]
+  winners                  GiveawayWinner[]
+  events                   GiveawayCampaignEvent[]
+
+  @@index([status])
+  @@index([startsAt])
+  @@index([endsAt])
+  @@index([featured])
+  @@map("giveaway_campaigns")
+}
+
+model GiveawayEntry {
+  id                String            @id
+  campaignId        String            @map("campaign_id")
+  entryNumber       String            @unique @map("entry_number")
+  userId            String?           @map("user_id")
+  email             String
+  customerName      String            @map("customer_name")
+  customerPhone     String            @map("customer_phone")
+  referralCode      String            @unique @map("referral_code")
+  referredByEntryId String?           @map("referred_by_entry_id")
+  socialClaims      Json              @default("[]") @map("social_claims")
+  baseEntries       Int               @default(1) @map("base_entries")
+  bonusEntries      Int               @default(0) @map("bonus_entries")
+  totalEntries      Int               @default(1) @map("total_entries")
+  emailVerified     Boolean           @default(false) @map("email_verified")
+  emailVerifyToken  String?           @unique @map("email_verify_token")
+  emailVerifiedAt   String?           @map("email_verified_at")
+  status            String            @default("active")
+  ipHash            String?           @map("ip_hash")
+  userAgentHash     String?           @map("user_agent_hash")
+  fraudFlags        Json              @default("[]") @map("fraud_flags")
+  trackingToken     String            @unique @map("tracking_token")
+  createdAt         String            @map("created_at")
+  updatedAt         String            @map("updated_at")
+  campaign          GiveawayCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  referredBy        GiveawayEntry?    @relation("GiveawayReferrals", fields: [referredByEntryId], references: [id], onDelete: SetNull)
+  referrals         GiveawayEntry[]   @relation("GiveawayReferrals")
+  winner            GiveawayWinner?
+
+  @@unique([campaignId, email])
+  @@index([campaignId])
+  @@index([email])
+  @@index([userId])
+  @@index([referralCode])
+  @@index([status])
+  @@map("giveaway_entries")
+}
+
+model GiveawayWinner {
+  id          String           @id
+  campaignId  String           @map("campaign_id")
+  entryId     String           @unique @map("entry_id")
+  rank        Int              @default(1)
+  announcedAt String?          @map("announced_at")
+  notifiedAt  String?          @map("notified_at")
+  createdAt   String           @map("created_at")
+  campaign    GiveawayCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  entry       GiveawayEntry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@map("giveaway_winners")
+}
+
+model GiveawayCampaignEvent {
+  id         String           @id
+  campaignId String           @map("campaign_id")
+  type       String
+  message    String?
+  metadata   Json             @default("{}")
+  createdBy  String?          @map("created_by")
+  createdAt  String           @map("created_at")
+  campaign   GiveawayCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([createdAt])
+  @@map("giveaway_campaign_events")
+}
+
+// ─── Product Compare ────────────────────────────────────────────────────────
+
+model ProductCompareList {
+  userId    String @id @map("user_id")
+  items     Json   @default("[]")
+  updatedAt String @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("product_compare_lists")
+}
+
+model ProductCompareShare {
+  id        String  @id
+  token     String  @unique
+  items     Json    @default("[]")
+  userId    String? @map("user_id")
+  viewCount Int     @default(0) @map("view_count")
+  createdAt String  @map("created_at")
+  expiresAt String? @map("expires_at")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("product_compare_shares")
+}
+
+model ProductCompareEvent {
+  id         String  @id
+  eventType  String  @map("event_type")
+  userId     String? @map("user_id")
+  productId  String? @map("product_id")
+  shareToken String? @map("share_token")
+  metadata   Json    @default("{}")
+  createdAt  String  @map("created_at")
+
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("product_compare_events")
 }

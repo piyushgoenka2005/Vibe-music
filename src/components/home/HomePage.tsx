@@ -98,9 +98,9 @@ export default function HomePage() {
       <CultureTypographySection />
 
       <ServiceStatusCarousel />
+      <TourRibbonSection />
       <DiscoverLocationsSection />
       <SocialProofStrip />
-      <TourRibbonSection />
     </main>
   );
 }

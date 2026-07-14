@@ -30,6 +30,10 @@ import {
   Bell,
   FilePenLine,
   Truck,
+  KeyRound,
+  CreditCard,
+  Gift,
+  GitCompare,
 } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
@@ -43,6 +47,10 @@ const NAV_ITEMS = [
   { href: ROUTES.adminCategories, label: "Categories", icon: FolderTree, permission: "categories:read" },
   { href: ROUTES.adminBrands, label: "Brands", icon: Tag, permission: "categories:read" },
   { href: ROUTES.adminOrders, label: "Orders", icon: ShoppingCart, permission: "orders:read" },
+  { href: ROUTES.adminRentals, label: "Rentals", icon: KeyRound, permission: "rentals:read" },
+  { href: ROUTES.adminFinancing, label: "Financing", icon: CreditCard, permission: "finance:read" },
+  { href: ROUTES.adminGiveaway, label: "Giveaways", icon: Gift, permission: "giveaways:read" },
+  { href: ROUTES.adminCompare, label: "Compare", icon: GitCompare, permission: "compare:read" },
   { href: ROUTES.adminReturns, label: "Returns", icon: RotateCcw, permission: "orders:read" },
   { href: ROUTES.adminSupport, label: "Support", icon: Headset, permission: "orders:read" },
   { href: ROUTES.adminCustomers, label: "Customers", icon: Users, permission: "customers:read" },

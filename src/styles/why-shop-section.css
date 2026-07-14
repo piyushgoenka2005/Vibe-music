@@ -50,8 +50,10 @@
 
 .why-shop__marquee-track {
   display: flex;
+  flex-wrap: nowrap;
   align-items: flex-start;
   width: max-content;
+  max-width: none;
   gap: 14px;
   padding: 2.25rem 14px 0.5rem;
   animation: why-shop-marquee-scroll 52s linear infinite;
@@ -63,13 +65,25 @@
   animation-play-state: paused;
 }
 
+/* Pause motion only — never wrap into a multi-row grid */
+.why-shop__marquee--static {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.why-shop__marquee--static::-webkit-scrollbar {
+  display: none;
+}
+
 .why-shop__marquee--static .why-shop__marquee-track {
   animation: none;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-wrap: nowrap;
+  width: max-content;
+  max-width: none;
+  justify-content: flex-start;
   padding-inline: 16px;
 }
 
@@ -392,19 +406,29 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .why-shop__marquee {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .why-shop__marquee::-webkit-scrollbar {
+    display: none;
+  }
+
   .why-shop__marquee-track {
     animation: none;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: nowrap;
+    width: max-content;
+    max-width: none;
+    justify-content: flex-start;
     padding-inline: 16px;
   }
 
   .why-shop__marquee--static {
-    overflow-x: visible;
-    scroll-snap-type: none;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
   }
 
   .why-shop__marquee--mobile-auto .why-shop__marquee-track {
@@ -412,7 +436,7 @@
   }
 
   .why-shop__card[aria-hidden="true"] {
-    display: none;
+    display: flex;
   }
 
   .why-shop__card,

@@ -9,9 +9,11 @@ import {
   HOMEPAGE_BANNER_SLIDES,
 } from "@/data/homepageBannerHero";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
+import { useIsClient } from "@/hooks/useIsClient";
 
 export default function HomepageBannerHero() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const ready = useIsClient();
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const reduceMotion = useHydrationSafeReducedMotion();
   const slideCount = HOMEPAGE_BANNER_SLIDES.length;
@@ -25,6 +27,10 @@ export default function HomepageBannerHero() {
   );
 
   useEffect(() => {
+    window.dispatchEvent(new Event("site-header:sync"));
+  }, []);
+
+  useEffect(() => {
     if (reduceMotion || slideCount <= 1) return;
 
     const timer = window.setInterval(() => {
@@ -34,15 +40,11 @@ export default function HomepageBannerHero() {
     return () => window.clearInterval(timer);
   }, [reduceMotion, slideCount]);
 
-  useEffect(() => {
-    window.dispatchEvent(new Event("site-header:sync"));
-  }, []);
-
   if (slideCount === 0) return null;
 
   return (
     <section
-      className="homepage-banner-hero"
+      className={`homepage-banner-hero${ready ? " is-ready" : ""}`}
       data-vibe-section="homepage-banner-hero"
       aria-label="Featured promotions"
       aria-roledescription="carousel"
@@ -81,7 +83,9 @@ export default function HomepageBannerHero() {
                 sizes="100vw"
                 className="homepage-banner-hero__image"
                 style={
-                  slide.objectPosition ? { objectPosition: slide.objectPosition } : undefined
+                  slide.objectPosition
+                    ? { objectPosition: slide.objectPosition }
+                    : undefined
                 }
               />
             </Link>

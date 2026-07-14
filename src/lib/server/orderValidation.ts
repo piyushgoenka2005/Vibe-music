@@ -7,6 +7,7 @@ import {
   type GSTRate,
 } from "@/lib/gstCalculator";
 import { getAvailableStock } from "@/lib/inventory/stockMath";
+import { resolvePositiveUnitPrice } from "@/lib/pricing/unitPrice";
 import { validateCoupon } from "@/lib/server/couponService";
 import { validateStockAvailability } from "@/lib/server/inventoryService";
 import type { CreateOrderPayload } from "@/types/order";
@@ -87,8 +88,8 @@ export async function resolveOrderItems(
         throw new Error(`Selected variant for "${product.name}" is no longer available`);
       }
 
-      const unitPrice = variant?.price ?? product.price;
-      if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+      const unitPrice = resolvePositiveUnitPrice(product.price, variant?.price);
+      if (unitPrice == null) {
         throw new Error(
           `"${product.name}" is not available for purchase yet (Coming Soon)`
         );

@@ -1,0 +1,106 @@
+.notify-me-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: grid;
+  place-items: center;
+  padding:
+    max(1rem, env(safe-area-inset-top, 0px))
+    max(1rem, env(safe-area-inset-right, 0px))
+    max(1rem, env(safe-area-inset-bottom, 0px))
+    max(1rem, env(safe-area-inset-left, 0px));
+  background: rgb(15 23 42 / 0.45);
+}
+
+.notify-me-modal__panel {
+  width: min(100%, 22rem);
+  max-height: min(90dvh, 32rem);
+  overflow: auto;
+  padding: 1.25rem 1.35rem 1.15rem;
+  border-radius: 14px;
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 18px 50px rgb(15 23 42 / 0.22);
+}
+
+.notify-me-modal__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.notify-me-modal__copy {
+  margin: 0.45rem 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.notify-me-modal__form input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  min-height: 44px;
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.notify-me-modal__form input:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.notify-me-modal__actions {
+  display: flex;
+  gap: 0.55rem;
+  justify-content: flex-end;
+  margin-top: 0.9rem;
+}
+
+.notify-me-modal__cancel,
+.notify-me-modal__submit {
+  border: 0;
+  border-radius: 999px;
+  min-height: 44px;
+  padding: 0.55rem 1.1rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.notify-me-modal__cancel {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.notify-me-modal__submit {
+  background: #0f4c81;
+  color: #fff;
+}
+
+.notify-me-modal__cancel:disabled,
+.notify-me-modal__submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 390px) {
+  .notify-me-modal__panel {
+    width: 100%;
+    border-radius: 12px;
+  }
+
+  .notify-me-modal__actions {
+    flex-direction: column-reverse;
+  }
+
+  .notify-me-modal__cancel,
+  .notify-me-modal__submit {
+    width: 100%;
+    justify-content: center;
+  }
+}

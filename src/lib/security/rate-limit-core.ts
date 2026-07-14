@@ -59,6 +59,8 @@ export function getClientIp(request: Request): string {
 
 export const RATE_LIMITS = {
   publicApi: { limit: 120, windowMs: 60_000 },
+  /** Dedicated bucket so homepage thumbs do not exhaust publicApi (120/min). */
+  mediaThumb: { limit: 600, windowMs: 60_000 },
   search: { limit: 60, windowMs: 60_000 },
   analytics: { limit: 30, windowMs: 60_000 },
   auth: { limit: 20, windowMs: 60_000 },

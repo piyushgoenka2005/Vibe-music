@@ -339,11 +339,14 @@
 
 .premium-home .product-suggest__items {
   display: flex;
+  flex-wrap: nowrap;
   gap: 1rem;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   overscroll-behavior-x: contain;
+  touch-action: pan-x;
   padding: 0.5rem 0 1rem;
   -webkit-overflow-scrolling: touch;
 }
@@ -387,6 +390,11 @@
   border-radius: var(--radius-sm);
   background: #f8fafc;
   overflow: hidden;
+}
+
+/* Premium carousel uses its own fixed frame + photo zoom */
+.premium-home .premium-product-carousel .product-suggest__item-img {
+  background: transparent;
 }
 
 .premium-home .product-suggest__item-img img,

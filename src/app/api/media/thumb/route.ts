@@ -17,20 +17,25 @@ const ALLOWED_HOSTS = new Set([
 
 const MAX_WIDTH = 800;
 const DEFAULT_WIDTH = 320;
+/** Reject / abort masters larger than this before buffering fully when Content-Length is known. */
+const MAX_UPSTREAM_BYTES = 8_000_000;
 const MEMORY_CACHE_MAX = 256;
 const DISK_CACHE_DIR = path.join(process.cwd(), ".cache", "media-thumbs");
 const CACHE_CONTROL =
   "public, max-age=604800, stale-while-revalidate=86400, immutable";
+
+/** Tiny neutral placeholder — never stream multi‑MB masters to the browser. */
+const PLACEHOLDER_WEBP = Buffer.from(
+  "UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAwA0JaQAA3AA/vuUAAA=",
+  "base64"
+);
 
 type CachedThumb = {
   body: Buffer;
   contentType: string;
 };
 
-/** Process-local LRU so repeat card loads skip Sharp / disk. */
 const memoryCache = new Map<string, CachedThumb>();
-
-/** Coalesce concurrent miss requests for the same key into one Sharp job. */
 const inflight = new Map<string, Promise<CachedThumb>>();
 
 function parseWidth(value: string | null): number {
@@ -39,10 +44,16 @@ function parseWidth(value: string | null): number {
   return Math.min(MAX_WIDTH, Math.floor(parsed));
 }
 
-function thumbHeaders(contentType: string, cache: "hit" | "disk" | "miss") {
+function thumbHeaders(
+  contentType: string,
+  cache: "hit" | "disk" | "miss" | "placeholder"
+) {
   return {
     "Content-Type": contentType,
-    "Cache-Control": CACHE_CONTROL,
+    "Cache-Control":
+      cache === "placeholder"
+        ? "public, max-age=60, stale-while-revalidate=300"
+        : CACHE_CONTROL,
     "X-Thumb-Cache": cache,
     "X-Content-Type-Options": "nosniff",
   };
@@ -83,19 +94,60 @@ async function writeDiskThumb(key: string, entry: CachedThumb) {
   }
 }
 
-async function buildThumb(url: string, width: number): Promise<CachedThumb> {
-  const upstream = await fetch(url, {
-    headers: { Accept: "image/*" },
-    next: { revalidate: 86400 },
-  });
+function placeholderThumb(): CachedThumb {
+  return { body: PLACEHOLDER_WEBP, contentType: "image/webp" };
+}
 
-  if (!upstream.ok) {
-    throw new Error(`Upstream image failed (${upstream.status})`);
+async function readUpstreamBody(response: Response): Promise<Buffer | null> {
+  const contentLength = Number(response.headers.get("content-length") ?? "");
+  if (Number.isFinite(contentLength) && contentLength > MAX_UPSTREAM_BYTES) {
+    return null;
   }
 
-  const input = Buffer.from(await upstream.arrayBuffer());
+  if (!response.body) {
+    const buffer = Buffer.from(await response.arrayBuffer());
+    return buffer.byteLength > MAX_UPSTREAM_BYTES ? null : buffer;
+  }
 
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > MAX_UPSTREAM_BYTES) {
+      try {
+        await reader.cancel();
+      } catch {
+        /* ignore */
+      }
+      return null;
+    }
+    chunks.push(value);
+  }
+
+  return Buffer.concat(chunks.map((c) => Buffer.from(c)));
+}
+
+async function buildThumb(url: string, width: number): Promise<CachedThumb> {
   try {
+    const upstream = await fetch(url, {
+      headers: { Accept: "image/*" },
+      cache: "no-store",
+    });
+
+    if (!upstream.ok) {
+      return placeholderThumb();
+    }
+
+    const input = await readUpstreamBody(upstream);
+    if (!input || input.byteLength === 0) {
+      return placeholderThumb();
+    }
+
     const sharp = (await import("sharp")).default;
     const body = await sharp(input)
       .rotate()
@@ -106,23 +158,15 @@ async function buildThumb(url: string, width: number): Promise<CachedThumb> {
       .webp({ quality: 70, effort: 4 })
       .toBuffer();
 
-    return {
-      body,
-      contentType: "image/webp",
-    };
+    return { body, contentType: "image/webp" };
   } catch {
-    // Keep serving originals if the Sharp native binary is unavailable.
-    return {
-      body: input,
-      contentType: upstream.headers.get("content-type") || "image/png",
-    };
+    return placeholderThumb();
   }
 }
 
 async function getThumb(cacheKey: string, url: string, width: number) {
   const memoryHit = memoryCache.get(cacheKey);
   if (memoryHit) {
-    // Refresh LRU order
     remember(cacheKey, memoryHit);
     return { thumb: memoryHit, cache: "hit" as const };
   }
@@ -137,8 +181,10 @@ async function getThumb(cacheKey: string, url: string, width: number) {
   if (!pending) {
     pending = (async () => {
       const built = await buildThumb(url, width);
-      remember(cacheKey, built);
-      void writeDiskThumb(cacheKey, built);
+      if (!built.body.equals(PLACEHOLDER_WEBP)) {
+        remember(cacheKey, built);
+        void writeDiskThumb(cacheKey, built);
+      }
       return built;
     })().finally(() => {
       inflight.delete(cacheKey);
@@ -146,7 +192,12 @@ async function getThumb(cacheKey: string, url: string, width: number) {
     inflight.set(cacheKey, pending);
   }
 
-  return { thumb: await pending, cache: "miss" as const };
+  const thumb = await pending;
+  const isPlaceholder = thumb.body.equals(PLACEHOLDER_WEBP);
+  return {
+    thumb,
+    cache: isPlaceholder ? ("placeholder" as const) : ("miss" as const),
+  };
 }
 
 export async function GET(request: Request) {
@@ -172,7 +223,6 @@ export async function GET(request: Request) {
 
     const cacheKey = `${parsed.toString()}|${width}`;
 
-    // Serve cached thumbs without burning the public API rate limit.
     const memoryHit = memoryCache.get(cacheKey);
     if (memoryHit) {
       remember(cacheKey, memoryHit);
@@ -194,9 +244,14 @@ export async function GET(request: Request) {
     const rateLimited = await enforceRateLimit(
       request,
       "media-thumb",
-      RATE_LIMITS.publicApi
+      RATE_LIMITS.mediaThumb
     );
-    if (rateLimited) return rateLimited;
+    if (rateLimited) {
+      return new NextResponse(new Uint8Array(PLACEHOLDER_WEBP), {
+        status: 200,
+        headers: thumbHeaders("image/webp", "placeholder"),
+      });
+    }
 
     const { thumb, cache } = await getThumb(
       cacheKey,

@@ -12,6 +12,7 @@ import { validateCouponCode } from "@/services/coupon.service";
 import type { AppliedCouponSnapshot } from "@/types/coupon";
 import type { Product, ProductVariant } from "@/types/product";
 import { getDefaultGstRateForCategory, type GSTRate } from "@/lib/gstCalculator";
+import { resolvePositiveUnitPrice } from "@/lib/pricing/unitPrice";
 import { isPurchasablePrice } from "@/utils/currency";
 
 export interface CartItem {
@@ -30,6 +31,19 @@ export interface CartItem {
   quantity: number;
 }
 
+export interface CatalogPriceUpdate {
+  productId: string;
+  variantId?: string;
+  price: number;
+  name?: string;
+  gstRate?: GSTRate;
+  variantSku?: string;
+  variantLabel?: string;
+  image?: string;
+  brand?: string;
+  slug?: string;
+}
+
 interface CartState {
   items: CartItem[];
   drawerOpen: boolean;
@@ -41,6 +55,7 @@ interface CartState {
   removeItem: (lineId: string) => void;
   updateQuantity: (lineId: string, quantity: number) => void;
   clearCart: () => void;
+  applyCatalogPrices: (updates: CatalogPriceUpdate[]) => void;
   itemCount: () => number;
   subtotal: () => number;
   discount: () => number;
@@ -60,8 +75,8 @@ function productToCartItem(
 ): CartItem {
   const variantId = variant?.id;
   const lineId = getCartLineId(product.id, variantId);
-  const image =
-    variant?.images?.[0] || product.image;
+  const image = variant?.images?.[0] || product.image;
+  const price = resolvePositiveUnitPrice(product.price, variant?.price) ?? 0;
 
   return {
     lineId,
@@ -72,7 +87,7 @@ function productToCartItem(
     slug: product.slug,
     name: variant?.label ? `${product.name} — ${variant.label}` : product.name,
     brand: product.brand,
-    price: variant?.price ?? product.price,
+    price,
     gstRate: product.gstRate ?? getDefaultGstRateForCategory(product.categorySlug),
     imageColor: product.imageColor,
     image,
@@ -111,8 +126,8 @@ export const useCartStore = create<CartState>()(
       isUpdating: false,
 
       addItem: (product, quantity = 1, variant) => {
-        const unitPrice = variant?.price ?? product.price;
-        if (!isPurchasablePrice(unitPrice)) {
+        const unitPrice = resolvePositiveUnitPrice(product.price, variant?.price);
+        if (unitPrice == null || !isPurchasablePrice(unitPrice)) {
           useToastStore
             .getState()
             .show("This product is Coming Soon and can’t be added yet.", "info");
@@ -120,22 +135,25 @@ export const useCartStore = create<CartState>()(
         }
         const qty = Math.max(1, quantity);
         const lineId = getCartLineId(product.id, variant?.id);
+        const fresh = productToCartItem(product, qty, variant);
         set((state) => {
           const existing = state.items.find((item) => item.lineId === lineId);
           if (existing) {
             return {
               items: state.items.map((item) =>
                 item.lineId === lineId
-                  ? { ...item, quantity: item.quantity + qty }
+                  ? {
+                      ...item,
+                      ...fresh,
+                      quantity: item.quantity + qty,
+                      lineId: item.lineId,
+                    }
                   : item
               ),
             };
           }
           return {
-            items: [
-              ...state.items,
-              productToCartItem(product, qty, variant),
-            ],
+            items: [...state.items, fresh],
           };
         });
         useToastStore
@@ -173,6 +191,50 @@ export const useCartStore = create<CartState>()(
       clearCart: () => {
         set({ items: [], couponCode: null, appliedCoupon: null });
         useToastStore.getState().show("Cart cleared", "info");
+      },
+
+      applyCatalogPrices: (updates) => {
+        if (updates.length === 0) return;
+
+        const byLine = new Map(
+          updates.map((update) => [
+            getCartLineId(update.productId, update.variantId),
+            update,
+          ])
+        );
+
+        set((state) => {
+          let changed = false;
+          const items = state.items.map((item) => {
+            const update = byLine.get(item.lineId);
+            if (!update || !isPurchasablePrice(update.price)) return item;
+
+            const next = {
+              ...item,
+              price: update.price,
+              ...(update.name ? { name: update.name } : {}),
+              ...(update.gstRate ? { gstRate: update.gstRate } : {}),
+              ...(update.variantSku ? { variantSku: update.variantSku } : {}),
+              ...(update.variantLabel
+                ? { variantLabel: update.variantLabel }
+                : {}),
+              ...(update.image ? { image: update.image } : {}),
+              ...(update.brand ? { brand: update.brand } : {}),
+              ...(update.slug ? { slug: update.slug } : {}),
+            };
+
+            if (
+              next.price !== item.price ||
+              next.name !== item.name ||
+              next.gstRate !== item.gstRate
+            ) {
+              changed = true;
+            }
+            return next;
+          });
+
+          return changed ? { items } : state;
+        });
       },
 
       itemCount: () =>
@@ -260,6 +322,7 @@ export const useCartStore = create<CartState>()(
             ...item,
             lineId:
               item.lineId ?? getCartLineId(item.productId, item.variantId),
+            price: isPurchasablePrice(item.price) ? item.price : 0,
           })) ?? [],
           couponCode: state?.couponCode ?? null,
           appliedCoupon: state?.appliedCoupon ?? null,
@@ -275,7 +338,7 @@ export const useCartStore = create<CartState>()(
 
         return base;
       },
-      version: 3,
+      version: 4,
     }
   )
 );

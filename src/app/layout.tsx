@@ -14,6 +14,7 @@ import "@/styles/storefront-pages.css";
 import "@/styles/mobile-storefront.css";
 import "@/styles/responsive-utilities.css";
 import "@/styles/buttons.css";
+import "@/styles/notify-me.css";
 
 export const metadata: Metadata = DEFAULT_METADATA;
 

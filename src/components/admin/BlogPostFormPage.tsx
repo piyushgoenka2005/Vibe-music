@@ -6,6 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { slugify } from "@/lib/slug";
 import { ROUTES } from "@/lib/routes";
 import { EMPTY_BLOG_CONTENT } from "@/lib/blog/editor";
+import { BLOG_CATEGORIES } from "@/lib/blog/blogEngine";
 import BlogCoverImageUpload from "@/components/admin/BlogCoverImageUpload";
 import TipTapEditor from "@/components/admin/TipTapEditor";
 import type { BlogPostStatus } from "@/types/blog";
@@ -17,6 +18,11 @@ const EMPTY_FORM = {
   content: EMPTY_BLOG_CONTENT,
   coverImage: "",
   tags: "",
+  categorySlug: "",
+  categoryLabel: "",
+  featured: false,
+  authorBio: "",
+  authorAvatar: "",
   seoTitle: "",
   seoDescription: "",
   status: "draft" as BlogPostStatus,
@@ -60,6 +66,11 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             content: d.post.content || EMPTY_BLOG_CONTENT,
             coverImage: d.post.coverImage ?? "",
             tags: (d.post.tags ?? []).join(", "),
+            categorySlug: d.post.categorySlug ?? "",
+            categoryLabel: d.post.categoryLabel ?? "",
+            featured: Boolean(d.post.featured),
+            authorBio: d.post.authorBio ?? "",
+            authorAvatar: d.post.authorAvatar ?? "",
             seoTitle: d.post.seoTitle ?? "",
             seoDescription: d.post.seoDescription ?? "",
             status: d.post.status ?? "draft",
@@ -84,6 +95,11 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
           .split(",")
           .map((tag) => tag.trim())
           .filter(Boolean),
+        categorySlug: form.categorySlug,
+        categoryLabel: form.categoryLabel,
+        featured: form.featured,
+        authorBio: form.authorBio,
+        authorAvatar: form.authorAvatar || "",
         seoTitle: form.seoTitle || form.title,
         seoDescription: form.seoDescription || form.excerpt,
         status: form.status,
@@ -185,6 +201,55 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             <TipTapEditor
               value={form.content}
               onChange={(content) => setForm({ ...form, content })}
+            />
+          </div>
+          <div className="admin-form-group">
+            <label>Category</label>
+            <select
+              className="admin-select"
+              value={form.categorySlug}
+              onChange={(e) => {
+                const categorySlug = e.target.value;
+                const categoryLabel =
+                  BLOG_CATEGORIES.find((item) => item.slug === categorySlug)?.label ?? "";
+                setForm({ ...form, categorySlug, categoryLabel });
+              }}
+            >
+              <option value="">Uncategorized</option>
+              {BLOG_CATEGORIES.map((category) => (
+                <option key={category.slug} value={category.slug}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="admin-form-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={form.featured}
+                onChange={(e) => setForm({ ...form, featured: e.target.checked })}
+              />{" "}
+              Featured article
+            </label>
+          </div>
+          <div className="admin-form-group admin-form-grid--full">
+            <label>Author bio</label>
+            <textarea
+              className="admin-textarea"
+              value={form.authorBio}
+              onChange={(e) => setForm({ ...form, authorBio: e.target.value })}
+              rows={2}
+            />
+          </div>
+          <div className="admin-form-group admin-form-grid--full">
+            <label>Author avatar URL</label>
+            <input
+              className="admin-input"
+              style={{ width: "100%" }}
+              value={form.authorAvatar}
+              onChange={(e) => setForm({ ...form, authorAvatar: e.target.value })}
+              placeholder="https://..."
             />
           </div>
           <div className="admin-form-group admin-form-grid--full">

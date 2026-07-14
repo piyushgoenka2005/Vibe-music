@@ -106,7 +106,7 @@
 
   .storefront-page .pdp {
     padding: 1rem max(1rem, env(safe-area-inset-left, 0px))
-      calc(6.25rem + env(safe-area-inset-bottom, 0px))
+      calc(7.5rem + env(safe-area-inset-bottom, 0px))
       max(1rem, env(safe-area-inset-right, 0px));
   }
 
@@ -121,7 +121,8 @@
   }
 
   .storefront-page .cart-page {
-    padding: 1rem max(1rem, env(safe-area-inset-left, 0px)) 3rem
+    padding: 1rem max(1rem, env(safe-area-inset-left, 0px))
+      calc(5rem + env(safe-area-inset-bottom, 0px))
       max(1rem, env(safe-area-inset-right, 0px));
   }
 
@@ -130,6 +131,10 @@
       calc(5.5rem + env(safe-area-inset-bottom, 0px))
       max(1rem, env(safe-area-inset-right, 0px));
     min-height: 0;
+  }
+
+  .storefront-page .checkout-page--payment {
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .storefront-page .pdp-actions__row {
@@ -513,9 +518,16 @@
 }
 
 .storefront-page .cat-product-card__add {
-  border-radius: var(--radius-pill) !important;
+  border-radius: 0 !important;
   background: var(--brand-gradient) !important;
   font-weight: 500 !important;
+  width: calc(100% + 2 * var(--card-pad-x, 14px)) !important;
+  max-width: none !important;
+  margin-inline: calc(-1 * var(--card-pad-x, 14px)) !important;
+  align-self: stretch !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .storefront-page .cat-product-card__add:hover {

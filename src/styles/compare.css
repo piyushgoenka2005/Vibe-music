@@ -18,8 +18,13 @@
   cursor: pointer;
 }
 
-.compare-page__clear:hover {
-  border-color: var(--brand-primary);
+.compare-page__share-url {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  word-break: break-all;
+}
+
+.compare-page__share-url a {
   color: var(--brand-primary);
 }
 

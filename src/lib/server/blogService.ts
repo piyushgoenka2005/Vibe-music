@@ -5,14 +5,23 @@ import type { BlogPostSummary } from "@/types/blog";
 
 export {
   createBlogPost,
+  createBlogComment,
   deleteBlogPost,
+  getBlogAnalytics,
   getBlogPostById,
   getBlogPostBySlug,
   getPublicBlogPostBySlug,
+  getRelatedPublicPosts,
   isBlogPostPublic,
   isBlogUnavailable,
   listAllBlogPosts,
+  listApprovedBlogComments,
+  listBlogCommentsForAdmin,
+  listPublicBlogPostsPaginated,
   listPublicBlogSlugs,
+  recordBlogShare,
+  recordBlogView,
+  updateBlogCommentStatus,
   updateBlogPost,
 } from "@/lib/server/blogRepository";
 

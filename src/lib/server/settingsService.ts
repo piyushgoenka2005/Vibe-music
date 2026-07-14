@@ -13,8 +13,8 @@ const DEFAULT_SETTINGS: StoreSettings = {
   gstNumber: "",
   defaultGstRate: DEFAULT_GST_RATE,
   sellerState: SELLER_STATE,
-  freeShippingThreshold: 9999,
-  standardShippingCharge: 99,
+  freeShippingThreshold: 0,
+  standardShippingCharge: 0,
   razorpayEnabled: isRazorpayConfigured(),
   updatedAt: new Date().toISOString(),
 };
@@ -24,6 +24,9 @@ export async function getStoreSettings(): Promise<StoreSettings> {
   return {
     ...DEFAULT_SETTINGS,
     ...(settings ?? {}),
+    // Storefront shipping is free — ignore any legacy paid charges in DB.
+    freeShippingThreshold: 0,
+    standardShippingCharge: 0,
     // Always reflect live env — do not trust a stale DB copy of this flag.
     razorpayEnabled: isRazorpayConfigured(),
   };

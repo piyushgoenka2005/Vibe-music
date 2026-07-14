@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useIsClient } from "@/hooks/useIsClient";
+import { useCartCatalogReprice } from "@/hooks/useCartCatalogReprice";
 import { useCartStore } from "@/store/cartStore";
 import CartItem from "./CartItem";
 import CartEmptyState from "./CartEmptyState";
@@ -15,6 +16,7 @@ export default function CartDrawer() {
   const items = useCartStore((s) => s.items);
   const isUpdating = useCartStore((s) => s.isUpdating);
   const isClient = useIsClient();
+  useCartCatalogReprice(open);
 
   useEffect(() => {
     if (!open) return;

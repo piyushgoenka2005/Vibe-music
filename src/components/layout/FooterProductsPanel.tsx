@@ -6,10 +6,12 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
 import { optimizeImageUrl } from "@/lib/images";
 import { categoryPath, productPath, ROUTES } from "@/lib/routes";
-import { formatDisplayPrice } from "@/utils/currency";
+import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
+import { useToastStore } from "@/store/toastStore";
 import RollingText from "@/components/common/RollingText";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
+import NotifyMeButton from "@/components/product/NotifyMeButton";
 import type { Product } from "@/types/product";
 
 const FOOTER_TRENDING_LIMIT = 4;
@@ -37,14 +39,23 @@ const PANEL_CATEGORIES = [
 function FooterProductSnippet({ product }: { product: Product }) {
   const addItem = useCartStore((state) => state.addItem);
   const openDrawer = useCartStore((state) => state.openDrawer);
+  const showToast = useToastStore((state) => state.show);
   const image = product.image;
   const href = productPath(product.slug);
   const outOfStock = product.availability === "out-of-stock";
+  const comingSoon = !isPurchasablePrice(product.price);
 
   function handleQuickAdd(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
-    if (outOfStock) return;
+    if (comingSoon) {
+      showToast("This product is Coming Soon and can’t be added yet.", "info");
+      return;
+    }
+    if (outOfStock) {
+      showToast("This product is currently out of stock.", "info");
+      return;
+    }
     addItem(product);
     openDrawer();
   }
@@ -69,15 +80,30 @@ function FooterProductSnippet({ product }: { product: Product }) {
           <p className="footer-product-snippet__price">{formatDisplayPrice(product.price)}</p>
         </div>
       </Link>
-      <button
-        type="button"
-        className="footer-product-snippet__add"
-        onClick={handleQuickAdd}
-        disabled={outOfStock}
-        aria-label={`Add ${product.name} to cart`}
-      >
-        +
-      </button>
+      {comingSoon ? (
+        <NotifyMeButton
+          variant="inline"
+          className="footer-product-snippet__add"
+          productId={product.id}
+          productSlug={product.slug}
+          productName={product.name}
+        />
+      ) : (
+        <button
+          type="button"
+          className="footer-product-snippet__add"
+          onClick={handleQuickAdd}
+          onPointerDown={(event) => event.stopPropagation()}
+          disabled={outOfStock}
+          aria-label={
+            outOfStock
+              ? `${product.name} is out of stock`
+              : `Add ${product.name} to cart`
+          }
+        >
+          +
+        </button>
+      )}
     </article>
   );
 }

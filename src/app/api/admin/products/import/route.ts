@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import AdmZip from "adm-zip";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { csvRowToImportRow, parseCsv } from "@/lib/csv";
-import {
-  productUploadFolder,
-  uploadBufferToCdn,
-} from "@/lib/server/cdnStorage";
+import { productUploadFolder } from "@/lib/server/cdnStorage";
+import { uploadOptimizedImageToCdn } from "@/lib/server/cdnImageOptimize";
 import {
   bulkImportProducts,
   previewBulkImport,
@@ -69,10 +67,11 @@ export async function POST(request: Request) {
           if (buffer) {
             const categorySlug = row.category.toLowerCase().replace(/\s+/g, "-");
             const productSlug = row.name.toLowerCase().replace(/\s+/g, "-");
-            const url = await uploadBufferToCdn(buffer, ref, {
+            const uploaded = await uploadOptimizedImageToCdn(buffer, {
               folder: productUploadFolder(categorySlug, productSlug),
+              filenameHint: ref,
             });
-            resolvedImages.push(url);
+            resolvedImages.push(uploaded.url);
           }
         }
 

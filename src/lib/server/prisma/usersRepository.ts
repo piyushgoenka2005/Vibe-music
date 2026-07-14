@@ -94,40 +94,6 @@ function now(): string {
   return new Date().toISOString();
 }
 
-function mapAddress(row: {
-  id: string;
-  userId: string;
-  fullName: string;
-  phone: string;
-  addressLine1: string;
-  addressLine2: string | null;
-  city: string;
-  state: string;
-  country: string;
-  postalCode: string;
-  isDefault: boolean;
-  label: string | null;
-  createdAt: string;
-  updatedAt: string;
-}): Address {
-  return {
-    id: row.id,
-    userId: row.userId,
-    fullName: row.fullName,
-    phone: row.phone,
-    addressLine1: row.addressLine1,
-    addressLine2: row.addressLine2 ?? undefined,
-    city: row.city,
-    state: row.state,
-    country: row.country,
-    postalCode: row.postalCode,
-    isDefault: row.isDefault,
-    label: row.label ?? undefined,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-  };
-}
-
 export async function clearDefaultAddressFlags(
   userId: string,
   exceptId?: string

@@ -1532,9 +1532,9 @@
     width: 100%;
     max-width: 100dvw;
     box-sizing: border-box;
-    padding: 0.625rem max(1rem, env(safe-area-inset-left, 0px))
+    padding: 0.625rem max(1rem, env(safe-area-inset-right, 0px))
       calc(0.625rem + env(safe-area-inset-bottom, 0px))
-      max(1rem, env(safe-area-inset-right, 0px));
+      max(1rem, env(safe-area-inset-left, 0px));
     background: rgba(255, 255, 255, 0.98);
     border-top: 1px solid var(--border-default);
     box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.1);
@@ -1620,6 +1620,15 @@
   .pdp-mobile-bar__cta--buy {
     grid-area: buy;
     background: var(--brand-primary);
+    color: #fff;
+  }
+
+  /* Coming Soon: single Notify CTA spans full action row */
+  .pdp-mobile-bar__cta--notify,
+  .pdp-mobile-bar__cta--cart:only-child {
+    grid-area: unset;
+    grid-column: 1 / -1;
+    background: var(--brand-primary, #1253ed);
     color: #fff;
   }
 

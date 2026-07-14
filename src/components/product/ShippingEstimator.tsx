@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { formatCurrencyPrecise } from "@/utils/currency";
 
 interface ShippingQuoteMethod {
   id: string;
@@ -53,10 +52,7 @@ export default function ShippingEstimator({ subtotal = 0 }: ShippingEstimatorPro
       const methods = data.methods ?? [];
       const standard = methods.find((m) => m.id === "standard") ?? methods[0];
 
-      const standardCharge =
-        standard?.charge === 0
-          ? "free"
-          : formatCurrencyPrecise(standard?.charge ?? 99);
+      const standardCharge = "free";
 
       const zoneNote = data.zone?.name ? ` Zone: ${data.zone.name}.` : "";
 

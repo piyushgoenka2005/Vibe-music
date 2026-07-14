@@ -14,13 +14,20 @@ export function hasStorefrontPrice(product: Product): boolean {
   return Number.isFinite(product.price) && product.price > 0;
 }
 
-function dedupePricedProducts(lists: Product[][]): Product[] {
+function dedupePricedProducts(
+  lists: Product[][],
+  options?: { inStockOnly?: boolean }
+): Product[] {
   const seen = new Set<string>();
   const result: Product[] = [];
+  const inStockOnly = options?.inStockOnly ?? false;
 
   for (const list of lists) {
     for (const product of list) {
       if (!hasStorefrontPrice(product) || seen.has(product.id)) continue;
+      if (inStockOnly && product.availability === "out-of-stock") {
+        continue;
+      }
       seen.add(product.id);
       result.push(product);
       if (result.length >= FOOTER_TRENDING_LIMIT) return result;
@@ -40,6 +47,9 @@ export async function getFooterTrendingProducts(
     searchProducts({ limit: FOOTER_TRENDING_POOL }),
   ]);
 
-  const picked = dedupePricedProducts([trending, featured, popular, recent]);
+  const pools = [trending, featured, popular, recent];
+  const inStock = dedupePricedProducts(pools, { inStockOnly: true });
+  const picked =
+    inStock.length > 0 ? inStock : dedupePricedProducts(pools);
   return picked.slice(0, limit);
 }

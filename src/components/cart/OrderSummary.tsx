@@ -101,7 +101,7 @@ export default function OrderSummary({
 
       <div className="cart-summary__row">
         <span>Shipping</span>
-        <span>{subtotal >= 99 ? "FREE" : "Calculated at checkout"}</span>
+        <span>FREE</span>
       </div>
 
       <div className="cart-summary__row cart-summary__row--total">

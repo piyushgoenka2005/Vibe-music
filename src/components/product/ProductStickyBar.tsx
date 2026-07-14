@@ -5,9 +5,12 @@ import { createPortal } from "react-dom";
 import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
+import NotifyMeButton from "./NotifyMeButton";
 
 interface ProductStickyBarProps {
   price: number;
+  productId: string;
+  productSlug: string;
   productName: string;
   inStock: boolean;
   onAddToCart: () => void;
@@ -17,6 +20,8 @@ interface ProductStickyBarProps {
 
 export default function ProductStickyBar({
   price,
+  productId,
+  productSlug,
   productName,
   inStock,
   onAddToCart,
@@ -60,28 +65,35 @@ export default function ProductStickyBar({
         <strong>{formatDisplayPrice(price)}</strong>
       </div>
       <div className="pdp-mobile-bar__actions">
-        <button
-          type="button"
-          className="pdp-mobile-bar__cta pdp-mobile-bar__cta--cart"
-          disabled={!canPurchase}
-          onClick={onAddToCart}
-          aria-label={
-            isComingSoon
-              ? `${productName} coming soon`
-              : `Add ${productName} to cart`
-          }
-        >
-          {isComingSoon ? "Coming Soon" : canPurchase ? "Add to Cart" : "Out of Stock"}
-        </button>
-        <button
-          type="button"
-          className="pdp-mobile-bar__cta pdp-mobile-bar__cta--buy"
-          disabled={!canPurchase}
-          onClick={onBuyNow}
-          aria-label={`Buy ${productName} now`}
-        >
-          Buy Now
-        </button>
+        {isComingSoon ? (
+          <NotifyMeButton
+            variant="sticky"
+            productId={productId}
+            productSlug={productSlug}
+            productName={productName}
+          />
+        ) : (
+          <>
+            <button
+              type="button"
+              className="pdp-mobile-bar__cta pdp-mobile-bar__cta--cart"
+              disabled={!canPurchase}
+              onClick={onAddToCart}
+              aria-label={`Add ${productName} to cart`}
+            >
+              {canPurchase ? "Add to Cart" : "Out of Stock"}
+            </button>
+            <button
+              type="button"
+              className="pdp-mobile-bar__cta pdp-mobile-bar__cta--buy"
+              disabled={!canPurchase}
+              onClick={onBuyNow}
+              aria-label={`Buy ${productName} now`}
+            >
+              Buy Now
+            </button>
+          </>
+        )}
       </div>
     </div>,
     document.body

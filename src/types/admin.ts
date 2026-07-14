@@ -37,7 +37,16 @@ export type Permission =
   | "blog:delete"
   | "admins:read"
   | "admins:write"
-  | "audit:read";
+  | "audit:read"
+  | "rentals:read"
+  | "rentals:write"
+  | "rentals:delete"
+  | "finance:read"
+  | "finance:write"
+  | "giveaways:read"
+  | "giveaways:write"
+  | "giveaways:delete"
+  | "compare:read";
 
 export interface AdminProfile {
   uid: string;

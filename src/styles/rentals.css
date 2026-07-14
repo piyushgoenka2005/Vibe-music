@@ -1,0 +1,207 @@
+.rentals-page {
+  padding: 2rem 1rem 4rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.rentals-hero {
+  margin-bottom: 2rem;
+}
+
+.rentals-hero__eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.rentals-hero__title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  margin: 0.35rem 0 0.5rem;
+}
+
+.rentals-hero__subtitle {
+  max-width: 52ch;
+  opacity: 0.85;
+  line-height: 1.5;
+}
+
+.rentals-categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.rentals-category-card {
+  display: block;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.rentals-category-card:hover {
+  border-color: color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.rentals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.rentals-product-card {
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.rentals-product-card__image {
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  width: 100%;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.rentals-product-card__body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.rentals-product-card__name {
+  font-weight: 600;
+  margin: 0;
+}
+
+.rentals-product-card__meta {
+  font-size: 0.875rem;
+  opacity: 0.75;
+}
+
+.rentals-product-card__price {
+  margin-top: auto;
+  font-weight: 600;
+}
+
+.rentals-detail {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 900px) {
+  .rentals-detail {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.rentals-detail__image {
+  width: 100%;
+  border-radius: 16px;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.rentals-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.rentals-form label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.rentals-form input,
+.rentals-form select,
+.rentals-form textarea {
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  background: transparent;
+  color: inherit;
+}
+
+.rentals-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.rentals-calendar__day {
+  font-size: 0.7rem;
+  text-align: center;
+  padding: 0.35rem 0.15rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.rentals-calendar__day--blocked {
+  opacity: 0.35;
+}
+
+.rentals-calendar__day--ok {
+  border-color: color-mix(in srgb, #22c55e 40%, transparent);
+}
+
+.rentals-quote {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.rentals-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--accent, #111);
+  color: var(--accent-fg, #fff);
+}
+
+.rentals-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rentals-btn--secondary {
+  background: transparent;
+  color: inherit;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.rentals-empty {
+  padding: 2rem;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.rentals-booking-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.rentals-booking-row {
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 12px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.35rem;
+}

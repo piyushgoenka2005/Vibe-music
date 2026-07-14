@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Heart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { productPath, ROUTES } from "@/lib/routes";
+import { optimizeImageUrl } from "@/lib/storefrontImages";
 import { fetchProducts } from "@/services/products.api";
 import { useWishlistStore } from "@/store/wishlistStore";
 import type { Product } from "@/types/product";
@@ -39,11 +40,12 @@ function WishlistSuggestionCard({
         <div className="wl-empty__product-thumb">
           {product.image ? (
             <Image
-              src={product.image}
+              src={optimizeImageUrl(product.image, "productCard")}
               alt=""
               fill
               sizes="64px"
               loading="lazy"
+              unoptimized
               className="wl-empty__product-photo"
             />
           ) : (

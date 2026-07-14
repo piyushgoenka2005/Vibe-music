@@ -10,7 +10,8 @@ import { productPath } from "@/lib/routes";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
-import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
+import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import NotifyMeButton from "@/components/product/NotifyMeButton";
 import type { GearStory } from "@/types/gear-story";
 import type { Product } from "@/types/product";
 
@@ -88,7 +89,13 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
   }, [open, story?.id, onClose]);
 
   const handleAddToCart = useCallback(() => {
-    if (!story || story.availability === "out-of-stock" || story.price <= 0) return;
+    if (
+      !story ||
+      story.availability === "out-of-stock" ||
+      !isPurchasablePrice(story.price)
+    ) {
+      return;
+    }
     addItem(storyToProduct(story), 1);
     openCart();
     onClose();
@@ -114,7 +121,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
 
   const product = storyToProduct(story);
   const displayPrice = story.salePrice ?? story.price;
-  const hasCatalogPrice = displayPrice > 0;
+  const hasCatalogPrice = isPurchasablePrice(displayPrice);
   const hasDiscount =
     story.discountPercentage > 0 && story.originalPrice > displayPrice;
   const gallery = gallerySources(story);
@@ -257,14 +264,24 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
             </ul>
 
             <div className="gear-story-modal__actions">
-              <button
-                type="button"
-                className="gear-story-modal__btn gear-story-modal__btn--primary"
-                onClick={handleAddToCart}
-                disabled={story.availability === "out-of-stock" || !hasCatalogPrice}
-              >
-                Add to cart
-              </button>
+              {hasCatalogPrice ? (
+                <button
+                  type="button"
+                  className="gear-story-modal__btn gear-story-modal__btn--primary"
+                  onClick={handleAddToCart}
+                  disabled={story.availability === "out-of-stock"}
+                >
+                  Add to cart
+                </button>
+              ) : (
+                <NotifyMeButton
+                  variant="inline"
+                  className="gear-story-modal__btn gear-story-modal__btn--primary"
+                  productId={story.productId}
+                  productSlug={story.slug}
+                  productName={story.name}
+                />
+              )}
               <Link
                 href={productPath(story.slug)}
                 className="gear-story-modal__btn gear-story-modal__btn--secondary"

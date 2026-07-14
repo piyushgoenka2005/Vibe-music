@@ -31,14 +31,18 @@ export default function AddressAutocompleteField({
 }: AddressAutocompleteFieldProps) {
   const [predictions, setPredictions] = useState<AddressPrediction[]>([]);
   const [open, setOpen] = useState(false);
-  const [placesOff, setPlacesOff] = useState(!autocompleteAvailable);
+  const [placesDisabledByApi, setPlacesDisabledByApi] = useState(false);
   const [resolving, setResolving] = useState(false);
   const debounceRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setPlacesOff(!autocompleteAvailable);
+    if (autocompleteAvailable) {
+      setPlacesDisabledByApi(false);
+    }
   }, [autocompleteAvailable]);
+
+  const placesOff = !autocompleteAvailable || placesDisabledByApi;
 
   const fetchPredictions = useCallback(
     async (input: string) => {
@@ -65,7 +69,7 @@ export default function AddressAutocompleteField({
           available?: boolean;
         };
         if (data.available === false) {
-          setPlacesOff(true);
+          setPlacesDisabledByApi(true);
           setPredictions([]);
           setOpen(false);
           return;
@@ -117,7 +121,7 @@ export default function AddressAutocompleteField({
         address?: ParsedPlaceAddress | null;
       };
       if (data.available === false) {
-        setPlacesOff(true);
+        setPlacesDisabledByApi(true);
         return;
       }
       if (data.address) {

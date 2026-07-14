@@ -1,7 +1,6 @@
 import "server-only";
 
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
-import type { Order } from "@/types/order";
 
 export interface PurchaseVerification {
   verified: boolean;

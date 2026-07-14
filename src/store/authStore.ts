@@ -67,7 +67,7 @@ async function credentialsSignIn(
   return mapSessionUser(session.user);
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,

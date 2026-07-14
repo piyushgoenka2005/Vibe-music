@@ -11,15 +11,16 @@ import type {
   UpdateBannerInput,
 } from "@/types/banner";
 import type {
+  BlogAnalyticsSummary,
+  BlogComment,
+  BlogCommentStatus,
   BlogPost,
   CreateBlogPostInput,
-  UpdateBlogPostInput,
 } from "@/types/blog";
 import type { ProductReviewStats } from "@/types/review";
 import {
   DEFAULT_HOMEPAGE_SECTIONS,
   type CreateHomepageSectionInput,
-  type CreateHomepageSectionItemInput,
   type HomepageSection,
   type HomepageSectionItem,
   type HomepageSectionKey,
@@ -109,28 +110,88 @@ export async function getBannerById(id: string) {
   return row ? mapBanner(row) : null;
 }
 
-export async function listAllBlogPosts() {
-  if (!isPostgresConfigured()) return [];
-  const rows = await prisma.blogPost.findMany({ orderBy: { updatedAt: "desc" } });
-  return rows.map((row) => ({
+function mapBlogContent(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (content && typeof content === "object") return JSON.stringify(content);
+  return "";
+}
+
+function mapBlogPostRow(row: {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: unknown;
+  contentFormat: string;
+  coverImage: string;
+  tags: unknown;
+  categorySlug?: string;
+  categoryLabel?: string;
+  featured?: boolean;
+  authorBio?: string;
+  authorAvatar?: string;
+  viewCount?: number;
+  seoTitle: string;
+  seoDescription: string;
+  status: string;
+  authorId: string;
+  authorName: string;
+  publishedAt: string | null;
+  scheduledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}): BlogPost {
+  return {
     id: row.id,
     slug: row.slug,
     title: row.title,
     excerpt: row.excerpt,
-    content: row.content,
-    contentFormat: row.contentFormat as "tiptap_json",
+    content: mapBlogContent(row.content),
+    contentFormat: "tiptap_json",
     coverImage: row.coverImage,
     tags: asStringArray(row.tags),
+    categorySlug: row.categorySlug ?? "",
+    categoryLabel: row.categoryLabel ?? "",
+    featured: Boolean(row.featured),
+    authorBio: row.authorBio ?? "",
+    authorAvatar: row.authorAvatar ?? "",
+    viewCount: row.viewCount ?? 0,
     seoTitle: row.seoTitle,
     seoDescription: row.seoDescription,
-    status: row.status as "draft" | "published" | "scheduled",
+    status: row.status as BlogPost["status"],
     authorId: row.authorId,
     authorName: row.authorName,
-    publishedAt: row.publishedAt ?? undefined,
-    scheduledAt: row.scheduledAt ?? undefined,
+    publishedAt: row.publishedAt ?? null,
+    scheduledAt: row.scheduledAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-  }));
+  };
+}
+
+function mapBlogCommentRow(row: {
+  id: string;
+  postId: string;
+  authorName: string;
+  email: string;
+  body: string;
+  status: string;
+  createdAt: string;
+}): BlogComment {
+  return {
+    id: row.id,
+    postId: row.postId,
+    authorName: row.authorName,
+    email: row.email,
+    body: row.body,
+    status: row.status as BlogComment["status"],
+    createdAt: row.createdAt,
+  };
+}
+
+export async function listAllBlogPosts() {
+  if (!isPostgresConfigured()) return [];
+  const rows = await prisma.blogPost.findMany({ orderBy: { updatedAt: "desc" } });
+  return rows.map(mapBlogPostRow);
 }
 
 export async function getBlogPostById(id: string) {
@@ -142,25 +203,7 @@ export async function getBlogPostBySlug(slug: string) {
   if (!isPostgresConfigured()) return null;
   const row = await prisma.blogPost.findUnique({ where: { slug } });
   if (!row) return null;
-  return {
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    excerpt: row.excerpt,
-    content: row.content,
-    contentFormat: row.contentFormat as "tiptap_json",
-    coverImage: row.coverImage,
-    tags: asStringArray(row.tags),
-    seoTitle: row.seoTitle,
-    seoDescription: row.seoDescription,
-    status: row.status as "draft" | "published" | "scheduled",
-    authorId: row.authorId,
-    authorName: row.authorName,
-    publishedAt: row.publishedAt ?? undefined,
-    scheduledAt: row.scheduledAt ?? undefined,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-  };
+  return mapBlogPostRow(row);
 }
 
 export async function listHomepageSections() {
@@ -379,6 +422,12 @@ export async function createBlogPostRecord(input: CreateBlogPostInput & {
       contentFormat: "tiptap_json",
       coverImage: input.coverImage?.trim() ?? "",
       tags: asJsonValue(input.tags ?? []),
+      categorySlug: input.categorySlug?.trim() ?? "",
+      categoryLabel: input.categoryLabel?.trim() ?? "",
+      featured: Boolean(input.featured),
+      authorBio: input.authorBio?.trim() ?? "",
+      authorAvatar: input.authorAvatar?.trim() ?? "",
+      viewCount: 0,
       seoTitle: input.seoTitle?.trim() ?? "",
       seoDescription: input.seoDescription?.trim() ?? "",
       status: input.status,
@@ -406,6 +455,12 @@ export async function updateBlogPostRecord(
       ...(patch.content !== undefined ? { content: asJsonValue(patch.content) } : {}),
       ...(patch.coverImage !== undefined ? { coverImage: patch.coverImage } : {}),
       ...(patch.tags !== undefined ? { tags: asJsonValue(patch.tags) } : {}),
+      ...(patch.categorySlug !== undefined ? { categorySlug: patch.categorySlug } : {}),
+      ...(patch.categoryLabel !== undefined ? { categoryLabel: patch.categoryLabel } : {}),
+      ...(patch.featured !== undefined ? { featured: patch.featured } : {}),
+      ...(patch.authorBio !== undefined ? { authorBio: patch.authorBio } : {}),
+      ...(patch.authorAvatar !== undefined ? { authorAvatar: patch.authorAvatar } : {}),
+      ...(patch.viewCount !== undefined ? { viewCount: patch.viewCount } : {}),
       ...(patch.seoTitle !== undefined ? { seoTitle: patch.seoTitle } : {}),
       ...(patch.seoDescription !== undefined
         ? { seoDescription: patch.seoDescription }
@@ -423,6 +478,138 @@ export async function updateBlogPostRecord(
 
 export async function deleteBlogPostRecord(id: string): Promise<void> {
   await prisma.blogPost.delete({ where: { id } });
+}
+
+export async function incrementBlogPostViewCount(postId: string): Promise<void> {
+  assertPostgresForWrite();
+  await prisma.blogPost.update({
+    where: { id: postId },
+    data: { viewCount: { increment: 1 } },
+  });
+}
+
+export async function createBlogPostEvent(input: {
+  id: string;
+  postId: string | null;
+  type: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}): Promise<void> {
+  assertPostgresForWrite();
+  await prisma.blogPostEvent.create({
+    data: {
+      id: input.id,
+      postId: input.postId,
+      type: input.type,
+      metadata: asJsonValue(input.metadata),
+      createdAt: input.createdAt,
+    },
+  });
+}
+
+export async function createBlogCommentRecord(input: {
+  id: string;
+  postId: string;
+  authorName: string;
+  email: string;
+  body: string;
+  status: BlogCommentStatus;
+  createdAt: string;
+}): Promise<BlogComment> {
+  assertPostgresForWrite();
+  await prisma.blogComment.create({ data: input });
+  return mapBlogCommentRow(input);
+}
+
+export async function listBlogCommentsByPost(
+  postId: string,
+  status: BlogCommentStatus
+): Promise<BlogComment[]> {
+  if (!isPostgresConfigured()) return [];
+  const rows = await prisma.blogComment.findMany({
+    where: { postId, status },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(mapBlogCommentRow);
+}
+
+export async function listAllBlogComments(): Promise<BlogComment[]> {
+  if (!isPostgresConfigured()) return [];
+  const rows = await prisma.blogComment.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
+  return rows.map(mapBlogCommentRow);
+}
+
+export async function updateBlogCommentStatus(
+  id: string,
+  status: BlogCommentStatus
+): Promise<BlogComment> {
+  assertPostgresForWrite();
+  const row = await prisma.blogComment.update({
+    where: { id },
+    data: { status },
+  });
+  return mapBlogCommentRow(row);
+}
+
+export async function getBlogAnalyticsSummary(): Promise<BlogAnalyticsSummary> {
+  if (!isPostgresConfigured()) {
+    return {
+      totalViews: 0,
+      totalShares: 0,
+      totalComments: 0,
+      pendingComments: 0,
+      topPosts: [],
+      recentEvents: [],
+    };
+  }
+
+  const [posts, comments, events] = await Promise.all([
+    prisma.blogPost.findMany({
+      select: { id: true, title: true, slug: true, viewCount: true },
+      orderBy: { viewCount: "desc" },
+      take: 5,
+    }),
+    prisma.blogComment.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    }),
+    prisma.blogPostEvent.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: { type: true, postId: true, createdAt: true },
+    }),
+  ]);
+
+  const commentCounts = Object.fromEntries(
+    comments.map((row) => [row.status, row._count._all])
+  );
+
+  const viewEvents = await prisma.blogPostEvent.count({ where: { type: "view" } });
+  const shareEvents = await prisma.blogPostEvent.count({ where: { type: "share" } });
+
+  return {
+    totalViews: viewEvents,
+    totalShares: shareEvents,
+    totalComments:
+      (commentCounts.approved ?? 0) +
+      (commentCounts.pending ?? 0) +
+      (commentCounts.rejected ?? 0),
+    pendingComments: commentCounts.pending ?? 0,
+    topPosts: posts.map((post) => ({
+      postId: post.id,
+      title: post.title,
+      slug: post.slug,
+      views: post.viewCount,
+    })),
+    recentEvents: events.map((event) => ({
+      type: event.type,
+      postId: event.postId,
+      createdAt: event.createdAt,
+    })),
+  };
 }
 
 export async function createCouponRecord(

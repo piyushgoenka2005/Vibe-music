@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
-import {
-  productUploadFolder,
-  uploadBufferToCdn,
-} from "@/lib/server/cdnStorage";
+import { productUploadFolder } from "@/lib/server/cdnStorage";
+import { uploadOptimizedImageToCdn } from "@/lib/server/cdnImageOptimize";
 
 export async function POST(request: Request) {
   try {
@@ -20,17 +18,19 @@ export async function POST(request: Request) {
 
     const folder = productUploadFolder(categorySlug, productSlug || undefined);
     const urls: string[] = [];
+    const masters: string[] = [];
 
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
-      const url = await uploadBufferToCdn(buffer, file.name, {
+      const uploaded = await uploadOptimizedImageToCdn(buffer, {
         folder,
-        contentType: file.type,
+        filenameHint: file.name,
       });
-      urls.push(url);
+      urls.push(uploaded.url);
+      masters.push(uploaded.masterUrl);
     }
 
-    return NextResponse.json({ urls });
+    return NextResponse.json({ urls, masters });
   } catch (error) {
     return adminErrorResponse(error);
   }

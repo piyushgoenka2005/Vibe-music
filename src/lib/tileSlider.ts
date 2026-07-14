@@ -1,3 +1,5 @@
+import { attachHorizontalWheelScroll } from "@/lib/horizontalWheelScroll";
+
 /** Wire tile carousel prev/next controls to horizontal `.tiles--slider` tracks. */
 export function initTileSliders(root: ParentNode): () => void {
   const cleanups: Array<() => void> = [];
@@ -20,7 +22,9 @@ export function initTileSliders(root: ParentNode): () => void {
     const blockEl = tileBlock;
 
     function scrollAmount(): number {
-      const firstTile = sliderEl.querySelector<HTMLElement>(".tile--link");
+      const firstTile = sliderEl.querySelector<HTMLElement>(
+        ".homepage-deals-card-wrap, .tile--link"
+      );
       if (!firstTile) return sliderEl.clientWidth * 0.75;
       const style = window.getComputedStyle(sliderEl);
       const gap = parseFloat(style.columnGap || style.gap || "0") || 16;
@@ -53,6 +57,7 @@ export function initTileSliders(root: ParentNode): () => void {
     nextEl.addEventListener("click", scrollNext);
     sliderEl.addEventListener("scroll", updateDisabled, { passive: true });
     window.addEventListener("resize", updateOverflow);
+    cleanups.push(attachHorizontalWheelScroll(sliderEl));
 
     updateOverflow();
 

@@ -691,7 +691,18 @@
   }
 
   .wl-drawer__share-btn.product-share-btn {
-    --share-btn-size: 2.5rem;
+    --share-btn-size: 2.75rem;
+  }
+
+  .wl-empty__cta {
+    min-height: 44px;
+    padding: 0.65rem 1.25rem;
+  }
+
+  .wl-empty__product-save {
+    min-height: 44px;
+    min-width: 4.25rem;
+    padding: 0.55rem 0.95rem;
   }
 }
 
