@@ -70,15 +70,8 @@ export default function SiteFooter() {
     if (!panel || !footer || !spacer) return;
 
     const shell = footer.querySelector<HTMLElement>(".site-footer__shell");
-    const mobileQuery = window.matchMedia("(max-width: 767px)");
 
     const syncSpacer = () => {
-      if (mobileQuery.matches) {
-        /* Mobile: trending is in-flow — no scroll-reveal spacer (avoids white gap). */
-        spacer.style.height = "0px";
-        panel.classList.add("is-ready", "is-interactive");
-        return;
-      }
       const height = Math.max(panel.offsetHeight, panel.scrollHeight);
       if (height > 0) {
         spacer.style.height = `${height}px`;
@@ -92,11 +85,6 @@ export default function SiteFooter() {
 
     const readyObserver = new IntersectionObserver(
       ([entry]) => {
-        if (mobileQuery.matches) {
-          panel.classList.add("is-ready", "is-interactive");
-          syncSpacer();
-          return;
-        }
         const isReady = Boolean(entry?.isIntersecting);
         panel.classList.toggle("is-ready", isReady);
         if (isReady) {
@@ -110,12 +98,7 @@ export default function SiteFooter() {
 
     const updateInteractive = () => {
       if (!shell) return;
-      if (mobileQuery.matches) {
-        panel.classList.add("is-ready", "is-interactive");
-        return;
-      }
       const shellRect = shell.getBoundingClientRect();
-      /* Full panel becomes interactive once the shell has scrolled mostly off */
       const panelInteractive = shellRect.bottom <= window.innerHeight * 0.2;
       panel.classList.toggle("is-interactive", panelInteractive);
     };
@@ -129,15 +112,9 @@ export default function SiteFooter() {
       });
     };
 
-    const onViewportChange = () => {
-      syncSpacer();
-      updateInteractive();
-    };
-
     updateInteractive();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onViewportChange);
-    mobileQuery.addEventListener("change", onViewportChange);
+    window.addEventListener("resize", updateInteractive);
 
     return () => {
       resizeObserver.disconnect();
@@ -146,8 +123,7 @@ export default function SiteFooter() {
         window.cancelAnimationFrame(scrollFrame);
       }
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onViewportChange);
-      mobileQuery.removeEventListener("change", onViewportChange);
+      window.removeEventListener("resize", updateInteractive);
     };
   }, []);
 
@@ -219,7 +195,6 @@ export default function SiteFooter() {
 
   return (
     <>
-      {/* Outside the footer stacking context so it stays under main/ribbon (z-index). */}
       <FooterProductsPanel ref={panelRef} />
 
       <footer

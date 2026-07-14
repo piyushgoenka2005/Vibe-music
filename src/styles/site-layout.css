@@ -29,6 +29,13 @@
   padding-top: 0;
 }
 
+/* Landing: don't leave a white flex pad between tour ribbon and footer */
+body.is-landing-page .storefront-main:has(> .premium-home > .tour-ribbon) {
+  flex: 1 0 auto;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
 .reveal {
   opacity: 1;
   transform: none;
@@ -1649,26 +1656,9 @@ body.site-nav-open .site-header--hidden {
     bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--floating-ui-clearance));
   }
 
-  body:has(.footer-products-panel.is-ready.is-interactive) .help-widget {
-    --floating-ui-clearance: 5.5rem;
-    bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--floating-ui-clearance));
-  }
-
   body:has(.pdp-mobile-bar) .back-to-top,
   body:has(.checkout-mobile-bar) .back-to-top {
     --floating-ui-clearance: 9.5rem;
-    bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--floating-ui-clearance));
-  }
-
-  body:has(.footer-products-panel.is-ready.is-interactive) .back-to-top {
-    --floating-ui-clearance: 5.5rem;
-    bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--floating-ui-clearance));
-  }
-
-  /* Commerce sticky + footer panel: keep back-to-top above both */
-  body:has(.pdp-mobile-bar):has(.footer-products-panel.is-ready.is-interactive) .back-to-top,
-  body:has(.checkout-mobile-bar):has(.footer-products-panel.is-ready.is-interactive) .back-to-top {
-    --floating-ui-clearance: 12.5rem;
     bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--floating-ui-clearance));
   }
 
