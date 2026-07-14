@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { storefrontImageCandidates } from "@/lib/storefrontImages";
 
 interface StorefrontThumbImageProps {
@@ -40,14 +40,17 @@ export default function StorefrontThumbImage({
   }, [src, width, height, preferOriginal]);
 
   const [attempt, setAttempt] = useState(0);
-
-  useEffect(() => {
+  const [srcKey, setSrcKey] = useState(src);
+  if (src !== srcKey) {
+    setSrcKey(src);
     setAttempt(0);
-  }, [src]);
+  }
 
-  const displaySrc = candidates[Math.min(attempt, candidates.length - 1)] ?? "";
+  const safeAttempt = src === srcKey ? attempt : 0;
+  const displaySrc =
+    candidates[Math.min(safeAttempt, candidates.length - 1)] ?? "";
 
-  if (!displaySrc || attempt >= candidates.length) {
+  if (!displaySrc || safeAttempt >= candidates.length) {
     return (
       <div
         aria-hidden

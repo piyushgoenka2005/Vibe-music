@@ -191,7 +191,6 @@ export default function PageLoadSplash({
   const prefersReducedMotion = usePrefersReducedMotion();
   const onCompleteRef = useRef(onComplete);
   const finishedRef = useRef(false);
-  onCompleteRef.current = onComplete;
 
   const [visible, setVisible] = useState(() => {
     if (variant !== "initial" || !SPLASH_ENABLED) return false;
@@ -203,6 +202,10 @@ export default function PageLoadSplash({
   const [showItems, setShowItems] = useState(false);
   const [showTeaser, setShowTeaser] = useState(false);
   const [exiting, setExiting] = useState(false);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   const finish = (markSeen: boolean) => {
     if (finishedRef.current) return;
@@ -232,8 +235,7 @@ export default function PageLoadSplash({
 
     setSplashCoverActive(true);
     removeBootSplash();
-    setVisible(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount / preference gate only
+    // Visibility is already derived from the initial-state initializer above.
   }, [prefersReducedMotion, variant]);
 
   useEffect(() => {

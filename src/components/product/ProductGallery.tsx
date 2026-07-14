@@ -148,14 +148,18 @@ export default function ProductGallery({
     return Array.from(new Set([activeSrc, ...optimized].filter(Boolean)));
   }, [activeSrc]);
   const [displayAttempt, setDisplayAttempt] = useState(0);
-  const activeDisplaySrc =
-    displayCandidates[Math.min(displayAttempt, displayCandidates.length - 1)] ??
-    "";
-  const activeZoomSrc = activeSrc ? storefrontZoomImageUrl(activeSrc) : "";
-
-  useEffect(() => {
+  const [activeSrcKey, setActiveSrcKey] = useState(activeSrc);
+  if (activeSrc !== activeSrcKey) {
+    setActiveSrcKey(activeSrc);
     setDisplayAttempt(0);
-  }, [activeSrc]);
+  }
+  const safeDisplayAttempt =
+    activeSrc === activeSrcKey ? displayAttempt : 0;
+  const activeDisplaySrc =
+    displayCandidates[
+      Math.min(safeDisplayAttempt, displayCandidates.length - 1)
+    ] ?? "";
+  const activeZoomSrc = activeSrc ? storefrontZoomImageUrl(activeSrc) : "";
 
   const measureImageRect = useCallback(() => {
     const main = mainRef.current;

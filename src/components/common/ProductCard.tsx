@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCartStore } from "@/store/cartStore";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import ProductShareButton from "@/components/product/ProductShareButton";
@@ -90,13 +90,22 @@ export default function ProductCard({ product, view }: ProductCardProps) {
   const preferredSrc = product.image
     ? optimizeImageUrl(product.image, "productCard")
     : "";
-  const [imageSrc, setImageSrc] = useState(preferredSrc);
-  const [imageFailed, setImageFailed] = useState(false);
-
-  useEffect(() => {
-    setImageSrc(preferredSrc);
-    setImageFailed(false);
-  }, [preferredSrc]);
+  const imageCandidates = Array.from(
+    new Set([preferredSrc, product.image].filter(Boolean))
+  );
+  const [imageAttempt, setImageAttempt] = useState(0);
+  const [imageSrcKey, setImageSrcKey] = useState(preferredSrc);
+  if (preferredSrc !== imageSrcKey) {
+    setImageSrcKey(preferredSrc);
+    setImageAttempt(0);
+  }
+  const safeImageAttempt =
+    preferredSrc === imageSrcKey ? imageAttempt : 0;
+  const imageSrc =
+    imageCandidates[Math.min(safeImageAttempt, imageCandidates.length - 1)] ??
+    "";
+  const imageFailed =
+    !imageSrc || safeImageAttempt >= imageCandidates.length;
 
   return (
     <article
@@ -127,11 +136,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
               decoding="async"
               className="cat-product-card__image-photo"
               onError={() => {
-                if (product.image && imageSrc !== product.image) {
-                  setImageSrc(product.image);
-                  return;
-                }
-                setImageFailed(true);
+                setImageAttempt((current) => current + 1);
               }}
             />
           ) : null}
