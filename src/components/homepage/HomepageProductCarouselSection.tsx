@@ -205,9 +205,10 @@ export default function HomepageProductCarouselSection({
             ref={scrollerRef}
             className="product-suggest__items paged scrollbar-minimal"
           >
-            {products.map((item) => (
+            {products.map((item, index) => (
               <CarouselProductCard
                 key={item.id}
+                imagePriority={index < 4}
                 item={item}
                 sectionKey={section.key}
               />

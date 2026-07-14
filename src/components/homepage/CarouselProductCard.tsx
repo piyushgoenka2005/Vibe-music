@@ -10,11 +10,13 @@ import { resolveLinkHref } from "@/lib/routes";
 import { useCartStore } from "@/store/cartStore";
 import type { HomepageProductItem } from "@/types/homepage";
 import type { Product } from "@/types/product";
-import { formatDisplayPrice } from "@/utils/currency";
+import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import NotifyMeButton from "@/components/product/NotifyMeButton";
 
 interface CarouselProductCardProps {
   item: HomepageProductItem;
   sectionKey: string;
+  imagePriority?: boolean;
 }
 
 function formatRatingAttribute(rating: number): string {
@@ -46,6 +48,7 @@ function toCartProduct(item: HomepageProductItem): Product {
 export default function CarouselProductCard({
   item,
   sectionKey,
+  imagePriority = false,
 }: CarouselProductCardProps) {
   const addItem = useCartStore((state) => state.addItem);
   const openDrawer = useCartStore((state) => state.openDrawer);
@@ -59,7 +62,7 @@ export default function CarouselProductCard({
     item.badgeLabel ?? (sectionKey === "trending" ? "Trending" : undefined);
   const isTrendingRibbon = sectionKey === "trending" && !item.badgeLabel;
   const productHref = resolveLinkHref(item.href);
-  const canQuickAdd = displayPrice > 0;
+  const canQuickAdd = isPurchasablePrice(displayPrice);
 
   function handleAddToCart(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -91,13 +94,17 @@ export default function CarouselProductCard({
             </span>
           ) : null}
           <div className="product-suggest__item-img">
+            <span className="product-suggest__item-img-frame" aria-hidden />
             {imageSrc ? (
-              <HomepageProductImage
-                className="product-suggest__item-photo"
-                fill
-                sizes="(max-width: 767px) 46vw, 240px"
-                src={imageSrc}
-              />
+              <span className="product-suggest__item-photo-pop">
+                <HomepageProductImage
+                  className="product-suggest__item-photo"
+                  fill
+                  priority={imagePriority}
+                  sizes="(max-width: 767px) 46vw, 240px"
+                  src={imageSrc}
+                />
+              </span>
             ) : null}
           </div>
           <div className="product-suggest__item-content">
@@ -156,9 +163,13 @@ export default function CarouselProductCard({
               Add to cart
             </button>
           ) : (
-            <Link href={productHref} className="product-suggest__item-action">
-              View
-            </Link>
+            <NotifyMeButton
+              variant="inline"
+              className="product-suggest__item-action product-suggest__item-action--button"
+              productId={item.id}
+              productSlug={item.slug}
+              productName={item.name}
+            />
           )}
         </div>
       </div>

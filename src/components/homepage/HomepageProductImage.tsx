@@ -25,8 +25,8 @@ export default function HomepageProductImage({
   className,
   sizes = "(max-width: 767px) 46vw, 280px",
   fill = false,
-  width = 400,
-  height = 400,
+  width = 320,
+  height = 320,
   priority = false,
 }: HomepageProductImageProps) {
   const thumbSrc = useMemo(() => cdnThumbUrl(src, width), [src, width]);
@@ -61,8 +61,10 @@ export default function HomepageProductImage({
         className={className}
         decoding="async"
         fetchPriority={priority ? "high" : "auto"}
+        height={height}
         loading={priority ? "eager" : "lazy"}
         src={activeSrc}
+        width={width}
         onError={onError}
         style={
           fill

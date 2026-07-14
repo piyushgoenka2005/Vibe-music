@@ -43,7 +43,7 @@ export default function NewArrivalsProductCard({
   price,
   salePrice,
   image,
-  imageAlt: _imageAlt,
+  imageAlt,
   sectionKey,
   rank,
   rating,
@@ -75,7 +75,7 @@ export default function NewArrivalsProductCard({
       />
       <Link
       aria-hidden={ariaHidden || undefined}
-      aria-label={`${brand} ${name}, ${formatDisplayPrice(price, salePrice)}`}
+      aria-label={imageAlt || `${brand} ${name}, ${formatDisplayPrice(price, salePrice)}`}
       className={`new-arrivals-card${featured ? " new-arrivals-card--featured" : ""}`}
       tabIndex={ariaHidden ? -1 : undefined}
       data-hp-section={sectionKey}
@@ -96,11 +96,11 @@ export default function NewArrivalsProductCard({
         {imageSrc && !ariaHidden ? (
           <HomepageProductImage
             className="new-arrivals-card__image"
-            height={400}
+            height={320}
             priority={imagePriority}
             sizes="(max-width: 767px) 45vw, 280px"
             src={imageSrc}
-            width={400}
+            width={320}
           />
         ) : (
           <div

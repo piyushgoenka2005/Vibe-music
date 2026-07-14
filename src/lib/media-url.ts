@@ -27,7 +27,7 @@ export function buildMediaTransformUrl(
 }
 
 export const MEDIA_PRESETS = {
-  productCard: { width: 400, height: 400, crop: "fill" as const, quality: "auto" as const },
+  productCard: { width: 320, height: 320, crop: "fill" as const, quality: "auto" as const },
   productDetail: { width: 900, height: 900, crop: "fit" as const, quality: "auto" as const },
   blogCover: { width: 1200, height: 630, crop: "fill" as const, quality: "auto" as const },
   banner: { width: 1600, height: 600, crop: "fill" as const, quality: "auto" as const },

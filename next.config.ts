@@ -56,6 +56,18 @@ const nextConfig: NextConfig = {
         source: "/api/:path*",
         headers: [...API_SECURITY_HEADERS],
       },
+      // Thumb proxy must be cacheable — override API no-store (last match wins).
+      {
+        source: "/api/media/thumb",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          {
+            key: "Cache-Control",
+            value:
+              "public, max-age=604800, stale-while-revalidate=86400, immutable",
+          },
+        ],
+      },
       {
         source: "/assets/:path*",
         headers: [

@@ -12,6 +12,7 @@
 /coverage
 /test-results/
 /playwright-report/
+/e2e/.auth/
 /reports/lighthouse/
 
 # next.js
@@ -25,6 +26,8 @@
 .DS_Store
 *.pem
 .cursor/
+.debug/
+.cache/
 debug-*.log
 
 # debug
