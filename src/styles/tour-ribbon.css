@@ -1,0 +1,196 @@
+/* Tour ribbon — Truck'N Roll–style overlapping marquees for Vibe Music */
+
+.tour-ribbon {
+  --tour-ribbon-blue: #1253ed;
+  --tour-ribbon-ink: #e6e8ee;
+  --tour-ribbon-ink-soft: rgba(230, 232, 238, 0.82);
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  margin: 0 0 -6px;
+  padding: clamp(3.5rem, 7vw, 5.5rem) 0 clamp(3.5rem, 7vw, 5.5rem);
+  overflow: hidden;
+  background: var(--tour-ribbon-blue);
+  color: var(--tour-ribbon-ink);
+  font-family: var(--font-tour-ribbon), "Arial Black", Impact, sans-serif;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  /* Avoid compositor seams at the footer join */
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.tour-ribbon__stage {
+  position: relative;
+  height: clamp(11rem, 22vw, 16.5rem);
+  width: 100%;
+  overflow: hidden;
+}
+
+.tour-ribbon__band {
+  position: absolute;
+  left: -8%;
+  width: 116%;
+  display: flex;
+  align-items: center;
+  padding: clamp(0.55rem, 1.4vw, 0.95rem) 0;
+  background: var(--tour-ribbon-blue);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  will-change: transform;
+}
+
+.tour-ribbon__band--1 {
+  top: 8%;
+  z-index: 3;
+  transform: rotate(-2.6deg);
+}
+
+.tour-ribbon__band--2 {
+  top: 36%;
+  z-index: 2;
+  transform: rotate(1.8deg);
+}
+
+.tour-ribbon__band--3 {
+  top: 64%;
+  z-index: 1;
+  transform: rotate(-1.4deg);
+}
+
+.tour-ribbon__track {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: clamp(1.75rem, 4vw, 3.25rem);
+  width: max-content;
+  will-change: transform;
+}
+
+.tour-ribbon__track--ltr {
+  animation: tour-ribbon-ltr var(--tour-ribbon-duration, 42s) linear infinite;
+}
+
+.tour-ribbon__track--rtl {
+  animation: tour-ribbon-rtl var(--tour-ribbon-duration, 48s) linear infinite;
+}
+
+.tour-ribbon__band--static .tour-ribbon__track {
+  animation: none;
+}
+
+.tour-ribbon__unit {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: clamp(0.85rem, 2vw, 1.4rem);
+  white-space: nowrap;
+}
+
+.tour-ribbon__headline {
+  font-size: clamp(2.35rem, 6.4vw, 4.75rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  text-transform: uppercase;
+  color: var(--tour-ribbon-ink);
+}
+
+.tour-ribbon__stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(2rem, 4.5vw, 3rem);
+  padding: 0.35rem 0.7rem 0.28rem;
+  border: 2px solid var(--tour-ribbon-ink);
+  border-radius: 2px;
+  transform: rotate(-8deg);
+  font-size: clamp(0.72rem, 1.55vw, 1.05rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--tour-ribbon-ink);
+  box-shadow: 3px 3px 0 rgba(8, 24, 72, 0.18);
+}
+
+.tour-ribbon__meta {
+  font-size: clamp(0.68rem, 1.35vw, 0.92rem);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--tour-ribbon-ink-soft);
+}
+
+@keyframes tour-ribbon-ltr {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes tour-ribbon-rtl {
+  from {
+    transform: translate3d(-50%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (max-width: 767px) {
+  .tour-ribbon {
+    padding: 2.75rem 0 3rem;
+  }
+
+  .tour-ribbon__stage {
+    height: 10.5rem;
+  }
+
+  .tour-ribbon__band {
+    left: -12%;
+    width: 124%;
+    padding-block: 0.5rem;
+  }
+
+  .tour-ribbon__band--1 {
+    top: 6%;
+    transform: rotate(-2.2deg);
+  }
+
+  .tour-ribbon__band--2 {
+    top: 36%;
+    transform: rotate(1.5deg);
+  }
+
+  .tour-ribbon__band--3 {
+    top: 66%;
+    transform: rotate(-1.1deg);
+  }
+
+  .tour-ribbon__headline {
+    font-size: clamp(1.85rem, 9vw, 2.45rem);
+  }
+
+  .tour-ribbon__stamp {
+    min-height: 1.7rem;
+    padding: 0.28rem 0.5rem;
+    font-size: 0.68rem;
+  }
+
+  .tour-ribbon__meta {
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-ribbon__track--ltr,
+  .tour-ribbon__track--rtl {
+    animation: none;
+  }
+}

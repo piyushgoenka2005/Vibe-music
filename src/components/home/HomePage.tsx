@@ -27,6 +27,10 @@ const DiscoverLocationsSection = dynamic(
   () => import("@/components/home/DiscoverLocationsSection"),
   { loading: () => null }
 );
+const TourRibbonSection = dynamic(
+  () => import("@/components/home/TourRibbonSection"),
+  { loading: () => null }
+);
 const EditorialSplit = dynamic(() => import("@/components/home/EditorialSplit"), {
   loading: () => null,
 });
@@ -96,6 +100,7 @@ export default function HomePage() {
       <ServiceStatusCarousel />
       <DiscoverLocationsSection />
       <SocialProofStrip />
+      <TourRibbonSection />
     </main>
   );
 }
