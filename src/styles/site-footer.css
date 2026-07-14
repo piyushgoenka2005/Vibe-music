@@ -8,102 +8,29 @@
   overflow: visible;
   color: #fff;
   background: transparent;
-  border: none !important;
-  border-top: none !important;
-  border-bottom: none !important;
-  box-shadow: none !important;
-  outline: none !important;
+  border-top: none;
+  border-bottom: none;
   pointer-events: none;
 }
 
 .site-footer.site-footer--layered::before,
 .site-footer.site-footer--layered::after {
-  display: none !important;
-  content: none !important;
-  border: none !important;
-  background: none !important;
+  display: none;
 }
 
 .site-footer__shell {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   max-width: 100%;
   margin: 0 auto;
   color: #fff;
   pointer-events: auto;
   background-color: #1253ed;
   background-image:
-    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.14), transparent 42%),
-    radial-gradient(circle at 88% 42%, rgba(99, 102, 241, 0.28), transparent 48%),
-    linear-gradient(180deg, #1253ed 0%, #1253ed 18%, #0e46c8 100%);
-  border: none;
-  border-top: none !important;
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.16), transparent 42%),
+    radial-gradient(circle at 88% 18%, rgba(99, 102, 241, 0.35), transparent 46%),
+    linear-gradient(180deg, #1253ed 0%, #0e46c8 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-/*
- * Homepage → footer seam: white trust bar sits flush into the blue footer.
- * Pull the footer under the strip and lock the top band to solid brand blue.
- */
-body.is-landing-page
-  .storefront-main:has(> .premium-home > .social-proof-strip),
-body.is-landing-page .storefront-main:has(> .premium-home > .tour-ribbon) {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-  box-shadow: none;
-}
-
-body.is-landing-page
-  .storefront-main:has(> .premium-home > .social-proof-strip)
-  + .site-footer.site-footer--layered,
-body.is-landing-page
-  .storefront-main:has(> .premium-home > .tour-ribbon)
-  + .site-footer.site-footer--layered {
-  margin-top: 0 !important;
-  border: none !important;
-  background-color: #1253ed;
-  box-shadow: none !important;
-}
-
-body.is-landing-page
-  .storefront-main:has(> .premium-home > .social-proof-strip)
-  + .site-footer.site-footer--layered
-  .site-footer__shell,
-body.is-landing-page
-  .storefront-main:has(> .premium-home > .tour-ribbon)
-  + .site-footer.site-footer--layered
-  .site-footer__shell {
-  border-top: none !important;
-  box-shadow: none !important;
-  outline: none !important;
-  background-color: #1253ed !important;
-  background-image:
-    linear-gradient(#1253ed, #1253ed),
-    radial-gradient(circle at 12% 34%, rgba(255, 255, 255, 0.12), transparent 42%),
-    radial-gradient(circle at 88% 58%, rgba(99, 102, 241, 0.22), transparent 48%),
-    linear-gradient(180deg, #1253ed 0%, #0e46c8 100%) !important;
-  background-size: 100% 64px, 100% 100%, 100% 100%, 100% 100% !important;
-  background-repeat: no-repeat !important;
-  background-position: top left, top left, top left, top left !important;
-}
-
-body.is-landing-page
-  .storefront-main:has(> .premium-home > .social-proof-strip)
-  + .site-footer.site-footer--layered
-  .site-footer__shell::before,
-body.is-landing-page
-  .storefront-main:has(> .premium-home > .tour-ribbon)
-  + .site-footer.site-footer--layered
-  .site-footer__shell::before {
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0) 28%,
-    rgba(0, 0, 0, 0.42) 72%
-  );
 }
 
 .site-footer__shell::before {
@@ -112,12 +39,7 @@ body.is-landing-page
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0) 22%,
-    rgba(0, 0, 0, 0.42) 70%
-  );
+  background: linear-gradient(180deg, rgba(0, 11, 250, 0) 0%, rgba(0, 0, 0, 0.42) 52%);
 }
 
 .site-footer__shell > * {
@@ -347,14 +269,6 @@ body.is-landing-page
   max-height: 280px;
 }
 
-@media (max-width: 1023px) {
-  .site-footer-accordion__content[data-open="true"] {
-    max-height: min(70dvh, 480px);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
 .site-footer-accordion__list {
   list-style: none;
   margin: 0;
@@ -410,9 +324,6 @@ body.is-landing-page
   height: 1.2em;
   line-height: 1.2;
   white-space: nowrap;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .footer-roll-text__sr {
@@ -467,17 +378,13 @@ body.is-landing-page
   background: transparent;
 }
 
-/* Fixed products panel — pinned under main/ribbon (never inside footer stacking). */
+/* Fixed products panel — deep navy reveal section (pinned to viewport bottom) */
 .footer-products-panel {
   position: fixed;
   inset: auto 0 0;
   z-index: 0;
   width: 100%;
-  padding:
-    clamp(1.75rem, 3.5vw, 2rem)
-    max(1.25rem, env(safe-area-inset-right, 0px))
-    calc(1.25rem + env(safe-area-inset-bottom, 0px))
-    max(1.25rem, env(safe-area-inset-left, 0px));
+  padding: clamp(1.75rem, 3.5vw, 2rem) 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
   color: #fff;
   background-color: #0d2d7e;
   background-image:
@@ -494,20 +401,16 @@ body.is-landing-page
 
 .footer-products-panel.is-ready {
   visibility: visible;
-  /* Pass-through while the footer shell scrolls over the reveal panel */
   pointer-events: none;
 }
 
 .footer-products-panel.is-ready.is-interactive {
-  /* Above footer chrome only after shell has scrolled away — stay under storefront-main (z:1) until then via z:0 default */
-  z-index: 1;
+  z-index: 2;
   pointer-events: auto;
 }
 
-/* Quick-add stays clickable during the scroll reveal (parent is pass-through) */
+/* Quick-add only — clickable while scroll reveal keeps panel pass-through */
 .footer-products-panel.is-ready .footer-product-snippet__add {
-  position: relative;
-  z-index: 2;
   pointer-events: auto;
 }
 
@@ -540,12 +443,10 @@ body.is-landing-page
 .footer-products-panel__title {
   margin: 0;
   font-family: var(--font-primary);
-  font-size: clamp(1.0625rem, 4.5vw, 1.35rem);
+  font-size: clamp(1rem, 2vw, 1.35rem);
   font-weight: var(--font-weight-medium, 500);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  max-width: 100%;
-  overflow-wrap: anywhere;
 }
 
 .footer-products-panel__details {
@@ -824,116 +725,27 @@ body.is-landing-page
     display: none;
   }
 
-  /*
-   * Mobile: trending panel sits in normal document flow between homepage and footer shell.
-   * Avoids the transparent-spacer white band; desktop keeps fixed scroll-reveal under ribbon.
-   */
-  .site-footer__panel-spacer {
-    display: none;
-    height: 0 !important;
-    min-height: 0 !important;
-  }
-
-  .footer-products-panel {
-    position: relative;
-    inset: auto;
-    z-index: 1;
-    max-height: none;
-    overflow: visible;
-    visibility: visible;
-    pointer-events: auto;
-    padding:
-      1.25rem
-      max(1rem, env(safe-area-inset-right, 0px))
-      calc(1.25rem + env(safe-area-inset-bottom, 0px))
-      max(1rem, env(safe-area-inset-left, 0px));
-  }
-
-  .footer-products-panel:not(.is-ready),
-  .footer-products-panel.is-ready,
-  .footer-products-panel.is-ready.is-interactive {
-    visibility: visible;
-    pointer-events: auto;
-    z-index: 1;
-  }
-
-  body:has(.checkout-mobile-bar) .footer-products-panel,
-  body:has(.pdp-mobile-bar--visible) .footer-products-panel {
-    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-    max-height: none;
-  }
-
   .footer-products-panel__header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.65rem;
-  }
-
-  .footer-products-panel__products {
-    grid-template-columns: 1fr;
-    gap: 0.65rem;
-  }
-
-  .footer-product-snippet {
-    padding: 0.55rem;
-    gap: 0.5rem;
-  }
-
-  .footer-product-snippet__thumb {
-    width: 3.5rem;
-    height: 3.5rem;
-  }
-
-  .footer-product-snippet__title {
-    font-size: 0.8125rem;
   }
 
   .footer-product-snippet__add {
     width: 2.75rem;
     height: 2.75rem;
-    min-width: 44px;
-    min-height: 44px;
     font-size: 1.125rem;
   }
 
-  .footer-product-snippet__add .notify-me-btn__glyph {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8125rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-  }
-
-  .footer-products-panel__shop-all {
-    min-height: 2.75rem;
-  }
-
-  /* Sticky commerce bars — allow scrolling content under them */
+  /* Sticky commerce bars own the bottom edge — keep panel pass-through */
   body:has(.pdp-mobile-bar--visible) .footer-products-panel.is-ready.is-interactive,
   body:has(.checkout-mobile-bar) .footer-products-panel.is-ready.is-interactive {
-    z-index: 1;
-    pointer-events: auto;
+    z-index: 0;
+    pointer-events: none;
   }
 
   body:has(.pdp-mobile-bar--visible) .footer-products-panel.is-ready .footer-product-snippet__add,
   body:has(.checkout-mobile-bar) .footer-products-panel.is-ready .footer-product-snippet__add {
-    pointer-events: auto;
-    z-index: 5;
-  }
-}
-
-@media (max-width: 390px) {
-  .footer-product-snippet__title {
-    font-size: 0.75rem;
-  }
-
-  .footer-product-snippet__price {
-    font-size: 0.75rem;
-  }
-
-  .footer-products-panel__title {
-    letter-spacing: 0.04em;
+    pointer-events: none;
   }
 }
 
