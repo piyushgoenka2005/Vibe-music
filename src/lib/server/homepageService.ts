@@ -246,6 +246,11 @@ async function resolveBrands(
   const brandById = new Map(brands.map((brand) => [brand.id, brand]));
   const brandBySlug = new Map(brands.map((brand) => [brand.slug, brand]));
 
+  // Shop Top Brands always follows TOP_BRAND_STRIP_SLUGS (ignores CMS manual picks).
+  if (section.sectionKey === "brand_strip") {
+    return buildTopBrandStripItems(brands);
+  }
+
   if (section.sourceMode === "manual") {
     const resolved: HomepageBrandItem[] = [];
 
@@ -265,10 +270,6 @@ async function resolveBrands(
     }
 
     return resolved;
-  }
-
-  if (section.sectionKey === "brand_strip") {
-    return buildTopBrandStripItems(brands);
   }
 
   return brands.slice(0, section.maxItems).map((brand) => ({
