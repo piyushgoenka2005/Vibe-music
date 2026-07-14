@@ -36,7 +36,7 @@ function ProductSequence({
           id={item.id}
           image={item.image}
           imageAlt={item.imageAlt}
-          imagePriority={false}
+          imagePriority={!ariaHidden && index < 4}
           name={item.name}
           price={item.price}
           rank={item.rank}

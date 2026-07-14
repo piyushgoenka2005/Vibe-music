@@ -15,9 +15,17 @@ const HEADLINE_ID = "top-products-title";
 
 function TopProductCard({ product }: { product: HomepageTopProduct }) {
   const imagePreset = product.imageFit === "contain" ? "productDetail" : "blogCover";
-  const imageSrc = optimizeImageUrl(product.image, imagePreset);
+  const optimized = optimizeImageUrl(product.image, imagePreset);
+  // Prefer browser→CDN for masters so thumb proxy timeouts don't blank the card.
+  const imageSrc =
+    product.image.startsWith("https://cdn.vibemusic.in/") &&
+    optimized.includes("/api/media/thumb")
+      ? product.image
+      : optimized;
   const imageFit = product.imageFit ?? "cover";
-  const usePlainImg = imageSrc.startsWith("/api/media/thumb");
+  const usePlainImg =
+    imageSrc.startsWith("/api/media/thumb") ||
+    imageSrc.startsWith("https://cdn.vibemusic.in/");
   const imageClassName = [
     "blog-teaser__image",
     imageFit === "contain" ? "blog-teaser__image--contain" : "",

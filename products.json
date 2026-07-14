@@ -6258,8 +6258,7 @@
     "trending": false,
     "newArrival": true,
     "images": [
-      "https://cdn.vibemusic.in/products/drums-percussion/avus-orlin-8-orlin-8/6040a8e7-9d74-4f2f-b468-3d1a912718c0.png",
-      "https://cdn.vibemusic.in/products/drums-percussion/avus-orlin-8-orlin-8/a26c6391-2e8c-4e4b-b090-29a1f8da459e.png"
+      "/images/brands/avus.png"
     ],
     "description": "The AVUS ORLIN 8\" is a versatile cymbal developed for musicians and audio professionals. Combining dependable construction with practical functionality, it is suitable for practice sessions, live performances, studio work and educational environments. Designed with usability and reliability in mind, this product delivers consistent performance across a wide range of applications.\n\nDesigned to deliver reliable performance for cymbal users in practice and professional environments.\n\nBuilt using quality materials to provide durability and long service life.\n\nSuitable for beginners, enthusiasts and professional performers.\n\nOptimized for consistent results in rehearsal, recording and stage applications.\n\nAn excellent choice for educational institutions, studios, events and personal use.",
     "specifications": {
@@ -6276,7 +6275,7 @@
     "availability": "in-stock",
     "condition": "new",
     "imageColor": "#e8e8e8",
-    "image": "https://cdn.vibemusic.in/products/drums-percussion/avus-orlin-8-orlin-8/6040a8e7-9d74-4f2f-b468-3d1a912718c0.png",
+    "image": "/images/brands/avus.png",
     "gstRate": 18,
     "detail": {
       "msrp": 3712,
@@ -6312,13 +6311,13 @@
           "id": "img-0",
           "alt": "AVUS ORLIN 8\" Professional Cymbal for Musicians, Live Performance and Studio Applications view 1",
           "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-orlin-8-orlin-8/6040a8e7-9d74-4f2f-b468-3d1a912718c0.png"
+          "src": "/images/brands/avus.png"
         },
         {
           "id": "img-1",
           "alt": "AVUS ORLIN 8\" Professional Cymbal for Musicians, Live Performance and Studio Applications view 2",
           "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-orlin-8-orlin-8/a26c6391-2e8c-4e4b-b090-29a1f8da459e.png"
+          "src": "/images/brands/avus.png"
         }
       ],
       "videos": [],
@@ -6360,12 +6359,7 @@
     "trending": false,
     "newArrival": true,
     "images": [
-      "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/32a2a78c-5b92-4f81-9deb-906636d6fecf.png",
-      "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/afdc2fdf-bbce-47b3-8473-b38ab99c9300.png",
-      "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/1e391672-b705-4fcb-b1e3-c0124ad2526a.png",
-      "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/d62c5fc0-0b28-474a-a672-d6571fae76af.png",
-      "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/951608e4-3e58-4703-8a55-d21dbe5b9c69.png",
-      "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/a5f9b3aa-188b-45e5-bba9-b77abcda43a6.png"
+      "/images/brands/avus.png"
     ],
     "description": "The AVUS GENEXT is a versatile percussion developed for musicians and audio professionals. Combining dependable construction with practical functionality, it is suitable for practice sessions, live performances, studio work and educational environments. Designed with usability and reliability in mind, this product delivers consistent performance across a wide range of applications.\n\nDesigned to deliver reliable performance for percussion users in practice and professional environments.\n\nBuilt using quality materials to provide durability and long service life.\n\nSuitable for beginners, enthusiasts and professional performers.\n\nOptimized for consistent results in rehearsal, recording and stage applications.\n\nAn excellent choice for educational institutions, studios, events and personal use.",
     "specifications": {
@@ -6382,7 +6376,7 @@
     "availability": "in-stock",
     "condition": "new",
     "imageColor": "#e8e8e8",
-    "image": "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/32a2a78c-5b92-4f81-9deb-906636d6fecf.png",
+    "image": "/images/brands/avus.png",
     "gstRate": 18,
     "detail": {
       "msrp": 27945,
@@ -6418,37 +6412,37 @@
           "id": "img-0",
           "alt": "AVUS GENEXT Professional Percussion for Musicians, Live Performance and Studio Applications view 1",
           "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/32a2a78c-5b92-4f81-9deb-906636d6fecf.png"
+          "src": "/images/brands/avus.png"
         },
         {
           "id": "img-1",
           "alt": "AVUS GENEXT Professional Percussion for Musicians, Live Performance and Studio Applications view 2",
           "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/afdc2fdf-bbce-47b3-8473-b38ab99c9300.png"
+          "src": "/images/brands/avus.png"
         },
         {
           "id": "img-2",
           "alt": "AVUS GENEXT Professional Percussion for Musicians, Live Performance and Studio Applications view 3",
           "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/1e391672-b705-4fcb-b1e3-c0124ad2526a.png"
+          "src": "/images/brands/avus.png"
         },
         {
           "id": "img-3",
           "alt": "AVUS GENEXT Professional Percussion for Musicians, Live Performance and Studio Applications view 4",
           "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/d62c5fc0-0b28-474a-a672-d6571fae76af.png"
+          "src": "/images/brands/avus.png"
         },
         {
           "id": "img-4",
           "alt": "AVUS GENEXT Professional Percussion for Musicians, Live Performance and Studio Applications view 5",
           "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/951608e4-3e58-4703-8a55-d21dbe5b9c69.png"
+          "src": "/images/brands/avus.png"
         },
         {
           "id": "img-5",
           "alt": "AVUS GENEXT Professional Percussion for Musicians, Live Performance and Studio Applications view 6",
           "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/a5f9b3aa-188b-45e5-bba9-b77abcda43a6.png"
+          "src": "/images/brands/avus.png"
         }
       ],
       "videos": [],
@@ -6490,8 +6484,7 @@
     "trending": false,
     "newArrival": true,
     "images": [
-      "https://cdn.vibemusic.in/products/drums-percussion/avus-zapcrash-12-zapcrash-12/0d5e4f8d-e4e5-4516-962b-ac2dc8048d03.png",
-      "https://cdn.vibemusic.in/products/drums-percussion/avus-zapcrash-12-zapcrash-12/d75f922d-a5b1-47d7-b8f0-79555075a886.png"
+      "/images/brands/avus.png"
     ],
     "description": "The AVUS ZAPCRASH 12\" is a versatile cymbal developed for musicians and audio professionals. Combining dependable construction with practical functionality, it is suitable for practice sessions, live performances, studio work and educational environments. Designed with usability and reliability in mind, this product delivers consistent performance across a wide range of applications.\n\nDesigned to deliver reliable performance for cymbal users in practice and professional environments.\n\nBuilt using quality materials to provide durability and long service life.\n\nSuitable for beginners, enthusiasts and professional performers.\n\nOptimized for consistent results in rehearsal, recording and stage applications.\n\nAn excellent choice for educational institutions, studios, events and personal use.",
     "specifications": {
@@ -6508,7 +6501,7 @@
     "availability": "in-stock",
     "condition": "new",
     "imageColor": "#e8e8e8",
-    "image": "https://cdn.vibemusic.in/products/drums-percussion/avus-zapcrash-12-zapcrash-12/0d5e4f8d-e4e5-4516-962b-ac2dc8048d03.png",
+    "image": "/images/brands/avus.png",
     "gstRate": 18,
     "detail": {
       "msrp": 9416,
@@ -6544,13 +6537,13 @@
           "id": "img-0",
           "alt": "AVUS ZAPCRASH 12\" Professional Cymbal for Musicians, Live Performance and Studio Applications view 1",
           "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-zapcrash-12-zapcrash-12/0d5e4f8d-e4e5-4516-962b-ac2dc8048d03.png"
+          "src": "/images/brands/avus.png"
         },
         {
           "id": "img-1",
           "alt": "AVUS ZAPCRASH 12\" Professional Cymbal for Musicians, Live Performance and Studio Applications view 2",
           "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/drums-percussion/avus-zapcrash-12-zapcrash-12/d75f922d-a5b1-47d7-b8f0-79555075a886.png"
+          "src": "/images/brands/avus.png"
         }
       ],
       "videos": [],

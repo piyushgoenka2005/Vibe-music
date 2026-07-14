@@ -482,16 +482,11 @@
 
 .premium-home .product-suggest__nav.visible {
   display: flex;
-}
-
-.premium-home .product-suggest__carousel:hover .product-suggest__nav.visible,
-.premium-home .product-suggest__carousel:focus-within .product-suggest__nav.visible {
   opacity: 1;
   pointer-events: auto;
 }
 
-.premium-home .product-suggest__carousel:hover .product-suggest__nav.visible.disabled,
-.premium-home .product-suggest__carousel:focus-within .product-suggest__nav.visible.disabled {
+.premium-home .product-suggest__nav.visible.disabled {
   opacity: 0.35;
   pointer-events: none;
 }

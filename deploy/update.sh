@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Quick production update on the VPS.
-# Usage (as root):  cd ~/Vibe-music && bash deploy/update.sh
+# Production update on the VPS.
+# Usage: cd ~/Vibe-music && bash deploy/update.sh
+# Optional: SEED_CATALOG=1 bash deploy/update.sh
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
@@ -12,6 +13,14 @@ git pull --ff-only origin main
 
 echo "==> Installing dependencies"
 npm ci
+
+echo "==> Database migrations"
+npm run db:migrate
+
+if [[ "${SEED_CATALOG:-0}" == "1" ]]; then
+  echo "==> Seeding catalog from JSON"
+  npm run seed:catalog
+fi
 
 echo "==> Type-check"
 npm run type-check
@@ -34,3 +43,6 @@ curl -sS -o /dev/null -w "localhost:3000 → HTTP %{http_code}\n" http://127.0.0
 curl -sS -o /dev/null -w "api/health → HTTP %{http_code}\n" http://127.0.0.1:3000/api/health || true
 
 echo "Update complete."
+if [[ "${SEED_CATALOG:-0}" != "1" ]]; then
+  echo "Tip: run SEED_CATALOG=1 bash deploy/update.sh after catalog JSON changes."
+fi

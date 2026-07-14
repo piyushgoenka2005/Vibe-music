@@ -77,19 +77,9 @@ async function main() {
   ]);
 
   console.log(`Done. brands=${brandCount} categories=${categoryCount} products=${productCount}`);
-
-  try {
-    const { invalidateCatalogCache } = await import(
-      "../../src/lib/server/firestoreCatalogRepository"
-    );
-    invalidateCatalogCache();
-    console.log("Catalog cache invalidated.");
-  } catch (error) {
-    console.warn(
-      "Could not invalidate catalog cache:",
-      error instanceof Error ? error.message : error
-    );
-  }
+  console.log(
+    "Catalog seeded. Restart the dev server (or wait for cache TTL) if homepage products look stale."
+  );
 }
 
 main()

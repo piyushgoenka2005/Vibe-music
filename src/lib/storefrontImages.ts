@@ -6,11 +6,19 @@ import {
 
 const CDN_HOST = "cdn.vibemusic.in";
 const DERIVATIVE_WIDTHS = [240, 480, 960, 1600] as const;
+/** Shared thumb buckets so homepage/cart/carousel hit one Sharp cache key. */
+const THUMB_WIDTHS = [240, 320, 480] as const;
 
 function snapDerivativeWidth(width: number): (typeof DERIVATIVE_WIDTHS)[number] {
   const next = DERIVATIVE_WIDTHS.find((w) => w >= width);
   if (next) return next;
   return DERIVATIVE_WIDTHS[DERIVATIVE_WIDTHS.length - 1]!;
+}
+
+export function snapStorefrontThumbWidth(width: number): number {
+  const w = Number.isFinite(width) ? Math.floor(width) : 320;
+  const next = THUMB_WIDTHS.find((bucket) => bucket >= w);
+  return next ?? THUMB_WIDTHS[THUMB_WIDTHS.length - 1]!;
 }
 
 /**
@@ -59,7 +67,7 @@ export function storefrontImageUrl(
       }
       const params = new URLSearchParams({
         url,
-        w: String(Math.min(800, Math.max(48, Math.floor(width)))),
+        w: String(snapStorefrontThumbWidth(width)),
       });
       return {
         src: `/api/media/thumb?${params.toString()}`,

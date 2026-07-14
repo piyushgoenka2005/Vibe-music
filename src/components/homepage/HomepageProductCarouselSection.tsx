@@ -150,8 +150,9 @@ export default function HomepageProductCarouselSection({
     const firstWrap = scroller.querySelector<HTMLElement>(
       ".product-suggest__item-wrap"
     );
+    const gap = Number.parseFloat(getComputedStyle(scroller).gap || "12") || 12;
     const amount =
-      firstWrap?.offsetWidth ?? Math.max(scroller.clientWidth * 0.8, 200);
+      (firstWrap?.offsetWidth ?? Math.max(scroller.clientWidth * 0.8, 200)) + gap;
     scroller.scrollBy({ left: direction * amount, behavior: "smooth" });
   }, []);
 
@@ -211,7 +212,7 @@ export default function HomepageProductCarouselSection({
             {products.map((item, index) => (
               <CarouselProductCard
                 key={item.id}
-                imagePriority={false}
+                imagePriority={index < 4}
                 item={item}
                 sectionKey={section.key}
               />

@@ -13,7 +13,7 @@ async function loadPublicHomepageData(): Promise<PublicHomepageData> {
 
 export const getCachedPublicHomepageData = unstable_cache(
   loadPublicHomepageData,
-  ["public-homepage-data"],
+  ["public-homepage-data-v3"],
   { revalidate: HOMEPAGE_REVALIDATE_SECONDS, tags: ["homepage", "catalog"] }
 );
 

@@ -4,7 +4,6 @@ import Link from "next/link";
 import type { MouseEvent } from "react";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import HomepageProductImage from "@/components/homepage/HomepageProductImage";
-import { optimizeImageUrl } from "@/lib/images";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { resolveLinkHref } from "@/lib/routes";
 import { useCartStore } from "@/store/cartStore";
@@ -57,7 +56,6 @@ export default function CarouselProductCard({
   const hasDiscount =
     item.salePrice != null && item.salePrice > 0 && item.salePrice < item.price;
   const showRating = item.reviewCount > 0;
-  const imageSrc = item.image ? optimizeImageUrl(item.image, "productCard") : "";
   const badgeLabel =
     item.badgeLabel ?? (sectionKey === "trending" ? "Trending" : undefined);
   const isTrendingRibbon = sectionKey === "trending" && !item.badgeLabel;
@@ -95,14 +93,14 @@ export default function CarouselProductCard({
           ) : null}
           <div className="product-suggest__item-img">
             <span className="product-suggest__item-img-frame" aria-hidden />
-            {imageSrc ? (
+            {item.image ? (
               <span className="product-suggest__item-photo-pop">
                 <HomepageProductImage
                   className="product-suggest__item-photo"
                   fill
                   priority={imagePriority}
                   sizes="(max-width: 767px) 46vw, 240px"
-                  src={imageSrc}
+                  src={item.image}
                 />
               </span>
             ) : null}

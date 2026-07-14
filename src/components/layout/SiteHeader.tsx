@@ -167,6 +167,7 @@ export default function SiteHeader() {
               height={56}
               priority
               className="assets-site-header__menu-logo"
+              style={{ width: "auto", height: "auto" }}
             />
           </a>
 

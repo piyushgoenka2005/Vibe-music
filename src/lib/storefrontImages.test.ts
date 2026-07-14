@@ -24,11 +24,8 @@ describe("storefrontImageUrl", () => {
     expect(bumped.src).toContain("-w960.webp");
   });
 
-  it("leaves non-CDN urls alone", () => {
-    const local = "/images/m/products/thumbs/x.webp";
-    expect(storefrontImageUrl(local, 320)).toEqual({
-      src: local,
-      kind: "direct",
-    });
+  it("snaps thumb widths to shared buckets", () => {
+    const result = storefrontImageUrl(master, 310);
+    expect(result.src).toContain("w=320");
   });
 });

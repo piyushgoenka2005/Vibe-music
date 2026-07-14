@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useCartStore } from "@/store/cartStore";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import ProductShareButton from "@/components/product/ProductShareButton";
@@ -87,9 +88,17 @@ export default function ProductCard({ product, view }: ProductCardProps) {
   const canQuickAdd =
     product.availability !== "out-of-stock" && isPurchasablePrice(product.price);
   const isGrid = view === "grid";
-  const imageSrc = product.image
+  const preferredSrc = product.image
     ? optimizeImageUrl(product.image, "productCard")
     : "";
+  const [imageSrc, setImageSrc] = useState(preferredSrc);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageSrc(preferredSrc);
+    setImageFailed(false);
+  }, [preferredSrc]);
+
   const imageUnoptimized =
     imageSrc.startsWith("http://") ||
     imageSrc.startsWith("https://") ||
@@ -114,7 +123,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           {isGrid && savingsPercent > 0 ? (
             <span className="cat-product-card__deal-tag">{savingsPercent}% off</span>
           ) : null}
-          {imageSrc ? (
+          {imageSrc && !imageFailed ? (
             <Image
               src={imageSrc}
               alt=""
@@ -123,6 +132,17 @@ export default function ProductCard({ product, view }: ProductCardProps) {
               loading="lazy"
               unoptimized={imageUnoptimized}
               className="cat-product-card__image-photo"
+              onError={() => {
+                if (
+                  product.image &&
+                  imageSrc !== product.image &&
+                  imageSrc.includes("/api/media/thumb")
+                ) {
+                  setImageSrc(product.image);
+                  return;
+                }
+                setImageFailed(true);
+              }}
             />
           ) : null}
         </Link>

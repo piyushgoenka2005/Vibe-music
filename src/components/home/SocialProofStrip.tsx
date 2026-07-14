@@ -1,6 +1,3 @@
-"use client";
-
-import { Star, ArrowUp } from "lucide-react";
 import { LANDING_SOCIAL_PROOF } from "@/data/landingStatus";
 
 const PROOF_ITEMS = [
@@ -9,10 +6,27 @@ const PROOF_ITEMS = [
   { value: LANDING_SOCIAL_PROOF.brands, label: "Brand partners" },
 ] as const;
 
-function scrollToTop() {
-  window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
+function BlueStarIcon() {
+  return (
+    <svg
+      className="social-proof-strip__star"
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M12 2.5l2.83 5.73 6.33.92-4.58 4.46 1.08 6.3L12 16.98 6.34 19.91l1.08-6.3L2.84 9.15l6.33-.92L12 2.5z"
+        stroke="#1253ed"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </svg>
+  );
 }
 
 export default function SocialProofStrip() {
@@ -20,13 +34,7 @@ export default function SocialProofStrip() {
     <section className="social-proof-strip" aria-label="Customer trust metrics">
       <div className="social-proof-strip__inner">
         <div className="social-proof-strip__rating">
-          <Star
-            className="social-proof-strip__star"
-            size={22}
-            strokeWidth={2}
-            fill="currentColor"
-            aria-hidden
-          />
+          <BlueStarIcon />
           <p className="social-proof-strip__rating-score">
             <span className="social-proof-strip__rating-value">
               {LANDING_SOCIAL_PROOF.rating}
@@ -48,15 +56,6 @@ export default function SocialProofStrip() {
             </li>
           ))}
         </ul>
-
-        <button
-          type="button"
-          className="social-proof-strip__top"
-          onClick={scrollToTop}
-          aria-label="Back to top"
-        >
-          <ArrowUp size={18} strokeWidth={2.25} aria-hidden />
-        </button>
       </div>
     </section>
   );

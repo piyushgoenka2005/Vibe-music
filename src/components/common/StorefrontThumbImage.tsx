@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { storefrontImageUrl } from "@/lib/storefrontImages";
 
 interface StorefrontThumbImageProps {
@@ -13,8 +13,8 @@ interface StorefrontThumbImageProps {
 }
 
 /**
- * Small product thumbs. Always routes CDN masters through derivatives / thumb API
- * so cart, checkout, and drawers never download multi‑MB originals.
+ * Small product thumbs. Prefer thumb API / derivatives; fall back to the
+ * original URL in the browser when the proxy fails so drawers never stay blank.
  */
 export default function StorefrontThumbImage({
   src,
@@ -23,17 +23,30 @@ export default function StorefrontThumbImage({
   width = 72,
   height = 72,
 }: StorefrontThumbImageProps) {
-  const displaySrc = useMemo(
-    () => storefrontImageUrl(src, Math.max(width, height)).src,
+  const preferred = useMemo(
+    () => storefrontImageUrl(src, Math.max(width, height)),
     [src, width, height]
   );
+  const [attempt, setAttempt] = useState<"preferred" | "master">("preferred");
+  const [failed, setFailed] = useState(false);
+
+  const displaySrc =
+    attempt === "master" && preferred.kind === "thumb" ? src : preferred.src;
 
   const unoptimized =
     displaySrc.startsWith("http://") ||
     displaySrc.startsWith("https://") ||
     displaySrc.includes("/api/media/thumb");
 
-  if (!displaySrc) return null;
+  if (!displaySrc || failed) {
+    return (
+      <div
+        aria-hidden
+        className={`${className ?? ""} storefront-thumb-image--placeholder`.trim()}
+        style={{ width, height }}
+      />
+    );
+  }
 
   return (
     <Image
@@ -43,6 +56,13 @@ export default function StorefrontThumbImage({
       height={height}
       className={className}
       unoptimized={unoptimized}
+      onError={() => {
+        if (attempt === "preferred" && preferred.kind === "thumb" && src) {
+          setAttempt("master");
+          return;
+        }
+        setFailed(true);
+      }}
     />
   );
 }

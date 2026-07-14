@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { storefrontImageUrl } from "@/lib/storefrontImages";
+import { cdnDerivativeUrl, storefrontImageUrl } from "@/lib/storefrontImages";
 
 type HomepageProductImageProps = {
   src: string;
@@ -13,11 +13,38 @@ type HomepageProductImageProps = {
   width?: number;
   height?: number;
   priority?: boolean;
+  /**
+   * Decorative clone (e.g. marquee duplicate). Skip network completely —
+   * the visible sequence already loads the same assets.
+   */
+  decorative?: boolean;
 };
+
+function placeholderClass(className?: string) {
+  return `${className ?? ""} homepage-product-image--placeholder`.trim();
+}
+
+/**
+ * Resolve a browser-reachable homepage image URL.
+ * Prefer known CDN derivatives; otherwise load masters directly in the browser
+ * (Node→CDN thumb proxy is slow/unreachable on many local/dev networks).
+ */
+function homepageDisplayUrl(src: string, width: number): string {
+  if (!src) return src;
+  const derivative = cdnDerivativeUrl(src, width);
+  if (derivative) return derivative;
+  try {
+    const host = new URL(src).hostname;
+    if (host === "cdn.vibemusic.in") return src;
+  } catch {
+    /* fall through */
+  }
+  return storefrontImageUrl(src, width).src;
+}
 
 /**
  * Product images for homepage carousels/grids.
- * Prefer CDN derivatives, then `/api/media/thumb`. Never fall back to multi‑MB masters.
+ * Uses browser→CDN for masters so cards paint without waiting on Sharp.
  */
 export default function HomepageProductImage({
   src,
@@ -27,52 +54,23 @@ export default function HomepageProductImage({
   width = 320,
   height = 320,
   priority = false,
+  decorative = false,
 }: HomepageProductImageProps) {
-  const primary = useMemo(
-    () => storefrontImageUrl(src, width),
+  const activeSrc = useMemo(
+    () => homepageDisplayUrl(src, width),
     [src, width]
   );
-  const thumbApiSrc = useMemo(() => {
-    try {
-      if (new URL(src).hostname !== "cdn.vibemusic.in") return null;
-      const params = new URLSearchParams({
-        url: src,
-        w: String(Math.min(800, width)),
-      });
-      return `/api/media/thumb?${params.toString()}`;
-    } catch {
-      return null;
-    }
-  }, [src, width]);
+  const [failed, setFailed] = useState(false);
 
-  const [mode, setMode] = useState<"primary" | "thumb" | "failed">("primary");
-
-  const activeSrc =
-    mode === "thumb" && thumbApiSrc
-      ? thumbApiSrc
-      : mode === "failed"
-        ? ""
-        : primary.src;
-
-  const usePlainImg = activeSrc.startsWith("/api/media/thumb");
-
-  if (!src || mode === "failed" || !activeSrc) {
-    return (
-      <div
-        aria-hidden
-        className={`${className ?? ""} homepage-product-image--placeholder`.trim()}
-      />
-    );
+  if (!src || decorative || failed) {
+    return <div aria-hidden className={placeholderClass(className)} />;
   }
 
-  const onError = () => {
-    setMode((current) => {
-      if (current === "primary" && thumbApiSrc && primary.src !== thumbApiSrc) {
-        return "thumb";
-      }
-      return "failed";
-    });
-  };
+  const onError = () => setFailed(true);
+
+  const usePlainImg =
+    activeSrc.startsWith("/api/media/thumb") ||
+    activeSrc.startsWith("https://cdn.vibemusic.in/");
 
   if (usePlainImg) {
     return (
