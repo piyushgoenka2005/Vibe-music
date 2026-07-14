@@ -232,19 +232,44 @@
 
 .gear-story-modal__close {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 12px;
+  left: 12px;
   z-index: 2;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 0;
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.65);
   border-radius: 50%;
-  background: var(--surface-subtle);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #0f172a;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 4px 12px rgba(15, 23, 42, 0.1);
   cursor: pointer;
+  transition:
+    color var(--duration-fast, 150ms ease),
+    background var(--duration-fast, 150ms ease),
+    border-color var(--duration-fast, 150ms ease),
+    transform var(--duration-fast, 150ms ease),
+    box-shadow var(--duration-fast, 150ms ease);
+}
+
+.gear-story-modal__close:hover {
+  color: var(--brand-primary, #1253ed);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(18, 83, 237, 0.2);
+  transform: translateY(-1px);
+}
+
+.gear-story-modal__close:focus-visible {
+  outline: 2px solid var(--brand-primary, #1253ed);
+  outline-offset: 2px;
 }
 
 .gear-story-modal__layout {
@@ -329,10 +354,10 @@
 .gear-story-modal__title {
   margin: 0 0 0.75rem;
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .gear-story-modal__price-row {
@@ -607,6 +632,11 @@
 
   .gear-story-modal__details {
     padding: 1.25rem 1rem 1.5rem;
+  }
+
+  .gear-story-modal__title {
+    font-size: 1.0625rem;
+    line-height: 1.3;
   }
 }
 

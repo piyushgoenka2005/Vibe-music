@@ -99,6 +99,7 @@ export default function SiteFooter() {
     const updateInteractive = () => {
       if (!shell) return;
       const shellRect = shell.getBoundingClientRect();
+      /* Trending becomes interactive only after Inside Vibe Music has scrolled mostly off */
       const panelInteractive = shellRect.bottom <= window.innerHeight * 0.2;
       panel.classList.toggle("is-interactive", panelInteractive);
     };
@@ -114,6 +115,7 @@ export default function SiteFooter() {
 
     updateInteractive();
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", syncSpacer);
     window.addEventListener("resize", updateInteractive);
 
     return () => {
@@ -123,6 +125,7 @@ export default function SiteFooter() {
         window.cancelAnimationFrame(scrollFrame);
       }
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", syncSpacer);
       window.removeEventListener("resize", updateInteractive);
     };
   }, []);
@@ -195,8 +198,12 @@ export default function SiteFooter() {
 
   return (
     <>
-      <FooterProductsPanel ref={panelRef} />
-
+      {/*
+        Layered scroll-reveal (desktop + mobile):
+        1) Inside Vibe Music shell scrolls over the fixed Trending panel
+        2) Spacer creates room to reveal Trending underneath
+        Panel stays behind the shell until the shell scrolls away.
+      */}
       <footer
         ref={footerRef}
         className="site-footer site-footer--layered"
@@ -307,6 +314,8 @@ export default function SiteFooter() {
 
         <div ref={spacerRef} className="site-footer__panel-spacer" aria-hidden />
       </footer>
+
+      <FooterProductsPanel ref={panelRef} />
     </>
   );
 }

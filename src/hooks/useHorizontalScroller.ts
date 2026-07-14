@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { attachHorizontalWheelScroll } from "@/lib/horizontalWheelScroll";
 
 type ScrollState = {
@@ -23,21 +17,24 @@ const IDLE: ScrollState = {
 
 const DRAG_THRESHOLD_PX = 8;
 
+type DragState = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  startScroll: number;
+  axis: "undecided" | "horizontal" | "vertical";
+  moved: boolean;
+};
+
 /**
- * Horizontal product rail: arrows, intentional sideways gestures, and mouse-drag.
- * Vertical page scroll (wheel + touch) is never trapped.
+ * Horizontal product rail: arrows + axis-locked drag for mouse/touch/pen.
+ * Vertical page scroll is never trapped — only confirmed sideways swipes
+ * take over the rail (requires non-passive pointermove for touch).
  */
 export function useHorizontalScroller(sectionKey: string, itemCount: number) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<ScrollState>(IDLE);
-  const dragRef = useRef<{
-    pointerId: number;
-    startX: number;
-    startY: number;
-    startScroll: number;
-    axis: "undecided" | "horizontal" | "vertical";
-    moved: boolean;
-  } | null>(null);
+  const dragRef = useRef<DragState | null>(null);
 
   const updateScrollState = useCallback(() => {
     const scroller = scrollerRef.current;
@@ -52,34 +49,6 @@ export function useHorizontalScroller(sectionKey: string, itemCount: number) {
       canScrollNext: overflow && left < maxScroll - 2,
     });
   }, []);
-
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-
-    updateScrollState();
-    const raf = window.requestAnimationFrame(updateScrollState);
-    const detachWheel = attachHorizontalWheelScroll(scroller);
-
-    scroller.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateScrollState);
-
-    const resizeObserver = new ResizeObserver(() => {
-      window.requestAnimationFrame(updateScrollState);
-    });
-    resizeObserver.observe(scroller);
-    for (const child of Array.from(scroller.children)) {
-      if (child instanceof HTMLElement) resizeObserver.observe(child);
-    }
-
-    return () => {
-      window.cancelAnimationFrame(raf);
-      scroller.removeEventListener("scroll", updateScrollState);
-      window.removeEventListener("resize", updateScrollState);
-      resizeObserver.disconnect();
-      detachWheel();
-    };
-  }, [updateScrollState, sectionKey, itemCount]);
 
   const scrollByCard = useCallback(
     (direction: -1 | 1) => {
@@ -107,49 +76,53 @@ export function useHorizontalScroller(sectionKey: string, itemCount: number) {
     [updateScrollState]
   );
 
-  const clearDrag = useCallback((scroller: HTMLDivElement | null, pointerId: number) => {
-    dragRef.current = null;
-    scroller?.classList.remove("is-dragging");
-    try {
-      scroller?.releasePointerCapture(pointerId);
-    } catch {
-      /* already released */
-    }
-  }, []);
-
-  const onPointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
-    // Touch/pen page scroll must stay native — only mouse-drag the rail.
-    if (event.pointerType !== "mouse") return;
-
-    const target = event.target as HTMLElement | null;
-    if (
-      target?.closest(
-        "a, button, input, textarea, select, [role='button'], .product-share-btn"
-      )
-    ) {
-      return;
-    }
-
+  useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
-    if (scroller.scrollWidth <= scroller.clientWidth + 8) return;
 
-    dragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      startScroll: scroller.scrollLeft,
-      axis: "undecided",
-      moved: false,
+    updateScrollState();
+    const raf = window.requestAnimationFrame(updateScrollState);
+    const detachWheel = attachHorizontalWheelScroll(scroller);
+
+    const clearDrag = (pointerId: number) => {
+      dragRef.current = null;
+      scroller.classList.remove("is-dragging");
+      try {
+        scroller.releasePointerCapture(pointerId);
+      } catch {
+        /* already released */
+      }
     };
-  }, []);
 
-  const onPointerMove = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+
+      const target = event.target as HTMLElement | null;
+      // Keep share / form controls out of rail drag; product links stay in
+      // so mobile swipes starting on a card can still pan horizontal.
+      if (
+        target?.closest(
+          "button, input, textarea, select, .product-share-btn, .product-suggest__item-action"
+        )
+      ) {
+        return;
+      }
+
+      if (scroller.scrollWidth <= scroller.clientWidth + 8) return;
+
+      dragRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        startScroll: scroller.scrollLeft,
+        axis: "undecided",
+        moved: false,
+      };
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
       const drag = dragRef.current;
-      const scroller = scrollerRef.current;
-      if (!drag || !scroller || drag.pointerId !== event.pointerId) return;
+      if (!drag || drag.pointerId !== event.pointerId) return;
 
       const deltaX = event.clientX - drag.startX;
       const deltaY = event.clientY - drag.startY;
@@ -163,13 +136,14 @@ export function useHorizontalScroller(sectionKey: string, itemCount: number) {
         }
 
         if (Math.abs(deltaY) > Math.abs(deltaX)) {
-          // Vertical intent — abandon so the page can scroll.
-          clearDrag(scroller, event.pointerId);
+          // Vertical intent — abandon; never preventDefault so the page scrolls.
+          clearDrag(event.pointerId);
           return;
         }
 
         drag.axis = "horizontal";
         drag.moved = true;
+        // Capture only after horizontal is confirmed — never during undecided.
         scroller.setPointerCapture(event.pointerId);
         scroller.classList.add("is-dragging");
       }
@@ -178,45 +152,65 @@ export function useHorizontalScroller(sectionKey: string, itemCount: number) {
 
       event.preventDefault();
       scroller.scrollLeft = drag.startScroll - deltaX;
-    },
-    [clearDrag]
-  );
+    };
 
-  const endDrag = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
+    const onPointerUp = (event: PointerEvent) => {
       const drag = dragRef.current;
-      const scroller = scrollerRef.current;
       if (!drag || drag.pointerId !== event.pointerId) return;
 
       const wasHorizontalDrag = drag.axis === "horizontal" && drag.moved;
-      clearDrag(scroller, event.pointerId);
+      clearDrag(event.pointerId);
 
       if (wasHorizontalDrag) {
         const suppress = (clickEvent: MouseEvent) => {
           clickEvent.preventDefault();
           clickEvent.stopPropagation();
-          scroller?.removeEventListener("click", suppress, true);
+          scroller.removeEventListener("click", suppress, true);
         };
-        scroller?.addEventListener("click", suppress, true);
+        scroller.addEventListener("click", suppress, true);
         window.setTimeout(() => {
-          scroller?.removeEventListener("click", suppress, true);
+          scroller.removeEventListener("click", suppress, true);
         }, 0);
       }
 
       updateScrollState();
-    },
-    [clearDrag, updateScrollState]
-  );
+    };
+
+    scroller.addEventListener("scroll", updateScrollState, { passive: true });
+    scroller.addEventListener("pointerdown", onPointerDown, { passive: true });
+    // Non-passive so horizontal touch can preventDefault after axis lock.
+    scroller.addEventListener("pointermove", onPointerMove, { passive: false });
+    scroller.addEventListener("pointerup", onPointerUp, { passive: true });
+    scroller.addEventListener("pointercancel", onPointerUp, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    const resizeObserver = new ResizeObserver(() => {
+      window.requestAnimationFrame(updateScrollState);
+    });
+    resizeObserver.observe(scroller);
+    for (const child of Array.from(scroller.children)) {
+      if (child instanceof HTMLElement) resizeObserver.observe(child);
+    }
+
+    return () => {
+      window.cancelAnimationFrame(raf);
+      scroller.removeEventListener("scroll", updateScrollState);
+      scroller.removeEventListener("pointerdown", onPointerDown);
+      scroller.removeEventListener("pointermove", onPointerMove);
+      scroller.removeEventListener("pointerup", onPointerUp);
+      scroller.removeEventListener("pointercancel", onPointerUp);
+      window.removeEventListener("resize", updateScrollState);
+      resizeObserver.disconnect();
+      detachWheel();
+      dragRef.current = null;
+    };
+  }, [updateScrollState, sectionKey, itemCount]);
 
   return {
     scrollerRef,
     ...state,
     scrollByCard,
-    scrollerProps: {
-      onPointerDown,
-      onPointerMove,
-      onPointerUp: endDrag,
-      onPointerCancel: endDrag,
-    },
+    /** Listeners are attached natively; empty props keep call sites stable. */
+    scrollerProps: {},
   };
 }

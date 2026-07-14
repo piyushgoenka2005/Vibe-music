@@ -146,15 +146,6 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
       />
 
       <div className="gear-story-modal__panel">
-        <button
-          type="button"
-          className="gear-story-modal__close"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <X size={20} aria-hidden="true" />
-        </button>
-
         <div className="gear-story-modal__layout">
           <div className="gear-story-modal__gallery">
             <div
@@ -163,6 +154,14 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
               onMouseMove={handleImageMouseMove}
               onMouseLeave={resetImageZoom}
             >
+              <button
+                type="button"
+                className="gear-story-modal__close"
+                onClick={onClose}
+                aria-label="Close"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
               <ProductShareButton
                 overlay
                 position="top-right"

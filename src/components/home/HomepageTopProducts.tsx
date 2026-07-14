@@ -15,13 +15,8 @@ const HEADLINE_ID = "top-products-title";
 
 function TopProductCard({ product }: { product: HomepageTopProduct }) {
   const imagePreset = product.imageFit === "contain" ? "productDetail" : "blogCover";
-  const optimized = optimizeImageUrl(product.image, imagePreset);
-  // Prefer browser→CDN for masters so thumb proxy timeouts don't blank the card.
-  const imageSrc =
-    product.image.startsWith("https://cdn.vibemusic.in/") &&
-    optimized.includes("/api/media/thumb")
-      ? product.image
-      : optimized;
+  // Always use sized thumbs/derivatives — full CDN PNG masters can be multi‑MB.
+  const imageSrc = optimizeImageUrl(product.image, imagePreset);
   const imageFit = product.imageFit ?? "cover";
   const usePlainImg =
     imageSrc.startsWith("/api/media/thumb") ||

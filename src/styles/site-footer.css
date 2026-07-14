@@ -15,12 +15,13 @@
 
 .site-footer.site-footer--layered::before,
 .site-footer.site-footer--layered::after {
-  display: none;
+  display: none !important;
+  content: none !important;
 }
 
 .site-footer__shell {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   max-width: 100%;
   margin: 0 auto;
   color: #fff;
@@ -30,7 +31,49 @@
     radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.16), transparent 42%),
     radial-gradient(circle at 88% 18%, rgba(99, 102, 241, 0.35), transparent 46%),
     linear-gradient(180deg, #1253ed 0%, #0e46c8 100%);
+  border: none;
+  border-top: none !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/*
+ * Homepage seam: tour ribbon → Inside Vibe Music.
+ * Overlap only — keep footer background TRANSPARENT so the spacer
+ * can reveal the navy Trending panel (scroll-reveal). Never paint the
+ * whole footer solid blue or you get an empty blue void under © / clock.
+ */
+body.is-landing-page .storefront-main {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+body.is-landing-page .storefront-main + .site-footer.site-footer--layered {
+  margin-top: -12px !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+@media (max-width: 767px) {
+  /* Pull Inside Vibe Music flush against the tour ribbon on mobile */
+  body.is-landing-page .storefront-main + .site-footer.site-footer--layered {
+    margin-top: -40px !important;
+  }
+}
+
+body.is-landing-page
+  .storefront-main
+  + .site-footer.site-footer--layered
+  .site-footer__shell {
+  border-top: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-color: #1253ed !important;
 }
 
 .site-footer__shell::before {
@@ -378,13 +421,17 @@
   background: transparent;
 }
 
-/* Fixed products panel — deep navy reveal section (pinned to viewport bottom) */
+/* Fixed products panel — pinned under the Inside Vibe Music shell (scroll-reveal) */
 .footer-products-panel {
   position: fixed;
   inset: auto 0 0;
   z-index: 0;
   width: 100%;
-  padding: clamp(1.75rem, 3.5vw, 2rem) 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  padding:
+    clamp(1.75rem, 3.5vw, 2rem)
+    max(1.25rem, env(safe-area-inset-right, 0px))
+    calc(1.25rem + env(safe-area-inset-bottom, 0px))
+    max(1.25rem, env(safe-area-inset-left, 0px));
   color: #fff;
   background-color: #0d2d7e;
   background-image:
@@ -401,16 +448,19 @@
 
 .footer-products-panel.is-ready {
   visibility: visible;
+  /* Pass-through while Inside Vibe Music shell scrolls over the reveal */
   pointer-events: none;
 }
 
 .footer-products-panel.is-ready.is-interactive {
-  z-index: 2;
+  z-index: 1;
   pointer-events: auto;
 }
 
 /* Quick-add only — clickable while scroll reveal keeps panel pass-through */
 .footer-products-panel.is-ready .footer-product-snippet__add {
+  position: relative;
+  z-index: 2;
   pointer-events: auto;
 }
 
@@ -728,12 +778,38 @@
   .footer-products-panel__header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.65rem;
+  }
+
+  .footer-products-panel__products {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .footer-product-snippet {
+    padding: 0.55rem;
+    gap: 0.5rem;
+  }
+
+  .footer-product-snippet__thumb {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .footer-product-snippet__title {
+    font-size: 0.8125rem;
   }
 
   .footer-product-snippet__add {
     width: 2.75rem;
     height: 2.75rem;
+    min-width: 44px;
+    min-height: 44px;
     font-size: 1.125rem;
+  }
+
+  .footer-products-panel__shop-all {
+    min-height: 2.75rem;
   }
 
   /* Sticky commerce bars own the bottom edge — keep panel pass-through */

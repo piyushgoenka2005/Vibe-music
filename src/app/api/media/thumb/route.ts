@@ -27,8 +27,8 @@ const MEMORY_CACHE_MAX = 256;
 const DISK_CACHE_DIR = path.join(process.cwd(), ".cache", "media-thumbs");
 const CACHE_CONTROL =
   "public, max-age=604800, stale-while-revalidate=86400, immutable";
-/** Fail fast so clients can fall back to the CDN master. */
-const UPSTREAM_TIMEOUT_MS = 8_000;
+/** Allow time to pull large PNG masters once; cached WebP thereafter. */
+const UPSTREAM_TIMEOUT_MS = 15_000;
 
 type CachedThumb = {
   body: Buffer;
@@ -145,13 +145,16 @@ async function buildThumb(url: string, width: number): Promise<CachedThumb | nul
     }
 
     const sharp = (await import("sharp")).default;
-    const body = await sharp(input)
+    // Fast card thumbs: aggressive downscale + low encoder effort.
+    // Masters are often multi‑MB PNGs; cards only need ~240–320px WebP.
+    const body = await sharp(input, { failOn: "none" })
       .rotate()
       .resize(width, width, {
         fit: "inside",
         withoutEnlargement: true,
+        fastShrinkOnLoad: true,
       })
-      .webp({ quality: 68, effort: 2 })
+      .webp({ quality: width <= 320 ? 62 : 68, effort: 1 })
       .toBuffer();
 
     if (isThumbPlaceholderBody(body)) {
@@ -221,7 +224,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Host not allowed" }, { status: 400 });
     }
 
-    const cacheKey = `v3|${parsed.toString()}|${width}`;
+    const cacheKey = `v4|${parsed.toString()}|${width}`;
 
     const memoryHit = memoryCache.get(cacheKey);
     if (memoryHit) {

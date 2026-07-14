@@ -29,13 +29,6 @@
   padding-top: 0;
 }
 
-/* Landing: don't leave a white flex pad between tour ribbon and footer */
-body.is-landing-page .storefront-main:has(> .premium-home > .tour-ribbon) {
-  flex: 1 0 auto;
-  padding-bottom: 0;
-  margin-bottom: 0;
-}
-
 .reveal {
   opacity: 1;
   transform: none;
@@ -1032,7 +1025,7 @@ body.site-nav-open .site-header--scroll-hidden {
   left: 0;
   bottom: 0;
   width: min(320px, 88vw);
-  z-index: 230;
+  z-index: 199;
   padding: 0;
   padding-left: env(safe-area-inset-left, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -1062,7 +1055,7 @@ body.site-nav-open .site-header--scroll-hidden {
 }
 
 body.site-nav-open .site-header {
-  z-index: 250;
+  z-index: 201;
 }
 
 body.site-nav-open .site-header--hidden {
@@ -1685,10 +1678,6 @@ body.site-nav-open .site-header--hidden {
 @media (max-width: 479px) {
   .site-footer__columns {
     grid-template-columns: 1fr;
-  }
-
-  .site-header__nav--portaled {
-    width: min(100dvw, 100%);
   }
 
   .site-header__inner {

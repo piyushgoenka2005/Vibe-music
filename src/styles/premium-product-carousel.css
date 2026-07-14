@@ -165,8 +165,8 @@
   scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  /* Allow vertical page scroll; browser still handles sideways swipes on the rail */
-  touch-action: pan-x pan-y;
+  /* pan-y: page owns vertical; JS axis-lock drives horizontal swipes */
+  touch-action: pan-y;
   cursor: grab;
   user-select: none;
 }
@@ -700,7 +700,8 @@
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    touch-action: pan-x pan-y;
+    /* pan-y: page owns vertical; JS axis-lock drives horizontal swipes */
+  touch-action: pan-y;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-wrap {

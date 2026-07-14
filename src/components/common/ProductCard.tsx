@@ -133,14 +133,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
               unoptimized={imageUnoptimized}
               className="cat-product-card__image-photo"
               onError={() => {
-                if (
-                  product.image &&
-                  imageSrc !== product.image &&
-                  imageSrc.includes("/api/media/thumb")
-                ) {
-                  setImageSrc(product.image);
-                  return;
-                }
+                // Never fall back to full CDN masters (often multi‑MB PNGs).
                 setImageFailed(true);
               }}
             />

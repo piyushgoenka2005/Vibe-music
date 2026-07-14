@@ -13,8 +13,8 @@ interface StorefrontThumbImageProps {
 }
 
 /**
- * Small product thumbs. Prefer thumb API / derivatives; fall back to the
- * original URL in the browser when the proxy fails so drawers never stay blank.
+ * Small product thumbs via CDN derivatives or `/api/media/thumb`.
+ * Never loads full multi‑MB PNG masters into the browser.
  */
 export default function StorefrontThumbImage({
   src,
@@ -27,11 +27,9 @@ export default function StorefrontThumbImage({
     () => storefrontImageUrl(src, Math.max(width, height)),
     [src, width, height]
   );
-  const [attempt, setAttempt] = useState<"preferred" | "master">("preferred");
   const [failed, setFailed] = useState(false);
 
-  const displaySrc =
-    attempt === "master" && preferred.kind === "thumb" ? src : preferred.src;
+  const displaySrc = preferred.src;
 
   const unoptimized =
     displaySrc.startsWith("http://") ||
@@ -57,10 +55,7 @@ export default function StorefrontThumbImage({
       className={className}
       unoptimized={unoptimized}
       onError={() => {
-        if (attempt === "preferred" && preferred.kind === "thumb" && src) {
-          setAttempt("master");
-          return;
-        }
+        // Never fall back to full CDN masters (often multi‑MB PNGs).
         setFailed(true);
       }}
     />

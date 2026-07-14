@@ -13,17 +13,16 @@ function BlueStarIcon() {
       width="22"
       height="22"
       viewBox="0 0 24 24"
-      fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
       <path
         d="M12 2.5l2.83 5.73 6.33.92-4.58 4.46 1.08 6.3L12 16.98 6.34 19.91l1.08-6.3L2.84 9.15l6.33-.92L12 2.5z"
+        fill="#1253ed"
         stroke="#1253ed"
-        strokeWidth="2"
+        strokeWidth="1.5"
         strokeLinejoin="round"
         strokeLinecap="round"
-        fill="none"
       />
     </svg>
   );

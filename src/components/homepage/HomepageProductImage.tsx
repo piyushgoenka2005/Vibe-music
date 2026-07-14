@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { cdnDerivativeUrl, storefrontImageUrl } from "@/lib/storefrontImages";
+import { storefrontImageUrl } from "@/lib/storefrontImages";
 
 type HomepageProductImageProps = {
   src: string;
@@ -25,26 +25,9 @@ function placeholderClass(className?: string) {
 }
 
 /**
- * Resolve a browser-reachable homepage image URL.
- * Prefer known CDN derivatives; otherwise load masters directly in the browser
- * (Node→CDN thumb proxy is slow/unreachable on many local/dev networks).
- */
-function homepageDisplayUrl(src: string, width: number): string {
-  if (!src) return src;
-  const derivative = cdnDerivativeUrl(src, width);
-  if (derivative) return derivative;
-  try {
-    const host = new URL(src).hostname;
-    if (host === "cdn.vibemusic.in") return src;
-  } catch {
-    /* fall through */
-  }
-  return storefrontImageUrl(src, width).src;
-}
-
-/**
  * Product images for homepage carousels/grids.
- * Uses browser→CDN for masters so cards paint without waiting on Sharp.
+ * Always route CDN masters through sized thumbs/derivatives — never the
+ * multi‑MB PNG masters that stall Trending / Staff Picks / Best Sellers.
  */
 export default function HomepageProductImage({
   src,
@@ -56,8 +39,8 @@ export default function HomepageProductImage({
   priority = false,
   decorative = false,
 }: HomepageProductImageProps) {
-  const activeSrc = useMemo(
-    () => homepageDisplayUrl(src, width),
+  const preferred = useMemo(
+    () => storefrontImageUrl(src, width),
     [src, width]
   );
   const [failed, setFailed] = useState(false);
@@ -66,6 +49,7 @@ export default function HomepageProductImage({
     return <div aria-hidden className={placeholderClass(className)} />;
   }
 
+  const activeSrc = preferred.src;
   const onError = () => setFailed(true);
 
   const usePlainImg =

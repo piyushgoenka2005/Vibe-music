@@ -328,10 +328,11 @@
 
   /* Gear story quick-view modal */
   .gear-story-modal__close {
-    top: max(10px, env(safe-area-inset-top, 0px));
-    right: max(10px, env(safe-area-inset-right, 0px));
+    top: 12px;
+    left: 12px;
+    width: 44px;
     min-width: 44px;
-    min-height: 44px;
+    height: 44px;
   }
 
   .gear-story-modal__actions .gear-story-modal__btn {
