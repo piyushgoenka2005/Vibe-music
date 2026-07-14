@@ -97,11 +97,12 @@ export default function NewArrivalsProductCard({
           {image ? (
             <HomepageProductImage
               className="new-arrivals-card__image"
-              height={320}
+              fill
+              height={640}
               priority={!ariaHidden && imagePriority}
-              sizes="(max-width: 767px) 45vw, 280px"
+              sizes="(max-width: 767px) 46vw, 360px"
               src={image}
-              width={320}
+              width={640}
             />
           ) : (
             <div

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
-import { optimizeImageUrl } from "@/lib/images";
 import { productPath, ROUTES } from "@/lib/routes";
 import { fetchProducts } from "@/services/products.api";
 import { useCartStore } from "@/store/cartStore";
@@ -30,9 +29,10 @@ function CartSuggestionCard({ product }: { product: Product }) {
         <div className="cart-empty__product-thumb">
           {product.image ? (
             <StorefrontThumbImage
-              src={optimizeImageUrl(product.image, "productCard")}
-              width={72}
-              height={72}
+              src={product.image}
+              alt={product.name}
+              width={120}
+              height={120}
             />
           ) : (
             <span

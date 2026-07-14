@@ -3,7 +3,6 @@
 import Link from "next/link";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { formatDisplayPrice } from "@/utils/currency";
-import { optimizeImageUrl } from "@/lib/images";
 import { productPath } from "@/lib/routes";
 import { searchStore } from "@/store/searchStore";
 import type { SearchProduct } from "@/types/search";
@@ -40,10 +39,11 @@ export default function SearchResults({ query, products }: SearchResultsProps) {
             <div className="sw-search-result-card__media">
               {product.image ? (
                 <StorefrontThumbImage
-                  src={optimizeImageUrl(product.image, "productCard")}
+                  src={product.image}
+                  alt={product.name}
                   className="sw-search-result-card__image"
-                  width={96}
-                  height={96}
+                  width={160}
+                  height={160}
                 />
               ) : (
                 <div

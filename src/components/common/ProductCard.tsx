@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -99,11 +98,6 @@ export default function ProductCard({ product, view }: ProductCardProps) {
     setImageFailed(false);
   }, [preferredSrc]);
 
-  const imageUnoptimized =
-    imageSrc.startsWith("http://") ||
-    imageSrc.startsWith("https://") ||
-    imageSrc.includes("/api/media/thumb");
-
   return (
     <article
       className="cat-product-card"
@@ -124,16 +118,19 @@ export default function ProductCard({ product, view }: ProductCardProps) {
             <span className="cat-product-card__deal-tag">{savingsPercent}% off</span>
           ) : null}
           {imageSrc && !imageFailed ? (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={imageSrc}
               src={imageSrc}
               alt=""
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"
               loading="lazy"
-              unoptimized={imageUnoptimized}
+              decoding="async"
               className="cat-product-card__image-photo"
               onError={() => {
-                // Never fall back to full CDN masters (often multi‑MB PNGs).
+                if (product.image && imageSrc !== product.image) {
+                  setImageSrc(product.image);
+                  return;
+                }
                 setImageFailed(true);
               }}
             />

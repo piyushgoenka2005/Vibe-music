@@ -51,39 +51,44 @@
 
   .premium-home .new-arrivals-card__image {
     position: absolute;
-    left: 50%;
-    bottom: 0;
-    width: 92% !important;
-    height: 108% !important;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
     max-width: none;
-    transform: translateX(-50%) scale(1);
-    transform-origin: center bottom;
+    padding: 0.4rem;
+    box-sizing: border-box;
+    transform: scale(1);
+    transform-origin: center center;
     object-fit: contain;
-    object-position: center bottom;
+    object-position: center center;
     filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.12));
+    transition:
+      transform 480ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 480ms ease;
   }
 
   .premium-home .new-arrivals-card:hover .new-arrivals-card__image,
   .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
-    transform: translateX(-50%) translateY(-18%) scale(1.28);
-    filter: drop-shadow(0 22px 28px rgba(15, 23, 42, 0.26));
+    transform: scale(1.24);
+    filter: drop-shadow(0 14px 20px rgba(15, 23, 42, 0.18));
   }
 
-  @media (hover: none), (pointer: coarse) {
-    .premium-home .new-arrivals-card__media {
-      overflow: hidden;
-    }
-
+  @media (hover: hover) and (pointer: fine) {
     .premium-home .new-arrivals-card:hover .new-arrivals-card__image,
     .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
-      transform: translateX(-50%) scale(1);
-      filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.12));
+      transform: scale(1.28);
+      filter: drop-shadow(0 16px 22px rgba(15, 23, 42, 0.2));
     }
   }
 
   .premium-home .new-arrivals-card__media {
-    overflow: visible;
+    overflow: hidden;
     margin-bottom: 0.375rem;
+  }
+
+  .premium-home .new-arrivals-card:hover .new-arrivals-card__media,
+  .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__media {
+    z-index: 2;
   }
 
   .premium-home .new-arrivals-card__rank {

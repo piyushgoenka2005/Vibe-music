@@ -1,7 +1,7 @@
 export interface MediaTransformOptions {
   width?: number;
   height?: number;
-  quality?: number | "auto";
+  quality?: number | "auto" | "auto:best" | "auto:good" | "auto:eco" | "auto:low";
   format?: "auto" | "webp" | "avif" | "jpg";
   crop?: "fill" | "fit" | "scale";
 }
@@ -27,10 +27,10 @@ export function buildMediaTransformUrl(
 }
 
 export const MEDIA_PRESETS = {
-  productCard: { width: 320, height: 320, crop: "fill" as const, quality: "auto" as const },
-  productDetail: { width: 900, height: 900, crop: "fit" as const, quality: "auto" as const },
-  blogCover: { width: 1200, height: 630, crop: "fill" as const, quality: "auto" as const },
-  banner: { width: 1600, height: 600, crop: "fill" as const, quality: "auto" as const },
-  reviewThumbnail: { width: 120, height: 120, crop: "fill" as const, quality: "auto" as const },
-  reviewGallery: { width: 600, height: 600, crop: "fit" as const, quality: "auto" as const },
+  productCard: { width: 640, height: 640, crop: "fit" as const, quality: "auto:best" as const },
+  productDetail: { width: 1200, height: 1200, crop: "fit" as const, quality: "auto:best" as const },
+  blogCover: { width: 1600, height: 840, crop: "fill" as const, quality: "auto:best" as const },
+  banner: { width: 1920, height: 720, crop: "fill" as const, quality: "auto:best" as const },
+  reviewThumbnail: { width: 240, height: 240, crop: "fill" as const, quality: "auto" as const },
+  reviewGallery: { width: 900, height: 900, crop: "fit" as const, quality: "auto:best" as const },
 };

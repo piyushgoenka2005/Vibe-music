@@ -25,7 +25,7 @@ function assertAllowedFolder(folder: string): void {
 }
 
 export interface OptimizedCdnUploadResult {
-  /** Default storefront/card URL (w480 WebP). */
+  /** Default storefront/card URL (w960 WebP). */
   url: string;
   masterUrl: string;
   derivatives: Partial<Record<CdnDerivativeWidth, string>>;
@@ -33,7 +33,7 @@ export interface OptimizedCdnUploadResult {
 
 /**
  * Optimize a product/banner/blog buffer and write master + WebP derivatives to CDN storage.
- * Returns the **w480** URL as `url` so the catalog stores a card-sized asset by default.
+ * Returns the **w960** URL as `url` so the catalog stores a high-quality asset by default.
  */
 export async function uploadOptimizedImageToCdn(
   buffer: Buffer,
@@ -73,7 +73,7 @@ export async function uploadOptimizedImageToCdn(
         fit: "inside",
         withoutEnlargement: true,
       })
-      .webp({ quality: 70, effort: 4 })
+      .webp({ quality: 82, effort: 4 })
       .toBuffer();
     const name = `${id}-w${width}.webp`;
     await writeFile(path.join(directory, name), body);
@@ -81,7 +81,7 @@ export async function uploadOptimizedImageToCdn(
   }
 
   return {
-    url: derivatives[480] ?? masterUrl,
+    url: derivatives[960] ?? derivatives[480] ?? masterUrl,
     masterUrl,
     derivatives,
   };

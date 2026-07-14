@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { enforceRateLimit, jsonError } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { parseGoogleAddressComponents } from "@/lib/address/parseGoogleAddressComponents";
+import { getGooglePlacesApiKey } from "@/lib/server/googlePlaces";
 
 interface PlacesAddressComponent {
   long_name: string;
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
   );
   if (rateLimited) return rateLimited;
 
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY?.trim();
+  const apiKey = getGooglePlacesApiKey();
   if (!apiKey) {
     return NextResponse.json({ available: false, address: null });
   }

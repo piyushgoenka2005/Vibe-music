@@ -3,7 +3,6 @@
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
-import { optimizeImageUrl } from "@/lib/storefrontImages";
 import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import type { ResolvedProductBundle } from "@/types/bundle";
@@ -76,10 +75,12 @@ export default function FrequentlyBoughtTogether({
               >
                 {product.image ? (
                   <StorefrontThumbImage
-                    src={optimizeImageUrl(product.image, "productCard")}
+                    src={product.image}
+                    alt={product.name}
                     className="pdp-fbt__image"
-                    width={120}
-                    height={120}
+                    width={240}
+                    height={240}
+                    preferOriginal
                   />
                 ) : (
                   <div

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
-import { optimizeImageUrl } from "@/lib/storefrontImages";
 import { formatDisplayPrice } from "@/utils/currency";
 import type { Product } from "@/types/product";
 
@@ -29,31 +28,34 @@ export default function ProductCrossSell({
               url={`/product/${product.slug}`}
             />
             <Link
-            href={`/product/${product.slug}`}
-            className="pdp-cross-sell__card"
-          >
-            <div className="pdp-cross-sell__media">
-              {product.image ? (
-                <StorefrontThumbImage
-                  src={optimizeImageUrl(product.image, "productCard")}
-                  className="pdp-cross-sell__image"
-                  width={160}
-                  height={160}
-                />
-              ) : (
-                <div
-                  className="pdp-cross-sell__swatch"
-                  style={{ backgroundColor: product.imageColor }}
-                  aria-hidden="true"
-                />
-              )}
-            </div>
-            <div className="pdp-cross-sell__brand">{product.brand}</div>
-            <div className="pdp-cross-sell__name">{product.name}</div>
-            <div className="pdp-cross-sell__price">
-              {formatDisplayPrice(product.price)}
-            </div>
-          </Link>
+              href={`/product/${product.slug}`}
+              className="pdp-cross-sell__card"
+            >
+              <div className="pdp-cross-sell__media">
+                {product.image ? (
+                  <StorefrontThumbImage
+                    src={product.image}
+                    alt={product.name}
+                    className="pdp-cross-sell__image"
+                    width={480}
+                    height={480}
+                    fill
+                    preferOriginal
+                  />
+                ) : (
+                  <div
+                    className="pdp-cross-sell__swatch"
+                    style={{ backgroundColor: product.imageColor }}
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
+              <div className="pdp-cross-sell__brand">{product.brand}</div>
+              <div className="pdp-cross-sell__name">{product.name}</div>
+              <div className="pdp-cross-sell__price">
+                {formatDisplayPrice(product.price)}
+              </div>
+            </Link>
           </div>
         ))}
       </div>

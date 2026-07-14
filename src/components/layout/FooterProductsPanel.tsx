@@ -4,7 +4,6 @@ import Link from "next/link";
 import { forwardRef, useEffect, useRef, type MouseEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
-import { optimizeImageUrl } from "@/lib/images";
 import { categoryPath, productPath, ROUTES } from "@/lib/routes";
 import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
@@ -66,9 +65,11 @@ function FooterProductSnippet({ product }: { product: Product }) {
         <div className="footer-product-snippet__thumb">
           {image ? (
             <StorefrontThumbImage
-              src={optimizeImageUrl(image, "productCard")}
-              width={64}
-              height={64}
+              src={image}
+              alt={product.name}
+              width={128}
+              height={128}
+              preferOriginal
             />
           ) : null}
         </div>

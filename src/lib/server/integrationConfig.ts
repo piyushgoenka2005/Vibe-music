@@ -73,7 +73,11 @@ export function getIntegrationChecks(): IntegrationChecks {
       process.env.UPSTASH_REDIS_REST_TOKEN
     ),
     googleOAuth: isGoogleAuthConfigured() ? "ok" : "missing",
-    places: configured(process.env.GOOGLE_PLACES_API_KEY),
+    places: configured(
+      process.env.GOOGLE_PLACES_API_KEY ||
+        process.env.GOOGLE_MAPS_API_KEY ||
+        process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    ),
     invoicePdf: invoicePdfStatus(),
     guestOrderSecret: secretWithMinLength(
       process.env.GUEST_ORDER_ACCESS_SECRET,
@@ -161,7 +165,7 @@ export function getOpsStatusReport(): {
       label: "Address autocomplete",
       status: checks.places,
       tier: "optional",
-      detail: "GOOGLE_PLACES_API_KEY — manual address always works",
+      detail: "GOOGLE_PLACES_API_KEY or GOOGLE_MAPS_API_KEY — manual address always works",
     },
     {
       key: "cod",

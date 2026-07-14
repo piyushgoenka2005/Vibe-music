@@ -46,8 +46,8 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
                 <StorefrontThumbImage
                   src={item.image}
                   alt={item.imageAlt}
-                  width={300}
-                  height={300}
+                  width={480}
+                  height={480}
                 />
               ) : null}
             </div>

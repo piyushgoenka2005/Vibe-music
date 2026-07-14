@@ -19,8 +19,8 @@ const ALLOWED_HOSTS = new Set([
   "res.cloudinary.com",
 ]);
 
-const MAX_WIDTH = 800;
-const DEFAULT_WIDTH = 320;
+const MAX_WIDTH = 2000;
+const DEFAULT_WIDTH = 480;
 /** Abort upstream masters larger than this before buffering fully. */
 const MAX_UPSTREAM_BYTES = 24_000_000;
 const MEMORY_CACHE_MAX = 256;
@@ -28,7 +28,7 @@ const DISK_CACHE_DIR = path.join(process.cwd(), ".cache", "media-thumbs");
 const CACHE_CONTROL =
   "public, max-age=604800, stale-while-revalidate=86400, immutable";
 /** Allow time to pull large PNG masters once; cached WebP thereafter. */
-const UPSTREAM_TIMEOUT_MS = 15_000;
+const UPSTREAM_TIMEOUT_MS = 20_000;
 
 type CachedThumb = {
   body: Buffer;
@@ -145,8 +145,7 @@ async function buildThumb(url: string, width: number): Promise<CachedThumb | nul
     }
 
     const sharp = (await import("sharp")).default;
-    // Fast card thumbs: aggressive downscale + low encoder effort.
-    // Masters are often multi‑MB PNGs; cards only need ~240–320px WebP.
+    // Card thumbs: favor speed so first paint doesn't 404 under load.
     const body = await sharp(input, { failOn: "none" })
       .rotate()
       .resize(width, width, {
@@ -154,7 +153,7 @@ async function buildThumb(url: string, width: number): Promise<CachedThumb | nul
         withoutEnlargement: true,
         fastShrinkOnLoad: true,
       })
-      .webp({ quality: width <= 320 ? 62 : 68, effort: 1 })
+      .webp({ quality: 80, effort: 2 })
       .toBuffer();
 
     if (isThumbPlaceholderBody(body)) {
@@ -250,16 +249,15 @@ export async function GET(request: Request) {
       RATE_LIMITS.mediaThumb
     );
     if (rateLimited) {
-      return NextResponse.json(
-        { error: "Rate limited" },
-        {
-          status: 429,
-          headers: {
-            "Cache-Control": "public, max-age=30",
-            "Retry-After": "30",
-          },
-        }
-      );
+      // Prefer a live CDN image over a blank card under burst traffic.
+      return NextResponse.redirect(parsed.toString(), {
+        status: 302,
+        headers: {
+          "Cache-Control": "public, max-age=15",
+          "Retry-After": "15",
+          "X-Thumb-Cache": "rate-limited-redirect",
+        },
+      });
     }
 
     const { thumb, cache } = await getThumb(
@@ -269,16 +267,14 @@ export async function GET(request: Request) {
     );
 
     if (!thumb) {
-      return NextResponse.json(
-        { error: "Upstream image unavailable" },
-        {
-          status: 404,
-          headers: {
-            "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
-            "X-Thumb-Cache": "miss",
-          },
-        }
-      );
+      // Never leave product rails blank — fall back to the upstream CDN asset.
+      return NextResponse.redirect(parsed.toString(), {
+        status: 302,
+        headers: {
+          "Cache-Control": "public, max-age=30, stale-while-revalidate=120",
+          "X-Thumb-Cache": "miss-redirect",
+        },
+      });
     }
 
     return new NextResponse(new Uint8Array(thumb.body), {

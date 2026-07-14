@@ -4,6 +4,8 @@ import {
   isRazorpayConfigured,
 } from "@/lib/server/env";
 import { getCodCapabilitiesSummary } from "@/lib/server/codEligibility";
+import { isGooglePlacesConfigured } from "@/lib/server/googlePlaces";
+import { BRAND } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +13,9 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const razorpayConfigured = isRazorpayConfigured();
   const demoPaymentsAllowed = isDemoPaymentsAllowed();
-  const placesAutocomplete = Boolean(
-    process.env.GOOGLE_PLACES_API_KEY?.trim()
-  );
+  const placesAutocomplete = isGooglePlacesConfigured();
   const cod = getCodCapabilitiesSummary();
+  const storePhone = BRAND.phoneTel;
 
   return NextResponse.json({
     placesAutocomplete,
@@ -22,6 +23,10 @@ export async function GET() {
     demoPaymentsAllowed,
     /** True when Razorpay is live, or demo checkout is allowed without keys. */
     onlinePaymentsAvailable: razorpayConfigured || demoPaymentsAllowed,
+    storePhoneConfigured: Boolean(storePhone),
+    storePhoneDisplay: BRAND.phoneDisplay || null,
+    storePhoneTel: storePhone || null,
+    storeEmail: BRAND.email,
     cod,
   });
 }

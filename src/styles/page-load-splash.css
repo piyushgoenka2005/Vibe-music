@@ -1,5 +1,39 @@
 /* Full-screen VIBE MUSIC loading splash — Apechain-style wave */
 
+/* Instant blue cover before React hydrates (set by inline boot script). */
+html.vibe-splash-pending,
+html.vibe-splash-active {
+  background: #0057ff;
+}
+
+html.vibe-splash-pending body,
+html.vibe-splash-active body {
+  overflow: hidden !important;
+  background: #0057ff;
+}
+
+html.vibe-splash-pending .storefront-root,
+html.vibe-splash-active .storefront-root,
+html.vibe-splash-pending .social-rail,
+html.vibe-splash-active .social-rail {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.vibe-boot-splash {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  place-items: center;
+  background: #0057ff;
+  pointer-events: all;
+}
+
+html.vibe-splash-pending .vibe-boot-splash {
+  display: grid;
+}
+
 .page-load-splash {
   --splash-blue: #0057ff;
   --splash-border: 8px;

@@ -5,43 +5,57 @@ import {
 } from "@/lib/media-url";
 
 const CDN_HOST = "cdn.vibemusic.in";
-const DERIVATIVE_WIDTHS = [240, 480, 960, 1600] as const;
-/** Shared thumb buckets so homepage/cart/carousel hit one Sharp cache key. */
-const THUMB_WIDTHS = [240, 320, 480] as const;
-
-function snapDerivativeWidth(width: number): (typeof DERIVATIVE_WIDTHS)[number] {
-  const next = DERIVATIVE_WIDTHS.find((w) => w >= width);
-  if (next) return next;
-  return DERIVATIVE_WIDTHS[DERIVATIVE_WIDTHS.length - 1]!;
-}
+/** Shared thumb buckets — include zoom/PDP sizes for sharp hover zoom. */
+const THUMB_WIDTHS = [320, 480, 800, 960, 1600] as const;
+const DERIVATIVE_FILE_RE =
+  /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-w(\d+)\.webp$/i;
 
 export function snapStorefrontThumbWidth(width: number): number {
-  const w = Number.isFinite(width) ? Math.floor(width) : 320;
+  const w = Number.isFinite(width) ? Math.floor(width) : 480;
   const next = THUMB_WIDTHS.find((bucket) => bucket >= w);
   return next ?? THUMB_WIDTHS[THUMB_WIDTHS.length - 1]!;
 }
 
 /**
- * Prefer CDN upload-time derivatives (`{uuid}-w480.webp`) when the URL already
- * points at a sized asset. Does **not** invent missing `-wN` files for legacy masters.
+ * Convert a CDN card derivative (`{uuid}-w480.webp`) back to the upload master
+ * (`{uuid}.webp`) so zoom / PDP can load real high-res detail.
+ */
+export function cdnMasterUrl(url: string): string {
+  if (!url) return url;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== CDN_HOST) return url;
+    const file = parsed.pathname.split("/").pop() ?? "";
+    const match = file.match(DERIVATIVE_FILE_RE);
+    if (!match?.[1]) return url;
+    const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
+    return `${parsed.origin}${dir}${match[1]}.webp`;
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * Prefer CDN upload-time derivatives (`{uuid}-wN.webp`) when the URL already
+ * points at a sized asset. Never invent missing larger `-wN` files.
  */
 export function cdnDerivativeUrl(url: string, width = 400): string | null {
   try {
     const parsed = new URL(url);
     if (parsed.hostname !== CDN_HOST) return null;
     const file = parsed.pathname.split("/").pop() ?? "";
-    const match = file.match(
-      /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-w(\d+)\.webp$/i
-    );
+    const match = file.match(DERIVATIVE_FILE_RE);
     if (!match?.[1] || !match[2]) return null;
     const existingW = Number(match[2]);
-    if (Number.isFinite(existingW) && existingW >= width * 0.85) {
+    if (!Number.isFinite(existingW)) return null;
+
+    // Existing derivative is large enough for this request.
+    if (existingW >= width * 0.85) {
       return url;
     }
-    const snapped = snapDerivativeWidth(width);
-    if (snapped === existingW) return url;
-    const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
-    return `${parsed.origin}${dir}${match[1]}-w${snapped}.webp`;
+
+    // Need a larger prebuilt size — do not invent it.
+    return null;
   } catch {
     return null;
   }
@@ -49,13 +63,14 @@ export function cdnDerivativeUrl(url: string, width = 400): string | null {
 
 /**
  * Storefront display URL:
- * - Known CDN derivatives (`-wN.webp`) → CDN (optionally bump width)
- * - Legacy CDN masters → `/api/media/thumb` (never invent missing derivatives)
+ * - Known CDN derivatives (`-wN.webp`) → CDN when large enough
+ * - Undersized derivatives → thumb from CDN master (not from the tiny card file)
+ * - Legacy CDN masters → `/api/media/thumb`
  * - Other hosts → as-is (Cloudinary transforms applied upstream)
  */
 export function storefrontImageUrl(
   url: string,
-  width = 400
+  width = 640
 ): { src: string; kind: "derivative" | "thumb" | "direct" } {
   if (!url) return { src: url, kind: "direct" };
   try {
@@ -65,8 +80,9 @@ export function storefrontImageUrl(
       if (derivative) {
         return { src: derivative, kind: "derivative" };
       }
+      const thumbSource = cdnMasterUrl(url);
       const params = new URLSearchParams({
-        url,
+        url: thumbSource,
         w: String(snapStorefrontThumbWidth(width)),
       });
       return {
@@ -80,8 +96,57 @@ export function storefrontImageUrl(
   return { src: url, kind: "direct" };
 }
 
+/**
+ * If `url` is already an `/api/media/thumb?...` path, return nested CDN original.
+ * Prevents double-optimization from dropping CDN fallbacks.
+ */
+export function unwrapStorefrontSrc(url: string): string {
+  if (!url) return url;
+  try {
+    const absolute = new URL(
+      url,
+      typeof window !== "undefined" ? window.location.origin : "http://localhost"
+    );
+    if (absolute.pathname === "/api/media/thumb") {
+      const nested = absolute.searchParams.get("url")?.trim();
+      if (nested) return nested;
+    }
+  } catch {
+    /* ignore */
+  }
+  return url;
+}
+
+/**
+ * High-res URL for PDP hover zoom / lightbox.
+ * Prefer the CDN upload master directly (sharpest; avoids thumb API races).
+ */
+export function storefrontZoomImageUrl(url: string): string {
+  if (!url) return url;
+  try {
+    const master = cdnMasterUrl(unwrapStorefrontSrc(url));
+    if (new URL(master).hostname === CDN_HOST) return master;
+  } catch {
+    /* fall through */
+  }
+  return storefrontImageUrl(unwrapStorefrontSrc(url), 1600).src;
+}
+
+/**
+ * Display candidates for a product image: optimized thumb first, then CDN/original.
+ */
+export function storefrontImageCandidates(
+  url: string,
+  width = 1200
+): string[] {
+  if (!url) return [];
+  const original = unwrapStorefrontSrc(url);
+  const preferred = storefrontImageUrl(original, width).src;
+  return Array.from(new Set([preferred, original].filter(Boolean)));
+}
+
 /** Resize CDN masters via derivative rewrite or local Sharp proxy. */
-export function cdnThumbUrl(url: string, width = 400): string {
+export function cdnThumbUrl(url: string, width = 640): string {
   return storefrontImageUrl(url, width).src;
 }
 
@@ -92,7 +157,7 @@ export function optimizeImageUrl(
   if (!url) return url;
   const options = MEDIA_PRESETS[preset];
   const transformed = buildMediaTransformUrl(url, options);
-  return storefrontImageUrl(transformed, options.width ?? 400).src;
+  return storefrontImageUrl(transformed, options.width ?? 640).src;
 }
 
 export function optimizeImage(
@@ -101,5 +166,5 @@ export function optimizeImage(
 ): string {
   if (!url) return url;
   const transformed = buildMediaTransformUrl(url, options);
-  return storefrontImageUrl(transformed, options.width ?? 400).src;
+  return storefrontImageUrl(transformed, options.width ?? 640).src;
 }

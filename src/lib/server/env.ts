@@ -11,10 +11,11 @@ export function isDemoPaymentsAllowed(): boolean {
 }
 
 export function isRazorpayConfigured(): boolean {
-  return Boolean(
-    process.env.RAZORPAY_KEY_ID?.trim() &&
-      process.env.RAZORPAY_KEY_SECRET?.trim()
-  );
+  const keyId = process.env.RAZORPAY_KEY_ID?.trim();
+  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
+  const publicKey =
+    process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim() || keyId;
+  return Boolean(keyId && keySecret && publicKey);
 }
 
 export function getRazorpayPublicKey(): string | undefined {

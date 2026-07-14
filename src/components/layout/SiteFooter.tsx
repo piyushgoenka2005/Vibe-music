@@ -25,6 +25,9 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
     links: [
       { label: "Track your order", href: ROUTES.trackOrder },
       { label: "Contact support", href: ROUTES.contact },
+      ...(BRAND.phoneTel
+        ? [{ label: `Call ${BRAND.phoneDisplay}`, href: `tel:${BRAND.phoneTel}` }]
+        : [{ label: `Email ${BRAND.email}`, href: `mailto:${BRAND.email}` }]),
       { label: "Shipping & delivery", href: ROUTES.page("shipping") },
       { label: "Returns & exchanges", href: ROUTES.page("returns") },
     ],

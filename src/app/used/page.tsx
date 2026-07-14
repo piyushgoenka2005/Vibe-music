@@ -62,28 +62,35 @@ export default async function UsedGearPage() {
 
   return (
     <main className="storefront-page storefront-page--subtle used-gear-page">
-      <header className="storefront-page__header">
-        <p className="storefront-page__eyebrow">Programs</p>
-        <h1 className="storefront-page__title">Used &amp; open-box gear</h1>
-        <p className="storefront-page__subtitle">
-          {products.length} inspected listing{products.length === 1 ? "" : "s"}{" "}
-          ready to browse. Condition is shown on each card.
-        </p>
-        <p className="storefront-page__meta">
-          Looking for something else?{" "}
-          <Link
-            href={`${ROUTES.contact}?subject=${encodeURIComponent("Used / open-box enquiry")}`}
-          >
-            Enquire about upcoming arrivals
-          </Link>
-          .
-        </p>
-      </header>
+      <div className="storefront-page__inner used-gear-page__inner">
+        <header className="storefront-page__header">
+          <p className="storefront-page__eyebrow">Programs</p>
+          <h1 className="storefront-page__title">Used &amp; open-box gear</h1>
+          <p className="storefront-page__subtitle">
+            {products.length} inspected listing{products.length === 1 ? "" : "s"}{" "}
+            ready to browse. Condition is shown on each card.
+          </p>
+          <p className="storefront-page__meta">
+            Looking for something else?{" "}
+            <Link
+              href={`${ROUTES.contact}?subject=${encodeURIComponent("Used / open-box enquiry")}`}
+            >
+              Enquire about upcoming arrivals
+            </Link>
+            .
+          </p>
+        </header>
 
-      <div className="cat-product-grid used-gear-page__grid">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} view="grid" />
-        ))}
+        <div
+          className="cat-product-grid cat-product-grid--grid used-gear-page__grid"
+          role="list"
+        >
+          {products.map((product) => (
+            <div key={product.id} role="listitem" className="used-gear-page__grid-item">
+              <ProductCard product={product} view="grid" />
+            </div>
+          ))}
+        </div>
       </div>
     </main>
   );

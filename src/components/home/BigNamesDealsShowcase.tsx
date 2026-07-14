@@ -44,9 +44,9 @@ function BigNamesDealItem({
                 decoding="async"
                 loading={index < 2 ? "eager" : "lazy"}
                 src={productSrc}
-                width={320}
-                height={420}
-                sizes="(max-width: 767px) 42vw, 220px"
+                width={640}
+                height={640}
+                sizes="(max-width: 767px) 42vw, 320px"
                 onError={() => {
                   if (productSrc !== PRODUCT_FALLBACK) {
                     setProductSrc(PRODUCT_FALLBACK);

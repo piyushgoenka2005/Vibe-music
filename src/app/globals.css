@@ -203,6 +203,13 @@ body {
   background: transparent;
 }
 
+.pdp-gallery__photo {
+  position: absolute;
+  inset: 0;
+  max-width: none;
+  max-height: none;
+}
+
 .cart-item__photo {
   width: 72px;
   height: 72px;

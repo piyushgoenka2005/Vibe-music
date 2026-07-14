@@ -33,7 +33,7 @@ export async function generateMetadata({
   }
 
   const hero = product.images?.[0]?.src || product.image;
-  const ogImage = hero ? storefrontImageUrl(hero, 960).src : undefined;
+  const ogImage = hero ? storefrontImageUrl(hero, 1200).src : undefined;
 
   return {
     title: `${product.name} | Vibe Music`,
@@ -56,7 +56,7 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
   const initialData = toInitialData(product);
   const heroRaw = product.images?.[0]?.src || product.image;
   const heroImageUrl = heroRaw
-    ? storefrontImageUrl(heroRaw, 960).src
+    ? storefrontImageUrl(heroRaw, 1200).src
     : undefined;
 
   return (

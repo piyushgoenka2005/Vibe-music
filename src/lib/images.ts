@@ -4,8 +4,12 @@
  */
 export {
   cdnDerivativeUrl,
+  cdnMasterUrl,
   cdnThumbUrl,
   optimizeImage,
   optimizeImageUrl,
+  storefrontImageCandidates,
   storefrontImageUrl,
+  storefrontZoomImageUrl,
+  unwrapStorefrontSrc,
 } from "@/lib/storefrontImages";

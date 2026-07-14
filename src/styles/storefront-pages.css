@@ -67,7 +67,8 @@
 }
 
 /* ─── Deals / listing pages (storefront-page__inner shell) ─── */
-.deals-page__inner {
+.deals-page__inner,
+.used-gear-page__inner {
   width: 100%;
   box-sizing: border-box;
 }
@@ -76,12 +77,14 @@
   margin-bottom: clamp(1.25rem, 3vw, 2rem);
 }
 
-.deals-page__grid {
+.deals-page__grid,
+.used-gear-page__grid {
   width: 100%;
   min-width: 0;
 }
 
-.deals-page__grid-item {
+.deals-page__grid-item,
+.used-gear-page__grid-item {
   min-width: 0;
 }
 

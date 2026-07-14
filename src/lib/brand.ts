@@ -1,3 +1,13 @@
+function storePhoneFromEnv(): string {
+  return (
+    process.env.NEXT_PUBLIC_STORE_PHONE?.trim() ||
+    process.env.STORE_PHONE?.trim() ||
+    ""
+  );
+}
+
+const storePhone = storePhoneFromEnv();
+
 export const BRAND = {
   name: "Vibe Music",
   shortName: "VibeMusic",
@@ -5,10 +15,10 @@ export const BRAND = {
   description:
     "Vibe Music is India's trusted destination for musical instruments, pro audio, accessories, and expert gear advice.",
   supportRole: "Gear Advisor",
-  phone: process.env.NEXT_PUBLIC_STORE_PHONE ?? "",
-  phoneDisplay: process.env.NEXT_PUBLIC_STORE_PHONE ?? "",
-  phoneTel: process.env.NEXT_PUBLIC_STORE_PHONE
-    ? `+${process.env.NEXT_PUBLIC_STORE_PHONE.replace(/\D/g, "")}`
+  phone: storePhone,
+  phoneDisplay: storePhone,
+  phoneTel: storePhone
+    ? `+${storePhone.replace(/\D/g, "")}`
     : "",
   email: "support@vibemusic.in",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic.in",

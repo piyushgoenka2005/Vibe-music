@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
-import { useMemo, useState } from "react";
-import { storefrontImageUrl } from "@/lib/storefrontImages";
+import { useEffect, useMemo, useState } from "react";
+import { storefrontImageCandidates } from "@/lib/storefrontImages";
 
 interface StorefrontThumbImageProps {
   src: string;
@@ -10,11 +9,18 @@ interface StorefrontThumbImageProps {
   className?: string;
   width?: number;
   height?: number;
+  /** Fill positioned parent (PDP cross-sell / card media wells). */
+  fill?: boolean;
+  /**
+   * Prefer the CDN/original URL first (useful when many thumbs load at once
+   * and the thumb API can rate-limit or time out).
+   */
+  preferOriginal?: boolean;
 }
 
 /**
- * Small product thumbs via CDN derivatives or `/api/media/thumb`.
- * Never loads full multi‑MB PNG masters into the browser.
+ * Product thumbs via CDN derivatives or `/api/media/thumb`, with CDN fallback.
+ * Uses plain <img> so 404/timeout thumbs swap to the master URL immediately.
  */
 export default function StorefrontThumbImage({
   src,
@@ -22,42 +28,58 @@ export default function StorefrontThumbImage({
   className,
   width = 72,
   height = 72,
+  fill = false,
+  preferOriginal = false,
 }: StorefrontThumbImageProps) {
-  const preferred = useMemo(
-    () => storefrontImageUrl(src, Math.max(width, height)),
-    [src, width, height]
-  );
-  const [failed, setFailed] = useState(false);
+  const candidates = useMemo(() => {
+    const list = storefrontImageCandidates(src, Math.max(width, height));
+    if (!preferOriginal || list.length < 2) return list;
+    const [preferred, ...rest] = list;
+    const original = rest[rest.length - 1] ?? preferred;
+    return Array.from(new Set([original, preferred, ...rest].filter(Boolean)));
+  }, [src, width, height, preferOriginal]);
 
-  const displaySrc = preferred.src;
+  const [attempt, setAttempt] = useState(0);
 
-  const unoptimized =
-    displaySrc.startsWith("http://") ||
-    displaySrc.startsWith("https://") ||
-    displaySrc.includes("/api/media/thumb");
+  useEffect(() => {
+    setAttempt(0);
+  }, [src]);
 
-  if (!displaySrc || failed) {
+  const displaySrc = candidates[Math.min(attempt, candidates.length - 1)] ?? "";
+
+  if (!displaySrc || attempt >= candidates.length) {
     return (
       <div
         aria-hidden
         className={`${className ?? ""} storefront-thumb-image--placeholder`.trim()}
-        style={{ width, height }}
+        style={fill ? undefined : { width, height }}
       />
     );
   }
 
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      key={displaySrc}
       src={displaySrc}
       alt={alt}
-      width={width}
-      height={height}
+      width={fill ? undefined : width}
+      height={fill ? undefined : height}
       className={className}
-      unoptimized={unoptimized}
-      onError={() => {
-        // Never fall back to full CDN masters (often multi‑MB PNGs).
-        setFailed(true);
-      }}
+      decoding="async"
+      loading="lazy"
+      onError={() => setAttempt((current) => current + 1)}
+      style={
+        fill
+          ? {
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+            }
+          : undefined
+      }
     />
   );
 }

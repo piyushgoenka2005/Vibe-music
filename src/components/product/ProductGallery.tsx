@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
-import { storefrontImageUrl } from "@/lib/storefrontImages";
+import {
+  storefrontImageCandidates,
+  storefrontZoomImageUrl,
+} from "@/lib/storefrontImages";
 import type { ProductImage, ProductVideo } from "@/types/product";
 
 const LENS_WIDTH_RATIO = 0.38;
@@ -85,6 +87,33 @@ interface LensPosition {
   y: number;
 }
 
+function GalleryThumb({ src }: { src: string }) {
+  const candidates = useMemo(() => storefrontImageCandidates(src, 160), [src]);
+  const [attempt, setAttempt] = useState(0);
+  const activeSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? "";
+
+  if (!activeSrc) return null;
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      key={activeSrc}
+      src={activeSrc}
+      alt=""
+      width={112}
+      height={112}
+      loading="lazy"
+      decoding="async"
+      className="pdp-gallery__thumb-photo"
+      onError={() => {
+        setAttempt((current) =>
+          current + 1 < candidates.length ? current + 1 : current
+        );
+      }}
+    />
+  );
+}
+
 export default function ProductGallery({
   images,
   videos,
@@ -112,12 +141,21 @@ export default function ProductGallery({
   const activeImage = images[activeIndex] ?? images[0];
   const canZoom = Boolean(activeImage?.src) && !showVideo;
   const activeSrc = activeImage?.src ?? "";
-  const activeDisplaySrc = activeSrc
-    ? storefrontImageUrl(activeSrc, 960).src
-    : "";
-  const activeZoomSrc = activeSrc
-    ? storefrontImageUrl(activeSrc, 960).src
-    : "";
+  const displayCandidates = useMemo(() => {
+    // Prefer the CDN master first for full-size PDP (sharp + reliable).
+    // Optimized thumb remains as a secondary candidate.
+    const optimized = storefrontImageCandidates(activeSrc, 1200);
+    return Array.from(new Set([activeSrc, ...optimized].filter(Boolean)));
+  }, [activeSrc]);
+  const [displayAttempt, setDisplayAttempt] = useState(0);
+  const activeDisplaySrc =
+    displayCandidates[Math.min(displayAttempt, displayCandidates.length - 1)] ??
+    "";
+  const activeZoomSrc = activeSrc ? storefrontZoomImageUrl(activeSrc) : "";
+
+  useEffect(() => {
+    setDisplayAttempt(0);
+  }, [activeSrc]);
 
   const measureImageRect = useCallback(() => {
     const main = mainRef.current;
@@ -317,16 +355,7 @@ export default function ProductGallery({
             aria-current={index === activeIndex && !showVideo}
           >
             {image.src ? (
-              <Image
-                src={storefrontImageUrl(image.src, 160).src}
-                alt=""
-                width={112}
-                height={112}
-                sizes="64px"
-                loading="lazy"
-                unoptimized
-                className="pdp-gallery__thumb-photo"
-              />
+              <GalleryThumb src={image.src} />
             ) : (
               <div
                 className="pdp-gallery__thumb-swatch"
@@ -424,22 +453,33 @@ export default function ProductGallery({
                 />
               </div>
             ) : activeDisplaySrc ? (
-              <Image
+              // Plain img — next/image fill was painting broken icons on thumb API
+              // races; match homepage fallback chain (thumb → CDN master).
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={activeDisplaySrc}
                 ref={photoRef}
                 src={activeDisplaySrc}
                 alt={activeImage.alt}
-                fill
-                sizes="(max-width: 767px) 100vw, 560px"
-                priority
-                unoptimized
                 className="pdp-gallery__photo"
                 draggable={false}
-                onLoadingComplete={(image) => {
+                decoding="async"
+                fetchPriority="high"
+                onLoad={(event) => {
+                  const image = event.currentTarget;
                   setImageMetrics({
                     naturalWidth: image.naturalWidth,
                     naturalHeight: image.naturalHeight,
                   });
                   measureImageRect();
+                }}
+                onError={() => {
+                  setDisplayAttempt((current) => {
+                    if (current + 1 < displayCandidates.length) {
+                      return current + 1;
+                    }
+                    return current;
+                  });
                 }}
               />
             ) : (
@@ -472,6 +512,12 @@ export default function ProductGallery({
               alt=""
               className="pdp-gallery__zoom-image"
               draggable={false}
+              onError={(event) => {
+                const target = event.currentTarget;
+                if (activeSrc && target.src !== activeSrc) {
+                  target.src = activeSrc;
+                }
+              }}
               style={{
                 width: imageRect.width * zoomScale.x,
                 height: imageRect.height * zoomScale.y,
@@ -560,12 +606,18 @@ export default function ProductGallery({
             role="img"
             aria-label={activeImage.alt}
           >
-            {activeDisplaySrc ? (
+            {activeZoomSrc || activeDisplaySrc ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={activeDisplaySrc}
+                src={activeZoomSrc || activeDisplaySrc}
                 alt={activeImage.alt}
                 className="pdp-lightbox__photo"
+                onError={(event) => {
+                  const target = event.currentTarget;
+                  if (activeSrc && target.src !== activeSrc) {
+                    target.src = activeSrc;
+                  }
+                }}
               />
             ) : (
               <div

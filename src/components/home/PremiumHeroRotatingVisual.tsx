@@ -10,7 +10,7 @@ import {
 import { cdnThumbUrl } from "@/lib/images";
 
 const MOSAIC_COUNT = 4;
-const MOSAIC_WIDTH = 640;
+const MOSAIC_WIDTH = 960;
 
 function badgeClassName(badge: string): string {
   const normalized = badge.toLowerCase();

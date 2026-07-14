@@ -26,16 +26,15 @@ function placeholderClass(className?: string) {
 
 /**
  * Product images for homepage carousels/grids.
- * Always route CDN masters through sized thumbs/derivatives — never the
- * multi‑MB PNG masters that stall Trending / Staff Picks / Best Sellers.
+ * Prefer sized thumbs; if thumb fails (timeout/404), fall back to the CDN source.
  */
 export default function HomepageProductImage({
   src,
   className,
-  sizes = "(max-width: 767px) 46vw, 280px",
+  sizes = "(max-width: 767px) 46vw, 320px",
   fill = false,
-  width = 320,
-  height = 320,
+  width = 480,
+  height = 480,
   priority = false,
   decorative = false,
 }: HomepageProductImageProps) {
@@ -43,75 +42,45 @@ export default function HomepageProductImage({
     () => storefrontImageUrl(src, width),
     [src, width]
   );
-  const [failed, setFailed] = useState(false);
+  const candidates = useMemo(() => {
+    const list = [preferred.src, src].filter(
+      (value): value is string => Boolean(value?.trim())
+    );
+    return Array.from(new Set(list));
+  }, [preferred.src, src]);
+  const [attempt, setAttempt] = useState(0);
+  const activeSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? src;
 
-  if (!src || decorative || failed) {
+  if (!src || decorative || attempt >= candidates.length) {
     return <div aria-hidden className={placeholderClass(className)} />;
   }
 
-  const activeSrc = preferred.src;
-  const onError = () => setFailed(true);
-
-  const usePlainImg =
-    activeSrc.startsWith("/api/media/thumb") ||
-    activeSrc.startsWith("https://cdn.vibemusic.in/");
-
-  if (usePlainImg) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        alt=""
-        className={className}
-        decoding="async"
-        fetchPriority={priority ? "high" : "auto"}
-        height={height}
-        loading={priority ? "eager" : "lazy"}
-        src={activeSrc}
-        width={width}
-        onError={onError}
-        style={
-          fill
-            ? {
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-              }
-            : undefined
-        }
-      />
-    );
-  }
-
-  if (fill) {
-    return (
-      <Image
-        alt=""
-        className={className}
-        fill
-        fetchPriority={priority ? "high" : undefined}
-        loading={priority ? "eager" : "lazy"}
-        priority={priority}
-        sizes={sizes}
-        src={activeSrc}
-        onError={onError}
-      />
-    );
-  }
+  const onError = () => setAttempt((current) => current + 1);
 
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      key={activeSrc}
       alt=""
       className={className}
-      fetchPriority={priority ? "high" : undefined}
-      height={height}
+      decoding="async"
+      fetchPriority={priority ? "high" : "auto"}
+      height={fill ? undefined : height}
       loading={priority ? "eager" : "lazy"}
-      priority={priority}
-      sizes={sizes}
       src={activeSrc}
-      width={width}
+      width={fill ? undefined : width}
       onError={onError}
+      style={
+        fill
+          ? {
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+            }
+          : undefined
+      }
     />
   );
 }

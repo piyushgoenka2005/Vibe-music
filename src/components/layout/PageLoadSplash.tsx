@@ -1,7 +1,13 @@
 "use client";
 
 import { Bebas_Neue } from "next/font/google";
-import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import "@/styles/page-load-splash.css";
 import SplashMusicalItems from "@/components/layout/SplashMusicalItems";
 import SplashCornerAccents from "@/components/layout/SplashCornerAccents";
@@ -14,27 +20,62 @@ const splashFont = Bebas_Neue({
   display: "swap",
 });
 
-/** Opt-in splash only — default off so first paint stays interactive. */
-const WAVE_SETTLE_MS = 320;
-const BRAND_HOLD_MS = 120;
-const BRAND_EXIT_MS = 160;
-const TEASER_DELAY_MS = 160;
-const ITEMS_PHASE_MS = 380;
-const FULL_EXIT_MS = 200;
-const SPLASH_SEEN_KEY = "vibe-splash-seen";
-const SPLASH_ENABLED = process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH === "true";
+/** Full brand sequence — site stays covered until this finishes. */
+const WAVE_SETTLE_MS = 1100;
+const BRAND_HOLD_MS = 380;
+const BRAND_EXIT_MS = 300;
+const TEASER_DELAY_MS = 720;
+const ITEMS_PHASE_MS = 2100;
+const FULL_EXIT_MS = 380;
+export const SPLASH_SEEN_KEY = "vibe-splash-seen";
+export const SPLASH_ACTIVE_CLASS = "vibe-splash-active";
+export const SPLASH_PENDING_CLASS = "vibe-splash-pending";
 
-function shouldShowInitialSplash(): boolean {
+const SPLASH_ENABLED =
+  process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH !== "false";
+
+export function isPageLoadSplashEnabled(): boolean {
+  return SPLASH_ENABLED;
+}
+
+export function shouldShowInitialSplash(): boolean {
   if (!SPLASH_ENABLED) return false;
   try {
     return sessionStorage.getItem(SPLASH_SEEN_KEY) !== "1";
   } catch {
-    return false;
+    return true;
+  }
+}
+
+function removeBootSplash() {
+  // Never DOM-remove #vibe-boot-splash — React owns that node.
+  // Visibility is gated by html.vibe-splash-pending in CSS.
+  document.documentElement.classList.remove(SPLASH_PENDING_CLASS);
+}
+
+function setSplashCoverActive(active: boolean) {
+  const root = document.documentElement;
+  if (active) {
+    root.classList.add(SPLASH_PENDING_CLASS);
+    root.classList.add(SPLASH_ACTIVE_CLASS);
+  } else {
+    root.classList.remove(SPLASH_PENDING_CLASS);
+    root.classList.remove(SPLASH_ACTIVE_CLASS);
+  }
+}
+
+function markSplashSeen() {
+  try {
+    sessionStorage.setItem(SPLASH_SEEN_KEY, "1");
+  } catch {
+    /* ignore */
   }
 }
 
 interface PageLoadSplashProps {
   variant?: "initial" | "inline";
+  /** Fires once the full sequence ends (or is skipped) so the storefront may show. */
+  onComplete?: () => void;
 }
 
 function SplashWaveText({ settled }: { settled: boolean }) {
@@ -46,7 +87,13 @@ function SplashWaveText({ settled }: { settled: boolean }) {
     >
       {chars.map((char, index) => {
         if (char === " ") {
-          return <span key={`space-${index}`} className="page-load-splash__space" aria-hidden />;
+          return (
+            <span
+              key={`space-${index}`}
+              className="page-load-splash__space"
+              aria-hidden
+            />
+          );
         }
 
         const waveBase = Math.sin(index * 0.72) * 0.22;
@@ -118,7 +165,12 @@ export function PageLoadSplashScreen({
     .join(" ");
 
   return (
-    <div className={className} role="status" aria-live="polite" aria-label="Loading Vibe Music">
+    <div
+      className={className}
+      role="status"
+      aria-live="polite"
+      aria-label="Loading Vibe Music"
+    >
       {showItems ? (
         <>
           <SplashCornerAccents />
@@ -132,50 +184,69 @@ export function PageLoadSplashScreen({
   );
 }
 
-export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashProps) {
+export default function PageLoadSplash({
+  variant = "initial",
+  onComplete,
+}: PageLoadSplashProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [visible, setVisible] = useState(false);
+  const onCompleteRef = useRef(onComplete);
+  const finishedRef = useRef(false);
+  onCompleteRef.current = onComplete;
+
+  const [visible, setVisible] = useState(() => {
+    if (variant !== "initial" || !SPLASH_ENABLED) return false;
+    if (typeof window === "undefined") return SPLASH_ENABLED;
+    return shouldShowInitialSplash();
+  });
   const [settled, setSettled] = useState(false);
   const [brandExiting, setBrandExiting] = useState(false);
   const [showItems, setShowItems] = useState(false);
   const [showTeaser, setShowTeaser] = useState(false);
   const [exiting, setExiting] = useState(false);
 
+  const finish = (markSeen: boolean) => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    setVisible(false);
+    setSplashCoverActive(false);
+    removeBootSplash();
+    if (markSeen) markSplashSeen();
+    onCompleteRef.current?.();
+  };
+
   useLayoutEffect(() => {
-    const applyVisibility = () => {
-      if (variant !== "initial") {
-        setVisible(false);
-        return;
-      }
-
-      if (!shouldShowInitialSplash() || prefersReducedMotion) {
-        setVisible(false);
-        if (prefersReducedMotion) {
-          setSettled(true);
-        }
-        return;
-      }
-
-      setVisible(true);
-    };
-
-    queueMicrotask(applyVisibility);
-  }, [prefersReducedMotion, variant]);
-
-  useEffect(() => {
-    if (!visible || prefersReducedMotion) {
-      if (prefersReducedMotion) {
-        queueMicrotask(() => setSettled(true));
-      }
+    if (variant !== "initial") {
+      finish(false);
       return;
     }
 
-    const settleTimer = window.setTimeout(() => setSettled(true), WAVE_SETTLE_MS);
+    if (!SPLASH_ENABLED || prefersReducedMotion) {
+      finish(prefersReducedMotion);
+      return;
+    }
+
+    if (!shouldShowInitialSplash()) {
+      finish(false);
+      return;
+    }
+
+    setSplashCoverActive(true);
+    removeBootSplash();
+    setVisible(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount / preference gate only
+  }, [prefersReducedMotion, variant]);
+
+  useEffect(() => {
+    if (!visible || prefersReducedMotion || finishedRef.current) return;
+    const settleTimer = window.setTimeout(
+      () => setSettled(true),
+      WAVE_SETTLE_MS
+    );
     return () => window.clearTimeout(settleTimer);
   }, [prefersReducedMotion, visible]);
 
   useEffect(() => {
-    if (variant !== "initial" || !visible) return;
+    if (variant !== "initial" || !visible || finishedRef.current) return;
 
     let brandExitTimer = 0;
     let itemsTimer = 0;
@@ -186,30 +257,19 @@ export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashPr
 
     const itemsStart = WAVE_SETTLE_MS + BRAND_HOLD_MS + BRAND_EXIT_MS;
 
-    const runSequence = () => {
-      if (cancelled) return;
-
-      if (prefersReducedMotion) {
-        fullExitTimer = window.setTimeout(() => {
-          setExiting(true);
-          hideTimer = window.setTimeout(() => {
-            if (!cancelled) {
-              setVisible(false);
-              try {
-                sessionStorage.setItem(SPLASH_SEEN_KEY, "1");
-              } catch {
-                /* ignore */
-              }
-            }
-          }, 140);
-        }, 280);
-        return;
-      }
-
+    if (prefersReducedMotion) {
+      fullExitTimer = window.setTimeout(() => {
+        setExiting(true);
+        hideTimer = window.setTimeout(() => {
+          if (!cancelled) finish(true);
+        }, 140);
+      }, 280);
+    } else {
       brandExitTimer = window.setTimeout(() => {
         setBrandExiting(true);
       }, WAVE_SETTLE_MS + BRAND_HOLD_MS);
 
+      // Phase 2: musical items, then ecommerce beat (“Entering the store…”)
       itemsTimer = window.setTimeout(() => {
         setShowItems(true);
       }, itemsStart);
@@ -221,19 +281,10 @@ export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashPr
       fullExitTimer = window.setTimeout(() => {
         setExiting(true);
         hideTimer = window.setTimeout(() => {
-          if (!cancelled) {
-            setVisible(false);
-            try {
-              sessionStorage.setItem(SPLASH_SEEN_KEY, "1");
-            } catch {
-              /* ignore */
-            }
-          }
+          if (!cancelled) finish(true);
         }, FULL_EXIT_MS);
       }, itemsStart + ITEMS_PHASE_MS);
-    };
-
-    runSequence();
+    }
 
     return () => {
       cancelled = true;
@@ -243,10 +294,13 @@ export default function PageLoadSplash({ variant = "initial" }: PageLoadSplashPr
       window.clearTimeout(fullExitTimer);
       window.clearTimeout(hideTimer);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sequence starts once when visible
   }, [prefersReducedMotion, variant, visible]);
 
   if (variant === "inline") {
-    return <PageLoadSplashScreen variant="inline" settled showItems showTeaser />;
+    return (
+      <PageLoadSplashScreen variant="inline" settled showItems showTeaser />
+    );
   }
 
   if (!visible) return null;

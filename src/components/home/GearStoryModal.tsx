@@ -176,7 +176,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                   src={mainSrc}
                   alt={story.name}
                   fill
-                  sizes="(max-width: 768px) 90vw, 420px"
+                  sizes="(max-width: 768px) 90vw, 640px"
                   priority
                   className="gear-story-modal__image"
                   onError={() =>

@@ -98,11 +98,11 @@ export default function CarouselProductCard({
                 <HomepageProductImage
                   className="product-suggest__item-photo"
                   fill
-                  height={240}
+                  height={480}
                   priority={imagePriority}
-                  sizes="(max-width: 767px) 46vw, 240px"
+                  sizes="(max-width: 767px) 46vw, 280px"
                   src={item.image}
-                  width={240}
+                  width={480}
                 />
               </span>
             ) : null}

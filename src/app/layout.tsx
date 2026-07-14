@@ -15,6 +15,7 @@ import "@/styles/mobile-storefront.css";
 import "@/styles/responsive-utilities.css";
 import "@/styles/buttons.css";
 import "@/styles/notify-me.css";
+import "@/styles/page-load-splash.css";
 
 export const metadata: Metadata = DEFAULT_METADATA;
 
@@ -29,9 +30,39 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const splashEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH !== "false";
+
   return (
     <html lang="en-IN" className={primaryFont.variable} suppressHydrationWarning>
+      <head>
+        {splashEnabled ? (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{if(sessionStorage.getItem("vibe-splash-seen")==="1")return;}catch(e){}document.documentElement.classList.add("vibe-splash-pending");})();`,
+            }}
+          />
+        ) : null}
+      </head>
       <body className={primaryFont.className} suppressHydrationWarning>
+        {splashEnabled ? (
+          <>
+            <div
+              id="vibe-boot-splash"
+              className="vibe-boot-splash"
+              aria-hidden="true"
+            >
+              <div className="page-load-splash__frame page-load-splash__frame--settled">
+                <span className="page-load-splash__text">VIBE MUSIC</span>
+              </div>
+            </div>
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `(function(){try{if(sessionStorage.getItem("vibe-splash-seen")==="1"){var el=document.getElementById("vibe-boot-splash");if(el)el.remove();document.documentElement.classList.remove("vibe-splash-pending");}}catch(e){}})();`,
+              }}
+            />
+          </>
+        ) : null}
         <SocialRailGate />
         <AppShell>{children}</AppShell>
       </body>

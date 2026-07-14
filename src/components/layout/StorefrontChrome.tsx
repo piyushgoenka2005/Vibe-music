@@ -18,7 +18,7 @@ const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
 });
 
 const SPLASH_CURSOR_ENABLED =
-  process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR === "true";
+  process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR !== "false";
 
 function subscribeNoop() {
   return () => {};
