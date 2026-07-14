@@ -5,7 +5,6 @@ import type { HomepageBrandItem } from "@/types/homepage";
 export const TOP_BRAND_STRIP_SLUGS = [
   "roland",
   "hertz",
-  "avus",
   "zoom",
   "gibraltar",
   "adeon",
@@ -31,7 +30,6 @@ export const ROLAND_BRAND_FALLBACK = {
 const BRAND_STRIP_FALLBACKS: Record<string, BrandLike> = {
   roland: ROLAND_BRAND_FALLBACK,
   hertz: { id: "hertz", name: "HERTZ", slug: "hertz" },
-  avus: { id: "avus", name: "AVUS", slug: "avus" },
   zoom: { id: "zoom", name: "ZOOM", slug: "zoom" },
   gibraltar: { id: "gibraltar", name: "GIBRALTAR", slug: "gibraltar" },
   adeon: { id: "adeon", name: "ADEON", slug: "adeon" },
