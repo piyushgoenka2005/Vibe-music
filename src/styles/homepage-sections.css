@@ -447,7 +447,7 @@
 }
 
 .premium-home .product-suggest__end-spacer {
-  flex: 0 0 1px;
+  flex: 0 0 1.5rem;
 }
 
 .premium-home .product-suggest__nav {

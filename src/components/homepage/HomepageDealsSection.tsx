@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
 import DealProductCard from "@/components/homepage/DealProductCard";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
-import { attachHorizontalWheelScroll } from "@/lib/horizontalWheelScroll";
+import { useHorizontalScroller } from "@/hooks/useHorizontalScroller";
 import { ROUTES, resolveLinkHref } from "@/lib/routes";
 import type { ResolvedHomepageSection } from "@/types/homepage";
 
@@ -17,57 +16,14 @@ export default function HomepageDealsSection({ section }: HomepageDealsSectionPr
   const titleId = `${section.sectionId}-title`;
   const ctaText = section.ctaText ?? "Shop All Deals";
   const ctaLink = resolveLinkHref(section.ctaLink || ROUTES.deals);
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
-  const [hasOverflow, setHasOverflow] = useState(false);
-
-  const updateScrollState = useCallback(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-
-    const maxScroll = Math.ceil(scroller.scrollWidth - scroller.clientWidth);
-    const overflow = maxScroll > 4;
-    setHasOverflow(overflow);
-    setCanScrollPrev(overflow && scroller.scrollLeft > 2);
-    setCanScrollNext(overflow && scroller.scrollLeft < maxScroll - 2);
-  }, []);
-
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-
-    updateScrollState();
-    const raf = window.requestAnimationFrame(updateScrollState);
-    scroller.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateScrollState);
-    const detachWheel = attachHorizontalWheelScroll(scroller);
-
-    const resizeObserver = new ResizeObserver(() => {
-      window.requestAnimationFrame(updateScrollState);
-    });
-    resizeObserver.observe(scroller);
-
-    return () => {
-      window.cancelAnimationFrame(raf);
-      scroller.removeEventListener("scroll", updateScrollState);
-      window.removeEventListener("resize", updateScrollState);
-      resizeObserver.disconnect();
-      detachWheel();
-    };
-  }, [products.length, updateScrollState]);
-
-  const scrollByCard = useCallback((direction: -1 | 1) => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-    const firstWrap = scroller.querySelector<HTMLElement>(
-      ".homepage-deals-card-wrap"
-    );
-    const gap = Number.parseFloat(getComputedStyle(scroller).gap || "12") || 12;
-    const amount =
-      (firstWrap?.offsetWidth ?? Math.max(scroller.clientWidth * 0.8, 200)) + gap;
-    scroller.scrollBy({ left: direction * amount, behavior: "smooth" });
-  }, []);
+  const {
+    scrollerRef,
+    hasOverflow,
+    canScrollPrev,
+    canScrollNext,
+    scrollByCard,
+    scrollerProps,
+  } = useHorizontalScroller(section.key, products.length);
 
   if (products.length === 0) {
     return null;
@@ -98,6 +54,7 @@ export default function HomepageDealsSection({ section }: HomepageDealsSectionPr
           <div
             ref={scrollerRef}
             className="homepage-deals-section__track tiles tiles--slider flex-container flex-row flex-nowrap scrollbar-minimal horizontal"
+            {...scrollerProps}
           >
             {products.map((item, index) => (
               <DealProductCard key={item.id} item={item} slotPosition={index + 1} />
@@ -113,7 +70,11 @@ export default function HomepageDealsSection({ section }: HomepageDealsSectionPr
                 }`}
                 aria-label="Scroll previous deals"
                 disabled={!canScrollPrev}
-                onClick={() => scrollByCard(-1)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  scrollByCard(-1);
+                }}
               >
                 <svg aria-hidden xmlns="http://www.w3.org/2000/svg" width="40" height="40">
                   <g fill="none" stroke="#000" strokeLinecap="round" strokeWidth="2">
@@ -128,7 +89,11 @@ export default function HomepageDealsSection({ section }: HomepageDealsSectionPr
                 }`}
                 aria-label="Scroll next deals"
                 disabled={!canScrollNext}
-                onClick={() => scrollByCard(1)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  scrollByCard(1);
+                }}
               >
                 <svg aria-hidden xmlns="http://www.w3.org/2000/svg" width="40" height="40">
                   <g fill="none" stroke="#000" strokeLinecap="round" strokeWidth="2">

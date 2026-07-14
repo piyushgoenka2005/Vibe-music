@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
 import CarouselProductCard from "@/components/homepage/CarouselProductCard";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
-import { attachHorizontalWheelScroll } from "@/lib/horizontalWheelScroll";
+import { useHorizontalScroller } from "@/hooks/useHorizontalScroller";
 import { isHomepageProductVisible } from "@/lib/homepage/productVisibility";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageSectionKey, ResolvedHomepageSection } from "@/types/homepage";
@@ -72,8 +71,14 @@ function ProductSuggestNav({
       type="button"
       className={className}
       aria-label={next ? NAV_NEXT_LABEL : NAV_PREV_LABEL}
+      aria-disabled={disabled}
       disabled={disabled}
-      onClick={onClick}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (disabled) return;
+        onClick();
+      }}
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" aria-hidden>
         <g fill="none" strokeLinecap="round" strokeWidth="2">
@@ -95,12 +100,16 @@ interface HomepageProductCarouselSectionProps {
 export default function HomepageProductCarouselSection({
   section,
 }: HomepageProductCarouselSectionProps) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
-  const [hasOverflow, setHasOverflow] = useState(false);
-
   const products = (section.products ?? []).filter(isHomepageProductVisible);
+  const {
+    scrollerRef,
+    hasOverflow,
+    canScrollPrev,
+    canScrollNext,
+    scrollByCard,
+    scrollerProps,
+  } = useHorizontalScroller(section.key, products.length);
+
   const isPremium = PREMIUM_CAROUSEL_KEYS.has(section.key);
   const titleId = `${section.sectionId}-title`;
   const eyebrow = CAROUSEL_EYEBROWS[section.key] ?? section.accentLabel;
@@ -108,53 +117,6 @@ export default function HomepageProductCarouselSection({
   const subtitle = section.subtitle ?? defaults?.subtitle;
   const ctaText = section.ctaText ?? defaults?.ctaText;
   const ctaLink = section.ctaLink ?? defaults?.ctaLink;
-
-  const updateScrollState = useCallback(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-
-    const maxScroll = Math.ceil(scroller.scrollWidth - scroller.clientWidth);
-    const overflow = maxScroll > 4;
-    setHasOverflow(overflow);
-    setCanScrollPrev(overflow && scroller.scrollLeft > 2);
-    setCanScrollNext(overflow && scroller.scrollLeft < maxScroll - 2);
-  }, []);
-
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-
-    updateScrollState();
-    const raf = window.requestAnimationFrame(updateScrollState);
-    scroller.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateScrollState);
-    const detachWheel = attachHorizontalWheelScroll(scroller);
-
-    const resizeObserver = new ResizeObserver(() => {
-      window.requestAnimationFrame(updateScrollState);
-    });
-    resizeObserver.observe(scroller);
-
-    return () => {
-      window.cancelAnimationFrame(raf);
-      scroller.removeEventListener("scroll", updateScrollState);
-      window.removeEventListener("resize", updateScrollState);
-      resizeObserver.disconnect();
-      detachWheel();
-    };
-  }, [products.length, updateScrollState]);
-
-  const scrollByCard = useCallback((direction: -1 | 1) => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-    const firstWrap = scroller.querySelector<HTMLElement>(
-      ".product-suggest__item-wrap"
-    );
-    const gap = Number.parseFloat(getComputedStyle(scroller).gap || "12") || 12;
-    const amount =
-      (firstWrap?.offsetWidth ?? Math.max(scroller.clientWidth * 0.8, 200)) + gap;
-    scroller.scrollBy({ left: direction * amount, behavior: "smooth" });
-  }, []);
 
   if (products.length === 0) {
     return null;
@@ -208,6 +170,7 @@ export default function HomepageProductCarouselSection({
           <div
             ref={scrollerRef}
             className="product-suggest__items paged scrollbar-minimal"
+            {...scrollerProps}
           >
             {products.map((item, index) => (
               <CarouselProductCard
@@ -217,7 +180,7 @@ export default function HomepageProductCarouselSection({
                 sectionKey={section.key}
               />
             ))}
-            <div className="product-suggest__end-spacer" />
+            <div className="product-suggest__end-spacer" aria-hidden />
           </div>
           {hasOverflow ? (
             <ProductSuggestNav

@@ -4748,17 +4748,24 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   padding: 0.35rem 0 0.75rem;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   touch-action: pan-x;
   scrollbar-width: none;
   cursor: grab;
+  user-select: none;
 }
 
-.premium-home .homepage-deals-section__track:active {
+.premium-home .homepage-deals-section__track:active,
+.premium-home .homepage-deals-section__track.is-dragging {
   cursor: grabbing;
+  scroll-snap-type: none;
+}
+
+.premium-home .homepage-deals-section__track.is-dragging a {
+  pointer-events: none;
 }
 
 .premium-home .homepage-deals-section__track::-webkit-scrollbar {

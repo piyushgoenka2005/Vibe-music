@@ -50,13 +50,13 @@
   }
 
   .premium-home .premium-product-carousel .product-suggest__items {
-    --carousel-card-width: clamp(220px, 20vw, 260px);
+    --carousel-card-width: clamp(210px, 18.5vw, 236px);
   }
 }
 
 @media (min-width: 1440px) {
   .premium-home .premium-product-carousel .product-suggest__items {
-    --carousel-card-width: 252px;
+    --carousel-card-width: 228px;
   }
 }
 
@@ -147,7 +147,7 @@
 
 .premium-home .premium-product-carousel .product-suggest__items {
   --carousel-gap: clamp(0.875rem, 2vw, 1.125rem);
-  --carousel-card-width: clamp(200px, 22vw, 268px);
+  --carousel-card-width: clamp(200px, 20vw, 248px);
   --carousel-edge: 0px;
   display: flex;
   flex-direction: row;
@@ -162,15 +162,22 @@
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   touch-action: pan-x;
   cursor: grab;
+  user-select: none;
 }
 
-.premium-home .premium-product-carousel .product-suggest__items:active {
+.premium-home .premium-product-carousel .product-suggest__items:active,
+.premium-home .premium-product-carousel .product-suggest__items.is-dragging {
   cursor: grabbing;
+  scroll-snap-type: none;
+}
+
+.premium-home .premium-product-carousel .product-suggest__items.is-dragging a {
+  pointer-events: none;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-wrap {
@@ -574,7 +581,7 @@
     0 1px 2px rgba(15, 23, 42, 0.05);
   opacity: 1;
   pointer-events: auto;
-  z-index: 12;
+  z-index: 20;
   transition:
     opacity 180ms ease,
     transform 200ms ease,
