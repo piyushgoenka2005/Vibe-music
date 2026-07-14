@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import { storefrontImageUrl } from "@/lib/storefrontImages";
 import type { ProductImage, ProductVideo } from "@/types/product";
 
 const LENS_WIDTH_RATIO = 0.38;
@@ -110,6 +111,13 @@ export default function ProductGallery({
 
   const activeImage = images[activeIndex] ?? images[0];
   const canZoom = Boolean(activeImage?.src) && !showVideo;
+  const activeSrc = activeImage?.src ?? "";
+  const activeDisplaySrc = activeSrc
+    ? storefrontImageUrl(activeSrc, 960).src
+    : "";
+  const activeZoomSrc = activeSrc
+    ? storefrontImageUrl(activeSrc, 960).src
+    : "";
 
   const measureImageRect = useCallback(() => {
     const main = mainRef.current;
@@ -267,6 +275,23 @@ export default function ProductGallery({
     }
   }, []);
 
+  if (!activeImage) {
+    return (
+      <div className="pdp-gallery" aria-label={`${productName} image gallery`}>
+        <div className="pdp-gallery__stage">
+          <div className="pdp-gallery__main">
+            <div
+              className="pdp-gallery__swatch"
+              style={{ backgroundColor: "#e8e7e6" }}
+              role="img"
+              aria-label={`${productName} placeholder`}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="pdp-gallery" aria-label={`${productName} image gallery`}>
       <div className="pdp-gallery__thumbs" role="list" aria-label="Product thumbnails">
@@ -293,12 +318,13 @@ export default function ProductGallery({
           >
             {image.src ? (
               <Image
-                src={image.src}
+                src={storefrontImageUrl(image.src, 160).src}
                 alt=""
                 width={112}
                 height={112}
                 sizes="64px"
                 loading="lazy"
+                unoptimized
                 className="pdp-gallery__thumb-photo"
               />
             ) : (
@@ -397,14 +423,15 @@ export default function ProductGallery({
                   allowFullScreen
                 />
               </div>
-            ) : activeImage.src ? (
+            ) : activeDisplaySrc ? (
               <Image
                 ref={photoRef}
-                src={activeImage.src}
+                src={activeDisplaySrc}
                 alt={activeImage.alt}
                 fill
                 sizes="(max-width: 767px) 100vw, 560px"
                 priority
+                unoptimized
                 className="pdp-gallery__photo"
                 draggable={false}
                 onLoadingComplete={(image) => {
@@ -441,7 +468,7 @@ export default function ProductGallery({
         {zoomActive && canZoom && mainSize.width > 0 ? (
           <div ref={paneRef} className="pdp-gallery__zoom-pane" aria-hidden>
             <img
-              src={activeImage.src}
+              src={activeZoomSrc || activeDisplaySrc}
               alt=""
               className="pdp-gallery__zoom-image"
               draggable={false}
@@ -533,9 +560,10 @@ export default function ProductGallery({
             role="img"
             aria-label={activeImage.alt}
           >
-            {activeImage.src ? (
+            {activeDisplaySrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={activeImage.src}
+                src={activeDisplaySrc}
                 alt={activeImage.alt}
                 className="pdp-lightbox__photo"
               />

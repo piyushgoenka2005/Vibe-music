@@ -12,7 +12,7 @@ export const LANDING_STATS = [
   {
     value: "Fast",
     label: "Dispatch on in-stock",
-    status: "Warehouses across India",
+    status: "Ships from Maharashtra",
     tone: "success" as StatusTone,
   },
   {
@@ -31,7 +31,7 @@ export const LANDING_STATS = [
 
 export const LANDING_LIVE_TICKER = [
   "Store open — dispatching orders across India",
-  "Free shipping on orders over ₹9,999",
+  "Free shipping on all orders",
   "Secure checkout via Razorpay · UPI · Cards",
   "Gear advisors reply by email Mon–Sat",
   "Track orders from your account after dispatch",
@@ -80,17 +80,17 @@ export const LANDING_SERVICE_STATUS = [
   },
   {
     icon: "credit-card" as const,
-    title: "Secure payments",
-    desc: "Razorpay checkout with UPI, cards & net banking",
-    status: "Protected",
-    tone: "success" as StatusTone,
+    title: "EMI & financing",
+    desc: "Apply for installment options on eligible gear",
+    status: "Available",
+    tone: "info" as StatusTone,
     href: ROUTES.financing,
-    cta: "Payment options",
+    cta: "Explore financing",
   },
   {
     icon: "clock" as const,
     title: "In-stock dispatch",
-    desc: "Priced, in-stock gear ships from our warehouses",
+    desc: "Priced, in-stock gear ships from our Maharashtra warehouse",
     status: "On schedule",
     tone: "info" as StatusTone,
     href: ROUTES.search,
@@ -107,48 +107,43 @@ export const LANDING_SERVICE_STATUS = [
   },
 ] as const;
 
+/** Trust bar above footer — rating shown as product-page review average. */
 export const LANDING_SOCIAL_PROOF = {
   rating: "4.8",
-  reviewCountLabel: "customer reviews on product pages",
+  ratingScale: "5",
+  detail: "customer reviews on product pages",
   musicians: "India-wide",
   cities: "Pan-India",
   brands: "Authorized",
 } as const;
 
+/**
+ * Delivery coverage — not claimed retail storefronts.
+ * Visuals use brand accents (no missing location photo assets).
+ */
 export const LANDING_LOCATIONS = [
   {
-    city: "Delhi",
-    status: "Open",
-    tone: "live" as StatusTone,
-    accent: "#1e3a8a",
-    image: "/images/locations/delhi.jpg",
-  },
-  {
-    city: "Kolkata",
-    status: "Open",
-    tone: "live" as StatusTone,
-    accent: "#0f766e",
-    image: "/images/locations/kolkata.jpg",
-  },
-  {
-    city: "Nagpur",
-    status: "Open",
-    tone: "live" as StatusTone,
-    accent: "#9a3412",
-    image: "/images/locations/nagpur.jpg",
-  },
-  {
-    city: "North East",
-    status: "Partner hub",
-    tone: "info" as StatusTone,
-    accent: "#5b21b6",
-    image: "/images/locations/north-east.jpg",
-  },
-  {
     city: "Mumbai",
-    status: "Flagship",
+    status: "Dispatch hub",
     tone: "success" as StatusTone,
     accent: "#1253ed",
-    image: "/images/locations/mumbai.jpg",
+  },
+  {
+    city: "Maharashtra",
+    status: "Warehouse",
+    tone: "live" as StatusTone,
+    accent: "#0e42be",
+  },
+  {
+    city: "North & East",
+    status: "We ship here",
+    tone: "info" as StatusTone,
+    accent: "#0f766e",
+  },
+  {
+    city: "Pan-India",
+    status: "Courier partners",
+    tone: "info" as StatusTone,
+    accent: "#5b21b6",
   },
 ] as const;

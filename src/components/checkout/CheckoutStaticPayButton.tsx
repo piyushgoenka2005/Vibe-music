@@ -16,9 +16,9 @@ export default function CheckoutStaticPayButton({
   onClick,
   disabled = false,
   loading = false,
-  label = "Place order (COD)",
+  label = "Complete order",
   loadingLabel = "Placing order...",
-  hint = "Pay when your order arrives",
+  hint = "Pay securely online",
 }: CheckoutStaticPayButtonProps) {
   return (
     <div className="checkout-static-pay">

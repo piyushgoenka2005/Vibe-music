@@ -1,8 +1,5 @@
 import type { ShippingMethod } from "@/lib/shipping/shippingMethods";
-import {
-  getShippingChargeForMethod,
-  SHIPPING_METHODS,
-} from "@/lib/shipping/shippingMethods";
+import { SHIPPING_METHODS } from "@/lib/shipping/shippingMethods";
 import type { ShippingZone } from "@/types/shippingZone";
 
 export function matchShippingZone(
@@ -35,25 +32,15 @@ export function matchShippingZone(
 }
 
 export function getZoneShippingCharge(
-  method: ShippingMethod,
-  subtotal: number,
-  discount: number,
-  zone: ShippingZone | null,
-  defaultThreshold: number
+  _method: ShippingMethod,
+  _subtotal: number,
+  _discount: number,
+  _zone: ShippingZone | null,
+  _defaultThreshold: number
 ): number {
-  const afterDiscount = subtotal - discount;
-  const threshold = zone?.freeShippingThreshold ?? defaultThreshold;
-
-  if (method === "standard" && afterDiscount >= threshold) {
-    return 0;
-  }
-
-  const zoneCharge = zone?.methodCharges?.[method];
-  if (typeof zoneCharge === "number" && zoneCharge >= 0) {
-    return zoneCharge;
-  }
-
-  return getShippingChargeForMethod(method, subtotal, discount);
+  // Intentional: storefront policy is free shipping on every order.
+  // Admin zone "methodCharges" are informational until this is deliberately re-enabled.
+  return 0;
 }
 
 export function buildShippingQuotes(
@@ -72,30 +59,17 @@ export function buildShippingQuotes(
   const methodIds =
     options?.methods ?? (["standard"] as ShippingMethod[]);
 
+  void subtotal;
+  void discount;
+  void zone;
+  void defaultThreshold;
+  void options;
+
   return methodIds.map((method) => {
     const config = SHIPPING_METHODS[method];
-    let charge = getZoneShippingCharge(
-      method,
-      subtotal,
-      discount,
-      zone,
-      defaultThreshold
-    );
-
-    // When zone has no explicit standard charge, prefer store settings fallback.
-    if (
-      method === "standard" &&
-      typeof options?.standardChargeFallback === "number" &&
-      !(typeof zone?.methodCharges?.standard === "number")
-    ) {
-      const afterDiscount = subtotal - discount;
-      const threshold = zone?.freeShippingThreshold ?? defaultThreshold;
-      charge = afterDiscount >= threshold ? 0 : options.standardChargeFallback;
-    }
-
     return {
       ...config,
-      charge,
+      charge: 0,
     };
   });
 }

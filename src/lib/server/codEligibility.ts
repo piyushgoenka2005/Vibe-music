@@ -34,10 +34,10 @@ function parsePinPrefixes(): string[] {
     .filter(Boolean);
 }
 
-/** COD rules from env — see docs/ops/GO_LIVE.md and .env.example. */
+/** COD rules from env — opt-in only. Default is disabled. */
 export function getCodPolicy(): CodPolicy {
   return {
-    enabled: process.env.COD_ENABLED !== "false",
+    enabled: process.env.COD_ENABLED === "true",
     maxOrderValue: parseMaxOrderValue(),
     pinPrefixes: parsePinPrefixes(),
   };

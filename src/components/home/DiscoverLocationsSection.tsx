@@ -1,10 +1,9 @@
-import Image from "next/image";
-import Link from "next/link";
 import type { CSSProperties } from "react";
 import { MapPin } from "lucide-react";
 import Marquee from "@/components/common/Marquee";
 import { LANDING_LOCATIONS, type StatusTone } from "@/data/landingStatus";
 import Reveal from "@/components/layout/Reveal";
+import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 
 function LocationStatusTag({
@@ -31,24 +30,16 @@ function LocationCard({
 }) {
   return (
     <article
-      className="locations-strip__card"
+      className="locations-strip__card locations-strip__card--solid"
       aria-hidden={ariaHidden || undefined}
       role="listitem"
       style={
         {
           "--location-accent": location.accent,
+          background: `linear-gradient(145deg, ${location.accent} 0%, #0a1628 100%)`,
         } as CSSProperties
       }
     >
-      <Image
-        alt=""
-        className="locations-strip__image"
-        fill
-        loading="lazy"
-        src={location.image}
-        sizes="(max-width: 767px) 70vw, 280px"
-        style={{ objectFit: "cover" }}
-      />
       <div className="locations-strip__overlay" />
       <div className="locations-strip__meta">
         <LocationStatusTag label={location.status} tone={location.tone} />
@@ -63,15 +54,18 @@ export default function DiscoverLocationsSection() {
     <Reveal as="section" className="locations-strip">
       <div className="locations-strip__inner">
         <header className="locations-strip__header">
-          <p className="locations-strip__eyebrow premium-section-eyebrow">Store network</p>
-          <h2 className="locations-strip__title">Discover our locations</h2>
+          <p className="locations-strip__eyebrow premium-section-eyebrow">
+            Fulfillment
+          </p>
+          <h2 className="locations-strip__title">Where your gear ships from</h2>
           <p className="locations-strip__cities">
-            Delhi · Kolkata · Nagpur · North East · Mumbai
+            Orders dispatch from our Maharashtra warehouse — we deliver
+            pan-India with courier partners.
           </p>
         </header>
 
         <Marquee
-          ariaLabel="Store locations"
+          ariaLabel="Fulfillment and delivery coverage"
           className="locations-strip__marquee"
           duration="42s"
           role="list"
@@ -83,10 +77,10 @@ export default function DiscoverLocationsSection() {
           ))}
         </Marquee>
 
-        <Link href={ROUTES.contact} className="locations-strip__cta premium-btn premium-btn--outline">
-          <MapPin className="locations-strip__cta-icon" size={16} strokeWidth={2.25} aria-hidden />
-          Contact a store advisor
-        </Link>
+        <div className="locations-strip__footer">
+          <MapPin size={16} aria-hidden />
+          <Link href={ROUTES.contact}>Questions about delivery? Contact us</Link>
+        </div>
       </div>
     </Reveal>
   );

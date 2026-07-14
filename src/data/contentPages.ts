@@ -26,7 +26,7 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
       {
         heading: "Free shipping",
         paragraphs: [
-          "Shipping is free on orders above ₹9,999 after discounts. Below that threshold, standard shipping is charged at checkout based on your delivery pin code.",
+          "Shipping is free on every order. Delivery timelines still vary by pin code — you can estimate ETA on the product page.",
         ],
       },
       {
@@ -86,7 +86,7 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
       {
         heading: "Payments",
         paragraphs: [
-          "Online payments are processed securely through Razorpay. Cash on delivery may be offered when enabled for your order value and PIN (see checkout). Default COD limit is ₹50,000 unless configured otherwise.",
+          "Online payments are processed securely through Razorpay (UPI, cards, and net banking). Cash on delivery is not offered.",
         ],
       },
       {

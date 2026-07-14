@@ -16,7 +16,7 @@ import type { ResolvedProductBundle } from "@/types/bundle";
 const PRODUCT_DETAIL_REVALIDATE_SECONDS =
   Number(process.env.PRODUCT_DETAIL_CACHE_REVALIDATE_SECONDS) ||
   Number(process.env.CATALOG_CACHE_REVALIDATE_SECONDS) ||
-  60;
+  300;
 
 const loadCachedProductCore = unstable_cache(
   async function loadCachedProductCore(
@@ -42,12 +42,18 @@ export const loadProductCorePage = cache(async function loadProductCorePage(
 
 const loadCachedProductMerchandising = unstable_cache(
   async function loadCachedProductMerchandising(
-    product: ProductDetail
+    productId: string,
+    productPrice: number,
+    similarIdsKey: string
   ): Promise<Omit<ProductDetailResult, "product">> {
+    const similarProductIds = similarIdsKey
+      ? similarIdsKey.split("|").filter(Boolean)
+      : [];
+
     const [bundle, similarProducts, relatedResult] = await Promise.all([
-      resolveBundleForProduct(product.id, product.price),
-      getProductSummaries(product.similarProductIds),
-      resolveRelatedProductsForProduct(product.id, 8),
+      resolveBundleForProduct(productId, productPrice),
+      getProductSummaries(similarProductIds),
+      resolveRelatedProductsForProduct(productId, 8),
     ]);
 
     return {
@@ -57,7 +63,7 @@ const loadCachedProductMerchandising = unstable_cache(
       relatedProducts: relatedResult.products,
     };
   },
-  ["product-detail-merchandising"],
+  ["product-detail-merchandising-v2"],
   {
     revalidate: PRODUCT_DETAIL_REVALIDATE_SECONDS,
     tags: ["catalog", "product-detail", "product-merchandising"],
@@ -69,7 +75,12 @@ export const loadProductMerchandising = cache(
     product: ProductDetail,
     initialBundle?: ResolvedProductBundle | null
   ): Promise<Omit<ProductDetailResult, "product">> {
-    const result = await loadCachedProductMerchandising(product);
+    const similarIdsKey = (product.similarProductIds ?? []).join("|");
+    const result = await loadCachedProductMerchandising(
+      product.id,
+      product.price,
+      similarIdsKey
+    );
 
     if (initialBundle) {
       return { ...result, bundle: initialBundle };

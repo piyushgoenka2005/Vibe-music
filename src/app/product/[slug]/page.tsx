@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ProductDetailPage from "@/components/product/ProductDetailPage";
 import { loadProductCorePage } from "@/lib/server/productDetailLoader";
+import { storefrontImageUrl } from "@/lib/storefrontImages";
 import type { ProductDetailResult } from "@/services/product.service";
 import type { ProductDetail } from "@/types/product";
 
@@ -31,12 +32,15 @@ export async function generateMetadata({
     return { title: "Product not found | Vibe Music" };
   }
 
+  const hero = product.images?.[0]?.src || product.image;
+  const ogImage = hero ? storefrontImageUrl(hero, 960).src : undefined;
+
   return {
     title: `${product.name} | Vibe Music`,
     description: product.description?.slice(0, 160) ?? product.name,
     openGraph: {
       title: product.name,
-      images: product.image ? [{ url: product.image }] : undefined,
+      images: ogImage ? [{ url: ogImage }] : undefined,
     },
   };
 }
@@ -50,7 +54,10 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
   }
 
   const initialData = toInitialData(product);
-  const heroImageUrl = product.images?.[0]?.src || product.image;
+  const heroRaw = product.images?.[0]?.src || product.image;
+  const heroImageUrl = heroRaw
+    ? storefrontImageUrl(heroRaw, 960).src
+    : undefined;
 
   return (
     <main className="storefront-page">

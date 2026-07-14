@@ -114,26 +114,28 @@ function TopProductCard({ product }: { product: HomepageTopProduct }) {
 async function resolveTopProducts(): Promise<HomepageTopProduct[]> {
   const resolved = await Promise.all(
     HOMEPAGE_TOP_PRODUCTS.map(async (product) => {
-      if (!product.productSlug || product.pinImage) return product;
+      // Special surfaces (e.g. GP-9 landing) need no catalog row.
+      if (!product.productSlug) return product;
 
       try {
         const catalogProduct = await getProductBySlug(product.productSlug);
-        if (!catalogProduct) return product;
+        // Never link to a PDP that does not exist in catalog.
+        if (!catalogProduct) return null;
 
-        const catalogImage = catalogProduct.image || product.image;
+        if (product.pinImage) return product;
 
         return {
           ...product,
-          image: catalogImage,
+          image: catalogProduct.image || product.image,
           href: product.href,
         };
       } catch {
-        return product;
+        return null;
       }
     })
   );
 
-  return resolved;
+  return resolved.filter((product): product is HomepageTopProduct => Boolean(product));
 }
 
 export default async function HomepageTopProducts() {
@@ -149,8 +151,8 @@ export default async function HomepageTopProducts() {
               Shop the highlights
             </h2>
             <p className="blog-teaser__subtitle">
-              Grand pianos, guitars, and live sound — hand-picked gear from our
-              showroom floor.
+              Grand pianos, guitars, and live sound — hand-picked in-stock gear
+              from our catalog.
             </p>
           </div>
           <Link
@@ -162,17 +164,24 @@ export default async function HomepageTopProducts() {
           </Link>
         </header>
 
-        <div className="blog-teaser__grid blog-teaser__grid--three">
-          {products.map((product, index) => (
-            <Reveal
-              key={product.id}
-              className="blog-teaser__card-wrap"
-              delay={index * 80}
-            >
-              <TopProductCard product={product} />
-            </Reveal>
-          ))}
-        </div>
+        {products.length === 0 ? (
+          <p className="blog-teaser__subtitle">
+            Featured products will appear here once the catalog is available.{" "}
+            <Link href={HOMEPAGE_TOP_PRODUCTS_CTA}>Browse the shop</Link>.
+          </p>
+        ) : (
+          <div className="blog-teaser__grid blog-teaser__grid--three">
+            {products.map((product, index) => (
+              <Reveal
+                key={product.id}
+                className="blog-teaser__card-wrap"
+                delay={index * 80}
+              >
+                <TopProductCard product={product} />
+              </Reveal>
+            ))}
+          </div>
+        )}
       </div>
     </Reveal>
   );

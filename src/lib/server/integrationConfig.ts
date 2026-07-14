@@ -33,6 +33,16 @@ function configured(...values: Array<string | undefined>): IntegrationStatus {
   return values.every((value) => Boolean(value?.trim())) ? "ok" : "missing";
 }
 
+function secretWithMinLength(
+  value: string | undefined,
+  minLength: number
+): IntegrationStatus {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) return "missing";
+  if (trimmed.length < minLength) return "partial";
+  return "ok";
+}
+
 function invoicePdfStatus(): IntegrationStatus {
   const server = process.env.INVOICE_PDF_ENABLED === "true";
   const client = process.env.NEXT_PUBLIC_INVOICE_PDF_ENABLED === "true";
@@ -44,7 +54,7 @@ function invoicePdfStatus(): IntegrationStatus {
 export function getIntegrationChecks(): IntegrationChecks {
   return {
     database: isPostgresConfigured() ? "ok" : "missing",
-    auth: configured(process.env.AUTH_SECRET),
+    auth: secretWithMinLength(process.env.AUTH_SECRET, 32),
     smtp: isSmtpConfigured() ? "ok" : "missing",
     razorpay: isRazorpayConfigured() &&
       Boolean(
@@ -65,7 +75,10 @@ export function getIntegrationChecks(): IntegrationChecks {
     googleOAuth: isGoogleAuthConfigured() ? "ok" : "missing",
     places: configured(process.env.GOOGLE_PLACES_API_KEY),
     invoicePdf: invoicePdfStatus(),
-    guestOrderSecret: configured(process.env.GUEST_ORDER_ACCESS_SECRET),
+    guestOrderSecret: secretWithMinLength(
+      process.env.GUEST_ORDER_ACCESS_SECRET,
+      32
+    ),
   };
 }
 
@@ -92,14 +105,14 @@ export function getOpsStatusReport(): {
       label: "Auth.js secret",
       status: checks.auth,
       tier: "required",
-      detail: "AUTH_SECRET (min 32 chars)",
+      detail: "AUTH_SECRET (min 32 chars — shorter values show as partial)",
     },
     {
       key: "guestOrderSecret",
       label: "Guest order / invoice tokens",
       status: checks.guestOrderSecret,
       tier: "required",
-      detail: "GUEST_ORDER_ACCESS_SECRET (min 32 chars)",
+      detail: "GUEST_ORDER_ACCESS_SECRET (min 32 chars — shorter values show as partial)",
     },
     {
       key: "razorpay",

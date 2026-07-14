@@ -167,11 +167,22 @@ export const authConfig = {
         token.name = session.user.name;
       }
 
-      const uid = typeof token.uid === "string" ? token.uid : token.sub;
-      if (uid) {
-        const adminSession = await getAdminSession(uid);
-        token.isAdmin = Boolean(adminSession);
-        token.adminRole = adminSession?.role;
+      // Admin DB lookup only on sign-in / session update — not every JWT read.
+      const shouldRefreshAdmin =
+        Boolean(user) ||
+        trigger === "update" ||
+        typeof token.isAdmin !== "boolean";
+
+      if (shouldRefreshAdmin) {
+        const uid = typeof token.uid === "string" ? token.uid : token.sub;
+        if (uid) {
+          const adminSession = await getAdminSession(uid);
+          token.isAdmin = Boolean(adminSession);
+          token.adminRole = adminSession?.role;
+        } else {
+          token.isAdmin = false;
+          token.adminRole = undefined;
+        }
       }
 
       return token;

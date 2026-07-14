@@ -11,7 +11,7 @@ describe("codEligibility", () => {
     process.env = { ...envBackup };
   });
 
-  it("allows COD by default under the max order value", () => {
+  it("blocks COD by default (opt-in only)", () => {
     delete process.env.COD_ENABLED;
     delete process.env.COD_MAX_ORDER_VALUE;
     delete process.env.COD_ALLOWED_PIN_PREFIXES;
@@ -20,8 +20,18 @@ describe("codEligibility", () => {
       orderValue: 10_000,
       postalCode: "400001",
     });
-    expect(result.eligible).toBe(true);
+    expect(result.eligible).toBe(false);
+    expect(getCodPolicy().enabled).toBe(false);
     expect(getCodPolicy().maxOrderValue).toBe(50_000);
+  });
+
+  it("allows COD when explicitly enabled", () => {
+    process.env.COD_ENABLED = "true";
+    const result = evaluateCodEligibility({
+      orderValue: 1_000,
+      postalCode: "400001",
+    });
+    expect(result.eligible).toBe(true);
   });
 
   it("blocks COD when disabled", () => {
@@ -34,6 +44,7 @@ describe("codEligibility", () => {
   });
 
   it("blocks COD over max order value", () => {
+    process.env.COD_ENABLED = "true";
     process.env.COD_MAX_ORDER_VALUE = "5000";
     const result = evaluateCodEligibility({
       orderValue: 5001,
@@ -44,6 +55,7 @@ describe("codEligibility", () => {
   });
 
   it("blocks COD outside allowed PIN prefixes", () => {
+    process.env.COD_ENABLED = "true";
     process.env.COD_ALLOWED_PIN_PREFIXES = "110,700";
     const result = evaluateCodEligibility({
       orderValue: 1_000,
@@ -53,7 +65,8 @@ describe("codEligibility", () => {
     expect(result.reason).toMatch(/PIN/i);
   });
 
-  it("allows COD for matching PIN prefixes", () => {
+  it("allows COD for matching PIN prefixes when enabled", () => {
+    process.env.COD_ENABLED = "true";
     process.env.COD_ALLOWED_PIN_PREFIXES = "400,110";
     const result = evaluateCodEligibility({
       orderValue: 1_000,

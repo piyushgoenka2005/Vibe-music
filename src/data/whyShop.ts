@@ -26,7 +26,7 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
     id: "free-shipping",
     iconId: "shipping",
     title: "Fast, FREE Shipping",
-    subtitle: "Free on orders over ₹9,999.",
+    subtitle: "Free shipping on every order.",
     href: ROUTES.page("shipping"),
   },
   {
@@ -39,8 +39,8 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
   {
     id: "pay-your-way",
     iconId: "payments",
-    title: "Easy Payments",
-    subtitle: "UPI, cards & net banking at checkout.",
+    title: "EMI & Financing",
+    subtitle: "Explore installment options for eligible gear.",
     href: ROUTES.financing,
   },
   {

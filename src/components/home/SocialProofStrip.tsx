@@ -1,4 +1,6 @@
-import { Star } from "lucide-react";
+"use client";
+
+import { Star, ArrowUp } from "lucide-react";
 import { LANDING_SOCIAL_PROOF } from "@/data/landingStatus";
 
 const PROOF_ITEMS = [
@@ -7,18 +9,33 @@ const PROOF_ITEMS = [
   { value: LANDING_SOCIAL_PROOF.brands, label: "Brand partners" },
 ] as const;
 
+function scrollToTop() {
+  window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 export default function SocialProofStrip() {
   return (
     <section className="social-proof-strip" aria-label="Customer trust metrics">
       <div className="social-proof-strip__inner">
         <div className="social-proof-strip__rating">
-          <Star size={18} className="social-proof-strip__star" aria-hidden />
-          <span className="social-proof-strip__rating-value">
-            {LANDING_SOCIAL_PROOF.rating}
-            <span className="social-proof-strip__rating-suffix">/5</span>
-          </span>
+          <Star
+            className="social-proof-strip__star"
+            size={22}
+            strokeWidth={2}
+            aria-hidden
+          />
+          <p className="social-proof-strip__rating-score">
+            <span className="social-proof-strip__rating-value">
+              {LANDING_SOCIAL_PROOF.rating}
+            </span>
+            <span className="social-proof-strip__rating-suffix">
+              / {LANDING_SOCIAL_PROOF.ratingScale}
+            </span>
+          </p>
           <span className="social-proof-strip__rating-label">
-            {LANDING_SOCIAL_PROOF.reviewCountLabel}
+            {LANDING_SOCIAL_PROOF.detail}
           </span>
         </div>
 
@@ -30,6 +47,15 @@ export default function SocialProofStrip() {
             </li>
           ))}
         </ul>
+
+        <button
+          type="button"
+          className="social-proof-strip__top"
+          onClick={scrollToTop}
+          aria-label="Back to top"
+        >
+          <ArrowUp size={18} strokeWidth={2.25} aria-hidden />
+        </button>
       </div>
     </section>
   );

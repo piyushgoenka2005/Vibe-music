@@ -5,7 +5,7 @@ import { getPublicHomepageData as buildPublicHomepageData } from "@/lib/server/h
 import type { PublicHomepageData } from "@/types/homepage";
 
 const HOMEPAGE_REVALIDATE_SECONDS =
-  Number(process.env.HOMEPAGE_CACHE_REVALIDATE_SECONDS) || 60;
+  Number(process.env.HOMEPAGE_CACHE_REVALIDATE_SECONDS) || 300;
 
 async function loadPublicHomepageData(): Promise<PublicHomepageData> {
   return buildPublicHomepageData();

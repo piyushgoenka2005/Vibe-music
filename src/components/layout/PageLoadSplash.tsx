@@ -14,21 +14,22 @@ const splashFont = Bebas_Neue({
   display: "swap",
 });
 
-const WAVE_SETTLE_MS = 1100;
-const BRAND_HOLD_MS = 380;
-const BRAND_EXIT_MS = 300;
-const TEASER_DELAY_MS = 720;
-const ITEMS_PHASE_MS = 2100;
-const FULL_EXIT_MS = 380;
+/** Opt-in splash only — default off so first paint stays interactive. */
+const WAVE_SETTLE_MS = 320;
+const BRAND_HOLD_MS = 120;
+const BRAND_EXIT_MS = 160;
+const TEASER_DELAY_MS = 160;
+const ITEMS_PHASE_MS = 380;
+const FULL_EXIT_MS = 200;
 const SPLASH_SEEN_KEY = "vibe-splash-seen";
-const SPLASH_DISABLED = process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH === "false";
+const SPLASH_ENABLED = process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH === "true";
 
 function shouldShowInitialSplash(): boolean {
-  if (SPLASH_DISABLED) return false;
+  if (!SPLASH_ENABLED) return false;
   try {
     return sessionStorage.getItem(SPLASH_SEEN_KEY) !== "1";
   } catch {
-    return true;
+    return false;
   }
 }
 

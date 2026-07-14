@@ -211,7 +211,7 @@ export default function SiteHeader() {
           <div className="site-header__actions">
             <Link
               href={accountHref}
-              className="site-header__action site-header__action--desktop-only assets-site-header__menu-account"
+              className="site-header__action site-header__action--account assets-site-header__menu-account"
               aria-label={accountLabel}
             >
               {accountPhotoUrl ? (

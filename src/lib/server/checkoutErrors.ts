@@ -26,7 +26,7 @@ export function formatCheckoutError(error: unknown): string {
   }
 
   if (/Missing Razorpay env vars|RAZORPAY_KEY/i.test(message)) {
-    return "Online payments are not configured yet. Please contact support or choose Cash on Delivery.";
+    return "Online payments are not configured yet. Please contact support.";
   }
 
   if (

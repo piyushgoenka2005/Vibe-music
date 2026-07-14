@@ -124,6 +124,9 @@ function SettingsContent() {
           </div>
           <div className="admin-form-group">
             <label>Free Shipping Threshold (₹)</label>
+            <p style={{ fontSize: "0.8125rem", color: "var(--admin-muted)", marginBottom: "0.35rem" }}>
+              Storefront checkout currently forces free shipping (₹0). These fields are retained for future paid shipping — they do not change customer quotes today.
+            </p>
             <input
               className="admin-input"
               style={{ width: "100%" }}

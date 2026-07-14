@@ -12,9 +12,9 @@ import CheckoutSummary, {
 import CheckoutPaymentMethods, {
   type OnlinePaymentChannel,
 } from "@/components/checkout/CheckoutPaymentMethods";
-import { evaluateCodEligibilityClient } from "@/lib/checkout/codEligibilityClient";
 import type { CodCapabilities } from "@/lib/checkout/codEligibilityClient";
 import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import AddressAutocompleteField from "@/components/checkout/AddressAutocompleteField";
 import { INDIAN_STATES } from "@/lib/address/indianStates";
 import { useCheckoutPayment } from "@/hooks/useCheckoutPayment";
@@ -27,6 +27,7 @@ import { normalizeIndianPhone } from "@/lib/validations/address";
 import { DEFAULT_GST_RATE } from "@/lib/gstCalculator";
 import { type ShippingMethod, getDefaultShippingMethod, getShippingChargeForMethod, SHIPPING_METHOD_IDS } from "@/lib/shipping/shippingMethods";
 import { useCartHydrated } from "@/hooks/useCartHydrated";
+import { useCartCatalogReprice } from "@/hooks/useCartCatalogReprice";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
 import { useAuthStore } from "@/store/authStore";
@@ -110,6 +111,7 @@ export default function CheckoutPageContent() {
   } = useAddresses();
   const showToast = useToastStore((s) => s.show);
   const cartHydrated = useCartHydrated();
+  useCartCatalogReprice(true);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -252,25 +254,10 @@ export default function CheckoutPageContent() {
     0
   );
 
-  const orderValueForCod = Math.max(0, cartSubtotal - couponDiscount);
-  const codCheck = evaluateCodEligibilityClient(checkoutCapabilities?.cod, {
-    orderValue: orderValueForCod,
-    postalCode: resolvedAddress?.postalCode ?? addressForm.postalCode,
-  });
-  const codAvailable = codCheck.eligible;
-
-  useEffect(() => {
-    if (paymentMethod === "cod" && !codAvailable && onlinePaymentsAvailable) {
-      setPaymentMethod("razorpay");
-    }
-    if (
-      paymentMethod === "razorpay" &&
-      !onlinePaymentsAvailable &&
-      codAvailable
-    ) {
-      setPaymentMethod("cod");
-    }
-  }, [paymentMethod, codAvailable, onlinePaymentsAvailable]);
+  const effectivePaymentMethod = useMemo((): PaymentMethod => {
+    // COD removed from checkout — online only.
+    return "razorpay";
+  }, []);
 
   const buyerState = resolvedAddress?.state ?? "Maharashtra";
   const email = (user?.email ?? guestEmail).trim().toLowerCase();
@@ -319,6 +306,11 @@ export default function CheckoutPageContent() {
       ? zoneQuote.charges
       : fallbackShippingCharges;
 
+  const activeShippingCharge =
+    shippingMethodCharges[shippingMethod] ??
+    fallbackShippingCharges[shippingMethod] ??
+    0;
+
   useEffect(() => {
     if (!shippingQuoteKey || !resolvedAddress?.postalCode) return;
 
@@ -356,10 +348,6 @@ export default function CheckoutPageContent() {
     };
   }, [shippingQuoteKey, resolvedAddress?.postalCode, resolvedAddress?.state, cartSubtotal, couponDiscount]);
 
-  const activeShippingCharge =
-    shippingMethodCharges[shippingMethod] ??
-    getShippingChargeForMethod(shippingMethod, cartSubtotal, couponDiscount);
-
   const invoice = computeCheckoutInvoice(
     checkoutItems,
     couponDiscount,
@@ -378,12 +366,12 @@ export default function CheckoutPageContent() {
     customerName: resolvedAddress?.name,
     customerPhone: contactPhone,
     phone: contactPhone || undefined,
-    paymentMethod,
+    paymentMethod: effectivePaymentMethod,
     disabled:
       step !== "payment" || !resolvedAddress || !hasValidContact,
     prefetchEnabled:
       step === "payment" &&
-      paymentMethod === "razorpay" &&
+      effectivePaymentMethod === "razorpay" &&
       Boolean(resolvedAddress) &&
       hasValidContact,
   });
@@ -914,11 +902,11 @@ export default function CheckoutPageContent() {
                 {items.map((item) => (
                   <div key={item.lineId} className="checkout-item">
                     {item.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <StorefrontThumbImage
                         src={item.image}
-                        alt=""
                         className="checkout-item__thumb"
+                        width={56}
+                        height={56}
                       />
                     ) : (
                       <div
@@ -974,30 +962,20 @@ export default function CheckoutPageContent() {
               <CheckoutPaymentMethods
                 onlineChannel={onlineChannel}
                 onlinePaymentsAvailable={onlinePaymentsAvailable}
-                codAvailable={codAvailable}
-                codUnavailableReason={codCheck.reason}
                 onOnlineChannelChange={setOnlineChannel}
                 onPaymentMethodChange={setPaymentMethod}
-                paymentMethod={paymentMethod}
+                paymentMethod={effectivePaymentMethod}
               />
 
               {!onlinePaymentsAvailable ? (
                 <p className="checkout-panel__alert" role="alert">
                   <strong>Online payments unavailable:</strong> Razorpay is not
-                  configured on this store. Please use Cash on Delivery if
-                  eligible, or contact support if you need to pay online.
+                  configured on this store. Please contact support to complete
+                  your order.
                 </p>
               ) : null}
 
-              {!codAvailable && paymentMethod !== "cod" ? (
-                <p className="checkout-panel__alert" role="status">
-                  <strong>COD unavailable:</strong>{" "}
-                  {codCheck.reason ??
-                    "Cash on delivery is not available for this order."}
-                </p>
-              ) : null}
-
-              {demoPaymentsLikely && paymentMethod === "razorpay" ? (
+              {demoPaymentsLikely && effectivePaymentMethod === "razorpay" ? (
                 <p className="checkout-panel__alert" role="note">
                   <strong>Demo mode:</strong> Razorpay keys are not configured.
                   Payment will be simulated — your order and invoice are still
@@ -1041,7 +1019,7 @@ export default function CheckoutPageContent() {
                   loadingLabel:
                     payment.processingLabel ??
                     (payment.isLoading ? "Opening Razorpay…" : undefined),
-                  paymentMethod,
+                  paymentMethod: effectivePaymentMethod,
                   error: payment.error,
                 }
               : undefined

@@ -78,6 +78,19 @@ function ShippingContent() {
 
   return (
     <div className="admin-grid-2">
+      <div
+        className="admin-panel"
+        style={{ gridColumn: "1 / -1", marginBottom: "1rem" }}
+      >
+        <div className="admin-panel__body">
+          <p style={{ margin: 0, fontWeight: 600 }}>Checkout shipping is free (₹0)</p>
+          <p style={{ margin: "0.35rem 0 0", color: "var(--text-secondary, #64748b)" }}>
+            Zone charge fields below are for coverage/ETA planning only. The storefront
+            checkout resolver currently returns ₹0 for every method — customers always
+            see free shipping.
+          </p>
+        </div>
+      </div>
       <div className="admin-panel">
         <div className="admin-toolbar">
           <button

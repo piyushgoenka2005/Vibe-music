@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import CarouselProductCard from "@/components/homepage/CarouselProductCard";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
+import { attachHorizontalWheelScroll } from "@/lib/horizontalWheelScroll";
 import { isHomepageProductVisible } from "@/lib/homepage/productVisibility";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageSectionKey, ResolvedHomepageSection } from "@/types/homepage";
@@ -127,6 +128,7 @@ export default function HomepageProductCarouselSection({
     const raf = window.requestAnimationFrame(updateScrollState);
     scroller.addEventListener("scroll", updateScrollState, { passive: true });
     window.addEventListener("resize", updateScrollState);
+    const detachWheel = attachHorizontalWheelScroll(scroller);
 
     const resizeObserver = new ResizeObserver(() => {
       window.requestAnimationFrame(updateScrollState);
@@ -138,6 +140,7 @@ export default function HomepageProductCarouselSection({
       scroller.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", updateScrollState);
       resizeObserver.disconnect();
+      detachWheel();
     };
   }, [products.length, updateScrollState]);
 
@@ -208,7 +211,7 @@ export default function HomepageProductCarouselSection({
             {products.map((item, index) => (
               <CarouselProductCard
                 key={item.id}
-                imagePriority={index < 4}
+                imagePriority={false}
                 item={item}
                 sectionKey={section.key}
               />

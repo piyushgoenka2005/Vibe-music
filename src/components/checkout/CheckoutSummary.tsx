@@ -8,7 +8,6 @@ import { getShippingChargeForMethod } from "@/lib/shipping/shippingMethods";
 import {
   calculateGST,
   DEFAULT_GST_RATE,
-  FREE_SHIPPING_THRESHOLD,
   SELLER_STATE,
   type GSTInvoiceData,
   type GSTRate,
@@ -146,15 +145,6 @@ export default function CheckoutSummary({
   const lineItems: CheckoutSummaryDisplayItem[] =
     displayItems ?? items.map((item) => ({ ...item }));
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotalAfterDiscount = invoice.subtotal - invoice.couponDiscount;
-  const shippingRemaining = Math.max(
-    FREE_SHIPPING_THRESHOLD - subtotalAfterDiscount,
-    0
-  );
-  const shippingProgress = Math.min(
-    (subtotalAfterDiscount / FREE_SHIPPING_THRESHOLD) * 100,
-    100
-  );
 
   async function handleApplyCoupon() {
     const ok = await applyCoupon(couponInput);
@@ -213,19 +203,6 @@ export default function CheckoutSummary({
               );
             })}
           </ul>
-        ) : null}
-
-        {showLineItems && shippingRemaining > 0 ? (
-          <div className="checkout-summary__shipping-bar">
-            <div
-              className="checkout-summary__shipping-fill"
-              style={{ width: `${shippingProgress}%` }}
-            />
-            <p>
-              Add {formatCurrencyPrecise(shippingRemaining)} more for free
-              shipping
-            </p>
-          </div>
         ) : null}
 
         {showPromo ? (
@@ -289,15 +266,7 @@ export default function CheckoutSummary({
             />
           ) : null}
 
-          <SummaryRow
-            label="Shipping"
-            value={
-              invoice.shippingCharge === 0
-                ? "FREE"
-                : formatCurrencyPrecise(invoice.shippingCharge)
-            }
-          />
-
+          <SummaryRow label="Shipping" value="FREE" />
           {invoice.platformFee > 0 ? (
             <SummaryRow
               label="Platform Fee"
@@ -339,7 +308,7 @@ export default function CheckoutSummary({
 
         <p className="checkout-summary__trust">
           <Lock size={12} aria-hidden />
-          Secure checkout in INR - UPI - Cards - Net Banking - COD
+          Secure checkout in INR — UPI · Cards · Net Banking
         </p>
       </div>
     </aside>

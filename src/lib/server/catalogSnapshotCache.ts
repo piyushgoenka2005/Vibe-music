@@ -5,7 +5,7 @@ import { fetchAllProducts as fetchAllProductsFromDb } from "@/lib/server/firesto
 import type { CatalogProduct } from "@/types/catalog";
 
 const CATALOG_REVALIDATE_SECONDS =
-  Number(process.env.CATALOG_CACHE_REVALIDATE_SECONDS) || 60;
+  Number(process.env.CATALOG_CACHE_REVALIDATE_SECONDS) || 300;
 
 async function loadActiveProducts(): Promise<CatalogProduct[]> {
   return fetchAllProductsFromDb(false);

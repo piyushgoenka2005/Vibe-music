@@ -11,7 +11,16 @@ import QueryProvider from "@/providers/QueryProvider";
 import NextAuthSessionProvider from "@/providers/SessionProvider";
 import WebVitalsReporter from "@/components/performance/WebVitalsReporter";
 import RoutePreloader from "@/components/layout/RoutePreloader";
-import PageLoadSplash from "@/components/layout/PageLoadSplash";
+
+const ENABLE_PAGE_LOAD_SPLASH =
+  process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH === "true";
+
+const PageLoadSplash = ENABLE_PAGE_LOAD_SPLASH
+  ? dynamic(() => import("@/components/layout/PageLoadSplash"), {
+      ssr: false,
+      loading: () => null,
+    })
+  : null;
 
 const StorefrontDrawers = dynamic(
   () => import("@/components/layout/StorefrontDrawers"),
@@ -39,7 +48,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <QueryProvider>
       <NextAuthSessionProvider>
         <AuthProvider>
-          <PageLoadSplash />
+          {PageLoadSplash ? <PageLoadSplash /> : null}
           <WebVitalsReporter />
           <RoutePreloader />
           <StorefrontChrome>

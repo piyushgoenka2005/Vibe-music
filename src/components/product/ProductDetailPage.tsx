@@ -20,18 +20,19 @@ import type { ProductDetailResult } from "@/services/product.service";
 import { isPurchasablePrice } from "@/utils/currency";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
-import ProductStickyBar from "./ProductStickyBar";
-import ShippingEstimator from "./ShippingEstimator";
-import ProductTabs, { type TabId } from "./ProductTabs";
-import ProductCrossSell from "./ProductCrossSell";
 import ProductDetailSkeleton from "./ProductDetailSkeleton";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
+import type { TabId } from "./ProductTabs";
 import "./product-detail.css";
 
 const FrequentlyBoughtTogether = dynamic(() => import("./FrequentlyBoughtTogether"), { ssr: false });
 const GuitarSpecShowcase = dynamic(() => import("./GuitarSpecShowcase"), { ssr: false });
 const GuitarTonesInMotion = dynamic(() => import("./GuitarTonesInMotion"), { ssr: false });
 const GuitarStorySections = dynamic(() => import("./GuitarStorySections"), { ssr: false });
+const ShippingEstimator = dynamic(() => import("./ShippingEstimator"), { ssr: false });
+const ProductTabs = dynamic(() => import("./ProductTabs"), { ssr: false });
+const ProductCrossSell = dynamic(() => import("./ProductCrossSell"), { ssr: false });
+const ProductStickyBar = dynamic(() => import("./ProductStickyBar"), { ssr: false });
 
 interface ProductDetailPageProps {
   slug: string;
@@ -254,6 +255,8 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
         onAddToCart={handleAddToCart}
         onBuyNow={handleBuyNow}
         price={variant.price}
+        productId={product.id}
+        productSlug={product.slug}
         productName={product.name}
         sentinelRef={atcSentinelRef}
       />

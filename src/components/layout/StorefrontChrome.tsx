@@ -1,19 +1,24 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { GlassFilter } from "@/components/ui/liquid-glass";
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SkipToContent from "@/components/layout/SkipToContent";
 import BackToTop from "@/components/layout/BackToTop";
-import HelpWidget from "@/components/layout/HelpWidget";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import DeferredSplashCursor from "@/components/layout/DeferredSplashCursor";
 
-const SPLASH_CURSOR_DISABLED =
-  process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR === "false";
+const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const SPLASH_CURSOR_ENABLED =
+  process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR === "true";
 
 function subscribeNoop() {
   return () => {};
@@ -52,7 +57,7 @@ export default function StorefrontChrome({
   const showBackToTop = !hideMobileFloatingUi;
   const splashEnabled =
     hasMounted &&
-    !SPLASH_CURSOR_DISABLED &&
+    SPLASH_CURSOR_ENABLED &&
     !prefersReducedMotion &&
     !hideChrome &&
     !isMobileViewport;
@@ -89,9 +94,9 @@ export default function StorefrontChrome({
       {showHelpWidget ? <HelpWidget /> : null}
       {splashEnabled ? (
         <DeferredSplashCursor
-          DYE_RESOLUTION={720}
+          DYE_RESOLUTION={480}
           SIM_RESOLUTION={64}
-          PRESSURE_ITERATIONS={10}
+          PRESSURE_ITERATIONS={8}
           DENSITY_DISSIPATION={6.5}
           VELOCITY_DISSIPATION={2.75}
           PRESSURE={0.08}

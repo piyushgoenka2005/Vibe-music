@@ -24,8 +24,7 @@ export default function HomepagePromoBanner() {
             width={BANNER_WIDTH}
             height={BANNER_HEIGHT}
             sizes="(max-width: 1320px) 100vw, 1320px"
-            priority
-            fetchPriority="high"
+            loading="lazy"
             className="homepage-promo-banner__image"
           />
         </Link>
