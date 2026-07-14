@@ -24,6 +24,7 @@ export default function SocialProofStrip() {
             className="social-proof-strip__star"
             size={22}
             strokeWidth={2}
+            fill="currentColor"
             aria-hidden
           />
           <p className="social-proof-strip__rating-score">
