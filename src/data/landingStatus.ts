@@ -12,7 +12,7 @@ export const LANDING_STATS = [
   {
     value: "Fast",
     label: "Dispatch on in-stock",
-    status: "Ships from Maharashtra",
+    status: "Warehouses across India",
     tone: "success" as StatusTone,
   },
   {
@@ -90,7 +90,7 @@ export const LANDING_SERVICE_STATUS = [
   {
     icon: "clock" as const,
     title: "In-stock dispatch",
-    desc: "Priced, in-stock gear ships from our Maharashtra warehouse",
+    desc: "Priced, in-stock gear ships from our warehouses",
     status: "On schedule",
     tone: "info" as StatusTone,
     href: ROUTES.search,
@@ -107,7 +107,6 @@ export const LANDING_SERVICE_STATUS = [
   },
 ] as const;
 
-/** Trust bar above footer — rating shown as product-page review average. */
 export const LANDING_SOCIAL_PROOF = {
   rating: "4.8",
   ratingScale: "5",
@@ -117,33 +116,40 @@ export const LANDING_SOCIAL_PROOF = {
   brands: "Authorized",
 } as const;
 
-/**
- * Delivery coverage — not claimed retail storefronts.
- * Visuals use brand accents (no missing location photo assets).
- */
 export const LANDING_LOCATIONS = [
   {
-    city: "Mumbai",
-    status: "Dispatch hub",
-    tone: "success" as StatusTone,
-    accent: "#1253ed",
-  },
-  {
-    city: "Maharashtra",
-    status: "Warehouse",
+    city: "Delhi",
+    status: "Open",
     tone: "live" as StatusTone,
-    accent: "#0e42be",
+    accent: "#1e3a8a",
+    image: "/images/locations/delhi.jpg",
   },
   {
-    city: "North & East",
-    status: "We ship here",
-    tone: "info" as StatusTone,
+    city: "Kolkata",
+    status: "Open",
+    tone: "live" as StatusTone,
     accent: "#0f766e",
+    image: "/images/locations/kolkata.jpg",
   },
   {
-    city: "Pan-India",
-    status: "Courier partners",
+    city: "Nagpur",
+    status: "Open",
+    tone: "live" as StatusTone,
+    accent: "#9a3412",
+    image: "/images/locations/nagpur.jpg",
+  },
+  {
+    city: "North East",
+    status: "Partner hub",
     tone: "info" as StatusTone,
     accent: "#5b21b6",
+    image: "/images/locations/north-east.jpg",
+  },
+  {
+    city: "Mumbai",
+    status: "Flagship",
+    tone: "success" as StatusTone,
+    accent: "#1253ed",
+    image: "/images/locations/mumbai.jpg",
   },
 ] as const;
