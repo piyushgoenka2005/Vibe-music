@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { HOMEPAGE_BLOG_FALLBACK_POSTS } from "@/data/homepageBlogTeaser";
-import { isBlogUnavailable, listPublicBlogPosts } from "@/lib/server/blogService";
 import { optimizeImageUrl } from "@/lib/images";
 import { ROUTES } from "@/lib/routes";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
@@ -35,6 +34,19 @@ function BlogTeaserCard({
   usingFallback?: boolean;
 }) {
   const published = formatPublishedDate(post.publishedAt);
+  const imageFit = post.imageFit ?? "cover";
+  const mediaClassName = [
+    "blog-teaser__media",
+    imageFit === "contain" ? "blog-teaser__media--contain" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const imageClassName = [
+    "blog-teaser__image",
+    imageFit === "contain" ? "blog-teaser__image--contain" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <article
@@ -44,11 +56,11 @@ function BlogTeaserCard({
         className="blog-teaser__link"
         href={postHref(post, usingFallback)}
       >
-        <div className="blog-teaser__media">
+        <div className={mediaClassName}>
           {post.coverImage ? (
             <img
               alt=""
-              className="blog-teaser__image"
+              className={imageClassName}
               loading="lazy"
               src={optimizeImageUrl(post.coverImage, "blogCover")}
             />
@@ -96,25 +108,9 @@ function BlogTeaserCard({
 }
 
 export default async function HomepageBlogTeaser() {
-  let posts: HomepageBlogTeaserPost[] = [];
-  let usingFallback = false;
-
-  if (!isBlogUnavailable()) {
-    try {
-      const allPosts = await listPublicBlogPosts(new Date(), { limit: 3 });
-      posts = Array.isArray(allPosts) ? allPosts.slice(0, 3) : [];
-    } catch (error) {
-      console.warn(
-        "[home] Blog teaser unavailable:",
-        error instanceof Error ? error.message : error
-      );
-    }
-  }
-
-  if (posts.length === 0) {
-    posts = HOMEPAGE_BLOG_FALLBACK_POSTS;
-    usingFallback = true;
-  }
+  // Curated covers for this homepage strip — keep stable vs live blog feed swaps.
+  const posts: HomepageBlogTeaserPost[] = HOMEPAGE_BLOG_FALLBACK_POSTS;
+  const usingFallback = true;
 
   const gridModifier =
     posts.length === 1 ? "one" : posts.length === 2 ? "two" : "three";

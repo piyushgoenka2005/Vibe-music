@@ -7,7 +7,7 @@
   position: relative;
   z-index: 3;
   width: 100%;
-  margin: 0;
+  margin: 0 0 -6px;
   padding: clamp(3.5rem, 7vw, 5.5rem) 0 clamp(3.5rem, 7vw, 5.5rem);
   overflow: hidden;
   background: var(--tour-ribbon-blue);
@@ -16,11 +16,9 @@
   border: 0;
   outline: 0;
   box-shadow: none;
-}
-
-/* Homepage: slight overlap into footer shell only (not the trending spacer) */
-body.is-landing-page .premium-home > .tour-ribbon {
-  margin-bottom: -12px;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .tour-ribbon__stage {
@@ -145,20 +143,7 @@ body.is-landing-page .premium-home > .tour-ribbon {
 
 @media (max-width: 767px) {
   .tour-ribbon {
-    padding: 2.75rem 0 2rem;
-  }
-
-  /* Close the white/dark seam into Inside Vibe Music — mobile only */
-  body.is-landing-page .premium-home > .tour-ribbon {
-    margin-bottom: -40px;
-    padding-bottom: 2.5rem;
-    /* Paint over any leftover gap so the navy reveal panel can't peek through */
-    box-shadow: 0 40px 0 0 var(--tour-ribbon-blue);
-  }
-
-  /* Trust strip already adds mobile padding-top when present */
-  body.is-landing-page .premium-home > .social-proof-strip + .tour-ribbon {
-    padding-top: 3.25rem;
+    padding: 2.75rem 0 3rem;
   }
 
   .tour-ribbon__stage {

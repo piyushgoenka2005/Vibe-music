@@ -58,5 +58,6 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     src: "/images/Hertz.webp",
     alt: "Hertz amplifiers — turn up the power and feel every beat at Vibe Music",
     href: `${ROUTES.searchResults}?brand=hertz`,
+    objectPosition: "center center",
   },
 ];

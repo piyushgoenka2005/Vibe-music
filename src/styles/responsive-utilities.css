@@ -3,9 +3,13 @@
 
 /* Prevent layout blowout from full-bleed sections */
 .premium-home,
-.homepage-banner-hero,
 .aplus-story-banner {
   max-width: 100%;
+}
+
+/* Banner is full-bleed; width rules live in homepage-banner-hero.css */
+.homepage-banner-hero {
+  max-width: none;
 }
 
 /* Tablet bridge: drawer nav active but desktop-ish layouts (768–1023px) */

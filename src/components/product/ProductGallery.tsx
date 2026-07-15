@@ -139,6 +139,7 @@ export default function ProductGallery({
   const [imageRect, setImageRect] = useState<ImageRect>(EMPTY_IMAGE_RECT);
 
   const mainRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLImageElement>(null);
   const paneRef = useRef<HTMLDivElement>(null);
 
@@ -273,6 +274,18 @@ export default function ProductGallery({
     if (!imageMetrics.naturalWidth) return;
     measureImageRect();
   }, [imageMetrics.naturalWidth, imageMetrics.naturalHeight, measureImageRect]);
+
+  // Match the stage frame to the photo so the full asset fills the area
+  // without edge cropping (fixed square frames left large letterbox on mobile).
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage || !imageMetrics.naturalWidth || !imageMetrics.naturalHeight) {
+      return;
+    }
+    const ratio = imageMetrics.naturalWidth / imageMetrics.naturalHeight;
+    const clamped = Math.min(1.35, Math.max(0.82, ratio));
+    stage.style.setProperty("--pdp-gallery-aspect", String(clamped));
+  }, [imageMetrics.naturalWidth, imageMetrics.naturalHeight]);
 
   const updateLens = useCallback(
     (clientX: number, clientY: number) => {
@@ -415,7 +428,10 @@ export default function ProductGallery({
         ))}
       </div>
 
-      <div className={`pdp-gallery__stage${zoomActive && canZoom ? " pdp-gallery__stage--zooming" : ""}`}>
+      <div
+        ref={stageRef}
+        className={`pdp-gallery__stage${zoomActive && canZoom ? " pdp-gallery__stage--zooming" : ""}`}
+      >
         <div
           ref={mainRef}
           className={`pdp-gallery__main${zoomActive && canZoom ? " pdp-gallery__main--zooming" : ""}`}

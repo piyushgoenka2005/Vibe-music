@@ -15,7 +15,7 @@ import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import { ROUTES } from "@/lib/routes";
 import "@/styles/culture-typography.css";
 
-/** Desktop dotted scroll quote */
+/** Desktop dotted scroll quote — also used on mobile */
 const DESKTOP_WORD_CYCLE = [
   "MUSICIANS",
   "DON'T REMEMBER",
@@ -26,16 +26,8 @@ const DESKTOP_WORD_CYCLE = [
   "BRAND.",
 ] as const;
 
-/** Mobile dotted scroll pattern */
-const MOBILE_WORD_CYCLE = [
-  "DISCOVER",
-  "MUSIC",
-  "GEAR",
-  "CREATORS",
-  "STUDIO",
-] as const;
-
-const MOBILE_CYCLE_REPEATS = 4;
+/** How many times to repeat the quote on mobile so the scroll runway stays long */
+const MOBILE_QUOTE_REPEATS = 4;
 
 export interface CultureTypographySectionProps {
   metadataLabel?: string;
@@ -104,9 +96,10 @@ export default function CultureTypographySection({
 
   const scrollLines = useMemo(() => {
     if (isMobile) {
+      // Same web quote as desktop — repeat for a continuous dotted scroll runway
       const repeated: string[] = [];
-      for (let i = 0; i < MOBILE_CYCLE_REPEATS; i++) {
-        repeated.push(...MOBILE_WORD_CYCLE);
+      for (let i = 0; i < MOBILE_QUOTE_REPEATS; i++) {
+        repeated.push(...desktopQuoteLines);
       }
       return [...repeated, ...repeated];
     }
@@ -238,7 +231,7 @@ export default function CultureTypographySection({
 
   const scrollTrackStyle = showScrollExperience ? { y: backgroundY } : undefined;
 
-  const mobileScrollRunwayVh = MOBILE_CYCLE_REPEATS * 56;
+  const mobileScrollRunwayVh = MOBILE_QUOTE_REPEATS * 72;
   const desktopScrollRunwayPx = Math.max(scrollShiftPx, desktopQuoteLines.length * 280);
 
   const sectionStyle = {

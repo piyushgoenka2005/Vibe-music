@@ -3,22 +3,13 @@
 .homepage-banner-hero {
   position: relative;
   display: block;
-  width: 100%;
-  max-width: 100%;
-  margin-left: 0;
-  margin-right: 0;
+  width: 100dvw;
+  max-width: 100dvw;
+  margin-left: calc(50% - 50dvw);
+  margin-right: calc(50% - 50dvw);
   padding: 0;
   overflow: hidden;
   background: #1a1a1a;
-}
-
-@media (min-width: 768px) {
-  .homepage-banner-hero {
-    width: 100dvw;
-    max-width: 100dvw;
-    margin-left: calc(50% - 50dvw);
-    margin-right: calc(50% - 50dvw);
-  }
 }
 
 .homepage-banner-hero__viewport {
@@ -59,6 +50,8 @@
 }
 
 .homepage-banner-hero__image {
+  width: 100% !important;
+  height: 100% !important;
   object-fit: cover !important;
   object-position: center center;
 }
@@ -118,22 +111,33 @@
 }
 
 @media (max-width: 767px) {
+  /*
+   * Edge-to-edge + fully visible artwork:
+   * Keep the native 1920×720 frame and use contain so wide creatives
+   * (HERTZ text + CTA on the left) are not cropped on phones.
+   */
   .homepage-banner-hero {
     width: 100%;
-    max-width: 100%;
+    max-width: none;
     margin-left: 0;
     margin-right: 0;
+    border-radius: 0;
+    background: #111;
   }
 
   .homepage-banner-hero__viewport {
-    aspect-ratio: 16 / 9;
-    min-height: 11rem;
+    aspect-ratio: 1920 / 720;
+    width: 100%;
+    min-height: 0;
     max-height: none;
     height: auto;
+    background: #111;
   }
 
   .homepage-banner-hero__image {
-    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
     object-position: center center;
   }
 
@@ -150,6 +154,12 @@
 
   .homepage-banner-hero__nav--next {
     right: max(0.5rem, env(safe-area-inset-right, 0px));
+  }
+}
+
+@media (max-width: 479px) {
+  .homepage-banner-hero__viewport {
+    min-height: 7.5rem;
   }
 }
 

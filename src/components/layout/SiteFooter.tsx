@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
@@ -26,9 +25,6 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
     links: [
       { label: "Track your order", href: ROUTES.trackOrder },
       { label: "Contact support", href: ROUTES.contact },
-      ...(BRAND.phoneTel
-        ? [{ label: `Call ${BRAND.phoneDisplay}`, href: `tel:${BRAND.phoneTel}` }]
-        : [{ label: `Email ${BRAND.email}`, href: `mailto:${BRAND.email}` }]),
       { label: "Shipping & delivery", href: ROUTES.page("shipping") },
       { label: "Returns & exchanges", href: ROUTES.page("returns") },
     ],
@@ -56,11 +52,6 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
 ];
 
 export default function SiteFooter() {
-  const pathname = usePathname() ?? "";
-  const isLandingPage = pathname === "/";
-  const isProductPage = /^\/product\/[^/]+$/.test(pathname);
-  /** Same layered scroll-reveal as the homepage (shell over fixed Trending panel). */
-  const useFooterReveal = isLandingPage || isProductPage;
   const showToast = useToastStore((state) => state.show);
   const footerRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -78,25 +69,10 @@ export default function SiteFooter() {
     const spacer = spacerRef.current;
     if (!panel || !footer || !spacer) return;
 
-    /* Search / listings: keep panel in-flow (fixed navy bled through translucent UI). */
-    if (!useFooterReveal) {
-      spacer.style.height = "0px";
-      panel.classList.add("is-ready", "is-interactive");
-      return () => {
-        panel.classList.remove("is-ready", "is-interactive");
-        spacer.style.height = "";
-      };
-    }
-
     const shell = footer.querySelector<HTMLElement>(".site-footer__shell");
 
     const syncSpacer = () => {
-      const rect = panel.getBoundingClientRect();
-      const height = Math.max(
-        Math.ceil(rect.height),
-        panel.offsetHeight,
-        panel.scrollHeight
-      );
+      const height = Math.max(panel.offsetHeight, panel.scrollHeight);
       if (height > 0) {
         spacer.style.height = `${height}px`;
       }
@@ -107,36 +83,23 @@ export default function SiteFooter() {
     const resizeObserver = new ResizeObserver(syncSpacer);
     resizeObserver.observe(panel);
 
-    /** Avoid flashing the fixed navy panel while the homepage is still short / loading. */
-    let footerInView = false;
-    const pageTallEnough = () =>
-      document.documentElement.scrollHeight >= window.innerHeight * 1.35;
-
-    const syncReady = () => {
-      const shouldShow = footerInView && pageTallEnough();
-      panel.classList.toggle("is-ready", shouldShow);
-      if (shouldShow) {
-        syncSpacer();
-      }
-    };
-
     const readyObserver = new IntersectionObserver(
       ([entry]) => {
-        footerInView = Boolean(entry?.isIntersecting);
-        syncReady();
+        const isReady = Boolean(entry?.isIntersecting);
+        panel.classList.toggle("is-ready", isReady);
+        if (isReady) {
+          syncSpacer();
+        }
       },
-      { threshold: 0.08, rootMargin: "0px 0px 0px 0px" }
+      { threshold: 0, rootMargin: "60px 0px 0px 0px" }
     );
 
-    readyObserver.observe(shell ?? footer);
-
-    const pageResizeObserver = new ResizeObserver(syncReady);
-    pageResizeObserver.observe(document.documentElement);
+    /* Observe shell + spacer together so Trending stays visible through the reveal */
+    readyObserver.observe(footer);
 
     const updateInteractive = () => {
       if (!shell) return;
       const shellRect = shell.getBoundingClientRect();
-      /* Trending becomes interactive only after Inside Vibe Music has scrolled mostly off */
       const panelInteractive = shellRect.bottom <= window.innerHeight * 0.2;
       panel.classList.toggle("is-interactive", panelInteractive);
     };
@@ -150,19 +113,16 @@ export default function SiteFooter() {
       });
     };
 
-    const onResize = () => {
-      syncSpacer();
-      syncReady();
-      updateInteractive();
-    };
-
     updateInteractive();
     window.addEventListener("scroll", onScroll, { passive: true });
+    const onResize = () => {
+      syncSpacer();
+      updateInteractive();
+    };
     window.addEventListener("resize", onResize);
 
     return () => {
       resizeObserver.disconnect();
-      pageResizeObserver.disconnect();
       readyObserver.disconnect();
       if (scrollFrame) {
         window.cancelAnimationFrame(scrollFrame);
@@ -172,7 +132,7 @@ export default function SiteFooter() {
       panel.classList.remove("is-ready", "is-interactive");
       spacer.style.height = "";
     };
-  }, [useFooterReveal]);
+  }, []);
 
   async function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -242,12 +202,8 @@ export default function SiteFooter() {
 
   return (
     <>
-      {/*
-        Layered scroll-reveal (desktop + mobile):
-        1) Inside Vibe Music shell scrolls over the fixed Trending panel
-        2) Spacer creates room to reveal Trending underneath
-        Panel stays behind the shell until the shell scrolls away.
-      */}
+      <FooterProductsPanel ref={panelRef} />
+
       <footer
         ref={footerRef}
         className="site-footer site-footer--layered"
@@ -358,8 +314,6 @@ export default function SiteFooter() {
 
         <div ref={spacerRef} className="site-footer__panel-spacer" aria-hidden />
       </footer>
-
-      <FooterProductsPanel ref={panelRef} />
     </>
   );
 }

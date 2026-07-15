@@ -47,10 +47,11 @@
   .premium-home > .homepage-banner-hero,
   .premium-home > [data-vibe-section="homepage-banner-hero"] {
     width: 100%;
-    max-width: 100%;
+    max-width: none;
     margin-left: 0;
     margin-right: 0;
     overflow-x: clip;
+    border-radius: 0;
   }
 
   .premium-home .homepage-wrapper .find-your-product {
@@ -3782,8 +3783,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
 
 @media (max-width: 767px) {
   .premium-hero--split {
-    padding-inline: max(1rem, env(safe-area-inset-left, 0px))
-      max(1rem, env(safe-area-inset-right, 0px));
+    padding-inline: 0;
     overflow-x: clip;
   }
 
@@ -3800,6 +3800,8 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
     max-width: 100%;
     min-width: 0;
     gap: 1.25rem;
+    padding-inline: max(1rem, env(safe-area-inset-left, 0px))
+      max(1rem, env(safe-area-inset-right, 0px));
   }
 
   .premium-hero__copy {
@@ -3848,7 +3850,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
 @media (max-width: 639px) {
   .premium-hero--split {
     padding-bottom: 0.85rem;
-    padding-inline: 0.875rem;
+    padding-inline: 0;
   }
 
   .premium-home > .premium-hero.premium-hero--split {
@@ -3857,6 +3859,11 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
 
   .homepage-banner-hero + .premium-hero.premium-hero--split {
     padding-top: clamp(0.625rem, 1.75vw, 0.875rem);
+  }
+
+  .premium-hero__inner {
+    padding-inline: max(0.875rem, env(safe-area-inset-left, 0px))
+      max(0.875rem, env(safe-area-inset-right, 0px));
   }
 
   .premium-hero__title {
