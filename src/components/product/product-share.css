@@ -9,7 +9,7 @@
   -webkit-backdrop-filter: none;
   cursor: pointer;
   padding: 0;
-  color: #0f172a;
+  color: #475569;
   line-height: 1;
   border-radius: 0;
   box-shadow: none;
@@ -17,21 +17,16 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition:
-    color var(--duration-fast, 150ms ease),
-    transform var(--duration-fast, 150ms ease);
+  transition: color 150ms ease, opacity 150ms ease;
 }
 
 .product-share-btn:not(.product-share-btn--labeled):hover {
   color: var(--brand-primary, #1253ed);
-  background: transparent;
-  border-color: transparent;
-  transform: none;
-  box-shadow: none;
+  opacity: 0.85;
 }
 
 .product-share-btn:not(.product-share-btn--labeled):active {
-  transform: none;
+  opacity: 0.6;
 }
 
 .product-share-btn:focus-visible {
@@ -59,6 +54,11 @@
   font-size: inherit;
   font-weight: inherit;
   gap: 0.5rem;
+  transform: none;
+}
+
+.product-share-btn--labeled:hover {
+  transform: none;
 }
 
 .product-share-btn__label {
@@ -74,8 +74,8 @@
 }
 
 .product-share-btn--top-right {
-  top: 8px;
-  right: 8px;
+  top: 20px;
+  right: 20px;
 }
 
 .product-share-btn--top-left {
@@ -95,6 +95,7 @@
 
 .product-card-actions .product-share-btn {
   --share-btn-size: 2rem;
+  color: #475569;
 }
 
 .product-card-actions .wl-heart-btn,
@@ -171,7 +172,6 @@
 .new-arrivals-card-wrap,
 .homepage-deals-card-wrap,
 .pdp-cross-sell__card-wrap,
-.pdp-fbt__card-wrap,
 .blog-teaser__card,
 .acct__wishlist-card,
 .scanner-card-wrap {
@@ -194,16 +194,11 @@
 }
 
 .pdp-share-btn.product-share-btn {
-  --share-btn-size: 2.75rem;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
+  --share-btn-size: 2.25rem;
 }
 
 .pdp-share-btn.product-share-btn:hover {
-  background: transparent;
   color: var(--brand-primary, #1253ed);
-  border-color: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {

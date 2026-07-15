@@ -75,16 +75,6 @@ export default function SiteFooter() {
     const spacer = spacerRef.current;
     if (!panel || !footer || !spacer) return;
 
-    /* Non-homepage: panel stays in-flow — no fixed scroll-reveal chrome */
-    if (!isLandingPage) {
-      spacer.style.height = "0px";
-      panel.classList.add("is-ready", "is-interactive");
-      return () => {
-        panel.classList.remove("is-ready", "is-interactive");
-        spacer.style.height = "";
-      };
-    }
-
     const shell = footer.querySelector<HTMLElement>(".site-footer__shell");
 
     const syncSpacer = () => {
@@ -146,7 +136,7 @@ export default function SiteFooter() {
       panel.classList.remove("is-ready", "is-interactive");
       spacer.style.height = "";
     };
-  }, [isLandingPage]);
+  }, []);
 
   async function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

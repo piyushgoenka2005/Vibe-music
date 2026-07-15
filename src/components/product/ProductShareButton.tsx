@@ -21,7 +21,7 @@ export default function ProductShareButton({
   title,
   url,
   text,
-  size = 16,
+  size = 20,
   className = "",
   overlay = false,
   position = "top-right",

@@ -9,7 +9,6 @@ import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
 
 import PremiumHero from "@/components/home/PremiumHero";
-import HomepagePromoBanner from "@/components/home/HomepagePromoBanner";
 const HomepageTopProducts = dynamic(
   () => import("@/components/home/HomepageTopProducts"),
   { loading: () => <BlogTeaserSkeleton /> }
@@ -81,8 +80,6 @@ export default function HomePage() {
       </Suspense>
 
       <CategoryBento />
-
-      <HomepagePromoBanner />
 
       <Suspense fallback={<HomepageSectionsSkeleton />}>
         <HomepageSectionsAsync />

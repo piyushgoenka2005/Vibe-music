@@ -136,6 +136,7 @@
   flex-wrap: nowrap;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
   padding: 0.25rem 0 0.75rem;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;

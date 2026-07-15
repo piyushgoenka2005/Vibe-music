@@ -32,7 +32,7 @@ function TopProductCard({ product }: { product: HomepageTopProduct }) {
     <article className="blog-teaser__card">
       <ProductShareButton
         overlay
-        position="top-right"
+        position="top-left"
         title={product.title}
         url={product.href}
       />

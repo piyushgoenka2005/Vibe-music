@@ -362,8 +362,8 @@
   }
 
   /* PDP — FBT horizontal strip */
-  .pdp-fbt__items {
-    gap: 0.5rem;
+  .pdp-fbt__products {
+    gap: 0;
     padding-bottom: 0.25rem;
   }
 
@@ -375,6 +375,8 @@
   .pdp-fbt__summary {
     min-width: 0;
     width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--pdp-grey10, #e5e4e3);
   }
 
   /* Search overlay */

@@ -50,13 +50,13 @@
   }
 
   .premium-home .premium-product-carousel .product-suggest__items {
-    --carousel-card-width: clamp(210px, 18.5vw, 236px);
+    --carousel-card-width: clamp(220px, 20vw, 270px);
   }
 }
 
 @media (min-width: 1440px) {
   .premium-home .premium-product-carousel .product-suggest__items {
-    --carousel-card-width: 228px;
+    --carousel-card-width: 260px;
   }
 }
 
@@ -147,7 +147,7 @@
 
 .premium-home .premium-product-carousel .product-suggest__items {
   --carousel-gap: clamp(0.875rem, 2vw, 1.125rem);
-  --carousel-card-width: clamp(200px, 20vw, 248px);
+  --carousel-card-width: clamp(210px, 21vw, 270px);
   --carousel-edge: 0px;
   display: flex;
   flex-direction: row;
@@ -162,7 +162,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
-  scroll-behavior: auto;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   /* pan-y: page owns vertical; JS axis-lock drives horizontal swipes */
@@ -175,6 +175,7 @@
 .premium-home .premium-product-carousel .product-suggest__items.is-dragging {
   cursor: grabbing;
   scroll-snap-type: none;
+  scroll-behavior: auto;
 }
 
 .premium-home .premium-product-carousel .product-suggest__items.is-dragging a {
@@ -240,12 +241,12 @@
   flex-direction: column;
   height: 100%;
   min-height: 100%;
-  padding: 0.875rem;
+  padding: 1rem;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #ffffff;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  overflow: visible;
+  overflow: hidden;
   transform: none;
   transition: none;
 }
@@ -338,8 +339,8 @@
 
   .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-action--button,
   .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-action--button {
-    background: var(--brand-primary, #1253ed);
-    border-color: var(--brand-primary, #1253ed);
+    background: #1e293b;
+    border-color: #1e293b;
     color: #ffffff;
     box-shadow: none;
   }
@@ -361,7 +362,7 @@
   min-height: 0;
   max-height: none;
   margin-bottom: 0.875rem;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden !important;
   background: transparent;
   transform: none !important;
@@ -479,26 +480,32 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.4rem;
   margin-top: auto;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-pricing {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.15rem;
   min-width: 0;
 }
 
+.premium-home .premium-product-carousel .product-suggest__item-prices {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
 .premium-home .premium-product-carousel .product-suggest__item-was {
-  font-size: 0.6875rem;
+  font-size: 0.9rem;
   color: #94a3b8;
   text-decoration: line-through;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-price {
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   letter-spacing: -0.02em;
   color: #0f172a;
 }
@@ -524,9 +531,10 @@
   justify-content: center;
   min-height: 2.25rem;
   padding: 0.45rem 0.85rem;
-  border: 1px solid rgba(18, 83, 237, 0.22);
+  border: 1px solid #0f172a;
   border-radius: 999px;
-  background: rgba(18, 83, 237, 0.06);
+  background: #0f172a;
+  color: #ffffff;
   cursor: pointer;
   text-decoration: none;
   transition:
@@ -539,8 +547,8 @@
 
 .premium-home .premium-product-carousel .product-suggest__item-action--button:hover,
 .premium-home .premium-product-carousel .product-suggest__item-action--button:focus-visible {
-  background: #0b46d4;
-  border-color: #0b46d4;
+  background: #1e293b;
+  border-color: #1e293b;
   color: #ffffff;
   text-decoration: none;
   transform: none;
@@ -626,7 +634,7 @@
 
 @media (min-width: 768px) {
   .premium-home .premium-product-carousel .product-suggest__items {
-    --carousel-card-width: clamp(210px, 24vw, 248px);
+    --carousel-card-width: clamp(220px, 23vw, 280px);
   }
 }
 
@@ -756,13 +764,27 @@
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-footer {
-    align-items: flex-end;
-    flex-direction: row;
-    gap: 0.5rem;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-pricing {
+    gap: 0.1rem;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-prices {
+    gap: 0.25rem;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-was {
+    font-size: 0.7rem;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-price {
-    font-size: 0.9375rem;
+    font-size: 0.8125rem;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-price--enquiry {
@@ -773,12 +795,13 @@
 
   .premium-home .premium-product-carousel .product-suggest__item-action,
   .premium-home .premium-product-carousel .product-suggest__item-action--button {
-    width: auto;
-    min-height: 44px;
+    width: 100%;
+    min-height: 2rem;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     margin-top: 0;
-    padding: 0.5rem 0.85rem;
+    padding: 0.35rem 0.5rem;
+    white-space: nowrap;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-ribbon,
@@ -797,6 +820,27 @@
 
   .premium-home .premium-product-carousel .product-suggest__end-spacer {
     flex: 0 0 max(0.25rem, env(safe-area-inset-right, 0px));
+  }
+}
+
+@media (max-width: 479px) {
+  .premium-home .premium-product-carousel .product-suggest__item-was {
+    font-size: 0.68rem;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-price {
+    font-size: 0.8125rem;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-action,
+  .premium-home .premium-product-carousel .product-suggest__item-action--button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.6875rem;
+    min-height: 2.25rem;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__name {
+    font-size: 0.75rem;
   }
 }
 

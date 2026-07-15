@@ -9,6 +9,7 @@ import {
   getVariantAttributeGroups,
 } from "@/lib/variants";
 import type { ProductDetail, ProductVariant } from "@/types/product";
+import ProductShareButton from "./ProductShareButton";
 import ProductTrustBadges from "./ProductTrustBadges";
 import NotifyMeButton from "./NotifyMeButton";
 
@@ -97,31 +98,46 @@ export default function ProductInfo({
       </div>
 
       <h1 className="pdp-title">{product.name}</h1>
-      <p className="pdp-sku">
-        SKU: <span>{selectedVariant.sku}</span>
-      </p>
+
+      <div className="pdp-meta-row">
+        <div className="pdp-rating">
+          <span className="pdp-rating__stars" aria-hidden="true">
+            {"★".repeat(Math.round(ratingValue))}
+            {"☆".repeat(5 - Math.round(ratingValue))}
+          </span>
+          <button
+            type="button"
+            className="pdp-rating__link"
+            onClick={onReviewsClick}
+          >
+            {reviewCountValue} {reviewCountValue === 1 ? "review" : "reviews"}
+          </button>
+          <span className="pdp-meta-separator" aria-hidden="true">|</span>
+          <button
+            type="button"
+            className="pdp-rating__link"
+            onClick={onReviewsClick}
+          >
+            Write your review
+          </button>
+        </div>
+        <div className="pdp-meta-actions">
+          <ProductShareButton
+            title={`${product.brand} ${product.name}`}
+            url={`/product/${product.slug}`}
+            showLabel
+            className="pdp-meta-share"
+          />
+          <span className="pdp-meta-separator" aria-hidden="true">|</span>
+          <span className="pdp-sku">
+            Item ID: {selectedVariant.sku}
+          </span>
+        </div>
+      </div>
 
       {showLimitedDeal ? (
         <span className="pdp-deal-badge">Limited Deal</span>
       ) : null}
-
-      <div className="pdp-rating">
-        <span className="pdp-rating__stars" aria-hidden="true">
-          {"★".repeat(Math.round(ratingValue))}
-          {"☆".repeat(5 - Math.round(ratingValue))}
-        </span>
-        <span>
-          {ratingValue.toFixed(1)} ({reviewCountValue} reviews)
-        </span>
-        <button
-          type="button"
-          className="pdp-rating__link"
-          style={{ border: 0, background: "none", cursor: "pointer", padding: 0 }}
-          onClick={onReviewsClick}
-        >
-          Read Reviews
-        </button>
-      </div>
 
       <div className="pdp-pricing">
         {onSale ? (
@@ -141,13 +157,12 @@ export default function ProductInfo({
         )}
       </div>
 
-      <div className={availabilityClass(selectedVariant.availability)}>
-        <span aria-hidden="true">●</span>
-        {availabilityLabel(selectedVariant.availability)}
-        {selectedVariant.stock > 0 ? (
-          <span className="pdp-stock-count"> ({selectedVariant.stock} available)</span>
-        ) : null}
-      </div>
+      {selectedVariant.availability !== "in-stock" && (
+        <div className={availabilityClass(selectedVariant.availability)}>
+          <span aria-hidden="true">●</span>
+          {availabilityLabel(selectedVariant.availability)}
+        </div>
+      )}
 
       {attributeGroups.length > 0 ? (
         <div className="pdp-variants">
@@ -318,6 +333,7 @@ export default function ProductInfo({
                 onClick={onAddToCart}
                 disabled={!canPurchase}
               >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{marginRight: 6, verticalAlign: "middle"}}><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                 Add to Cart
               </button>
               <button

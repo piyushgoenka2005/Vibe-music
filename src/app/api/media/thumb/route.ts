@@ -20,7 +20,7 @@ const ALLOWED_HOSTS = new Set([
 ]);
 
 const MAX_WIDTH = 2000;
-const DEFAULT_WIDTH = 480;
+const DEFAULT_WIDTH = 800;
 /** Abort upstream masters larger than this before buffering fully. */
 const MAX_UPSTREAM_BYTES = 24_000_000;
 const MEMORY_CACHE_MAX = 256;
@@ -145,15 +145,13 @@ async function buildThumb(url: string, width: number): Promise<CachedThumb | nul
     }
 
     const sharp = (await import("sharp")).default;
-    // Card thumbs: favor speed so first paint doesn't 404 under load.
     const body = await sharp(input, { failOn: "none" })
       .rotate()
       .resize(width, width, {
         fit: "inside",
         withoutEnlargement: true,
-        fastShrinkOnLoad: true,
       })
-      .webp({ quality: 80, effort: 2 })
+      .webp({ quality: 92, effort: 4 })
       .toBuffer();
 
     if (isThumbPlaceholderBody(body)) {
@@ -223,7 +221,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Host not allowed" }, { status: 400 });
     }
 
-    const cacheKey = `v4|${parsed.toString()}|${width}`;
+    const cacheKey = `v5|${parsed.toString()}|${width}`;
 
     const memoryHit = memoryCache.get(cacheKey);
     if (memoryHit) {

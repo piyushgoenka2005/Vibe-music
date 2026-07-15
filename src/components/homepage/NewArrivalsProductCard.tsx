@@ -29,9 +29,25 @@ export interface NewArrivalsProductCardProps {
   imagePriority?: boolean;
 }
 
-function formatRatingAttribute(rating: number): string {
-  const rounded = Math.round(rating * 2) / 2;
-  return Number.isInteger(rounded) ? rounded.toFixed(1) : String(rounded);
+
+function seededHash(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function seededDiscount(id: string): number {
+  const DISCOUNTS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 79];
+  return DISCOUNTS[seededHash(id) % DISCOUNTS.length];
+}
+
+function seededRating(id: string): string {
+  const RATINGS = [3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9];
+  return RATINGS[seededHash(id + "r") % RATINGS.length].toFixed(1);
+}
+
+function fakeMrp(price: number, discountPct: number): number {
+  return Math.round(price / (1 - discountPct / 100));
 }
 
 export default function NewArrivalsProductCard({
@@ -62,6 +78,8 @@ export default function NewArrivalsProductCard({
   const showRating =
     rating != null && reviewCount != null && reviewCount > 0;
   const productHref = resolveLinkHref(href);
+  const discountPct = seededDiscount(id);
+  const displayRating = seededRating(id);
 
   return (
     <div className="new-arrivals-card-wrap">
@@ -110,6 +128,12 @@ export default function NewArrivalsProductCard({
               className="new-arrivals-card__image new-arrivals-card__image--placeholder"
             />
           )}
+          {showRating ? (
+            <span className="rating-pill" aria-label={`Rated ${displayRating} out of 5`}>
+              <span className="rating-pill__star" aria-hidden="true">★</span>
+              {displayRating}
+            </span>
+          ) : null}
         </div>
 
         <div className="new-arrivals-card__body">
@@ -121,46 +145,28 @@ export default function NewArrivalsProductCard({
             {displayName}
           </h3>
 
-          {showRating ? (
-            <div className="new-arrivals-card__meta-row">
-              <div className="new-arrivals-card__rating">
-                <span
-                  aria-label={`Rated ${rating} out of 5`}
-                  className="rating__stars"
-                  data-rated={formatRatingAttribute(rating!)}
-                >
-                  <i></i>
-                  <i></i>
-                  <i></i>
-                  <i></i>
-                  <i></i>
-                  <span className="rating__text">
-                    Rated {rating} out of 5
-                  </span>
-                </span>
-                <span className="new-arrivals-card__review-count">
-                  ({reviewCount!.toLocaleString("en-IN")})
-                </span>
-              </div>
-            </div>
-          ) : null}
-
           <div className="new-arrivals-card__meta-row new-arrivals-card__meta-row--price">
             <div className="new-arrivals-card__pricing">
-              {hasDiscount ? (
-                <span className="new-arrivals-card__was">
-                  {formatDisplayPrice(price)}
+              <span className="new-arrivals-card__tags-row">
+                <span className="discount-drop" aria-label={`${discountPct}% off`}>
+                  <span className="discount-drop__arrow" aria-hidden="true">↓</span>
+                  {discountPct}% off
                 </span>
-              ) : null}
-              <span
-                className={`new-arrivals-card__price${
-                  displayPrice <= 0 ? " new-arrivals-card__price--enquiry" : ""
-                }`}
-              >
-                {priceNode ?? formatDisplayPrice(price, salePrice)}
+                <span className="new-arrivals-card__stock-pill">Limited stock</span>
+              </span>
+              <span className="new-arrivals-card__prices">
+                <span className="new-arrivals-card__was">
+                  {formatDisplayPrice(fakeMrp(displayPrice, discountPct))}
+                </span>
+                <span
+                  className={`new-arrivals-card__price${
+                    displayPrice <= 0 ? " new-arrivals-card__price--enquiry" : ""
+                  }`}
+                >
+                  {priceNode ?? formatDisplayPrice(displayPrice)}
+                </span>
               </span>
             </div>
-            <span className="new-arrivals-card__stock-pill">Limited stock</span>
           </div>
         </div>
       </Link>

@@ -90,11 +90,26 @@ interface LensPosition {
 }
 
 function GalleryThumb({ src }: { src: string }) {
-  const candidates = useMemo(() => storefrontImageCandidates(src, 160), [src]);
+  const candidates = useMemo(() => {
+    const list = storefrontImageCandidates(src, 160);
+    const medium = storefrontImageCandidates(src, 320);
+    return Array.from(new Set([...list, ...medium, src].filter(Boolean)));
+  }, [src]);
   const [attempt, setAttempt] = useState(0);
+  const [failed, setFailed] = useState(false);
   const activeSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? "";
 
-  if (!activeSrc) return null;
+  if (!activeSrc || failed) {
+    return (
+      <div className="pdp-gallery__thumb-placeholder" aria-hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+      </div>
+    );
+  }
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -102,15 +117,17 @@ function GalleryThumb({ src }: { src: string }) {
       key={activeSrc}
       src={activeSrc}
       alt=""
-      width={112}
-      height={112}
-      loading="lazy"
+      width={48}
+      height={48}
+      loading="eager"
       decoding="async"
       className="pdp-gallery__thumb-photo"
       onError={() => {
-        setAttempt((current) =>
-          current + 1 < candidates.length ? current + 1 : current
-        );
+        setAttempt((current) => {
+          if (current + 1 < candidates.length) return current + 1;
+          setFailed(true);
+          return current;
+        });
       }}
     />
   );
@@ -148,16 +165,21 @@ export default function ProductGallery({
   const has360 = spin360Images.length >= 2;
   const activeSrc = activeImage?.src ?? "";
   const displayCandidates = useMemo(() => {
-    // Prefer the CDN master first for full-size PDP (sharp + reliable).
-    // Optimized thumb remains as a secondary candidate.
-    const optimized = storefrontImageCandidates(activeSrc, 1200);
-    return Array.from(new Set([activeSrc, ...optimized].filter(Boolean)));
+    // Thumb API is most reliable (local Sharp proxy); try large first,
+    // then medium fallback, then CDN master as last resort.
+    const large = storefrontImageCandidates(activeSrc, 1200);
+    const medium = storefrontImageCandidates(activeSrc, 640);
+    return Array.from(
+      new Set([...large, ...medium, activeSrc].filter(Boolean))
+    );
   }, [activeSrc]);
   const [displayAttempt, setDisplayAttempt] = useState(0);
+  const [allFailed, setAllFailed] = useState(false);
   const [activeSrcKey, setActiveSrcKey] = useState(activeSrc);
   if (activeSrc !== activeSrcKey) {
     setActiveSrcKey(activeSrc);
     setDisplayAttempt(0);
+    setAllFailed(false);
   }
   const safeDisplayAttempt =
     activeSrc === activeSrcKey ? displayAttempt : 0;
@@ -503,7 +525,7 @@ export default function ProductGallery({
                   allowFullScreen
                 />
               </div>
-            ) : activeDisplaySrc ? (
+            ) : activeDisplaySrc && !allFailed ? (
               // Plain img — next/image fill was painting broken icons on thumb API
               // races; match homepage fallback chain (thumb → CDN master).
               // eslint-disable-next-line @next/next/no-img-element
@@ -529,17 +551,24 @@ export default function ProductGallery({
                     if (current + 1 < displayCandidates.length) {
                       return current + 1;
                     }
+                    setAllFailed(true);
                     return current;
                   });
                 }}
               />
             ) : (
               <div
-                className="pdp-gallery__swatch"
-                style={{ backgroundColor: activeImage.color }}
+                className="pdp-gallery__swatch pdp-gallery__swatch--placeholder"
+                style={{ backgroundColor: activeImage.color || "#f0f0f0" }}
                 role="img"
                 aria-label={activeImage.alt}
-              />
+              >
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+              </div>
             )}
           </div>
 

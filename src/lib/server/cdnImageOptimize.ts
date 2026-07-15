@@ -58,7 +58,7 @@ export async function uploadOptimizedImageToCdn(
       fit: "inside",
       withoutEnlargement: true,
     })
-    .webp({ quality: 82, effort: 4 })
+    .webp({ quality: 92, effort: 5 })
     .toBuffer();
 
   const masterName = `${id}.webp`;
@@ -73,7 +73,7 @@ export async function uploadOptimizedImageToCdn(
         fit: "inside",
         withoutEnlargement: true,
       })
-      .webp({ quality: 82, effort: 4 })
+      .webp({ quality: 92, effort: 5 })
       .toBuffer();
     const name = `${id}-w${width}.webp`;
     await writeFile(path.join(directory, name), body);

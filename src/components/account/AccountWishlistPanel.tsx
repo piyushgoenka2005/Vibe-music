@@ -113,7 +113,7 @@ export default function AccountWishlistPanel() {
                 <article key={item.productId} className="acct__wishlist-card">
                   <ProductShareButton
                     overlay
-                    position="top-right"
+                    position="top-left"
                     title={`${item.brand} ${item.name}`}
                     url={`/product/${item.slug}`}
                     size={16}

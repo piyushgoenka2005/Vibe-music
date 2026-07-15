@@ -62,7 +62,9 @@ function buildGalleryImages(
     src,
   }));
 
-  return variantImages;
+  const variantSrcs = new Set(variant.images);
+  const extras = productImages.filter((img) => img.src && !variantSrcs.has(img.src));
+  return [...variantImages, ...extras];
 }
 
 export default function ProductDetailPage({ slug, initialData }: ProductDetailPageProps) {

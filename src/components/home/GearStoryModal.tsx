@@ -164,7 +164,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
               </button>
               <ProductShareButton
                 overlay
-                position="top-right"
+                position="top-left"
                 title={story.name}
                 url={productPath(story.slug)}
                 text={`Check out ${story.name} at Vibe Music`}

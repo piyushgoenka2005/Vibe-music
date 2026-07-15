@@ -210,27 +210,34 @@ export default function SiteHeader() {
           </button>
 
           <div className="site-header__actions">
-            <Link
-              href={accountHref}
-              className="site-header__action site-header__action--account assets-site-header__menu-account"
-              aria-label={accountLabel}
-            >
-              {accountPhotoUrl ? (
-                <img
-                  src={accountPhotoUrl}
-                  alt=""
-                  className="site-header__avatar"
-                  width={26}
-                  height={26}
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <User size={18} aria-hidden />
-              )}
-              <span className="site-header__action-label assets-site-header__menu-account-navlink">
-                {accountLabel}
-              </span>
-            </Link>
+            <div className="site-header__account-wrap">
+              <Link
+                href={accountHref}
+                className="site-header__action site-header__action--account assets-site-header__menu-account"
+                aria-label={accountLabel}
+              >
+                {accountPhotoUrl ? (
+                  <img
+                    src={accountPhotoUrl}
+                    alt=""
+                    className="site-header__avatar"
+                    width={28}
+                    height={28}
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <User size={20} aria-hidden />
+                )}
+                <span className="site-header__action-label assets-site-header__menu-account-navlink">
+                  {accountLabel}
+                </span>
+              </Link>
+              {isInitialized && !isAuthenticated ? (
+                <Link href={ROUTES.login} className="login-nudge">
+                  Login
+                </Link>
+              ) : null}
+            </div>
 
             <div className="site-header__action--desktop-only assets-site-header__menu-cart-wrap">
               <WishlistCounter onClick={openWishlistDrawer} />

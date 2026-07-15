@@ -3,10 +3,9 @@ interface ProductShareIconProps {
   size?: number;
 }
 
-/** Export/share glyph with inset padding so it stays centered in circular buttons. */
 export default function ProductShareIcon({
   className,
-  size = 16,
+  size = 20,
 }: ProductShareIconProps) {
   return (
     <svg
@@ -17,14 +16,14 @@ export default function ProductShareIcon({
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth="2"
+      strokeWidth="2.2"
       viewBox="0 0 24 24"
       width={size}
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d="M12 6.25v7.5" />
-      <path d="M8.75 9.5 12 6.25 15.25 9.5" />
-      <path d="M7.25 13.75v4a1.75 1.75 0 0 0 1.75 1.75h6a1.75 1.75 0 0 0 1.75-1.75v-4" />
+      <path d="M12 3v10" />
+      <path d="m8 7 4-4 4 4" />
+      <path d="M6 14v3a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3" />
     </svg>
   );
 }

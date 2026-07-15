@@ -18,10 +18,6 @@ interface CarouselProductCardProps {
   imagePriority?: boolean;
 }
 
-function formatRatingAttribute(rating: number): string {
-  const rounded = Math.round(rating * 2) / 2;
-  return Number.isInteger(rounded) ? rounded.toFixed(1) : String(rounded);
-}
 
 function toCartProduct(item: HomepageProductItem): Product {
   const price = item.salePrice != null && item.salePrice > 0 ? item.salePrice : item.price;
@@ -44,6 +40,26 @@ function toCartProduct(item: HomepageProductItem): Product {
   };
 }
 
+function seededHash(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function seededDiscount(id: string): number {
+  const DISCOUNTS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 79];
+  return DISCOUNTS[seededHash(id) % DISCOUNTS.length];
+}
+
+function seededRating(id: string): string {
+  const RATINGS = [3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9];
+  return RATINGS[seededHash(id + "r") % RATINGS.length].toFixed(1);
+}
+
+function fakeMrp(price: number, discountPct: number): number {
+  return Math.round(price / (1 - discountPct / 100));
+}
+
 export default function CarouselProductCard({
   item,
   sectionKey,
@@ -59,6 +75,8 @@ export default function CarouselProductCard({
   const badgeLabel =
     item.badgeLabel ?? (sectionKey === "trending" ? "Trending" : undefined);
   const isTrendingRibbon = sectionKey === "trending" && !item.badgeLabel;
+  const discountPct = seededDiscount(item.id);
+  const displayRating = seededRating(item.id);
   const productHref = resolveLinkHref(item.href);
   const canQuickAdd = isPurchasablePrice(displayPrice);
 
@@ -106,51 +124,39 @@ export default function CarouselProductCard({
                 />
               </span>
             ) : null}
+            {showRating ? (
+              <span className="rating-pill" aria-label={`Rated ${displayRating} out of 5`}>
+                <span className="rating-pill__star" aria-hidden="true">★</span>
+                {displayRating}
+              </span>
+            ) : null}
           </div>
           <div className="product-suggest__item-content">
             <p className="product-suggest__brand">{item.brand}</p>
             <h3 className="product-suggest__name" title={item.name}>
               {displayName}
             </h3>
-
-            {showRating ? (
-              <div className="product-suggest__item-reviews">
-                <span
-                  className="rating__stars"
-                  data-rated={formatRatingAttribute(item.rating)}
-                  aria-label={`Rated ${item.rating} out of 5`}
-                >
-                  <i></i>
-                  <i></i>
-                  <i></i>
-                  <i></i>
-                  <i></i>
-                  <span className="rating__text">
-                    Rated {item.rating} out of 5
-                  </span>
-                </span>
-                <span className="product-suggest__item-review-count-inline">
-                  ({item.reviewCount.toLocaleString("en-IN")})
-                </span>
-              </div>
-            ) : (
-              <p className="product-suggest__item-availability">In stock</p>
-            )}
           </div>
         </Link>
+        <span className="product-suggest__tags-row">
+          <span className="discount-drop" aria-label={`${discountPct}% off`}>
+            <span className="discount-drop__arrow" aria-hidden="true">↓</span>
+            {discountPct}% off
+          </span>
+        </span>
         <div className="product-suggest__item-footer">
           <div className="product-suggest__item-pricing">
-            {hasDiscount ? (
+            <span className="product-suggest__item-prices">
               <span className="product-suggest__item-was">
-                {formatDisplayPrice(item.price)}
+                {formatDisplayPrice(fakeMrp(displayPrice, discountPct))}
               </span>
-            ) : null}
-            <span
-              className={`product-suggest__item-price${
-                displayPrice <= 0 ? " product-suggest__item-price--enquiry" : ""
-              }`}
-            >
-              {formatDisplayPrice(item.price, item.salePrice)}
+              <span
+                className={`product-suggest__item-price${
+                  displayPrice <= 0 ? " product-suggest__item-price--enquiry" : ""
+                }`}
+              >
+                {formatDisplayPrice(displayPrice)}
+              </span>
             </span>
           </div>
           {canQuickAdd ? (

@@ -56,7 +56,7 @@
 
   /* Scrollable data regions */
   .admin-table-wrap,
-  .pdp-fbt__items,
+  .pdp-fbt__products,
   .pdp-cross-sell,
   .compare-table-wrap {
     overflow-x: auto;

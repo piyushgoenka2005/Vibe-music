@@ -2,8 +2,14 @@
  * Horizontal wheel assist for product rails.
  * Never steals vertical page scroll — only reacts to clear sideways intent
  * (trackpad deltaX, Shift+wheel, or dominant horizontal delta).
+ *
+ * Discrete mouse-wheel clicks (large deltas) use smooth scrolling so the
+ * rail glides instead of jumping. Continuous trackpad deltas write scrollLeft
+ * directly for 1:1 tracking.
  */
 export function attachHorizontalWheelScroll(el: HTMLElement): () => void {
+  const DISCRETE_THRESHOLD = 50;
+
   const onWheel = (event: WheelEvent) => {
     const maxScroll = el.scrollWidth - el.clientWidth;
     if (maxScroll <= 8) return;
@@ -15,7 +21,6 @@ export function attachHorizontalWheelScroll(el: HTMLElement): () => void {
     const shiftHorizontal = event.shiftKey && absY >= absX;
     const nativeHorizontal = absX > absY * 1.15;
 
-    // Pure/mostly-vertical gestures must keep scrolling the page.
     if (!shiftHorizontal && !nativeHorizontal) return;
 
     const delta = shiftHorizontal ? event.deltaY : event.deltaX;
@@ -27,7 +32,13 @@ export function attachHorizontalWheelScroll(el: HTMLElement): () => void {
     if (!moved) return;
 
     event.preventDefault();
-    el.scrollLeft = clamped;
+
+    const isDiscrete = Math.abs(delta) >= DISCRETE_THRESHOLD;
+    if (isDiscrete) {
+      el.scrollTo({ left: clamped, behavior: "smooth" });
+    } else {
+      el.scrollLeft = clamped;
+    }
   };
 
   el.addEventListener("wheel", onWheel, { passive: false });

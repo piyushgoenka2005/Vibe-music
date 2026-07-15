@@ -236,6 +236,7 @@
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
     scroll-padding-inline: 0;
     padding-bottom: 0.25rem;
     -webkit-overflow-scrolling: touch;
@@ -247,6 +248,7 @@
 
   .category-cards-inner.is-dragging {
     scroll-snap-type: none;
+    scroll-behavior: auto;
   }
 
   .category-cards-inner.is-dragging a {

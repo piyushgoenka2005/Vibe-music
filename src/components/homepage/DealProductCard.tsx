@@ -23,7 +23,7 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
     <div className="homepage-deals-card-wrap">
       <ProductShareButton
         overlay
-        position="top-right"
+        position="top-left"
         title={`${item.brand} ${item.name}`}
         url={productHref}
       />
