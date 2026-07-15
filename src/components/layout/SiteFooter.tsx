@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
@@ -25,6 +26,9 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
     links: [
       { label: "Track your order", href: ROUTES.trackOrder },
       { label: "Contact support", href: ROUTES.contact },
+      ...(BRAND.phoneTel
+        ? [{ label: `Call ${BRAND.phoneDisplay}`, href: `tel:${BRAND.phoneTel}` }]
+        : [{ label: `Email ${BRAND.email}`, href: `mailto:${BRAND.email}` }]),
       { label: "Shipping & delivery", href: ROUTES.page("shipping") },
       { label: "Returns & exchanges", href: ROUTES.page("returns") },
     ],
@@ -52,6 +56,8 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
 ];
 
 export default function SiteFooter() {
+  const pathname = usePathname() ?? "";
+  const isLandingPage = pathname === "/";
   const showToast = useToastStore((state) => state.show);
   const footerRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -68,6 +74,16 @@ export default function SiteFooter() {
     const footer = footerRef.current;
     const spacer = spacerRef.current;
     if (!panel || !footer || !spacer) return;
+
+    /* Non-homepage: panel stays in-flow — no fixed scroll-reveal chrome */
+    if (!isLandingPage) {
+      spacer.style.height = "0px";
+      panel.classList.add("is-ready", "is-interactive");
+      return () => {
+        panel.classList.remove("is-ready", "is-interactive");
+        spacer.style.height = "";
+      };
+    }
 
     const shell = footer.querySelector<HTMLElement>(".site-footer__shell");
 
@@ -91,15 +107,15 @@ export default function SiteFooter() {
           syncSpacer();
         }
       },
-      { threshold: 0, rootMargin: "60px 0px 0px 0px" }
+      { threshold: 0.08, rootMargin: "0px 0px 0px 0px" }
     );
 
-    /* Observe shell + spacer together so Trending stays visible through the reveal */
-    readyObserver.observe(footer);
+    readyObserver.observe(shell ?? footer);
 
     const updateInteractive = () => {
       if (!shell) return;
       const shellRect = shell.getBoundingClientRect();
+      /* Trending becomes interactive only after Inside Vibe Music has scrolled mostly off */
       const panelInteractive = shellRect.bottom <= window.innerHeight * 0.2;
       panel.classList.toggle("is-interactive", panelInteractive);
     };
@@ -115,11 +131,8 @@ export default function SiteFooter() {
 
     updateInteractive();
     window.addEventListener("scroll", onScroll, { passive: true });
-    const onResize = () => {
-      syncSpacer();
-      updateInteractive();
-    };
-    window.addEventListener("resize", onResize);
+    window.addEventListener("resize", syncSpacer);
+    window.addEventListener("resize", updateInteractive);
 
     return () => {
       resizeObserver.disconnect();
@@ -128,11 +141,12 @@ export default function SiteFooter() {
         window.cancelAnimationFrame(scrollFrame);
       }
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", syncSpacer);
+      window.removeEventListener("resize", updateInteractive);
       panel.classList.remove("is-ready", "is-interactive");
       spacer.style.height = "";
     };
-  }, []);
+  }, [isLandingPage]);
 
   async function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -202,8 +216,12 @@ export default function SiteFooter() {
 
   return (
     <>
-      <FooterProductsPanel ref={panelRef} />
-
+      {/*
+        Layered scroll-reveal (desktop + mobile):
+        1) Inside Vibe Music shell scrolls over the fixed Trending panel
+        2) Spacer creates room to reveal Trending underneath
+        Panel stays behind the shell until the shell scrolls away.
+      */}
       <footer
         ref={footerRef}
         className="site-footer site-footer--layered"
@@ -314,6 +332,8 @@ export default function SiteFooter() {
 
         <div ref={spacerRef} className="site-footer__panel-spacer" aria-hidden />
       </footer>
+
+      <FooterProductsPanel ref={panelRef} />
     </>
   );
 }
