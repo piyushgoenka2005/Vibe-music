@@ -39,6 +39,7 @@ function toAdminProduct(catalog: CatalogProduct): AdminProduct {
     variants: detail.variants,
     specifications: catalog.specifications,
     images: catalog.images,
+    spin360Images: catalog.detail?.spin360Images ?? [],
   };
 }
 
@@ -123,6 +124,7 @@ export async function createAdminProduct(
     images?: string[];
     variants?: CreateProductInput["variants"];
     guitarSpecs?: Record<string, string>;
+    spin360Images?: string[];
   }
 ): Promise<AdminProduct> {
   const created = await createProduct({
@@ -152,6 +154,7 @@ export async function createAdminProduct(
     variants: input.variants,
     guitarSpecs: input.guitarSpecs,
     specifications: input.specifications,
+    spin360Images: input.spin360Images,
   });
   return toAdminProduct(created);
 }
@@ -162,6 +165,7 @@ export async function updateAdminProduct(
     images?: string[];
     variants?: CreateProductInput["variants"];
     guitarSpecs?: Record<string, string>;
+    spin360Images?: string[];
   }
 ): Promise<AdminProduct> {
   const updated = await updateProduct(id, {
@@ -191,6 +195,7 @@ export async function updateAdminProduct(
     variants: patch.variants,
     guitarSpecs: patch.guitarSpecs,
     specifications: patch.specifications,
+    spin360Images: patch.spin360Images,
   });
   return toAdminProduct(updated);
 }

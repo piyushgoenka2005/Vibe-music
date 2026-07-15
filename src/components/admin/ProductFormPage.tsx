@@ -41,6 +41,7 @@ const EMPTY = {
   trending: false,
   newArrival: false,
   images: [] as string[],
+  spin360Images: [] as string[],
   variants: [] as ProductVariant[],
   bundle: createEmptyBundleState(),
   related: createEmptyRelatedState(),
@@ -74,6 +75,7 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             trending: d.product.trending ?? false,
             newArrival: d.product.newArrival ?? false,
             images: d.product.images ?? (d.product.image ? [d.product.image] : []),
+            spin360Images: d.product.spin360Images ?? [],
             variants: d.product.variants ?? [],
             bundle: createEmptyBundleState(),
             related: createEmptyRelatedState(),
@@ -299,6 +301,19 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             images={form.images}
             onChange={(images) => setForm({ ...form, images })}
           />
+          <div className="admin-form-grid--full">
+            <h3 className="admin-section-title" style={{ marginBottom: "0.5rem" }}>
+              360° view frames
+            </h3>
+            <p style={{ color: "var(--admin-muted)", marginBottom: "0.75rem", fontSize: "0.875rem" }}>
+              Upload an ordered sequence of product frames (minimum 2). Leave empty to hide the 360° viewer on the PDP.
+            </p>
+            <ProductImageUpload
+              categorySlug={form.categorySlug}
+              images={form.spin360Images}
+              onChange={(spin360Images) => setForm({ ...form, spin360Images })}
+            />
+          </div>
           <div className="admin-form-grid--full">
             <ProductVariantsEditor
               parentSku={form.sku || "VM-00000"}

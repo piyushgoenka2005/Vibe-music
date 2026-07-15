@@ -2,6 +2,7 @@
 
 import { useLayoutEffect } from "react";
 import {
+  SPLASH_ACTIVE_CLASS,
   SPLASH_PENDING_CLASS,
   SPLASH_SEEN_KEY,
   isPageLoadSplashEnabled,
@@ -13,13 +14,24 @@ import {
  */
 export default function SplashPendingClear() {
   useLayoutEffect(() => {
+    const clear = () => {
+      document.documentElement.classList.remove(
+        SPLASH_PENDING_CLASS,
+        SPLASH_ACTIVE_CLASS
+      );
+      document.documentElement.style.removeProperty("background");
+      document.documentElement.style.removeProperty("background-color");
+      document.body?.style.removeProperty("background");
+      document.body?.style.removeProperty("background-color");
+    };
+
     if (!isPageLoadSplashEnabled()) {
-      document.documentElement.classList.remove(SPLASH_PENDING_CLASS);
+      clear();
       return;
     }
     try {
       if (sessionStorage.getItem(SPLASH_SEEN_KEY) === "1") {
-        document.documentElement.classList.remove(SPLASH_PENDING_CLASS);
+        clear();
       }
     } catch {
       /* keep cover until PageLoadSplash decides */

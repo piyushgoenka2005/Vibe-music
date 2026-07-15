@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { Heart } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { useWishlistStore } from "@/store/wishlistStore";
+import { useToastStore } from "@/store/toastStore";
 import { formatDisplayPrice } from "@/utils/currency";
 import type { Product } from "@/types/product";
 import AccountEmptyState from "./AccountEmptyState";
@@ -30,6 +32,36 @@ export default function AccountWishlistPanel() {
   const moveToCart = useWishlistStore((s) => s.moveToCart);
   const moveAllToCart = useWishlistStore((s) => s.moveAllToCart);
   const clear = useWishlistStore((s) => s.clear);
+  const showToast = useToastStore((s) => s.show);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
+
+  async function shareWishlist() {
+    if (items.length === 0 || sharing) return;
+    setSharing(true);
+    try {
+      const res = await fetch("/api/wishlist/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      });
+      const json = (await res.json()) as { share?: { url: string }; error?: string };
+      if (!res.ok || !json.share?.url) {
+        throw new Error(json.error ?? "Share failed");
+      }
+      setShareUrl(json.share.url);
+      try {
+        await navigator.clipboard.writeText(json.share.url);
+        showToast("Wishlist share link copied", "success");
+      } catch {
+        showToast("Wishlist share link created", "success");
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Share failed", "error");
+    } finally {
+      setSharing(false);
+    }
+  }
 
   return (
     <div>
@@ -51,11 +83,28 @@ export default function AccountWishlistPanel() {
             <button
               type="button"
               className="acct__btn acct__btn--secondary"
+              onClick={() => void shareWishlist()}
+              disabled={sharing}
+            >
+              {sharing ? "Sharing…" : "Share wishlist"}
+            </button>
+            <button
+              type="button"
+              className="acct__btn acct__btn--secondary"
               onClick={clear}
             >
               Clear Wishlist
             </button>
           </div>
+
+          {shareUrl ? (
+            <p className="acct__section-sub" style={{ marginTop: "0.75rem" }}>
+              Share link:{" "}
+              <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                {shareUrl}
+              </a>
+            </p>
+          ) : null}
 
           <div className="acct__wishlist-grid">
             {items.map((item) => {

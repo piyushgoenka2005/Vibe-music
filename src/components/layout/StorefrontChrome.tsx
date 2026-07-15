@@ -63,13 +63,22 @@ export default function StorefrontChrome({
     !isMobileViewport;
 
   useLayoutEffect(() => {
+    const hasFooterReveal = isLandingPage || isProductPage;
     document.body.classList.toggle("is-landing-page", isLandingPage);
+    document.body.classList.toggle("is-product-page", isProductPage);
+    document.body.classList.toggle("has-footer-reveal", hasFooterReveal);
     window.dispatchEvent(new Event("site-header:sync"));
     requestAnimationFrame(() => {
       window.dispatchEvent(new Event("site-header:sync"));
     });
-    return () => document.body.classList.remove("is-landing-page");
-  }, [isLandingPage]);
+    return () => {
+      document.body.classList.remove(
+        "is-landing-page",
+        "is-product-page",
+        "has-footer-reveal"
+      );
+    };
+  }, [isLandingPage, isProductPage]);
 
   useEffect(() => {
     if (pathname.startsWith("/checkout") || pathname.startsWith("/cart")) {
@@ -81,8 +90,17 @@ export default function StorefrontChrome({
     return <>{children}</>;
   }
 
+  const shellClassName = [
+    "storefront-shell",
+    isLandingPage ? "is-landing-page" : "",
+    isProductPage ? "is-product-page" : "",
+    isLandingPage || isProductPage ? "has-footer-reveal" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className="storefront-shell">
+    <div className={shellClassName}>
       <GlassFilter />
       <SkipToContent />
       <SiteHeader />

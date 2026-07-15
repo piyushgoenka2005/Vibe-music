@@ -315,6 +315,20 @@ model Wishlist {
   @@map("wishlists")
 }
 
+model WishlistShare {
+  id        String  @id
+  token     String  @unique
+  items     Json    @default("[]")
+  userId    String? @map("user_id")
+  viewCount Int     @default(0) @map("view_count")
+  createdAt String  @map("created_at")
+  expiresAt String? @map("expires_at")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("wishlist_shares")
+}
+
 // ─── Content ────────────────────────────────────────────────────────────────
 
 model Banner {
@@ -473,6 +487,15 @@ model StoreSettings {
   updatedAt             String @map("updated_at")
 
   @@map("store_settings")
+}
+
+model AdminRolePermissionOverride {
+  role        String  @id
+  permissions Json    @default("[]")
+  updatedAt   String  @map("updated_at")
+  updatedBy   String? @map("updated_by")
+
+  @@map("admin_role_permission_overrides")
 }
 
 model Shipment {

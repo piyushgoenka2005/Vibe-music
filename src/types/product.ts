@@ -95,4 +95,6 @@ export interface ProductDetail extends Product {
   frequentlyBoughtTogether: string[];
   similarProductIds: string[];
   relatedProductIds: string[];
+  /** Ordered frame URLs for 360° product view. */
+  spin360Images?: string[];
 }

@@ -79,6 +79,10 @@ test.describe("guest checkout", () => {
       "DATABASE_URL required for order persistence"
     );
 
+    const caps = await request.get("/api/checkout/capabilities");
+    const capsBody = (await caps.json()) as { cod?: { enabled?: boolean } };
+    test.skip(!capsBody.cod?.enabled, "COD disabled in environment (expected for production)");
+
     const product = await fetchCheckoutProduct(request);
     await seedGuestCart(page, product);
     const email = `e2e-guest-${Date.now()}@example.com`;
@@ -103,6 +107,10 @@ test.describe("guest checkout", () => {
       !process.env.DATABASE_URL,
       "DATABASE_URL required for order persistence"
     );
+
+    const caps = await request.get("/api/checkout/capabilities");
+    const capsBody = (await caps.json()) as { cod?: { enabled?: boolean } };
+    test.skip(!capsBody.cod?.enabled, "COD disabled in environment (expected for production)");
 
     const product = await fetchCheckoutProduct(request);
     const response = await request.post("/api/payment/create-order", {

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Bebas_Neue } from "next/font/google";
 import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
 import SocialRailGate from "@/components/layout/SocialRailGate";
@@ -16,6 +17,12 @@ import "@/styles/responsive-utilities.css";
 import "@/styles/buttons.css";
 import "@/styles/notify-me.css";
 import "@/styles/page-load-splash.css";
+
+const splashBootFont = Bebas_Neue({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+});
 
 export const metadata: Metadata = DEFAULT_METADATA;
 
@@ -46,22 +53,20 @@ export default function RootLayout({
       </head>
       <body className={primaryFont.className} suppressHydrationWarning>
         {splashEnabled ? (
-          <>
-            <div
-              id="vibe-boot-splash"
-              className="vibe-boot-splash"
-              aria-hidden="true"
-            >
-              <div className="page-load-splash__frame page-load-splash__frame--settled">
-                <span className="page-load-splash__text">VIBE MUSIC</span>
-              </div>
+          /* Instant framed brand cover — CSS hides unless html.vibe-splash-pending. */
+          <div
+            id="vibe-boot-splash"
+            className="vibe-boot-splash"
+            aria-hidden="true"
+          >
+            <div className="page-load-splash__frame page-load-splash__frame--settled">
+              <span
+                className={`page-load-splash__text page-load-splash__text--settled ${splashBootFont.className}`}
+              >
+                VIBE MUSIC
+              </span>
             </div>
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `(function(){try{if(sessionStorage.getItem("vibe-splash-seen")==="1"){var el=document.getElementById("vibe-boot-splash");if(el)el.remove();document.documentElement.classList.remove("vibe-splash-pending");}}catch(e){}})();`,
-              }}
-            />
-          </>
+          </div>
         ) : null}
         <SocialRailGate />
         <AppShell>{children}</AppShell>

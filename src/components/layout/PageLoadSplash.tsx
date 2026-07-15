@@ -20,7 +20,7 @@ const splashFont = Bebas_Neue({
   display: "swap",
 });
 
-/** Full brand sequence — site stays covered until this finishes. */
+/** Framed VIBE MUSIC → musical items → “Entering the store…”. */
 const WAVE_SETTLE_MS = 1100;
 const BRAND_HOLD_MS = 380;
 const BRAND_EXIT_MS = 300;
@@ -74,7 +74,6 @@ function markSplashSeen() {
 
 interface PageLoadSplashProps {
   variant?: "initial" | "inline";
-  /** Fires once the full sequence ends (or is skipped) so the storefront may show. */
   onComplete?: () => void;
 }
 
@@ -192,11 +191,7 @@ export default function PageLoadSplash({
   const onCompleteRef = useRef(onComplete);
   const finishedRef = useRef(false);
 
-  const [visible, setVisible] = useState(() => {
-    if (variant !== "initial" || !SPLASH_ENABLED) return false;
-    if (typeof window === "undefined") return SPLASH_ENABLED;
-    return shouldShowInitialSplash();
-  });
+  const [visible, setVisible] = useState(false);
   const [settled, setSettled] = useState(false);
   const [brandExiting, setBrandExiting] = useState(false);
   const [showItems, setShowItems] = useState(false);
@@ -233,9 +228,9 @@ export default function PageLoadSplash({
       return;
     }
 
+    setVisible(true);
     setSplashCoverActive(true);
     removeBootSplash();
-    // Visibility is already derived from the initial-state initializer above.
   }, [prefersReducedMotion, variant]);
 
   useEffect(() => {
@@ -271,7 +266,6 @@ export default function PageLoadSplash({
         setBrandExiting(true);
       }, WAVE_SETTLE_MS + BRAND_HOLD_MS);
 
-      // Phase 2: musical items, then ecommerce beat (“Entering the store…”)
       itemsTimer = window.setTimeout(() => {
         setShowItems(true);
       }, itemsStart);

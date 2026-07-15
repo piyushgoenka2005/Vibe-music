@@ -27,7 +27,7 @@
   gap: 6px;
   font-size: 13px;
   color: var(--pdp-grey60);
-  margin-bottom: 20px;
+  margin-bottom: 32px;
 }
 
 .pdp-breadcrumb a {
@@ -43,6 +43,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 32px;
+  margin-top: 4px;
   margin-bottom: 40px;
   overflow: visible;
 }
@@ -68,7 +69,7 @@
   .pdp-breadcrumb {
     flex-wrap: nowrap;
     overflow: hidden;
-    margin-bottom: 1rem;
+    margin-bottom: 1.35rem;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
@@ -123,7 +124,7 @@
   }
 
   .pdp-gallery__main-inner {
-    padding: 8px;
+    padding: 16px;
   }
 
   .pdp-gallery__video-btn {
@@ -184,18 +185,19 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  padding: 12px;
+  padding: 20px;
   box-sizing: border-box;
 }
 
 .pdp-gallery__photo {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  inset: auto;
   width: 100%;
   height: 100%;
-  max-width: none;
-  max-height: none;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
+  object-position: center;
   padding: 0;
   user-select: none;
   pointer-events: none;
@@ -338,6 +340,75 @@
   color: var(--pdp-blue);
   font-size: 14px;
   font-weight: 500;
+  cursor: pointer;
+}
+
+.pdp-gallery__video-btn--active {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.pdp-gallery__spin {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.pdp-gallery__spin .pdp-gallery__photo {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.pdp-gallery__spin:active {
+  cursor: grabbing;
+}
+
+.pdp-gallery__spin-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.72);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.pdp-gallery__spin-controls {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  pointer-events: none;
+}
+
+.pdp-gallery__spin-btn {
+  pointer-events: auto;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #111827;
+  font-size: 22px;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -1327,7 +1398,7 @@
 /* Cross-sell sections */
 .pdp-section {
   margin-bottom: 48px;
-  padding-top: 8px;
+  padding-top: 1.25rem;
 }
 
 .pdp-section__title {
@@ -1821,9 +1892,10 @@
     margin-bottom: 1rem;
   }
 
-  .pdp-section {
-    margin-bottom: 2rem;
-  }
+.pdp-section {
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+}
 
   .pdp-gallery__stage {
     width: 100%;

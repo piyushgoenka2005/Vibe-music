@@ -22,6 +22,7 @@ export const ROUTES = {
   accountNotifications: "/account/notifications",
   accountSupport: "/account/support",
   accountWishlist: "/account/wishlist",
+  wishlistShare: (token: string) => `/wishlist/share/${token}`,
   login: "/login",
   register: "/register",
   forgotPassword: "/forgot-password",
@@ -191,6 +192,7 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.accountAddresses) return true;
   if (path === ROUTES.accountSettings) return true;
   if (path === ROUTES.accountWishlist) return true;
+  if (path.startsWith("/wishlist/share/")) return true;
   if (path === ROUTES.accountNotifications) return true;
   if (path === ROUTES.accountSupport) return true;
   if (path === ROUTES.login || path === ROUTES.register) return true;

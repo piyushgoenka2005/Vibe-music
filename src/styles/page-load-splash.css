@@ -1,23 +1,37 @@
 /* Full-screen VIBE MUSIC loading splash — Apechain-style wave */
 
-/* Instant blue cover before React hydrates (set by inline boot script). */
+/*
+ * Splash blue lives ONLY on the overlay nodes (.vibe-boot-splash /
+ * .page-load-splash). Never paint html/body blue — that left letterbox
+ * bands above/below the hero after the splash unmounted.
+ */
 html.vibe-splash-pending,
 html.vibe-splash-active {
-  background: #0057ff;
+  overflow: hidden;
 }
 
 html.vibe-splash-pending body,
 html.vibe-splash-active body {
   overflow: hidden !important;
-  background: #0057ff;
 }
 
+/* Block interaction under the cover; keep storefront painted so it can load. */
 html.vibe-splash-pending .storefront-root,
 html.vibe-splash-active .storefront-root,
 html.vibe-splash-pending .social-rail,
-html.vibe-splash-active .social-rail {
-  visibility: hidden !important;
+html.vibe-splash-active .social-rail,
+html.vibe-splash-pending .footer-products-panel,
+html.vibe-splash-active .footer-products-panel {
   pointer-events: none !important;
+}
+
+.storefront-root {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  background: var(--surface-base, #ffffff);
 }
 
 .vibe-boot-splash {
@@ -742,6 +756,9 @@ html.vibe-splash-pending .vibe-boot-splash {
   align-items: flex-end;
   justify-content: center;
   width: 100%;
+  /* Boot splash has no Next font class — keep condensed look before hydrate. */
+  font-family: "Bebas Neue", "Arial Narrow", "Helvetica Neue Condensed", Impact,
+    sans-serif;
   font-size: clamp(2.75rem, 10.5vw, 4.85rem);
   font-weight: 400;
   line-height: 1;

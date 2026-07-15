@@ -189,6 +189,7 @@ function buildDefaultDetail(
       ...sameBrand.slice(0, 2),
       ...sameCategory.slice(2, 4),
     ].map((p) => p.id),
+    spin360Images: [],
   };
 }
 
@@ -242,6 +243,9 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
     frequentlyBoughtTogether: detail.frequentlyBoughtTogether,
     similarProductIds: detail.similarProductIds,
     relatedProductIds: detail.relatedProductIds,
+    spin360Images: Array.isArray(detail.spin360Images)
+      ? detail.spin360Images.filter((src): src is string => typeof src === "string" && src.length > 0)
+      : [],
   };
 }
 
@@ -657,6 +661,15 @@ export async function createProduct(
   const all = await fetchAllProductsFromDb(true);
   product.detail = buildDefaultDetail(product, all);
 
+  if (input.spin360Images?.length) {
+    product.detail = {
+      ...product.detail,
+      spin360Images: input.spin360Images.filter(
+        (src): src is string => typeof src === "string" && src.length > 0
+      ),
+    };
+  }
+
   if (input.variants?.length) {
     const existingSkus = await fetchAllVariantSkus();
     return writeProduct(
@@ -790,6 +803,15 @@ export async function updateProduct(
       specs: mergeProductSpecs(
         updated.detail?.specs ?? preservedDetail.specs,
         updated.specifications
+      ),
+    };
+  }
+
+  if (patch.spin360Images !== undefined) {
+    updated.detail = {
+      ...(updated.detail ?? preservedDetail),
+      spin360Images: patch.spin360Images.filter(
+        (src): src is string => typeof src === "string" && src.length > 0
       ),
     };
   }

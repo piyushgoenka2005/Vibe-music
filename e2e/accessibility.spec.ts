@@ -15,6 +15,13 @@ const PAGES: Array<{
 ];
 
 test.describe("accessibility basics", () => {
+  test("skip to content link targets main landmark", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded", timeout: 60_000 });
+    const skip = page.locator(".skip-to-content");
+    await expect(skip).toHaveAttribute("href", "#main-content");
+    await expect(page.locator("#main-content")).toHaveCount(1);
+  });
+
   for (const { path, name, heading } of PAGES) {
     test(`${name} has main landmark and h1`, async ({ page }) => {
       await page.goto(path, { waitUntil: "domcontentloaded", timeout: 60_000 });

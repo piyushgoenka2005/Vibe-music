@@ -1,4 +1,4 @@
-import { getPermissionsForRole } from "@/lib/auth/permissions";
+import { resolvePermissionsForRole } from "@/lib/server/rolePermissionsService";
 import * as pg from "@/lib/server/prisma/usersRepository";
 import type { AdminProfile, AdminRole, AdminSession } from "@/types/admin";
 
@@ -23,7 +23,7 @@ export async function getAdminSession(uid: string): Promise<AdminSession | null>
     email: profile.email,
     displayName: profile.displayName,
     role: profile.role,
-    permissions: getPermissionsForRole(profile.role),
+    permissions: await resolvePermissionsForRole(profile.role),
   };
 }
 

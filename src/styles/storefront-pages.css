@@ -239,7 +239,15 @@
 /* ─── Product detail (PDP) ─── */
 .storefront-page .pdp {
   max-width: var(--content-max);
-  padding: 1.5rem 1.25rem 4rem;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.storefront-page .pdp-breadcrumb {
+  margin-bottom: 1.75rem;
+}
+
+.storefront-page .pdp-main {
+  margin-top: 0.25rem;
 }
 
 .storefront-page .pdp-breadcrumb a,

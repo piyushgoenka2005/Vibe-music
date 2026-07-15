@@ -61,6 +61,8 @@ export interface CatalogProductDetail {
   frequentlyBoughtTogether: string[];
   similarProductIds: string[];
   relatedProductIds: string[];
+  /** Ordered frame URLs for PDP 360° spinner (optional). */
+  spin360Images?: string[];
 }
 
 export interface CreateProductInput {
@@ -101,6 +103,8 @@ export interface CreateProductInput {
     isDefault?: boolean;
   }>;
   guitarSpecs?: Record<string, string>;
+  /** Ordered frame URLs for PDP 360° view. */
+  spin360Images?: string[];
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {

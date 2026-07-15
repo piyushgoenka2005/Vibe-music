@@ -8,6 +8,7 @@ import {
   storefrontZoomImageUrl,
 } from "@/lib/storefrontImages";
 import type { ProductImage, ProductVideo } from "@/types/product";
+import Product360Viewer from "@/components/product/Product360Viewer";
 
 const LENS_WIDTH_RATIO = 0.38;
 const PANE_WIDTH = 680;
@@ -80,6 +81,7 @@ interface ProductGalleryProps {
   videos: ProductVideo[];
   productName: string;
   productSlug: string;
+  spin360Images?: string[];
 }
 
 interface LensPosition {
@@ -119,10 +121,12 @@ export default function ProductGallery({
   videos,
   productName,
   productSlug,
+  spin360Images = [],
 }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [show360, setShow360] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [zoomActive, setZoomActive] = useState(false);
   const [lensPos, setLensPos] = useState<LensPosition>({ x: 0, y: 0 });
@@ -139,7 +143,8 @@ export default function ProductGallery({
   const paneRef = useRef<HTMLDivElement>(null);
 
   const activeImage = images[activeIndex] ?? images[0];
-  const canZoom = Boolean(activeImage?.src) && !showVideo;
+  const canZoom = Boolean(activeImage?.src) && !showVideo && !show360;
+  const has360 = spin360Images.length >= 2;
   const activeSrc = activeImage?.src ?? "";
   const displayCandidates = useMemo(() => {
     // Prefer the CDN master first for full-size PDP (sharp + reliable).
@@ -317,7 +322,7 @@ export default function ProductGallery({
     }
   }, []);
 
-  if (!activeImage) {
+  if (!activeImage && !has360) {
     return (
       <div className="pdp-gallery" aria-label={`${productName} image gallery`}>
         <div className="pdp-gallery__stage">
@@ -334,6 +339,27 @@ export default function ProductGallery({
     );
   }
 
+  if (!activeImage && has360) {
+    return (
+      <div className="pdp-gallery" aria-label={`${productName} image gallery`}>
+        <div className="pdp-gallery__stage">
+          <div className="pdp-gallery__main">
+            <div className="pdp-gallery__main-inner">
+              <Product360Viewer frames={spin360Images} productName={productName} />
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="pdp-gallery__video-btn pdp-gallery__video-btn--active"
+          aria-pressed
+        >
+          360° View
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="pdp-gallery" aria-label={`${productName} image gallery`}>
       <div className="pdp-gallery__thumbs" role="list" aria-label="Product thumbnails">
@@ -342,21 +368,24 @@ export default function ProductGallery({
             key={image.id}
             type="button"
             role="listitem"
-            className={`pdp-gallery__thumb${index === activeIndex && !showVideo ? " pdp-gallery__thumb--active" : ""}`}
+            className={`pdp-gallery__thumb${index === activeIndex && !showVideo && !show360 ? " pdp-gallery__thumb--active" : ""}`}
             onMouseEnter={() => {
               setShowVideo(false);
+              setShow360(false);
               setActiveIndex(index);
             }}
             onFocus={() => {
               setShowVideo(false);
+              setShow360(false);
               setActiveIndex(index);
             }}
             onClick={() => {
               setShowVideo(false);
+              setShow360(false);
               setActiveIndex(index);
             }}
             aria-label={image.alt}
-            aria-current={index === activeIndex && !showVideo}
+            aria-current={index === activeIndex && !showVideo && !show360}
           >
             {image.src ? (
               <GalleryThumb src={image.src} />
@@ -447,7 +476,9 @@ export default function ProductGallery({
             className="pdp-gallery__share"
           />
           <div className="pdp-gallery__main-inner">
-            {showVideo && videos[0] ? (
+            {show360 && has360 ? (
+              <Product360Viewer frames={spin360Images} productName={productName} />
+            ) : showVideo && videos[0] ? (
               <div className="pdp-video-embed pdp-video-embed--gallery">
                 <iframe
                   src={videos[0].embedUrl}
@@ -532,11 +563,29 @@ export default function ProductGallery({
         ) : null}
       </div>
 
+      {has360 ? (
+        <button
+          type="button"
+          className={`pdp-gallery__video-btn${show360 ? " pdp-gallery__video-btn--active" : ""}`}
+          onClick={() => {
+            setShow360(true);
+            setShowVideo(false);
+            setZoomActive(false);
+          }}
+          aria-pressed={show360}
+        >
+          360° View
+        </button>
+      ) : null}
+
       {videos.length > 0 ? (
         <button
           type="button"
           className="pdp-gallery__video-btn"
-          onClick={() => setShowVideo(true)}
+          onClick={() => {
+            setShowVideo(true);
+            setShow360(false);
+          }}
         >
           <Play size={16} />
           Watch Product Video

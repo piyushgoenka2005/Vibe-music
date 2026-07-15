@@ -58,6 +58,9 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
 export default function SiteFooter() {
   const pathname = usePathname() ?? "";
   const isLandingPage = pathname === "/";
+  const isProductPage = /^\/product\/[^/]+$/.test(pathname);
+  /** Same layered scroll-reveal as the homepage (shell over fixed Trending panel). */
+  const useFooterReveal = isLandingPage || isProductPage;
   const showToast = useToastStore((state) => state.show);
   const footerRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -75,8 +78,8 @@ export default function SiteFooter() {
     const spacer = spacerRef.current;
     if (!panel || !footer || !spacer) return;
 
-    /* Non-homepage: panel stays in-flow — no fixed scroll-reveal chrome */
-    if (!isLandingPage) {
+    /* Search / listings: keep panel in-flow (fixed navy bled through translucent UI). */
+    if (!useFooterReveal) {
       spacer.style.height = "0px";
       panel.classList.add("is-ready", "is-interactive");
       return () => {
@@ -88,7 +91,12 @@ export default function SiteFooter() {
     const shell = footer.querySelector<HTMLElement>(".site-footer__shell");
 
     const syncSpacer = () => {
-      const height = Math.max(panel.offsetHeight, panel.scrollHeight);
+      const rect = panel.getBoundingClientRect();
+      const height = Math.max(
+        Math.ceil(rect.height),
+        panel.offsetHeight,
+        panel.scrollHeight
+      );
       if (height > 0) {
         spacer.style.height = `${height}px`;
       }
@@ -99,18 +107,31 @@ export default function SiteFooter() {
     const resizeObserver = new ResizeObserver(syncSpacer);
     resizeObserver.observe(panel);
 
+    /** Avoid flashing the fixed navy panel while the homepage is still short / loading. */
+    let footerInView = false;
+    const pageTallEnough = () =>
+      document.documentElement.scrollHeight >= window.innerHeight * 1.35;
+
+    const syncReady = () => {
+      const shouldShow = footerInView && pageTallEnough();
+      panel.classList.toggle("is-ready", shouldShow);
+      if (shouldShow) {
+        syncSpacer();
+      }
+    };
+
     const readyObserver = new IntersectionObserver(
       ([entry]) => {
-        const isReady = Boolean(entry?.isIntersecting);
-        panel.classList.toggle("is-ready", isReady);
-        if (isReady) {
-          syncSpacer();
-        }
+        footerInView = Boolean(entry?.isIntersecting);
+        syncReady();
       },
       { threshold: 0.08, rootMargin: "0px 0px 0px 0px" }
     );
 
     readyObserver.observe(shell ?? footer);
+
+    const pageResizeObserver = new ResizeObserver(syncReady);
+    pageResizeObserver.observe(document.documentElement);
 
     const updateInteractive = () => {
       if (!shell) return;
@@ -129,24 +150,29 @@ export default function SiteFooter() {
       });
     };
 
+    const onResize = () => {
+      syncSpacer();
+      syncReady();
+      updateInteractive();
+    };
+
     updateInteractive();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", syncSpacer);
-    window.addEventListener("resize", updateInteractive);
+    window.addEventListener("resize", onResize);
 
     return () => {
       resizeObserver.disconnect();
+      pageResizeObserver.disconnect();
       readyObserver.disconnect();
       if (scrollFrame) {
         window.cancelAnimationFrame(scrollFrame);
       }
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", syncSpacer);
-      window.removeEventListener("resize", updateInteractive);
+      window.removeEventListener("resize", onResize);
       panel.classList.remove("is-ready", "is-interactive");
       spacer.style.height = "";
     };
-  }, [isLandingPage]);
+  }, [useFooterReveal]);
 
   async function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

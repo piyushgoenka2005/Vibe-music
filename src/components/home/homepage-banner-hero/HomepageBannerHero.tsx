@@ -11,6 +11,16 @@ import {
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { useIsClient } from "@/hooks/useIsClient";
 
+/** Keep in sync with `PageLoadSplash` class names. */
+function isSplashCovering(): boolean {
+  if (typeof document === "undefined") return false;
+  const root = document.documentElement;
+  return (
+    root.classList.contains("vibe-splash-pending") ||
+    root.classList.contains("vibe-splash-active")
+  );
+}
+
 export default function HomepageBannerHero() {
   const [activeIndex, setActiveIndex] = useState(0);
   const ready = useIsClient();
@@ -30,14 +40,41 @@ export default function HomepageBannerHero() {
     window.dispatchEvent(new Event("site-header:sync"));
   }, []);
 
+  // Always open on slide 0 (Hertz HG 20). Do not advance while the page-load
+  // splash covers the storefront, then reset and start rotation when it lifts.
   useEffect(() => {
     if (reduceMotion || slideCount <= 1) return;
 
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % slideCount);
-    }, HOMEPAGE_BANNER_ROTATION_MS);
+    let timer = 0;
+    let observer: MutationObserver | null = null;
 
-    return () => window.clearInterval(timer);
+    const startRotation = () => {
+      setActiveIndex(0);
+      timer = window.setInterval(() => {
+        setActiveIndex((current) => (current + 1) % slideCount);
+      }, HOMEPAGE_BANNER_ROTATION_MS);
+    };
+
+    if (!isSplashCovering()) {
+      startRotation();
+    } else {
+      observer = new MutationObserver(() => {
+        if (!isSplashCovering()) {
+          observer?.disconnect();
+          observer = null;
+          startRotation();
+        }
+      });
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+    }
+
+    return () => {
+      if (timer) window.clearInterval(timer);
+      observer?.disconnect();
+    };
   }, [reduceMotion, slideCount]);
 
   if (slideCount === 0) return null;

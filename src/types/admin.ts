@@ -108,6 +108,8 @@ export interface AdminProduct extends Product {
   variants?: ProductVariant[];
   specifications?: Record<string, string>;
   images?: string[];
+  /** Ordered frame URLs for PDP 360° view. */
+  spin360Images?: string[];
 }
 
 export interface AdminCategory {

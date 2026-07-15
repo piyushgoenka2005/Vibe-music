@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { usePathname } from "next/navigation";
 import AuthProvider from "@/components/auth/AuthProvider";
 import ToastContainer from "@/components/common/ToastContainer";
@@ -15,16 +15,11 @@ import RoutePreloader from "@/components/layout/RoutePreloader";
 import ScrollRestoration from "@/components/layout/ScrollRestoration";
 import PageLoadSplash, {
   isPageLoadSplashEnabled,
-  shouldShowInitialSplash,
 } from "@/components/layout/PageLoadSplash";
+import SplashPendingClear from "@/components/layout/SplashPendingClear";
+import ServiceWorkerRegister from "@/components/layout/ServiceWorkerRegister";
 
 const ENABLE_PAGE_LOAD_SPLASH = isPageLoadSplashEnabled();
-
-function initialStorefrontUnlocked(): boolean {
-  if (!ENABLE_PAGE_LOAD_SPLASH) return true;
-  if (typeof window === "undefined") return false;
-  return !shouldShowInitialSplash();
-}
 
 const StorefrontDrawers = dynamic(
   () => import("@/components/layout/StorefrontDrawers"),
@@ -34,12 +29,13 @@ const StorefrontDrawers = dynamic(
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const isAdmin = pathname.startsWith("/admin");
-  const [storefrontUnlocked, setStorefrontUnlocked] = useState(
-    initialStorefrontUnlocked
-  );
 
+  /** Splash only covers the UI — storefront mounts immediately so data/images load underneath. */
   const handleSplashComplete = useCallback(() => {
-    setStorefrontUnlocked(true);
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   }, []);
 
   if (isAdmin) {
@@ -59,25 +55,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <QueryProvider>
       <NextAuthSessionProvider>
         <AuthProvider>
+          <SplashPendingClear />
           {ENABLE_PAGE_LOAD_SPLASH ? (
             <PageLoadSplash onComplete={handleSplashComplete} />
           ) : null}
-          {storefrontUnlocked ? (
-            <>
-              <WebVitalsReporter />
-              <RoutePreloader />
-              <ScrollRestoration />
-              <div className="storefront-root">
-                <StorefrontChrome>
-                  <DeferredHtmlLinkInterceptor />
-                  <DeferredGlobalSearch />
-                  <StorefrontDrawers />
-                  <ToastContainer />
-                  {children}
-                </StorefrontChrome>
-              </div>
-            </>
-          ) : null}
+          <WebVitalsReporter />
+          <ServiceWorkerRegister />
+          <RoutePreloader />
+          <ScrollRestoration />
+          <div className="storefront-root">
+            <StorefrontChrome>
+              <DeferredHtmlLinkInterceptor />
+              <DeferredGlobalSearch />
+              <StorefrontDrawers />
+              <ToastContainer />
+              {children}
+            </StorefrontChrome>
+          </div>
         </AuthProvider>
       </NextAuthSessionProvider>
     </QueryProvider>

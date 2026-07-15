@@ -9,7 +9,7 @@ Short path from “code is ready” to “production secrets are honest.” Full
 | PostgreSQL | `DATABASE_URL` | App unhealthy |
 | Auth.js | `AUTH_SECRET` (≥32) | Login/session broken |
 | Guest / invoice tokens | `GUEST_ORDER_ACCESS_SECRET` (≥32) | Guest order + invoice links fail |
-| Razorpay | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Online pay hidden; COD only |
+| Razorpay | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Online pay hidden (COD is also off by default) |
 | Razorpay webhook | `RAZORPAY_WEBHOOK_SECRET` | Paid status may not auto-update |
 | Email | `SMTP_*` or `RESEND_API_KEY` | Order / reset emails skip or 503 |
 
@@ -17,11 +17,11 @@ Short path from “code is ready” to “production secrets are honest.” Full
 
 | Variable | Default | Effect |
 |----------|---------|--------|
-| `COD_ENABLED` | on (unless `false`) | Disables COD entirely when `false` |
+| `COD_ENABLED` | **off** (must set `true` to enable) | COD only when explicitly `true` |
 | `COD_MAX_ORDER_VALUE` | `50000` | COD blocked above this order value (₹); `0` = no max |
 | `COD_ALLOWED_PIN_PREFIXES` | empty | Comma-separated PIN prefixes; empty = all India |
 
-Never set `ALLOW_DEMO_PAYMENTS=true` in production.
+Production currently runs with COD **disabled**. Razorpay is the primary online checkout path. Never set `ALLOW_DEMO_PAYMENTS=true` in production.
 
 ## 2. Strongly recommended (multi-worker VPS)
 

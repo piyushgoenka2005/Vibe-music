@@ -6,6 +6,7 @@ import BrowseCategoryCardsSection from "@/components/home/BrowseCategoryCardsSec
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
+import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
 
 import PremiumHero from "@/components/home/PremiumHero";
 import HomepagePromoBanner from "@/components/home/HomepagePromoBanner";
@@ -90,6 +91,10 @@ export default function HomePage() {
       <HomepageAplusContent />
 
       <EditorialSplit />
+
+      <Suspense fallback={<BlogTeaserSkeleton />}>
+        <HomepageBlogTeaser />
+      </Suspense>
 
       <Suspense fallback={<BlogTeaserSkeleton />}>
         <HomepageTopProducts />

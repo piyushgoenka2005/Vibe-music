@@ -12,22 +12,24 @@ export interface HomepageBannerSlide {
   objectPosition?: string;
 }
 
-export const HOMEPAGE_BANNER_ROTATION_MS = 5500;
+export const HOMEPAGE_BANNER_ROTATION_MS = 4000;
 
-/** Client-approved homepage hero banner carousel slides. */
+/** Client-approved homepage hero banner carousel slides.
+ *  Index 0 is always the first frame on load (priority + eager).
+ */
 export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
-  {
-    id: "banner-hertz-electrix-guitar",
-    src: "/electrix-guitar.webp",
-    alt: "Hertz Super Strat electric guitar — Indian rosewood fretboard, 21 precision frets, PJ pickups at Vibe Music",
-    href: categoryPath("guitars"),
-    objectPosition: "center center",
-  },
   {
     id: "banner-hertz-hg-20",
     src: "/hertz-hg-20.webp",
     alt: "Hertz HG 20 portable guitar amplifier — delay & reverb, 20W powerful sound at Vibe Music",
     href: `${ROUTES.searchResults}?brand=hertz`,
+    objectPosition: "center center",
+  },
+  {
+    id: "banner-hertz-electrix-guitar",
+    src: "/electrix-guitar.webp",
+    alt: "Hertz Super Strat electric guitar — Indian rosewood fretboard, 21 precision frets, PJ pickups at Vibe Music",
+    href: categoryPath("guitars"),
     objectPosition: "center center",
   },
   {
