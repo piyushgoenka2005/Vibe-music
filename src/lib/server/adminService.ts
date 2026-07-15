@@ -6,6 +6,14 @@ export async function getAdminProfile(uid: string): Promise<AdminProfile | null>
   return pg.getAdminProfile(uid);
 }
 
+export async function getAdminRecord(uid: string): Promise<AdminProfile | null> {
+  return pg.getAdminRecord(uid);
+}
+
+export async function countActiveSuperAdmins(): Promise<number> {
+  return pg.countActiveSuperAdmins();
+}
+
 export async function getAdminSession(uid: string): Promise<AdminSession | null> {
   const profile = await getAdminProfile(uid);
   if (!profile) return null;

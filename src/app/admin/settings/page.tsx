@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminOpsStatusPanel from "@/components/admin/AdminOpsStatusPanel";
 import { LoadingState } from "@/components/admin/AdminUi";
-import type { StoreSettings } from "@/types/admin";
+import { ROUTES } from "@/lib/routes";
+import type { AdminSession, StoreSettings } from "@/types/admin";
 
-function SettingsContent() {
+function SettingsContent({ admin }: { admin: AdminSession }) {
   const queryClient = useQueryClient();
   const [saved, setSaved] = useState(false);
 
@@ -47,6 +49,23 @@ function SettingsContent() {
   if (isLoading || !form) return <LoadingState />;
 
   return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {admin.permissions.includes("admins:read") ? (
+        <div className="admin-panel">
+          <div className="admin-panel__header">
+            <h2 className="admin-panel__title">Team access</h2>
+          </div>
+          <div className="admin-panel__body">
+            <p style={{ margin: "0 0 0.75rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+              Invite or promote users who can manage the storefront from the admin panel.
+            </p>
+            <Link href={ROUTES.adminUsers} className="admin-btn admin-btn--primary">
+              Manage admin users
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
     <div className="admin-panel">
       <div className="admin-panel__body">
         <div className="admin-form-grid">
@@ -184,6 +203,7 @@ function SettingsContent() {
         <AdminOpsStatusPanel />
       </div>
     </div>
+    </div>
   );
 }
 
@@ -192,7 +212,7 @@ export default function AdminSettingsPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Settings">
-          <SettingsContent />
+          <SettingsContent admin={admin} />
         </AdminShell>
       )}
     </AdminGuard>

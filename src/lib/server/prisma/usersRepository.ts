@@ -55,9 +55,16 @@ export async function getAddressById(
   };
 }
 
-export async function getAdminProfile(uid: string): Promise<AdminProfile | null> {
-  const row = await prisma.admin.findUnique({ where: { uid } });
-  if (!row || !row.isActive) return null;
+function mapAdminRow(row: {
+  uid: string;
+  email: string;
+  displayName: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt: string | null;
+}): AdminProfile {
   return {
     uid: row.uid,
     email: row.email,
@@ -68,6 +75,20 @@ export async function getAdminProfile(uid: string): Promise<AdminProfile | null>
     updatedAt: row.updatedAt,
     lastLoginAt: row.lastLoginAt ?? undefined,
   };
+}
+
+/** Active admins only — used for login / session. */
+export async function getAdminProfile(uid: string): Promise<AdminProfile | null> {
+  const row = await prisma.admin.findUnique({ where: { uid } });
+  if (!row || !row.isActive) return null;
+  return mapAdminRow(row);
+}
+
+/** Any admin row including inactive — used for admin management. */
+export async function getAdminRecord(uid: string): Promise<AdminProfile | null> {
+  const row = await prisma.admin.findUnique({ where: { uid } });
+  if (!row) return null;
+  return mapAdminRow(row);
 }
 
 export async function listAdmins(): Promise<AdminProfile[]> {
@@ -250,9 +271,15 @@ export async function updateAdminProfileRecord(
     where: { uid },
     data: { ...patch, updatedAt: timestamp },
   });
-  const profile = await getAdminProfile(uid);
+  const profile = await getAdminRecord(uid);
   if (!profile) throw new Error("Admin not found after update");
   return profile;
+}
+
+export async function countActiveSuperAdmins(): Promise<number> {
+  return prisma.admin.count({
+    where: { role: "super_admin", isActive: true },
+  });
 }
 
 export async function updateUserActiveStatus(

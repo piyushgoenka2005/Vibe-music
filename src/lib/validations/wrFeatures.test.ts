@@ -17,7 +17,7 @@ describe("wrFeatures validations", () => {
     expect(parsed.category).toBe("order");
   });
 
-  it("rejects weak admin passwords", () => {
+  it("rejects weak admin passwords when provided", () => {
     expect(() =>
       adminInviteSchema.parse({
         email: "admin@vibemusic.in",
@@ -26,6 +26,15 @@ describe("wrFeatures validations", () => {
         password: "short",
       })
     ).toThrow();
+  });
+
+  it("allows inviting without password for promote-existing flow", () => {
+    const parsed = adminInviteSchema.parse({
+      email: "admin@vibemusic.in",
+      displayName: "Admin",
+      role: "admin",
+    });
+    expect(parsed.password).toBeUndefined();
   });
 
   it("accepts shipping zone config", () => {

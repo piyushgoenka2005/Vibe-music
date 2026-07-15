@@ -37,6 +37,7 @@ export const adminUserUpdateSchema = z.object({
     .enum(["super_admin", "admin", "inventory_manager", "customer_support"])
     .optional(),
   isActive: z.boolean().optional(),
+  password: z.string().min(8).max(128).optional(),
 });
 
 export const adminRefundSchema = z.object({
@@ -80,7 +81,8 @@ export const adminInviteSchema = z.object({
   email: z.string().email(),
   displayName: z.string().min(1).max(120),
   role: z.enum(["super_admin", "admin", "inventory_manager", "customer_support"]),
-  password: z.string().min(8).max(128),
+  /** Required when creating a new auth user; optional when promoting an existing account. */
+  password: z.string().min(8).max(128).optional(),
 });
 
 export const contentPageSchema = z.object({
