@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import { prisma } from "@/lib/db/prisma";
+import { prisma, isPostgresConfigured } from "@/lib/db/prisma";
 import { createAuthPrismaAdapter } from "@/lib/auth/prisma-adapter";
 import { verifyPassword } from "@/lib/auth/password";
 import { resolveSessionMaxAgeSeconds } from "@/lib/auth/session-config";
@@ -108,7 +108,7 @@ function resolveAuthSecret(): string | undefined {
 export const authConfig = {
   trustHost: true,
   secret: resolveAuthSecret(),
-  adapter: createAuthPrismaAdapter(prisma),
+  ...(isPostgresConfigured() ? { adapter: createAuthPrismaAdapter(prisma) } : {}),
   session: {
     strategy: "jwt" as const,
   },
@@ -173,16 +173,24 @@ export const authConfig = {
         trigger === "update" ||
         typeof token.isAdmin !== "boolean";
 
-      if (shouldRefreshAdmin) {
+      if (shouldRefreshAdmin && isPostgresConfigured()) {
         const uid = typeof token.uid === "string" ? token.uid : token.sub;
         if (uid) {
-          const adminSession = await getAdminSession(uid);
-          token.isAdmin = Boolean(adminSession);
-          token.adminRole = adminSession?.role;
+          try {
+            const adminSession = await getAdminSession(uid);
+            token.isAdmin = Boolean(adminSession);
+            token.adminRole = adminSession?.role;
+          } catch {
+            token.isAdmin = false;
+            token.adminRole = undefined;
+          }
         } else {
           token.isAdmin = false;
           token.adminRole = undefined;
         }
+      } else if (shouldRefreshAdmin) {
+        token.isAdmin = false;
+        token.adminRole = undefined;
       }
 
       return token;
