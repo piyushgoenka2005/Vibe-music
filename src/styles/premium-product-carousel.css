@@ -165,8 +165,8 @@
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  /* pan-y: page owns vertical; JS axis-lock drives horizontal swipes */
-  touch-action: pan-y;
+  /* Native pan-x for momentum on phones; pan-y keeps page scroll */
+  touch-action: pan-x pan-y;
   cursor: grab;
   user-select: none;
 }
@@ -489,22 +489,25 @@
   flex-direction: column;
   gap: 0.15rem;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-prices {
   display: flex;
   align-items: baseline;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  width: 100%;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-was {
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 500;
   color: #94a3b8;
   text-decoration: line-through;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-price {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: #0f172a;
@@ -708,8 +711,8 @@
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    /* pan-y: page owns vertical; JS axis-lock drives horizontal swipes */
-  touch-action: pan-y;
+    /* Native pan-x for momentum on phones; pan-y keeps page scroll */
+    touch-action: pan-x pan-y;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-wrap {
@@ -776,20 +779,26 @@
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-prices {
-    gap: 0.25rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-was {
-    font-size: 0.7rem;
+    font-size: 0.95rem;
+    font-weight: 500;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-price {
-    font-size: 0.8125rem;
+    font-size: 1.15rem;
+    font-weight: 800;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-price--enquiry {
     max-width: none;
-    font-size: 0.8125rem;
+    font-size: 0.95rem;
     line-height: 1.2;
   }
 
@@ -825,11 +834,11 @@
 
 @media (max-width: 479px) {
   .premium-home .premium-product-carousel .product-suggest__item-was {
-    font-size: 0.68rem;
+    font-size: 0.9rem;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-price {
-    font-size: 0.8125rem;
+    font-size: 1.1rem;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-action,

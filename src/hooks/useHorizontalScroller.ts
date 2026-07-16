@@ -26,10 +26,15 @@ type DragState = {
   moved: boolean;
 };
 
+function prefersFinePointer(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
 /**
- * Horizontal product rail: arrows + axis-locked drag for mouse/touch/pen.
- * Vertical page scroll is never trapped — only confirmed sideways swipes
- * take over the rail (requires non-passive pointermove for touch).
+ * Horizontal product rail: arrows + axis-locked drag for mouse/trackpad.
+ * On touch phones, native overflow scrolling provides momentum (buttery smooth).
+ * Vertical page scroll is never trapped.
  */
 export function useHorizontalScroller(sectionKey: string, itemCount: number) {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -83,6 +88,7 @@ export function useHorizontalScroller(sectionKey: string, itemCount: number) {
     updateScrollState();
     const raf = window.requestAnimationFrame(updateScrollState);
     const detachWheel = attachHorizontalWheelScroll(scroller);
+    const usePointerDrag = prefersFinePointer();
 
     const clearDrag = (pointerId: number) => {
       dragRef.current = null;
@@ -99,7 +105,7 @@ export function useHorizontalScroller(sectionKey: string, itemCount: number) {
 
       const target = event.target as HTMLElement | null;
       // Keep share / form controls out of rail drag; product links stay in
-      // so mobile swipes starting on a card can still pan horizontal.
+      // so desktop swipes starting on a card can still pan horizontal.
       if (
         target?.closest(
           "button, input, textarea, select, .product-share-btn, .product-suggest__item-action"
@@ -177,12 +183,16 @@ export function useHorizontalScroller(sectionKey: string, itemCount: number) {
     };
 
     scroller.addEventListener("scroll", updateScrollState, { passive: true });
-    scroller.addEventListener("pointerdown", onPointerDown, { passive: true });
-    // Non-passive so horizontal touch can preventDefault after axis lock.
-    scroller.addEventListener("pointermove", onPointerMove, { passive: false });
-    scroller.addEventListener("pointerup", onPointerUp, { passive: true });
-    scroller.addEventListener("pointercancel", onPointerUp, { passive: true });
     window.addEventListener("resize", updateScrollState);
+
+    // Touch phones: skip JS drag — native overflow scroll has momentum.
+    // Mouse/trackpad: keep axis-locked drag for click-and-drag.
+    if (usePointerDrag) {
+      scroller.addEventListener("pointerdown", onPointerDown, { passive: true });
+      scroller.addEventListener("pointermove", onPointerMove, { passive: false });
+      scroller.addEventListener("pointerup", onPointerUp, { passive: true });
+      scroller.addEventListener("pointercancel", onPointerUp, { passive: true });
+    }
 
     const resizeObserver = new ResizeObserver(() => {
       window.requestAnimationFrame(updateScrollState);
@@ -195,10 +205,12 @@ export function useHorizontalScroller(sectionKey: string, itemCount: number) {
     return () => {
       window.cancelAnimationFrame(raf);
       scroller.removeEventListener("scroll", updateScrollState);
-      scroller.removeEventListener("pointerdown", onPointerDown);
-      scroller.removeEventListener("pointermove", onPointerMove);
-      scroller.removeEventListener("pointerup", onPointerUp);
-      scroller.removeEventListener("pointercancel", onPointerUp);
+      if (usePointerDrag) {
+        scroller.removeEventListener("pointerdown", onPointerDown);
+        scroller.removeEventListener("pointermove", onPointerMove);
+        scroller.removeEventListener("pointerup", onPointerUp);
+        scroller.removeEventListener("pointercancel", onPointerUp);
+      }
       window.removeEventListener("resize", updateScrollState);
       resizeObserver.disconnect();
       detachWheel();

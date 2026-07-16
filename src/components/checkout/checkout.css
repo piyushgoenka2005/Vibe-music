@@ -1746,6 +1746,21 @@
     box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.1);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      transform 220ms ease,
+      opacity 180ms ease,
+      visibility 180ms ease;
+  }
+
+  .checkout-mobile-bar--hidden {
+    transform: translateY(110%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .checkout-mobile-bar__total {

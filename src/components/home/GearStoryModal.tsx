@@ -1,12 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import Link from "next/link";
 import { Heart, X } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import { productPath } from "@/lib/routes";
+import { storefrontImageCandidates } from "@/lib/storefrontImages";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -50,13 +57,124 @@ function gallerySources(story: GearStory): string[] {
     story.images.length > 0
       ? story.images
       : [story.image || story.posterUrl].filter(Boolean);
-  return Array.from(new Set(sources.filter((src) => Boolean(src?.trim()))));
+  return Array.from(
+    new Set(
+      sources
+        .map((src) => src?.trim())
+        .filter((src): src is string => Boolean(src) && src !== "null" && src !== "undefined")
+    )
+  );
+}
+
+function GearStoryMainImage({
+  src,
+  fallbackSrc,
+  alt,
+}: {
+  src: string;
+  fallbackSrc?: string;
+  alt: string;
+}) {
+  const candidates = useMemo(() => {
+    const primary = storefrontImageCandidates(src, 960);
+    const fallback = fallbackSrc && fallbackSrc !== src
+      ? storefrontImageCandidates(fallbackSrc, 960)
+      : [];
+    return Array.from(new Set([...primary, ...fallback, src, fallbackSrc].filter(Boolean)));
+  }, [src, fallbackSrc]);
+  const [attempt, setAttempt] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const activeSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? "";
+
+  useEffect(() => {
+    setAttempt(0);
+    setFailed(false);
+  }, [src, fallbackSrc]);
+
+  if (!activeSrc || failed) {
+    return (
+      <div className="gear-story-modal__image gear-story-modal__image--placeholder" aria-hidden>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      key={activeSrc}
+      src={activeSrc}
+      alt={alt}
+      className="gear-story-modal__image"
+      decoding="async"
+      fetchPriority="high"
+      onError={() => {
+        setAttempt((current) => {
+          if (current + 1 < candidates.length) return current + 1;
+          setFailed(true);
+          return current;
+        });
+      }}
+    />
+  );
+}
+
+function GearStoryThumb({
+  src,
+  onDead,
+}: {
+  src: string;
+  onDead: () => void;
+}) {
+  const candidates = useMemo(() => {
+    const list = storefrontImageCandidates(src, 160);
+    const medium = storefrontImageCandidates(src, 320);
+    return Array.from(new Set([...list, ...medium, src].filter(Boolean)));
+  }, [src]);
+  const [attempt, setAttempt] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const activeSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? "";
+
+  useEffect(() => {
+    setAttempt(0);
+    setFailed(false);
+  }, [src]);
+
+  useEffect(() => {
+    if (failed || !activeSrc) onDead();
+  }, [failed, activeSrc, onDead]);
+
+  if (!activeSrc || failed) return null;
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      key={activeSrc}
+      src={activeSrc}
+      alt=""
+      width={112}
+      height={112}
+      loading="eager"
+      decoding="async"
+      onError={() => {
+        setAttempt((current) => {
+          if (current + 1 < candidates.length) return current + 1;
+          setFailed(true);
+          return current;
+        });
+      }}
+    />
+  );
 }
 
 export default function GearStoryModal({ story, onClose }: GearStoryModalProps) {
   const isClient = useIsClient();
   const [activeImage, setActiveImage] = useState(0);
-  const [failedSrc, setFailedSrc] = useState<Record<string, boolean>>({});
+  const [deadSrcs, setDeadSrcs] = useState<Record<string, boolean>>({});
   const zoomRef = useRef<HTMLDivElement>(null);
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openDrawer);
@@ -71,7 +189,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
     if (!open) return;
     const frame = requestAnimationFrame(() => {
       setActiveImage(0);
-      setFailedSrc({});
+      setDeadSrcs({});
     });
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -117,6 +235,10 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
     zoomRef.current?.style.setProperty("--zoom-y", "50%");
   }, []);
 
+  const markDeadSrc = useCallback((src: string) => {
+    setDeadSrcs((prev) => (prev[src] ? prev : { ...prev, [src]: true }));
+  }, []);
+
   if (!isClient || !story) return null;
 
   const product = storyToProduct(story);
@@ -124,12 +246,19 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
   const hasCatalogPrice = isPurchasablePrice(displayPrice);
   const hasDiscount =
     story.discountPercentage > 0 && story.originalPrice > displayPrice;
-  const gallery = gallerySources(story);
-  const activeSrc = gallery[activeImage] ?? story.image ?? story.posterUrl;
-  const mainSrc =
-    failedSrc[activeSrc] && story.posterUrl && story.posterUrl !== activeSrc
+  const gallery = gallerySources(story).filter((src) => !deadSrcs[src]);
+  const safeActiveIndex = Math.min(
+    activeImage,
+    Math.max(gallery.length - 1, 0)
+  );
+  const activeSrc =
+    gallery[safeActiveIndex] ?? story.image ?? story.posterUrl ?? "";
+  const fallbackSrc =
+    story.posterUrl && story.posterUrl !== activeSrc
       ? story.posterUrl
-      : activeSrc;
+      : story.image && story.image !== activeSrc
+        ? story.image
+        : undefined;
 
   return createPortal(
     <div
@@ -164,24 +293,18 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
               </button>
               <ProductShareButton
                 overlay
-                position="top-left"
+                position="top-right"
                 title={story.name}
                 url={productPath(story.slug)}
                 text={`Check out ${story.name} at Vibe Music`}
                 size={18}
                 className="gear-story-modal__share"
               />
-              {mainSrc ? (
-                <Image
-                  src={mainSrc}
+              {activeSrc ? (
+                <GearStoryMainImage
+                  src={activeSrc}
+                  fallbackSrc={fallbackSrc}
                   alt={story.name}
-                  fill
-                  sizes="(max-width: 768px) 90vw, 640px"
-                  priority
-                  className="gear-story-modal__image"
-                  onError={() =>
-                    setFailedSrc((prev) => ({ ...prev, [activeSrc]: true }))
-                  }
                 />
               ) : null}
             </div>
@@ -193,19 +316,14 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                     type="button"
                     role="listitem"
                     className={`gear-story-modal__thumb${
-                      index === activeImage ? " gear-story-modal__thumb--active" : ""
+                      index === safeActiveIndex
+                        ? " gear-story-modal__thumb--active"
+                        : ""
                     }`}
                     onClick={() => setActiveImage(index)}
                     aria-label={`View image ${index + 1}`}
                   >
-                    <Image
-                      src={src}
-                      alt=""
-                      width={112}
-                      height={112}
-                      sizes="56px"
-                      loading="lazy"
-                    />
+                    <GearStoryThumb src={src} onDead={() => markDeadSrc(src)} />
                   </button>
                 ))}
               </div>

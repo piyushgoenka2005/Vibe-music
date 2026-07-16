@@ -159,6 +159,7 @@ export default function ProductGallery({
   const stageRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLImageElement>(null);
   const paneRef = useRef<HTMLDivElement>(null);
+  const thumbsRef = useRef<HTMLDivElement>(null);
 
   const activeImage = images[activeIndex] ?? images[0];
   const canZoom = Boolean(activeImage?.src) && !showVideo && !show360;
@@ -297,6 +298,25 @@ export default function ProductGallery({
     measureImageRect();
   }, [imageMetrics.naturalWidth, imageMetrics.naturalHeight, measureImageRect]);
 
+  // Keep the active thumbnail visible in the mobile horizontal strip.
+  useEffect(() => {
+    const strip = thumbsRef.current;
+    if (!strip) return;
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(max-width: 768px)").matches) return;
+
+    const active = strip.querySelector<HTMLElement>(
+      ".pdp-gallery__thumb--active"
+    );
+    if (!active) return;
+
+    active.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
+  }, [activeIndex, showVideo, show360]);
+
   // Match the stage frame to the photo so the full asset fills the area
   // without edge cropping (fixed square frames left large letterbox on mobile).
   useEffect(() => {
@@ -397,7 +417,12 @@ export default function ProductGallery({
 
   return (
     <div className="pdp-gallery" aria-label={`${productName} image gallery`}>
-      <div className="pdp-gallery__thumbs" role="list" aria-label="Product thumbnails">
+      <div
+        ref={thumbsRef}
+        className="pdp-gallery__thumbs"
+        role="list"
+        aria-label="Product thumbnails"
+      >
         {images.map((image, index) => (
           <button
             key={image.id}
@@ -665,10 +690,24 @@ export default function ProductGallery({
           <button
             type="button"
             className="pdp-lightbox__close"
-            onClick={() => setLightboxOpen(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxOpen(false);
+            }}
             aria-label="Close lightbox"
           >
-            ×
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
           </button>
           {images.length > 1 ? (
             <>

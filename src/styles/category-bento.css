@@ -1091,7 +1091,7 @@
     );
     overflow-x: auto;
     overflow-y: hidden;
-    scroll-snap-type: x mandatory;
+    scroll-snap-type: x proximity;
     scroll-behavior: smooth;
     scrollbar-width: none;
     margin-inline: calc(-1 * max(0.875rem, env(safe-area-inset-left, 0px)))
@@ -1100,8 +1100,8 @@
     scroll-padding-inline: var(--bento-side-pad);
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    /* Page owns vertical; JS axis-lock drives sideways swipes */
-    touch-action: pan-y;
+    /* Native pan-x for momentum; pan-y keeps page scroll */
+    touch-action: pan-x pan-y;
   }
 
   .category-bento__showcase-scroll.is-dragging {

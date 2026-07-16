@@ -31,6 +31,7 @@ export default function ProductStickyBar({
   const isMobile = useIsMobileViewport();
   const isClient = useIsClient();
   const [visible, setVisible] = useState(false);
+  const [footerInView, setFooterInView] = useState(false);
   const canPurchase = inStock && isPurchasablePrice(price);
   const isComingSoon = !isPurchasablePrice(price);
 
@@ -49,14 +50,33 @@ export default function ProductStickyBar({
     return () => observer.disconnect();
   }, [sentinelRef]);
 
+  useEffect(() => {
+    const footer = document.querySelector<HTMLElement>(
+      ".site-footer__shell, .site-footer-newsletter, .site-footer"
+    );
+    if (!footer) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setFooterInView(Boolean(entry?.isIntersecting));
+      },
+      { root: null, threshold: 0, rootMargin: "0px 0px -8% 0px" }
+    );
+
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
+
   if (!isMobile || !isClient) return null;
+
+  const showBar = visible && !footerInView;
 
   return createPortal(
     <div
-      className={`pdp-mobile-bar${visible ? " pdp-mobile-bar--visible" : ""}`}
+      className={`pdp-mobile-bar${showBar ? " pdp-mobile-bar--visible" : ""}`}
       role="region"
       aria-label="Quick purchase"
-      aria-hidden={!visible}
+      aria-hidden={!showBar}
     >
       <div className="pdp-mobile-bar__price">
         <span className="pdp-mobile-bar__label">

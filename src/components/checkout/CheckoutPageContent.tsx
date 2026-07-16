@@ -153,11 +153,34 @@ export default function CheckoutPageContent() {
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
   const [addressError, setAddressError] = useState<string | null>(null);
+  const [footerInView, setFooterInView] = useState(false);
   const mobileBarReady = useSyncExternalStore(
     () => () => {},
     () => true,
     () => false
   );
+
+  useEffect(() => {
+    const footer = document.querySelector<HTMLElement>(
+      ".site-footer__shell, .site-footer-newsletter, .site-footer"
+    );
+    if (!footer) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setFooterInView(Boolean(entry?.isIntersecting));
+      },
+      {
+        root: null,
+        threshold: 0,
+        // Hide once the footer shell starts covering the bottom of the screen
+        rootMargin: "0px 0px -8% 0px",
+      }
+    );
+
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -549,9 +572,12 @@ export default function CheckoutPageContent() {
   const mobileBar =
     step !== "payment" ? (
       <div
-        className="checkout-mobile-bar"
+        className={`checkout-mobile-bar${
+          footerInView ? " checkout-mobile-bar--hidden" : ""
+        }`}
         role="region"
         aria-label="Order total and continue"
+        aria-hidden={footerInView}
       >
         <div className="checkout-mobile-bar__total">
           <span className="checkout-mobile-bar__label">Total</span>
@@ -563,7 +589,7 @@ export default function CheckoutPageContent() {
           <CheckoutGlassButton
             variant="solid"
             className="checkout-mobile-bar__cta"
-            disabled={!canProceedFromAddress}
+            disabled={!canProceedFromAddress || footerInView}
             onClick={() => void handleContinueFromAddress()}
           >
             Continue
@@ -572,6 +598,7 @@ export default function CheckoutPageContent() {
           <CheckoutGlassButton
             variant="solid"
             className="checkout-mobile-bar__cta"
+            disabled={footerInView}
             onClick={handleContinueToPayment}
           >
             Continue

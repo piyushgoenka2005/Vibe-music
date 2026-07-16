@@ -18,6 +18,17 @@
   cursor: pointer;
 }
 
+.compare-page__clear--cart {
+  border-color: #0f172a;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.compare-page__clear--cart:hover {
+  background: #1e293b;
+  border-color: #1e293b;
+}
+
 .compare-page__share-url {
   margin-top: 0.75rem;
   font-size: 0.875rem;

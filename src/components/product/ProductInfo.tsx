@@ -312,7 +312,21 @@ export default function ProductInfo({
                   isWishlisted ? "Remove from wishlist" : "Add to wishlist"
                 }
               >
-                {isWishlisted ? "♥ Wishlisted" : "♡ Wishlist"}
+                {isWishlisted ? (
+                  <>
+                    <span className="pdp-btn__wishlist-icon" aria-hidden="true">
+                      ♥
+                    </span>{" "}
+                    Wishlisted
+                  </>
+                ) : (
+                  <>
+                    <span className="pdp-btn__wishlist-icon" aria-hidden="true">
+                      ♡
+                    </span>{" "}
+                    Wishlist
+                  </>
+                )}
               </button>
             </div>
           </>
@@ -345,7 +359,21 @@ export default function ProductInfo({
                   isWishlisted ? "Remove from wishlist" : "Add to wishlist"
                 }
               >
-                {isWishlisted ? "♥ Wishlisted" : "♡ Wishlist"}
+                {isWishlisted ? (
+                  <>
+                    <span className="pdp-btn__wishlist-icon" aria-hidden="true">
+                      ♥
+                    </span>{" "}
+                    Wishlisted
+                  </>
+                ) : (
+                  <>
+                    <span className="pdp-btn__wishlist-icon" aria-hidden="true">
+                      ♡
+                    </span>{" "}
+                    Wishlist
+                  </>
+                )}
               </button>
             </div>
           </>

@@ -42,7 +42,7 @@ export default function BigNamesDealsSection() {
 
         <BigNamesDealsShowcase items={BIG_NAMES_DEALS} />
 
-        <Reveal delay={120}>
+        <Reveal immediate>
           <div className="big-names-deals__cta-wrap">
             <Link className="big-names-deals__cta" href={BIG_NAMES_DEALS_CTA}>
               Shop All Deals

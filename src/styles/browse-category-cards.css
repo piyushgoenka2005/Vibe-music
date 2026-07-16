@@ -235,14 +235,14 @@
     gap: 10px;
     overflow-x: auto;
     overflow-y: hidden;
-    scroll-snap-type: x mandatory;
+    scroll-snap-type: x proximity;
     scroll-behavior: smooth;
     scroll-padding-inline: 0;
     padding-bottom: 0.25rem;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    /* Page owns vertical; JS axis-lock drives sideways swipes */
-    touch-action: pan-y;
+    /* Native pan-x for momentum; pan-y keeps page scroll */
+    touch-action: pan-x pan-y;
     scrollbar-width: none;
   }
 
@@ -257,11 +257,15 @@
 
   .category-cards-inner::-webkit-scrollbar {
     display: none;
+    width: 0;
+    height: 0;
   }
 
   .category-card {
     flex: 0 0 min(78vw, 322px);
+    flex-shrink: 0;
     scroll-snap-align: start;
+    scroll-snap-stop: normal;
   }
 
   .category-cards__pagination {

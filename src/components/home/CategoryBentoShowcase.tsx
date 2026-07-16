@@ -303,7 +303,14 @@ export default function CategoryBentoShowcase() {
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const detachAxis = attachAxisLockedRailScroll(el);
+
+    // Mouse/trackpad: axis-lock + wheel. Touch phones: native momentum scroll.
+    const usePointerDrag =
+      typeof window !== "undefined" &&
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const detachAxis = usePointerDrag
+      ? attachAxisLockedRailScroll(el)
+      : () => undefined;
     const detachWheel = attachHorizontalWheelScroll(el);
     return () => {
       detachAxis();

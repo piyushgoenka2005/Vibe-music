@@ -1369,79 +1369,224 @@
 @media (max-width: 767px) {
   .sw-search-landing-shell {
     min-height: auto;
+    overflow-x: clip;
   }
 
   .sw-search-landing {
-    padding: 2.5rem 1rem 3.25rem;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem clamp(1rem, 4.5vw, 1.25rem) 2rem;
+    text-align: center;
+  }
+
+  .sw-search-landing__eyebrow {
+    margin: 0 0 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    line-height: 1.3;
+    text-align: center;
   }
 
   .sw-search-landing h1 {
-    font-size: clamp(1.5rem, 7vw, 2rem);
+    margin: 0 0 0.65rem;
+    font-size: clamp(1.875rem, 8vw, 2.125rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    text-wrap: balance;
   }
 
   .sw-search-landing__lead {
+    margin: 0 auto 1.5rem;
+    max-width: 20rem;
+    padding-inline: 0.25rem;
     font-size: 0.9375rem;
-    margin-bottom: 1.25rem;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .sw-search-landing-bar {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .sw-search-landing-bar__form {
+    width: 100%;
   }
 
   .sw-search-landing-bar__glow {
     background: transparent;
     box-shadow: none;
+    padding: 0;
+    border-radius: 0;
+    overflow: visible;
   }
 
   .sw-search-landing-bar__glow-lines {
     display: none;
   }
 
+  /* Input chrome + full-width Search button (12px gap) */
   .sw-search-landing-bar__shell {
-    flex-wrap: wrap;
-    padding: 0.45rem;
-    gap: 0.45rem;
-    border: 1px solid var(--border-default);
-    background: #fff;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    gap: 12px;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     box-shadow: none;
     backdrop-filter: none;
   }
 
-  .sw-search-landing-bar__field {
-    flex: 1 1 calc(100% - 2.75rem);
-    min-width: 0;
+  .sw-search-landing-bar__icon {
+    position: absolute;
+    top: 1.05rem;
+    left: 1rem;
+    z-index: 2;
+    pointer-events: none;
+    color: var(--brand-primary);
   }
 
-  .sw-search-landing-bar__submit {
+  .sw-search-landing-bar__icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .sw-search-landing-bar__field {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
     width: 100%;
     min-width: 0;
-    min-height: 2.75rem;
-    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    min-height: 54px;
+    padding: 0 1rem 0 2.85rem;
+    border: 1px solid var(--border-default);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    box-sizing: border-box;
+  }
+
+  .sw-search-landing-bar__input {
+    width: 100%;
+    height: 54px;
+    min-height: 54px;
+    padding: 0;
+    font-size: 16px; /* avoid iOS zoom */
+    line-height: 1.3;
+  }
+
+  .sw-search-landing-bar__rolling {
+    left: 2.85rem;
+    right: 1rem;
     font-size: 0.9375rem;
   }
 
+  .sw-search-landing-bar__shortcut {
+    display: none !important;
+  }
+
+  .sw-search-landing-bar__submit {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    height: 52px;
+    min-height: 52px;
+    padding: 0 1rem;
+    border-radius: 14px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .sw-search-landing-bar__submit:hover {
+    transform: none;
+  }
+
+  .sw-search-landing-bar__panel {
+    top: calc(100% + 0.5rem);
+    border-radius: 14px;
+  }
+
   .sw-search-landing-bar__discover-card {
-    margin-top: 1.15rem;
-    padding: 1.1rem 1rem 1rem;
+    margin-top: 1.25rem;
+    padding: 1rem;
+    border-radius: 16px;
     background: #fff;
     background-image: none;
     box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+    box-sizing: border-box;
+  }
+
+  .sw-search-landing-bar__discover-head {
+    margin-bottom: 0.85rem;
+  }
+
+  .sw-search-landing-bar__discover-eyebrow {
+    margin-bottom: 0.25rem;
+    font-size: 0.6875rem;
   }
 
   .sw-search-landing-bar__discover-title {
     font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 
   .sw-search-landing-bar__category-grid {
-    gap: 0.55rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    align-items: stretch;
   }
 
   .sw-search-landing-bar__category-tile {
-    min-height: 2.875rem;
-    padding: 0.6rem 0.7rem;
-    gap: 0.55rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 3.25rem;
+    height: 100%;
+    padding: 0.875rem;
+    border-radius: 14px;
     background: #fff;
+    box-sizing: border-box;
   }
 
   .sw-search-landing-bar__category-tile:hover {
     transform: none;
     box-shadow: none;
+  }
+
+  .sw-search-landing-bar__category-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+
+  .sw-search-landing-bar__category-label {
+    min-width: 0;
+    flex: 1 1 auto;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .sw-search-landing-bar__discover-foot {
@@ -1450,7 +1595,7 @@
   }
 
   .sw-search-landing-bar__trending-row {
-    gap: 0.45rem;
+    gap: 0.5rem;
   }
 
   .sw-search-landing-bar__trending-pill {
@@ -1458,6 +1603,15 @@
     padding: 0.5rem 0.9rem;
     font-size: 0.8125rem;
     background: #fff;
+  }
+
+  .sw-search-landing-bar__chips {
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .sw-search-landing-bar__chip {
+    min-height: 2.75rem;
   }
 }
 
@@ -1473,11 +1627,56 @@
     font-size: 1rem;
     margin-top: 0.25rem;
   }
+
+  .sw-search-landing-bar__category-label {
+    font-size: 0.75rem;
+  }
 }
 
 @media (max-width: 479px) {
   .sw-search-landing {
-    padding: 2rem 0.875rem 2.75rem;
+    padding: 1.35rem 1rem 1.75rem;
+  }
+
+  .sw-search-landing h1 {
+    font-size: 1.875rem;
+  }
+
+  .sw-search-landing__lead {
+    margin-bottom: 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  .sw-search-landing-bar__field {
+    min-height: 52px;
+  }
+
+  .sw-search-landing-bar__input {
+    height: 52px;
+    min-height: 52px;
+  }
+
+  .sw-search-landing-bar__icon {
+    top: 0.95rem;
+  }
+
+  .sw-search-landing-bar__submit {
+    height: 50px;
+    min-height: 50px;
+  }
+
+  .sw-search-landing-bar__discover-card {
+    margin-top: 1.1rem;
+    padding: 0.9rem;
+  }
+
+  .sw-search-landing-bar__category-grid {
+    gap: 0.625rem;
+  }
+
+  .sw-search-landing-bar__category-tile {
+    padding: 0.8rem;
+    min-height: 3rem;
   }
 }
 

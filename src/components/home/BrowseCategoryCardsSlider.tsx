@@ -10,6 +10,11 @@ interface BrowseCategoryCardsSliderProps {
   items: BrowseCategoryCard[];
 }
 
+function prefersFinePointer(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
 export default function BrowseCategoryCardsSlider({
   items,
 }: BrowseCategoryCardsSliderProps) {
@@ -36,7 +41,13 @@ export default function BrowseCategoryCardsSlider({
     updateActiveIndex();
     track.addEventListener("scroll", updateActiveIndex, { passive: true });
     window.addEventListener("resize", updateActiveIndex);
-    const detachAxis = attachAxisLockedRailScroll(track);
+
+    // Mouse/trackpad: axis-lock + wheel assist.
+    // Touch phones: native overflow scroll (momentum + snap) — smoother.
+    const usePointerDrag = prefersFinePointer();
+    const detachAxis = usePointerDrag
+      ? attachAxisLockedRailScroll(track)
+      : () => undefined;
     const detachWheel = attachHorizontalWheelScroll(track);
 
     return () => {
@@ -78,11 +89,13 @@ export default function BrowseCategoryCardsSlider({
             href={item.href}
             role="listitem"
             aria-label={`${index + 1} / ${items.length}: ${item.title}`}
+            draggable={false}
           >
             <div className="category-card__image">
               <img
                 alt=""
                 decoding="async"
+                draggable={false}
                 height={item.height}
                 loading="lazy"
                 role="presentation"

@@ -107,9 +107,11 @@
 
 /* Gear stories skeleton */
 .gear-stories-skeleton__card {
-  width: min(72vw, 280px);
-  height: min(118vw, 480px);
-  border-radius: 48px;
+  width: min(22vw, 260px);
+  aspect-ratio: 9 / 16;
+  height: auto;
+  max-height: none;
+  border-radius: 40px;
   background: linear-gradient(
     90deg,
     var(--surface-muted) 25%,

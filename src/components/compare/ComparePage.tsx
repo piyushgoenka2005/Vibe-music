@@ -297,7 +297,7 @@ export default function ComparePage({
                   {isPurchasablePrice(item.price) ? (
                     <button
                       type="button"
-                      className="compare-page__clear"
+                      className="compare-page__clear compare-page__clear--cart"
                       onClick={() => addToCart(productFromItem(item), 1)}
                     >
                       Add to cart

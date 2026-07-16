@@ -154,9 +154,9 @@
   .cat-product-grid--grid .cat-product-card__add {
     margin-top: 8px;
     min-height: 2.5rem;
-    height: 2.5rem;
+    height: auto;
     font-size: 12px;
-    border-radius: 0;
+    border-radius: 999px;
   }
 }
 
@@ -300,14 +300,14 @@
     justify-content: center;
     align-self: stretch;
     box-sizing: border-box;
-    width: calc(100% + 2 * var(--card-pad-x, 0.7rem));
+    width: 100%;
     margin-top: 0.45rem;
-    margin-inline: calc(-1 * var(--card-pad-x, 0.7rem));
+    margin-inline: 0;
     min-height: 44px;
     height: auto;
     padding: 0.5rem 0.65rem;
-    border: 0;
-    border-radius: 0;
+    border: 1px solid #0f172a;
+    border-radius: 999px;
     background: #0f172a;
     color: #ffffff;
     font-size: 0.75rem;
@@ -317,6 +317,7 @@
 
   .cat-product-grid--grid .cat-product-card__add:hover:not(:disabled) {
     background: #1e293b;
+    border-color: #1e293b;
   }
 
   .cat-product-card__brand {
@@ -390,7 +391,7 @@
     min-height: 44px;
     height: auto;
     font-size: 0.75rem;
-    border-radius: 0;
+    border-radius: 999px;
   }
 }
 
@@ -612,34 +613,42 @@
   align-self: stretch;
   box-sizing: border-box;
   margin: 10px 0 0;
-  margin-inline: calc(-1 * var(--card-pad-x, 14px));
-  width: calc(100% + 2 * var(--card-pad-x, 14px));
+  margin-inline: 0;
+  width: 100%;
   max-width: none;
-  min-height: 2.75rem;
-  height: 2.75rem;
-  border: 0;
-  border-radius: 0;
-  background: var(--brand-gradient, var(--cat-blue));
-  color: #fff;
-  font-size: 13px;
-  font-weight: 500;
+  min-height: 2.5rem;
+  height: auto;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid #0f172a;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
   box-shadow: none;
   transition:
-    filter var(--duration-fast),
-    background var(--duration-fast);
+    background 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease;
 }
 
 .cat-product-card__add:hover:not(:disabled) {
   transform: none;
-  filter: brightness(1.05);
+  filter: none;
+  background: #1e293b;
+  border-color: #1e293b;
   box-shadow: none;
 }
 
 .cat-product-card__add:disabled {
-  background: var(--cat-grey50);
+  background: #94a3b8;
+  border-color: #94a3b8;
+  color: #ffffff;
   cursor: not-allowed;
   filter: none;
+  opacity: 1;
 }
 
 .cat-pagination {

@@ -904,7 +904,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   font-size: clamp(1.25rem, 2.5vw, 1.65rem);
   font-weight: 500;
   letter-spacing: -0.02em;
-  color: var(--text-primary, #0f172a);
+  color: #0e42be;
   line-height: 1.15;
 }
 
@@ -1349,22 +1349,6 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   min-width: 0;
   opacity: 1;
   transform: none;
-}
-
-.reveal-group--visible .big-names-deals__item {
-  animation: big-names-item-in 0.7s ease both;
-  animation-delay: calc(var(--big-names-index, 0) * 100ms + 80ms);
-}
-
-@keyframes big-names-item-in {
-  from {
-    opacity: 0.35;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .big-names-deals__link {
@@ -3018,16 +3002,16 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
     min-height: 3rem;
     justify-content: center;
     border: none;
-    background: var(--brand-primary, #1253ed);
+    background: #0e42be;
     color: #ffffff !important;
     font-size: 0.9375rem;
     font-weight: 700;
-    box-shadow: 0 8px 24px rgba(18, 83, 237, 0.28);
+    box-shadow: 0 8px 24px rgba(14, 66, 190, 0.28);
   }
 
   .premium-home .new-arrivals-section__cta-mobile .homepage-section__cta-btn:hover,
   .premium-home .new-arrivals-section__cta-mobile .homepage-section__cta-btn:focus-visible {
-    background: var(--brand-primary-hover, #0f47d4);
+    background: #0c3aa8;
     border-color: transparent;
     color: #ffffff !important;
   }
@@ -4761,7 +4745,6 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   }
 
   .reveal-group--visible .big-names-deals__item {
-    animation: none;
     opacity: 1;
     transform: none;
   }

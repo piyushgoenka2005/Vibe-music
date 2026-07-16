@@ -243,15 +243,33 @@
     max-width: 100%;
   }
 
+  .storefront-page .pdp-gallery {
+    flex-direction: column-reverse;
+    width: 100%;
+    max-width: 100%;
+  }
+
   .pdp-gallery__main {
     max-width: 100%;
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .storefront-page .pdp-gallery__thumbs {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .storefront-page .pdp-gallery__main .pdp-gallery__photo {
     width: auto;
     height: auto;
     max-width: 100%;
-    max-height: 100%;
+    max-height: min(52vh, 420px);
     object-fit: contain;
     object-position: center center;
   }
