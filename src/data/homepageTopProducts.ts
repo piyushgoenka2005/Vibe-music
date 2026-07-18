@@ -2,11 +2,9 @@ import { productPath, ROUTES } from "@/lib/routes";
 
 const ROLAND_GP9_PRODUCT = "/images/products/roland-gp9-front.webp";
 
-const HERTZ_GUITAR_FRONT =
-  "https://res.cloudinary.com/piyushgoenka/image/upload/v1782292587/products/guitars/hertz-hza4503-hza4503/01-hza-4503-na-amazonfront.png";
+const HERTZ_GUITAR_FRONT = "/images/guitar.png";
 
-const ADEON_PA_FRONT =
-  "https://res.cloudinary.com/piyushgoenka/image/upload/v1782290990/products/live-sound-lighting/adeon-ad12-dsp-ad12-dsp/01-ad12.jpg";
+const ADEON_PA_FRONT = "/images/PA-Speaker.png";
 
 export interface HomepageTopProduct {
   id: string;
