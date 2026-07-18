@@ -5,6 +5,10 @@ import type { MouseEvent } from "react";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import HomepageProductImage from "@/components/homepage/HomepageProductImage";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
+import {
+  ensureProductReviewMetrics,
+  formatRatingPillLabel,
+} from "@/lib/product/productReviewDisplay";
 import { resolveLinkHref } from "@/lib/routes";
 import { useCartStore } from "@/store/cartStore";
 import type { HomepageProductItem } from "@/types/homepage";
@@ -21,6 +25,11 @@ interface CarouselProductCardProps {
 
 function toCartProduct(item: HomepageProductItem): Product {
   const price = item.salePrice != null && item.salePrice > 0 ? item.salePrice : item.price;
+  const { rating, reviewCount } = ensureProductReviewMetrics({
+    id: item.id,
+    rating: item.rating,
+    reviewCount: item.reviewCount,
+  });
   return {
     id: item.id,
     slug: item.slug,
@@ -31,8 +40,8 @@ function toCartProduct(item: HomepageProductItem): Product {
     categorySlug: "",
     price,
     originalPrice: item.price > price ? item.price : undefined,
-    rating: item.rating,
-    reviewCount: item.reviewCount,
+    rating,
+    reviewCount,
     availability: "in-stock",
     condition: "new",
     imageColor: "#e2e8f0",
@@ -51,11 +60,6 @@ function seededDiscount(id: string): number {
   return DISCOUNTS[seededHash(id) % DISCOUNTS.length];
 }
 
-function seededRating(id: string): string {
-  const RATINGS = [3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9];
-  return RATINGS[seededHash(id + "r") % RATINGS.length].toFixed(1);
-}
-
 function fakeMrp(price: number, discountPct: number): number {
   return Math.round(price / (1 - discountPct / 100));
 }
@@ -71,12 +75,18 @@ export default function CarouselProductCard({
   const displayPrice = item.salePrice ?? item.price;
   const hasDiscount =
     item.salePrice != null && item.salePrice > 0 && item.salePrice < item.price;
-  const showRating = item.reviewCount > 0;
+  const { rating: displayRating, reviewCount: displayReviewCount } =
+    ensureProductReviewMetrics({
+      id: item.id,
+      rating: item.rating,
+      reviewCount: item.reviewCount,
+    });
+  const ratingPillLabel = formatRatingPillLabel(displayRating, displayReviewCount);
+  const showRating = displayReviewCount > 0;
   const badgeLabel =
     item.badgeLabel ?? (sectionKey === "trending" ? "Trending" : undefined);
   const isTrendingRibbon = sectionKey === "trending" && !item.badgeLabel;
   const discountPct = seededDiscount(item.id);
-  const displayRating = seededRating(item.id);
   const productHref = resolveLinkHref(item.href);
   const canQuickAdd = isPurchasablePrice(displayPrice);
 
@@ -125,9 +135,14 @@ export default function CarouselProductCard({
               </span>
             ) : null}
             {showRating ? (
-              <span className="rating-pill" aria-label={`Rated ${displayRating} out of 5`}>
-                <span className="rating-pill__star" aria-hidden="true">★</span>
-                {displayRating}
+              <span
+                className="rating-pill"
+                aria-label={`Rated ${displayRating.toFixed(1)} out of 5 from ${displayReviewCount} ratings`}
+              >
+                <span className="rating-pill__star" aria-hidden="true">
+                  ★
+                </span>
+                {ratingPillLabel}
               </span>
             ) : null}
           </div>
@@ -138,15 +153,13 @@ export default function CarouselProductCard({
             </h3>
           </div>
         </Link>
-        <span className="product-suggest__tags-row">
-          <span className="discount-drop" aria-label={`${discountPct}% off`}>
-            <span className="discount-drop__arrow" aria-hidden="true">↓</span>
-            {discountPct}% off
-          </span>
-        </span>
         <div className="product-suggest__item-footer">
           <div className="product-suggest__item-pricing">
-            <span className="product-suggest__item-prices">
+            <div className="product-suggest__item-prices">
+              <span className="discount-drop" aria-label={`${discountPct}% off`}>
+                <span className="discount-drop__arrow" aria-hidden="true">↓</span>
+                {discountPct}% off
+              </span>
               <span className="product-suggest__item-was">
                 {formatDisplayPrice(fakeMrp(displayPrice, discountPct))}
               </span>
@@ -157,8 +170,10 @@ export default function CarouselProductCard({
               >
                 {formatDisplayPrice(displayPrice)}
               </span>
-            </span>
+            </div>
           </div>
+        </div>
+        <div className="product-suggest__item-action-row">
           {canQuickAdd ? (
             <button
               type="button"

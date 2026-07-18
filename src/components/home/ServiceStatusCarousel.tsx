@@ -7,6 +7,7 @@ import {
   LANDING_SERVICE_STATUS,
   LANDING_TRUST_ITEMS,
 } from "@/data/landingStatus";
+import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import Reveal from "@/components/layout/Reveal";
 
 type CarouselItem = {
@@ -37,14 +38,84 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
   })),
 ];
 
+function ServiceCarouselCard({
+  item,
+  index,
+  isDuplicate = false,
+}: {
+  item: CarouselItem;
+  index: number;
+  isDuplicate?: boolean;
+}) {
+  const cardContent = (
+    <>
+      <div className="service-carousel__card-head">
+        <span className="service-carousel__card-category">{item.category}</span>
+        <span className="service-carousel__card-index" aria-hidden>
+          {String(index + 1).padStart(2, "0")}
+        </span>
+      </div>
+
+      <div className="service-carousel__card-body">
+        <h3 className="service-carousel__card-title">{item.title}</h3>
+        <p className="service-carousel__card-desc">{item.desc}</p>
+      </div>
+    </>
+  );
+
+  if (item.href) {
+    return (
+      <Link
+        href={item.href}
+        className="service-carousel__card"
+        role="listitem"
+        aria-hidden={isDuplicate ? true : undefined}
+        tabIndex={isDuplicate ? -1 : undefined}
+      >
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return (
+    <article
+      className="service-carousel__card"
+      role="listitem"
+      aria-hidden={isDuplicate ? true : undefined}
+    >
+      {cardContent}
+    </article>
+  );
+}
+
 export default function ServiceStatusCarousel() {
+  const reduceMotion = useHydrationSafeReducedMotion();
+  const enableAutoScroll = !reduceMotion;
   const trackRef = useRef<HTMLDivElement>(null);
   const [activePage, setActivePage] = useState(0);
   const [pageCount, setPageCount] = useState(1);
 
+  const displayItems = enableAutoScroll
+    ? [...CAROUSEL_ITEMS, ...CAROUSEL_ITEMS]
+    : CAROUSEL_ITEMS;
+
+  const trackWrapClassName = [
+    "service-carousel__track-wrap",
+    enableAutoScroll && "service-carousel__track-wrap--marquee",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const trackClassName = [
+    "service-carousel__track",
+    enableAutoScroll && "service-carousel__track--marquee",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   const updatePageState = useCallback(() => {
     const track = trackRef.current;
-    if (!track) return;
+    if (!track || enableAutoScroll) return;
 
     const card = track.querySelector<HTMLElement>(".service-carousel__card");
     const cardWidth = card?.offsetWidth ?? 1;
@@ -56,11 +127,13 @@ export default function ServiceStatusCarousel() {
 
     setPageCount(pages);
     setActivePage(page);
-  }, []);
+  }, [enableAutoScroll]);
 
   useEffect(() => {
+    if (enableAutoScroll) return undefined;
+
     const track = trackRef.current;
-    if (!track) return;
+    if (!track) return undefined;
 
     updatePageState();
     track.addEventListener("scroll", updatePageState, { passive: true });
@@ -70,11 +143,11 @@ export default function ServiceStatusCarousel() {
       track.removeEventListener("scroll", updatePageState);
       window.removeEventListener("resize", updatePageState);
     };
-  }, [updatePageState]);
+  }, [enableAutoScroll, updatePageState]);
 
   const scrollByPage = (direction: -1 | 1) => {
     const track = trackRef.current;
-    if (!track) return;
+    if (!track || enableAutoScroll) return;
 
     const card = track.querySelector<HTMLElement>(".service-carousel__card");
     const cardWidth = card?.offsetWidth ?? track.clientWidth;
@@ -87,7 +160,7 @@ export default function ServiceStatusCarousel() {
 
   const scrollToPage = (page: number) => {
     const track = trackRef.current;
-    if (!track) return;
+    if (!track || enableAutoScroll) return;
 
     const card = track.querySelector<HTMLElement>(".service-carousel__card");
     const cardWidth = card?.offsetWidth ?? track.clientWidth;
@@ -110,84 +183,88 @@ export default function ServiceStatusCarousel() {
             focus on the music.
           </p>
 
-          <div className="service-carousel__controls">
-            <div className="service-carousel__arrows">
-              <button
-                type="button"
-                className="service-carousel__arrow"
-                aria-label="Previous features"
-                onClick={() => scrollByPage(-1)}
-              >
-                <ChevronLeft size={18} aria-hidden />
-              </button>
-              <button
-                type="button"
-                className="service-carousel__arrow"
-                aria-label="Next features"
-                onClick={() => scrollByPage(1)}
-              >
-                <ChevronRight size={18} aria-hidden />
-              </button>
-            </div>
-
-            <div className="service-carousel__dots" role="tablist" aria-label="Feature pages">
-              {Array.from({ length: pageCount }, (_, index) => (
+          {!enableAutoScroll ? (
+            <div className="service-carousel__controls">
+              <div className="service-carousel__arrows">
                 <button
-                  key={index}
                   type="button"
-                  role="tab"
-                  aria-selected={activePage === index}
-                  aria-label={`Go to page ${index + 1}`}
-                  className={`service-carousel__dot${
-                    activePage === index ? " service-carousel__dot--active" : ""
-                  }`}
-                  onClick={() => scrollToPage(index)}
-                />
-              ))}
+                  className="service-carousel__arrow"
+                  aria-label="Previous features"
+                  onClick={() => scrollByPage(-1)}
+                >
+                  <ChevronLeft size={18} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className="service-carousel__arrow"
+                  aria-label="Next features"
+                  onClick={() => scrollByPage(1)}
+                >
+                  <ChevronRight size={18} aria-hidden />
+                </button>
+              </div>
+
+              <div className="service-carousel__dots" role="tablist" aria-label="Feature pages">
+                {Array.from({ length: pageCount }, (_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    role="tab"
+                    aria-selected={activePage === index}
+                    aria-label={`Go to page ${index + 1}`}
+                    className={`service-carousel__dot${
+                      activePage === index ? " service-carousel__dot--active" : ""
+                    }`}
+                    onClick={() => scrollToPage(index)}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
         </Reveal>
 
-        <div className="service-carousel__track-wrap">
-          <div ref={trackRef} className="service-carousel__track" role="list">
-            {CAROUSEL_ITEMS.map((item, index) => {
-              const cardContent = (
-                <>
-                  <div className="service-carousel__card-head">
-                    <span className="service-carousel__card-category">{item.category}</span>
-                    <span className="service-carousel__card-index" aria-hidden>
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                  </div>
-
-                  <div className="service-carousel__card-body">
-                    <h3 className="service-carousel__card-title">{item.title}</h3>
-                    <p className="service-carousel__card-desc">{item.desc}</p>
-                  </div>
-                </>
-              );
-
-              if (item.href) {
-                return (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className="service-carousel__card"
-                    role="listitem"
-                  >
-                    {cardContent}
-                  </Link>
-                );
-              }
-
-              return (
-                <article key={item.id} className="service-carousel__card" role="listitem">
-                  {cardContent}
-                </article>
-              );
-            })}
+        <div className={trackWrapClassName}>
+          <div ref={trackRef} className={trackClassName} role="list">
+            {displayItems.map((item, index) => (
+              <ServiceCarouselCard
+                key={`${item.id}-${index}`}
+                item={item}
+                index={index % CAROUSEL_ITEMS.length}
+                isDuplicate={enableAutoScroll && index >= CAROUSEL_ITEMS.length}
+              />
+            ))}
           </div>
         </div>
+      </div>
+
+      <div className="service-carousel__ledger" aria-label="Store services at a glance">
+        {CAROUSEL_ITEMS.map((item) => {
+          const content = (
+            <>
+              <span className="service-carousel__ledger-category">{item.category}</span>
+              <span className="service-carousel__ledger-title">{item.title}</span>
+              <span className="service-carousel__ledger-desc">{item.desc}</span>
+            </>
+          );
+
+          if (item.href) {
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="service-carousel__ledger-item"
+              >
+                {content}
+              </Link>
+            );
+          }
+
+          return (
+            <div key={item.id} className="service-carousel__ledger-item">
+              {content}
+            </div>
+          );
+        })}
       </div>
     </section>
   );

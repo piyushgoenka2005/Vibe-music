@@ -13,7 +13,7 @@ import Reveal from "@/components/layout/Reveal";
 
 const HEADLINE_ID = "top-products-title";
 
-function TopProductCard({ product }: { product: HomepageTopProduct }) {
+export function TopProductCard({ product }: { product: HomepageTopProduct }) {
   const imagePreset = product.imageFit === "contain" ? "productDetail" : "blogCover";
   // Always use sized thumbs/derivatives — full CDN PNG masters can be multi‑MB.
   const imageSrc = optimizeImageUrl(product.image, imagePreset);

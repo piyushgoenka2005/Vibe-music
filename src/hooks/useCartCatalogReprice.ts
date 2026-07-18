@@ -40,6 +40,7 @@ export function useCartCatalogReprice(enabled = true) {
             productId: line.productId,
             variantId: line.variantId,
             price: line.price,
+            originalPrice: line.originalPrice,
             name: line.name,
             gstRate: line.gstRate,
             variantSku: line.variantSku,

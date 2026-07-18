@@ -50,13 +50,13 @@
   }
 
   .premium-home .premium-product-carousel .product-suggest__items {
-    --carousel-card-width: clamp(220px, 20vw, 270px);
+    --carousel-card-width: clamp(188px, 17vw, 232px);
   }
 }
 
 @media (min-width: 1440px) {
   .premium-home .premium-product-carousel .product-suggest__items {
-    --carousel-card-width: 260px;
+    --carousel-card-width: 220px;
   }
 }
 
@@ -146,8 +146,8 @@
 }
 
 .premium-home .premium-product-carousel .product-suggest__items {
-  --carousel-gap: clamp(0.875rem, 2vw, 1.125rem);
-  --carousel-card-width: clamp(210px, 21vw, 270px);
+  --carousel-gap: clamp(0.75rem, 1.75vw, 1rem);
+  --carousel-card-width: clamp(180px, 17.5vw, 228px);
   --carousel-edge: 0px;
   display: flex;
   flex-direction: row;
@@ -156,7 +156,7 @@
   gap: var(--carousel-gap);
   margin: 0;
   /* Room for image pop (overflow-x:auto forces y clipping — keep paint inside padding) */
-  padding: 1.75rem 0 1.5rem;
+  padding: 1.35rem 0 1.15rem;
   scroll-padding-inline: 0;
   scrollbar-width: none;
   overflow-x: auto;
@@ -241,7 +241,7 @@
   flex-direction: column;
   height: 100%;
   min-height: 100%;
-  padding: 1rem;
+  padding: 0 0 0.75rem;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #ffffff;
@@ -333,7 +333,7 @@
   /* Only the product photo layer scales — no translate, so the well stays aligned */
   .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-photo-pop,
   .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-photo-pop {
-    transform: scale(1.18);
+    transform: scale(1.3);
     filter: none;
   }
 
@@ -361,8 +361,8 @@
   height: auto;
   min-height: 0;
   max-height: none;
-  margin-bottom: 0.875rem;
-  border-radius: 16px;
+  margin-bottom: 0.625rem;
+  border-radius: 14px 14px 0 0;
   overflow: hidden !important;
   background: transparent;
   transform: none !important;
@@ -401,13 +401,17 @@
   pointer-events: none;
 }
 
-/* Photo layer — only this scales on hover (clipped by the well) */
+/* Photo layer — full width; scale up so product size holds when card narrows */
 .premium-home .premium-product-carousel .product-suggest__item-photo-pop {
   position: absolute;
-  inset: 4%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 2;
   display: block;
-  transform: scale(1);
+  width: 100%;
+  transform: scale(1.22);
   transform-origin: center center;
   filter: none;
   transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -438,7 +442,29 @@
   flex: 1;
   flex-direction: column;
   min-height: 0;
-  margin-bottom: 0.625rem;
+  margin-bottom: 0.35rem;
+  padding-inline: 0.75rem;
+}
+
+.premium-home .premium-product-carousel .product-suggest__item-action-row {
+  display: flex;
+  width: 100%;
+  padding-inline: 0.75rem;
+  margin-top: 0.45rem;
+  margin-bottom: 0;
+}
+
+.premium-home .premium-product-carousel .product-suggest__item-action-row .product-suggest__item-action,
+.premium-home .premium-product-carousel .product-suggest__item-action-row .product-suggest__item-action--button {
+  width: 100%;
+  min-height: 2.25rem;
+  justify-content: center;
+}
+
+.premium-home .premium-product-carousel .product-suggest__tags-row {
+  padding-inline: 0.75rem;
+  margin-top: auto;
+  margin-bottom: 0.35rem;
 }
 
 .premium-home .premium-product-carousel .product-suggest__brand {
@@ -478,39 +504,52 @@
 
 .premium-home .premium-product-carousel .product-suggest__item-footer {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: flex-start;
   gap: 0.4rem;
-  margin-top: auto;
+  margin-top: 0;
+  padding-inline: 0.75rem;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-pricing {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  align-items: center;
   min-width: 0;
   flex: 1 1 auto;
+  width: 100%;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-prices {
   display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: clamp(0.35rem, 1.2vw, 0.5rem);
   width: 100%;
+  min-width: 0;
+}
+
+.premium-home .premium-product-carousel .product-suggest__item-prices .discount-drop {
+  flex: 0 0 auto;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-was {
+  flex: 0 1 auto;
+  min-width: 0;
   font-size: 1rem;
   font-weight: 500;
   color: #94a3b8;
   text-decoration: line-through;
+  white-space: nowrap;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-price {
+  flex: 0 0 auto;
+  margin-left: auto;
   font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: #0f172a;
+  white-space: nowrap;
 }
 
 .premium-home .premium-product-carousel .product-suggest__item-price--enquiry {
@@ -581,6 +620,7 @@
 /* Carousel nav — always visible when the rail overflows */
 .premium-home .premium-product-carousel .product-suggest__nav {
   display: flex;
+  top: calc(50% - 2.25rem);
   width: 48px;
   height: 48px;
   margin-top: -24px;
@@ -637,7 +677,7 @@
 
 @media (min-width: 768px) {
   .premium-home .premium-product-carousel .product-suggest__items {
-    --carousel-card-width: clamp(220px, 23vw, 280px);
+    --carousel-card-width: clamp(188px, 20vw, 236px);
   }
 }
 
@@ -725,20 +765,46 @@
   }
 
   .premium-home .premium-product-carousel .product-suggest__item {
-    padding: 0.625rem;
+    padding: 0 0 0.625rem;
     border-radius: 14px;
     min-width: 0;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-img {
     margin-bottom: 0.5rem;
-    border-radius: 10px;
+    border-radius: 14px 14px 0 0;
     aspect-ratio: 1;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-photo-pop {
-    inset: 6%;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    transform: scale(1.2);
     will-change: auto;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-content,
+  .premium-home .premium-product-carousel .product-suggest__item-action-row,
+  .premium-home .premium-product-carousel .product-suggest__tags-row,
+  .premium-home .premium-product-carousel .product-suggest__item-footer {
+    padding-inline: 0.625rem;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-action-row {
+    margin-top: 0.4rem;
+    margin-bottom: 0;
+  }
+
+  .premium-home .premium-product-carousel .product-suggest__item-action-row .product-suggest__item-action,
+  .premium-home .premium-product-carousel .product-suggest__item-action-row .product-suggest__item-action--button {
+    width: 100%;
+    min-height: 2rem;
+    font-size: 0.7rem;
+    padding: 0.35rem 0.5rem;
+    white-space: nowrap;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-img img,
@@ -767,32 +833,32 @@
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-footer {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 0.35rem;
+    align-items: center;
+    flex-direction: row;
+    gap: 0.25rem;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-pricing {
-    gap: 0.1rem;
     min-width: 0;
     width: 100%;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-prices {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 0.35rem;
     width: 100%;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-was {
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 500;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-price {
-    font-size: 1.15rem;
+    font-size: 1.2rem;
     font-weight: 800;
   }
 

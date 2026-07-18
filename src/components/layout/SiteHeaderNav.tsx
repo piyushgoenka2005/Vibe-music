@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { HEADER_MEGA_MENUS, MEGA_MENU_BY_SLUG } from "@/data/headerMegaMenu";
 import { ROUTES } from "@/lib/routes";
 import HeaderMegaMenu from "@/components/layout/HeaderMegaMenu";
-import GooeyLinkupFilter from "@/components/ui/GooeyLinkupFilter";
 
 interface SiteHeaderNavProps {
   onNavigate?: () => void;
@@ -144,7 +143,6 @@ export default function SiteHeaderNav({
         setHoveredKey(null);
       }}
     >
-      <GooeyLinkupFilter id="gooey-linkup" />
       <div
         ref={navShellRef}
         className={`site-header__nav-shell${scrollable ? " site-header__nav-shell--scrollable" : ""}`}

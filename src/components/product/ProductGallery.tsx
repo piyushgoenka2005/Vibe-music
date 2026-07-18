@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import {
@@ -11,10 +11,12 @@ import type { ProductImage, ProductVideo } from "@/types/product";
 import Product360Viewer from "@/components/product/Product360Viewer";
 
 const LENS_WIDTH_RATIO = 0.38;
-const PANE_WIDTH = 680;
-const PANE_MIN_WIDTH = 480;
-const PANE_EXTRA_HEIGHT = 240;
-const PANE_MAX_HEIGHT = 680;
+const PANE_WIDTH = 560;
+const PANE_MIN_WIDTH = 280;
+const PANE_EXTRA_HEIGHT = 120;
+const PANE_MAX_HEIGHT = 560;
+const PANE_GAP = 12;
+const HEADER_SAFE_TOP = 96;
 
 interface ImageMetrics {
   naturalWidth: number;
@@ -149,6 +151,8 @@ export default function ProductGallery({
   const [lensPos, setLensPos] = useState<LensPosition>({ x: 0, y: 0 });
   const [mainSize, setMainSize] = useState({ width: 0, height: 0 });
   const [paneSize, setPaneSize] = useState({ width: 0, height: 0 });
+  const [paneOffset, setPaneOffset] = useState({ top: 0, left: 0 });
+  const [zoomSpaceOk, setZoomSpaceOk] = useState(false);
   const [imageMetrics, setImageMetrics] = useState<ImageMetrics>({
     naturalWidth: 0,
     naturalHeight: 0,
@@ -162,7 +166,9 @@ export default function ProductGallery({
   const thumbsRef = useRef<HTMLDivElement>(null);
 
   const activeImage = images[activeIndex] ?? images[0];
-  const canZoom = Boolean(activeImage?.src) && !showVideo && !show360;
+  const zoomEligible =
+    Boolean(activeImage?.src) && !showVideo && !show360;
+  const canZoom = zoomEligible && zoomSpaceOk;
   const has360 = spin360Images.length >= 2;
   const activeSrc = activeImage?.src ?? "";
   const displayCandidates = useMemo(() => {
@@ -197,6 +203,51 @@ export default function ProductGallery({
     setImageRect(measureRenderedImageRect(main, photo));
   }, []);
 
+  const placeZoomPane = useCallback(() => {
+    const main = mainRef.current;
+    if (!main || typeof window === "undefined") return;
+
+    const rect = main.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const spaceRight = viewportWidth - rect.right - PANE_GAP - 12;
+    const spaceLeft = rect.left - PANE_GAP - 12;
+
+    // Prefer the right side; fall back to left. If neither fits, disable zoom
+    // instead of sliding a huge pane over the gallery/header.
+    const side: "right" | "left" | "none" =
+      spaceRight >= PANE_MIN_WIDTH
+        ? "right"
+        : spaceLeft >= PANE_MIN_WIDTH
+          ? "left"
+          : "none";
+
+    if (side === "none" || viewportWidth < 1024) {
+      setZoomSpaceOk(false);
+      setZoomActive(false);
+      setPaneSize({ width: 0, height: 0 });
+      return;
+    }
+
+    const available = side === "right" ? spaceRight : spaceLeft;
+    const width = Math.min(PANE_WIDTH, Math.floor(available));
+    const height = Math.min(
+      PANE_MAX_HEIGHT,
+      Math.round(rect.height + PANE_EXTRA_HEIGHT),
+      Math.max(240, viewportHeight - HEADER_SAFE_TOP - 24)
+    );
+    const left =
+      side === "right" ? rect.right + PANE_GAP : rect.left - PANE_GAP - width;
+    const top = Math.min(
+      Math.max(HEADER_SAFE_TOP, rect.top),
+      Math.max(HEADER_SAFE_TOP, viewportHeight - height - 12)
+    );
+
+    setZoomSpaceOk(true);
+    setPaneOffset({ top, left });
+    setPaneSize({ width, height });
+  }, []);
+
   const effectivePaneSize = useMemo(() => {
     if (paneSize.width > 0 && paneSize.height > 0) {
       return paneSize;
@@ -205,15 +256,8 @@ export default function ProductGallery({
     const height =
       mainSize.height > 0
         ? Math.min(PANE_MAX_HEIGHT, Math.round(mainSize.height + PANE_EXTRA_HEIGHT))
-        : 640;
-    const viewportWidth =
-      typeof window !== "undefined" ? window.innerWidth : 1280;
-    const width = Math.min(
-      PANE_WIDTH,
-      Math.max(PANE_MIN_WIDTH, Math.round(viewportWidth * 0.5 - 48))
-    );
-
-    return { width, height };
+        : 420;
+    return { width: Math.min(PANE_WIDTH, PANE_MIN_WIDTH + 80), height };
   }, [mainSize.height, paneSize]);
 
   const lensDimensions = useMemo(() => {
@@ -271,20 +315,47 @@ export default function ProductGallery({
     return () => observer.disconnect();
   }, [activeIndex, measureImageRect, showVideo]);
 
+  // Keep zoom availability in sync with layout; do not wait for hover.
+  useLayoutEffect(() => {
+    if (!zoomEligible) {
+      setZoomSpaceOk(false);
+      setZoomActive(false);
+      return;
+    }
+
+    placeZoomPane();
+    window.addEventListener("resize", placeZoomPane);
+    window.addEventListener("scroll", placeZoomPane, true);
+    return () => {
+      window.removeEventListener("resize", placeZoomPane);
+      window.removeEventListener("scroll", placeZoomPane, true);
+    };
+  }, [
+    activeIndex,
+    mainSize.height,
+    mainSize.width,
+    placeZoomPane,
+    showVideo,
+    show360,
+    zoomEligible,
+  ]);
+
   useEffect(() => {
     const node = paneRef.current;
     if (!node || !zoomActive) return;
 
     const updatePaneSize = () => {
       const rect = node.getBoundingClientRect();
-      setPaneSize({ width: rect.width, height: rect.height });
+      if (rect.width > 0 && rect.height > 0) {
+        setPaneSize({ width: rect.width, height: rect.height });
+      }
     };
 
     updatePaneSize();
     const observer = new ResizeObserver(updatePaneSize);
     observer.observe(node);
     return () => observer.disconnect();
-  }, [activeIndex, showVideo, zoomActive]);
+  }, [activeIndex, showVideo, zoomActive, paneOffset.left, paneOffset.top]);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -316,18 +387,6 @@ export default function ProductGallery({
       block: "nearest",
     });
   }, [activeIndex, showVideo, show360]);
-
-  // Match the stage frame to the photo so the full asset fills the area
-  // without edge cropping (fixed square frames left large letterbox on mobile).
-  useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage || !imageMetrics.naturalWidth || !imageMetrics.naturalHeight) {
-      return;
-    }
-    const ratio = imageMetrics.naturalWidth / imageMetrics.naturalHeight;
-    const clamped = Math.min(1.35, Math.max(0.82, ratio));
-    stage.style.setProperty("--pdp-gallery-aspect", String(clamped));
-  }, [imageMetrics.naturalWidth, imageMetrics.naturalHeight]);
 
   const updateLens = useCallback(
     (clientX: number, clientY: number) => {
@@ -372,9 +431,7 @@ export default function ProductGallery({
   );
 
   const openLightbox = useCallback(() => {
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
-      setLightboxOpen(true);
-    }
+    setLightboxOpen(true);
   }, []);
 
   if (!activeImage && !has360) {
@@ -482,7 +539,24 @@ export default function ProductGallery({
         <div
           ref={mainRef}
           className={`pdp-gallery__main${zoomActive && canZoom ? " pdp-gallery__main--zooming" : ""}`}
-          onMouseEnter={() => canZoom && setZoomActive(true)}
+          onMouseEnter={() => {
+            if (!zoomEligible) return;
+            placeZoomPane();
+            measureImageRect();
+            // placeZoomPane updates zoomSpaceOk; only activate if space remains.
+            const main = mainRef.current;
+            if (!main || typeof window === "undefined") return;
+            const rect = main.getBoundingClientRect();
+            const spaceRight = window.innerWidth - rect.right - PANE_GAP - 12;
+            const spaceLeft = rect.left - PANE_GAP - 12;
+            if (
+              window.innerWidth < 1024 ||
+              (spaceRight < PANE_MIN_WIDTH && spaceLeft < PANE_MIN_WIDTH)
+            ) {
+              return;
+            }
+            setZoomActive(true);
+          }}
           onMouseLeave={() => setZoomActive(false)}
           onMouseMove={onMouseMove}
           onTouchStart={(e) => {
@@ -597,6 +671,20 @@ export default function ProductGallery({
             )}
           </div>
 
+          {canZoom ? (
+            <button
+              type="button"
+              className="pdp-gallery__full-view"
+              onClick={(e) => {
+                e.stopPropagation();
+                openLightbox();
+              }}
+              aria-label="Open full view"
+            >
+              Click to see full view
+            </button>
+          ) : null}
+
           {zoomActive && canZoom ? (
             <div
               className="pdp-gallery__zoom-lens"
@@ -611,7 +699,17 @@ export default function ProductGallery({
         </div>
 
         {zoomActive && canZoom && mainSize.width > 0 ? (
-          <div ref={paneRef} className="pdp-gallery__zoom-pane" aria-hidden>
+          <div
+            ref={paneRef}
+            className="pdp-gallery__zoom-pane"
+            aria-hidden
+            style={{
+              top: paneOffset.top,
+              left: paneOffset.left,
+              width: paneSize.width > 0 ? paneSize.width : undefined,
+              height: paneSize.height > 0 ? paneSize.height : undefined,
+            }}
+          >
             <img
               src={activeZoomSrc || activeDisplaySrc}
               alt=""
@@ -624,8 +722,14 @@ export default function ProductGallery({
                 }
               }}
               style={{
-                width: imageRect.width * zoomScale.x,
-                height: imageRect.height * zoomScale.y,
+                width:
+                  Math.max(imageRect.width > 0 ? imageRect.width : mainSize.width, 1) *
+                  zoomScale.x,
+                height:
+                  Math.max(
+                    imageRect.height > 0 ? imageRect.height : mainSize.height,
+                    1
+                  ) * zoomScale.y,
                 transform: `translate(${-(lensPos.x - imageRect.left) * zoomScale.x}px, ${-(lensPos.y - imageRect.top) * zoomScale.y}px)`,
               }}
             />

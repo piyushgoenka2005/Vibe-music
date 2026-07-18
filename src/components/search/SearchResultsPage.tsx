@@ -17,15 +17,19 @@ import {
   ViewToggle,
 } from "@/components/filters";
 import CategoryPagination from "@/components/category/CategoryPagination";
+import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import SearchEmptyState from "./SearchEmptyState";
+import SearchRecentlyViewed from "./SearchRecentlyViewed";
 import type { Product } from "@/types/product";
 import type { SearchProduct, SearchResultsData } from "@/types/search";
 import "../filters/filters.css";
 import "../category/category.css";
+import "./search.css";
 
 interface SearchResultsPageProps {
   query: string;
   initialCategory?: string;
+  initialSubcategory?: string;
   /** Server-rendered results for the initial query — skips the first client fetch. */
   initialResults?: SearchResultsData | null;
 }
@@ -55,6 +59,7 @@ function toListingProduct(product: SearchProduct): Product {
 function SearchResultsPageContent({
   query,
   initialCategory = "",
+  initialSubcategory = "",
   initialResults = null,
 }: SearchResultsPageProps) {
   const {
@@ -65,17 +70,26 @@ function SearchResultsPageContent({
     removeCondition,
     hasActive,
     categorySlug,
+    subcategory,
   } = useSearchListingFilters();
   const openMobileDrawer = useFilterStore((s) => s.openMobileDrawer);
 
   const urlCategory = categorySlug || initialCategory;
+  const urlSubcategory = subcategory || initialSubcategory;
 
   const { status, error, results } = useSearchResults(
     query,
-    { category: urlCategory || undefined, all: true },
+    {
+      category: urlCategory || undefined,
+      subcategory: urlSubcategory || undefined,
+      all: true,
+    },
     {
       initialResults,
-      initialFilters: { category: initialCategory },
+      initialFilters: {
+        category: initialCategory,
+        subcategory: initialSubcategory,
+      },
     }
   );
 
@@ -93,23 +107,35 @@ function SearchResultsPageContent({
   const total = data.total;
   const isLoading = status === "loading";
   const isError = status === "error";
-  const hasQuery = query.trim().length >= 2 || Boolean(urlCategory);
+  const hasQuery =
+    query.trim().length >= 2 || Boolean(urlCategory) || Boolean(urlSubcategory);
 
   return (
     <div className="cat-page">
-      <nav className="cat-breadcrumb" aria-label="Breadcrumb">
-        <Link href={ROUTES.home}>Home</Link>
-        <span className="cat-breadcrumb__sep" aria-hidden="true">
-          /
-        </span>
-        <span aria-current="page">Search</span>
-      </nav>
+      <div className="storefront-nav-chrome">
+        <StorefrontBackButton fallbackHref={ROUTES.search} />
+        <nav className="cat-breadcrumb" aria-label="Breadcrumb">
+          <Link href={ROUTES.home}>Home</Link>
+          <span className="cat-breadcrumb__sep" aria-hidden="true">
+            /
+          </span>
+          <span aria-current="page">Search</span>
+        </nav>
+      </div>
 
       <h1 className="cat-page__title">
         {query.trim() ? (
           <>
             Results for &ldquo;{query.trim()}&rdquo;
           </>
+        ) : urlSubcategory.toLowerCase().includes("acoustic") ? (
+          "Acoustic Guitars"
+        ) : urlSubcategory.toLowerCase().includes("amplifier") ? (
+          "Amplifiers"
+        ) : urlSubcategory ? (
+          urlSubcategory
+        ) : urlCategory ? (
+          <>Browsing {urlCategory.replace(/-/g, " ")}</>
         ) : (
           "Search Results"
         )}
@@ -225,6 +251,8 @@ function SearchResultsPageContent({
         onUpdate={updateFilters}
         resultCount={total}
       />
+
+      <SearchRecentlyViewed className="sw-search-recent--results" />
     </div>
   );
 }

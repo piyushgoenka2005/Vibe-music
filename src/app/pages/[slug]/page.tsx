@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { resolveContentPage } from "@/lib/server/contentPageRepository";
 import { CONTENT_PAGE_SLUGS } from "@/data/contentPages";
 import { ROUTES } from "@/lib/routes";
@@ -33,6 +34,7 @@ export default async function ContentPageRoute({ params }: ContentPageRouteProps
     <main className="storefront-page storefront-page--subtle cms-page">
       <article className="storefront-page__inner cms-page__article">
         <header className="storefront-page__header cms-page__header">
+          <StorefrontBackButton />
           <p className="storefront-page__eyebrow">{page.eyebrow}</p>
           <h1 className="storefront-page__title">{page.title}</h1>
         </header>

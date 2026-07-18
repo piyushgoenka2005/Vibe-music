@@ -23,7 +23,8 @@ export default function AccountFinancingPage() {
     <AccountShell>
       <h1>My finance applications</h1>
       <p style={{ marginBottom: "1rem" }}>
-        <Link href={ROUTES.financing}>Apply for new financing</Link>
+        Installment plans are not currently available. Pay at checkout with UPI, cards, or net
+        banking.
       </p>
       {isLoading ? (
         <p>Loading…</p>

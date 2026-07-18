@@ -37,9 +37,9 @@
   /* Layout */
   --content-max: 1280px;
   --content-wide: 1440px;
-  --header-height: 58px;
+  --header-height: 60px;
   /* SSR fallback — refined on mount via useSiteHeaderOffset */
-  --site-header-offset: 118px;
+  --site-header-offset: 148px;
   --z-toast: 1000002;
   --radius-sm: 8px;
   --radius-md: 14px;

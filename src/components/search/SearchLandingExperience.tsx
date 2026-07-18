@@ -57,6 +57,8 @@ export default function SearchLandingExperience({
     error,
     groups,
     activeIndex,
+    activeDescendantId,
+    flatSuggestions,
     setQuery,
     setActiveIndex,
     submitSearch,
@@ -127,6 +129,11 @@ export default function SearchLandingExperience({
         moveActiveIndex(-1);
         return;
       }
+      if (event.key === "Tab" && !event.shiftKey && flatSuggestions.length > 0) {
+        event.preventDefault();
+        moveActiveIndex(1);
+        return;
+      }
       if (event.key === "Enter") {
         event.preventDefault();
         handleEnter();
@@ -139,7 +146,7 @@ export default function SearchLandingExperience({
         inputRef.current?.blur();
       }
     },
-    [handleEnter, moveActiveIndex]
+    [flatSuggestions.length, handleEnter, moveActiveIndex]
   );
 
   const onTrendingClick = useCallback(
@@ -151,7 +158,7 @@ export default function SearchLandingExperience({
   );
 
   const showRollingPlaceholder = !query && !isFocused;
-  const panelOpen = showPanel && query.length > 0;
+  const panelOpen = showPanel;
   const showDiscover = !panelOpen;
 
   return (
@@ -199,6 +206,7 @@ export default function SearchLandingExperience({
               aria-expanded={panelOpen}
               aria-controls="sw-search-landing-panel"
               aria-autocomplete="list"
+              aria-activedescendant={activeDescendantId}
             />
           </div>
 
@@ -230,6 +238,7 @@ export default function SearchLandingExperience({
                 setShowPanel(false);
               }}
               onHover={setActiveIndex}
+              onSubmit={() => submitSearch()}
             />
           </div>
         ) : null}

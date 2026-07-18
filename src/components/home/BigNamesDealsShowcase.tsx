@@ -10,6 +10,8 @@ import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import type { BigNamesDealBrand } from "@/data/bigNamesDeals";
 
 const PRODUCT_FALLBACK = "/images/guitar-1.webp";
+const MOBILE_AUTO_SPEED_PX = 0.55;
+const MOBILE_AUTO_RESUME_MS = 1400;
 
 function BigNamesDealItem({
   item,
@@ -72,6 +74,10 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
     isMobileViewport && !reduceMotion && items.length > 1;
   const showcaseItems = enableMobileAuto ? [...items, ...items] : items;
   const trackRef = useRef<HTMLDivElement>(null);
+  const userPausedRef = useRef(false);
+  const programmaticRef = useRef(false);
+  const rafRef = useRef(0);
+  const resumeTimerRef = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const scrollClassName = [
@@ -98,9 +104,14 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
 
     const slideWidth = slide.offsetWidth;
     const gap = parseFloat(getComputedStyle(track).gap) || 0;
-    const index = Math.round(track.scrollLeft / (slideWidth + gap));
+    const loopWidth = enableMobileAuto ? track.scrollWidth / 2 : track.scrollWidth;
+    const normalizedLeft =
+      enableMobileAuto && loopWidth > 0
+        ? ((track.scrollLeft % loopWidth) + loopWidth) % loopWidth
+        : track.scrollLeft;
+    const index = Math.round(normalizedLeft / (slideWidth + gap));
     setActiveIndex(Math.min(items.length - 1, Math.max(0, index)));
-  }, [items.length]);
+  }, [enableMobileAuto, items.length]);
 
   useEffect(() => {
     if (enableMobileAuto) return undefined;
@@ -117,6 +128,113 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
       window.removeEventListener("resize", updateActiveIndex);
     };
   }, [enableMobileAuto, updateActiveIndex]);
+
+  useEffect(() => {
+    if (!enableMobileAuto) return undefined;
+
+    const track = trackRef.current;
+    if (!track) return undefined;
+
+    let running = true;
+
+    const getLoopWidth = () => track.scrollWidth / 2;
+
+    const normalizeScroll = () => {
+      const loopWidth = getLoopWidth();
+      if (loopWidth <= 0) return;
+
+      programmaticRef.current = true;
+      if (track.scrollLeft >= loopWidth) {
+        track.scrollLeft -= loopWidth;
+      } else if (track.scrollLeft < 0) {
+        track.scrollLeft += loopWidth;
+      }
+      programmaticRef.current = false;
+    };
+
+    const pauseForUser = () => {
+      userPausedRef.current = true;
+      window.clearTimeout(resumeTimerRef.current);
+    };
+
+    const scheduleResume = () => {
+      window.clearTimeout(resumeTimerRef.current);
+      resumeTimerRef.current = window.setTimeout(() => {
+        normalizeScroll();
+        userPausedRef.current = false;
+        updateActiveIndex();
+      }, MOBILE_AUTO_RESUME_MS);
+    };
+
+    const tick = () => {
+      if (!running) return;
+
+      if (!userPausedRef.current) {
+        const loopWidth = getLoopWidth();
+        if (loopWidth > track.clientWidth) {
+          programmaticRef.current = true;
+          track.scrollLeft += MOBILE_AUTO_SPEED_PX;
+          if (track.scrollLeft >= loopWidth) {
+            track.scrollLeft -= loopWidth;
+          }
+          programmaticRef.current = false;
+        }
+      }
+
+      rafRef.current = window.requestAnimationFrame(tick);
+    };
+
+    const onScroll = (event: Event) => {
+      if (programmaticRef.current) return;
+      if (!event.isTrusted) return;
+
+      normalizeScroll();
+      pauseForUser();
+      scheduleResume();
+      updateActiveIndex();
+    };
+
+    const onTouchStart = () => {
+      pauseForUser();
+    };
+
+    const onTouchEnd = () => {
+      scheduleResume();
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === "touch" || event.pointerType === "pen") {
+        pauseForUser();
+      }
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerType === "touch" || event.pointerType === "pen") {
+        scheduleResume();
+      }
+    };
+
+    track.addEventListener("scroll", onScroll, { passive: true });
+    track.addEventListener("touchstart", onTouchStart, { passive: true });
+    track.addEventListener("touchend", onTouchEnd, { passive: true });
+    track.addEventListener("pointerdown", onPointerDown);
+    track.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("resize", updateActiveIndex);
+
+    rafRef.current = window.requestAnimationFrame(tick);
+
+    return () => {
+      running = false;
+      window.cancelAnimationFrame(rafRef.current);
+      window.clearTimeout(resumeTimerRef.current);
+      track.removeEventListener("scroll", onScroll);
+      track.removeEventListener("touchstart", onTouchStart);
+      track.removeEventListener("touchend", onTouchEnd);
+      track.removeEventListener("pointerdown", onPointerDown);
+      track.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("resize", updateActiveIndex);
+    };
+  }, [enableMobileAuto, items.length, updateActiveIndex]);
 
   const scrollToIndex = (index: number) => {
     if (enableMobileAuto) return;

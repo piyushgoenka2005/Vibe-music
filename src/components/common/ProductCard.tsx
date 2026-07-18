@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCartStore } from "@/store/cartStore";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
+import {
+  ensureProductReviewMetrics,
+  formatRatingPillLabel,
+} from "@/lib/product/productReviewDisplay";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import CompareButton from "@/components/compare/CompareButton";
 import WishlistButton from "@/components/wishlist/WishlistButton";
@@ -52,13 +56,6 @@ function conditionLabel(condition: Product["condition"]): string {
   }
 }
 
-function seededRating(id: string): string {
-  let h = 0;
-  for (let i = 0; i < (id + "r").length; i++) h = (h * 31 + (id + "r").charCodeAt(i)) | 0;
-  const RATINGS = [3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9];
-  return RATINGS[Math.abs(h) % RATINGS.length].toFixed(1);
-}
-
 function discountPercent(original: number, current: number): number {
   if (original <= 0 || current <= 0 || current >= original) return 0;
   return Math.round(((original - current) / original) * 100);
@@ -69,6 +66,13 @@ export default function ProductCard({ product, view }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
   const openDrawer = useCartStore((s) => s.openDrawer);
   const productHref = `/product/${product.slug}`;
+  const { rating: displayRating, reviewCount: displayReviewCount } =
+    ensureProductReviewMetrics({
+      id: product.id,
+      rating: product.rating,
+      reviewCount: product.reviewCount,
+    });
+  const ratingPillLabel = formatRatingPillLabel(displayRating, displayReviewCount);
 
   function prefetchProduct() {
     try {
@@ -86,7 +90,9 @@ export default function ProductCard({ product, view }: ProductCardProps) {
     openDrawer();
   }
 
-  const displayName = formatProductCardTitle(product.name, product.brand);
+  const displayName = formatProductCardTitle(product.name, product.brand)
+    .replace(/\s*[—–-]\s*(Open\s*Box|Pre-?owned|Used)\s*$/i, "")
+    .trim();
   const originalPrice = product.originalPrice ?? product.price;
   const hasDiscount = originalPrice > product.price && product.price > 0;
   const savingsPercent = discountPercent(originalPrice, product.price);
@@ -133,6 +139,13 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           {isGrid && savingsPercent > 0 ? (
             <span className="cat-product-card__deal-tag">{savingsPercent}% off</span>
           ) : null}
+          {product.condition !== "new" ? (
+            <span
+              className={`cat-product-card__condition cat-product-card__condition--${product.condition}`}
+            >
+              {conditionLabel(product.condition)}
+            </span>
+          ) : null}
           {imageSrc && !imageFailed ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -147,10 +160,15 @@ export default function ProductCard({ product, view }: ProductCardProps) {
               }}
             />
           ) : null}
-          {product.reviewCount > 0 ? (
-            <span className="rating-pill" aria-label={`Rated ${seededRating(product.id)} out of 5`}>
-              <span className="rating-pill__star" aria-hidden="true">★</span>
-              {seededRating(product.id)}
+          {displayReviewCount > 0 ? (
+            <span
+              className="rating-pill"
+              aria-label={`Rated ${displayRating.toFixed(1)} out of 5 from ${displayReviewCount} ratings`}
+            >
+              <span className="rating-pill__star" aria-hidden="true">
+                ★
+              </span>
+              {ratingPillLabel}
             </span>
           ) : null}
         </Link>

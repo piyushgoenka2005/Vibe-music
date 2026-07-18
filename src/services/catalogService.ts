@@ -7,6 +7,8 @@ import {
   GUITAR_SHOWCASE_FIELD_LABELS,
   isGuitarProduct,
 } from "@/lib/product/guitarShowcaseSpecs";
+import { cleanProductName } from "@/lib/product/cleanProductName";
+import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import { mergeProductSpecs } from "@/lib/product/productSpecs";
 import { slugify } from "@/lib/slug";
 import {
@@ -194,18 +196,24 @@ function buildDefaultDetail(
 }
 
 export function toProduct(catalogProduct: CatalogProduct): Product {
+  const { rating, reviewCount } = ensureProductReviewMetrics({
+    id: catalogProduct.id,
+    rating: catalogProduct.rating,
+    reviewCount: catalogProduct.reviewCount,
+  });
+
   return {
     id: catalogProduct.id,
     slug: catalogProduct.slug,
-    name: catalogProduct.name,
+    name: cleanProductName(catalogProduct.name),
     brand: catalogProduct.brand,
     brandSlug: catalogProduct.brandSlug,
     category: catalogProduct.category,
     categorySlug: catalogProduct.categorySlug,
     price: catalogProduct.price,
     gstRate: catalogProduct.gstRate,
-    rating: catalogProduct.rating,
-    reviewCount: catalogProduct.reviewCount,
+    rating,
+    reviewCount,
     availability: catalogProduct.availability,
     condition: catalogProduct.condition,
     imageColor: catalogProduct.imageColor,
@@ -214,9 +222,11 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
 }
 
 export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
-  const detail = catalogProduct.detail ?? buildDefaultDetail(catalogProduct, []);
+  const detail =
+    catalogProduct.detail ?? buildDefaultDetail(catalogProduct, []);
+  const rawVariants = Array.isArray(detail.variants) ? detail.variants : [];
   const variants = normalizeVariants(
-    detail.variants.map((variant) => ({
+    rawVariants.map((variant) => ({
       ...variant,
       stock: variant.stock ?? catalogProduct.stock,
       attributes: variant.attributes ?? [],
@@ -227,24 +237,44 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
     catalogProduct.stock
   );
 
+  const gallery = Array.isArray(detail.gallery)
+    ? detail.gallery
+    : (catalogProduct.images ?? []).map((src, index) => ({
+        id: `img-${index}`,
+        alt: `${catalogProduct.name} view ${index + 1}`,
+        color: catalogProduct.imageColor,
+        ...(src ? { src } : {}),
+      }));
+
   return {
     ...toProduct(catalogProduct),
     sku: catalogProduct.sku,
-    msrp: detail.msrp,
-    salePrice: detail.salePrice,
+    msrp: detail.msrp ?? null,
+    salePrice: detail.salePrice ?? null,
     description: catalogProduct.description,
-    specs: mergeProductSpecs(detail.specs, catalogProduct.specifications),
-    inTheBox: detail.inTheBox,
-    images: detail.gallery,
-    videos: detail.videos,
+    specs: mergeProductSpecs(
+      Array.isArray(detail.specs) ? detail.specs : [],
+      catalogProduct.specifications
+    ),
+    inTheBox: Array.isArray(detail.inTheBox) ? detail.inTheBox : [],
+    images: gallery,
+    videos: Array.isArray(detail.videos) ? detail.videos : [],
     variants,
-    reviews: detail.reviews,
-    qa: detail.qa,
-    frequentlyBoughtTogether: detail.frequentlyBoughtTogether,
-    similarProductIds: detail.similarProductIds,
-    relatedProductIds: detail.relatedProductIds,
+    reviews: Array.isArray(detail.reviews) ? detail.reviews : [],
+    qa: Array.isArray(detail.qa) ? detail.qa : [],
+    frequentlyBoughtTogether: Array.isArray(detail.frequentlyBoughtTogether)
+      ? detail.frequentlyBoughtTogether
+      : [],
+    similarProductIds: Array.isArray(detail.similarProductIds)
+      ? detail.similarProductIds
+      : [],
+    relatedProductIds: Array.isArray(detail.relatedProductIds)
+      ? detail.relatedProductIds
+      : [],
     spin360Images: Array.isArray(detail.spin360Images)
-      ? detail.spin360Images.filter((src): src is string => typeof src === "string" && src.length > 0)
+      ? detail.spin360Images.filter(
+          (src): src is string => typeof src === "string" && src.length > 0
+        )
       : [],
   };
 }
@@ -303,6 +333,30 @@ export function searchInCatalogProducts(
         product.categorySlug === resolvedSlug ||
         normalizeCategorySlug(product.category) === resolvedSlug
     );
+
+    // Keep guitar amps off the main Guitars PLP — they belong under the
+    // Amplifiers browse path (`?category=guitars&subcategory=AMPLIFIER`).
+    if (
+      resolvedSlug === "guitars" &&
+      !subcategoryRequestsAmplifiers(options.subcategory)
+    ) {
+      source = source.filter(
+        (product) => !isGuitarAmplifierCatalogProduct(product)
+      );
+    }
+  }
+
+  if (options.subcategory) {
+    const needles = options.subcategory
+      .split("|")
+      .map((part) => part.trim().toLowerCase())
+      .filter(Boolean);
+    if (needles.length > 0) {
+      source = source.filter((product) => {
+        const sub = (product.subcategory ?? "").toLowerCase();
+        return needles.some((needle) => sub.includes(needle));
+      });
+    }
   }
 
   if (options.query) {
@@ -349,7 +403,7 @@ export function searchInCatalogProducts(
       source = source
         .map((product) => ({
           product,
-          score: scoreProductMatch(toProduct(product), tokens),
+          score: scoreProductMatch(product, tokens),
         }))
         .filter((entry) => entry.score > 0)
         .sort((a, b) => b.score - a.score)
@@ -486,6 +540,8 @@ export async function getRelatedProducts(
 export interface ProductSearchOptions {
   query?: string;
   category?: string;
+  /** Case-insensitive substring match against catalog `subcategory`. */
+  subcategory?: string;
   brand?: string;
   sort?: string;
   condition?: Product["condition"];
@@ -497,8 +553,41 @@ export interface ProductSearchOptions {
   purchasableOnly?: boolean;
 }
 
+/** Light plural/singular variants so `amplifiers` still matches "Amplifier". */
+function expandSearchToken(token: string): string[] {
+  const variants = new Set<string>([token]);
+  if (token.endsWith("ies") && token.length > 4) {
+    variants.add(`${token.slice(0, -3)}y`);
+  } else if (token.endsWith("ses") && token.length > 4) {
+    variants.add(token.slice(0, -2));
+  } else if (token.endsWith("s") && token.length > 3 && !token.endsWith("ss")) {
+    variants.add(token.slice(0, -1));
+  } else {
+    variants.add(`${token}s`);
+  }
+  return Array.from(variants);
+}
+
+function isGuitarAmplifierCatalogProduct(product: CatalogProduct): boolean {
+  const sub = (product.subcategory ?? "").toLowerCase();
+  const name = product.name.toLowerCase();
+  const sku = product.sku.toUpperCase();
+  if (sku === "VM-DG20" || sku === "VM-DG40") return true;
+  return (
+    sub.includes("amplifier") ||
+    name.includes("guitar amplifier") ||
+    /\bamplifier\b/.test(name)
+  );
+}
+
+function subcategoryRequestsAmplifiers(subcategory?: string): boolean {
+  if (!subcategory) return false;
+  const value = subcategory.toLowerCase();
+  return value.includes("amplifier") || /(^|\|)amps?(\||$)/.test(value);
+}
+
 function scoreProductMatch(
-  product: Product,
+  product: CatalogProduct,
   tokens: string[]
 ): number {
   if (tokens.length === 0) return 0;
@@ -506,26 +595,33 @@ function scoreProductMatch(
   const name = product.name.toLowerCase();
   const brand = product.brand.toLowerCase();
   const category = product.category.toLowerCase();
+  const subcategory = (product.subcategory ?? "").toLowerCase();
   const slug = product.slug.toLowerCase();
   let score = 0;
 
+  const fieldIncludes = (field: string, token: string) =>
+    expandSearchToken(token).some((variant) => field.includes(variant));
+
   for (const token of tokens) {
-    if (slug === token) score += 120;
-    if (name === token) score += 100;
-    if (name.startsWith(token)) score += 60;
-    if (brand.startsWith(token)) score += 40;
-    if (name.includes(token)) score += 30;
-    if (brand.includes(token)) score += 20;
-    if (category.includes(token)) score += 15;
-    if (slug.includes(token)) score += 10;
+    const variants = expandSearchToken(token);
+    if (variants.some((variant) => slug === variant)) score += 120;
+    if (variants.some((variant) => name === variant)) score += 100;
+    if (variants.some((variant) => name.startsWith(variant))) score += 60;
+    if (variants.some((variant) => brand.startsWith(variant))) score += 40;
+    if (fieldIncludes(name, token)) score += 30;
+    if (fieldIncludes(brand, token)) score += 20;
+    if (fieldIncludes(subcategory, token)) score += 28;
+    if (fieldIncludes(category, token)) score += 15;
+    if (fieldIncludes(slug, token)) score += 10;
   }
 
   const allTokensMatch = tokens.every(
     (token) =>
-      name.includes(token) ||
-      brand.includes(token) ||
-      category.includes(token) ||
-      slug.includes(token)
+      fieldIncludes(name, token) ||
+      fieldIncludes(brand, token) ||
+      fieldIncludes(category, token) ||
+      fieldIncludes(subcategory, token) ||
+      fieldIncludes(slug, token)
   );
   if (allTokensMatch) score += 25 * tokens.length;
 
@@ -534,7 +630,7 @@ function scoreProductMatch(
   if (score === 0) return 0;
 
   score += product.rating * 2 + Math.min(product.reviewCount, 50) * 0.1;
-  if (product.availability === "in-stock") score += 5;
+  if (product.stock > 0) score += 5;
   return score;
 }
 

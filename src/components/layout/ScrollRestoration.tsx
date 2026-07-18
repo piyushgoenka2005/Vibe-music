@@ -1,11 +1,28 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import {
+  consumeStorefrontBackIntent,
+  recordStorefrontNavigation,
+} from "@/lib/navigation/storefrontHistory";
 
 const STORAGE_KEY = "vibe:scroll-positions";
 /** Re-apply saved Y while homepage chunks / images expand after back. */
-const RESTORE_WINDOW_MS = 1800;
+const RESTORE_WINDOW_MS = 2800;
+
+/** Set synchronously in capture phase before React / Next handle popstate. */
+let pendingPopNavigation = false;
+
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "popstate",
+    () => {
+      pendingPopNavigation = true;
+    },
+    true
+  );
+}
 
 function readPositions(): Record<string, number> {
   try {
@@ -44,15 +61,75 @@ function saveScrollForKey(key: string, y: number) {
   writePositions(positions);
 }
 
+function isBackToKey(key: string, stack: string[], pendingPop: boolean): boolean {
+  const index = stack.lastIndexOf(key);
+  if (pendingPop) {
+    // Browser back/forward: only treat as back when this URL already exists earlier.
+    return index !== -1;
+  }
+  return index !== -1 && index < stack.length - 1;
+}
+
+function updateHistoryStack(stack: string[], key: string, isBack: boolean): string[] {
+  if (isBack) {
+    const index = stack.lastIndexOf(key);
+    return index === -1 ? stack : stack.slice(0, index + 1);
+  }
+  if (stack[stack.length - 1] === key) return stack;
+  return [...stack, key];
+}
+
+function runScrollRestore(targetY: number) {
+  let stopped = false;
+  let observer: ResizeObserver | null = null;
+  let timeoutId = 0;
+
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    observer?.disconnect();
+    if (timeoutId) window.clearTimeout(timeoutId);
+    window.removeEventListener("wheel", stop);
+    window.removeEventListener("touchstart", stop);
+    window.removeEventListener("keydown", stop);
+  };
+
+  const restore = () => {
+    if (stopped) return;
+    applyScrollY(targetY);
+  };
+
+  restore();
+  requestAnimationFrame(() => {
+    restore();
+    requestAnimationFrame(restore);
+  });
+
+  observer = new ResizeObserver(() => {
+    restore();
+  });
+  observer.observe(document.documentElement);
+
+  window.addEventListener("wheel", stop, { passive: true });
+  window.addEventListener("touchstart", stop, { passive: true });
+  window.addEventListener("keydown", stop);
+  timeoutId = window.setTimeout(stop, RESTORE_WINDOW_MS);
+
+  return stop;
+}
+
 /**
  * App Router + async homepage sections often restore scroll before layout
- * height exists, so Back lands 3–4 sections too low. Manual restore keeps
- * re-applying the saved Y until the page height settles (or the user scrolls).
+ * height exists, so Back lands at the hero. Manual restore keeps re-applying
+ * the saved Y until the page height settles (or the user scrolls).
  */
 export default function ScrollRestoration() {
   const pathname = usePathname() ?? "";
-  const pendingRestore = useRef(false);
+  const searchParams = useSearchParams();
+  const searchKey = searchParams?.toString() ?? "";
   const prevKeyRef = useRef<string | null>(null);
+  const historyStackRef = useRef<string[]>([]);
+  const restoringRef = useRef(false);
   /** Last known scroll for the active key — survives Next scrolling to 0 mid-nav. */
   const lastYRef = useRef(0);
   const activeKeyRef = useRef(pathKey(pathname));
@@ -62,13 +139,6 @@ export default function ScrollRestoration() {
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
-
-    const onPopState = () => {
-      pendingRestore.current = true;
-    };
-
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
   useEffect(() => {
@@ -89,7 +159,6 @@ export default function ScrollRestoration() {
       });
     };
 
-    /** Flush before Next resets scroll on link / back navigations. */
     const flushBeforeNav = () => {
       saveScrollForKey(activeKeyRef.current, lastYRef.current);
     };
@@ -104,65 +173,76 @@ export default function ScrollRestoration() {
       window.removeEventListener("pagehide", flushBeforeNav);
       document.removeEventListener("pointerdown", flushBeforeNav, true);
       document.removeEventListener("keydown", flushBeforeNav, true);
-      // Do not write window.scrollY here — Next may already have reset it to 0.
       saveScrollForKey(key, lastYRef.current);
     };
-  }, [pathname]);
+  }, [pathname, searchKey]);
 
   useLayoutEffect(() => {
     const key = pathKey(pathname);
     const prevKey = prevKeyRef.current;
     prevKeyRef.current = key;
 
-    if (pendingRestore.current) {
-      pendingRestore.current = false;
-      const targetY = readPositions()[key] ?? lastYRef.current ?? 0;
-      let stopped = false;
-      let observer: ResizeObserver | null = null;
-      let timeoutId = 0;
+    const stack = historyStackRef.current;
+    const pendingPop = pendingPopNavigation;
+    pendingPopNavigation = false;
 
-      const stop = () => {
-        if (stopped) return;
-        stopped = true;
-        observer?.disconnect();
-        if (timeoutId) window.clearTimeout(timeoutId);
-        window.removeEventListener("wheel", stop);
-        window.removeEventListener("touchstart", stop);
-        window.removeEventListener("keydown", stop);
+    const intentionalBack = consumeStorefrontBackIntent(key);
+    const isBack =
+      intentionalBack || isBackToKey(key, stack, pendingPop);
+    historyStackRef.current = updateHistoryStack(stack, key, isBack);
+    recordStorefrontNavigation(key, isBack);
+
+    const savedY = readPositions()[key];
+    const shouldRestore =
+      isBack &&
+      savedY != null &&
+      savedY > 0 &&
+      (intentionalBack || prevKey === null || prevKey !== key || pendingPop);
+
+    if (shouldRestore) {
+      restoringRef.current = true;
+      const targetY = savedY;
+      const stop = runScrollRestore(targetY);
+      return () => {
+        restoringRef.current = false;
+        stop();
       };
-
-      const restore = () => {
-        if (stopped) return;
-        applyScrollY(targetY);
-      };
-
-      restore();
-      requestAnimationFrame(() => {
-        restore();
-        requestAnimationFrame(restore);
-      });
-
-      observer = new ResizeObserver(() => {
-        restore();
-      });
-      observer.observe(document.documentElement);
-
-      window.addEventListener("wheel", stop, { passive: true });
-      window.addEventListener("touchstart", stop, { passive: true });
-      window.addEventListener("keydown", stop);
-      timeoutId = window.setTimeout(stop, RESTORE_WINDOW_MS);
-
-      return stop;
     }
 
-    // Forward / link navigation: land at top (Next usually does this; force for consistency).
-    if (prevKey !== null && prevKey !== key) {
+    restoringRef.current = false;
+
+    if (prevKey !== null && prevKey !== key && !isBack) {
       applyScrollY(0);
       lastYRef.current = 0;
     }
 
     return undefined;
-  }, [pathname]);
+  }, [pathname, searchKey]);
+
+  /** Next may scroll to top after layout — re-apply while restore window is active. */
+  useEffect(() => {
+    if (!restoringRef.current) return undefined;
+
+    const key = pathKey(pathname);
+    const targetY = readPositions()[key] ?? 0;
+    if (targetY <= 0) return undefined;
+
+    let frame = 0;
+    let rafId = 0;
+
+    const tick = () => {
+      applyScrollY(targetY);
+      frame += 1;
+      if (frame < 12 && restoringRef.current) {
+        rafId = requestAnimationFrame(tick);
+      }
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [pathname, searchKey]);
 
   return null;
 }

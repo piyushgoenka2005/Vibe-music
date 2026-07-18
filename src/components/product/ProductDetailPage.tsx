@@ -20,7 +20,10 @@ import type { ProductDetailResult } from "@/services/product.service";
 import { isPurchasablePrice } from "@/utils/currency";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
+import ProductBuyBox from "./ProductBuyBox";
+import ProductRelatedRail from "./ProductRelatedRail";
 import ProductDetailSkeleton from "./ProductDetailSkeleton";
+import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import type { TabId } from "./ProductTabs";
 import "./product-detail.css";
@@ -29,7 +32,6 @@ const FrequentlyBoughtTogether = dynamic(() => import("./FrequentlyBoughtTogethe
 const GuitarSpecShowcase = dynamic(() => import("./GuitarSpecShowcase"), { ssr: false });
 const GuitarTonesInMotion = dynamic(() => import("./GuitarTonesInMotion"), { ssr: false });
 const GuitarStorySections = dynamic(() => import("./GuitarStorySections"), { ssr: false });
-const ShippingEstimator = dynamic(() => import("./ShippingEstimator"), { ssr: false });
 const ProductTabs = dynamic(() => import("./ProductTabs"), { ssr: false });
 const ProductCrossSell = dynamic(() => import("./ProductCrossSell"), { ssr: false });
 const ProductStickyBar = dynamic(() => import("./ProductStickyBar"), { ssr: false });
@@ -149,7 +151,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
 
   if (showSkeleton) return <ProductDetailSkeleton />;
 
-  if (isError || !data || !selectedVariant) {
+  if (isError || !data) {
     return (
       <div className="pdp">
         <p>Product not found.</p>
@@ -158,8 +160,26 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
     );
   }
 
-  const variant = selectedVariant;
+  const variant =
+    selectedVariant ??
+    getDefaultVariant(data.product.variants) ??
+    data.product.variants[0];
+
+  if (!variant) {
+    return (
+      <div className="pdp">
+        <p>This product is temporarily unavailable.</p>
+        <Link href={ROUTES.search}>Browse products</Link>
+      </div>
+    );
+  }
+
   const { product, similarProducts, relatedProducts } = data;
+  const railProducts = [...relatedProducts, ...similarProducts].filter(
+    (item, index, items) =>
+      item.id !== product.id &&
+      items.findIndex((candidate) => candidate.id === item.id) === index
+  );
 
   function scrollToReviews() {
     setTabOverride("reviews");
@@ -181,15 +201,20 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   return (
     <>
       <div className="pdp">
-        <nav className="pdp-breadcrumb" aria-label="Breadcrumb">
-        <Link href="/">Home</Link>
-        <span aria-hidden="true">/</span>
-        <Link href={`/category/${product.categorySlug}`}>
-          {product.category}
-        </Link>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">{product.name}</span>
-      </nav>
+        <div className="storefront-nav-chrome">
+          <StorefrontBackButton
+            fallbackHref={`/category/${product.categorySlug}`}
+          />
+          <nav className="pdp-breadcrumb" aria-label="Breadcrumb">
+            <Link href="/">Home</Link>
+            <span aria-hidden="true">/</span>
+            <Link href={`/category/${product.categorySlug}`}>
+              {product.category}
+            </Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{product.name}</span>
+          </nav>
+        </div>
 
       <div className="pdp-main">
         <ProductGallery
@@ -199,25 +224,31 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
           productSlug={product.slug}
           spin360Images={product.spin360Images}
         />
-        <div>
+        <div className="pdp-details">
           <ProductInfo
             product={product}
             selectedVariant={variant}
-            quantity={quantity}
             attributeSelection={attributeSelection}
             onAttributeChange={updateVariantSelection}
+            onReviewsClick={scrollToReviews}
+            liveRating={product.rating}
+            liveReviewCount={product.reviewCount}
+          />
+        </div>
+        <div className="pdp-buy-cluster">
+          <ProductBuyBox
+            product={product}
+            selectedVariant={variant}
+            quantity={quantity}
             onQuantityChange={setQuantity}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
             onToggleWishlist={() => toggleWishlist(product)}
             isWishlisted={isWishlisted}
-            onReviewsClick={scrollToReviews}
-            liveRating={product.rating}
-            liveReviewCount={product.reviewCount}
             atcSentinelRef={atcSentinelRef}
           />
-          <ShippingEstimator subtotal={variant.price * quantity} />
         </div>
+        <ProductRelatedRail products={railProducts} />
       </div>
 
       <div ref={tabsRef}>

@@ -158,8 +158,11 @@ export function syncProductAggregatesFromVariants(
   };
 }
 
-export function getDefaultVariant(variants: ProductVariant[]): ProductVariant {
-  return variants.find((variant) => variant.isDefault) ?? variants[0]!;
+export function getDefaultVariant(
+  variants: ProductVariant[]
+): ProductVariant | null {
+  if (!variants.length) return null;
+  return variants.find((variant) => variant.isDefault) ?? variants[0] ?? null;
 }
 
 export function findVariantById(

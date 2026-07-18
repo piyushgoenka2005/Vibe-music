@@ -1,6 +1,7 @@
 "use client";
 
 import ProductCard from "@/components/common/ProductCard";
+import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import type { Product } from "@/types/product";
 import "@/components/category/category.css";
 
@@ -13,6 +14,7 @@ export default function DealsPage({ products }: DealsPageProps) {
     <main className="storefront-page storefront-page--subtle deals-page">
       <div className="storefront-page__inner deals-page__inner">
         <header className="storefront-page__header deals-page__header">
+          <StorefrontBackButton />
           <p className="storefront-page__eyebrow">Deals</p>
           <h1 className="storefront-page__title">Today&apos;s Deals</h1>
           <p className="storefront-page__meta">

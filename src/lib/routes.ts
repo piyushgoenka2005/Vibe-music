@@ -113,7 +113,7 @@ const SHOP_PREFIX_RULES: Array<{ prefix: string; target: string }> = [
   { prefix: "/shop/bass", target: categoryPath("bass") },
   {
     prefix: "/shop/amplifiers-effects",
-    target: `${ROUTES.searchResults}?q=${encodeURIComponent("amplifier")}`,
+    target: `${ROUTES.searchResults}?category=guitars&subcategory=${encodeURIComponent("AMPLIFIER")}`,
   },
   { prefix: "/shop/studio-recording", target: categoryPath("studio-recording") },
   { prefix: "/shop/software", target: categoryPath("software-plug-ins") },

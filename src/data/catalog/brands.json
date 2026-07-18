@@ -43,5 +43,10 @@
     "id": "m-audio",
     "name": "M-AUDIO",
     "slug": "m-audio"
+  },
+  {
+    "id": "nord",
+    "name": "Nord",
+    "slug": "nord"
   }
 ]

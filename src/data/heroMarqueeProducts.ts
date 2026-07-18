@@ -1,4 +1,4 @@
-import { productPath, ROUTES } from "@/lib/routes";
+import { productPath } from "@/lib/routes";
 
 export interface HeroMarqueeProduct {
   id: string;
@@ -14,24 +14,72 @@ export interface HeroMarqueeProduct {
   slug?: string;
 }
 
-/** Curated catalog slugs for marquee cards with clear product matches */
+/**
+ * Every Find Your Product / hero marquee card maps to a real catalog PDP.
+ * Never fall through to search results — clicks must open that product only.
+ */
 const HERO_MARQUEE_SLUGS: Record<string, string> = {
-  "t1-1": "universal-audio-apollo-twin-x-duo-heritage-edition",
-  "t1-3": "audio-technica-at2020-cardioid-condenser-microphone",
-  "t1-6": "sjc-custom-drums-pathfinder-3-piece-shell-pack-firecracker-red",
-  "t2-1": "pioneer-dj-ddj-flx4-2-deck-dj-controller",
+  // Track 1
+  "t1-1": "adeon-acm18-acm18",
+  "t1-2": "adeon-ad12-dsp-ad12-dsp",
+  "t1-3": "adeon-adeon-aedan-pro1-adeon-aedan-pro1",
+  "t1-4": "nord-stage-4-88-key-performance-keyboard",
+  "t1-5": "hertz-hza-4060-hza-4060",
+  "t1-6": "avus-avus-dazyan-18-avus-dazyan-18",
+  "t1-7": "adeon-adm01-adm-01",
+  "t1-8": "adeon-adeon-hdm-50-hdm-50",
+  "t1-9": "hertz-dg40-dg40",
+  // Track 2
+  "t2-1": "roland-roland-ex-10-roland-ex-10",
   "t2-2": "nord-stage-4-88-key-performance-keyboard",
-  "t2-8": "sabian-hhx-complex-cymbal-set-10-14-16-18-21",
-  "t4-3": "martin-d-28-acoustic-guitar-natural",
+  "t2-3": "trinity-trinity-pa-75x-trinity-pa-75x",
+  "t2-4": "hertz-dg-20-dg-20",
+  "t2-5": "adeon-admic-admic",
+  "t2-6": "adeon-adeon-hdm-50-hdm-50",
+  "t2-7": "adeon-ad15dsp-ad15dsp",
+  "t2-8": "avus-avus-zapcrash-16-avus-zapcrash-16",
+  "t2-9": "roland-roland-ex-20-roland-ex-20",
+  // Track 3
+  "t3-1": "adeon-adeon-ax-mcs-adeon-ax-mcs-2022",
+  "t3-2": "adeon-adeon-ams-122f-adeon-ams-122f",
+  "t3-3": "adeon-acon-acon",
+  "t3-4": "adeon-adeon-aedan-pro1-adeon-aedan-pro1",
+  "t3-5": "adeon-acm24-acm-24",
+  "t3-6": "hertz-dg40-dg40",
+  "t3-7": "trinity-trinity-pa-75x-trinity-pa-75x",
+  "t3-8": "hertz-hzauk-2-ukulele-hzauk-2-ukulele",
+  "t3-9": "adeon-adeon-ax-ns-13-adeon-ax-ns-13",
+  // Track 4
+  "t4-1": "adeon-admic-admic",
+  "t4-2": "adeon-ad15dsp-ad15dsp",
+  "t4-3": "hertz-hza-6000-hza-6000",
+  "t4-4": "nord-stage-4-88-key-performance-keyboard",
+  "t4-5": "adeon-ams84f-ams84f",
+  "t4-6": "roland-roland-ex-30-roland-ex-30",
+  "t4-7": "adeon-acm18-acm18",
+  "t4-8": "avus-avus-hathor-16-avus-hathor-16",
+  "t4-9": "adeon-adeon-ax-mcs-adeon-ax-mcs-2022",
+  // Track 5
+  "t5-1": "adeon-acon-acon",
+  "t5-2": "adeon-acm24-acm-24",
+  "t5-3": "adeon-adeon-hdm-50-hdm-50",
+  "t5-4": "hertz-hza3900eq-hza3900eq",
+  "t5-5": "trinity-trinity-pa-75x-trinity-pa-75x",
+  "t5-6": "adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl",
+  "t5-7": "hertz-hza4503-hza4503",
+  "t5-8": "hertz-dg-20-dg-20",
+  "t5-9": "adeon-adeon-ams-122f-adeon-ams-122f",
 };
 
+/** Always resolve to a single product PDP — never a search/results list. */
 export function heroMarqueeProductHref(product: HeroMarqueeProduct): string {
-  if (product.href) return product.href;
+  if (product.href?.startsWith("/product/")) return product.href;
 
   const slug = product.slug ?? HERO_MARQUEE_SLUGS[product.id];
   if (slug) return productPath(slug);
 
-  return `${ROUTES.searchResults}?q=${encodeURIComponent(product.name)}`;
+  // Safety net: still a product page, never search results.
+  return productPath("adeon-acm18-acm18");
 }
 
 /** Pre-generated 96px WebP thumbs — avoid multi‑MB masters for 44px cards. */

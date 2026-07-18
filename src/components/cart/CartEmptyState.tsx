@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
-import { productPath, ROUTES } from "@/lib/routes";
-import { fetchProducts } from "@/services/products.api";
+import { categoryPath, ROUTES } from "@/lib/routes";
+import { fetchProductSummaries, fetchProducts } from "@/services/products.api";
 import { useCartStore } from "@/store/cartStore";
+import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import type { Product } from "@/types/product";
 import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
@@ -14,11 +15,20 @@ interface CartEmptyStateProps {
   onBrowse?: () => void;
 }
 
+const TRENDING_CATEGORIES = [
+  { label: "Guitars", href: categoryPath("guitars") },
+  { label: "Live Sound", href: categoryPath("live-sound-lighting") },
+  { label: "Drums", href: categoryPath("drums-percussion") },
+  { label: "Studio", href: categoryPath("studio-recording") },
+  { label: "Keyboards", href: categoryPath("keyboards-synthesizers") },
+  { label: "DJ Gear", href: categoryPath("dj-equipment") },
+] as const;
+
 function CartSuggestionCard({ product }: { product: Product }) {
   const addItem = useCartStore((state) => state.addItem);
   const outOfStock = product.availability === "out-of-stock";
   const comingSoon = !isPurchasablePrice(product.price);
-  const href = productPath(product.slug);
+  const href = `/product/${product.slug}`;
   const hasDeal =
     product.originalPrice != null &&
     product.originalPrice > product.price;
@@ -49,7 +59,9 @@ function CartSuggestionCard({ product }: { product: Product }) {
               product.originalPrice ?? product.price,
               hasDeal ? product.price : undefined
             )}
-            {hasDeal ? <span className="cart-empty__product-deal">Limited deal</span> : null}
+            {hasDeal ? (
+              <span className="cart-empty__product-deal">Limited deal</span>
+            ) : null}
           </p>
         </div>
       </Link>
@@ -77,9 +89,18 @@ function CartSuggestionCard({ product }: { product: Product }) {
 }
 
 export default function CartEmptyState({ onBrowse }: CartEmptyStateProps) {
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["cart-empty-suggestions"],
+  const recentlyViewedIds = useRecentlyViewedStore((s) => s.productIds);
+
+  const { data: trending = [], isLoading: trendingLoading } = useQuery({
+    queryKey: ["cart-empty-trending"],
     queryFn: () => fetchProducts({ trending: true, limit: 3 }),
+    staleTime: 60_000,
+  });
+
+  const { data: recentlyViewed = [], isLoading: recentLoading } = useQuery({
+    queryKey: ["cart-empty-recent", recentlyViewedIds.slice(0, 6).join(",")],
+    queryFn: () => fetchProductSummaries(recentlyViewedIds.slice(0, 6)),
+    enabled: recentlyViewedIds.length > 0,
     staleTime: 60_000,
   });
 
@@ -87,38 +108,99 @@ export default function CartEmptyState({ onBrowse }: CartEmptyStateProps) {
     <div className="cart-empty">
       <div className="cart-empty__hero">
         <div className="cart-empty__emoji" aria-hidden>
-          😔
+          🎸
         </div>
-        <h3 className="cart-empty__title">Your cart looks empty</h3>
+        <h3 className="cart-empty__title">Your cart is empty</h3>
         <p className="cart-empty__text">
-          Explore guitars, studio gear, and pro audio curated for every stage and
-          practice room.
+          Discover guitars, studio gear, and pro audio curated for every stage
+          and practice room.
         </p>
         <Link
           href={ROUTES.search}
           className="cart-empty__cta"
           onClick={onBrowse}
         >
-          Browse collection
+          Continue Shopping
         </Link>
       </div>
 
-      <section className="cart-empty__suggestions" aria-label="Popular right now">
-        <h4 className="cart-empty__suggestions-label">Popular right now</h4>
+      <section className="cart-empty__categories" aria-label="Trending categories">
+        <h4 className="cart-empty__section-label">Trending categories</h4>
+        <div className="cart-empty__category-list">
+          {TRENDING_CATEGORIES.map((category) => (
+            <Link
+              key={category.href}
+              href={category.href}
+              className="cart-empty__category-pill"
+              onClick={onBrowse}
+            >
+              {category.label}
+            </Link>
+          ))}
+        </div>
+      </section>
 
-        {isLoading ? (
+      {recentlyViewed.length > 0 ? (
+        <section className="cart-empty__suggestions" aria-label="Recently viewed">
+          <h4 className="cart-empty__section-label">Recently viewed</h4>
+          {recentLoading ? (
+            <div className="cart-empty__suggestions-loading" aria-hidden>
+              <div className="cart-skeleton-line" />
+            </div>
+          ) : (
+            <div className="cart-empty__product-list">
+              {recentlyViewed.map((product) => (
+                <CartSuggestionCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      <section className="cart-empty__suggestions" aria-label="Popular products">
+        <h4 className="cart-empty__section-label">Popular products</h4>
+        {trendingLoading ? (
           <div className="cart-empty__suggestions-loading" aria-hidden>
             <div className="cart-skeleton-line" />
             <div className="cart-skeleton-line" />
-            <div className="cart-skeleton-line" />
           </div>
-        ) : products.length > 0 ? (
+        ) : trending.length > 0 ? (
           <div className="cart-empty__product-list">
-            {products.map((product) => (
+            {trending.map((product) => (
               <CartSuggestionCard key={product.id} product={product} />
             ))}
           </div>
         ) : null}
+      </section>
+
+      <section className="cart-empty__brands" aria-label="Featured brands">
+        <h4 className="cart-empty__section-label">Featured brands</h4>
+        <div className="cart-empty__category-list">
+          <Link href={ROUTES.brands} className="cart-empty__category-pill" onClick={onBrowse}>
+            Shop all brands
+          </Link>
+          <Link
+            href={`${ROUTES.searchResults}?q=roland`}
+            className="cart-empty__category-pill"
+            onClick={onBrowse}
+          >
+            Roland
+          </Link>
+          <Link
+            href={`${ROUTES.searchResults}?q=adeon`}
+            className="cart-empty__category-pill"
+            onClick={onBrowse}
+          >
+            ADEON
+          </Link>
+          <Link
+            href={`${ROUTES.searchResults}?q=hertz`}
+            className="cart-empty__category-pill"
+            onClick={onBrowse}
+          >
+            HERTZ
+          </Link>
+        </div>
       </section>
     </div>
   );

@@ -1,0 +1,112 @@
+"use client";
+
+import { useMemo } from "react";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
+import { useCartStore } from "@/store/cartStore";
+import type { Product } from "@/types/product";
+import { formatDisplayPrice } from "@/utils/currency";
+import { Star } from "lucide-react";
+
+interface CartUpsellCarouselProps {
+  products: Product[];
+  title?: string;
+}
+
+function discountPercent(product: Product): number | null {
+  const original = product.originalPrice;
+  if (original == null || original <= product.price) return null;
+  return Math.round(((original - product.price) / original) * 100);
+}
+
+function isPurchasable(product: Product): boolean {
+  return product.availability !== "out-of-stock" && product.price > 0;
+}
+
+export default function CartUpsellCarousel({
+  products,
+  title = "Recommended for you",
+}: CartUpsellCarouselProps) {
+  const items = useCartStore((s) => s.items);
+  const cartProductIds = useMemo(
+    () =>
+      new Set(
+        items
+          .filter((item) => !item.isPromoGift)
+          .map((item) => item.productId)
+      ),
+    [items]
+  );
+  const addItem = useCartStore((s) => s.addItem);
+
+  const visible = products.filter((product) => !cartProductIds.has(product.id));
+  if (visible.length === 0) return null;
+
+  return (
+    <section className="cart-upsell" aria-label={title}>
+      <h2 className="cart-upsell__title">{title}</h2>
+      <div className="cart-upsell__track">
+        {visible.map((product) => {
+          const pct = discountPercent(product);
+          const original = product.originalPrice;
+          const canAdd = isPurchasable(product);
+
+          return (
+            <article key={product.id} className="cart-upsell__card">
+              <div className="cart-upsell__media">
+                {product.image ? (
+                  <StorefrontThumbImage
+                    src={product.image}
+                    className="cart-upsell__photo"
+                    width={160}
+                    height={120}
+                  />
+                ) : (
+                  <div
+                    className="cart-upsell__swatch"
+                    style={{ backgroundColor: product.imageColor }}
+                    aria-hidden
+                  />
+                )}
+              </div>
+              <div className="cart-upsell__copy">
+                <p className="cart-upsell__name">{product.name}</p>
+                {product.rating > 0 ? (
+                  <p className="cart-upsell__rating">
+                    <Star size={11} aria-hidden fill="currentColor" />
+                    <span>{product.rating.toFixed(1)}</span>
+                  </p>
+                ) : null}
+                <div className="cart-upsell__prices">
+                  {original != null && original > product.price ? (
+                    <span className="cart-upsell__mrp">
+                      {formatDisplayPrice(original)}
+                    </span>
+                  ) : null}
+                  <span className="cart-upsell__price">
+                    {formatDisplayPrice(product.price)}
+                  </span>
+                  {pct != null ? (
+                    <span className="cart-upsell__discount">{pct}% off</span>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  className="cart-upsell__add"
+                  onClick={() => addItem(product, 1)}
+                  disabled={!canAdd}
+                  aria-label={
+                    canAdd
+                      ? `Add ${product.name} to cart`
+                      : `${product.name} is unavailable`
+                  }
+                >
+                  {canAdd ? "+ Add" : "Unavailable"}
+                </button>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}

@@ -1,5 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { CartGiftProductSummary, CartPromotionsPublic } from "@/lib/cart/cartPromotions";
+import {
+  computeItemSavings,
+  computePaidSubtotal,
+  isPromoGiftLine,
+  syncPromoGiftItems,
+} from "@/lib/cart/promoGift";
 import { createSafeJSONStorage } from "@/lib/storage/safeLocalStorage";
 import { useToastStore } from "@/store/toastStore";
 import { getCartLineId } from "@/lib/variants";
@@ -25,16 +32,19 @@ export interface CartItem {
   name: string;
   brand: string;
   price: number;
+  originalPrice?: number;
   gstRate: GSTRate;
   imageColor?: string;
   image?: string;
   quantity: number;
+  isPromoGift?: boolean;
 }
 
 export interface CatalogPriceUpdate {
   productId: string;
   variantId?: string;
   price: number;
+  originalPrice?: number;
   name?: string;
   gstRate?: GSTRate;
   variantSku?: string;
@@ -51,6 +61,7 @@ interface CartState {
   appliedCoupon: AppliedCouponSnapshot | null;
   isApplyingCoupon: boolean;
   isUpdating: boolean;
+  promoConfig: CartPromotionsPublic | null;
   addItem: (product: Product, quantity?: number, variant?: ProductVariant) => void;
   removeItem: (lineId: string) => void;
   updateQuantity: (lineId: string, quantity: number) => void;
@@ -58,6 +69,9 @@ interface CartState {
   applyCatalogPrices: (updates: CatalogPriceUpdate[]) => void;
   itemCount: () => number;
   subtotal: () => number;
+  paidSubtotal: () => number;
+  itemSavings: () => number;
+  totalSavings: () => number;
   discount: () => number;
   total: () => number;
   openDrawer: () => void;
@@ -66,6 +80,20 @@ interface CartState {
   applyCoupon: (code: string) => Promise<boolean>;
   removeCoupon: () => void;
   setUpdating: (value: boolean) => void;
+  setPromoConfig: (config: CartPromotionsPublic | null) => void;
+  syncPromoRewards: () => void;
+}
+
+function resolveProductOriginalPrice(
+  product: Product,
+  unitPrice: number,
+  variant?: ProductVariant
+): number | undefined {
+  const variantPrice = variant?.price;
+  void variantPrice;
+  const original = product.originalPrice;
+  if (original != null && original > unitPrice) return original;
+  return undefined;
 }
 
 function productToCartItem(
@@ -88,6 +116,7 @@ function productToCartItem(
     name: variant?.label ? `${product.name} — ${variant.label}` : product.name,
     brand: product.brand,
     price,
+    originalPrice: resolveProductOriginalPrice(product, price, variant),
     gstRate: product.gstRate ?? getDefaultGstRateForCategory(product.categorySlug),
     imageColor: product.imageColor,
     image,
@@ -115,6 +144,15 @@ function resolveCartDiscount(
   return calculateCouponDiscountAmount(subtotal, appliedCoupon);
 }
 
+function applyPromoSync(
+  items: CartItem[],
+  promoConfig: CartPromotionsPublic | null
+): CartItem[] {
+  const gift = promoConfig?.giftProduct ?? null;
+  const threshold = promoConfig?.freeGiftThreshold ?? 799;
+  return syncPromoGiftItems(items, gift, threshold);
+}
+
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
@@ -124,6 +162,7 @@ export const useCartStore = create<CartState>()(
       appliedCoupon: null,
       isApplyingCoupon: false,
       isUpdating: false,
+      promoConfig: null,
 
       addItem: (product, quantity = 1, variant) => {
         const unitPrice = resolvePositiveUnitPrice(product.price, variant?.price);
@@ -137,24 +176,26 @@ export const useCartStore = create<CartState>()(
         const lineId = getCartLineId(product.id, variant?.id);
         const fresh = productToCartItem(product, qty, variant);
         set((state) => {
-          const existing = state.items.find((item) => item.lineId === lineId);
+          const existing = state.items.find(
+            (item) => item.lineId === lineId && !isPromoGiftLine(item)
+          );
+          let items: CartItem[];
           if (existing) {
-            return {
-              items: state.items.map((item) =>
-                item.lineId === lineId
-                  ? {
-                      ...item,
-                      ...fresh,
-                      quantity: item.quantity + qty,
-                      lineId: item.lineId,
-                    }
-                  : item
-              ),
-            };
+            items = state.items.map((item) =>
+              item.lineId === lineId
+                ? {
+                    ...item,
+                    ...fresh,
+                    quantity: item.quantity + qty,
+                    lineId: item.lineId,
+                    isPromoGift: undefined,
+                  }
+                : item
+            );
+          } else {
+            items = [...state.items, fresh];
           }
-          return {
-            items: [...state.items, fresh],
-          };
+          return { items: applyPromoSync(items, state.promoConfig) };
         });
         useToastStore
           .getState()
@@ -163,9 +204,15 @@ export const useCartStore = create<CartState>()(
 
       removeItem: (lineId) => {
         const item = get().items.find((i) => i.lineId === lineId);
-        set((state) => ({
-          items: state.items.filter((i) => i.lineId !== lineId),
-        }));
+        if (item && isPromoGiftLine(item)) return;
+
+        set((state) => {
+          const items = applyPromoSync(
+            state.items.filter((i) => i.lineId !== lineId),
+            state.promoConfig
+          );
+          return { items };
+        });
         if (item) {
           useToastStore
             .getState()
@@ -174,17 +221,26 @@ export const useCartStore = create<CartState>()(
       },
 
       updateQuantity: (lineId, quantity) => {
+        if (get().isUpdating) return;
+
+        const item = get().items.find((i) => i.lineId === lineId);
+        if (item && isPromoGiftLine(item)) return;
+
         const qty = Math.max(0, Math.min(99, quantity));
         if (qty === 0) {
           get().removeItem(lineId);
           return;
         }
         set({ isUpdating: true });
-        set((state) => ({
-          items: state.items.map((item) =>
-            item.lineId === lineId ? { ...item, quantity: qty } : item
-          ),
-        }));
+        set((state) => {
+          const items = applyPromoSync(
+            state.items.map((entry) =>
+              entry.lineId === lineId ? { ...entry, quantity: qty } : entry
+            ),
+            state.promoConfig
+          );
+          return { items };
+        });
         window.setTimeout(() => set({ isUpdating: false }), 200);
       },
 
@@ -206,12 +262,17 @@ export const useCartStore = create<CartState>()(
         set((state) => {
           let changed = false;
           const items = state.items.map((item) => {
+            if (isPromoGiftLine(item)) return item;
+
             const update = byLine.get(item.lineId);
             if (!update || !isPurchasablePrice(update.price)) return item;
 
             const next = {
               ...item,
               price: update.price,
+              ...(update.originalPrice != null
+                ? { originalPrice: update.originalPrice }
+                : {}),
               ...(update.name ? { name: update.name } : {}),
               ...(update.gstRate ? { gstRate: update.gstRate } : {}),
               ...(update.variantSku ? { variantSku: update.variantSku } : {}),
@@ -225,6 +286,7 @@ export const useCartStore = create<CartState>()(
 
             if (
               next.price !== item.price ||
+              next.originalPrice !== item.originalPrice ||
               next.name !== item.name ||
               next.gstRate !== item.gstRate
             ) {
@@ -233,7 +295,8 @@ export const useCartStore = create<CartState>()(
             return next;
           });
 
-          return changed ? { items } : state;
+          if (!changed) return state;
+          return { items: applyPromoSync(items, state.promoConfig) };
         });
       },
 
@@ -245,6 +308,12 @@ export const useCartStore = create<CartState>()(
           (sum, item) => sum + item.price * item.quantity,
           0
         ),
+
+      paidSubtotal: () => computePaidSubtotal(get().items),
+
+      itemSavings: () => computeItemSavings(get().items),
+
+      totalSavings: () => get().itemSavings() + get().discount(),
 
       discount: () =>
         resolveCartDiscount(get().appliedCoupon, get().subtotal()),
@@ -300,6 +369,19 @@ export const useCartStore = create<CartState>()(
       },
 
       setUpdating: (value) => set({ isUpdating: value }),
+
+      setPromoConfig: (config) => {
+        set((state) => ({
+          promoConfig: config,
+          items: applyPromoSync(state.items, config),
+        }));
+      },
+
+      syncPromoRewards: () => {
+        set((state) => ({
+          items: applyPromoSync(state.items, state.promoConfig),
+        }));
+      },
     }),
     {
       name: "vibe-cart-guest",
@@ -318,12 +400,14 @@ export const useCartStore = create<CartState>()(
         };
 
         const base = {
-          items: state?.items?.map((item) => ({
-            ...item,
-            lineId:
-              item.lineId ?? getCartLineId(item.productId, item.variantId),
-            price: isPurchasablePrice(item.price) ? item.price : 0,
-          })) ?? [],
+          items:
+            state?.items?.map((item) => ({
+              ...item,
+              lineId:
+                item.lineId ?? getCartLineId(item.productId, item.variantId),
+              price: isPurchasablePrice(item.price) ? item.price : 0,
+              isPromoGift: item.isPromoGift ?? item.lineId?.startsWith("promo-gift:"),
+            })) ?? [],
           couponCode: state?.couponCode ?? null,
           appliedCoupon: state?.appliedCoupon ?? null,
         };
@@ -338,7 +422,15 @@ export const useCartStore = create<CartState>()(
 
         return base;
       },
-      version: 4,
+      version: 5,
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        state.items = state.items.filter(
+          (item) => !item.lineId?.startsWith("promo-gift:")
+        );
+      },
     }
   )
 );
+
+export type { CartGiftProductSummary, CartPromotionsPublic };

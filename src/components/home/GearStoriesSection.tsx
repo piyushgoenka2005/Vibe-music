@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Marquee from "@/components/common/Marquee";
 import type { GearStoriesSectionData, GearStory } from "@/types/gear-story";
 import GearStoryCard from "./GearStoryCard";
@@ -14,8 +14,21 @@ interface GearStoriesSectionProps {
 export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
   const [activeStory, setActiveStory] = useState<GearStory | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [userPausedKeys, setUserPausedKeys] = useState<Set<string>>(
+    () => new Set()
+  );
   const modalOpen = Boolean(activeStory);
-  const isPaused = modalOpen || isHovered;
+  const playbackLocked = modalOpen || isHovered;
+  const isStripPaused = playbackLocked || userPausedKeys.size > 0;
+
+  const handleUserPauseChange = useCallback((cardKey: string, paused: boolean) => {
+    setUserPausedKeys((prev) => {
+      const next = new Set(prev);
+      if (paused) next.add(cardKey);
+      else next.delete(cardKey);
+      return next;
+    });
+  }, []);
 
   if (data.stories.length === 0) return null;
 
@@ -39,7 +52,7 @@ export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
           ariaLabel="Gear style story reels"
           className={[
             "gear-stories__marquee",
-            isPaused ? "gear-stories__marquee--paused" : "",
+            isStripPaused ? "gear-stories__marquee--paused" : "",
           ]
             .filter(Boolean)
             .join(" ")}
@@ -49,20 +62,26 @@ export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
           sequenceClassName="gear-stories__sequence"
           trackClassName="gear-stories__marquee-track"
         >
-          {[...data.stories, ...data.stories].map((story, index) => (
+          {[...data.stories, ...data.stories].map((story, index) => {
+            const cardKey = `${story.id}-${index}`;
+
+            return (
             <div
-              key={`${story.id}-${index}`}
+              key={cardKey}
               className="gear-stories__item"
               role="listitem"
             >
               <GearStoryCard
                 story={story}
-                isPaused={isPaused}
+                cardKey={cardKey}
+                playbackLocked={playbackLocked}
                 playDelayMs={(index % data.stories.length) * 120}
+                onUserPauseChange={handleUserPauseChange}
                 onOpen={setActiveStory}
               />
             </div>
-          ))}
+            );
+          })}
         </Marquee>
       </div>
 

@@ -49,6 +49,7 @@ export function buildBrandFacets(products: Product[]): SearchBrand[] {
 export async function getSearchResults(options: {
   query: string;
   category?: string;
+  subcategory?: string;
   brand?: string;
   sort?: string;
 }): Promise<SearchResultsPayload> {
@@ -56,6 +57,7 @@ export async function getSearchResults(options: {
   const products = await searchProducts({
     query,
     category: options.category,
+    subcategory: options.subcategory,
     brand: options.brand,
     sort: options.sort,
   });

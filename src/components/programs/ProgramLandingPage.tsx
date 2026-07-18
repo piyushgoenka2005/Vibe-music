@@ -1,4 +1,5 @@
 import Link from "next/link";
+import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { ROUTES } from "@/lib/routes";
 
 export interface ProgramLandingAction {
@@ -27,6 +28,7 @@ export default function ProgramLandingPage({
   return (
     <div className="storefront-page__inner program-landing">
       <header className="storefront-page__header">
+        <StorefrontBackButton />
         <p className="storefront-page__eyebrow">{eyebrow}</p>
         <h1 className="storefront-page__title">{title}</h1>
         <p className="storefront-page__subtitle">{subtitle}</p>

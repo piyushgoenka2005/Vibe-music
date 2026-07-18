@@ -28,6 +28,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q")?.trim() ?? "";
     const category = searchParams.get("category") ?? undefined;
+    const subcategory = searchParams.get("subcategory") ?? undefined;
     const brand = searchParams.get("brand") ?? undefined;
     const sort = searchParams.get("sort") ?? undefined;
     const mode = searchParams.get("mode") ?? "results";
@@ -38,7 +39,9 @@ export async function GET(request: Request) {
       MAX_LIMIT
     );
 
-    const hasFilter = Boolean(category?.trim() || brand?.trim());
+    const hasFilter = Boolean(
+      category?.trim() || subcategory?.trim() || brand?.trim()
+    );
     if (query.length < MIN_QUERY_LENGTH && !hasFilter) {
       return NextResponse.json({
         query,
@@ -59,6 +62,7 @@ export async function GET(request: Request) {
     const products = await searchProducts({
       query,
       category,
+      subcategory,
       brand: apiBrand,
       sort: apiSort,
     });

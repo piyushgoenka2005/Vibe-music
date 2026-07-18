@@ -18,26 +18,23 @@ const PRODUCT_DETAIL_REVALIDATE_SECONDS =
   Number(process.env.CATALOG_CACHE_REVALIDATE_SECONDS) ||
   300;
 
-const loadCachedProductCore = unstable_cache(
-  async function loadCachedProductCore(
-    normalizedSlug: string
-  ): Promise<ProductDetail | null> {
-    const product = await getProductDetailBySlug(normalizedSlug);
-    return product ?? null;
-  },
-  ["product-detail-core"],
-  {
-    revalidate: PRODUCT_DETAIL_REVALIDATE_SECONDS,
-    tags: ["catalog", "product-detail"],
-  }
-);
-
+/**
+ * Load PDP core data without caching misses.
+ * `unstable_cache` must not wrap a function that returns `null` for missing
+ * slugs — a transient miss would sticky-404 the product for the full
+ * revalidate window (previously "This page hit a wrong note" for live SKUs).
+ */
 export const loadProductCorePage = cache(async function loadProductCorePage(
   slug: string
 ): Promise<ProductDetail | null> {
   const normalizedSlug = normalizeProductSlug(slug);
   if (!normalizedSlug) return null;
-  return loadCachedProductCore(normalizedSlug);
+
+  try {
+    return (await getProductDetailBySlug(normalizedSlug)) ?? null;
+  } catch {
+    return null;
+  }
 });
 
 const loadCachedProductMerchandising = unstable_cache(
@@ -63,7 +60,7 @@ const loadCachedProductMerchandising = unstable_cache(
       relatedProducts: relatedResult.products,
     };
   },
-  ["product-detail-merchandising-v2"],
+  ["product-detail-merchandising-v3"],
   {
     revalidate: PRODUCT_DETAIL_REVALIDATE_SECONDS,
     tags: ["catalog", "product-detail", "product-merchandising"],

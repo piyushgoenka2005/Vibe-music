@@ -35,6 +35,7 @@ export default function SiteHeader() {
 
   useEffect(() => {
     queueMicrotask(() => setMobileOpen(false));
+    window.dispatchEvent(new Event("site-header:sync"));
   }, [pathname]);
 
   useEffect(() => {
@@ -150,26 +151,22 @@ export default function SiteHeader() {
 
       <div className="site-header__bar">
         <div className="site-header__inner">
-          <a
+          <Link
             href={ROUTES.home}
             className="site-header__logo"
             aria-label={BRAND.name}
-            onClick={(event) => {
-              event.preventDefault();
-              // Always return to the landing page with a full page load.
-              window.location.href = ROUTES.home;
-            }}
+            scroll={false}
           >
             <Image
               src={BRAND.headerLogoPath}
               alt={BRAND.name}
-              width={220}
-              height={56}
+              width={240}
+              height={58}
               priority
+              unoptimized
               className="assets-site-header__menu-logo"
-              style={{ width: "auto", height: "auto" }}
             />
-          </a>
+          </Link>
 
           <form
             className="site-header__search site-header__search--bar assets-site-header__menu-search-form"
@@ -195,7 +192,7 @@ export default function SiteHeader() {
               className="site-header__search-submit assets-site-header__menu-search-submit"
               aria-label="Search"
             >
-              <Search size={14} />
+              <Search size={14} strokeWidth={2} aria-hidden />
             </button>
           </form>
 
@@ -206,7 +203,7 @@ export default function SiteHeader() {
             onClick={handleMobileSearchOpen}
             aria-label="Open search"
           >
-            <Search size={22} aria-hidden />
+            <Search size={22} strokeWidth={1.75} aria-hidden />
           </button>
 
           <div className="site-header__actions">
@@ -226,7 +223,7 @@ export default function SiteHeader() {
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <User size={20} aria-hidden />
+                  <User size={20} strokeWidth={1.75} aria-hidden />
                 )}
                 <span className="site-header__action-label assets-site-header__menu-account-navlink">
                   {accountLabel}
@@ -249,7 +246,7 @@ export default function SiteHeader() {
               aria-label={cartLabel}
               onClick={handleCartClick}
             >
-              <ShoppingCart size={20} />
+              <ShoppingCart size={20} strokeWidth={1.75} />
               <span
                 ref={cartCountRef}
                 className="site-header__cart-count assets-site-header__menu-cart-count"
@@ -271,7 +268,7 @@ export default function SiteHeader() {
             aria-controls="site-header-nav"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            {mobileOpen ? <X size={22} strokeWidth={1.75} /> : <Menu size={22} strokeWidth={1.75} />}
             <span className="site-header__menu-label">{mobileOpen ? "Close" : "Menu"}</span>
           </button>
         </div>

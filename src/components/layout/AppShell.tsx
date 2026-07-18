@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback } from "react";
+import { Suspense, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import AuthProvider from "@/components/auth/AuthProvider";
 import ToastContainer from "@/components/common/ToastContainer";
@@ -62,7 +62,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <WebVitalsReporter />
           <ServiceWorkerRegister />
           <RoutePreloader />
-          <ScrollRestoration />
+          <Suspense fallback={null}>
+            <ScrollRestoration />
+          </Suspense>
           <div className="storefront-root">
             <StorefrontChrome>
               <DeferredHtmlLinkInterceptor />

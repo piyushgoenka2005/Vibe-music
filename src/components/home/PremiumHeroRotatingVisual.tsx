@@ -10,7 +10,7 @@ import {
 import { cdnThumbUrl } from "@/lib/images";
 
 const MOSAIC_COUNT = 4;
-const MOSAIC_WIDTH = 960;
+const MOSAIC_WIDTH = 1200;
 
 function badgeClassName(badge: string): string {
   const normalized = badge.toLowerCase();
@@ -55,20 +55,17 @@ export default function PremiumHeroRotatingVisual() {
                 {slide.badge}
               </span>
             ) : null}
+            <div className="premium-hero__mosaic-cell__media">
             {usePlainImg ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={src}
                 alt=""
+                className="premium-hero__mosaic-photo"
                 loading={index === 0 ? "eager" : "lazy"}
                 decoding="async"
                 fetchPriority={index === 0 ? "high" : "auto"}
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: slide.fit === "cover" ? "cover" : "contain",
                   ...(slide.objectPosition
                     ? { objectPosition: slide.objectPosition }
                     : null),
@@ -82,19 +79,22 @@ export default function PremiumHeroRotatingVisual() {
                 src={src}
                 alt=""
                 fill
-                sizes="(max-width: 1023px) 50vw, 28vw"
+                className="premium-hero__mosaic-photo"
+                sizes="(max-width: 1023px) 50vw, 24vw"
                 priority={index === 0}
                 loading={index === 0 ? "eager" : "lazy"}
-                style={
-                  slide.objectPosition
+                style={{
+                  objectFit: slide.fit === "cover" ? "cover" : "contain",
+                  ...(slide.objectPosition
                     ? { objectPosition: slide.objectPosition }
-                    : undefined
-                }
+                    : null),
+                }}
                 onError={() =>
                   setFailedSrc((prev) => ({ ...prev, [slide.src]: true }))
                 }
               />
             )}
+            </div>
             <span className="premium-hero__mosaic-meta" aria-hidden="true">
               {slide.brand ? (
                 <span className="premium-hero__mosaic-brand">{slide.brand}</span>

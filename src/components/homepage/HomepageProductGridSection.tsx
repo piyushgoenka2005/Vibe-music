@@ -44,6 +44,7 @@ function ProductSequence({
           reviewCount={item.reviewCount}
           salePrice={item.salePrice}
           sectionKey={sectionKey}
+          slug={item.slug}
         />
       ))}
     </>

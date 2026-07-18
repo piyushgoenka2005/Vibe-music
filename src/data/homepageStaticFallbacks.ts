@@ -6,6 +6,7 @@ import {
   fetchCategories,
 } from "@/lib/server/firestoreCatalogRepository";
 import { categoryPath, productPath } from "@/lib/routes";
+import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import { getCategoryGridImage } from "@/lib/categoryImages";
 import { buildTopBrandStripItems } from "@/data/topBrandStrip";
 import {
@@ -34,6 +35,11 @@ function toProductItem(
       : originalPrice > product.price
         ? product.price
         : null;
+  const { rating, reviewCount } = ensureProductReviewMetrics({
+    id: product.id,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+  });
   return {
     id: product.id,
     slug: product.slug,
@@ -43,8 +49,8 @@ function toProductItem(
     salePrice,
     image: product.image || product.images[0] || "",
     imageAlt: product.name,
-    rating: product.rating,
-    reviewCount: product.reviewCount,
+    rating,
+    reviewCount,
     href: productPath(product.slug),
     rank,
   };

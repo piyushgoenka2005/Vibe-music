@@ -39,9 +39,9 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
   {
     id: "pay-your-way",
     iconId: "payments",
-    title: "EMI & Financing",
-    subtitle: "Explore installment options for eligible gear.",
-    href: ROUTES.financing,
+    title: "Secure Payments",
+    subtitle: "UPI, cards, and net banking at checkout.",
+    href: ROUTES.checkout,
   },
   {
     id: "deals-on-deals",

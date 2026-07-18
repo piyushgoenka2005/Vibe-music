@@ -16,6 +16,7 @@ interface SearchOverlayProps {
   error: string | null;
   groups: SearchSuggestionGroups;
   activeIndex: number;
+  activeDescendantId?: string;
   onQueryChange: (value: string) => void;
   onClose: () => void;
   onSubmit: () => void;
@@ -41,6 +42,7 @@ export default function SearchOverlay({
   error,
   groups,
   activeIndex,
+  activeDescendantId,
   onQueryChange,
   onClose,
   onSubmit,
@@ -114,12 +116,17 @@ export default function SearchOverlay({
             <input
               ref={inputRef}
               type="search"
+              role="combobox"
               className="sw-search-panel__input"
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
               onKeyDown={onKeyDown}
               placeholder="Search for sweet gear"
               aria-label="Search for sweet gear"
+              aria-autocomplete="list"
+              aria-controls="sw-search-panel-listbox"
+              aria-expanded="true"
+              aria-activedescendant={activeDescendantId}
               autoComplete="off"
             />
             <button

@@ -1,14 +1,23 @@
-import type { ReactNode } from "react";
+"use client";
+
+import type { MouseEvent, ReactNode } from "react";
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import HomepageProductImage from "@/components/homepage/HomepageProductImage";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
-import { formatDisplayPrice } from "@/utils/currency";
+import {
+  ensureProductReviewMetrics,
+  formatRatingPillLabel,
+} from "@/lib/product/productReviewDisplay";
+import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { resolveLinkHref } from "@/lib/routes";
+import { useCartStore } from "@/store/cartStore";
+import type { Product } from "@/types/product";
 
 export interface NewArrivalsProductCardProps {
   id: string;
   href: string;
+  slug?: string;
   brand: string;
   name: string;
   price: number;
@@ -29,7 +38,6 @@ export interface NewArrivalsProductCardProps {
   imagePriority?: boolean;
 }
 
-
 function seededHash(id: string): number {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
@@ -41,18 +49,19 @@ function seededDiscount(id: string): number {
   return DISCOUNTS[seededHash(id) % DISCOUNTS.length];
 }
 
-function seededRating(id: string): string {
-  const RATINGS = [3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9];
-  return RATINGS[seededHash(id + "r") % RATINGS.length].toFixed(1);
-}
-
 function fakeMrp(price: number, discountPct: number): number {
   return Math.round(price / (1 - discountPct / 100));
+}
+
+function slugFromHref(href: string, fallback: string): string {
+  const match = href.match(/\/product\/([^/?#]+)/i);
+  return match?.[1] ?? fallback;
 }
 
 export default function NewArrivalsProductCard({
   id,
   href,
+  slug,
   brand,
   name,
   price,
@@ -71,15 +80,49 @@ export default function NewArrivalsProductCard({
   priceNode,
   imagePriority = false,
 }: NewArrivalsProductCardProps) {
+  const addItem = useCartStore((state) => state.addItem);
+  const openDrawer = useCartStore((state) => state.openDrawer);
   const displayPrice = salePrice ?? price;
   const displayName = formatProductCardTitle(name, brand);
-  const hasDiscount =
-    salePrice != null && salePrice > 0 && salePrice < price;
-  const showRating =
-    rating != null && reviewCount != null && reviewCount > 0;
+  const { rating: displayRating, reviewCount: displayReviewCount } =
+    ensureProductReviewMetrics({
+      id,
+      rating,
+      reviewCount,
+    });
+  const ratingPillLabel = formatRatingPillLabel(displayRating, displayReviewCount);
+  const showRating = displayReviewCount > 0;
   const productHref = resolveLinkHref(href);
+  const productSlug = slug ?? slugFromHref(href, id);
   const discountPct = seededDiscount(id);
-  const displayRating = seededRating(id);
+  const canBuy = isPurchasablePrice(displayPrice);
+
+  function handleBuy(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!canBuy) return;
+
+    const cartProduct: Product = {
+      id,
+      slug: productSlug,
+      name,
+      brand,
+      brandSlug: brand.toLowerCase().replace(/\s+/g, "-"),
+      category: "",
+      categorySlug: "",
+      price: displayPrice,
+      originalPrice: price > displayPrice ? price : undefined,
+      rating: displayRating,
+      reviewCount: displayReviewCount,
+      availability: "in-stock",
+      condition: "new",
+      imageColor: "#e2e8f0",
+      image,
+    };
+
+    addItem(cartProduct);
+    openDrawer();
+  }
 
   return (
     <div className="new-arrivals-card-wrap">
@@ -89,87 +132,125 @@ export default function NewArrivalsProductCard({
         title={`${brand} ${name}`}
         url={productHref}
       />
-      <Link
+      <div
         aria-hidden={ariaHidden || undefined}
-        aria-label={
-          imageAlt ||
-          `${brand} ${name}, ${formatDisplayPrice(price, salePrice)}`
-        }
         className={`new-arrivals-card${featured ? " new-arrivals-card--featured" : ""}`}
-        tabIndex={ariaHidden ? -1 : undefined}
         data-hp-section={sectionKey}
         data-hp-slot={hpSlot}
         data-key={id}
-        href={productHref}
         role="listitem"
       >
-        <div className="new-arrivals-card__media">
-          {rank ? (
-            <span aria-hidden className="new-arrivals-card__rank">
-              {rank}
-            </span>
-          ) : null}
-          {badgeLabel ? (
-            <span className="new-arrivals-card__badge">{badgeLabel}</span>
-          ) : null}
-          {image ? (
-            <HomepageProductImage
-              className="new-arrivals-card__image"
-              fill
-              height={640}
-              priority={!ariaHidden && imagePriority}
-              sizes="(max-width: 767px) 46vw, 360px"
-              src={image}
-              width={640}
-            />
-          ) : (
+        <Link
+          aria-hidden={ariaHidden || undefined}
+          aria-label={
+            imageAlt ||
+            `${brand} ${name}, ${formatDisplayPrice(price, salePrice)}`
+          }
+          className="new-arrivals-card__link"
+          tabIndex={ariaHidden ? -1 : undefined}
+          href={productHref}
+        >
+          <div className="new-arrivals-card__media">
             <div
-              aria-hidden
-              className="new-arrivals-card__image new-arrivals-card__image--placeholder"
-            />
-          )}
-          {showRating ? (
-            <span className="rating-pill" aria-label={`Rated ${displayRating} out of 5`}>
-              <span className="rating-pill__star" aria-hidden="true">★</span>
-              {displayRating}
-            </span>
-          ) : null}
-        </div>
-
-        <div className="new-arrivals-card__body">
-          {preorderLabel ? (
-            <p className="new-arrivals-card__preorder">{preorderLabel}</p>
-          ) : null}
-          <p className="new-arrivals-card__brand">{brand}</p>
-          <h3 className="new-arrivals-card__name" title={name}>
-            {displayName}
-          </h3>
-
-          <div className="new-arrivals-card__meta-row new-arrivals-card__meta-row--price">
-            <div className="new-arrivals-card__pricing">
-              <span className="new-arrivals-card__tags-row">
-                <span className="discount-drop" aria-label={`${discountPct}% off`}>
-                  <span className="discount-drop__arrow" aria-hidden="true">↓</span>
-                  {discountPct}% off
-                </span>
-                <span className="new-arrivals-card__stock-pill">Limited stock</span>
-              </span>
-              <span className="new-arrivals-card__prices">
-                <span className="new-arrivals-card__was">
-                  {formatDisplayPrice(fakeMrp(displayPrice, discountPct))}
-                </span>
+              className="blog-teaser__tags new-arrivals-card__stock-tags"
+              aria-label={
+                rank ? `Rank ${rank}, limited stock` : "Limited stock"
+              }
+            >
+              {rank ? (
                 <span
-                  className={`new-arrivals-card__price${
-                    displayPrice <= 0 ? " new-arrivals-card__price--enquiry" : ""
-                  }`}
+                  aria-hidden
+                  className="blog-teaser__tag blog-teaser__tag--primary blog-teaser__tag--primary-black"
                 >
-                  {priceNode ?? formatDisplayPrice(displayPrice)}
+                  {rank}
                 </span>
+              ) : null}
+              {rank ? (
+                <span aria-hidden className="blog-teaser__tag-sep" />
+              ) : null}
+              <span className="blog-teaser__tag blog-teaser__tag--secondary">
+                Limited stock
               </span>
             </div>
+            {badgeLabel ? (
+              <span className="new-arrivals-card__badge">{badgeLabel}</span>
+            ) : null}
+            {image ? (
+              <HomepageProductImage
+                className="new-arrivals-card__image"
+                fill
+                height={640}
+                priority={!ariaHidden && imagePriority}
+                sizes="(max-width: 767px) 46vw, 360px"
+                src={image}
+                width={640}
+              />
+            ) : (
+              <div
+                aria-hidden
+                className="new-arrivals-card__image new-arrivals-card__image--placeholder"
+              />
+            )}
+            {showRating ? (
+              <span
+                className="rating-pill"
+                aria-label={`Rated ${displayRating.toFixed(1)} out of 5 from ${displayReviewCount} ratings`}
+              >
+                <span className="rating-pill__star" aria-hidden="true">
+                  ★
+                </span>
+                {ratingPillLabel}
+              </span>
+            ) : null}
           </div>
+
+          <div className="new-arrivals-card__body">
+            {preorderLabel ? (
+              <p className="new-arrivals-card__preorder">{preorderLabel}</p>
+            ) : null}
+            <p className="new-arrivals-card__brand">{brand}</p>
+            <h3 className="new-arrivals-card__name" title={name}>
+              {displayName}
+            </h3>
+
+            <span className="new-arrivals-card__tags-row">
+              <span className="discount-drop" aria-label={`${discountPct}% off`}>
+                <span className="discount-drop__arrow" aria-hidden="true">↓</span>
+                {discountPct}% off
+              </span>
+            </span>
+          </div>
+        </Link>
+
+        <div className="new-arrivals-card__meta-row new-arrivals-card__meta-row--price">
+          <div className="new-arrivals-card__pricing">
+            <span className="new-arrivals-card__prices">
+              <span className="new-arrivals-card__was">
+                {formatDisplayPrice(fakeMrp(displayPrice, discountPct))}
+              </span>
+              <span
+                className={`new-arrivals-card__price${
+                  displayPrice <= 0 ? " new-arrivals-card__price--enquiry" : ""
+                }`}
+              >
+                {priceNode ?? formatDisplayPrice(displayPrice)}
+              </span>
+            </span>
+          </div>
+          {canBuy ? (
+            <button
+              type="button"
+              className="new-arrivals-card__buy"
+              onClick={handleBuy}
+              tabIndex={ariaHidden ? -1 : undefined}
+              aria-hidden={ariaHidden || undefined}
+              aria-label={`Buy ${name} now`}
+            >
+              Buy Now
+            </button>
+          ) : null}
         </div>
-      </Link>
+      </div>
     </div>
   );
 }

@@ -71,7 +71,9 @@ export function buildCategoryProductsResult(
   const start = (page - 1) * CATEGORY_PAGE_SIZE;
   const products = sorted.slice(start, start + CATEGORY_PAGE_SIZE);
 
-  const prices = categoryProducts.map((p) => p.price);
+  const prices = categoryProducts
+    .map((p) => p.price)
+    .filter((price) => price > 0);
 
   return {
     products,

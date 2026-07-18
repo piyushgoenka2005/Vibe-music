@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { ROUTES } from "@/lib/routes";
 import type { BrandWithCount } from "@/lib/server/brandsPageLoader";
 import "@/components/category/category.css";
@@ -13,6 +14,7 @@ export default function BrandsPage({ brands }: BrandsPageProps) {
   return (
     <main className="storefront-page storefront-page--subtle brands-page">
       <header className="storefront-page__header">
+        <StorefrontBackButton />
         <p className="storefront-page__eyebrow">Shop by brand</p>
         <h1 className="storefront-page__title">Brands</h1>
         <p className="storefront-page__meta">

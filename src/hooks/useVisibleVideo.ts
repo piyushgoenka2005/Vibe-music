@@ -5,6 +5,8 @@ import { useEffect, type RefObject } from "react";
 interface UseVisibleVideoOptions {
   /** When true, video stays paused regardless of visibility */
   forcePaused?: boolean;
+  /** Immediate manual pause lock (avoids race before React state updates) */
+  manualPausedRef?: RefObject<boolean>;
   /** Fraction of card width that must be visible inside the strip (0–1) */
   visibilityRatio?: number;
   /** Horizontal scroll strip — visibility is measured against this element */
@@ -147,6 +149,7 @@ export function useVisibleVideo(
   containerRef: RefObject<HTMLElement | null>,
   {
     forcePaused = false,
+    manualPausedRef,
     visibilityRatio = 0.05,
     scrollRootRef,
     playDelayMs = 0,
@@ -162,10 +165,13 @@ export function useVisibleVideo(
     let playTimer = 0;
     let cancelled = false;
 
+    const isPlaybackLocked = () =>
+      forcePaused || Boolean(manualPausedRef?.current);
+
     const syncPlayback = () => {
       if (cancelled || !videoRef.current || !containerRef.current) return;
 
-      if (forcePaused) {
+      if (isPlaybackLocked()) {
         videoRef.current.pause();
         return;
       }
@@ -195,7 +201,7 @@ export function useVisibleVideo(
       window.clearInterval(retryTimer);
       retryTimer = window.setInterval(() => {
         if (cancelled || !videoRef.current || !containerRef.current) return;
-        if (forcePaused) return;
+        if (isPlaybackLocked()) return;
 
         const strip = scrollRootRef?.current ?? null;
         const { overlap } = getVisibleOverlap(containerRef.current, strip);
@@ -247,14 +253,15 @@ export function useVisibleVideo(
     videoRef,
     containerRef,
     forcePaused,
+    manualPausedRef,
     visibilityRatio,
     scrollRootRef,
     playDelayMs,
   ]);
 
   useEffect(() => {
-    if (forcePaused) {
+    if (forcePaused || manualPausedRef?.current) {
       videoRef.current?.pause();
     }
-  }, [forcePaused, videoRef]);
+  }, [forcePaused, manualPausedRef, videoRef]);
 }

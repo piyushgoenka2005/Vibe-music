@@ -96,6 +96,8 @@ export default function GlobalSearch() {
     error,
     groups,
     activeIndex,
+    activeDescendantId,
+    flatSuggestions,
     setQuery,
     setActiveIndex,
     openOverlay,
@@ -104,6 +106,7 @@ export default function GlobalSearch() {
     selectSuggestion,
     moveActiveIndex,
     handleEnter,
+    isOverlayOpen,
   } = useSearch();
 
   const syncNativeInputs = useCallback((value: string) => {
@@ -164,6 +167,11 @@ export default function GlobalSearch() {
       } else if (event.key === "ArrowUp") {
         event.preventDefault();
         moveActiveIndex(-1);
+      } else if (event.key === "Tab" && !event.shiftKey) {
+        if (flatSuggestions.length > 0) {
+          event.preventDefault();
+          moveActiveIndex(1);
+        }
       } else if (event.key === "Enter") {
         event.preventDefault();
         handleEnter();
@@ -173,7 +181,7 @@ export default function GlobalSearch() {
         target.blur();
       }
     },
-    [closeOverlay, getSearchAnchorRect, handleEnter, moveActiveIndex, openOverlay]
+    [closeOverlay, flatSuggestions.length, getSearchAnchorRect, handleEnter, moveActiveIndex, openOverlay]
   );
 
   const onFormSubmit = useCallback(
@@ -224,6 +232,22 @@ export default function GlobalSearch() {
   useEffect(() => {
     syncNativeInputs(query);
   }, [query, syncNativeInputs]);
+
+  useEffect(() => {
+    document
+      .querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS)
+      .forEach((input) => {
+        input.setAttribute("role", "combobox");
+        input.setAttribute("aria-autocomplete", "list");
+        input.setAttribute("aria-controls", "sw-search-panel-listbox");
+        input.setAttribute("aria-expanded", isOverlayOpen ? "true" : "false");
+        if (activeDescendantId) {
+          input.setAttribute("aria-activedescendant", activeDescendantId);
+        } else {
+          input.removeAttribute("aria-activedescendant");
+        }
+      });
+  }, [isOverlayOpen, activeDescendantId]);
 
   useEffect(() => {
     function attach(): boolean {
@@ -292,6 +316,9 @@ export default function GlobalSearch() {
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       moveActiveIndex(-1);
+    } else if (event.key === "Tab" && !event.shiftKey && flatSuggestions.length > 0) {
+      event.preventDefault();
+      moveActiveIndex(1);
     } else if (event.key === "Enter") {
       event.preventDefault();
       handleEnter();
@@ -306,6 +333,7 @@ export default function GlobalSearch() {
         error={error}
         groups={groups}
         activeIndex={activeIndex}
+        activeDescendantId={activeDescendantId}
         onQueryChange={setQuery}
         onClose={closeOverlay}
         onSubmit={submitSearch}

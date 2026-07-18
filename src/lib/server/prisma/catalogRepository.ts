@@ -107,16 +107,17 @@ export async function fetchProductById(id: string): Promise<CatalogProduct | nul
 export async function fetchProductBySlug(
   slug: string
 ): Promise<CatalogProduct | null> {
-  return withProductFallback(
-    async () => {
-      const row = await prisma.product.findUnique({ where: { slug } });
-      return row ? prismaToProduct(row) : null;
-    },
-    async () => {
-      const { loadProducts } = await import("@/lib/server/catalogRepository");
-      return loadProducts().find((product) => product.slug === slug) ?? null;
-    }
-  );
+  const fromLocal = async () => {
+    const { loadProducts } = await import("@/lib/server/catalogRepository");
+    return loadProducts().find((product) => product.slug === slug) ?? null;
+  };
+
+  return withProductFallback(async () => {
+    const row = await prisma.product.findUnique({ where: { slug } });
+    if (row) return prismaToProduct(row);
+    // Curated demo / newly added JSON SKUs may lag DB sync — resolve locally.
+    return fromLocal();
+  }, fromLocal);
 }
 
 export async function fetchProductsByIds(
@@ -162,7 +163,9 @@ export async function fetchProductsByCategory(
     async () => {
       const { loadProducts } = await import("@/lib/server/catalogRepository");
       const products = loadProducts().filter(
-        (product) => normalizeCategorySlug(product.category) === resolved
+        (product) =>
+          product.categorySlug === resolved ||
+          normalizeCategorySlug(product.category) === resolved
       );
       return filterActive(products, includeInactive);
     }

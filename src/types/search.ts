@@ -1,6 +1,12 @@
 import type { SearchAnalyticsSource } from "@/types/searchAnalytics";
 
-export type SuggestionType = "product" | "category" | "brand" | "recent";
+export type SuggestionType =
+  | "keyword"
+  | "product"
+  | "category"
+  | "brand"
+  | "viewed"
+  | "recent";
 
 export interface SearchProduct {
   id: string;
@@ -35,12 +41,16 @@ export interface SearchSuggestion {
   sublabel?: string;
   href: string;
   productSlug?: string;
+  image?: string;
+  price?: number;
 }
 
 export interface SearchSuggestionGroups {
-  products: SearchSuggestion[];
+  keywords: SearchSuggestion[];
   categories: SearchSuggestion[];
   brands: SearchSuggestion[];
+  products: SearchSuggestion[];
+  recentlyViewed: SearchSuggestion[];
   recent: SearchSuggestion[];
 }
 

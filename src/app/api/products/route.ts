@@ -66,6 +66,9 @@ export async function GET(request: Request) {
       conditions:
         conditionValues.length > 1 ? conditionValues : undefined,
       limit: Number.isFinite(limit) ? limit : undefined,
+      // Category browse must include Coming Soon SKUs (₹0) so departments
+      // like Microphones aren't empty when prices aren't set yet.
+      purchasableOnly: category ? false : undefined,
     });
 
     return NextResponse.json(

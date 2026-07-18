@@ -24,6 +24,7 @@ export function useSearchListingFilters() {
     () => ({
       q: searchParams.get("q"),
       category: searchParams.get("category"),
+      subcategory: searchParams.get("subcategory"),
     }),
     [searchParams]
   );
@@ -34,9 +35,11 @@ export function useSearchListingFilters() {
       else params.delete("q");
       if (preserved.category) params.set("category", preserved.category);
       else params.delete("category");
+      if (preserved.subcategory) params.set("subcategory", preserved.subcategory);
+      else params.delete("subcategory");
       return params;
     },
-    [preserved.category, preserved.q]
+    [preserved.category, preserved.q, preserved.subcategory]
   );
 
   const updateFilters = useCallback(
@@ -86,5 +89,6 @@ export function useSearchListingFilters() {
     hasActive: hasActiveFilters(filters),
     defaults: DEFAULT_FILTERS,
     categorySlug: preserved.category ?? "",
+    subcategory: preserved.subcategory ?? "",
   };
 }

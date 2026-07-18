@@ -4,11 +4,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ROUTES } from "@/lib/routes";
+import { buildEmptyStateSuggestions } from "@/lib/search/searchIntelligence";
 import {
+  buildClientSearchSuggestions,
+  buildPopularQueriesFromStore,
   fetchSearchResults,
   fetchSearchSuggestions,
+  mapRecentlyViewedSuggestions,
   MIN_QUERY_LENGTH,
+  SEARCH_EMPTY_GROUPS,
 } from "@/services/search.service";
+import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import { searchStore, useSearchStore } from "@/store/searchStore";
 import type {
   SearchResultsData,
@@ -38,11 +44,25 @@ function readHeaderSearchQuery(): string {
 
 function flattenSuggestions(groups: SearchSuggestionGroups): SearchSuggestion[] {
   return [
-    ...groups.recent,
-    ...groups.products,
+    ...groups.keywords,
     ...groups.categories,
     ...groups.brands,
+    ...groups.products,
+    ...groups.recentlyViewed,
+    ...groups.recent,
   ];
+}
+
+function hasSuggestions(groups: SearchSuggestionGroups): boolean {
+  return (
+    groups.keywords.length +
+      groups.categories.length +
+      groups.brands.length +
+      groups.products.length +
+      groups.recentlyViewed.length +
+      groups.recent.length >
+    0
+  );
 }
 
 interface UseSearchOptions {
@@ -55,19 +75,29 @@ export function useSearch(options: UseSearchOptions = {}) {
   const router = useRouter();
   const query = useSearchStore((s) => s.query);
   const recentSearches = useSearchStore((s) => s.recentSearches);
+  const analytics = useSearchStore((s) => s.analytics);
   const isOverlayOpen = useSearchStore((s) => s.isOverlayOpen);
+  const recentlyViewedIds = useRecentlyViewedStore((s) => s.productIds);
   const suggestionsActive = isOverlayOpen || inlineSuggestions;
 
   const debouncedQuery = useDebounce(query, 300);
   const [status, setStatus] = useState<SearchStatus>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [groups, setGroups] = useState<SearchSuggestionGroups>({
-    products: [],
-    categories: [],
-    brands: [],
-    recent: [],
-  });
+  const [groups, setGroups] = useState<SearchSuggestionGroups>(SEARCH_EMPTY_GROUPS);
   const [activeIndex, setActiveIndex] = useState(-1);
+
+  const popularQueries = useMemo(
+    () => buildPopularQueriesFromStore(analytics),
+    [analytics]
+  );
+
+  const suggestionOptions = useMemo(
+    () => ({
+      recentlyViewedIds,
+      popularQueries,
+    }),
+    [recentlyViewedIds, popularQueries]
+  );
 
   const flatSuggestions = useMemo(() => flattenSuggestions(groups), [groups]);
 
@@ -77,29 +107,77 @@ export function useSearch(options: UseSearchOptions = {}) {
     let cancelled = false;
 
     async function run() {
-      if (debouncedQuery.length > 0 && debouncedQuery.length < MIN_QUERY_LENGTH) {
-        setStatus("idle");
+      if (debouncedQuery.length === 0) {
+        setStatus("success");
         setError(null);
-        setGroups({
-          products: [],
-          categories: [],
-          brands: [],
-          recent: recentSearches.slice(0, 5).map((item, index) => ({
-            id: `recent-${index}`,
-            type: "recent" as const,
-            label: item,
-            href: `${ROUTES.searchResults}?q=${encodeURIComponent(item)}`,
-          })),
-        });
+        const recent = recentSearches.slice(0, 5).map((item, index) => ({
+          id: `recent-${index}`,
+          type: "recent" as const,
+          label: item,
+          href: `${ROUTES.searchResults}?q=${encodeURIComponent(item)}`,
+        }));
+        const recentlyViewed = await mapRecentlyViewedSuggestions(
+          recentlyViewedIds,
+          ""
+        );
+        if (cancelled) return;
+
+        if (recent.length === 0 && recentlyViewed.length === 0) {
+          const discovery = buildEmptyStateSuggestions();
+          setGroups({
+            keywords: discovery.trending,
+            categories: discovery.categories,
+            brands: discovery.brands,
+            products: [],
+            recentlyViewed: [],
+            recent: [],
+          });
+        } else {
+          setGroups({
+            ...SEARCH_EMPTY_GROUPS,
+            recentlyViewed,
+            recent,
+          });
+        }
         setActiveIndex(-1);
         return;
       }
 
+      if (debouncedQuery.length < MIN_QUERY_LENGTH) {
+        setStatus("success");
+        setError(null);
+        try {
+          const next = await fetchSearchSuggestions(
+            debouncedQuery,
+            recentSearches,
+            suggestionOptions
+          );
+          if (cancelled) return;
+          setGroups(next);
+          setActiveIndex(-1);
+        } catch {
+          if (cancelled) return;
+          setGroups(SEARCH_EMPTY_GROUPS);
+          setActiveIndex(-1);
+        }
+        return;
+      }
+
+      const clientGroups = buildClientSearchSuggestions(
+        debouncedQuery,
+        recentSearches,
+        suggestionOptions
+      );
+      setGroups(clientGroups);
       setStatus("loading");
       setError(null);
 
       try {
-        const next = await fetchSearchSuggestions(debouncedQuery, recentSearches);
+        const next = await fetchSearchSuggestions(
+          debouncedQuery,
+          recentSearches,
+          suggestionOptions
+        );
         if (cancelled) return;
         setGroups(next);
         setStatus("success");
@@ -107,15 +185,18 @@ export function useSearch(options: UseSearchOptions = {}) {
       } catch {
         if (cancelled) return;
         setGroups({
-          products: [],
-          categories: [],
-          brands: [],
-          recent: recentSearches.slice(0, 5).map((item, index) => ({
-            id: `recent-${index}`,
-            type: "recent" as const,
-            label: item,
-            href: `${ROUTES.searchResults}?q=${encodeURIComponent(item)}`,
-          })),
+          ...clientGroups,
+          recent: recentSearches
+            .filter((item) =>
+              item.toLowerCase().includes(debouncedQuery.toLowerCase())
+            )
+            .slice(0, 3)
+            .map((item, index) => ({
+              id: `recent-match-${index}`,
+              type: "recent" as const,
+              label: item,
+              href: `${ROUTES.searchResults}?q=${encodeURIComponent(item)}`,
+            })),
         });
         setStatus("success");
         setError(null);
@@ -127,7 +208,7 @@ export function useSearch(options: UseSearchOptions = {}) {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, recentSearches, suggestionsActive]);
+  }, [debouncedQuery, recentSearches, recentlyViewedIds, suggestionOptions, suggestionsActive]);
 
   const setQuery = useCallback((value: string) => {
     searchStore.setQuery(value);
@@ -160,10 +241,13 @@ export function useSearch(options: UseSearchOptions = {}) {
   const selectSuggestion = useCallback(
     (suggestion: SearchSuggestion) => {
       searchStore.addRecentSearch(suggestion.label);
-      if (suggestion.type === "product" && suggestion.productSlug) {
+      if (
+        (suggestion.type === "product" || suggestion.type === "viewed") &&
+        suggestion.productSlug
+      ) {
         searchStore.trackSearchClick({
           query: query.trim() || suggestion.label,
-          productId: suggestion.id,
+          productId: suggestion.id.replace(/^viewed-/, ""),
           productSlug: suggestion.productSlug,
           productName: suggestion.label,
           source: "autocomplete",
@@ -200,6 +284,9 @@ export function useSearch(options: UseSearchOptions = {}) {
     submitSearch();
   }, [activeIndex, flatSuggestions, selectSuggestion, submitSearch]);
 
+  const activeDescendantId =
+    activeIndex >= 0 ? `sw-search-option-${activeIndex}` : undefined;
+
   return {
     query,
     debouncedQuery,
@@ -208,6 +295,7 @@ export function useSearch(options: UseSearchOptions = {}) {
     groups,
     flatSuggestions,
     activeIndex,
+    activeDescendantId,
     setActiveIndex,
     setQuery,
     openOverlay,
@@ -218,6 +306,7 @@ export function useSearch(options: UseSearchOptions = {}) {
     handleEnter,
     isOverlayOpen,
     recentSearches,
+    hasSuggestions: hasSuggestions(groups),
   };
 }
 
@@ -225,6 +314,7 @@ export function useSearchResults(
   query: string,
   filters?: {
     category?: string;
+    subcategory?: string;
     brand?: string;
     sort?: string;
     all?: boolean;
@@ -232,7 +322,11 @@ export function useSearchResults(
   options?: {
     /** Server-rendered results matching the initial query/filters. */
     initialResults?: SearchResultsData | null;
-    initialFilters?: { category?: string; brand?: string };
+    initialFilters?: {
+      category?: string;
+      subcategory?: string;
+      brand?: string;
+    };
   }
 ) {
   const initialResults = options?.initialResults ?? null;
@@ -244,6 +338,7 @@ export function useSearchResults(
     initialResults
   );
   const category = filters?.category;
+  const subcategory = filters?.subcategory;
   const brand = filters?.brand;
   const sort = filters?.sort;
   const all = filters?.all === true;
@@ -252,6 +347,7 @@ export function useSearchResults(
       ? [
           query.trim(),
           options?.initialFilters?.category ?? "",
+          options?.initialFilters?.subcategory ?? "",
           all ? "" : (options?.initialFilters?.brand ?? ""),
           all ? "all" : "",
         ].join("|")
@@ -265,6 +361,7 @@ export function useSearchResults(
     const requestKey = [
       query.trim(),
       category ?? "",
+      subcategory ?? "",
       all ? "" : (brand ?? ""),
       all ? "all" : sort && sort !== "relevance" ? sort : "",
     ].join("|");
@@ -282,7 +379,11 @@ export function useSearchResults(
     initialKeyRef.current = null;
 
     async function run() {
-      const hasFilter = Boolean(category?.trim() || (!all && brand?.trim()));
+      const hasFilter = Boolean(
+        category?.trim() ||
+          subcategory?.trim() ||
+          (!all && brand?.trim())
+      );
 
       if (query.trim().length < MIN_QUERY_LENGTH && !hasFilter) {
         setResults({
@@ -302,6 +403,7 @@ export function useSearchResults(
       try {
         const data = await fetchSearchResults(query, {
           category,
+          subcategory,
           brand: all ? undefined : brand,
           sort: all ? undefined : sort,
           all,
@@ -325,7 +427,7 @@ export function useSearchResults(
     return () => {
       cancelled = true;
     };
-  }, [query, category, brand, sort, all, initialResults]);
+  }, [query, category, subcategory, brand, sort, all, initialResults]);
 
   return { status, error, results };
 }

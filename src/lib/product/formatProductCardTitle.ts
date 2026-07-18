@@ -1,3 +1,5 @@
+import { cleanProductName } from "@/lib/product/cleanProductName";
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -15,7 +17,7 @@ export function formatProductCardTitle(
   brand?: string,
   maxLength = 64
 ): string {
-  let title = name.trim();
+  let title = cleanProductName(name);
   if (!title) return "";
 
   if (brand) {

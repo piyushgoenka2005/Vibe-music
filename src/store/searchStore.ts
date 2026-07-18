@@ -177,6 +177,18 @@ export const searchStore = {
     emit();
   },
 
+  removeRecentSearch(query: string) {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    const next = state.recentSearches.filter(
+      (item) => item.toLowerCase() !== trimmed.toLowerCase()
+    );
+    if (next.length === state.recentSearches.length) return;
+    state = { ...state, recentSearches: next };
+    persistRecent(next);
+    emit();
+  },
+
   trackSearch(event: Omit<ClientSearchAnalyticsEvent, "timestamp">) {
     const entry: ClientSearchAnalyticsEvent = {
       ...event,

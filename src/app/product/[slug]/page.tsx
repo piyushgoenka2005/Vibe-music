@@ -47,7 +47,12 @@ export async function generateMetadata({
 
 export default async function ProductRoute({ params }: ProductRouteProps) {
   const { slug } = await params;
-  const product = await loadProductCorePage(slug);
+  let product;
+  try {
+    product = await loadProductCorePage(slug);
+  } catch {
+    product = null;
+  }
 
   if (!product) {
     notFound();

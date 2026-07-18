@@ -5,19 +5,20 @@ function normalizeLabel(label: string): string {
 }
 
 export function mergeProductSpecs(
-  specs: ProductSpec[],
+  specs: ProductSpec[] | null | undefined,
   specifications?: Record<string, string>
 ): ProductSpec[] {
   const map = new Map<string, ProductSpec>();
 
-  for (const spec of specs) {
-    const value = spec.value.trim();
+  for (const spec of specs ?? []) {
+    if (!spec?.label) continue;
+    const value = String(spec.value ?? "").trim();
     if (!value) continue;
     map.set(normalizeLabel(spec.label), { label: spec.label, value });
   }
 
   for (const [label, rawValue] of Object.entries(specifications ?? {})) {
-    const value = String(rawValue).trim();
+    const value = String(rawValue ?? "").trim();
     if (!value) continue;
     map.set(normalizeLabel(label), { label, value });
   }

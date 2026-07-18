@@ -24,11 +24,30 @@ export interface CartRepriceLineResult {
   name: string;
   quantity: number;
   price: number;
+  originalPrice?: number;
   gstRate: GSTRate;
   image?: string;
   brand?: string;
   slug?: string;
   error?: string;
+}
+
+function resolveCatalogOriginalPrice(
+  product: {
+    originalPrice: number;
+    price: number;
+    detail?: { msrp?: number | null } | null;
+  },
+  unitPrice: number
+): number | undefined {
+  const msrp = product.detail?.msrp;
+  const candidate =
+    product.originalPrice > unitPrice
+      ? product.originalPrice
+      : msrp != null && msrp > unitPrice
+        ? msrp
+        : undefined;
+  return candidate;
 }
 
 /**
@@ -96,6 +115,7 @@ export async function repriceCartLines(
         name: variant?.label ? `${product.name} — ${variant.label}` : product.name,
         quantity: item.quantity,
         price: unitPrice,
+        originalPrice: resolveCatalogOriginalPrice(product, unitPrice),
         gstRate: (product.gstRate ??
           getDefaultGstRateForCategory(product.category)) as GSTRate,
         image: variant?.images?.[0] || product.images?.[0],

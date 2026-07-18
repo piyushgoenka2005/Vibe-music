@@ -16,21 +16,36 @@ export default function ProductDescription({ description }: ProductDescriptionPr
 
   return (
     <article className="pdp-description">
-      {introBlocks.map((block, index) => (
-        <p key={`intro-${index}`} className="pdp-description__lead">
-          {block.text}
-        </p>
-      ))}
-
       {featureBlocks.length > 0 ? (
-        <div className="pdp-description__highlights">
-          {featureBlocks.map((block, index) => (
-            <div key={`feature-${index}`} className="pdp-description__highlight">
-              <h3 className="pdp-description__highlight-title">{block.title}</h3>
-              <p className="pdp-description__highlight-body">{block.body}</p>
-            </div>
-          ))}
-        </div>
+        <section className="pdp-description__about" aria-label="About this item">
+          <h3 className="pdp-description__section-heading">About this item</h3>
+          <ul className="pdp-description__about-list">
+            {featureBlocks.map((block, index) => (
+              <li key={`feature-${index}`} className="pdp-description__about-item">
+                <strong className="pdp-description__about-title">{block.title}</strong>
+                {block.body ? (
+                  <>
+                    {" "}
+                    <span className="pdp-description__about-body">{block.body}</span>
+                  </>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {introBlocks.length > 0 ? (
+        <section className="pdp-description__product-copy" aria-label="Product description">
+          <h3 className="pdp-description__section-heading">Product description</h3>
+          <div className="pdp-description__intro">
+            {introBlocks.map((block, index) => (
+              <p key={`intro-${index}`} className="pdp-description__lead">
+                {block.text}
+              </p>
+            ))}
+          </div>
+        </section>
       ) : null}
     </article>
   );

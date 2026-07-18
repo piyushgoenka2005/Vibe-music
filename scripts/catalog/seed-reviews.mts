@@ -9,6 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
+import { syntheticReviewCreatedAt } from "../../src/lib/reviews/syntheticReviewDate.ts";
 
 const prisma = new PrismaClient();
 const catalogDir = path.join(process.cwd(), "src", "data", "catalog");
@@ -216,9 +217,8 @@ async function main() {
       index,
       kind
     );
-    const createdAt = `${entry.date}T${String(10 + (index % 10)).padStart(2, "0")}:${String(
-      (index * 7) % 60
-    ).padStart(2, "0")}:00.000Z`;
+    // Persist a rolling last-3-years date (stable per review id).
+    const createdAt = syntheticReviewCreatedAt(id);
 
     const location = entry.state
       ? `${entry.city}, ${entry.state}`

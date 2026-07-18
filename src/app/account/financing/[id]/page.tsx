@@ -32,7 +32,7 @@ export default function AccountFinanceDetailPage() {
           <h1>{app.applicationNumber}</h1>
           <p>{app.productName}</p>
           <p>Status: {app.status}</p>
-          <p>EMI: {formatCurrency(app.monthlyInstallment)}/month × {app.tenureMonths}</p>
+          <p>Monthly payment: {formatCurrency(app.monthlyInstallment)}/month × {app.tenureMonths}</p>
           <p>Total payable: {formatCurrency(app.totalPayable)}</p>
           {app.rejectionReason ? <p>Reason: {app.rejectionReason}</p> : null}
         </div>

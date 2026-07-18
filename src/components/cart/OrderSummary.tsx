@@ -64,8 +64,12 @@ export default function OrderSummary({
                 type="text"
                 placeholder="Coupon code"
                 value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value)}
+                onChange={(e) =>
+                  setCouponInput(e.target.value.toUpperCase())
+                }
                 aria-label="Coupon code"
+                autoCapitalize="characters"
+                spellCheck={false}
                 disabled={isApplyingCoupon}
               />
               <button

@@ -1,3 +1,4 @@
+import { cleanProductName } from "@/lib/product/cleanProductName";
 import type { Prisma } from "@prisma/client";
 import type { Brand } from "@/types/brand";
 import type { CatalogProduct } from "@/types/catalog";
@@ -103,7 +104,7 @@ export function prismaToProduct(row: {
   return {
     id: row.id,
     slug: row.slug,
-    name: row.name,
+    name: cleanProductName(row.name),
     brand: row.brand,
     category: row.category,
     subcategory: row.subcategory,

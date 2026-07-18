@@ -3,6 +3,7 @@
 :root {
   --font-primary: var(--font-inter, "Helvetica Neue"), Helvetica, Arial, sans-serif;
   --font-display: var(--font-primary);
+  --font-product-name: Arial, Helvetica, sans-serif;
 
   --font-weight-regular: 400;
   --font-weight-medium: 500;
@@ -78,7 +79,7 @@
 }
 
 .type-product-title {
-  font-family: var(--font-primary);
+  font-family: var(--font-product-name);
   font-size: clamp(1.375rem, 2.5vw, var(--text-product-size));
   font-weight: var(--font-weight-regular);
   letter-spacing: var(--text-product-tracking);
@@ -129,7 +130,6 @@ h6 {
 
 /* Shared title patterns across storefront */
 .storefront-page__title,
-.pdp-title,
 .pdp-section__title,
 .category-bento__title,
 .editorial-split__title,
@@ -137,7 +137,6 @@ h6 {
 .premium-hero__title,
 .site-footer__heading,
 .cat-page__title,
-.cat-product-card__name,
 .auth-page__title,
 .checkout-page__title,
 .cart-page__title,
@@ -149,6 +148,32 @@ h6 {
 .blog-index__title {
   font-family: var(--font-primary);
   font-weight: var(--font-weight-regular);
+}
+
+/* Product names — Arial everywhere */
+.pdp-title,
+.cat-product-card__name,
+.product-suggest__name,
+.product-suggest__name strong,
+.new-arrivals-card__name,
+.pdp-cross-sell__name,
+.pdp-fbt__name,
+.compare-mobile-card__title,
+.compare-mobile-card__title a,
+.compare-table thead th a,
+.rentals-product-card__name,
+.sw-search-result-card__name,
+.cart-item__name,
+.cart-empty__product-name,
+.wl-empty__product-name,
+.acct__wishlist-name,
+.acct__order-item-name,
+.checkout-confirm__item-name,
+.product-name,
+.scanner-card__name,
+.premium-home .tile .product-name,
+.premium-home .homepage-deals-section .product-name {
+  font-family: var(--font-product-name);
 }
 
 /* Eyebrows & UI labels */

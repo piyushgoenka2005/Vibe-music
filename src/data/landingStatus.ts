@@ -80,12 +80,12 @@ export const LANDING_SERVICE_STATUS = [
   },
   {
     icon: "credit-card" as const,
-    title: "EMI & financing",
-    desc: "Apply for installment options on eligible gear",
+    title: "Secure checkout",
+    desc: "Pay with UPI, cards, and net banking at checkout",
     status: "Available",
     tone: "info" as StatusTone,
-    href: ROUTES.financing,
-    cta: "Explore financing",
+    href: ROUTES.checkout,
+    cta: "Go to checkout",
   },
   {
     icon: "clock" as const,

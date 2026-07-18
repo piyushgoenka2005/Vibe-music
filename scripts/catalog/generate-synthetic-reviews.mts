@@ -16,6 +16,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const catalogDir = path.join(ROOT, "src", "data", "catalog");
 
 const WRITTEN_PER_PRODUCT = 30;
+/** Must stay above storefront floor (MIN_PRODUCT_REVIEW_COUNT = 264). */
 const RATINGS_PER_PRODUCT = 300;
 
 interface CatalogProduct {
@@ -626,11 +627,11 @@ function pick<T>(rng: () => number, list: T[]): T {
 }
 
 function formatDate(rng: () => number): string {
-  const start = new Date("2023-11-01").getTime();
-  const end = new Date("2026-07-01").getTime();
+  // Rolling window: random day within the last 3 years from generation time.
+  const end = Date.now();
+  const start = end - Math.round(3 * 365.25 * 24 * 60 * 60 * 1000);
   const t = start + Math.floor(rng() * (end - start));
-  const d = new Date(t);
-  return d.toISOString().slice(0, 10);
+  return new Date(t).toISOString().slice(0, 10);
 }
 
 function pickRating(rng: () => number, written: boolean): number {

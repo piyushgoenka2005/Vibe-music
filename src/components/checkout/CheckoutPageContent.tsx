@@ -14,6 +14,7 @@ import CheckoutPaymentMethods, {
 } from "@/components/checkout/CheckoutPaymentMethods";
 import type { CodCapabilities } from "@/lib/checkout/codEligibilityClient";
 import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
+import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import AddressAutocompleteField from "@/components/checkout/AddressAutocompleteField";
 import { INDIAN_STATES } from "@/lib/address/indianStates";
@@ -612,6 +613,7 @@ export default function CheckoutPageContent() {
     <div className={`checkout-page checkout-page--${step}`}>
       <header className="checkout-hero">
         <div className="checkout-hero__copy storefront-page__header">
+          <StorefrontBackButton fallbackHref="/cart" />
           <p className="storefront-page__eyebrow">Secure checkout</p>
           <h1 className="storefront-page__title checkout-page__title">Checkout</h1>
           <p className="storefront-page__subtitle">

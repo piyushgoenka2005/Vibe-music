@@ -17,6 +17,7 @@ import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useToastStore } from "@/store/toastStore";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
+import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import type { ProductSpec } from "@/types/product";
 import "@/styles/compare.css";
 
@@ -152,6 +153,7 @@ export default function ComparePage({
   return (
     <main className="storefront-page storefront-page--subtle compare-page">
       <header className="storefront-page__header">
+        <StorefrontBackButton />
         <p className="storefront-page__eyebrow">Compare</p>
         <h1 className="storefront-page__title">
           {sharedTitle ?? "Compare Products"}

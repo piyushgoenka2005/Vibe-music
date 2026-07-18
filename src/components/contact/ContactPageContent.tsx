@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { NavArrowIcon } from "@/gp9/components/ui/nav-arrow-icon";
+import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { BRAND } from "@/lib/brand";
 
 export default function ContactPageContent() {
@@ -55,6 +56,7 @@ export default function ContactPageContent() {
   return (
     <div className="storefront-page__inner contact-page">
       <header className="storefront-page__header">
+        <StorefrontBackButton />
         <p className="storefront-page__eyebrow">Support</p>
         <h1 className="storefront-page__title">Contact Vibe Music</h1>
         <p className="storefront-page__subtitle">

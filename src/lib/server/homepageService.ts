@@ -7,6 +7,7 @@ import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { buildTopBrandStripItems } from "@/data/topBrandStrip";
 import { getCategoryGridImage } from "@/lib/categoryImages";
 import { categoryPath, productPath } from "@/lib/routes";
+import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import {
   listActiveSections,
   listAllSectionItems,
@@ -46,6 +47,11 @@ function toProductItem(
   rank?: number
 ): HomepageProductItem {
   const salePrice = product.detail?.salePrice ?? null;
+  const { rating, reviewCount } = ensureProductReviewMetrics({
+    id: product.id,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+  });
   return {
     id: product.id,
     slug: product.slug,
@@ -55,8 +61,8 @@ function toProductItem(
     salePrice,
     image: product.image || product.images[0] || "",
     imageAlt: product.name,
-    rating: product.rating,
-    reviewCount: product.reviewCount,
+    rating,
+    reviewCount,
     href: productPath(product.slug),
     badgeLabel: overrides?.badgeLabel,
     offerText: overrides?.offerText,

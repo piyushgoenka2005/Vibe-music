@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
 import { STYLE_STORY_REELS } from "@/data/styleStory";
 import { useVisibleVideo } from "@/hooks/useVisibleVideo";
@@ -23,34 +23,91 @@ function InstagramGlyph() {
 
 interface GearStoryCardProps {
   story: GearStory;
-  isPaused: boolean;
+  cardKey: string;
+  playbackLocked: boolean;
   playDelayMs?: number;
+  onUserPauseChange: (cardKey: string, paused: boolean) => void;
   onOpen: (story: GearStory) => void;
 }
 
 export default function GearStoryCard({
   story,
-  isPaused,
+  cardKey,
+  playbackLocked,
   playDelayMs = 0,
+  onUserPauseChange,
   onOpen,
 }: GearStoryCardProps) {
   const containerRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const userPausedRef = useRef(false);
+  const [userPaused, setUserPaused] = useState(false);
   const reelUrl =
     STYLE_STORY_REELS.find((reel) => reel.videoSrc === story.videoUrl)?.reelUrl ??
     SOCIAL_LINKS.instagram;
 
   useVisibleVideo(videoRef, containerRef, {
-    forcePaused: isPaused,
+    forcePaused: playbackLocked || userPaused,
+    manualPausedRef: userPausedRef,
     playDelayMs,
     visibilityRatio: 0.35,
   });
 
+  const togglePause = useCallback(() => {
+    if (playbackLocked) return;
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    const nextPaused = !userPausedRef.current;
+    userPausedRef.current = nextPaused;
+
+    if (nextPaused) {
+      video.pause();
+    } else {
+      void video.play().catch(() => {});
+    }
+
+    setUserPaused(nextPaused);
+    onUserPauseChange(cardKey, nextPaused);
+  }, [cardKey, onUserPauseChange, playbackLocked]);
+
+  const handleCardClick = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      if ((event.target as HTMLElement).closest("a, button")) return;
+      togglePause();
+    },
+    [togglePause]
+  );
+
+  const handleCardKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLElement>) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      if ((event.target as HTMLElement).closest("a, button")) return;
+      event.preventDefault();
+      togglePause();
+    },
+    [togglePause]
+  );
+
   return (
     <article
       ref={containerRef}
-      className="gear-story-card"
+      className={[
+        "gear-story-card",
+        userPaused ? "gear-story-card--paused" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       data-story-id={story.id}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      tabIndex={0}
+      aria-label={
+        userPaused
+          ? `Paused reel for ${story.name}. Press to resume.`
+          : `Playing reel for ${story.name}. Press to pause.`
+      }
     >
       <div className="gear-story-card__media">
         <video

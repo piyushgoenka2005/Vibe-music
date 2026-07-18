@@ -9,6 +9,11 @@ export const loadCategoryProducts = cache(async function loadCategoryProducts(
   categorySlug: string,
   filters: CategoryFilters = DEFAULT_FILTERS
 ): Promise<CategoryProductsResult> {
-  const categoryProducts = await searchProducts({ category: categorySlug });
+  // Include Coming Soon (₹0) SKUs so categories aren't empty when prices
+  // aren't set yet — ProductCard already shows Notify Me for those.
+  const categoryProducts = await searchProducts({
+    category: categorySlug,
+    purchasableOnly: false,
+  });
   return buildCategoryProductsResult(categoryProducts, filters);
 });

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ProductCard from "@/components/common/ProductCard";
 import ProgramLandingPage from "@/components/programs/ProgramLandingPage";
+import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { searchProducts } from "@/lib/server/productRepository";
 import { ROUTES, categoryPath } from "@/lib/routes";
 import "@/styles/storefront-pages.css";
@@ -64,6 +65,7 @@ export default async function UsedGearPage() {
     <main className="storefront-page storefront-page--subtle used-gear-page">
       <div className="storefront-page__inner used-gear-page__inner">
         <header className="storefront-page__header">
+          <StorefrontBackButton />
           <p className="storefront-page__eyebrow">Programs</p>
           <h1 className="storefront-page__title">Used &amp; open-box gear</h1>
           <p className="storefront-page__subtitle">
@@ -82,7 +84,7 @@ export default async function UsedGearPage() {
         </header>
 
         <div
-          className="cat-product-grid cat-product-grid--grid used-gear-page__grid"
+          className="used-gear-page__grid"
           role="list"
         >
           {products.map((product) => (

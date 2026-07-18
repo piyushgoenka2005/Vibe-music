@@ -2,7 +2,7 @@ export default function BlogTeaserSkeleton() {
   return (
     <section
       aria-busy="true"
-      aria-label="Loading articles"
+      aria-label="Loading trending products"
       className="blog-teaser blog-teaser--loading"
     >
       <div className="blog-teaser__inner">

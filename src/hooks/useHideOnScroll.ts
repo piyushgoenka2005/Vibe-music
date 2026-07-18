@@ -87,37 +87,54 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
     if (!header) return;
 
     const syncOffset = () => {
-      const nav = header.querySelector<HTMLElement>(".site-header__nav");
-      const navIsInFlow =
-        nav !== null && getComputedStyle(nav).position !== "fixed";
+      // Measure every visible chrome band that paints over the page.
+      // Do not rely solely on header.getBoundingClientRect() — collapsed
+      // or absolutely-positioned children can under-report height.
+      const bands = [
+        ".announcement-bar",
+        ".site-header__bar",
+        ".site-header__nav--desktop",
+      ] as const;
 
-      const headerRect = header.getBoundingClientRect();
-      let chromeBottom = headerRect.bottom;
+      let chromeBottom = 0;
+      for (const selector of bands) {
+        const el = header.querySelector<HTMLElement>(selector);
+        if (!el) continue;
 
-      if (!navIsInFlow) {
-        chromeBottom = headerRect.top;
-        for (const selector of [".announcement-bar", ".site-header__bar"]) {
-          const el = header.querySelector<HTMLElement>(selector);
-          if (!el) continue;
+        const style = getComputedStyle(el);
+        if (style.display === "none" || style.visibility === "hidden") continue;
 
-          const style = getComputedStyle(el);
-          if (style.display === "none") continue;
-
-          chromeBottom = Math.max(chromeBottom, el.getBoundingClientRect().bottom);
-        }
+        const rect = el.getBoundingClientRect();
+        if (rect.height < 1) continue;
+        chromeBottom = Math.max(chromeBottom, rect.bottom);
       }
 
-      let offset = Math.round(chromeBottom);
+      const headerRect = header.getBoundingClientRect();
+      if (chromeBottom < 1) {
+        chromeBottom = headerRect.bottom;
+      } else {
+        // Prefer the larger of band bottoms vs header box when nav is in-flow.
+        const nav = header.querySelector<HTMLElement>(".site-header__nav--desktop");
+        const navInFlow =
+          nav !== null &&
+          getComputedStyle(nav).display !== "none" &&
+          getComputedStyle(nav).position !== "fixed";
+        if (navInFlow) {
+          chromeBottom = Math.max(chromeBottom, headerRect.bottom);
+        }
+      }
 
       const hero = document.querySelector<HTMLElement>(".homepage-banner-hero");
       if (hero && document.body.classList.contains("is-landing-page")) {
         const gap = hero.getBoundingClientRect().top - headerRect.bottom;
         if (gap > 0.5) {
-          offset = Math.round(headerRect.bottom);
+          chromeBottom = Math.max(chromeBottom, headerRect.bottom);
         }
       }
 
-      const clamped = Math.max(56, Math.min(220, offset));
+      // +8px keeps titles/breadcrumbs from kissing the nav underline.
+      const offset = Math.round(chromeBottom) + 8;
+      const clamped = Math.max(88, Math.min(280, offset));
 
       document.documentElement.style.setProperty(
         "--site-header-offset",
@@ -127,7 +144,7 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
 
     syncOffset();
 
-    // Re-sync after hero mounts and layout settles
+    // Re-sync after fonts/layout settle and after route transitions.
     requestAnimationFrame(() => {
       syncOffset();
       requestAnimationFrame(syncOffset);
@@ -137,6 +154,9 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
 
     const observer = new ResizeObserver(syncOffset);
     observer.observe(header);
+    const nav = header.querySelector(".site-header__nav--desktop");
+    if (nav) observer.observe(nav);
+
     window.addEventListener("resize", syncOffset);
     window.addEventListener("site-header:sync", syncOffset);
 

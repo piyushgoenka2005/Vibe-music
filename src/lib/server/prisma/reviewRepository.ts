@@ -1,6 +1,7 @@
 import "server-only";
 
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
+import { withSyntheticReviewDates } from "@/lib/reviews/syntheticReviewDate";
 import type {
   AdminReviewListParams,
   PublicReview,
@@ -110,6 +111,8 @@ export async function listProductReviews(
   if (params.hasImages === true) where.hasImages = true;
 
   let reviews = (await prisma.review.findMany({ where })).map(prismaToReview);
+  // Synthetic catalog reviews get rolling dates across the last 3 years.
+  reviews = withSyntheticReviewDates(reviews);
   reviews = sortReviews(reviews, params.sort ?? "newest");
   const page = paginate(reviews, limit, params.cursor);
 
