@@ -37,6 +37,6 @@ export function ensureProductReviewMetrics(input: {
   return { rating, reviewCount };
 }
 
-export function formatRatingPillLabel(rating: number, reviewCount: number): string {
-  return `${rating.toFixed(1)} (${reviewCount.toLocaleString("en-IN")})`;
+export function formatRatingPillLabel(rating: number, _reviewCount?: number): string {
+  return rating.toFixed(1);
 }

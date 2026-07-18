@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import {
@@ -37,6 +38,27 @@ const EMPTY_IMAGE_RECT: ImageRect = {
   height: 0,
 };
 
+function readCssScale(element: HTMLElement): number {
+  const transform = getComputedStyle(element).transform;
+  if (!transform || transform === "none") return 1;
+
+  const matrix2d = transform.match(/^matrix\((.+)\)$/);
+  if (matrix2d?.[1]) {
+    const parts = matrix2d[1].split(",").map((value) => Number.parseFloat(value.trim()));
+    const scale = Math.hypot(parts[0] ?? 0, parts[1] ?? 0);
+    return Number.isFinite(scale) && scale > 0 ? scale : 1;
+  }
+
+  const matrix3d = transform.match(/^matrix3d\((.+)\)$/);
+  if (matrix3d?.[1]) {
+    const parts = matrix3d[1].split(",").map((value) => Number.parseFloat(value.trim()));
+    const scale = Math.hypot(parts[0] ?? 0, parts[1] ?? 0);
+    return Number.isFinite(scale) && scale > 0 ? scale : 1;
+  }
+
+  return 1;
+}
+
 function measureRenderedImageRect(
   main: HTMLElement,
   photo: HTMLImageElement
@@ -52,9 +74,22 @@ function measureRenderedImageRect(
   const padTop = parseFloat(style.paddingTop) || 0;
   const padRight = parseFloat(style.paddingRight) || 0;
   const padBottom = parseFloat(style.paddingBottom) || 0;
+  const scale = readCssScale(photo);
 
-  const contentWidth = photo.clientWidth - padLeft - padRight;
-  const contentHeight = photo.clientHeight - padTop - padBottom;
+  // Layout box (pre-transform). Visual center stays put with transform-origin: center.
+  const layoutWidth = photo.offsetWidth;
+  const layoutHeight = photo.offsetHeight;
+  const visualCenterX = (photoRect.left + photoRect.right) / 2 - mainRect.left;
+  const visualCenterY = (photoRect.top + photoRect.bottom) / 2 - mainRect.top;
+  const layoutLeft = visualCenterX - layoutWidth / 2;
+  const layoutTop = visualCenterY - layoutHeight / 2;
+
+  const contentWidth = Math.max(photo.clientWidth - padLeft - padRight, 0);
+  const contentHeight = Math.max(photo.clientHeight - padTop - padBottom, 0);
+  if (contentWidth <= 0 || contentHeight <= 0) {
+    return EMPTY_IMAGE_RECT;
+  }
+
   const imageAspect = photo.naturalWidth / photo.naturalHeight;
   const contentAspect = contentWidth / contentHeight;
 
@@ -67,14 +102,22 @@ function measureRenderedImageRect(
     width = contentHeight * imageAspect;
   }
 
-  const contentLeft = photoRect.left - mainRect.left + padLeft;
-  const contentTop = photoRect.top - mainRect.top + padTop;
+  const unscaledLeft = layoutLeft + padLeft + (contentWidth - width) / 2;
+  const unscaledTop = layoutTop + padTop + (contentHeight - height) / 2;
+  const originX = layoutLeft + layoutWidth / 2;
+  const originY = layoutTop + layoutHeight / 2;
+  const unscaledCenterX = unscaledLeft + width / 2;
+  const unscaledCenterY = unscaledTop + height / 2;
+  const scaledWidth = width * scale;
+  const scaledHeight = height * scale;
+  const scaledCenterX = originX + (unscaledCenterX - originX) * scale;
+  const scaledCenterY = originY + (unscaledCenterY - originY) * scale;
 
   return {
-    left: contentLeft + (contentWidth - width) / 2,
-    top: contentTop + (contentHeight - height) / 2,
-    width,
-    height,
+    left: scaledCenterX - scaledWidth / 2,
+    top: scaledCenterY - scaledHeight / 2,
+    width: scaledWidth,
+    height: scaledHeight,
   };
 }
 
@@ -267,13 +310,35 @@ export default function ProductGallery({
       return { width: 280, height: 210 };
     }
 
-    const paneAspect = effectivePaneSize.width / effectivePaneSize.height;
-    const width = Math.round(baseWidth * LENS_WIDTH_RATIO);
-    const height = Math.round(width / paneAspect);
+    const paneAspect =
+      effectivePaneSize.height > 0
+        ? effectivePaneSize.width / effectivePaneSize.height
+        : 4 / 3;
+    let width = Math.round(baseWidth * LENS_WIDTH_RATIO);
+    let height = Math.round(width / paneAspect);
+
+    // Keep magnification near native resolution so the zoom pane stays sharp.
+    if (
+      imageMetrics.naturalWidth > 0 &&
+      baseWidth > 0 &&
+      effectivePaneSize.width > 0
+    ) {
+      const maxScale = Math.max(
+        1.15,
+        (imageMetrics.naturalWidth * 1.2) / baseWidth
+      );
+      const minLensWidth = Math.ceil(effectivePaneSize.width / maxScale);
+      if (width < minLensWidth && minLensWidth < baseWidth) {
+        width = minLensWidth;
+        height = Math.round(width / paneAspect);
+      }
+    }
+
     return { width, height };
   }, [
     effectivePaneSize.height,
     effectivePaneSize.width,
+    imageMetrics.naturalWidth,
     imageRect.width,
     mainSize.width,
   ]);
@@ -388,19 +453,53 @@ export default function ProductGallery({
     });
   }, [activeIndex, showVideo, show360]);
 
+  useEffect(() => {
+    if (!lightboxOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setLightboxOpen(false);
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [lightboxOpen]);
+
   const updateLens = useCallback(
     (clientX: number, clientY: number) => {
       const node = mainRef.current;
+      const photo = photoRef.current;
       if (!node || !canZoom) return;
 
+      // Remeasure each move so CSS photo scale stays synced with the lens.
+      const nextRect =
+        photo && photo.naturalWidth > 0
+          ? measureRenderedImageRect(node, photo)
+          : imageRect;
+      if (
+        nextRect.width > 0 &&
+        (nextRect.width !== imageRect.width ||
+          nextRect.height !== imageRect.height ||
+          nextRect.left !== imageRect.left ||
+          nextRect.top !== imageRect.top)
+      ) {
+        setImageRect(nextRect);
+      }
+
+      const activeRect = nextRect.width > 0 ? nextRect : imageRect;
       const rect = node.getBoundingClientRect();
       const x = clientX - rect.left;
       const y = clientY - rect.top;
       const { width: lensWidth, height: lensHeight } = lensDimensions;
-      const minX = imageRect.left;
-      const minY = imageRect.top;
-      const maxX = Math.max(minX, imageRect.left + imageRect.width - lensWidth);
-      const maxY = Math.max(minY, imageRect.top + imageRect.height - lensHeight);
+      const minX = activeRect.left;
+      const minY = activeRect.top;
+      const maxX = Math.max(minX, activeRect.left + activeRect.width - lensWidth);
+      const maxY = Math.max(minY, activeRect.top + activeRect.height - lensHeight);
 
       setLensPos({
         x: Math.min(Math.max(x - lensWidth / 2, minX), maxX),
@@ -431,6 +530,7 @@ export default function ProductGallery({
   );
 
   const openLightbox = useCallback(() => {
+    setZoomActive(false);
     setLightboxOpen(true);
   }, []);
 
@@ -671,20 +771,6 @@ export default function ProductGallery({
             )}
           </div>
 
-          {canZoom ? (
-            <button
-              type="button"
-              className="pdp-gallery__full-view"
-              onClick={(e) => {
-                e.stopPropagation();
-                openLightbox();
-              }}
-              aria-label="Open full view"
-            >
-              Click to see full view
-            </button>
-          ) : null}
-
           {zoomActive && canZoom ? (
             <div
               className="pdp-gallery__zoom-lens"
@@ -697,6 +783,20 @@ export default function ProductGallery({
             />
           ) : null}
         </div>
+
+        {zoomEligible ? (
+          <button
+            type="button"
+            className="pdp-gallery__full-view"
+            onClick={(e) => {
+              e.stopPropagation();
+              openLightbox();
+            }}
+            aria-label="Open full view"
+          >
+            Click to see full view
+          </button>
+        ) : null}
 
         {zoomActive && canZoom && mainSize.width > 0 ? (
           <div
@@ -766,112 +866,117 @@ export default function ProductGallery({
         </button>
       ) : null}
 
-      {lightboxOpen ? (
-        <div
-          className="pdp-lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Image lightbox"
-          onClick={() => setLightboxOpen(false)}
-          onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
-          onTouchEnd={(e) => {
-            if (touchStartX == null || images.length <= 1) {
-              setTouchStartX(null);
-              return;
-            }
-            const endX = e.changedTouches[0]?.clientX ?? touchStartX;
-            const diff = endX - touchStartX;
-            if (Math.abs(diff) > 48) {
-              setActiveIndex((current) => {
-                if (diff < 0) return Math.min(images.length - 1, current + 1);
-                return Math.max(0, current - 1);
-              });
-              setShowVideo(false);
-            }
-            setTouchStartX(null);
-          }}
-        >
-          <button
-            type="button"
-            className="pdp-lightbox__close"
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxOpen(false);
-            }}
-            aria-label="Close lightbox"
-          >
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              aria-hidden="true"
+      {lightboxOpen && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className="pdp-lightbox"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Image lightbox"
+              onClick={() => setLightboxOpen(false)}
+              onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
+              onTouchEnd={(e) => {
+                if (touchStartX == null || images.length <= 1) {
+                  setTouchStartX(null);
+                  return;
+                }
+                const endX = e.changedTouches[0]?.clientX ?? touchStartX;
+                const diff = endX - touchStartX;
+                if (Math.abs(diff) > 48) {
+                  setActiveIndex((current) => {
+                    if (diff < 0) return Math.min(images.length - 1, current + 1);
+                    return Math.max(0, current - 1);
+                  });
+                  setShowVideo(false);
+                }
+                setTouchStartX(null);
+              }}
             >
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
-          {images.length > 1 ? (
-            <>
               <button
                 type="button"
-                className="pdp-lightbox__nav pdp-lightbox__nav--prev"
+                className="pdp-lightbox__close"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setActiveIndex((current) => Math.max(0, current - 1));
-                  setShowVideo(false);
+                  setLightboxOpen(false);
                 }}
-                aria-label="Previous image"
+                aria-label="Close lightbox"
               >
-                ‹
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
               </button>
-              <button
-                type="button"
-                className="pdp-lightbox__nav pdp-lightbox__nav--next"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveIndex((current) => Math.min(images.length - 1, current + 1));
-                  setShowVideo(false);
-                }}
-                aria-label="Next image"
-              >
-                ›
-              </button>
-            </>
-          ) : null}
-          <div
-            className="pdp-lightbox__swatch"
-            onClick={(e) => e.stopPropagation()}
-            role="img"
-            aria-label={activeImage.alt}
-          >
-            {activeZoomSrc || activeDisplaySrc ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={activeZoomSrc || activeDisplaySrc}
-                alt={activeImage.alt}
-                className="pdp-lightbox__photo"
-                onError={(event) => {
-                  const target = event.currentTarget;
-                  if (activeSrc && target.src !== activeSrc) {
-                    target.src = activeSrc;
-                  }
-                }}
-              />
-            ) : (
+              {images.length > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    className="pdp-lightbox__nav pdp-lightbox__nav--prev"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveIndex((current) => Math.max(0, current - 1));
+                      setShowVideo(false);
+                    }}
+                    aria-label="Previous image"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    className="pdp-lightbox__nav pdp-lightbox__nav--next"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveIndex((current) =>
+                        Math.min(images.length - 1, current + 1)
+                      );
+                      setShowVideo(false);
+                    }}
+                    aria-label="Next image"
+                  >
+                    ›
+                  </button>
+                </>
+              ) : null}
               <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  backgroundColor: activeImage.color,
-                }}
-              />
-            )}
-          </div>
-        </div>
-      ) : null}
+                className="pdp-lightbox__swatch"
+                onClick={(e) => e.stopPropagation()}
+                role="img"
+                aria-label={activeImage.alt}
+              >
+                {activeZoomSrc || activeDisplaySrc ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={activeZoomSrc || activeDisplaySrc}
+                    alt={activeImage.alt}
+                    className="pdp-lightbox__photo"
+                    onError={(event) => {
+                      const target = event.currentTarget;
+                      if (activeSrc && target.src !== activeSrc) {
+                        target.src = activeSrc;
+                      }
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: activeImage.color,
+                    }}
+                  />
+                )}
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

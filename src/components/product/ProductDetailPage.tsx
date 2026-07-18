@@ -23,7 +23,6 @@ import ProductInfo from "./ProductInfo";
 import ProductBuyBox from "./ProductBuyBox";
 import ProductRelatedRail from "./ProductRelatedRail";
 import ProductDetailSkeleton from "./ProductDetailSkeleton";
-import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import type { TabId } from "./ProductTabs";
 import "./product-detail.css";
@@ -102,6 +101,9 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   );
   const [quantity, setQuantity] = useState(1);
   const [tabOverride, setTabOverride] = useState<TabId | undefined>();
+  const [dismissedRelatedIds, setDismissedRelatedIds] = useState<Set<string>>(
+    () => new Set()
+  );
 
   const selectedVariant = variantOverride ?? defaultVariant;
   const attributeSelection = useMemo(
@@ -116,6 +118,10 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
       trackRecentlyViewed(catalogProduct);
     }
   }, [catalogProduct, trackRecentlyViewed]);
+
+  useEffect(() => {
+    setDismissedRelatedIds(new Set());
+  }, [slug]);
 
   const galleryImages = useMemo(() => {
     if (!catalogProduct || !selectedVariant) return [];
@@ -175,11 +181,23 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   }
 
   const { product, similarProducts, relatedProducts } = data;
-  const railProducts = [...relatedProducts, ...similarProducts].filter(
-    (item, index, items) =>
-      item.id !== product.id &&
-      items.findIndex((candidate) => candidate.id === item.id) === index
-  );
+  const railProducts = [...relatedProducts, ...similarProducts]
+    .filter(
+      (item, index, items) =>
+        item.id !== product.id &&
+        items.findIndex((candidate) => candidate.id === item.id) === index &&
+        !dismissedRelatedIds.has(item.id)
+    )
+    .slice(0, 4);
+  const showRelatedRail = railProducts.length > 0;
+
+  function dismissRelatedProduct(productId: string) {
+    setDismissedRelatedIds((prev) => {
+      const next = new Set(prev);
+      next.add(productId);
+      return next;
+    });
+  }
 
   function scrollToReviews() {
     setTabOverride("reviews");
@@ -201,22 +219,17 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   return (
     <>
       <div className="pdp">
-        <div className="storefront-nav-chrome">
-          <StorefrontBackButton
-            fallbackHref={`/category/${product.categorySlug}`}
-          />
-          <nav className="pdp-breadcrumb" aria-label="Breadcrumb">
-            <Link href="/">Home</Link>
-            <span aria-hidden="true">/</span>
-            <Link href={`/category/${product.categorySlug}`}>
-              {product.category}
-            </Link>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">{product.name}</span>
-          </nav>
-        </div>
+        <nav className="pdp-breadcrumb" aria-label="Breadcrumb">
+          <Link href="/">Home</Link>
+          <span aria-hidden="true">/</span>
+          <Link href={`/category/${product.categorySlug}`}>
+            {product.category}
+          </Link>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{product.name}</span>
+        </nav>
 
-      <div className="pdp-main">
+      <div className={`pdp-main${showRelatedRail ? " pdp-main--with-rail" : ""}`}>
         <ProductGallery
           images={galleryImages}
           videos={product.videos}
@@ -248,7 +261,12 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
             atcSentinelRef={atcSentinelRef}
           />
         </div>
-        <ProductRelatedRail products={railProducts} />
+        {showRelatedRail ? (
+          <ProductRelatedRail
+            products={railProducts}
+            onDismiss={dismissRelatedProduct}
+          />
+        ) : null}
       </div>
 
       <div ref={tabsRef}>

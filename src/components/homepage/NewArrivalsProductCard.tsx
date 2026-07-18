@@ -152,24 +152,13 @@ export default function NewArrivalsProductCard({
         >
           <div className="new-arrivals-card__media">
             <div
-              className="blog-teaser__tags new-arrivals-card__stock-tags"
+              className="new-arrivals-card__stock-row"
               aria-label={
                 rank ? `Rank ${rank}, limited stock` : "Limited stock"
               }
             >
-              {rank ? (
-                <span
-                  aria-hidden
-                  className="blog-teaser__tag blog-teaser__tag--primary blog-teaser__tag--primary-black"
-                >
-                  {rank}
-                </span>
-              ) : null}
-              {rank ? (
-                <span aria-hidden className="blog-teaser__tag-sep" />
-              ) : null}
-              <span className="blog-teaser__tag blog-teaser__tag--secondary">
-                Limited stock
+              <span aria-hidden className="new-arrivals-card__ribbon">
+                {rank ? `${rank} Limited stock` : "Limited stock"}
               </span>
             </div>
             {badgeLabel ? (
@@ -194,7 +183,7 @@ export default function NewArrivalsProductCard({
             {showRating ? (
               <span
                 className="rating-pill"
-                aria-label={`Rated ${displayRating.toFixed(1)} out of 5 from ${displayReviewCount} ratings`}
+                aria-label={`Rated ${displayRating.toFixed(1)} out of 5`}
               >
                 <span className="rating-pill__star" aria-hidden="true">
                   ★

@@ -135,7 +135,7 @@
 
   .cat-product-grid--grid .cat-product-card__body {
     --card-pad-x: 12px;
-    padding: 12px var(--card-pad-x) 0;
+    padding: 12px var(--card-pad-x) 12px;
   }
 
   .cat-product-grid--grid .cat-product-card__name {
@@ -247,7 +247,7 @@
 
   .cat-product-card__body {
     --card-pad-x: 0.7rem;
-    padding: 0.65rem var(--card-pad-x) 0;
+    padding: 0.65rem var(--card-pad-x) 0.75rem;
     gap: 0.3rem;
   }
 
@@ -386,7 +386,7 @@
 
   .cat-product-card__body {
     --card-pad-x: 0.65rem;
-    padding: 0.65rem var(--card-pad-x) 0;
+    padding: 0.65rem var(--card-pad-x) 0.7rem;
   }
 
   .cat-product-card__add {
@@ -496,7 +496,7 @@
 
 .cat-product-card__body {
   --card-pad-x: 14px;
-  padding: 14px var(--card-pad-x) 0;
+  padding: 14px var(--card-pad-x) 14px;
   display: flex;
   flex-direction: column;
   flex: 1;

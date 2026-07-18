@@ -6585,9 +6585,9 @@
     "trending": true,
     "newArrival": true,
     "images": [
-      "/images/m/home/cats/Matriarch.png",
-      "/images/m/home/cats/Matriarch.png",
-      "/images/m/home/cats/Matriarch.png"
+      "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/55821996-5863-4175-8d9c-5d19966fd4c3.png",
+      "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/c28a752e-47fd-4b38-b8c2-f350a6e538ac.png",
+      "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/362ee69d-6ac7-4f54-99ff-f2527d10fed8.png"
     ],
     "description": "The Nord Stage 4 88 is a flagship performance keyboard built for gigging musicians and studio players. It combines a fully weighted hammer-action keyboard with Nord’s award-winning piano, organ, and synth engines, seamless layering, and hands-on control for stage-ready sound design. Ideal for live performance, rehearsal rooms, and professional recording setups.",
     "specifications": {
@@ -6606,7 +6606,7 @@
     "availability": "in-stock",
     "condition": "new",
     "imageColor": "#e8e8e8",
-    "image": "/images/m/home/cats/Matriarch.png",
+    "image": "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/55821996-5863-4175-8d9c-5d19966fd4c3.png",
     "gstRate": 18,
     "detail": {
       "msrp": 499999,
@@ -6652,19 +6652,19 @@
           "id": "img-0",
           "alt": "Nord Stage 4 88-Key Performance Keyboard view 1",
           "color": "#e8e8e8",
-          "src": "/images/m/home/cats/Matriarch.png"
+          "src": "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/55821996-5863-4175-8d9c-5d19966fd4c3.png"
         },
         {
           "id": "img-1",
           "alt": "Nord Stage 4 88-Key Performance Keyboard view 2",
           "color": "#e8e8e8",
-          "src": "/images/m/home/cats/Matriarch.png"
+          "src": "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/c28a752e-47fd-4b38-b8c2-f350a6e538ac.png"
         },
         {
           "id": "img-2",
           "alt": "Nord Stage 4 88-Key Performance Keyboard view 3",
           "color": "#e8e8e8",
-          "src": "/images/m/home/cats/Matriarch.png"
+          "src": "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/362ee69d-6ac7-4f54-99ff-f2527d10fed8.png"
         }
       ],
       "videos": [],

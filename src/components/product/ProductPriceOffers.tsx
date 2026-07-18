@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import {
   buildPdpOfferRows,
   resolvePdpPricing,
@@ -17,15 +17,10 @@ interface ProductPriceOffersProps {
   selectedVariant: ProductVariant;
 }
 
-const OFFER_CARD_SCROLL = 168;
-
 export default function ProductPriceOffers({
   product,
   selectedVariant,
 }: ProductPriceOffersProps) {
-  const [canScrollNext, setCanScrollNext] = useState(false);
-  const trackRef = useRef<HTMLDivElement>(null);
-
   const displayPrice = selectedVariant.price;
   const pricing = useMemo(
     () =>
@@ -41,26 +36,6 @@ export default function ProductPriceOffers({
     () => buildPdpOfferRows(displayPrice),
     [displayPrice]
   );
-
-  const updateScrollState = useCallback(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    setCanScrollNext(track.scrollLeft + track.clientWidth < track.scrollWidth - 4);
-  }, []);
-
-  useEffect(() => {
-    updateScrollState();
-    const track = trackRef.current;
-    if (!track) return;
-
-    const observer = new ResizeObserver(updateScrollState);
-    observer.observe(track);
-    return () => observer.disconnect();
-  }, [offers.length, updateScrollState]);
-
-  const scrollNext = () => {
-    trackRef.current?.scrollBy({ left: OFFER_CARD_SCROLL, behavior: "smooth" });
-  };
 
   if (!isPurchasablePrice(displayPrice)) {
     return (
@@ -78,7 +53,7 @@ export default function ProductPriceOffers({
         </span>
         {pricing.hasDiscount ? (
           <span className="pdp-info-pricing__pct-badge">
-            − {pricing.savingsPercent}%
+            - {pricing.savingsPercent}%
           </span>
         ) : null}
       </div>
@@ -103,9 +78,7 @@ export default function ProductPriceOffers({
 
           <div className="pdp-offers__carousel-wrap">
             <div
-              ref={trackRef}
               className="pdp-offers__track"
-              onScroll={updateScrollState}
               role="list"
               aria-label="Available offers"
             >
@@ -125,17 +98,6 @@ export default function ProductPriceOffers({
                 </article>
               ))}
             </div>
-
-            {canScrollNext ? (
-              <button
-                type="button"
-                className="pdp-offers__nav"
-                onClick={scrollNext}
-                aria-label="Scroll offers right"
-              >
-                <ChevronRight size={18} aria-hidden />
-              </button>
-            ) : null}
           </div>
         </div>
       ) : null}

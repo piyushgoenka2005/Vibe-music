@@ -201,8 +201,8 @@
 
 @media (max-width: 767px) {
   .storefront-page__inner {
-    padding: 1.25rem max(1rem, env(safe-area-inset-left, 0px)) 3rem
-      max(1rem, env(safe-area-inset-right, 0px));
+    padding: 1.25rem max(0.75rem, env(safe-area-inset-left, 0px)) 3rem
+      max(0.75rem, env(safe-area-inset-right, 0px));
   }
 
   .storefront-page__header {
@@ -214,9 +214,21 @@
   }
 
   .storefront-page .pdp {
-    padding: 1rem max(1rem, env(safe-area-inset-left, 0px))
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    box-sizing: border-box;
+    padding: 0.75rem max(0.75rem, env(safe-area-inset-left, 0px))
       calc(7.5rem + env(safe-area-inset-bottom, 0px))
-      max(1rem, env(safe-area-inset-right, 0px));
+      max(0.75rem, env(safe-area-inset-right, 0px));
+  }
+
+  .storefront-page .pdp-main,
+  .storefront-page .pdp-details,
+  .storefront-page .pdp-buy-cluster {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .storefront-page .cat-page {
@@ -303,18 +315,20 @@
 
 @media (max-width: 479px) {
   .storefront-page__inner {
-    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
-    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+    padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
   }
 
   .storefront-page .pdp {
-    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
-    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+    padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
     padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .storefront-page .pdp-info {
     padding: 0;
+    border: none;
+    border-radius: 0;
   }
 
   .storefront-page .pdp-price {
@@ -352,6 +366,10 @@
     width: 100%;
     padding-left: clamp(1.25rem, 2.5vw, 2.5rem);
     padding-right: 0;
+  }
+
+  .storefront-page .pdp:has(.pdp-main:not(.pdp-main--with-rail)) {
+    padding-right: clamp(1.25rem, 2.5vw, 2.5rem);
   }
 }
 
@@ -402,7 +420,7 @@
 }
 
 .storefront-page .pdp-info {
-  padding: clamp(1.5rem, 2.8vw, 2.35rem);
+  padding: clamp(1rem, 1.8vw, 1.5rem) clamp(1rem, 1.8vw, 1.5rem);
   border-radius: var(--radius-lg);
   border: 1px solid rgba(226, 232, 240, 0.7);
   background: transparent;
@@ -423,7 +441,11 @@
 
 @media (max-width: 767px) {
   .storefront-page .pdp-info {
-    padding: 1.25rem;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
 }
 

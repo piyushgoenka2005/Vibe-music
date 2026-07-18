@@ -137,7 +137,7 @@ export default function CarouselProductCard({
             {showRating ? (
               <span
                 className="rating-pill"
-                aria-label={`Rated ${displayRating.toFixed(1)} out of 5 from ${displayReviewCount} ratings`}
+                aria-label={`Rated ${displayRating.toFixed(1)} out of 5`}
               >
                 <span className="rating-pill__star" aria-hidden="true">
                   ★

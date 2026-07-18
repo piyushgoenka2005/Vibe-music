@@ -13,7 +13,8 @@ const IMAGES = {
   microphone: "/images/m/home/cats/SM58-cat.png",
   audioInterface: "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
   software: "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
-  keyboard: "/images/m/home/cats/Matriarch.png",
+  keyboard:
+    "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/55821996-5863-4175-8d9c-5d19966fd4c3.png",
   speaker: "/images/m/products/image/6c9d9ecdf8KxbYZ66Y2FbzDnGWRM90iaN4Xlc84X.jpg",
   pa: "/images/m/home/cats/k12_2.png",
   dj: "/images/m/home/cats/ATLP120XUSBSV.png",

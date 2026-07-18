@@ -241,7 +241,7 @@
   flex-direction: column;
   height: 100%;
   min-height: 100%;
-  padding: 0 0 0.75rem;
+  padding: 0 0 0.85rem;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #ffffff;
@@ -448,9 +448,10 @@
 
 .premium-home .premium-product-carousel .product-suggest__item-action-row {
   display: flex;
+  flex-shrink: 0;
   width: 100%;
   padding-inline: 0.75rem;
-  margin-top: 0.45rem;
+  margin-top: auto;
   margin-bottom: 0;
 }
 
@@ -535,8 +536,9 @@
 .premium-home .premium-product-carousel .product-suggest__item-was {
   flex: 0 1 auto;
   min-width: 0;
-  font-size: 1rem;
+  font-size: 0.7rem;
   font-weight: 500;
+  line-height: 1.1;
   color: #94a3b8;
   text-decoration: line-through;
   white-space: nowrap;
@@ -765,7 +767,7 @@
   }
 
   .premium-home .premium-product-carousel .product-suggest__item {
-    padding: 0 0 0.625rem;
+    padding: 0 0 0.75rem;
     border-radius: 14px;
     min-width: 0;
   }
@@ -853,7 +855,7 @@
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-was {
-    font-size: 1rem;
+    font-size: 0.6875rem;
     font-weight: 500;
   }
 
@@ -900,7 +902,7 @@
 
 @media (max-width: 479px) {
   .premium-home .premium-product-carousel .product-suggest__item-was {
-    font-size: 0.9rem;
+    font-size: 0.625rem;
   }
 
   .premium-home .premium-product-carousel .product-suggest__item-price {
