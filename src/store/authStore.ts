@@ -142,7 +142,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   signInWithGoogle: async (callbackUrl = "/account") => {
     set({ isLoading: true, error: null });
     try {
-      await nextAuthSignIn("google", { callbackUrl });
+      const { sanitizeAuthRedirect } = await import("@/lib/auth/safeRedirect");
+      await nextAuthSignIn("google", {
+        callbackUrl: sanitizeAuthRedirect(callbackUrl, "/account"),
+      });
     } catch (error) {
       set({
         error: getAuthErrorMessage(error, "Google sign in failed."),

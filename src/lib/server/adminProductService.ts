@@ -14,6 +14,7 @@ import {
 } from "@/services/catalogService";
 import { deleteProductBundle } from "@/lib/server/bundleService";
 import { deleteProductRelatedList } from "@/lib/server/relatedProductsService";
+import { notifyWaitlistOnRestock } from "@/lib/server/restockNotificationService";
 import { getProductImage } from "@/data/productImages";
 import type { AdminProduct } from "@/types/admin";
 import type { CatalogProduct, CreateProductInput } from "@/types/catalog";
@@ -168,6 +169,9 @@ export async function updateAdminProduct(
     spin360Images?: string[];
   }
 ): Promise<AdminProduct> {
+  const existing =
+    patch.stockQuantity !== undefined ? await getProductById(id) : null;
+
   const updated = await updateProduct(id, {
     name: patch.name,
     brand: patch.brand,
@@ -197,6 +201,19 @@ export async function updateAdminProduct(
     specifications: patch.specifications,
     spin360Images: patch.spin360Images,
   });
+
+  if (existing && patch.stockQuantity !== undefined) {
+    void notifyWaitlistOnRestock({
+      productId: id,
+      productName: updated.name,
+      productSlug: updated.slug,
+      previousStock: existing.stock,
+      previousReserved: existing.reservedStock ?? 0,
+      newStock: updated.stock,
+      newReserved: updated.reservedStock ?? 0,
+    }).catch(() => undefined);
+  }
+
   return toAdminProduct(updated);
 }
 
@@ -238,11 +255,41 @@ export async function bulkDeleteAdminProducts(ids: string[]): Promise<number> {
 export async function bulkUpdateAdminStock(
   updates: Array<{ id: string; stockQuantity: number }>
 ): Promise<number> {
-  return (
-    await bulkUpdateStock(
-      updates.map((u) => ({ id: u.id, stock: u.stockQuantity }))
-    )
-  ).updated;
+  const before = new Map<
+    string,
+    { stock: number; reserved: number; name: string; slug: string }
+  >();
+  for (const update of updates) {
+    const product = await getProductById(update.id);
+    if (product) {
+      before.set(update.id, {
+        stock: product.stock,
+        reserved: product.reservedStock ?? 0,
+        name: product.name,
+        slug: product.slug,
+      });
+    }
+  }
+
+  const result = await bulkUpdateStock(
+    updates.map((u) => ({ id: u.id, stock: u.stockQuantity }))
+  );
+
+  for (const update of updates) {
+    const prev = before.get(update.id);
+    if (!prev) continue;
+    void notifyWaitlistOnRestock({
+      productId: update.id,
+      productName: prev.name,
+      productSlug: prev.slug,
+      previousStock: prev.stock,
+      previousReserved: prev.reserved,
+      newStock: update.stockQuantity,
+      newReserved: prev.reserved,
+    }).catch(() => undefined);
+  }
+
+  return result.updated;
 }
 
 export async function bulkUpdateAdminCategory(

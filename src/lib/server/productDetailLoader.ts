@@ -4,14 +4,19 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { normalizeProductSlug } from "@/lib/slug";
 import { resolveBundleForProduct } from "@/lib/server/bundleService";
-import { resolveRelatedProductsForProduct } from "@/lib/server/relatedProductsService";
+import {
+  resolveRelatedProductsForProduct,
+  resolveSimilarProductsForProduct,
+} from "@/lib/server/relatedProductsService";
 import {
   getProductDetailBySlug,
-  getProductSummaries,
 } from "@/services/catalogService";
 import type { ProductDetailResult } from "@/services/product.service";
 import type { ProductDetail } from "@/types/product";
 import type { ResolvedProductBundle } from "@/types/bundle";
+
+const SIMILAR_PRODUCTS_LIMIT = 4;
+const RELATED_PRODUCTS_LIMIT = 4;
 
 const PRODUCT_DETAIL_REVALIDATE_SECONDS =
   Number(process.env.PRODUCT_DETAIL_CACHE_REVALIDATE_SECONDS) ||
@@ -47,11 +52,21 @@ const loadCachedProductMerchandising = unstable_cache(
       ? similarIdsKey.split("|").filter(Boolean)
       : [];
 
-    const [bundle, similarProducts, relatedResult] = await Promise.all([
+    const [bundle, similarProducts] = await Promise.all([
       resolveBundleForProduct(productId, productPrice),
-      getProductSummaries(similarProductIds),
-      resolveRelatedProductsForProduct(productId, 8),
+      resolveSimilarProductsForProduct(
+        productId,
+        similarProductIds,
+        SIMILAR_PRODUCTS_LIMIT
+      ),
     ]);
+
+    const similarIds = similarProducts.map((product) => product.id);
+    const relatedResult = await resolveRelatedProductsForProduct(
+      productId,
+      RELATED_PRODUCTS_LIMIT,
+      similarIds
+    );
 
     return {
       bundle,
@@ -60,7 +75,7 @@ const loadCachedProductMerchandising = unstable_cache(
       relatedProducts: relatedResult.products,
     };
   },
-  ["product-detail-merchandising-v3"],
+  ["product-detail-merchandising-v6"],
   {
     revalidate: PRODUCT_DETAIL_REVALIDATE_SECONDS,
     tags: ["catalog", "product-detail", "product-merchandising"],

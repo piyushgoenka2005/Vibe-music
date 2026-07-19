@@ -175,8 +175,8 @@
 }
 
 .used-gear-page .cat-product-card__image-photo {
-  object-fit: contain;
-  padding: 4%;
+  object-fit: cover;
+  padding: 0;
 }
 
 .used-gear-page .cat-product-card__body {
@@ -232,9 +232,9 @@
   }
 
   .storefront-page .cat-page {
-    padding: 1rem max(1rem, env(safe-area-inset-left, 0px))
-      calc(5rem + env(safe-area-inset-bottom, 0px))
-      max(1rem, env(safe-area-inset-right, 0px));
+    padding: 0.4rem max(0.75rem, env(safe-area-inset-left, 0px))
+      calc(4rem + env(safe-area-inset-bottom, 0px))
+      max(0.75rem, env(safe-area-inset-right, 0px));
   }
 
   .premium-home {
@@ -336,8 +336,8 @@
   }
 
   .storefront-page .cat-page {
-    padding: 0.75rem max(0.75rem, env(safe-area-inset-left, 0px)) 2.5rem
-      max(0.75rem, env(safe-area-inset-right, 0px));
+    padding: 0.35rem max(0.5rem, env(safe-area-inset-left, 0px)) 2rem
+      max(0.5rem, env(safe-area-inset-right, 0px));
   }
 
   .storefront-page .cart-page {

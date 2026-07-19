@@ -31,7 +31,6 @@ import {
   FilePenLine,
   Truck,
   KeyRound,
-  CreditCard,
   Gift,
   GitCompare,
 } from "lucide-react";
@@ -48,7 +47,6 @@ const NAV_ITEMS = [
   { href: ROUTES.adminBrands, label: "Brands", icon: Tag, permission: "categories:read" },
   { href: ROUTES.adminOrders, label: "Orders", icon: ShoppingCart, permission: "orders:read" },
   { href: ROUTES.adminRentals, label: "Rentals", icon: KeyRound, permission: "rentals:read" },
-  { href: ROUTES.adminFinancing, label: "Financing", icon: CreditCard, permission: "finance:read" },
   { href: ROUTES.adminGiveaway, label: "Giveaways", icon: Gift, permission: "giveaways:read" },
   { href: ROUTES.adminCompare, label: "Compare", icon: GitCompare, permission: "compare:read" },
   { href: ROUTES.adminReturns, label: "Returns", icon: RotateCcw, permission: "orders:read" },

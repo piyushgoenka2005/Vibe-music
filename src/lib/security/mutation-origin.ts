@@ -35,15 +35,6 @@ function isTrustedOrigin(candidate: string, requestOrigin: string): boolean {
   const normalized = normalizeOrigin(candidate);
   if (normalized === requestOrigin) return true;
   if (ALLOWED_ORIGINS.has(normalized)) return true;
-
-  // Vercel preview/production aliases (*.vercel.app)
-  try {
-    const host = new URL(normalized).hostname;
-    if (host.endsWith(".vercel.app")) return true;
-  } catch {
-    // ignore malformed origins
-  }
-
   return false;
 }
 

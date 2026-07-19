@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
-  getContentPageFromFirestore,
+  getContentPageFromDb,
   upsertContentPage,
 } from "@/lib/server/contentPageRepository";
 import { CONTENT_PAGES } from "@/data/contentPages";
@@ -14,7 +14,7 @@ export async function GET(_request: Request, context: RouteContext) {
     await requireAdmin("settings:read");
     const { slug } = await context.params;
     const page =
-      (await getContentPageFromFirestore(slug)) ?? CONTENT_PAGES[slug] ?? null;
+      (await getContentPageFromDb(slug)) ?? CONTENT_PAGES[slug] ?? null;
     if (!page) {
       return NextResponse.json({ error: "Page not found" }, { status: 404 });
     }

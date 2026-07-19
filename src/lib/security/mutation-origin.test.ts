@@ -12,27 +12,40 @@ function postRequest(
 }
 
 describe("verifyMutationOrigin", () => {
-  it("allows same-origin requests on vercel.app", () => {
+  it("allows same-origin requests", () => {
     const request = postRequest(
-      "https://vibemusic-official.vercel.app/api/payment/create-order",
-      { origin: "https://vibemusic-official.vercel.app" }
+      "https://vibemusic.in/api/payment/create-order",
+      { origin: "https://vibemusic.in" }
     );
 
     expect(verifyMutationOrigin(request)).toBe(true);
   });
 
-  it("allows referer from vercel.app deployment", () => {
+  it("allows referer from the same site", () => {
     const request = postRequest(
-      "https://vibemusic-official.vercel.app/api/coupons/validate",
-      { referer: "https://vibemusic-official.vercel.app/checkout" }
+      "https://vibemusic.in/api/coupons/validate",
+      { referer: "https://vibemusic.in/checkout" }
     );
 
     expect(verifyMutationOrigin(request)).toBe(true);
+  });
+
+  it("blocks arbitrary vercel.app origins (not allowlisted)", () => {
+    const request = postRequest(
+      "https://vibemusic.in/api/payment/create-order",
+      { origin: "https://attacker.vercel.app" }
+    );
+
+    const env = process.env as { NODE_ENV?: string };
+    const previous = env.NODE_ENV;
+    env.NODE_ENV = "production";
+    expect(verifyMutationOrigin(request)).toBe(false);
+    env.NODE_ENV = previous;
   });
 
   it("blocks cross-origin requests in production", () => {
     const request = postRequest(
-      "https://vibemusic-official.vercel.app/api/payment/create-order",
+      "https://vibemusic.in/api/payment/create-order",
       { origin: "https://evil.example.com" }
     );
 

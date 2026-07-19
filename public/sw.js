@@ -1,5 +1,5 @@
 /* Vibe Music PWA shell service worker — network-first for pages, cache-first for static assets. */
-const CACHE_NAME = "vibe-shell-v1";
+const CACHE_NAME = "vibe-shell-v2";
 const PRECACHE_URLS = [
   "/",
   "/site.webmanifest",
@@ -8,6 +8,19 @@ const PRECACHE_URLS = [
   "/icon-512.png",
   "/apple-icon.png",
 ];
+
+function isPrivatePath(pathname) {
+  return (
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/checkout") ||
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/cart") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/orders/")
+  );
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -40,12 +53,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Never cache API / auth / checkout mutations paths.
-  if (
-    url.pathname.startsWith("/api/") ||
-    url.pathname.startsWith("/admin") ||
-    url.pathname.startsWith("/checkout")
-  ) {
+  if (isPrivatePath(url.pathname)) {
     return;
   }
 
@@ -60,8 +68,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          if (response.ok) {
+            const copy = response.clone();
+            void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
           return response;
         })
         .catch(() =>
@@ -76,8 +86,10 @@ self.addEventListener("fetch", (event) => {
       caches.match(request).then((cached) => {
         if (cached) return cached;
         return fetch(request).then((response) => {
-          const copy = response.clone();
-          void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          if (response.ok) {
+            const copy = response.clone();
+            void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
           return response;
         });
       })

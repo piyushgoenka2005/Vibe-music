@@ -72,13 +72,30 @@ export async function updateNotificationPreferences(
 ): Promise<NotificationPreferences> {
   const current = await getNotificationPreferences(userId);
   const updated = { ...current, ...patch };
-  await prisma.user.update({
+  const user = await prisma.user.update({
     where: { id: userId },
     data: {
       notificationPreferences: asJsonValue(updated),
       updatedAt: new Date().toISOString(),
     },
+    select: { email: true, name: true },
   });
+
+  if (
+    user.email &&
+    ("newsletter" in patch || "promotions" in patch)
+  ) {
+    const { syncNewsletterMarketingPreference } = await import(
+      "@/lib/server/newsletterRepository"
+    );
+    void syncNewsletterMarketingPreference({
+      email: user.email,
+      // Either newsletter or promotions opt-in keeps marketing subscription active.
+      marketing: updated.newsletter || updated.promotions,
+      firstName: user.name,
+    }).catch(() => undefined);
+  }
+
   return updated;
 }
 

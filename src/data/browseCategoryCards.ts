@@ -126,4 +126,4 @@ export const BROWSE_CATEGORY_CARDS: BrowseCategoryCard[] = [
   },
 ];
 
-export const BROWSE_CATEGORY_CARDS_CTA = ROUTES.search;
+export const BROWSE_CATEGORY_CARDS_CTA = ROUTES.categories;

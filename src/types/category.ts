@@ -6,6 +6,6 @@ export interface Category {
   imageUrl?: string;
   isFeatured?: boolean;
   sortOrder?: number;
-  /** Computed at runtime from Firestore — not persisted. */
+  /** Computed at runtime from catalog — not persisted. */
   productCount?: number;
 }

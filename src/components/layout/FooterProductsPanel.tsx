@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { forwardRef, useEffect, useRef, type MouseEvent } from "react";
+import { forwardRef, useEffect, useRef, useState, type MouseEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
 import { categoryPath, productPath, ROUTES } from "@/lib/routes";
@@ -111,33 +111,35 @@ function FooterProductSnippet({ product }: { product: Product }) {
 
 const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPanel(_, ref) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const [fetchEnabled, setFetchEnabled] = useState(false);
 
-  const { data: products = [], isLoading, refetch } = useQuery({
+  const { data: products = [], isLoading, isFetching } = useQuery({
     queryKey: ["footer-trending-products"],
     queryFn: fetchFooterTrendingProducts,
+    enabled: fetchEnabled,
     staleTime: FOOTER_TRENDING_STALE_MS,
-    refetchInterval: FOOTER_TRENDING_REFETCH_MS,
+    refetchInterval: fetchEnabled ? FOOTER_TRENDING_REFETCH_MS : false,
     refetchIntervalInBackground: false,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnWindowFocus: fetchEnabled,
+    refetchOnReconnect: fetchEnabled,
   });
 
   useEffect(() => {
     const node = panelRef.current;
-    if (!node) return;
+    if (!node || fetchEnabled) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
-          void refetch();
+          setFetchEnabled(true);
         }
       },
-      { rootMargin: "120px 0px", threshold: 0.12 }
+      { rootMargin: "240px 0px", threshold: 0.01 }
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [refetch]);
+  }, [fetchEnabled]);
 
   function setPanelRef(node: HTMLDivElement | null) {
     panelRef.current = node;
@@ -147,6 +149,11 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
       ref.current = node;
     }
   }
+
+  const showSkeletons =
+    !fetchEnabled || isLoading || (isFetching && products.length === 0);
+  const showEmpty =
+    fetchEnabled && !isLoading && !isFetching && products.length === 0;
 
   return (
     <div ref={setPanelRef} className="footer-products-panel" data-footer-panel>
@@ -172,7 +179,7 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
         </div>
 
         <div className="footer-products-panel__products">
-          {isLoading
+          {showSkeletons
             ? Array.from({ length: FOOTER_TRENDING_LIMIT }, (_, index) => (
                 <div
                   key={`footer-product-skeleton-${index}`}
@@ -180,7 +187,7 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
                   aria-hidden
                 />
               ))
-            : products.length === 0
+            : showEmpty
               ? (
                 <p className="footer-products-panel__empty">
                   Curated picks with live pricing will appear here soon.

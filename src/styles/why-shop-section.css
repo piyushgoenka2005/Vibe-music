@@ -70,6 +70,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -410,6 +411,7 @@
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
     scrollbar-width: none;
   }
 
@@ -429,6 +431,7 @@
   .why-shop__marquee--static {
     overflow-x: auto;
     scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
   }
 
   .why-shop__marquee--mobile-auto .why-shop__marquee-track {

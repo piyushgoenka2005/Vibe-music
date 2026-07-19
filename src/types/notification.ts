@@ -4,7 +4,8 @@ export type NotificationType =
   | "product_alert"
   | "newsletter"
   | "support_reply"
-  | "system";
+  | "system"
+  | "rental";
 
 export interface UserNotification {
   id: string;
@@ -26,7 +27,13 @@ export interface NotificationPreferences {
 
 export interface AdminNotification {
   id: string;
-  type: "ticket" | "return" | "contact" | "order" | "system";
+  type:
+    | "ticket"
+    | "return"
+    | "contact"
+    | "order"
+    | "system"
+    | "rental";
   title: string;
   body: string;
   link?: string;

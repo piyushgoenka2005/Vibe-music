@@ -736,8 +736,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 44px;
+  min-height: 44px;
   margin: 0;
   padding: 0;
   border: none;
@@ -1502,6 +1504,7 @@ a.cart-item-card__name:hover {
   overflow-x: auto;
   padding-bottom: 0.35rem;
   scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }

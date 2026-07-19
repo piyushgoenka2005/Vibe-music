@@ -5,6 +5,7 @@ import {
   updateReturnRequest,
 } from "@/lib/server/returnRequestRepository";
 import { notifyUserIfAllowed } from "@/lib/server/notificationRepository";
+import { sendReturnStatusEmail } from "@/lib/server/customerUpdateEmailService";
 import { adminReturnRequestSchema } from "@/lib/validations/wrFeatures";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -36,18 +37,20 @@ export async function PUT(request: Request, context: RouteContext) {
 
     const returnRequest = await updateReturnRequest(id, parsed);
 
-    if (
-      existing.userId &&
-      parsed.status &&
-      parsed.status !== existing.status
-    ) {
-      void notifyUserIfAllowed({
-        userId: existing.userId,
-        type: "order_update",
-        title: "Return request update",
-        body: `Your return for order ${existing.orderId.slice(0, 8)}… is now ${parsed.status.replace("_", " ")}.`,
-        link: `/account/orders/${existing.orderId}`,
-      });
+    if (parsed.status && parsed.status !== existing.status) {
+      if (existing.userId) {
+        void notifyUserIfAllowed({
+          userId: existing.userId,
+          type: "order_update",
+          title: "Return request update",
+          body: `Your return for order ${existing.orderId.slice(0, 8)}… is now ${parsed.status.replace("_", " ")}.`,
+          link: `/account/orders/${existing.orderId}`,
+        });
+      }
+      void sendReturnStatusEmail({
+        returnRequest,
+        status: parsed.status,
+      }).catch(() => undefined);
     }
 
     return NextResponse.json({ returnRequest });

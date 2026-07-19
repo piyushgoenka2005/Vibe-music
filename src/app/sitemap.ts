@@ -16,7 +16,6 @@ export default async function sitemap() {
     "/used",
     "/rentals",
     "/giveaway",
-    "/financing",
     "/contact",
     "/pages/shipping",
     "/pages/returns",

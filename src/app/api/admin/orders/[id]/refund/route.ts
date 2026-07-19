@@ -26,6 +26,7 @@ export async function POST(request: Request, context: RouteContext) {
       orderId: id,
       amountPaise,
       actorEmail: admin.email,
+      note: parsed.note,
       request,
     });
 

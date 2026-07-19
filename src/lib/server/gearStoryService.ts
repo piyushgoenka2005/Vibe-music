@@ -75,7 +75,8 @@ function buildPlaceholderStory(seed: GearStorySeed, index: number): GearStory {
     discountPercentage: 0,
     description: seed.description,
     features: seed.features,
-    slug: seed.productId,
+    // Never use productId as a storefront slug — broken /product links.
+    slug: "",
     brand: seed.title.split(" ")[0] ?? "Vibe Music",
     name: seed.title,
     rating: 0,
@@ -107,18 +108,26 @@ async function resolveFromLocalCatalog(): Promise<Array<CatalogProduct | undefin
 }
 
 async function resolveSeedProducts(): Promise<Array<CatalogProduct | undefined>> {
-  if (isCatalogUnavailable()) {
-    return resolveFromLocalCatalog();
+  let fromDb: Array<CatalogProduct | undefined> = [];
+
+  if (!isCatalogUnavailable()) {
+    try {
+      const ids = GEAR_STORY_SEEDS.map((seed) => seed.productId);
+      const products = await fetchProductsByIds(ids);
+      const byId = new Map(products.map((product) => [product.id, product]));
+      fromDb = GEAR_STORY_SEEDS.map((seed) => byId.get(seed.productId));
+    } catch {
+      fromDb = [];
+    }
   }
 
-  try {
-    const ids = GEAR_STORY_SEEDS.map((seed) => seed.productId);
-    const products = await fetchProductsByIds(ids);
-    const byId = new Map(products.map((product) => [product.id, product]));
-    return GEAR_STORY_SEEDS.map((seed) => byId.get(seed.productId));
-  } catch {
-    return resolveFromLocalCatalog();
-  }
+  const missing = fromDb.length === 0 || fromDb.some((product) => !product);
+  if (!missing) return fromDb;
+
+  const fromLocal = await resolveFromLocalCatalog();
+  if (fromDb.length === 0) return fromLocal;
+
+  return GEAR_STORY_SEEDS.map((_, index) => fromDb[index] ?? fromLocal[index]);
 }
 
 export async function listGearStories(): Promise<GearStoriesSectionData> {

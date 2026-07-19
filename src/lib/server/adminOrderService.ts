@@ -1,5 +1,9 @@
+import { logAuditEvent } from "@/lib/server/auditLog";
 import { releaseOrderInventory } from "@/lib/server/inventoryService";
-import { notifyOrderRefunded } from "@/lib/server/orderNotificationService";
+import {
+  notifyOrderRefunded,
+  notifyOrderStatusChanged,
+} from "@/lib/server/orderNotificationService";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import * as pgUsers from "@/lib/server/prisma/usersRepository";
 import type { Order, OrderStatus } from "@/types/order";
@@ -79,9 +83,6 @@ export async function updateOrderStatus(
   actor: string,
   note?: string
 ): Promise<Order> {
-  void actor;
-  void note;
-
   const existingOrder = await pgOrder.fetchOrderById(orderId);
   if (!existingOrder) throw new Error("Order not found");
 
@@ -107,8 +108,26 @@ export async function updateOrderStatus(
 
   const order = await pgOrder.patchOrderFields(orderId, patch);
 
-  if (status === "refunded" && existingOrder.status !== "refunded") {
-    void notifyOrderRefunded(order);
+  if (note?.trim()) {
+    void logAuditEvent({
+      action: "order.note",
+      actorEmail: actor,
+      resourceType: "order",
+      resourceId: orderId,
+      metadata: {
+        note: note.trim(),
+        status,
+        previousStatus: existingOrder.status,
+      },
+    });
+  }
+
+  if (status !== existingOrder.status) {
+    if (status === "refunded") {
+      void notifyOrderRefunded(order);
+    } else {
+      void notifyOrderStatusChanged(order, existingOrder.status);
+    }
   }
 
   return order;
@@ -119,10 +138,19 @@ export async function addOrderNote(
   note: string,
   actor: string
 ): Promise<void> {
-  void orderId;
-  void note;
-  void actor;
-  // Order notes are not persisted in the Prisma Order schema.
+  const existingOrder = await pgOrder.fetchOrderById(orderId);
+  if (!existingOrder) throw new Error("Order not found");
+
+  await logAuditEvent({
+    action: "order.note",
+    actorEmail: actor,
+    resourceType: "order",
+    resourceId: orderId,
+    metadata: {
+      note: note.trim(),
+      status: existingOrder.status,
+    },
+  });
 }
 
 async function fetchOrderStatsForUsers(

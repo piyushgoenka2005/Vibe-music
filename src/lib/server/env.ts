@@ -4,10 +4,10 @@ export function isProduction(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
-/** Demo payments when Razorpay is off and not production (unless explicitly allowed). */
+/** Demo payments when Razorpay is off — never allowed in production. */
 export function isDemoPaymentsAllowed(): boolean {
-  if (process.env.ALLOW_DEMO_PAYMENTS === "true") return true;
-  return !isProduction();
+  if (isProduction()) return false;
+  return process.env.ALLOW_DEMO_PAYMENTS !== "false";
 }
 
 export function isRazorpayConfigured(): boolean {

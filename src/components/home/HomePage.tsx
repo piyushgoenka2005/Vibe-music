@@ -7,12 +7,9 @@ import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
+import HomepageTopProducts from "@/components/home/HomepageTopProducts";
 
 import PremiumHero from "@/components/home/PremiumHero";
-const HomepageTopProducts = dynamic(
-  () => import("@/components/home/HomepageTopProducts"),
-  { loading: () => <BlogTeaserSkeleton /> }
-);
 
 const HomepageStats = dynamic(() => import("@/components/home/HomepageStats"), {
   loading: () => null,

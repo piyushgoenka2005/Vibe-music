@@ -32,38 +32,39 @@ export async function resolveInvoiceOrder(
     return validateInvoiceOrder(order);
   }
 
-  let order: Order | null = null;
+  // Email alone is not authorization — require a signed token for guests,
+  // or an authenticated session that owns the order (or admin).
+  if (normalizedEmail && !token) {
+    return {
+      ok: false,
+      code: "unauthorized",
+      message: "Invoice access token required",
+    };
+  }
 
-  if (normalizedEmail) {
-    order = await getOrderById(orderId);
-    if (!order || order.email.toLowerCase() !== normalizedEmail) {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) {
+    return {
+      ok: false,
+      code: "unauthorized",
+      message: "Authentication required",
+    };
+  }
+
+  const order = await getOrderById(orderId);
+  if (!order) {
+    return { ok: false, code: "not_found", message: "Order not found" };
+  }
+
+  const owns =
+    order.userId === sessionUser.uid ||
+    (sessionUser.email &&
+      order.email.toLowerCase() === sessionUser.email.toLowerCase());
+
+  if (!owns) {
+    const adminSession = await getAdminSession(sessionUser.uid);
+    if (!adminSession) {
       return { ok: false, code: "not_found", message: "Order not found" };
-    }
-  } else {
-    const sessionUser = await getSessionUser();
-    if (!sessionUser) {
-      return {
-        ok: false,
-        code: "unauthorized",
-        message: "Authentication required",
-      };
-    }
-
-    order = await getOrderById(orderId);
-    if (!order) {
-      return { ok: false, code: "not_found", message: "Order not found" };
-    }
-
-    const owns =
-      order.userId === sessionUser.uid ||
-      (sessionUser.email &&
-        order.email.toLowerCase() === sessionUser.email.toLowerCase());
-
-    if (!owns) {
-      const adminSession = await getAdminSession(sessionUser.uid);
-      if (!adminSession) {
-        return { ok: false, code: "not_found", message: "Order not found" };
-      }
     }
   }
 

@@ -207,25 +207,27 @@ export default function NewArrivalsProductCard({
                 <span className="discount-drop__arrow" aria-hidden="true">↓</span>
                 {discountPct}% off
               </span>
+              <span className="new-arrivals-card__prices">
+                <span className="new-arrivals-card__was">
+                  {formatDisplayPrice(fakeMrp(displayPrice, discountPct))}
+                </span>
+                <span
+                  className={`new-arrivals-card__price${
+                    displayPrice <= 0 ? " new-arrivals-card__price--enquiry" : ""
+                  }`}
+                >
+                  {priceNode ?? formatDisplayPrice(displayPrice)}
+                </span>
+              </span>
             </span>
           </div>
         </Link>
 
-        <div className="new-arrivals-card__meta-row new-arrivals-card__meta-row--price">
-          <div className="new-arrivals-card__pricing">
-            <span className="new-arrivals-card__prices">
-              <span className="new-arrivals-card__was">
-                {formatDisplayPrice(fakeMrp(displayPrice, discountPct))}
-              </span>
-              <span
-                className={`new-arrivals-card__price${
-                  displayPrice <= 0 ? " new-arrivals-card__price--enquiry" : ""
-                }`}
-              >
-                {priceNode ?? formatDisplayPrice(displayPrice)}
-              </span>
-            </span>
-          </div>
+        <div
+          className={`new-arrivals-card__meta-row new-arrivals-card__meta-row--price${
+            canBuy ? "" : " new-arrivals-card__meta-row--solo"
+          }`}
+        >
           {canBuy ? (
             <button
               type="button"

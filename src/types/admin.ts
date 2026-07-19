@@ -41,8 +41,6 @@ export type Permission =
   | "rentals:read"
   | "rentals:write"
   | "rentals:delete"
-  | "finance:read"
-  | "finance:write"
   | "giveaways:read"
   | "giveaways:write"
   | "giveaways:delete"

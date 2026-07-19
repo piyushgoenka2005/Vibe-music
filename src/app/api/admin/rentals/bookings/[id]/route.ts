@@ -11,6 +11,8 @@ import {
   getRentalBookingById,
   updateRentalBookingFields,
 } from "@/lib/server/rentalRepository";
+import { sendRentalBookingEmail } from "@/lib/server/rentalEmailService";
+import { notifyRentalBookingUpdate } from "@/lib/server/rentalNotificationService";
 import {
   adminRentalStatusSchema,
   returnRentalBookingSchema,
@@ -73,6 +75,7 @@ export async function PUT(
     }
 
     const parsed = adminRentalStatusSchema.parse(body);
+    const existing = await getRentalBookingById(id);
     await updateRentalBookingFields(id, { status: parsed.status });
     await appendRentalStatusEvent({
       bookingId: id,
@@ -90,6 +93,24 @@ export async function PUT(
       metadata: { status: parsed.status },
     });
     const booking = await getRentalBookingById(id);
+    if (booking && existing && parsed.status !== existing.status) {
+      const emailEvent =
+        parsed.status === "confirmed"
+          ? ("confirmed" as const)
+          : parsed.status === "cancelled"
+            ? ("cancelled" as const)
+            : parsed.status === "returned" || parsed.status === "completed"
+              ? ("returned" as const)
+              : parsed.status === "active"
+                ? ("active" as const)
+                : null;
+      if (emailEvent) {
+        void sendRentalBookingEmail(booking, emailEvent).catch(() => undefined);
+      }
+      void notifyRentalBookingUpdate(booking, parsed.status).catch(
+        () => undefined
+      );
+    }
     return NextResponse.json({ booking });
   } catch (error) {
     return adminErrorResponse(error);

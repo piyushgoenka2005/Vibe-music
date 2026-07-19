@@ -237,34 +237,60 @@ export default function ServiceStatusCarousel() {
         </div>
       </div>
 
-      <div className="service-carousel__ledger" aria-label="Store services at a glance">
-        {CAROUSEL_ITEMS.map((item) => {
-          const content = (
-            <>
-              <span className="service-carousel__ledger-category">{item.category}</span>
-              <span className="service-carousel__ledger-title">{item.title}</span>
-              <span className="service-carousel__ledger-desc">{item.desc}</span>
-            </>
-          );
+      <div
+        className={[
+          "service-carousel__ledger",
+          enableAutoScroll ? "service-carousel__ledger--marquee" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        aria-label="Store services at a glance"
+      >
+        <div
+          className={[
+            "service-carousel__ledger-track",
+            enableAutoScroll ? "service-carousel__ledger-track--marquee" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {(enableAutoScroll ? [...CAROUSEL_ITEMS, ...CAROUSEL_ITEMS] : CAROUSEL_ITEMS).map(
+            (item, index) => {
+              const isDuplicate = enableAutoScroll && index >= CAROUSEL_ITEMS.length;
+              const content = (
+                <>
+                  <span className="service-carousel__ledger-category">{item.category}</span>
+                  <span className="service-carousel__ledger-title">{item.title}</span>
+                  <span className="service-carousel__ledger-desc">{item.desc}</span>
+                </>
+              );
 
-          if (item.href) {
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className="service-carousel__ledger-item"
-              >
-                {content}
-              </Link>
-            );
-          }
+              if (item.href) {
+                return (
+                  <Link
+                    key={`${item.id}-${index}`}
+                    href={item.href}
+                    className="service-carousel__ledger-item"
+                    aria-hidden={isDuplicate ? true : undefined}
+                    tabIndex={isDuplicate ? -1 : undefined}
+                  >
+                    {content}
+                  </Link>
+                );
+              }
 
-          return (
-            <div key={item.id} className="service-carousel__ledger-item">
-              {content}
-            </div>
-          );
-        })}
+              return (
+                <div
+                  key={`${item.id}-${index}`}
+                  className="service-carousel__ledger-item"
+                  aria-hidden={isDuplicate ? true : undefined}
+                >
+                  {content}
+                </div>
+              );
+            }
+          )}
+        </div>
       </div>
     </section>
   );

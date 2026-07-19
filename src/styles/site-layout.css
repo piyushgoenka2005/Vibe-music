@@ -256,6 +256,7 @@
 
   .announcement-bar__viewport {
     overflow-x: auto;
+    scroll-behavior: smooth;
     scrollbar-width: none;
   }
 
@@ -838,6 +839,7 @@ body.site-nav-open .site-header--scroll-hidden {
   margin: 0 auto;
   padding: 0 1.5rem;
   overflow-x: auto;
+  scroll-behavior: smooth;
   scrollbar-width: none;
 }
 

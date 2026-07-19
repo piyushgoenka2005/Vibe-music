@@ -26,9 +26,17 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("admins:write", request);
+    const actor = await requireAdmin("admins:write", request);
     const body = await request.json();
     const parsed = adminInviteSchema.parse(body);
+
+    if (parsed.role === "super_admin" && actor.role !== "super_admin") {
+      return NextResponse.json(
+        { error: "Only a Super Admin can invite another Super Admin" },
+        { status: 403 }
+      );
+    }
+
     const email = parsed.email.trim().toLowerCase();
 
     const existingUser = await findUserByEmail(email);

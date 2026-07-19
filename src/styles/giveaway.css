@@ -128,3 +128,19 @@
   border-radius: 8px;
   padding: 0.75rem;
 }
+
+@media (max-width: 599px) {
+  .giveaway-form input,
+  .giveaway-form button,
+  .giveaway-card button {
+    min-height: 44px;
+  }
+
+  .giveaway-countdown__grid {
+    gap: 0.5rem;
+  }
+
+  .giveaway-countdown__grid div {
+    min-width: 3.25rem;
+  }
+}

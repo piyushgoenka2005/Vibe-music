@@ -11,6 +11,7 @@ import BackToTop from "@/components/layout/BackToTop";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import DeferredSplashCursor from "@/components/layout/DeferredSplashCursor";
+import { ROUTES } from "@/lib/routes";
 
 const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
   ssr: false,
@@ -39,6 +40,7 @@ export default function StorefrontChrome({
   const isLandingPage = pathname === "/";
   const isProductPage = /^\/product\/[^/]+$/.test(pathname);
   const isListingPage =
+    pathname === ROUTES.categories ||
     /^\/category\/[^/]+$/.test(pathname) ||
     pathname.startsWith("/search") ||
     pathname === "/deals";

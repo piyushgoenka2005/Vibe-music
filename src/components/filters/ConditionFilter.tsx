@@ -28,16 +28,22 @@ export default function ConditionFilter({
 
   return (
     <FilterSection title="Condition">
-      {OPTIONS.map((option) => (
-        <label key={option.value} className="cat-filter-option">
-          <input
-            type="checkbox"
-            checked={selected.includes(option.value)}
-            onChange={() => toggle(option.value)}
-          />
-          <span>{option.label}</span>
-        </label>
-      ))}
+      <div className="cat-filter-pills" role="group" aria-label="Condition">
+        {OPTIONS.map((option) => {
+          const active = selected.includes(option.value);
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={active}
+              className={`cat-filter-pill${active ? " cat-filter-pill--active" : ""}`}
+              onClick={() => toggle(option.value)}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
     </FilterSection>
   );
 }

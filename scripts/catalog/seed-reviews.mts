@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
-import { syntheticReviewCreatedAt } from "../../src/lib/reviews/syntheticReviewDate.ts";
+import { syntheticReviewCreatedAt } from "../../src/lib/reviews/syntheticReviewDate";
 
 const prisma = new PrismaClient();
 const catalogDir = path.join(process.cwd(), "src", "data", "catalog");

@@ -112,4 +112,10 @@
     --duration-normal: 0ms;
     --duration-slow: 0ms;
   }
+
+  /* Instant rail / page scroll — no queued smooth scrolling */
+  html,
+  * {
+    scroll-behavior: auto !important;
+  }
 }

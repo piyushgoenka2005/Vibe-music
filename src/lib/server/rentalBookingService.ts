@@ -466,4 +466,10 @@ export async function activateRentalBooking(
     note: "Rental started",
     createdBy: actorId,
   });
+
+  const updated = await getRentalBookingById(bookingId);
+  if (updated) {
+    await sendRentalBookingEmail(updated, "active");
+    await notifyRentalBookingUpdate(updated, "active");
+  }
 }

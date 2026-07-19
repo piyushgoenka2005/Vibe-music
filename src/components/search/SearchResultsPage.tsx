@@ -20,6 +20,7 @@ import CategoryPagination from "@/components/category/CategoryPagination";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import SearchEmptyState from "./SearchEmptyState";
 import SearchRecentlyViewed from "./SearchRecentlyViewed";
+import { SlidersHorizontal } from "lucide-react";
 import type { Product } from "@/types/product";
 import type { SearchProduct, SearchResultsData } from "@/types/search";
 import "../filters/filters.css";
@@ -69,6 +70,7 @@ function SearchResultsPageContent({
     removeBrand,
     removeCondition,
     hasActive,
+    activeCount,
     categorySlug,
     subcategory,
   } = useSearchListingFilters();
@@ -147,19 +149,23 @@ function SearchResultsPageContent({
       </p>
 
       <div className="cat-toolbar">
-        <div className="cat-toolbar__left">
+        <div className="cat-toolbar__primary">
           <button
             type="button"
-            className="cat-toolbar__mobile-btn"
+            className={`cat-toolbar__mobile-btn${hasActive ? " cat-toolbar__mobile-btn--active" : ""}`}
             onClick={openMobileDrawer}
           >
-            Filters {hasActive ? "•" : ""}
+            <SlidersHorizontal size={16} strokeWidth={2.25} aria-hidden />
+            <span>Filters</span>
+            {activeCount > 0 ? (
+              <span className="cat-toolbar__badge">{activeCount}</span>
+            ) : null}
           </button>
           <span className="cat-toolbar__count" aria-live="polite">
-            {isLoading ? "Loading..." : `${total} products`}
+            {isLoading ? "Loading…" : `${total} products`}
           </span>
         </div>
-        <div className="cat-toolbar__left">
+        <div className="cat-toolbar__controls">
           <SortDropdown
             value={filters.sort}
             onChange={(sort) => updateFilters({ sort })}
@@ -184,6 +190,7 @@ function SearchResultsPageContent({
           filters={filters}
           facets={facets}
           onUpdate={updateFilters}
+          className="cat-filter-sidebar--desktop"
         />
 
         <div>
@@ -249,6 +256,7 @@ function SearchResultsPageContent({
         filters={filters}
         facets={facets}
         onUpdate={updateFilters}
+        onClearAll={clearAllFilters}
         resultCount={total}
       />
 

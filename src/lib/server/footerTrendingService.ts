@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import {
   getTrendingProducts,
   searchProducts,
@@ -37,7 +38,7 @@ function dedupePricedProducts(
   return result;
 }
 
-export async function getFooterTrendingProducts(
+async function loadFooterTrendingProducts(
   limit = FOOTER_TRENDING_LIMIT
 ): Promise<Product[]> {
   const [trending, featured, popular, recent] = await Promise.all([
@@ -52,4 +53,18 @@ export async function getFooterTrendingProducts(
   const picked =
     inStock.length > 0 ? inStock : dedupePricedProducts(pools);
   return picked.slice(0, limit);
+}
+
+const getCachedFooterTrendingProducts = unstable_cache(
+  async (limit: number) => loadFooterTrendingProducts(limit),
+  ["footer-trending-products"],
+  { revalidate: 60 }
+);
+
+export async function getFooterTrendingProducts(
+  limit = FOOTER_TRENDING_LIMIT
+): Promise<Product[]> {
+  const safeLimit =
+    Number.isFinite(limit) && limit > 0 ? Math.min(limit, 12) : FOOTER_TRENDING_LIMIT;
+  return getCachedFooterTrendingProducts(safeLimit);
 }

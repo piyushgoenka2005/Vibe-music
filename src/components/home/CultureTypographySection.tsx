@@ -5,18 +5,22 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import {
   motion,
   useMotionValue,
+  useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
 } from "framer-motion";
 import { ArrowRight, ChevronDown } from "lucide-react";
-import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
+import { useIsClient } from "@/hooks/useIsClient";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import { ROUTES } from "@/lib/routes";
 import "@/styles/culture-typography.css";
 
-/** Desktop dotted scroll quote — also used on mobile */
-const DESKTOP_WORD_CYCLE = [
+/**
+ * One shared quote cycle for SSR + client (no hydration word-list swap).
+ * Long lines are scaled via --word-scale so they never clip edge-to-edge.
+ */
+const WORD_CYCLE = [
   "MUSICIANS",
   "DON'T REMEMBER",
   "PRICES.",
@@ -26,8 +30,8 @@ const DESKTOP_WORD_CYCLE = [
   "BRAND.",
 ] as const;
 
-/** How many times to repeat the quote on mobile so the scroll runway stays long */
-const MOBILE_QUOTE_REPEATS = 4;
+/** How many copies of the cycle to stack (then duplicated once for a seamless -50% loop). */
+const QUOTE_REPEATS = 4;
 
 export interface CultureTypographySectionProps {
   metadataLabel?: string;
@@ -39,21 +43,20 @@ export interface CultureTypographySectionProps {
   className?: string;
 }
 
-/** Scale long lines so they fit within the viewport without cropping. */
-function getWordScale(word: string, isMobile = false): number {
-  if (word.length <= 9) return 1;
-  const divisor = isMobile ? 12 : 10.5;
-  return Math.min(1, divisor / word.length);
+/** Scale so ultra-bold lines fit ~full viewport width without clipping. */
+function getWordScale(word: string): number {
+  // Soft cap — keeps "DON'T REMEMBER" large on mobile while still fitting
+  const maxCharsAtFullSize = 12;
+  if (word.length <= maxCharsAtFullSize) return 1;
+  return Math.min(1, maxCharsAtFullSize / word.length);
 }
 
 function BackgroundWords({
   lines,
   lit = false,
-  isMobile = false,
 }: {
   lines: string[];
   lit?: boolean;
-  isMobile?: boolean;
 }) {
   return (
     <>
@@ -61,9 +64,7 @@ function BackgroundWords({
         <p
           key={`${word}-${index}${lit ? "-lit" : ""}`}
           className={`culture-typography__word${lit ? " culture-typography__word--lit" : ""}`}
-          style={
-            { "--word-scale": getWordScale(word, isMobile) } as React.CSSProperties
-          }
+          style={{ "--word-scale": getWordScale(word) } as React.CSSProperties}
         >
           {word}
         </p>
@@ -78,35 +79,35 @@ export default function CultureTypographySection({
   subtitle,
   buttonLabel = "Explore Gear",
   buttonHref = ROUTES.search,
-  backgroundWords = DESKTOP_WORD_CYCLE,
+  backgroundWords = WORD_CYCLE,
   className = "",
 }: CultureTypographySectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const reduceMotion = useHydrationSafeReducedMotion();
+  const isClient = useIsClient();
   const isMobile = useIsMobileViewport();
-  const showScrollExperience = !reduceMotion;
+  const prefersReducedMotion = useReducedMotion();
+  const reduceMotion = Boolean(prefersReducedMotion);
+  /** Motion values only drive UI after mount — avoids SSR/client transform flash. */
+  const motionReady = isClient && !reduceMotion;
+
   const [scrollShiftPx, setScrollShiftPx] = useState(0);
   const [scrollProgressValue, setScrollProgressValue] = useState(0);
 
-  const desktopQuoteLines = useMemo(
-    () => (backgroundWords.length > 0 ? [...backgroundWords] : [...DESKTOP_WORD_CYCLE]),
+  const quoteLines = useMemo(
+    () => (backgroundWords.length > 0 ? [...backgroundWords] : [...WORD_CYCLE]),
     [backgroundWords]
   );
 
+  /** Stable across SSR + hydration — never branch on isMobile here. */
   const scrollLines = useMemo(() => {
-    if (isMobile) {
-      // Same web quote as desktop — repeat for a continuous dotted scroll runway
-      const repeated: string[] = [];
-      for (let i = 0; i < MOBILE_QUOTE_REPEATS; i++) {
-        repeated.push(...desktopQuoteLines);
-      }
-      return [...repeated, ...repeated];
+    const repeated: string[] = [];
+    for (let i = 0; i < QUOTE_REPEATS; i++) {
+      repeated.push(...quoteLines);
     }
-    return desktopQuoteLines;
-  }, [desktopQuoteLines, isMobile]);
-
-  const displayTitle = isMobile ? title.replace(/\n/g, " ") : title;
+    // Exact duplicate for seamless translateY(-50%) loop
+    return [...repeated, ...repeated];
+  }, [quoteLines]);
 
   const spotlightX = useMotionValue(50);
   const spotlightY = useMotionValue(50);
@@ -124,10 +125,11 @@ export default function CultureTypographySection({
     offset: ["start start", "end end"],
   });
 
+  /** Measure track overflow in px for both mobile + desktop (one transform unit). */
   useLayoutEffect(() => {
-    if (!showScrollExperience || isMobile) {
-      const frame = window.requestAnimationFrame(() => setScrollShiftPx(0));
-      return () => window.cancelAnimationFrame(frame);
+    if (!motionReady) {
+      setScrollShiftPx(0);
+      return undefined;
     }
 
     const track = trackRef.current;
@@ -137,7 +139,9 @@ export default function CultureTypographySection({
     if (!track || !sticky) return undefined;
 
     const update = () => {
-      const overflow = Math.max(0, track.scrollHeight - sticky.clientHeight);
+      // Half the track = one quote runway (content is doubled for the loop)
+      const half = track.scrollHeight / 2;
+      const overflow = Math.max(0, half);
       setScrollShiftPx(overflow);
     };
 
@@ -152,43 +156,32 @@ export default function CultureTypographySection({
       observer.disconnect();
       window.removeEventListener("resize", update);
     };
-  }, [isMobile, showScrollExperience, scrollLines]);
+  }, [motionReady, scrollLines]);
 
+  // Always numeric px — never mix % and px (framer-motion glitch source).
   const backgroundY = useTransform(scrollYProgress, (progress) => {
-    if (!showScrollExperience) return 0;
-    if (isMobile) return `${-50 * progress}%`;
+    if (!motionReady || scrollShiftPx <= 0) return 0;
     return -scrollShiftPx * progress;
   });
 
-  const contentOpacity = useTransform(
-    scrollYProgress,
-    [0, 0.08, 0.88, 1],
-    reduceMotion ? [1, 1, 1, 1] : [0, 1, 1, 0.9]
-  );
-
-  const contentY = useTransform(
-    scrollYProgress,
-    [0, 0.12],
-    reduceMotion ? [0, 0] : [48, 0]
-  );
-
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.88, 1], [1, 1, 0.9]);
+  const contentY = useTransform(scrollYProgress, [0, 0.12], motionReady ? [20, 0] : [0, 0]);
   const hintOpacity = useTransform(
     scrollYProgress,
     [0, 0.03, 0.1, 0.2],
-    reduceMotion ? [0, 0, 0, 0] : [0, 1, 1, 0]
+    motionReady ? [0, 1, 1, 0] : [0, 0, 0, 0]
   );
-
   const progressScaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   useEffect(() => {
-    if (!showScrollExperience) return undefined;
+    if (!motionReady) return undefined;
     return scrollYProgress.on("change", (value) => {
       setScrollProgressValue(Math.round(value * 100));
     });
-  }, [scrollYProgress, showScrollExperience]);
+  }, [scrollYProgress, motionReady]);
 
   useEffect(() => {
-    if (reduceMotion || isMobile) return undefined;
+    if (!motionReady || isMobile) return undefined;
 
     const section = sectionRef.current;
     if (!section) return undefined;
@@ -208,12 +201,13 @@ export default function CultureTypographySection({
       unsubX();
       unsubY();
       unsubO();
+      section.style.setProperty("--spotlight-opacity", "0");
     };
-  }, [isMobile, reduceMotion, springOpacity, springX, springY]);
+  }, [isMobile, motionReady, springOpacity, springX, springY]);
 
   const handleMouseMove = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
-      if (reduceMotion || isMobile) return;
+      if (!motionReady || isMobile) return;
 
       const rect = sectionRef.current?.getBoundingClientRect();
       if (!rect) return;
@@ -222,32 +216,27 @@ export default function CultureTypographySection({
       spotlightY.set(((event.clientY - rect.top) / rect.height) * 100);
       spotlightOpacity.set(1);
     },
-    [isMobile, reduceMotion, spotlightOpacity, spotlightX, spotlightY]
+    [isMobile, motionReady, spotlightOpacity, spotlightX, spotlightY]
   );
 
   const handleMouseLeave = useCallback(() => {
     spotlightOpacity.set(0);
   }, [spotlightOpacity]);
 
-  const scrollTrackStyle = showScrollExperience ? { y: backgroundY } : undefined;
+  const scrollTrackStyle = motionReady ? { y: backgroundY } : undefined;
 
-  const mobileScrollRunwayVh = MOBILE_QUOTE_REPEATS * 72;
-  const desktopScrollRunwayPx = Math.max(scrollShiftPx, desktopQuoteLines.length * 280);
-
+  // Keep section runway locked to measured half-track so scroll never desyncs.
   const sectionStyle = {
-    "--culture-scroll-height": !showScrollExperience
-      ? isMobile
-        ? "100svh"
-        : "130svh"
-      : isMobile
-        ? `${mobileScrollRunwayVh}vh`
-        : `calc(100svh + ${desktopScrollRunwayPx}px)`,
+    ...(motionReady && scrollShiftPx > 0
+      ? {
+          "--culture-scroll-height": `calc(100svh + ${Math.round(scrollShiftPx)}px)`,
+        }
+      : null),
   } as React.CSSProperties;
 
   const sectionClassName = [
     "culture-typography",
-    showScrollExperience ? "culture-typography--scrollable" : "culture-typography--static",
-    isMobile ? "culture-typography--mobile-hero" : "culture-typography--desktop-quote",
+    reduceMotion ? "culture-typography--static" : "culture-typography--scrollable",
     className,
   ]
     .filter(Boolean)
@@ -260,8 +249,8 @@ export default function CultureTypographySection({
       style={sectionStyle}
       aria-labelledby="culture-typography-title"
       data-vibe-section="culture-typography"
-      onMouseLeave={showScrollExperience && !isMobile ? handleMouseLeave : undefined}
-      onMouseMove={showScrollExperience && !isMobile ? handleMouseMove : undefined}
+      onMouseLeave={motionReady && !isMobile ? handleMouseLeave : undefined}
+      onMouseMove={motionReady && !isMobile ? handleMouseMove : undefined}
     >
       <div className="culture-typography__sticky">
         <div className="culture-typography__atmosphere" aria-hidden />
@@ -274,22 +263,22 @@ export default function CultureTypographySection({
             style={scrollTrackStyle}
           >
             <div className="culture-typography__bg">
-              <BackgroundWords isMobile={isMobile} lines={scrollLines} />
+              <BackgroundWords lines={scrollLines} />
             </div>
           </motion.div>
 
-          {showScrollExperience && !isMobile ? (
+          {motionReady && !isMobile ? (
             <motion.div
               className="culture-typography__scroll-track culture-typography__scroll-track--spotlight"
               style={scrollTrackStyle}
             >
               <div className="culture-typography__bg-spotlight">
-                <BackgroundWords isMobile={isMobile} lines={scrollLines} lit />
+                <BackgroundWords lines={scrollLines} lit />
               </div>
             </motion.div>
           ) : null}
 
-          {showScrollExperience && !isMobile ? (
+          {motionReady && !isMobile ? (
             <div className="culture-typography__spotlight-orb" />
           ) : null}
 
@@ -300,16 +289,16 @@ export default function CultureTypographySection({
         <motion.div
           className="culture-typography__content"
           style={
-            reduceMotion || isMobile
-              ? undefined
-              : { opacity: contentOpacity, y: contentY }
+            motionReady && !isMobile
+              ? { opacity: contentOpacity, y: contentY }
+              : undefined
           }
         >
           <div className="culture-typography__content-inner">
             <p className="culture-typography__meta">{metadataLabel}</p>
 
             <h2 id="culture-typography-title" className="culture-typography__title">
-              {displayTitle}
+              {title}
             </h2>
 
             {subtitle ? (
@@ -327,7 +316,7 @@ export default function CultureTypographySection({
           </div>
         </motion.div>
 
-        {showScrollExperience ? (
+        {!reduceMotion ? (
           <>
             {!isMobile ? (
               <motion.div

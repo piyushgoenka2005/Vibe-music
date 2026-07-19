@@ -751,6 +751,7 @@
       max(0.875rem, env(safe-area-inset-right, 0px));
     scroll-padding-inline: max(0.875rem, env(safe-area-inset-left, 0px));
     scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
     /* Native pan-x for momentum on phones; pan-y keeps page scroll */

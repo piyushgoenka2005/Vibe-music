@@ -408,6 +408,18 @@ export function searchInCatalogProducts(
         .filter((entry) => entry.score > 0)
         .sort((a, b) => b.score - a.score)
         .map((entry) => entry.product);
+
+      // "guitar" should surface instruments — not guitar amplifiers (those match
+      // via the word "Guitar" in amp titles). Amps stay available for amp queries
+      // and the Amplifiers subcategory browse path.
+      if (
+        queryLooksLikeGuitarSearch(tokens) &&
+        !queryRequestsAmplifiers(normalized)
+      ) {
+        source = source.filter(
+          (product) => !isGuitarAmplifierCatalogProduct(product)
+        );
+      }
     }
   }
 
@@ -584,6 +596,26 @@ function subcategoryRequestsAmplifiers(subcategory?: string): boolean {
   if (!subcategory) return false;
   const value = subcategory.toLowerCase();
   return value.includes("amplifier") || /(^|\|)amps?(\||$)/.test(value);
+}
+
+/** True when the shopper is explicitly looking for amps / guitar amps. */
+function queryRequestsAmplifiers(query: string): boolean {
+  const value = query.toLowerCase().trim();
+  if (!value) return false;
+  return (
+    value.includes("amplifier") ||
+    value.includes("amplifiers") ||
+    /(^|\s)amps?(\s|$)/.test(value)
+  );
+}
+
+/** True when the query includes a guitar token (e.g. "guitar", "guitars"). */
+function queryLooksLikeGuitarSearch(tokens: string[]): boolean {
+  return tokens.some((token) =>
+    expandSearchToken(token).some(
+      (variant) => variant === "guitar" || variant === "guitars"
+    )
+  );
 }
 
 function scoreProductMatch(

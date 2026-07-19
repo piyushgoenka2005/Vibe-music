@@ -90,11 +90,11 @@ export default function ProductPriceOffers({
                 >
                   <h4 className="pdp-offers__card-title">{offer.title}</h4>
                   <p className="pdp-offers__card-detail">{offer.detail}</p>
-                  <button type="button" className="pdp-offers__card-link">
+                  <span className="pdp-offers__card-link" aria-hidden="true">
                     {offer.offerCount}{" "}
                     {offer.offerCount === 1 ? "offer" : "offers"}
                     <ChevronRight size={14} aria-hidden />
-                  </button>
+                  </span>
                 </article>
               ))}
             </div>

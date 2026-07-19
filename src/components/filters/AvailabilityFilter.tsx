@@ -6,7 +6,7 @@ import type { AvailabilityFilter as AvailabilityValue } from "@/types/filters";
 const OPTIONS: { value: AvailabilityValue; label: string }[] = [
   { value: "all", label: "All" },
   { value: "in-stock", label: "In Stock" },
-  { value: "limited", label: "Limited Stock" },
+  { value: "limited", label: "Limited" },
   { value: "out-of-stock", label: "Out of Stock" },
 ];
 
@@ -21,17 +21,23 @@ export default function AvailabilityFilter({
 }: AvailabilityFilterProps) {
   return (
     <FilterSection title="Availability">
-      {OPTIONS.map((option) => (
-        <label key={option.value} className="cat-filter-option">
-          <input
-            type="radio"
-            name="availability-filter"
-            checked={selected === option.value}
-            onChange={() => onChange(option.value)}
-          />
-          <span>{option.label}</span>
-        </label>
-      ))}
+      <div className="cat-filter-pills" role="radiogroup" aria-label="Availability">
+        {OPTIONS.map((option) => {
+          const active = selected === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              className={`cat-filter-pill${active ? " cat-filter-pill--active" : ""}`}
+              onClick={() => onChange(option.value)}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
     </FilterSection>
   );
 }

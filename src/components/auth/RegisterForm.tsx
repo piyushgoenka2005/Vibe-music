@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
 import { ROUTES } from "@/lib/routes";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations/auth";
+import { sanitizeAuthRedirect } from "@/lib/auth/safeRedirect";
 import { useAuthStore } from "@/store/authStore";
 
 interface RegisterFormProps {
@@ -31,10 +32,14 @@ interface RegisterFormProps {
 export default function RegisterForm({ googleAuthEnabled = false }: RegisterFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || ROUTES.account;
-  const loginHref = searchParams.get("redirect")
-    ? `${ROUTES.login}?redirect=${encodeURIComponent(searchParams.get("redirect")!)}`
-    : ROUTES.login;
+  const redirectTo = sanitizeAuthRedirect(
+    searchParams.get("redirect"),
+    ROUTES.account
+  );
+  const loginHref =
+    searchParams.get("redirect") && redirectTo !== ROUTES.account
+      ? `${ROUTES.login}?redirect=${encodeURIComponent(redirectTo)}`
+      : ROUTES.login;
 
   const signUp = useAuthStore((s) => s.signUp);
   const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);

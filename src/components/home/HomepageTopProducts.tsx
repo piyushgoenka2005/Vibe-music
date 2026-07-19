@@ -115,17 +115,23 @@ export function TopProductCard({ product }: { product: HomepageTopProduct }) {
 }
 
 async function resolveTopProducts(): Promise<HomepageTopProduct[]> {
+  // Curated pinImage cards (and non-catalog surfaces like GP-9) render
+  // immediately — skip per-slug catalog round-trips that blocked Suspense.
+  const needsCatalogLookup = HOMEPAGE_TOP_PRODUCTS.some(
+    (product) => Boolean(product.productSlug) && !product.pinImage
+  );
+
+  if (!needsCatalogLookup) {
+    return HOMEPAGE_TOP_PRODUCTS;
+  }
+
   const resolved = await Promise.all(
     HOMEPAGE_TOP_PRODUCTS.map(async (product) => {
-      // Special surfaces (e.g. GP-9 landing) need no catalog row.
-      if (!product.productSlug) return product;
+      if (!product.productSlug || product.pinImage) return product;
 
       try {
         const catalogProduct = await getProductBySlug(product.productSlug);
-        // Never link to a PDP that does not exist in catalog.
         if (!catalogProduct) return null;
-
-        if (product.pinImage) return product;
 
         return {
           ...product,

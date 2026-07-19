@@ -10,7 +10,7 @@ const dirs = [
 const EXTRA = [
   ["sweetwater-exclusive", "vibemusic-exclusive"],
   ["sweetwater-card", "vibemusic-card"],
-  ["/myaccount/vibemusic-card/", "/financing/"],
+  ["/myaccount/vibemusic-card/", "/search"],
   ["Sales Engineer", "Gear Advisor"],
   ["Sales Engineers", "Gear Advisors"],
   ["Sweetwater Sound", "Vibe Music"],

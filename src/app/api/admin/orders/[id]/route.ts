@@ -25,6 +25,22 @@ export async function PUT(request: Request, context: RouteContext) {
     const { id } = await context.params;
     const body = await request.json();
 
+    // Status update takes priority when both status and note are present
+    // (admin UI always sends both together).
+    if (body.status !== undefined && body.status !== null && body.status !== "") {
+      const parsed = adminOrderStatusSchema.parse(body);
+      const permission =
+        parsed.status === "refunded" ? "orders:refund" : "orders:write";
+      const admin = await requireAdmin(permission, request);
+      const order = await updateOrderStatus(
+        id,
+        parsed.status,
+        admin.email,
+        parsed.note
+      );
+      return NextResponse.json({ order });
+    }
+
     if (body.note) {
       const admin = await requireAdmin("orders:write", request);
       const parsed = adminNoteSchema.parse(body);
@@ -33,17 +49,10 @@ export async function PUT(request: Request, context: RouteContext) {
       return NextResponse.json({ order });
     }
 
-    const parsed = adminOrderStatusSchema.parse(body);
-    const permission =
-      parsed.status === "refunded" ? "orders:refund" : "orders:write";
-    const admin = await requireAdmin(permission, request);
-    const order = await updateOrderStatus(
-      id,
-      parsed.status,
-      admin.email,
-      parsed.note
+    return NextResponse.json(
+      { error: "Provide a status and/or note to update." },
+      { status: 400 }
     );
-    return NextResponse.json({ order });
   } catch (error) {
     return adminErrorResponse(error);
   }

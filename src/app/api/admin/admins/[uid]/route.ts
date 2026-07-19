@@ -43,6 +43,17 @@ export async function PUT(request: Request, context: RouteContext) {
       );
     }
 
+    if (
+      parsed.role === "super_admin" &&
+      current.role !== "super_admin" &&
+      session.role !== "super_admin"
+    ) {
+      return NextResponse.json(
+        { error: "Only a Super Admin can promote another Super Admin" },
+        { status: 403 }
+      );
+    }
+
     const demotingSuperAdmin =
       current.role === "super_admin" &&
       current.isActive &&

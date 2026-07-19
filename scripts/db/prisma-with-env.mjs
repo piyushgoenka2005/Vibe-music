@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 
@@ -11,10 +12,13 @@ spawnSync(process.execPath, [path.join(process.cwd(), "scripts", "db", "sync-pri
   cwd: process.cwd(),
 });
 
-const result = spawnSync(
-  process.execPath,
-  ["--env-file", envFile, prismaEntry, ...args],
-  { stdio: "inherit", cwd: process.cwd() }
-);
+const nodeArgs = fs.existsSync(envFile)
+  ? ["--env-file", envFile, prismaEntry, ...args]
+  : [prismaEntry, ...args];
+
+const result = spawnSync(process.execPath, nodeArgs, {
+  stdio: "inherit",
+  cwd: process.cwd(),
+});
 
 process.exit(result.status ?? 1);

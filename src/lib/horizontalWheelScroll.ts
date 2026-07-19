@@ -3,12 +3,34 @@
  * Never steals vertical page scroll — only reacts to clear sideways intent
  * (trackpad deltaX, Shift+wheel, or dominant horizontal delta).
  *
- * Discrete mouse-wheel clicks (large deltas) use smooth scrolling so the
- * rail glides instead of jumping. Continuous trackpad deltas write scrollLeft
- * directly for 1:1 tracking.
+ * Discrete mouse-wheel clicks use smooth scrolling. Continuous trackpad
+ * deltas write scrollLeft with scroll-behavior forced to auto so CSS smooth
+ * does not lag/queue behind the gesture.
  */
 export function attachHorizontalWheelScroll(el: HTMLElement): () => void {
   const DISCRETE_THRESHOLD = 50;
+  let restoreTimer: number | null = null;
+  let previousBehavior = "";
+
+  const forceAutoScrollBehavior = () => {
+    if (restoreTimer !== null) {
+      window.clearTimeout(restoreTimer);
+      restoreTimer = null;
+    }
+    if (!previousBehavior) {
+      previousBehavior = el.style.scrollBehavior;
+    }
+    el.style.scrollBehavior = "auto";
+  };
+
+  const scheduleRestore = () => {
+    if (restoreTimer !== null) window.clearTimeout(restoreTimer);
+    restoreTimer = window.setTimeout(() => {
+      el.style.scrollBehavior = previousBehavior;
+      previousBehavior = "";
+      restoreTimer = null;
+    }, 120);
+  };
 
   const onWheel = (event: WheelEvent) => {
     const maxScroll = el.scrollWidth - el.clientWidth;
@@ -37,10 +59,16 @@ export function attachHorizontalWheelScroll(el: HTMLElement): () => void {
     if (isDiscrete) {
       el.scrollTo({ left: clamped, behavior: "smooth" });
     } else {
+      forceAutoScrollBehavior();
       el.scrollLeft = clamped;
+      scheduleRestore();
     }
   };
 
   el.addEventListener("wheel", onWheel, { passive: false });
-  return () => el.removeEventListener("wheel", onWheel);
+  return () => {
+    if (restoreTimer !== null) window.clearTimeout(restoreTimer);
+    el.style.scrollBehavior = previousBehavior;
+    el.removeEventListener("wheel", onWheel);
+  };
 }

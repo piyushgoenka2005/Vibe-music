@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createSafeJSONStorage } from "@/lib/storage/safeLocalStorage";
 
-/** @deprecated Addresses are stored in Firestore. Kept for localStorage migration only. */
+/** @deprecated Addresses live in PostgreSQL via account APIs. Kept for localStorage migration only. */
 export interface SavedAddress {
   id: string;
   label: string;

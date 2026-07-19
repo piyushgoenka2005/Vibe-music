@@ -98,6 +98,7 @@
   color: #475569;
 }
 
+.product-card-actions .product-share-btn,
 .product-card-actions .wl-heart-btn,
 .product-card-actions .compare-btn {
   width: var(--share-btn-size, 2rem);
@@ -159,10 +160,34 @@
   .product-card-actions {
     top: 0.45rem;
     right: 0.45rem;
+    left: auto;
+    max-width: calc(100% - 0.9rem);
     gap: 0.35rem;
   }
 
-  .cat-product-grid--grid .product-card-actions,
+  /* List cards: even spacing across the media top */
+  .cat-product-grid--list .product-card-actions {
+    display: flex;
+    top: 0.35rem;
+    left: 0.35rem;
+    right: 0.35rem;
+    width: auto;
+    max-width: none;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0;
+  }
+
+  .cat-product-grid--list .product-card-actions .product-share-btn,
+  .cat-product-grid--list .product-card-actions .wl-heart-btn,
+  .cat-product-grid--list .product-card-actions .compare-btn {
+    --share-btn-size: 2.75rem;
+    width: var(--share-btn-size);
+    min-width: var(--share-btn-size);
+    height: var(--share-btn-size);
+    min-height: var(--share-btn-size);
+  }
+
   .new-arrivals-card-wrap .product-share-btn--overlay {
     display: none;
   }

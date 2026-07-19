@@ -687,6 +687,21 @@ model ContactMessage {
   @@map("contact_messages")
 }
 
+model ProductStockAlert {
+  id          String  @id
+  email       String
+  productId   String  @map("product_id")
+  productSlug String  @map("product_slug")
+  productName String  @map("product_name")
+  userId      String? @map("user_id")
+  createdAt   String  @map("created_at")
+  notifiedAt  String? @map("notified_at")
+
+  @@unique([email, productId])
+  @@index([productId, notifiedAt])
+  @@map("product_stock_alerts")
+}
+
 model SearchAnalyticsEvent {
   id        String @id
   query     String
@@ -1015,109 +1030,6 @@ model RentalPolicy {
   updatedAt          String @map("updated_at")
 
   @@map("rental_policies")
-}
-
-// ─── Finance / EMI ──────────────────────────────────────────────────────────
-
-model FinanceProvider {
-  id              String        @id
-  name            String
-  slug            String        @unique
-  type            String        @default("bank")
-  logoUrl         String?       @map("logo_url")
-  description     String        @default("")
-  status          String        @default("active")
-  minOrderValue   Float         @default(5000) @map("min_order_value")
-  maxOrderValue   Float         @default(500000) @map("max_order_value")
-  processingFeePct Float        @default(0) @map("processing_fee_pct")
-  sortOrder       Int           @default(0) @map("sort_order")
-  createdAt       String        @map("created_at")
-  updatedAt       String        @map("updated_at")
-  plans           FinancePlan[]
-  applications    FinanceApplication[]
-
-  @@index([status])
-  @@map("finance_providers")
-}
-
-model FinancePlan {
-  id                String          @id
-  providerId        String          @map("provider_id")
-  name              String
-  tenureMonths      Int             @map("tenure_months")
-  interestRateAnnual Float          @default(0) @map("interest_rate_annual")
-  isNoCostEmi       Boolean         @default(false) @map("is_no_cost_emi")
-  emiType           String          @default("card") @map("emi_type")
-  minOrderValue     Float           @default(5000) @map("min_order_value")
-  maxOrderValue     Float           @default(500000) @map("max_order_value")
-  downPaymentMinPct Float           @default(0) @map("down_payment_min_pct")
-  status            String          @default("active")
-  createdAt         String          @map("created_at")
-  updatedAt         String          @map("updated_at")
-  provider          FinanceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  applications      FinanceApplication[]
-
-  @@index([providerId])
-  @@index([status])
-  @@index([emiType])
-  @@map("finance_plans")
-}
-
-model FinanceApplication {
-  id                  String               @id
-  applicationNumber   String               @unique @map("application_number")
-  userId              String?              @map("user_id")
-  email               String
-  customerName        String               @map("customer_name")
-  customerPhone       String               @map("customer_phone")
-  isGuest             Boolean              @default(false) @map("is_guest")
-  productName         String               @map("product_name")
-  productSlug         String?              @map("product_slug")
-  orderValue          Float                @map("order_value")
-  downPayment         Float                @default(0) @map("down_payment")
-  tenureMonths        Int                  @map("tenure_months")
-  providerId          String               @map("provider_id")
-  planId              String               @map("plan_id")
-  emiType             String               @map("emi_type")
-  monthlyInstallment  Float                @map("monthly_installment")
-  totalPayable        Float                @map("total_payable")
-  interestAmount      Float                @default(0) @map("interest_amount")
-  processingFee       Float                @default(0) @map("processing_fee")
-  status              String               @default("submitted")
-  rejectionReason     String?              @map("rejection_reason")
-  panNumber           String?              @map("pan_number")
-  employmentType      String?              @map("employment_type")
-  monthlyIncome       Float?               @map("monthly_income")
-  documents           Json                 @default("[]")
-  notes               String?
-  approvedAt          String?              @map("approved_at")
-  rejectedAt          String?              @map("rejected_at")
-  createdAt           String               @map("created_at")
-  updatedAt           String               @map("updated_at")
-  provider            FinanceProvider      @relation(fields: [providerId], references: [id])
-  plan                FinancePlan          @relation(fields: [planId], references: [id])
-  events              FinanceApplicationEvent[]
-
-  @@index([userId])
-  @@index([email])
-  @@index([status])
-  @@index([providerId])
-  @@index([createdAt])
-  @@map("finance_applications")
-}
-
-model FinanceApplicationEvent {
-  id            String             @id
-  applicationId String             @map("application_id")
-  status        String
-  note          String?
-  createdBy     String?            @map("created_by")
-  createdAt     String             @map("created_at")
-  application   FinanceApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-
-  @@index([applicationId])
-  @@index([createdAt])
-  @@map("finance_application_events")
 }
 
 // ─── Giveaway Engine ────────────────────────────────────────────────────────

@@ -16,6 +16,8 @@ interface RevealProps {
   id?: string;
   /** Always visible — use for above-the-fold blocks (hero, first sections). */
   immediate?: boolean;
+  /** Optional tone for accent styling (e.g. homepage stats). */
+  "data-tone"?: string;
 }
 
 export default function Reveal({
@@ -25,6 +27,7 @@ export default function Reveal({
   as: Tag = "div",
   id,
   immediate = false,
+  "data-tone": dataTone,
 }: RevealProps) {
   const ref = useRef<HTMLElement>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -80,6 +83,7 @@ export default function Reveal({
       ref={ref as never}
       className={classes}
       id={id}
+      data-tone={dataTone}
       style={{ transitionDelay: visible && animate ? `${delay}ms` : undefined }}
     >
       {children}
