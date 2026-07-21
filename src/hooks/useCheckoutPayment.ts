@@ -6,7 +6,6 @@ import { BRAND } from "@/lib/brand";
 import { cacheOrderForConfirmation } from "@/lib/checkout/orderConfirmationCache";
 import { ensureRazorpayScriptLoaded, useRazorpay } from "@/hooks/useRazorpay";
 import {
-  createCodOrder,
   createPaymentOrder,
   completeDemoPayment,
   releaseOrderReservation,
@@ -159,25 +158,12 @@ export function useCheckoutPayment({
     if (disabled || isProcessing) return;
 
     setIsProcessing(true);
-    setProcessingLabel(
-      paymentMethod === "razorpay" ? "Creating order…" : "Placing order…"
-    );
+    setProcessingLabel("Creating order…");
     let pendingOrderId: string | null = null;
     let pendingTrackingToken: string | undefined;
 
     try {
       const payload = buildPayload();
-
-      if (paymentMethod === "cod") {
-        const { orderId, trackingToken, order } = await createCodOrder(payload);
-        goToOrderConfirmation(
-          orderId,
-          trackingToken ?? order.trackingToken,
-          order.email
-        );
-        cacheOrderForConfirmation(order);
-        return;
-      }
 
       const key = orderPayloadKey(payload);
       const prefetched =

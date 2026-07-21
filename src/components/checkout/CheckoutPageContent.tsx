@@ -12,7 +12,6 @@ import CheckoutSummary, {
 import CheckoutPaymentMethods, {
   type OnlinePaymentChannel,
 } from "@/components/checkout/CheckoutPaymentMethods";
-import type { CodCapabilities } from "@/lib/checkout/codEligibilityClient";
 import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
@@ -136,7 +135,6 @@ export default function CheckoutPageContent() {
   const [addressForm, setAddressForm] = useState<ShippingAddress>(EMPTY_ADDRESS);
   const [confirmedAddress, setConfirmedAddress] =
     useState<ShippingAddress | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("razorpay");
   const shippingMethod = getDefaultShippingMethod();
   const [zoneQuote, setZoneQuote] = useState<{
     key: string;
@@ -149,7 +147,6 @@ export default function CheckoutPageContent() {
     razorpayConfigured: boolean;
     demoPaymentsAllowed: boolean;
     onlinePaymentsAvailable: boolean;
-    cod?: CodCapabilities;
   } | null>(null);
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
@@ -193,15 +190,11 @@ export default function CheckoutPageContent() {
           razorpayConfigured: boolean;
           demoPaymentsAllowed: boolean;
           onlinePaymentsAvailable: boolean;
-          cod?: CodCapabilities;
         }>;
       })
       .then((data) => {
         if (cancelled || !data) return;
         setCheckoutCapabilities(data);
-        if (!data.onlinePaymentsAvailable) {
-          setPaymentMethod("cod");
-        }
       })
       .catch(() => {
         /* Keep optimistic defaults if capabilities fail to load. */
@@ -278,10 +271,7 @@ export default function CheckoutPageContent() {
     0
   );
 
-  const effectivePaymentMethod = useMemo((): PaymentMethod => {
-    if (paymentMethod === "cod") return "cod";
-    return onlinePaymentsAvailable ? "razorpay" : "cod";
-  }, [onlinePaymentsAvailable, paymentMethod]);
+  const effectivePaymentMethod: PaymentMethod = "razorpay";
 
   const buyerState = resolvedAddress?.state ?? "Maharashtra";
   const email = (user?.email ?? guestEmail).trim().toLowerCase();
@@ -992,7 +982,7 @@ export default function CheckoutPageContent() {
                 onlineChannel={onlineChannel}
                 onlinePaymentsAvailable={onlinePaymentsAvailable}
                 onOnlineChannelChange={setOnlineChannel}
-                onPaymentMethodChange={setPaymentMethod}
+                onPaymentMethodChange={() => undefined}
                 paymentMethod={effectivePaymentMethod}
               />
 

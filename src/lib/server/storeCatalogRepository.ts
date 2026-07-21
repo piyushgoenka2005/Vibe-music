@@ -1,6 +1,5 @@
-﻿/**
+/**
  * Product catalog data access (PostgreSQL via Prisma).
- * Filename kept for import stability during the Firestore removal migration.
  */
 import "server-only";
 
@@ -37,7 +36,7 @@ export async function writeProduct(product: CatalogProduct): Promise<CatalogProd
 
 export async function batchWriteProducts(products: CatalogProduct[]): Promise<number> {
   await pg.batchWriteProducts(products);
-    invalidateCatalogCache();
+  invalidateCatalogCache();
   return products.length;
 }
 

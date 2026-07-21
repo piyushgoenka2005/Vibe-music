@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import {
   fetchProductsByIds,
-} from "@/lib/server/firestoreCatalogRepository";
+} from "@/lib/server/storeCatalogRepository";
 import {
   getAllProducts,
   getCatalogProductBySlug,

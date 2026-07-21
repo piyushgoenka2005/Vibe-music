@@ -25,7 +25,7 @@ export default function RentalCheckoutPageClient() {
   const [email, setEmail] = useState(user?.email ?? "");
   const [customerName, setCustomerName] = useState(user?.name ?? user?.email?.split("@")[0] ?? "");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">("razorpay");
+  const [paymentMethod] = useState<"razorpay">("razorpay");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [agreementAccepted, setAgreementAccepted] = useState(false);
   const [address, setAddress] = useState({
@@ -125,7 +125,7 @@ export default function RentalCheckoutPageClient() {
       const tokenQuery = result.booking.trackingToken
         ? `&token=${encodeURIComponent(result.booking.trackingToken)}`
         : "";
-      if (result.demoPaymentAllowed || paymentMethod === "cod") {
+      if (result.demoPaymentAllowed) {
         router.push(`/rentals/success?booking=${result.booking.id}${tokenQuery}`);
         return;
       }
@@ -208,15 +208,9 @@ export default function RentalCheckoutPageClient() {
           Phone
           <input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} required />
         </label>
-        <label>
-          Payment
-          <select
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value as "razorpay" | "cod")}
-          >
-            <option value="razorpay">Pay online (Razorpay)</option>
-          </select>
-        </label>
+        <p className="rentals-form__payment-note">
+          Payment is collected online via Razorpay (UPI, cards, net banking).
+        </p>
 
         {fulfillment === "delivery" ? (
           <>

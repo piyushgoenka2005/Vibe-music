@@ -1,6 +1,6 @@
 import "server-only";
 
-import { fetchBrands } from "@/lib/server/firestoreCatalogRepository";
+import { fetchBrands } from "@/lib/server/storeCatalogRepository";
 import { getCachedActiveProducts } from "@/lib/server/catalogSnapshotCache";
 import { listCategories } from "@/lib/server/categoryRepository";
 import { getBrandLogoUrl } from "@/lib/brandLogos";

@@ -156,9 +156,8 @@ test.describe("api smoke", () => {
     const body = await response.json();
     expect(typeof body.onlinePaymentsAvailable).toBe("boolean");
     expect(typeof body.placesAutocomplete).toBe("boolean");
-    expect(body.cod).toBeTruthy();
-    expect(typeof body.cod.enabled).toBe("boolean");
-    expect(typeof body.cod.maxOrderValue).toBe("number");
+    expect(Array.isArray(body.paymentMethods)).toBe(true);
+    expect(body.paymentMethods).toEqual(["razorpay"]);
   });
 
   test("create-order rejects empty cart", async ({ request }) => {
@@ -166,7 +165,7 @@ test.describe("api smoke", () => {
       data: {
         items: [],
         email: "buyer@example.com",
-        paymentMethod: "cod",
+        paymentMethod: "razorpay",
         shippingAddress: {
           name: "Test Buyer",
           line1: "1 Test Street",

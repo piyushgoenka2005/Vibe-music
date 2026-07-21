@@ -70,19 +70,7 @@ test.describe("cart and wishlist", () => {
 });
 
 test.describe("guest checkout", () => {
-  test.describe.configure({ mode: "serial" });
-
-  test("COD checkout completes for guest cart", async ({ page, request }) => {
-    test.setTimeout(120_000);
-    test.skip(
-      !process.env.DATABASE_URL,
-      "DATABASE_URL required for order persistence"
-    );
-
-    const caps = await request.get("/api/checkout/capabilities");
-    const capsBody = (await caps.json()) as { cod?: { enabled?: boolean } };
-    test.skip(!capsBody.cod?.enabled, "COD disabled in environment (expected for production)");
-
+  test("checkout shows Razorpay-only payment options", async ({ page, request }) => {
     const product = await fetchCheckoutProduct(request);
     await seedGuestCart(page, product);
     const email = `e2e-guest-${Date.now()}@example.com`;
@@ -92,25 +80,13 @@ test.describe("guest checkout", () => {
     await fillGuestCheckoutAddress(page, email);
     await page.getByRole("button", { name: /Continue to Review/i }).click();
     await page.getByRole("button", { name: /Continue to Payment/i }).click();
-    await page.getByText("Cash on Delivery").click();
-    const placeOrder = page.getByRole("button", { name: /Place order \(COD\)/i });
-    await expect(placeOrder).toBeEnabled({ timeout: 15_000 });
-    await Promise.all([
-      page.waitForURL(/\/checkout\/success/, { timeout: 60_000 }),
-      placeOrder.click(),
-    ]);
-    await expect(page.getByText(/order|confirmed|success/i).first()).toBeVisible();
+
+    await expect(page.getByRole("button", { name: /Pay Online/i })).toBeVisible();
+    await expect(page.getByText(/Cash on Delivery/i)).toHaveCount(0);
   });
 
-  test("create-order API accepts valid COD payload", async ({ request }) => {
-    test.skip(
-      !process.env.DATABASE_URL,
-      "DATABASE_URL required for order persistence"
-    );
-
-    const caps = await request.get("/api/checkout/capabilities");
-    const capsBody = (await caps.json()) as { cod?: { enabled?: boolean } };
-    test.skip(!capsBody.cod?.enabled, "COD disabled in environment (expected for production)");
+  test("create-order API rejects COD payment method", async ({ request }) => {
+    test.skip(!process.env.DATABASE_URL, "DATABASE_URL required");
 
     const product = await fetchCheckoutProduct(request);
     const response = await request.post("/api/payment/create-order", {
@@ -130,8 +106,8 @@ test.describe("guest checkout", () => {
       },
     });
 
-    expect(response.ok()).toBeTruthy();
+    expect(response.status()).toBe(400);
     const body = await response.json();
-    expect(body.order?.id ?? body.orderId).toBeTruthy();
+    expect(body.error).toMatch(/razorpay/i);
   });
 });

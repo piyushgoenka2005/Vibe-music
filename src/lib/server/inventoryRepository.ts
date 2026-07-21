@@ -2,7 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
-import { invalidateCatalogCache } from "@/lib/server/firestoreCatalogRepository";
+import { invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
 import {
   getAvailableStock,
   stockToAvailability,

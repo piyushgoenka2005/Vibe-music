@@ -7,7 +7,7 @@ import { getProductImage } from "@/data/productImages";
 import {
   fetchProductsByIds,
   isCatalogUnavailable,
-} from "@/lib/server/firestoreCatalogRepository";
+} from "@/lib/server/storeCatalogRepository";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
   GearStoriesSectionData,

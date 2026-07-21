@@ -17,7 +17,6 @@ import {
 import { notifyAdminNewOrder } from "@/lib/server/orderNotificationService";
 import { resolveAuthoritativeShippingCharge } from "@/lib/server/shippingQuoteService";
 import {
-  reserveAndFulfillStockForOrder,
   reserveStockForOrder,
   releaseReservedStockForOrder,
 } from "@/lib/server/inventoryService";
@@ -120,10 +119,9 @@ function buildOrderRecord(
     buyerState: payload.buyerState,
   });
 
-  const paymentStatus: PaymentStatus =
-    payload.paymentMethod === "cod" ? "cod_pending" : "pending";
+  const paymentStatus: PaymentStatus = "pending";
 
-  const orderStatus = payload.paymentMethod === "cod" ? "processing" : "pending";
+  const orderStatus = "pending";
 
   const items = payload.items.map((source, index) => {
     const line = invoice.lineBreakdown[index]!;
@@ -174,7 +172,7 @@ function buildOrderRecord(
     total: invoice.grandTotal,
     items,
     shippingAddress: payload.shippingAddress,
-    invoice: payload.paymentMethod === "cod" ? invoice : undefined,
+    invoice: undefined,
     inventoryStatus: "none",
     createdAt: now,
     updatedAt: now,
@@ -275,15 +273,9 @@ export async function createOrder(
 
     const reserveInventory = async (): Promise<void> => {
       try {
-        if (payload.paymentMethod === "cod") {
-          logPayment("Inventory reservation started (COD)", { orderId });
-          await reserveAndFulfillStockForOrder(orderId, inventoryLines);
-          await updateOrder(orderId, { inventoryStatus: "fulfilled" });
-        } else {
-          logPayment("Inventory reservation started (online)", { orderId });
-          await reserveStockForOrder(orderId, inventoryLines);
-          await updateOrder(orderId, { inventoryStatus: "reserved" });
-        }
+        logPayment("Inventory reservation started (online)", { orderId });
+        await reserveStockForOrder(orderId, inventoryLines);
+        await updateOrder(orderId, { inventoryStatus: "reserved" });
         logPayment("Inventory reservation completed", { orderId });
       } catch (inventoryError) {
         logPaymentError(inventoryError, {

@@ -33,7 +33,7 @@ import {
   skuExists,
   slugExists,
   writeProduct,
-} from "@/lib/server/firestoreCatalogRepository";
+} from "@/lib/server/storeCatalogRepository";
 import { getCachedCategories, getCachedProducts } from "@/lib/server/catalogSnapshotCache";
 import { recordInventoryLogEntry } from "@/lib/server/inventoryRepository";
 import {

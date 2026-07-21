@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
-import { invalidateCatalogCache } from "@/lib/server/firestoreCatalogRepository";
+import { invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
 import { categoryToPrisma } from "@/lib/server/prisma/mappers";
 import { slugify } from "@/lib/slug";
 import type { AdminCategory } from "@/types/admin";

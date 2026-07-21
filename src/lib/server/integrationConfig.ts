@@ -2,7 +2,6 @@ import { isSmtpConfigured } from "@/lib/server/email/smtpConfig";
 import { isPostgresConfigured } from "@/lib/db/postgresConfig";
 import { isGoogleAuthConfigured } from "@/lib/auth/google-config";
 import { isRazorpayConfigured, isDemoPaymentsAllowed } from "@/lib/server/env";
-import { getCodPolicy } from "@/lib/server/codEligibility";
 
 export type IntegrationStatus = "ok" | "missing" | "partial";
 export type IntegrationTier = "required" | "recommended" | "optional";
@@ -93,8 +92,6 @@ export function getOpsStatusReport(): {
   items: IntegrationCheckItem[];
 } {
   const checks = getIntegrationChecks();
-  const codPolicy = getCodPolicy();
-  const codStatus: IntegrationStatus = codPolicy.enabled ? "ok" : "missing";
 
   const items: IntegrationCheckItem[] = [
     {
@@ -166,19 +163,6 @@ export function getOpsStatusReport(): {
       status: checks.places,
       tier: "optional",
       detail: "GOOGLE_PLACES_API_KEY or GOOGLE_MAPS_API_KEY — manual address always works",
-    },
-    {
-      key: "cod",
-      label: "Cash on delivery gates",
-      status: codStatus,
-      tier: "optional",
-      detail: !codPolicy.enabled
-        ? "COD_ENABLED=false — cash on delivery off"
-        : `Enabled · max ₹${codPolicy.maxOrderValue.toLocaleString("en-IN") || "∞"}${
-            codPolicy.pinPrefixes.length
-              ? ` · PIN prefixes: ${codPolicy.pinPrefixes.join(", ")}`
-              : " · all PINs"
-          }`,
     },
     {
       key: "invoicePdf",

@@ -4,7 +4,7 @@ import {
   fetchAllProducts,
   fetchBrands,
   fetchCategories,
-} from "@/lib/server/firestoreCatalogRepository";
+} from "@/lib/server/storeCatalogRepository";
 import { categoryPath, productPath } from "@/lib/routes";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import { getCategoryGridImage } from "@/lib/categoryImages";

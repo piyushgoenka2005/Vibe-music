@@ -6,7 +6,7 @@ import {
   canAccessOrder,
   isPlacedOrder,
 } from "@/lib/server/orderAccess";
-import { fetchProductsByIds } from "@/lib/server/firestoreCatalogRepository";
+import { fetchProductsByIds } from "@/lib/server/storeCatalogRepository";
 import { getOrderById } from "@/lib/server/orderService";
 import { raceWithTimeout } from "@/lib/server/raceWithTimeout";
 import { buildPublicOrderTracking } from "@/lib/server/shipmentService";

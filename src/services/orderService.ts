@@ -46,17 +46,6 @@ export async function verifyPayment(
   return parseJson<VerifyPaymentResponse>(response);
 }
 
-export async function createCodOrder(
-  payload: CreateOrderPayload
-): Promise<{ orderId: string; trackingToken?: string; order: Order }> {
-  const response = await fetch("/api/payment/create-order", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...payload, paymentMethod: "cod" }),
-  });
-  return parseJson<{ orderId: string; order: Order }>(response);
-}
-
 export async function releaseOrderReservation(
   orderId: string,
   trackingToken: string
