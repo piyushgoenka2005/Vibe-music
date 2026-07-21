@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import {
   BROWSE_CATEGORY_CARDS,
   BROWSE_CATEGORY_CARDS_CTA,
@@ -7,6 +8,17 @@ import BrowseCategoryCardsSlider from "@/components/home/BrowseCategoryCardsSlid
 import Reveal from "@/components/layout/Reveal";
 
 const HEADLINE_ID = "browse-category-cards-title";
+
+function ViewAllGearLabel() {
+  return (
+    <>
+      View All Gear
+      <span className="category-cards-container__button-arrow" aria-hidden>
+        <ArrowUpRight size={16} strokeWidth={2.5} />
+      </span>
+    </>
+  );
+}
 
 export default function BrowseCategoryCardsSection() {
   return (
@@ -27,7 +39,7 @@ export default function BrowseCategoryCardsSection() {
             className="category-cards-container__button"
             href={BROWSE_CATEGORY_CARDS_CTA}
           >
-            View All Gear
+            <ViewAllGearLabel />
           </Link>
         </div>
       </div>
@@ -41,7 +53,7 @@ export default function BrowseCategoryCardsSection() {
           className="category-cards-container__button"
           href={BROWSE_CATEGORY_CARDS_CTA}
         >
-          View All Gear
+          <ViewAllGearLabel />
         </Link>
       </div>
     </Reveal>

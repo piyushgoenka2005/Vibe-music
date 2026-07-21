@@ -10,6 +10,11 @@ import {
 import { cleanProductName } from "@/lib/product/cleanProductName";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import { mergeProductSpecs } from "@/lib/product/productSpecs";
+import {
+  detectSearchInstrumentIntent,
+  productMatchesSearchIntent,
+  searchIntentScoreBoost,
+} from "@/lib/product/productRelevance";
 import { slugify } from "@/lib/slug";
 import {
   batchDeleteProducts as fsBatchDelete,
@@ -400,21 +405,39 @@ export function searchInCatalogProducts(
       }
     } else {
       const tokens = normalized.split(/\s+/).filter(Boolean);
+      const intent = detectSearchInstrumentIntent(normalized);
+      if (intent) {
+        source = source.filter((product) =>
+          productMatchesSearchIntent(product, intent)
+        );
+      }
+
       source = source
         .map((product) => ({
           product,
-          score: scoreProductMatch(product, tokens),
+          score:
+            scoreProductMatch(product, tokens, normalized) +
+            searchIntentScoreBoost(product, intent),
         }))
         .filter((entry) => entry.score > 0)
         .sort((a, b) => b.score - a.score)
         .map((entry) => entry.product);
+
+      // Multi-word queries must match every token (e.g. brand + model), not
+      // just one shared word like "guitar".
+      if (!intent && tokens.length >= 2) {
+        source = source.filter((product) =>
+          productMatchesAllSearchTokens(product, tokens)
+        );
+      }
 
       // "guitar" should surface instruments — not guitar amplifiers (those match
       // via the word "Guitar" in amp titles). Amps stay available for amp queries
       // and the Amplifiers subcategory browse path.
       if (
         queryLooksLikeGuitarSearch(tokens) &&
-        !queryRequestsAmplifiers(normalized)
+        !queryRequestsAmplifiers(normalized) &&
+        intent !== "amplifier"
       ) {
         source = source.filter(
           (product) => !isGuitarAmplifierCatalogProduct(product)
@@ -620,7 +643,8 @@ function queryLooksLikeGuitarSearch(tokens: string[]): boolean {
 
 function scoreProductMatch(
   product: CatalogProduct,
-  tokens: string[]
+  tokens: string[],
+  rawQuery = ""
 ): number {
   if (tokens.length === 0) return 0;
 
@@ -629,10 +653,20 @@ function scoreProductMatch(
   const category = product.category.toLowerCase();
   const subcategory = (product.subcategory ?? "").toLowerCase();
   const slug = product.slug.toLowerCase();
+  const query = rawQuery.toLowerCase().trim();
   let score = 0;
 
   const fieldIncludes = (field: string, token: string) =>
     expandSearchToken(token).some((variant) => field.includes(variant));
+
+  // Prefer exact / contiguous phrase hits over scattered token matches.
+  if (query.length >= 4) {
+    if (name === query) score += 200;
+    else if (name.includes(query)) score += 140;
+    else if (subcategory === query) score += 120;
+    else if (subcategory.includes(query)) score += 90;
+    else if (slug.includes(query.replace(/\s+/g, "-"))) score += 70;
+  }
 
   for (const token of tokens) {
     const variants = expandSearchToken(token);
@@ -647,15 +681,9 @@ function scoreProductMatch(
     if (fieldIncludes(slug, token)) score += 10;
   }
 
-  const allTokensMatch = tokens.every(
-    (token) =>
-      fieldIncludes(name, token) ||
-      fieldIncludes(brand, token) ||
-      fieldIncludes(category, token) ||
-      fieldIncludes(subcategory, token) ||
-      fieldIncludes(slug, token)
-  );
-  if (allTokensMatch) score += 25 * tokens.length;
+  if (productMatchesAllSearchTokens(product, tokens)) {
+    score += 25 * tokens.length;
+  }
 
   // Popularity/stock boosts only apply to actual text matches; otherwise
   // every in-stock product would match every query.
@@ -664,6 +692,29 @@ function scoreProductMatch(
   score += product.rating * 2 + Math.min(product.reviewCount, 50) * 0.1;
   if (product.stock > 0) score += 5;
   return score;
+}
+
+function productMatchesAllSearchTokens(
+  product: CatalogProduct,
+  tokens: string[]
+): boolean {
+  const name = product.name.toLowerCase();
+  const brand = product.brand.toLowerCase();
+  const category = product.category.toLowerCase();
+  const subcategory = (product.subcategory ?? "").toLowerCase();
+  const slug = product.slug.toLowerCase();
+
+  const fieldIncludes = (field: string, token: string) =>
+    expandSearchToken(token).some((variant) => field.includes(variant));
+
+  return tokens.every(
+    (token) =>
+      fieldIncludes(name, token) ||
+      fieldIncludes(brand, token) ||
+      fieldIncludes(category, token) ||
+      fieldIncludes(subcategory, token) ||
+      fieldIncludes(slug, token)
+  );
 }
 
 export async function searchProducts(

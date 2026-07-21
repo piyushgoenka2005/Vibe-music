@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, Search, ShoppingCart, User } from "lucide-react";
+import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 import { useShallow } from "zustand/react/shallow";
@@ -272,14 +272,20 @@ export default function SiteHeader() {
 
           <button
             type="button"
-            className="site-header__menu-btn"
+            className={`site-header__menu-btn${mobileOpen ? " is-open" : ""}`}
             onClick={toggleMobileNav}
             aria-expanded={mobileOpen}
             aria-controls="site-header-mobile-nav"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
-            <Menu size={22} strokeWidth={1.75} aria-hidden />
-            <span className="site-header__menu-label">Menu</span>
+            {mobileOpen ? (
+              <X size={24} strokeWidth={1.75} aria-hidden />
+            ) : (
+              <>
+                <Menu size={22} strokeWidth={1.75} aria-hidden />
+                <span className="site-header__menu-label">Menu</span>
+              </>
+            )}
           </button>
         </div>
       </div>

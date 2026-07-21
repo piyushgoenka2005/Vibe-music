@@ -2758,7 +2758,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
 }
 
 /*
- * Limited-stock tag — same orange left-edge ribbon as Trending Now.
+ * Limited-stock tag — brand-blue left-edge ribbon.
  * Rank (when present) sits as a compact black disc beside it.
  */
 .premium-home .new-arrivals-card__media .new-arrivals-card__stock-row {
@@ -2780,7 +2780,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   margin: 0;
   padding: 0.45rem 0.9rem 0.45rem 0.7rem;
   border-radius: 0 999px 999px 0;
-  background: #dc2626;
+  background: var(--brand-primary, #1253ed);
   color: #ffffff;
   font-size: 0.625rem;
   font-weight: 800;
@@ -2789,7 +2789,7 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   text-transform: uppercase;
   box-shadow: none;
   white-space: nowrap;
-  --badge-fold: #991b1b;
+  --badge-fold: #0d3bb8;
 }
 
 .premium-home .new-arrivals-card__media .new-arrivals-card__ribbon::after {

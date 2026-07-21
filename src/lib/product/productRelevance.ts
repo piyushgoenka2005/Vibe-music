@@ -3,8 +3,10 @@ import type { CatalogProduct } from "@/types/catalog";
 export type ProductInstrumentKind =
   | "amplifier"
   | "acoustic-guitar"
+  | "electro-acoustic-guitar"
   | "electric-guitar"
   | "bass-guitar"
+  | "ukulele"
   | "generic";
 
 function normalizeText(value: string | undefined): string {
@@ -23,6 +25,13 @@ export function isGuitarAmplifierProduct(product: CatalogProduct): boolean {
   );
 }
 
+function looksLikeUkulele(haystack: string, sku: string): boolean {
+  if (haystack.includes("ukulele") || haystack.includes("ukelele")) return true;
+  if (/\buke\b/.test(haystack)) return true;
+  const upper = sku.toUpperCase();
+  return /HZA[- ]?UK|HZAUK|UK-?24|UKULELE/i.test(upper) || /hza[- ]?uk/i.test(haystack);
+}
+
 export function getProductInstrumentKind(
   product: CatalogProduct
 ): ProductInstrumentKind {
@@ -34,14 +43,119 @@ export function getProductInstrumentKind(
   const instrument = normalizeText(product.specifications.Instrument);
   const haystack = `${sub} ${name} ${productType} ${instrument}`;
 
+  if (looksLikeUkulele(haystack, product.sku)) return "ukulele";
+
+  if (
+    haystack.includes("electro acoustic") ||
+    haystack.includes("electro-acoustic") ||
+    sub.includes("electro acoustic")
+  ) {
+    if (haystack.includes("bass")) return "bass-guitar";
+    return "electro-acoustic-guitar";
+  }
+
+  if (
+    (haystack.includes("bass guitar") ||
+      (haystack.includes("bass") && haystack.includes("guitar"))) &&
+    !haystack.includes("acoustic")
+  ) {
+    return "bass-guitar";
+  }
+  if (haystack.includes("bass") && sub.includes("bass")) return "bass-guitar";
+
+  if (
+    haystack.includes("electric guitar") ||
+    (sub.includes("electric") &&
+      !sub.includes("electro") &&
+      haystack.includes("guitar"))
+  ) {
+    return "electric-guitar";
+  }
+
   if (haystack.includes("acoustic guitar") || sub.includes("acoustic")) {
     return "acoustic-guitar";
   }
-  if (haystack.includes("electric guitar") || sub.includes("electric")) {
+
+  return "generic";
+}
+
+/**
+ * Detect a specific instrument intent from a free-text search query.
+ * Returns null for broad queries like "guitar" or "hertz".
+ */
+export function detectSearchInstrumentIntent(
+  query: string
+): ProductInstrumentKind | null {
+  const value = normalizeText(query);
+  if (!value) return null;
+
+  if (
+    value.includes("ukulele") ||
+    value.includes("ukelele") ||
+    /(^|\s)uke(\s|$)/.test(value)
+  ) {
+    return "ukulele";
+  }
+
+  if (
+    /\bamplifiers?\b/.test(value) ||
+    /(^|\s)amps?(\s|$)/.test(value) ||
+    value.includes("guitar amp")
+  ) {
+    return "amplifier";
+  }
+
+  if (
+    value.includes("electro acoustic") ||
+    value.includes("electro-acoustic") ||
+    value.includes("electroacoustic")
+  ) {
+    return "electro-acoustic-guitar";
+  }
+
+  if (
+    value.includes("bass guitar") ||
+    (/\bbass\b/.test(value) && /\bguitars?\b/.test(value))
+  ) {
+    return "bass-guitar";
+  }
+
+  if (
+    value.includes("electric guitar") ||
+    value.includes("electric guitars") ||
+    (/\belectric\b/.test(value) && /\bguitars?\b/.test(value))
+  ) {
     return "electric-guitar";
   }
-  if (haystack.includes("bass")) return "bass-guitar";
-  return "generic";
+
+  if (
+    value.includes("acoustic guitar") ||
+    value.includes("acoustic guitars") ||
+    (/\bacoustic\b/.test(value) && /\bguitars?\b/.test(value))
+  ) {
+    return "acoustic-guitar";
+  }
+
+  return null;
+}
+
+export function productMatchesSearchIntent(
+  product: CatalogProduct,
+  intent: ProductInstrumentKind
+): boolean {
+  return getProductInstrumentKind(product) === intent;
+}
+
+/**
+ * Extra score when the catalog product matches a specific search intent.
+ * Mismatches are expected to be filtered before scoring; this is a boost only.
+ */
+export function searchIntentScoreBoost(
+  product: CatalogProduct,
+  intent: ProductInstrumentKind | null
+): number {
+  if (!intent) return 0;
+  return getProductInstrumentKind(product) === intent ? 80 : 0;
 }
 
 export function areMerchandisingPeersCompatible(
@@ -52,16 +166,33 @@ export function areMerchandisingPeersCompatible(
   const candidateKind = getProductInstrumentKind(candidate);
 
   if (sourceKind === "amplifier") {
-    return candidateKind === "amplifier" || candidateKind === "electric-guitar";
+    return (
+      candidateKind === "amplifier" || candidateKind === "electric-guitar"
+    );
   }
   if (sourceKind === "acoustic-guitar") {
-    return candidateKind !== "amplifier";
+    return (
+      candidateKind === "acoustic-guitar" ||
+      candidateKind === "electro-acoustic-guitar" ||
+      candidateKind === "ukulele"
+    );
+  }
+  if (sourceKind === "electro-acoustic-guitar") {
+    return (
+      candidateKind === "electro-acoustic-guitar" ||
+      candidateKind === "acoustic-guitar"
+    );
   }
   if (sourceKind === "electric-guitar") {
-    return candidateKind !== "acoustic-guitar";
+    return (
+      candidateKind === "electric-guitar" || candidateKind === "amplifier"
+    );
   }
   if (sourceKind === "bass-guitar") {
-    return candidateKind !== "amplifier" && candidateKind !== "acoustic-guitar";
+    return candidateKind === "bass-guitar";
+  }
+  if (sourceKind === "ukulele") {
+    return candidateKind === "ukulele";
   }
   return true;
 }

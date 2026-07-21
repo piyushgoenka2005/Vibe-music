@@ -493,8 +493,9 @@
 }
 
 .storefront-page .pdp-tabs__shell {
-  border-color: var(--border-default);
-  box-shadow: var(--shadow-card);
+  border-color: transparent;
+  box-shadow: none;
+  background: transparent;
 }
 
 .storefront-page .pdp-tabs__btn--active .pdp-tabs__btn-label {

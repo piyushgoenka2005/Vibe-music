@@ -20,7 +20,7 @@ export default function EditorialSplit() {
             <Link href={ROUTES.search} className="premium-btn premium-btn--primary">
               Explore studio gear
             </Link>
-            <Link href={ROUTES.blog} className="premium-btn premium-btn--ghost">
+            <Link href={ROUTES.blog} className="premium-btn premium-btn--outline">
               Read buying guides
             </Link>
           </div>

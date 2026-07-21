@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import type { CatalogProduct } from "@/types/catalog";
 import {
   areMerchandisingPeersCompatible,
+  detectSearchInstrumentIntent,
   getProductInstrumentKind,
+  productMatchesSearchIntent,
   rankMerchandisingPeers,
 } from "@/lib/product/productRelevance";
 
@@ -59,6 +61,47 @@ describe("productRelevance", () => {
     expect(getProductInstrumentKind(acoustic)).toBe("acoustic-guitar");
     expect(getProductInstrumentKind(amp)).toBe("amplifier");
     expect(areMerchandisingPeersCompatible(acoustic, amp)).toBe(false);
+  });
+
+  it("classifies ukuleles and electro-acoustics", () => {
+    const uke = makeProduct({
+      id: "uke",
+      name: "HERTZ HZA - UK(24) Professional Guitar",
+      subcategory: "Guitar",
+      sku: "VM-HZAUK2",
+    });
+    const electro = makeProduct({
+      id: "electro",
+      name: "HERTZ HZA3900EQ Electro Acoustic Guitar",
+      subcategory: "Electro Acoustic Guitar",
+      sku: "VM-HZA3900EQ",
+    });
+
+    expect(getProductInstrumentKind(uke)).toBe("ukulele");
+    expect(getProductInstrumentKind(electro)).toBe("electro-acoustic-guitar");
+  });
+
+  it("detects electric guitar intent and rejects acoustic matches", () => {
+    expect(detectSearchInstrumentIntent("Electric guitar")).toBe(
+      "electric-guitar"
+    );
+    expect(detectSearchInstrumentIntent("acoustic guitars")).toBe(
+      "acoustic-guitar"
+    );
+
+    const acoustic = makeProduct({
+      id: "acoustic",
+      name: "HERTZ HZA-3600 Natural Finish Acoustic Guitar",
+      subcategory: "Acoustic Guitar",
+    });
+    const electric = makeProduct({
+      id: "electric",
+      name: "HERTZ Strat Electric Guitar",
+      subcategory: "Electric Guitar",
+    });
+
+    expect(productMatchesSearchIntent(acoustic, "electric-guitar")).toBe(false);
+    expect(productMatchesSearchIntent(electric, "electric-guitar")).toBe(true);
   });
 
   it("ranks same-subcategory acoustic guitars above amps for an acoustic PDP", () => {
