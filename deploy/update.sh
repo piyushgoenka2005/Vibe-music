@@ -32,6 +32,9 @@ echo "==> Building"
 export NODE_ENV=production
 npm run build
 
+echo "==> Gear story videos (optional)"
+npm run verify:gear-videos || true
+
 echo "==> Restarting PM2"
 if pm2 describe vibe >/dev/null 2>&1; then
   pm2 restart vibe --update-env

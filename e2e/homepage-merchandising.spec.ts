@@ -1,0 +1,55 @@
+import { test, expect } from "./fixtures";
+
+interface HomepageProductItem {
+  id: string;
+  name: string;
+  requiresVariantSelection?: boolean;
+}
+
+interface HomepageSection {
+  key: string;
+  items?: HomepageProductItem[];
+}
+
+test.describe("homepage merchandising", () => {
+  test("carousel cards show Choose options for multi-variant products", async ({
+    page,
+    request,
+  }) => {
+    const response = await request.get("/api/homepage");
+    expect(response.ok()).toBeTruthy();
+    const body = (await response.json()) as { sections?: HomepageSection[] };
+
+    const variantItem = body.sections
+      ?.flatMap((section) => section.items ?? [])
+      .find((item) => item.requiresVariantSelection);
+
+    test.skip(!variantItem, "No multi-variant product on homepage carousel");
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const card = page.locator(
+      `.product-suggest__item[data-id="${variantItem!.id}"]`
+    );
+    await expect(card).toBeVisible({ timeout: 20_000 });
+    await expect(
+      card.getByRole("button", { name: /choose options/i })
+    ).toBeVisible();
+  });
+
+  test("homepage API marks variant products consistently", async ({
+    request,
+  }) => {
+    const response = await request.get("/api/homepage");
+    expect(response.ok()).toBeTruthy();
+    const body = (await response.json()) as { sections?: HomepageSection[] };
+
+    const items =
+      body.sections?.flatMap((section) => section.items ?? []) ?? [];
+    expect(items.length).toBeGreaterThan(0);
+
+    for (const item of items) {
+      expect(typeof item.requiresVariantSelection).toBe("boolean");
+    }
+  });
+});

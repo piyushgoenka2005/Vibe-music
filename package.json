@@ -28,6 +28,7 @@
     "download:images": "node scripts/assets/download-essential-images.mjs",
     "generate:favicons": "node scripts/assets/generate-favicons.mjs",
     "download:style-story": "node scripts/assets/download-style-story-thumbnails.mjs",
+    "verify:gear-videos": "npx tsx scripts/ops/verify-gear-story-videos.mts",
     "migrate:brand": "node scripts/legacy/migrate-brand.mjs && node scripts/legacy/migrate-content-brand.mjs",
     "sync:cdn-vps": "powershell -ExecutionPolicy Bypass -File scripts/ops/sync-cdn-to-vps.ps1",
     "postinstall": "node scripts/db/prisma-generate.mjs",
