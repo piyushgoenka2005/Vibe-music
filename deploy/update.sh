@@ -22,6 +22,9 @@ if [[ "${SEED_CATALOG:-0}" == "1" ]]; then
   npm run seed:catalog
 fi
 
+echo "==> Clearing stale Next.js build cache"
+rm -rf .next
+
 echo "==> Type-check"
 npm run type-check
 
