@@ -291,15 +291,17 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
               >
                 <X size={18} aria-hidden="true" />
               </button>
-              <ProductShareButton
-                overlay
-                position="top-right"
-                title={story.name}
-                url={productPath(story.slug)}
-                text={`Check out ${story.name} at Vibe Music`}
-                size={18}
-                className="gear-story-modal__share"
-              />
+              {story.slug ? (
+                <ProductShareButton
+                  overlay
+                  position="top-right"
+                  title={story.name}
+                  url={productPath(story.slug)}
+                  text={`Check out ${story.name} at Vibe Music`}
+                  size={18}
+                  className="gear-story-modal__share"
+                />
+              ) : null}
               {activeSrc ? (
                 <GearStoryMainImage
                   src={activeSrc}
@@ -353,9 +355,13 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                     </>
                   ) : null}
                 </>
-              ) : (
+              ) : story.slug ? (
                 <span className="gear-story-modal__price gear-story-modal__price--muted">
                   View product page for pricing
+                </span>
+              ) : (
+                <span className="gear-story-modal__price gear-story-modal__price--muted">
+                  Coming soon
                 </span>
               )}
             </div>
@@ -390,7 +396,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                 >
                   Add to cart
                 </button>
-              ) : (
+              ) : story.slug ? (
                 <NotifyMeButton
                   variant="inline"
                   className="gear-story-modal__btn gear-story-modal__btn--primary"
@@ -398,14 +404,17 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                   productSlug={story.slug}
                   productName={story.name}
                 />
-              )}
-              <Link
-                href={productPath(story.slug)}
-                className="gear-story-modal__btn gear-story-modal__btn--secondary"
-                onClick={onClose}
-              >
-                View product
-              </Link>
+              ) : null}
+              {story.slug ? (
+                <Link
+                  href={productPath(story.slug)}
+                  className="gear-story-modal__btn gear-story-modal__btn--secondary"
+                  onClick={onClose}
+                >
+                  View product
+                </Link>
+              ) : null}
+              {story.slug ? (
               <button
                 type="button"
                 className="gear-story-modal__btn gear-story-modal__btn--tertiary"
@@ -419,6 +428,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                 />
                 {isWishlisted ? "Saved" : "Wishlist"}
               </button>
+              ) : null}
             </div>
           </div>
         </div>

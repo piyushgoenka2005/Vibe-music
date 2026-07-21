@@ -46,7 +46,6 @@ input[type="reset"],
 .cart-drawer__checkout,
 .sw-search-bar__submit,
 .sw-search-recent__clear,
-.cat-toolbar__mobile-btn,
 .cat-pagination button,
 .locations-strip__cta,
 .blog-teaser__all,
@@ -57,7 +56,114 @@ input[type="reset"],
 /* Search bar submit buttons stay fully curved (pill) */
 .sw-search-landing-bar__submit,
 .sw-search-bar__submit,
+.cat-toolbar__mobile-btn,
 .error-page__btn--chain,
 .gooey-linkup__hit {
   border-radius: 999px !important;
+}
+
+.pdp-buybox__pin-apply {
+  border-radius: 10px !important;
+}
+
+/*
+ * Product-card Add to cart — canonical dark pill.
+ * Applies only to card / mini-card quick-add actions (not PDP buy box / sticky bar).
+ */
+.cat-product-card__add,
+.product-suggest__item-action--button,
+.cart-upsell__add,
+.compare-page__clear--cart,
+.acct__wishlist-actions .acct__btn--primary,
+.wl-drawer__action-btn--primary {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  min-height: 2.5rem !important;
+  height: auto !important;
+  padding: 0.55rem 0.85rem !important;
+  border: 1px solid #0f172a !important;
+  border-radius: 999px !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  font-family: var(--font-primary) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  line-height: 1.2 !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: pointer;
+  transition:
+    background 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease !important;
+}
+
+/* Full-width ATC on product / carousel / upsell cards */
+.cat-product-card__add,
+.product-suggest__item-action--button,
+.cart-upsell__add {
+  width: 100% !important;
+  max-width: none !important;
+  align-self: stretch !important;
+}
+
+/* Wishlist / compare share a row with other actions */
+.acct__wishlist-actions .acct__btn--primary,
+.compare-page__clear--cart {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+.wl-drawer__action-btn--primary {
+  width: auto !important;
+  flex: 0 1 auto !important;
+}
+
+.cat-product-card__add:hover:not(:disabled),
+.product-suggest__item-action--button:hover:not(:disabled),
+.product-suggest__item-action--button:focus-visible,
+.cart-upsell__add:hover:not(:disabled),
+.compare-page__clear--cart:hover:not(:disabled),
+.acct__wishlist-actions .acct__btn--primary:hover:not(:disabled),
+.wl-drawer__action-btn--primary:hover:not(:disabled) {
+  background: #1e293b !important;
+  border-color: #1e293b !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: none !important;
+  text-decoration: none !important;
+}
+
+.cat-product-card__add:disabled,
+.product-suggest__item-action--button:disabled,
+.cart-upsell__add:disabled,
+.compare-page__clear--cart:disabled,
+.acct__wishlist-actions .acct__btn--primary:disabled,
+.wl-drawer__action-btn--primary:disabled {
+  background: #94a3b8 !important;
+  border-color: #94a3b8 !important;
+  color: #ffffff !important;
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+@media (max-width: 767px) {
+  .cat-product-card__add,
+  .product-suggest__item-action--button,
+  .cart-upsell__add,
+  .compare-page__clear--cart,
+  .acct__wishlist-actions .acct__btn--primary,
+  .wl-drawer__action-btn--primary {
+    min-height: 44px !important;
+    font-size: 0.75rem !important;
+    padding: 0.5rem 0.65rem !important;
+  }
 }

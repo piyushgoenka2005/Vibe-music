@@ -32,6 +32,12 @@ export async function subscribeToNewsletter(input: {
     where: { email },
   });
   if (existing) {
+    if (existing.marketing !== record.marketing) {
+      await prisma.newsletterSubscriber.update({
+        where: { email },
+        data: { marketing: record.marketing },
+      });
+    }
     return { created: false };
   }
 
@@ -48,4 +54,42 @@ export async function subscribeToNewsletter(input: {
   });
 
   return { created: true };
+}
+
+/** Sync account newsletter/promotions prefs to the subscriber table. */
+export async function syncNewsletterMarketingPreference(input: {
+  email: string;
+  marketing: boolean;
+  firstName?: string | null;
+}): Promise<void> {
+  const email = input.email.trim().toLowerCase();
+  if (!email) return;
+
+  const existing = await prisma.newsletterSubscriber.findUnique({
+    where: { email },
+  });
+
+  if (existing) {
+    if (existing.marketing !== input.marketing) {
+      await prisma.newsletterSubscriber.update({
+        where: { email },
+        data: { marketing: input.marketing },
+      });
+    }
+    return;
+  }
+
+  if (!input.marketing) return;
+
+  await prisma.newsletterSubscriber.create({
+    data: {
+      id: randomUUID(),
+      email,
+      firstName: input.firstName?.trim() || null,
+      lastName: null,
+      marketing: true,
+      subscribedAt: new Date().toISOString(),
+      source: "website",
+    },
+  });
 }

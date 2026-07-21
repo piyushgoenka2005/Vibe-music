@@ -236,6 +236,7 @@
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
+  scroll-behavior: smooth;
 }
 
 .pdp-review-images__thumb,

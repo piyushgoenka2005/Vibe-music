@@ -183,13 +183,12 @@ h6 {
   font-weight: var(--font-weight-medium);
 }
 
-/* Buttons — never bold */
+/* Buttons — never bold (card ATC pills opt out below) */
 button,
 input[type="button"],
 input[type="submit"],
 input[type="reset"],
 .premium-btn,
-.cat-product-card__add,
 .cart-drawer__close,
 .gear-story-card__cta,
 .gear-story-modal__btn {

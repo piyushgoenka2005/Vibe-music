@@ -5,7 +5,9 @@ import {
   updateProductQuestion,
 } from "@/lib/server/productQuestionRepository";
 import { notifyUserIfAllowed } from "@/lib/server/notificationRepository";
+import { sendProductQuestionAnswerEmail } from "@/lib/server/customerUpdateEmailService";
 import { adminProductQuestionSchema } from "@/lib/validations/wrFeatures";
+import { prisma } from "@/lib/db/prisma";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -59,6 +61,23 @@ export async function PUT(request: Request, context: RouteContext) {
         body: `${existing.productName}: ${parsed.answer.slice(0, 120)}`,
         link: `/product/${existing.productSlug}`,
       });
+
+      void prisma.user
+        .findUnique({
+          where: { id: existing.userId },
+          select: { email: true },
+        })
+        .then((user) => {
+          if (!user?.email) return;
+          return sendProductQuestionAnswerEmail({
+            email: user.email,
+            productName: existing.productName,
+            productSlug: existing.productSlug,
+            question: existing.question,
+            answer: parsed.answer!,
+          });
+        })
+        .catch(() => undefined);
     }
 
     return NextResponse.json({ question });

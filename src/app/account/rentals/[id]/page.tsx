@@ -45,7 +45,11 @@ export default function AccountRentalDetailPage() {
             ))}
           </ul>
           <a
-            href={`/api/rentals/invoices/${booking.id}/html`}
+            href={
+              booking.trackingToken
+                ? `/api/rentals/invoices/${booking.id}/html?token=${encodeURIComponent(booking.trackingToken)}`
+                : `/api/rentals/invoices/${booking.id}/html`
+            }
             className="rentals-btn rentals-btn--secondary"
             target="_blank"
             rel="noreferrer"

@@ -12,7 +12,7 @@ import type {
 
 export type ProductStatus = "active" | "draft" | "archived";
 
-/** Canonical catalog product schema — stored in Firestore. */
+/** Canonical catalog product schema — stored in PostgreSQL. */
 export interface CatalogProduct {
   id: string;
   slug: string;

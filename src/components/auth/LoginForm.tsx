@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
 import { ROUTES } from "@/lib/routes";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
+import { sanitizeAuthRedirect } from "@/lib/auth/safeRedirect";
 import { useAuthStore } from "@/store/authStore";
 
 interface LoginFormProps {
@@ -30,13 +31,18 @@ interface LoginFormProps {
 export default function LoginForm({ googleAuthEnabled = false }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || ROUTES.account;
-  const registerHref = searchParams.get("redirect")
-    ? `${ROUTES.register}?redirect=${encodeURIComponent(searchParams.get("redirect")!)}`
-    : ROUTES.register;
-  const adminLoginHref = searchParams.get("redirect")
-    ? `${ROUTES.adminLogin}?redirect=${encodeURIComponent(searchParams.get("redirect")!)}`
-    : ROUTES.adminLogin;
+  const redirectTo = sanitizeAuthRedirect(
+    searchParams.get("redirect"),
+    ROUTES.account
+  );
+  const registerHref =
+    searchParams.get("redirect") && redirectTo !== ROUTES.account
+      ? `${ROUTES.register}?redirect=${encodeURIComponent(redirectTo)}`
+      : ROUTES.register;
+  const adminLoginHref =
+    searchParams.get("redirect") && redirectTo !== ROUTES.account
+      ? `${ROUTES.adminLogin}?redirect=${encodeURIComponent(redirectTo)}`
+      : ROUTES.adminLogin;
 
   const signIn = useAuthStore((s) => s.signIn);
   const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);

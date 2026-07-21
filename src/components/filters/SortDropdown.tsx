@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import type { SortOption } from "@/types/filters";
 
 const OPTIONS: { value: SortOption; label: string }[] = [
@@ -16,17 +17,28 @@ interface SortDropdownProps {
 
 export default function SortDropdown({ value, onChange }: SortDropdownProps) {
   return (
-    <select
-      className="cat-sort-select"
-      value={value}
-      onChange={(e) => onChange(e.target.value as SortOption)}
-      aria-label="Sort products"
-    >
-      {OPTIONS.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <label className="cat-sort">
+      <span className="cat-sort__label">Sort</span>
+      <span className="cat-sort__control">
+        <select
+          className="cat-sort-select"
+          value={value}
+          onChange={(e) => onChange(e.target.value as SortOption)}
+          aria-label="Sort products"
+        >
+          {OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          className="cat-sort__chevron"
+          size={16}
+          strokeWidth={2.25}
+          aria-hidden
+        />
+      </span>
+    </label>
   );
 }

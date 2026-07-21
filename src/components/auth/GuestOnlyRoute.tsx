@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthLoading from "@/components/auth/AuthLoading";
 import { ROUTES } from "@/lib/routes";
+import { sanitizeAuthRedirect } from "@/lib/auth/safeRedirect";
 import { useAuthStore } from "@/store/authStore";
 
 interface GuestOnlyRouteProps {
@@ -19,7 +20,7 @@ function GuestOnlyRouteInner({
 }: GuestOnlyRouteProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || fallback;
+  const redirectTo = sanitizeAuthRedirect(searchParams.get("redirect"), fallback);
   const isInitialized = useAuthStore((s) => s.isInitialized);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [timedOut, setTimedOut] = useState(false);

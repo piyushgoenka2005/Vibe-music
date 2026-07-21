@@ -1,9 +1,15 @@
 /**
  * Axis-locked horizontal rail: vertical swipes never call preventDefault
  * (page keeps scrolling). Confirmed sideways swipes drive scrollLeft.
- * Pair with CSS `touch-action: pan-y` on the element.
+ * Pair with CSS `touch-action: pan-y` (or `pan-x pan-y`) on the element.
+ *
+ * Set `allowInteractive: true` for tab bars whose children are buttons —
+ * horizontal drag still scrolls; a completed sideways drag suppresses the click.
  */
-export function attachAxisLockedRailScroll(el: HTMLElement): () => void {
+export function attachAxisLockedRailScroll(
+  el: HTMLElement,
+  options?: { allowInteractive?: boolean }
+): () => void {
   type Drag = {
     pointerId: number;
     startX: number;
@@ -14,6 +20,7 @@ export function attachAxisLockedRailScroll(el: HTMLElement): () => void {
   };
 
   const THRESHOLD = 8;
+  const allowInteractive = options?.allowInteractive === true;
   let drag: Drag | null = null;
 
   const clear = (pointerId: number) => {
@@ -29,7 +36,12 @@ export function attachAxisLockedRailScroll(el: HTMLElement): () => void {
   const onPointerDown = (event: PointerEvent) => {
     if (event.button !== 0) return;
     const target = event.target as HTMLElement | null;
-    if (target?.closest("button, input, textarea, select")) return;
+    if (
+      !allowInteractive &&
+      target?.closest("button, input, textarea, select, a")
+    ) {
+      return;
+    }
     if (el.scrollWidth <= el.clientWidth + 8) return;
 
     drag = {

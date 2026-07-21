@@ -89,7 +89,9 @@ async function handleApiRequest(request: NextRequest): Promise<NextResponse | nu
     remaining: options.limit,
     resetAt: Date.now() + options.windowMs,
   };
-  if (process.env.DISABLE_RATE_LIMIT !== "true") {
+  if (process.env.DISABLE_RATE_LIMIT === "true" && process.env.NODE_ENV !== "production") {
+    // Rate limits intentionally skipped in non-production only.
+  } else {
     rateLimit = await edgeCheckRateLimit(`${scope}:${ip}`, options);
     if (!rateLimit.allowed) {
       logSecurityEvent("rate_limit_exceeded", { requestId, path: pathname, ip, scope });

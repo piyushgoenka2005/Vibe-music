@@ -21,12 +21,12 @@ const splashFont = Bebas_Neue({
 });
 
 /** Framed VIBE MUSIC → musical items → “Entering the store…”. */
-const WAVE_SETTLE_MS = 1100;
-const BRAND_HOLD_MS = 380;
-const BRAND_EXIT_MS = 300;
-const TEASER_DELAY_MS = 720;
-const ITEMS_PHASE_MS = 2100;
-const FULL_EXIT_MS = 380;
+const WAVE_SETTLE_MS = 700;
+const BRAND_HOLD_MS = 260;
+const BRAND_EXIT_MS = 220;
+const TEASER_DELAY_MS = 420;
+const ITEMS_PHASE_MS = 1250;
+const FULL_EXIT_MS = 280;
 export const SPLASH_SEEN_KEY = "vibe-splash-seen";
 export const SPLASH_ACTIVE_CLASS = "vibe-splash-active";
 export const SPLASH_PENDING_CLASS = "vibe-splash-pending";

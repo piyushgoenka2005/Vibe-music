@@ -367,7 +367,7 @@ function HomepageContent() {
                     onChange={(event) =>
                       setItemForm((prev) => ({ ...prev, productId: event.target.value }))
                     }
-                    placeholder="Firestore product document ID"
+                    placeholder="Catalog product ID"
                   />
                 </div>
               ) : null}

@@ -2,7 +2,7 @@
 
 import type { RefObject } from "react";
 import { useMemo, useState } from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, Truck } from "lucide-react";
 import {
   formatCurrencyPrecise,
   formatDisplayPrice,
@@ -248,6 +248,7 @@ export default function ProductBuyBox({
             />
             <button
               type="button"
+              className="pdp-buybox__pin-apply"
               onClick={() => void updateLocation()}
               disabled={pinLoading || pincode.length !== 6}
             >
@@ -332,7 +333,15 @@ export default function ProductBuyBox({
         <dl className="pdp-buybox__meta">
           <div className="pdp-buybox__meta-row">
             <dt>Shipper / Seller</dt>
-            <dd>Vibe Music</dd>
+            <dd className="pdp-buybox__meta-value">
+              <Truck
+                className="pdp-buybox__meta-icon"
+                size={16}
+                strokeWidth={1.75}
+                aria-hidden
+              />
+              <span>Vibe Music</span>
+            </dd>
           </div>
           <div className="pdp-buybox__meta-row">
             <dt>Payment</dt>

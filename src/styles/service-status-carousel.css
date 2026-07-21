@@ -182,6 +182,7 @@
   gap: 1rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
   scroll-padding-inline: 0.25rem;
   padding: 0.25rem 0.25rem 1rem;
   -webkit-overflow-scrolling: touch;
@@ -311,9 +312,6 @@
 }
 
 .service-carousel__ledger {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
   max-width: var(--content-wide, 1280px);
   margin: clamp(1.5rem, 3vw, 2rem) auto 0;
   padding: clamp(1rem, 2vw, 1.25rem);
@@ -321,6 +319,13 @@
   border: 1px solid #e8eaee;
   border-radius: 16px;
   background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+  overflow: hidden;
+}
+
+.service-carousel__ledger-track {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
 .service-carousel__ledger-item {
@@ -368,6 +373,13 @@ a.service-carousel__ledger-item:focus-visible {
   color: #6b7280;
 }
 
+/* Desktop: hide marquee duplicates so the 4-col grid stays clean */
+@media (min-width: 1024px) {
+  .service-carousel__ledger-track--marquee .service-carousel__ledger-item[aria-hidden="true"] {
+    display: none;
+  }
+}
+
 @media (max-width: 1023px) {
   .service-carousel__inner {
     grid-template-columns: 1fr;
@@ -380,8 +392,49 @@ a.service-carousel__ledger-item:focus-visible {
   }
 
   .service-carousel__ledger {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-top: 1.25rem;
+    padding-inline: 0.875rem;
+  }
+
+  .service-carousel__ledger-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .service-carousel__ledger--marquee {
+    overflow: hidden;
+    padding-inline: 0.75rem;
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      #000 4%,
+      #000 96%,
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      #000 4%,
+      #000 96%,
+      transparent 100%
+    );
+  }
+
+  .service-carousel__ledger-track--marquee {
+    display: flex;
+    width: max-content;
+    max-width: none;
+    gap: 0.75rem;
+    animation: service-carousel-marquee 42s linear infinite;
+    will-change: transform;
+  }
+
+  .service-carousel__ledger--marquee:hover .service-carousel__ledger-track--marquee,
+  .service-carousel__ledger--marquee:focus-within .service-carousel__ledger-track--marquee {
+    animation-play-state: paused;
+  }
+
+  .service-carousel__ledger-track--marquee .service-carousel__ledger-item {
+    flex: 0 0 min(78vw, 280px);
   }
 }
 
@@ -397,10 +450,28 @@ a.service-carousel__ledger-item:focus-visible {
   }
 
   .service-carousel__ledger {
-    grid-template-columns: 1fr;
-    gap: 0.625rem;
     margin-top: 1rem;
-    padding: 0.875rem;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .service-carousel__ledger-track:not(.service-carousel__ledger-track--marquee) {
+    display: flex;
+    gap: 0.625rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.15rem;
+  }
+
+  .service-carousel__ledger-track:not(.service-carousel__ledger-track--marquee)::-webkit-scrollbar {
+    display: none;
+  }
+
+  .service-carousel__ledger-track:not(.service-carousel__ledger-track--marquee)
+    .service-carousel__ledger-item {
+    flex: 0 0 min(82vw, 280px);
+    scroll-snap-align: start;
   }
 
   .service-carousel__ledger-item {
@@ -430,6 +501,7 @@ a.service-carousel__ledger-item:focus-visible {
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
     scrollbar-width: thin;
   }
 
@@ -442,5 +514,18 @@ a.service-carousel__ledger-item:focus-visible {
 
   .service-carousel__track-wrap--marquee::after {
     display: block;
+  }
+
+  .service-carousel__ledger-track--marquee {
+    animation: none;
+    overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .service-carousel__ledger--marquee {
+    mask-image: none;
+    -webkit-mask-image: none;
+    overflow-x: auto;
   }
 }

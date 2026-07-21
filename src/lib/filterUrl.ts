@@ -103,12 +103,15 @@ export function filtersToSearchParams(
 }
 
 export function hasActiveFilters(filters: CategoryFilters): boolean {
-  return (
-    filters.brands.length > 0 ||
-    filters.minPrice !== null ||
-    filters.maxPrice !== null ||
-    filters.rating !== null ||
-    filters.availability !== "all" ||
-    filters.conditions.length > 0
-  );
+  return countActiveFilters(filters) > 0;
+}
+
+/** Number of applied refine facets (excludes sort/view/page). */
+export function countActiveFilters(filters: CategoryFilters): number {
+  let count = filters.brands.length + filters.conditions.length;
+  if (filters.minPrice !== null) count += 1;
+  if (filters.maxPrice !== null) count += 1;
+  if (filters.rating !== null) count += 1;
+  if (filters.availability !== "all") count += 1;
+  return count;
 }

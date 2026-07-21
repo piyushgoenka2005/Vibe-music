@@ -6,7 +6,7 @@ import { formatMailboxFrom } from "@/lib/server/email/mailboxes";
 import { logInfo } from "@/lib/server/logger";
 import { formatRentalDateRange } from "@/lib/rental/durationUtils";
 
-type RentalEmailEvent = "confirmed" | "cancelled" | "returned" | "reminder";
+type RentalEmailEvent = "confirmed" | "cancelled" | "returned" | "reminder" | "active";
 
 function subjectFor(event: RentalEmailEvent, booking: RentalBooking): string {
   switch (event) {
@@ -18,6 +18,8 @@ function subjectFor(event: RentalEmailEvent, booking: RentalBooking): string {
       return `Rental returned — ${booking.bookingNumber}`;
     case "reminder":
       return `Rental reminder — ${booking.bookingNumber}`;
+    case "active":
+      return `Rental started — ${booking.bookingNumber}`;
     default:
       return `Rental update — ${booking.bookingNumber}`;
   }
@@ -44,6 +46,12 @@ function bodyFor(event: RentalEmailEvent, booking: RentalBooking): string {
   if (event === "confirmed") {
     base.push(
       "Your rental is confirmed. Please bring a valid ID for pickup or ensure someone is available for delivery.",
+      "",
+      "Thank you for choosing Vibe Music."
+    );
+  } else if (event === "active") {
+    base.push(
+      "Your rental period has started. Enjoy the gear — return it on time to avoid late fees.",
       "",
       "Thank you for choosing Vibe Music."
     );

@@ -38,6 +38,7 @@ export default function SiteHeaderMobileDrawer({
         aria-label="Close menu"
       />
       <nav
+        id="site-header-mobile-nav"
         className="site-header__nav site-header__nav--portaled site-header__nav--open assets-site-header__nav"
         aria-label="Shop categories"
         role="dialog"

@@ -25,6 +25,8 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
+  /* Contain paint so transformed dotted type does not flicker */
+  contain: paint;
 }
 
 .culture-typography__scroll-track {
@@ -32,7 +34,9 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  will-change: transform;
+  /* translate3d layer without permanent will-change (avoids sticky ghost frames) */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .culture-typography__scroll-track--spotlight {
@@ -50,15 +54,14 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  gap: clamp(0.1rem, 0.35vh, 0.5rem);
-  padding: clamp(2rem, 8vh, 5rem) clamp(1.25rem, 3vw, 2.5rem);
+  gap: clamp(0.05rem, 0.3vh, 0.4rem);
+  padding: clamp(1.5rem, 6vh, 4rem) 0;
   pointer-events: none;
   user-select: none;
 }
 
 .culture-typography__bg-spotlight {
   opacity: var(--spotlight-opacity, 0);
-  will-change: opacity;
   -webkit-mask-image: radial-gradient(
     circle clamp(140px, 22vw, 320px) at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
     #000 0%,
@@ -117,15 +120,15 @@
     radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 28%, transparent 68%),
     radial-gradient(circle, rgba(59, 130, 246, 0.28) 0%, transparent 55%);
   mix-blend-mode: screen;
+  /* blur on orb only — never on scrolling word glyphs */
   filter: blur(8px);
 }
 
 .culture-typography__word--lit {
-  opacity: 0.95;
-  background-color: rgba(255, 255, 255, 0.38);
+  opacity: 0.92;
+  background-color: rgba(255, 255, 255, 0.4);
   background-image: radial-gradient(circle at center, rgba(255, 255, 255, 1) 1.15px, transparent 1.25px);
   background-size: 4px 4px;
-  filter: drop-shadow(0 0 32px rgba(255, 255, 255, 0.28));
 }
 
 .culture-typography__atmosphere {
@@ -153,7 +156,12 @@
 .culture-typography__word {
   --word-scale: 1;
   margin: 0;
+  box-sizing: border-box;
+  width: 100%;
   max-width: 100%;
+  padding-inline: 0.25rem;
+  overflow: hidden;
+  text-align: center;
   font-family: var(--font-primary);
   font-size: clamp(
     calc(7.25rem * var(--word-scale)),
@@ -172,12 +180,22 @@
   -webkit-background-clip: text;
   background-clip: text;
   opacity: 0.52;
-  filter: drop-shadow(0 0 40px rgba(255, 255, 255, 0.14));
+  /* No CSS filter here — filters on glyphs inside a transformed track cause flicker */
+}
+
+@media (min-width: 1024px) {
+  .culture-typography__word {
+    font-size: clamp(
+      calc(7.5rem * var(--word-scale)),
+      calc(15vw * var(--word-scale)),
+      calc(24rem * var(--word-scale))
+    );
+  }
 }
 
 .culture-typography__content {
   position: relative;
-  z-index: 2;
+  z-index: 4;
   display: flex;
   height: 100%;
   min-height: 100svh;
@@ -187,7 +205,7 @@
 }
 
 .culture-typography__content-inner {
-  width: 100%;
+  width: auto;
   max-width: 320px;
 }
 
@@ -201,6 +219,10 @@
   .culture-typography__content-inner {
     margin-left: auto;
     margin-right: clamp(1rem, 4vw, 3rem);
+  }
+
+  .culture-typography__title {
+    text-shadow: 0 2px 24px rgba(10, 52, 150, 0.35);
   }
 }
 
@@ -281,7 +303,7 @@
   position: absolute;
   left: 50%;
   bottom: clamp(2.5rem, 6vh, 4rem);
-  z-index: 3;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -320,7 +342,7 @@
   left: clamp(1.25rem, 4vw, 2.5rem);
   right: clamp(1.25rem, 4vw, 2.5rem);
   bottom: clamp(1rem, 2.5vh, 1.5rem);
-  z-index: 3;
+  z-index: 5;
   height: 3px;
   border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.18);
@@ -345,112 +367,144 @@
   --culture-scroll-height: calc(100svh + 240vh);
 }
 
-.culture-typography--scrollable .culture-typography__scroll-track {
-  will-change: transform;
-}
-
-.culture-typography--scrollable .culture-typography__typography-stack {
-  overflow: hidden;
-}
-
+.culture-typography--scrollable .culture-typography__typography-stack,
 .culture-typography--static .culture-typography__typography-stack {
   overflow: hidden;
 }
 
-.culture-typography--desktop-quote.culture-typography--static .culture-typography__word:nth-child(n + 8) {
-  display: none;
-}
-
+/* Mobile — CSS-first layout (no JS class required) */
 @media (max-width: 767px) {
-  .culture-typography--mobile-hero.culture-typography--scrollable {
+  .culture-typography--scrollable {
+    --culture-scroll-height: 288vh;
     min-height: calc(100svh - var(--site-header-offset, 90px));
   }
 
-  .culture-typography--mobile-hero .culture-typography__sticky {
+  .culture-typography__sticky {
     position: sticky;
     top: var(--site-header-offset, 90px);
     height: calc(100svh - var(--site-header-offset, 90px));
     min-height: calc(100svh - var(--site-header-offset, 90px));
   }
 
-  .culture-typography--mobile-hero .culture-typography__content {
+  .culture-typography__content {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: clamp(2rem, 8vw, 3rem) clamp(1.25rem, 5vw, 1.75rem)
-      clamp(3.5rem, 10vh, 4.5rem);
+    align-items: flex-end;
+    justify-content: flex-end;
+    height: 100%;
+    min-height: 0;
+    z-index: 4;
+    opacity: 1 !important;
+    transform: none !important;
+    padding: clamp(1.25rem, 4vw, 1.75rem) clamp(1.1rem, 4.5vw, 1.5rem)
+      clamp(3.75rem, 11vh, 4.75rem);
   }
 
-  .culture-typography--mobile-hero .culture-typography__content-inner {
-    margin-inline: auto;
-    text-align: center;
-    max-width: 18.5rem;
+  .culture-typography__content-inner {
+    width: auto;
+    max-width: min(18.5rem, 78vw);
+    margin-inline: 0;
+    margin-left: auto;
+    margin-right: 0;
+    text-align: left;
+    position: relative;
+    z-index: 3;
   }
 
-  .culture-typography--mobile-hero .culture-typography__meta {
-    margin-bottom: 1rem;
-    font-size: 0.8125rem;
-    text-align: center;
+  .culture-typography__meta {
+    margin-bottom: 0.75rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-align: left;
+    color: #ffffff;
   }
 
-  .culture-typography--mobile-hero .culture-typography__title {
+  .culture-typography__title {
     max-width: none;
-    font-size: clamp(1.65rem, 7.2vw, 2rem);
-    line-height: 1.12;
-    white-space: normal;
-    text-align: center;
+    font-size: clamp(1.7rem, 7.4vw, 2.15rem);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+    white-space: pre-line;
+    text-align: left;
+    color: #ffffff;
+    text-shadow: 0 2px 18px rgba(10, 52, 150, 0.45);
   }
 
-  .culture-typography--mobile-hero .culture-typography__subtitle {
-    margin-inline: auto;
-    text-align: center;
+  .culture-typography__subtitle {
+    margin-inline: 0;
+    text-align: left;
+    color: rgba(255, 255, 255, 0.78);
   }
 
-  .culture-typography--mobile-hero .culture-typography__cta-wrap {
-    margin-top: 1.5rem;
+  .culture-typography__cta-wrap {
+    margin-top: 1.25rem;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
   }
 
-  .culture-typography--mobile-hero .culture-typography__scroll-fade--top {
-    height: clamp(72px, 14vh, 110px);
+  .culture-typography__cta {
+    display: inline-flex;
+    background: #ffffff;
+    color: #1253ed;
   }
 
-  .culture-typography--mobile-hero .culture-typography__scroll-fade--bottom {
-    height: clamp(64px, 12vh, 96px);
+  .culture-typography__scroll-fade--top {
+    height: clamp(56px, 10vh, 88px);
   }
 
-  .culture-typography--mobile-hero .culture-typography__progress {
+  .culture-typography__scroll-fade--bottom {
+    height: clamp(48px, 9vh, 72px);
+    z-index: 1;
+  }
+
+  .culture-typography__progress {
     left: clamp(1rem, 4vw, 1.5rem);
     right: clamp(1rem, 4vw, 1.5rem);
     bottom: clamp(0.85rem, 2.5vh, 1.25rem);
   }
 
+  .culture-typography__bg,
+  .culture-typography__bg-spotlight {
+    width: 100%;
+    padding-inline: 0;
+    gap: clamp(0.05rem, 0.25vh, 0.35rem);
+  }
+
   .culture-typography__word {
-    font-size: clamp(
-      calc(2.35rem * var(--word-scale)),
-      calc(11.5vw * var(--word-scale)),
-      calc(4.35rem * var(--word-scale))
-    );
-    line-height: 0.88;
-    letter-spacing: -0.03em;
-    opacity: 0.68;
-  }
-
-  .culture-typography__content-inner {
-    margin-inline: auto;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-inline: 0.25rem;
+    overflow: hidden;
     text-align: center;
-  }
-
-  .culture-typography__title,
-  .culture-typography__subtitle {
-    margin-inline: auto;
+    /* Scaled by --word-scale so "DON'T REMEMBER" stays large but fits */
+    font-size: clamp(
+      calc(2.65rem * var(--word-scale)),
+      calc(14.5vw * var(--word-scale)),
+      calc(5.25rem * var(--word-scale))
+    );
+    line-height: 0.86;
+    letter-spacing: -0.045em;
+    color: transparent;
+    background-color: rgba(255, 255, 255, 0.55);
+    background-image: radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0.85) 1.15px,
+      transparent 1.25px
+    );
+    background-size: 4.25px 4.25px;
+    -webkit-background-clip: text;
+    background-clip: text;
+    opacity: 0.42;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .culture-typography--scrollable {
+    --culture-scroll-height: 100svh;
+  }
+
   .culture-typography__scroll-track {
-    will-change: auto;
+    transform: none !important;
   }
 
   .culture-typography__scroll-hint-icon {
@@ -464,27 +518,27 @@
 }
 
 @media (max-width: 479px) {
-  .culture-typography--mobile-hero .culture-typography__title {
-    font-size: clamp(1.5rem, 7vw, 1.85rem);
+  .culture-typography__title {
+    font-size: clamp(1.55rem, 7.2vw, 1.95rem);
+    color: #ffffff;
   }
 
-  .culture-typography--mobile-hero .culture-typography__content-inner {
-    max-width: 17rem;
+  .culture-typography__content-inner {
+    width: auto;
+    max-width: min(17.5rem, 82vw);
+    margin-left: auto;
+    margin-right: 0;
   }
 
   .culture-typography__word {
     font-size: clamp(
-      calc(2rem * var(--word-scale)),
-      calc(10vw * var(--word-scale)),
-      calc(3.25rem * var(--word-scale))
+      calc(2.4rem * var(--word-scale)),
+      calc(13.75vw * var(--word-scale)),
+      calc(4.75rem * var(--word-scale))
     );
     line-height: 0.86;
-    letter-spacing: -0.03em;
-    opacity: 0.42;
-  }
-
-  .culture-typography__title {
-    font-size: clamp(1.5rem, 7vw, 1.85rem);
+    letter-spacing: -0.045em;
+    opacity: 0.38;
   }
 
   .culture-typography__subtitle {

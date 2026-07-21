@@ -39,7 +39,11 @@ function RentalSuccessContent() {
               View my rentals
             </Link>
             <a
-              href={`/api/rentals/invoices/${booking.id}/html`}
+              href={
+                token
+                  ? `/api/rentals/invoices/${booking.id}/html?token=${encodeURIComponent(token)}`
+                  : `/api/rentals/invoices/${booking.id}/html`
+              }
               className="rentals-btn rentals-btn--secondary"
               target="_blank"
               rel="noreferrer"

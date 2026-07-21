@@ -25,7 +25,7 @@ export default function FilterSidebar({
 }: FilterSidebarProps) {
   return (
     <aside
-      className={`cat-filter-sidebar cat-filter-sidebar--desktop ${className}`.trim()}
+      className={`cat-filter-sidebar ${className}`.trim()}
       aria-label="Product filters"
     >
       <BrandFilter

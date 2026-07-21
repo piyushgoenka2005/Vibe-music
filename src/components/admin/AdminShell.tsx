@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Menu } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminThemeToggle from "@/components/admin/AdminThemeToggle";
@@ -15,10 +16,23 @@ interface AdminShellProps {
   actions?: React.ReactNode;
 }
 
+const MOBILE_ADMIN_MQ = "(max-width: 768px)";
+
 export default function AdminShell({ admin, title, children, actions }: AdminShellProps) {
   const theme = useAdminUiStore((s) => s.theme);
   const sidebarCollapsed = useAdminUiStore((s) => s.sidebarCollapsed);
   const setSidebarCollapsed = useAdminUiStore((s) => s.setSidebarCollapsed);
+
+  // On phones, start with the drawer closed so content isn't covered.
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_ADMIN_MQ);
+    const sync = () => {
+      if (mq.matches) setSidebarCollapsed(true);
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [setSidebarCollapsed]);
 
   return (
     <div

@@ -16,7 +16,9 @@ export async function notifyRentalBookingUpdate(
         ? "Rental cancelled"
         : status === "completed"
           ? "Rental completed"
-          : "Rental update";
+          : status === "active"
+            ? "Rental started"
+            : "Rental update";
 
   const body = `Booking ${booking.bookingNumber} is now ${status}.`;
 

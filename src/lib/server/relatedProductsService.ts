@@ -3,15 +3,19 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import {
-  fetchProductsByBrandSlug,
-  fetchProductsByCategory,
   fetchProductsByIds,
 } from "@/lib/server/firestoreCatalogRepository";
 import {
+  getAllProducts,
   getCatalogProductBySlug,
   getProductById,
   toProduct,
 } from "@/services/catalogService";
+import type { CatalogProduct } from "@/types/catalog";
+import {
+  areMerchandisingPeersCompatible,
+  rankMerchandisingPeers,
+} from "@/lib/product/productRelevance";
 import type { Product } from "@/types/product";
 import {
   MAX_RELATED_PRODUCTS,
@@ -190,9 +194,80 @@ function appendUniqueProducts(
   return next;
 }
 
+async function loadMerchandisingCandidatePool(
+  product: CatalogProduct
+): Promise<CatalogProduct[]> {
+  const snapshot = await getAllProducts(false);
+  return snapshot.filter(
+    (candidate) =>
+      candidate.id !== product.id &&
+      candidate.status === "active" &&
+      candidate.price > 0 &&
+      (candidate.categorySlug === product.categorySlug ||
+        candidate.brandSlug === product.brandSlug)
+  );
+}
+
+function resolveRankedFallbackProducts(
+  product: CatalogProduct,
+  candidates: CatalogProduct[],
+  limit: number,
+  mode: "similar" | "related",
+  seenIds: Set<string>
+): Product[] {
+  const ranked = rankMerchandisingPeers(
+    product,
+    candidates,
+    limit,
+    mode,
+    seenIds
+  );
+  return ranked.map(toProduct);
+}
+
+export async function resolveSimilarProductsForProduct(
+  productId: string,
+  configuredIds: string[] = [],
+  limit = MAX_RELATED_PRODUCTS
+): Promise<Product[]> {
+  const product = await getProductById(productId);
+  if (!product) return [];
+
+  const seenIds = new Set<string>([productId]);
+  let resolved: Product[] = [];
+
+  if (configuredIds.length > 0) {
+    const manualProducts = await fetchProductsByIds(configuredIds);
+    const compatibleManual = manualProducts.filter((candidate) =>
+      areMerchandisingPeersCompatible(product, candidate)
+    );
+    resolved = appendUniqueProducts(
+      resolved,
+      compatibleManual.map(toProduct),
+      seenIds,
+      limit
+    );
+  }
+
+  if (resolved.length < limit) {
+    const candidates = await loadMerchandisingCandidatePool(product);
+    const fallback = resolveRankedFallbackProducts(
+      product,
+      candidates,
+      limit - resolved.length,
+      "similar",
+      seenIds
+    );
+    resolved = appendUniqueProducts(resolved, fallback, seenIds, limit);
+  }
+
+  return resolved.slice(0, limit);
+}
+
 export async function resolveRelatedProductsForProduct(
   productId: string,
-  limit = MAX_RELATED_PRODUCTS
+  limit = MAX_RELATED_PRODUCTS,
+  excludeIds: string[] = []
 ): Promise<ResolvedRelatedProducts> {
   const product = await getProductById(productId);
   if (!product) {
@@ -206,41 +281,35 @@ export async function resolveRelatedProductsForProduct(
 
   const manualIds =
     relation && relation.isActive ? relation.relatedProductIds : [];
-  const seenIds = new Set<string>([productId]);
+  const seenIds = new Set<string>([productId, ...excludeIds]);
 
   let resolved: Product[] = [];
   let manualCount = 0;
 
   if (manualIds.length > 0) {
     const manualProducts = await fetchProductsByIds(manualIds);
+    const compatibleManual = manualProducts.filter((candidate) =>
+      areMerchandisingPeersCompatible(product, candidate)
+    );
     resolved = appendUniqueProducts(
       resolved,
-      manualProducts.map(toProduct),
+      compatibleManual.map(toProduct),
       seenIds,
       limit
     );
     manualCount = resolved.length;
   }
 
-  if (resolved.length < limit && product.categorySlug) {
-    const categoryProducts = await fetchProductsByCategory(product.categorySlug);
-    resolved = appendUniqueProducts(
-      resolved,
-      categoryProducts.map(toProduct),
-      seenIds,
-      limit
+  if (resolved.length < limit) {
+    const candidates = await loadMerchandisingCandidatePool(product);
+    const fallback = resolveRankedFallbackProducts(
+      product,
+      candidates,
+      limit - resolved.length,
+      "related",
+      seenIds
     );
-  }
-
-  if (resolved.length < limit && product.brandSlug) {
-    const brandProducts = await fetchProductsByBrandSlug(product.brandSlug);
-    const filtered = brandProducts.filter((candidate) => candidate.id !== product.id);
-    resolved = appendUniqueProducts(
-      resolved,
-      filtered.map(toProduct),
-      seenIds,
-      limit
-    );
+    resolved = appendUniqueProducts(resolved, fallback, seenIds, limit);
   }
 
   const source: ResolvedRelatedProducts["source"] =

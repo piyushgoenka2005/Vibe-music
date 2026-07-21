@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ProductDetail } from "@/types/product";
+import { attachHorizontalWheelScroll } from "@/lib/horizontalWheelScroll";
 import ProductDescription from "./ProductDescription";
 import ProductReviewsSection from "./reviews/ProductReviewsSection";
 import ProductQASection from "./qa/ProductQASection";
@@ -32,12 +33,35 @@ export default function ProductTabs({
   initialTab = "description",
 }: ProductTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+  const navRef = useRef<HTMLDivElement>(null);
   const displayedReviewCount = reviewCount ?? product.reviewCount;
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    return attachHorizontalWheelScroll(nav);
+  }, []);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const active = nav.querySelector<HTMLElement>('[aria-selected="true"]');
+    active?.scrollIntoView({
+      behavior: "smooth",
+      inline: "nearest",
+      block: "nearest",
+    });
+  }, [activeTab]);
 
   return (
     <section className="pdp-tabs" aria-label="Product details">
       <div className="pdp-tabs__shell">
-        <div className="pdp-tabs__nav" role="tablist" aria-label="Product information">
+        <div
+          ref={navRef}
+          className="pdp-tabs__nav"
+          role="tablist"
+          aria-label="Product information"
+        >
           {TABS.map((tab) => (
             <button
               key={tab.id}

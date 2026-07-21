@@ -16,7 +16,6 @@ test.describe("admin console", () => {
       "/admin/products",
       "/admin/analytics",
       "/admin/rentals",
-      "/admin/financing",
       "/admin/giveaway",
       "/admin/compare",
     ];

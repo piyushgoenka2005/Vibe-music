@@ -13,6 +13,8 @@ import type { Product } from "@/types/product";
 
 const HEADLINE_ID = "trending-buys-title";
 const DISPLAY_LIMIT = 3;
+/** Prefer live trending, but never block the homepage on a cold catalog. */
+const TRENDING_BUDGET_MS = 450;
 
 function catalogProductToTeaser(product: Product): HomepageTopProduct {
   return {
@@ -30,10 +32,17 @@ function catalogProductToTeaser(product: Product): HomepageTopProduct {
 
 async function resolveTrendingProducts(): Promise<HomepageTopProduct[]> {
   try {
-    const trending = await getTrendingProducts();
-    const priced = trending.filter((product) => product.price > 0);
-    if (priced.length > 0) {
-      return priced.slice(0, DISPLAY_LIMIT).map(catalogProductToTeaser);
+    const trending = await Promise.race([
+      getTrendingProducts().then((list) =>
+        list.filter((product) => product.price > 0)
+      ),
+      new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), TRENDING_BUDGET_MS);
+      }),
+    ]);
+
+    if (trending && trending.length > 0) {
+      return trending.slice(0, DISPLAY_LIMIT).map(catalogProductToTeaser);
     }
   } catch {
     // Fall through to curated cards.

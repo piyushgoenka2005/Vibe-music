@@ -33,16 +33,19 @@ function mapContentPage(row: {
   };
 }
 
-export async function getContentPageFromFirestore(
+export async function getContentPageFromDb(
   slug: string
 ): Promise<ContentPage | null> {
   const row = await prisma.contentPage.findUnique({ where: { slug } });
   return row ? mapContentPage(row) : null;
 }
 
+/** @deprecated Use getContentPageFromDb */
+export const getContentPageFromFirestore = getContentPageFromDb;
+
 export async function resolveContentPage(slug: string): Promise<ContentPage | undefined> {
   try {
-    const fromDatabase = await getContentPageFromFirestore(slug);
+    const fromDatabase = await getContentPageFromDb(slug);
     if (fromDatabase) return fromDatabase;
   } catch {
     // Fall back to static content when PostgreSQL is unavailable.

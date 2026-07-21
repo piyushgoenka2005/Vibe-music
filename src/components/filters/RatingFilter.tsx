@@ -12,26 +12,26 @@ interface RatingFilterProps {
 export default function RatingFilter({ selected, onChange }: RatingFilterProps) {
   return (
     <FilterSection title="Customer Rating">
-      {RATINGS.map((rating) => (
-        <label key={rating} className="cat-filter-option">
-          <input
-            type="radio"
-            name="rating-filter"
-            checked={selected === rating}
-            onChange={() => onChange(rating)}
-          />
-          <span>{rating} stars &amp; up</span>
-        </label>
-      ))}
-      {selected !== null ? (
-        <button
-          type="button"
-          className="cat-filter-clear"
-          onClick={() => onChange(null)}
-        >
-          Clear rating
-        </button>
-      ) : null}
+      <div className="cat-filter-pills" role="radiogroup" aria-label="Customer rating">
+        {RATINGS.map((rating) => {
+          const active = selected === rating;
+          return (
+            <button
+              key={rating}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              className={`cat-filter-pill${active ? " cat-filter-pill--active" : ""}`}
+              onClick={() => onChange(active ? null : rating)}
+            >
+              <span className="cat-filter-pill__stars" aria-hidden="true">
+                {"★".repeat(rating)}
+              </span>
+              <span>& up</span>
+            </button>
+          );
+        })}
+      </div>
     </FilterSection>
   );
 }

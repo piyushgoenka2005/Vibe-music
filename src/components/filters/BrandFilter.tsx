@@ -31,18 +31,25 @@ export default function BrandFilter({
 
   return (
     <FilterSection title="Brand">
-      {brands.map((brand) => (
-        <label key={brand.slug} className="cat-filter-option">
-          <input
-            type="checkbox"
-            checked={selected.includes(brand.slug)}
-            onChange={() => toggle(brand.slug)}
-          />
-          <span>
-            {brand.name} ({brand.count})
-          </span>
-        </label>
-      ))}
+      <div className="cat-filter-brand-list">
+        {brands.map((brand) => {
+          const active = selected.includes(brand.slug);
+          return (
+            <label
+              key={brand.slug}
+              className={`cat-filter-brand${active ? " cat-filter-brand--active" : ""}`}
+            >
+              <input
+                type="checkbox"
+                checked={active}
+                onChange={() => toggle(brand.slug)}
+              />
+              <span className="cat-filter-brand__name">{brand.name}</span>
+              <span className="cat-filter-brand__count">{brand.count}</span>
+            </label>
+          );
+        })}
+      </div>
     </FilterSection>
   );
 }

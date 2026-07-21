@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   filtersToSearchParams,
   hasActiveFilters,
+  countActiveFilters,
   parseFiltersFromSearchParams,
 } from "@/lib/filterUrl";
 import { DEFAULT_FILTERS, type CategoryFilters } from "@/types/filters";
@@ -87,6 +88,7 @@ export function useSearchListingFilters() {
     removeBrand,
     removeCondition,
     hasActive: hasActiveFilters(filters),
+    activeCount: countActiveFilters(filters),
     defaults: DEFAULT_FILTERS,
     categorySlug: preserved.category ?? "",
     subcategory: preserved.subcategory ?? "",

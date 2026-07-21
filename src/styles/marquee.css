@@ -42,6 +42,7 @@
     overflow-x: auto;
     scrollbar-width: none;
     scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
   }
 
   .marquee__track::-webkit-scrollbar {

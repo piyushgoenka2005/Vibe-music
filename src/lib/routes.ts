@@ -56,6 +56,7 @@ export const ROUTES = {
   gp9: "/gp9",
   deals: "/deals",
   brands: "/brands",
+  categories: "/category",
   compare: "/compare",
   compareShare: (token: string) => `/compare/share/${token}`,
   contact: "/contact",
@@ -75,15 +76,6 @@ export const ROUTES = {
   adminRentalPolicies: "/admin/rentals/policies",
   instrumentRentals: "/instrument-rentals",
   giveaway: "/giveaway",
-  financing: "/financing",
-  financingApply: "/financing/apply",
-  accountFinancing: "/account/financing",
-  accountFinanceApplication: (id: string) => `/account/financing/${id}`,
-  adminFinancing: "/admin/financing",
-  adminFinanceProviders: "/admin/financing/providers",
-  adminFinancePlans: "/admin/financing/plans",
-  adminFinanceApplications: "/admin/financing/applications",
-  adminFinanceAnalytics: "/admin/financing/analytics",
   adminGiveaway: "/admin/giveaway",
   adminGiveawayCampaigns: "/admin/giveaway/campaigns",
   adminCompare: "/admin/compare",
@@ -100,9 +92,13 @@ export function productPath(slug: string): string {
 }
 
 const PLACEHOLDER_REDIRECTS: Record<string, string> = {
-  "/categories": ROUTES.search,
+  "/categories": ROUTES.categories,
   "/products": ROUTES.search,
   "/wishlist": ROUTES.accountWishlist,
+  "/financing": ROUTES.search,
+  "/financing/apply": ROUTES.search,
+  "/account/financing": ROUTES.account,
+  "/admin/financing": ROUTES.admin,
 };
 
 /** Longest-prefix shop paths → category slug */
@@ -198,16 +194,16 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.login || path === ROUTES.register) return true;
   if (path === ROUTES.blog || path.startsWith("/blog/")) return true;
   if (path === ROUTES.gp9 || path.startsWith(`${ROUTES.gp9}/`)) return true;
-  if (path === ROUTES.deals || path === ROUTES.brands || path === ROUTES.compare) return true;
+  if (path === ROUTES.deals || path === ROUTES.brands || path === ROUTES.categories || path === ROUTES.compare) return true;
   if (path === ROUTES.contact) return true;
   if (path === ROUTES.used || path === ROUTES.rentals) return true;
-  if (path === ROUTES.giveaway || path === ROUTES.financing) return true;
+  if (path === ROUTES.giveaway) return true;
   if (path === ROUTES.forgotPassword || path === ROUTES.resetPassword) return true;
   if (path === "/careers" || path === ROUTES.careers || path.startsWith("/pages/")) return true;
   if (path === ROUTES.admin) return true;
   if (path.startsWith("/admin/")) return true;
 
-  const categoryMatch = path.match(/^\/category\/([^/]+)$/);
+  const categoryMatch = path.match(/^\/category(?:\/([^/]+))?$/);
   if (categoryMatch) return true;
 
   const productMatch = path.match(/^\/product\/([^/]+)$/);
@@ -235,9 +231,13 @@ function resolveShopPath(path: string): string | null {
 export function resolveLegacyPath(pathname: string): string | null {
   const path = normalizePath(pathname);
 
-  if (isValidAppRoute(path)) return null;
-
+  // Retired / placeholder paths first (before /admin/* validity catch-all).
   if (PLACEHOLDER_REDIRECTS[path]) return PLACEHOLDER_REDIRECTS[path];
+  for (const [key, target] of Object.entries(PLACEHOLDER_REDIRECTS)) {
+    if (path.startsWith(`${key}/`)) return target;
+  }
+
+  if (isValidAppRoute(path)) return null;
 
   const storeDetail = resolveStoreDetail(path);
   if (storeDetail) return storeDetail;

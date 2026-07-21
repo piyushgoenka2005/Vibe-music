@@ -19,7 +19,7 @@ export default function CategoryBreadcrumb({
         <span className="cat-breadcrumb__sep" aria-hidden="true">
           /
         </span>
-        <Link href={ROUTES.search}>Browse</Link>
+        <Link href={ROUTES.categories}>Categories</Link>
         <span className="cat-breadcrumb__sep" aria-hidden="true">
           /
         </span>

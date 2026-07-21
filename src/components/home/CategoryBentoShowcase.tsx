@@ -363,7 +363,7 @@ export default function CategoryBentoShowcase() {
           whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
         >
           <Link
-            href={ROUTES.search}
+            href={ROUTES.categories}
             className="category-bento__browse-btn"
           >
             <span className="category-bento__browse-btn-label">

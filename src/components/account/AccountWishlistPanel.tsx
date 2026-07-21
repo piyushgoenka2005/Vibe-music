@@ -157,7 +157,7 @@ export default function AccountWishlistPanel() {
                         onClick={() => moveToCart(item.productId)}
                         disabled={!stock.inStock}
                       >
-                        Add to Cart
+                        Add to cart
                       </button>
                       <button
                         type="button"

@@ -7,7 +7,7 @@ import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 
 const baseUrl = process.env.LIGHTHOUSE_BASE_URL ?? "http://127.0.0.1:3000";
-const urls = ["/", "/contact", "/pages/shipping", "/cart", "/checkout", "/deals", "/giveaway", "/financing"];
+const urls = ["/", "/contact", "/pages/shipping", "/cart", "/checkout", "/deals", "/giveaway"];
 
 await mkdir("reports/lighthouse", { recursive: true });
 

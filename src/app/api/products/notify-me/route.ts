@@ -9,7 +9,9 @@ import {
 import { createContactMessage } from "@/lib/server/contactRepository";
 import { createAdminNotification } from "@/lib/server/notificationRepository";
 import { subscribeToNewsletter } from "@/lib/server/newsletterRepository";
+import { upsertProductStockAlert } from "@/lib/server/stockAlertRepository";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { auth } from "@/auth";
 
 const notifySchema = z.object({
   email: z.string().email().max(160),
@@ -38,6 +40,19 @@ export async function POST(request: Request) {
   const displayName = parsed.data.name?.trim() || "Customer";
 
   try {
+    const session = await auth();
+    const sessionEmail = session?.user?.email?.trim().toLowerCase();
+    const userId =
+      sessionEmail && sessionEmail === email ? (session?.user?.id ?? null) : null;
+
+    await upsertProductStockAlert({
+      email,
+      productId: parsed.data.productId,
+      productSlug: parsed.data.productSlug,
+      productName,
+      userId,
+    });
+
     await createContactMessage({
       name: displayName,
       email,

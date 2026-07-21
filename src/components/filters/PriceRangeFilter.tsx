@@ -28,7 +28,7 @@ export default function PriceRangeFilter({
             type="number"
             min={rangeMin}
             max={rangeMax}
-            placeholder={formatCurrency(rangeMin)}
+            placeholder={rangeMax > rangeMin ? formatCurrency(rangeMin) : "Min"}
             value={minPrice ?? ""}
             onChange={(e) =>
               onChange(
@@ -45,8 +45,8 @@ export default function PriceRangeFilter({
             id="cat-filter-price-max"
             type="number"
             min={rangeMin}
-            max={rangeMax}
-            placeholder={formatCurrency(rangeMax)}
+            max={rangeMax || undefined}
+            placeholder={rangeMax > rangeMin ? formatCurrency(rangeMax) : "Max"}
             value={maxPrice ?? ""}
             onChange={(e) =>
               onChange(

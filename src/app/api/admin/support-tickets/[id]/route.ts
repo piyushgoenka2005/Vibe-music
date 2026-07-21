@@ -5,6 +5,7 @@ import {
   updateSupportTicket,
 } from "@/lib/server/supportTicketRepository";
 import { notifyUserIfAllowed } from "@/lib/server/notificationRepository";
+import { sendSupportTicketUpdateEmail } from "@/lib/server/customerUpdateEmailService";
 import { adminSupportTicketSchema } from "@/lib/validations/wrFeatures";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -41,18 +42,23 @@ export async function PUT(request: Request, context: RouteContext) {
     });
 
     if (
-      existing.userId &&
       parsed.status &&
       parsed.status !== existing.status &&
       (parsed.status === "resolved" || parsed.status === "in_progress")
     ) {
-      void notifyUserIfAllowed({
-        userId: existing.userId,
-        type: "support_reply",
-        title: "Support ticket update",
-        body: `Your ticket "${existing.subject}" is now ${parsed.status.replace("_", " ")}.`,
-        link: "/account/notifications",
-      });
+      if (existing.userId) {
+        void notifyUserIfAllowed({
+          userId: existing.userId,
+          type: "support_reply",
+          title: "Support ticket update",
+          body: `Your ticket "${existing.subject}" is now ${parsed.status.replace("_", " ")}.`,
+          link: "/account/notifications",
+        });
+      }
+      void sendSupportTicketUpdateEmail({
+        ticket,
+        status: parsed.status,
+      }).catch(() => undefined);
     }
 
     return NextResponse.json({ ticket });

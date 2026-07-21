@@ -17,13 +17,13 @@ async function loadAllProducts(): Promise<CatalogProduct[]> {
 
 export const getCachedActiveProducts = unstable_cache(
   loadActiveProducts,
-  ["catalog-active-products-v2"],
+  ["catalog-active-products-v3"],
   { revalidate: CATALOG_REVALIDATE_SECONDS, tags: ["catalog"] }
 );
 
 export const getCachedAllProducts = unstable_cache(
   loadAllProducts,
-  ["catalog-all-products-v2"],
+  ["catalog-all-products-v3"],
   { revalidate: CATALOG_REVALIDATE_SECONDS, tags: ["catalog"] }
 );
 

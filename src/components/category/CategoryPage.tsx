@@ -14,6 +14,7 @@ import {
 } from "@/components/filters";
 import CategoryBreadcrumb from "./CategoryBreadcrumb";
 import CategoryPagination from "./CategoryPagination";
+import { SlidersHorizontal } from "lucide-react";
 import type { Category } from "@/types/category";
 import type { CategoryProductsResult } from "@/types/filters";
 import "../filters/filters.css";
@@ -32,6 +33,7 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
     removeBrand,
     removeCondition,
     hasActive,
+    activeCount,
   } = useCategoryFilters();
   const openMobileDrawer = useFilterStore((s) => s.openMobileDrawer);
   const { data, isLoading, isError } = useCategoryProducts(
@@ -50,19 +52,23 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
       <p className="cat-page__desc">{category.description}</p>
 
       <div className="cat-toolbar">
-        <div className="cat-toolbar__left">
+        <div className="cat-toolbar__primary">
           <button
             type="button"
-            className="cat-toolbar__mobile-btn"
+            className={`cat-toolbar__mobile-btn${hasActive ? " cat-toolbar__mobile-btn--active" : ""}`}
             onClick={openMobileDrawer}
           >
-            Filters {hasActive ? "•" : ""}
+            <SlidersHorizontal size={16} strokeWidth={2.25} aria-hidden />
+            <span>Filters</span>
+            {activeCount > 0 ? (
+              <span className="cat-toolbar__badge">{activeCount}</span>
+            ) : null}
           </button>
           <span className="cat-toolbar__count" aria-live="polite">
-            {isLoading ? "Loading..." : `${total} products`}
+            {isLoading ? "Loading…" : `${total} products`}
           </span>
         </div>
-        <div className="cat-toolbar__left">
+        <div className="cat-toolbar__controls">
           <SortDropdown
             value={filters.sort}
             onChange={(sort) => updateFilters({ sort })}
@@ -87,6 +93,7 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
           filters={filters}
           facets={facets}
           onUpdate={updateFilters}
+          className="cat-filter-sidebar--desktop"
         />
 
         <div>
@@ -150,6 +157,7 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
         filters={filters}
         facets={facets}
         onUpdate={updateFilters}
+        onClearAll={clearAllFilters}
         resultCount={total}
       />
     </div>

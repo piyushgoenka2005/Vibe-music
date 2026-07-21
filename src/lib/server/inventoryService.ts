@@ -8,6 +8,7 @@ import {
   setProductStock,
 } from "@/lib/server/inventoryRepository";
 import { sendLowStockAdminNotification } from "@/lib/server/adminNotificationEmailService";
+import { notifyWaitlistOnRestock } from "@/lib/server/restockNotificationService";
 import { getAllProducts, getProductById } from "@/services/catalogService";
 import {
   getAvailableStock as calcAvailable,
@@ -78,6 +79,16 @@ export async function adjustStock(
     adminId: adjustedBy,
     note: reason,
   });
+
+  void notifyWaitlistOnRestock({
+    productId,
+    productName: product.name,
+    productSlug: product.slug,
+    previousStock: previousQuantity,
+    previousReserved: reservedStock,
+    newStock: newQuantity,
+    newReserved: reservedStock,
+  }).catch(() => undefined);
 
   const isNowLowStock = isLowStock(newQuantity, reservedStock, threshold);
   if (!wasLowStock && isNowLowStock) {
@@ -182,12 +193,50 @@ export async function releaseOrderInventory(order: Order): Promise<void> {
   const status = order.inventoryStatus ?? "none";
 
   if (status === "reserved") {
+    const before = await fetchProductStockSnapshots(
+      lines.map((line) => line.productId)
+    );
     await releaseReservedStockForOrder(order.id, lines);
+
+    for (const line of lines) {
+      const snap = before.get(line.productId);
+      if (!snap) continue;
+      const product = await getProductById(line.productId);
+      if (!product) continue;
+      void notifyWaitlistOnRestock({
+        productId: line.productId,
+        productName: product.name,
+        productSlug: product.slug,
+        previousStock: snap.stock,
+        previousReserved: snap.reservedStock,
+        newStock: product.stock,
+        newReserved: product.reservedStock ?? 0,
+      }).catch(() => undefined);
+    }
     return;
   }
 
   if (status === "fulfilled") {
+    const before = await fetchProductStockSnapshots(
+      lines.map((line) => line.productId)
+    );
     await restoreStockForCancelledOrder(order.id, lines);
+
+    for (const line of lines) {
+      const snap = before.get(line.productId);
+      if (!snap) continue;
+      const product = await getProductById(line.productId);
+      if (!product) continue;
+      void notifyWaitlistOnRestock({
+        productId: line.productId,
+        productName: product.name,
+        productSlug: product.slug,
+        previousStock: snap.stock,
+        previousReserved: snap.reservedStock,
+        newStock: product.stock,
+        newReserved: product.reservedStock ?? 0,
+      }).catch(() => undefined);
+    }
   }
 }
 

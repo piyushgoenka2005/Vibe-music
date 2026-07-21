@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type CSSProperties, type SyntheticEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type SyntheticEvent } from "react";
 
 const BENTO_IMAGE_FALLBACK = "/images/Electric Blue Guitar.png";
 
@@ -36,8 +36,30 @@ export default function CategoryBentoImage({
   srcSet,
   variant = "card",
 }: CategoryBentoImageProps) {
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(priority);
   const [imageSrc, setImageSrc] = useState(src);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+
+  useEffect(() => {
+    setImageSrc(src);
+    if (priority) {
+      setLoaded(true);
+      return;
+    }
+    setLoaded(false);
+  }, [src, priority]);
+
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img || loaded) return;
+    if (img.complete && img.naturalWidth > 0) {
+      setLoaded(true);
+    }
+  }, [imageSrc, loaded]);
+
+  function markLoaded() {
+    setLoaded(true);
+  }
 
   function handleError(event: SyntheticEvent<HTMLImageElement>) {
     const img = event.currentTarget;
@@ -47,8 +69,7 @@ export default function CategoryBentoImage({
     setImageSrc(BENTO_IMAGE_FALLBACK);
   }
 
-  const loadedClass =
-    loaded || priority ? " category-bento__image--loaded" : "";
+  const loadedClass = loaded || priority ? " category-bento__image--loaded" : "";
   const imageStyle: CSSProperties = {
     objectFit: "contain",
     objectPosition,
@@ -61,7 +82,8 @@ export default function CategoryBentoImage({
         className={`${className}${loadedClass}`}
         fill
         onError={handleError}
-        onLoad={() => setLoaded(true)}
+        onLoad={markLoaded}
+        onLoadingComplete={markLoaded}
         priority={priority}
         sizes={sizes ?? (variant === "hero" ? "(min-width: 1024px) 50vw, 92vw" : "25vw")}
         src={localImagePath(imageSrc)}
@@ -72,12 +94,13 @@ export default function CategoryBentoImage({
 
   return (
     <img
+      ref={imgRef}
       alt={alt}
       className={`${className}${loadedClass}`}
       decoding="async"
       loading={priority ? "eager" : loading}
       onError={handleError}
-      onLoad={() => setLoaded(true)}
+      onLoad={markLoaded}
       sizes={sizes}
       src={imageSrc}
       srcSet={srcSet}

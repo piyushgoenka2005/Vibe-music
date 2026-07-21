@@ -2,6 +2,24 @@
 
 /* ─── Global mobile safeguards ─── */
 @media (max-width: 767px) {
+  /* Struck-out MRPs clutter tight mobile cards / price rows — hide sitewide */
+  .cat-product-card__price--was,
+  .product-suggest__item-was,
+  .new-arrivals-card__was,
+  .cart-item-card__mrp,
+  .cart-upsell__mrp,
+  .cart-sticky-footer__total-mrp,
+  .pdp-info-pricing__mrp,
+  .pdp-msrp,
+  .pdp-buybox__list-row,
+  .pdp-buybox__list-price,
+  .pdp-fbt__summary-original,
+  .gear-story-modal__price-was,
+  .premium-home .new-arrivals-card__was,
+  .premium-home .premium-product-carousel .product-suggest__item-was {
+    display: none !important;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -125,8 +143,22 @@
     display: none;
   }
 
+  /* Keep wishlist/compare/share reachable on mobile grid cards */
   .cat-product-grid--grid .product-card-actions {
-    display: none;
+    display: flex;
+    gap: 0.35rem;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .cat-product-grid--grid .product-card-actions .product-share-btn,
+  .cat-product-grid--grid .product-card-actions .wl-heart-btn,
+  .cat-product-grid--grid .product-card-actions .compare-btn {
+    --share-btn-size: 2.75rem;
+    width: var(--share-btn-size);
+    min-width: var(--share-btn-size);
+    height: var(--share-btn-size);
+    min-height: var(--share-btn-size);
   }
 
   .site-header {
@@ -258,6 +290,24 @@
     width: 100%;
   }
 
+  /* PDP detail tabs — swipe horizontally when labels overflow */
+  .storefront-page .pdp-tabs,
+  .storefront-page .pdp-tabs__shell {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .storefront-page .pdp-tabs__nav {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+  }
+
   .storefront-page .pdp-gallery {
     flex-direction: column-reverse;
     width: 100%;
@@ -278,6 +328,7 @@
     max-height: none;
     overflow-x: auto;
     overflow-y: hidden;
+    scroll-behavior: smooth;
   }
 
   .storefront-page .pdp-gallery__main .pdp-gallery__photo {
@@ -517,6 +568,7 @@
     overflow-x: auto;
     flex-wrap: nowrap;
     padding-bottom: 0.25rem;
+    scroll-behavior: smooth;
     scrollbar-width: none;
   }
 

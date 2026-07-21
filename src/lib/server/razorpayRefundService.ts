@@ -18,6 +18,7 @@ export async function initiateOrderRefund(input: {
   orderId: string;
   amountPaise?: number;
   actorEmail: string;
+  note?: string;
   request?: Request;
 }): Promise<{ orderId: string; razorpayRefundId?: string; skipped?: boolean }> {
   const order = await fetchOrderById(input.orderId);
@@ -39,6 +40,7 @@ export async function initiateOrderRefund(input: {
     notes: {
       orderId: order.id,
       initiatedBy: input.actorEmail,
+      ...(input.note?.trim() ? { note: input.note.trim().slice(0, 200) } : {}),
     },
   });
 
@@ -57,6 +59,7 @@ export async function initiateOrderRefund(input: {
     metadata: {
       razorpayRefundId: refund.id,
       amountPaise: input.amountPaise ?? null,
+      ...(input.note?.trim() ? { note: input.note.trim() } : {}),
     },
   });
 

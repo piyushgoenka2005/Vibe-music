@@ -101,6 +101,15 @@ export async function POST(request: Request, context: RouteContext) {
 
     const { shipment } = await getOrderShipmentDetails(id);
     if (shipment?.trackingNumber) {
+      if (order.userId) {
+        void notifyUserIfAllowed({
+          userId: order.userId,
+          type: "order_update",
+          title: "Shipment update",
+          body: `Tracking ${shipment.trackingNumber} — ${parsed.status || parsed.title}.`,
+          link: `/account/orders/${id}`,
+        });
+      }
       void sendShipmentUpdateEmail({
         order,
         trackingNumber: shipment.trackingNumber,

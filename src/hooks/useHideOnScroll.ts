@@ -132,13 +132,21 @@ export function useSiteHeaderOffset(headerRef: RefObject<HTMLElement | null>) {
         }
       }
 
+      // Exact chrome bottom — used by the mobile drawer/backdrop so they sit flush.
+      const chrome = Math.round(chromeBottom);
+      const chromeClamped = Math.max(56, Math.min(280, chrome));
+
       // +8px keeps titles/breadcrumbs from kissing the nav underline.
-      const offset = Math.round(chromeBottom) + 8;
-      const clamped = Math.max(88, Math.min(280, offset));
+      const offset = chromeClamped + 8;
+      const offsetClamped = Math.max(64, Math.min(288, offset));
 
       document.documentElement.style.setProperty(
+        "--site-header-chrome",
+        `${chromeClamped}px`
+      );
+      document.documentElement.style.setProperty(
         "--site-header-offset",
-        `${clamped}px`
+        `${offsetClamped}px`
       );
     };
 

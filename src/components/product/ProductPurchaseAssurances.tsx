@@ -10,6 +10,7 @@ import {
   Truck,
   type LucideIcon,
 } from "lucide-react";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 interface AssuranceItem {
   icon: LucideIcon;
@@ -45,11 +46,24 @@ const ASSURANCES: AssuranceItem[] = [
   },
 ];
 
-const ASSURANCE_SCROLL = 180;
+const AUTO_SCROLL_MS = 3200;
+const RESUME_AFTER_MS = 4500;
+const MOBILE_MQ = "(max-width: 767px)";
+
+function getStep(track: HTMLElement): number {
+  const item = track.querySelector<HTMLElement>(".pdp-assurances__item");
+  if (!item) return 180;
+  const styles = getComputedStyle(track);
+  const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
+  return item.offsetWidth + gap;
+}
 
 export default function ProductPurchaseAssurances() {
   const trackRef = useRef<HTMLUListElement>(null);
+  const pausedUntilRef = useRef(0);
+  const reduceMotion = usePrefersReducedMotion();
   const [canScrollNext, setCanScrollNext] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const updateScrollState = useCallback(() => {
     const track = trackRef.current;
@@ -57,6 +71,18 @@ export default function ProductPurchaseAssurances() {
     setCanScrollNext(
       track.scrollLeft + track.clientWidth < track.scrollWidth - 4
     );
+  }, []);
+
+  const pauseAutoScroll = useCallback(() => {
+    pausedUntilRef.current = Date.now() + RESUME_AFTER_MS;
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_MQ);
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {
@@ -68,13 +94,59 @@ export default function ProductPurchaseAssurances() {
     return () => observer.disconnect();
   }, [updateScrollState]);
 
+  /* Mobile: auto-advance while keeping native swipe / drag scroll. */
+  useEffect(() => {
+    if (reduceMotion || !isMobile) return;
+
+    const track = trackRef.current;
+    if (!track) return;
+
+    const onUserInteract = () => pauseAutoScroll();
+
+    track.addEventListener("pointerdown", onUserInteract);
+    track.addEventListener("touchstart", onUserInteract, { passive: true });
+    track.addEventListener("wheel", onUserInteract, { passive: true });
+
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      if (Date.now() < pausedUntilRef.current) return;
+
+      const maxScroll = track.scrollWidth - track.clientWidth;
+      if (maxScroll <= 4) return;
+
+      const step = getStep(track);
+      const atEnd = track.scrollLeft >= maxScroll - 4;
+
+      if (atEnd) {
+        track.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        track.scrollBy({ left: step, behavior: "smooth" });
+      }
+    }, AUTO_SCROLL_MS);
+
+    return () => {
+      window.clearInterval(timer);
+      track.removeEventListener("pointerdown", onUserInteract);
+      track.removeEventListener("touchstart", onUserInteract);
+      track.removeEventListener("wheel", onUserInteract);
+    };
+  }, [isMobile, pauseAutoScroll, reduceMotion]);
+
+  const enableAuto = isMobile && !reduceMotion;
+
   return (
     <aside className="pdp-assurances" aria-label="Purchase assurances">
       <div className="pdp-assurances__viewport">
         <ul
           ref={trackRef}
-          className="pdp-assurances__list"
+          className={[
+            "pdp-assurances__list",
+            enableAuto ? "pdp-assurances__list--auto" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
           onScroll={updateScrollState}
+          aria-roledescription={enableAuto ? "carousel" : undefined}
         >
           {ASSURANCES.map((item) => {
             const Icon = item.icon;
@@ -90,14 +162,16 @@ export default function ProductPurchaseAssurances() {
           })}
         </ul>
 
-        {canScrollNext ? (
+        {canScrollNext && !enableAuto ? (
           <button
             type="button"
             className="pdp-assurances__nav"
             aria-label="Show more purchase assurances"
             onClick={() => {
-              trackRef.current?.scrollBy({
-                left: ASSURANCE_SCROLL,
+              const track = trackRef.current;
+              if (!track) return;
+              track.scrollBy({
+                left: getStep(track),
                 behavior: "smooth",
               });
             }}

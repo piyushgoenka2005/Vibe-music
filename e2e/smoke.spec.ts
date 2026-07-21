@@ -66,6 +66,43 @@ test.describe("storefront smoke", () => {
     expect(overflow).toBeLessThanOrEqual(1);
   });
 
+  test("key storefront pages have no horizontal overflow at mobile width", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const paths = [
+      "/cart",
+      "/checkout",
+      "/search",
+      "/compare",
+      "/rentals",
+      "/giveaway",
+      "/contact",
+    ];
+    for (const path of paths) {
+      await page.goto(path, { waitUntil: "domcontentloaded", timeout: 60_000 });
+      const overflow = await page.evaluate(() => {
+        const doc = document.documentElement;
+        return doc.scrollWidth - doc.clientWidth;
+      });
+      expect(overflow, `${path} overflow`).toBeLessThanOrEqual(2);
+    }
+  });
+
+  test("category listing keeps product card actions on mobile", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/category/guitars", {
+      waitUntil: "domcontentloaded",
+      timeout: 60_000,
+    });
+    const actions = page.locator(".cat-product-grid--grid .product-card-actions").first();
+    if (await actions.count()) {
+      await expect(actions).toBeVisible();
+      const box = await actions.boundingBox();
+      expect(box?.width ?? 0).toBeGreaterThan(0);
+    }
+  });
+
   test("newsletter subscribe endpoint validates input", async ({ request }) => {
     const response = await request.post("/api/newsletter/subscribe", {
       data: { email: "not-an-email" },
@@ -151,12 +188,6 @@ test.describe("program landings", () => {
     await expect(
       page.getByText(/no live giveaway|live now|giveaways & contests/i).first()
     ).toBeVisible();
-  });
-
-  test("financing page loads EMI hub", async ({ page }) => {
-    await page.goto("/financing", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.getByText(/EMI|finance|Compare plans/i).first()).toBeVisible();
   });
 
   test("used gear page loads", async ({ page }) => {

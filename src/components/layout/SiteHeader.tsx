@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useHideOnScroll, useSiteHeaderOffset } from "@/hooks/useHideOnScroll";
+import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import SiteHeaderNav from "@/components/layout/SiteHeaderNav";
 import SiteHeaderMobileDrawer from "@/components/layout/SiteHeaderMobileDrawer";
@@ -29,6 +30,7 @@ export default function SiteHeader() {
   const searchToggleRef = useRef<HTMLButtonElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const isMobile = useIsMobileViewport();
   const headerHidden = useHideOnScroll({ disabled: mobileOpen, disableOnMobile: true });
 
   useSiteHeaderOffset(headerRef);
@@ -37,6 +39,11 @@ export default function SiteHeader() {
     queueMicrotask(() => setMobileOpen(false));
     window.dispatchEvent(new Event("site-header:sync"));
   }, [pathname]);
+
+  /* Drawer is mobile-only — never leave it open after rotating to desktop */
+  useEffect(() => {
+    if (!isMobile && mobileOpen) setMobileOpen(false);
+  }, [isMobile, mobileOpen]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -65,6 +72,12 @@ export default function SiteHeader() {
     window.addEventListener("keydown", onEscape);
     return () => window.removeEventListener("keydown", onEscape);
   }, [mobileOpen]);
+
+  const toggleMobileNav = useCallback(() => {
+    if (!isMobile) return;
+    searchStore.closeOverlay();
+    setMobileOpen((open) => !open);
+  }, [isMobile]);
 
   const { user, isAuthenticated, isInitialized } = useAuthStore(
     useShallow((state) => ({
@@ -259,17 +272,20 @@ export default function SiteHeader() {
 
           <button
             type="button"
-            className="site-header__menu-btn"
-            onClick={() => {
-              searchStore.closeOverlay();
-              setMobileOpen((open) => !open);
-            }}
+            className={`site-header__menu-btn${mobileOpen ? " is-open" : ""}`}
+            onClick={toggleMobileNav}
             aria-expanded={mobileOpen}
-            aria-controls="site-header-nav"
+            aria-controls="site-header-mobile-nav"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
-            {mobileOpen ? <X size={22} strokeWidth={1.75} /> : <Menu size={22} strokeWidth={1.75} />}
-            <span className="site-header__menu-label">{mobileOpen ? "Close" : "Menu"}</span>
+            {mobileOpen ? (
+              <X size={24} strokeWidth={1.75} aria-hidden />
+            ) : (
+              <>
+                <Menu size={22} strokeWidth={1.75} aria-hidden />
+                <span className="site-header__menu-label">Menu</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -277,7 +293,7 @@ export default function SiteHeader() {
       <SiteHeaderNav onMegaMenuOpenChange={handleMegaMenuOpenChange} />
 
       <SiteHeaderMobileDrawer
-        open={mobileOpen}
+        open={isMobile && mobileOpen}
         onClose={() => setMobileOpen(false)}
         onNavigate={() => setMobileOpen(false)}
       />

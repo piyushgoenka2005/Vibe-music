@@ -488,6 +488,7 @@
     transform: translateX(-50%);
     max-width: calc(100% - 1.5rem);
     overflow-x: auto;
+    scroll-behavior: smooth;
     scrollbar-width: none;
   }
 
