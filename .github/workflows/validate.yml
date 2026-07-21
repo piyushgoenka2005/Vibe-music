@@ -31,7 +31,6 @@ jobs:
       NEXTAUTH_SECRET: ci-auth-secret-minimum-32-characters-long
       NEXTAUTH_URL: http://localhost:3000
       GUEST_ORDER_ACCESS_SECRET: ci-guest-order-secret-min-32-chars-long
-      COD_ENABLED: "true"
       E2E_ADMIN_EMAIL: e2e-admin@vibemusic.test
       E2E_ADMIN_PASSWORD: E2eAdminPassword!123456
 

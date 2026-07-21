@@ -183,9 +183,8 @@ export async function createRentalBooking(
   const durationType = payload.items[0]!.durationType;
   const lockExpires = new Date(Date.now() + LOCK_HOLD_MINUTES * 60 * 1000).toISOString();
 
-  const paymentStatus =
-    payload.paymentMethod === "cod" ? "cod_pending" : "pending";
-  const status = payload.paymentMethod === "cod" ? "confirmed" : "pending";
+  const paymentStatus = "pending";
+  const status = "pending";
 
   await createRentalBookingRecord({
     id: bookingId,
@@ -239,8 +238,8 @@ export async function createRentalBooking(
       bookingId,
       startAt: q.startAt,
       endAt: q.endAt,
-      status: payload.paymentMethod === "cod" ? "confirmed" : "held",
-      expiresAt: payload.paymentMethod === "cod" ? null : lockExpires,
+      status: "held",
+      expiresAt: lockExpires,
     }))
   );
 

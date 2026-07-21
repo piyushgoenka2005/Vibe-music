@@ -44,6 +44,7 @@ yarn-error.log*
 .env.production.local
 !.env.example
 !.env.production.example
+deploy/ops-secrets.env
 
 
 # vercel

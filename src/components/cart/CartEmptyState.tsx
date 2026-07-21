@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { categoryPath, ROUTES } from "@/lib/routes";
+import {
+  canListingQuickAdd,
+  listingQuickAddAriaLabel,
+  listingQuickAddLabel,
+  shouldNavigateForVariants,
+} from "@/lib/product/listingQuickAdd";
 import { fetchProductSummaries, fetchProducts } from "@/services/products.api";
 import { useCartStore } from "@/store/cartStore";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
@@ -25,9 +32,11 @@ const TRENDING_CATEGORIES = [
 ] as const;
 
 function CartSuggestionCard({ product }: { product: Product }) {
+  const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const outOfStock = product.availability === "out-of-stock";
   const comingSoon = !isPurchasablePrice(product.price);
+  const canQuickAdd = canListingQuickAdd(product);
   const href = `/product/${product.slug}`;
   const hasDeal =
     product.originalPrice != null &&
@@ -77,11 +86,24 @@ function CartSuggestionCard({ product }: { product: Product }) {
         <button
           type="button"
           className="cart-empty__product-add"
-          disabled={outOfStock}
-          onClick={() => addItem(product)}
-          aria-label={`Add ${product.name} to cart`}
+          disabled={outOfStock || !canQuickAdd}
+          onClick={() => {
+            if (!canQuickAdd) return;
+            if (shouldNavigateForVariants(product)) {
+              router.push(href);
+              return;
+            }
+            addItem(product);
+          }}
+          aria-label={
+            outOfStock
+              ? `${product.name} is out of stock`
+              : listingQuickAddAriaLabel(product)
+          }
         >
-          {outOfStock ? "Sold out" : "Add"}
+          {outOfStock
+            ? "Sold out"
+            : listingQuickAddLabel(product)}
         </button>
       )}
     </article>

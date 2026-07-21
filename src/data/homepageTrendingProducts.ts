@@ -1,4 +1,4 @@
-import { productPath, ROUTES } from "@/lib/routes";
+import { productPath } from "@/lib/routes";
 import type { HomepageTopProduct } from "@/data/homepageTopProducts";
 
 /** Curated fallbacks when live trending catalog data is unavailable. */

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { fetchBrands } from "@/lib/server/firestoreCatalogRepository";
+import { fetchBrands } from "@/lib/server/storeCatalogRepository";
 import { getCachedActiveProducts } from "@/lib/server/catalogSnapshotCache";
 import { listCategories } from "@/lib/server/categoryRepository";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
@@ -47,6 +47,7 @@ function toProductItem(
   rank?: number
 ): HomepageProductItem {
   const salePrice = product.detail?.salePrice ?? null;
+  const variantCount = product.detail?.variants?.length ?? 0;
   const { rating, reviewCount } = ensureProductReviewMetrics({
     id: product.id,
     rating: product.rating,
@@ -67,6 +68,7 @@ function toProductItem(
     badgeLabel: overrides?.badgeLabel,
     offerText: overrides?.offerText,
     rank,
+    requiresVariantSelection: variantCount > 1,
   };
 }
 

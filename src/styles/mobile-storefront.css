@@ -290,22 +290,10 @@
     width: 100%;
   }
 
-  /* PDP detail tabs — swipe horizontally when labels overflow */
-  .storefront-page .pdp-tabs,
-  .storefront-page .pdp-tabs__shell {
+  /* PDP detail sections — full-width vertical stack */
+  .storefront-page .pdp-sections {
     min-width: 0;
     max-width: 100%;
-  }
-
-  .storefront-page .pdp-tabs__nav {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-    touch-action: pan-x pan-y;
   }
 
   .storefront-page .pdp-gallery {

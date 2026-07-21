@@ -95,7 +95,7 @@ export default function ProductImageUpload({
         />
         <p>{uploading ? "Uploading…" : "Drag & drop images here, or click to select"}</p>
         <p style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
-          Images upload to Cloudinary. Supports multiple images.
+          Images upload to the Vibe CDN. Supports multiple images.
         </p>
       </div>
 

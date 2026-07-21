@@ -65,35 +65,41 @@ export default function ProductQASection({
       />
 
       {isLoading ? (
-        <p className="pdp-tabs__empty">Loading questions…</p>
+        <p className="pdp-sections__status">Loading questions…</p>
       ) : (
         <>
           {pendingQuestions.length > 0 ? (
             <div className="pdp-qa-pending" aria-label="Pending questions">
-              <p className="pdp-tabs__empty">
+              <p className="pdp-sections__status">
                 {pendingQuestions.length} question
                 {pendingQuestions.length === 1 ? "" : "s"} awaiting review.
               </p>
-              {pendingQuestions.map((item) => (
-                <article key={item.id} className="pdp-qa pdp-qa--pending">
-                  <p className="pdp-qa__q">Q: {item.question}</p>
-                  <p className="pdp-qa__a">Awaiting answer from Vibe Music.</p>
-                </article>
-              ))}
+              <div className="pdp-sections__panel">
+                {pendingQuestions.map((item) => (
+                  <article key={item.id} className="pdp-qa pdp-qa--pending">
+                    <p className="pdp-qa__q">Q: {item.question}</p>
+                    <p className="pdp-qa__a">Awaiting answer from Vibe Music.</p>
+                  </article>
+                ))}
+              </div>
             </div>
           ) : null}
 
           {unique.length === 0 ? (
-            <p className="pdp-tabs__empty">No answered questions yet. Be the first to ask.</p>
+            <p className="pdp-sections__empty">
+              No answered questions yet. Be the first to ask.
+            </p>
           ) : (
-            unique.map((item) => (
-              <article key={item.id} className="pdp-qa">
-                <p className="pdp-qa__q">Q: {item.question}</p>
-                <p className="pdp-qa__a">
-                  A: {item.answer} — <em>{item.author}</em>
-                </p>
-              </article>
-            ))
+            <div className="pdp-sections__panel">
+              {unique.map((item) => (
+                <article key={item.id} className="pdp-qa">
+                  <p className="pdp-qa__q">Q: {item.question}</p>
+                  <p className="pdp-qa__a">
+                    A: {item.answer} — <em>{item.author}</em>
+                  </p>
+                </article>
+              ))}
+            </div>
           )}
         </>
       )}

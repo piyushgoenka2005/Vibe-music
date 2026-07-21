@@ -45,5 +45,6 @@ describe("getIntegrationChecks", () => {
     expect(report.items.every((item) => item.label && item.detail)).toBe(true);
     expect(report.items.some((item) => item.key === "places")).toBe(true);
     expect(report.items.some((item) => item.key === "googleOAuth")).toBe(true);
+    expect(report.items.some((item) => item.key === "analyticsClient")).toBe(true);
   });
 });

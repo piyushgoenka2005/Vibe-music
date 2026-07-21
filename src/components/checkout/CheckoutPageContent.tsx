@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useSyncExternalStore, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -12,7 +12,6 @@ import CheckoutSummary, {
 import CheckoutPaymentMethods, {
   type OnlinePaymentChannel,
 } from "@/components/checkout/CheckoutPaymentMethods";
-import type { CodCapabilities } from "@/lib/checkout/codEligibilityClient";
 import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
@@ -35,6 +34,12 @@ import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";
 import { formatCurrencyPrecise } from "@/utils/currency";
+import {
+  trackBeginCheckout,
+  trackAddShippingInfo,
+  trackAddPaymentInfo,
+} from "@/lib/analytics/events";
+import { cartItemsToAnalyticsLines } from "@/lib/analytics/cartLines";
 import type { PaymentMethod, ShippingAddress } from "@/types/order";
 import "@/components/checkout/checkout.css";
 
@@ -113,10 +118,17 @@ export default function CheckoutPageContent() {
   const showToast = useToastStore((s) => s.show);
   const cartHydrated = useCartHydrated();
   useCartCatalogReprice(true);
+  const checkoutTrackedRef = useRef(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
+
+  useEffect(() => {
+    if (!cartHydrated || items.length === 0 || checkoutTrackedRef.current) return;
+    checkoutTrackedRef.current = true;
+    trackBeginCheckout(cartItemsToAnalyticsLines(items), couponCode ?? undefined);
+  }, [cartHydrated, items, couponCode]);
 
   const [step, setStep] = useState<CheckoutStep>("address");
   const savedAddresses = useMemo(
@@ -136,7 +148,6 @@ export default function CheckoutPageContent() {
   const [addressForm, setAddressForm] = useState<ShippingAddress>(EMPTY_ADDRESS);
   const [confirmedAddress, setConfirmedAddress] =
     useState<ShippingAddress | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("razorpay");
   const shippingMethod = getDefaultShippingMethod();
   const [zoneQuote, setZoneQuote] = useState<{
     key: string;
@@ -149,7 +160,6 @@ export default function CheckoutPageContent() {
     razorpayConfigured: boolean;
     demoPaymentsAllowed: boolean;
     onlinePaymentsAvailable: boolean;
-    cod?: CodCapabilities;
   } | null>(null);
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
@@ -193,15 +203,11 @@ export default function CheckoutPageContent() {
           razorpayConfigured: boolean;
           demoPaymentsAllowed: boolean;
           onlinePaymentsAvailable: boolean;
-          cod?: CodCapabilities;
         }>;
       })
       .then((data) => {
         if (cancelled || !data) return;
         setCheckoutCapabilities(data);
-        if (!data.onlinePaymentsAvailable) {
-          setPaymentMethod("cod");
-        }
       })
       .catch(() => {
         /* Keep optimistic defaults if capabilities fail to load. */
@@ -278,10 +284,7 @@ export default function CheckoutPageContent() {
     0
   );
 
-  const effectivePaymentMethod = useMemo((): PaymentMethod => {
-    // COD removed from checkout — online only.
-    return "razorpay";
-  }, []);
+  const effectivePaymentMethod: PaymentMethod = "razorpay";
 
   const buyerState = resolvedAddress?.state ?? "Maharashtra";
   const email = (user?.email ?? guestEmail).trim().toLowerCase();
@@ -461,6 +464,7 @@ export default function CheckoutPageContent() {
     }
 
     setConfirmedAddress(shipping);
+    trackAddShippingInfo(cartItemsToAnalyticsLines(items));
     setStep("summary");
     window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -483,6 +487,7 @@ export default function CheckoutPageContent() {
   }
 
   function handleContinueToPayment() {
+    trackAddPaymentInfo(cartItemsToAnalyticsLines(items), "razorpay");
     setStep("payment");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -992,7 +997,7 @@ export default function CheckoutPageContent() {
                 onlineChannel={onlineChannel}
                 onlinePaymentsAvailable={onlinePaymentsAvailable}
                 onOnlineChannelChange={setOnlineChannel}
-                onPaymentMethodChange={setPaymentMethod}
+                onPaymentMethodChange={() => undefined}
                 paymentMethod={effectivePaymentMethod}
               />
 

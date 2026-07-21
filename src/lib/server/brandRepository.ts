@@ -2,7 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { loadBrands, saveBrands } from "@/lib/server/catalogRepository";
-import { invalidateCatalogCache } from "@/lib/server/firestoreCatalogRepository";
+import { invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
 import { brandToPrisma, prismaToBrand } from "@/lib/server/prisma/mappers";
 import { slugify } from "@/lib/slug";
 import type { Brand } from "@/types/brand";

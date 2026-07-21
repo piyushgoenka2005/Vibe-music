@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
+import { trackSearch } from "@/lib/analytics/events";
 import { ROUTES } from "@/lib/routes";
 import { buildEmptyStateSuggestions } from "@/lib/search/searchIntelligence";
 import {
@@ -232,6 +233,7 @@ export function useSearch(options: UseSearchOptions = {}) {
       if (next.length < MIN_QUERY_LENGTH) return;
       searchStore.setQuery(next);
       searchStore.addRecentSearch(next);
+      trackSearch(next);
       closeOverlay();
       router.push(`${ROUTES.searchResults}?q=${encodeURIComponent(next)}`);
     },

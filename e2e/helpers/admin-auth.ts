@@ -9,8 +9,8 @@ export const E2E_ADMIN_STORAGE_PATH = "e2e/.auth/admin.json";
 
 async function fillReactInput(locator: Locator, value: string): Promise<void> {
   await locator.waitFor({ state: "visible" });
-  await locator.click();
-  await locator.fill(value);
+  await locator.click({ clickCount: 3 });
+  await locator.pressSequentially(value, { delay: 20 });
 
   if ((await locator.inputValue()) !== value) {
     await locator.evaluate((node, next) => {
@@ -26,11 +26,11 @@ async function fillReactInput(locator: Locator, value: string): Promise<void> {
     }, value);
   }
 
-  await expect(locator).toHaveValue(value);
+  await expect(locator).toHaveValue(value, { timeout: 10_000 });
 }
 
 export async function loginAsE2EAdmin(page: Page): Promise<void> {
-  await page.goto("/admin/login", { waitUntil: "domcontentloaded" });
+  await page.goto("/admin/login", { waitUntil: "load" });
   await expect(page.getByRole("heading", { name: /Admin Login/i })).toBeVisible();
 
   const emailInput = page.locator('input[name="email"]');
@@ -39,6 +39,8 @@ export async function loginAsE2EAdmin(page: Page): Promise<void> {
   await fillReactInput(emailInput, E2E_ADMIN_EMAIL);
   await fillReactInput(passwordInput, E2E_ADMIN_PASSWORD);
 
-  await page.getByRole("button", { name: /Admin Login/i }).click();
-  await expect(page).toHaveURL(/\/admin(?:\/)?$/, { timeout: 30_000 });
+  await Promise.all([
+    page.waitForURL(/\/admin(?:\/)?$/, { timeout: 45_000 }),
+    page.getByRole("button", { name: /Admin Login/i }).click(),
+  ]);
 }

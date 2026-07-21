@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useAuthStore } from "@/store/authStore";
 import { mergeGuestCartOnAuth } from "@/lib/cart/mergeGuestCart";
+import { setAnalyticsUserId } from "@/lib/analytics/gtag";
+import { trackLogin } from "@/lib/analytics/events";
 
 const SESSION_FAIL_OPEN_MS = 6000;
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
+  const prevUserIdRef = useRef<string | null>(null);
   const setSessionUser = useAuthStore((s) => s.setSessionUser);
   const setAuthLoading = useAuthStore((s) => s.setAuthLoading);
   const setAuthInitialized = useAuthStore((s) => s.setAuthInitialized);
@@ -33,9 +36,18 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         name: session.user.name?.trim() || session.user.email.split("@")[0] || "User",
         photoURL: session.user.image ?? null,
       });
+      setAnalyticsUserId(session.user.id);
+      if (prevUserIdRef.current !== session.user.id) {
+        if (prevUserIdRef.current === null) {
+          trackLogin("google");
+        }
+        prevUserIdRef.current = session.user.id;
+      }
       mergeGuestCartOnAuth();
     } else {
       setSessionUser(null);
+      setAnalyticsUserId(null);
+      prevUserIdRef.current = null;
     }
 
     setAuthInitialized(true);

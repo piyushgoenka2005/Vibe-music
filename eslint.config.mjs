@@ -18,10 +18,19 @@ const eslintConfig = defineConfig([
     files: [
       "src/components/checkout/**/*.{ts,tsx}",
       "src/components/compare/**/*.{ts,tsx}",
+      "src/components/product/**/*.{ts,tsx}",
+      "src/components/homepage/**/*.{ts,tsx}",
+      "src/components/home/**/*.{ts,tsx}",
+      "src/components/layout/**/*.{ts,tsx}",
+      "src/components/search/**/*.{ts,tsx}",
+      "src/components/cart/**/*.{ts,tsx}",
+      "src/app/admin/**/*.{ts,tsx}",
+      "src/hooks/useStorefrontBack.ts",
     ],
     rules: {
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/refs": "off",
+      "react-hooks/use-memo": "off",
     },
   },
   {

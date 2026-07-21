@@ -33,7 +33,7 @@ import {
   skuExists,
   slugExists,
   writeProduct,
-} from "@/lib/server/firestoreCatalogRepository";
+} from "@/lib/server/storeCatalogRepository";
 import { getCachedCategories, getCachedProducts } from "@/lib/server/catalogSnapshotCache";
 import { recordInventoryLogEntry } from "@/lib/server/inventoryRepository";
 import {
@@ -207,6 +207,8 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
     reviewCount: catalogProduct.reviewCount,
   });
 
+  const variantCount = catalogProduct.detail?.variants?.length ?? 0;
+
   return {
     id: catalogProduct.id,
     slug: catalogProduct.slug,
@@ -223,6 +225,7 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
     condition: catalogProduct.condition,
     imageColor: catalogProduct.imageColor,
     image: catalogProduct.image,
+    requiresVariantSelection: variantCount > 1,
   };
 }
 

@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { formatCheckoutError } from "@/lib/server/checkoutErrors";
 import { createOrder } from "@/lib/server/orderService";
-import { isPlacedOrder } from "@/lib/orderPlacement";
-import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
-import { notifyCustomerOrderPlaced } from "@/lib/server/orderNotificationService";
 import {
   resolveCouponDiscount,
   resolveOrderItems,
@@ -20,7 +17,6 @@ import {
   logPaymentError,
 } from "@/lib/server/paymentDiagnostics";
 import type { CreateOrderPayload } from "@/types/order";
-import { evaluateCodEligibility } from "@/lib/server/codEligibility";
 
 export async function POST(request: Request) {
   try {
@@ -67,9 +63,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!body.paymentMethod || !["razorpay", "cod"].includes(body.paymentMethod)) {
+    if (body.paymentMethod !== "razorpay") {
       return NextResponse.json(
-        { error: "Invalid payment method" },
+        { error: "Only online payment via Razorpay is supported." },
         { status: 400 }
       );
     }
@@ -81,20 +77,6 @@ export async function POST(request: Request) {
       0
     );
     const couponDiscount = await resolveCouponDiscount(body.couponCode, subtotal);
-    const orderValue = Math.max(0, subtotal - couponDiscount);
-
-    if (body.paymentMethod === "cod") {
-      const codCheck = evaluateCodEligibility({
-        orderValue,
-        postalCode: body.shippingAddress?.postalCode,
-      });
-      if (!codCheck.eligible) {
-        return NextResponse.json(
-          { error: codCheck.reason ?? "Cash on delivery is not available" },
-          { status: 400 }
-        );
-      }
-    }
 
     const payload: CreateOrderPayload = {
       ...body,
@@ -117,16 +99,6 @@ export async function POST(request: Request) {
       demoMode: Boolean(demoMode),
       hasRazorpayOrderId: Boolean(razorpayOrderId),
     });
-
-    if (payload.paymentMethod === "cod" && isPlacedOrder(order)) {
-      void sendOrderConfirmationEmail(order);
-      void notifyCustomerOrderPlaced(order);
-      return NextResponse.json({
-        orderId: order.id,
-        trackingToken: order.trackingToken,
-        order,
-      });
-    }
 
     if (demoMode) {
       return NextResponse.json({

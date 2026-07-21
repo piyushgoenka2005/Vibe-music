@@ -1,7 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
+import { productPath } from "@/lib/routes";
+import {
+  canListingQuickAdd,
+  listingQuickAddAriaLabel,
+  listingQuickAddLabel,
+  shouldNavigateForVariants,
+} from "@/lib/product/listingQuickAdd";
 import { useCartStore } from "@/store/cartStore";
 import type { Product } from "@/types/product";
 import { formatDisplayPrice } from "@/utils/currency";
@@ -19,13 +27,14 @@ function discountPercent(product: Product): number | null {
 }
 
 function isPurchasable(product: Product): boolean {
-  return product.availability !== "out-of-stock" && product.price > 0;
+  return canListingQuickAdd(product);
 }
 
 export default function CartUpsellCarousel({
   products,
   title = "Recommended for you",
 }: CartUpsellCarouselProps) {
+  const router = useRouter();
   const items = useCartStore((s) => s.items);
   const cartProductIds = useMemo(
     () =>
@@ -49,6 +58,16 @@ export default function CartUpsellCarousel({
           const pct = discountPercent(product);
           const original = product.originalPrice;
           const canAdd = isPurchasable(product);
+          const addLabel = listingQuickAddLabel(product);
+
+          function handleAdd() {
+            if (!canAdd) return;
+            if (shouldNavigateForVariants(product)) {
+              router.push(productPath(product.slug));
+              return;
+            }
+            addItem(product, 1);
+          }
 
           return (
             <article key={product.id} className="cart-upsell__card">
@@ -92,15 +111,19 @@ export default function CartUpsellCarousel({
                 <button
                   type="button"
                   className="cart-upsell__add"
-                  onClick={() => addItem(product, 1)}
+                  onClick={handleAdd}
                   disabled={!canAdd}
                   aria-label={
                     canAdd
-                      ? `Add ${product.name} to cart`
+                      ? listingQuickAddAriaLabel(product)
                       : `${product.name} is unavailable`
                   }
                 >
-                  {canAdd ? "+ Add" : "Unavailable"}
+                  {canAdd
+                    ? shouldNavigateForVariants(product)
+                      ? addLabel
+                      : "+ Add"
+                    : "Unavailable"}
                 </button>
               </div>
             </article>

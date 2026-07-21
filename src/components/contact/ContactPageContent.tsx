@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Mail, MapPin, Phone } from "lucide-react";
+import { trackGenerateLead } from "@/lib/analytics/events";
 import { NavArrowIcon } from "@/gp9/components/ui/nav-arrow-icon";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { BRAND } from "@/lib/brand";
@@ -39,6 +40,7 @@ export default function ContactPageContent() {
         throw new Error(data.error ?? "Unable to send message");
       }
       setStatus("success");
+      trackGenerateLead("contact");
       setFeedback(data.message ?? "Message sent.");
       setName("");
       setEmail("");

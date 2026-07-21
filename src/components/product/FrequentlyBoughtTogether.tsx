@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
+import { categoryPath } from "@/lib/routes";
 import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import type { ResolvedProductBundle } from "@/types/bundle";
@@ -224,7 +225,7 @@ export default function FrequentlyBoughtTogether({
           </button>
           <span className="pdp-fbt__divider-text">OR</span>
           <Link
-            href="/category/accessories"
+            href={categoryPath("cables-cases-accessories")}
             className="pdp-btn pdp-btn--secondary pdp-fbt__build-own"
           >
             Build Your Own Bundle and Save

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { fetchAllProducts } from "@/lib/server/firestoreCatalogRepository";
+import { fetchAllProducts } from "@/lib/server/storeCatalogRepository";
 import {
   generateVariantSku,
   normalizeVariant,

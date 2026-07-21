@@ -41,7 +41,7 @@ export const createRentalBookingSchema = z.object({
   customerPhone: z.string().min(8),
   fulfillment: rentalFulfillmentSchema,
   address: rentalAddressSchema.optional(),
-  paymentMethod: z.enum(["razorpay", "cod"]),
+  paymentMethod: z.literal("razorpay"),
   buyerState: z.string().optional(),
   termsAccepted: z.literal(true),
   agreementAccepted: z.literal(true),

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import HomepageProductImage from "@/components/homepage/HomepageProductImage";
@@ -10,10 +11,16 @@ import {
   formatRatingPillLabel,
 } from "@/lib/product/productReviewDisplay";
 import { resolveLinkHref } from "@/lib/routes";
+import {
+  canListingQuickAdd,
+  listingQuickAddAriaLabel,
+  listingQuickAddLabel,
+  shouldNavigateForVariants,
+} from "@/lib/product/listingQuickAdd";
 import { useCartStore } from "@/store/cartStore";
 import type { HomepageProductItem } from "@/types/homepage";
 import type { Product } from "@/types/product";
-import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
 
 interface CarouselProductCardProps {
@@ -46,6 +53,7 @@ function toCartProduct(item: HomepageProductItem): Product {
     condition: "new",
     imageColor: "#e2e8f0",
     image: item.image,
+    requiresVariantSelection: item.requiresVariantSelection,
   };
 }
 
@@ -69,6 +77,7 @@ export default function CarouselProductCard({
   sectionKey,
   imagePriority = false,
 }: CarouselProductCardProps) {
+  const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const openDrawer = useCartStore((state) => state.openDrawer);
   const displayName = formatProductCardTitle(item.name, item.brand);
@@ -88,13 +97,18 @@ export default function CarouselProductCard({
   const isTrendingRibbon = sectionKey === "trending" && !item.badgeLabel;
   const discountPct = seededDiscount(item.id);
   const productHref = resolveLinkHref(item.href);
-  const canQuickAdd = isPurchasablePrice(displayPrice);
+  const cartProduct = toCartProduct(item);
+  const canQuickAdd = canListingQuickAdd(cartProduct);
 
   function handleAddToCart(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
     if (!canQuickAdd) return;
-    addItem(toCartProduct(item));
+    if (shouldNavigateForVariants(cartProduct)) {
+      router.push(productHref);
+      return;
+    }
+    addItem(cartProduct);
     openDrawer();
   }
 
@@ -179,9 +193,12 @@ export default function CarouselProductCard({
               type="button"
               className="product-suggest__item-action product-suggest__item-action--button"
               onClick={handleAddToCart}
-              aria-label={`Add ${item.name} to cart`}
+              aria-label={listingQuickAddAriaLabel({
+                name: item.name,
+                requiresVariantSelection: item.requiresVariantSelection,
+              })}
             >
-              Add to cart
+              {listingQuickAddLabel(cartProduct)}
             </button>
           ) : (
             <NotifyMeButton

@@ -101,6 +101,17 @@ const envChecks = [
   "CDN_PUBLIC_BASE_URL",
 ].map(envOk);
 
+const optionalEnvChecks = [
+  "NEXT_PUBLIC_GA_MEASUREMENT_ID",
+  "GA_MEASUREMENT_API_SECRET",
+  "GOOGLE_PLACES_API_KEY",
+  "NEXT_PUBLIC_STORE_PHONE",
+  "UPSTASH_REDIS_REST_URL",
+].map((name) => {
+  const result = envOk(name);
+  return { ...result, name: `optional:${name}` };
+});
+
 const routeChecks = await Promise.all([
   fetchCheck("/api/health"),
   fetchCheck("/api/homepage"),
@@ -112,12 +123,13 @@ const routeChecks = await Promise.all([
   fetchCheck("/search"),
 ]);
 
-const results = [...envChecks, ...routeChecks];
-const failed = results.filter((result) => !result.ok);
+const results = [...envChecks, ...optionalEnvChecks, ...routeChecks];
+const failed = results.filter((result) => !result.ok && !result.name.startsWith("optional:"));
 
 console.log(`\nVibe Music verification — ${BASE_URL}\n`);
 for (const result of results) {
-  const mark = result.ok ? "OK " : "FAIL";
+  const optional = result.name.startsWith("optional:");
+  const mark = result.ok ? "OK " : optional ? "SKIP" : "FAIL";
   console.log(`${mark}  ${result.name.padEnd(42)} ${result.detail}`);
 }
 

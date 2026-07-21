@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Banknote,
   CheckCircle2,
   CreditCard,
   Landmark,
@@ -13,7 +12,7 @@ import {
 import type { OnlinePaymentChannel } from "@/components/checkout/CheckoutPaymentMethods";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { formatCurrencyPrecise } from "@/utils/currency";
-import type { PaymentMethod, ShippingAddress } from "@/types/order";
+import type { ShippingAddress } from "@/types/order";
 
 export interface ConfirmLineItem {
   lineId: string;
@@ -29,7 +28,6 @@ interface CheckoutConfirmSectionProps {
   address: ShippingAddress;
   email: string;
   phone: string;
-  paymentMethod: PaymentMethod;
   onlineChannel: OnlinePaymentChannel;
   onEditAddress: () => void;
   onEditPayment: () => void;
@@ -46,13 +44,11 @@ export default function CheckoutConfirmSection({
   address,
   email,
   phone,
-  paymentMethod,
   onlineChannel,
   onEditAddress,
   onEditPayment,
 }: CheckoutConfirmSectionProps) {
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const isCod = paymentMethod === "cod";
 
   return (
     <div className="checkout-confirm">
@@ -63,9 +59,7 @@ export default function CheckoutConfirmSection({
         <div>
           <h2 className="checkout-confirm__title">Confirm your order</h2>
           <p className="checkout-confirm__lead">
-            {isCod
-              ? "Review your details, then place your order from the summary panel."
-              : "Review your details, then swipe to pay securely in the order summary."}
+            Review your details, then swipe to pay securely in the order summary.
           </p>
         </div>
       </header>
@@ -167,9 +161,7 @@ export default function CheckoutConfirmSection({
           </div>
           <div className="checkout-confirm__payment">
             <span className="checkout-confirm__payment-icon" aria-hidden>
-              {isCod ? (
-                <Banknote size={20} />
-              ) : onlineChannel === "upi" ? (
+              {onlineChannel === "upi" ? (
                 <Smartphone size={20} />
               ) : onlineChannel === "netbanking" ? (
                 <Landmark size={20} />
@@ -178,27 +170,21 @@ export default function CheckoutConfirmSection({
               )}
             </span>
             <div>
-              <p className="checkout-confirm__payment-title">
-                {isCod ? "Cash on Delivery" : "Pay Online"}
-              </p>
+              <p className="checkout-confirm__payment-title">Pay Online</p>
               <p className="checkout-confirm__payment-sub">
-                {isCod
-                  ? "Pay in cash when your order arrives"
-                  : `${CHANNEL_LABELS[onlineChannel]} via Razorpay`}
+                {`${CHANNEL_LABELS[onlineChannel]} via Razorpay`}
               </p>
             </div>
           </div>
           <p className="checkout-confirm__secure">
-            {isCod
-              ? "No online payment required for this order."
-              : "256-bit SSL · PCI-DSS compliant · Powered by Razorpay"}
+            256-bit SSL · PCI-DSS compliant · Powered by Razorpay
           </p>
         </section>
       </div>
 
       <p className="checkout-confirm__footnote">
         By confirming, you agree to place this order. An invoice will be
-        included with your shipment.
+        emailed after payment.
       </p>
     </div>
   );

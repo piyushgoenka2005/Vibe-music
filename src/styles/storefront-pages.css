@@ -452,7 +452,7 @@
 @media (min-width: 768px) {
   .storefront-page .pdp-info {
     position: sticky;
-    top: calc(var(--header-height) + 1rem);
+    top: calc(var(--site-header-offset, 148px) + 0.75rem);
     align-self: start;
   }
 }
@@ -487,20 +487,22 @@
   background: var(--surface-subtle);
 }
 
-.storefront-page .pdp-tabs__nav button[aria-selected="true"] {
-  color: var(--brand-primary);
-  border-bottom-color: var(--brand-primary);
+.storefront-page .pdp-sections__heading-text {
+  color: var(--text-primary);
 }
 
-.storefront-page .pdp-tabs__shell {
-  border-color: transparent;
-  box-shadow: none;
-  background: transparent;
+.storefront-page .pdp-sections__heading-line {
+  background: var(--border-default);
 }
 
-.storefront-page .pdp-tabs__btn--active .pdp-tabs__btn-label {
-  color: var(--brand-primary);
-  border-bottom-color: var(--brand-primary);
+.storefront-page .pdp-sections__panel,
+.storefront-page .pdp-specs-wrap,
+.storefront-page .pdp-in-the-box,
+.storefront-page .pdp-qa-form,
+.storefront-page .pdp-review-summary,
+.storefront-page .pdp-review-form {
+  border-color: var(--border-default);
+  border-radius: var(--radius-md);
 }
 
 .storefront-page .pdp-description__highlight:hover {

@@ -142,11 +142,6 @@ export interface Coupon {
   updatedAt: string;
 }
 
-import type { Review } from "@/types/review";
-
-/** @deprecated Use Review from @/types/review */
-export type ReviewDocument = Review;
-
 export interface InventoryRecord {
   productId: string;
   productName: string;

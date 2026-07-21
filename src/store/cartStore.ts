@@ -21,6 +21,8 @@ import type { Product, ProductVariant } from "@/types/product";
 import { getDefaultGstRateForCategory, type GSTRate } from "@/lib/gstCalculator";
 import { resolvePositiveUnitPrice } from "@/lib/pricing/unitPrice";
 import { isPurchasablePrice } from "@/utils/currency";
+import { trackAddToCart, trackRemoveFromCart } from "@/lib/analytics/events";
+import { cartItemToAnalyticsLine } from "@/lib/analytics/cartLines";
 
 export interface CartItem {
   lineId: string;
@@ -200,6 +202,7 @@ export const useCartStore = create<CartState>()(
         useToastStore
           .getState()
           .show(`${variant?.label ?? product.name} added to cart`);
+        trackAddToCart(product, qty, variant?.label);
       },
 
       removeItem: (lineId) => {
@@ -217,6 +220,7 @@ export const useCartStore = create<CartState>()(
           useToastStore
             .getState()
             .show(`${item.name} removed from cart`, "info");
+          trackRemoveFromCart(cartItemToAnalyticsLine(item));
         }
       },
 

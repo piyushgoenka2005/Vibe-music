@@ -18,13 +18,13 @@ import {
 import type { ProductImage, ProductVariant } from "@/types/product";
 import type { ProductDetailResult } from "@/services/product.service";
 import { isPurchasablePrice } from "@/utils/currency";
+import { trackViewItem } from "@/lib/analytics/events";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import ProductBuyBox from "./ProductBuyBox";
 import ProductRelatedRail from "./ProductRelatedRail";
 import ProductDetailSkeleton from "./ProductDetailSkeleton";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
-import type { TabId } from "./ProductTabs";
 import "./product-detail.css";
 
 const FrequentlyBoughtTogether = dynamic(() => import("./FrequentlyBoughtTogether"), { ssr: false });
@@ -71,7 +71,6 @@ function buildGalleryImages(
 export default function ProductDetailPage({ slug, initialData }: ProductDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const tabsRef = useRef<HTMLDivElement>(null);
   const atcSentinelRef = useRef<HTMLDivElement>(null);
   const { data, isLoading, isError } = useProduct(slug, initialData);
   const showSkeleton = isLoading && !data;
@@ -100,7 +99,6 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
     null
   );
   const [quantity, setQuantity] = useState(1);
-  const [tabOverride, setTabOverride] = useState<TabId | undefined>();
   const [dismissedRelatedIds, setDismissedRelatedIds] = useState<Set<string>>(
     () => new Set()
   );
@@ -118,6 +116,14 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
       trackRecentlyViewed(catalogProduct);
     }
   }, [catalogProduct, trackRecentlyViewed]);
+
+  useEffect(() => {
+    if (!catalogProduct || !selectedVariant) return;
+    trackViewItem(catalogProduct, {
+      variantLabel: selectedVariant.label,
+      value: selectedVariant.price ?? catalogProduct.price,
+    });
+  }, [catalogProduct, selectedVariant]);
 
   useEffect(() => {
     setDismissedRelatedIds(new Set());
@@ -200,8 +206,9 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   }
 
   function scrollToReviews() {
-    setTabOverride("reviews");
-    tabsRef.current?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("section-reviews")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function handleAddToCart() {
@@ -269,15 +276,11 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
         ) : null}
       </div>
 
-      <div ref={tabsRef}>
-        <ProductTabs
-          key={tabOverride ?? "description"}
-          product={product}
-          productSlug={slug}
-          reviewCount={product.reviewCount}
-          initialTab={tabOverride}
-        />
-      </div>
+      <ProductTabs
+        product={product}
+        productSlug={slug}
+        reviewCount={product.reviewCount}
+      />
 
       {data.bundle ? (
         <FrequentlyBoughtTogether

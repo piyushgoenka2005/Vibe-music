@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { forwardRef, useEffect, useRef, useState, type MouseEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
 import { categoryPath, productPath, ROUTES } from "@/lib/routes";
+import {
+  canListingQuickAdd,
+  listingQuickAddAriaLabel,
+  shouldNavigateForVariants,
+} from "@/lib/product/listingQuickAdd";
 import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";
@@ -36,6 +42,7 @@ const PANEL_CATEGORIES = [
 ] as const;
 
 function FooterProductSnippet({ product }: { product: Product }) {
+  const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const openDrawer = useCartStore((state) => state.openDrawer);
   const showToast = useToastStore((state) => state.show);
@@ -43,6 +50,7 @@ function FooterProductSnippet({ product }: { product: Product }) {
   const href = productPath(product.slug);
   const outOfStock = product.availability === "out-of-stock";
   const comingSoon = !isPurchasablePrice(product.price);
+  const canQuickAdd = canListingQuickAdd(product);
 
   function handleQuickAdd(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -53,6 +61,10 @@ function FooterProductSnippet({ product }: { product: Product }) {
     }
     if (outOfStock) {
       showToast("This product is currently out of stock.", "info");
+      return;
+    }
+    if (shouldNavigateForVariants(product)) {
+      router.push(href);
       return;
     }
     addItem(product);
@@ -95,11 +107,11 @@ function FooterProductSnippet({ product }: { product: Product }) {
           className="footer-product-snippet__add"
           onClick={handleQuickAdd}
           onPointerDown={(event) => event.stopPropagation()}
-          disabled={outOfStock}
+          disabled={outOfStock || !canQuickAdd}
           aria-label={
             outOfStock
               ? `${product.name} is out of stock`
-              : `Add ${product.name} to cart`
+              : listingQuickAddAriaLabel(product)
           }
         >
           +

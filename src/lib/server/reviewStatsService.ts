@@ -2,7 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
-import { invalidateCatalogCache } from "@/lib/server/firestoreCatalogRepository";
+import { invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
 import * as pgContent from "@/lib/server/prisma/contentRepository";
 import { prismaToReview } from "@/lib/server/prisma/mappers";
 import type { ProductReviewStats } from "@/types/review";

@@ -8,7 +8,7 @@ export default function ProductDescription({ description }: ProductDescriptionPr
   const blocks = parseProductDescription(description);
 
   if (blocks.length === 0) {
-    return <p className="pdp-description__empty">No description available.</p>;
+    return <p className="pdp-sections__empty">No description available.</p>;
   }
 
   const introBlocks = blocks.filter((block) => block.type === "intro");
@@ -18,7 +18,7 @@ export default function ProductDescription({ description }: ProductDescriptionPr
     <article className="pdp-description">
       {featureBlocks.length > 0 ? (
         <section className="pdp-description__about" aria-label="About this item">
-          <h3 className="pdp-description__section-heading">About this item</h3>
+          <h3 className="pdp-sections__subheading">About this item</h3>
           <ul className="pdp-description__about-list">
             {featureBlocks.map((block, index) => (
               <li key={`feature-${index}`} className="pdp-description__about-item">
@@ -36,8 +36,12 @@ export default function ProductDescription({ description }: ProductDescriptionPr
       ) : null}
 
       {introBlocks.length > 0 ? (
-        <section className="pdp-description__product-copy" aria-label="Product description">
-          <h3 className="pdp-description__section-heading">Product description</h3>
+        <section
+          className={`pdp-description__product-copy${
+            featureBlocks.length > 0 ? " pdp-description__product-copy--split" : ""
+          }`}
+          aria-label="Product description"
+        >
           <div className="pdp-description__intro">
             {introBlocks.map((block, index) => (
               <p key={`intro-${index}`} className="pdp-description__lead">

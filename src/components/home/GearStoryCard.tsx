@@ -42,6 +42,7 @@ export default function GearStoryCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const userPausedRef = useRef(false);
   const [userPaused, setUserPaused] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
   const reelUrl =
     STYLE_STORY_REELS.find((reel) => reel.videoSrc === story.videoUrl)?.reelUrl ??
     SOCIAL_LINKS.instagram;
@@ -110,19 +111,31 @@ export default function GearStoryCard({
       }
     >
       <div className="gear-story-card__media">
-        <video
-          ref={videoRef}
-          className="gear-story-card__video"
-          src={story.videoUrl}
-          poster={story.posterUrl || undefined}
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          disablePictureInPicture
-          controls={false}
-          aria-hidden="true"
-        />
+        {videoFailed || !story.videoUrl ? (
+          // Posters until reel MP4s are deployed under /public/videos on the VPS.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            className="gear-story-card__video gear-story-card__poster"
+            src={story.posterUrl}
+            alt=""
+            aria-hidden="true"
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            className="gear-story-card__video"
+            src={story.videoUrl}
+            poster={story.posterUrl || undefined}
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            disablePictureInPicture
+            controls={false}
+            aria-hidden="true"
+            onError={() => setVideoFailed(true)}
+          />
+        )}
         <div className="gear-story-card__overlay">
           <a
             href={reelUrl}

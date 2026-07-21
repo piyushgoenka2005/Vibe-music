@@ -45,6 +45,7 @@ function ProductSequence({
           salePrice={item.salePrice}
           sectionKey={sectionKey}
           slug={item.slug}
+          requiresVariantSelection={item.requiresVariantSelection}
         />
       ))}
     </>

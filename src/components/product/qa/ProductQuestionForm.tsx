@@ -50,7 +50,7 @@ export default function ProductQuestionForm({
 
   if (!isAuthenticated) {
     return (
-      <div className="pdp-qa-form">
+      <div className="pdp-sections__panel pdp-qa-form">
         <h4 className="pdp-qa-form__title">Ask a question</h4>
         <p className="pdp-qa-form__message">
           Sign in to ask about this product. We&apos;ll notify you when it&apos;s answered.
@@ -68,7 +68,7 @@ export default function ProductQuestionForm({
 
   return (
     <form
-      className="pdp-qa-form"
+      className="pdp-sections__panel pdp-qa-form"
       onSubmit={(e) => {
         e.preventDefault();
         setMessage(null);

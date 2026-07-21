@@ -86,6 +86,10 @@ export default function ProductCard({ product, view }: ProductCardProps) {
     if (product.availability === "out-of-stock" || !isPurchasablePrice(product.price)) {
       return;
     }
+    if (product.requiresVariantSelection) {
+      router.push(productHref);
+      return;
+    }
     addItem(product);
     openDrawer();
   }
@@ -99,6 +103,11 @@ export default function ProductCard({ product, view }: ProductCardProps) {
   const isComingSoon = !isPurchasablePrice(product.price);
   const canQuickAdd =
     product.availability !== "out-of-stock" && isPurchasablePrice(product.price);
+  const quickAddLabel = product.requiresVariantSelection
+    ? "Choose options"
+    : canQuickAdd
+      ? "Add to cart"
+      : "Out of stock";
   const isGrid = view === "grid";
   const preferredSrc = product.image
     ? optimizeImageUrl(product.image, "productCard")
@@ -262,9 +271,13 @@ export default function ProductCard({ product, view }: ProductCardProps) {
             className="cat-product-card__add"
             onClick={handleAdd}
             disabled={!canQuickAdd}
-            aria-label={`Add ${product.name} to cart`}
+            aria-label={
+              product.requiresVariantSelection
+                ? `Choose options for ${product.name}`
+                : `Add ${product.name} to cart`
+            }
           >
-            {canQuickAdd ? "Add to cart" : "Out of stock"}
+            {quickAddLabel}
           </button>
         )}
       </div>

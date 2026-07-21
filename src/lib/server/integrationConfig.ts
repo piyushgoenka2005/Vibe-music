@@ -2,7 +2,10 @@ import { isSmtpConfigured } from "@/lib/server/email/smtpConfig";
 import { isPostgresConfigured } from "@/lib/db/postgresConfig";
 import { isGoogleAuthConfigured } from "@/lib/auth/google-config";
 import { isRazorpayConfigured, isDemoPaymentsAllowed } from "@/lib/server/env";
-import { getCodPolicy } from "@/lib/server/codEligibility";
+import {
+  isClientAnalyticsConfigured,
+  isServerAnalyticsConfigured,
+} from "@/lib/analytics/config";
 
 export type IntegrationStatus = "ok" | "missing" | "partial";
 export type IntegrationTier = "required" | "recommended" | "optional";
@@ -27,6 +30,8 @@ export interface IntegrationChecks {
   places: IntegrationStatus;
   invoicePdf: IntegrationStatus;
   guestOrderSecret: IntegrationStatus;
+  analyticsClient: IntegrationStatus;
+  analyticsServer: IntegrationStatus;
 }
 
 function configured(...values: Array<string | undefined>): IntegrationStatus {
@@ -83,6 +88,12 @@ export function getIntegrationChecks(): IntegrationChecks {
       process.env.GUEST_ORDER_ACCESS_SECRET,
       32
     ),
+    analyticsClient: isClientAnalyticsConfigured() ? "ok" : "missing",
+    analyticsServer: isServerAnalyticsConfigured()
+      ? "ok"
+      : isClientAnalyticsConfigured()
+        ? "partial"
+        : "missing",
   };
 }
 
@@ -93,8 +104,6 @@ export function getOpsStatusReport(): {
   items: IntegrationCheckItem[];
 } {
   const checks = getIntegrationChecks();
-  const codPolicy = getCodPolicy();
-  const codStatus: IntegrationStatus = codPolicy.enabled ? "ok" : "missing";
 
   const items: IntegrationCheckItem[] = [
     {
@@ -168,25 +177,27 @@ export function getOpsStatusReport(): {
       detail: "GOOGLE_PLACES_API_KEY or GOOGLE_MAPS_API_KEY — manual address always works",
     },
     {
-      key: "cod",
-      label: "Cash on delivery gates",
-      status: codStatus,
-      tier: "optional",
-      detail: !codPolicy.enabled
-        ? "COD_ENABLED=false — cash on delivery off"
-        : `Enabled · max ₹${codPolicy.maxOrderValue.toLocaleString("en-IN") || "∞"}${
-            codPolicy.pinPrefixes.length
-              ? ` · PIN prefixes: ${codPolicy.pinPrefixes.join(", ")}`
-              : " · all PINs"
-          }`,
-    },
-    {
       key: "invoicePdf",
       label: "Invoice PDF download",
       status: checks.invoicePdf,
       tier: "optional",
       detail:
         "Set BOTH INVOICE_PDF_ENABLED and NEXT_PUBLIC_INVOICE_PDF_ENABLED after installing Chromium",
+    },
+    {
+      key: "analyticsClient",
+      label: "Google Analytics (client)",
+      status: checks.analyticsClient,
+      tier: "recommended",
+      detail: "NEXT_PUBLIC_GA_MEASUREMENT_ID and/or NEXT_PUBLIC_GTM_ID",
+    },
+    {
+      key: "analyticsServer",
+      label: "Google Analytics (server purchases)",
+      status: checks.analyticsServer,
+      tier: "recommended",
+      detail:
+        "GA_MEASUREMENT_API_SECRET — Measurement Protocol for purchase dedupe when clients block scripts",
     },
   ];
 
