@@ -279,9 +279,9 @@ export default function CheckoutPageContent() {
   );
 
   const effectivePaymentMethod = useMemo((): PaymentMethod => {
-    // COD removed from checkout — online only.
-    return "razorpay";
-  }, []);
+    if (paymentMethod === "cod") return "cod";
+    return onlinePaymentsAvailable ? "razorpay" : "cod";
+  }, [onlinePaymentsAvailable, paymentMethod]);
 
   const buyerState = resolvedAddress?.state ?? "Maharashtra";
   const email = (user?.email ?? guestEmail).trim().toLowerCase();

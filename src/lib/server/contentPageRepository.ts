@@ -40,9 +40,6 @@ export async function getContentPageFromDb(
   return row ? mapContentPage(row) : null;
 }
 
-/** @deprecated Use getContentPageFromDb */
-export const getContentPageFromFirestore = getContentPageFromDb;
-
 export async function resolveContentPage(slug: string): Promise<ContentPage | undefined> {
   try {
     const fromDatabase = await getContentPageFromDb(slug);

@@ -126,9 +126,6 @@ export async function resolveOrderItems(
   return resolved;
 }
 
-/** @deprecated Use resolveOrderItems */
-export const resolveOrderItemsFromFirestore = resolveOrderItems;
-
 export async function resolveCouponDiscount(
   couponCode: string | null | undefined,
   subtotal: number

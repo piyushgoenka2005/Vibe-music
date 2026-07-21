@@ -101,16 +101,20 @@ export default function ProductTabs({
             className="pdp-tabs__panel"
           >
             <div className="pdp-specs-wrap">
-              <table className="pdp-specs">
-                <tbody>
-                  {product.specs.map((spec) => (
-                    <tr key={spec.label}>
-                      <th scope="row">{spec.label}</th>
-                      <td>{spec.value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {product.specs.length === 0 ? (
+                <p className="pdp-tabs__empty">No specifications listed for this product.</p>
+              ) : (
+                <table className="pdp-specs">
+                  <tbody>
+                    {product.specs.map((spec) => (
+                      <tr key={spec.label}>
+                        <th scope="row">{spec.label}</th>
+                        <td>{spec.value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
 
@@ -121,11 +125,15 @@ export default function ProductTabs({
             hidden={activeTab !== "in-the-box"}
             className="pdp-tabs__panel"
           >
-            <ul className="pdp-in-the-box">
-              {product.inTheBox.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+            {product.inTheBox.length === 0 ? (
+              <p className="pdp-tabs__empty">Package contents not listed.</p>
+            ) : (
+              <ul className="pdp-in-the-box">
+                {product.inTheBox.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div

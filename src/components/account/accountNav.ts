@@ -8,6 +8,8 @@ import {
   Bell,
   Headset,
   LogOut,
+  Gift,
+  CalendarDays,
 } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 
@@ -28,6 +30,18 @@ export const ACCOUNT_NAV_ITEMS = [
     href: ROUTES.accountWishlist,
     label: "Wishlist",
     icon: Heart,
+    mobile: true,
+  },
+  {
+    href: ROUTES.accountRentals,
+    label: "Rentals",
+    icon: CalendarDays,
+    mobile: true,
+  },
+  {
+    href: ROUTES.accountGiveaways,
+    label: "Giveaways",
+    icon: Gift,
     mobile: true,
   },
   {

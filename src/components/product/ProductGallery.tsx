@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
@@ -185,11 +185,21 @@ export default function ProductGallery({
   productSlug,
   spin360Images = [],
 }: ProductGalleryProps) {
+  const isMobileGallery = useSyncExternalStore(
+    (onStoreChange) => {
+      const mq = window.matchMedia("(max-width: 767px)");
+      mq.addEventListener("change", onStoreChange);
+      return () => mq.removeEventListener("change", onStoreChange);
+    },
+    () => window.matchMedia("(max-width: 767px)").matches,
+    () => false
+  );
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [show360, setShow360] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const suppressNextClickRef = useRef(false);
   const [zoomActive, setZoomActive] = useState(false);
   const [lensPos, setLensPos] = useState<LensPosition>({ x: 0, y: 0 });
   const [mainSize, setMainSize] = useState({ width: 0, height: 0 });
@@ -664,29 +674,28 @@ export default function ProductGallery({
           }}
           onTouchMove={onTouchMove}
           onTouchEnd={(e) => {
-            if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
-              const touch = e.changedTouches[0];
-              if (touch && touchStartX != null) {
-                const diff = touch.clientX - touchStartX;
-                if (Math.abs(diff) < 12) {
-                  openLightbox();
-                }
-              }
-            }
             setZoomActive(false);
-            if (touchStartX == null || images.length <= 1) {
+            const touch = e.changedTouches[0];
+            const endX = touch?.clientX ?? touchStartX;
+            if (touchStartX == null || endX == null) {
               setTouchStartX(null);
               return;
             }
-            const endX = e.changedTouches[0]?.clientX ?? touchStartX;
+
             const diff = endX - touchStartX;
-            if (Math.abs(diff) > 48) {
+
+            if (Math.abs(diff) > 48 && images.length > 1) {
               setActiveIndex((current) => {
                 if (diff < 0) return Math.min(images.length - 1, current + 1);
                 return Math.max(0, current - 1);
               });
               setShowVideo(false);
+              if (isMobileGallery) suppressNextClickRef.current = true;
+            } else if (isMobileGallery && Math.abs(diff) < 12) {
+              openLightbox();
+              suppressNextClickRef.current = true;
             }
+
             setTouchStartX(null);
           }}
           onTouchCancel={() => {
@@ -694,14 +703,24 @@ export default function ProductGallery({
             setTouchStartX(null);
           }}
           onClick={() => {
-            if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+            if (suppressNextClickRef.current) {
+              suppressNextClickRef.current = false;
+              return;
+            }
+            if (isMobileGallery) {
               openLightbox();
             }
           }}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === "Enter" && openLightbox()}
-          aria-label={canZoom ? "Hover to zoom product image" : "Product image"}
+          aria-label={
+            isMobileGallery
+              ? "Tap to enlarge product image"
+              : canZoom
+                ? "Hover to zoom product image"
+                : "Product image"
+          }
         >
           <ProductShareButton
             overlay

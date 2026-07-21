@@ -26,9 +26,6 @@ export const AUTH_GUEST_ROUTES = [
   ROUTES.resetPassword,
 ] as const;
 
-/** @deprecated Use AUTH_GUEST_ROUTES */
-export const AUTH_PUBLIC_ROUTES = AUTH_GUEST_ROUTES;
-
 export function isGuestAuthRoute(pathname: string): boolean {
   const path = pathname.replace(/\/+$/, "") || "/";
   return AUTH_GUEST_ROUTES.includes(path as (typeof AUTH_GUEST_ROUTES)[number]);

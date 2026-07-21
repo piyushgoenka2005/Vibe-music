@@ -22,6 +22,8 @@ export interface Product {
   condition: ProductCondition;
   imageColor: string;
   image: string;
+  /** True when the SKU has multiple purchasable variants — PLP must open PDP before add-to-cart. */
+  requiresVariantSelection?: boolean;
 }
 
 export interface ProductImage {

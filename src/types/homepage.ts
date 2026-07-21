@@ -70,6 +70,7 @@ export interface HomepageProductItem {
   badgeLabel?: string;
   offerText?: string;
   rank?: number;
+  requiresVariantSelection?: boolean;
 }
 
 export interface HomepageCategoryItem {

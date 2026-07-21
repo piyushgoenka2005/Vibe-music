@@ -1,7 +1,8 @@
 "use client";
 
-import type { MouseEvent, ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { MouseEvent, ReactNode } from "react";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import HomepageProductImage from "@/components/homepage/HomepageProductImage";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
@@ -9,8 +10,13 @@ import {
   ensureProductReviewMetrics,
   formatRatingPillLabel,
 } from "@/lib/product/productReviewDisplay";
-import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import { formatDisplayPrice } from "@/utils/currency";
 import { resolveLinkHref } from "@/lib/routes";
+import {
+  canListingQuickAdd,
+  listingQuickAddAriaLabel,
+  shouldNavigateForVariants,
+} from "@/lib/product/listingQuickAdd";
 import { useCartStore } from "@/store/cartStore";
 import type { Product } from "@/types/product";
 
@@ -36,6 +42,7 @@ export interface NewArrivalsProductCardProps {
   priceNode?: ReactNode;
   /** Eager-load image for above-the-fold / first marquee cards. */
   imagePriority?: boolean;
+  requiresVariantSelection?: boolean;
 }
 
 function seededHash(id: string): number {
@@ -79,7 +86,9 @@ export default function NewArrivalsProductCard({
   hpSlot,
   priceNode,
   imagePriority = false,
+  requiresVariantSelection = false,
 }: NewArrivalsProductCardProps) {
+  const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const openDrawer = useCartStore((state) => state.openDrawer);
   const displayPrice = salePrice ?? price;
@@ -95,31 +104,34 @@ export default function NewArrivalsProductCard({
   const productHref = resolveLinkHref(href);
   const productSlug = slug ?? slugFromHref(href, id);
   const discountPct = seededDiscount(id);
-  const canBuy = isPurchasablePrice(displayPrice);
+  const cartProduct: Product = {
+    id,
+    slug: productSlug,
+    name,
+    brand,
+    brandSlug: brand.toLowerCase().replace(/\s+/g, "-"),
+    category: "",
+    categorySlug: "",
+    price: displayPrice,
+    originalPrice: price > displayPrice ? price : undefined,
+    rating: displayRating,
+    reviewCount: displayReviewCount,
+    availability: "in-stock",
+    condition: "new",
+    imageColor: "#e2e8f0",
+    image,
+    requiresVariantSelection,
+  };
+  const canBuy = canListingQuickAdd(cartProduct);
 
   function handleBuy(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
     if (!canBuy) return;
-
-    const cartProduct: Product = {
-      id,
-      slug: productSlug,
-      name,
-      brand,
-      brandSlug: brand.toLowerCase().replace(/\s+/g, "-"),
-      category: "",
-      categorySlug: "",
-      price: displayPrice,
-      originalPrice: price > displayPrice ? price : undefined,
-      rating: displayRating,
-      reviewCount: displayReviewCount,
-      availability: "in-stock",
-      condition: "new",
-      imageColor: "#e2e8f0",
-      image,
-    };
-
+    if (shouldNavigateForVariants(cartProduct)) {
+      router.push(productHref);
+      return;
+    }
     addItem(cartProduct);
     openDrawer();
   }
@@ -235,9 +247,12 @@ export default function NewArrivalsProductCard({
               onClick={handleBuy}
               tabIndex={ariaHidden ? -1 : undefined}
               aria-hidden={ariaHidden || undefined}
-              aria-label={`Buy ${name} now`}
+              aria-label={listingQuickAddAriaLabel({
+                name,
+                requiresVariantSelection,
+              })}
             >
-              Buy Now
+              {requiresVariantSelection ? "Choose options" : "Buy Now"}
             </button>
           ) : null}
         </div>

@@ -51,20 +51,4 @@ export function invalidateCatalogCache(): void {
   );
 }
 
-/** @deprecated Legacy Firestore helper — identity mapping for Prisma products. */
-export function docToCatalogProduct(id: string, data: CatalogProduct): CatalogProduct | null {
-  if (!data?.name || !data?.slug || !data?.brand) return null;
-  return { ...data, id };
-}
-
-/** @deprecated Legacy Firestore helper — no-op document shape for imports. */
-export function catalogProductToDoc(product: CatalogProduct): CatalogProduct {
-  return {
-    ...product,
-    stock: product.stock,
-    reservedStock: product.reservedStock ?? 0,
-    lowStockThreshold: product.lowStockThreshold ?? 10,
-  };
-}
-
 export type { Brand, Category, CatalogProduct, ProductStatus };

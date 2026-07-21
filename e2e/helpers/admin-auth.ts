@@ -12,19 +12,17 @@ async function fillReactInput(locator: Locator, value: string): Promise<void> {
   await locator.click();
   await locator.fill(value);
 
-  if ((await locator.inputValue()) !== value) {
-    await locator.evaluate((node, next) => {
-      const input = node as HTMLInputElement;
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        "value"
-      )?.set;
-      setter?.call(input, next);
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new Event("change", { bubbles: true }));
-      input.dispatchEvent(new Event("blur", { bubbles: true }));
-    }, value);
-  }
+  await locator.evaluate((node, next) => {
+    const input = node as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value"
+    )?.set;
+    setter?.call(input, next);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    input.dispatchEvent(new Event("blur", { bubbles: true }));
+  }, value);
 
   await expect(locator).toHaveValue(value);
 }

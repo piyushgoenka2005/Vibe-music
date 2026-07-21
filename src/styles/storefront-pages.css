@@ -452,7 +452,7 @@
 @media (min-width: 768px) {
   .storefront-page .pdp-info {
     position: sticky;
-    top: calc(var(--header-height) + 1rem);
+    top: calc(var(--site-header-offset, 148px) + 0.75rem);
     align-self: start;
   }
 }

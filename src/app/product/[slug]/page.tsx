@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ProductDetailPage from "@/components/product/ProductDetailPage";
-import { loadProductCorePage } from "@/lib/server/productDetailLoader";
+import { loadProductDetailPage } from "@/lib/server/productDetailLoader";
 import { storefrontImageUrl } from "@/lib/storefrontImages";
-import type { ProductDetailResult } from "@/services/product.service";
-import type { ProductDetail } from "@/types/product";
 
 export const dynamicParams = true;
 export const revalidate = 300;
@@ -13,21 +11,12 @@ interface ProductRouteProps {
   params: Promise<{ slug: string }>;
 }
 
-function toInitialData(product: ProductDetail): ProductDetailResult {
-  return {
-    product,
-    bundle: null,
-    frequentlyBoughtTogether: [],
-    similarProducts: [],
-    relatedProducts: [],
-  };
-}
-
 export async function generateMetadata({
   params,
 }: ProductRouteProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await loadProductCorePage(slug);
+  const detail = await loadProductDetailPage(slug);
+  const product = detail?.product;
   if (!product) {
     return { title: "Product not found | Vibe Music" };
   }
@@ -47,19 +36,19 @@ export async function generateMetadata({
 
 export default async function ProductRoute({ params }: ProductRouteProps) {
   const { slug } = await params;
-  let product;
+  let initialData;
   try {
-    product = await loadProductCorePage(slug);
+    initialData = await loadProductDetailPage(slug);
   } catch {
-    product = null;
+    initialData = null;
   }
 
-  if (!product) {
+  if (!initialData?.product) {
     notFound();
   }
 
-  const initialData = toInitialData(product);
-  const heroRaw = product.images?.[0]?.src || product.image;
+  const heroRaw =
+    initialData.product.images?.[0]?.src || initialData.product.image;
   const heroImageUrl = heroRaw
     ? storefrontImageUrl(heroRaw, 1200).src
     : undefined;

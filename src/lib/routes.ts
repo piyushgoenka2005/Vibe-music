@@ -188,6 +188,9 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.accountAddresses) return true;
   if (path === ROUTES.accountSettings) return true;
   if (path === ROUTES.accountWishlist) return true;
+  if (path === ROUTES.accountRentals) return true;
+  if (path.startsWith("/account/rentals/")) return true;
+  if (path === ROUTES.accountGiveaways) return true;
   if (path.startsWith("/wishlist/share/")) return true;
   if (path === ROUTES.accountNotifications) return true;
   if (path === ROUTES.accountSupport) return true;
@@ -197,7 +200,10 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.deals || path === ROUTES.brands || path === ROUTES.categories || path === ROUTES.compare) return true;
   if (path === ROUTES.contact) return true;
   if (path === ROUTES.used || path === ROUTES.rentals) return true;
+  if (path.startsWith("/rentals/")) return true;
   if (path === ROUTES.giveaway) return true;
+  if (path.startsWith("/giveaway/")) return true;
+  if (path.startsWith("/orders/")) return true;
   if (path === ROUTES.forgotPassword || path === ROUTES.resetPassword) return true;
   if (path === "/careers" || path === ROUTES.careers || path.startsWith("/pages/")) return true;
   if (path === ROUTES.admin) return true;

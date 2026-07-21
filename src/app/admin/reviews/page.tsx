@@ -14,7 +14,7 @@ import {
 } from "@/components/admin/AdminUi";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
-import type { ReviewDocument } from "@/types/admin";
+import type { Review } from "@/types/review";
 import type { AdminReviewStats, ReviewSortOption } from "@/types/review";
 
 function buildReviewsQuery(params: Record<string, string | undefined>) {
@@ -34,7 +34,7 @@ function ReviewsContent() {
   const [verifiedFilter, setVerifiedFilter] = useState(false);
   const [hasImagesFilter, setHasImagesFilter] = useState(false);
   const [sort, setSort] = useState<ReviewSortOption>("newest");
-  const [selectedReview, setSelectedReview] = useState<ReviewDocument | null>(null);
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [adminReply, setAdminReply] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
 
@@ -66,7 +66,7 @@ function ReviewsContent() {
       const res = await fetch(buildReviewsQuery(queryParams));
       if (!res.ok) throw new Error("Failed to load reviews");
       return res.json() as Promise<{
-        reviews: ReviewDocument[];
+        reviews: Review[];
         hasMore: boolean;
         nextCursor?: string;
       }>;
@@ -81,7 +81,7 @@ function ReviewsContent() {
       rejectionReason: reason,
     }: {
       id: string;
-      status: ReviewDocument["status"];
+      status: Review["status"];
       adminReply?: string;
       rejectionReason?: string;
     }) => {

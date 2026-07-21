@@ -81,22 +81,6 @@ function splitPriceParts(price: number) {
   };
 }
 
-function buildProtectionPlans(price: number) {
-  if (!isPurchasablePrice(price)) return [];
-  return [
-    {
-      id: "warranty-1y",
-      label: "1 Year Extended warranty",
-      price: Math.max(299, Math.round(price * 0.029)),
-    },
-    {
-      id: "warranty-2y",
-      label: "2 Years Total Protection",
-      price: Math.max(499, Math.round(price * 0.057)),
-    },
-  ];
-}
-
 export default function ProductBuyBox({
   product,
   selectedVariant,
@@ -119,10 +103,6 @@ export default function ProductBuyBox({
     onSale && product.msrp ? product.msrp - displayPrice : 0;
   const maxQuantity = Math.max(1, Math.min(99, selectedVariant.stock || 99));
   const { dateLabel, orderWindow } = useMemo(() => getDeliveryEstimate(), []);
-  const protectionPlans = useMemo(
-    () => buildProtectionPlans(displayPrice),
-    [displayPrice]
-  );
   const priceParts = splitPriceParts(lineTotal);
 
   const [pincode, setPincode] = useState("");
@@ -350,24 +330,6 @@ export default function ProductBuyBox({
             </dd>
           </div>
         </dl>
-
-        {protectionPlans.length > 0 && canPurchase ? (
-          <div className="pdp-buybox__protection">
-            <p className="pdp-buybox__protection-title">Add a Protection Plan:</p>
-            <ul className="pdp-buybox__protection-list">
-              {protectionPlans.map((plan) => (
-                <li key={plan.id}>
-                  <label className="pdp-buybox__protection-option">
-                    <input type="checkbox" name="protection-plan" value={plan.id} />
-                    <span>
-                      {plan.label} for {formatCurrencyPrecise(plan.price)}
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
 
         <div className="pdp-buybox__divider" aria-hidden="true" />
 
