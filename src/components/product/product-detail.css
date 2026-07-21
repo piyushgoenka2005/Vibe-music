@@ -2724,10 +2724,6 @@
   color: var(--pdp-grey60);
 }
 
-.pdp-specs-wrap {
-  /* panel styles from .pdp-sections__panel */
-}
-
 .pdp-specs {
   width: 100%;
   border-collapse: collapse;
@@ -2827,12 +2823,17 @@
   }
 
   .pdp-sections__heading {
-    gap: 0.625rem;
+    gap: 0.5rem;
     margin-bottom: 1rem;
   }
 
   .pdp-sections__heading-text {
     font-size: 1rem;
+  }
+
+  .pdp-sections__body {
+    gap: 0.875rem;
+    font-size: 0.875rem;
   }
 
   .pdp-description__highlights-grid {
@@ -2982,11 +2983,6 @@
 .pdp-qa-pending .pdp-sections__status {
   padding-bottom: 0.75rem;
   text-align: left;
-}
-
-.pdp-qa-section > .pdp-sections__panel,
-.pdp-qa-pending > .pdp-qa {
-  /* qa list grouped in panel when multiple items */
 }
 
 .pdp-qa-form {

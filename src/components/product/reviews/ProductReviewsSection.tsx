@@ -66,7 +66,7 @@ export default function ProductReviewsSection({
       ) : reviews.length === 0 ? (
         <p className="pdp-sections__empty">No reviews match your filters yet.</p>
       ) : (
-        <div className="pdp-reviews-section__list">
+        <div className="pdp-sections__panel pdp-reviews-section__list">
           {reviews.map((review) => (
             <ReviewCard key={review.id} review={review} productSlug={productSlug} />
           ))}

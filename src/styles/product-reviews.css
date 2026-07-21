@@ -1,14 +1,14 @@
 .pdp-reviews-section {
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .pdp-review-summary {
   display: grid;
   gap: 1.25rem;
   grid-template-columns: minmax(180px, 220px) 1fr;
-  padding: 1rem;
-  border: 1px solid var(--color-border, #cbd5e1);
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--pdp-grey10, #e5e4e3);
   border-radius: 12px;
   background: #fff;
 }
@@ -136,7 +136,7 @@
   min-height: 40px;
   padding: 0.35rem 0.5rem;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--pdp-grey10, #e5e4e3);
 }
 
 .pdp-review-filters__check {
@@ -150,8 +150,8 @@
 .pdp-review-form {
   display: grid;
   gap: 1rem;
-  padding: 1rem;
-  border: 1px solid #cbd5e1;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--pdp-grey10, #e5e4e3);
   border-radius: 12px;
   background: #fff;
 }
@@ -175,7 +175,7 @@
 .pdp-review-form__field input,
 .pdp-review-form__field textarea {
   width: 100%;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--pdp-grey10, #e5e4e3);
   border-radius: 8px;
   padding: 0.65rem 0.75rem;
 }
@@ -186,7 +186,7 @@
 .pdp-review-helpful {
   min-height: 44px;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--pdp-grey10, #e5e4e3);
   background: #fff;
   padding: 0.55rem 0.9rem;
   cursor: pointer;
@@ -203,7 +203,7 @@
   display: grid;
   gap: 0.75rem;
   padding: 1rem 0;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--pdp-grey10, #e5e4e3);
 }
 
 .pdp-review-card__meta {
@@ -292,15 +292,27 @@
   height: auto;
 }
 
+.pdp-reviews-section__list {
+  padding: 0 1.125rem;
+}
+
+.pdp-reviews-section__list .pdp-review-card:first-child {
+  padding-top: 0.75rem;
+}
+
+.pdp-reviews-section__list .pdp-review-card:last-child {
+  border-bottom: 0;
+  padding-bottom: 0.75rem;
+}
+
 .pdp-reviews-section__footer {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
   justify-content: space-between;
-}
-
-.pdp-reviews-section__status {
+  padding-top: 0.25rem;
+  font-size: 0.875rem;
   color: #64748b;
 }
 

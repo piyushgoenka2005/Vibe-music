@@ -71,11 +71,11 @@ export default function ProductTabs({
           const heading = sectionHeading(section.id, section.label);
 
           return (
-          <article
-            key={section.id}
-            className="pdp-sections__block"
-            aria-labelledby={`section-${section.id}`}
-          >
+            <article
+              key={section.id}
+              className="pdp-sections__block"
+              aria-labelledby={`section-${section.id}`}
+            >
             <ProductSectionHeading id={section.id} count={heading.count}>
               {heading.label}
             </ProductSectionHeading>
@@ -86,12 +86,12 @@ export default function ProductTabs({
               ) : null}
 
               {section.id === "specs" ? (
-                <div className="pdp-sections__panel pdp-specs-wrap">
-                  {product.specs.length === 0 ? (
-                    <p className="pdp-sections__empty">
-                      No specifications listed for this product.
-                    </p>
-                  ) : (
+                product.specs.length === 0 ? (
+                  <p className="pdp-sections__empty">
+                    No specifications listed for this product.
+                  </p>
+                ) : (
+                  <div className="pdp-sections__panel pdp-specs-wrap">
                     <table className="pdp-specs">
                       <tbody>
                         {product.specs.map((spec) => (
@@ -102,8 +102,8 @@ export default function ProductTabs({
                         ))}
                       </tbody>
                     </table>
-                  )}
-                </div>
+                  </div>
+                )
               ) : null}
 
               {section.id === "in-the-box" ? (
@@ -150,7 +150,7 @@ export default function ProductTabs({
                 )
               ) : null}
             </div>
-          </article>
+            </article>
           );
         })}
       </div>
