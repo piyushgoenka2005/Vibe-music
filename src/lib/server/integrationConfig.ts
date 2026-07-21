@@ -2,6 +2,10 @@ import { isSmtpConfigured } from "@/lib/server/email/smtpConfig";
 import { isPostgresConfigured } from "@/lib/db/postgresConfig";
 import { isGoogleAuthConfigured } from "@/lib/auth/google-config";
 import { isRazorpayConfigured, isDemoPaymentsAllowed } from "@/lib/server/env";
+import {
+  isClientAnalyticsConfigured,
+  isServerAnalyticsConfigured,
+} from "@/lib/analytics/config";
 
 export type IntegrationStatus = "ok" | "missing" | "partial";
 export type IntegrationTier = "required" | "recommended" | "optional";
@@ -26,6 +30,8 @@ export interface IntegrationChecks {
   places: IntegrationStatus;
   invoicePdf: IntegrationStatus;
   guestOrderSecret: IntegrationStatus;
+  analyticsClient: IntegrationStatus;
+  analyticsServer: IntegrationStatus;
 }
 
 function configured(...values: Array<string | undefined>): IntegrationStatus {
@@ -82,6 +88,12 @@ export function getIntegrationChecks(): IntegrationChecks {
       process.env.GUEST_ORDER_ACCESS_SECRET,
       32
     ),
+    analyticsClient: isClientAnalyticsConfigured() ? "ok" : "missing",
+    analyticsServer: isServerAnalyticsConfigured()
+      ? "ok"
+      : isClientAnalyticsConfigured()
+        ? "partial"
+        : "missing",
   };
 }
 
@@ -171,6 +183,21 @@ export function getOpsStatusReport(): {
       tier: "optional",
       detail:
         "Set BOTH INVOICE_PDF_ENABLED and NEXT_PUBLIC_INVOICE_PDF_ENABLED after installing Chromium",
+    },
+    {
+      key: "analyticsClient",
+      label: "Google Analytics (client)",
+      status: checks.analyticsClient,
+      tier: "recommended",
+      detail: "NEXT_PUBLIC_GA_MEASUREMENT_ID and/or NEXT_PUBLIC_GTM_ID",
+    },
+    {
+      key: "analyticsServer",
+      label: "Google Analytics (server purchases)",
+      status: checks.analyticsServer,
+      tier: "recommended",
+      detail:
+        "GA_MEASUREMENT_API_SECRET — Measurement Protocol for purchase dedupe when clients block scripts",
     },
   ];
 

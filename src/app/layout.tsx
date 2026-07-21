@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bebas_Neue } from "next/font/google";
 import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
+import GoogleAnalyticsScripts from "@/components/analytics/GoogleAnalyticsScripts";
 import SocialRailGate from "@/components/layout/SocialRailGate";
 import { DEFAULT_METADATA } from "@/lib/site";
 import "./globals.css";
@@ -52,6 +53,7 @@ export default function RootLayout({
         ) : null}
       </head>
       <body className={primaryFont.className} suppressHydrationWarning>
+        <GoogleAnalyticsScripts />
         {splashEnabled ? (
           /* Instant framed brand cover — CSS hides unless html.vibe-splash-pending. */
           <div

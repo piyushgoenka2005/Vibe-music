@@ -18,6 +18,7 @@ import PageLoadSplash, {
 } from "@/components/layout/PageLoadSplash";
 import SplashPendingClear from "@/components/layout/SplashPendingClear";
 import ServiceWorkerRegister from "@/components/layout/ServiceWorkerRegister";
+import AnalyticsProvider from "@/components/analytics/AnalyticsProvider";
 
 const ENABLE_PAGE_LOAD_SPLASH = isPageLoadSplashEnabled();
 
@@ -60,6 +61,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <PageLoadSplash onComplete={handleSplashComplete} />
           ) : null}
           <WebVitalsReporter />
+          <AnalyticsProvider />
           <ServiceWorkerRegister />
           <RoutePreloader />
           <Suspense fallback={null}>

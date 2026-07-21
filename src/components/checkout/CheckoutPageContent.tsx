@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useSyncExternalStore, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -34,6 +34,12 @@ import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";
 import { formatCurrencyPrecise } from "@/utils/currency";
+import {
+  trackBeginCheckout,
+  trackAddShippingInfo,
+  trackAddPaymentInfo,
+} from "@/lib/analytics/events";
+import { cartItemsToAnalyticsLines } from "@/lib/analytics/cartLines";
 import type { PaymentMethod, ShippingAddress } from "@/types/order";
 import "@/components/checkout/checkout.css";
 
@@ -112,10 +118,17 @@ export default function CheckoutPageContent() {
   const showToast = useToastStore((s) => s.show);
   const cartHydrated = useCartHydrated();
   useCartCatalogReprice(true);
+  const checkoutTrackedRef = useRef(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
+
+  useEffect(() => {
+    if (!cartHydrated || items.length === 0 || checkoutTrackedRef.current) return;
+    checkoutTrackedRef.current = true;
+    trackBeginCheckout(cartItemsToAnalyticsLines(items), couponCode ?? undefined);
+  }, [cartHydrated, items, couponCode]);
 
   const [step, setStep] = useState<CheckoutStep>("address");
   const savedAddresses = useMemo(
@@ -451,6 +464,7 @@ export default function CheckoutPageContent() {
     }
 
     setConfirmedAddress(shipping);
+    trackAddShippingInfo(cartItemsToAnalyticsLines(items));
     setStep("summary");
     window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -473,6 +487,7 @@ export default function CheckoutPageContent() {
   }
 
   function handleContinueToPayment() {
+    trackAddPaymentInfo(cartItemsToAnalyticsLines(items), "razorpay");
     setStep("payment");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }

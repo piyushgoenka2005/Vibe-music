@@ -3,6 +3,7 @@ import {
   isDemoPaymentsAllowed,
   isRazorpayConfigured,
 } from "@/lib/server/env";
+import { isClientAnalyticsConfigured } from "@/lib/analytics/config";
 import { isGooglePlacesConfigured } from "@/lib/server/googlePlaces";
 import { formatIndianPhone } from "@/lib/brand";
 import { getStoreSettings } from "@/lib/server/settingsService";
@@ -32,5 +33,6 @@ export async function GET() {
     storePhoneTel: phone.tel || null,
     storeEmail: settings.storeEmail,
     paymentMethods: ["razorpay"] as const,
+    analyticsEnabled: isClientAnalyticsConfigured(),
   });
 }

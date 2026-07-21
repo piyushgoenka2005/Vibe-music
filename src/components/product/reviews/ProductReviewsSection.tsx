@@ -62,11 +62,9 @@ export default function ProductReviewsSection({
       />
 
       {reviewsQuery.isLoading ? (
-        <p className="pdp-reviews-section__status">Loading reviews…</p>
+        <p className="pdp-sections__status">Loading reviews…</p>
       ) : reviews.length === 0 ? (
-        <p className="pdp-reviews-section__status">
-          No reviews match your filters yet.
-        </p>
+        <p className="pdp-sections__empty">No reviews match your filters yet.</p>
       ) : (
         <div className="pdp-reviews-section__list">
           {reviews.map((review) => (

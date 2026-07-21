@@ -20,6 +20,7 @@ import {
 import { isInvoiceAvailable, withInvoiceReturnTo } from "@/features/invoice/utils/invoice-utils";
 import { getInvoiceDownloadAction } from "@/features/invoice/utils/invoice-actions";
 import { useCheckoutSuccessOrder } from "@/hooks/useCheckoutSuccessOrder";
+import { trackPurchase } from "@/lib/analytics/events";
 import "@/components/checkout/checkout.css";
 
 export default function CheckoutSuccessContent() {
@@ -63,6 +64,7 @@ export default function CheckoutSuccessContent() {
   useEffect(() => {
     if (orderId && order && isPlacedOrder(order)) {
       clearCachedOrderForConfirmation(orderId);
+      trackPurchase(order);
     }
   }, [order, orderId]);
 

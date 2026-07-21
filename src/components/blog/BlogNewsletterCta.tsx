@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackGenerateLead } from "@/lib/analytics/events";
 
 export default function BlogNewsletterCta() {
   const [email, setEmail] = useState("");
@@ -16,6 +17,7 @@ export default function BlogNewsletterCta() {
         body: JSON.stringify({ email, source: "blog" }),
       });
       if (!response.ok) throw new Error("Subscribe failed");
+      trackGenerateLead("newsletter");
       setStatus("success");
       setEmail("");
     } catch {

@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import type { ProductDetail } from "@/types/product";
-import { attachHorizontalWheelScroll } from "@/lib/horizontalWheelScroll";
 import ProductDescription from "./ProductDescription";
 import ProductReviewsSection from "./reviews/ProductReviewsSection";
 import ProductQASection from "./qa/ProductQASection";
 import "@/styles/product-reviews.css";
 
-const TABS = [
+const SECTIONS = [
   { id: "description", label: "Description" },
   { id: "specs", label: "Specs" },
   { id: "in-the-box", label: "In The Box" },
@@ -17,180 +16,146 @@ const TABS = [
   { id: "videos", label: "Videos" },
 ] as const;
 
-type TabId = (typeof TABS)[number]["id"];
+type SectionId = (typeof SECTIONS)[number]["id"];
 
 interface ProductTabsProps {
   product: ProductDetail;
   productSlug: string;
   reviewCount?: number;
-  initialTab?: TabId;
+}
+
+function ProductSectionHeading({
+  id,
+  children,
+  count,
+}: {
+  id: SectionId;
+  children: ReactNode;
+  count?: number;
+}) {
+  return (
+    <div className="pdp-sections__heading" id={`section-${id}`}>
+      <span className="pdp-sections__heading-line" aria-hidden="true" />
+      <h2 className="pdp-sections__heading-text">
+        {children}
+        {count != null ? (
+          <span className="pdp-sections__heading-count">({count})</span>
+        ) : null}
+      </h2>
+      <span className="pdp-sections__heading-line" aria-hidden="true" />
+    </div>
+  );
 }
 
 export default function ProductTabs({
   product,
   productSlug,
   reviewCount,
-  initialTab = "description",
 }: ProductTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
-  const navRef = useRef<HTMLDivElement>(null);
   const displayedReviewCount = reviewCount ?? product.reviewCount;
 
-  useEffect(() => {
-    const nav = navRef.current;
-    if (!nav) return;
-    return attachHorizontalWheelScroll(nav);
-  }, []);
-
-  useEffect(() => {
-    const nav = navRef.current;
-    if (!nav) return;
-    const active = nav.querySelector<HTMLElement>('[aria-selected="true"]');
-    active?.scrollIntoView({
-      behavior: "smooth",
-      inline: "nearest",
-      block: "nearest",
-    });
-  }, [activeTab]);
+  function sectionHeading(sectionId: SectionId, label: string) {
+    if (sectionId === "reviews") {
+      return { label, count: displayedReviewCount };
+    }
+    if (sectionId === "qa") {
+      return { label, count: product.qa.length };
+    }
+    return { label, count: undefined };
+  }
 
   return (
-    <section className="pdp-tabs" aria-label="Product details">
-      <div className="pdp-tabs__shell">
-        <div
-          ref={navRef}
-          className="pdp-tabs__nav"
-          role="tablist"
-          aria-label="Product information"
-        >
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              id={`tab-${tab.id}`}
-              aria-selected={activeTab === tab.id}
-              aria-controls={`panel-${tab.id}`}
-              className={`pdp-tabs__btn${activeTab === tab.id ? " pdp-tabs__btn--active" : ""}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <span className="pdp-tabs__btn-label">
-                {tab.label}
-                {tab.id === "reviews" ? ` (${displayedReviewCount})` : ""}
-                {tab.id === "qa" ? ` (${product.qa.length})` : ""}
-              </span>
-            </button>
-          ))}
-        </div>
+    <section className="pdp-sections" aria-label="Product details">
+      <div className="pdp-sections__list">
+        {SECTIONS.map((section) => {
+          const heading = sectionHeading(section.id, section.label);
 
-        <div className="pdp-tabs__content">
-          <div
-            id="panel-description"
-            role="tabpanel"
-            aria-labelledby="tab-description"
-            hidden={activeTab !== "description"}
-            className="pdp-tabs__panel"
+          return (
+          <article
+            key={section.id}
+            className="pdp-sections__block"
+            aria-labelledby={`section-${section.id}`}
           >
-            <ProductDescription description={product.description} />
-          </div>
+            <ProductSectionHeading id={section.id} count={heading.count}>
+              {heading.label}
+            </ProductSectionHeading>
 
-          <div
-            id="panel-specs"
-            role="tabpanel"
-            aria-labelledby="tab-specs"
-            hidden={activeTab !== "specs"}
-            className="pdp-tabs__panel"
-          >
-            <div className="pdp-specs-wrap">
-              {product.specs.length === 0 ? (
-                <p className="pdp-tabs__empty">No specifications listed for this product.</p>
-              ) : (
-                <table className="pdp-specs">
-                  <tbody>
-                    {product.specs.map((spec) => (
-                      <tr key={spec.label}>
-                        <th scope="row">{spec.label}</th>
-                        <td>{spec.value}</td>
-                      </tr>
+            <div className="pdp-sections__body">
+              {section.id === "description" ? (
+                <ProductDescription description={product.description} />
+              ) : null}
+
+              {section.id === "specs" ? (
+                <div className="pdp-sections__panel pdp-specs-wrap">
+                  {product.specs.length === 0 ? (
+                    <p className="pdp-sections__empty">
+                      No specifications listed for this product.
+                    </p>
+                  ) : (
+                    <table className="pdp-specs">
+                      <tbody>
+                        {product.specs.map((spec) => (
+                          <tr key={spec.label}>
+                            <th scope="row">{spec.label}</th>
+                            <td>{spec.value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              ) : null}
+
+              {section.id === "in-the-box" ? (
+                product.inTheBox.length === 0 ? (
+                  <p className="pdp-sections__empty">Package contents not listed.</p>
+                ) : (
+                  <ul className="pdp-sections__panel pdp-in-the-box">
+                    {product.inTheBox.map((item) => (
+                      <li key={item}>{item}</li>
                     ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
+                  </ul>
+                )
+              ) : null}
 
-          <div
-            id="panel-in-the-box"
-            role="tabpanel"
-            aria-labelledby="tab-in-the-box"
-            hidden={activeTab !== "in-the-box"}
-            className="pdp-tabs__panel"
-          >
-            {product.inTheBox.length === 0 ? (
-              <p className="pdp-tabs__empty">Package contents not listed.</p>
-            ) : (
-              <ul className="pdp-in-the-box">
-                {product.inTheBox.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            )}
-          </div>
+              {section.id === "reviews" ? (
+                <ProductReviewsSection productSlug={productSlug} productId={product.id} />
+              ) : null}
 
-          <div
-            id="panel-reviews"
-            role="tabpanel"
-            aria-labelledby="tab-reviews"
-            hidden={activeTab !== "reviews"}
-            className="pdp-tabs__panel"
-          >
-            {activeTab === "reviews" ? (
-              <ProductReviewsSection productSlug={productSlug} productId={product.id} />
-            ) : null}
-          </div>
+              {section.id === "qa" ? (
+                <ProductQASection productSlug={productSlug} staticQa={product.qa} />
+              ) : null}
 
-          <div
-            id="panel-qa"
-            role="tabpanel"
-            aria-labelledby="tab-qa"
-            hidden={activeTab !== "qa"}
-            className="pdp-tabs__panel"
-          >
-            {activeTab === "qa" ? (
-              <ProductQASection productSlug={productSlug} staticQa={product.qa} />
-            ) : null}
-          </div>
-
-          <div
-            id="panel-videos"
-            role="tabpanel"
-            aria-labelledby="tab-videos"
-            hidden={activeTab !== "videos"}
-            className="pdp-tabs__panel"
-          >
-            {product.videos.length === 0 ? (
-              <p className="pdp-tabs__empty">No product videos available.</p>
-            ) : (
-              <div className="pdp-videos">
-                {product.videos.map((video) => (
-                  <div key={video.id} className="pdp-videos__item">
-                    <h4 className="pdp-videos__title">{video.title}</h4>
-                    <div className="pdp-video-embed">
-                      <iframe
-                        src={video.embedUrl}
-                        title={video.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </div>
+              {section.id === "videos" ? (
+                product.videos.length === 0 ? (
+                  <p className="pdp-sections__empty">No product videos available.</p>
+                ) : (
+                  <div className="pdp-videos">
+                    {product.videos.map((video) => (
+                      <div key={video.id} className="pdp-videos__item">
+                        <h3 className="pdp-sections__subheading pdp-videos__title">
+                          {video.title}
+                        </h3>
+                        <div className="pdp-video-embed">
+                          <iframe
+                            src={video.embedUrl}
+                            title={video.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+                )
+              ) : null}
+            </div>
+          </article>
+          );
+        })}
       </div>
     </section>
   );
 }
 
-export type { TabId };
+export type { SectionId as TabId };
