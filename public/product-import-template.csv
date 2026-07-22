@@ -1,2 +1,2 @@
-name,brand,category,subcategory,price,originalPrice,stock,sku,description,featured,trending,newArrival,image1,image2,image3,image4,image5
+name,brand,category,subcategory,sellingPrice,mrp,stock,sku,description,featured,trending,newArrival,image1,image2,image3,image4,image5
 Fender Player Stratocaster,Fender,Guitars,Electric,70830,81454,100,VM-SAMPLE-001,Sample guitar description,false,false,true,fender1.jpg,fender2.jpg,,,

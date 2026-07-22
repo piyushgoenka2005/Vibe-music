@@ -218,6 +218,10 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
     category: catalogProduct.category,
     categorySlug: catalogProduct.categorySlug,
     price: catalogProduct.price,
+    originalPrice:
+      catalogProduct.originalPrice > catalogProduct.price
+        ? catalogProduct.originalPrice
+        : undefined,
     gstRate: catalogProduct.gstRate,
     rating,
     reviewCount,
@@ -953,7 +957,11 @@ export async function updateProduct(
     updated.price = aggregates.price;
     updated.stock = aggregates.stock;
     updated.availability = aggregates.availability;
-  } else if (stock !== current.stock || price !== current.price) {
+  } else if (
+    stock !== current.stock ||
+    price !== current.price ||
+    originalPrice !== current.originalPrice
+  ) {
     const currentVariants = getVariantsFromProduct({
       ...updated,
       detail: preservedDetail,
@@ -969,13 +977,20 @@ export async function updateProduct(
       }
       return variant;
     });
-    updated.detail = { ...preservedDetail, variants: syncedVariants };
+    updated.detail = {
+      ...preservedDetail,
+      variants: syncedVariants,
+      msrp: originalPrice > price ? originalPrice : null,
+      salePrice: originalPrice > price ? price : null,
+    };
     updated.availability =
       syncProductAggregatesFromVariants(syncedVariants).availability;
   } else {
     updated.detail = {
       ...preservedDetail,
       variants: getVariantsFromProduct({ ...updated, detail: preservedDetail }),
+      msrp: originalPrice > price ? originalPrice : null,
+      salePrice: originalPrice > price ? price : null,
     };
   }
 

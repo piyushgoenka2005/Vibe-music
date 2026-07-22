@@ -163,7 +163,7 @@ export default function BulkImportModal({
         </div>
         <div className="admin-panel__body">
           <p style={{ marginBottom: "0.5rem" }}>
-            Import products from a CSV. Images ZIP is optional.{" "}
+            Import products from a CSV. Use <strong>sellingPrice</strong> and <strong>mrp</strong> columns (or legacy <strong>price</strong> / <strong>originalPrice</strong>).{" "}
             <a href="/product-import-template.csv" download className="admin-link">
               Download template
             </a>

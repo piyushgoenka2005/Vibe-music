@@ -1,3 +1,5 @@
+import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
+
 export const HOMEPAGE_SECTION_KEYS = [
   "new_arrivals",
   "best_sellers",
@@ -5,6 +7,7 @@ export const HOMEPAGE_SECTION_KEYS = [
   "staff_picks",
   "featured_categories",
   "deals_of_the_day",
+  "big_names_deals",
   "brand_strip",
 ] as const;
 
@@ -17,7 +20,8 @@ export type HomepageSectionLayout =
   | "product_carousel"
   | "category_grid"
   | "deals_slider"
-  | "brand_strip";
+  | "brand_strip"
+  | "big_names_deals";
 
 export interface HomepageSection {
   id: string;
@@ -104,6 +108,16 @@ export interface ResolvedHomepageSection {
   brands?: HomepageBrandItem[];
 }
 
+export interface PublicBigNamesDealsData {
+  isActive: boolean;
+  eyebrow: string;
+  headline: string;
+  subtitle: string;
+  ctaText: string;
+  ctaLink: string;
+  items: BigNamesDealItem[];
+}
+
 export interface PublicHomepageData {
   sections: ResolvedHomepageSection[];
   fetchedAt: string;
@@ -155,6 +169,7 @@ export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionKey, string> = {
   staff_picks: "Staff Picks",
   featured_categories: "Featured Categories",
   deals_of_the_day: "Deals Of The Day",
+  big_names_deals: "Big Names / Serious Savings",
   brand_strip: "Brand Strip",
 };
 
@@ -231,10 +246,24 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     layout: "deals_slider",
   },
   {
+    sectionKey: "big_names_deals",
+    title: "Big names. Serious savings.",
+    subtitle:
+      "Find all the top brands you already love, at prices that simply can't be beat",
+    accentLabel: "Shop top brands",
+    ctaText: "Shop All Deals",
+    ctaLink: "/deals",
+    isActive: true,
+    sortOrder: 6,
+    sourceMode: "manual",
+    maxItems: 5,
+    layout: "big_names_deals",
+  },
+  {
     sectionKey: "brand_strip",
     title: "Shop Top Brands",
     isActive: true,
-    sortOrder: 6,
+    sortOrder: 7,
     sourceMode: "auto",
     maxItems: 16,
     layout: "brand_strip",

@@ -26,6 +26,7 @@ export const adminProductSchema = z.object({
   category: z.string().min(1),
   categorySlug: z.string().optional(),
   price: z.number().positive(),
+  originalPrice: z.number().min(0).optional(),
   salePrice: z.number().positive().nullable().optional(),
   sku: z.preprocess(
     (value) => (value === "" ? undefined : value),
@@ -124,6 +125,7 @@ const homepageSectionKeySchema = z.enum([
   "staff_picks",
   "featured_categories",
   "deals_of_the_day",
+  "big_names_deals",
   "brand_strip",
 ]);
 
@@ -144,6 +146,7 @@ export const adminHomepageSectionSchema = z.object({
       "category_grid",
       "deals_slider",
       "brand_strip",
+      "big_names_deals",
     ])
     .optional(),
 });

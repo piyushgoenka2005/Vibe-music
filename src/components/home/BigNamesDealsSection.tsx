@@ -2,11 +2,21 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import Reveal from "@/components/layout/Reveal";
 import BigNamesDealsShowcase from "@/components/home/BigNamesDealsShowcase";
-import { BIG_NAMES_DEALS, BIG_NAMES_DEALS_CTA } from "@/data/bigNamesDeals";
+import { getBigNamesDealsPublicData } from "@/lib/server/homepageService";
 
 const HEADLINE_ID = "bigNamesDealsHeadline";
 
-export default function BigNamesDealsSection() {
+export default async function BigNamesDealsSection() {
+  const data = await getBigNamesDealsPublicData();
+  if (!data.isActive || data.items.length === 0) {
+    return null;
+  }
+
+  const subtitleLines = data.subtitle
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
   return (
     <section className="big-names-deals" aria-labelledby={HEADLINE_ID}>
       <div className="big-names-deals__inner">
@@ -14,7 +24,7 @@ export default function BigNamesDealsSection() {
           <Reveal immediate>
             <p className="big-names-deals__eyebrow">
               <span className="big-names-deals__eyebrow-line" aria-hidden />
-              Shop top brands
+              {data.eyebrow}
               <span className="big-names-deals__eyebrow-line" aria-hidden />
             </p>
           </Reveal>
@@ -24,28 +34,29 @@ export default function BigNamesDealsSection() {
               className="big-names-deals__headline typo-series"
               id={HEADLINE_ID}
             >
-              Big names. Serious savings.
+              {data.headline}
             </h2>
           </Reveal>
 
-          <Reveal immediate delay={80}>
-            <p className="big-names-deals__subtitle">
-              <span className="big-names-deals__subtitle-line">
-                Find all the top brands you already love, at prices that simply
-              </span>
-              <span className="big-names-deals__subtitle-line">
-                can&apos;t be beat
-              </span>
-            </p>
-          </Reveal>
+          {subtitleLines.length > 0 ? (
+            <Reveal immediate delay={80}>
+              <p className="big-names-deals__subtitle">
+                {subtitleLines.map((line) => (
+                  <span key={line} className="big-names-deals__subtitle-line">
+                    {line}
+                  </span>
+                ))}
+              </p>
+            </Reveal>
+          ) : null}
         </header>
 
-        <BigNamesDealsShowcase items={BIG_NAMES_DEALS} />
+        <BigNamesDealsShowcase items={data.items} />
 
         <Reveal immediate>
           <div className="big-names-deals__cta-wrap">
-            <Link className="big-names-deals__cta" href={BIG_NAMES_DEALS_CTA}>
-              Shop All Deals
+            <Link className="big-names-deals__cta" href={data.ctaLink}>
+              {data.ctaText}
               <span className="big-names-deals__cta-arrow" aria-hidden>
                 <ArrowUpRight size={23} strokeWidth={2.75} />
               </span>

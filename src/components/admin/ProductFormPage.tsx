@@ -18,6 +18,7 @@ import ProductVariantsEditor from "@/components/admin/ProductVariantsEditor";
 import GuitarSpecsEditor, {
   extractGuitarSpecsFromRecord,
 } from "@/components/admin/GuitarSpecsEditor";
+import ProductDescriptionBulletsEditor from "@/components/admin/ProductDescriptionBulletsEditor";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import type { Category } from "@/types/category";
 import type { ProductVariant } from "@/types/product";
@@ -29,6 +30,7 @@ const EMPTY = {
   category: "",
   categorySlug: "",
   price: 0,
+  originalPrice: 0,
   sku: "",
   description: "",
   stockQuantity: 100,
@@ -216,34 +218,70 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             <label htmlFor="product-form-sku">SKU</label>
             <input id="product-form-sku" className="admin-input" style={{ width: "100%" }} value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
           </div>
-          <div className="admin-form-group">
-            <label htmlFor="product-form-category">Category *</label>
-            <select
-              id="product-form-category"
-              className="admin-select"
-              value={form.categorySlug}
-              onChange={(e) => {
-                const category = categories.find((c) => c.slug === e.target.value);
-                setForm({
-                  ...form,
-                  categorySlug: e.target.value,
-                  category: category?.name ?? form.category,
-                });
-              }}
-              required
-            >
-              <option value="">Select category</option>
-              {categories.map((category) => (
-                <option key={category.slug} value={category.slug}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+          <div className="admin-form-grid--pricing">
+            <div className="admin-form-group" style={{ marginBottom: 0 }}>
+              <label htmlFor="product-form-category">Category *</label>
+              <select
+                id="product-form-category"
+                className="admin-select"
+                value={form.categorySlug}
+                onChange={(e) => {
+                  const category = categories.find((c) => c.slug === e.target.value);
+                  setForm({
+                    ...form,
+                    categorySlug: e.target.value,
+                    category: category?.name ?? form.category,
+                  });
+                }}
+                required
+              >
+                <option value="">Select category</option>
+                {categories.map((category) => (
+                  <option key={category.slug} value={category.slug}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="admin-form-group" style={{ marginBottom: 0 }}>
+              <label htmlFor="product-form-mrp">MRP (INR)</label>
+              <input
+                id="product-form-mrp"
+                className="admin-input"
+                style={{ width: "100%" }}
+                type="number"
+                min={0}
+                value={form.originalPrice}
+                onChange={(e) =>
+                  setForm({ ...form, originalPrice: Number(e.target.value) })
+                }
+                placeholder="Original list price"
+              />
+            </div>
+            <div className="admin-form-group" style={{ marginBottom: 0 }}>
+              <label htmlFor="product-form-price">Selling Price (INR) *</label>
+              <input
+                id="product-form-price"
+                className="admin-input"
+                style={{ width: "100%" }}
+                type="number"
+                min={0}
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+                required
+              />
+            </div>
           </div>
-          <div className="admin-form-group">
-            <label htmlFor="product-form-price">Price (INR) *</label>
-            <input id="product-form-price" className="admin-input" style={{ width: "100%" }} type="number" min={0} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} required />
-          </div>
+          <p
+            style={{
+              gridColumn: "1 / -1",
+              margin: "-0.25rem 0 0",
+              fontSize: "0.8125rem",
+              color: "var(--admin-muted)",
+            }}
+          >
+            When MRP is higher than selling price, the storefront shows MRP struck through with the selling price.
+          </p>
           <div className="admin-form-group">
             <label htmlFor="product-form-stock">Stock Quantity</label>
             <input id="product-form-stock" className="admin-input" style={{ width: "100%" }} type="number" min={0} value={form.stockQuantity} onChange={(e) => setForm({ ...form, stockQuantity: Number(e.target.value) })} />
@@ -283,20 +321,37 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
               <option value={28}>28%</option>
             </select>
           </div>
-          <div className="admin-form-group">
-            <label>
-              <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> Featured
-            </label>
-          </div>
-          <div className="admin-form-group">
-            <label>
-              <input type="checkbox" checked={form.trending} onChange={(e) => setForm({ ...form, trending: e.target.checked })} /> Trending
-            </label>
-          </div>
-          <div className="admin-form-group">
-            <label>
-              <input type="checkbox" checked={form.newArrival} onChange={(e) => setForm({ ...form, newArrival: e.target.checked })} /> New Arrival
-            </label>
+          <div className="admin-form-grid--pricing">
+            <div className="admin-form-group" style={{ marginBottom: 0 }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.featured}
+                  onChange={(e) => setForm({ ...form, featured: e.target.checked })}
+                />{" "}
+                Featured
+              </label>
+            </div>
+            <div className="admin-form-group" style={{ marginBottom: 0 }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.trending}
+                  onChange={(e) => setForm({ ...form, trending: e.target.checked })}
+                />{" "}
+                Trending
+              </label>
+            </div>
+            <div className="admin-form-group" style={{ marginBottom: 0 }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.newArrival}
+                  onChange={(e) => setForm({ ...form, newArrival: e.target.checked })}
+                />{" "}
+                New Arrival
+              </label>
+            </div>
           </div>
           <ProductImageUpload
             categorySlug={form.categorySlug}
@@ -344,10 +399,11 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
               />
             </div>
           ) : null}
-          <div className="admin-form-group admin-form-grid--full">
-            <label htmlFor="product-form-description">Description</label>
-            <textarea id="product-form-description" className="admin-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          </div>
+          <ProductDescriptionBulletsEditor
+            key={productId ?? "new"}
+            value={form.description}
+            onChange={(description) => setForm({ ...form, description })}
+          />
           {isGuitarProduct(form.categorySlug, form.category) ? (
             <GuitarSpecsEditor
               specs={form.guitarSpecs}

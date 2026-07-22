@@ -7,12 +7,27 @@ interface ProductDescriptionProps {
 export default function ProductDescription({ description }: ProductDescriptionProps) {
   const blocks = parseProductDescription(description);
 
+  const introBlocks = blocks.filter((block) => block.type === "intro");
+  const featureBlocks = blocks.filter((block) => block.type === "feature");
+  const bulletBlocks = blocks.filter((block) => block.type === "bullet");
+
+  if (bulletBlocks.length > 0) {
+    return (
+      <article className="pdp-description">
+        <ul className="pdp-description__about-list">
+          {bulletBlocks.map((block, index) => (
+            <li key={`bullet-${index}`} className="pdp-description__about-item">
+              {block.text}
+            </li>
+          ))}
+        </ul>
+      </article>
+    );
+  }
+
   if (blocks.length === 0) {
     return <p className="pdp-sections__empty">No description available.</p>;
   }
-
-  const introBlocks = blocks.filter((block) => block.type === "intro");
-  const featureBlocks = blocks.filter((block) => block.type === "feature");
 
   return (
     <article className="pdp-description">

@@ -65,13 +65,15 @@ export function rowsToCsv(headers: string[], rows: ParsedCsvRow[]): string {
 }
 
 export function csvRowToImportRow(row: ParsedCsvRow) {
+  const sellingPrice = row.sellingPrice ?? row.price ?? "";
+  const mrp = row.mrp ?? row.originalPrice ?? "";
   return {
     name: row.name ?? "",
     brand: row.brand ?? "",
     category: row.category ?? "",
     subcategory: row.subcategory ?? "",
-    price: Number(row.price),
-    originalPrice: row.originalPrice ? Number(row.originalPrice) : undefined,
+    price: Number(sellingPrice),
+    originalPrice: mrp ? Number(mrp) : undefined,
     stock: row.stock ? Number(row.stock) : undefined,
     sku: row.sku ?? "",
     description: row.description ?? "",

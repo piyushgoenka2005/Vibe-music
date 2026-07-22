@@ -76,7 +76,6 @@ export default function NewArrivalsProductCard({
   image,
   imageAlt,
   sectionKey,
-  rank,
   rating,
   reviewCount,
   badgeLabel,
@@ -103,7 +102,14 @@ export default function NewArrivalsProductCard({
   const showRating = displayReviewCount > 0;
   const productHref = resolveLinkHref(href);
   const productSlug = slug ?? slugFromHref(href, id);
-  const discountPct = seededDiscount(id);
+  const hasRealDiscount =
+    salePrice != null && price > displayPrice && displayPrice > 0;
+  const discountPct = hasRealDiscount
+    ? Math.round(((price - displayPrice) / price) * 100)
+    : seededDiscount(id);
+  const wasPrice = hasRealDiscount
+    ? price
+    : fakeMrp(displayPrice, discountPct);
   const cartProduct: Product = {
     id,
     slug: productSlug,
@@ -165,12 +171,10 @@ export default function NewArrivalsProductCard({
           <div className="new-arrivals-card__media">
             <div
               className="new-arrivals-card__stock-row"
-              aria-label={
-                rank ? `Rank ${rank}, limited stock` : "Limited stock"
-              }
+              aria-label="Limited stock"
             >
               <span aria-hidden className="new-arrivals-card__ribbon">
-                {rank ? `${rank} Limited stock` : "Limited stock"}
+                Limited stock
               </span>
             </div>
             {badgeLabel ? (
@@ -221,7 +225,7 @@ export default function NewArrivalsProductCard({
               </span>
               <span className="new-arrivals-card__prices">
                 <span className="new-arrivals-card__was">
-                  {formatDisplayPrice(fakeMrp(displayPrice, discountPct))}
+                  {formatDisplayPrice(wasPrice)}
                 </span>
                 <span
                   className={`new-arrivals-card__price${

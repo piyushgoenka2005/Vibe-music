@@ -58,14 +58,22 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
               >
                 <div className="pdp-accordion__content">
                   {section.id === "description" ? (
-                    section.content.map((line, lineIndex) => (
-                      <p
-                        key={`${section.id}-${lineIndex}`}
-                        className="pdp-accordion__paragraph"
-                      >
-                        {line}
-                      </p>
-                    ))
+                    section.content.length > 1 ? (
+                      <ul className="pdp-accordion__list">
+                        {section.content.map((line, lineIndex) => (
+                          <li key={`${section.id}-${lineIndex}`}>{line}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      section.content.map((line, lineIndex) => (
+                        <p
+                          key={`${section.id}-${lineIndex}`}
+                          className="pdp-accordion__paragraph"
+                        >
+                          {line}
+                        </p>
+                      ))
+                    )
                   ) : (
                     <ul className="pdp-accordion__list">
                       {section.content.map((line, lineIndex) => (

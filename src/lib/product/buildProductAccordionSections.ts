@@ -13,13 +13,16 @@ export function buildProductAccordionSections(
   const blocks = parseProductDescription(product.description);
   const introBlocks = blocks.filter((block) => block.type === "intro");
   const featureBlocks = blocks.filter((block) => block.type === "feature");
+  const bulletBlocks = blocks.filter((block) => block.type === "bullet");
 
   const descriptionLines =
-    introBlocks.length > 0
-      ? introBlocks.map((block) => block.text)
-      : product.description.trim()
-        ? [product.description.trim()]
-        : ["No description available for this product yet."];
+    bulletBlocks.length > 0
+      ? bulletBlocks.map((block) => block.text)
+      : introBlocks.length > 0
+        ? introBlocks.map((block) => block.text)
+        : product.description.trim()
+          ? [product.description.trim()]
+          : ["No description available for this product yet."];
 
   const whyBuyLines =
     featureBlocks.length > 0

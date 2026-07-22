@@ -865,6 +865,43 @@ export async function ensureDefaultHomepageSections(): Promise<void> {
   );
 }
 
+export async function ensureMissingHomepageSections(): Promise<void> {
+  if (!isPostgresConfigured()) return;
+  await ensureDefaultHomepageSections();
+  const existing = await prisma.homepageSection.findMany({
+    select: { sectionKey: true },
+  });
+  const keys = new Set(existing.map((row) => row.sectionKey));
+  const missing = DEFAULT_HOMEPAGE_SECTIONS.filter(
+    (section) => !keys.has(section.sectionKey)
+  );
+  if (missing.length === 0) return;
+
+  const timestamp = now();
+  await prisma.$transaction(
+    missing.map((section) =>
+      prisma.homepageSection.create({
+        data: {
+          id: section.sectionKey,
+          sectionKey: section.sectionKey,
+          title: section.title,
+          subtitle: section.subtitle ?? null,
+          accentLabel: section.accentLabel ?? null,
+          ctaText: section.ctaText ?? null,
+          ctaLink: section.ctaLink ?? null,
+          isActive: section.isActive,
+          sortOrder: section.sortOrder,
+          sourceMode: section.sourceMode,
+          maxItems: section.maxItems,
+          layout: section.layout,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      })
+    )
+  );
+}
+
 export async function listHomepageSectionsMapped(): Promise<HomepageSection[]> {
   if (!isPostgresConfigured()) {
     const timestamp = new Date(0).toISOString();
@@ -875,7 +912,7 @@ export async function listHomepageSectionsMapped(): Promise<HomepageSection[]> {
       updatedAt: timestamp,
     }));
   }
-  await ensureDefaultHomepageSections();
+  await ensureMissingHomepageSections();
   const rows = await prisma.homepageSection.findMany({ orderBy: { sortOrder: "asc" } });
   return rows.map(mapHomepageSection);
 }

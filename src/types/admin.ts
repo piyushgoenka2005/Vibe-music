@@ -92,6 +92,8 @@ import type { ProductVariant } from "@/types/product";
 export interface AdminProduct extends Product {
   sku?: string;
   status?: "active" | "draft" | "archived";
+  /** Stored MRP — may equal selling price when not on sale. */
+  originalPrice?: number;
   salePrice?: number | null;
   stockQuantity?: number;
   lowStockThreshold?: number;

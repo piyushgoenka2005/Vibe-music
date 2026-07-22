@@ -3,6 +3,11 @@ import "server-only";
 import { randomUUID } from "crypto";
 import * as pg from "@/lib/server/prisma/contentRepository";
 import {
+  BIG_NAMES_DEALS_MAX_ITEMS,
+  isBigNamesDealsGuitarProduct,
+} from "@/lib/homepage/bigNamesDeals";
+import { getProductById } from "@/services/catalogService";
+import {
   type CreateHomepageSectionInput,
   type CreateHomepageSectionItemInput,
   type HomepageSection,
@@ -128,6 +133,24 @@ export async function createSectionItem(
 ): Promise<HomepageSectionItem> {
   const section = await getSectionByKey(input.sectionKey);
   if (!section) throw new Error("Homepage section not found");
+
+  if (input.sectionKey === "big_names_deals") {
+    const existing = await listSectionItems(input.sectionKey);
+    if (existing.length >= BIG_NAMES_DEALS_MAX_ITEMS) {
+      throw new Error(`Maximum ${BIG_NAMES_DEALS_MAX_ITEMS} guitars allowed in this section`);
+    }
+    if (!input.productId) {
+      throw new Error("Select a guitar product");
+    }
+    const product = await getProductById(input.productId);
+    if (!product || !isBigNamesDealsGuitarProduct(product)) {
+      throw new Error("Only active guitar products can be added to Big Names / Serious Savings");
+    }
+    const duplicate = existing.some((item) => item.productId === input.productId);
+    if (duplicate) {
+      throw new Error("This guitar is already in the section");
+    }
+  }
 
   const timestamp = now();
   const sortOrder =

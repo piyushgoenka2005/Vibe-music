@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import RevealGroup from "@/components/layout/RevealGroup";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
-import type { BigNamesDealBrand } from "@/data/bigNamesDeals";
+import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
 
 const PRODUCT_FALLBACK = "/images/guitar-1.webp";
 
@@ -16,7 +16,7 @@ function BigNamesDealItem({
   index,
   isDuplicate = false,
 }: {
-  item: BigNamesDealBrand;
+  item: BigNamesDealItem;
   index: number;
   isDuplicate?: boolean;
 }) {
@@ -62,7 +62,7 @@ function BigNamesDealItem({
 }
 
 interface BigNamesDealsShowcaseProps {
-  items: BigNamesDealBrand[];
+  items: BigNamesDealItem[];
 }
 
 export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcaseProps) {

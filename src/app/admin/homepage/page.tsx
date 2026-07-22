@@ -17,6 +17,8 @@ import {
   type HomepageSectionItem,
   type HomepageSectionKey,
 } from "@/types/homepage";
+import { BIG_NAMES_DEALS_MAX_ITEMS } from "@/lib/homepage/bigNamesDeals";
+import type { AdminProduct } from "@/types/admin";
 
 const QUERY_KEY = ["admin-homepage"] as const;
 
@@ -31,8 +33,13 @@ const EMPTY_ITEM = {
   offerText: "",
 };
 
-function itemLabel(item: HomepageSectionItem): string {
-  if (item.productId) return `Product: ${item.productId}`;
+function itemLabel(
+  item: HomepageSectionItem,
+  productNames: Map<string, string>
+): string {
+  if (item.productId) {
+    return productNames.get(item.productId) ?? `Product: ${item.productId}`;
+  }
   if (item.categorySlug) return `Category: ${item.categorySlug}`;
   if (item.brandId) return `Brand: ${item.brandId}`;
   if (item.customTitle) return item.customTitle;
@@ -58,6 +65,17 @@ function HomepageContent() {
     },
   });
 
+  const { data: guitarProducts = [] } = useQuery({
+    queryKey: ["admin-homepage-guitars"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/products?category=guitars&limit=200");
+      if (!res.ok) throw new Error("Failed to load guitar products");
+      const body = (await res.json()) as { products?: AdminProduct[] };
+      return body.products ?? [];
+    },
+    enabled: activeKey === "big_names_deals",
+  });
+
   const sections = useMemo(
     () => [...(data?.sections ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
     [data?.sections]
@@ -70,6 +88,17 @@ function HomepageContent() {
         .filter((item) => item.sectionKey === activeKey)
         .sort((a, b) => a.sortOrder - b.sortOrder),
     [data?.items, activeKey]
+  );
+
+  const productNameMap = useMemo(
+    () =>
+      new Map(
+        guitarProducts.map((product) => [
+          product.id,
+          `${product.brand} — ${product.name}`,
+        ])
+      ),
+    [guitarProducts]
   );
 
   const saveSectionMutation = useMutation({
@@ -85,8 +114,14 @@ function HomepageContent() {
           ctaText: sectionForm.ctaText ?? activeSection.ctaText ?? "",
           ctaLink: sectionForm.ctaLink ?? activeSection.ctaLink ?? "",
           isActive: sectionForm.isActive ?? activeSection.isActive,
-          sourceMode: sectionForm.sourceMode ?? activeSection.sourceMode,
-          maxItems: sectionForm.maxItems ?? activeSection.maxItems,
+          sourceMode:
+            activeKey === "big_names_deals"
+              ? "manual"
+              : (sectionForm.sourceMode ?? activeSection.sourceMode),
+          maxItems:
+            activeKey === "big_names_deals"
+              ? BIG_NAMES_DEALS_MAX_ITEMS
+              : (sectionForm.maxItems ?? activeSection.maxItems),
         }),
       });
       const body = (await res.json()) as { error?: string };
@@ -201,10 +236,14 @@ function HomepageContent() {
     maxItems: sectionForm.maxItems ?? activeSection.maxItems,
   };
 
+  const isBigNamesSection = activeKey === "big_names_deals";
   const isProductSection =
-    activeKey !== "featured_categories" && activeKey !== "brand_strip";
+    activeKey !== "featured_categories" &&
+    activeKey !== "brand_strip";
   const isCategorySection = activeKey === "featured_categories";
   const isBrandSection = activeKey === "brand_strip";
+  const canAddBigNamesItem =
+    !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
 
   return (
     <>
@@ -234,7 +273,7 @@ function HomepageContent() {
         <div className="admin-panel__body">
           <div className="admin-form-grid">
             <div className="admin-form-group">
-              <label>Title</label>
+              <label>{isBigNamesSection ? "Headline" : "Title"}</label>
               <input
                 className="admin-input"
                 style={{ width: "100%" }}
@@ -255,9 +294,9 @@ function HomepageContent() {
                 }
               />
             </div>
-            {activeKey === "deals_of_the_day" ? (
+            {activeKey === "deals_of_the_day" || isBigNamesSection ? (
               <div className="admin-form-group">
-                <label>Accent Label</label>
+                <label>{isBigNamesSection ? "Eyebrow" : "Accent Label"}</label>
                 <input
                   className="admin-input"
                   style={{ width: "100%" }}
@@ -298,7 +337,8 @@ function HomepageContent() {
                 min={1}
                 max={50}
                 style={{ width: "100%" }}
-                value={form.maxItems}
+                value={isBigNamesSection ? BIG_NAMES_DEALS_MAX_ITEMS : form.maxItems}
+                disabled={isBigNamesSection}
                 onChange={(event) =>
                   setSectionForm((prev) => ({
                     ...prev,
@@ -307,6 +347,7 @@ function HomepageContent() {
                 }
               />
             </div>
+            {!isBigNamesSection ? (
             <div className="admin-form-group">
               <label>Source Mode</label>
               <select
@@ -324,6 +365,13 @@ function HomepageContent() {
                 <option value="manual">Manual curation</option>
               </select>
             </div>
+            ) : (
+              <div className="admin-form-group">
+                <p className="admin-form-hint" style={{ margin: 0 }}>
+                  Manual curation only. Pick up to {BIG_NAMES_DEALS_MAX_ITEMS} guitar products below.
+                </p>
+              </div>
+            )}
             <div className="admin-form-group">
               <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input
@@ -350,7 +398,7 @@ function HomepageContent() {
         </div>
       </div>
 
-      {form.sourceMode === "manual" ? (
+      {(form.sourceMode === "manual" || isBigNamesSection) ? (
         <div className="admin-panel">
           <div className="admin-panel__header">
             <h2 className="admin-panel__title">Curated Items</h2>
@@ -358,6 +406,26 @@ function HomepageContent() {
           <div className="admin-panel__body">
             <div className="admin-form-grid">
               {isProductSection ? (
+                isBigNamesSection ? (
+                  <div className="admin-form-group">
+                    <label>Guitar product</label>
+                    <select
+                      className="admin-select"
+                      style={{ width: "100%" }}
+                      value={itemForm.productId}
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, productId: event.target.value }))
+                      }
+                    >
+                      <option value="">Select a guitar</option>
+                      {guitarProducts.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.brand} — {product.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
                 <div className="admin-form-group">
                   <label>Product ID</label>
                   <input
@@ -370,6 +438,7 @@ function HomepageContent() {
                     placeholder="Catalog product ID"
                   />
                 </div>
+                )
               ) : null}
               {isCategorySection ? (
                 <div className="admin-form-group">
@@ -397,6 +466,7 @@ function HomepageContent() {
                   />
                 </div>
               ) : null}
+              {!isBigNamesSection ? (
               <div className="admin-form-group">
                 <label>Custom Title</label>
                 <input
@@ -408,6 +478,8 @@ function HomepageContent() {
                   }
                 />
               </div>
+              ) : null}
+              {!isBigNamesSection ? (
               <div className="admin-form-group">
                 <label>Custom Image URL</label>
                 <input
@@ -419,6 +491,8 @@ function HomepageContent() {
                   }
                 />
               </div>
+              ) : null}
+              {!isBigNamesSection ? (
               <div className="admin-form-group">
                 <label>Custom Link</label>
                 <input
@@ -430,7 +504,8 @@ function HomepageContent() {
                   }
                 />
               </div>
-              {isProductSection ? (
+              ) : null}
+              {isProductSection && !isBigNamesSection ? (
                 <div className="admin-form-group">
                   <label>Offer Text</label>
                   <input
@@ -444,7 +519,10 @@ function HomepageContent() {
                 </div>
               ) : null}
               <div className="admin-form-group">
+                {!isBigNamesSection ? (
                 <label>Badge Label</label>
+                ) : null}
+                {!isBigNamesSection ? (
                 <input
                   className="admin-input"
                   style={{ width: "100%" }}
@@ -453,17 +531,24 @@ function HomepageContent() {
                     setItemForm((prev) => ({ ...prev, badgeLabel: event.target.value }))
                   }
                 />
+                ) : null}
               </div>
             </div>
             <div style={{ marginTop: "1rem" }}>
               <button
                 type="button"
                 className="admin-btn admin-btn--primary"
-                disabled={addItemMutation.isPending}
+                disabled={addItemMutation.isPending || !canAddBigNamesItem}
                 onClick={() => addItemMutation.mutate()}
               >
-                <Plus size={16} /> Add Item
+                <Plus size={16} />{" "}
+                {isBigNamesSection ? "Add Guitar" : "Add Item"}
               </button>
+              {isBigNamesSection && !canAddBigNamesItem ? (
+                <p className="admin-form-hint" style={{ marginTop: 8 }}>
+                  Maximum {BIG_NAMES_DEALS_MAX_ITEMS} guitars reached.
+                </p>
+              ) : null}
             </div>
 
             {sectionItems.length === 0 ? (
@@ -482,7 +567,7 @@ function HomepageContent() {
                   <tbody>
                     {sectionItems.map((item, index) => (
                       <tr key={item.id}>
-                        <td>{itemLabel(item)}</td>
+                        <td>{itemLabel(item, productNameMap)}</td>
                         <td>
                           <StatusBadge status={item.isActive ? "active" : "inactive"} />
                         </td>

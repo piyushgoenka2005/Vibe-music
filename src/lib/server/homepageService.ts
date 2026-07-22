@@ -9,6 +9,7 @@ import { getCategoryGridImage } from "@/lib/categoryImages";
 import { categoryPath, productPath } from "@/lib/routes";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import {
+  getSectionByKey,
   listActiveSections,
   listAllSectionItems,
   isHomepageItemScheduledActive,
@@ -19,6 +20,15 @@ import {
   HOMEPAGE_POPULAR_CATEGORY_COUNT,
 } from "@/data/popularCategories";
 import { DEFAULT_HOMEPAGE_SECTIONS } from "@/types/homepage";
+import {
+  BIG_NAMES_DEALS,
+  BIG_NAMES_DEALS_CTA,
+} from "@/data/bigNamesDeals";
+import {
+  BIG_NAMES_DEALS_MAX_ITEMS,
+  isBigNamesDealsGuitarProduct,
+  mapCatalogProductToBigNamesDeal,
+} from "@/lib/homepage/bigNamesDeals";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
   HomepageBrandItem,
@@ -27,6 +37,7 @@ import type {
   HomepageSection,
   HomepageSectionItem,
   HomepageSectionKey,
+  PublicBigNamesDealsData,
   PublicHomepageData,
   ResolvedHomepageSection,
 } from "@/types/homepage";
@@ -46,7 +57,9 @@ function toProductItem(
   overrides?: Partial<HomepageSectionItem>,
   rank?: number
 ): HomepageProductItem {
-  const salePrice = product.detail?.salePrice ?? null;
+  const hasDiscount =
+    product.originalPrice > product.price && product.price > 0;
+  const salePrice = hasDiscount ? product.price : null;
   const variantCount = product.detail?.variants?.length ?? 0;
   const { rating, reviewCount } = ensureProductReviewMetrics({
     id: product.id,
@@ -58,7 +71,7 @@ function toProductItem(
     slug: product.slug,
     brand: product.brand,
     name: product.name,
-    price: product.price,
+    price: hasDiscount ? product.originalPrice : product.price,
     salePrice,
     image: product.image || product.images[0] || "",
     imageAlt: product.name,
@@ -297,6 +310,7 @@ function sectionDomId(sectionKey: HomepageSectionKey): string {
     staff_picks: "suggested-products",
     featured_categories: "popular-categories",
     deals_of_the_day: "sales-events",
+    big_names_deals: "big-names-deals",
     brand_strip: "brand-strip",
   };
   return map[sectionKey];
@@ -308,6 +322,10 @@ async function resolveSection(
   at: Date,
   allSectionItems: HomepageSectionItem[]
 ): Promise<ResolvedHomepageSection | null> {
+  if (section.sectionKey === "big_names_deals") {
+    return null;
+  }
+
   const items = allSectionItems
     .filter(
       (item) =>
@@ -390,6 +408,102 @@ function buildFeaturedCategoriesFallbackSection(at: Date): HomepageSection {
     createdAt: at.toISOString(),
     updatedAt: at.toISOString(),
   };
+}
+
+export async function getBigNamesDealsPublicData(
+  at = new Date()
+): Promise<PublicBigNamesDealsData> {
+  const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
+    (section) => section.sectionKey === "big_names_deals"
+  );
+
+  try {
+    const [section, products, allItems] = await Promise.all([
+      getSectionByKey("big_names_deals"),
+      getCachedActiveProducts(),
+      listAllSectionItems(),
+    ]);
+
+    const config = section ?? {
+      id: "big_names_deals",
+      sectionKey: "big_names_deals" as const,
+      title: defaults?.title ?? "Big names. Serious savings.",
+      subtitle: defaults?.subtitle,
+      accentLabel: defaults?.accentLabel ?? "Shop top brands",
+      ctaText: defaults?.ctaText ?? "Shop All Deals",
+      ctaLink: defaults?.ctaLink ?? BIG_NAMES_DEALS_CTA,
+      isActive: defaults?.isActive ?? true,
+      sortOrder: defaults?.sortOrder ?? 6,
+      sourceMode: "manual" as const,
+      maxItems: BIG_NAMES_DEALS_MAX_ITEMS,
+      layout: "big_names_deals" as const,
+      createdAt: at.toISOString(),
+      updatedAt: at.toISOString(),
+    };
+
+    const productMap = new Map(products.map((product) => [product.id, product]));
+    const items = allItems
+      .filter(
+        (item) =>
+          item.sectionKey === "big_names_deals" &&
+          item.isActive &&
+          item.productId &&
+          isHomepageItemScheduledActive(item, at)
+      )
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .slice(0, BIG_NAMES_DEALS_MAX_ITEMS);
+
+    const curated = items
+      .map((item) => {
+        const product = productMap.get(item.productId!);
+        if (!product || !isBigNamesDealsGuitarProduct(product)) return null;
+        return mapCatalogProductToBigNamesDeal(product, {
+          href: item.customHref || undefined,
+          image: item.customImage || undefined,
+          title: item.customTitle || undefined,
+        });
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    return {
+      isActive: config.isActive,
+      eyebrow: config.accentLabel ?? "Shop top brands",
+      headline: config.title,
+      subtitle:
+        config.subtitle ??
+        "Find all the top brands you already love, at prices that simply can't be beat",
+      ctaText: config.ctaText ?? "Shop All Deals",
+      ctaLink: config.ctaLink ?? BIG_NAMES_DEALS_CTA,
+      items:
+        curated.length > 0
+          ? curated
+          : BIG_NAMES_DEALS.map(({ key, brand, href, product, productAlt }) => ({
+              key,
+              brand,
+              href,
+              product,
+              productAlt,
+            })),
+    };
+  } catch {
+    return {
+      isActive: true,
+      eyebrow: defaults?.accentLabel ?? "Shop top brands",
+      headline: defaults?.title ?? "Big names. Serious savings.",
+      subtitle:
+        defaults?.subtitle ??
+        "Find all the top brands you already love, at prices that simply can't be beat",
+      ctaText: defaults?.ctaText ?? "Shop All Deals",
+      ctaLink: defaults?.ctaLink ?? BIG_NAMES_DEALS_CTA,
+      items: BIG_NAMES_DEALS.map(({ key, brand, href, product, productAlt }) => ({
+        key,
+        brand,
+        href,
+        product,
+        productAlt,
+      })),
+    };
+  }
 }
 
 export async function getPublicHomepageData(

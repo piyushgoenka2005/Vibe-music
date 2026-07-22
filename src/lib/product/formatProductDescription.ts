@@ -1,6 +1,46 @@
 export type DescriptionBlock =
   | { type: "intro"; text: string }
-  | { type: "feature"; title: string; body: string };
+  | { type: "feature"; title: string; body: string }
+  | { type: "bullet"; text: string };
+
+function stripBulletMarker(line: string): string {
+  return line.trim().replace(/^[-•*]\s+/, "");
+}
+
+/** Admin editor ↔ stored description (one bullet per line). */
+export function descriptionToBulletLines(description: string): string[] {
+  const trimmed = description.replace(/\r\n/g, "\n").trim();
+  if (!trimmed) return [""];
+  const lines = trimmed
+    .split("\n")
+    .map(stripBulletMarker)
+    .filter(Boolean);
+  return lines.length > 0 ? [...lines, ""] : [""];
+}
+
+export function bulletLinesToDescription(lines: string[]): string {
+  return lines.map((line) => line.trim()).filter(Boolean).join("\n");
+}
+
+function parseBulletListDescription(normalized: string): DescriptionBlock[] | null {
+  if (/\n\n/.test(normalized)) return null;
+
+  const rawLines = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
+  if (rawLines.length === 0) return null;
+
+  if (rawLines.length === 1) {
+    const line = rawLines[0]!;
+    if (/^[-•*]\s+/.test(line)) {
+      return [{ type: "bullet", text: stripBulletMarker(line) }];
+    }
+    return null;
+  }
+
+  return rawLines.map((line) => ({
+    type: "bullet" as const,
+    text: stripBulletMarker(line),
+  }));
+}
 
 const BODY_STARTERS = new Set([
   "built-in",
@@ -250,6 +290,9 @@ function parseStructuredSections(normalized: string): DescriptionBlock[] {
 export function parseProductDescription(description: string): DescriptionBlock[] {
   const normalized = description.replace(/\r\n/g, "\n").trim();
   if (!normalized) return [];
+
+  const bulletBlocks = parseBulletListDescription(normalized);
+  if (bulletBlocks) return bulletBlocks;
 
   if (/\n\n/.test(normalized)) {
     return parseStructuredSections(normalized);
