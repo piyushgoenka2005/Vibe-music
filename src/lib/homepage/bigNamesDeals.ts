@@ -1,4 +1,4 @@
-import { categoryPath, productPath } from "@/lib/routes";
+import { productPath } from "@/lib/routes";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import { BIG_NAMES_DEALS } from "@/data/bigNamesDeals";
 import type { CatalogProduct } from "@/types/catalog";
@@ -26,7 +26,6 @@ export function isBigNamesDealsGuitarProduct(product: CatalogProduct): boolean {
   if (product.status !== "active") return false;
   if (!isGuitarProduct(product.categorySlug, product.category)) return false;
   const name = product.name.toLowerCase();
-  // Amplifiers often share "guitar" in the title — never showcase those here.
   if (name.includes("amplifier") || name.includes(" amp ")) return false;
   return true;
 }
@@ -35,10 +34,15 @@ export function mapCatalogProductToBigNamesDeal(
   product: CatalogProduct,
   overrides?: { href?: string; image?: string; title?: string }
 ): BigNamesDealItem {
+  const href =
+    overrides?.href && overrides.href.startsWith("/product/")
+      ? overrides.href
+      : productPath(product.slug);
+
   return {
     key: product.id,
     brand: product.brand,
-    href: overrides?.href ?? productPath(product.slug),
+    href,
     product: overrides?.image ?? (product.image || product.images[0] || ""),
     productAlt: overrides?.title ?? product.name,
   };
@@ -55,17 +59,47 @@ function scoreGuitarMatch(product: CatalogProduct, keywords: string[]): number {
   return score;
 }
 
+function toShowcaseItem(
+  deal: (typeof BIG_NAMES_DEALS)[number],
+  product?: CatalogProduct
+): BigNamesDealItem {
+  if (product) {
+    return {
+      key: deal.key,
+      brand: deal.brand,
+      href: productPath(product.slug),
+      product: deal.product,
+      productAlt: `${deal.brand} showcase — shop ${product.name}`,
+    };
+  }
+
+  return {
+    key: deal.key,
+    brand: deal.brand,
+    href: productPath(deal.productSlug),
+    product: deal.product,
+    productAlt: deal.productAlt,
+  };
+}
+
 /**
- * Keep iconic brand visuals, but always deep-link to a real guitar PDP (or
- * `/category/guitars` when the catalog has no guitar products yet).
+ * Keep iconic brand visuals and always deep-link to a product PDP —
+ * never a category or search suggestions list.
  */
 export function resolveBigNamesDealFallbacks(
   products: CatalogProduct[]
 ): BigNamesDealItem[] {
   const guitars = products.filter(isBigNamesDealsGuitarProduct);
+  const bySlug = new Map(guitars.map((product) => [product.slug, product]));
   const used = new Set<string>();
 
   return BIG_NAMES_DEALS.slice(0, BIG_NAMES_DEALS_MAX_ITEMS).map((deal) => {
+    const preferred = bySlug.get(deal.productSlug);
+    if (preferred && !used.has(preferred.id)) {
+      used.add(preferred.id);
+      return toShowcaseItem(deal, preferred);
+    }
+
     const keywords = SHOWCASE_MATCH_KEYWORDS[deal.key] ?? [deal.brand.toLowerCase()];
     const ranked = [...guitars]
       .filter((product) => !used.has(product.id))
@@ -78,21 +112,10 @@ export function resolveBigNamesDealFallbacks(
     const matched = ranked[0];
     if (matched) {
       used.add(matched.id);
-      return {
-        key: deal.key,
-        brand: deal.brand,
-        href: productPath(matched.slug),
-        product: deal.product,
-        productAlt: `${deal.brand} showcase — shop ${matched.name}`,
-      };
+      return toShowcaseItem(deal, matched);
     }
 
-    return {
-      key: deal.key,
-      brand: deal.brand,
-      href: categoryPath("guitars"),
-      product: deal.product,
-      productAlt: deal.productAlt,
-    };
+    // Catalog unavailable / empty — still open the configured product page.
+    return toShowcaseItem(deal);
   });
 }

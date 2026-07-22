@@ -30,7 +30,7 @@ function BigNamesDealItem({
       style={{ "--big-names-index": String(index) } as CSSProperties}
     >
       <Link
-        aria-label={`Shop ${item.brand} guitars`}
+        aria-label={`Shop ${item.brand} — open product`}
         className="big-names-deals__link"
         href={item.href}
         prefetch

@@ -21,7 +21,6 @@ import {
 } from "@/data/popularCategories";
 import { DEFAULT_HOMEPAGE_SECTIONS } from "@/types/homepage";
 import {
-  BIG_NAMES_DEALS,
   BIG_NAMES_DEALS_CTA,
 } from "@/data/bigNamesDeals";
 import {
@@ -490,13 +489,8 @@ export async function getBigNamesDealsPublicData(
         "Find all the top brands you already love, at prices that simply can't be beat",
       ctaText: defaults?.ctaText ?? "Shop All Deals",
       ctaLink: defaults?.ctaLink ?? BIG_NAMES_DEALS_CTA,
-      items: BIG_NAMES_DEALS.map(({ key, brand, href, product, productAlt }) => ({
-        key,
-        brand,
-        href,
-        product,
-        productAlt,
-      })),
+      // Offline / DB-down: still deep-link each guitar to its product PDP.
+      items: resolveBigNamesDealFallbacks([]),
     };
   }
 }
