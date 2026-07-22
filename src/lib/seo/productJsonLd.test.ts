@@ -20,7 +20,7 @@ const sample = {
   description: "A solid test instrument.",
   images: [{ id: "1", alt: "Test", color: "#ccc", src: "/images/guitar-1.webp" }],
   variants: [],
-} as ProductDetail;
+} as unknown as ProductDetail;
 
 describe("buildProductJsonLd", () => {
   it("emits Product + Offer schema", () => {
