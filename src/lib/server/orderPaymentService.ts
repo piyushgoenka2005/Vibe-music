@@ -4,7 +4,10 @@ import { calculateGST, SELLER_STATE } from "@/lib/gstCalculator";
 import { incrementCouponUsage } from "@/lib/server/couponService";
 import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
 import { notifyCustomerOrderPlaced, notifyOrderRefunded } from "@/lib/server/orderNotificationService";
-import { sendServerPurchaseEvent } from "@/lib/analytics/measurementProtocol";
+import {
+  sendServerPurchaseEvent,
+  sendServerRefundEvent,
+} from "@/lib/analytics/measurementProtocol";
 import {
   fetchOrderById,
   findOrderByRazorpayOrderId as findOrderByRazorpayOrderIdFromStore,
@@ -229,6 +232,7 @@ export async function refundOrderPayment(input: {
 
   const refundedOrder = await updateOrder(order.id, updated);
   void notifyOrderRefunded(refundedOrder);
+  void sendServerRefundEvent(refundedOrder);
 
   return {
     order: refundedOrder,

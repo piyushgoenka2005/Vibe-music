@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useFilterStore } from "@/store/filterStore";
 import { useSearchListingFilters } from "@/hooks/useSearchListingFilters";
 import { useSearchResults } from "@/hooks/useSearch";
 import { buildCategoryProductsResult } from "@/lib/catalog/categoryProductsCore";
+import { trackViewItemList } from "@/lib/analytics/events";
 import { ROUTES } from "@/lib/routes";
 import { slugify } from "@/lib/slug";
 import ProductCard from "@/components/common/ProductCard";
@@ -111,6 +112,19 @@ function SearchResultsPageContent({
   const isError = status === "error";
   const hasQuery =
     query.trim().length >= 2 || Boolean(urlCategory) || Boolean(urlSubcategory);
+  const listContext = {
+    itemListId: query.trim()
+      ? `search_${query.trim().toLowerCase().slice(0, 48)}`
+      : "search_results",
+    itemListName: query.trim()
+      ? `Search: ${query.trim()}`
+      : "Search Results",
+  };
+
+  useEffect(() => {
+    if (!data.products.length) return;
+    trackViewItemList(data.products, listContext);
+  }, [query, data.products, data.page]);
 
   return (
     <div className="cat-page">
@@ -234,11 +248,13 @@ function SearchResultsPageContent({
                 className={`cat-product-grid cat-product-grid--${filters.view}`}
                 role="list"
               >
-                {data.products.map((product) => (
+                {data.products.map((product, index) => (
                   <ProductCard
                     key={product.id}
                     product={product}
                     view={filters.view}
+                    listContext={listContext}
+                    listIndex={index}
                   />
                 ))}
               </div>

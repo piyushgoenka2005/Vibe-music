@@ -4,10 +4,8 @@ import {
   isRazorpayConfigured,
 } from "@/lib/server/env";
 import { isClientAnalyticsConfigured } from "@/lib/analytics/config";
-import {
-  isGooglePlacesConfigured,
-  warnIfGooglePlacesMisconfigured,
-} from "@/lib/server/googlePlaces";
+import { warnIfGooglePlacesMisconfigured } from "@/lib/server/googlePlaces";
+import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
 import { formatIndianPhone } from "@/lib/brand";
 import { getStoreSettings } from "@/lib/server/settingsService";
 
@@ -17,8 +15,8 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const razorpayConfigured = isRazorpayConfigured();
   const demoPaymentsAllowed = isDemoPaymentsAllowed();
-  const placesAutocomplete = isGooglePlacesConfigured();
-  // One-shot config log (configured / missing / invalid) — does not change the payload.
+  const placesAutocomplete = isAddressAutocompleteConfigured();
+  // Log Google Places status for ops; autocomplete still works via Nominatim.
   warnIfGooglePlacesMisconfigured("api/checkout/capabilities");
   const settings = await getStoreSettings();
   const phone = formatIndianPhone(

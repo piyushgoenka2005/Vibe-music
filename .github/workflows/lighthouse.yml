@@ -1,8 +1,11 @@
-# Optional Lighthouse audit (manual / scheduled — not a hard PR gate)
+# Lighthouse audit with score gates (PR + weekly + manual)
 name: Lighthouse
 
 on:
   workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main, master]
   schedule:
     - cron: "0 4 * * 1"
 
@@ -42,10 +45,16 @@ jobs:
           GUEST_ORDER_ACCESS_SECRET: ci-guest-order-secret-min-32-chars-long
           ALLOW_DEMO_PAYMENTS: "true"
           AUTH_SECRET: ci-auth-secret-min-32-characters-long
-      - name: Run Lighthouse
+      - name: Run Lighthouse (gated)
         run: npm run audit:lighthouse
         env:
           LIGHTHOUSE_BASE_URL: http://127.0.0.1:3000
+          LIGHTHOUSE_FAIL: "true"
+          LIGHTHOUSE_URLS: "/,/contact,/cart"
+          LIGHTHOUSE_MIN_PERF: "45"
+          LIGHTHOUSE_MIN_A11Y: "80"
+          LIGHTHOUSE_MIN_BP: "75"
+          LIGHTHOUSE_MIN_SEO: "80"
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4

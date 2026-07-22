@@ -17,6 +17,41 @@ function canTrack(): boolean {
   return typeof window !== "undefined" && isAnalyticsEnabled();
 }
 
+export type ItemListContext = {
+  itemListId: string;
+  itemListName: string;
+};
+
+export function trackViewItemList(
+  products: Product[],
+  list: ItemListContext
+): void {
+  if (!canTrack() || products.length === 0) return;
+  const items = products.slice(0, 30).map((product, index) =>
+    productToGa4Item(product, { quantity: 1, index })
+  );
+  trackGaEcommerce("view_item_list", {
+    currency: "INR",
+    item_list_id: list.itemListId,
+    item_list_name: list.itemListName,
+    items,
+  });
+}
+
+export function trackSelectItem(
+  product: Product,
+  list: ItemListContext,
+  index?: number
+): void {
+  if (!canTrack()) return;
+  trackGaEcommerce("select_item", {
+    currency: "INR",
+    item_list_id: list.itemListId,
+    item_list_name: list.itemListName,
+    items: [productToGa4Item(product, { quantity: 1, index })],
+  });
+}
+
 export function trackViewItem(
   product: Product,
   options?: { variantLabel?: string; value?: number }

@@ -7,6 +7,7 @@ import {
   isServerAnalyticsConfigured,
 } from "@/lib/analytics/config";
 import { isGooglePlacesConfigured } from "@/lib/server/googlePlaces";
+import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
 
 export type IntegrationStatus = "ok" | "missing" | "partial";
 export type IntegrationTier = "required" | "recommended" | "optional";
@@ -79,7 +80,7 @@ export function getIntegrationChecks(): IntegrationChecks {
       process.env.UPSTASH_REDIS_REST_TOKEN
     ),
     googleOAuth: isGoogleAuthConfigured() ? "ok" : "missing",
-    places: isGooglePlacesConfigured() ? "ok" : "missing",
+    places: isAddressAutocompleteConfigured() ? "ok" : "missing",
     invoicePdf: invoicePdfStatus(),
     guestOrderSecret: secretWithMinLength(
       process.env.GUEST_ORDER_ACCESS_SECRET,
@@ -171,8 +172,9 @@ export function getOpsStatusReport(): {
       label: "Address autocomplete",
       status: checks.places,
       tier: "optional",
-      detail:
-        "GOOGLE_PLACES_API_KEY (aliases: GOOGLE_MAPS_API_KEY, NEXT_PUBLIC_GOOGLE_*_API_KEY) — manual address always works",
+      detail: isGooglePlacesConfigured()
+        ? "Google Places API key configured"
+        : "OpenStreetMap Nominatim (India) — set GOOGLE_PLACES_API_KEY to prefer Google",
     },
     {
       key: "invoicePdf",

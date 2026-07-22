@@ -36,6 +36,7 @@ export type Ga4EventName =
   | "add_shipping_info"
   | "add_payment_info"
   | "purchase"
+  | "refund"
   | "search"
   | "sign_up"
   | "login"

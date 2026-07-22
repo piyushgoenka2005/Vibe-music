@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useFilterStore } from "@/store/filterStore";
 import { useCategoryFilters } from "@/hooks/useCategoryFilters";
 import { useCategoryProducts } from "@/hooks/useCategoryProducts";
 import ProductCard from "@/components/common/ProductCard";
+import { trackViewItemList } from "@/lib/analytics/events";
 import {
   FilterChips,
   FilterSidebar,
@@ -44,6 +45,15 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
 
   const facets = data?.facets ?? { brands: [], priceRange: { min: 0, max: 0 } };
   const total = data?.total ?? 0;
+  const listContext = {
+    itemListId: `category_${category.slug}`,
+    itemListName: category.name,
+  };
+
+  useEffect(() => {
+    if (!data?.products?.length) return;
+    trackViewItemList(data.products, listContext);
+  }, [category.slug, category.name, data?.products, data?.page]);
 
   return (
     <div className="cat-page">
@@ -135,11 +145,13 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
                 className={`cat-product-grid cat-product-grid--${filters.view}`}
                 role="list"
               >
-                {data.products.map((product) => (
+                {data.products.map((product, index) => (
                   <ProductCard
                     key={product.id}
                     product={product}
                     view={filters.view}
+                    listContext={listContext}
+                    listIndex={index}
                   />
                 ))}
               </div>

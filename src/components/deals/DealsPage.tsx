@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import ProductCard from "@/components/common/ProductCard";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
+import { trackViewItemList } from "@/lib/analytics/events";
 import type { Product } from "@/types/product";
 import "@/components/category/category.css";
 
@@ -9,7 +11,17 @@ interface DealsPageProps {
   products: Product[];
 }
 
+const DEALS_LIST = {
+  itemListId: "deals",
+  itemListName: "Today's Deals",
+} as const;
+
 export default function DealsPage({ products }: DealsPageProps) {
+  useEffect(() => {
+    if (!products.length) return;
+    trackViewItemList(products, DEALS_LIST);
+  }, [products]);
+
   return (
     <main className="storefront-page storefront-page--subtle deals-page">
       <div className="storefront-page__inner deals-page__inner">
@@ -30,9 +42,14 @@ export default function DealsPage({ products }: DealsPageProps) {
             className="cat-product-grid cat-product-grid--grid deals-page__grid"
             role="list"
           >
-            {products.map((product) => (
+            {products.map((product, index) => (
               <div key={product.id} role="listitem" className="deals-page__grid-item">
-                <ProductCard product={product} view="grid" />
+                <ProductCard
+                  product={product}
+                  view="grid"
+                  listContext={DEALS_LIST}
+                  listIndex={index}
+                />
               </div>
             ))}
           </div>

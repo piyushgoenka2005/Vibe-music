@@ -15,12 +15,18 @@ import WishlistButton from "@/components/wishlist/WishlistButton";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
 import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { optimizeImageUrl } from "@/lib/storefrontImages";
+import {
+  trackSelectItem,
+  type ItemListContext,
+} from "@/lib/analytics/events";
 import type { Product } from "@/types/product";
 import type { ViewMode } from "@/types/filters";
 
 interface ProductCardProps {
   product: Product;
   view: ViewMode;
+  listContext?: ItemListContext;
+  listIndex?: number;
 }
 
 function availabilityLabel(availability: Product["availability"]): string {
@@ -61,7 +67,12 @@ function discountPercent(original: number, current: number): number {
   return Math.round(((original - current) / original) * 100);
 }
 
-export default function ProductCard({ product, view }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  view,
+  listContext,
+  listIndex,
+}: ProductCardProps) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
   const openDrawer = useCartStore((s) => s.openDrawer);
@@ -82,11 +93,17 @@ export default function ProductCard({ product, view }: ProductCardProps) {
     }
   }
 
+  function trackProductSelect() {
+    if (!listContext) return;
+    trackSelectItem(product, listContext, listIndex);
+  }
+
   function handleAdd() {
     if (product.availability === "out-of-stock" || !isPurchasablePrice(product.price)) {
       return;
     }
     if (product.requiresVariantSelection) {
+      trackProductSelect();
       router.push(productHref);
       return;
     }
@@ -144,6 +161,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
           prefetch
           onMouseEnter={prefetchProduct}
           onFocus={prefetchProduct}
+          onClick={trackProductSelect}
         >
           {isGrid && savingsPercent > 0 ? (
             <span className="cat-product-card__deal-tag">{savingsPercent}% off</span>
@@ -208,6 +226,7 @@ export default function ProductCard({ product, view }: ProductCardProps) {
             title={product.name}
             onMouseEnter={prefetchProduct}
             onFocus={prefetchProduct}
+            onClick={trackProductSelect}
             style={{ color: "inherit", textDecoration: "none" }}
           >
             {displayName}

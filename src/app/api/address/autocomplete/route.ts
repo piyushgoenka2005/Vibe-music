@@ -6,6 +6,7 @@ import {
   warnGooglePlacesApiFailure,
   warnIfGooglePlacesMisconfigured,
 } from "@/lib/server/googlePlaces";
+import { nominatimAutocomplete } from "@/lib/server/nominatimAddress";
 
 interface PlacesAutocompletePrediction {
   description: string;
@@ -18,25 +19,7 @@ const CONFIG_ERROR_STATUSES = new Set([
   "UNKNOWN_ERROR",
 ]);
 
-export async function GET(request: Request) {
-  const rateLimited = await enforceRateLimit(
-    request,
-    "address-autocomplete",
-    RATE_LIMITS.publicApi
-  );
-  if (rateLimited) return rateLimited;
-
-  const apiKey = getGooglePlacesApiKey();
-  if (!apiKey) {
-    warnIfGooglePlacesMisconfigured("api/address/autocomplete");
-    return NextResponse.json({ predictions: [], available: false });
-  }
-
-  const input = new URL(request.url).searchParams.get("input")?.trim();
-  if (!input || input.length < 3) {
-    return jsonError("At least 3 characters required", 400);
-  }
-
+async function googleAutocomplete(input: string, apiKey: string) {
   const params = new URLSearchParams({
     input,
     key: apiKey,
@@ -58,7 +41,7 @@ export async function GET(request: Request) {
       },
       "api/address/autocomplete"
     );
-    return jsonError("Autocomplete unavailable", 502);
+    return null;
   }
 
   if (!response.ok) {
@@ -67,7 +50,7 @@ export async function GET(request: Request) {
       { httpStatus: response.status },
       "api/address/autocomplete"
     );
-    return jsonError("Autocomplete unavailable", 502);
+    return null;
   }
 
   const data = (await response.json()) as {
@@ -79,13 +62,14 @@ export async function GET(request: Request) {
   const status = data.status ?? "UNKNOWN_ERROR";
 
   if (status === "OK" || status === "ZERO_RESULTS") {
-    return NextResponse.json({
-      available: true,
+    return {
+      available: true as const,
       predictions: (data.predictions ?? []).map((p) => ({
         description: p.description,
         placeId: p.place_id,
       })),
-    });
+      provider: "google" as const,
+    };
   }
 
   if (CONFIG_ERROR_STATUSES.has(status)) {
@@ -97,10 +81,9 @@ export async function GET(request: Request) {
       },
       "api/address/autocomplete"
     );
-    return NextResponse.json({ predictions: [], available: false });
+    return null;
   }
 
-  // OVER_QUERY_LIMIT / temporary issues — keep available so UI can retry later
   warnGooglePlacesApiFailure(
     "Google Places autocomplete returned a non-OK status",
     {
@@ -109,5 +92,48 @@ export async function GET(request: Request) {
     },
     "api/address/autocomplete"
   );
-  return NextResponse.json({ predictions: [], available: true });
+  return {
+    available: true as const,
+    predictions: [],
+    provider: "google" as const,
+  };
+}
+
+export async function GET(request: Request) {
+  const rateLimited = await enforceRateLimit(
+    request,
+    "address-autocomplete",
+    RATE_LIMITS.publicApi
+  );
+  if (rateLimited) return rateLimited;
+
+  const input = new URL(request.url).searchParams.get("input")?.trim();
+  if (!input || input.length < 3) {
+    return jsonError("At least 3 characters required", 400);
+  }
+
+  const apiKey = getGooglePlacesApiKey();
+  if (apiKey) {
+    const googleResult = await googleAutocomplete(input, apiKey);
+    if (googleResult) {
+      return NextResponse.json(googleResult);
+    }
+  } else {
+    warnIfGooglePlacesMisconfigured("api/address/autocomplete");
+  }
+
+  try {
+    const predictions = await nominatimAutocomplete(input);
+    return NextResponse.json({
+      available: true,
+      predictions,
+      provider: "nominatim",
+    });
+  } catch (error) {
+    console.warn(
+      "[address-autocomplete] Nominatim fallback failed",
+      error instanceof Error ? error.message : error
+    );
+    return NextResponse.json({ predictions: [], available: false });
+  }
 }

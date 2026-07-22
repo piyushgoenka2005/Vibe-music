@@ -7,6 +7,10 @@ import {
   warnGooglePlacesApiFailure,
   warnIfGooglePlacesMisconfigured,
 } from "@/lib/server/googlePlaces";
+import {
+  isNominatimPlaceId,
+  nominatimPlaceDetails,
+} from "@/lib/server/nominatimAddress";
 
 interface PlacesAddressComponent {
   long_name: string;
@@ -28,15 +32,35 @@ export async function GET(request: Request) {
   );
   if (rateLimited) return rateLimited;
 
+  const placeId = new URL(request.url).searchParams.get("placeId")?.trim();
+  if (!placeId) {
+    return jsonError("placeId is required", 400);
+  }
+
+  if (isNominatimPlaceId(placeId)) {
+    try {
+      const address = await nominatimPlaceDetails(placeId);
+      if (!address) {
+        return NextResponse.json({ available: true, address: null });
+      }
+      return NextResponse.json({
+        available: true,
+        address,
+        provider: "nominatim",
+      });
+    } catch (error) {
+      console.warn(
+        "[address-details] Nominatim lookup failed",
+        error instanceof Error ? error.message : error
+      );
+      return jsonError("Place details unavailable", 502);
+    }
+  }
+
   const apiKey = getGooglePlacesApiKey();
   if (!apiKey) {
     warnIfGooglePlacesMisconfigured("api/address/details");
     return NextResponse.json({ available: false, address: null });
-  }
-
-  const placeId = new URL(request.url).searchParams.get("placeId")?.trim();
-  if (!placeId) {
-    return jsonError("placeId is required", 400);
   }
 
   const params = new URLSearchParams({
@@ -93,6 +117,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       available: true,
       address: parsed,
+      provider: "google",
     });
   }
 

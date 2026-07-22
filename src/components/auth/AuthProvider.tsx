@@ -8,6 +8,7 @@ import { setAnalyticsUserId } from "@/lib/analytics/gtag";
 import { trackLogin } from "@/lib/analytics/events";
 
 const SESSION_FAIL_OPEN_MS = 6000;
+const LOGIN_DEDUPE_PREFIX = "vibe-ga-login-";
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
@@ -39,7 +40,17 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       setAnalyticsUserId(session.user.id);
       if (prevUserIdRef.current !== session.user.id) {
         if (prevUserIdRef.current === null) {
-          trackLogin("google");
+          const method =
+            session.user.authProvider === "google" ? "google" : "email";
+          const dedupeKey = `${LOGIN_DEDUPE_PREFIX}${session.user.id}`;
+          try {
+            if (sessionStorage.getItem(dedupeKey) !== "1") {
+              sessionStorage.setItem(dedupeKey, "1");
+              trackLogin(method);
+            }
+          } catch {
+            trackLogin(method);
+          }
         }
         prevUserIdRef.current = session.user.id;
       }

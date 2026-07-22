@@ -31,11 +31,19 @@ declare module "next-auth" {
       emailVerified?: Date | null;
       isAdmin: boolean;
       adminRole?: AdminRole;
+      /** Auth.js provider id used for this session (credentials | google). */
+      authProvider?: string;
     };
   }
 
   interface User {
     rememberMe?: boolean;
+  }
+}
+
+declare module "@auth/core/jwt" {
+  interface JWT {
+    authProvider?: string;
   }
 }
 
@@ -179,12 +187,16 @@ export const authConfig = {
         return true;
       }
     },
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, account, trigger, session }) {
       if (user) {
         token.uid = user.id;
         const rememberMe = user.rememberMe ?? false;
         const maxAge = resolveSessionMaxAgeSeconds(rememberMe);
         token.exp = Math.floor(Date.now() / 1000) + maxAge;
+      }
+
+      if (account?.provider) {
+        token.authProvider = account.provider;
       }
 
       if (trigger === "update" && session?.user?.name) {
@@ -236,6 +248,8 @@ export const authConfig = {
         emailVerified: session.user?.emailVerified ?? null,
         isAdmin: Boolean(token.isAdmin),
         adminRole,
+        authProvider:
+          typeof token.authProvider === "string" ? token.authProvider : "credentials",
       };
 
       return session;

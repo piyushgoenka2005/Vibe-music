@@ -23,6 +23,7 @@ import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
 import { ROUTES } from "@/lib/routes";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations/auth";
 import { sanitizeAuthRedirect } from "@/lib/auth/safeRedirect";
+import { trackSignUp } from "@/lib/analytics/events";
 import { useAuthStore } from "@/store/authStore";
 
 interface RegisterFormProps {
@@ -64,6 +65,7 @@ export default function RegisterForm({ googleAuthEnabled = false }: RegisterForm
         password: values.password,
         displayName: values.name,
       });
+      trackSignUp("email");
       router.push(redirectTo);
     } catch (err) {
       setError(getAuthErrorMessage(err, "Sign up failed."));
