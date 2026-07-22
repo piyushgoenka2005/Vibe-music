@@ -79,6 +79,8 @@ test.describe("storefront smoke", () => {
       "/rentals",
       "/giveaway",
       "/contact",
+      "/category/guitars",
+      "/deals",
     ];
     for (const path of paths) {
       await page.goto(path, { waitUntil: "domcontentloaded", timeout: 60_000 });

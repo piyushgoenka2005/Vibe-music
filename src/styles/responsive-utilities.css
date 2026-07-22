@@ -38,6 +38,21 @@
   min-width: 0;
 }
 
+@media (max-width: 767px) {
+  body {
+    overflow-x: clip;
+  }
+
+  .storefront-page__inner,
+  .cat-page,
+  .pdp,
+  .checkout-page,
+  .cart-page {
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
 /* Touch-friendly icon controls (44px minimum) */
 @media (max-width: 767px) {
   .product-share-btn,

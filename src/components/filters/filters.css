@@ -691,6 +691,8 @@
 
   .cat-toolbar__mobile-btn {
     display: inline-flex;
+    min-height: 44px;
+    height: 44px;
   }
 
   .cat-toolbar__count {
@@ -705,16 +707,16 @@
   .cat-sort-select {
     width: 100%;
     max-width: none;
-    min-height: 2.45rem;
-    height: 2.45rem;
+    min-height: 44px;
+    height: 44px;
     font-size: 16px;
   }
 
   .cat-view-toggle button {
-    width: 2.35rem;
-    height: 2.35rem;
-    min-width: 2.35rem;
-    min-height: 2.35rem;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .cat-filter-chips {

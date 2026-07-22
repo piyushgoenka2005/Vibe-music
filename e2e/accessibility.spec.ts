@@ -92,6 +92,26 @@ test.describe("accessibility basics", () => {
     }
   });
 
+  test("compact phone storefront has no horizontal overflow", async ({
+    page,
+    request,
+    requiresDatabase,
+  }) => {
+    void requiresDatabase;
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 320, height: 568 });
+    const product = await fetchTrendingProduct(request);
+    const paths = ["/", "/cart", "/checkout", "/category/guitars", `/product/${product.slug}`];
+    for (const path of paths) {
+      await gotoStorefront(page, path, { timeout: 30_000 });
+      const overflow = await page.evaluate(() => {
+        const doc = document.documentElement;
+        return doc.scrollWidth - doc.clientWidth;
+      });
+      expect(overflow, path).toBeLessThanOrEqual(2);
+    }
+  });
+
   test("mobile search trending pills meet 44px tap target", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/search", { waitUntil: "domcontentloaded", timeout: 60_000 });

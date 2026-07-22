@@ -1091,7 +1091,7 @@ body.site-nav-open .site-header--scroll-hidden {
   top: var(--site-header-chrome, var(--site-header-offset, 90px));
   left: 0;
   bottom: 0;
-  width: min(100%, calc(100vw - 2.75rem));
+  width: min(100%, calc(100dvw - 2.75rem));
   z-index: 199;
   display: flex;
   flex-direction: column;
@@ -1765,13 +1765,13 @@ body.site-nav-open .site-header--hidden {
 
   .site-header__search-toggle,
   .site-header__action {
-    min-width: 2.25rem;
-    min-height: 2.5rem;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .site-header__menu-btn {
-    min-width: 2.25rem;
-    min-height: 2.5rem;
+    min-width: 44px;
+    min-height: 44px;
     padding-inline: 0.05rem;
   }
 

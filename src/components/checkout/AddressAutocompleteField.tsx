@@ -187,40 +187,15 @@ export default function AddressAutocompleteField({
         </span>
       )}
       {open && predictions.length > 0 ? (
-        <ul
-          role="listbox"
-          style={{
-            position: "absolute",
-            zIndex: 20,
-            top: "100%",
-            left: 0,
-            right: 0,
-            margin: "0.25rem 0 0",
-            padding: 0,
-            listStyle: "none",
-            background: "var(--color-surface, #fff)",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-            maxHeight: "12rem",
-            overflowY: "auto",
-          }}
-        >
+        <ul role="listbox" className="checkout-address-suggest">
           {predictions.map((prediction) => (
             <li key={prediction.placeId}>
               <button
                 type="button"
                 role="option"
                 aria-selected={false}
+                className="checkout-address-suggest__option"
                 onClick={() => void selectPrediction(prediction)}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  textAlign: "left",
-                  padding: "0.5rem 0.75rem",
-                  border: "none",
-                  background: "transparent",
-                  cursor: "pointer",
-                }}
               >
                 {prediction.description}
               </button>
