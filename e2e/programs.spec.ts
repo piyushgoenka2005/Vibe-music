@@ -23,14 +23,16 @@ test.describe("enterprise program pages", () => {
 });
 
 test.describe("enterprise program APIs", () => {
-  test("giveaway campaigns list responds", async ({ request }) => {
+  test("giveaway campaigns list responds", async ({ request, requiresDatabase }) => {
+    void requiresDatabase;
     const response = await request.get("/api/giveaway/campaigns");
     expect(response.ok()).toBeTruthy();
     const body = await response.json();
     expect(Array.isArray(body.campaigns)).toBe(true);
   });
 
-  test("rental categories list responds", async ({ request }) => {
+  test("rental categories list responds", async ({ request, requiresDatabase }) => {
+    void requiresDatabase;
     const response = await request.get("/api/rentals/categories");
     expect(response.ok()).toBeTruthy();
   });

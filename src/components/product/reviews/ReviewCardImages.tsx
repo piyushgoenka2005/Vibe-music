@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useCallback, useState, type RefObject } from "react";
+import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
 
 interface ReviewCardImagesProps {
@@ -11,6 +12,8 @@ interface ReviewCardImagesProps {
 
 export default function ReviewCardImages({ images, title }: ReviewCardImagesProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const close = useCallback(() => setActiveIndex(null), []);
+  const dialogRef = useDialogA11y(activeIndex !== null, close);
 
   if (images.length === 0) return null;
 
@@ -37,11 +40,12 @@ export default function ReviewCardImages({ images, title }: ReviewCardImagesProp
 
       {activeIndex !== null ? (
         <div
+          ref={dialogRef as RefObject<HTMLDivElement>}
           className="pdp-review-lightbox"
           role="dialog"
           aria-modal="true"
           aria-label="Review image preview"
-          onClick={() => setActiveIndex(null)}
+          onClick={close}
         >
           <div
             className="pdp-review-lightbox__inner"
@@ -50,7 +54,7 @@ export default function ReviewCardImages({ images, title }: ReviewCardImagesProp
             <button
               type="button"
               className="pdp-review-lightbox__close"
-              onClick={() => setActiveIndex(null)}
+              onClick={close}
               aria-label="Close image preview"
             >
               ×

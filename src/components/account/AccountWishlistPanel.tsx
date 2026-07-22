@@ -65,7 +65,7 @@ export default function AccountWishlistPanel() {
 
   return (
     <div>
-      <h2 className="acct__section-title">Wishlist</h2>
+      <h1 className="acct__section-title">Wishlist</h1>
       <p className="acct__section-sub">
         {items.length} saved item{items.length === 1 ? "" : "s"} — your favorite gear, ready when you are.
       </p>

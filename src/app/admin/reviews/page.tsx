@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type RefObject } from "react";
 import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -12,6 +12,7 @@ import {
   StatCard,
   formatDate,
 } from "@/components/admin/AdminUi";
+import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
 import type { Review } from "@/types/review";
@@ -37,6 +38,11 @@ function ReviewsContent() {
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [adminReply, setAdminReply] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
+  const closeReviewDrawer = useCallback(() => setSelectedReview(null), []);
+  const reviewDrawerRef = useDialogA11y(
+    selectedReview !== null,
+    closeReviewDrawer
+  );
 
   const queryParams = useMemo(
     () => ({
@@ -321,14 +327,24 @@ function ReviewsContent() {
       </div>
 
       {selectedReview ? (
-        <div className="admin-drawer-backdrop" onClick={() => setSelectedReview(null)}>
-          <div className="admin-drawer" onClick={(event) => event.stopPropagation()}>
+        <div
+          className="admin-drawer-backdrop"
+          onClick={closeReviewDrawer}
+        >
+          <div
+            ref={reviewDrawerRef as RefObject<HTMLDivElement>}
+            className="admin-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-review-drawer-title"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="admin-drawer__header">
-              <h2>{selectedReview.title}</h2>
+              <h2 id="admin-review-drawer-title">{selectedReview.title}</h2>
               <button
                 type="button"
                 className="admin-btn admin-btn--ghost"
-                onClick={() => setSelectedReview(null)}
+                onClick={closeReviewDrawer}
               >
                 Close
               </button>

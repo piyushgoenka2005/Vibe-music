@@ -127,9 +127,9 @@ export default function AccountOrderDetail({
 
         <div className="acct__order-detail-heading">
           <div>
-            <h2 className="acct__section-title">
+            <h1 className="acct__section-title">
               Order {formatOrderIdDisplay(order.id)}
-            </h2>
+            </h1>
             <p className="acct__section-sub acct__order-detail-sub">
               Placed on {formatOrderDate(order.createdAt)}
             </p>

@@ -76,7 +76,7 @@ export default function ProductQuestionForm({
         mutation.mutate();
       }}
     >
-      <h4 className="pdp-qa-form__title">Ask a question</h4>
+      <h4 id="pdp-qa-form-title" className="pdp-qa-form__title">Ask a question</h4>
       <textarea
         className="pdp-qa-form__input"
         value={question}
@@ -86,6 +86,7 @@ export default function ProductQuestionForm({
         minLength={10}
         maxLength={500}
         required
+        aria-labelledby="pdp-qa-form-title"
       />
       <button
         type="submit"

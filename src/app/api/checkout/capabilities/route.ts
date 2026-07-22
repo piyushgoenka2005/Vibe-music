@@ -4,7 +4,10 @@ import {
   isRazorpayConfigured,
 } from "@/lib/server/env";
 import { isClientAnalyticsConfigured } from "@/lib/analytics/config";
-import { isGooglePlacesConfigured } from "@/lib/server/googlePlaces";
+import {
+  isGooglePlacesConfigured,
+  warnIfGooglePlacesMisconfigured,
+} from "@/lib/server/googlePlaces";
 import { formatIndianPhone } from "@/lib/brand";
 import { getStoreSettings } from "@/lib/server/settingsService";
 
@@ -15,6 +18,8 @@ export async function GET() {
   const razorpayConfigured = isRazorpayConfigured();
   const demoPaymentsAllowed = isDemoPaymentsAllowed();
   const placesAutocomplete = isGooglePlacesConfigured();
+  // One-shot config log (configured / missing / invalid) — does not change the payload.
+  warnIfGooglePlacesMisconfigured("api/checkout/capabilities");
   const settings = await getStoreSettings();
   const phone = formatIndianPhone(
     process.env.NEXT_PUBLIC_STORE_PHONE?.trim() ||

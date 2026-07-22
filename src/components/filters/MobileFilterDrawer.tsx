@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { SlidersHorizontal, X } from "lucide-react";
+import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useFilterStore } from "@/store/filterStore";
 import type { CategoryFilters } from "@/types/filters";
 import { countActiveFilters } from "@/lib/filterUrl";
@@ -29,6 +30,7 @@ export default function MobileFilterDrawer({
   const open = useFilterStore((s) => s.mobileDrawerOpen);
   const close = useFilterStore((s) => s.closeMobileDrawer);
   const activeCount = countActiveFilters(filters);
+  const drawerRef = useDialogA11y(open, close);
 
   useEffect(() => {
     if (!open) return;
@@ -37,14 +39,6 @@ export default function MobileFilterDrawer({
       document.body.style.overflow = "";
     };
   }, [open]);
-
-  useEffect(() => {
-    function onEscape(e: KeyboardEvent) {
-      if (e.key === "Escape") close();
-    }
-    if (open) document.addEventListener("keydown", onEscape);
-    return () => document.removeEventListener("keydown", onEscape);
-  }, [open, close]);
 
   if (!open) return null;
 
@@ -56,6 +50,7 @@ export default function MobileFilterDrawer({
         aria-hidden="true"
       />
       <div
+        ref={drawerRef as RefObject<HTMLDivElement>}
         className="cat-mobile-drawer cat-mobile-drawer--open"
         role="dialog"
         aria-modal="true"

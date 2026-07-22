@@ -113,7 +113,7 @@ export default async function BlogIndexPage({ searchParams }: PageProps) {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={optimizeImageUrl(post.coverImage, "blogCover")}
-                        alt=""
+                        alt={post.title}
                         className="blog-card__image"
                         loading="lazy"
                       />

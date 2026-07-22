@@ -2,13 +2,14 @@
 
 import { formatDisplayPrice } from "@/utils/currency";
 
-import { useEffect } from "react";
+import { useEffect, type RefObject } from "react";
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import WishlistEmptyState from "@/components/wishlist/WishlistEmptyState";
 import { ROUTES } from "@/lib/routes";
 import { createPortal } from "react-dom";
+import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useWishlistStore } from "@/store/wishlistStore";
 import "./wishlist.css";
@@ -21,6 +22,7 @@ export default function WishlistDrawer() {
   const moveToCart = useWishlistStore((s) => s.moveToCart);
   const moveAllToCart = useWishlistStore((s) => s.moveAllToCart);
   const isClient = useIsClient();
+  const drawerRef = useDialogA11y(open, close);
 
   useEffect(() => {
     if (!open) return;
@@ -30,14 +32,6 @@ export default function WishlistDrawer() {
     };
   }, [open]);
 
-  useEffect(() => {
-    function onEscape(e: KeyboardEvent) {
-      if (e.key === "Escape") close();
-    }
-    if (open) document.addEventListener("keydown", onEscape);
-    return () => document.removeEventListener("keydown", onEscape);
-  }, [open, close]);
-
   if (!isClient) return null;
   if (!open) return null;
 
@@ -45,6 +39,7 @@ export default function WishlistDrawer() {
     <>
       <div className="wl-drawer-overlay" onClick={close} aria-hidden="true" />
       <aside
+        ref={drawerRef as RefObject<HTMLElement>}
         className="wl-drawer"
         role="dialog"
         aria-modal="true"

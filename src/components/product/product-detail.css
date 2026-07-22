@@ -270,6 +270,11 @@
   box-shadow: none;
 }
 
+.pdp-gallery__main:focus-visible {
+  outline: 2px solid var(--brand-primary, #1253ed);
+  outline-offset: 2px;
+}
+
 @media (max-width: 767px) {
   .pdp-gallery__main {
     touch-action: pan-x pan-y;

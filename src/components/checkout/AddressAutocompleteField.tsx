@@ -34,19 +34,32 @@ export default function AddressAutocompleteField({
   const [placesDisabledByApi, setPlacesDisabledByApi] = useState(false);
   const [resolving, setResolving] = useState(false);
   const debounceRef = useRef<number | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (autocompleteAvailable) {
       setPlacesDisabledByApi(false);
+      return;
     }
+    setPredictions([]);
+    setOpen(false);
   }, [autocompleteAvailable]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        window.clearTimeout(debounceRef.current);
+      }
+      abortRef.current?.abort();
+    };
+  }, []);
 
   const placesOff = !autocompleteAvailable || placesDisabledByApi;
 
   const fetchPredictions = useCallback(
     async (input: string) => {
-      if (!autocompleteAvailable || placesOff) {
+      if (!autocompleteAvailable || placesDisabledByApi) {
         setPredictions([]);
         return;
       }
@@ -56,10 +69,16 @@ export default function AddressAutocompleteField({
         return;
       }
 
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
       try {
         const response = await fetch(
-          `/api/address/autocomplete?input=${encodeURIComponent(input.trim())}`
+          `/api/address/autocomplete?input=${encodeURIComponent(input.trim())}`,
+          { signal: controller.signal }
         );
+        if (controller.signal.aborted) return;
         if (!response.ok) {
           setPredictions([]);
           return;
@@ -68,6 +87,7 @@ export default function AddressAutocompleteField({
           predictions?: AddressPrediction[];
           available?: boolean;
         };
+        if (controller.signal.aborted) return;
         if (data.available === false) {
           setPlacesDisabledByApi(true);
           setPredictions([]);
@@ -76,11 +96,14 @@ export default function AddressAutocompleteField({
         }
         setPredictions(data.predictions ?? []);
         setOpen((data.predictions?.length ?? 0) > 0);
-      } catch {
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
         setPredictions([]);
       }
     },
-    [autocompleteAvailable, placesOff]
+    [autocompleteAvailable, placesDisabledByApi]
   );
 
   useEffect(() => {

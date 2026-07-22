@@ -91,6 +91,8 @@ Formula: `(Implemented + 0.5 × Partial) / Required`
 | Blog | Public blog | Implemented | |
 | Infra | PWA | Implemented | Manifest + `public/sw.js` (prod registers SW) |
 | Infra | WCAG 2.1 AA | **Partial** | Smoke a11y + skip link; formal AA audit optional |
+| Payments | Gateway | Implemented | **Razorpay only** — Stripe not shipped |
+| Search | Engine | Implemented | PostgreSQL/Prisma facets — **not** Elasticsearch |
 | SE system | Full CRM | **N/A** | WRD NOT REQUIRED |
 
 ---
@@ -170,12 +172,12 @@ These are shipped beyond the April 2026 document:
 | Next.js App Router + TypeScript | Next.js 16 + TS | Aligned |
 | PostgreSQL + Prisma | Yes (VPS) | Aligned |
 | Separate Express/Nest API | Next.js Route Handlers | Accepted alternate |
-| Elasticsearch | App/DB search facets | Simplified |
+| Elasticsearch | PostgreSQL/Prisma search facets | Simplified (accepted) |
 | Redis + Bull | Optional Upstash; not always set | Partial |
-| Stripe + Razorpay | Razorpay only | Scope change |
-| S3 / Cloudinary | VPS CDN | Aligned goal |
+| Stripe + Razorpay | **Razorpay only** | Scope change — Stripe not implemented |
+| S3 / Cloudinary | VPS CDN (`cdn.vibemusic.in`) | Aligned |
 | JWT auth | Auth.js JWT + Google | Aligned |
-| PWA-ready | Not implemented | Gap |
+| PWA-ready | Implemented (`public/sw.js` + manifest) | Aligned |
 | Sales Engineer | Not built | Correct (NOT REQUIRED) |
 
 ---

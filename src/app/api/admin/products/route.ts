@@ -4,6 +4,7 @@ import {
   listAdminProducts,
   createAdminProduct,
   bulkUpdateProductStatus,
+  buildAdminProductsExportCsv,
 } from "@/lib/server/adminProductService";
 import { adminProductSchema } from "@/lib/validations/admin";
 
@@ -11,10 +12,29 @@ export async function GET(request: Request) {
   try {
     await requireAdmin("products:read");
     const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search") ?? undefined;
+    const status = searchParams.get("status") ?? undefined;
+    const category = searchParams.get("category") ?? undefined;
+
+    if (searchParams.get("export") === "csv") {
+      const csv = await buildAdminProductsExportCsv({
+        search,
+        status,
+        category,
+      });
+      const stamp = new Date().toISOString().slice(0, 10);
+      return new NextResponse(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="vibe-products-${stamp}.csv"`,
+        },
+      });
+    }
+
     const result = await listAdminProducts({
-      search: searchParams.get("search") ?? undefined,
-      status: searchParams.get("status") ?? undefined,
-      category: searchParams.get("category") ?? undefined,
+      search,
+      status,
+      category,
       limit: Number(searchParams.get("limit") ?? 20),
       offset: searchParams.has("offset")
         ? Number(searchParams.get("offset") ?? 0)

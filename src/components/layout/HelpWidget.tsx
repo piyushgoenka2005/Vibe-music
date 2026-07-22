@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type RefObject } from "react";
 import "@/styles/help-widget.css";
 import Link from "next/link";
 import {
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
+import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useAuthStore } from "@/store/authStore";
 import {
   HELP_WIDGET_DISCLAIMER,
@@ -36,7 +37,6 @@ const LINK_ICONS = {
 export default function HelpWidget() {
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const user = useAuthStore((s) => s.user);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -54,7 +54,7 @@ export default function HelpWidget() {
     setOpen(false);
     setLoading(false);
   }, []);
-
+  const panelRef = useDialogA11y(open, close);
   const openPanel = useCallback(() => {
     setLoading(true);
     setOpen(true);
@@ -76,7 +76,7 @@ export default function HelpWidget() {
     openPanel();
   }, [close, open, openPanel]);
 
-  async function submitTicket(event: React.FormEvent) {
+  async function submitTicket(event: FormEvent) {
     event.preventDefault();
     setTicketSubmitting(true);
     setTicketStatus(null);
@@ -106,27 +106,6 @@ export default function HelpWidget() {
       setTicketSubmitting(false);
     }
   }
-
-  useEffect(() => {
-    if (!open) return undefined;
-
-    const frame = requestAnimationFrame(() => {
-      closeButtonRef.current?.focus();
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [close, open]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -166,6 +145,7 @@ export default function HelpWidget() {
             type="button"
           />
           <div
+            ref={panelRef as RefObject<HTMLDivElement>}
             aria-labelledby={`${panelId}-title`}
             className="help-widget__panel"
             id={panelId}
@@ -183,7 +163,6 @@ export default function HelpWidget() {
               aria-label="Close support panel"
               className="help-widget__close"
               onClick={close}
-              ref={closeButtonRef}
               type="button"
             >
               <X aria-hidden size={18} strokeWidth={2.25} />

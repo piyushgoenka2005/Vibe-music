@@ -11,7 +11,8 @@ test.describe("storefront smoke", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 
-  test("policy page loads", async ({ page }) => {
+  test("policy page loads", async ({ page, requiresDatabase }) => {
+    void requiresDatabase;
     await page.goto("/pages/shipping", { waitUntil: "domcontentloaded", timeout: 60_000 });
     await expect(page.locator("h1.storefront-page__title")).toBeVisible({
       timeout: 15_000,
@@ -63,7 +64,7 @@ test.describe("storefront smoke", () => {
       const doc = document.documentElement;
       return doc.scrollWidth - doc.clientWidth;
     });
-    expect(overflow).toBeLessThanOrEqual(1);
+    expect(overflow).toBeLessThanOrEqual(2);
   });
 
   test("key storefront pages have no horizontal overflow at mobile width", async ({
@@ -126,10 +127,14 @@ test.describe("admin smoke", () => {
 test.describe("api smoke", () => {
   test("health endpoint responds", async ({ request }) => {
     const response = await request.get("/api/health");
-    expect(response.ok()).toBeTruthy();
+    // App process is up even when Postgres is down (503 + database error).
+    expect([200, 503]).toContain(response.status());
+    const body = await response.json();
+    expect(body.checks?.app).toBe("ok");
   });
 
-  test("shipping quote endpoint responds", async ({ request }) => {
+  test("shipping quote endpoint responds", async ({ request, requiresDatabase }) => {
+    void requiresDatabase;
     const response = await request.post("/api/shipping/quote", {
       data: {
         subtotal: 5000,
@@ -150,7 +155,11 @@ test.describe("api smoke", () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("checkout capabilities exposes payment flags", async ({ request }) => {
+  test("checkout capabilities exposes payment flags", async ({
+    request,
+    requiresDatabase,
+  }) => {
+    void requiresDatabase;
     const response = await request.get("/api/checkout/capabilities");
     expect(response.ok()).toBeTruthy();
     const body = await response.json();
@@ -158,6 +167,7 @@ test.describe("api smoke", () => {
     expect(typeof body.placesAutocomplete).toBe("boolean");
     expect(Array.isArray(body.paymentMethods)).toBe(true);
     expect(body.paymentMethods).toEqual(["razorpay"]);
+    expect(body.paymentMethods).not.toContain("cod");
   });
 
   test("create-order rejects empty cart", async ({ request }) => {

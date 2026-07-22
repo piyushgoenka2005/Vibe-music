@@ -31,7 +31,7 @@ function resolveRateLimitScope(pathname: string): {
   if (pathname.startsWith("/api/admin")) {
     return { scope: "admin-api", options: RATE_LIMITS.admin };
   }
-  if (pathname.startsWith("/api/auth")) {
+  if (pathname.startsWith("/api/auth") || pathname === "/api/contact") {
     return { scope: "auth-api", options: RATE_LIMITS.auth };
   }
   if (pathname.startsWith("/api/payment") || pathname.startsWith("/api/orders")) {

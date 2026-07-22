@@ -1,19 +1,22 @@
 import { test, expect } from "./fixtures";
 
 test.describe("blog production", () => {
-  test("blog index loads with h1", async ({ page }) => {
+  test("blog index loads with h1", async ({ page, requiresDatabase }) => {
+    void requiresDatabase;
     await page.goto("/blog", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1, name: "Blog" })).toBeVisible();
   });
 
-  test("blog RSS feed responds", async ({ request }) => {
+  test("blog RSS feed responds", async ({ request, requiresDatabase }) => {
+    void requiresDatabase;
     const response = await request.get("/blog/rss.xml");
     expect(response.ok()).toBeTruthy();
     const body = await response.text();
     expect(body).toContain("<rss");
   });
 
-  test("blog posts API responds", async ({ request }) => {
+  test("blog posts API responds", async ({ request, requiresDatabase }) => {
+    void requiresDatabase;
     const response = await request.get("/api/blog/posts?limit=3");
     expect(response.ok()).toBeTruthy();
     const body = await response.json();

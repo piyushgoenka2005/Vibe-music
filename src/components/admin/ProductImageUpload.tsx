@@ -83,7 +83,13 @@ export default function ProductImageUpload({
         onClick={() => inputRef.current?.click()}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => { if (e.key === "Enter") inputRef.current?.click(); }}
+        aria-label="Upload product images"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
       >
         <input
           ref={inputRef}

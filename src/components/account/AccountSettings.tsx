@@ -55,7 +55,7 @@ export default function AccountSettings() {
 
   return (
     <div>
-      <h2 className="acct__section-title">Settings</h2>
+      <h1 className="acct__section-title">Settings</h1>
       <p className="acct__section-sub">
         Manage notifications, privacy, and account security.
       </p>

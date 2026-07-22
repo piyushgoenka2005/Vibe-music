@@ -63,6 +63,7 @@ export function adminErrorResponse(error: unknown, request?: Request): NextRespo
     }
     return response;
   }
-  const message = error instanceof Error ? error.message : "Internal server error";
-  return NextResponse.json({ error: message }, { status: 500 });
+  // Avoid leaking internal exception details to admin clients.
+  console.error("[admin]", error);
+  return NextResponse.json({ error: "Internal server error" }, { status: 500 });
 }

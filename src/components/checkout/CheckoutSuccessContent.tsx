@@ -97,6 +97,7 @@ export default function CheckoutSuccessContent() {
   if (isLoading && !order) {
     return (
       <div className="checkout-success">
+        <h1>Order Confirmation</h1>
         <p className="checkout-success__loading">Confirming your order…</p>
       </div>
     );

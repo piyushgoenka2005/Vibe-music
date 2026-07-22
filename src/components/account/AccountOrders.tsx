@@ -27,7 +27,7 @@ export default function AccountOrders({ initialOrders }: AccountOrdersProps) {
 
   return (
     <div>
-      <h2 className="acct__section-title">Orders</h2>
+      <h1 className="acct__section-title">Orders</h1>
       <p className="acct__section-sub">
         Track, return, or buy things again.
       </p>

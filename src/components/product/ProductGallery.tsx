@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
@@ -10,6 +10,7 @@ import {
 } from "@/lib/storefrontImages";
 import type { ProductImage, ProductVideo } from "@/types/product";
 import Product360Viewer from "@/components/product/Product360Viewer";
+import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 
 const LENS_WIDTH_RATIO = 0.38;
 const PANE_WIDTH = 560;
@@ -196,6 +197,8 @@ export default function ProductGallery({
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const closeLightbox = useCallback(() => setLightboxOpen(false), []);
+  const lightboxRef = useDialogA11y(lightboxOpen, closeLightbox);
   const [showVideo, setShowVideo] = useState(false);
   const [show360, setShow360] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -469,14 +472,8 @@ export default function ProductGallery({
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setLightboxOpen(false);
-    }
-
-    window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", onKeyDown);
     };
   }, [lightboxOpen]);
 
@@ -713,7 +710,12 @@ export default function ProductGallery({
           }}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && openLightbox()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openLightbox();
+            }
+          }}
           aria-label={
             isMobileGallery
               ? "Tap to enlarge product image"
@@ -888,11 +890,12 @@ export default function ProductGallery({
       {lightboxOpen && typeof document !== "undefined"
         ? createPortal(
             <div
+              ref={lightboxRef as RefObject<HTMLDivElement>}
               className="pdp-lightbox"
               role="dialog"
               aria-modal="true"
               aria-label="Image lightbox"
-              onClick={() => setLightboxOpen(false)}
+              onClick={closeLightbox}
               onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
               onTouchEnd={(e) => {
                 if (touchStartX == null || images.length <= 1) {
@@ -916,7 +919,7 @@ export default function ProductGallery({
                 className="pdp-lightbox__close"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setLightboxOpen(false);
+                  closeLightbox();
                 }}
                 aria-label="Close lightbox"
               >

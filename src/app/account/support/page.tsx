@@ -32,13 +32,13 @@ export default function AccountSupportPage() {
 
   return (
     <div>
-      <h2 className="acct__section-title">
+      <h1 className="acct__section-title">
         <Headset
           size={20}
           style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }}
         />
         Support tickets
-      </h2>
+      </h1>
       <p className="acct__section-sub">
         Track requests submitted through the help widget or contact form.
       </p>

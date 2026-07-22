@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useSearchStore } from "@/store/searchStore";
 import type { SearchStatus, SearchSuggestionGroups } from "@/types/search";
@@ -53,7 +54,7 @@ export default function SearchOverlay({
   const isOverlayOpen = useSearchStore((s) => s.isOverlayOpen);
   const isMobile = useSearchStore((s) => s.isMobile);
   const anchorRect = useSearchStore((s) => s.anchorRect);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const panelRef = useDialogA11y(isOverlayOpen, onClose) as RefObject<HTMLDivElement>;
   const inputRef = useRef<HTMLInputElement>(null);
   const isClient = useIsClient();
 
@@ -73,17 +74,11 @@ export default function SearchOverlay({
       onClose();
     }
 
-    function onEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
     document.addEventListener("mousedown", onPointerDown);
-    document.addEventListener("keydown", onEscape);
     return () => {
       document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("keydown", onEscape);
     };
-  }, [isOverlayOpen, onClose]);
+  }, [isOverlayOpen, onClose, panelRef]);
 
   if (!isOverlayOpen || !isClient) return null;
 

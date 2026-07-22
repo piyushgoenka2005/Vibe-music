@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
+import {
+  AdminAuthError,
+  requireAdmin,
+  adminErrorResponse,
+} from "@/lib/auth/require-admin";
+import { hasAnyPermission } from "@/lib/auth/permissions";
 import { deleteImageFromCdn, isCdnUrl } from "@/lib/server/cdnStorage";
 
 interface DeleteImagesPayload {
@@ -8,7 +13,16 @@ interface DeleteImagesPayload {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("products:write", request);
+    const admin = await requireAdmin(undefined, request);
+    if (
+      !hasAnyPermission(admin.permissions, [
+        "products:write",
+        "banners:write",
+        "blog:write",
+      ])
+    ) {
+      throw new AdminAuthError("Insufficient permissions", 403);
+    }
 
     const body = (await request.json().catch(() => null)) as
       | DeleteImagesPayload

@@ -15,7 +15,9 @@ test.describe("homepage merchandising", () => {
   test("carousel cards show Choose options for multi-variant products", async ({
     page,
     request,
+    requiresDatabase,
   }) => {
+    void requiresDatabase;
     const response = await request.get("/api/homepage");
     expect(response.ok()).toBeTruthy();
     const body = (await response.json()) as { sections?: HomepageSection[] };
@@ -39,7 +41,9 @@ test.describe("homepage merchandising", () => {
 
   test("homepage API marks variant products consistently", async ({
     request,
+    requiresDatabase,
   }) => {
+    void requiresDatabase;
     const response = await request.get("/api/homepage");
     expect(response.ok()).toBeTruthy();
     const body = (await response.json()) as { sections?: HomepageSection[] };

@@ -335,7 +335,7 @@ function BannersContent() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={banner.image}
-                        alt=""
+                        alt={banner.title}
                         style={{
                           width: 96,
                           height: 48,

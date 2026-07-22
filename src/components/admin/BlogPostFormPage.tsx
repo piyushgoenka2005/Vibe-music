@@ -129,8 +129,9 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
       <div className="admin-panel__body">
         <div className="admin-form-grid">
           <div className="admin-form-group admin-form-grid--full">
-            <label>Title *</label>
+            <label htmlFor="blog-form-title">Title *</label>
             <input
+              id="blog-form-title"
               className="admin-input"
               style={{ width: "100%" }}
               value={form.title}
@@ -139,8 +140,9 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             />
           </div>
           <div className="admin-form-group">
-            <label>Slug</label>
+            <label htmlFor="blog-form-slug">Slug</label>
             <input
+              id="blog-form-slug"
               className="admin-input"
               style={{ width: "100%" }}
               value={form.slug}
@@ -149,8 +151,9 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             />
           </div>
           <div className="admin-form-group">
-            <label>Status</label>
+            <label htmlFor="blog-form-status">Status</label>
             <select
+              id="blog-form-status"
               className="admin-select"
               value={form.status}
               onChange={(e) =>
@@ -167,8 +170,9 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
           </div>
           {form.status === "scheduled" ? (
             <div className="admin-form-group">
-              <label>Publish at *</label>
+              <label htmlFor="blog-form-scheduled-at">Publish at *</label>
               <input
+                id="blog-form-scheduled-at"
                 className="admin-input"
                 style={{ width: "100%" }}
                 type="datetime-local"
@@ -181,8 +185,9 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             </div>
           ) : null}
           <div className="admin-form-group admin-form-grid--full">
-            <label>Excerpt</label>
+            <label htmlFor="blog-form-excerpt">Excerpt</label>
             <textarea
+              id="blog-form-excerpt"
               className="admin-textarea"
               value={form.excerpt}
               onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
@@ -204,8 +209,9 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             />
           </div>
           <div className="admin-form-group">
-            <label>Category</label>
+            <label htmlFor="blog-form-category">Category</label>
             <select
+              id="blog-form-category"
               className="admin-select"
               value={form.categorySlug}
               onChange={(e) => {
@@ -234,8 +240,9 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             </label>
           </div>
           <div className="admin-form-group admin-form-grid--full">
-            <label>Author bio</label>
+            <label htmlFor="blog-form-author-bio">Author bio</label>
             <textarea
+              id="blog-form-author-bio"
               className="admin-textarea"
               value={form.authorBio}
               onChange={(e) => setForm({ ...form, authorBio: e.target.value })}
@@ -243,8 +250,9 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             />
           </div>
           <div className="admin-form-group admin-form-grid--full">
-            <label>Author avatar URL</label>
+            <label htmlFor="blog-form-author-avatar">Author avatar URL</label>
             <input
+              id="blog-form-author-avatar"
               className="admin-input"
               style={{ width: "100%" }}
               value={form.authorAvatar}
@@ -253,8 +261,9 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             />
           </div>
           <div className="admin-form-group admin-form-grid--full">
-            <label>Tags</label>
+            <label htmlFor="blog-form-tags">Tags</label>
             <input
+              id="blog-form-tags"
               className="admin-input"
               style={{ width: "100%" }}
               value={form.tags}
@@ -263,8 +272,9 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             />
           </div>
           <div className="admin-form-group">
-            <label>SEO title</label>
+            <label htmlFor="blog-form-seo-title">SEO title</label>
             <input
+              id="blog-form-seo-title"
               className="admin-input"
               style={{ width: "100%" }}
               value={form.seoTitle}
@@ -273,8 +283,9 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             />
           </div>
           <div className="admin-form-group admin-form-grid--full">
-            <label>SEO description</label>
+            <label htmlFor="blog-form-seo-description">SEO description</label>
             <textarea
+              id="blog-form-seo-description"
               className="admin-textarea"
               value={form.seoDescription}
               onChange={(e) =>

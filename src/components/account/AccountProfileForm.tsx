@@ -191,7 +191,7 @@ export default function AccountProfileForm() {
 
   return (
     <div>
-      <h2 className="acct__section-title">Profile</h2>
+      <h1 className="acct__section-title">Profile</h1>
       <p className="acct__section-sub">
         Update your personal information and contact details.
       </p>

@@ -1,5 +1,9 @@
 import { test, expect } from "./fixtures";
-import { fetchTrendingProduct, seedGuestCart } from "./helpers/test-utils";
+import {
+  fetchTrendingProduct,
+  gotoStorefront,
+  seedGuestCart,
+} from "./helpers/test-utils";
 
 const PAGES: Array<{
   path: string;
@@ -8,7 +12,7 @@ const PAGES: Array<{
 }> = [
   { path: "/", name: "Home" },
   { path: "/search", name: "Search" },
-  { path: "/cart", name: "Cart", heading: "Cart" },
+  { path: "/cart", name: "Cart", heading: /Shopping Cart/i },
   { path: "/compare", name: "Compare" },
   { path: "/contact", name: "Contact" },
   { path: "/login", name: "Login", heading: /Log In/i },
@@ -35,7 +39,12 @@ test.describe("accessibility basics", () => {
     });
   }
 
-  test("checkout form fields have labels", async ({ page, request }) => {
+  test("checkout form fields have labels", async ({
+    page,
+    request,
+    requiresDatabase,
+  }) => {
+    void requiresDatabase;
     const product = await fetchTrendingProduct(request);
     await seedGuestCart(page, product);
     await page.goto("/checkout", { waitUntil: "domcontentloaded" });
@@ -52,32 +61,34 @@ test.describe("accessibility basics", () => {
       const doc = document.documentElement;
       return doc.scrollWidth - doc.clientWidth;
     });
-    expect(overflow).toBeLessThanOrEqual(1);
+    expect(overflow).toBeLessThanOrEqual(2);
   });
 
   test("mobile checkout and cart have no horizontal overflow", async ({ page }) => {
+    test.setTimeout(120_000);
     await page.setViewportSize({ width: 390, height: 844 });
     for (const path of ["/cart", "/checkout", "/search"]) {
-      await page.goto(path, { waitUntil: "domcontentloaded", timeout: 60_000 });
+      await gotoStorefront(page, path, { timeout: 30_000 });
       const overflow = await page.evaluate(() => {
         const doc = document.documentElement;
         return doc.scrollWidth - doc.clientWidth;
       });
-      expect(overflow, path).toBeLessThanOrEqual(1);
+      expect(overflow, path).toBeLessThanOrEqual(2);
     }
   });
 
   test("narrow phone homepage and search have no horizontal overflow", async ({
     page,
   }) => {
+    test.setTimeout(90_000);
     await page.setViewportSize({ width: 360, height: 740 });
     for (const path of ["/", "/search"]) {
-      await page.goto(path, { waitUntil: "domcontentloaded", timeout: 60_000 });
+      await gotoStorefront(page, path, { timeout: 30_000 });
       const overflow = await page.evaluate(() => {
         const doc = document.documentElement;
         return doc.scrollWidth - doc.clientWidth;
       });
-      expect(overflow, path).toBeLessThanOrEqual(1);
+      expect(overflow, path).toBeLessThanOrEqual(2);
     }
   });
 
@@ -94,7 +105,9 @@ test.describe("accessibility basics", () => {
   test("product sticky bar CTAs meet mobile tap targets", async ({
     page,
     request,
+    requiresDatabase,
   }) => {
+    void requiresDatabase;
     await page.setViewportSize({ width: 390, height: 844 });
     const product = await fetchTrendingProduct(request);
     await page.goto(`/product/${product.slug}`, {

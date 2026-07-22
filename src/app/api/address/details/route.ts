@@ -2,13 +2,23 @@ import { NextResponse } from "next/server";
 import { enforceRateLimit, jsonError } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { parseGoogleAddressComponents } from "@/lib/address/parseGoogleAddressComponents";
-import { getGooglePlacesApiKey } from "@/lib/server/googlePlaces";
+import {
+  getGooglePlacesApiKey,
+  warnGooglePlacesApiFailure,
+  warnIfGooglePlacesMisconfigured,
+} from "@/lib/server/googlePlaces";
 
 interface PlacesAddressComponent {
   long_name: string;
   short_name: string;
   types: string[];
 }
+
+const CONFIG_ERROR_STATUSES = new Set([
+  "REQUEST_DENIED",
+  "INVALID_REQUEST",
+  "UNKNOWN_ERROR",
+]);
 
 export async function GET(request: Request) {
   const rateLimited = await enforceRateLimit(
@@ -20,6 +30,7 @@ export async function GET(request: Request) {
 
   const apiKey = getGooglePlacesApiKey();
   if (!apiKey) {
+    warnIfGooglePlacesMisconfigured("api/address/details");
     return NextResponse.json({ available: false, address: null });
   }
 
@@ -34,17 +45,35 @@ export async function GET(request: Request) {
     fields: "address_component,formatted_address,name",
   });
 
-  const response = await fetch(
-    `https://maps.googleapis.com/maps/api/place/details/json?${params}`,
-    { cache: "no-store" }
-  );
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://maps.googleapis.com/maps/api/place/details/json?${params}`,
+      { cache: "no-store" }
+    );
+  } catch (error) {
+    warnGooglePlacesApiFailure(
+      "Google Places details fetch failed",
+      {
+        error: error instanceof Error ? error.message : String(error),
+      },
+      "api/address/details"
+    );
+    return jsonError("Place details unavailable", 502);
+  }
 
   if (!response.ok) {
+    warnGooglePlacesApiFailure(
+      "Google Places details HTTP error",
+      { httpStatus: response.status },
+      "api/address/details"
+    );
     return jsonError("Place details unavailable", 502);
   }
 
   const data = (await response.json()) as {
     status?: string;
+    error_message?: string;
     result?: {
       formatted_address?: string;
       name?: string;
@@ -52,18 +81,40 @@ export async function GET(request: Request) {
     };
   };
 
-  if (data.status && data.status !== "OK") {
-    return NextResponse.json({ available: true, address: null });
+  const status = data.status ?? "UNKNOWN_ERROR";
+
+  if (status === "OK") {
+    const components = data.result?.address_components ?? [];
+    const parsed = parseGoogleAddressComponents(components, {
+      formattedAddress: data.result?.formatted_address,
+      placeName: data.result?.name,
+    });
+
+    return NextResponse.json({
+      available: true,
+      address: parsed,
+    });
   }
 
-  const components = data.result?.address_components ?? [];
-  const parsed = parseGoogleAddressComponents(components, {
-    formattedAddress: data.result?.formatted_address,
-    placeName: data.result?.name,
-  });
+  if (CONFIG_ERROR_STATUSES.has(status)) {
+    warnGooglePlacesApiFailure(
+      "Google Places details rejected the request (check API key, billing, and Places API enablement)",
+      {
+        placesStatus: status,
+        errorMessage: data.error_message ?? null,
+      },
+      "api/address/details"
+    );
+    return NextResponse.json({ available: false, address: null });
+  }
 
-  return NextResponse.json({
-    available: true,
-    address: parsed,
-  });
+  warnGooglePlacesApiFailure(
+    "Google Places details returned a non-OK status",
+    {
+      placesStatus: status,
+      errorMessage: data.error_message ?? null,
+    },
+    "api/address/details"
+  );
+  return NextResponse.json({ available: true, address: null });
 }

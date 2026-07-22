@@ -6,6 +6,7 @@ import {
   isClientAnalyticsConfigured,
   isServerAnalyticsConfigured,
 } from "@/lib/analytics/config";
+import { isGooglePlacesConfigured } from "@/lib/server/googlePlaces";
 
 export type IntegrationStatus = "ok" | "missing" | "partial";
 export type IntegrationTier = "required" | "recommended" | "optional";
@@ -78,11 +79,7 @@ export function getIntegrationChecks(): IntegrationChecks {
       process.env.UPSTASH_REDIS_REST_TOKEN
     ),
     googleOAuth: isGoogleAuthConfigured() ? "ok" : "missing",
-    places: configured(
-      process.env.GOOGLE_PLACES_API_KEY ||
-        process.env.GOOGLE_MAPS_API_KEY ||
-        process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-    ),
+    places: isGooglePlacesConfigured() ? "ok" : "missing",
     invoicePdf: invoicePdfStatus(),
     guestOrderSecret: secretWithMinLength(
       process.env.GUEST_ORDER_ACCESS_SECRET,
@@ -174,7 +171,8 @@ export function getOpsStatusReport(): {
       label: "Address autocomplete",
       status: checks.places,
       tier: "optional",
-      detail: "GOOGLE_PLACES_API_KEY or GOOGLE_MAPS_API_KEY — manual address always works",
+      detail:
+        "GOOGLE_PLACES_API_KEY (aliases: GOOGLE_MAPS_API_KEY, NEXT_PUBLIC_GOOGLE_*_API_KEY) — manual address always works",
     },
     {
       key: "invoicePdf",

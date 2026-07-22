@@ -53,6 +53,7 @@ function ProductsContent() {
     useAdminCursorPagination();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [importOpen, setImportOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [bulkStock, setBulkStock] = useState("");
   const [bulkCategorySlug, setBulkCategorySlug] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -188,6 +189,32 @@ function ProductsContent() {
     });
   }
 
+  async function handleExportCsv() {
+    setExporting(true);
+    setActionError(null);
+    try {
+      const sp = new URLSearchParams({ export: "csv" });
+      if (search) sp.set("search", search);
+      if (status) sp.set("status", status);
+      const res = await fetch(`/api/admin/products?${sp}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Export failed");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `vibe-products-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (isLoading) return <LoadingState />;
 
   const products = data?.products ?? [];
@@ -217,6 +244,14 @@ function ProductsContent() {
         </select>
         <button type="button" className="admin-btn admin-btn--secondary" onClick={() => setImportOpen(true)}>
           Import CSV
+        </button>
+        <button
+          type="button"
+          className="admin-btn admin-btn--secondary"
+          disabled={exporting}
+          onClick={() => void handleExportCsv()}
+        >
+          {exporting ? "Exporting…" : "Export CSV"}
         </button>
         {selected.size > 0 ? (
           <>

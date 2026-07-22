@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useId, useState } from "react";
+import { FormEvent, useCallback, useId, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/store/toastStore";
 import { useIsClient } from "@/hooks/useIsClient";
@@ -38,16 +39,8 @@ export default function NotifyMeButton({
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const email = emailOverride ?? (open ? userEmail : "");
-
-  useEffect(() => {
-    if (!open) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
-
+  const close = useCallback(() => setOpen(false), []);
+  const dialogRef = useDialogA11y(open, close);
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     const value = email.trim();
@@ -134,9 +127,10 @@ export default function NotifyMeButton({
               role="dialog"
               aria-modal="true"
               aria-labelledby={`${formId}-title`}
-              onClick={() => setOpen(false)}
+              onClick={close}
             >
               <div
+                ref={dialogRef as RefObject<HTMLDivElement>}
                 className="notify-me-modal__panel"
                 onClick={(event) => event.stopPropagation()}
               >
@@ -165,7 +159,7 @@ export default function NotifyMeButton({
                     <button
                       type="button"
                       className="notify-me-modal__cancel"
-                      onClick={() => setOpen(false)}
+                      onClick={close}
                       disabled={submitting}
                     >
                       Cancel

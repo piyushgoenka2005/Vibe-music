@@ -149,6 +149,11 @@
   border-color: #b7bac2;
 }
 
+.auth-google-btn:focus-visible {
+  outline: 2px solid var(--brand-primary, #1253ed);
+  outline-offset: 2px;
+}
+
 .auth-google-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;

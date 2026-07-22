@@ -201,24 +201,25 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
       <div className="admin-panel__body">
         <div className="admin-form-grid">
           <div className="admin-form-group">
-            <label>Name *</label>
-            <input className="admin-input" style={{ width: "100%" }} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            <label htmlFor="product-form-name">Name *</label>
+            <input id="product-form-name" className="admin-input" style={{ width: "100%" }} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
           <div className="admin-form-group">
-            <label>Slug</label>
-            <input className="admin-input" style={{ width: "100%" }} value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+            <label htmlFor="product-form-slug">Slug</label>
+            <input id="product-form-slug" className="admin-input" style={{ width: "100%" }} value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
           </div>
           <div className="admin-form-group">
-            <label>Brand *</label>
-            <input className="admin-input" style={{ width: "100%" }} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} required />
+            <label htmlFor="product-form-brand">Brand *</label>
+            <input id="product-form-brand" className="admin-input" style={{ width: "100%" }} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} required />
           </div>
           <div className="admin-form-group">
-            <label>SKU</label>
-            <input className="admin-input" style={{ width: "100%" }} value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
+            <label htmlFor="product-form-sku">SKU</label>
+            <input id="product-form-sku" className="admin-input" style={{ width: "100%" }} value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
           </div>
           <div className="admin-form-group">
-            <label>Category *</label>
+            <label htmlFor="product-form-category">Category *</label>
             <select
+              id="product-form-category"
               className="admin-select"
               value={form.categorySlug}
               onChange={(e) => {
@@ -240,24 +241,25 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             </select>
           </div>
           <div className="admin-form-group">
-            <label>Price (INR) *</label>
-            <input className="admin-input" style={{ width: "100%" }} type="number" min={0} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} required />
+            <label htmlFor="product-form-price">Price (INR) *</label>
+            <input id="product-form-price" className="admin-input" style={{ width: "100%" }} type="number" min={0} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} required />
           </div>
           <div className="admin-form-group">
-            <label>Stock Quantity</label>
-            <input className="admin-input" style={{ width: "100%" }} type="number" min={0} value={form.stockQuantity} onChange={(e) => setForm({ ...form, stockQuantity: Number(e.target.value) })} />
+            <label htmlFor="product-form-stock">Stock Quantity</label>
+            <input id="product-form-stock" className="admin-input" style={{ width: "100%" }} type="number" min={0} value={form.stockQuantity} onChange={(e) => setForm({ ...form, stockQuantity: Number(e.target.value) })} />
           </div>
           <div className="admin-form-group">
-            <label>Status</label>
-            <select className="admin-select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as typeof form.status })}>
+            <label htmlFor="product-form-status">Status</label>
+            <select id="product-form-status" className="admin-select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as typeof form.status })}>
               <option value="active">Active</option>
               <option value="draft">Draft</option>
               <option value="archived">Archived</option>
             </select>
           </div>
           <div className="admin-form-group">
-            <label>Condition</label>
+            <label htmlFor="product-form-condition">Condition</label>
             <select
+              id="product-form-condition"
               className="admin-select"
               value={form.condition}
               onChange={(e) =>
@@ -273,8 +275,8 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             </select>
           </div>
           <div className="admin-form-group">
-            <label>GST Rate (%)</label>
-            <select className="admin-select" value={form.gstRate} onChange={(e) => setForm({ ...form, gstRate: Number(e.target.value) as typeof form.gstRate })}>
+            <label htmlFor="product-form-gst">GST Rate (%)</label>
+            <select id="product-form-gst" className="admin-select" value={form.gstRate} onChange={(e) => setForm({ ...form, gstRate: Number(e.target.value) as typeof form.gstRate })}>
               <option value={5}>5%</option>
               <option value={12}>12%</option>
               <option value={18}>18%</option>
@@ -343,8 +345,8 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             </div>
           ) : null}
           <div className="admin-form-group admin-form-grid--full">
-            <label>Description</label>
-            <textarea className="admin-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <label htmlFor="product-form-description">Description</label>
+            <textarea id="product-form-description" className="admin-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           {isGuitarProduct(form.categorySlug, form.category) ? (
             <GuitarSpecsEditor

@@ -15,17 +15,24 @@ test.describe("catalog browse", () => {
     await expect(page.locator("body")).toBeVisible();
   });
 
-  test("deals page loads", async ({ page }) => {
+  test("deals page loads", async ({ page, requiresDatabase }) => {
+    void requiresDatabase;
     await page.goto("/deals", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 
-  test("brands page loads", async ({ page }) => {
+  test("brands page loads", async ({ page, requiresDatabase }) => {
+    void requiresDatabase;
     await page.goto("/brands", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 
-  test("product detail page loads from API slug", async ({ page, request }) => {
+  test("product detail page loads from API slug", async ({
+    page,
+    request,
+    requiresDatabase,
+  }) => {
+    void requiresDatabase;
     const product = await fetchTrendingProduct(request);
     await page.goto(`/product/${product.slug}`, { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -38,14 +45,16 @@ test.describe("catalog browse", () => {
 });
 
 test.describe("cart and wishlist", () => {
-  test("cart shows seeded product", async ({ page, request }) => {
+  test("cart shows seeded product", async ({ page, request, requiresDatabase }) => {
+    void requiresDatabase;
     const product = await fetchCheckoutProduct(request);
     await seedGuestCart(page, product);
     await page.goto("/cart", { waitUntil: "domcontentloaded" });
     await expect(page.getByText(product.name).first()).toBeVisible({ timeout: 15_000 });
   });
 
-  test("compare page accepts share API", async ({ request }) => {
+  test("compare page accepts share API", async ({ request, requiresDatabase }) => {
+    void requiresDatabase;
     const product = await fetchTrendingProduct(request);
     const response = await request.post("/api/compare/share", {
       headers: mutationHeaders(),
@@ -70,7 +79,13 @@ test.describe("cart and wishlist", () => {
 });
 
 test.describe("guest checkout", () => {
-  test("checkout shows Razorpay-only payment options", async ({ page, request }) => {
+  test("checkout shows Razorpay-only payment options", async ({
+    page,
+    request,
+    requiresDatabase,
+  }) => {
+    void requiresDatabase;
+
     const product = await fetchCheckoutProduct(request);
     await seedGuestCart(page, product);
     const email = `e2e-guest-${Date.now()}@example.com`;
@@ -79,25 +94,29 @@ test.describe("guest checkout", () => {
     await waitForCheckoutAddressForm(page);
     await fillGuestCheckoutAddress(page, email);
     await page.getByRole("button", { name: /Continue to Review/i }).click();
+    await expect(page.getByRole("heading", { name: /Review Your Order/i })).toBeVisible({
+      timeout: 15_000,
+    });
     await page.getByRole("button", { name: /Continue to Payment/i }).click();
 
-    await expect(page.getByRole("button", { name: /Pay Online/i })).toBeVisible();
-    await expect(page.getByText(/Cash on Delivery/i)).toHaveCount(0);
+    const payMethods = page.locator(".checkout-pay-methods");
+    await expect(payMethods).toBeVisible({ timeout: 15_000 });
+    await expect(payMethods.getByRole("button", { name: /Pay Online/i })).toBeVisible();
+    await expect(payMethods.getByText(/Cash on Delivery/i)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Place order \(COD\)/i })).toHaveCount(0);
   });
 
   test("create-order API rejects COD payment method", async ({ request }) => {
-    test.skip(!process.env.DATABASE_URL, "DATABASE_URL required");
-
-    const product = await fetchCheckoutProduct(request);
+    // Payment-method gate runs before item resolution — no catalog/DB required.
     const response = await request.post("/api/payment/create-order", {
       headers: mutationHeaders(),
       data: {
         items: [
           {
-            productId: product.id,
-            name: product.name,
+            productId: "e2e-cod-rejected",
+            name: "E2E COD Reject Fixture",
             quantity: 1,
-            price: product.price,
+            price: 1999,
           },
         ],
         email: `e2e-api-${Date.now()}@example.com`,

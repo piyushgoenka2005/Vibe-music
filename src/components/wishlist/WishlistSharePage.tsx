@@ -47,6 +47,7 @@ export default function WishlistSharePage({ token }: { token: string }) {
     return (
       <main className="storefront-page">
         <div className="acct__card" style={{ maxWidth: 960, margin: "2rem auto" }}>
+          <h1 className="acct__section-title">Shared wishlist</h1>
           <p>Loading shared wishlist…</p>
         </div>
       </main>

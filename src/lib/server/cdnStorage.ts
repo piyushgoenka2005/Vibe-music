@@ -14,6 +14,9 @@ import path from "node:path";
 const DEFAULT_STORAGE_ROOT = "/var/www/cdn";
 const DEFAULT_PUBLIC_BASE_URL = "https://cdn.vibemusic.in";
 
+/** Must stay in sync with CDN_DERIVATIVE_WIDTHS in cdnImageOptimize.ts */
+const OPTIMIZED_DERIVATIVE_WIDTHS = [240, 480, 960, 1600] as const;
+
 /** Folder prefixes this module is allowed to write to or delete from. */
 const ALLOWED_PREFIXES = ["products/", "banners/", "blog/", "reviews/"];
 
@@ -36,6 +39,10 @@ const ALLOWED_EXTENSIONS = new Set([
   ".svg",
 ]);
 
+/** `{uuid}.webp` or `{uuid}-w960.webp` from uploadOptimizedImageToCdn. */
+const OPTIMIZED_CDN_FILE_RE =
+  /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:-w\d+)?\.(webp|jpg|jpeg|png)$/i;
+
 export function getCdnStorageRoot(): string {
   return process.env.CDN_STORAGE_ROOT?.trim() || DEFAULT_STORAGE_ROOT;
 }
@@ -44,6 +51,13 @@ export function getCdnPublicBaseUrl(): string {
   const base =
     process.env.CDN_PUBLIC_BASE_URL?.trim() || DEFAULT_PUBLIC_BASE_URL;
   return base.replace(/\/+$/, "");
+}
+
+/** Public bases we may see on stored URLs (env + production default). */
+function getKnownCdnPublicBases(): string[] {
+  return Array.from(
+    new Set([getCdnPublicBaseUrl(), DEFAULT_PUBLIC_BASE_URL.replace(/\/+$/, "")])
+  );
 }
 
 function sanitizeSegment(value: string, fallback: string): string {
@@ -106,28 +120,51 @@ export async function uploadBufferToCdn(
 }
 
 export function isCdnUrl(url: string): boolean {
-  return url.startsWith(`${getCdnPublicBaseUrl()}/`);
+  return getKnownCdnPublicBases().some((base) => url.startsWith(`${base}/`));
+}
+
+function relativePathFromCdnUrl(url: string): string | null {
+  for (const base of getKnownCdnPublicBases()) {
+    const prefix = `${base}/`;
+    if (!url.startsWith(prefix)) continue;
+    return decodeURIComponent(url.slice(prefix.length)).replace(/^\/+/, "");
+  }
+  return null;
 }
 
 /**
- * Deletes a file previously uploaded via uploadBufferToCdn, identified by its
- * public URL. Returns false for URLs outside the CDN or outside allowed folders.
+ * When deleting an optimized upload asset, also remove master + sibling
+ * derivatives so `-w960` deletes don't orphan `{uuid}.webp` / `-w240` etc.
  */
-export async function deleteImageFromCdn(url: string): Promise<boolean> {
-  const base = `${getCdnPublicBaseUrl()}/`;
-  if (!url.startsWith(base)) return false;
+function relatedOptimizedRelativePaths(relativePath: string): string[] {
+  const normalized = relativePath.replace(/\\/g, "/");
+  const slash = normalized.lastIndexOf("/");
+  const dir = slash >= 0 ? normalized.slice(0, slash) : "";
+  const file = slash >= 0 ? normalized.slice(slash + 1) : normalized;
+  const match = file.match(OPTIMIZED_CDN_FILE_RE);
+  if (!match?.[1]) return [normalized];
 
-  const relativePath = decodeURIComponent(url.slice(base.length)).replace(
-    /^\/+/,
-    ""
-  );
+  const id = match[1];
+  const prefix = dir ? `${dir}/` : "";
+  const related = new Set<string>([normalized, `${prefix}${id}.webp`]);
+  for (const width of OPTIMIZED_DERIVATIVE_WIDTHS) {
+    related.add(`${prefix}${id}-w${width}.webp`);
+  }
+  return Array.from(related);
+}
+
+async function unlinkRelativeCdnPath(relativePath: string): Promise<boolean> {
   if (!ALLOWED_PREFIXES.some((prefix) => relativePath.startsWith(prefix))) {
     return false;
   }
 
   const root = getCdnStorageRoot();
+  const resolvedRoot = path.resolve(root);
   const filePath = path.resolve(root, relativePath);
-  if (!filePath.startsWith(path.resolve(root) + path.sep)) {
+  if (
+    filePath !== resolvedRoot &&
+    !filePath.startsWith(resolvedRoot + path.sep)
+  ) {
     return false;
   }
 
@@ -139,6 +176,23 @@ export async function deleteImageFromCdn(url: string): Promise<boolean> {
     // Already gone counts as deleted, matching Cloudinary "not found" behavior.
     return code === "ENOENT";
   }
+}
+
+/**
+ * Deletes a file previously uploaded via CDN helpers, identified by its
+ * public URL. For optimized WebP sets, removes master + all `-wN` siblings.
+ * Returns false for URLs outside the CDN or outside allowed folders.
+ */
+export async function deleteImageFromCdn(url: string): Promise<boolean> {
+  const relativePath = relativePathFromCdnUrl(url);
+  if (!relativePath) return false;
+
+  const targets = relatedOptimizedRelativePaths(relativePath);
+  const results = await Promise.all(
+    targets.map((target) => unlinkRelativeCdnPath(target))
+  );
+  // Success if the requested file (or any related optimized asset) was removed.
+  return results.some(Boolean);
 }
 
 export function productUploadFolder(

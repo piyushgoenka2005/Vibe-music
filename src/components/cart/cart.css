@@ -919,6 +919,16 @@
   background: transparent;
 }
 
+.cart-savings__coupon-field:focus-within {
+  border-color: var(--brand-primary, #1253ed);
+  box-shadow: 0 0 0 3px rgba(18, 83, 237, 0.12);
+}
+
+.cart-savings__coupon-apply:focus-visible {
+  outline: 2px solid var(--brand-primary, #1253ed);
+  outline-offset: -2px;
+}
+
 .cart-savings__coupon-apply {
   flex-shrink: 0;
   min-width: 4.5rem;
@@ -1424,6 +1434,16 @@ a.cart-item-card__name:hover {
   padding: 0 0.85rem;
   font-size: 0.875rem;
   outline: none;
+}
+
+.cart-coupon-card__field:focus-within {
+  border-color: var(--brand-primary, #1253ed);
+  box-shadow: 0 0 0 3px rgba(18, 83, 237, 0.12);
+}
+
+.cart-coupon-card__apply:focus-visible {
+  outline: 2px solid var(--brand-primary, #1253ed);
+  outline-offset: -2px;
 }
 
 .cart-coupon-card__apply {

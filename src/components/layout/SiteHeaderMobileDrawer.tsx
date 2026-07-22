@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { type RefObject } from "react";
+import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useIsClient } from "@/hooks/useIsClient";
 import SiteHeaderMobileNav from "@/components/layout/SiteHeaderMobileNav";
 
@@ -17,15 +18,7 @@ export default function SiteHeaderMobileDrawer({
   onNavigate,
 }: SiteHeaderMobileDrawerProps) {
   const isClient = useIsClient();
-
-  useEffect(() => {
-    if (!open) return;
-    const onEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onEscape);
-    return () => document.removeEventListener("keydown", onEscape);
-  }, [open, onClose]);
+  const navRef = useDialogA11y(open, onClose);
 
   if (!isClient || !open) return null;
 
@@ -38,6 +31,7 @@ export default function SiteHeaderMobileDrawer({
         aria-label="Close menu"
       />
       <nav
+        ref={navRef as RefObject<HTMLElement>}
         id="site-header-mobile-nav"
         className="site-header__nav site-header__nav--portaled site-header__nav--open assets-site-header__nav"
         aria-label="Shop categories"

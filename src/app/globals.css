@@ -179,6 +179,20 @@ body {
   transform: translateY(0);
 }
 
+/* Baseline keyboard focus — :where keeps specificity low so component styles win */
+:where(
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  summary
+):focus-visible {
+  outline: 2px solid var(--ring, #1253ed);
+  outline-offset: 2px;
+}
+
 /* Preserve Vibe Music DOM hierarchy from HtmlSection host nodes */
 .vibe-html-section,
 .vibe-html-chunk {

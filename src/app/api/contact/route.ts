@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const rateLimited = await enforceRateLimit(
     request,
     "contact-form",
-    RATE_LIMITS.publicApi
+    RATE_LIMITS.auth
   );
   if (rateLimited) return rateLimited;
 

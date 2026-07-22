@@ -26,10 +26,21 @@ export async function gotoStorefront(
     waitUntil?: "domcontentloaded" | "load" | "networkidle";
   }
 ): Promise<void> {
-  await page.goto(path, {
-    waitUntil: options?.waitUntil ?? "domcontentloaded",
-    timeout: options?.timeout ?? 60_000,
-  });
+  const timeout = options?.timeout ?? 60_000;
+  const waitUntil = options?.waitUntil ?? "domcontentloaded";
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await page.goto(path, { waitUntil, timeout });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
+  }
+  throw lastError;
 }
 
 async function seedGuestCartViaStorage(
@@ -171,3 +182,20 @@ export const guestShippingAddress = {
   country: "India",
   phone: "9876543210",
 };
+
+/** True when the app health endpoint reports PostgreSQL as ok. */
+export async function isDatabaseHealthy(
+  request: APIRequestContext
+): Promise<boolean> {
+  try {
+    const response = await request.get("/api/health", { timeout: 10_000 });
+    if (!response.ok()) return false;
+    const body = (await response.json()) as {
+      checks?: { database?: string };
+      database?: { ok?: boolean };
+    };
+    return body.checks?.database === "ok" || body.database?.ok === true;
+  } catch {
+    return false;
+  }
+}

@@ -123,9 +123,9 @@ export default function CartShell({
               </button>
             </div>
             <div className="cart-shell__heading">
-              <h1 id={titleId} className="cart-shell__title">
+              <h2 id={titleId} className="cart-shell__title">
                 Shopping Cart ({itemCount})
-              </h1>
+              </h2>
               {items.length > 0 ? (
                 <p className="cart-shell__subtitle">Items reserved in your cart</p>
               ) : null}

@@ -2,7 +2,24 @@
 
 Enterprise ecommerce platform for musical instruments and pro audio.
 
-**Stack:** Next.js 16 (App Router) · React 19 · PostgreSQL (VPS) · Auth.js · Prisma · Razorpay · TypeScript
+**Stack:** Next.js 16 (App Router) · React 19 · PostgreSQL (VPS) · Auth.js · Prisma · **Razorpay** (sole payment gateway) · TypeScript
+
+---
+
+## Architecture notes (current)
+
+| Area | Implementation |
+|------|----------------|
+| **Payments** | **Razorpay only** (UPI, cards, net banking via Razorpay Checkout). Stripe is **not** implemented. COD is optional and **off by default** (`COD_ENABLED`). |
+| **Search** | PostgreSQL / Prisma faceted search (`/api/search`). **Not** Elasticsearch. |
+| **Database** | Self-hosted PostgreSQL on the VPS via Prisma. Firestore is fully decommissioned. |
+| **CDN** | Product/media assets on `cdn.vibemusic.in` (`CDN_STORAGE_ROOT` + `CDN_PUBLIC_BASE_URL`). Sync with `npm run sync:cdn-vps`. nginx config: `deploy/nginx/cdn.vibemusic.in.conf`. |
+| **Email** | Self-hosted SMTP or Resend relay — see [`docs/ops/SMTP.md`](docs/ops/SMTP.md). |
+| **Auth** | Auth.js (credentials + optional Google OAuth). |
+
+### Extra features (beyond the April 2026 WRD)
+
+Instrument rentals · Giveaways · Product compare · GP-9 3D experience · Used gear hub · Support tickets · Wishlist share · Notify Me / restock alerts · Admin RBAC + audit logs · PWA (`public/sw.js`)
 
 ---
 
@@ -17,6 +34,10 @@ VPS deploy steps: **[docs/ops/VPS-SETUP.md](docs/ops/VPS-SETUP.md)**.
 DATABASE_URL=postgresql://vibe:<password>@localhost:5432/vibe?schema=public
 ```
 
+### Backups
+
+Daily `pg_dump` off-server is required for production. Full checklist (Postgres + CDN + config): **[docs/ops/DEPLOYMENT.md#backup-checklist](docs/ops/DEPLOYMENT.md#backup-checklist)**.
+
 ---
 
 ## Project structure
@@ -27,7 +48,7 @@ prisma/              Schema + migrations (PostgreSQL)
 public/              Static assets
 docs/
   ops/               Living production runbooks (deploy, DB, SMTP, VPS)
-  release/           Historical RC reports
+  release/           Historical RC reports (may mention retired Firestore stack)
   reference/         Briefs & sample exports
 deploy/              Executable VPS scripts + nginx (see deploy/README.md)
 scripts/
@@ -79,13 +100,24 @@ CI workflow: `.github/workflows/validate.yml`
 | Step | Command / doc |
 |------|----------------|
 | Ops index | [`docs/ops/`](docs/ops/) |
+| Go-live short list | [`docs/ops/GO_LIVE.md`](docs/ops/GO_LIVE.md) |
 | VPS + PostgreSQL setup | [`docs/ops/VPS-SETUP.md`](docs/ops/VPS-SETUP.md) |
 | PostgreSQL guide | [`docs/ops/POSTGRESQL.md`](docs/ops/POSTGRESQL.md) |
 | Deploy checklist | [`docs/ops/DEPLOYMENT.md`](docs/ops/DEPLOYMENT.md) |
 | Production env template | [`.env.production.example`](.env.production.example) |
+| CDN nginx | [`deploy/nginx/cdn.vibemusic.in.conf`](deploy/nginx/cdn.vibemusic.in.conf) |
 | Apply migrations | `npm run db:migrate` |
 | Seed admin | `npm run seed:admin` |
 | Build & reload | `deploy/update.sh` (or `npm run build && npm run start`) |
+
+### CDN (required for admin image uploads)
+
+```env
+CDN_STORAGE_ROOT=/var/www/cdn
+CDN_PUBLIC_BASE_URL=https://cdn.vibemusic.in
+```
+
+Then restart PM2. Push local staging assets with `npm run sync:cdn-vps` when needed.
 
 ---
 

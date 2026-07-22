@@ -78,6 +78,44 @@ const recommended = [
   "GOOGLE_PLACES_API_KEY",
 ];
 
+/** Aliases accepted by src/lib/server/googlePlaces.ts (any one is enough). */
+const placesAliases = [
+  "GOOGLE_MAPS_API_KEY",
+  "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
+  "NEXT_PUBLIC_GOOGLE_PLACES_API_KEY",
+];
+
+const PLACEHOLDER_PLACES_KEY =
+  /^(your-|xxx+|changeme|placeholder|todo|replace|example|dummy|test[_-]?key)/i;
+
+function isUsablePlacesKey(raw) {
+  const value = typeof raw === "string" ? raw.trim() : "";
+  if (!value) return false;
+  if (PLACEHOLDER_PLACES_KEY.test(value)) return false;
+  if (value.length < 20) return false;
+  return true;
+}
+
+function inspectPlacesEnv() {
+  const keys = ["GOOGLE_PLACES_API_KEY", ...placesAliases];
+  for (const key of keys) {
+    if (isUsablePlacesKey(env[key])) {
+      return { status: "configured", source: key };
+    }
+  }
+  for (const key of keys) {
+    const value = env[key]?.trim?.() ?? "";
+    if (!value) continue;
+    if (PLACEHOLDER_PLACES_KEY.test(value)) {
+      return { status: "invalid", reason: "placeholder", source: key };
+    }
+    if (value.length < 20) {
+      return { status: "invalid", reason: "too_short", source: key };
+    }
+  }
+  return { status: "missing" };
+}
+
 const optional = [
   "NEXT_PUBLIC_GTM_ID",
   "INVOICE_PDF_ENABLED",
@@ -92,6 +130,20 @@ for (const key of requiredProd) {
 console.log("\nRecommended:");
 for (const key of recommended) {
   console.log(`  ${status(key).padEnd(44)} ${key}`);
+}
+const placesInspection = inspectPlacesEnv();
+if (placesInspection.status === "missing") {
+  console.log(
+    "  (optional) Set GOOGLE_PLACES_API_KEY or an alias for checkout address autocomplete."
+  );
+} else if (placesInspection.status === "invalid") {
+  console.log(
+    `  (invalid) ${placesInspection.source} looks unusable (${placesInspection.reason}); autocomplete will stay off.`
+  );
+} else {
+  console.log(
+    `  (ok) Google Places key present via ${placesInspection.source}`
+  );
 }
 console.log("\nOptional:");
 for (const key of optional) {

@@ -16,6 +16,7 @@ import { deleteProductBundle } from "@/lib/server/bundleService";
 import { deleteProductRelatedList } from "@/lib/server/relatedProductsService";
 import { notifyWaitlistOnRestock } from "@/lib/server/restockNotificationService";
 import { getProductImage } from "@/data/productImages";
+import { rowsToCsv, type ParsedCsvRow } from "@/lib/csv";
 import type { AdminProduct } from "@/types/admin";
 import type { CatalogProduct, CreateProductInput } from "@/types/catalog";
 import { paginateSortedById } from "@/lib/admin/paginateByCursor";
@@ -118,6 +119,157 @@ export async function listAdminProducts(options: {
 export async function getAdminProduct(id: string): Promise<AdminProduct | null> {
   const product = await getProductById(id);
   return product ? toAdminProduct(product) : null;
+}
+
+/** All matching admin products (no pagination) for CSV export. */
+export async function listAdminProductsForExport(options: {
+  search?: string;
+  status?: string;
+  category?: string;
+} = {}): Promise<AdminProduct[]> {
+  const result = await listAdminProducts({
+    ...options,
+    limit: Number.MAX_SAFE_INTEGER,
+    offset: 0,
+  });
+  return result.products;
+}
+
+const EXPORT_BASE_HEADERS = [
+  "id",
+  "slug",
+  "name",
+  "brand",
+  "brandSlug",
+  "category",
+  "categorySlug",
+  "subcategory",
+  "price",
+  "originalPrice",
+  "gstRate",
+  "stock",
+  "lowStockThreshold",
+  "sku",
+  "status",
+  "availability",
+  "condition",
+  "featured",
+  "trending",
+  "newArrival",
+  "description",
+  "rating",
+  "reviewCount",
+  "image",
+  "imageColor",
+  "specifications",
+  "spin360Images",
+  "createdAt",
+  "updatedAt",
+] as const;
+
+function filterCatalogForExport(
+  products: CatalogProduct[],
+  options: { search?: string; status?: string; category?: string }
+): CatalogProduct[] {
+  let filtered = products;
+
+  if (options.search) {
+    const q = options.search.toLowerCase();
+    filtered = filtered.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.brand.toLowerCase().includes(q) ||
+        p.slug.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q)
+    );
+  }
+
+  if (options.status) {
+    filtered = filtered.filter((p) => p.status === options.status);
+  }
+
+  if (options.category) {
+    filtered = filtered.filter(
+      (p) =>
+        p.categorySlug === options.category || p.category === options.category
+    );
+  }
+
+  return filtered.sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+/**
+ * CSV of full product details. Image files are not bundled — CDN/public URLs
+ * are written as image1…imageN (at least image1–image5 for import compatibility).
+ */
+export async function buildAdminProductsExportCsv(options: {
+  search?: string;
+  status?: string;
+  category?: string;
+} = {}): Promise<string> {
+  const products = filterCatalogForExport(await getAllProducts(true), options);
+  const maxImages = Math.max(
+    5,
+    ...products.map((product) => product.images?.length ?? 0)
+  );
+  const imageHeaders = Array.from(
+    { length: maxImages },
+    (_, index) => `image${index + 1}`
+  );
+  const headers = [...EXPORT_BASE_HEADERS, ...imageHeaders];
+
+  const rows: ParsedCsvRow[] = products.map((product) => {
+    const images = product.images ?? [];
+    const row: ParsedCsvRow = {
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      brand: product.brand,
+      brandSlug: product.brandSlug,
+      category: product.category,
+      categorySlug: product.categorySlug,
+      subcategory: product.subcategory ?? "",
+      price: String(product.price ?? ""),
+      originalPrice: String(product.originalPrice ?? ""),
+      gstRate: product.gstRate != null ? String(product.gstRate) : "",
+      stock: String(product.stock ?? ""),
+      lowStockThreshold:
+        product.lowStockThreshold != null
+          ? String(product.lowStockThreshold)
+          : "",
+      sku: product.sku ?? "",
+      status: product.status ?? "active",
+      availability: product.availability ?? "",
+      condition: product.condition ?? "",
+      featured: String(Boolean(product.featured)),
+      trending: String(Boolean(product.trending)),
+      newArrival: String(Boolean(product.newArrival)),
+      description: product.description ?? "",
+      rating: String(product.rating ?? ""),
+      reviewCount: String(product.reviewCount ?? ""),
+      image: product.image ?? "",
+      imageColor: product.imageColor ?? "",
+      specifications: product.specifications
+        ? JSON.stringify(product.specifications)
+        : "",
+      spin360Images: product.detail?.spin360Images?.length
+        ? JSON.stringify(product.detail.spin360Images)
+        : "",
+      createdAt: product.createdAt ?? "",
+      updatedAt: product.updatedAt ?? "",
+    };
+
+    for (let i = 0; i < maxImages; i += 1) {
+      row[`image${i + 1}`] = images[i] ?? "";
+    }
+
+    return row;
+  });
+
+  return rowsToCsv(headers, rows);
 }
 
 export async function createAdminProduct(

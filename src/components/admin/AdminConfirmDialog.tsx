@@ -1,5 +1,8 @@
 "use client";
 
+import { useCallback, type RefObject } from "react";
+import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
+
 interface AdminConfirmDialogProps {
   open: boolean;
   title: string;
@@ -23,6 +26,11 @@ export default function AdminConfirmDialog({
   onConfirm,
   onCancel,
 }: AdminConfirmDialogProps) {
+  const handleCancel = useCallback(() => {
+    onCancel();
+  }, [onCancel]);
+  const dialogRef = useDialogA11y(open, handleCancel);
+
   if (!open) return null;
 
   return (
@@ -31,9 +39,10 @@ export default function AdminConfirmDialog({
       role="dialog"
       aria-modal="true"
       aria-labelledby="admin-confirm-title"
-      onClick={onCancel}
+      onClick={handleCancel}
     >
       <div
+        ref={dialogRef as RefObject<HTMLDivElement>}
         className="admin-confirm-dialog"
         onClick={(event) => event.stopPropagation()}
       >
@@ -46,7 +55,7 @@ export default function AdminConfirmDialog({
             type="button"
             className="admin-btn admin-btn--secondary"
             disabled={loading}
-            onClick={onCancel}
+            onClick={handleCancel}
           >
             {cancelLabel}
           </button>

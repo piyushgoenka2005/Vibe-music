@@ -5,7 +5,11 @@ import Google from "next-auth/providers/google";
 import { prisma, isPostgresConfigured } from "@/lib/db/prisma";
 import { createAuthPrismaAdapter } from "@/lib/auth/prisma-adapter";
 import { verifyPassword } from "@/lib/auth/password";
-import { resolveSessionMaxAgeSeconds } from "@/lib/auth/session-config";
+import {
+  AUTH_SESSION_REMEMBER_MAX_AGE_SECONDS,
+  resolveSessionMaxAgeSeconds,
+} from "@/lib/auth/session-config";
+import { encode as encodeJwt } from "@auth/core/jwt";
 import {
   ensureOAuthUserProfile,
   findUserByEmail,
@@ -111,6 +115,26 @@ export const authConfig = {
   ...(isPostgresConfigured() ? { adapter: createAuthPrismaAdapter(prisma) } : {}),
   session: {
     strategy: "jwt" as const,
+    // Ceiling for cookie Max-Age / Auth.js defaults. Per-login lifetime is set
+    // via token.exp in the jwt callback and honored by custom jwt.encode below.
+    maxAge: AUTH_SESSION_REMEMBER_MAX_AGE_SECONDS,
+  },
+  jwt: {
+    // Auth.js encode() ignores token.exp and always uses session.maxAge (30d
+    // default). Preserve the absolute expiry from the jwt callback so remember-me
+    // (24h vs 5d) actually takes effect.
+    async encode(params) {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const tokenExp =
+        params.token && typeof params.token.exp === "number"
+          ? params.token.exp
+          : null;
+      const maxAge =
+        tokenExp != null
+          ? Math.max(1, tokenExp - nowSec)
+          : (params.maxAge ?? AUTH_SESSION_REMEMBER_MAX_AGE_SECONDS);
+      return encodeJwt({ ...params, maxAge });
+    },
   },
   pages: {
     signIn: "/login",

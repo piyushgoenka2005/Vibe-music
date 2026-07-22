@@ -281,7 +281,7 @@ export default function AccountAddresses() {
 
   return (
     <div>
-      <h2 className="acct__section-title">Addresses</h2>
+      <h1 className="acct__section-title">Addresses</h1>
       <p className="acct__section-sub">
         Manage shipping addresses synced to your account for faster checkout.
       </p>

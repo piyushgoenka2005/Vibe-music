@@ -1,6 +1,8 @@
 # Production Deployment Checklist
 
-Use this checklist when deploying Vibe Music to production on the **VPS** with **self-hosted PostgreSQL**, Auth.js, and SMTP.
+Use this checklist when deploying Vibe Music to production on the **VPS** with **self-hosted PostgreSQL**, Auth.js, **Razorpay** (sole payment gateway), and SMTP.
+
+> **Not in this stack:** Stripe, Elasticsearch, Firestore, Cloudinary SDK. Search is PostgreSQL/Prisma. Product images use the VPS CDN (`cdn.vibemusic.in`).
 
 ## Pre-deploy
 
@@ -92,9 +94,20 @@ npm run db:migrate
 
 ## CDN / nginx
 
-- [ ] `CDN_STORAGE_ROOT` exists on the VPS and is writable by the app user
+Production media is served from the **VPS CDN**, not Cloudinary (legacy Cloudinary URLs in old product data may still render via `next/image` remote patterns).
+
+Required env (admin image uploads fail without these):
+
+```env
+CDN_STORAGE_ROOT=/var/www/cdn
+CDN_PUBLIC_BASE_URL=https://cdn.vibemusic.in
+```
+
+- [ ] `CDN_STORAGE_ROOT` exists on the VPS and is writable by the app / PM2 user
 - [ ] nginx serves `CDN_PUBLIC_BASE_URL` (see `deploy/nginx/cdn.vibemusic.in.conf`)
-- [ ] Run `npm run sync:cdn-vps` if pushing local assets to the VPS
+- [ ] App nginx proxies `vibemusic.in` → Next.js `:3000` (`deploy/nginx/vibemusic.in.conf`)
+- [ ] Run `npm run sync:cdn-vps` if pushing local staging assets to the VPS
+- [ ] Restart PM2 after setting CDN env vars
 
 ## Application deploy
 
@@ -107,10 +120,11 @@ npm run start
 - [ ] Build completes without errors
 - [ ] `/api/health` returns `database: ok`
 - [ ] Login (credentials + Google), register, and password reset work
-- [ ] Checkout with Razorpay completes end-to-end
+- [ ] Checkout with **Razorpay** completes end-to-end (webhook updates payment status)
 - [ ] Order confirmation email arrives
 - [ ] Admin product image upload writes to CDN
-- [ ] Homepage, catalog, search, and blog load from PostgreSQL
+- [ ] Homepage, catalog, **PostgreSQL search** (`/api/search`), and blog load correctly
+- [ ] COD remains disabled unless intentionally enabled via `COD_ENABLED=true`
 
 ## Post-deploy monitoring
 
@@ -123,18 +137,21 @@ npm run start
 
 # Backup Checklist
 
-Run before every production deploy and on a recurring schedule (daily recommended).
+Run before every production deploy and on a **daily** recurring schedule. Store copies **off the production VPS**.
 
 ## PostgreSQL
 
+Prefer a URL **without** `?schema=public` for plain `pg_dump` / `psql` (Prisma-style query params are not valid for all `libpq` clients):
+
 ```bash
-# Full logical backup
-pg_dump "$DATABASE_URL" -Fc -f "vibe-backup-$(date +%Y%m%d-%H%M).dump"
+# Full logical backup (custom format — recommended)
+pg_dump "postgresql://vibe:PASSWORD@localhost:5432/vibe" -Fc -f "vibe-backup-$(date +%Y%m%d-%H%M).dump"
 
 # Or plain SQL
-pg_dump "$DATABASE_URL" > "vibe-backup-$(date +%Y%m%d-%H%M).sql"
+pg_dump "postgresql://vibe:PASSWORD@localhost:5432/vibe" > "vibe-backup-$(date +%Y%m%d-%H%M).sql"
 ```
 
+- [ ] Cron or systemd timer runs daily dump
 - [ ] Backup file stored off-server (S3, another VPS, or local secure storage)
 - [ ] Backup size is reasonable (not empty / truncated)
 - [ ] Test restore on staging at least monthly:
@@ -149,14 +166,14 @@ pg_restore -d vibe_staging vibe-backup-YYYYMMDD-HHMM.dump
 tar -czf cdn-backup-$(date +%Y%m%d).tar.gz -C /var/www cdn
 ```
 
-- [ ] Include `products/`, `banners/`, `blog/`, and `reviews/` folders
+- [ ] Include `products/`, `banners/`, `blog/`, and `reviews/` folders under `CDN_STORAGE_ROOT`
 - [ ] Copy tarball to off-server storage
 
 ## Application config
 
 - [ ] Export production `.env` to a secrets manager (not git)
 - [ ] Note current git commit SHA deployed
-- [ ] Document Razorpay webhook URL and SMTP DNS records
+- [ ] Document Razorpay webhook URL (`/api/payment/webhook/razorpay`) and SMTP DNS records
 
 ## Auth / admin access
 

@@ -56,7 +56,15 @@ function NotificationsPanel() {
   }
 
   if (isLoading || !data) {
-    return <p className="acct__section-sub">Loading notifications…</p>;
+    return (
+      <div>
+        <h1 className="acct__section-title">
+          <Bell size={20} style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }} />
+          Notifications
+        </h1>
+        <p className="acct__section-sub">Loading notifications…</p>
+      </div>
+    );
   }
 
   const preferenceItems = [
@@ -68,10 +76,10 @@ function NotificationsPanel() {
 
   return (
     <div>
-      <h2 className="acct__section-title">
+      <h1 className="acct__section-title">
         <Bell size={20} style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }} />
         Notifications
-      </h2>
+      </h1>
       <p className="acct__section-sub">
         {data.unreadCount} unread notification{data.unreadCount === 1 ? "" : "s"}.
       </p>

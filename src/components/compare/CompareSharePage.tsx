@@ -17,6 +17,7 @@ export default function CompareSharePage({ token }: { token: string }) {
   if (isLoading) {
     return (
       <main className="storefront-page compare-page">
+        <h1 className="storefront-page__title">Shared product comparison</h1>
         <p>Loading shared comparison…</p>
       </main>
     );
@@ -25,6 +26,7 @@ export default function CompareSharePage({ token }: { token: string }) {
   if (error || !data?.share.items.length) {
     return (
       <main className="storefront-page compare-page">
+        <h1 className="storefront-page__title">Shared product comparison</h1>
         <p>Shared comparison not found or expired.</p>
       </main>
     );

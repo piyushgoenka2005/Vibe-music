@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type MouseEvent,
+  type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
@@ -15,6 +16,7 @@ import ProductShareButton from "@/components/product/ProductShareButton";
 import { productPath } from "@/lib/routes";
 import { storefrontImageCandidates } from "@/lib/storefrontImages";
 import { useIsClient } from "@/hooks/useIsClient";
+import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
@@ -184,6 +186,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
   const toggleWishlist = useWishlistStore((s) => s.toggle);
 
   const open = Boolean(story);
+  const dialogRef = useDialogA11y(open, onClose);
 
   useEffect(() => {
     if (!open) return;
@@ -194,17 +197,11 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
-    window.addEventListener("keydown", onKeyDown);
     return () => {
       cancelAnimationFrame(frame);
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", onKeyDown);
     };
-  }, [open, story?.id, onClose]);
+  }, [open, story?.id]);
 
   const handleAddToCart = useCallback(() => {
     if (
@@ -262,6 +259,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
 
   return createPortal(
     <div
+      ref={dialogRef as RefObject<HTMLDivElement>}
       className="gear-story-modal"
       role="dialog"
       aria-modal="true"

@@ -21,14 +21,16 @@ Short path from “code is ready” to “production secrets are honest.” Full
 | `COD_MAX_ORDER_VALUE` | `50000` | COD blocked above this order value (₹); `0` = no max |
 | `COD_ALLOWED_PIN_PREFIXES` | empty | Comma-separated PIN prefixes; empty = all India |
 
-Production currently runs with COD **disabled**. Razorpay is the primary online checkout path. Never set `ALLOW_DEMO_PAYMENTS=true` in production.
+Production currently runs with COD **disabled**. **Razorpay is the only payment gateway** (no Stripe). Never set `ALLOW_DEMO_PAYMENTS=true` in production.
+
+Catalog search uses **PostgreSQL / Prisma** (`/api/search`) — not Elasticsearch.
 
 ## 2. Strongly recommended (multi-worker VPS)
 
 | Item | Env | Effect if missing |
 |------|-----|-------------------|
 | Upstash Redis | `UPSTASH_*` | Rate limits are per-process only |
-| CDN | `CDN_STORAGE_ROOT`, `CDN_PUBLIC_BASE_URL` | Admin image uploads fail / local-only |
+| CDN | `CDN_STORAGE_ROOT`, `CDN_PUBLIC_BASE_URL` | Admin image uploads fail / local-only. Serve via `deploy/nginx/cdn.vibemusic.in.conf`. |
 
 ## 3. Optional UX upgrades
 

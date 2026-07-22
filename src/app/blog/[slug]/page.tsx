@@ -167,7 +167,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={optimizeImageUrl(post.coverImage, "blogCover")}
-                  alt=""
+                  alt={post.title}
                   className="blog-article__cover"
                 />
               </figure>
@@ -183,7 +183,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={post.authorAvatar}
-                alt=""
+                alt={post.authorName}
                 className="blog-article__author-avatar"
               />
             ) : (

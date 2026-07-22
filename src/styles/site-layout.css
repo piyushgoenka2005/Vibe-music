@@ -109,7 +109,7 @@
   line-height: 1.25;
   overflow: hidden;
   contain: none;
-  --announcement-marquee-duration: 18s;
+  --announcement-marquee-duration: 40s;
 }
 
 .announcement-bar__viewport {
@@ -224,7 +224,7 @@
 @media (max-width: 639px) {
   .announcement-bar {
     padding: 0.25rem 0;
-    --announcement-marquee-duration: 14s;
+    --announcement-marquee-duration: 36s;
   }
 
   .announcement-bar__item {
@@ -1789,7 +1789,7 @@ body.site-nav-open .site-header--hidden {
 
   .announcement-bar {
     padding: 0.15rem 0;
-    --announcement-marquee-duration: 18s;
+    --announcement-marquee-duration: 40s;
   }
 
   .announcement-bar__item {

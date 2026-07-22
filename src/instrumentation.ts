@@ -28,6 +28,13 @@ export async function register() {
       }
     }
 
+    {
+      const { warnIfGooglePlacesMisconfigured } = await import(
+        "@/lib/server/googlePlaces"
+      );
+      warnIfGooglePlacesMisconfigured("instrumentation");
+    }
+
     try {
       const { verifyPostgresConnection } = await import(
         "@/lib/server/postgresHealth"

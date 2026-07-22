@@ -15,6 +15,19 @@ export default function BlogCoverImageUpload({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function bestEffortDelete(url: string) {
+    if (!url) return;
+    try {
+      void fetch("/api/admin/upload/images/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ urls: [url] }),
+      });
+    } catch {
+      // Best-effort CDN cleanup; ignore failures.
+    }
+  }
+
   async function uploadFile(file: File) {
     if (!file.type.startsWith("image/")) {
       setError("Please select an image file");
@@ -23,6 +36,7 @@ export default function BlogCoverImageUpload({
 
     setUploading(true);
     setError(null);
+    const previousUrl = value;
 
     try {
       const formData = new FormData();
@@ -36,6 +50,9 @@ export default function BlogCoverImageUpload({
         throw new Error(data.error ?? "Upload failed");
       }
       onChange(data.url);
+      if (previousUrl && previousUrl !== data.url) {
+        bestEffortDelete(previousUrl);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -76,7 +93,11 @@ export default function BlogCoverImageUpload({
           <button
             type="button"
             className="admin-btn admin-btn--ghost"
-            onClick={() => onChange("")}
+            onClick={() => {
+              const previousUrl = value;
+              onChange("");
+              bestEffortDelete(previousUrl);
+            }}
           >
             Remove
           </button>
