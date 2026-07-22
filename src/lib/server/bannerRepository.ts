@@ -1,5 +1,6 @@
 import "server-only";
 
+import { revalidateTag } from "next/cache";
 import { unstable_cache } from "next/cache";
 import * as pg from "@/lib/server/prisma/contentRepository";
 import type {
@@ -11,6 +12,14 @@ import type {
 
 const ACTIVE_BANNERS_CACHE_KEY = "homepage-active-banners";
 const ACTIVE_BANNERS_REVALIDATE_SECONDS = 300;
+
+function invalidateBannerCache(): void {
+  try {
+    revalidateTag("banners", "max");
+  } catch {
+    /* ignore outside request context */
+  }
+}
 
 function isBannerScheduledActive(
   banner: HomepageBanner,
@@ -58,24 +67,31 @@ export async function getBannerById(id: string): Promise<HomepageBanner | null> 
 }
 
 export async function createBanner(input: CreateBannerInput): Promise<HomepageBanner> {
-  return pg.createBanner(input);
+  const banner = await pg.createBanner(input);
+  invalidateBannerCache();
+  return banner;
 }
 
 export async function updateBanner(
   id: string,
   input: UpdateBannerInput
 ): Promise<HomepageBanner> {
-  return pg.updateBannerRecord(id, input);
+  const banner = await pg.updateBannerRecord(id, input);
+  invalidateBannerCache();
+  return banner;
 }
 
 export async function deleteBanner(id: string): Promise<void> {
   const existing = await getBannerById(id);
   if (!existing) throw new Error("Banner not found");
   await pg.deleteBannerRecord(id);
+  invalidateBannerCache();
 }
 
 export async function reorderBanners(orderedIds: string[]): Promise<HomepageBanner[]> {
-  return pg.reorderBannerRecords(orderedIds);
+  const banners = await pg.reorderBannerRecords(orderedIds);
+  invalidateBannerCache();
+  return banners;
 }
 
 export type { BannerStatus };
