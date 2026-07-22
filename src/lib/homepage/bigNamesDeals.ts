@@ -27,7 +27,7 @@ export function mapCatalogProductToBigNamesDeal(
     key: product.id,
     brand: product.brand,
     href: overrides?.href ?? productPath(product.slug),
-    product: overrides?.image ?? product.image || product.images[0] || "",
+    product: overrides?.image ?? (product.image || product.images[0] || ""),
     productAlt: overrides?.title ?? product.name,
   };
 }
