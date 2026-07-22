@@ -41,7 +41,7 @@ export const BRAND = {
   email: "support@vibemusic.in",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic.in",
   domain: "vibemusic.in",
-  address: "Mumbai, Maharashtra, India",
+  address: "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071",
   logoPath: "/brand/vibemusic-logo.svg",
   headerLogoPath: "/brand/header-logo.webp",
   iconPath: "/icon-48.png",

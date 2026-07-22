@@ -9,7 +9,7 @@ const DEFAULT_SETTINGS: StoreSettings = {
   storeName: "Vibe Music",
   storeEmail: "support@vibemusic.in",
   storePhone: "",
-  storeAddress: "Mumbai, Maharashtra, India",
+  storeAddress: "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071",
   gstNumber: "",
   defaultGstRate: DEFAULT_GST_RATE,
   sellerState: SELLER_STATE,

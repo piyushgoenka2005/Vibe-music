@@ -38,7 +38,7 @@ function resolveStorePhone(): string {
   return (
     process.env.NEXT_PUBLIC_STORE_PHONE?.trim() ||
     process.env.STORE_PHONE?.trim() ||
-    ""
+    "919773651006"
   );
 }
 
@@ -64,7 +64,7 @@ async function seedStorePhone(): Promise<void> {
       storeName: "Vibe Music",
       storeEmail: "support@vibemusic.in",
       storePhone: phone,
-      storeAddress: "Mumbai, Maharashtra, India",
+      storeAddress: "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071",
       gstNumber: "",
       defaultGstRate: 18,
       sellerState: "Maharashtra",
