@@ -350,7 +350,7 @@ export function useSearchResults(
           query.trim(),
           options?.initialFilters?.category ?? "",
           options?.initialFilters?.subcategory ?? "",
-          all ? "" : (options?.initialFilters?.brand ?? ""),
+          options?.initialFilters?.brand ?? "",
           all ? "all" : "",
         ].join("|")
       : null
@@ -364,7 +364,7 @@ export function useSearchResults(
       query.trim(),
       category ?? "",
       subcategory ?? "",
-      all ? "" : (brand ?? ""),
+      brand ?? "",
       all ? "all" : sort && sort !== "relevance" ? sort : "",
     ].join("|");
     if (initialKeyRef.current !== null && initialKeyRef.current === requestKey) {
@@ -382,9 +382,7 @@ export function useSearchResults(
 
     async function run() {
       const hasFilter = Boolean(
-        category?.trim() ||
-          subcategory?.trim() ||
-          (!all && brand?.trim())
+        category?.trim() || subcategory?.trim() || brand?.trim()
       );
 
       if (query.trim().length < MIN_QUERY_LENGTH && !hasFilter) {
@@ -406,7 +404,7 @@ export function useSearchResults(
         const data = await fetchSearchResults(query, {
           category,
           subcategory,
-          brand: all ? undefined : brand,
+          brand,
           sort: all ? undefined : sort,
           all,
         });
@@ -414,7 +412,7 @@ export function useSearchResults(
         setResults(data);
         setStatus("success");
         searchStore.trackSearch({
-          query: data.query,
+          query: data.query || brand || query.trim(),
           resultCount: data.total,
           source: "results-page",
         });

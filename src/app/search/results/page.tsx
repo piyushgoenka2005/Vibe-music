@@ -10,6 +10,7 @@ interface SearchResultsRouteProps {
     q?: string;
     category?: string;
     subcategory?: string;
+    brand?: string;
   }>;
 }
 
@@ -20,16 +21,23 @@ export default async function SearchResultsRoute({
   const query = params.q?.trim() ?? "";
   const category = params.category ?? "";
   const subcategory = params.subcategory ?? "";
+  const brand = params.brand?.split(",")[0]?.trim() ?? "";
 
   let initialResults: SearchResultsData | null = null;
-  const hasFilter = Boolean(category || subcategory);
+  const hasFilter = Boolean(category || subcategory || brand);
 
   if (query.length >= SEARCH_MIN_QUERY_LENGTH || hasFilter) {
     try {
-      // Fetch full match set; brand/price/rating filters apply client-side.
-      initialResults = await getSearchResults({ query, category, subcategory });
+      // Load the browse set server-side. Listing `brand=` chips filter client-side
+      // (same as price/rating), so pass brand only when we also have a text query
+      // and want server narrowing — for brand-only URLs, omit it to hydrate facets.
+      initialResults = await getSearchResults({
+        query,
+        category: category || undefined,
+        subcategory: subcategory || undefined,
+        brand: query ? brand || undefined : undefined,
+      });
     } catch {
-      // Fall back to client-side fetching if the server lookup fails.
       initialResults = null;
     }
   }

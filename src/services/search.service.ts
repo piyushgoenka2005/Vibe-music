@@ -345,8 +345,10 @@ export async function fetchSearchResults(
   if (filters?.all) params.set("all", "1");
   if (filters?.category) params.set("category", filters.category);
   if (filters?.subcategory) params.set("subcategory", filters.subcategory);
+  // Always send brand when present so empty-q browse is allowed server-side.
+  // With all=1 the API still returns the full match set for client-side chips.
+  if (filters?.brand) params.set("brand", filters.brand);
   if (!filters?.all) {
-    if (filters?.brand) params.set("brand", filters.brand);
     if (filters?.sort && filters.sort !== "relevance") {
       params.set("sort", filters.sort);
     }

@@ -79,12 +79,14 @@ function SearchResultsPageContent({
 
   const urlCategory = categorySlug || initialCategory;
   const urlSubcategory = subcategory || initialSubcategory;
+  const listingBrand = filters.brands[0] ?? "";
 
   const { status, error, results } = useSearchResults(
     query,
     {
       category: urlCategory || undefined,
       subcategory: urlSubcategory || undefined,
+      brand: listingBrand || undefined,
       all: true,
     },
     {
@@ -92,6 +94,7 @@ function SearchResultsPageContent({
       initialFilters: {
         category: initialCategory,
         subcategory: initialSubcategory,
+        brand: listingBrand || undefined,
       },
     }
   );
@@ -110,15 +113,33 @@ function SearchResultsPageContent({
   const total = data.total;
   const isLoading = status === "loading";
   const isError = status === "error";
+  const brandLabel =
+    filters.brands.length > 0
+      ? filters.brands
+          .map((slug) =>
+            slug
+              .split("-")
+              .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+              .join(" ")
+          )
+          .join(", ")
+      : "";
   const hasQuery =
-    query.trim().length >= 2 || Boolean(urlCategory) || Boolean(urlSubcategory);
+    query.trim().length >= 2 ||
+    Boolean(urlCategory) ||
+    Boolean(urlSubcategory) ||
+    filters.brands.length > 0;
   const listContext = {
     itemListId: query.trim()
       ? `search_${query.trim().toLowerCase().slice(0, 48)}`
-      : "search_results",
+      : brandLabel
+        ? `brand_${filters.brands.join("_")}`
+        : "search_results",
     itemListName: query.trim()
       ? `Search: ${query.trim()}`
-      : "Search Results",
+      : brandLabel
+        ? `Brand: ${brandLabel}`
+        : "Search Results",
   };
 
   useEffect(() => {
@@ -144,6 +165,8 @@ function SearchResultsPageContent({
           <>
             Results for &ldquo;{query.trim()}&rdquo;
           </>
+        ) : brandLabel ? (
+          <>{brandLabel}</>
         ) : urlSubcategory.toLowerCase().includes("acoustic") ? (
           "Acoustic Guitars"
         ) : urlSubcategory.toLowerCase().includes("amplifier") ? (
@@ -226,7 +249,9 @@ function SearchResultsPageContent({
               <div className="cat-empty">
                 <h2 style={{ margin: "0 0 8px" }}>No products match your filters</h2>
                 <p style={{ margin: 0, color: "#807f7e" }}>
-                  Try adjusting or clearing your filters.
+                  {brandLabel
+                    ? `We don’t currently stock ${brandLabel}. Clear the brand filter or browse guitars below.`
+                    : "Try adjusting or clearing your filters."}
                 </p>
                 <button
                   type="button"
@@ -236,9 +261,14 @@ function SearchResultsPageContent({
                 >
                   Clear All Filters
                 </button>
+                <div style={{ marginTop: 16 }}>
+                  <Link href="/category/guitars" className="cat-filter-clear">
+                    Browse all guitars
+                  </Link>
+                </div>
               </div>
             ) : (
-              <SearchEmptyState query={query} />
+              <SearchEmptyState query={query || brandLabel} />
             )
           ) : null}
 
