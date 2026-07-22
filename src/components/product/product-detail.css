@@ -224,7 +224,7 @@
   --pdp-thumb-scrollbar-track: #e5e7eb;
   --pdp-thumb-scrollbar-thumb: #9ca3af;
   --pdp-thumb-scrollbar-thumb-hover: #6b7280;
-  --pdp-gallery-photo-scale: 1.32;
+  --pdp-gallery-photo-scale: 0.94;
   /* Rail = cards + whitespace + scrollbar track (no overlap/clipping). */
   --pdp-thumbs-rail-width: calc(
     var(--pdp-thumb-size) + var(--pdp-thumb-scroll-gap) + var(--pdp-thumb-scrollbar-size)
@@ -296,7 +296,7 @@
 
 /* Keep display scale while zooming so lens mapping stays aligned */
 .pdp-gallery__main--zooming .pdp-gallery__photo {
-  transform: scale(var(--pdp-gallery-photo-scale, 1.32));
+  transform: scale(var(--pdp-gallery-photo-scale, 0.94));
 }
 
 .pdp-gallery__main-inner {
@@ -307,7 +307,7 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  padding: 0;
+  padding: clamp(0.65rem, 1.6vw, 1.1rem);
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -324,8 +324,8 @@
   padding: 0;
   user-select: none;
   pointer-events: none;
-  /* Enlarge product art inside the fixed square card */
-  transform: scale(var(--pdp-gallery-photo-scale, 1.32));
+  /* Keep product fully visible inside the square frame (no side crop) */
+  transform: scale(var(--pdp-gallery-photo-scale, 0.94));
   transform-origin: center center;
 }
 
@@ -586,7 +586,7 @@
   }
 
   .pdp-gallery__main-inner {
-    padding: 0;
+    padding: clamp(0.5rem, 2.5vw, 0.85rem);
   }
 
   .pdp-gallery__photo {
@@ -598,7 +598,7 @@
     object-position: center center;
     margin: 0 auto;
     display: block;
-    transform: scale(var(--pdp-gallery-photo-scale, 1.28));
+    transform: scale(var(--pdp-gallery-photo-scale, 0.92));
     transform-origin: center center;
   }
 
