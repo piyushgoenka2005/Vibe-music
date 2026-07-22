@@ -1,4 +1,4 @@
-import { ROUTES } from "@/lib/routes";
+import { ROUTES, categoryPath } from "@/lib/routes";
 
 export interface BigNamesDealBrand {
   key: string;
@@ -13,45 +13,47 @@ export interface BigNamesDealBrand {
 
 export const BIG_NAMES_DEALS_CTA = ROUTES.deals;
 
+/** Showcase visuals for top brands — hrefs fall back to guitars category;
+ * runtime resolution prefers live catalog guitar PDPs. */
 export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
   {
     key: "gibson",
     brand: "Gibson",
-    href: `${ROUTES.searchResults}?brand=gibson`,
+    href: categoryPath("guitars"),
     logo: "/images/big-names-deals/gibson-logo.svg",
     product: "/images/big-names-deals/gibson-product.webp",
-    productAlt: "Gibson SG electric guitar in TV yellow",
+    productAlt: "Gibson-style electric guitar showcase",
   },
   {
     key: "epiphone",
     brand: "Epiphone",
-    href: `${ROUTES.searchResults}?brand=epiphone`,
+    href: categoryPath("guitars"),
     logo: "/images/big-names-deals/epiphone-logo.svg",
     product: "/images/big-names-deals/epiphone-product.webp",
-    productAlt: "Epiphone Les Paul in amber sunburst",
+    productAlt: "Epiphone-style Les Paul sunburst showcase",
   },
   {
     key: "prs",
     brand: "PRS",
-    href: `${ROUTES.searchResults}?brand=prs`,
+    href: categoryPath("guitars"),
     logo: "/images/big-names-deals/prs-logo.svg",
     product: "/images/big-names-deals/prs-product.webp",
-    productAlt: "PRS SE Studio electric guitar in seafoam green",
+    productAlt: "PRS-style seafoam electric guitar showcase",
   },
   {
     key: "ibanez",
     brand: "Ibanez",
-    href: `${ROUTES.searchResults}?brand=ibanez`,
+    href: categoryPath("guitars"),
     logo: "/images/big-names-deals/ibanez-logo.svg",
     product: "/images/big-names-deals/ibanez-product.webp",
-    productAlt: "Ibanez electric guitar in tobacco sunburst",
+    productAlt: "Ibanez-style electric guitar showcase",
   },
   {
     key: "fender",
     brand: "Fender",
-    href: `${ROUTES.searchResults}?brand=fender`,
+    href: categoryPath("guitars"),
     logo: "/images/big-names-deals/fender-logo.svg",
     product: "/images/big-names-deals/fender-product.webp",
-    productAlt: "Fender Stratocaster electric guitar in 3-color sunburst",
+    productAlt: "Fender Stratocaster-style sunburst showcase",
   },
 ];

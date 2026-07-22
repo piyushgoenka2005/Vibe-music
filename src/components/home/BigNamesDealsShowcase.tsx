@@ -30,9 +30,10 @@ function BigNamesDealItem({
       style={{ "--big-names-index": String(index) } as CSSProperties}
     >
       <Link
-        aria-label={`Shop ${item.brand} deals`}
+        aria-label={`Shop ${item.brand} guitars`}
         className="big-names-deals__link"
         href={item.href}
+        prefetch
         tabIndex={isDuplicate ? -1 : undefined}
       >
         <div className="big-names-deals__hang-wrap">

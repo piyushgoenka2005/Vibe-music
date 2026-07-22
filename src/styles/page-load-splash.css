@@ -25,6 +25,13 @@ html.vibe-splash-active .footer-products-panel {
   pointer-events: none !important;
 }
 
+/* Consent banner must stay clickable even while splash is covering the store */
+html.vibe-splash-pending .cookie-consent,
+html.vibe-splash-active .cookie-consent,
+.cookie-consent {
+  pointer-events: auto !important;
+}
+
 .storefront-root {
   flex: 1 1 auto;
   display: flex;

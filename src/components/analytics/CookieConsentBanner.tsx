@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import Link from "next/link";
 import {
   ANALYTICS_CONSENT_KEY,
   isAnalyticsEnabled,
@@ -26,10 +28,24 @@ function readConsent(): ConsentState {
 }
 
 export default function CookieConsentBanner() {
-  const [consent, setConsent] = useState<ConsentState>(() => readConsent());
-  const [visible, setVisible] = useState(
-    () => isAnalyticsEnabled() && readConsent() === "unknown"
-  );
+  const [consent, setConsent] = useState<ConsentState>("unknown");
+  const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (!isAnalyticsEnabled()) return;
+
+    const stored = readConsent();
+    setConsent(stored);
+    if (stored === "unknown") {
+      setVisible(true);
+    } else if (stored === "granted") {
+      grantAnalyticsConsent();
+    } else {
+      denyAnalyticsConsent();
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAnalyticsEnabled()) return;
@@ -42,7 +58,9 @@ export default function CookieConsentBanner() {
     }
   }, [consent]);
 
-  function accept() {
+  function accept(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
     try {
       localStorage.setItem(ANALYTICS_CONSENT_KEY, "granted");
     } catch {
@@ -53,7 +71,9 @@ export default function CookieConsentBanner() {
     setVisible(false);
   }
 
-  function decline() {
+  function decline(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
     try {
       localStorage.setItem(ANALYTICS_CONSENT_KEY, "denied");
     } catch {
@@ -64,12 +84,17 @@ export default function CookieConsentBanner() {
     setVisible(false);
   }
 
-  if (!isAnalyticsEnabled() || !visible || consent !== "unknown") {
+  if (!mounted || !isAnalyticsEnabled() || !visible || consent !== "unknown") {
     return null;
   }
 
-  return (
-    <div className="cookie-consent" role="dialog" aria-labelledby="cookie-consent-title">
+  const banner = (
+    <div
+      className="cookie-consent"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="cookie-consent-title"
+    >
       <div className="cookie-consent__inner">
         <p id="cookie-consent-title" className="cookie-consent__title">
           Analytics &amp; experience
@@ -77,12 +102,16 @@ export default function CookieConsentBanner() {
         <p className="cookie-consent__text">
           We use privacy-friendly Google Analytics to understand how musicians shop
           on Vibe Music and improve our store. No ad tracking.{" "}
-          <a href="/pages/cookies" className="cookie-consent__link">
+          <Link href="/pages/cookies" className="cookie-consent__link">
             Cookie policy
-          </a>
+          </Link>
         </p>
         <div className="cookie-consent__actions">
-          <button type="button" className="cookie-consent__btn" onClick={decline}>
+          <button
+            type="button"
+            className="cookie-consent__btn"
+            onClick={decline}
+          >
             Decline
           </button>
           <button
@@ -96,4 +125,6 @@ export default function CookieConsentBanner() {
       </div>
     </div>
   );
+
+  return createPortal(banner, document.body);
 }

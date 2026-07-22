@@ -28,6 +28,7 @@ import {
   BIG_NAMES_DEALS_MAX_ITEMS,
   isBigNamesDealsGuitarProduct,
   mapCatalogProductToBigNamesDeal,
+  resolveBigNamesDealFallbacks,
 } from "@/lib/homepage/bigNamesDeals";
 import type { CatalogProduct } from "@/types/catalog";
 import type {
@@ -477,13 +478,7 @@ export async function getBigNamesDealsPublicData(
       items:
         curated.length > 0
           ? curated
-          : BIG_NAMES_DEALS.map(({ key, brand, href, product, productAlt }) => ({
-              key,
-              brand,
-              href,
-              product,
-              productAlt,
-            })),
+          : resolveBigNamesDealFallbacks(products),
     };
   } catch {
     return {
