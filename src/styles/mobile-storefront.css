@@ -2,24 +2,6 @@
 
 /* ─── Global mobile safeguards ─── */
 @media (max-width: 767px) {
-  /* Struck-out MRPs clutter tight mobile cards / price rows — hide sitewide */
-  .cat-product-card__price--was,
-  .product-suggest__item-was,
-  .new-arrivals-card__was,
-  .cart-item-card__mrp,
-  .cart-upsell__mrp,
-  .cart-sticky-footer__total-mrp,
-  .pdp-info-pricing__mrp,
-  .pdp-msrp,
-  .pdp-buybox__list-row,
-  .pdp-buybox__list-price,
-  .pdp-fbt__summary-original,
-  .gear-story-modal__price-was,
-  .premium-home .new-arrivals-card__was,
-  .premium-home .premium-product-carousel .product-suggest__item-was {
-    display: none !important;
-  }
-
   html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;

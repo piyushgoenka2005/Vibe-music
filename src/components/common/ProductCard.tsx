@@ -258,11 +258,6 @@ export default function ProductCard({
         ) : (
           <div className="cat-product-card__meta">
             <div className="cat-product-card__pricing">
-              {hasDiscount ? (
-                <span className="cat-product-card__price cat-product-card__price--was">
-                  {formatCurrency(originalPrice)}
-                </span>
-              ) : null}
               <span
                 className={`cat-product-card__price cat-product-card__price--sale${
                   product.price <= 0 ? " cat-product-card__price--enquiry" : ""
@@ -270,6 +265,11 @@ export default function ProductCard({
               >
                 {formatDisplayPrice(product.price)}
               </span>
+              {hasDiscount ? (
+                <span className="cat-product-card__price cat-product-card__price--was">
+                  {formatCurrency(originalPrice)}
+                </span>
+              ) : null}
             </div>
             <span
               className={`cat-product-card__badge ${availabilityClass(product.availability)}`}
