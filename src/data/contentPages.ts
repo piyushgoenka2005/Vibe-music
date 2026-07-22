@@ -134,19 +134,32 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
     sections: [
       {
         paragraphs: [
-          "Vibe Music uses cookies and similar technologies to keep you signed in, remember cart contents, and understand how the site is used.",
+          "Vibe Music uses cookies and similar technologies to keep you signed in, remember cart contents, and understand how the site is used. You can change analytics preferences anytime via the consent banner.",
         ],
       },
       {
         heading: "Essential cookies",
         paragraphs: [
-          "Required for authentication, checkout, and security. These cannot be disabled while using the store.",
+          "Required for authentication, checkout security, cart persistence, and fraud prevention. These cannot be disabled while using the store.",
         ],
       },
       {
-        heading: "Analytics",
+        heading: "Analytics (optional)",
         paragraphs: [
-          "We may use performance metrics (such as Core Web Vitals) to improve page speed and reliability. No personally identifiable information is sold to third parties.",
+          "With your consent we enable Google Analytics 4 to measure storefront performance and shopping funnels (page views, add-to-cart, checkout, purchase). Advertising cookies and ad personalization are disabled by default.",
+          "You can Accept or Decline analytics on first visit. Declining keeps essential cookies only; we still fulfil orders normally.",
+        ],
+      },
+      {
+        heading: "Performance metrics",
+        paragraphs: [
+          "We collect anonymized Core Web Vitals to improve page speed. No personally identifiable information is sold to third parties.",
+        ],
+      },
+      {
+        heading: "More information",
+        paragraphs: [
+          "See our Privacy Policy for how personal data is handled, or email support@vibemusic.in with cookie-related requests.",
         ],
       },
     ],

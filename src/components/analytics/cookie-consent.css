@@ -30,6 +30,16 @@
   color: rgba(248, 250, 252, 0.82);
 }
 
+.cookie-consent__link {
+  color: #93c5fd;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cookie-consent__link:hover {
+  color: #bfdbfe;
+}
+
 .cookie-consent__actions {
   display: flex;
   gap: 0.5rem;

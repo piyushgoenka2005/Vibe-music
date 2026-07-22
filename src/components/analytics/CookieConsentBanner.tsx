@@ -76,7 +76,10 @@ export default function CookieConsentBanner() {
         </p>
         <p className="cookie-consent__text">
           We use privacy-friendly Google Analytics to understand how musicians shop
-          on Vibe Music and improve our store. No ad tracking.
+          on Vibe Music and improve our store. No ad tracking.{" "}
+          <a href="/pages/cookies" className="cookie-consent__link">
+            Cookie policy
+          </a>
         </p>
         <div className="cookie-consent__actions">
           <button type="button" className="cookie-consent__btn" onClick={decline}>

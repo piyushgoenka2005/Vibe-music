@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ProductDetailPage from "@/components/product/ProductDetailPage";
 import { loadProductDetailPage } from "@/lib/server/productDetailLoader";
+import { buildProductJsonLd } from "@/lib/seo/productJsonLd";
 import { storefrontImageUrl } from "@/lib/storefrontImages";
 
 export const dynamicParams = true;
@@ -53,8 +54,14 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
     ? storefrontImageUrl(heroRaw, 1200).src
     : undefined;
 
+  const jsonLd = buildProductJsonLd(initialData.product);
+
   return (
     <main className="storefront-page">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {heroImageUrl ? (
         <link rel="preload" as="image" href={heroImageUrl} fetchPriority="high" />
       ) : null}
