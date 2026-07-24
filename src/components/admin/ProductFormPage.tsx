@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { slugify } from "@/lib/slug";
 import { ROUTES } from "@/lib/routes";
 import ProductImageUpload from "@/components/admin/ProductImageUpload";
@@ -52,6 +52,7 @@ const EMPTY = {
 
 export default function ProductFormPage({ productId }: { productId?: string }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -192,7 +193,13 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
       }
       return saved;
     },
-    onSuccess: () => router.push(ROUTES.adminProducts),
+    onSuccess: async () => {
+      // Drop cached list so the products page always refetches after create/edit.
+      await queryClient.cancelQueries({ queryKey: ["admin-products"] });
+      queryClient.removeQueries({ queryKey: ["admin-products"] });
+      router.push(ROUTES.adminProducts);
+      router.refresh();
+    },
     onError: (err) => setError(err instanceof Error ? err.message : "Save failed"),
   });
 

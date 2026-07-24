@@ -6,20 +6,60 @@ import {
   bulkUpdateStock,
   createProduct,
   deleteProduct,
-  getAllProducts,
   getProductById,
   toProduct,
   toProductDetail,
   updateProduct,
 } from "@/services/catalogService";
-import { deleteProductBundle } from "@/lib/server/bundleService";
-import { deleteProductRelatedList } from "@/lib/server/relatedProductsService";
+import { fetchAllProducts } from "@/lib/server/storeCatalogRepository";
 import { notifyWaitlistOnRestock } from "@/lib/server/restockNotificationService";
 import { getProductImage } from "@/data/productImages";
 import { rowsToCsv, type ParsedCsvRow } from "@/lib/csv";
+import { prisma } from "@/lib/db/prisma";
 import type { AdminProduct } from "@/types/admin";
 import type { CatalogProduct, CreateProductInput } from "@/types/catalog";
 import { paginateSortedById } from "@/lib/admin/paginateByCursor";
+
+async function purgeProductSideData(productIds: string[]): Promise<void> {
+  if (productIds.length === 0) return;
+
+  const reviewIds = (
+    await prisma.review.findMany({
+      where: { productId: { in: productIds } },
+      select: { id: true },
+    })
+  ).map((row) => row.id);
+
+  if (reviewIds.length > 0) {
+    await prisma.reviewVote.deleteMany({ where: { reviewId: { in: reviewIds } } });
+    await prisma.review.deleteMany({ where: { id: { in: reviewIds } } });
+  }
+
+  await prisma.$transaction([
+    prisma.productBundle.deleteMany({ where: { productId: { in: productIds } } }),
+    prisma.productRelation.deleteMany({
+      where: { productId: { in: productIds } },
+    }),
+    prisma.productReviewStats.deleteMany({
+      where: { productId: { in: productIds } },
+    }),
+    prisma.productQuestion.deleteMany({
+      where: { productId: { in: productIds } },
+    }),
+    prisma.productStockAlert.deleteMany({
+      where: { productId: { in: productIds } },
+    }),
+    prisma.inventoryLog.deleteMany({
+      where: { productId: { in: productIds } },
+    }),
+    prisma.userProductReview.deleteMany({
+      where: { productId: { in: productIds } },
+    }),
+    prisma.homepageSectionItem.deleteMany({
+      where: { productId: { in: productIds } },
+    }),
+  ]);
+}
 
 function toAdminProduct(catalog: CatalogProduct): AdminProduct {
   const product = toProduct(catalog);
@@ -59,7 +99,7 @@ export async function listAdminProducts(options: {
   hasMore: boolean;
   nextCursor?: string;
 }> {
-  let products = (await getAllProducts(true)).map(toAdminProduct);
+  let products = (await fetchAllProducts(true)).map(toAdminProduct);
 
   if (options.search) {
     const q = options.search.toLowerCase();
@@ -211,7 +251,7 @@ export async function buildAdminProductsExportCsv(options: {
   status?: string;
   category?: string;
 } = {}): Promise<string> {
-  const products = filterCatalogForExport(await getAllProducts(true), options);
+  const products = filterCatalogForExport(await fetchAllProducts(true), options);
   const maxImages = Math.max(
     5,
     ...products.map((product) => product.images?.length ?? 0)
@@ -371,9 +411,13 @@ export async function updateAdminProduct(
 }
 
 export async function deleteAdminProduct(id: string): Promise<void> {
+  const existing = await getProductById(id);
+  if (!existing) {
+    throw new Error("Product not found");
+  }
+
+  await purgeProductSideData([id]);
   await deleteProduct(id);
-  await deleteProductBundle(id).catch(() => undefined);
-  await deleteProductRelatedList(id).catch(() => undefined);
 }
 
 export async function duplicateAdminProduct(id: string): Promise<AdminProduct> {
@@ -402,6 +446,7 @@ export async function bulkUpdateProductStatus(
 }
 
 export async function bulkDeleteAdminProducts(ids: string[]): Promise<number> {
+  await purgeProductSideData(ids);
   return (await bulkDeleteProducts(ids)).deleted;
 }
 

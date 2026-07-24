@@ -636,7 +636,7 @@
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
-    touch-action: pan-x;
+    touch-action: pan-x pan-y;
     scrollbar-width: thin;
     scrollbar-color: var(--pdp-thumb-scrollbar-thumb) var(--pdp-thumb-scrollbar-track);
   }
@@ -1411,7 +1411,8 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
-  touch-action: pan-x;
+  /* Keep horizontal swipe; pan-y lets the page scroll when the gesture is vertical */
+  touch-action: pan-x pan-y;
 }
 
 .pdp-assurances__list::-webkit-scrollbar {

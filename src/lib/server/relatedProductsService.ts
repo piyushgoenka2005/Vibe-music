@@ -139,7 +139,7 @@ export async function upsertProductRelatedList(
 export async function deleteProductRelatedList(
   productId: string
 ): Promise<void> {
-  await prisma.productRelation.delete({ where: { productId } });
+  await prisma.productRelation.deleteMany({ where: { productId } });
   invalidateRelatedProductsCache();
 }
 

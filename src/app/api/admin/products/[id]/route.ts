@@ -44,6 +44,20 @@ export async function DELETE(_request: Request, context: RouteContext) {
     await deleteAdminProduct(id);
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (error instanceof Error && error.message === "Product not found") {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+    // Prisma "record to delete does not exist"
+    const code =
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      typeof (error as { code?: unknown }).code === "string"
+        ? (error as { code: string }).code
+        : null;
+    if (code === "P2025") {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
     return adminErrorResponse(error);
   }
 }

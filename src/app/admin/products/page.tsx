@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -75,7 +75,17 @@ function ProductsContent() {
   const { data, isLoading } = useQuery({
     queryKey: productsQueryKey,
     queryFn: () => fetchProducts({ search, status, cursor }),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
+
+  // Always refetch when landing on this page (e.g. after create/import).
+  useEffect(() => {
+    void queryClient.invalidateQueries({
+      queryKey: ["admin-products"],
+      refetchType: "active",
+    });
+  }, [queryClient]);
 
   function removeProductsFromCache(ids: string[]) {
     const idSet = new Set(ids);
@@ -128,7 +138,9 @@ function ProductsContent() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/products/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "Delete failed");

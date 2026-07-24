@@ -1,7 +1,7 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
-import { fetchAllProducts as fetchAllProductsFromDb } from "@/lib/server/storeCatalogRepository";
+import { fetchAllProducts as fetchAllProductsFromDb } from "@/lib/server/prisma/catalogRepository";
 import type { CatalogProduct } from "@/types/catalog";
 
 const CATALOG_REVALIDATE_SECONDS =
@@ -33,7 +33,7 @@ const CATEGORY_REVALIDATE_SECONDS =
 
 async function loadCategories() {
   const { fetchCategories } = await import(
-    "@/lib/server/storeCatalogRepository"
+    "@/lib/server/prisma/catalogRepository"
   );
   return fetchCategories();
 }

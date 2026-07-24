@@ -130,7 +130,7 @@ export async function upsertProductBundle(
 }
 
 export async function deleteProductBundle(productId: string): Promise<void> {
-  await prisma.productBundle.delete({ where: { productId } });
+  await prisma.productBundle.deleteMany({ where: { productId } });
   invalidateBundleCache();
 }
 

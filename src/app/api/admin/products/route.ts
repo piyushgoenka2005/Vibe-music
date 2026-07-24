@@ -41,7 +41,11 @@ export async function GET(request: Request) {
         : undefined,
       cursor: searchParams.get("cursor") ?? undefined,
     });
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    });
   } catch (error) {
     return adminErrorResponse(error);
   }
