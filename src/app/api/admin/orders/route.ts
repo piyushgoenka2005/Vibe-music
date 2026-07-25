@@ -1,21 +1,52 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { listAllOrders } from "@/lib/server/adminOrderService";
 import type { Order } from "@/types/order";
+
+const orderStatusSchema = z.enum([
+  "pending",
+  "confirmed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "refunded",
+]);
+
+const listOrdersQuerySchema = z.object({
+  status: orderStatusSchema.optional(),
+  search: z.string().trim().max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(20),
+  offset: z.coerce.number().int().min(0).optional(),
+  cursor: z.string().trim().min(1).max(200).optional(),
+});
+
+const exportOrdersSchema = z.object({
+  export: z.literal("csv"),
+});
 
 export async function GET(request: Request) {
   try {
     await requireAdmin("orders:read");
     const { searchParams } = new URL(request.url);
-    const result = await listAllOrders({
-      status: (searchParams.get("status") as Order["status"]) ?? undefined,
+    const parsed = listOrdersQuerySchema.safeParse({
+      status: searchParams.get("status") ?? undefined,
       search: searchParams.get("search") ?? undefined,
-      limit: Number(searchParams.get("limit") ?? 20),
+      limit: searchParams.get("limit") ?? 20,
       offset: searchParams.has("offset")
-        ? Number(searchParams.get("offset") ?? 0)
+        ? searchParams.get("offset")
         : undefined,
       cursor: searchParams.get("cursor") ?? undefined,
     });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid query" },
+        { status: 400 }
+      );
+    }
+
+    const result = await listAllOrders(parsed.data);
     return NextResponse.json(result);
   } catch (error) {
     return adminErrorResponse(error);
@@ -25,9 +56,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     await requireAdmin("orders:read", request);
-    const body = await request.json();
+    const parsed = exportOrdersSchema.parse(await request.json());
 
-    if (body.export === "csv") {
+    if (parsed.export === "csv") {
       const allOrders: Order[] = [];
       let cursor: string | undefined;
       do {

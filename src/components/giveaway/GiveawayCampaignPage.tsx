@@ -7,6 +7,7 @@ import { useState } from "react";
 import CountdownTimer from "@/components/giveaway/CountdownTimer";
 import { getCampaignPhase } from "@/lib/giveaway/eligibilityEngine";
 import { ROUTES } from "@/lib/routes";
+import { sanitizeHtml } from "@/lib/security/sanitize";
 import { useAuthStore } from "@/store/authStore";
 import type { GiveawayCampaign } from "@/types/giveaway";
 
@@ -187,7 +188,11 @@ export default function GiveawayCampaignPage({ slug }: { slug: string }) {
       {campaign.termsHtml ? (
         <section className="giveaway-terms">
           <h2>Terms & conditions</h2>
-          <div dangerouslySetInnerHTML={{ __html: campaign.termsHtml }} />
+          <div
+            dangerouslySetInnerHTML={{
+              __html: sanitizeHtml(campaign.termsHtml),
+            }}
+          />
         </section>
       ) : null}
 

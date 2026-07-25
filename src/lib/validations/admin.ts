@@ -246,3 +246,42 @@ export const adminNoteSchema = z.object({
 export const adminCustomerStatusSchema = z.object({
   isActive: z.boolean(),
 });
+
+export const adminProductBulkSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("delete"),
+    ids: z.array(z.string().min(1)).min(1).max(500),
+  }),
+  z.object({
+    action: z.literal("archive"),
+    ids: z.array(z.string().min(1)).min(1).max(500),
+  }),
+  z.object({
+    action: z.literal("activate"),
+    ids: z.array(z.string().min(1)).min(1).max(500),
+  }),
+  z.object({
+    action: z.literal("update_stock"),
+    ids: z.array(z.string().min(1)).min(1).max(500),
+    stock: z.number().finite().min(0),
+  }),
+  z.object({
+    action: z.literal("update_category"),
+    ids: z.array(z.string().min(1)).min(1).max(500),
+    category: z.string().min(1).max(255),
+    categorySlug: z.string().min(1).max(255),
+  }),
+]);
+
+export const adminNotificationMarkSchema = z
+  .object({
+    id: z.string().min(1).optional(),
+    markAllRead: z.boolean().optional(),
+  })
+  .refine((value) => value.markAllRead === true || Boolean(value.id), {
+    message: "Provide markAllRead or a notification id",
+  });
+
+export const adminDeleteImagesSchema = z.object({
+  urls: z.array(z.string().trim().min(1).max(2000)).min(1).max(50),
+});

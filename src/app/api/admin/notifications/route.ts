@@ -5,6 +5,7 @@ import {
   markAdminNotificationRead,
   markAllAdminNotificationsRead,
 } from "@/lib/server/notificationRepository";
+import { adminNotificationMarkSchema } from "@/lib/validations/admin";
 
 export async function GET() {
   try {
@@ -20,19 +21,15 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     await requireAdmin("dashboard:read", request);
-    const body = await request.json();
+    const parsed = adminNotificationMarkSchema.parse(await request.json());
 
-    if (body.markAllRead) {
+    if (parsed.markAllRead) {
       await markAllAdminNotificationsRead();
       return NextResponse.json({ ok: true });
     }
 
-    if (typeof body.id === "string") {
-      await markAdminNotificationRead(body.id);
-      return NextResponse.json({ ok: true });
-    }
-
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    await markAdminNotificationRead(parsed.id!);
+    return NextResponse.json({ ok: true });
   } catch (error) {
     return adminErrorResponse(error);
   }

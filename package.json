@@ -47,6 +47,8 @@
     "test:e2e:report": "playwright show-report playwright-report",
     "audit:lighthouse": "node scripts/ops/lighthouse-audit.mjs",
     "verify:integrations": "npx tsx --env-file=.env.local scripts/ops/verify-integrations.mts",
+    "verify:prod-signoff": "npx tsx scripts/ops/prod-signoff.mts",
+    "verify:razorpay-ops": "npx tsx --env-file=.env.local scripts/ops/verify-razorpay-ops.mts",
     "check:env": "node scripts/ops/check-env.mjs",
     "setup:local": "node scripts/db/setup-local-config.mjs",
     "db:probe": "node scripts/db/probe-db.mjs",

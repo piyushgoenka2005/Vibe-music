@@ -1,5 +1,5 @@
-// PostgreSQL mirror of Firestore collections.
-// Production continues reading Firestore — this schema is for migration prep only.
+// PostgreSQL schema for Vibe Music (sole production datastore).
+// Firestore has been fully decommissioned — do not reintroduce client Firestore reads.
 
 generator client {
   provider = "prisma-client-js"

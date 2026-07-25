@@ -26,6 +26,18 @@ function sortByName(products: CatalogProduct[]): CatalogProduct[] {
   return [...products].sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/**
+ * Local JSON under `src/data/catalog` is a seed/dev mirror only.
+ * Production must serve Postgres; enable JSON fallback explicitly via
+ * ALLOW_JSON_CATALOG_FALLBACK=true (defaults on in non-production).
+ */
+export function isJsonCatalogFallbackAllowed(): boolean {
+  const flag = process.env.ALLOW_JSON_CATALOG_FALLBACK?.trim().toLowerCase();
+  if (flag === "true" || flag === "1") return true;
+  if (flag === "false" || flag === "0") return false;
+  return process.env.NODE_ENV !== "production";
+}
+
 function assertPostgresForWrite(): void {
   if (!isPostgresConfigured()) {
     throw new Error("DATABASE_URL is required for catalog writes");
@@ -64,18 +76,31 @@ async function loadLocalProducts(includeInactive: boolean): Promise<CatalogProdu
   return filterActive(loadProducts(), includeInactive);
 }
 
-/** Prefer Postgres; fall back to local JSON when DB is missing, empty, or unreachable. */
+/** Prefer Postgres; optionally fall back to local JSON (dev / explicit opt-in). */
 async function withProductFallback<T>(
   dbQuery: () => Promise<T>,
   localFallback: () => Promise<T> | T
 ): Promise<T> {
-  if (!isPostgresConfigured() || (await isPostgresCatalogEmpty())) {
+  const allowJson = isJsonCatalogFallbackAllowed();
+
+  if (!isPostgresConfigured()) {
+    if (!allowJson) {
+      throw new Error("DATABASE_URL is required for catalog reads");
+    }
     return localFallback();
   }
+
+  if (await isPostgresCatalogEmpty()) {
+    // Unseeded local DBs can use JSON; production empty DB must not hide missing seed.
+    if (allowJson) return localFallback();
+    return dbQuery();
+  }
+
   try {
     return await dbQuery();
-  } catch {
-    return localFallback();
+  } catch (error) {
+    if (allowJson) return localFallback();
+    throw error;
   }
 }
 
@@ -115,8 +140,9 @@ export async function fetchProductBySlug(
   return withProductFallback(async () => {
     const row = await prisma.product.findUnique({ where: { slug } });
     if (row) return prismaToProduct(row);
-    // Curated demo / newly added JSON SKUs may lag DB sync — resolve locally.
-    return fromLocal();
+    // Dev/seed only: resolve curated JSON SKUs that lag DB sync.
+    if (isJsonCatalogFallbackAllowed()) return fromLocal();
+    return null;
   }, fromLocal);
 }
 

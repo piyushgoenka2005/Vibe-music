@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import AdmZip from "adm-zip";
+import { z } from "zod";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { csvRowToImportRow, parseCsv } from "@/lib/csv";
 import { productUploadFolder } from "@/lib/server/cdnStorage";
@@ -9,6 +10,14 @@ import {
   previewBulkImport,
 } from "@/services/catalogService";
 import type { BulkImportRow } from "@/types/catalog";
+
+const MAX_CSV_BYTES = 5 * 1024 * 1024;
+const MAX_ZIP_BYTES = 50 * 1024 * 1024;
+const MAX_IMPORT_ROWS = 2000;
+
+const importFlagsSchema = z.object({
+  confirm: z.boolean(),
+});
 
 function collectImageNames(row: BulkImportRow): string[] {
   return [row.image1, row.image2, row.image3, row.image4, row.image5].filter(
@@ -32,14 +41,49 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get("file");
     const zipFile = formData.get("zip");
-    const confirm = formData.get("confirm") === "true";
+    const flags = importFlagsSchema.safeParse({
+      confirm: formData.get("confirm") === "true",
+    });
+    if (!flags.success) {
+      return NextResponse.json({ error: "Invalid import flags" }, { status: 400 });
+    }
+    const confirm = flags.data.confirm;
 
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "CSV file is required" }, { status: 400 });
     }
 
+    if (file.size <= 0 || file.size > MAX_CSV_BYTES) {
+      return NextResponse.json(
+        { error: `CSV must be between 1 byte and ${MAX_CSV_BYTES} bytes` },
+        { status: 400 }
+      );
+    }
+
+    if (
+      file.name &&
+      !file.name.toLowerCase().endsWith(".csv") &&
+      !file.type.includes("csv") &&
+      !file.type.includes("text")
+    ) {
+      return NextResponse.json({ error: "Upload a .csv file" }, { status: 400 });
+    }
+
+    if (zipFile instanceof File && zipFile.size > MAX_ZIP_BYTES) {
+      return NextResponse.json(
+        { error: `ZIP must be at most ${MAX_ZIP_BYTES} bytes` },
+        { status: 400 }
+      );
+    }
+
     const text = await file.text();
     const parsed = parseCsv(text);
+    if (parsed.length > MAX_IMPORT_ROWS) {
+      return NextResponse.json(
+        { error: `CSV exceeds ${MAX_IMPORT_ROWS} rows` },
+        { status: 400 }
+      );
+    }
     let rows: BulkImportRow[] = parsed.map(csvRowToImportRow);
 
     const zipMap = new Map<string, Buffer>();

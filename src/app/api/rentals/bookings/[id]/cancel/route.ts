@@ -20,12 +20,15 @@ export async function POST(
     }
 
     const sessionUser = await getSessionUser();
-    const isOwner =
-      (sessionUser?.uid && booking.userId === sessionUser.uid) ||
-      (sessionUser?.email &&
-        booking.email.toLowerCase() === sessionUser.email.toLowerCase());
+    const isOwnerById =
+      Boolean(sessionUser?.uid) && booking.userId === sessionUser?.uid;
+    // Guest bookings (no userId yet) may be cancelled after login with matching email.
+    const isOwnerByGuestEmail =
+      !booking.userId &&
+      Boolean(sessionUser?.email) &&
+      booking.email.toLowerCase() === sessionUser!.email!.toLowerCase();
 
-    if (!isOwner) {
+    if (!isOwnerById && !isOwnerByGuestEmail) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

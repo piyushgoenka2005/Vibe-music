@@ -8,9 +8,10 @@ import {
 import {
   enforceMutationSecurity,
   enforceRateLimit,
+  parseJsonBody,
 } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
-import type { VerifyPaymentPayload } from "@/types/order";
+import { verifyPaymentSchema } from "@/lib/validations/checkout";
 
 export async function POST(request: Request) {
   try {
@@ -24,21 +25,10 @@ export async function POST(request: Request) {
     const csrfError = enforceMutationSecurity(request);
     if (csrfError) return csrfError;
 
-    const body = (await request.json()) as VerifyPaymentPayload;
+    const parsed = await parseJsonBody(request, verifyPaymentSchema);
+    if ("error" in parsed) return parsed.error;
 
-    if (
-      !body.orderId ||
-      !body.razorpayOrderId ||
-      !body.razorpayPaymentId ||
-      !body.razorpaySignature
-    ) {
-      return NextResponse.json(
-        { error: "Missing payment verification fields" },
-        { status: 400 }
-      );
-    }
-
-    const order = await verifyAndCompletePayment(body);
+    const order = await verifyAndCompletePayment(parsed.data);
 
     const sessionUser = await getSessionUser();
     if (sessionUser?.email) {

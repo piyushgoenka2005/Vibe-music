@@ -6,10 +6,7 @@ import {
 } from "@/lib/auth/require-admin";
 import { hasAnyPermission } from "@/lib/auth/permissions";
 import { deleteImageFromCdn, isCdnUrl } from "@/lib/server/cdnStorage";
-
-interface DeleteImagesPayload {
-  urls?: string[];
-}
+import { adminDeleteImagesSchema } from "@/lib/validations/admin";
 
 export async function POST(request: Request) {
   try {
@@ -24,17 +21,8 @@ export async function POST(request: Request) {
       throw new AdminAuthError("Insufficient permissions", 403);
     }
 
-    const body = (await request.json().catch(() => null)) as
-      | DeleteImagesPayload
-      | null;
-
-    const urls = Array.isArray(body?.urls)
-      ? body!.urls.filter((u) => typeof u === "string" && u.trim().length > 0)
-      : [];
-
-    if (urls.length === 0) {
-      return NextResponse.json({ error: "No image urls provided" }, { status: 400 });
-    }
+    const parsed = adminDeleteImagesSchema.parse(await request.json());
+    const urls = parsed.urls.map((url) => url.trim()).filter(Boolean);
 
     const results = await Promise.all(
       urls.map(async (url) => {

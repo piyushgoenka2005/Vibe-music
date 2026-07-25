@@ -12,6 +12,7 @@ import { canAccessOrder } from "@/lib/server/orderAccess";
 import { getOrderById } from "@/lib/server/orderService";
 import { toPaise } from "@/lib/gstCalculator";
 import { updateOrder } from "@/lib/server/orderRepository";
+import { resumePaymentSchema } from "@/lib/validations/checkout";
 
 export async function POST(
   request: Request,
@@ -19,12 +20,16 @@ export async function POST(
 ) {
   try {
     const { orderId } = await context.params;
-    const body = (await request.json().catch(() => ({}))) as {
-      email?: string;
-      trackingToken?: string;
-    };
-    const guestEmail = body.email?.trim().toLowerCase();
-    const trackingToken = body.trackingToken?.trim();
+    const raw = await request.json().catch(() => ({}));
+    const parsed = resumePaymentSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid request body" },
+        { status: 400 }
+      );
+    }
+    const guestEmail = parsed.data.email?.trim().toLowerCase();
+    const trackingToken = parsed.data.trackingToken;
 
     const order = await getOrderById(orderId);
     if (!order) {
@@ -40,7 +45,7 @@ export async function POST(
       Boolean(adminSession) ||
       canAccessOrder(order, {
         userId: sessionUser?.uid,
-        email: guestEmail ?? sessionUser?.email?.toLowerCase(),
+        email: guestEmail ?? sessionUser?.email?.toLowerCase() ?? undefined,
         trackingToken,
       });
 

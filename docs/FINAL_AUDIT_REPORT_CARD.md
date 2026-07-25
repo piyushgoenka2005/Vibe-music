@@ -1,6 +1,9 @@
 # Vibe Music — Final Audit Report Card
 
-**Audit date:** 22 July 2026  
+> **Superseded for live status:** see the refreshed master audit  
+> [`docs/MASTER_E2E_AUDIT_JUL25.md`](./MASTER_E2E_AUDIT_JUL25.md) (25 Jul 2026 · `5fd9865`) — Jul 22 ops gaps are **closed on production**; overall **98%**.
+
+**Audit date:** 22 July 2026 (historical baseline)  
 **Auditor:** Automated quality gates + production probes + code review  
 **Repository:** [github.com/piyushgoenka2005/Vibe-music](https://github.com/piyushgoenka2005/Vibe-music)  
 **Latest commit audited:** `431df8a` (main)  
