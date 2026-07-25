@@ -15,35 +15,37 @@ echo "  Vibe Music — Complete ops gaps (step-by-step)"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
+MISSING=0
+
 # ── Step 1: Pull latest code ────────────────────────────────────────────────
-echo "▶ Step 1/8 — Pull latest main"
+echo "▶ Step 1/10 — Pull latest main"
 git fetch origin main
 git pull --ff-only origin main
 echo "   Commit: $(git log -1 --oneline)"
 echo ""
 
 # ── Step 2: Merge ops secrets into .env ───────────────────────────────────
-echo "▶ Step 2/8 — Merge deploy/ops-secrets.env → .env"
+echo "▶ Step 2/10 — Merge deploy/ops-secrets.env → .env"
 node scripts/ops/merge-ops-secrets.mjs
 echo ""
 
 # ── Step 3: Verify required env ───────────────────────────────────────────
-echo "▶ Step 3/8 — Check production env"
+echo "▶ Step 3/10 — Check production env"
 npm run check:env || true
 echo ""
 
 # ── Step 4: Install, migrate, build, restart ──────────────────────────────
-echo "▶ Step 4/8 — Deploy (npm ci, migrate, build, PM2)"
+echo "▶ Step 4/10 — Deploy (npm ci, migrate, build, PM2)"
 bash deploy/update.sh
 echo ""
 
 # ── Step 5: Seed store phone + admin banners ──────────────────────────────
-echo "▶ Step 5/8 — Seed production ops (phone, banners)"
+echo "▶ Step 5/10 — Seed production ops (phone, banners)"
 npx tsx --env-file=.env scripts/ops/seed-production-ops.mts || true
 echo ""
 
 # ── Step 6: Gear story videos ─────────────────────────────────────────────
-echo "▶ Step 6/8 — Verify gear story MP4s"
+echo "▶ Step 6/10 — Verify gear story MP4s"
 npm run verify:gear-videos || true
 if [[ ! -f public/videos/style-story/reel-1.mp4 ]]; then
   echo "   Tip: scp reel-*.mp4 to public/videos/style-story/ (see README there)"
@@ -52,7 +54,7 @@ fi
 echo ""
 
 # ── Step 7: Post-deploy integration smoke ─────────────────────────────────
-echo "▶ Step 7/8 — Smoke test localhost"
+echo "▶ Step 7/10 — Smoke test localhost"
 sleep 2
 HEALTH=$(curl -sS http://127.0.0.1:3000/api/health || echo '{"status":"error"}')
 echo "   /api/health → $HEALTH"
@@ -62,9 +64,28 @@ BANNERS=$(curl -sS http://127.0.0.1:3000/api/banners || echo '{}')
 echo "   /api/banners → $(echo "$BANNERS" | head -c 120)..."
 echo ""
 
-# ── Step 8: Summary ─────────────────────────────────────────────────────────
-echo "▶ Step 8/8 — Gap checklist"
-MISSING=0
+# ── Step 8: Install / verify backups (F-14) ───────────────────────────────
+echo "▶ Step 8/10 — Install backups (pg_dump + CDN cron)"
+if bash deploy/install-backups.sh; then
+  echo "   ✅ backups installed"
+else
+  echo "   ⚠️  backup install failed — run: bash deploy/install-backups.sh"
+  MISSING=$((MISSING + 1))
+fi
+echo ""
+
+# ── Step 9: Razorpay ops readiness (no charge) ────────────────────────────
+echo "▶ Step 9/10 — Razorpay ops readiness"
+if npx tsx --env-file=.env scripts/ops/verify-razorpay-ops.mts; then
+  echo "   ✅ razorpay ops checks"
+else
+  echo "   ⚠️  razorpay ops warnings/failures — see output above"
+  MISSING=$((MISSING + 1))
+fi
+echo ""
+
+# ── Step 10: Summary ────────────────────────────────────────────────────────
+echo "▶ Step 10/10 — Gap checklist"
 
 check_env_key() {
   local key="$1"

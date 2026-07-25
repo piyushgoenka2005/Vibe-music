@@ -9,6 +9,13 @@ export type { ProductSearchOptions };
 
 const SEARCH_TIMEOUT_MS = 2_500;
 
+function isJsonCatalogFallbackAllowed(): boolean {
+  const flag = process.env.ALLOW_JSON_CATALOG_FALLBACK?.trim().toLowerCase();
+  if (flag === "true" || flag === "1") return true;
+  if (flag === "false" || flag === "0") return false;
+  return process.env.NODE_ENV !== "production";
+}
+
 async function searchFromLocalCatalog(
   options: ProductSearchOptions
 ): Promise<Product[]> {
@@ -64,6 +71,7 @@ export async function getTrendingProducts(): Promise<Product[]> {
       }),
     ]);
   } catch {
+    if (!isJsonCatalogFallbackAllowed()) return [];
     return trendingFromLocalCatalog();
   }
 }
@@ -79,6 +87,7 @@ export async function searchProducts(
       }),
     ]);
   } catch {
+    if (!isJsonCatalogFallbackAllowed()) return [];
     return searchFromLocalCatalog(options);
   }
 }

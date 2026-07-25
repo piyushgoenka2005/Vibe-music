@@ -6,50 +6,40 @@ import {
   bulkUpdateAdminStock,
   bulkUpdateProductStatus,
 } from "@/lib/server/adminProductService";
+import { adminProductBulkSchema } from "@/lib/validations/admin";
 
 export async function POST(request: Request) {
   try {
     await requireAdmin("products:write", request);
-    const body = await request.json();
-    const action = body.action as string;
-    const ids = body.ids as string[];
+    const parsed = adminProductBulkSchema.parse(await request.json());
 
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json({ error: "No products selected" }, { status: 400 });
-    }
-
-    switch (action) {
+    switch (parsed.action) {
       case "delete": {
         await requireAdmin("products:delete", request);
-        const deleted = await bulkDeleteAdminProducts(ids);
+        const deleted = await bulkDeleteAdminProducts(parsed.ids);
         return NextResponse.json({ deleted });
       }
       case "archive": {
-        const updated = await bulkUpdateProductStatus(ids, "archived");
+        const updated = await bulkUpdateProductStatus(parsed.ids, "archived");
         return NextResponse.json({ updated });
       }
       case "activate": {
-        const updated = await bulkUpdateProductStatus(ids, "active");
+        const updated = await bulkUpdateProductStatus(parsed.ids, "active");
         return NextResponse.json({ updated });
       }
       case "update_stock": {
-        const stock = Number(body.stock);
-        if (!Number.isFinite(stock) || stock < 0) {
-          return NextResponse.json({ error: "Invalid stock value" }, { status: 400 });
-        }
         const updated = await bulkUpdateAdminStock(
-          ids.map((id) => ({ id, stockQuantity: stock }))
+          parsed.ids.map((id) => ({ id, stockQuantity: parsed.stock }))
         );
         return NextResponse.json({ updated });
       }
       case "update_category": {
-        const category = String(body.category ?? "");
-        const categorySlug = String(body.categorySlug ?? "");
-        if (!category || !categorySlug) {
-          return NextResponse.json({ error: "Category is required" }, { status: 400 });
-        }
         const updated = await bulkUpdateAdminCategory(
-          ids.map((id) => ({ id, category, categorySlug }))
+          parsed.ids.map((id) => ({
+            id,
+            category: parsed.category,
+            categorySlug: parsed.categorySlug,
+          }))
         );
         return NextResponse.json({ updated });
       }

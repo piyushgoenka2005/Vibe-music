@@ -1,0 +1,26 @@
+# Example crontab entries for Vibe Music backups (F-14).
+# Install on the backup host (or VPS), then verify with:
+#   bash /path/to/Vibe-music/deploy/verify-backups.sh
+#
+# 1) Create dirs once:
+#    sudo mkdir -p /var/backups/vibe && sudo chown "$USER" /var/backups/vibe
+#
+# 2) Set DB URL without Prisma ?schema= (libpq-compatible):
+#    export BACKUP_DATABASE_URL='postgresql://vibe:PASSWORD@localhost:5432/vibe'
+#
+# 3) crontab -e  → paste lines below (adjust paths).
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Daily Postgres dump at 02:15 IST-ish (server local time) — custom format
+15 2 * * * mkdir -p /var/backups/vibe && pg_dump "$BACKUP_DATABASE_URL" -Fc -f "/var/backups/vibe/vibe-backup-$(date +\%Y\%m\%d-\%H\%M).dump" && find /var/backups/vibe -name 'vibe-backup-*.dump' -mtime +14 -delete
+
+# Daily CDN tarball at 02:45
+45 2 * * * mkdir -p /var/backups/vibe && tar -czf "/var/backups/vibe/cdn-backup-$(date +\%Y\%m\%d).tar.gz" -C /var/www cdn && find /var/backups/vibe -name 'cdn-backup-*.tar.gz' -mtime +14 -delete
+
+# Optional: copy newest dumps off-server (example rsync — fill host/path)
+# 30 3 * * * rsync -az /var/backups/vibe/ backup-user@offsite:/backups/vibemusic/
+
+# Weekly self-check (email/log on failure)
+0 4 * * 1 BACKUP_DIR=/var/backups/vibe CDN_BACKUP_DIR=/var/backups/vibe MAX_AGE_HOURS=36 bash /home/ubuntu/Vibe-music/deploy/verify-backups.sh >> /var/log/vibe-backup-verify.log 2>&1

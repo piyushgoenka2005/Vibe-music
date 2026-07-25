@@ -1,21 +1,24 @@
 # FINAL Security Report — ViBE Music
 
-**Date:** 11 July 2026
+> **Historical snapshot (11 July 2026).** The live stack is **Auth.js + PostgreSQL/Prisma + Razorpay** — Firebase Auth and Firestore are **decommissioned**.  
+> For current findings see [`docs/MASTER_E2E_AUDIT_JUL25.md`](../MASTER_E2E_AUDIT_JUL25.md).
+
+**Date:** 11 July 2026 (annotated 25 July 2026)
 
 ## Executive summary
 
-| Area | Status |
+| Area | Status (July 2026 code — current stack) |
 |------|--------|
-| Authentication | **Strong** — Firebase Auth + session cookies |
+| Authentication | **Strong** — Auth.js (credentials + optional Google) + session cookies |
 | Authorization / RBAC | **Strong** — `requireAdmin(permission)` on all admin APIs |
-| CSRF | **Implemented** — `enforceMutationSecurity` on state-changing routes |
-| Rate limiting | **Implemented** — Contact, support, newsletter, public APIs |
-| Payment security | **Strong** — HMAC signature verification, webhook secret |
-| Firestore rules | **Deny-by-default** — all commerce writes via Admin SDK |
-| Secrets | **No hardcoded secrets** in source |
+| CSRF | **Implemented** — `enforceMutationSecurity` / origin checks on mutations |
+| Rate limiting | **Implemented** — Edge scopes in `proxy.ts` + route helpers |
+| Payment security | **Strong** — Razorpay HMAC checkout + webhook signature |
+| Data plane | **PostgreSQL via Prisma** — Firestore fully retired |
+| Secrets | **No hardcoded secrets** in source (`.env*` gitignored) |
 | Debug endpoints | **Blocked in production** |
 
-**Score: 94 / 100**
+**Score (historical): 94 / 100** — re-score after Jul 25 hardening: see master E2E audit.
 
 ---
 
@@ -23,10 +26,10 @@
 
 | Control | Evidence |
 |---------|----------|
-| Customer auth | Firebase Auth, `ProtectedRoute`, session API |
-| Admin auth | Separate admin session, `AdminGuard`, login route |
-| Password reset | `forgot-password` flow |
-| Guest order access | Signed tokens with `GUEST_ORDER_ACCESS_SECRET` |
+| Customer auth | Auth.js credentials + Google OAuth, protected routes via `proxy.ts` |
+| Admin auth | Admin session + RBAC permissions, `AdminGuard` / `requireAdmin` |
+| Password reset | `forgot-password` / `reset-password` routes |
+| Guest order access | Tracking UUID + `timingSafeEqual` (email-only match is **dev-only**) |
 
 ---
 
@@ -59,29 +62,27 @@ Admin invite gated on `admins:write`.
 
 ---
 
-## Firestore security rules
+## Data plane (PostgreSQL)
 
-- All order/payment/inventory writes: **deny client**
-- User profiles: owner read/write only
-- Admin profiles: deny all client access
-- New collections (supportTickets, notifications, etc.): deny client writes
-- Public read: products, categories, published blog, contentPages, shippingZones
+- All commerce writes go through Next.js API routes + Prisma (no client DB access).
+- Guest order access requires tracking token in production (email-only match is dev fallback).
+- Admin mutations audited via `auditLog` / `/admin/audit-logs`.
 
-**Deploy required:** `firebase deploy --only firestore:rules`
+> Historical note: an earlier draft of this report listed Firestore security rules. Firestore is retired.
 
 ---
 
 ## Rate limiting
 
-Applied to: contact, support tickets, newsletter, payment create-order, auth endpoints.
+Applied via `proxy.ts` edge scopes and route helpers: contact, support, newsletter, payment, auth, admin, search.
 
-Implementation: `src/lib/security/rate-limit.ts`
+Implementation: `src/lib/security/rate-limit-core.ts`, `edge-rate-limit.ts`, optional Upstash.
 
 ---
 
 ## Audit logging
 
-Admin actions logged to `auditLogs` collection. Viewer at `admin/audit-logs` (super admin).
+Admin mutations logged (`src/lib/server/auditLog.ts`). Viewer at `admin/audit-logs`.
 
 Refund initiation, order status changes, admin invites logged.
 
@@ -94,6 +95,7 @@ Refund initiation, order status changes, admin invites logged.
 | S1 | CSP not fully strict | Review hosting headers pre-deploy |
 | S2 | No automated security scan in CI | Optional: add `npm audit` to workflow |
 | S3 | Payment diagnostics uses console.log | Acceptable ops logging; no secrets logged |
+| S4 | Regex HTML sanitizer (not DOMPurify) | Blog sanitized; giveaway terms now sanitized |
 
 ---
 
@@ -101,10 +103,11 @@ Refund initiation, order status changes, admin invites logged.
 
 ```
 npm test (security tests)  → PASS
-mutation-origin.test.ts    → 3/3
-razorpay/signature.test.ts → 5/5
+mutation-origin.test.ts
+razorpay/signature.test.ts
+orderAccess.test.ts
 ```
 
 ## Completion status
 
-No critical security issues remain. Production-ready after env secrets configured and Firestore rules deployed.
+No critical in-repo security blockers for Razorpay commerce. Keep env secrets configured; Postgres backups are an ops obligation (not Firestore rules).

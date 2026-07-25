@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
@@ -15,6 +15,8 @@ import "@/components/analytics/cookie-consent.css";
 
 type ConsentState = "unknown" | "granted" | "denied";
 
+const CONSENT_CHANGE_EVENT = "vibe-analytics-consent";
+
 function readConsent(): ConsentState {
   if (typeof window === "undefined") return "unknown";
   try {
@@ -27,28 +29,32 @@ function readConsent(): ConsentState {
   return "unknown";
 }
 
+function writeConsent(value: "granted" | "denied") {
+  try {
+    localStorage.setItem(ANALYTICS_CONSENT_KEY, value);
+  } catch {
+    /* ignore */
+  }
+  window.dispatchEvent(new Event(CONSENT_CHANGE_EVENT));
+}
+
+function subscribeConsent(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(CONSENT_CHANGE_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(CONSENT_CHANGE_EVENT, onStoreChange);
+  };
+}
+
+const subscribeNowhere = () => () => {};
+
 export default function CookieConsentBanner() {
-  const [consent, setConsent] = useState<ConsentState>("unknown");
-  const [visible, setVisible] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const isClient = useSyncExternalStore(subscribeNowhere, () => true, () => false);
+  const consent = useSyncExternalStore(subscribeConsent, readConsent, () => "unknown");
 
   useEffect(() => {
-    setMounted(true);
-    if (!isAnalyticsEnabled()) return;
-
-    const stored = readConsent();
-    setConsent(stored);
-    if (stored === "unknown") {
-      setVisible(true);
-    } else if (stored === "granted") {
-      grantAnalyticsConsent();
-    } else {
-      denyAnalyticsConsent();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isAnalyticsEnabled()) return;
+    if (!isClient || !isAnalyticsEnabled()) return;
     if (consent === "granted") {
       grantAnalyticsConsent();
       return;
@@ -56,35 +62,23 @@ export default function CookieConsentBanner() {
     if (consent === "denied") {
       denyAnalyticsConsent();
     }
-  }, [consent]);
+  }, [isClient, consent]);
 
   function accept(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
-    try {
-      localStorage.setItem(ANALYTICS_CONSENT_KEY, "granted");
-    } catch {
-      /* ignore */
-    }
+    writeConsent("granted");
     grantAnalyticsConsent();
-    setConsent("granted");
-    setVisible(false);
   }
 
   function decline(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
-    try {
-      localStorage.setItem(ANALYTICS_CONSENT_KEY, "denied");
-    } catch {
-      /* ignore */
-    }
+    writeConsent("denied");
     denyAnalyticsConsent();
-    setConsent("denied");
-    setVisible(false);
   }
 
-  if (!mounted || !isAnalyticsEnabled() || !visible || consent !== "unknown") {
+  if (!isClient || !isAnalyticsEnabled() || consent !== "unknown") {
     return null;
   }
 

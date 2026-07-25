@@ -39,13 +39,20 @@ Confirm:
 
 ## 4. Smoke test (production)
 
-- [ ] https://vibemusic.in loads; homepage ribbon + rating bar above footer
-- [ ] Top New Products — images load (no blank cards)
-- [ ] PDP for ADEON ACON — price + image + Add to cart
-- [ ] Checkout — Razorpay only (no COD)
-- [ ] `/admin/login` — admin account works
-- [ ] `/api/health` → `status: healthy`
-- [ ] Order confirmation email sends
+Automated (safe — no charge):
+
+```bash
+VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
+npm run verify:razorpay-ops   # needs .env.local / VPS .env with Razorpay keys
+# On VPS:
+bash deploy/install-backups.sh
+bash deploy/verify-backups.sh
+```
+
+Manual checklist (only if `paid_orders_db` is WARN):
+
+- [ ] Place **one** live Razorpay order; webhook marks paid; confirmation email arrives
+- [ ] Off-server copy of `/var/backups/vibe` (rsync / S3)
 
 ## 5. Post-launch (within 48h)
 

@@ -11,8 +11,10 @@ import {
 import {
   enforceMutationSecurity,
   enforceRateLimit,
+  parseJsonBody,
 } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { demoPaymentSchema } from "@/lib/validations/checkout";
 
 export async function POST(request: Request) {
   if (!isDemoPaymentsAllowed() || isRazorpayConfigured()) {
@@ -33,25 +35,12 @@ export async function POST(request: Request) {
     const csrfError = enforceMutationSecurity(request);
     if (csrfError) return csrfError;
 
-    const body = (await request.json()) as {
-      orderId?: string;
-      email?: string;
-      trackingToken?: string;
-    };
-    const orderId = body.orderId?.trim();
-    const email = body.email?.trim().toLowerCase();
-    const trackingToken = body.trackingToken?.trim();
+    const parsed = await parseJsonBody(request, demoPaymentSchema);
+    if ("error" in parsed) return parsed.error;
 
-    if (!orderId) {
-      return NextResponse.json({ error: "Order ID required." }, { status: 400 });
-    }
-
-    if (!email && !trackingToken) {
-      return NextResponse.json(
-        { error: "Email or tracking token is required." },
-        { status: 400 }
-      );
-    }
+    const orderId = parsed.data.orderId;
+    const email = parsed.data.email?.trim().toLowerCase();
+    const trackingToken = parsed.data.trackingToken;
 
     const order = await getOrderById(orderId);
     if (!order) {

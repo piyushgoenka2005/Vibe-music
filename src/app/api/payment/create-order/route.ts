@@ -10,12 +10,14 @@ import { toPaise } from "@/lib/gstCalculator";
 import {
   enforceMutationSecurity,
   enforceRateLimit,
+  parseJsonBody,
 } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import {
   logPayment,
   logPaymentError,
 } from "@/lib/server/paymentDiagnostics";
+import { createOrderSchema } from "@/lib/validations/checkout";
 import type { CreateOrderPayload } from "@/types/order";
 
 export async function POST(request: Request) {
@@ -38,37 +40,20 @@ export async function POST(request: Request) {
       return csrfError;
     }
 
-    const [sessionUser, body] = await Promise.all([
+    const [sessionUser, parsed] = await Promise.all([
       getSessionUser(),
-      request.json() as Promise<CreateOrderPayload>,
+      parseJsonBody(request, createOrderSchema),
     ]);
+    if ("error" in parsed) {
+      logPayment("Zod validation failed");
+      return parsed.error;
+    }
+    const body = parsed.data;
     logPayment("Request parsed", {
       paymentMethod: body.paymentMethod,
-      itemCount: body.items?.length ?? 0,
-      hasEmail: Boolean(body.email?.trim()),
+      itemCount: body.items.length,
+      hasEmail: Boolean(body.email),
     });
-
-    if (!body.items?.length) {
-      return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
-    }
-
-    if (!body.email?.trim()) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
-    }
-
-    if (!body.shippingAddress?.line1 || !body.shippingAddress?.city) {
-      return NextResponse.json(
-        { error: "Complete shipping address is required" },
-        { status: 400 }
-      );
-    }
-
-    if (body.paymentMethod !== "razorpay") {
-      return NextResponse.json(
-        { error: "Only online payment via Razorpay is supported." },
-        { status: 400 }
-      );
-    }
 
     const resolvedItems = await resolveOrderItems(body.items);
     logPayment("Order items resolved", { count: resolvedItems.length });
@@ -87,6 +72,7 @@ export async function POST(request: Request) {
         body.customerPhone?.trim() || body.shippingAddress.phone?.trim(),
       buyerState: body.buyerState || body.shippingAddress.state,
       couponDiscount,
+      paymentMethod: "razorpay",
     };
 
     const { order, razorpayOrderId, keyId, demoMode } = await createOrder(

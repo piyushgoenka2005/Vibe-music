@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
-import { validateBlogCommentInput } from "@/lib/blog/blogEngine";
 import {
   createBlogComment,
   getPublicBlogPostBySlug,
   listApprovedBlogComments,
 } from "@/lib/server/blogService";
+import {
+  enforceMutationSecurity,
+  enforceRateLimit,
+  parseJsonBody,
+} from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { blogCommentSchema } from "@/lib/validations/checkout";
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
@@ -27,26 +33,30 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   try {
+    const rateLimited = await enforceRateLimit(
+      request,
+      "blog-comment",
+      RATE_LIMITS.publicApi
+    );
+    if (rateLimited) return rateLimited;
+
+    const csrfError = enforceMutationSecurity(request);
+    if (csrfError) return csrfError;
+
     const { slug } = await context.params;
     const post = await getPublicBlogPostBySlug(slug);
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    const body = (await request.json()) as {
-      authorName?: string;
-      email?: string;
-      body?: string;
-      website?: string;
-    };
-    const validated = validateBlogCommentInput(body);
-    if (typeof validated === "string") {
-      return NextResponse.json({ error: validated }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, blogCommentSchema);
+    if ("error" in parsed) return parsed.error;
 
     const comment = await createBlogComment({
       postId: post.id,
-      ...validated,
+      authorName: parsed.data.authorName,
+      email: parsed.data.email,
+      body: parsed.data.body,
     });
 
     return NextResponse.json(

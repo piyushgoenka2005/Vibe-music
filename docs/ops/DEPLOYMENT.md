@@ -132,12 +132,22 @@ npm run start
 - [ ] Confirm Razorpay webhooks are received (payment status updates)
 - [ ] Monitor SMTP bounce/failure logs for the first hour
 - [ ] Run `npm run verify:integrations` against production (adjust `VERIFY_BASE_URL`)
+- [ ] Run `VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff`
+- [ ] On the backup host, run `bash deploy/verify-backups.sh` (recent pg_dump + CDN tarball)
 
 ---
 
 # Backup Checklist
 
 Run before every production deploy and on a **daily** recurring schedule. Store copies **off the production VPS**.
+
+**Automation helpers**
+
+| Asset | Purpose |
+|-------|---------|
+| [`deploy/crontab.backups.example`](../../deploy/crontab.backups.example) | Sample cron for `pg_dump` + CDN tarball + weekly verify |
+| [`deploy/verify-backups.sh`](../../deploy/verify-backups.sh) | Fails if newest dump/tarball is missing, tiny, or older than `MAX_AGE_HOURS` |
+| `npm run verify:prod-signoff` | Safe HTTP gates (no charge); prints manual Razorpay checklist |
 
 ## PostgreSQL
 
