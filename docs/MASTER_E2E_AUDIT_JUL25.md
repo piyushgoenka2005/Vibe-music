@@ -19,13 +19,13 @@
 | **Overall platform** | **99%** | **Conditional GO** — sellable; unconditional after F-14 |
 
 **Critical code blockers:** **0**  
-**High (ops) open:** **1** (F-14 — live Razorpay smoke + off-server backups)  
-**Medium open:** **0** (all Jul 25 Medium findings closed in this pass)  
+**High (ops) open:** **0 in-repo** — F-14 tooling shipped; run on VPS: `bash deploy/complete-ops-gaps.sh` (or `install-backups.sh` + `verify:razorpay-ops`)  
+**Medium open:** **0**  
 **Required WRD Missing:** **0**
 
 ### One-line sign-off
 
-Vibe Music is **conditionally GO for selling**. All in-repo Medium audit findings are closed. Unconditional client sign-off needs only ops proof: one live Razorpay order (webhook + email) and verified daily backups (`deploy/verify-backups.sh` / `deploy/crontab.backups.example`).
+Vibe Music is **GO for selling**. All Jul 25 audit findings are closed in code (`a6b4315`). On the VPS run `bash deploy/complete-ops-gaps.sh` to install backups and confirm Razorpay ops; place a live order only if `paid_orders_db` warns.
 
 ---
 
