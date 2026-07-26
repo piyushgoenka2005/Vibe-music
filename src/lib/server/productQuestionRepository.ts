@@ -133,3 +133,7 @@ export async function updateProductQuestion(
   if (!updated) throw new Error("Question not found after update");
   return updated;
 }
+
+export async function deleteProductQuestion(id: string): Promise<void> {
+  await prisma.productQuestion.delete({ where: { id } });
+}

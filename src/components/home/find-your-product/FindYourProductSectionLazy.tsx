@@ -1,10 +1,10 @@
-"use client";
+import { Suspense } from "react";
+import FindYourProductSection from "@/components/home/find-your-product/FindYourProductSection";
 
-import dynamic from "next/dynamic";
-
-const FindYourProductSection = dynamic(
-  () => import("@/components/home/find-your-product/FindYourProductSection"),
-  { loading: () => null }
-);
-
-export default FindYourProductSection;
+export default function FindYourProductSectionLazy() {
+  return (
+    <Suspense fallback={null}>
+      <FindYourProductSection />
+    </Suspense>
+  );
+}

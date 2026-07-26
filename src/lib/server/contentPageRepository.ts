@@ -80,3 +80,26 @@ export async function upsertContentPage(page: ContentPage): Promise<ContentPage>
   });
   return page;
 }
+
+export async function deleteContentPage(slug: string): Promise<{
+  deleted: boolean;
+  revertedToSeed: boolean;
+}> {
+  const seeded = Boolean(CONTENT_PAGES[slug]);
+  const existing = await prisma.contentPage.findUnique({ where: { slug } });
+  if (!existing && !seeded) {
+    return { deleted: false, revertedToSeed: false };
+  }
+  if (existing) {
+    await prisma.contentPage.delete({ where: { slug } });
+  }
+  // Seeded pages remain available from static CONTENT_PAGES after DB delete.
+  if (!seeded && !existing) {
+    return { deleted: false, revertedToSeed: false };
+  }
+  return { deleted: true, revertedToSeed: seeded };
+}
+
+export function isSeededContentPage(slug: string): boolean {
+  return Boolean(CONTENT_PAGES[slug]);
+}

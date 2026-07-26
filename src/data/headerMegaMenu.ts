@@ -206,72 +206,49 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       {
         heading: "PA systems",
         links: [
-          { label: "Powered speakers", href: subSearch("live-sound-lighting", "powered speaker") },
-          { label: "Mixers", href: subSearch("live-sound-lighting", "live mixer") },
-          { label: "Wireless systems", href: subSearch("live-sound-lighting", "wireless mic") },
-          { label: "In-ear monitors", href: subSearch("live-sound-lighting", "in ear monitor") },
-        ],
-      },
-      {
-        heading: "Lighting",
-        links: [
-          { label: "PAR lights", href: subSearch("live-sound-lighting", "par light") },
-          { label: "Moving heads", href: subSearch("live-sound-lighting", "moving head") },
-          { label: "Controllers", href: subSearch("live-sound-lighting", "dmx controller") },
-          { label: "Fog machines", href: subSearch("live-sound-lighting", "fog machine") },
-        ],
-      },
-      {
-        heading: "Rig essentials",
-        links: [
-          { label: "Speaker stands", href: subSearch("live-sound-lighting", "speaker stand") },
-          { label: "DI boxes", href: subSearch("live-sound-lighting", "di box") },
-          { label: "Stage snakes", href: subSearch("live-sound-lighting", "stage snake") },
+          { label: "Active PA speakers", href: subSearch("live-sound-lighting", "PA speaker") },
+          { label: "DSP speakers", href: subSearch("live-sound-lighting", "DSP") },
           { label: "Shop all live sound", href: categoryPath("live-sound-lighting") },
         ],
       },
+      {
+        heading: "Stage essentials",
+        links: [
+          { label: "Live performance PA", href: categoryPath("live-sound-lighting") },
+          { label: "DJ & karaoke PA", href: subSearch("live-sound-lighting", "DJ") },
+          { label: "Browse live sound", href: categoryPath("live-sound-lighting") },
+        ],
+      },
     ],
     featured: [
-      featured("live-sound-lighting", "PA speakers", "powered speaker"),
-      featured("live-sound-lighting", "Lighting", "stage lighting", "lighting", "header-mega__card-image--horizontal"),
+      featured("live-sound-lighting", "PA speakers", "PA speaker"),
+      featured("live-sound-lighting", "Active speakers", "active speaker"),
     ],
   },
   {
-    slug: "software-plug-ins",
-    name: "Software",
-    href: categoryPath("software-plug-ins"),
+    slug: "microphones-wireless",
+    name: "Microphones",
+    href: categoryPath("microphones-wireless"),
     columns: [
       {
-        heading: "DAWs",
+        heading: "Wired mics",
         links: [
-          { label: "Music production", href: subSearch("software-plug-ins", "daw") },
-          { label: "Notation software", href: subSearch("software-plug-ins", "notation") },
-          { label: "DJ software", href: subSearch("software-plug-ins", "dj software") },
-          { label: "Bundles", href: subSearch("software-plug-ins", "software bundle") },
+          { label: "Dynamic mics", href: subSearch("microphones-wireless", "dynamic mic") },
+          { label: "Condenser mics", href: subSearch("microphones-wireless", "condenser mic") },
+          { label: "Shop all microphones", href: categoryPath("microphones-wireless") },
         ],
       },
       {
-        heading: "Plug-ins",
+        heading: "Wireless",
         links: [
-          { label: "EQ & compression", href: subSearch("software-plug-ins", "eq plugin") },
-          { label: "Reverb & delay", href: subSearch("software-plug-ins", "reverb plugin") },
-          { label: "Virtual instruments", href: subSearch("software-plug-ins", "virtual instrument") },
-          { label: "Mastering tools", href: subSearch("software-plug-ins", "mastering plugin") },
-        ],
-      },
-      {
-        heading: "Licensing",
-        links: [
-          { label: "Subscriptions", href: subSearch("software-plug-ins", "subscription") },
-          { label: "Educational", href: subSearch("software-plug-ins", "education") },
-          { label: "Upgrades", href: subSearch("software-plug-ins", "upgrade") },
-          { label: "Shop all software", href: categoryPath("software-plug-ins") },
+          { label: "Wireless systems", href: subSearch("microphones-wireless", "wireless") },
+          { label: "Browse microphones", href: categoryPath("microphones-wireless") },
         ],
       },
     ],
     featured: [
-      featured("software-plug-ins", "DAWs", "daw"),
-      featured("software-plug-ins", "Plug-ins", "plugin", "plugin"),
+      featured("microphones-wireless", "Dynamic mics", "dynamic mic"),
+      featured("microphones-wireless", "Wireless", "wireless mic"),
     ],
   },
   {
@@ -280,36 +257,27 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
     href: categoryPath("dj-equipment"),
     columns: [
       {
-        heading: "Controllers",
+        heading: "Mixers",
         links: [
-          { label: "2-deck controllers", href: subSearch("dj-equipment", "2 deck controller") },
-          { label: "4-deck controllers", href: subSearch("dj-equipment", "4 deck controller") },
-          { label: "All-in-one", href: subSearch("dj-equipment", "all in one dj") },
-          { label: "Media players", href: subSearch("dj-equipment", "cdj") },
-        ],
-      },
-      {
-        heading: "Club gear",
-        links: [
-          { label: "DJ mixers", href: subSearch("dj-equipment", "dj mixer") },
-          { label: "Turntables", href: subSearch("dj-equipment", "turntable") },
-          { label: "Monitor speakers", href: subSearch("dj-equipment", "dj monitor") },
-          { label: "Booth packages", href: subSearch("dj-equipment", "dj package") },
-        ],
-      },
-      {
-        heading: "Accessories",
-        links: [
-          { label: "Headphones", href: subSearch("dj-equipment", "dj headphones") },
-          { label: "Cases & bags", href: subSearch("dj-equipment", "dj case") },
-          { label: "Stands & furniture", href: subSearch("dj-equipment", "laptop stand") },
+          { label: "USB mixers", href: subSearch("dj-equipment", "USB mixer") },
+          { label: "Bluetooth mixers", href: subSearch("dj-equipment", "Bluetooth mixer") },
+          { label: "Multi-channel consoles", href: subSearch("dj-equipment", "mixer console") },
           { label: "Shop all DJ", href: categoryPath("dj-equipment") },
+        ],
+      },
+      {
+        heading: "Live & studio",
+        links: [
+          { label: "Karaoke mixers", href: subSearch("dj-equipment", "karaoke") },
+          { label: "PA mixers", href: subSearch("dj-equipment", "PA mixer") },
+          { label: "Open-box mixers", href: subSearch("dj-equipment", "open box") },
+          { label: "Browse DJ gear", href: categoryPath("dj-equipment") },
         ],
       },
     ],
     featured: [
-      featured("dj-equipment", "Controllers", "dj controller"),
-      featured("dj-equipment", "Turntables", "turntable", "turntable"),
+      featured("dj-equipment", "Mixers", "mixer"),
+      featured("dj-equipment", "Consoles", "console"),
     ],
   },
   {

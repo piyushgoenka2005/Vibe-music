@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/api/route-utils";
 import { listActiveBanners } from "@/lib/server/bannerService";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const banners = await listActiveBanners();
     return NextResponse.json(
@@ -15,7 +16,9 @@ export async function GET() {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unable to load banners";
-    const status = message.includes("Quota exceeded") ? 503 : 500;
-    return NextResponse.json({ error: message, banners: [] }, { status });
+    if (message.includes("Quota exceeded")) {
+      return NextResponse.json({ error: "Service busy", banners: [] }, { status: 503 });
+    }
+    return handleRouteError(error, "api/banners", request);
   }
 }

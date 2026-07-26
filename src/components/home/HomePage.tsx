@@ -5,7 +5,7 @@ import HomepageBannerHero from "@/components/home/homepage-banner-hero/HomepageB
 import BrowseCategoryCardsSection from "@/components/home/BrowseCategoryCardsSection";
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
-import HomepageNewArrivalsAsync from "@/components/homepage/HomepageNewArrivalsAsync";
+import HomepageNewArrivalsAsync from "@/components/home/HomepageNewArrivalsAsync";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
 import BigNamesDealsSection from "@/components/home/BigNamesDealsSection";
@@ -101,7 +101,6 @@ export default function HomePage() {
       <ServiceStatusCarousel />
       <DiscoverLocationsSection />
       <SocialProofStrip />
-      <TourRibbonSection />
     </main>
   );
 }

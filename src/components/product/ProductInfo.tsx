@@ -41,6 +41,7 @@ export default function ProductInfo({
       rating: liveRating ?? product.rating,
       reviewCount: liveReviewCount ?? product.reviewCount,
     });
+  const hasReviews = reviewCountValue > 0;
   const attributeGroups = getVariantAttributeGroups(product.variants);
 
   return (
@@ -55,24 +56,31 @@ export default function ProductInfo({
 
       <div className="pdp-meta-row">
         <div className="pdp-rating">
-          <span className="pdp-rating__stars" aria-hidden="true">
-            {"★".repeat(Math.round(ratingValue))}
-            {"☆".repeat(5 - Math.round(ratingValue))}
-          </span>
+          {hasReviews ? (
+            <>
+              <span className="pdp-rating__stars" aria-hidden="true">
+                {"★".repeat(Math.round(ratingValue))}
+                {"☆".repeat(5 - Math.round(ratingValue))}
+              </span>
+              <button
+                type="button"
+                className="pdp-rating__link"
+                onClick={onReviewsClick}
+              >
+                {reviewCountValue}{" "}
+                {reviewCountValue === 1 ? "review" : "reviews"}
+              </button>
+              <span className="pdp-meta-separator" aria-hidden="true">
+                |
+              </span>
+            </>
+          ) : null}
           <button
             type="button"
             className="pdp-rating__link"
             onClick={onReviewsClick}
           >
-            {reviewCountValue} {reviewCountValue === 1 ? "review" : "reviews"}
-          </button>
-          <span className="pdp-meta-separator" aria-hidden="true">|</span>
-          <button
-            type="button"
-            className="pdp-rating__link"
-            onClick={onReviewsClick}
-          >
-            Write your review
+            {hasReviews ? "Write your review" : "Be the first to review"}
           </button>
         </div>
         <div className="pdp-meta-actions">

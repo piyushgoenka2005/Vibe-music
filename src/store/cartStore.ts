@@ -65,7 +65,7 @@ interface CartState {
   isUpdating: boolean;
   promoConfig: CartPromotionsPublic | null;
   addItem: (product: Product, quantity?: number, variant?: ProductVariant) => void;
-  removeItem: (lineId: string) => void;
+  removeItem: (lineId: string, options?: { silent?: boolean }) => void;
   updateQuantity: (lineId: string, quantity: number) => void;
   clearCart: () => void;
   applyCatalogPrices: (updates: CatalogPriceUpdate[]) => void;
@@ -205,7 +205,7 @@ export const useCartStore = create<CartState>()(
         trackAddToCart(product, qty, variant?.label);
       },
 
-      removeItem: (lineId) => {
+      removeItem: (lineId, options) => {
         const item = get().items.find((i) => i.lineId === lineId);
         if (item && isPromoGiftLine(item)) return;
 
@@ -216,10 +216,12 @@ export const useCartStore = create<CartState>()(
           );
           return { items };
         });
-        if (item) {
+        if (item && !options?.silent) {
           useToastStore
             .getState()
             .show(`${item.name} removed from cart`, "info");
+          trackRemoveFromCart(cartItemToAnalyticsLine(item));
+        } else if (item) {
           trackRemoveFromCart(cartItemToAnalyticsLine(item));
         }
       },

@@ -4,6 +4,8 @@ import {
   notifyOrderRefunded,
   notifyOrderStatusChanged,
 } from "@/lib/server/orderNotificationService";
+import { asJsonValue } from "@/lib/server/prisma/mappers";
+import { prisma } from "@/lib/db/prisma";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import * as pgUsers from "@/lib/server/prisma/usersRepository";
 import type { Order, OrderStatus } from "@/types/order";
@@ -257,4 +259,42 @@ export async function updateCustomerStatus(
   isActive: boolean
 ): Promise<void> {
   await pgUsers.updateUserActiveStatus(uid, isActive);
+}
+
+export async function eraseCustomer(uid: string): Promise<void> {
+  const user = await pgUsers.getUserProfile(uid);
+  if (!user) throw new Error("Customer not found");
+
+  const adminRow = await prisma.admin.findUnique({ where: { uid } });
+  if (adminRow) {
+    throw new Error("Cannot erase an admin account from Customers");
+  }
+
+  const email = user.email;
+  await prisma.$transaction(async (tx) => {
+    await tx.userNotification.deleteMany({ where: { userId: uid } });
+    await tx.order.updateMany({
+      where: { userId: uid },
+      data: {
+        email: `erased+${uid.slice(0, 8)}@deleted.local`,
+        customerName: "Erased customer",
+        customerPhone: null,
+        userId: null,
+        shippingAddress: asJsonValue({
+          name: "Erased",
+          line1: "Redacted",
+          city: "Redacted",
+          state: "NA",
+          postalCode: "000000",
+          country: "IN",
+        }),
+      },
+    });
+    if (email) {
+      await tx.newsletterSubscriber.deleteMany({
+        where: { email: email.toLowerCase() },
+      });
+    }
+    await tx.user.delete({ where: { id: uid } });
+  });
 }

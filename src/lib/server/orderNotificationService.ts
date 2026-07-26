@@ -1,6 +1,6 @@
 import "server-only";
 
-import { ROUTES } from "@/lib/routes";
+import { adminOrderPath } from "@/lib/routes";
 import {
   createAdminNotification,
   notifyUserIfAllowed,
@@ -16,7 +16,7 @@ export async function notifyAdminNewOrder(order: Order): Promise<void> {
     type: "order",
     title: "New order",
     body: `${order.customerName ?? order.email} — ₹${Math.round(order.total)} (${order.paymentMethod})`,
-    link: ROUTES.adminOrders,
+    link: adminOrderPath(order.id),
   });
 }
 

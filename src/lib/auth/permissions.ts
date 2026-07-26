@@ -84,6 +84,7 @@ const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     "blog:delete",
     "rentals:read",
     "rentals:write",
+    "rentals:delete",
     "giveaways:read",
     "giveaways:write",
     "giveaways:delete",

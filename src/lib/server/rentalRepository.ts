@@ -339,6 +339,42 @@ export async function listRentalBlocksForProduct(
   }));
 }
 
+export async function upsertRentalBlock(
+  input: RentalAvailabilityBlock
+): Promise<RentalAvailabilityBlock> {
+  const row = await prisma.rentalAvailabilityBlock.upsert({
+    where: { id: input.id },
+    create: {
+      id: input.id,
+      productId: input.productId,
+      unitId: input.unitId ?? null,
+      startAt: input.startAt,
+      endAt: input.endAt,
+      reason: input.reason || "maintenance",
+      createdAt: input.createdAt || new Date().toISOString(),
+    },
+    update: {
+      unitId: input.unitId ?? null,
+      startAt: input.startAt,
+      endAt: input.endAt,
+      reason: input.reason || "maintenance",
+    },
+  });
+  return {
+    id: row.id,
+    productId: row.productId,
+    unitId: row.unitId,
+    startAt: row.startAt,
+    endAt: row.endAt,
+    reason: row.reason,
+    createdAt: row.createdAt,
+  };
+}
+
+export async function deleteRentalBlock(id: string): Promise<void> {
+  await prisma.rentalAvailabilityBlock.delete({ where: { id } });
+}
+
 export async function getRentalPolicy(): Promise<RentalPolicy> {
   const row = await prisma.rentalPolicy.findUnique({ where: { id: "default" } });
   if (row) {
@@ -771,6 +807,10 @@ export async function upsertRentalUnit(input: RentalInventoryUnit): Promise<Rent
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
+}
+
+export async function deleteRentalUnit(id: string): Promise<void> {
+  await prisma.rentalInventoryUnit.delete({ where: { id } });
 }
 
 export async function upsertRentalPolicy(input: RentalPolicy): Promise<RentalPolicy> {

@@ -1,7 +1,6 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import { invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
 import * as pgContent from "@/lib/server/prisma/contentRepository";
 import { prismaToReview } from "@/lib/server/prisma/mappers";
@@ -70,29 +69,13 @@ export async function getProductReviewStats(
 ): Promise<ProductReviewStats> {
   const stats = await pgContent.getProductReviewStats(productId);
   if (!stats) {
-    const fallback = emptyProductReviewStats(productId);
-    const ensured = ensureProductReviewMetrics({
-      id: productId,
-      rating: fallback.averageRating,
-      reviewCount: fallback.totalReviews,
-    });
-    return {
-      ...fallback,
-      averageRating: ensured.rating,
-      totalReviews: ensured.reviewCount,
-    };
+    return emptyProductReviewStats(productId);
   }
-
-  const ensured = ensureProductReviewMetrics({
-    id: productId,
-    rating: stats.averageRating,
-    reviewCount: stats.totalReviews,
-  });
 
   return {
     productId: stats.productId,
-    totalReviews: ensured.reviewCount,
-    averageRating: ensured.rating,
+    totalReviews: Math.max(0, Math.floor(Number(stats.totalReviews) || 0)),
+    averageRating: Number(stats.averageRating) || 0,
     distribution: {
       "1": Number((stats.distribution as Record<string, number>)["1"] ?? 0),
       "2": Number((stats.distribution as Record<string, number>)["2"] ?? 0),

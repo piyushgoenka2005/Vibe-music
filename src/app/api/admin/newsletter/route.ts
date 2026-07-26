@@ -1,0 +1,69 @@
+import { NextResponse } from "next/server";
+import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
+import {
+  deleteNewsletterSubscriber,
+  listNewsletterSubscribers,
+} from "@/lib/server/newsletterRepository";
+import { logAuditEvent } from "@/lib/server/auditLog";
+
+export async function GET(request: Request) {
+  try {
+    await requireAdmin("customers:read");
+    const { searchParams } = new URL(request.url);
+    const subscribers = await listNewsletterSubscribers();
+
+    if (searchParams.get("export") === "csv") {
+      const header = "email,firstName,lastName,marketing,subscribedAt,source\n";
+      const rows = subscribers
+        .map((s) =>
+          [
+            s.email,
+            s.firstName ?? "",
+            s.lastName ?? "",
+            s.marketing ? "true" : "false",
+            s.subscribedAt,
+            s.source,
+          ]
+            .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+            .join(",")
+        )
+        .join("\n");
+      return new NextResponse(header + rows, {
+        headers: {
+          "Content-Type": "text/csv",
+          "Content-Disposition": 'attachment; filename="newsletter-subscribers.csv"',
+        },
+      });
+    }
+
+    return NextResponse.json({ subscribers, total: subscribers.length });
+  } catch (error) {
+    return adminErrorResponse(error);
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const admin = await requireAdmin("customers:write", request);
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get("email");
+    if (!email) {
+      return NextResponse.json({ error: "email required" }, { status: 400 });
+    }
+    const deleted = await deleteNewsletterSubscriber(email);
+    if (!deleted) {
+      return NextResponse.json({ error: "Subscriber not found" }, { status: 404 });
+    }
+    await logAuditEvent({
+      action: "newsletter.subscriber.deleted",
+      actorId: admin.uid,
+      actorEmail: admin.email,
+      resourceType: "newsletter_subscriber",
+      resourceId: email,
+      request,
+    });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return adminErrorResponse(error);
+  }
+}

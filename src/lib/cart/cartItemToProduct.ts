@@ -3,10 +3,9 @@ import type { Product } from "@/types/product";
 
 /** Minimal product shape for wishlist / toast actions from a cart line. */
 export function cartItemToProduct(item: CartItem): Product {
-  const slug = item.slug?.trim() || "";
   return {
     id: item.productId,
-    slug,
+    slug: item.slug?.trim() || "",
     name: item.name,
     brand: item.brand,
     brandSlug: item.brand.toLowerCase().replace(/\s+/g, "-"),

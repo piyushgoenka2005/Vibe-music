@@ -46,7 +46,7 @@ export default function CategoriesIndexPage({
                   <span className="categories-index__thumb-wrap">
                     <Image
                       src={category.imageSrc}
-                      alt=""
+                      alt={category.name}
                       width={96}
                       height={96}
                       className="categories-index__thumb"

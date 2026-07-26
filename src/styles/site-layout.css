@@ -1776,6 +1776,18 @@ body.site-nav-open .site-header--hidden {
   }
 }
 
+/* Full cart page: keep page scroll enabled (inner shell must not trap wheel). */
+.storefront-main:has(.cart-page) {
+  overflow-x: clip;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body:has(.cart-page) {
+  overflow-x: clip;
+  overflow-y: auto;
+}
+
 /* Desktop scroll-reveal: hide Help while trending panel owns the viewport */
 @media (min-width: 768px) {
   body:has(.footer-products-panel.is-ready.is-interactive) .help-widget {

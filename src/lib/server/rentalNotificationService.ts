@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
+import { adminRentalBookingPath } from "@/lib/routes";
 import type { RentalBooking } from "@/types/rental";
 import { logInfo } from "@/lib/server/logger";
 
@@ -44,7 +45,7 @@ export async function notifyRentalBookingUpdate(
         type: "rental",
         title,
         body,
-        link: `/admin/rentals/bookings/${booking.id}`,
+        link: adminRentalBookingPath(booking.id),
         read: false,
         createdAt: new Date().toISOString(),
       },

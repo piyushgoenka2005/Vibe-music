@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
-import { ROUTES } from "@/lib/routes";
+import { adminOrderPath } from "@/lib/routes";
 import type { ReturnRequest, ReturnRequestStatus } from "@/types/returnRequest";
 
 function ReturnsContent() {
@@ -92,7 +92,7 @@ function ReturnsContent() {
                   >
                     <td>
                       <Link
-                        href={ROUTES.adminOrders}
+                        href={adminOrderPath(item.orderId)}
                         onClick={(e) => e.stopPropagation()}
                       >
                         {item.orderId.slice(0, 8)}…
@@ -121,7 +121,8 @@ function ReturnsContent() {
           ) : (
             <>
               <p>
-                <strong>Order:</strong> {selected.orderId}
+                <strong>Order:</strong>{" "}
+                <Link href={adminOrderPath(selected.orderId)}>{selected.orderId}</Link>
               </p>
               <p>
                 <strong>Email:</strong> {selected.email}

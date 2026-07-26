@@ -63,9 +63,11 @@ export default function CartUpsellCarousel({
           const original = product.originalPrice;
           const canAdd = isPurchasable(product);
           const addLabel = listingQuickAddLabel(product);
-          const href = productPath(product.slug);
+          const href = productPath(product.slug.trim());
 
-          function handleAdd() {
+          function handleAdd(event: React.MouseEvent) {
+            event.preventDefault();
+            event.stopPropagation();
             if (!canAdd) return;
             if (shouldNavigateForVariants(product)) {
               router.push(href);
@@ -116,23 +118,25 @@ export default function CartUpsellCarousel({
                   </div>
                 </div>
               </Link>
-              <button
-                type="button"
-                className="cart-upsell__add"
-                onClick={handleAdd}
-                disabled={!canAdd}
-                aria-label={
-                  canAdd
-                    ? listingQuickAddAriaLabel(product)
-                    : `${product.name} is unavailable`
-                }
-              >
-                {canAdd
-                  ? shouldNavigateForVariants(product)
-                    ? addLabel
-                    : "+ Add"
-                  : "Unavailable"}
-              </button>
+              <div className="cart-upsell__actions">
+                <button
+                  type="button"
+                  className="cart-upsell__add"
+                  onClick={handleAdd}
+                  disabled={!canAdd}
+                  aria-label={
+                    canAdd
+                      ? listingQuickAddAriaLabel(product)
+                      : `${product.name} is unavailable`
+                  }
+                >
+                  {canAdd
+                    ? shouldNavigateForVariants(product)
+                      ? addLabel
+                      : "+ Add"
+                    : "Unavailable"}
+                </button>
+              </div>
             </article>
           );
         })}

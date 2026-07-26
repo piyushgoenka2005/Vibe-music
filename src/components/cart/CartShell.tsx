@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, X } from "lucide-react";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useCartCatalogReprice } from "@/hooks/useCartCatalogReprice";
 import { useCartPromotions } from "@/hooks/useCartPromotions";
+import { ROUTES } from "@/lib/routes";
 import { fetchProductSummaries, fetchProducts } from "@/services/products.api";
 import { useCartStore } from "@/store/cartStore";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
@@ -14,6 +16,7 @@ import CartItem from "./CartItem";
 import CartMilestoneProgress from "./CartMilestoneProgress";
 import CartPromoBanner from "./CartPromoBanner";
 import CartSavingsSummary from "./CartSavingsSummary";
+import CartShippingInfo from "./CartShippingInfo";
 import CartStickyFooter from "./CartStickyFooter";
 import CartUpsellCarousel from "./CartUpsellCarousel";
 
@@ -30,6 +33,7 @@ export default function CartShell({
   onClose,
   onBrowse,
 }: CartShellProps) {
+  const router = useRouter();
   const isClient = useIsClient();
   const items = useCartStore((s) => s.items);
   const isUpdating = useCartStore((s) => s.isUpdating);
@@ -71,7 +75,13 @@ export default function CartShell({
     const merged = [...recentlyViewed, ...recommended];
     const seen = new Set<string>();
     return merged.filter((product) => {
-      if (seen.has(product.id) || cartProductIds.has(product.id)) return false;
+      if (
+        seen.has(product.id) ||
+        cartProductIds.has(product.id) ||
+        !product.slug?.trim()
+      ) {
+        return false;
+      }
       seen.add(product.id);
       return true;
     });
@@ -85,6 +95,14 @@ export default function CartShell({
     () => items.filter((item) => item.isPromoGift),
     [items]
   );
+
+  const closeOrBrowse = onBrowse ?? onClose;
+  const handleContinueShopping =
+    variant === "drawer"
+      ? closeOrBrowse
+      : () => {
+          router.push(ROUTES.search);
+        };
 
   if (!isClient) {
     return (
@@ -124,30 +142,35 @@ export default function CartShell({
             </div>
             <div className="cart-shell__heading">
               <h2 id={titleId} className="cart-shell__title">
-                Cart
+                Shopping Cart ({itemCount})
               </h2>
-              <p className="cart-shell__subtitle">
-                {itemCount} {itemCount === 1 ? "item" : "items"}
-              </p>
+              {items.length > 0 ? (
+                <p className="cart-shell__subtitle">Items reserved in your cart</p>
+              ) : null}
             </div>
           </>
         ) : (
           <div className="cart-shell__heading">
             <h1 id={titleId} className="cart-shell__title">
-              Cart
+              Shopping Cart ({itemCount})
             </h1>
             {items.length > 0 ? (
-              <p className="cart-shell__subtitle">
-                {itemCount} {itemCount === 1 ? "item" : "items"}
-              </p>
-            ) : (
-              <p className="cart-shell__subtitle">Empty</p>
-            )}
+              <p className="cart-shell__subtitle">Items reserved in your cart</p>
+            ) : null}
           </div>
         )}
       </header>
 
       <div className="cart-shell__body">
+        {items.length > 0 ? (
+          <div className="cart-shell__context">
+            <CartPromoBanner />
+            <CartMilestoneProgress />
+            <CartShippingInfo />
+            <CartSavingsSummary />
+          </div>
+        ) : null}
+
         {isUpdating ? (
           <div className="cart-loading" role="status" aria-live="polite">
             <div className="cart-spinner" aria-hidden="true" />
@@ -156,14 +179,11 @@ export default function CartShell({
         ) : null}
 
         {items.length === 0 ? (
-          <CartEmptyState onBrowse={onBrowse ?? onClose} />
+          <CartEmptyState
+            onBrowse={variant === "drawer" ? closeOrBrowse : undefined}
+          />
         ) : (
           <>
-            <div className="cart-shell__context">
-              <CartPromoBanner />
-              <CartMilestoneProgress />
-            </div>
-
             {paidItems.length > 0 ? (
               <div className="cart-shell__items" aria-label="Cart items">
                 {paidItems.map((item) => (
@@ -194,8 +214,6 @@ export default function CartShell({
               </section>
             ) : null}
 
-            <CartSavingsSummary />
-
             <CartUpsellCarousel
               products={upsellProducts}
               title="Recommended for you"
@@ -206,7 +224,7 @@ export default function CartShell({
 
       <CartStickyFooter
         showViewCartLink={variant === "drawer"}
-        onContinueShopping={onBrowse ?? onClose}
+        onContinueShopping={handleContinueShopping}
       />
     </div>
   );

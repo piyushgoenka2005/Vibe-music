@@ -132,8 +132,14 @@ async function buildThumb(url: string, width: number): Promise<CachedThumb | nul
     const upstream = await fetch(url, {
       headers: { Accept: "image/*" },
       cache: "no-store",
+      redirect: "manual",
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
+
+    if (upstream.status >= 300 && upstream.status < 400) {
+      // Refuse redirect chains — host allowlist is only checked on the request URL.
+      return null;
+    }
 
     if (!upstream.ok) {
       return null;

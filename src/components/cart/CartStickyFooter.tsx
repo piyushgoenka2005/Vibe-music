@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
+import Link from "next/link";
 import { buildCartShippingState } from "@/lib/cart/cartShipping";
 import { computeMrpTotal } from "@/lib/cart/promoGift";
 import { ROUTES } from "@/lib/routes";
@@ -38,111 +38,130 @@ export default function CartStickyFooter({
   const mrpTotal = computeMrpTotal(items);
   const showMrpStrike = mrpTotal > total + 0.009;
   const shipping = buildCartShippingState(paidSubtotal, promoConfig);
+  const showLinks = Boolean(showViewCartLink || onContinueShopping);
+
+  function handleCheckoutClick() {
+    closeDrawer();
+    onCheckout?.();
+  }
 
   return (
     <footer className="cart-sticky-footer">
-      <div className="cart-sticky-footer__bar">
-        <button
-          type="button"
-          className="cart-sticky-footer__total-wrap"
-          onClick={() => setExpanded((open) => !open)}
-          aria-expanded={expanded}
-        >
-          <span className="cart-sticky-footer__total-label">
-            Estimated Total
-            {expanded ? (
-              <ChevronUp size={16} aria-hidden />
-            ) : (
-              <ChevronDown size={16} aria-hidden />
-            )}
-          </span>
-          <span className="cart-sticky-footer__total-values">
-            {showMrpStrike ? (
-              <span className="cart-sticky-footer__total-mrp">
-                {formatCurrency(mrpTotal)}
-              </span>
-            ) : null}
-            <span className="cart-sticky-footer__total-amount">
-              {formatCurrency(total)}
-            </span>
-          </span>
-        </button>
-
-        {onCheckout ? (
-          <CheckoutGlassButton
-            className="cart-sticky-footer__checkout"
-            onClick={onCheckout}
-            variant="solid"
-          >
-            Proceed to Checkout
-          </CheckoutGlassButton>
-        ) : (
-          <CheckoutGlassButton
-            className="cart-sticky-footer__checkout"
-            href={checkoutHref}
-            onClick={closeDrawer}
-            variant="solid"
-          >
-            Proceed to Checkout
-          </CheckoutGlassButton>
-        )}
-      </div>
-
-      {expanded ? (
-        <div className="cart-sticky-footer__breakdown">
-          <div className="cart-sticky-footer__row">
-            <span>Subtotal</span>
-            <span>{formatCurrency(subtotal)}</span>
-          </div>
-          {itemSavings > 0 ? (
-            <div className="cart-sticky-footer__row cart-sticky-footer__row--discount">
-              <span>Product savings</span>
-              <span>−{formatCurrency(itemSavings)}</span>
-            </div>
-          ) : null}
-          {discount > 0 ? (
-            <div className="cart-sticky-footer__row cart-sticky-footer__row--discount">
-              <span>Coupon savings</span>
-              <span>−{formatCurrency(discount)}</span>
-            </div>
-          ) : null}
-          {totalSavings > 0 ? (
-            <div className="cart-sticky-footer__row cart-sticky-footer__row--discount">
-              <span>Total savings</span>
-              <span>−{formatCurrency(totalSavings)}</span>
-            </div>
-          ) : null}
-          <div className="cart-sticky-footer__row">
-            <span>Shipping</span>
-            <span>{shipping.amountLabel}</span>
-          </div>
-        </div>
+      {totalSavings > 0 ? (
+        <p className="cart-sticky-footer__savings">
+          Saving {formatCurrency(totalSavings)}
+        </p>
       ) : null}
 
-      {showViewCartLink || onContinueShopping ? (
-        <div className="cart-sticky-footer__links">
-          {onContinueShopping ? (
+      <div className="cart-sticky-footer__panel">
+        <div className="cart-sticky-footer__summary">
+          <button
+            type="button"
+            className="cart-sticky-footer__total-wrap"
+            onClick={() => setExpanded((open) => !open)}
+            aria-expanded={expanded}
+            aria-controls="cart-sticky-footer-breakdown"
+            aria-label={
+              expanded ? "Hide price breakdown" : "Show price breakdown"
+            }
+          >
+            <span className="cart-sticky-footer__total-label">
+              Order total
+              <span className="cart-sticky-footer__chevron" aria-hidden>
+                {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </span>
+            </span>
+            <span className="cart-sticky-footer__total-values">
+              {showMrpStrike ? (
+                <span className="cart-sticky-footer__total-mrp">
+                  {formatCurrency(mrpTotal)}
+                </span>
+              ) : null}
+              <span className="cart-sticky-footer__total-amount">
+                {formatCurrency(total)}
+              </span>
+            </span>
+          </button>
+
+          <p className="cart-sticky-footer__meta">
+            {shipping.unlocked
+              ? "Free shipping · Taxes included"
+              : `${shipping.amountLabel} shipping · Taxes included`}
+          </p>
+
+          {expanded ? (
+            <div
+              id="cart-sticky-footer-breakdown"
+              className="cart-sticky-footer__breakdown"
+            >
+              <div className="cart-sticky-footer__row">
+                <span>Subtotal</span>
+                <span>{formatCurrency(subtotal)}</span>
+              </div>
+              {itemSavings > 0 ? (
+                <div className="cart-sticky-footer__row cart-sticky-footer__row--discount">
+                  <span>Product savings</span>
+                  <span>−{formatCurrency(itemSavings)}</span>
+                </div>
+              ) : null}
+              {discount > 0 ? (
+                <div className="cart-sticky-footer__row cart-sticky-footer__row--discount">
+                  <span>Coupon</span>
+                  <span>−{formatCurrency(discount)}</span>
+                </div>
+              ) : null}
+              <div className="cart-sticky-footer__row">
+                <span>Shipping</span>
+                <span>{shipping.amountLabel}</span>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="cart-sticky-footer__actions">
+          {onCheckout ? (
             <button
               type="button"
-              className="cart-sticky-footer__continue"
-              onClick={onContinueShopping}
+              className="cart-sticky-footer__checkout"
+              onClick={handleCheckoutClick}
             >
-              Continue Shopping
+              Checkout
             </button>
-          ) : null}
-
-          {showViewCartLink ? (
-            <CheckoutGlassButton
-              className="cart-sticky-footer__view-cart"
-              href={ROUTES.cart}
+          ) : (
+            <Link
+              href={checkoutHref}
+              className="cart-sticky-footer__checkout"
               onClick={closeDrawer}
-              variant="ghost"
             >
-              View full cart
-            </CheckoutGlassButton>
+              Checkout
+            </Link>
+          )}
+
+          {showLinks ? (
+            <div className="cart-sticky-footer__links">
+              {onContinueShopping ? (
+                <button
+                  type="button"
+                  className="cart-sticky-footer__continue"
+                  onClick={onContinueShopping}
+                >
+                  Continue shopping
+                </button>
+              ) : null}
+
+              {showViewCartLink ? (
+                <Link
+                  href={ROUTES.cart}
+                  className="cart-sticky-footer__view-cart"
+                  onClick={closeDrawer}
+                >
+                  View full cart
+                </Link>
+              ) : null}
+            </div>
           ) : null}
         </div>
-      ) : null}
+      </div>
     </footer>
   );
 }

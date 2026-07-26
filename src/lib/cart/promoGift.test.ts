@@ -44,14 +44,14 @@ describe("promoGift", () => {
     expect(computePaidSubtotal(items)).toBe(500);
   });
 
-  it("computes item savings from original prices", () => {
+  it("computes item savings from original prices excluding gifts", () => {
     const items = [paidItem(800, 1, 1000), buildPromoGiftLine(gift)];
-    expect(computeItemSavings(items)).toBe(349);
+    expect(computeItemSavings(items)).toBe(200);
   });
 
-  it("computes MRP total including gifts", () => {
+  it("computes MRP total excluding promo gifts", () => {
     const items = [paidItem(800, 1, 1000), buildPromoGiftLine(gift)];
-    expect(computeMrpTotal(items)).toBe(1149);
+    expect(computeMrpTotal(items)).toBe(1000);
   });
 
   it("adds gift when threshold met", () => {

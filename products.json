@@ -6563,5 +6563,126 @@
       "similarProductIds": [],
       "relatedProductIds": []
     }
+  },
+  {
+    "id": "prod-nord-stage-4-88-key-performance-keyboard",
+    "slug": "nord-stage-4-88-key-performance-keyboard",
+    "name": "Nord Stage 4 88-Key Performance Keyboard",
+    "brand": "Nord",
+    "category": "Keyboards & Synthesizers",
+    "subcategory": "Stage Piano",
+    "price": 449999,
+    "originalPrice": 499999,
+    "discountPercentage": 10,
+    "rating": 4.8,
+    "reviewCount": 300,
+    "stock": 6,
+    "reservedStock": 0,
+    "lowStockThreshold": 3,
+    "sku": "VM-NORD-STAGE4-88",
+    "status": "active",
+    "featured": true,
+    "trending": true,
+    "newArrival": true,
+    "images": [
+      "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/55821996-5863-4175-8d9c-5d19966fd4c3.png",
+      "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/c28a752e-47fd-4b38-b8c2-f350a6e538ac.png",
+      "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/362ee69d-6ac7-4f54-99ff-f2527d10fed8.png"
+    ],
+    "description": "The Nord Stage 4 88 is a flagship performance keyboard built for gigging musicians and studio players. It combines a fully weighted hammer-action keyboard with Nord’s award-winning piano, organ, and synth engines, seamless layering, and hands-on control for stage-ready sound design. Ideal for live performance, rehearsal rooms, and professional recording setups.",
+    "specifications": {
+      "Manufacturer": "Nord",
+      "Category": "Keyboards & Synthesizers",
+      "SKU": "VM-NORD-STAGE4-88",
+      "Model": "Stage 4 88",
+      "Product Type": "Stage Piano",
+      "Keys": "88",
+      "Action": "Fully weighted hammer action"
+    },
+    "createdAt": "2026-07-18T09:19:17.595Z",
+    "updatedAt": "2026-07-18T09:19:17.595Z",
+    "brandSlug": "nord",
+    "categorySlug": "keyboards-synthesizers",
+    "availability": "in-stock",
+    "condition": "new",
+    "imageColor": "#e8e8e8",
+    "image": "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/55821996-5863-4175-8d9c-5d19966fd4c3.png",
+    "gstRate": 18,
+    "detail": {
+      "msrp": 499999,
+      "salePrice": 449999,
+      "specs": [
+        {
+          "label": "Manufacturer",
+          "value": "Nord"
+        },
+        {
+          "label": "Category",
+          "value": "Keyboards & Synthesizers"
+        },
+        {
+          "label": "SKU",
+          "value": "VM-NORD-STAGE4-88"
+        },
+        {
+          "label": "Model",
+          "value": "Stage 4 88"
+        },
+        {
+          "label": "Product Type",
+          "value": "Stage Piano"
+        },
+        {
+          "label": "Keys",
+          "value": "88"
+        },
+        {
+          "label": "Action",
+          "value": "Fully weighted hammer action"
+        }
+      ],
+      "inTheBox": [
+        "Nord Stage 4 88",
+        "Power cord",
+        "Owner’s manual",
+        "Manufacturer documentation"
+      ],
+      "gallery": [
+        {
+          "id": "img-0",
+          "alt": "Nord Stage 4 88-Key Performance Keyboard view 1",
+          "color": "#e8e8e8",
+          "src": "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/55821996-5863-4175-8d9c-5d19966fd4c3.png"
+        },
+        {
+          "id": "img-1",
+          "alt": "Nord Stage 4 88-Key Performance Keyboard view 2",
+          "color": "#e8e8e8",
+          "src": "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/c28a752e-47fd-4b38-b8c2-f350a6e538ac.png"
+        },
+        {
+          "id": "img-2",
+          "alt": "Nord Stage 4 88-Key Performance Keyboard view 3",
+          "color": "#e8e8e8",
+          "src": "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/362ee69d-6ac7-4f54-99ff-f2527d10fed8.png"
+        }
+      ],
+      "videos": [],
+      "variants": [
+        {
+          "id": "var-default",
+          "label": "88-key",
+          "sku": "VM-NORD-STAGE4-88",
+          "price": 449999,
+          "availability": "in-stock",
+          "stock": 6
+        }
+      ],
+      "reviews": [],
+      "qa": [],
+      "frequentlyBoughtTogether": [],
+      "similarProductIds": [],
+      "relatedProductIds": []
+    }
   }
 ]

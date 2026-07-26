@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -36,13 +37,19 @@ async function fetchOrderDetail(orderId: string): Promise<Order> {
 
 function OrdersContent() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const deepLinkOrderId = searchParams.get("orderId");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
     useAdminCursorPagination();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(deepLinkOrderId);
   const [newStatus, setNewStatus] = useState<OrderStatus>("processing");
   const [note, setNote] = useState("");
+
+  useEffect(() => {
+    if (deepLinkOrderId) setSelectedId(deepLinkOrderId);
+  }, [deepLinkOrderId]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-orders", search, status, cursor],
@@ -54,6 +61,10 @@ function OrdersContent() {
     queryFn: () => fetchOrderDetail(selectedId!),
     enabled: Boolean(selectedId),
   });
+
+  useEffect(() => {
+    if (selected) setNewStatus(selected.status);
+  }, [selected]);
 
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -276,7 +287,9 @@ export default function AdminOrdersPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Orders">
-          <OrdersContent />
+          <Suspense fallback={<LoadingState />}>
+            <OrdersContent />
+          </Suspense>
         </AdminShell>
       )}
     </AdminGuard>

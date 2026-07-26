@@ -143,33 +143,41 @@ export default function ProductBuyBox({
     <aside className="pdp-buybox" aria-label="Purchase options">
       <div ref={atcSentinelRef} className="pdp-buybox__card">
         <div className="pdp-buybox__price-block">
-          {onSale && product.msrp && quantity === 1 ? (
-            <div className="pdp-buybox__list-row">
-              <span>List Price:</span>
-              <span className="pdp-buybox__list-price">
-                {formatPrice(product.msrp)}
-              </span>
+          {isComingSoon ? (
+            <div className="pdp-buybox__price pdp-buybox__price--coming-soon">
+              <span className="pdp-buybox__coming-soon-label">Coming Soon</span>
             </div>
-          ) : null}
+          ) : (
+            <>
+              {onSale && product.msrp && quantity === 1 ? (
+                <div className="pdp-buybox__list-row">
+                  <span>List Price:</span>
+                  <span className="pdp-buybox__list-price">
+                    {formatPrice(product.msrp)}
+                  </span>
+                </div>
+              ) : null}
 
-          <div className="pdp-buybox__price">
-            <span className="pdp-buybox__price-symbol">{priceParts.symbol}</span>
-            <span className="pdp-buybox__price-whole">{priceParts.whole}</span>
-            {priceParts.fraction ? (
-              <span className="pdp-buybox__price-fraction">
-                .{priceParts.fraction}
-              </span>
-            ) : null}
-          </div>
+              <div className="pdp-buybox__price">
+                <span className="pdp-buybox__price-symbol">{priceParts.symbol}</span>
+                <span className="pdp-buybox__price-whole">{priceParts.whole}</span>
+                {priceParts.fraction ? (
+                  <span className="pdp-buybox__price-fraction">
+                    .{priceParts.fraction}
+                  </span>
+                ) : null}
+              </div>
 
-          {savings > 0 && quantity === 1 ? (
-            <p className="pdp-buybox__savings">
-              You save {formatPrice(savings)}
-              {product.msrp
-                ? ` (${Math.round((savings / product.msrp) * 100)}%)`
-                : ""}
-            </p>
-          ) : null}
+              {savings > 0 && quantity === 1 ? (
+                <p className="pdp-buybox__savings">
+                  You save {formatPrice(savings)}
+                  {product.msrp
+                    ? ` (${Math.round((savings / product.msrp) * 100)}%)`
+                    : ""}
+                </p>
+              ) : null}
+            </>
+          )}
         </div>
 
         {canPurchase ? (

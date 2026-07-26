@@ -1,4 +1,4 @@
-/** Scanner card data — static now; catalog mapping can replace this later. */
+/** Scanner card data — prefer catalog-backed fields (name/price/image/slug). */
 export interface ScannerProduct {
   id: string;
   name: string;

@@ -21,6 +21,7 @@ export function computePaidSubtotal(items: CartItem[]): number {
 
 export function computeItemSavings(items: CartItem[]): number {
   return items.reduce((sum, item) => {
+    if (isPromoGiftLine(item)) return sum;
     const original = item.originalPrice ?? 0;
     if (original <= item.price) return sum;
     return sum + (original - item.price) * item.quantity;
@@ -29,9 +30,11 @@ export function computeItemSavings(items: CartItem[]): number {
 
 export function computeMrpTotal(items: CartItem[]): number {
   return items.reduce((sum, item) => {
-    const unit = item.originalPrice && item.originalPrice > item.price
-      ? item.originalPrice
-      : item.price;
+    if (isPromoGiftLine(item)) return sum;
+    const unit =
+      item.originalPrice && item.originalPrice > item.price
+        ? item.originalPrice
+        : item.price;
     return sum + unit * item.quantity;
   }, 0);
 }

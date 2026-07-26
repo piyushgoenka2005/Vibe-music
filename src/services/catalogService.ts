@@ -61,7 +61,7 @@ import type {
   ProductStatus,
   UpdateProductInput,
 } from "@/types/catalog";
-import type { Product, ProductDetail } from "@/types/product";
+import type { Product, ProductDetail, ProductSpec, ProductVideo } from "@/types/product";
 
 async function resolveCategory(
   categoryInput: string
@@ -165,7 +165,7 @@ function buildDefaultDetail(
       label,
       value,
     })),
-    inTheBox: [product.name, "Manufacturer documentation", "Warranty card"],
+    inTheBox: [],
     gallery: product.images.map((src, i) => ({
       id: `img-${i}`,
       alt: `${product.name} view ${i + 1}`,
@@ -198,6 +198,45 @@ function buildDefaultDetail(
     ].map((p) => p.id),
     spin360Images: [],
   };
+}
+
+/** Detect legacy invented package contents from older catalog defaults. */
+function isInventedInTheBox(items: string[], productName: string): boolean {
+  return (
+    items.length === 3 &&
+    items[0] === productName &&
+    items[1] === "Manufacturer documentation" &&
+    items[2] === "Warranty card"
+  );
+}
+
+function normalizeDetailSpecs(
+  specs: Array<{ label?: string; value?: string }>
+): ProductSpec[] {
+  return specs
+    .map((spec) => ({
+      label: String(spec.label ?? "").trim(),
+      value: String(spec.value ?? "").trim(),
+    }))
+    .filter((spec) => spec.label && spec.value);
+}
+
+function normalizeProductVideos(
+  videos: Array<{
+    id?: string;
+    title?: string;
+    thumbnailColor?: string;
+    embedUrl?: string;
+  }>
+): ProductVideo[] {
+  return videos
+    .map((video, index) => ({
+      id: String(video.id ?? `video-${index + 1}`).trim() || `video-${index + 1}`,
+      title: String(video.title ?? "").trim(),
+      thumbnailColor: String(video.thumbnailColor ?? "#1a1a1a").trim() || "#1a1a1a",
+      embedUrl: String(video.embedUrl ?? "").trim(),
+    }))
+    .filter((video) => video.title && video.embedUrl);
 }
 
 export function toProduct(catalogProduct: CatalogProduct): Product {
@@ -268,7 +307,10 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
       Array.isArray(detail.specs) ? detail.specs : [],
       catalogProduct.specifications
     ),
-    inTheBox: Array.isArray(detail.inTheBox) ? detail.inTheBox : [],
+    inTheBox: (() => {
+      const items = Array.isArray(detail.inTheBox) ? detail.inTheBox : [];
+      return isInventedInTheBox(items, catalogProduct.name) ? [] : items;
+    })(),
     images: gallery,
     videos: Array.isArray(detail.videos) ? detail.videos : [],
     variants,
@@ -856,6 +898,27 @@ export async function createProduct(
     };
   }
 
+  if (input.inTheBox !== undefined) {
+    product.detail = {
+      ...product.detail!,
+      inTheBox: input.inTheBox.map((item) => item.trim()).filter(Boolean),
+    };
+  }
+
+  if (input.videos !== undefined) {
+    product.detail = {
+      ...product.detail!,
+      videos: normalizeProductVideos(input.videos),
+    };
+  }
+
+  if (input.detailSpecs !== undefined) {
+    product.detail = {
+      ...product.detail!,
+      specs: normalizeDetailSpecs(input.detailSpecs),
+    };
+  }
+
   if (input.variants?.length) {
     const existingSkus = await fetchAllVariantSkus();
     return writeProduct(
@@ -1010,6 +1073,27 @@ export async function updateProduct(
       spin360Images: patch.spin360Images.filter(
         (src): src is string => typeof src === "string" && src.length > 0
       ),
+    };
+  }
+
+  if (patch.inTheBox !== undefined) {
+    updated.detail = {
+      ...(updated.detail ?? preservedDetail),
+      inTheBox: patch.inTheBox.map((item) => item.trim()).filter(Boolean),
+    };
+  }
+
+  if (patch.videos !== undefined) {
+    updated.detail = {
+      ...(updated.detail ?? preservedDetail),
+      videos: normalizeProductVideos(patch.videos),
+    };
+  }
+
+  if (patch.detailSpecs !== undefined) {
+    updated.detail = {
+      ...(updated.detail ?? preservedDetail),
+      specs: normalizeDetailSpecs(patch.detailSpecs),
     };
   }
 

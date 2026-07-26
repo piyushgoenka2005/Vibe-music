@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/api/route-utils";
 import { loadProductDetailPage } from "@/lib/server/productDetailLoader";
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   try {
     const { slug } = await context.params;
     const data = await loadProductDetailPage(slug);
@@ -18,8 +19,6 @@ export async function GET(_request: Request, context: RouteContext) {
       },
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to load product";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleRouteError(error, "api/products/[slug]", request);
   }
 }

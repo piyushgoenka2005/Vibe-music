@@ -56,26 +56,6 @@ function toCartProduct(item: HomepageProductItem): Product {
   };
 }
 
-function seededHash(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-function seededDiscount(id: string): number {
-  const DISCOUNTS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 79];
-  return DISCOUNTS[seededHash(id) % DISCOUNTS.length];
-}
-
-function fakeMrp(price: number, discountPct: number): number {
-  return Math.round(price / (1 - discountPct / 100));
-}
-
-/** Hide seeded strikethrough MRP on cards where it overflows the price row. */
-const HIDE_SEEDED_MRP_PRODUCT_IDS = new Set([
-  "prod-nord-stage-4-88-key-performance-keyboard",
-]);
-
 export default function CarouselProductCard({
   item,
   sectionKey,
@@ -87,8 +67,14 @@ export default function CarouselProductCard({
   const displayName = formatProductCardTitle(item.name, item.brand);
   const displayPrice = item.salePrice ?? item.price;
   const hasPrice = isPurchasablePrice(displayPrice);
-  const showSeededMrp =
-    hasPrice && !HIDE_SEEDED_MRP_PRODUCT_IDS.has(item.id);
+  const hasRealDiscount =
+    item.salePrice != null &&
+    item.salePrice > 0 &&
+    item.price > item.salePrice &&
+    displayPrice > 0;
+  const discountPct = hasRealDiscount
+    ? Math.round(((item.price - item.salePrice!) / item.price) * 100)
+    : null;
   const { rating: displayRating, reviewCount: displayReviewCount } =
     ensureProductReviewMetrics({
       id: item.id,
@@ -100,7 +86,6 @@ export default function CarouselProductCard({
   const badgeLabel =
     item.badgeLabel ?? (sectionKey === "trending" ? "Trending" : undefined);
   const isTrendingRibbon = sectionKey === "trending" && !item.badgeLabel;
-  const discountPct = seededDiscount(item.id);
   const productHref = resolveLinkHref(item.href);
   const cartProduct = toCartProduct(item);
   const canQuickAdd = canListingQuickAdd(cartProduct);
@@ -175,7 +160,7 @@ export default function CarouselProductCard({
                 hasPrice ? "" : " product-suggest__tags-row--enquiry"
               }`}
             >
-              {hasPrice ? (
+              {discountPct != null ? (
                 <span className="discount-drop" aria-label={`${discountPct}% off`}>
                   <span className="discount-drop__arrow" aria-hidden="true">
                     ↓
@@ -184,9 +169,9 @@ export default function CarouselProductCard({
                 </span>
               ) : null}
               <span className="product-suggest__item-prices">
-                {showSeededMrp ? (
+                {hasRealDiscount ? (
                   <span className="product-suggest__item-was">
-                    {formatDisplayPrice(fakeMrp(displayPrice, discountPct))}
+                    {formatDisplayPrice(item.price)}
                   </span>
                 ) : null}
                 <span

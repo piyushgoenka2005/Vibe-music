@@ -5,6 +5,7 @@ import { getOrderById, releaseOrderReservation } from "@/lib/server/orderService
 import {
   enforceMutationSecurity,
   enforceRateLimit,
+  handleRouteError,
   parseJsonBody,
 } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
@@ -51,8 +52,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to release reservation";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleRouteError(error, "api/payment/release-reservation", request);
   }
 }

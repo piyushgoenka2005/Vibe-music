@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import AdminShell from "@/components/admin/AdminShell";
+import { canAccessAdminPath } from "@/lib/auth/admin-route-permissions";
 import { ROUTES } from "@/lib/routes";
 import AuthLoading from "@/components/auth/AuthLoading";
 import type { AdminSession } from "@/types/admin";
@@ -50,6 +53,23 @@ export default function AdminGuard({ children }: AdminGuardProps) {
 
   if (!admin || isError) {
     return <AuthLoading />;
+  }
+
+  if (!canAccessAdminPath(admin.permissions, pathname)) {
+    return (
+      <AdminShell admin={admin} title="Access denied">
+        <div className="admin-panel">
+          <div className="admin-panel__body" role="alert">
+            <p style={{ margin: "0 0 1rem" }}>
+              You do not have permission to view this page.
+            </p>
+            <Link href={ROUTES.admin} className="admin-btn admin-btn--primary">
+              Back to dashboard
+            </Link>
+          </div>
+        </div>
+      </AdminShell>
+    );
   }
 
   return <>{children(admin)}</>;

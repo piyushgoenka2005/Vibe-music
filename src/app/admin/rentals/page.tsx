@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { LoadingState } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
+import { LoadingState, StatCard } from "@/components/admin/AdminUi";
 import { ROUTES } from "@/lib/routes";
-import { formatCurrency } from "@/utils/currency";
 
 function RentalsAdminDashboard() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-analytics"],
     queryFn: async () => {
       const res = await fetch("/api/admin/rentals/analytics");
@@ -21,6 +21,15 @@ function RentalsAdminDashboard() {
   const analytics = data?.analytics;
 
   if (isLoading) return <LoadingState />;
+  if (error) {
+    return (
+      <ErrorState
+        message="Unable to load rentals overview."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   return (
     <>
@@ -41,15 +50,11 @@ function RentalsAdminDashboard() {
           Policies
         </Link>
       </div>
-      <div className="admin-panel" style={{ marginTop: "1rem" }}>
-        <div className="admin-panel__body">
-          <p>Total bookings: {analytics?.totalBookings ?? 0}</p>
-          <p>Active rentals: {analytics?.activeBookings ?? 0}</p>
-          <p>Revenue: {formatCurrency(analytics?.totalRevenue ?? 0)}</p>
-          <p>Deposits held: {formatCurrency(analytics?.totalDeposits ?? 0)}</p>
-          <p>Late fees: {formatCurrency(analytics?.lateFeesCollected ?? 0)}</p>
-          <p>Damage charges: {formatCurrency(analytics?.damageChargesCollected ?? 0)}</p>
-        </div>
+      <div className="admin-stat-grid" style={{ marginTop: "1rem" }}>
+        <StatCard label="Total bookings" value={analytics?.totalBookings ?? 0} />
+        <StatCard label="Active rentals" value={analytics?.activeBookings ?? 0} />
+        <StatCard label="Revenue" value={analytics?.totalRevenue ?? 0} format="currency" />
+        <StatCard label="Deposits held" value={analytics?.totalDeposits ?? 0} format="currency" />
       </div>
     </>
   );

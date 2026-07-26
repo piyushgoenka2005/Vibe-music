@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
+import { adminGiveawayCampaignPath } from "@/lib/routes";
 import type { GiveawayCampaign, GiveawayEntry } from "@/types/giveaway";
 import { logInfo } from "@/lib/server/logger";
 
@@ -39,7 +40,7 @@ export async function notifyGiveawayUpdate(
         type: "giveaway",
         title,
         body,
-        link: `/admin/giveaway/campaigns/${campaign.id}`,
+        link: adminGiveawayCampaignPath(campaign.id),
         read: false,
         createdAt: new Date().toISOString(),
       },

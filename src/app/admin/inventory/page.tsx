@@ -22,6 +22,28 @@ function InventoryContent() {
     },
   });
 
+  const { data: adjustmentsData } = useQuery({
+    queryKey: ["admin-inventory-adjustments"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/inventory?view=adjustments");
+      if (!res.ok) throw new Error("Failed to load adjustments");
+      return res.json() as Promise<{
+        adjustments: Array<{
+          id: string;
+          productId: string;
+          sku: string;
+          previousStock: number;
+          newStock: number;
+          quantityChanged: number;
+          action: string;
+          adminId?: string | null;
+          timestamp: string;
+          note?: string;
+        }>;
+      }>;
+    },
+  });
+
   const adjustMutation = useMutation({
     mutationFn: async () => {
       if (!adjustProduct) return;
@@ -36,6 +58,7 @@ function InventoryContent() {
       setAdjustProduct(null);
       setReason("");
       queryClient.invalidateQueries({ queryKey: ["admin-inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-inventory-adjustments"] });
     },
   });
 
@@ -103,6 +126,49 @@ function InventoryContent() {
                     <td>
                       <button type="button" className="admin-btn admin-btn--ghost" onClick={() => { setAdjustProduct(item); setNewQty(item.stockQuantity); }}>Adjust</button>
                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="admin-panel" style={{ marginTop: "1.5rem" }}>
+        <div className="admin-panel__header">
+          <h2 className="admin-panel__title">Adjustment history</h2>
+        </div>
+        {(adjustmentsData?.adjustments ?? []).length === 0 ? (
+          <EmptyState message="No stock adjustments logged yet." />
+        ) : (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>SKU</th>
+                  <th>Change</th>
+                  <th>Stock</th>
+                  <th>Action</th>
+                  <th>By</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(adjustmentsData?.adjustments ?? []).map((log) => (
+                  <tr key={log.id}>
+                    <td>{new Date(log.timestamp).toLocaleString("en-IN")}</td>
+                    <td>{log.sku || log.productId.slice(0, 8)}</td>
+                    <td>
+                      {log.quantityChanged > 0 ? "+" : ""}
+                      {log.quantityChanged}
+                    </td>
+                    <td>
+                      {log.previousStock} → {log.newStock}
+                    </td>
+                    <td>{log.action}</td>
+                    <td>{log.adminId ?? "—"}</td>
+                    <td>{log.note ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

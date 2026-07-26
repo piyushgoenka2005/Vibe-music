@@ -105,6 +105,12 @@ export interface CreateProductInput {
   guitarSpecs?: Record<string, string>;
   /** Ordered frame URLs for PDP 360° view. */
   spin360Images?: string[];
+  /** Package contents for the PDP In The Box tab. */
+  inTheBox?: string[];
+  /** Product videos for the PDP Videos tab. */
+  videos?: ProductVideo[];
+  /** Spec rows for the PDP Specs tab. */
+  detailSpecs?: ProductSpec[];
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {

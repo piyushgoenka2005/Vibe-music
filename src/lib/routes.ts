@@ -33,6 +33,7 @@ export const ROUTES = {
   adminProductNew: "/admin/products/new",
   adminOrders: "/admin/orders",
   adminCustomers: "/admin/customers",
+  adminNewsletter: "/admin/newsletter",
   adminCategories: "/admin/categories",
   adminCoupons: "/admin/coupons",
   adminReviews: "/admin/reviews",
@@ -82,6 +83,32 @@ export const ROUTES = {
   accountGiveaways: "/account/giveaways",
   page: (slug: string) => `/pages/${slug}`,
 } as const;
+
+export function adminOrderPath(orderId: string): string {
+  return `${ROUTES.adminOrders}?orderId=${encodeURIComponent(orderId)}`;
+}
+
+export function adminRentalBookingPath(bookingId: string): string {
+  return `${ROUTES.adminRentalBookings}?id=${encodeURIComponent(bookingId)}`;
+}
+
+export function adminGiveawayCampaignPath(campaignId: string): string {
+  return `${ROUTES.adminGiveawayCampaigns}?id=${encodeURIComponent(campaignId)}`;
+}
+
+/** Normalize legacy admin deep-links stored on notifications. */
+export function normalizeAdminNotificationLink(link: string): string {
+  const bookingMatch = link.match(/^\/admin\/rentals\/bookings\/([^/?#]+)/);
+  if (bookingMatch?.[1]) return adminRentalBookingPath(bookingMatch[1]);
+
+  const campaignMatch = link.match(/^\/admin\/giveaway\/campaigns\/([^/?#]+)/);
+  if (campaignMatch?.[1]) return adminGiveawayCampaignPath(campaignMatch[1]);
+
+  const orderMatch = link.match(/^\/admin\/orders\/([^/?#]+)/);
+  if (orderMatch?.[1]) return adminOrderPath(orderMatch[1]);
+
+  return link;
+}
 
 export function categoryPath(slug: string): string {
   return `/category/${slug}`;

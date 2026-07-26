@@ -12,12 +12,16 @@ import {
   updateProduct,
 } from "@/services/catalogService";
 import { fetchAllProducts } from "@/lib/server/storeCatalogRepository";
-import { notifyWaitlistOnRestock } from "@/lib/server/restockNotificationService";
+import {
+  notifyWaitlistOnGoLive,
+  notifyWaitlistOnRestock,
+} from "@/lib/server/restockNotificationService";
 import { getProductImage } from "@/data/productImages";
 import { rowsToCsv, type ParsedCsvRow } from "@/lib/csv";
 import { prisma } from "@/lib/db/prisma";
 import type { AdminProduct } from "@/types/admin";
 import type { CatalogProduct, CreateProductInput } from "@/types/catalog";
+import type { ProductSpec, ProductVideo } from "@/types/product";
 import { paginateSortedById } from "@/lib/admin/paginateByCursor";
 
 async function purgeProductSideData(productIds: string[]): Promise<void> {
@@ -83,6 +87,9 @@ function toAdminProduct(catalog: CatalogProduct): AdminProduct {
     specifications: catalog.specifications,
     images: catalog.images,
     spin360Images: catalog.detail?.spin360Images ?? [],
+    inTheBox: detail.inTheBox,
+    videos: detail.videos,
+    detailSpecs: detail.specs,
   };
 }
 
@@ -319,6 +326,9 @@ export async function createAdminProduct(
     variants?: CreateProductInput["variants"];
     guitarSpecs?: Record<string, string>;
     spin360Images?: string[];
+    inTheBox?: string[];
+    videos?: ProductVideo[];
+    detailSpecs?: ProductSpec[];
   }
 ): Promise<AdminProduct> {
   const created = await createProduct({
@@ -349,6 +359,9 @@ export async function createAdminProduct(
     guitarSpecs: input.guitarSpecs,
     specifications: input.specifications,
     spin360Images: input.spin360Images,
+    inTheBox: input.inTheBox,
+    videos: input.videos,
+    detailSpecs: input.detailSpecs,
   });
   return toAdminProduct(created);
 }
@@ -360,10 +373,14 @@ export async function updateAdminProduct(
     variants?: CreateProductInput["variants"];
     guitarSpecs?: Record<string, string>;
     spin360Images?: string[];
+    inTheBox?: string[];
+    videos?: ProductVideo[];
+    detailSpecs?: ProductSpec[];
   }
 ): Promise<AdminProduct> {
-  const existing =
-    patch.stockQuantity !== undefined ? await getProductById(id) : null;
+  const needsSnapshot =
+    patch.stockQuantity !== undefined || patch.price !== undefined;
+  const existing = needsSnapshot ? await getProductById(id) : null;
 
   const updated = await updateProduct(id, {
     name: patch.name,
@@ -393,6 +410,9 @@ export async function updateAdminProduct(
     guitarSpecs: patch.guitarSpecs,
     specifications: patch.specifications,
     spin360Images: patch.spin360Images,
+    inTheBox: patch.inTheBox,
+    videos: patch.videos,
+    detailSpecs: patch.detailSpecs,
   });
 
   if (existing && patch.stockQuantity !== undefined) {
@@ -404,6 +424,16 @@ export async function updateAdminProduct(
       previousReserved: existing.reservedStock ?? 0,
       newStock: updated.stock,
       newReserved: updated.reservedStock ?? 0,
+    }).catch(() => undefined);
+  }
+
+  if (existing && patch.price !== undefined) {
+    void notifyWaitlistOnGoLive({
+      productId: id,
+      productName: updated.name,
+      productSlug: updated.slug,
+      previousPrice: existing.price,
+      newPrice: updated.price,
     }).catch(() => undefined);
   }
 

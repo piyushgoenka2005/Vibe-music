@@ -1,11 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
-import type { SupportTicket, SupportTicketStatus } from "@/types/supportTicket";
+import { adminOrderPath } from "@/lib/routes";
+import type {
+  SupportTicket,
+  SupportTicketPriority,
+  SupportTicketStatus,
+} from "@/types/supportTicket";
 
 type InboxTab = "tickets" | "contact";
 
@@ -26,6 +32,8 @@ function SupportTicketsPanel() {
   const [selected, setSelected] = useState<SupportTicket | null>(null);
   const [adminNote, setAdminNote] = useState("");
   const [newStatus, setNewStatus] = useState<SupportTicketStatus>("in_progress");
+  const [priority, setPriority] = useState<SupportTicketPriority>("normal");
+  const [assignedTo, setAssignedTo] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-support", statusFilter],
@@ -43,13 +51,19 @@ function SupportTicketsPanel() {
       const res = await fetch(`/api/admin/support-tickets/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus, adminNote: adminNote || undefined }),
+        body: JSON.stringify({
+          status: newStatus,
+          priority,
+          assignedTo: assignedTo.trim() || undefined,
+          adminNote: adminNote || undefined,
+        }),
       });
       if (!res.ok) throw new Error("Update failed");
     },
     onSuccess: () => {
       setSelected(null);
       setAdminNote("");
+      setAssignedTo("");
       queryClient.invalidateQueries({ queryKey: ["admin-support"] });
     },
   });
@@ -85,7 +99,7 @@ function SupportTicketsPanel() {
                 <tr>
                   <th>Subject</th>
                   <th>Customer</th>
-                  <th>Category</th>
+                  <th>Priority</th>
                   <th>Status</th>
                   <th>Date</th>
                 </tr>
@@ -98,13 +112,19 @@ function SupportTicketsPanel() {
                     onClick={() => {
                       setSelected(ticket);
                       setNewStatus(ticket.status);
+                      setPriority(ticket.priority ?? "normal");
+                      setAssignedTo(ticket.assignedTo ?? "");
                       setAdminNote(ticket.adminNote ?? "");
                     }}
                   >
                     <td>{ticket.subject}</td>
                     <td>{ticket.name}</td>
-                    <td>{ticket.category}</td>
-                    <td><StatusBadge status={ticket.status} /></td>
+                    <td>
+                      <StatusBadge status={ticket.priority ?? "normal"} />
+                    </td>
+                    <td>
+                      <StatusBadge status={ticket.status} />
+                    </td>
                     <td>{formatDate(ticket.createdAt)}</td>
                   </tr>
                 ))}
@@ -123,9 +143,18 @@ function SupportTicketsPanel() {
             <EmptyState message="Select a support ticket." />
           ) : (
             <>
-              <p><strong>From:</strong> {selected.name} ({selected.email})</p>
-              <p><strong>Subject:</strong> {selected.subject}</p>
-              {selected.orderId ? <p><strong>Order:</strong> {selected.orderId}</p> : null}
+              <p>
+                <strong>From:</strong> {selected.name} ({selected.email})
+              </p>
+              <p>
+                <strong>Subject:</strong> {selected.subject}
+              </p>
+              {selected.orderId ? (
+                <p>
+                  <strong>Order:</strong>{" "}
+                  <Link href={adminOrderPath(selected.orderId)}>{selected.orderId}</Link>
+                </p>
+              ) : null}
               <p style={{ marginTop: "1rem", whiteSpace: "pre-wrap" }}>{selected.message}</p>
               <div className="admin-form-group" style={{ marginTop: "1rem" }}>
                 <label>Status</label>
@@ -140,6 +169,29 @@ function SupportTicketsPanel() {
                   <option value="resolved">Resolved</option>
                   <option value="closed">Closed</option>
                 </select>
+              </div>
+              <div className="admin-form-group">
+                <label>Priority</label>
+                <select
+                  className="admin-select"
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as SupportTicketPriority)}
+                >
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+              <div className="admin-form-group">
+                <label>Assigned to</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={assignedTo}
+                  onChange={(e) => setAssignedTo(e.target.value)}
+                  placeholder="Admin email or name"
+                />
               </div>
               <div className="admin-form-group">
                 <label>Admin note</label>
@@ -180,12 +232,18 @@ function ContactMessagesPanel() {
     },
   });
 
-  const markReadMutation = useMutation({
-    mutationFn: async (message: ContactMessage) => {
+  const statusMutation = useMutation({
+    mutationFn: async ({
+      message,
+      status,
+    }: {
+      message: ContactMessage;
+      status: "new" | "read";
+    }) => {
       const res = await fetch(`/api/admin/contact-messages/${message.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "read" }),
+        body: JSON.stringify({ status }),
       });
       if (!res.ok) throw new Error("Update failed");
       return res.json() as Promise<{ message: ContactMessage }>;
@@ -236,13 +294,15 @@ function ContactMessagesPanel() {
                     onClick={() => {
                       setSelected(message);
                       if (message.status === "new") {
-                        markReadMutation.mutate(message);
+                        statusMutation.mutate({ message, status: "read" });
                       }
                     }}
                   >
                     <td>{message.subject}</td>
                     <td>{message.name}</td>
-                    <td><StatusBadge status={message.status} /></td>
+                    <td>
+                      <StatusBadge status={message.status} />
+                    </td>
                     <td>{formatDate(message.createdAt)}</td>
                   </tr>
                 ))}
@@ -261,16 +321,48 @@ function ContactMessagesPanel() {
             <EmptyState message="Select a contact message." />
           ) : (
             <>
-              <p><strong>From:</strong> {selected.name} ({selected.email})</p>
-              {selected.phone ? <p><strong>Phone:</strong> {selected.phone}</p> : null}
-              <p><strong>Subject:</strong> {selected.subject}</p>
-              <p><strong>Status:</strong> {selected.status}</p>
+              <p>
+                <strong>From:</strong> {selected.name} ({selected.email})
+              </p>
+              {selected.phone ? (
+                <p>
+                  <strong>Phone:</strong> {selected.phone}
+                </p>
+              ) : null}
+              <p>
+                <strong>Subject:</strong> {selected.subject}
+              </p>
+              <p>
+                <strong>Status:</strong> {selected.status}
+              </p>
               <p style={{ marginTop: "1rem", whiteSpace: "pre-wrap" }}>{selected.message}</p>
-              <p style={{ marginTop: "1rem" }}>
-                <a className="admin-btn admin-btn--primary" href={`mailto:${selected.email}?subject=Re:%20${encodeURIComponent(selected.subject)}`}>
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem", flexWrap: "wrap" }}>
+                <a
+                  className="admin-btn admin-btn--primary"
+                  href={`mailto:${selected.email}?subject=Re:%20${encodeURIComponent(selected.subject)}`}
+                >
                   Reply by email
                 </a>
-              </p>
+                {selected.status === "read" ? (
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary"
+                    disabled={statusMutation.isPending}
+                    onClick={() => statusMutation.mutate({ message: selected, status: "new" })}
+                  >
+                    Mark unread
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary"
+                    disabled={statusMutation.isPending}
+                    onClick={() => statusMutation.mutate({ message: selected, status: "read" })}
+                  >
+                    Mark read
+                  </button>
+                )}
+              </div>
             </>
           )}
         </div>

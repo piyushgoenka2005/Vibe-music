@@ -19,9 +19,12 @@ import GuitarSpecsEditor, {
   extractGuitarSpecsFromRecord,
 } from "@/components/admin/GuitarSpecsEditor";
 import ProductDescriptionBulletsEditor from "@/components/admin/ProductDescriptionBulletsEditor";
+import ProductInTheBoxEditor from "@/components/admin/ProductInTheBoxEditor";
+import ProductSpecsEditor from "@/components/admin/ProductSpecsEditor";
+import ProductVideosEditor from "@/components/admin/ProductVideosEditor";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import type { Category } from "@/types/category";
-import type { ProductVariant } from "@/types/product";
+import type { ProductSpec, ProductVariant, ProductVideo } from "@/types/product";
 
 const EMPTY = {
   name: "",
@@ -48,6 +51,9 @@ const EMPTY = {
   bundle: createEmptyBundleState(),
   related: createEmptyRelatedState(),
   guitarSpecs: {} as Record<string, string>,
+  inTheBox: [] as string[],
+  videos: [] as ProductVideo[],
+  detailSpecs: [] as ProductSpec[],
 };
 
 export default function ProductFormPage({ productId }: { productId?: string }) {
@@ -83,6 +89,9 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             bundle: createEmptyBundleState(),
             related: createEmptyRelatedState(),
             guitarSpecs: extractGuitarSpecsFromRecord(d.product.specifications),
+            inTheBox: d.product.inTheBox ?? [],
+            videos: d.product.videos ?? [],
+            detailSpecs: d.product.detailSpecs ?? [],
           });
         }
         setLoaded(true);
@@ -145,6 +154,11 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
         images: form.images,
         variants: form.variants,
         guitarSpecs,
+        inTheBox: form.inTheBox.map((item) => item.trim()).filter(Boolean),
+        videos: form.videos.filter((v) => v.title.trim() && v.embedUrl.trim()),
+        detailSpecs: form.detailSpecs.filter(
+          (s) => s.label.trim() && s.value.trim()
+        ),
       };
       const url = productId ? `/api/admin/products/${productId}` : "/api/admin/products";
       const method = productId ? "PUT" : "POST";
@@ -410,6 +424,18 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
             key={productId ?? "new"}
             value={form.description}
             onChange={(description) => setForm({ ...form, description })}
+          />
+          <ProductInTheBoxEditor
+            items={form.inTheBox}
+            onChange={(inTheBox) => setForm({ ...form, inTheBox })}
+          />
+          <ProductSpecsEditor
+            specs={form.detailSpecs}
+            onChange={(detailSpecs) => setForm({ ...form, detailSpecs })}
+          />
+          <ProductVideosEditor
+            videos={form.videos}
+            onChange={(videos) => setForm({ ...form, videos })}
           />
           {isGuitarProduct(form.categorySlug, form.category) ? (
             <GuitarSpecsEditor

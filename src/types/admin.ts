@@ -86,8 +86,7 @@ export interface RevenueDataPoint {
   orders: number;
 }
 
-import type { Product } from "@/types/product";
-import type { ProductVariant } from "@/types/product";
+import type { Product, ProductSpec, ProductVideo, ProductVariant } from "@/types/product";
 
 export interface AdminProduct extends Product {
   sku?: string;
@@ -110,6 +109,12 @@ export interface AdminProduct extends Product {
   images?: string[];
   /** Ordered frame URLs for PDP 360° view. */
   spin360Images?: string[];
+  /** Package contents shown on the PDP In The Box tab. */
+  inTheBox?: string[];
+  /** Product videos shown on the PDP Videos tab / gallery. */
+  videos?: ProductVideo[];
+  /** Spec rows shown on the PDP Specs tab (beyond guitarSpecs map). */
+  detailSpecs?: ProductSpec[];
 }
 
 export interface AdminCategory {

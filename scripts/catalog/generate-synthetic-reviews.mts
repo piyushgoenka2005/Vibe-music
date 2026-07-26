@@ -16,7 +16,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const catalogDir = path.join(ROOT, "src", "data", "catalog");
 
 const WRITTEN_PER_PRODUCT = 30;
-/** Must stay above storefront floor (MIN_PRODUCT_REVIEW_COUNT = 264). */
+/** Total ratings generated per product for seed data. */
 const RATINGS_PER_PRODUCT = 300;
 
 interface CatalogProduct {

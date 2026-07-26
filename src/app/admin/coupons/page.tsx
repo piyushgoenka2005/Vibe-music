@@ -50,7 +50,9 @@ function CouponsContent() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`/api/admin/coupons/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/coupons/${id}`, { method: "DELETE" });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(json.error ?? "Delete failed");
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-coupons"] }),
   });
@@ -62,6 +64,13 @@ function CouponsContent() {
       <div className="admin-toolbar">
         <button type="button" className="admin-btn admin-btn--primary" onClick={() => setShowForm(true)}>Add Coupon</button>
       </div>
+      {deleteMutation.isError ? (
+        <div className="admin-error" role="alert" style={{ marginBottom: "1rem" }}>
+          <p className="admin-error__message">
+            {(deleteMutation.error as Error).message || "Delete failed"}
+          </p>
+        </div>
+      ) : null}
       {showForm ? (
         <div className="admin-panel" style={{ marginBottom: "1rem" }}>
           <div className="admin-panel__body">

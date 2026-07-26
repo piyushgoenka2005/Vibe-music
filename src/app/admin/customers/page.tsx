@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -12,6 +13,7 @@ import {
   formatDate,
 } from "@/components/admin/AdminUi";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
+import { adminOrderPath } from "@/lib/routes";
 
 async function fetchCustomers(params: { search: string; cursor?: string }) {
   const sp = new URLSearchParams({ limit: "20" });
@@ -87,12 +89,26 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
     },
   });
 
+  const eraseMutation = useMutation({
+    mutationFn: async (uid: string) => {
+      const res = await fetch(`/api/admin/customers/${uid}`, { method: "DELETE" });
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) throw new Error(body?.error ?? "Erase failed");
+    },
+    onSuccess: () => {
+      setSelectedId(null);
+      setStatusError(null);
+      void queryClient.invalidateQueries({ queryKey: ["admin-customers"] });
+    },
+  });
+
   if (isLoading) return <LoadingState />;
 
   const customers = data?.customers ?? [];
   const hasMore = data?.hasMore ?? false;
   const customer = detail?.customer as
     | {
+        uid: string;
         displayName: string;
         email: string;
         orderCount: number;
@@ -220,7 +236,7 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
                   />
                 </p>
                 {canWrite ? (
-                  <div style={{ marginTop: "0.75rem" }}>
+                  <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                     <button
                       type="button"
                       className={
@@ -237,6 +253,22 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
                           ? "Deactivate account"
                           : "Activate account"}
                     </button>
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--danger"
+                      disabled={eraseMutation.isPending}
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            `Permanently erase ${customer.email}? Orders stay for records but personal data is redacted.`
+                          )
+                        ) {
+                          eraseMutation.mutate(selectedId!);
+                        }
+                      }}
+                    >
+                      {eraseMutation.isPending ? "Erasing…" : "Erase customer"}
+                    </button>
                     {statusError ? (
                       <p
                         role="alert"
@@ -244,21 +276,38 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
                           color: "var(--admin-danger)",
                           fontSize: "0.8125rem",
                           marginTop: "0.5rem",
+                          width: "100%",
                         }}
                       >
                         {statusError}
                       </p>
                     ) : null}
-                    <p
-                      style={{
-                        color: "var(--admin-muted)",
-                        fontSize: "0.75rem",
-                        marginTop: "0.35rem",
-                      }}
-                    >
-                      Deactivated customers cannot sign in with email/password.
-                    </p>
+                    {eraseMutation.isError ? (
+                      <p
+                        role="alert"
+                        style={{
+                          color: "var(--admin-danger)",
+                          fontSize: "0.8125rem",
+                          marginTop: "0.5rem",
+                          width: "100%",
+                        }}
+                      >
+                        {(eraseMutation.error as Error).message}
+                      </p>
+                    ) : null}
                   </div>
+                ) : null}
+                {canWrite ? (
+                  <p
+                    style={{
+                      color: "var(--admin-muted)",
+                      fontSize: "0.75rem",
+                      marginTop: "0.35rem",
+                    }}
+                  >
+                    Deactivated customers cannot sign in with email/password. Erase
+                    permanently removes the account and redacts personal order data.
+                  </p>
                 ) : null}
                 <h3 style={{ fontSize: "0.875rem", marginTop: "1rem" }}>
                   Order History
@@ -276,8 +325,10 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
                   <ul style={{ fontSize: "0.875rem" }}>
                     {(customer.orders ?? []).map((o) => (
                       <li key={o.id}>
-                        {formatDate(o.createdAt)} — {formatCurrency(o.total)} —{" "}
-                        <StatusBadge status={o.status} />
+                        <Link href={adminOrderPath(o.id)}>
+                          {formatDate(o.createdAt)} — {formatCurrency(o.total)} —{" "}
+                          <StatusBadge status={o.status} />
+                        </Link>
                       </li>
                     ))}
                   </ul>

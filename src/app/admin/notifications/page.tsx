@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState, formatDate } from "@/components/admin/AdminUi";
+import { normalizeAdminNotificationLink } from "@/lib/routes";
 import type { AdminNotification } from "@/types/notification";
 
 function NotificationsContent() {
@@ -68,34 +69,35 @@ function NotificationsContent() {
               </tr>
             </thead>
             <tbody>
-              {notifications.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    {item.link ? (
-                      <Link href={item.link}>{item.title}</Link>
-                    ) : (
-                      item.title
-                    )}
-                    <div style={{ fontSize: "0.875rem", color: "var(--admin-muted)" }}>
-                      {item.body}
-                    </div>
-                  </td>
-                  <td>{item.type}</td>
-                  <td>{formatDate(item.createdAt)}</td>
-                  <td>{item.read ? "Read" : "Unread"}</td>
-                  <td>
-                    {!item.read ? (
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn--secondary"
-                        onClick={() => markReadMutation.mutate({ id: item.id })}
-                      >
-                        Mark read
-                      </button>
-                    ) : null}
-                  </td>
-                </tr>
-              ))}
+              {notifications.map((item) => {
+                const href = item.link
+                  ? normalizeAdminNotificationLink(item.link)
+                  : null;
+                return (
+                  <tr key={item.id}>
+                    <td>
+                      {href ? <Link href={href}>{item.title}</Link> : item.title}
+                      <div style={{ fontSize: "0.875rem", color: "var(--admin-muted)" }}>
+                        {item.body}
+                      </div>
+                    </td>
+                    <td>{item.type}</td>
+                    <td>{formatDate(item.createdAt)}</td>
+                    <td>{item.read ? "Read" : "Unread"}</td>
+                    <td>
+                      {!item.read ? (
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--secondary"
+                          onClick={() => markReadMutation.mutate({ id: item.id })}
+                        >
+                          Mark read
+                        </button>
+                      ) : null}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -80,7 +80,7 @@ export default function ProductStickyBar({
     >
       <div className="pdp-mobile-bar__price">
         <span className="pdp-mobile-bar__label">
-          {isComingSoon ? "Price" : canPurchase ? "Price" : "Unavailable"}
+          {isComingSoon ? "Status" : canPurchase ? "Price" : "Unavailable"}
         </span>
         <strong>{formatDisplayPrice(price)}</strong>
       </div>

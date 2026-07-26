@@ -44,6 +44,17 @@ function QuestionsContent() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/admin/questions/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+    },
+    onSuccess: () => {
+      setSelected(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-questions"] });
+    },
+  });
+
   if (isLoading) return <LoadingState />;
 
   const questions = data?.questions ?? [];
@@ -148,6 +159,20 @@ function QuestionsContent() {
                 onClick={() => updateMutation.mutate()}
               >
                 {updateMutation.isPending ? "Saving…" : "Save"}
+              </button>
+              <button
+                type="button"
+                className="admin-btn admin-btn--danger"
+                style={{ marginLeft: "0.5rem" }}
+                disabled={deleteMutation.isPending}
+                onClick={() => {
+                  if (!selected) return;
+                  if (window.confirm("Delete this product question?")) {
+                    deleteMutation.mutate(selected.id);
+                  }
+                }}
+              >
+                Delete
               </button>
             </>
           )}

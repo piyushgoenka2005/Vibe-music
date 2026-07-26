@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/api/route-utils";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { listOrdersForUser } from "@/lib/server/orderService";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const sessionUser = await getSessionUser();
     if (!sessionUser) {
@@ -16,8 +17,6 @@ export async function GET() {
 
     return NextResponse.json({ orders });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to fetch orders";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleRouteError(error, "api/orders", request);
   }
 }

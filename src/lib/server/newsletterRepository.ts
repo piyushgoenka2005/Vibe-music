@@ -56,6 +56,30 @@ export async function subscribeToNewsletter(input: {
   return { created: true };
 }
 
+export async function listNewsletterSubscribers(): Promise<SubscriberRecord[]> {
+  const rows = await prisma.newsletterSubscriber.findMany({
+    orderBy: { subscribedAt: "desc" },
+  });
+  return rows.map((row) => ({
+    email: row.email,
+    firstName: row.firstName ?? undefined,
+    lastName: row.lastName ?? undefined,
+    marketing: row.marketing,
+    subscribedAt: row.subscribedAt,
+    source: (row.source as SubscriberRecord["source"]) || "website",
+  }));
+}
+
+export async function deleteNewsletterSubscriber(email: string): Promise<boolean> {
+  const normalized = email.trim().toLowerCase();
+  const existing = await prisma.newsletterSubscriber.findUnique({
+    where: { email: normalized },
+  });
+  if (!existing) return false;
+  await prisma.newsletterSubscriber.delete({ where: { email: normalized } });
+  return true;
+}
+
 /** Sync account newsletter/promotions prefs to the subscriber table. */
 export async function syncNewsletterMarketingPreference(input: {
   email: string;

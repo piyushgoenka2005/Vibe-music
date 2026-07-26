@@ -1765,6 +1765,17 @@
   color: #008a28;
 }
 
+.pdp-buybox__price--coming-soon {
+  color: #0f1111;
+  align-items: center;
+}
+
+.pdp-buybox__coming-soon-label {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
 .pdp-buybox__price-symbol {
   font-size: 0.82rem;
   font-weight: 700;

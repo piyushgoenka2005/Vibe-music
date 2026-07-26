@@ -3,6 +3,7 @@ import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
   getProductQuestionById,
   updateProductQuestion,
+  deleteProductQuestion,
 } from "@/lib/server/productQuestionRepository";
 import { notifyUserIfAllowed } from "@/lib/server/notificationRepository";
 import { sendProductQuestionAnswerEmail } from "@/lib/server/customerUpdateEmailService";
@@ -81,6 +82,21 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     return NextResponse.json({ question });
+  } catch (error) {
+    return adminErrorResponse(error);
+  }
+}
+
+export async function DELETE(request: Request, context: RouteContext) {
+  try {
+    await requireAdmin("reviews:write", request);
+    const { id } = await context.params;
+    const existing = await getProductQuestionById(id);
+    if (!existing) {
+      return NextResponse.json({ error: "Question not found" }, { status: 404 });
+    }
+    await deleteProductQuestion(id);
+    return NextResponse.json({ ok: true });
   } catch (error) {
     return adminErrorResponse(error);
   }

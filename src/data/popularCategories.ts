@@ -25,6 +25,7 @@ function thumbSrcSet(name: string): string {
   return `${src} 200w`;
 }
 
+/** Only departments that currently have catalog SKUs. */
 export const POPULAR_CATEGORY_ITEMS: PopularCategoryItem[] = [
   {
     slot: 0,
@@ -49,83 +50,45 @@ export const POPULAR_CATEGORY_ITEMS: PopularCategoryItem[] = [
   },
   {
     slot: 3,
-    href: categoryPath("bass"),
-    title: "Bass",
-    imageSrc: thumb("PBassAPR3SB"),
-    imageSrcSet: thumbSrcSet("PBassAPR3SB"),
-  },
-  {
-    slot: 4,
     href: categoryPath("keyboards-synthesizers"),
     title: "Keyboards & Synthesizers",
     imageSrc: thumb("Matriarch"),
     imageSrcSet: thumbSrcSet("Matriarch"),
   },
   {
-    slot: 5,
+    slot: 4,
     href: categoryPath("live-sound-lighting"),
     title: "Live Sound & Lighting",
     imageSrc: thumb("k12_2"),
     imageSrcSet: thumbSrcSet("k12_2"),
   },
   {
-    slot: 6,
-    href: categoryPath("software-plug-ins"),
-    title: "Software & Plug-ins",
-    imageSrc: thumb("ptstudioann"),
-    imageSrcSet: thumbSrcSet("ptstudioann"),
-  },
-  {
-    slot: 7,
+    slot: 5,
     href: categoryPath("dj-equipment"),
     title: "DJ Equipment",
     imageSrc: thumb("ATLP120XUSBSV"),
     imageSrcSet: thumbSrcSet("ATLP120XUSBSV"),
   },
   {
-    slot: 8,
+    slot: 6,
     href: categoryPath("microphones-wireless"),
     title: "Microphones & Wireless",
     imageSrc: thumb("SM58-cat"),
     imageSrcSet: thumbSrcSet("SM58-cat"),
   },
   {
-    slot: 9,
-    href: categoryPath("band-orchestra"),
-    title: "Band & Orchestra",
-    imageSrc: thumb("KingSlvFlTr"),
-    imageSrcSet: thumbSrcSet("KingSlvFlTr"),
-    badge: "New",
-  },
-  {
-    slot: 10,
-    href: categoryPath("home-audio-electronics"),
-    title: "Home Audio & Electronics",
-    imageSrc: thumb("TourOneM2Bk"),
-    imageSrcSet: thumbSrcSet("TourOneM2Bk"),
-    badge: "New",
-  },
-  {
-    slot: 11,
-    href: categoryPath("commercial-audio-installation"),
-    title: "Commercial Audio & Install",
-    imageSrc: thumb("Control28"),
-    imageSrcSet: thumbSrcSet("Control28"),
-  },
-  {
-    slot: 12,
+    slot: 7,
     href: categoryPath("cables-cases-accessories"),
     title: "Cables, Cases, Stands & More",
     imageSrc: thumb("M4WP006"),
     imageSrcSet: thumbSrcSet("M4WP006"),
   },
   {
-    slot: 13,
-    href: categoryPath("video-cameras"),
-    title: "Video & Cameras",
-    imageSrc: thumb("EOSR82450Kit"),
-    imageSrcSet: thumbSrcSet("EOSR82450Kit"),
-    badge: "New",
+    slot: 8,
+    href: categoryPath("home-audio-electronics"),
+    title: "Home Audio & Electronics",
+    imageSrc: thumb("TourOneM2Bk"),
+    imageSrcSet: thumbSrcSet("TourOneM2Bk"),
   },
 ];
 

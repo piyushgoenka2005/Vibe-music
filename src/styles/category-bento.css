@@ -1297,6 +1297,11 @@
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
+  .category-bento__showcase-scroll,
+  .category-bento__track {
+    scroll-behavior: auto;
+  }
+
   .category-bento__link,
   .category-bento__image,
   .category-bento__explore,

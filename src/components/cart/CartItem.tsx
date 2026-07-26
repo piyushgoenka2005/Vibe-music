@@ -34,7 +34,7 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
   const image = item.image;
   const pct = discountPercent(item.price, item.originalPrice);
   const showOriginal =
-    item.originalPrice != null && item.originalPrice > item.price;
+    !isGift && item.originalPrice != null && item.originalPrice > item.price;
   const atMaxQty = item.quantity >= 99;
 
   function handleMoveToWishlist() {
@@ -47,10 +47,14 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
     if (!isInWishlist) {
       addToWishlist(cartItemToProduct(item));
     } else {
-      useToastStore.getState().show(`${item.name} is already in your wishlist`, "info");
+      useToastStore
+        .getState()
+        .show(`${item.name} is already in your wishlist`, "info");
     }
-    removeItem(item.lineId);
+    removeItem(item.lineId, { silent: true });
   }
+
+  const priceLabel = isGift ? "FREE" : formatDisplayPrice(item.price);
 
   return (
     <article
@@ -90,6 +94,14 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
             aria-hidden="true"
           />
         )}
+        {pct != null && !isGift ? (
+          <span className="cart-item-card__badge">{pct}% OFF</span>
+        ) : null}
+        {isGift ? (
+          <span className="cart-item-card__badge cart-item-card__badge--gift">
+            Free Gift
+          </span>
+        ) : null}
       </div>
 
       <div className="cart-item-card__content">
@@ -111,14 +123,6 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
                 {item.name}
               </Link>
             )}
-            {pct != null && !isGift ? (
-              <span className="cart-item-card__badge">{pct}% off</span>
-            ) : null}
-            {isGift ? (
-              <span className="cart-item-card__badge cart-item-card__badge--gift">
-                Free gift
-              </span>
-            ) : null}
             {!isGift ? (
               <p className="cart-item-card__availability">In stock · Ships fast</p>
             ) : (
@@ -129,9 +133,7 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
           </div>
 
           <div className="cart-item-card__price-col">
-            <div className="cart-item-card__price">
-              {formatDisplayPrice(item.price)}
-            </div>
+            <div className="cart-item-card__price">{priceLabel}</div>
             {showOriginal ? (
               <div className="cart-item-card__mrp">
                 {formatDisplayPrice(item.originalPrice!)}

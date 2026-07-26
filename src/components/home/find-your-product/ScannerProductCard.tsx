@@ -51,12 +51,16 @@ export default function ScannerProductCard({ product }: ScannerProductCardProps)
         <div className="scanner-card__right">
           <div className="scanner-card__revenue-row">
             <span className="scanner-card__revenue">{product.revenue}</span>
-            <span className="scanner-card__growth">
-              <GrowthArrowIcon />
-              {product.growth}
-            </span>
+            {product.growth ? (
+              <span className="scanner-card__growth">
+                <GrowthArrowIcon />
+                {product.growth}
+              </span>
+            ) : null}
           </div>
-          <div className="scanner-card__rev-label">Revenue</div>
+          <div className="scanner-card__rev-label">
+            {product.slug ? "Brand" : "Revenue"}
+          </div>
         </div>
       </Link>
     </div>

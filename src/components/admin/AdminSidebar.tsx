@@ -33,6 +33,7 @@ import {
   KeyRound,
   Gift,
   GitCompare,
+  Mail,
 } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
@@ -52,6 +53,7 @@ const NAV_ITEMS = [
   { href: ROUTES.adminReturns, label: "Returns", icon: RotateCcw, permission: "orders:read" },
   { href: ROUTES.adminSupport, label: "Support", icon: Headset, permission: "orders:read" },
   { href: ROUTES.adminCustomers, label: "Customers", icon: Users, permission: "customers:read" },
+  { href: ROUTES.adminNewsletter, label: "Newsletter", icon: Mail, permission: "customers:read" },
   { href: ROUTES.adminCoupons, label: "Coupons", icon: Ticket, permission: "coupons:read" },
   { href: ROUTES.adminBanners, label: "Banners", icon: ImageIcon, permission: "banners:read" },
   { href: ROUTES.adminHomepage, label: "Homepage", icon: LayoutTemplate, permission: "homepage:read" },

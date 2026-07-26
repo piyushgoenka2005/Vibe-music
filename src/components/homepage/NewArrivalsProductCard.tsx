@@ -19,7 +19,7 @@ import {
   shouldNavigateForVariants,
 } from "@/lib/product/listingQuickAdd";
 import { useCartStore } from "@/store/cartStore";
-import type { Product } from "@/types/product";
+import type { Product, ProductAvailability } from "@/types/product";
 
 export interface NewArrivalsProductCardProps {
   id: string;
@@ -44,26 +44,22 @@ export interface NewArrivalsProductCardProps {
   /** Eager-load image for above-the-fold / first marquee cards. */
   imagePriority?: boolean;
   requiresVariantSelection?: boolean;
-}
-
-function seededHash(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-function seededDiscount(id: string): number {
-  const DISCOUNTS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 79];
-  return DISCOUNTS[seededHash(id) % DISCOUNTS.length];
-}
-
-function fakeMrp(price: number, discountPct: number): number {
-  return Math.round(price / (1 - discountPct / 100));
+  availability?: ProductAvailability;
+  stock?: number;
 }
 
 function slugFromHref(href: string, fallback: string): string {
   const match = href.match(/\/product\/([^/?#]+)/i);
   return match?.[1] ?? fallback;
+}
+
+function isLimitedStock(
+  availability?: ProductAvailability,
+  stock?: number
+): boolean {
+  if (availability === "limited") return true;
+  if (typeof stock === "number" && stock > 0 && stock <= 5) return true;
+  return false;
 }
 
 export default function NewArrivalsProductCard({
@@ -87,6 +83,8 @@ export default function NewArrivalsProductCard({
   priceNode,
   imagePriority = false,
   requiresVariantSelection = false,
+  availability,
+  stock,
 }: NewArrivalsProductCardProps) {
   const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
@@ -105,13 +103,14 @@ export default function NewArrivalsProductCard({
   const productHref = resolveLinkHref(href);
   const productSlug = slug ?? slugFromHref(href, id);
   const hasRealDiscount =
-    salePrice != null && price > displayPrice && displayPrice > 0;
+    salePrice != null &&
+    salePrice > 0 &&
+    price > salePrice &&
+    displayPrice > 0;
   const discountPct = hasRealDiscount
-    ? Math.round(((price - displayPrice) / price) * 100)
-    : seededDiscount(id);
-  const wasPrice = hasRealDiscount
-    ? price
-    : fakeMrp(displayPrice, discountPct);
+    ? Math.round(((price - salePrice) / price) * 100)
+    : null;
+  const showLimitedStock = isLimitedStock(availability, stock);
   const cartProduct: Product = {
     id,
     slug: productSlug,
@@ -121,10 +120,10 @@ export default function NewArrivalsProductCard({
     category: "",
     categorySlug: "",
     price: displayPrice,
-    originalPrice: price > displayPrice ? price : undefined,
+    originalPrice: hasRealDiscount ? price : undefined,
     rating: displayRating,
     reviewCount: displayReviewCount,
-    availability: "in-stock",
+    availability: availability ?? "in-stock",
     condition: "new",
     imageColor: "#e2e8f0",
     image,
@@ -171,14 +170,16 @@ export default function NewArrivalsProductCard({
           href={productHref}
         >
           <div className="new-arrivals-card__media">
-            <div
-              className="new-arrivals-card__stock-row"
-              aria-label="Limited stock"
-            >
-              <span aria-hidden className="new-arrivals-card__ribbon">
-                Limited stock
-              </span>
-            </div>
+            {showLimitedStock ? (
+              <div
+                className="new-arrivals-card__stock-row"
+                aria-label="Limited stock"
+              >
+                <span aria-hidden className="new-arrivals-card__ribbon">
+                  Limited stock
+                </span>
+              </div>
+            ) : null}
             {badgeLabel ? (
               <span className="new-arrivals-card__badge">{badgeLabel}</span>
             ) : null}
@@ -225,16 +226,16 @@ export default function NewArrivalsProductCard({
                 hasPrice ? "" : " new-arrivals-card__tags-row--enquiry"
               }`}
             >
-              {hasPrice ? (
+              {discountPct != null ? (
                 <span className="discount-drop" aria-label={`${discountPct}% off`}>
                   <span className="discount-drop__arrow" aria-hidden="true">↓</span>
                   {discountPct}% off
                 </span>
               ) : null}
               <span className="new-arrivals-card__prices">
-                {hasPrice ? (
+                {hasRealDiscount ? (
                   <span className="new-arrivals-card__was">
-                    {formatDisplayPrice(wasPrice)}
+                    {formatDisplayPrice(price)}
                   </span>
                 ) : null}
                 <span

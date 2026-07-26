@@ -51,6 +51,7 @@ function HomepageContent() {
   const [activeKey, setActiveKey] = useState<HomepageSectionKey>("new_arrivals");
   const [sectionForm, setSectionForm] = useState<Partial<HomepageSection>>({});
   const [itemForm, setItemForm] = useState(EMPTY_ITEM);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -136,26 +137,31 @@ function HomepageContent() {
 
   const addItemMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/admin/homepage/items", {
-        method: "POST",
+      const payload = {
+        sectionKey: activeKey,
+        productId: itemForm.productId || undefined,
+        categorySlug: itemForm.categorySlug || undefined,
+        brandId: itemForm.brandId || undefined,
+        customImage: itemForm.customImage || undefined,
+        customTitle: itemForm.customTitle || undefined,
+        customHref: itemForm.customHref || undefined,
+        badgeLabel: itemForm.badgeLabel || undefined,
+        offerText: itemForm.offerText || undefined,
+      };
+      const url = editingItemId
+        ? `/api/admin/homepage/items/${editingItemId}`
+        : "/api/admin/homepage/items";
+      const res = await fetch(url, {
+        method: editingItemId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sectionKey: activeKey,
-          productId: itemForm.productId || undefined,
-          categorySlug: itemForm.categorySlug || undefined,
-          brandId: itemForm.brandId || undefined,
-          customImage: itemForm.customImage || undefined,
-          customTitle: itemForm.customTitle || undefined,
-          customHref: itemForm.customHref || undefined,
-          badgeLabel: itemForm.badgeLabel || undefined,
-          offerText: itemForm.offerText || undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       const body = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(body.error ?? "Add item failed");
+      if (!res.ok) throw new Error(body.error ?? (editingItemId ? "Update failed" : "Add item failed"));
     },
     onSuccess: () => {
       setItemForm(EMPTY_ITEM);
+      setEditingItemId(null);
       setFormError(null);
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
@@ -197,6 +203,7 @@ function HomepageContent() {
   function selectSection(key: HomepageSectionKey) {
     setActiveKey(key);
     setFormError(null);
+    setEditingItemId(null);
     setItemForm(EMPTY_ITEM);
     const section = sections.find((entry) => entry.sectionKey === key);
     if (section) {
@@ -534,18 +541,34 @@ function HomepageContent() {
                 ) : null}
               </div>
             </div>
-            <div style={{ marginTop: "1rem" }}>
+            <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               <button
                 type="button"
                 className="admin-btn admin-btn--primary"
-                disabled={addItemMutation.isPending || !canAddBigNamesItem}
+                disabled={addItemMutation.isPending || (!editingItemId && !canAddBigNamesItem)}
                 onClick={() => addItemMutation.mutate()}
               >
                 <Plus size={16} />{" "}
-                {isBigNamesSection ? "Add Guitar" : "Add Item"}
+                {editingItemId
+                  ? "Update Item"
+                  : isBigNamesSection
+                    ? "Add Guitar"
+                    : "Add Item"}
               </button>
-              {isBigNamesSection && !canAddBigNamesItem ? (
-                <p className="admin-form-hint" style={{ marginTop: 8 }}>
+              {editingItemId ? (
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--secondary"
+                  onClick={() => {
+                    setEditingItemId(null);
+                    setItemForm(EMPTY_ITEM);
+                  }}
+                >
+                  Cancel edit
+                </button>
+              ) : null}
+              {isBigNamesSection && !canAddBigNamesItem && !editingItemId ? (
+                <p className="admin-form-hint" style={{ marginTop: 8, width: "100%" }}>
                   Maximum {BIG_NAMES_DEALS_MAX_ITEMS} guitars reached.
                 </p>
               ) : null}
@@ -595,6 +618,25 @@ function HomepageContent() {
                         </td>
                         <td>
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--ghost"
+                              onClick={() => {
+                                setEditingItemId(item.id);
+                                setItemForm({
+                                  productId: item.productId ?? "",
+                                  categorySlug: item.categorySlug ?? "",
+                                  brandId: item.brandId ?? "",
+                                  customImage: item.customImage ?? "",
+                                  customTitle: item.customTitle ?? "",
+                                  customHref: item.customHref ?? "",
+                                  badgeLabel: item.badgeLabel ?? "",
+                                  offerText: item.offerText ?? "",
+                                });
+                              }}
+                            >
+                              Edit
+                            </button>
                             <button
                               type="button"
                               className="admin-btn admin-btn--secondary"
