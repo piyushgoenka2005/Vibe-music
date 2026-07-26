@@ -1,6 +1,5 @@
 import "server-only";
 
-import { FIND_YOUR_PRODUCT_TRACKS } from "@/data/heroMarqueeProducts";
 import type { ScannerProduct } from "@/components/home/find-your-product/types";
 import { fetchAllProducts } from "@/lib/server/storeCatalogRepository";
 import { formatDisplayPrice } from "@/utils/currency";
@@ -35,7 +34,7 @@ function toScannerProduct(
 /**
  * Build Find Your Product marquee tracks from the live catalog so every card
  * opens the matching PDP (name, price, image, slug aligned).
- * Falls back to static tracks when the catalog is empty.
+ * Returns empty tracks when the catalog is unavailable — never fabricate stats.
  */
 export async function loadFindYourProductTracks(): Promise<ScannerProduct[][]> {
   try {
@@ -43,9 +42,7 @@ export async function loadFindYourProductTracks(): Promise<ScannerProduct[][]> {
     const active = catalog.filter((p) => p.status === "active" && p.slug);
 
     if (active.length === 0) {
-      return FIND_YOUR_PRODUCT_TRACKS.map((track) =>
-        track.slice(0, ITEMS_PER_TRACK)
-      );
+      return Array.from({ length: TRACK_COUNT }, () => []);
     }
 
     const ranked = [...active].sort((a, b) => {
@@ -71,8 +68,6 @@ export async function loadFindYourProductTracks(): Promise<ScannerProduct[][]> {
     }
     return tracks;
   } catch {
-    return FIND_YOUR_PRODUCT_TRACKS.map((track) =>
-      track.slice(0, ITEMS_PER_TRACK)
-    );
+    return Array.from({ length: TRACK_COUNT }, () => []);
   }
 }

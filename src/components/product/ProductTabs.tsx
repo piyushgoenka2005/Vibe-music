@@ -68,6 +68,19 @@ export default function ProductTabs({
     <section className="pdp-sections" aria-label="Product details">
       <div className="pdp-sections__list">
         {SECTIONS.map((section) => {
+          if (
+            section.id === "in-the-box" &&
+            product.inTheBox.length === 0
+          ) {
+            return null;
+          }
+          if (section.id === "videos" && product.videos.length === 0) {
+            return null;
+          }
+          if (section.id === "specs" && product.specs.length === 0) {
+            return null;
+          }
+
           const heading = sectionHeading(section.id, section.label);
 
           return (
@@ -107,15 +120,11 @@ export default function ProductTabs({
               ) : null}
 
               {section.id === "in-the-box" ? (
-                product.inTheBox.length === 0 ? (
-                  <p className="pdp-sections__empty">Package contents not listed.</p>
-                ) : (
-                  <ul className="pdp-sections__panel pdp-in-the-box">
-                    {product.inTheBox.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                )
+                <ul className="pdp-sections__panel pdp-in-the-box">
+                  {product.inTheBox.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
               ) : null}
 
               {section.id === "reviews" ? (

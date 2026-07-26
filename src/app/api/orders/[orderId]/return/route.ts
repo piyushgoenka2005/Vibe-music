@@ -18,19 +18,10 @@ import { createReturnRequestSchema } from "@/lib/validations/wrFeatures";
 
 type RouteContext = { params: Promise<{ orderId: string }> };
 
-async function canAccessOrder(
-  orderId: string,
-  userId: string,
-  email?: string | null
-) {
+async function canAccessOrder(orderId: string, userId: string) {
   const order = await getOrderById(orderId);
   if (!order) return null;
-  if (
-    order.userId === userId ||
-    (email && order.email.toLowerCase() === email.toLowerCase())
-  ) {
-    return order;
-  }
+  if (order.userId === userId) return order;
   return null;
 }
 
@@ -42,11 +33,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
 
     const { orderId } = await context.params;
-    const order = await canAccessOrder(
-      orderId,
-      sessionUser.uid,
-      sessionUser.email
-    );
+    const order = await canAccessOrder(orderId, sessionUser.uid);
     if (!order) {
       return jsonError("Order not found", 404);
     }
@@ -75,11 +62,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const { orderId } = await context.params;
-    const order = await canAccessOrder(
-      orderId,
-      sessionUser.uid,
-      sessionUser.email
-    );
+    const order = await canAccessOrder(orderId, sessionUser.uid);
     if (!order) {
       return jsonError("Order not found", 404);
     }

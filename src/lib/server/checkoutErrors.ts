@@ -52,5 +52,5 @@ export function formatCheckoutError(error: unknown): string {
     return message;
   }
 
-  return message || "Unable to complete checkout. Please try again.";
+  return "Unable to complete checkout. Please try again.";
 }

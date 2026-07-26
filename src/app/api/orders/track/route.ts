@@ -55,8 +55,10 @@ export async function GET(request: Request) {
     const body: OrderTrackingResponse = await buildPublicOrderTracking(order);
     return NextResponse.json(body);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to track order";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[orders/track] failed", error);
+    return NextResponse.json(
+      { error: "Unable to track order" },
+      { status: 500 }
+    );
   }
 }

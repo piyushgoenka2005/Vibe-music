@@ -22,7 +22,7 @@ const ASSURANCES: AssuranceItem[] = [
   {
     icon: Truck,
     label: "Free Shipping",
-    detail: "Free delivery on orders over ₹9,999",
+    detail: "Free delivery on every order",
   },
   {
     icon: CreditCard,

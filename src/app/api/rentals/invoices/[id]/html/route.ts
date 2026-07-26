@@ -3,6 +3,7 @@ import { getRentalBookingById } from "@/lib/server/rentalRepository";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { getAdminSession } from "@/lib/server/adminService";
 import { formatRentalDateRange } from "@/lib/rental/durationUtils";
+import { handleRouteError } from "@/lib/api/route-utils";
 import { timingSafeEqual } from "node:crypto";
 
 function verifyToken(
@@ -43,16 +44,12 @@ export async function GET(
     const token = searchParams.get("token");
 
     const isOwner = Boolean(sessionUser?.uid && booking.userId === sessionUser.uid);
-    const isEmailMatch = Boolean(
-      sessionUser?.email &&
-        booking.email.toLowerCase() === sessionUser.email.toLowerCase()
-    );
     const hasToken = verifyToken(booking.trackingToken, token);
     const isAdmin = sessionUser?.uid
       ? Boolean(await getAdminSession(sessionUser.uid))
       : false;
 
-    if (!isOwner && !isEmailMatch && !hasToken && !isAdmin) {
+    if (!isOwner && !hasToken && !isAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -87,9 +84,6 @@ h1{font-size:1.4rem}</style></head>
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Invoice failed" },
-      { status: 500 }
-    );
+    return handleRouteError(error, "GET /api/rentals/invoices/[id]/html");
   }
 }

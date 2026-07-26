@@ -168,34 +168,15 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       {
         heading: "Keyboards",
         links: [
-          { label: "Digital pianos", href: subSearch("keyboards-synthesizers", "digital piano") },
-          { label: "Stage pianos", href: subSearch("keyboards-synthesizers", "stage piano") },
-          { label: "Arranger keyboards", href: subSearch("keyboards-synthesizers", "arranger") },
-          { label: "MIDI keyboards", href: subSearch("keyboards-synthesizers", "midi keyboard") },
-        ],
-      },
-      {
-        heading: "Synths",
-        links: [
-          { label: "Analog synths", href: subSearch("keyboards-synthesizers", "analog synth") },
-          { label: "Workstations", href: subSearch("keyboards-synthesizers", "workstation") },
-          { label: "Groove boxes", href: subSearch("keyboards-synthesizers", "groovebox") },
-          { label: "Modules & racks", href: subSearch("keyboards-synthesizers", "synth module") },
-        ],
-      },
-      {
-        heading: "Essentials",
-        links: [
-          { label: "Keyboard stands", href: subSearch("keyboards-synthesizers", "keyboard stand") },
-          { label: "Pedals & benches", href: subSearch("keyboards-synthesizers", "sustain pedal") },
-          { label: "Cases & bags", href: subSearch("keyboards-synthesizers", "keyboard bag") },
           { label: "Shop all keys", href: categoryPath("keyboards-synthesizers") },
+          { label: "Stage keyboards", href: subSearch("keyboards-synthesizers", "keyboard") },
+          { label: "Performance pianos", href: subSearch("keyboards-synthesizers", "piano") },
         ],
       },
     ],
     featured: [
-      featured("keyboards-synthesizers", "Digital pianos", "digital piano"),
-      featured("keyboards-synthesizers", "Synthesizers", "synthesizer", "synthesizer"),
+      featured("keyboards-synthesizers", "Shop all keys", "keyboard"),
+      featured("keyboards-synthesizers", "Stage keyboards", "stage"),
     ],
   },
   {

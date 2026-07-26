@@ -202,12 +202,7 @@ function resolveAutoProducts(
               : 0;
 
         return toProductItem(product, {
-          badgeLabel:
-            computedPct > 0
-              ? `${computedPct}% Off`
-              : discounted.length > 0
-                ? "Hot Deal"
-                : "Today's Deal",
+          badgeLabel: computedPct > 0 ? `${computedPct}% Off` : undefined,
           offerText: computedPct > 0 ? `Save ${computedPct}%` : undefined,
         });
       });

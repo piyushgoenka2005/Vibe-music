@@ -56,10 +56,7 @@ export async function resolveInvoiceOrder(
     return { ok: false, code: "not_found", message: "Order not found" };
   }
 
-  const owns =
-    order.userId === sessionUser.uid ||
-    (sessionUser.email &&
-      order.email.toLowerCase() === sessionUser.email.toLowerCase());
+  const owns = Boolean(order.userId) && order.userId === sessionUser.uid;
 
   if (!owns) {
     const adminSession = await getAdminSession(sessionUser.uid);

@@ -25,5 +25,5 @@ export function resolveDealBadgeLabel(item: {
     if (pct >= 1) return `${pct}% Off`;
   }
 
-  return "Deal";
+  return "";
 }

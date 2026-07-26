@@ -13,15 +13,6 @@ export interface BigNamesDealItem {
   productAlt: string;
 }
 
-/** Keywords used to pair showcase brand imagery with live catalog guitars. */
-const SHOWCASE_MATCH_KEYWORDS: Record<string, string[]> = {
-  gibson: ["sg", "explorer", "electric", "professional", "hza-uk", "uk(24)"],
-  epiphone: ["sunburst", "les", "paul", "amber", "3900", "4060"],
-  prs: ["natural", "green", "solid top", "4040", "3600", "studio"],
-  ibanez: ["tobacco", "black", "eq", "3900eq", "electro"],
-  fender: ["sunburst", "strat", "4060", "3900", "acoustic"],
-};
-
 export function isBigNamesDealsGuitarProduct(product: CatalogProduct): boolean {
   if (product.status !== "active") return false;
   if (!isGuitarProduct(product.categorySlug, product.category)) return false;
@@ -48,17 +39,6 @@ export function mapCatalogProductToBigNamesDeal(
   };
 }
 
-function scoreGuitarMatch(product: CatalogProduct, keywords: string[]): number {
-  const haystack = `${product.name} ${product.brand} ${product.slug}`.toLowerCase();
-  let score = 0;
-  for (const keyword of keywords) {
-    if (haystack.includes(keyword.toLowerCase())) score += 3;
-  }
-  if (typeof product.rating === "number") score += product.rating;
-  if (product.availability === "in-stock") score += 1;
-  return score;
-}
-
 function toShowcaseItem(
   deal: (typeof BIG_NAMES_DEALS)[number],
   product?: CatalogProduct
@@ -66,10 +46,11 @@ function toShowcaseItem(
   if (product) {
     return {
       key: deal.key,
-      brand: deal.brand,
+      // Always use the live catalog brand — never a mismatched showcase label.
+      brand: product.brand,
       href: productPath(product.slug),
-      product: deal.product,
-      productAlt: `${deal.brand} showcase — shop ${product.name}`,
+      product: product.image || product.images[0] || deal.product,
+      productAlt: product.name,
     };
   }
 
@@ -83,8 +64,8 @@ function toShowcaseItem(
 }
 
 /**
- * Keep iconic brand visuals and always deep-link to a product PDP —
- * never a category or search suggestions list.
+ * Featured guitars deep-link to real PDPs. Brand text always matches the
+ * catalog product — never Gibson/Fender labels on Hertz SKUs.
  */
 export function resolveBigNamesDealFallbacks(
   products: CatalogProduct[]
@@ -93,29 +74,25 @@ export function resolveBigNamesDealFallbacks(
   const bySlug = new Map(guitars.map((product) => [product.slug, product]));
   const used = new Set<string>();
 
-  return BIG_NAMES_DEALS.slice(0, BIG_NAMES_DEALS_MAX_ITEMS).map((deal) => {
+  const items: BigNamesDealItem[] = [];
+
+  for (const deal of BIG_NAMES_DEALS.slice(0, BIG_NAMES_DEALS_MAX_ITEMS)) {
     const preferred = bySlug.get(deal.productSlug);
     if (preferred && !used.has(preferred.id)) {
       used.add(preferred.id);
-      return toShowcaseItem(deal, preferred);
+      items.push(toShowcaseItem(deal, preferred));
+      continue;
     }
 
-    const keywords = SHOWCASE_MATCH_KEYWORDS[deal.key] ?? [deal.brand.toLowerCase()];
-    const ranked = [...guitars]
-      .filter((product) => !used.has(product.id))
-      .sort(
-        (a, b) =>
-          scoreGuitarMatch(b, keywords) - scoreGuitarMatch(a, keywords) ||
-          a.name.localeCompare(b.name)
-      );
-
-    const matched = ranked[0];
-    if (matched) {
-      used.add(matched.id);
-      return toShowcaseItem(deal, matched);
+    const next = guitars.find((product) => !used.has(product.id));
+    if (next) {
+      used.add(next.id);
+      items.push(toShowcaseItem(deal, next));
+      continue;
     }
 
-    // Catalog unavailable / empty — still open the configured product page.
-    return toShowcaseItem(deal);
-  });
+    items.push(toShowcaseItem(deal));
+  }
+
+  return items;
 }

@@ -87,16 +87,16 @@ export async function POST(request: Request) {
       message: result.message,
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Webhook processing failed";
-
     console.error("[razorpay-webhook] Processing error:", {
       eventId,
       eventType,
-      message,
+      error,
     });
 
     const status = isRetryableError(error) ? 500 : 422;
-    return NextResponse.json({ error: message, eventId }, { status });
+    return NextResponse.json(
+      { error: "Webhook processing failed", eventId },
+      { status }
+    );
   }
 }

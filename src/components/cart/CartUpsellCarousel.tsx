@@ -97,7 +97,7 @@ export default function CartUpsellCarousel({
                 </div>
                 <div className="cart-upsell__copy">
                   <p className="cart-upsell__name">{product.name}</p>
-                  {product.rating > 0 ? (
+                  {product.reviewCount > 0 && product.rating > 0 ? (
                     <p className="cart-upsell__rating">
                       <Star size={11} aria-hidden fill="currentColor" />
                       <span>{product.rating.toFixed(1)}</span>

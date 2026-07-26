@@ -335,13 +335,16 @@ function resolveCatalogCategory(path: string): string | null {
 
 /** Resolve href for in-page link interception (preserves query + hash) */
 export function resolveLinkHref(href: string): string {
+  if (!href) return href;
+  // Block XSS / open-redirect vectors from admin or CMS CTAs.
+  if (/^\s*javascript:/i.test(href) || href.trimStart().startsWith("//")) {
+    return "#";
+  }
   if (
-    !href ||
     href.startsWith("#") ||
     href.startsWith("mailto:") ||
     href.startsWith("tel:") ||
-    href.startsWith("sms:") ||
-    href.startsWith("javascript:")
+    href.startsWith("sms:")
   ) {
     return href;
   }

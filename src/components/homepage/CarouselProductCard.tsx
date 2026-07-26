@@ -83,9 +83,8 @@ export default function CarouselProductCard({
     });
   const ratingPillLabel = formatRatingPillLabel(displayRating, displayReviewCount);
   const showRating = displayReviewCount > 0;
-  const badgeLabel =
-    item.badgeLabel ?? (sectionKey === "trending" ? "Trending" : undefined);
-  const isTrendingRibbon = sectionKey === "trending" && !item.badgeLabel;
+  const badgeLabel = item.badgeLabel?.trim() || undefined;
+  const isTrendingRibbon = Boolean(badgeLabel && /trend/i.test(badgeLabel));
   const productHref = resolveLinkHref(item.href);
   const cartProduct = toCartProduct(item);
   const canQuickAdd = canListingQuickAdd(cartProduct);

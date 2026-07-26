@@ -61,7 +61,10 @@ export async function GET(
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unable to generate invoice";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[invoice-html] failed", err);
+    return NextResponse.json(
+      { error: "Unable to generate invoice" },
+      { status: 500 }
+    );
   }
 }

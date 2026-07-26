@@ -10,12 +10,32 @@ const productVariantSchema = z.object({
   id: z.string().optional(),
   label: z.string().max(200).optional(),
   sku: z.string().min(4).max(32).optional(),
-  price: z.number().positive(),
+  /** ₹0 allowed for Coming Soon / unpublished pricing. */
+  price: z.number().min(0),
   stock: z.number().min(0),
   attributes: z.array(variantAttributeSchema).default([]),
   images: z.array(z.string().url().or(z.literal(""))).default([]),
   isDefault: z.boolean().optional(),
 });
+
+/** Relative app path or https URL — blocks javascript: and protocol-relative. */
+const safeStorefrontHref = z
+  .string()
+  .max(500)
+  .refine(
+    (value) => {
+      const href = value.trim();
+      if (!href) return false;
+      if (href.startsWith("/") && !href.startsWith("//")) return true;
+      try {
+        const url = new URL(href);
+        return url.protocol === "https:" || url.protocol === "http:";
+      } catch {
+        return false;
+      }
+    },
+    { message: "Link must be a relative path or http(s) URL" }
+  );
 
 export const adminProductSchema = z.object({
   id: z.string().optional(),
@@ -25,9 +45,10 @@ export const adminProductSchema = z.object({
   brandSlug: z.string().optional(),
   category: z.string().min(1),
   categorySlug: z.string().optional(),
-  price: z.number().positive(),
+  /** ₹0 allowed for Coming Soon products. */
+  price: z.number().min(0),
   originalPrice: z.number().min(0).optional(),
-  salePrice: z.number().positive().nullable().optional(),
+  salePrice: z.number().min(0).nullable().optional(),
   sku: z.preprocess(
     (value) => (value === "" ? undefined : value),
     z.string().min(4).max(20).optional()
@@ -107,7 +128,7 @@ export const adminBannerSchema = z.object({
   image: z.string().url("Desktop image URL is required"),
   mobileImage: z.string().url().optional().or(z.literal("")),
   ctaText: z.string().min(1).max(100),
-  ctaLink: z.string().min(1).max(500),
+  ctaLink: safeStorefrontHref,
   startDate: z.string().optional().nullable(),
   endDate: z.string().optional().nullable(),
   priority: z.number().int().min(0).optional(),
@@ -134,7 +155,7 @@ export const adminHomepageSectionSchema = z.object({
   subtitle: z.string().max(500).optional(),
   accentLabel: z.string().max(100).optional(),
   ctaText: z.string().max(100).optional(),
-  ctaLink: z.string().max(500).optional(),
+  ctaLink: z.union([z.literal(""), safeStorefrontHref]).optional(),
   isActive: z.boolean().optional(),
   sortOrder: z.number().int().min(0).optional(),
   sourceMode: z.enum(["manual", "auto"]).optional(),
@@ -160,7 +181,7 @@ export const adminHomepageSectionItemSchema = z.object({
   brandId: z.string().optional(),
   customImage: z.string().url().optional().or(z.literal("")),
   customTitle: z.string().max(200).optional(),
-  customHref: z.string().max(500).optional(),
+  customHref: z.union([z.literal(""), safeStorefrontHref]).optional(),
   badgeLabel: z.string().max(100).optional(),
   offerText: z.string().max(200).optional(),
   startDate: z.string().optional().nullable(),

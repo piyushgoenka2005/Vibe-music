@@ -75,7 +75,10 @@ export async function GET(
       },
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unable to generate PDF";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[invoice-pdf] failed", err);
+    return NextResponse.json(
+      { error: "Unable to generate PDF" },
+      { status: 500 }
+    );
   }
 }
