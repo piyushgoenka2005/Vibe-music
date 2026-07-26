@@ -1,13 +1,14 @@
-import dynamic from "next/dynamic";
+﻿import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import "@/styles/homepage-bundle.css";
 import HomepageBannerHero from "@/components/home/homepage-banner-hero/HomepageBannerHero";
 import BrowseCategoryCardsSection from "@/components/home/BrowseCategoryCardsSection";
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
+import HomepageNewArrivalsAsync from "@/components/homepage/HomepageNewArrivalsAsync";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
-import HomepageTopProducts from "@/components/home/HomepageTopProducts";
+import BigNamesDealsSection from "@/components/home/BigNamesDealsSection";
 
 import PremiumHero from "@/components/home/PremiumHero";
 
@@ -46,11 +47,6 @@ const GearStoriesReelsSection = dynamic(
   { loading: () => null }
 );
 
-const BigNamesDealsSection = dynamic(
-  () => import("@/components/home/BigNamesDealsSection"),
-  { loading: () => null }
-);
-
 const CategoryBento = dynamic(() => import("@/components/home/CategoryBento"), {
   loading: () => null,
 });
@@ -69,11 +65,14 @@ export default function HomePage() {
       <PremiumHero />
       <HomepageStats />
 
-      <Suspense fallback={<BlogTeaserSkeleton />}>
-        <HomepageTopProducts />
+      <Suspense fallback={<HomepageSectionsSkeleton />}>
+        <HomepageNewArrivalsAsync />
       </Suspense>
 
-      <BigNamesDealsSection />
+      <Suspense fallback={<HomepageSectionsSkeleton />}>
+        <BigNamesDealsSection />
+      </Suspense>
+
       <WhyShopSection />
       <BrowseCategoryCardsSection />
 
@@ -102,7 +101,7 @@ export default function HomePage() {
       <ServiceStatusCarousel />
       <DiscoverLocationsSection />
       <SocialProofStrip />
-      
+      <TourRibbonSection />
     </main>
   );
 }

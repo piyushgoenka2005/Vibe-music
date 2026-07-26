@@ -7,10 +7,11 @@
   --pdp-grey50: #969695;
   --pdp-grey60: #807f7e;
   --pdp-grey100: #2e2e2d;
+  --pdp-pad-x: 16px;
   
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: 24px var(--pdp-pad-x) 48px;
   color: var(--pdp-grey100);
   overflow-x: clip;
   width: 100%;
@@ -21,6 +22,15 @@
   .pdp {
     max-width: 100%;
     margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .pdp > .pdp-breadcrumb,
+  .pdp > .pdp-main,
+  .pdp > .pdp-sections,
+  .pdp > .pdp-section:not(.pdp-section--fbt) {
+    padding-inline: var(--pdp-pad-x);
+    box-sizing: border-box;
   }
 }
 
@@ -1128,7 +1138,7 @@
 .pdp-info-pricing__price {
   font-family: var(--font-sans, var(--font-primary)), ui-sans-serif, system-ui, sans-serif;
   font-size: 1.5rem;
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: #df2935;
   line-height: 1.15;
@@ -1157,6 +1167,7 @@
   margin: 0 0 0.2rem;
   font-family: var(--font-sans, var(--font-primary)), ui-sans-serif, system-ui, sans-serif;
   font-size: 0.8125rem;
+  font-weight: 700;
   color: #008a28;
   line-height: 1.35;
 }
@@ -1164,6 +1175,7 @@
 .pdp-info-pricing__mrp-label,
 .pdp-info-pricing__mrp-value {
   color: #008a28;
+  font-weight: 700;
 }
 
 .pdp-info-pricing__mrp-value {
@@ -1733,13 +1745,15 @@
   gap: 6px;
   font-family: var(--font-sans, var(--font-primary)), ui-sans-serif, system-ui, sans-serif;
   font-size: 13px;
-  color: #008a28;
+  font-weight: 700;
+  color: #0f1111;
   margin-bottom: 2px;
 }
 
 .pdp-buybox__list-price {
   text-decoration: line-through;
-  color: #008a28;
+  color: #0f1111;
+  font-weight: 700;
 }
 
 .pdp-buybox__price {
@@ -1747,30 +1761,35 @@
   align-items: flex-start;
   line-height: 1;
   font-family: var(--font-sans, var(--font-primary)), ui-sans-serif, system-ui, sans-serif;
-  color: #df2935;
+  font-weight: 700;
+  color: #008a28;
 }
 
 .pdp-buybox__price-symbol {
   font-size: 0.82rem;
+  font-weight: 700;
   margin-top: 0.35rem;
   margin-right: 2px;
 }
 
 .pdp-buybox__price-whole {
   font-size: 1.75rem;
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .pdp-buybox__price-fraction {
   font-size: 0.82rem;
+  font-weight: 700;
   margin-top: 0.35rem;
 }
 
 .pdp-buybox__savings {
   margin: 6px 0 0;
+  font-family: var(--font-sans, var(--font-primary)), ui-sans-serif, system-ui, sans-serif;
   font-size: 13px;
-  color: var(--pdp-green);
+  font-weight: 700;
+  color: #0f1111;
 }
 
 .pdp-buybox__delivery {
@@ -2656,15 +2675,21 @@
 .pdp-description__intro {
   display: grid;
   gap: 0.875rem;
-  max-width: 72ch;
+  width: 100%;
+  max-width: none;
 }
 
 .pdp-description__lead {
   margin: 0;
+  width: 100%;
+  max-width: none;
   font-size: 0.9375rem;
-  line-height: 1.7;
+  line-height: 1.75;
   color: #475569;
   letter-spacing: -0.01em;
+  text-align: justify;
+  text-wrap: pretty;
+  hyphens: auto;
 }
 
 .pdp-description__highlights {
@@ -2853,6 +2878,11 @@
   .pdp-sections__body {
     gap: 0.875rem;
     font-size: 0.875rem;
+  }
+
+  .pdp-description__lead {
+    text-align: left;
+    hyphens: manual;
   }
 
   .pdp-description__highlights-grid {
@@ -3864,10 +3894,26 @@
 
   .pdp-fbt {
     flex-direction: column;
+    width: 100%;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .pdp-section--fbt {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    box-sizing: border-box;
+  }
+
+  .pdp-section--fbt .pdp-section__title {
+    padding-inline: var(--pdp-pad-x);
+    margin-bottom: 14px;
   }
 
   .pdp-fbt__products {
-    padding: 16px 12px;
+    padding: 16px var(--pdp-pad-x);
     gap: 0;
     overflow-x: auto;
     scroll-behavior: smooth;
@@ -3905,7 +3951,28 @@
     border-left: none;
     border-top: 1px solid var(--pdp-grey10);
     min-width: 0;
-    padding: 20px 16px;
+    padding: 20px var(--pdp-pad-x);
+  }
+
+  .pdp-fbt__add-all {
+    width: 100%;
+    max-width: none;
+    min-height: 2.5rem;
+    padding: 0.55rem 1.25rem;
+    border: 1px solid #0f1111;
+    border-radius: 999px;
+    background: #0f1111;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .pdp-fbt__add-all:hover:not(:disabled),
+  .pdp-fbt__add-all:focus-visible:not(:disabled) {
+    background: #ffffff;
+    color: #0f1111;
+    outline: none;
   }
 
   .pdp-qty__control input {

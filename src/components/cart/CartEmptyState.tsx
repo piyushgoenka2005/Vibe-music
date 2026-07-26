@@ -129,13 +129,9 @@ export default function CartEmptyState({ onBrowse }: CartEmptyStateProps) {
   return (
     <div className="cart-empty">
       <div className="cart-empty__hero">
-        <div className="cart-empty__emoji" aria-hidden>
-          🎸
-        </div>
         <h3 className="cart-empty__title">Your cart is empty</h3>
         <p className="cart-empty__text">
-          Discover guitars, studio gear, and pro audio curated for every stage
-          and practice room.
+          Discover guitars, studio gear, and pro audio for every stage.
         </p>
         <Link
           href={ROUTES.search}

@@ -94,14 +94,7 @@ export default function NotifyMeButton({
             ? `pdp-btn pdp-btn--buy pdp-buy-now ${className}`.trim()
             : `pdp-btn pdp-btn--primary ${className}`.trim();
 
-  const label =
-    variant === "inline" ? (
-      <span aria-hidden="true" className="notify-me-btn__glyph">
-        N
-      </span>
-    ) : (
-      "Notify me"
-    );
+  const label = "Notify Me";
 
   return (
     <>
@@ -169,7 +162,7 @@ export default function NotifyMeButton({
                       className="notify-me-modal__submit"
                       disabled={submitting || done}
                     >
-                      {done ? "Saved" : submitting ? "Saving…" : "Notify me"}
+                      {done ? "Saved" : submitting ? "Saving…" : "Notify Me"}
                     </button>
                   </div>
                 </form>

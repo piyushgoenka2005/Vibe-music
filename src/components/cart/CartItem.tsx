@@ -4,6 +4,7 @@ import Link from "next/link";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { cartItemToProduct } from "@/lib/cart/cartItemToProduct";
 import { isPromoGiftLine } from "@/lib/cart/promoGift";
+import { productPath } from "@/lib/routes";
 import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
 import { useCartStore, type CartItem as CartItemType } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";
@@ -27,7 +28,8 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
   const isInWishlist = useWishlistStore((s) => s.has(item.productId));
 
   const isGift = isPromoGiftLine(item);
-  const slug = item.slug ?? "#";
+  const slug = item.slug?.trim() || "";
+  const productHref = slug ? productPath(slug) : null;
   const imageColor = item.imageColor ?? "#f2f1f0";
   const image = item.image;
   const pct = discountPercent(item.price, item.originalPrice);
@@ -36,6 +38,12 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
   const atMaxQty = item.quantity >= 99;
 
   function handleMoveToWishlist() {
+    if (!slug) {
+      useToastStore
+        .getState()
+        .show("This item can’t be saved to wishlist right now.", "error");
+      return;
+    }
     if (!isInWishlist) {
       addToWishlist(cartItemToProduct(item));
     } else {
@@ -51,7 +59,24 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
       aria-busy={isUpdating || undefined}
     >
       <div className="cart-item-card__media">
-        {image ? (
+        {productHref ? (
+          <Link href={productHref} className="cart-item-card__media-link">
+            {image ? (
+              <StorefrontThumbImage
+                src={image}
+                className="cart-item-card__photo"
+                width={80}
+                height={80}
+              />
+            ) : (
+              <div
+                className="cart-item-card__swatch"
+                style={{ backgroundColor: imageColor }}
+                aria-hidden="true"
+              />
+            )}
+          </Link>
+        ) : image ? (
           <StorefrontThumbImage
             src={image}
             className="cart-item-card__photo"
@@ -65,14 +90,6 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
             aria-hidden="true"
           />
         )}
-        {pct != null && !isGift ? (
-          <span className="cart-item-card__badge">{pct}% OFF</span>
-        ) : null}
-        {isGift ? (
-          <span className="cart-item-card__badge cart-item-card__badge--gift">
-            Free Gift
-          </span>
-        ) : null}
       </div>
 
       <div className="cart-item-card__content">
@@ -87,13 +104,21 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
             {item.variantSku && !isGift ? (
               <div className="cart-item-card__sku">SKU: {item.variantSku}</div>
             ) : null}
-            {isGift ? (
+            {isGift || !productHref ? (
               <div className="cart-item-card__name">{item.name}</div>
             ) : (
-              <Link href={`/product/${slug}`} className="cart-item-card__name">
+              <Link href={productHref} className="cart-item-card__name">
                 {item.name}
               </Link>
             )}
+            {pct != null && !isGift ? (
+              <span className="cart-item-card__badge">{pct}% off</span>
+            ) : null}
+            {isGift ? (
+              <span className="cart-item-card__badge cart-item-card__badge--gift">
+                Free gift
+              </span>
+            ) : null}
             {!isGift ? (
               <p className="cart-item-card__availability">In stock · Ships fast</p>
             ) : (

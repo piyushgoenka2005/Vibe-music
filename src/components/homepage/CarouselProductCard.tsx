@@ -14,13 +14,12 @@ import { resolveLinkHref } from "@/lib/routes";
 import {
   canListingQuickAdd,
   listingQuickAddAriaLabel,
-  listingQuickAddLabel,
   shouldNavigateForVariants,
 } from "@/lib/product/listingQuickAdd";
 import { useCartStore } from "@/store/cartStore";
 import type { HomepageProductItem } from "@/types/homepage";
 import type { Product } from "@/types/product";
-import { formatDisplayPrice } from "@/utils/currency";
+import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
 
 interface CarouselProductCardProps {
@@ -72,6 +71,11 @@ function fakeMrp(price: number, discountPct: number): number {
   return Math.round(price / (1 - discountPct / 100));
 }
 
+/** Hide seeded strikethrough MRP on cards where it overflows the price row. */
+const HIDE_SEEDED_MRP_PRODUCT_IDS = new Set([
+  "prod-nord-stage-4-88-key-performance-keyboard",
+]);
+
 export default function CarouselProductCard({
   item,
   sectionKey,
@@ -82,8 +86,9 @@ export default function CarouselProductCard({
   const openDrawer = useCartStore((state) => state.openDrawer);
   const displayName = formatProductCardTitle(item.name, item.brand);
   const displayPrice = item.salePrice ?? item.price;
-  const hasDiscount =
-    item.salePrice != null && item.salePrice > 0 && item.salePrice < item.price;
+  const hasPrice = isPurchasablePrice(displayPrice);
+  const showSeededMrp =
+    hasPrice && !HIDE_SEEDED_MRP_PRODUCT_IDS.has(item.id);
   const { rating: displayRating, reviewCount: displayReviewCount } =
     ensureProductReviewMetrics({
       id: item.id,
@@ -165,45 +170,53 @@ export default function CarouselProductCard({
             <h3 className="product-suggest__name" title={item.name}>
               {displayName}
             </h3>
-          </div>
-        </Link>
-        <div className="product-suggest__item-footer">
-          <div className="product-suggest__item-pricing">
-            <div className="product-suggest__item-prices">
-              <span className="discount-drop" aria-label={`${discountPct}% off`}>
-                <span className="discount-drop__arrow" aria-hidden="true">↓</span>
-                {discountPct}% off
-              </span>
-              <span className="product-suggest__item-was">
-                {formatDisplayPrice(fakeMrp(displayPrice, discountPct))}
-              </span>
-              <span
-                className={`product-suggest__item-price${
-                  displayPrice <= 0 ? " product-suggest__item-price--enquiry" : ""
-                }`}
-              >
-                {formatDisplayPrice(displayPrice)}
+            <div
+              className={`product-suggest__tags-row${
+                hasPrice ? "" : " product-suggest__tags-row--enquiry"
+              }`}
+            >
+              {hasPrice ? (
+                <span className="discount-drop" aria-label={`${discountPct}% off`}>
+                  <span className="discount-drop__arrow" aria-hidden="true">
+                    ↓
+                  </span>
+                  {discountPct}% off
+                </span>
+              ) : null}
+              <span className="product-suggest__item-prices">
+                {showSeededMrp ? (
+                  <span className="product-suggest__item-was">
+                    {formatDisplayPrice(fakeMrp(displayPrice, discountPct))}
+                  </span>
+                ) : null}
+                <span
+                  className={`product-suggest__item-price${
+                    hasPrice ? "" : " product-suggest__item-price--enquiry"
+                  }`}
+                >
+                  {formatDisplayPrice(displayPrice)}
+                </span>
               </span>
             </div>
           </div>
-        </div>
+        </Link>
         <div className="product-suggest__item-action-row">
           {canQuickAdd ? (
             <button
               type="button"
-              className="product-suggest__item-action product-suggest__item-action--button"
+              className="new-arrivals-card__buy"
               onClick={handleAddToCart}
               aria-label={listingQuickAddAriaLabel({
                 name: item.name,
                 requiresVariantSelection: item.requiresVariantSelection,
               })}
             >
-              {listingQuickAddLabel(cartProduct)}
+              {item.requiresVariantSelection ? "Choose options" : "Buy Now"}
             </button>
           ) : (
             <NotifyMeButton
               variant="inline"
-              className="product-suggest__item-action product-suggest__item-action--button"
+              className="new-arrivals-card__buy"
               productId={item.id}
               productSlug={item.slug}
               productName={item.name}

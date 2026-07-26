@@ -692,10 +692,10 @@
 
 .storefront-page .cat-product-card__add {
   border-radius: 999px !important;
-  border: 1px solid #0f172a !important;
-  background: #0f172a !important;
+  border: 1px solid #0f1111 !important;
+  background: #0f1111 !important;
   color: #ffffff !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   width: 100% !important;
   max-width: none !important;
   margin-inline: 0 !important;
@@ -707,8 +707,9 @@
 }
 
 .storefront-page .cat-product-card__add:hover:not(:disabled) {
-  background: #1e293b !important;
-  border-color: #1e293b !important;
+  background: #ffffff !important;
+  border-color: #0f1111 !important;
+  color: #0f1111 !important;
   box-shadow: none !important;
 }
 

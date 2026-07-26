@@ -124,34 +124,30 @@ export default function CartShell({
             </div>
             <div className="cart-shell__heading">
               <h2 id={titleId} className="cart-shell__title">
-                Shopping Cart ({itemCount})
+                Cart
               </h2>
-              {items.length > 0 ? (
-                <p className="cart-shell__subtitle">Items reserved in your cart</p>
-              ) : null}
+              <p className="cart-shell__subtitle">
+                {itemCount} {itemCount === 1 ? "item" : "items"}
+              </p>
             </div>
           </>
         ) : (
           <div className="cart-shell__heading">
             <h1 id={titleId} className="cart-shell__title">
-              Shopping Cart ({itemCount})
+              Cart
             </h1>
             {items.length > 0 ? (
-              <p className="cart-shell__subtitle">Items reserved in your cart</p>
-            ) : null}
+              <p className="cart-shell__subtitle">
+                {itemCount} {itemCount === 1 ? "item" : "items"}
+              </p>
+            ) : (
+              <p className="cart-shell__subtitle">Empty</p>
+            )}
           </div>
         )}
       </header>
 
       <div className="cart-shell__body">
-        {items.length > 0 ? (
-          <div className="cart-shell__context">
-            <CartPromoBanner />
-            <CartMilestoneProgress />
-            <CartSavingsSummary />
-          </div>
-        ) : null}
-
         {isUpdating ? (
           <div className="cart-loading" role="status" aria-live="polite">
             <div className="cart-spinner" aria-hidden="true" />
@@ -163,6 +159,11 @@ export default function CartShell({
           <CartEmptyState onBrowse={onBrowse ?? onClose} />
         ) : (
           <>
+            <div className="cart-shell__context">
+              <CartPromoBanner />
+              <CartMilestoneProgress />
+            </div>
+
             {paidItems.length > 0 ? (
               <div className="cart-shell__items" aria-label="Cart items">
                 {paidItems.map((item) => (
@@ -192,6 +193,8 @@ export default function CartShell({
                 </div>
               </section>
             ) : null}
+
+            <CartSavingsSummary />
 
             <CartUpsellCarousel
               products={upsellProducts}

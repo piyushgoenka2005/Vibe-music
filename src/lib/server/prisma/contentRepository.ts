@@ -254,20 +254,25 @@ export async function getStoreSettings(): Promise<StoreSettings | null> {
 
 export async function getProductReviewStats(productId: string) {
   if (!isPostgresConfigured()) return null;
-  const row = await prisma.productReviewStats.findUnique({
-    where: { productId },
-  });
-  if (!row) return null;
-  return {
-    productId: row.productId,
-    totalReviews: row.totalReviews,
-    averageRating: row.averageRating,
-    distribution: row.distribution as Record<string, number>,
-    verifiedCount: row.verifiedCount,
-    withImagesCount: row.withImagesCount,
-    lastReviewAt: row.lastReviewAt,
-    updatedAt: row.updatedAt,
-  };
+  try {
+    const row = await prisma.productReviewStats.findUnique({
+      where: { productId },
+    });
+    if (!row) return null;
+    return {
+      productId: row.productId,
+      totalReviews: row.totalReviews,
+      averageRating: row.averageRating,
+      distribution: row.distribution as Record<string, number>,
+      verifiedCount: row.verifiedCount,
+      withImagesCount: row.withImagesCount,
+      lastReviewAt: row.lastReviewAt,
+      updatedAt: row.updatedAt,
+    };
+  } catch (error) {
+    console.error("[reviews] getProductReviewStats failed", error);
+    return null;
+  }
 }
 
 function now(): string {

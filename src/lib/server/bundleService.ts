@@ -64,8 +64,14 @@ export async function getBundleByProductId(
     return bundleCache.get(productId) ?? null;
   }
 
-  const row = await prisma.productBundle.findUnique({ where: { productId } });
-  const bundle = row ? mapBundle(row) : null;
+  let bundle: ProductBundle | null = null;
+  try {
+    const row = await prisma.productBundle.findUnique({ where: { productId } });
+    bundle = row ? mapBundle(row) : null;
+  } catch (error) {
+    console.error("[bundles] getBundleByProductId failed", error);
+    return null;
+  }
 
   if (!bundleCache || !isFresh(bundleCacheAt)) {
     bundleCache = new Map();
@@ -175,34 +181,46 @@ export async function resolveBundleForProduct(
   productId: string,
   mainUnitPrice?: number
 ): Promise<ResolvedProductBundle | null> {
-  let bundle = await getBundleByProductId(productId);
+  try {
+    let bundle = await getBundleByProductId(productId);
 
-  if (!bundle) {
-    bundle = await seedBundleFromProductDetail(productId);
-  }
+    if (!bundle) {
+      try {
+        bundle = await seedBundleFromProductDetail(productId);
+      } catch (error) {
+        console.error("[bundles] seedBundleFromProductDetail failed", error);
+        bundle = null;
+      }
+    }
 
-  if (!bundle || !bundle.isActive || bundle.relatedProductIds.length === 0) {
+    if (!bundle || !bundle.isActive || bundle.relatedProductIds.length === 0) {
+      return null;
+    }
+
+    const relatedProducts = await getProductSummaries(bundle.relatedProductIds);
+    if (relatedProducts.length === 0) return null;
+
+    const mainProduct = await getProductById(productId);
+    const mainPrice =
+      mainUnitPrice ?? (mainProduct ? toProduct(mainProduct).price : 0);
+    const subtotal =
+      mainPrice +
+      relatedProducts.reduce((sum, product) => sum + product.price, 0);
+    const discountMultiplier = 1 - bundle.discountPercent / 100;
+    const bundlePrice = Math.round(subtotal * discountMultiplier * 100) / 100;
+    const savings = Math.round((subtotal - bundlePrice) * 100) / 100;
+
+    return {
+      discountPercent: bundle.discountPercent,
+      subtotal,
+      bundlePrice,
+      savings,
+      items: relatedProducts,
+    };
+  } catch (error) {
+    console.error("[bundles] resolveBundleForProduct failed", error);
     return null;
   }
-
-  const relatedProducts = await getProductSummaries(bundle.relatedProductIds);
-  if (relatedProducts.length === 0) return null;
-
-  const mainProduct = await getProductById(productId);
-  const mainPrice = mainUnitPrice ?? (mainProduct ? toProduct(mainProduct).price : 0);
-  const subtotal =
-    mainPrice + relatedProducts.reduce((sum, product) => sum + product.price, 0);
-  const discountMultiplier = 1 - bundle.discountPercent / 100;
-  const bundlePrice = Math.round(subtotal * discountMultiplier * 100) / 100;
-  const savings = Math.round((subtotal - bundlePrice) * 100) / 100;
-
-  return {
-    discountPercent: bundle.discountPercent,
-    subtotal,
-    bundlePrice,
-    savings,
-    items: relatedProducts,
-  };
 }
 
 export async function resolveBundleBySlug(

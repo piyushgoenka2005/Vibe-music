@@ -8,14 +8,8 @@ export default function CartPromoBanner() {
   );
 
   return (
-    <div className="cart-promo-banner" role="note">
-      <span className="cart-promo-banner__icon" aria-hidden="true">
-        🎁
-      </span>
+    <p className="cart-promo-banner" role="note">
       <span className="cart-promo-banner__text">{bannerText}</span>
-      <span className="cart-promo-banner__icon" aria-hidden="true">
-        🎁
-      </span>
-    </div>
+    </p>
   );
 }

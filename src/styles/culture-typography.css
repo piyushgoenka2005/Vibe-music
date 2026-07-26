@@ -2,7 +2,7 @@
 
 .culture-typography {
   position: relative;
-  height: var(--culture-scroll-height, 320vh);
+  height: var(--culture-scroll-height, 220vh);
   background: #1253ed;
   isolation: isolate;
   content-visibility: visible;
@@ -364,7 +364,8 @@
 }
 
 .culture-typography--scrollable {
-  --culture-scroll-height: calc(100svh + 240vh);
+  /* Fallback until JS measures 2 quote cycles */
+  --culture-scroll-height: calc(100svh + 140vh);
 }
 
 .culture-typography--scrollable .culture-typography__typography-stack,
@@ -375,7 +376,7 @@
 /* Mobile — CSS-first layout (no JS class required) */
 @media (max-width: 767px) {
   .culture-typography--scrollable {
-    --culture-scroll-height: 288vh;
+    --culture-scroll-height: calc(100svh + 120vh);
     min-height: calc(100svh - var(--site-header-offset, 90px));
   }
 

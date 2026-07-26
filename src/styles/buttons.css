@@ -82,24 +82,25 @@ input[type="reset"],
   box-sizing: border-box !important;
   min-height: 2.5rem !important;
   height: auto !important;
-  padding: 0.55rem 0.85rem !important;
-  border: 1px solid #0f172a !important;
+  padding: 0.55rem 1.25rem !important;
+  border: 1px solid #0f1111 !important;
   border-radius: 999px !important;
-  background: #0f172a !important;
+  background: #0f1111 !important;
   color: #ffffff !important;
   font-family: var(--font-primary) !important;
-  font-size: 0.8125rem !important;
+  font-size: 0.9rem !important;
   font-weight: 700 !important;
-  letter-spacing: 0.01em !important;
-  line-height: 1.2 !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1 !important;
   text-decoration: none !important;
   box-shadow: none !important;
   transform: none !important;
   cursor: pointer;
+  white-space: nowrap !important;
   transition:
-    background 220ms ease,
-    border-color 220ms ease,
-    color 220ms ease !important;
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease !important;
 }
 
 /* Full-width ATC on product / carousel / upsell cards */
@@ -131,9 +132,9 @@ input[type="reset"],
 .compare-page__clear--cart:hover:not(:disabled),
 .acct__wishlist-actions .acct__btn--primary:hover:not(:disabled),
 .wl-drawer__action-btn--primary:hover:not(:disabled) {
-  background: #1e293b !important;
-  border-color: #1e293b !important;
-  color: #ffffff !important;
+  background: #ffffff !important;
+  border-color: #0f1111 !important;
+  color: #0f1111 !important;
   box-shadow: none !important;
   transform: none !important;
   filter: none !important;

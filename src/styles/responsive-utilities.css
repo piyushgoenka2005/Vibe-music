@@ -73,11 +73,13 @@
   .admin-table-wrap,
   .pdp-fbt__products,
   .pdp-cross-sell,
-  .compare-table-wrap {
+  .compare-table-wrap,
+  .cart-upsell__track {
     overflow-x: auto;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+    touch-action: pan-x;
   }
 
   /* Long text safety */

@@ -713,16 +713,17 @@
     --share-btn-size: 2rem;
   }
 
-  /* Cart sticky CTA — stack on very narrow phones */
+  /* Cart sticky CTA — keep total + checkout on one row */
   .cart-sticky-footer__bar {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(9rem, auto);
     gap: 0.65rem;
+    align-items: center;
   }
 
   .cart-sticky-footer__checkout {
     min-width: 0;
-    width: 100%;
+    width: auto;
   }
 
   .cart-sticky-footer__checkout .checkout-glass-btn,
@@ -730,6 +731,10 @@
   .cart-sticky-footer__checkout button {
     width: 100%;
     min-height: 48px;
+  }
+
+  .cart-shell--page .cart-sticky-footer__bar {
+    grid-template-columns: minmax(0, 1fr) minmax(8.5rem, auto);
   }
 
   .site-header__logo img,

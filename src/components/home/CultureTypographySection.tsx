@@ -30,8 +30,8 @@ const WORD_CYCLE = [
   "BRAND.",
 ] as const;
 
-/** How many copies of the cycle to stack (then duplicated once for a seamless -50% loop). */
-const QUOTE_REPEATS = 4;
+/** Exactly two quote cycles on mobile + desktop (no extra loop padding). */
+const QUOTE_REPEATS = 2;
 
 export interface CultureTypographySectionProps {
   metadataLabel?: string;
@@ -92,6 +92,7 @@ export default function CultureTypographySection({
   const motionReady = isClient && !reduceMotion;
 
   const [scrollShiftPx, setScrollShiftPx] = useState(0);
+  const [stickyPinPx, setStickyPinPx] = useState(0);
   const [scrollProgressValue, setScrollProgressValue] = useState(0);
 
   const quoteLines = useMemo(
@@ -105,8 +106,7 @@ export default function CultureTypographySection({
     for (let i = 0; i < QUOTE_REPEATS; i++) {
       repeated.push(...quoteLines);
     }
-    // Exact duplicate for seamless translateY(-50%) loop
-    return [...repeated, ...repeated];
+    return repeated;
   }, [quoteLines]);
 
   const spotlightX = useMotionValue(50);
@@ -129,6 +129,7 @@ export default function CultureTypographySection({
   useLayoutEffect(() => {
     if (!motionReady) {
       setScrollShiftPx(0);
+      setStickyPinPx(0);
       return undefined;
     }
 
@@ -139,9 +140,10 @@ export default function CultureTypographySection({
     if (!track || !sticky) return undefined;
 
     const update = () => {
-      // Half the track = one quote runway (content is doubled for the loop)
-      const half = track.scrollHeight / 2;
-      const overflow = Math.max(0, half);
+      const pin = sticky.clientHeight;
+      // Scroll just enough to reveal both quote cycles in the sticky frame.
+      const overflow = Math.max(0, track.scrollHeight - pin);
+      setStickyPinPx(pin);
       setScrollShiftPx(overflow);
     };
 
@@ -225,11 +227,11 @@ export default function CultureTypographySection({
 
   const scrollTrackStyle = motionReady ? { y: backgroundY } : undefined;
 
-  // Keep section runway locked to measured half-track so scroll never desyncs.
+  // Keep section runway locked to measured pin + overflow (same on mobile + desktop).
   const sectionStyle = {
-    ...(motionReady && scrollShiftPx > 0
+    ...(motionReady && scrollShiftPx > 0 && stickyPinPx > 0
       ? {
-          "--culture-scroll-height": `calc(100svh + ${Math.round(scrollShiftPx)}px)`,
+          "--culture-scroll-height": `${Math.round(stickyPinPx + scrollShiftPx)}px`,
         }
       : null),
   } as React.CSSProperties;

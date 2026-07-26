@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
-import { categoryPath } from "@/lib/routes";
+import { categoryPath, productPath } from "@/lib/routes";
 import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import type { ResolvedProductBundle } from "@/types/bundle";
@@ -94,7 +94,7 @@ export default function FrequentlyBoughtTogether({
   }
 
   return (
-    <section className="pdp-section" aria-label="Complete your order">
+    <section className="pdp-section pdp-section--fbt" aria-label="Complete your order">
       <h2 className="pdp-section__title">Complete Your Order</h2>
       <div className="pdp-fbt">
         <div className="pdp-fbt__products">
@@ -126,7 +126,7 @@ export default function FrequentlyBoughtTogether({
                     </label>
                   )}
                   <Link
-                    href={`/product/${product.slug}`}
+                    href={productPath(product.slug)}
                     className="pdp-fbt__card-link"
                   >
                     <div className="pdp-fbt__image-wrap">

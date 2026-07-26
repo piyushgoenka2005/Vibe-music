@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { productPath } from "@/lib/routes";
@@ -47,7 +48,10 @@ export default function CartUpsellCarousel({
   );
   const addItem = useCartStore((s) => s.addItem);
 
-  const visible = products.filter((product) => !cartProductIds.has(product.id));
+  const visible = products.filter(
+    (product) =>
+      !cartProductIds.has(product.id) && Boolean(product.slug?.trim())
+  );
   if (visible.length === 0) return null;
 
   return (
@@ -59,11 +63,12 @@ export default function CartUpsellCarousel({
           const original = product.originalPrice;
           const canAdd = isPurchasable(product);
           const addLabel = listingQuickAddLabel(product);
+          const href = productPath(product.slug);
 
           function handleAdd() {
             if (!canAdd) return;
             if (shouldNavigateForVariants(product)) {
-              router.push(productPath(product.slug));
+              router.push(href);
               return;
             }
             addItem(product, 1);
@@ -71,61 +76,63 @@ export default function CartUpsellCarousel({
 
           return (
             <article key={product.id} className="cart-upsell__card">
-              <div className="cart-upsell__media">
-                {product.image ? (
-                  <StorefrontThumbImage
-                    src={product.image}
-                    className="cart-upsell__photo"
-                    width={160}
-                    height={120}
-                  />
-                ) : (
-                  <div
-                    className="cart-upsell__swatch"
-                    style={{ backgroundColor: product.imageColor }}
-                    aria-hidden
-                  />
-                )}
-              </div>
-              <div className="cart-upsell__copy">
-                <p className="cart-upsell__name">{product.name}</p>
-                {product.rating > 0 ? (
-                  <p className="cart-upsell__rating">
-                    <Star size={11} aria-hidden fill="currentColor" />
-                    <span>{product.rating.toFixed(1)}</span>
-                  </p>
-                ) : null}
-                <div className="cart-upsell__prices">
-                  {original != null && original > product.price ? (
-                    <span className="cart-upsell__mrp">
-                      {formatDisplayPrice(original)}
-                    </span>
-                  ) : null}
-                  <span className="cart-upsell__price">
-                    {formatDisplayPrice(product.price)}
-                  </span>
-                  {pct != null ? (
-                    <span className="cart-upsell__discount">{pct}% off</span>
-                  ) : null}
+              <Link href={href} className="cart-upsell__link">
+                <div className="cart-upsell__media">
+                  {product.image ? (
+                    <StorefrontThumbImage
+                      src={product.image}
+                      className="cart-upsell__photo"
+                      width={160}
+                      height={120}
+                    />
+                  ) : (
+                    <div
+                      className="cart-upsell__swatch"
+                      style={{ backgroundColor: product.imageColor }}
+                      aria-hidden
+                    />
+                  )}
                 </div>
-                <button
-                  type="button"
-                  className="cart-upsell__add"
-                  onClick={handleAdd}
-                  disabled={!canAdd}
-                  aria-label={
-                    canAdd
-                      ? listingQuickAddAriaLabel(product)
-                      : `${product.name} is unavailable`
-                  }
-                >
-                  {canAdd
-                    ? shouldNavigateForVariants(product)
-                      ? addLabel
-                      : "+ Add"
-                    : "Unavailable"}
-                </button>
-              </div>
+                <div className="cart-upsell__copy">
+                  <p className="cart-upsell__name">{product.name}</p>
+                  {product.rating > 0 ? (
+                    <p className="cart-upsell__rating">
+                      <Star size={11} aria-hidden fill="currentColor" />
+                      <span>{product.rating.toFixed(1)}</span>
+                    </p>
+                  ) : null}
+                  <div className="cart-upsell__prices">
+                    {original != null && original > product.price ? (
+                      <span className="cart-upsell__mrp">
+                        {formatDisplayPrice(original)}
+                      </span>
+                    ) : null}
+                    <span className="cart-upsell__price">
+                      {formatDisplayPrice(product.price)}
+                    </span>
+                    {pct != null ? (
+                      <span className="cart-upsell__discount">{pct}% off</span>
+                    ) : null}
+                  </div>
+                </div>
+              </Link>
+              <button
+                type="button"
+                className="cart-upsell__add"
+                onClick={handleAdd}
+                disabled={!canAdd}
+                aria-label={
+                  canAdd
+                    ? listingQuickAddAriaLabel(product)
+                    : `${product.name} is unavailable`
+                }
+              >
+                {canAdd
+                  ? shouldNavigateForVariants(product)
+                    ? addLabel
+                    : "+ Add"
+                  : "Unavailable"}
+              </button>
             </article>
           );
         })}

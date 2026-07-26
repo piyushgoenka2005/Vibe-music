@@ -79,8 +79,16 @@ export async function getRelatedListByProductId(
     return relationsCache.get(productId) ?? null;
   }
 
-  const row = await prisma.productRelation.findUnique({ where: { productId } });
-  const relation = row ? mapRelation(row) : null;
+  let relation: ProductRelatedList | null = null;
+  try {
+    const row = await prisma.productRelation.findUnique({
+      where: { productId },
+    });
+    relation = row ? mapRelation(row) : null;
+  } catch (error) {
+    console.error("[related] getRelatedListByProductId failed", error);
+    return null;
+  }
 
   if (!relationsCache || !isFresh(relationsCacheAt)) {
     relationsCache = new Map();
@@ -269,57 +277,67 @@ export async function resolveRelatedProductsForProduct(
   limit = MAX_RELATED_PRODUCTS,
   excludeIds: string[] = []
 ): Promise<ResolvedRelatedProducts> {
-  const product = await getProductById(productId);
-  if (!product) {
+  try {
+    const product = await getProductById(productId);
+    if (!product) {
+      return { products: [], source: "fallback" };
+    }
+
+    let relation = await getRelatedListByProductId(productId);
+    if (!relation) {
+      try {
+        relation = await seedRelationFromProductDetail(productId);
+      } catch (error) {
+        console.error("[related] seedRelationFromProductDetail failed", error);
+        relation = null;
+      }
+    }
+
+    const manualIds =
+      relation && relation.isActive ? relation.relatedProductIds : [];
+    const seenIds = new Set<string>([productId, ...excludeIds]);
+
+    let resolved: Product[] = [];
+    let manualCount = 0;
+
+    if (manualIds.length > 0) {
+      const manualProducts = await fetchProductsByIds(manualIds);
+      const compatibleManual = manualProducts.filter((candidate) =>
+        areMerchandisingPeersCompatible(product, candidate)
+      );
+      resolved = appendUniqueProducts(
+        resolved,
+        compatibleManual.map(toProduct),
+        seenIds,
+        limit
+      );
+      manualCount = resolved.length;
+    }
+
+    if (resolved.length < limit) {
+      const candidates = await loadMerchandisingCandidatePool(product);
+      const fallback = resolveRankedFallbackProducts(
+        product,
+        candidates,
+        limit - resolved.length,
+        "related",
+        seenIds
+      );
+      resolved = appendUniqueProducts(resolved, fallback, seenIds, limit);
+    }
+
+    const source: ResolvedRelatedProducts["source"] =
+      manualCount === 0
+        ? "fallback"
+        : manualCount >= resolved.length
+          ? "manual"
+          : "mixed";
+
+    return { products: resolved.slice(0, limit), source };
+  } catch (error) {
+    console.error("[related] resolveRelatedProductsForProduct failed", error);
     return { products: [], source: "fallback" };
   }
-
-  let relation = await getRelatedListByProductId(productId);
-  if (!relation) {
-    relation = await seedRelationFromProductDetail(productId);
-  }
-
-  const manualIds =
-    relation && relation.isActive ? relation.relatedProductIds : [];
-  const seenIds = new Set<string>([productId, ...excludeIds]);
-
-  let resolved: Product[] = [];
-  let manualCount = 0;
-
-  if (manualIds.length > 0) {
-    const manualProducts = await fetchProductsByIds(manualIds);
-    const compatibleManual = manualProducts.filter((candidate) =>
-      areMerchandisingPeersCompatible(product, candidate)
-    );
-    resolved = appendUniqueProducts(
-      resolved,
-      compatibleManual.map(toProduct),
-      seenIds,
-      limit
-    );
-    manualCount = resolved.length;
-  }
-
-  if (resolved.length < limit) {
-    const candidates = await loadMerchandisingCandidatePool(product);
-    const fallback = resolveRankedFallbackProducts(
-      product,
-      candidates,
-      limit - resolved.length,
-      "related",
-      seenIds
-    );
-    resolved = appendUniqueProducts(resolved, fallback, seenIds, limit);
-  }
-
-  const source: ResolvedRelatedProducts["source"] =
-    manualCount === 0
-      ? "fallback"
-      : manualCount >= resolved.length
-        ? "manual"
-        : "mixed";
-
-  return { products: resolved.slice(0, limit), source };
 }
 
 export async function resolveRelatedProductsBySlug(

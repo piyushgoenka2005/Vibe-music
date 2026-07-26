@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent, ReactNode } from "react";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import NotifyMeButton from "@/components/product/NotifyMeButton";
 import HomepageProductImage from "@/components/homepage/HomepageProductImage";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import {
   ensureProductReviewMetrics,
   formatRatingPillLabel,
 } from "@/lib/product/productReviewDisplay";
-import { formatDisplayPrice } from "@/utils/currency";
+import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { resolveLinkHref } from "@/lib/routes";
 import {
   canListingQuickAdd,
@@ -91,6 +92,7 @@ export default function NewArrivalsProductCard({
   const addItem = useCartStore((state) => state.addItem);
   const openDrawer = useCartStore((state) => state.openDrawer);
   const displayPrice = salePrice ?? price;
+  const hasPrice = isPurchasablePrice(displayPrice);
   const displayName = formatProductCardTitle(name, brand);
   const { rating: displayRating, reviewCount: displayReviewCount } =
     ensureProductReviewMetrics({
@@ -218,18 +220,26 @@ export default function NewArrivalsProductCard({
               {displayName}
             </h3>
 
-            <span className="new-arrivals-card__tags-row">
-              <span className="discount-drop" aria-label={`${discountPct}% off`}>
-                <span className="discount-drop__arrow" aria-hidden="true">↓</span>
-                {discountPct}% off
-              </span>
-              <span className="new-arrivals-card__prices">
-                <span className="new-arrivals-card__was">
-                  {formatDisplayPrice(wasPrice)}
+            <span
+              className={`new-arrivals-card__tags-row${
+                hasPrice ? "" : " new-arrivals-card__tags-row--enquiry"
+              }`}
+            >
+              {hasPrice ? (
+                <span className="discount-drop" aria-label={`${discountPct}% off`}>
+                  <span className="discount-drop__arrow" aria-hidden="true">↓</span>
+                  {discountPct}% off
                 </span>
+              ) : null}
+              <span className="new-arrivals-card__prices">
+                {hasPrice ? (
+                  <span className="new-arrivals-card__was">
+                    {formatDisplayPrice(wasPrice)}
+                  </span>
+                ) : null}
                 <span
                   className={`new-arrivals-card__price${
-                    displayPrice <= 0 ? " new-arrivals-card__price--enquiry" : ""
+                    hasPrice ? "" : " new-arrivals-card__price--enquiry"
                   }`}
                 >
                   {priceNode ?? formatDisplayPrice(displayPrice)}
@@ -239,11 +249,7 @@ export default function NewArrivalsProductCard({
           </div>
         </Link>
 
-        <div
-          className={`new-arrivals-card__meta-row new-arrivals-card__meta-row--price${
-            canBuy ? "" : " new-arrivals-card__meta-row--solo"
-          }`}
-        >
+        <div className="new-arrivals-card__meta-row new-arrivals-card__meta-row--price">
           {canBuy ? (
             <button
               type="button"
@@ -258,7 +264,22 @@ export default function NewArrivalsProductCard({
             >
               {requiresVariantSelection ? "Choose options" : "Buy Now"}
             </button>
-          ) : null}
+          ) : ariaHidden ? (
+            <span
+              className="new-arrivals-card__buy"
+              aria-hidden="true"
+            >
+              Notify Me
+            </span>
+          ) : (
+            <NotifyMeButton
+              variant="inline"
+              className="new-arrivals-card__buy"
+              productId={id}
+              productSlug={productSlug}
+              productName={name}
+            />
+          )}
         </div>
       </div>
     </div>

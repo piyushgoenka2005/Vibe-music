@@ -80,12 +80,17 @@ export async function getProductQuestionById(
 export async function listApprovedQuestionsForProduct(
   productId: string
 ): Promise<ProductQuestionListResponse> {
-  const rows = await prisma.productQuestion.findMany({
-    where: { productId, status: "approved" },
-    orderBy: { createdAt: "desc" },
-  });
-  const questions = rows.map(mapQuestion);
-  return { questions, totalCount: questions.length };
+  try {
+    const rows = await prisma.productQuestion.findMany({
+      where: { productId, status: "approved" },
+      orderBy: { createdAt: "desc" },
+    });
+    const questions = rows.map(mapQuestion);
+    return { questions, totalCount: questions.length };
+  } catch (error) {
+    console.error("[questions] listApprovedQuestionsForProduct failed", error);
+    return { questions: [], totalCount: 0 };
+  }
 }
 
 export async function listProductQuestionsForAdmin(options: {

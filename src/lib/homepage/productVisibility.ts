@@ -10,5 +10,5 @@ export function hasPositiveDisplayPrice(product: CatalogProduct): boolean {
 
 /** Homepage carousels/grids show active catalog items even when price is Coming Soon. */
 export function isHomepageProductVisible(item: HomepageProductItem): boolean {
-  return Boolean(item.id && item.name);
+  return Boolean(item.id && item.name && item.href?.trim() && item.slug?.trim());
 }

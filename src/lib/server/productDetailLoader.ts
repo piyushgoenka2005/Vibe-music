@@ -107,6 +107,20 @@ export const loadProductDetailPage = cache(async function loadProductDetailPage(
 ): Promise<ProductDetailResult | null> {
   const product = await loadProductCorePage(slug);
   if (!product) return null;
-  const merchandising = await loadProductMerchandising(product);
-  return { product, ...merchandising };
+
+  try {
+    const merchandising = await loadProductMerchandising(product);
+    return { product, ...merchandising };
+  } catch (error) {
+    // Merchandising (bundles / related) may fail when Postgres is down.
+    // Still serve the PDP from the catalog / JSON fallback.
+    console.error("[pdp] merchandising failed; serving product core only", error);
+    return {
+      product,
+      bundle: null,
+      frequentlyBoughtTogether: [],
+      similarProducts: [],
+      relatedProducts: [],
+    };
+  }
 });

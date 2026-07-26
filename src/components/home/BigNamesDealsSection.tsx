@@ -2,12 +2,14 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import Reveal from "@/components/layout/Reveal";
 import BigNamesDealsShowcase from "@/components/home/BigNamesDealsShowcase";
-import { getBigNamesDealsPublicData } from "@/lib/server/homepageService";
+import {
+  getBigNamesDealsPublicData,
+} from "@/lib/server/homepageService";
+import type { PublicBigNamesDealsData } from "@/types/homepage";
 
 const HEADLINE_ID = "bigNamesDealsHeadline";
 
-export default async function BigNamesDealsSection() {
-  const data = await getBigNamesDealsPublicData();
+export function BigNamesDealsView({ data }: { data: PublicBigNamesDealsData }) {
   if (!data.isActive || data.items.length === 0) {
     return null;
   }
@@ -66,4 +68,9 @@ export default async function BigNamesDealsSection() {
       </div>
     </section>
   );
+}
+
+export default async function BigNamesDealsSection() {
+  const data = await getBigNamesDealsPublicData();
+  return <BigNamesDealsView data={data} />;
 }
