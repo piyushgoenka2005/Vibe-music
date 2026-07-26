@@ -333,7 +333,7 @@
   /* Only the product photo layer scales — no translate, so the well stays aligned */
   .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-photo-pop,
   .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-photo-pop {
-    transform: scale(1.3);
+    transform: scale(1.12);
     filter: none;
   }
 
@@ -401,7 +401,7 @@
   pointer-events: none;
 }
 
-/* Photo layer — full width; scale up so product size holds when card narrows */
+/* Photo layer — slight scale so products fill the well without cropping hard */
 .premium-home .premium-product-carousel .product-suggest__item-photo-pop {
   position: absolute;
   top: 0;
@@ -411,7 +411,7 @@
   z-index: 2;
   display: block;
   width: 100%;
-  transform: scale(1.22);
+  transform: scale(1.04);
   transform-origin: center center;
   filter: none;
   transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -428,7 +428,7 @@
   height: 100% !important;
   max-width: none;
   max-height: none;
-  padding: 0;
+  padding: 0.55rem;
   box-sizing: border-box;
   margin: 0 !important;
   object-fit: contain;
@@ -785,7 +785,7 @@
     left: 0;
     right: 0;
     width: 100%;
-    transform: scale(1.2);
+    transform: scale(1.04);
     will-change: auto;
   }
 
@@ -816,7 +816,7 @@
     width: 100% !important;
     height: 100% !important;
     margin: 0 !important;
-    padding: 0;
+    padding: 0.45rem;
     object-fit: contain;
     object-position: center;
     transform: none !important;

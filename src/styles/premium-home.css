@@ -3192,18 +3192,23 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   }
 
   .premium-home .new-arrivals-marquee__track {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+    animation: none;
+    background: transparent;
+  }
+
+  .premium-home .new-arrivals-marquee__sequence {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1px;
     width: 100%;
     max-width: 100%;
-    overflow: hidden;
-    animation: none;
+    padding-right: 0;
+    align-items: stretch;
     background: #eef2f6;
-  }
-
-  .premium-home .new-arrivals-marquee__sequence {
-    display: contents;
   }
 
   .premium-home .new-arrivals-marquee__sequence--clone {
@@ -3213,9 +3218,9 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   .premium-home .new-arrivals-marquee__sequence > .new-arrivals-card-wrap,
   .premium-home .new-arrivals-marquee__sequence > .new-arrivals-card {
     flex: none;
-    width: auto;
+    width: 100%;
     min-width: 0;
-    max-width: 100%;
+    max-width: none;
     scroll-snap-align: unset;
   }
 
@@ -4762,19 +4767,23 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   }
 
   .premium-home .new-arrivals-marquee__track {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1px;
+    display: block;
     width: 100%;
     overflow: visible;
     animation: none;
     overscroll-behavior: auto;
     scroll-snap-type: none;
-    background: #eef2f6;
+    background: transparent;
   }
 
   .premium-home .new-arrivals-marquee__sequence {
-    display: contents;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    width: 100%;
+    max-width: 100%;
+    padding-right: 0;
+    background: #eef2f6;
   }
 
   .premium-home .new-arrivals-marquee__track::-webkit-scrollbar {
@@ -4879,19 +4888,24 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
 
   .premium-home .new-arrivals-marquee__track {
     animation: none;
-    width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-  }
-
-  .premium-home .new-arrivals-marquee__track::-webkit-scrollbar {
-    display: none;
   }
 
   .premium-home .new-arrivals-marquee__sequence--clone {
     display: none;
+  }
+
+  @media (min-width: 768px) {
+    .premium-home .new-arrivals-marquee__track {
+      width: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+    }
+
+    .premium-home .new-arrivals-marquee__track::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   .locations-strip__marquee-track {

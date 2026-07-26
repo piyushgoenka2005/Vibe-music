@@ -12,7 +12,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useHideOnScroll, useSiteHeaderOffset } from "@/hooks/useHideOnScroll";
-import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
+import { useIsCompactHeaderViewport } from "@/hooks/useIsMobileViewport";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import SiteHeaderNav from "@/components/layout/SiteHeaderNav";
 import SiteHeaderMobileDrawer from "@/components/layout/SiteHeaderMobileDrawer";
@@ -30,7 +30,7 @@ export default function SiteHeader() {
   const searchToggleRef = useRef<HTMLButtonElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const isMobile = useIsMobileViewport();
+  const isCompactHeader = useIsCompactHeaderViewport();
   const headerHidden = useHideOnScroll({ disabled: mobileOpen, disableOnMobile: true });
 
   useSiteHeaderOffset(headerRef);
@@ -40,10 +40,10 @@ export default function SiteHeader() {
     window.dispatchEvent(new Event("site-header:sync"));
   }, [pathname]);
 
-  /* Drawer is mobile-only — never leave it open after rotating to desktop */
+  /* Drawer is for compact header only — close when switching to full desktop nav */
   useEffect(() => {
-    if (!isMobile && mobileOpen) setMobileOpen(false);
-  }, [isMobile, mobileOpen]);
+    if (!isCompactHeader && mobileOpen) setMobileOpen(false);
+  }, [isCompactHeader, mobileOpen]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -74,10 +74,10 @@ export default function SiteHeader() {
   }, [mobileOpen]);
 
   const toggleMobileNav = useCallback(() => {
-    if (!isMobile) return;
+    if (!isCompactHeader) return;
     searchStore.closeOverlay();
     setMobileOpen((open) => !open);
-  }, [isMobile]);
+  }, [isCompactHeader]);
 
   const { user, isAuthenticated, isInitialized } = useAuthStore(
     useShallow((state) => ({
@@ -88,7 +88,7 @@ export default function SiteHeader() {
   );
 
   const accountHref = isAuthenticated ? ROUTES.account : ROUTES.login;
-  const accountLabel =
+  const accountAriaLabel =
     isInitialized && isAuthenticated && user?.name
       ? user.name.split(" ")[0]
       : "Account";
@@ -224,7 +224,7 @@ export default function SiteHeader() {
               <Link
                 href={accountHref}
                 className="site-header__action site-header__action--account assets-site-header__menu-account"
-                aria-label={accountLabel}
+                aria-label={accountAriaLabel}
               >
                 {accountPhotoUrl ? (
                   <img
@@ -239,14 +239,9 @@ export default function SiteHeader() {
                   <User size={20} strokeWidth={1.75} aria-hidden />
                 )}
                 <span className="site-header__action-label assets-site-header__menu-account-navlink">
-                  {accountLabel}
+                  Profile
                 </span>
               </Link>
-              {isInitialized && !isAuthenticated ? (
-                <Link href={ROUTES.login} className="login-nudge">
-                  Login
-                </Link>
-              ) : null}
             </div>
 
             <div className="site-header__action--desktop-only assets-site-header__menu-cart-wrap">
@@ -259,7 +254,7 @@ export default function SiteHeader() {
               aria-label={cartLabel}
               onClick={handleCartClick}
             >
-              <ShoppingCart size={20} strokeWidth={1.75} />
+              <ShoppingCart size={20} strokeWidth={1.75} aria-hidden />
               <span
                 ref={cartCountRef}
                 className="site-header__cart-count assets-site-header__menu-cart-count"
@@ -267,6 +262,7 @@ export default function SiteHeader() {
               >
                 {cartCountText}
               </span>
+              <span className="site-header__action-label">Cart</span>
             </Link>
           </div>
 
@@ -293,7 +289,7 @@ export default function SiteHeader() {
       <SiteHeaderNav onMegaMenuOpenChange={handleMegaMenuOpenChange} />
 
       <SiteHeaderMobileDrawer
-        open={isMobile && mobileOpen}
+        open={isCompactHeader && mobileOpen}
         onClose={() => setMobileOpen(false)}
         onNavigate={() => setMobileOpen(false)}
       />

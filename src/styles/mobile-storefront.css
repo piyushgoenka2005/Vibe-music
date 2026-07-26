@@ -754,10 +754,6 @@
     grid-template-columns: 1fr !important;
   }
 
-  .premium-home .new-arrivals-marquee__track {
-    grid-template-columns: 1fr !important;
-  }
-
   .site-header__inner {
     gap: 0.15rem;
   }

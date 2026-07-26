@@ -68,6 +68,11 @@ export default function HomePage() {
       <HomepageBannerHero />
       <PremiumHero />
       <HomepageStats />
+
+      <Suspense fallback={<BlogTeaserSkeleton />}>
+        <HomepageTopProducts />
+      </Suspense>
+
       <BigNamesDealsSection />
       <WhyShopSection />
       <BrowseCategoryCardsSection />
@@ -82,6 +87,8 @@ export default function HomePage() {
         <HomepageSectionsAsync />
       </Suspense>
 
+      <TourRibbonSection />
+
       <HomepageAplusContent />
 
       <EditorialSplit />
@@ -90,16 +97,12 @@ export default function HomePage() {
         <HomepageBlogTeaser />
       </Suspense>
 
-      <Suspense fallback={<BlogTeaserSkeleton />}>
-        <HomepageTopProducts />
-      </Suspense>
-
       <CultureTypographySection />
 
       <ServiceStatusCarousel />
       <DiscoverLocationsSection />
       <SocialProofStrip />
-      <TourRibbonSection />
+      
     </main>
   );
 }

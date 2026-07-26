@@ -473,7 +473,8 @@
 .storefront-page .pdp-info-pricing__price,
 .storefront-page .pdp-price--sale,
 .storefront-page .pdp-price__current {
-  color: var(--brand-primary) !important;
+  color: #df2935 !important;
+  font-family: var(--font-sans, var(--font-primary)), ui-sans-serif, system-ui, sans-serif;
 }
 
 .storefront-page .pdp-availability {

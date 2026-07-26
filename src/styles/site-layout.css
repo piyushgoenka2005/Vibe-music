@@ -1289,8 +1289,47 @@ body.site-nav-open .site-header--hidden {
 }
 
 @media (min-width: 1024px) {
+  .site-header__actions {
+    gap: 0.2rem;
+    align-items: center;
+  }
+
+  .site-header__account-wrap {
+    align-items: center;
+  }
+
+  .site-header__action,
+  .site-header__action--desktop-only .wl-nav-btn {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.2rem;
+    min-width: 3.5rem;
+    padding: 0.3rem 0.45rem;
+  }
+
   .site-header__action-label {
-    display: inline;
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .site-header__action--desktop-only .wl-nav-btn {
+    width: auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  .site-header__cart-count {
+    top: 0.1rem;
+    right: 0.2rem;
+  }
+
+  .site-header__action--desktop-only .wl-nav-btn__count {
+    top: 0.1rem;
+    right: 0.2rem;
   }
 
   .site-header__search {
@@ -1881,63 +1920,14 @@ body.site-nav-open .site-header--hidden {
   white-space: nowrap;
 }
 
-/* ─── Login nudge popup ─── */
+/* ─── Account wrap ─── */
 .site-header__account-wrap {
   position: relative;
   display: inline-flex;
   align-items: center;
 }
 
-.login-nudge {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  padding: 6px 18px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #fff;
-  background: var(--brand-primary, #1253ed);
-  border-radius: 6px;
-  white-space: nowrap;
-  text-decoration: none;
-  box-shadow: 0 4px 14px rgba(18, 83, 237, 0.35);
-  animation: nudge-shake 2.5s ease-in-out infinite;
-  cursor: pointer;
-  letter-spacing: 0.02em;
-}
-
-.login-nudge::before {
-  content: "";
-  position: absolute;
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-bottom: 6px solid var(--brand-primary, #1253ed);
-}
-
-.login-nudge:hover {
-  background: #0f43c9;
-  box-shadow: 0 4px 18px rgba(18, 83, 237, 0.5);
-}
-
-@keyframes nudge-shake {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  10% { transform: translateX(-50%) translateY(-2px); }
-  20% { transform: translateX(-50%) translateY(0); }
-  30% { transform: translateX(-50%) translateY(-2px); }
-  40% { transform: translateX(-50%) translateY(0); }
-}
-
 @media (max-width: 767px) {
-  .login-nudge {
-    font-size: 0.7rem;
-    padding: 4px 12px;
-  }
-
   .rating-pill {
     padding: 1px 6px 1px 4px;
     font-size: 0.68rem;

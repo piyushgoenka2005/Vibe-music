@@ -14,7 +14,6 @@ const MOBILE_EXTRA_LINKS = [
     key: "deals",
     label: "Deals",
     href: `${ROUTES.searchResults}?q=deals`,
-    accent: true,
   },
   {
     key: "guides",
