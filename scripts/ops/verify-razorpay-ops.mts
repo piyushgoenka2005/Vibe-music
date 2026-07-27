@@ -98,6 +98,26 @@ if (keyId && keySecret) {
         : `HTTP ${response.status} — check live/test keys`,
       blocking: true,
     });
+
+    const capturedRes = await fetch(
+      "https://api.razorpay.com/v1/payments?count=1&status=captured",
+      { headers: { Authorization: `Basic ${auth}` } }
+    );
+    const capturedJson = (await capturedRes.json()) as {
+      count?: number;
+      items?: unknown[];
+    };
+    const capturedOk =
+      capturedRes.ok &&
+      ((capturedJson.count ?? 0) > 0 || (capturedJson.items?.length ?? 0) > 0);
+    checks.push({
+      name: "razorpay_captured_history",
+      ok: capturedOk,
+      detail: capturedOk
+        ? "merchant account has captured payment(s) — gateway proven live"
+        : "no captured payments on Razorpay account yet",
+      blocking: false,
+    });
   } catch (error) {
     checks.push({
       name: "razorpay_api",
@@ -183,11 +203,9 @@ const failed = checks.filter((c) => !c.ok && c.blocking);
 const warn = checks.filter((c) => !c.ok && !c.blocking);
 
 console.log(`
-Manual close-out (if paid_orders_db is WARN):
-  1. Buy the cheapest in-stock SKU on https://vibemusic.in with Razorpay
-  2. Confirm /admin/orders shows paid + invoice
-  3. Confirm confirmation email arrived
-  4. Re-run: npm run verify:razorpay-ops
+If paid_orders_db is still WARN, run on VPS:
+  npm run verify:f14-payment-proof
+Then re-run: npm run verify:razorpay-ops
 `);
 
 if (failed.length > 0) {
@@ -198,6 +216,6 @@ if (failed.length > 0) {
 console.log(
   warn.length === 0
     ? "All Razorpay ops checks passed (including at least one paid order).\n"
-    : `Credentials OK. ${warn.length} non-blocking warning(s) — complete manual live order if needed.\n`
+    : `Credentials OK. ${warn.length} non-blocking warning(s).\n`
 );
 process.exit(0);
