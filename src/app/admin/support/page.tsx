@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
+import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import { adminOrderPath } from "@/lib/routes";
 import type {
   SupportTicket,
@@ -35,7 +36,7 @@ function SupportTicketsPanel() {
   const [priority, setPriority] = useState<SupportTicketPriority>("normal");
   const [assignedTo, setAssignedTo] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-support", statusFilter],
     queryFn: async () => {
       const qs = statusFilter ? `?status=${statusFilter}` : "";
@@ -69,6 +70,15 @@ function SupportTicketsPanel() {
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load support tickets."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const tickets = data?.tickets ?? [];
 
@@ -209,6 +219,7 @@ function SupportTicketsPanel() {
               >
                 {updateMutation.isPending ? "Saving…" : "Update ticket"}
               </button>
+              <MutationError error={updateMutation.isError ? updateMutation.error : null} />
             </>
           )}
         </div>
@@ -222,7 +233,7 @@ function ContactMessagesPanel() {
   const [statusFilter, setStatusFilter] = useState("");
   const [selected, setSelected] = useState<ContactMessage | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-contact", statusFilter],
     queryFn: async () => {
       const qs = statusFilter ? `?status=${statusFilter}` : "";
@@ -255,6 +266,15 @@ function ContactMessagesPanel() {
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load contact messages."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const messages = data?.messages ?? [];
 
@@ -363,6 +383,7 @@ function ContactMessagesPanel() {
                   </button>
                 )}
               </div>
+              <MutationError error={statusMutation.isError ? statusMutation.error : null} />
             </>
           )}
         </div>

@@ -10,6 +10,7 @@ import {
   LoadingState,
   StatusBadge,
 } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import {
   HOMEPAGE_SECTION_KEYS,
   HOMEPAGE_SECTION_LABELS,
@@ -46,7 +47,7 @@ function itemLabel(
   return item.id;
 }
 
-function HomepageContent() {
+function HomepageContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
   const [activeKey, setActiveKey] = useState<HomepageSectionKey>("new_arrivals");
   const [sectionForm, setSectionForm] = useState<Partial<HomepageSection>>({});
@@ -54,7 +55,7 @@ function HomepageContent() {
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
       const res = await fetch("/api/admin/homepage");
@@ -230,6 +231,15 @@ function HomepageContent() {
   }
 
   if (isLoading) return <LoadingState message="Loading homepage sections…" />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load homepage configuration."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
   if (!activeSection) return <EmptyState message="No homepage sections found." />;
 
   const form = {
@@ -393,6 +403,7 @@ function HomepageContent() {
             </div>
           </div>
           <div style={{ marginTop: "1rem" }}>
+            {canWrite ? (
             <button
               type="button"
               className="admin-btn admin-btn--primary"
@@ -401,6 +412,7 @@ function HomepageContent() {
             >
               Save Section
             </button>
+            ) : null}
           </div>
         </div>
       </div>
@@ -542,6 +554,7 @@ function HomepageContent() {
               </div>
             </div>
             <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              {canWrite ? (
               <button
                 type="button"
                 className="admin-btn admin-btn--primary"
@@ -555,7 +568,8 @@ function HomepageContent() {
                     ? "Add Guitar"
                     : "Add Item"}
               </button>
-              {editingItemId ? (
+              ) : null}
+              {canWrite && editingItemId ? (
                 <button
                   type="button"
                   className="admin-btn admin-btn--secondary"
@@ -595,6 +609,7 @@ function HomepageContent() {
                           <StatusBadge status={item.isActive ? "active" : "inactive"} />
                         </td>
                         <td>
+                          {canWrite ? (
                           <div style={{ display: "flex", gap: 4 }}>
                             <button
                               type="button"
@@ -615,8 +630,12 @@ function HomepageContent() {
                               <ArrowDown size={16} />
                             </button>
                           </div>
+                          ) : (
+                            index + 1
+                          )}
                         </td>
                         <td>
+                          {canWrite ? (
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                             <button
                               type="button"
@@ -652,6 +671,9 @@ function HomepageContent() {
                               Delete
                             </button>
                           </div>
+                          ) : (
+                            "—"
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -681,7 +703,7 @@ export default function AdminHomepagePage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Homepage Sections">
-          <HomepageContent />
+          <HomepageContent canWrite={admin.permissions.includes("homepage:write")} />
         </AdminShell>
       )}
     </AdminGuard>

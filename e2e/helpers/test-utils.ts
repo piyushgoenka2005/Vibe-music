@@ -157,12 +157,12 @@ export async function fillGuestCheckoutAddress(
 ): Promise<void> {
   await waitForCheckoutAddressForm(page);
   const form = page.locator(".checkout-form");
-  await form.getByLabel("Full Name").fill("E2E Test Buyer");
-  await form.getByLabel("Address Line 1").fill("123 MG Road");
-  await form.getByLabel("City").fill("Mumbai");
-  await form.getByLabel("PIN Code").fill("400001");
-  await form.getByLabel("Phone").fill("9876543210");
-  await form.getByRole("textbox", { name: "Email", exact: true }).fill(email);
+  await form.locator('input[autocomplete="name"]').fill("E2E Test Buyer");
+  await form.locator('input[autocomplete="street-address"]').fill("123 MG Road");
+  await form.getByRole("textbox", { name: "City", exact: true }).fill("Mumbai");
+  await form.locator('input[autocomplete="postal-code"]').fill("400001");
+  await form.locator('input[autocomplete="tel"], input[type="tel"]').first().fill("9876543210");
+  await form.locator('input[autocomplete="email"], input[type="email"]').first().fill(email);
 }
 
 export function mutationHeaders(): Record<string, string> {

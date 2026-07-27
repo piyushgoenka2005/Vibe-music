@@ -93,6 +93,7 @@ export default function CategoryBentoImage({
   }
 
   return (
+    // eslint-disable-next-line @next/next/no-img-element -- progressive load/error swap for bento tiles
     <img
       ref={imgRef}
       alt={alt}

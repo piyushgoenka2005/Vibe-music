@@ -66,6 +66,7 @@ function ProductsContent() {
     queryKey: ["admin-categories"],
     queryFn: async () => {
       const res = await fetch("/api/catalog/categories");
+      if (!res.ok) throw new Error("Failed to load categories");
       const data = await res.json();
       setCategories(data.categories ?? []);
       return data.categories as Category[];
@@ -190,6 +191,9 @@ function ProductsContent() {
       if (!res.ok) throw new Error("Duplicate failed");
     },
     onSuccess: invalidate,
+    onError: (err) => {
+      setActionError(err instanceof Error ? err.message : "Duplicate failed");
+    },
   });
 
   function toggleSelect(id: string) {

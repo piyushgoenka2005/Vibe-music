@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatCard, StatusBadge, LoadingState, EmptyState } from "@/components/admin/AdminUi";
+import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import type { InventoryRecord } from "@/types/admin";
 
 function InventoryContent() {
@@ -13,7 +14,7 @@ function InventoryContent() {
   const [newQty, setNewQty] = useState(0);
   const [reason, setReason] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-inventory"],
     queryFn: async () => {
       const res = await fetch("/api/admin/inventory");
@@ -63,6 +64,15 @@ function InventoryContent() {
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load inventory."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const inventory = data?.inventory ?? [];
   const stats = data?.stats;
@@ -90,6 +100,7 @@ function InventoryContent() {
               <button type="button" className="admin-btn admin-btn--primary" onClick={() => adjustMutation.mutate()}>Save Adjustment</button>
               <button type="button" className="admin-btn admin-btn--secondary" onClick={() => setAdjustProduct(null)}>Cancel</button>
             </div>
+            <MutationError error={adjustMutation.isError ? adjustMutation.error : null} />
           </div>
         </div>
       ) : null}

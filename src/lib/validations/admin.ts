@@ -306,3 +306,23 @@ export const adminNotificationMarkSchema = z
 export const adminDeleteImagesSchema = z.object({
   urls: z.array(z.string().trim().min(1).max(2000)).min(1).max(50),
 });
+
+export const adminNewsletterDeleteQuerySchema = z.object({
+  email: z.string().trim().email(),
+});
+
+export const adminProductDuplicateActionSchema = z.object({
+  action: z.literal("duplicate"),
+});
+
+export const adminProductUploadMetaSchema = z.object({
+  categorySlug: z.string().min(1).max(100).default("general"),
+  productSlug: z.string().max(200).optional(),
+});
+
+export const adminImageMimeTypeSchema = z.object({
+  mimeType: z
+    .string()
+    .min(1)
+    .refine((value) => value.startsWith("image/"), "File must be an image"),
+});

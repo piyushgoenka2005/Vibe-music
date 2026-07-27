@@ -44,7 +44,7 @@ function BookingsAdmin() {
     },
   });
 
-  const { data: detailData, isLoading: detailLoading } = useQuery({
+  const { data: detailData, isLoading: detailLoading, isError: detailError, refetch: refetchDetail, isFetching: detailFetching } = useQuery({
     queryKey: ["admin-rental-booking", selectedId],
     queryFn: async () => {
       const res = await fetch(`/api/admin/rentals/bookings/${selectedId}`);
@@ -149,6 +149,12 @@ function BookingsAdmin() {
             <EmptyState message="Select a booking." />
           ) : detailLoading ? (
             <LoadingState message="Loading booking…" />
+          ) : detailError ? (
+            <ErrorState
+              message="Unable to load booking details."
+              onRetry={() => void refetchDetail()}
+              isRetrying={detailFetching}
+            />
           ) : !selected ? (
             <EmptyState message="Booking not found." />
           ) : (

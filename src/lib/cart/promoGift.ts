@@ -1,4 +1,3 @@
-import { getCartLineId } from "@/lib/variants";
 import type { CartGiftProductSummary } from "@/lib/cart/cartPromotions";
 import type { CartItem } from "@/store/cartStore";
 import { getDefaultGstRateForCategory, type GSTRate } from "@/lib/gstCalculator";
@@ -41,7 +40,7 @@ export function computeMrpTotal(items: CartItem[]): number {
 
 export function buildPromoGiftLine(
   gift: CartGiftProductSummary,
-  gstRate?: GSTRate
+  _gstRate?: GSTRate
 ): CartItem {
   return {
     lineId: getPromoGiftLineId(gift.id),

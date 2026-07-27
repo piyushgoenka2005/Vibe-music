@@ -149,11 +149,21 @@ export async function countOrders(): Promise<number> {
   return prisma.order.count();
 }
 
-export async function findPaidOrders(): Promise<Order[]> {
+export async function findPaidOrders(options?: {
+  sinceDays?: number;
+}): Promise<Order[]> {
+  const sinceDays = options?.sinceDays ?? 90;
+  const since = new Date();
+  since.setDate(since.getDate() - sinceDays);
+  since.setHours(0, 0, 0, 0);
+
   const rows = await prisma.order.findMany({
     where: {
       OR: [{ paymentStatus: "paid" }, { paymentStatus: "cod_pending" }],
+      createdAt: { gte: since.toISOString() },
     },
+    orderBy: { createdAt: "desc" },
+    take: 5_000,
   });
   return rows.map(prismaToOrder);
 }

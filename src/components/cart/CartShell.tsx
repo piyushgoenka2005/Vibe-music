@@ -13,6 +13,7 @@ import { useCartStore } from "@/store/cartStore";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import CartEmptyState from "./CartEmptyState";
 import CartItem from "./CartItem";
+import CartCompleteYourOrder from "./CartCompleteYourOrder";
 import CartMilestoneProgress from "./CartMilestoneProgress";
 import CartPromoBanner from "./CartPromoBanner";
 import CartSavingsSummary from "./CartSavingsSummary";
@@ -212,6 +213,10 @@ export default function CartShell({
                   ))}
                 </div>
               </section>
+            ) : null}
+
+            {variant === "page" && paidItems[0] ? (
+              <CartCompleteYourOrder primaryItem={paidItems[0]} />
             ) : null}
 
             <CartUpsellCarousel

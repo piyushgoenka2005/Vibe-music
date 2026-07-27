@@ -234,6 +234,7 @@ export function GlassDock({
     >
       <div className="flex items-center justify-center gap-2 overflow-hidden rounded-3xl p-3 px-0.5 py-0">
         {icons.map((icon) => (
+          // eslint-disable-next-line @next/next/no-img-element -- demo liquid-glass icon strip
           <img
             key={icon.alt}
             src={icon.src}

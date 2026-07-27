@@ -125,6 +125,7 @@ export default function HeroOrbitalCarousel({
               >
                 <div className="hero-orbit__card-frame">
                   <div className="hero-orbit__card-glow" aria-hidden />
+                  {/* eslint-disable-next-line @next/next/no-img-element -- hero orbit needs fetchPriority + fit swap */}
                   <img
                     alt={scene.alt}
                     className={`hero-orbit__card-image${

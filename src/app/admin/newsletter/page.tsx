@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
+import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 
 type Subscriber = {
   email: string;
@@ -17,7 +18,7 @@ type Subscriber = {
 function NewsletterContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-newsletter"],
     queryFn: async () => {
       const res = await fetch("/api/admin/newsletter");
@@ -39,6 +40,15 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load newsletter subscribers."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const subscribers = data?.subscribers ?? [];
 
@@ -57,6 +67,7 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
         </button>
       </div>
       <div className="admin-panel">
+        <MutationError error={deleteMutation.isError ? deleteMutation.error : null} />
         {subscribers.length === 0 ? (
           <EmptyState message="No newsletter subscribers yet." />
         ) : (

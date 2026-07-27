@@ -5,6 +5,7 @@ import {
   listNewsletterSubscribers,
 } from "@/lib/server/newsletterRepository";
 import { logAuditEvent } from "@/lib/server/auditLog";
+import { adminNewsletterDeleteQuerySchema } from "@/lib/validations/admin";
 
 export async function GET(request: Request) {
   try {
@@ -46,10 +47,9 @@ export async function DELETE(request: Request) {
   try {
     const admin = await requireAdmin("customers:write", request);
     const { searchParams } = new URL(request.url);
-    const email = searchParams.get("email");
-    if (!email) {
-      return NextResponse.json({ error: "email required" }, { status: 400 });
-    }
+    const { email } = adminNewsletterDeleteQuerySchema.parse({
+      email: searchParams.get("email"),
+    });
     const deleted = await deleteNewsletterSubscriber(email);
     if (!deleted) {
       return NextResponse.json({ error: "Subscriber not found" }, { status: 404 });

@@ -8,26 +8,30 @@ import { loadLocalEnv } from "./e2e/load-env";
 loadLocalEnv();
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
   testDir: "./e2e",
   globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
-  forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : 2,
+  forbidOnly: isCI,
+  retries: isCI ? 2 : 1,
+  workers: isCI ? 1 : Math.min(4, Number(process.env.PLAYWRIGHT_WORKERS ?? 2)),
   timeout: 60_000,
-  reporter: process.env.CI
-    ? [
-        ["list"],
-        ["html", { open: "never", outputFolder: "playwright-report" }],
-        ["json", { outputFile: "playwright-report/results.json" }],
-      ]
-    : [["list"]],
+  expect: { timeout: 15_000 },
+  reporter: [
+    ["list"],
+    ["html", { open: "never", outputFolder: "playwright-report" }],
+    ["json", { outputFile: "playwright-report/results.json" }],
+    ["junit", { outputFile: "playwright-report/junit.xml" }],
+  ],
   use: {
     baseURL,
-    trace: "on-first-retry",
+    trace: isCI ? "on-first-retry" : "retain-on-failure",
     screenshot: "only-on-failure",
+    video: isCI ? "retain-on-failure" : "off",
+    actionTimeout: 15_000,
+    navigationTimeout: 45_000,
   },
   projects: [
     {
@@ -36,12 +40,15 @@ export default defineConfig({
     },
     {
       name: "chromium",
-      testIgnore: [/admin\.setup\.ts/, /admin\.authenticated\.spec\.ts/],
+      testIgnore: [
+        /admin\.setup\.ts/,
+        /admin\.(authenticated|crud-smoke|security)\.spec\.ts/,
+      ],
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "admin-authenticated",
-      testMatch: /admin\.authenticated\.spec\.ts/,
+      testMatch: /admin\.(authenticated|crud-smoke|security)\.spec\.ts/,
       dependencies: ["admin-setup"],
       use: {
         ...devices["Desktop Chrome"],
@@ -54,10 +61,11 @@ export default defineConfig({
     : {
         command: "npm run dev",
         url: baseURL,
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: !isCI,
         timeout: 180_000,
         env: {
           ...process.env,
+          NODE_OPTIONS: "",
           NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH: "false",
           DISABLE_RATE_LIMIT: "true",
           E2E_ADMIN_EMAIL,

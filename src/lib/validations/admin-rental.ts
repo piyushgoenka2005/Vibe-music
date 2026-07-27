@@ -68,6 +68,11 @@ export const adminRentalBlockSchema = z.object({
   reason: z.string().optional(),
 });
 
+/** Query param for rental DELETE handlers (categories, units, blocks, products). */
+export const adminResourceIdQuerySchema = z.object({
+  id: z.string().min(1, "id required"),
+});
+
 export const adminRentalStatusSchema = z.object({
   status: z.enum([
     "pending",

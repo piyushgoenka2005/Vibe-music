@@ -7,6 +7,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminOpsStatusPanel from "@/components/admin/AdminOpsStatusPanel";
 import { LoadingState } from "@/components/admin/AdminUi";
+import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import { ROUTES } from "@/lib/routes";
 import type { AdminSession, StoreSettings } from "@/types/admin";
 
@@ -14,7 +15,7 @@ function SettingsContent({ admin }: { admin: AdminSession }) {
   const queryClient = useQueryClient();
   const [saved, setSaved] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-settings"],
     queryFn: async () => {
       const res = await fetch("/api/admin/settings");
@@ -46,7 +47,16 @@ function SettingsContent({ admin }: { admin: AdminSession }) {
     queryClient.setQueryData(["admin-settings"], { settings: { ...form, [key]: value } });
   }
 
-  if (isLoading || !form) return <LoadingState />;
+  if (isLoading) return <LoadingState />;
+  if (isError || !form) {
+    return (
+      <ErrorState
+        message="Unable to load store settings."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -144,16 +154,16 @@ function SettingsContent({ admin }: { admin: AdminSession }) {
           <div className="admin-form-group">
             <label>Free Shipping Threshold (₹)</label>
             <p style={{ fontSize: "0.8125rem", color: "var(--admin-muted)", marginBottom: "0.35rem" }}>
-              Storefront checkout currently forces free shipping (₹0). These fields are retained for future paid shipping — they do not change customer quotes today.
+              Checkout currently always quotes free shipping. These fields are stored for future paid-shipping modes and do not change customer quotes today. Cart messaging defaults to free shipping (threshold 0) unless NEXT_PUBLIC_CART_FREE_SHIPPING_THRESHOLD is set.
             </p>
             <input
               className="admin-input"
               style={{ width: "100%" }}
               type="number"
+              disabled
+              readOnly
               value={form.freeShippingThreshold}
-              onChange={(e) =>
-                updateField("freeShippingThreshold", Number(e.target.value))
-              }
+              aria-describedby="shipping-settings-note"
             />
           </div>
           <div className="admin-form-group">
@@ -162,11 +172,13 @@ function SettingsContent({ admin }: { admin: AdminSession }) {
               className="admin-input"
               style={{ width: "100%" }}
               type="number"
+              disabled
+              readOnly
               value={form.standardShippingCharge}
-              onChange={(e) =>
-                updateField("standardShippingCharge", Number(e.target.value))
-              }
             />
+            <p id="shipping-settings-note" style={{ fontSize: "0.75rem", color: "var(--admin-muted)", marginTop: "0.35rem" }}>
+              Fields locked while free-shipping policy is forced in checkout.
+            </p>
           </div>
           <div className="admin-form-group">
             <label>Razorpay (store flag)</label>
@@ -198,6 +210,7 @@ function SettingsContent({ admin }: { admin: AdminSession }) {
               Settings saved
             </span>
           ) : null}
+          <MutationError error={saveMutation.isError ? saveMutation.error : null} />
         </div>
 
         <AdminOpsStatusPanel />

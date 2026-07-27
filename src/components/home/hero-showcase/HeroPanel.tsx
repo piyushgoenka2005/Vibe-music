@@ -76,6 +76,7 @@ export default function HeroPanel({
       <div className="hero-showcase__panel-glow" aria-hidden />
 
       <div className="hero-showcase__panel-image-stack" aria-hidden={!isActive}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- hero panel active-state fetchPriority */}
         <img
           alt={scene.alt}
           className={imageClassName}

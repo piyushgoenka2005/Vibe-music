@@ -4,9 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 
 function CompareAnalyticsPanel() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-compare-analytics"],
     queryFn: async () => {
       const res = await fetch("/api/admin/compare/analytics");
@@ -16,6 +17,15 @@ function CompareAnalyticsPanel() {
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load compare analytics."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
   const a = data?.analytics;
 
   return (

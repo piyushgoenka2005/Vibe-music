@@ -227,6 +227,7 @@ export default function SiteHeader() {
                 aria-label={accountAriaLabel}
               >
                 {accountPhotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- OAuth avatar requires referrerPolicy
                   <img
                     src={accountPhotoUrl}
                     alt=""

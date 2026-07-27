@@ -29,9 +29,11 @@ function parseThreshold(value: string | undefined, fallback: number): number {
 }
 
 export function getCartPromotionsConfig(): CartPromotionsConfig {
+  // Default 0 — checkout currently always quotes free shipping.
+  // Set NEXT_PUBLIC_CART_FREE_SHIPPING_THRESHOLD to re-enable cart milestone messaging.
   const freeShippingThreshold = parseThreshold(
     process.env.NEXT_PUBLIC_CART_FREE_SHIPPING_THRESHOLD,
-    400
+    0
   );
   const freeGiftThreshold = parseThreshold(
     process.env.NEXT_PUBLIC_CART_FREE_GIFT_THRESHOLD,
@@ -42,7 +44,9 @@ export function getCartPromotionsConfig(): CartPromotionsConfig {
 
   const bannerText = giftProductId
     ? `Free gift on orders above ₹${freeGiftThreshold.toLocaleString("en-IN")}`
-    : `Free shipping on orders above ₹${freeShippingThreshold.toLocaleString("en-IN")}`;
+    : freeShippingThreshold > 0
+      ? `Free shipping on orders above ₹${freeShippingThreshold.toLocaleString("en-IN")}`
+      : "Free standard shipping on every order";
 
   return {
     freeShippingThreshold,
@@ -55,6 +59,9 @@ export function getCartPromotionsConfig(): CartPromotionsConfig {
 export function formatCartPromoBanner(config: CartPromotionsConfig): string {
   if (config.giftProductId) {
     return `Free gift on orders above ₹${config.freeGiftThreshold.toLocaleString("en-IN")}`;
+  }
+  if (config.freeShippingThreshold <= 0) {
+    return "Free standard shipping on every order";
   }
   return `Free shipping on orders above ₹${config.freeShippingThreshold.toLocaleString("en-IN")}`;
 }

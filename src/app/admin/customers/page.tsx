@@ -12,6 +12,7 @@ import {
   formatCurrency,
   formatDate,
 } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import { adminOrderPath } from "@/lib/routes";
 
@@ -44,7 +45,7 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-customers", search, cursor],
     queryFn: () => fetchCustomers({ search, cursor }),
   });
@@ -103,6 +104,15 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load customers."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const customers = data?.customers ?? [];
   const hasMore = data?.hasMore ?? false;

@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
+import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import { adminOrderPath } from "@/lib/routes";
 import type { ReturnRequest, ReturnRequestStatus } from "@/types/returnRequest";
 
@@ -16,7 +17,7 @@ function ReturnsContent() {
   const [adminNote, setAdminNote] = useState("");
   const [newStatus, setNewStatus] = useState<ReturnRequestStatus>("approved");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-returns", statusFilter],
     queryFn: async () => {
       const qs = statusFilter ? `?status=${statusFilter}` : "";
@@ -44,6 +45,15 @@ function ReturnsContent() {
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load return requests."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const returns = data?.returns ?? [];
 
@@ -169,6 +179,7 @@ function ReturnsContent() {
               >
                 {updateMutation.isPending ? "Saving…" : "Save changes"}
               </button>
+              <MutationError error={updateMutation.isError ? updateMutation.error : null} />
             </>
           )}
         </div>

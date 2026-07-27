@@ -4,6 +4,7 @@ import { createGiveawayEntrySchema } from "@/lib/validations/giveaway";
 import { submitGiveawayEntry } from "@/lib/server/giveawayEntryService";
 import { enforceMutationSecurity, enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 function clientIp(request: Request): string | undefined {
   return (
@@ -47,9 +48,6 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Entry failed" },
-      { status: 400 }
-    );
+    return publicApiError(error, "Entry failed");
   }
 }

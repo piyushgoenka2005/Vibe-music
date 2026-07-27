@@ -7,7 +7,13 @@ import AdminShell from "@/components/admin/AdminShell";
 import { StatusBadge, LoadingState, EmptyState } from "@/components/admin/AdminUi";
 import type { Coupon } from "@/types/admin";
 
-function CouponsContent() {
+function CouponsContent({
+  canWrite,
+  canDelete,
+}: {
+  canWrite: boolean;
+  canDelete: boolean;
+}) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -62,7 +68,9 @@ function CouponsContent() {
   return (
     <>
       <div className="admin-toolbar">
+        {canWrite ? (
         <button type="button" className="admin-btn admin-btn--primary" onClick={() => setShowForm(true)}>Add Coupon</button>
+        ) : null}
       </div>
       {deleteMutation.isError ? (
         <div className="admin-error" role="alert" style={{ marginBottom: "1rem" }}>
@@ -104,8 +112,12 @@ function CouponsContent() {
                     <td>{c.usedCount}{c.maxUses ? ` / ${c.maxUses}` : ""}</td>
                     <td><StatusBadge status={c.isActive ? "active" : "archived"} /></td>
                     <td>
+                      {canWrite ? (
                       <button type="button" className="admin-btn admin-btn--ghost" onClick={() => { setEditId(c.id); setForm({ code: c.code, label: c.label, type: c.type, value: c.value, isActive: c.isActive, maxUses: c.maxUses, expiresAt: c.expiresAt?.slice(0, 10) ?? "" }); setShowForm(true); }}>Edit</button>
+                      ) : null}
+                      {canDelete ? (
                       <button type="button" className="admin-btn admin-btn--danger" onClick={() => deleteMutation.mutate(c.id)}>Delete</button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -123,7 +135,10 @@ export default function AdminCouponsPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Coupons">
-          <CouponsContent />
+          <CouponsContent
+            canWrite={admin.permissions.includes("coupons:write")}
+            canDelete={admin.permissions.includes("coupons:delete")}
+          />
         </AdminShell>
       )}
     </AdminGuard>

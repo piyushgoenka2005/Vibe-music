@@ -33,6 +33,7 @@ export default function HeroThumbnailStrip({
             onClick={() => onSelect(index)}
             onPointerDown={(event) => event.stopPropagation()}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element -- hero thumb strip with src fallback */}
             <img
               alt=""
               className="hero-showcase__thumb-image"

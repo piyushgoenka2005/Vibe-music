@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import { slugify } from "@/lib/slug";
 import type { ContentPage } from "@/data/contentPages";
 
@@ -25,7 +26,7 @@ function CmsContent() {
   const [hasDbOverride, setHasDbOverride] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-cms-pages"],
     queryFn: async () => {
       const res = await fetch("/api/admin/cms/pages");
@@ -105,6 +106,15 @@ function CmsContent() {
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load CMS pages."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const pages = data?.pages ?? [];
 

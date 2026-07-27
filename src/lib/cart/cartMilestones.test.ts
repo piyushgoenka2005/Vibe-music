@@ -30,6 +30,18 @@ describe("cartMilestones", () => {
     expect(state.targetThreshold).toBe(400);
   });
 
+  it("omits shipping milestone when threshold is zero (always free)", () => {
+    const state = buildCartMilestoneState(0, {
+      freeShippingThreshold: 0,
+      freeGiftThreshold: 799,
+      giftProductId: null,
+      bannerText: "Free standard shipping on every order",
+      giftProduct: null,
+    });
+    expect(state.milestones).toHaveLength(0);
+    expect(state.statusMessage).toMatch(/free standard shipping/i);
+  });
+
   it("marks milestones unlocked at thresholds", () => {
     const state = buildCartMilestoneState(850, configWithGift);
     expect(state.milestones.every((milestone) => milestone.unlocked)).toBe(true);

@@ -95,9 +95,10 @@ function buildProviders(): NextAuthConfig["providers"] {
         Google({
           clientId: google.clientId,
           clientSecret: google.clientSecret,
-          // Allows Google sign-in when the shopper already registered with the same email.
-          // Prefer keeping email verification strict; do not remove without a linking UX.
-          allowDangerousEmailAccountLinking: true,
+          // Opt-in only: auto-links Google → existing email accounts without a linking UX.
+          // Set AUTH_ALLOW_DANGEROUS_EMAIL_LINKING=true only after accepting the takeover risk.
+          allowDangerousEmailAccountLinking:
+            process.env.AUTH_ALLOW_DANGEROUS_EMAIL_LINKING === "true",
         })
       );
     }

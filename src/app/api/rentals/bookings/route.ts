@@ -4,6 +4,7 @@ import { createRentalBookingSchema } from "@/lib/validations/rental";
 import { createRentalBooking } from "@/lib/server/rentalBookingService";
 import { enforceMutationSecurity, enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function POST(request: Request) {
   try {
@@ -33,9 +34,6 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Booking failed" },
-      { status: 400 }
-    );
+    return publicApiError(error, "Booking failed");
   }
 }

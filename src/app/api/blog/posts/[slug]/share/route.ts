@@ -4,7 +4,6 @@ import { getPublicBlogPostBySlug, recordBlogShare } from "@/lib/server/blogServi
 import {
   enforceMutationSecurity,
   enforceRateLimit,
-  parseJsonBody,
 } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 

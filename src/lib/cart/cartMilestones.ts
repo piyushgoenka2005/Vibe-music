@@ -28,7 +28,7 @@ export function buildCartMilestoneState(
   paidSubtotal: number,
   config: CartPromotionsPublic | null
 ): CartMilestoneState {
-  const freeShippingThreshold = config?.freeShippingThreshold ?? 400;
+  const freeShippingThreshold = config?.freeShippingThreshold ?? 0;
   const freeGiftThreshold = config?.freeGiftThreshold ?? 799;
   const giftConfigured = Boolean(config?.giftProductId);
 
@@ -42,16 +42,19 @@ export function buildCartMilestoneState(
     giftConfigured
   );
 
-  const milestones: CartMilestone[] = [
-    {
+  const milestones: CartMilestone[] = [];
+
+  // Threshold 0 means shipping is always free — omit the milestone (matches checkout).
+  if (freeShippingThreshold > 0) {
+    milestones.push({
       id: "free-shipping",
       label: "Free shipping",
       shortLabel: "Shipping",
       threshold: freeShippingThreshold,
       icon: "shipping",
       unlocked: shippingUnlocked,
-    },
-  ];
+    });
+  }
 
   if (giftConfigured) {
     milestones.push({
@@ -76,12 +79,17 @@ export function buildCartMilestoneState(
       ? 1
       : Math.min(1, paidSubtotal / targetThreshold);
 
-  let statusMessage = "Add items to unlock rewards";
+  let statusMessage =
+    freeShippingThreshold <= 0 && !giftConfigured
+      ? "Free standard shipping on every order"
+      : "Add items to unlock rewards";
   if (nextMilestone) {
     const remaining = Math.max(0, nextMilestone.threshold - paidSubtotal);
     statusMessage = `Add ${formatDisplayPrice(remaining)} more to unlock ${nextMilestone.label.toLowerCase()}`;
-  } else if (milestones.every((milestone) => milestone.unlocked)) {
+  } else if (milestones.length > 0 && milestones.every((milestone) => milestone.unlocked)) {
     statusMessage = "All rewards unlocked for this order";
+  } else if (freeShippingThreshold <= 0 && !giftConfigured) {
+    statusMessage = "Free standard shipping on every order";
   }
 
   return {

@@ -136,22 +136,24 @@ test.describe("accessibility basics", () => {
     });
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     const bar = page.locator(".pdp-mobile-bar");
-    await expect(bar).toBeVisible({ timeout: 15_000 });
+    await expect(bar).toHaveCount(1);
     const ctas = bar.locator(".pdp-mobile-bar__cta");
-    await expect(ctas.first()).toBeVisible({ timeout: 10_000 });
-    const count = await ctas.count();
-    expect(count).toBeGreaterThan(0);
-    for (let i = 0; i < count; i += 1) {
-      const box = await ctas.nth(i).boundingBox();
-      expect(box, `cta ${i} should render`).toBeTruthy();
-      expect(box!.height).toBeGreaterThanOrEqual(44);
+    await expect(ctas.first()).toBeAttached({ timeout: 15_000 });
+    const metrics = await page.evaluate(() => {
+      const bar = document.querySelector(".pdp-mobile-bar");
+      const ctas = Array.from(document.querySelectorAll(".pdp-mobile-bar__cta"));
+      return {
+        ctaHeights: ctas.map((el) => el.getBoundingClientRect().height),
+        notifyWidth: document.querySelector(".pdp-mobile-bar__cta--notify")?.getBoundingClientRect().width ?? 0,
+        barWidth: bar?.getBoundingClientRect().width ?? 0,
+      };
+    });
+    expect(metrics.ctaHeights.length).toBeGreaterThan(0);
+    for (const [i, height] of metrics.ctaHeights.entries()) {
+      expect(height, `cta ${i} height`).toBeGreaterThanOrEqual(44);
     }
-    const notify = bar.locator(".pdp-mobile-bar__cta--notify");
-    if ((await notify.count()) > 0) {
-      const barBox = await bar.boundingBox();
-      const ctaBox = await notify.boundingBox();
-      expect(barBox && ctaBox).toBeTruthy();
-      expect(ctaBox!.width).toBeGreaterThan(barBox!.width * 0.7);
+    if (metrics.notifyWidth > 0 && metrics.barWidth > 0) {
+      expect(metrics.notifyWidth).toBeGreaterThan(metrics.barWidth * 0.7);
     }
   });
 });

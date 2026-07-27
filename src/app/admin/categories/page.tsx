@@ -7,7 +7,13 @@ import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
 import type { AdminCategory } from "@/types/admin";
 
-function CategoriesContent() {
+function CategoriesContent({
+  canWrite,
+  canDelete,
+}: {
+  canWrite: boolean;
+  canDelete: boolean;
+}) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", slug: "", description: "" });
@@ -55,9 +61,11 @@ function CategoriesContent() {
   return (
     <>
       <div className="admin-toolbar">
+        {canWrite ? (
         <button type="button" className="admin-btn admin-btn--primary" onClick={() => { setShowForm(true); setEditId(null); setForm({ name: "", slug: "", description: "" }); }}>
           Add Category
         </button>
+        ) : null}
       </div>
 
       {showForm ? (
@@ -106,8 +114,12 @@ function CategoriesContent() {
                     <td>{cat.slug}</td>
                     <td>{cat.productCount ?? 0}</td>
                     <td>
+                      {canWrite ? (
                       <button type="button" className="admin-btn admin-btn--ghost" style={{ padding: "0.25rem 0.5rem" }} onClick={() => { setEditId(cat.id); setForm({ name: cat.name, slug: cat.slug, description: cat.description ?? "" }); setShowForm(true); }}>Edit</button>
+                      ) : null}
+                      {canDelete ? (
                       <button type="button" className="admin-btn admin-btn--danger" style={{ padding: "0.25rem 0.5rem" }} onClick={() => deleteMutation.mutate(cat.id)}>Delete</button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -125,7 +137,10 @@ export default function AdminCategoriesPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Categories">
-          <CategoriesContent />
+          <CategoriesContent
+            canWrite={admin.permissions.includes("categories:write")}
+            canDelete={admin.permissions.includes("categories:delete")}
+          />
         </AdminShell>
       )}
     </AdminGuard>

@@ -32,6 +32,7 @@ export default function AccountWelcomeHeader() {
           aria-label={photoURL ? `${user?.name ?? "User"} profile photo` : undefined}
         >
           {photoURL ? (
+            // eslint-disable-next-line @next/next/no-img-element -- OAuth avatar requires referrerPolicy
             <img
               src={photoURL}
               alt=""

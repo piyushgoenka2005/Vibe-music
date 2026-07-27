@@ -7,7 +7,13 @@ import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
 import type { Brand } from "@/types/brand";
 
-function BrandsContent() {
+function BrandsContent({
+  canWrite,
+  canDelete,
+}: {
+  canWrite: boolean;
+  canDelete: boolean;
+}) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", slug: "" });
@@ -55,6 +61,7 @@ function BrandsContent() {
   return (
     <>
       <div className="admin-toolbar">
+        {canWrite ? (
         <button
           type="button"
           className="admin-btn admin-btn--primary"
@@ -66,6 +73,7 @@ function BrandsContent() {
         >
           Add Brand
         </button>
+        ) : null}
       </div>
 
       {showForm ? (
@@ -131,6 +139,7 @@ function BrandsContent() {
                     <td>{brand.name}</td>
                     <td>{brand.slug}</td>
                     <td>
+                      {canWrite ? (
                       <button
                         type="button"
                         className="admin-btn admin-btn--ghost"
@@ -143,6 +152,8 @@ function BrandsContent() {
                       >
                         Edit
                       </button>
+                      ) : null}
+                      {canDelete ? (
                       <button
                         type="button"
                         className="admin-btn admin-btn--danger"
@@ -151,6 +162,7 @@ function BrandsContent() {
                       >
                         Delete
                       </button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -168,7 +180,10 @@ export default function AdminBrandsPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Brands">
-          <BrandsContent />
+          <BrandsContent
+            canWrite={admin.permissions.includes("categories:write")}
+            canDelete={admin.permissions.includes("categories:delete")}
+          />
         </AdminShell>
       )}
     </AdminGuard>

@@ -58,7 +58,13 @@ function scheduleLabel(banner: HomepageBanner): string {
   return `${start} → ${end}`;
 }
 
-function BannersContent() {
+function BannersContent({
+  canWrite,
+  canDelete,
+}: {
+  canWrite: boolean;
+  canDelete: boolean;
+}) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -180,10 +186,12 @@ function BannersContent() {
   return (
     <>
       <div className="admin-toolbar">
+        {canWrite ? (
         <button type="button" className="admin-btn admin-btn--primary" onClick={openCreate}>
           <Plus size={16} />
           Add Banner
         </button>
+        ) : null}
       </div>
 
       {showForm ? (
@@ -361,6 +369,8 @@ function BannersContent() {
                     </td>
                     <td>
                       <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                        {canWrite ? (
+                        <>
                         <button
                           type="button"
                           className="admin-btn admin-btn--ghost"
@@ -396,6 +406,9 @@ function BannersContent() {
                         >
                           {banner.status === "active" ? "Deactivate" : "Activate"}
                         </button>
+                        </>
+                        ) : null}
+                        {canDelete ? (
                         <button
                           type="button"
                           className="admin-btn admin-btn--danger"
@@ -403,6 +416,7 @@ function BannersContent() {
                         >
                           Delete
                         </button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -421,7 +435,10 @@ export default function AdminBannersPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Homepage Banners">
-          <BannersContent />
+          <BannersContent
+            canWrite={admin.permissions.includes("banners:write")}
+            canDelete={admin.permissions.includes("banners:delete")}
+          />
         </AdminShell>
       )}
     </AdminGuard>

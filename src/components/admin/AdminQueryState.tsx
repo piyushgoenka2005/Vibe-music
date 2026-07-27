@@ -23,3 +23,19 @@ export function ErrorState({ message, onRetry, isRetrying = false }: ErrorStateP
     </div>
   );
 }
+
+export function MutationError({
+  error,
+  fallback = "Something went wrong. Please try again.",
+}: {
+  error: unknown;
+  fallback?: string;
+}) {
+  if (!error) return null;
+  const message = error instanceof Error ? error.message : fallback;
+  return (
+    <p className="admin-error__message" role="alert" style={{ margin: "0.5rem 0 0" }}>
+      {message}
+    </p>
+  );
+}

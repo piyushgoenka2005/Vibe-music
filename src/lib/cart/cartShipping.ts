@@ -13,7 +13,8 @@ export function buildCartShippingState(
   paidSubtotal: number,
   config: CartPromotionsPublic | null
 ): CartShippingState {
-  const threshold = config?.freeShippingThreshold ?? 400;
+  // Match checkout: free shipping is the default storefront policy.
+  const threshold = config?.freeShippingThreshold ?? 0;
   const unlocked = isFreeShippingUnlocked(paidSubtotal, threshold);
 
   if (unlocked) {

@@ -7,7 +7,7 @@ import {
   listRentalUnits,
   upsertRentalUnit,
 } from "@/lib/server/rentalRepository";
-import { adminRentalUnitSchema } from "@/lib/validations/admin-rental";
+import { adminRentalUnitSchema, adminResourceIdQuerySchema } from "@/lib/validations/admin-rental";
 
 export async function GET(request: Request) {
   try {
@@ -57,10 +57,9 @@ export async function DELETE(request: Request) {
   try {
     const admin = await requireAdmin("rentals:delete", request);
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-    if (!id) {
-      return NextResponse.json({ error: "id required" }, { status: 400 });
-    }
+    const { id } = adminResourceIdQuerySchema.parse({
+      id: searchParams.get("id"),
+    });
     await deleteRentalUnit(id);
     await logAuditEvent({
       action: "rental.unit.deleted",

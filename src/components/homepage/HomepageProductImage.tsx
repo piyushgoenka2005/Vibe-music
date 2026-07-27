@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useMemo, useState } from "react";
 import { storefrontImageUrl } from "@/lib/storefrontImages";
 
@@ -31,7 +30,6 @@ function placeholderClass(className?: string) {
 export default function HomepageProductImage({
   src,
   className,
-  sizes = "(max-width: 767px) 46vw, 320px",
   fill = false,
   width = 480,
   height = 480,

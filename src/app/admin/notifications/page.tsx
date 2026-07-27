@@ -5,13 +5,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState, formatDate } from "@/components/admin/AdminUi";
+import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import { normalizeAdminNotificationLink } from "@/lib/routes";
 import type { AdminNotification } from "@/types/notification";
 
 function NotificationsContent() {
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-notifications"],
     queryFn: async () => {
       const res = await fetch("/api/admin/notifications");
@@ -38,6 +39,15 @@ function NotificationsContent() {
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load notifications."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const notifications = data?.notifications ?? [];
 
@@ -53,6 +63,7 @@ function NotificationsContent() {
         >
           Mark all read
         </button>
+        <MutationError error={markReadMutation.isError ? markReadMutation.error : null} />
       </div>
       {notifications.length === 0 ? (
         <EmptyState message="No admin notifications yet." />

@@ -92,6 +92,7 @@ export default function BrowseCategoryCardsSlider({
             draggable={false}
           >
             <div className="category-card__image">
+              {/* eslint-disable-next-line @next/next/no-img-element -- static marketing category art with fixed dimensions */}
               <img
                 alt=""
                 decoding="async"

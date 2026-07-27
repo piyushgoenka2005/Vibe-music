@@ -6,6 +6,7 @@ import Link from "next/link";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState, formatDate } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
 import { ROUTES } from "@/lib/routes";
 import type { AdminProfile, AdminRole } from "@/types/admin";
@@ -43,7 +44,7 @@ function UsersContent({
   const [showInvitePassword, setShowInvitePassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
       const res = await fetch("/api/admin/admins");
@@ -124,17 +125,25 @@ function UsersContent({
     },
   });
 
-  const admins = data?.admins ?? [];
   const sortedAdmins = useMemo(
     () =>
-      [...admins].sort((a, b) => {
+      [...(data?.admins ?? [])].sort((a, b) => {
         if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
         return a.displayName.localeCompare(b.displayName);
       }),
-    [admins]
+    [data?.admins]
   );
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load admin users."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>

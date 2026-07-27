@@ -28,6 +28,7 @@ export default function EditorialSplit() {
         <div className="editorial-split__visual">
           <div className="editorial-split__card">
             <div className="editorial-split__orb" />
+            {/* eslint-disable-next-line @next/next/no-img-element -- static marketing editorial asset */}
             <img
               src={MARKETING_EDITORIAL_IMAGE}
               alt="Fender Stratocaster electric guitar — expert gear advice for every player"

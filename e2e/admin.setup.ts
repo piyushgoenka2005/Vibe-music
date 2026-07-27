@@ -1,7 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { test as setup } from "./fixtures";
-import { loginAsE2EAdmin, E2E_ADMIN_STORAGE_PATH } from "./helpers/admin-auth";
+import {
+  createE2EAdminStorageState,
+  E2E_ADMIN_STORAGE_PATH,
+} from "./helpers/admin-auth";
 import { E2E_ADMIN_SEED_MARKER } from "./helpers/e2e-paths";
 
 const adminSeedReady =
@@ -14,6 +17,5 @@ setup.skip(
 
 setup("create E2E admin session", async ({ page }) => {
   fs.mkdirSync(path.dirname(E2E_ADMIN_STORAGE_PATH), { recursive: true });
-  await loginAsE2EAdmin(page);
-  await page.context().storageState({ path: E2E_ADMIN_STORAGE_PATH });
+  await createE2EAdminStorageState(page, E2E_ADMIN_STORAGE_PATH);
 });

@@ -267,7 +267,6 @@ export function useCheckoutPayment({
   }, [
     disabled,
     isProcessing,
-    paymentMethod,
     buildPayload,
     email,
     phone,

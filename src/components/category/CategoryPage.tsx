@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import { useFilterStore } from "@/store/filterStore";
 import { useCategoryFilters } from "@/hooks/useCategoryFilters";
 import { useCategoryProducts } from "@/hooks/useCategoryProducts";
@@ -45,15 +45,18 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
 
   const facets = data?.facets ?? { brands: [], priceRange: { min: 0, max: 0 } };
   const total = data?.total ?? 0;
-  const listContext = {
-    itemListId: `category_${category.slug}`,
-    itemListName: category.name,
-  };
+  const listContext = useMemo(
+    () => ({
+      itemListId: `category_${category.slug}`,
+      itemListName: category.name,
+    }),
+    [category.slug, category.name]
+  );
 
   useEffect(() => {
     if (!data?.products?.length) return;
     trackViewItemList(data.products, listContext);
-  }, [category.slug, category.name, data?.products, data?.page]);
+  }, [listContext, data?.products, data?.page]);
 
   return (
     <div className="cat-page">

@@ -831,6 +831,7 @@ export default function ProductGallery({
               height: paneSize.height > 0 ? paneSize.height : undefined,
             }}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element -- zoom lens needs raw img + onError swap */}
             <img
               src={activeZoomSrc || activeDisplaySrc}
               alt=""

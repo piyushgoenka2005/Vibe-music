@@ -1,28 +1,11 @@
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
 import { getSessionUser } from "@/lib/auth/server-session";
 import {
   createUserAddress,
   getUserAddresses,
 } from "@/lib/server/addressService";
 import { addressInputSchema } from "@/lib/validations/address";
-
-function formatRouteError(error: unknown): { message: string; status: number } {
-  if (error instanceof ZodError) {
-    const message = error.issues.map((issue) => issue.message).join(" ");
-    return { message, status: 400 };
-  }
-
-  const message =
-    error instanceof Error ? error.message : "Unable to complete request";
-  const status =
-    message.includes("required") ||
-    message.includes("valid") ||
-    message.includes("Invalid")
-      ? 400
-      : 500;
-  return { message, status };
-}
+import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function GET() {
   try {
@@ -41,8 +24,7 @@ export async function GET() {
       }
     );
   } catch (error) {
-    const { message, status } = formatRouteError(error);
-    return NextResponse.json({ error: message }, { status });
+    return publicApiError(error, "Unable to load addresses");
   }
 }
 
@@ -59,7 +41,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ address }, { status: 201 });
   } catch (error) {
-    const { message, status } = formatRouteError(error);
-    return NextResponse.json({ error: message }, { status });
+    return publicApiError(error, "Unable to save address");
   }
 }

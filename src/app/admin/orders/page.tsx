@@ -7,6 +7,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminOrderShipment from "@/components/admin/AdminOrderShipment";
 import { StatusBadge, LoadingState, EmptyState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
+import { MutationError } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import type { Order, OrderStatus } from "@/types/order";
 
@@ -46,6 +47,7 @@ function OrdersContent() {
   const [selectedId, setSelectedId] = useState<string | null>(deepLinkOrderId);
   const [newStatus, setNewStatus] = useState<OrderStatus>("processing");
   const [note, setNote] = useState("");
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (deepLinkOrderId) setSelectedId(deepLinkOrderId);
@@ -107,6 +109,10 @@ function OrdersContent() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ export: "csv" }),
     });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(body?.error ?? "Export failed");
+    }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -135,7 +141,21 @@ function OrdersContent() {
           <option value="cancelled">Cancelled</option>
           <option value="refunded">Refunded</option>
         </select>
-        <button type="button" className="admin-btn admin-btn--secondary" onClick={exportCsv}>Export CSV</button>
+        <button
+          type="button"
+          className="admin-btn admin-btn--secondary"
+          onClick={() => {
+            setExportError(null);
+            exportCsv().catch((err) => {
+              setExportError(err instanceof Error ? err.message : "Export failed");
+            });
+          }}
+        >
+          Export CSV
+        </button>
+        {exportError ? (
+          <p className="admin-error__message" role="alert">{exportError}</p>
+        ) : null}
       </div>
 
       <div className="admin-grid-2">
@@ -246,6 +266,7 @@ function OrdersContent() {
                 <button type="button" className="admin-btn admin-btn--primary" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate()}>
                   {updateMutation.isPending ? "Updating…" : "Update Order"}
                 </button>
+                <MutationError error={updateMutation.isError ? updateMutation.error : null} />
                 {selected.paymentStatus === "paid" && selected.razorpayPaymentId ? (
                   <button
                     type="button"

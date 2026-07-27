@@ -24,13 +24,17 @@ function isLocalhostDatabaseUrl(url: string): boolean {
 /**
  * True when PostgreSQL should be used for reads/writes.
  * Does not import Prisma — safe for instrumentation / env checks.
+ *
+ * During `next build`, Postgres is skipped by default so SSG can run without a
+ * live database. Set ALLOW_POSTGRES_DURING_BUILD=true when validating/releasing
+ * with a real DATABASE_URL (CI Postgres service or local release closure).
  */
 export function isPostgresConfigured(): boolean {
   const url = process.env.DATABASE_URL?.trim();
   if (!url) return false;
 
   if (isProductionBuildPhase()) {
-    return false;
+    return process.env.ALLOW_POSTGRES_DURING_BUILD === "true";
   }
 
   if (process.env.VERCEL && isLocalhostDatabaseUrl(url)) {

@@ -6,7 +6,10 @@ import {
   deleteAdminProduct,
   duplicateAdminProduct,
 } from "@/lib/server/adminProductService";
-import { adminProductSchema } from "@/lib/validations/admin";
+import {
+  adminProductSchema,
+  adminProductDuplicateActionSchema,
+} from "@/lib/validations/admin";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -67,11 +70,9 @@ export async function POST(request: Request, context: RouteContext) {
     await requireAdmin("products:write", request);
     const { id } = await context.params;
     const body = await request.json();
-    if (body.action === "duplicate") {
-      const product = await duplicateAdminProduct(id);
-      return NextResponse.json({ product }, { status: 201 });
-    }
-    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+    adminProductDuplicateActionSchema.parse(body);
+    const product = await duplicateAdminProduct(id);
+    return NextResponse.json({ product }, { status: 201 });
   } catch (error) {
     return adminErrorResponse(error);
   }

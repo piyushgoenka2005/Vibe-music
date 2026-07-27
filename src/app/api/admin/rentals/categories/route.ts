@@ -7,7 +7,7 @@ import {
   listRentalCategories,
   upsertRentalCategory,
 } from "@/lib/server/rentalRepository";
-import { adminRentalCategorySchema } from "@/lib/validations/admin-rental";
+import { adminRentalCategorySchema, adminResourceIdQuerySchema } from "@/lib/validations/admin-rental";
 import { slugify } from "@/lib/slug";
 
 export async function GET() {
@@ -57,10 +57,9 @@ export async function DELETE(request: Request) {
   try {
     const admin = await requireAdmin("rentals:delete", request);
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-    if (!id) {
-      return NextResponse.json({ error: "id required" }, { status: 400 });
-    }
+    const { id } = adminResourceIdQuerySchema.parse({
+      id: searchParams.get("id"),
+    });
     await deleteRentalCategory(id);
     await logAuditEvent({
       action: "rental.category.deleted",

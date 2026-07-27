@@ -1776,11 +1776,10 @@ body.site-nav-open .site-header--hidden {
   }
 }
 
-/* Full cart page: keep page scroll enabled (inner shell must not trap wheel). */
+/* Full cart page: document scrolls — do not nest a second scrollport on main. */
 .storefront-main:has(.cart-page) {
   overflow-x: clip;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow-y: visible;
 }
 
 body:has(.cart-page) {

@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
@@ -56,8 +55,6 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
 ];
 
 export default function SiteFooter() {
-  const pathname = usePathname() ?? "";
-  const isLandingPage = pathname === "/";
   const showToast = useToastStore((state) => state.show);
   const footerRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);

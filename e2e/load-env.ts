@@ -1,8 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
 
-/** Load .env / .env.local for Playwright when shell env omits DATABASE_URL. */
+/**
+ * Load env files for Playwright (and its webServer child).
+ * Prefer `.env.local` over `.env` (Next.js convention). Existing process.env
+ * wins only when PLAYWRIGHT_PRESERVE_ENV=true — otherwise local files refresh
+ * DATABASE_URL / AUTH_* so a stale shell cannot poison E2E.
+ */
 export function loadLocalEnv(): void {
+  const preserve = process.env.PLAYWRIGHT_PRESERVE_ENV === "true";
+  const merged = new Map<string, string>();
+
   for (const file of [".env", ".env.local"]) {
     const full = path.join(process.cwd(), file);
     if (!fs.existsSync(full)) continue;
@@ -14,8 +22,6 @@ export function loadLocalEnv(): void {
       if (eq <= 0) continue;
 
       const key = trimmed.slice(0, eq).trim();
-      if (process.env[key]) continue;
-
       let value = trimmed.slice(eq + 1).trim();
       if (
         (value.startsWith('"') && value.endsWith('"')) ||
@@ -23,7 +29,12 @@ export function loadLocalEnv(): void {
       ) {
         value = value.slice(1, -1);
       }
-      process.env[key] = value;
+      merged.set(key, value);
     }
+  }
+
+  for (const [key, value] of merged) {
+    if (preserve && process.env[key]) continue;
+    process.env[key] = value;
   }
 }

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
+import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import type { ProductQuestion, ProductQuestionStatus } from "@/types/productQuestion";
 
 function QuestionsContent() {
@@ -14,7 +15,7 @@ function QuestionsContent() {
   const [answer, setAnswer] = useState("");
   const [newStatus, setNewStatus] = useState<ProductQuestionStatus>("approved");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-questions", statusFilter],
     queryFn: async () => {
       const qs = statusFilter ? `?status=${statusFilter}` : "";
@@ -56,6 +57,15 @@ function QuestionsContent() {
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load product questions."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const questions = data?.questions ?? [];
 
@@ -160,6 +170,8 @@ function QuestionsContent() {
               >
                 {updateMutation.isPending ? "Saving…" : "Save"}
               </button>
+              <MutationError error={updateMutation.isError ? updateMutation.error : null} />
+              <MutationError error={deleteMutation.isError ? deleteMutation.error : null} />
               <button
                 type="button"
                 className="admin-btn admin-btn--danger"

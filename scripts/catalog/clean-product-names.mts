@@ -25,7 +25,6 @@ function walk<T>(value: T): T {
 
 const catalogPaths = [
   path.join(process.cwd(), "src", "data", "catalog", "products.json"),
-  path.join(process.cwd(), "products.json"),
 ];
 
 for (const filePath of catalogPaths) {

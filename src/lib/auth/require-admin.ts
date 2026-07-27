@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { isMutationMethod } from "@/lib/security/mutation-origin";
 import { getAdminSession } from "@/lib/server/adminService";
@@ -62,6 +63,20 @@ export function adminErrorResponse(error: unknown, request?: Request): NextRespo
       );
     }
     return response;
+  }
+  if (error instanceof ZodError) {
+    const message =
+      error.issues[0]?.message?.trim() || "Invalid request";
+    return NextResponse.json(
+      {
+        error: message,
+        issues: error.issues.map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
+        })),
+      },
+      { status: 400 }
+    );
   }
   // Avoid leaking internal exception details to admin clients.
   console.error("[admin]", error);

@@ -129,23 +129,26 @@ function SearchResultsPageContent({
     Boolean(urlCategory) ||
     Boolean(urlSubcategory) ||
     filters.brands.length > 0;
-  const listContext = {
-    itemListId: query.trim()
-      ? `search_${query.trim().toLowerCase().slice(0, 48)}`
-      : brandLabel
-        ? `brand_${filters.brands.join("_")}`
-        : "search_results",
-    itemListName: query.trim()
-      ? `Search: ${query.trim()}`
-      : brandLabel
-        ? `Brand: ${brandLabel}`
-        : "Search Results",
-  };
+  const listContext = useMemo(
+    () => ({
+      itemListId: query.trim()
+        ? `search_${query.trim().toLowerCase().slice(0, 48)}`
+        : brandLabel
+          ? `brand_${filters.brands.join("_")}`
+          : "search_results",
+      itemListName: query.trim()
+        ? `Search: ${query.trim()}`
+        : brandLabel
+          ? `Brand: ${brandLabel}`
+          : "Search Results",
+    }),
+    [query, brandLabel, filters.brands]
+  );
 
   useEffect(() => {
     if (!data.products.length) return;
     trackViewItemList(data.products, listContext);
-  }, [query, data.products, data.page]);
+  }, [listContext, data.products, data.page]);
 
   return (
     <div className="cat-page">

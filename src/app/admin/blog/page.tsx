@@ -12,6 +12,7 @@ import {
   StatusBadge,
   formatDate,
 } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import { ROUTES } from "@/lib/routes";
 import type { BlogComment, BlogPost } from "@/types/blog";
 
@@ -28,7 +29,7 @@ function scheduleHint(post: BlogPost): string | null {
 }
 
 function BlogAnalyticsPanel() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-blog-analytics"],
     queryFn: async () => {
       const res = await fetch("/api/admin/blog/analytics");
@@ -38,6 +39,15 @@ function BlogAnalyticsPanel() {
   });
 
   if (isLoading) return <LoadingState message="Loading analytics…" />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load blog analytics."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
   const analytics = data?.analytics;
 
   return (

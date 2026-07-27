@@ -37,8 +37,17 @@ export async function POST(request: Request, context: RouteContext) {
       note: parsed.note ?? null,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Refund failed";
-    if (message.includes("not found") || message.includes("No Razorpay")) {
+    const message = error instanceof Error ? error.message : "";
+    if (/order not found/i.test(message)) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+    if (/no razorpay/i.test(message)) {
+      return NextResponse.json(
+        { error: "Order has no Razorpay payment to refund" },
+        { status: 400 }
+      );
+    }
+    if (/already refunded|not refundable|refund/i.test(message) && message.length < 160) {
       return NextResponse.json({ error: message }, { status: 400 });
     }
     return adminErrorResponse(error);

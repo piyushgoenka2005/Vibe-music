@@ -54,6 +54,7 @@ export default function GuitarSpecShowcase({
       <div className="guitar-spec-showcase__pattern" aria-hidden="true" />
       <div className="guitar-spec-showcase__inner">
         <div className="guitar-spec-showcase__image-wrap" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element -- decorative guitar showcase */}
           <img
             src={showcaseImage}
             alt=""
@@ -79,6 +80,7 @@ export default function GuitarSpecShowcase({
         </div>
 
         <div className="guitar-spec-showcase__mobile-image">
+          {/* eslint-disable-next-line @next/next/no-img-element -- mobile guitar showcase */}
           <img src={showcaseImage} alt={GUITAR_SHOWCASE_IMAGE_ALT} loading="lazy" />
         </div>
       </div>

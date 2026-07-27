@@ -40,6 +40,7 @@ export default function HeaderMegaMenu({ menu, open }: HeaderMegaMenuProps) {
           <div className="header-mega__featured">
             {menu.featured.map((card) => (
               <Link key={card.href} href={card.href} className="header-mega__card">
+                {/* eslint-disable-next-line @next/next/no-img-element -- mega-menu featured card art */}
                 <img
                   src={card.image}
                   alt=""

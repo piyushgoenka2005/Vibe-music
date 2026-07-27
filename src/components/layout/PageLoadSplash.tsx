@@ -290,7 +290,6 @@ export default function PageLoadSplash({
       window.clearTimeout(fullExitTimer);
       window.clearTimeout(hideTimer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- sequence starts once when visible
   }, [prefersReducedMotion, variant, visible]);
 
   if (variant === "inline") {

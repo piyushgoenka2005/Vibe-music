@@ -62,7 +62,8 @@ export default function StorefrontChrome({
     SPLASH_CURSOR_ENABLED &&
     !prefersReducedMotion &&
     !hideChrome &&
-    !isMobileViewport;
+    !isMobileViewport &&
+    !isCheckoutOrCart;
 
   useLayoutEffect(() => {
     const hasFooterReveal = isLandingPage || isProductPage;

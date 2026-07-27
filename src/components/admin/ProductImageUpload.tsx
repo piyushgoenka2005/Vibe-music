@@ -111,6 +111,7 @@ export default function ProductImageUpload({
         <div className="admin-image-preview-grid">
           {images.map((url, index) => (
             <div key={`${url}-${index}`} className="admin-image-preview">
+              {/* eslint-disable-next-line @next/next/no-img-element -- admin upload preview may be blob/data URL */}
               <img src={url} alt={`Product ${index + 1}`} />
               <button
                 type="button"

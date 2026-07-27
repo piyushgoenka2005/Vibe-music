@@ -12,6 +12,7 @@ import {
   StatCard,
   formatDate,
 } from "@/components/admin/AdminUi";
+import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
@@ -66,7 +67,7 @@ function ReviewsContent() {
     },
   });
 
-  const { data, isLoading, isFetching } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-reviews", queryParams],
     queryFn: async () => {
       const res = await fetch(buildReviewsQuery(queryParams));
@@ -129,6 +130,15 @@ function ReviewsContent() {
   }
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load reviews."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const reviews = data?.reviews ?? [];
   const stats = statsData?.stats;
@@ -418,6 +428,8 @@ function ReviewsContent() {
                 Reject
               </button>
             </div>
+            <MutationError error={updateMutation.isError ? updateMutation.error : null} />
+            <MutationError error={deleteMutation.isError ? deleteMutation.error : null} />
           </div>
         </div>
       ) : null}

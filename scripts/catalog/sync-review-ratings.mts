@@ -9,7 +9,6 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const catalogPaths = [
   path.join(process.cwd(), "src", "data", "catalog", "products.json"),
-  path.join(process.cwd(), "products.json"),
 ];
 
 type ProductRow = {

@@ -5,13 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { StatCard, LoadingState, formatCurrency } from "@/components/admin/AdminUi";
+import { StatCard, LoadingState, EmptyState, formatCurrency } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import SearchAnalyticsPanel from "@/components/admin/SearchAnalyticsPanel";
 
 function AnalyticsContent() {
   const [period, setPeriod] = useState("30d");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-analytics", period],
     queryFn: async () => {
       const res = await fetch(`/api/admin/analytics?period=${period}`);
@@ -30,9 +31,18 @@ function AnalyticsContent() {
   });
 
   if (isLoading) return <LoadingState message="Loading analytics…" />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load analytics report."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const report = data?.report;
-  if (!report) return <div className="admin-empty">No analytics data.</div>;
+  if (!report) return <EmptyState message="No analytics data for this period." />;
 
   return (
     <>
