@@ -1,7 +1,7 @@
 # FINAL Security Report — ViBE Music
 
 > **Historical snapshot (11 July 2026).** The live stack is **Auth.js + PostgreSQL/Prisma + Razorpay** — Firebase Auth and Firestore are **decommissioned**.  
-> For current findings see [`docs/MASTER_E2E_AUDIT_JUL25.md`](../MASTER_E2E_AUDIT_JUL25.md).
+> For current findings see [`docs/ops/DEPLOYMENT.md`](../ops/DEPLOYMENT.md) and [`docs/ops/README.md`](../ops/README.md).
 
 **Date:** 11 July 2026 (annotated 25 July 2026)
 

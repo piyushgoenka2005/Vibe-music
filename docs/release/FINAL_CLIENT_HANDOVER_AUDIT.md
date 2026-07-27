@@ -4,7 +4,7 @@
 **Live site:** https://vibemusic.in  
 **Repo:** https://github.com/piyushgoenka2005/Vibe-music  
 **WRD reference:** `ViBE Music - Website Development.pdf` (April 2026)  
-**Companion docs:** [`WRD_FEATURE_AUDIT_JULY_2026.md`](../../WRD_FEATURE_AUDIT_JULY_2026.md), [`CLIENT_HANDOVER_AUDIT.md`](./CLIENT_HANDOVER_AUDIT.md), [`docs/ops/GO_LIVE.md`](../ops/GO_LIVE.md)
+**Companion docs:** [`CLIENT_HANDOVER_AUDIT.md`](./CLIENT_HANDOVER_AUDIT.md), [`docs/ops/GO_LIVE.md`](../ops/GO_LIVE.md)
 
 ---
 
@@ -150,7 +150,7 @@ Full runbook: [`docs/ops/GO_LIVE.md`](../ops/GO_LIVE.md), [`docs/ops/DEPLOYMENT.
 
 | Artifact | Location |
 |----------|----------|
-| WRD feature matrix (updated) | `WRD_FEATURE_AUDIT_JULY_2026.md` |
+| WRD feature matrix | `CLIENT_HANDOVER_AUDIT.md` |
 | Prior evening handover | `docs/release/CLIENT_HANDOVER_AUDIT.md` |
 | **This final audit** | `docs/release/FINAL_CLIENT_HANDOVER_AUDIT.md` |
 | Ops go-live | `docs/ops/GO_LIVE.md` |
