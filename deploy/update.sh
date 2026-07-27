@@ -30,6 +30,7 @@ npm run type-check
 
 echo "==> Building"
 export NODE_ENV=production
+export ALLOW_POSTGRES_DURING_BUILD="${ALLOW_POSTGRES_DURING_BUILD:-true}"
 npm run build
 
 echo "==> Gear story videos (optional)"
