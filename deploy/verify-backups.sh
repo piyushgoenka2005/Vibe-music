@@ -24,7 +24,8 @@ echo
 check_recent() {
   local label="$1"
   local dir="$2"
-  local pattern="$3"
+  shift 2
+  # Remaining args are one or more -name patterns (no nested quotes).
 
   if [[ ! -d "$dir" ]]; then
     echo "FAIL  $label — directory missing: $dir"
@@ -34,7 +35,18 @@ check_recent() {
 
   local newest=""
   local newest_mtime=0
-  # shellcheck disable=SC2086
+  local find_expr=()
+  local first=1
+  for pat in "$@"; do
+    if (( first )); then
+      find_expr+=( -name "$pat" )
+      first=0
+    else
+      find_expr+=( -o -name "$pat" )
+    fi
+  done
+
+  local file
   while IFS= read -r -d '' file; do
     local mtime
     mtime=$(stat -c %Y "$file" 2>/dev/null || stat -f %m "$file")
@@ -42,7 +54,7 @@ check_recent() {
       newest_mtime=$mtime
       newest=$file
     fi
-  done < <(find "$dir" -maxdepth 2 -type f \( $pattern \) -print0 2>/dev/null || true)
+  done < <(find "$dir" -maxdepth 2 -type f \( "${find_expr[@]}" \) -print0 2>/dev/null || true)
 
   if [[ -z "$newest" ]]; then
     echo "FAIL  $label — no matching files in $dir"
@@ -67,8 +79,8 @@ check_recent() {
   echo "OK    $label — $newest (${size}B, age ${age}s)"
 }
 
-check_recent "postgres dump" "$BACKUP_DIR" "-name 'vibe-backup-*.dump' -o -name 'vibe-backup-*.sql' -o -name '*.dump'"
-check_recent "cdn tarball" "$CDN_BACKUP_DIR" "-name 'cdn-backup-*.tar.gz' -o -name 'cdn-*.tar.gz'"
+check_recent "postgres dump" "$BACKUP_DIR" "vibe-backup-*.dump" "vibe-backup-*.sql" "*.dump"
+check_recent "cdn tarball" "$CDN_BACKUP_DIR" "cdn-backup-*.tar.gz" "cdn-*.tar.gz"
 
 echo
 if (( FAIL > 0 )); then
