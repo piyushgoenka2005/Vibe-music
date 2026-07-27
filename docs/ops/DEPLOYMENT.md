@@ -111,10 +111,22 @@ CDN_PUBLIC_BASE_URL=https://cdn.vibemusic.in
 
 ## Application deploy
 
+Preferred one-shot updater on the VPS (pull → `npm ci` → migrate → type-check → build → PM2 reload):
+
+```bash
+cd ~/Vibe-music
+bash deploy/update.sh
+# Optional after catalog JSON changes:
+# SEED_CATALOG=1 bash deploy/update.sh
+```
+
+Manual equivalent:
+
 ```bash
 npm ci
-npm run build
-npm run start
+npm run db:migrate
+ALLOW_POSTGRES_DURING_BUILD=true npm run build
+pm2 restart vibe --update-env
 ```
 
 - [ ] Build completes without errors

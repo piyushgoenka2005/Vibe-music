@@ -3,7 +3,7 @@
 **Date:** 15 July 2026  
 **Live site:** https://vibemusic.in  
 **Repo:** https://github.com/piyushgoenka2005/Vibe-music  
-**WRD reference:** `ViBE Music - Website Development.pdf` (April 2026)  
+**WRD reference:** [`docs/reference/website-development-brief.pdf`](../reference/website-development-brief.pdf) (April 2026)  
 **Companion docs:** [`CLIENT_HANDOVER_AUDIT.md`](./CLIENT_HANDOVER_AUDIT.md), [`docs/ops/GO_LIVE.md`](../ops/GO_LIVE.md)
 
 ---

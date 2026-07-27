@@ -36,6 +36,9 @@ npm run build
 echo "==> Gear story videos (optional)"
 npm run verify:gear-videos || true
 
+echo "==> Ensuring PM2 log directory"
+mkdir -p /var/log/vibe
+
 echo "==> Restarting PM2"
 if pm2 describe vibe >/dev/null 2>&1; then
   pm2 restart vibe --update-env

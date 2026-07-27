@@ -56,7 +56,7 @@
 | ID | Gap | Recommendation |
 |----|-----|----------------|
 | P2-4 | No full checkout E2E with Razorpay | Manual QA on test/live keys; mock webhook tests exist in unit layer |
-| P2-5 | No authenticated admin E2E | Manual admin smoke checklist in deployment doc |
+| P2-5 | Authenticated admin E2E | Closed — `e2e/admin.authenticated.spec.ts`, `admin.crud-smoke.spec.ts`, `admin.security.spec.ts` |
 
 ### P3 — Enhancements
 

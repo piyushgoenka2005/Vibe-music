@@ -112,7 +112,7 @@ export function isCanonicalCategorySlug(
   );
 }
 
-/** Normalize a category record read from Firestore or local JSON. */
+/** Normalize a category record read from PostgreSQL or local JSON. */
 export function normalizeCategoryRecord(category: Category): Category {
   const slug = normalizeCategorySlug(category.slug || category.name);
   return slug ? { ...category, slug } : category;

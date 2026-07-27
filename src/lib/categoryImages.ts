@@ -66,7 +66,7 @@ function imageFromPopularCategories(href: string): string | undefined {
   return cleanLocalPath(item.imageSrc);
 }
 
-/** Fallback hero when no Firestore banners are configured. */
+/** Fallback hero when no CMS banners are configured. */
 export const MARKETING_HERO_IMAGE =
   "/images/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png";
 

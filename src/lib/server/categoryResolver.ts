@@ -9,7 +9,7 @@ import {
 import { getCachedCategories } from "@/lib/server/catalogSnapshotCache";
 import type { Category } from "@/types/category";
 
-/** Cached category list from Firestore (with local fallback merge). */
+/** Cached category list from PostgreSQL (with local fallback merge). */
 export const getCategoryCatalog = cache(async (): Promise<Category[]> => {
   const categories = await getCachedCategories();
   return categories.map(normalizeCategoryRecord);
