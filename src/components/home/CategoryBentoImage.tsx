@@ -83,7 +83,6 @@ export default function CategoryBentoImage({
         fill
         onError={handleError}
         onLoad={markLoaded}
-        onLoadingComplete={markLoaded}
         priority={priority}
         sizes={sizes ?? (variant === "hero" ? "(min-width: 1024px) 50vw, 92vw" : "25vw")}
         src={localImagePath(imageSrc)}

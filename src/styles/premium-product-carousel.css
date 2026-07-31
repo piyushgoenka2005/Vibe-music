@@ -333,7 +333,7 @@
   /* Only the product photo layer scales — no translate, so the well stays aligned */
   .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-photo-pop,
   .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-photo-pop {
-    transform: scale(1.42);
+    transform: scale(var(--home-product-image-scale-hover-strong, 1.42));
     filter: none;
   }
 
@@ -403,7 +403,7 @@
   pointer-events: none;
 }
 
-/* Photo layer — slight scale so products fill the well without cropping hard */
+/* Photo layer — 1× at rest; hover zoom only */
 .premium-home .premium-product-carousel .product-suggest__item-photo-pop {
   position: absolute;
   top: 0;
@@ -413,7 +413,7 @@
   z-index: 2;
   display: block;
   width: 100%;
-  transform: scale(1.18);
+  transform: scale(var(--home-product-image-scale, 1));
   transform-origin: center center;
   filter: none;
   transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -821,7 +821,7 @@
     left: 0;
     right: 0;
     width: 100%;
-    transform: scale(1.04);
+    transform: scale(var(--home-product-image-scale, 1));
     will-change: auto;
   }
 

@@ -1,13 +1,13 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import RevealGroup from "@/components/layout/RevealGroup";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
+import { storefrontImageCandidates } from "@/lib/storefrontImages";
 
 const PRODUCT_FALLBACK = "/images/guitar-1.webp";
 
@@ -20,7 +20,20 @@ function BigNamesDealItem({
   index: number;
   isDuplicate?: boolean;
 }) {
-  const [productSrc, setProductSrc] = useState(item.product);
+  const candidates = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [...storefrontImageCandidates(item.product, 640), PRODUCT_FALLBACK].filter(
+            Boolean
+          )
+        )
+      ),
+    [item.product]
+  );
+  const [attempt, setAttempt] = useState(0);
+  const productSrc =
+    candidates[Math.min(attempt, candidates.length - 1)] ?? PRODUCT_FALLBACK;
 
   return (
     <div
@@ -39,18 +52,19 @@ function BigNamesDealItem({
         <div className="big-names-deals__hang-wrap">
           <div className="big-names-deals__product-stage">
             <span className="big-names-deals__product-shadow">
-              <Image
+              {/* Plain img avoids /_next/image CDN timeouts on large PNG masters */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 alt={item.productAlt}
                 className="big-names-deals__product"
                 decoding="async"
+                height={640}
                 loading={index < 2 ? "eager" : "lazy"}
                 src={productSrc}
                 width={640}
-                height={640}
-                sizes="(max-width: 767px) 42vw, 320px"
                 onError={() => {
-                  if (productSrc !== PRODUCT_FALLBACK) {
-                    setProductSrc(PRODUCT_FALLBACK);
+                  if (attempt < candidates.length - 1) {
+                    setAttempt((current) => current + 1);
                   }
                 }}
               />

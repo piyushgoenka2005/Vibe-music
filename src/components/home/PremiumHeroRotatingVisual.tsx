@@ -39,7 +39,9 @@ export default function PremiumHeroRotatingVisual() {
         const description = slide.description ?? slide.alt;
         const rawSrc = failedSrc[slide.src] ? MARKETING_HERO_FALLBACK : slide.src;
         const src = cdnThumbUrl(rawSrc, MOSAIC_WIDTH);
-        const usePlainImg = src.startsWith("/api/media/thumb");
+        const usePlainImg =
+          src.startsWith("/api/media/thumb") ||
+          src.includes("cdn.vibemusic.in");
 
         return (
           <Link

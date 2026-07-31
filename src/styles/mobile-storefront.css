@@ -70,7 +70,7 @@
     max-width: none;
     padding: 0.4rem;
     box-sizing: border-box;
-    transform: scale(1);
+    transform: scale(var(--home-product-image-scale, 1));
     transform-origin: center center;
     object-fit: contain;
     object-position: center center;
@@ -82,14 +82,14 @@
 
   .premium-home .new-arrivals-card:hover .new-arrivals-card__image,
   .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
-    transform: scale(1.24);
+    transform: scale(var(--home-product-image-scale-hover, 1.18));
     filter: drop-shadow(0 14px 20px rgba(15, 23, 42, 0.18));
   }
 
   @media (hover: hover) and (pointer: fine) {
     .premium-home .new-arrivals-card:hover .new-arrivals-card__image,
     .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
-      transform: scale(1.28);
+      transform: scale(var(--home-product-image-scale-hover, 1.18));
       filter: drop-shadow(0 16px 22px rgba(15, 23, 42, 0.2));
     }
   }
@@ -823,6 +823,8 @@
 
   .site-header__logo img,
   .site-header__logo .assets-site-header__menu-logo {
+    height: auto;
+    width: auto;
     max-width: min(140px, 36vw);
   }
 

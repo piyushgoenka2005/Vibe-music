@@ -86,8 +86,6 @@ export default function HomePage() {
         <HomepageSectionsAsync />
       </Suspense>
 
-      <TourRibbonSection />
-
       <HomepageAplusContent />
 
       <EditorialSplit />
@@ -101,6 +99,7 @@ export default function HomePage() {
       <ServiceStatusCarousel />
       <DiscoverLocationsSection />
       <SocialProofStrip />
+      <TourRibbonSection />
     </main>
   );
 }

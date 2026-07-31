@@ -1653,6 +1653,8 @@ body.site-nav-open .site-header--hidden {
 
   .site-header__logo img,
   .site-header__logo .assets-site-header__menu-logo {
+    height: auto;
+    width: auto;
     max-height: 50px;
     max-width: min(190px, 44vw);
   }
@@ -1809,6 +1811,8 @@ body:has(.cart-page) {
 
   .site-header__logo img,
   .site-header__logo .assets-site-header__menu-logo {
+    height: auto;
+    width: auto;
     max-height: 46px;
     max-width: min(152px, 38vw);
   }

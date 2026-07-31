@@ -437,7 +437,7 @@
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  transform: scale(1.03);
+  transform: scale(1);
   transition:
     opacity 500ms ease,
     transform 520ms var(--bento-ease);
@@ -451,8 +451,8 @@
 .category-bento__link--wide .category-bento__image {
   object-fit: contain;
   object-position: center center;
-  padding: clamp(0.15rem, 0.45vw, 0.35rem);
-  transform: scale(1.04);
+  padding: clamp(0.35rem, 0.9vw, 0.65rem);
+  transform: scale(1);
 }
 
 .category-bento__link--overlay:hover .category-bento__image,
@@ -1192,10 +1192,10 @@
 
   .category-bento__link--overlay .category-bento__image,
   .category-bento__link--wide .category-bento__image {
-    padding: 0.2rem;
+    padding: 0.35rem;
     object-fit: contain;
     object-position: center center;
-    transform: scale(1.06);
+    transform: scale(1);
   }
 
   .category-bento__link--overlay:hover .category-bento__image,
@@ -1291,7 +1291,7 @@
 
   .category-bento__link--overlay .category-bento__image,
   .category-bento__link--wide .category-bento__image {
-    transform: scale(1.08);
+    transform: scale(1);
   }
 }
 

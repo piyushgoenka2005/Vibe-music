@@ -178,6 +178,7 @@ export default function SiteHeader() {
               priority
               unoptimized
               className="assets-site-header__menu-logo"
+              style={{ width: "auto", height: "auto" }}
             />
           </Link>
 
