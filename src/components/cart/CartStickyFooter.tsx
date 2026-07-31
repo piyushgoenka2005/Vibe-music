@@ -136,31 +136,31 @@ export default function CartStickyFooter({
               Checkout
             </Link>
           )}
-
-          {showLinks ? (
-            <div className="cart-sticky-footer__links">
-              {onContinueShopping ? (
-                <button
-                  type="button"
-                  className="cart-sticky-footer__continue"
-                  onClick={onContinueShopping}
-                >
-                  Continue shopping
-                </button>
-              ) : null}
-
-              {showViewCartLink ? (
-                <Link
-                  href={ROUTES.cart}
-                  className="cart-sticky-footer__view-cart"
-                  onClick={closeDrawer}
-                >
-                  View full cart
-                </Link>
-              ) : null}
-            </div>
-          ) : null}
         </div>
+
+        {showLinks ? (
+          <div className="cart-sticky-footer__links">
+            {onContinueShopping ? (
+              <button
+                type="button"
+                className="cart-sticky-footer__continue"
+                onClick={onContinueShopping}
+              >
+                Continue shopping
+              </button>
+            ) : null}
+
+            {showViewCartLink ? (
+              <Link
+                href={ROUTES.cart}
+                className="cart-sticky-footer__view-cart"
+                onClick={closeDrawer}
+              >
+                View full cart
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </footer>
   );

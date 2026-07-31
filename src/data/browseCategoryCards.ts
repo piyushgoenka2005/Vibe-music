@@ -38,63 +38,64 @@ function localImage(
 ): Pick<BrowseCategoryCard, "image" | "srcSet" | "width" | "height"> {
   return {
     image: src,
-    srcSet: `${src} 800w`,
+    srcSet: `${src} ${width}w`,
     width,
     height,
   };
 }
 
 /**
- * Browse tiles mapped to real Vibe Music catalog routes — local assets only.
+ * Browse tiles — local lifestyle group photos (full-bleed cover + centered title).
+ * Assets live under `/public/images/browse-categories/`.
  */
 export const BROWSE_CATEGORY_CARDS: BrowseCategoryCard[] = [
   {
     id: "guitars",
     title: "Guitars",
     href: browseCategory("guitars"),
-    ...localImage("/images/Electric Orange Guitar.png", 1200, 801),
+    ...localImage("/images/browse-categories/guitars.jpg", 800, 534),
   },
   {
     id: "acoustic-guitars",
     title: "Acoustic Guitars",
     href: browseSearch({ category: "guitars", subcategory: "Acoustic" }),
-    ...localImage("/images/guitar.png", 1080, 719),
+    ...localImage("/images/browse-categories/acoustic.jpg", 800, 533),
   },
   {
     id: "amplifiers",
     title: "Amplifiers",
     href: browseSearch({ category: "guitars", subcategory: "AMPLIFIER" }),
-    ...localImage("/images/Hertz.webp", 1512, 1080),
+    ...localImage("/images/browse-categories/amplifiers.jpg", 800, 571),
   },
   {
     id: "drums-percussion",
     title: "Drums & Percussion",
     href: browseCategory("drums-percussion"),
-    ...localImage("/images/m/home/cats/thumbs/LM402.webp", 1280, 1600),
+    ...localImage("/images/browse-categories/drums.jpg", 800, 1000),
   },
   {
     id: "live-sound-lighting",
     title: "Live Sound",
     href: browseCategory("live-sound-lighting"),
-    ...localImage("/images/m/home/cats/thumbs/k12_2.webp", 2800, 2013),
+    ...localImage("/images/browse-categories/live-sound.jpg", 800, 575),
   },
   {
     id: "microphones-wireless",
     title: "Microphones",
     href: browseCategory("microphones-wireless"),
-    ...localImage("/images/m/home/cats/thumbs/SM58-cat.webp", 1280, 1600),
+    ...localImage("/images/browse-categories/microphones.jpg", 800, 1000),
   },
   {
     id: "home-audio-electronics",
     title: "Home Audio",
     href: browseCategory("home-audio-electronics"),
-    ...localImage("/images/m/home/cats/thumbs/M4WP006.webp", 1080, 1080),
+    ...localImage("/images/browse-categories/home-audio.jpg", 800, 800),
   },
   {
     id: "used",
     title: "Used & Open-Box",
     href: ROUTES.used,
-    ...localImage("/images/guitar-2.webp", 1600, 1280),
+    ...localImage("/images/browse-categories/used.jpg", 800, 640),
   },
 ];
 

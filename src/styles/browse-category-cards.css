@@ -131,12 +131,14 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(
-    180deg,
-    rgba(8, 7, 8, 0.06) 0%,
-    rgba(8, 7, 8, 0.18) 42%,
-    rgba(8, 7, 8, 0.48) 100%
-  );
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 7, 8, 0.12) 0%,
+      rgba(8, 7, 8, 0.28) 45%,
+      rgba(8, 7, 8, 0.55) 100%
+    ),
+    rgba(8, 7, 8, 0.18);
   pointer-events: none;
   transition: opacity 280ms ease;
 }
@@ -182,9 +184,10 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
+  color: #ffffff;
   text-align: center;
   text-wrap: balance;
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.32);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
   pointer-events: none;
 }
 

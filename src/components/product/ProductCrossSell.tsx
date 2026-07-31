@@ -16,7 +16,7 @@ export default function ProductCrossSell({
   if (products.length === 0) return null;
 
   return (
-    <section className="pdp-section" aria-label={title}>
+    <section className="pdp-section pdp-section--cross-sell" aria-label={title}>
       <h2 className="pdp-section__title">{title}</h2>
       <div className="pdp-cross-sell">
         {products.map((product) => (

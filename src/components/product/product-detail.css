@@ -28,7 +28,7 @@
   .pdp > .pdp-breadcrumb,
   .pdp > .pdp-main,
   .pdp > .pdp-sections,
-  .pdp > .pdp-section:not(.pdp-section--fbt) {
+  .pdp > .pdp-section:not(.pdp-section--fbt):not(.pdp-section--cross-sell) {
     padding-inline: var(--pdp-pad-x);
     box-sizing: border-box;
   }
@@ -3842,7 +3842,10 @@
     overscroll-behavior-x: contain;
     touch-action: pan-x pan-y;
     padding-bottom: 4px;
+    /* Edge-to-edge rail; peek padding only on the trailing end */
     margin-inline: 0;
+    padding-inline: 0;
+    scroll-padding-inline: 0;
     scrollbar-width: none;
   }
 
@@ -3851,11 +3854,33 @@
   }
 
   .pdp-cross-sell__card-wrap {
-    flex: 0 0 clamp(148px, 42vw, 176px);
-    width: clamp(148px, 42vw, 176px);
-    max-width: clamp(148px, 42vw, 176px);
+    flex: 0 0 clamp(156px, 44vw, 188px);
+    width: clamp(156px, 44vw, 188px);
+    max-width: clamp(156px, 44vw, 188px);
     scroll-snap-align: start;
     align-self: stretch;
+  }
+
+  /* First card flush to screen edge; last card has a small end inset */
+  .pdp-cross-sell__card-wrap:first-child {
+    margin-left: 0;
+  }
+
+  .pdp-cross-sell__card-wrap:last-child {
+    margin-right: var(--pdp-pad-x);
+  }
+
+  .pdp-section--cross-sell {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+    box-sizing: border-box;
+  }
+
+  .pdp-section--cross-sell .pdp-section__title {
+    padding-inline: var(--pdp-pad-x);
+    margin-bottom: 14px;
   }
 
   .pdp-cross-sell__card {

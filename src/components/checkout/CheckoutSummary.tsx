@@ -225,22 +225,26 @@ export default function CheckoutSummary({
               </div>
             ) : (
               <>
-                <input
-                  type="text"
-                  placeholder="e.g. SAVE10"
-                  value={couponInput}
-                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                  aria-label="Promo code"
-                  disabled={isApplyingCoupon}
-                />
-                <button
-                  type="button"
-                  className="checkout-summary__promo-apply"
-                  onClick={() => void handleApplyCoupon()}
-                  disabled={isApplyingCoupon || !couponInput.trim()}
-                >
-                  {isApplyingCoupon ? "..." : "Apply"}
-                </button>
+                <div className="checkout-summary__promo-row">
+                  <input
+                    type="text"
+                    placeholder="e.g. SAVE10"
+                    value={couponInput}
+                    onChange={(e) =>
+                      setCouponInput(e.target.value.toUpperCase())
+                    }
+                    aria-label="Promo code"
+                    disabled={isApplyingCoupon}
+                  />
+                  <button
+                    type="button"
+                    className="checkout-summary__promo-apply"
+                    onClick={() => void handleApplyCoupon()}
+                    disabled={isApplyingCoupon || !couponInput.trim()}
+                  >
+                    {isApplyingCoupon ? "..." : "Apply"}
+                  </button>
+                </div>
               </>
             )}
             {!couponCode ? (

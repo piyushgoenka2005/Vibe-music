@@ -1,4 +1,4 @@
-﻿import dynamic from "next/dynamic";
+import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import "@/styles/homepage-bundle.css";
 import HomepageBannerHeroSection from "@/components/home/homepage-banner-hero/HomepageBannerHeroSection";
@@ -9,7 +9,6 @@ import HomepageNewArrivalsAsync from "@/components/home/HomepageNewArrivalsAsync
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
 import BigNamesDealsSection from "@/components/home/BigNamesDealsSection";
-import HomepagePromoBanner from "@/components/home/HomepagePromoBanner";
 
 import PremiumHero from "@/components/home/PremiumHero";
 
@@ -73,8 +72,6 @@ export default function HomePage() {
       <Suspense fallback={<HomepageSectionsSkeleton />}>
         <BigNamesDealsSection />
       </Suspense>
-
-      <HomepagePromoBanner />
 
       <WhyShopSection />
       <BrowseCategoryCardsSection />

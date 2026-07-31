@@ -52,7 +52,7 @@
 }
 
 .storefront-page__header .storefront-back-btn {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0;
 }
 
 @media (max-width: 1023px) {
@@ -86,7 +86,23 @@
 }
 
 .storefront-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 1rem;
+  row-gap: 0.2rem;
   margin-bottom: 2rem;
+}
+
+.storefront-page__header .storefront-back-btn {
+  margin-bottom: 0;
+}
+
+.storefront-page__header .storefront-page__title,
+.storefront-page__header .storefront-page__subtitle,
+.storefront-page__header .storefront-page__meta {
+  flex: 1 0 100%;
+  width: 100%;
 }
 
 .storefront-page__eyebrow {
@@ -207,6 +223,7 @@
 
   .storefront-page__header {
     margin-bottom: 1.25rem;
+    column-gap: 0.875rem;
   }
 
   .storefront-page__title {
