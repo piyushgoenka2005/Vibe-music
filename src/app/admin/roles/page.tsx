@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { EmptyState } from "@/components/admin/AdminUi";
+import { EmptyState, LoadingState } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import { ADMIN_ROLE_LABELS, ALL_PERMISSIONS } from "@/lib/auth/permissions";
 import type { AdminRole, Permission } from "@/types/admin";
 
@@ -20,7 +21,7 @@ const ROLES = Object.keys(ADMIN_ROLE_LABELS) as AdminRole[];
 
 function RolesContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching, error } = useQuery({
     queryKey: ["admin-roles"],
     queryFn: async () => {
       const res = await fetch("/api/admin/roles");
@@ -72,11 +73,21 @@ function RolesContent({ canWrite }: { canWrite: boolean }) {
   });
 
   if (isLoading) {
-    return <p>Loading roles…</p>;
+    return <LoadingState message="Loading roles…" />;
   }
 
-  if (error || !data) {
-    return <p>Unable to load role permissions.</p>;
+  if (isError || !data) {
+    return (
+      <ErrorState
+        message={
+          error instanceof Error
+            ? error.message
+            : "Unable to load role permissions."
+        }
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
   }
 
   const activePerms = new Set(draft[selectedRole] ?? data.effective[selectedRole] ?? []);

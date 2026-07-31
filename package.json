@@ -34,6 +34,7 @@
     "complete:ops-gaps": "bash deploy/complete-ops-gaps.sh",
     "deploy:smoke": "bash deploy/post-deploy-smoke.sh",
     "deploy:update": "bash deploy/update.sh",
+    "deploy:finish": "bash deploy/finish-production.sh",
     "ops:install-sweeper": "bash deploy/install-reservation-sweeper.sh",
     "migrate:brand": "node scripts/legacy/migrate-brand.mjs && node scripts/legacy/migrate-content-brand.mjs",
     "sync:cdn-vps": "powershell -ExecutionPolicy Bypass -File scripts/ops/sync-cdn-to-vps.ps1",

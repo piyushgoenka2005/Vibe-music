@@ -64,9 +64,11 @@ ls -la /etc/ssh/sshd_config.d/ 2>/dev/null || true
 dpkg -l unattended-upgrades 2>/dev/null | tail -1 || true
 
 section "App deployment"
-APP_DIR="/root/Vibe-music"
-if [ ! -d "$APP_DIR" ]; then
-  for d in /root/vibe-music /var/www/Vibe-music; do [ -d "$d" ] && APP_DIR="$d" && break; done
+APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+if [ ! -d "$APP_DIR/.git" ]; then
+  for d in /root/Vibe-music /root/vibe-music /var/www/Vibe-music /home/ubuntu/Vibe-music; do
+    [ -d "$d/.git" ] && APP_DIR="$d" && break
+  done
 fi
 echo "APP_DIR=$APP_DIR"
 if [ -d "$APP_DIR" ]; then

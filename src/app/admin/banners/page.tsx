@@ -11,6 +11,7 @@ import {
   LoadingState,
   StatusBadge,
 } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { HomepageBanner } from "@/types/banner";
 
 const QUERY_KEY = ["admin-banners"] as const;
@@ -71,7 +72,7 @@ function BannersContent({
   const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
       const res = await fetch("/api/admin/banners");
@@ -182,6 +183,15 @@ function BannersContent({
   }
 
   if (isLoading) return <LoadingState message="Loading banners…" />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load banners."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   return (
     <>

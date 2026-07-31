@@ -114,9 +114,17 @@ check_env_key() {
 
 check_env_key "NEXT_PUBLIC_GA_MEASUREMENT_ID"
 check_env_key "GA_MEASUREMENT_API_SECRET"
-check_env_key "GOOGLE_PLACES_API_KEY"
 check_env_key "NEXT_PUBLIC_STORE_PHONE"
 check_env_key "NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION"
+
+# Places is optional (Nominatim India fallback); warn only if unset
+if grep -q "^GOOGLE_PLACES_API_KEY=.\+" .env 2>/dev/null || \
+   grep -q "^NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=.\+" .env 2>/dev/null || \
+   grep -q "^GOOGLE_MAPS_API_KEY=.\+" .env 2>/dev/null; then
+  echo "   ✅ Google Places key"
+else
+  echo "   ℹ️  Google Places key unset — Nominatim fallback remains available"
+fi
 
 if crontab -l 2>/dev/null | grep -q 'ops:release-stale-reservations'; then
   echo "   ✅ reservation sweeper cron"

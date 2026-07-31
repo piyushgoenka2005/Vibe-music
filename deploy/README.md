@@ -7,6 +7,7 @@ Shell scripts, PM2 config, and nginx templates for the VPS.
 | Asset | Purpose |
 |-------|---------|
 | `update.sh` | Pull, install, migrate, build, reload PM2, smoke |
+| `finish-production.sh` | **One-shot** live parity: pull → deploy → backups → sweeper → public smoke |
 | `post-deploy-smoke.sh` | Critical HTTP/JSON gates (incl. `/api/coupons/active`) |
 | `install-reservation-sweeper.sh` | Cron for abandoned checkout inventory TTL |
 | `go-live.sh` / `emergency-go-live.sh` | Cutover helpers |
@@ -15,6 +16,7 @@ Shell scripts, PM2 config, and nginx templates for the VPS.
 | `verify-backups.sh` | Confirm recent Postgres + CDN backups (F-14) |
 | `install-backups.sh` | First dump + install daily cron + verify |
 | `crontab.backups.example` | Sample daily dump / CDN / verify / sweeper cron |
+| `finish-production.sh` | **One-shot** live parity: pull → deploy → backups → sweeper → public smoke |
 | `complete-ops-gaps.sh` | Full e2e: secrets → deploy → backups → sweeper → smoke |
 | `*-audit.sh` / `*-hardening.sh` | Ops audits and hardening |
 

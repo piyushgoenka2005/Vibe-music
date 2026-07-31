@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { ShippingZone } from "@/types/shippingZone";
 
 function emptyZone(): Omit<ShippingZone, "createdAt" | "updatedAt"> {
@@ -28,7 +29,7 @@ function ShippingContent({ canWrite }: { canWrite: boolean }) {
     emptyZone()
   );
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-shipping-zones"],
     queryFn: async () => {
       const res = await fetch("/api/admin/shipping-zones");
@@ -73,6 +74,15 @@ function ShippingContent({ canWrite }: { canWrite: boolean }) {
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load shipping zones."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const zones = data?.zones ?? [];
 

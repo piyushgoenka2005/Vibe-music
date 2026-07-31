@@ -25,6 +25,8 @@ function loadEnvFile(file) {
 const env = {
   ...loadEnvFile(".env"),
   ...loadEnvFile(".env.local"),
+  ...loadEnvFile(".env.production"),
+  ...loadEnvFile(".env.production.local"),
 };
 
 function status(key) {

@@ -4,13 +4,13 @@ set -uo pipefail
 section(){ echo ""; echo "========== $1 =========="; }
 
 section "Git vs GitHub"
-cd /root/Vibe-music
+APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+cd "$APP_DIR"
 git fetch origin main 2>/dev/null
 echo "Local: $(git rev-parse HEAD)"
 echo "Remote origin/main: $(git rev-parse origin/main)"
 git log -1 --oneline origin/main
 git diff --stat origin/main...HEAD 2>/dev/null || echo "No diff"
-
 section "Mail - Postfix"
 postconf -n 2>/dev/null | grep -E '^(myhostname|mydomain|myorigin|inet_interfaces|smtpd_tls|smtp_tls|mynetworks|virtual|home_mailbox|smtpd_sasl|smtpd_recipient_restrictions|smtpd_milters|non_smtpd_milters)' || true
 postqueue -p 2>/dev/null | head -5 || true

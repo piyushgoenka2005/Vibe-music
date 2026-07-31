@@ -6,7 +6,12 @@ DOMAIN="vibemusic.in"
 APP_DIR="${APP_DIR:-$(find /root /var/www /home -maxdepth 5 -name package.json 2>/dev/null | while read f; do
   grep -q '"name": "vibe"' "$f" 2>/dev/null && dirname "$f" && break
 done | head -1)}"
-APP_DIR="${APP_DIR:-/root/Vibe-music}"
+APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+if [[ ! -d "$APP_DIR/.git" ]]; then
+  for d in /root/Vibe-music /root/vibe-music /var/www/Vibe-music /home/ubuntu/Vibe-music; do
+    [[ -d "$d/.git" ]] && APP_DIR="$d" && break
+  done
+fi
 cd "$APP_DIR"
 echo ">>> APP_DIR=$APP_DIR"
 

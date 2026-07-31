@@ -327,8 +327,8 @@ ViBE Music’s **live site** is **healthy and sellable**, but **not yet equal** 
 | I4 | PDP shows status when coupon offers fail to load |
 | I9 | CMS + Shipping visible with `settings:read`; New/Save/Delete gated on `settings:write` |
 
-**Still ops-only (not code):** deploy working tree, GSC token on VPS, install sweeper cron, seed catalog.
+**Still ops-only (not code):** On the VPS run `bash deploy/finish-production.sh` (needs SSH). Then set GSC token if missing and confirm public smoke green.
 
 ---
 
-*No secrets included. Evidence: live probes 31 Jul 2026 + repository inspection + post-audit fixes.*
+*No secrets included. Evidence: live probes 31 Jul 2026 + repository inspection + post-audit fixes + production polish pass.*

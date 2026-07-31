@@ -47,7 +47,12 @@ section "PM2 logs (last 60 lines each)"
 pm2 logs vibe --lines 60 --nostream 2>/dev/null || true
 
 section "App directory"
-APP_DIR="${APP_DIR:-/root/vibe-music}"
+APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+if [[ ! -d "$APP_DIR" ]]; then
+  for d in /root/Vibe-music /root/vibe-music /var/www/Vibe-music /home/ubuntu/Vibe-music; do
+    [[ -d "$d" ]] && APP_DIR="$d" && break
+  done
+fi
 if [ -d "$APP_DIR" ]; then
   ls -la "$APP_DIR" | head -20
   [ -f "$APP_DIR/package.json" ] && head -5 "$APP_DIR/package.json"

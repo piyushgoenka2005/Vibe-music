@@ -2,8 +2,10 @@
 set -uo pipefail
 section(){ echo ""; echo "=== $1 ==="; }
 
+APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+cd "$APP_DIR"
+
 section "Git"
-cd /root/Vibe-music
 git fetch origin main 2>/dev/null
 echo "Branch: $(git branch --show-current)"
 echo "Commit: $(git log -1 --oneline)"
@@ -16,7 +18,7 @@ curl -sS -o /dev/null -w "api/health → %{http_code}\n" http://127.0.0.1:3000/a
 curl -sS -o /dev/null -w "api/coupons/active → %{http_code}\n" http://127.0.0.1:3000/api/coupons/active
 curl -sS -o /dev/null -w "nginx:443 → %{http_code}\n" https://127.0.0.1/ -k
 curl -sS -o /dev/null -w "http redirect → %{http_code}\n" http://127.0.0.1/ -L -o /dev/null -w "%{url_effective}\n" 2>/dev/null || true
-bash "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/post-deploy-smoke.sh" || true
+bash "$APP_DIR/deploy/post-deploy-smoke.sh" || true
 
 section "PM2"
 pm2 list

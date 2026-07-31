@@ -10,7 +10,7 @@ backup(){ [ -f "$1" ] && cp -a "$1" "$BACKUP_DIR/" && log "Backed up $1"; }
 
 DOMAIN="vibemusic.in"
 MAIL_HOST="mail.vibemusic.in"
-APP_DIR="/root/Vibe-music"
+APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 SELECTOR="default"
 
 log "Backup directory: $BACKUP_DIR"

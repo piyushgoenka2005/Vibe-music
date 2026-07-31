@@ -1,5 +1,11 @@
 # FINAL Feature Matrix — ViBE Music
 
+> **STALE — DO NOT USE FOR GA CLAIMS (11 July 2026).**  
+> This matrix still mentions **COD**, **Firestore**, and zone-aware shipping as live complete.  
+> Current source of truth: [`FINAL_DEEP_E2E_AUDIT_REPORT_2026-07-31.md`](./FINAL_DEEP_E2E_AUDIT_REPORT_2026-07-31.md)  
+> Deploy runbook: [`../ops/DEPLOY_READY.md`](../ops/DEPLOY_READY.md)  
+> Stack today: **Razorpay-only** + **PostgreSQL/Prisma** (no COD, no Firestore).
+
 **Date:** 11 July 2026  
 **Legend:** Complete | Partial | Missing  
 **Verification:** Code inspection + build + tests (11 July 2026)

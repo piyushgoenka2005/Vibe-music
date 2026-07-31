@@ -25,7 +25,10 @@ Ensure the commit you want live is on **`origin/main`** (`deploy/update.sh` pull
 cd /root/Vibe-music   # or your APP_DIR
 git fetch origin main && git pull --ff-only origin main
 
-# Optional secrets merge (GA4, phone, Places, GSC token):
+# Fastest path to live 100%:
+bash deploy/finish-production.sh
+
+# Or full ops secrets merge first:
 cp -n deploy/ops-secrets.env.example deploy/ops-secrets.env
 # edit deploy/ops-secrets.env → then:
 bash deploy/complete-ops-gaps.sh
