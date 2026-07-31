@@ -4,6 +4,7 @@ import { use } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import BlogPostFormPage from "@/components/admin/BlogPostFormPage";
+import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
 
 export default function AdminBlogEditPage({
   params,
@@ -14,11 +15,14 @@ export default function AdminBlogEditPage({
 
   return (
     <AdminGuard>
-      {(admin) => (
-        <AdminShell admin={admin} title="Edit Blog Post">
-          <BlogPostFormPage postId={id} />
-        </AdminShell>
-      )}
+      {(admin) => {
+        const caps = getAdminCapabilities(admin.permissions);
+        return (
+          <AdminShell admin={admin} title="Edit Blog Post">
+            <BlogPostFormPage postId={id} readOnly={!caps.blogWrite} />
+          </AdminShell>
+        );
+      }}
     </AdminGuard>
   );
 }

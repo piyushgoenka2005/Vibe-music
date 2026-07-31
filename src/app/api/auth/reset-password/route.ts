@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { hashPasswordResetToken } from "@/lib/auth/password-reset-token";
 import { findUserByEmail, updateUserPassword } from "@/lib/server/userService";
 import { passwordSchema } from "@/lib/validations/auth";
 import {
@@ -43,10 +44,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid or expired reset link." }, { status: 400 });
     }
 
+    const tokenHash = hashPasswordResetToken(parsed.data.token);
     const verification = await prisma.verificationToken.findFirst({
       where: {
         identifier: email,
-        token: parsed.data.token,
+        token: tokenHash,
         expires: { gt: new Date() },
       },
     });
@@ -56,6 +58,7 @@ export async function POST(request: Request) {
     }
 
     await updateUserPassword(user.id, parsed.data.password);
+    // Single-use: invalidate all reset tokens for this identifier.
     await prisma.verificationToken.deleteMany({ where: { identifier: email } });
 
     return NextResponse.json({ ok: true });

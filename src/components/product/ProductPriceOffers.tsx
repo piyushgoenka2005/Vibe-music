@@ -1,10 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   buildPdpOfferRows,
   resolvePdpPricing,
 } from "@/lib/product/pdpOffers";
+import { buildPdpOfferRowsFromCoupons } from "@/lib/product/pdpOffersFromCoupons";
+import type { StorefrontCouponOffer } from "@/types/coupon";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 import {
   formatCurrencyPrecise,
@@ -32,10 +35,22 @@ export default function ProductPriceOffers({
     [displayPrice, product.msrp, product.originalPrice]
   );
 
-  const offers = useMemo(
-    () => buildPdpOfferRows(displayPrice),
-    [displayPrice]
-  );
+  const offersQuery = useQuery({
+    queryKey: ["storefront-active-coupons"],
+    queryFn: async () => {
+      const res = await fetch("/api/coupons/active");
+      if (!res.ok) throw new Error("Failed to load offers");
+      const data = (await res.json()) as { coupons: StorefrontCouponOffer[] };
+      return data.coupons ?? [];
+    },
+    staleTime: 120_000,
+  });
+
+  const offers = useMemo(() => {
+    const fromCoupons = buildPdpOfferRowsFromCoupons(offersQuery.data ?? []);
+    if (fromCoupons.length > 0) return fromCoupons;
+    return buildPdpOfferRows(displayPrice);
+  }, [offersQuery.data, displayPrice]);
 
   if (!isPurchasablePrice(displayPrice)) {
     return (
@@ -68,6 +83,12 @@ export default function ProductPriceOffers({
       ) : null}
 
       <p className="pdp-info-pricing__tax">Inclusive of all taxes</p>
+
+      {offersQuery.isError ? (
+        <p className="pdp-info-pricing__tax" role="status">
+          Offers unavailable right now — try again later or apply a coupon at checkout.
+        </p>
+      ) : null}
 
       {offers.length > 0 ? (
         <div className="pdp-offers">

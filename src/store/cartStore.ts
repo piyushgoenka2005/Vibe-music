@@ -174,31 +174,49 @@ export const useCartStore = create<CartState>()(
             .show("This product is Coming Soon and can’t be added yet.", "info");
           return;
         }
+        const maxStock =
+          variant?.stock != null && variant.stock > 0
+            ? Math.min(99, variant.stock)
+            : 99;
         const qty = Math.max(1, quantity);
         const lineId = getCartLineId(product.id, variant?.id);
+        const existingQty =
+          get().items.find(
+            (item) => item.lineId === lineId && !isPromoGiftLine(item)
+          )?.quantity ?? 0;
+        const requestedTotal = existingQty + qty;
+        const capped = requestedTotal > maxStock;
         const fresh = productToCartItem(product, qty, variant);
         set((state) => {
           const existing = state.items.find(
             (item) => item.lineId === lineId && !isPromoGiftLine(item)
           );
           let items: CartItem[];
+          let nextQty = qty;
           if (existing) {
+            nextQty = Math.min(existing.quantity + qty, maxStock);
             items = state.items.map((item) =>
               item.lineId === lineId
                 ? {
                     ...item,
                     ...fresh,
-                    quantity: item.quantity + qty,
+                    quantity: nextQty,
                     lineId: item.lineId,
                     isPromoGift: undefined,
                   }
                 : item
             );
           } else {
-            items = [...state.items, fresh];
+            nextQty = Math.min(qty, maxStock);
+            items = [...state.items, { ...fresh, quantity: nextQty }];
           }
           return { items: applyPromoSync(items, state.promoConfig) };
         });
+        if (capped) {
+          useToastStore
+            .getState()
+            .show(`Only ${maxStock} available for this item`, "info");
+        }
         useToastStore
           .getState()
           .show(`${variant?.label ?? product.name} added to cart`);

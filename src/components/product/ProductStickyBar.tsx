@@ -85,7 +85,7 @@ export default function ProductStickyBar({
         <strong>{formatDisplayPrice(price)}</strong>
       </div>
       <div className="pdp-mobile-bar__actions">
-        {isComingSoon ? (
+        {isComingSoon || !inStock ? (
           <NotifyMeButton
             variant="sticky"
             productId={productId}

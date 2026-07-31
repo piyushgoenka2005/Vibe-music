@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { formatCheckoutError } from "@/lib/server/checkoutErrors";
 import {
-  linkGuestOrdersToUser,
+  attachPaidOrderToUser,
   verifyAndCompletePayment,
 } from "@/lib/server/orderService";
 import {
@@ -31,8 +31,12 @@ export async function POST(request: Request) {
     const order = await verifyAndCompletePayment(parsed.data);
 
     const sessionUser = await getSessionUser();
-    if (sessionUser?.email) {
-      void linkGuestOrdersToUser(
+    if (
+      sessionUser?.email &&
+      order.email.trim().toLowerCase() === sessionUser.email.trim().toLowerCase()
+    ) {
+      await attachPaidOrderToUser(
+        order.id,
         sessionUser.uid,
         sessionUser.email
       ).catch(() => undefined);

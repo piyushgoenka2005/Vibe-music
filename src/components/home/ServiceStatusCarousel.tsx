@@ -35,6 +35,7 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
     category: TRUST_CATEGORIES[index] ?? "Trust",
     title: item.title,
     desc: item.desc,
+    href: item.href,
   })),
 ];
 

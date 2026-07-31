@@ -5,11 +5,13 @@ import { useRef, useState } from "react";
 interface BlogCoverImageUploadProps {
   value: string;
   onChange: (url: string) => void;
+  disabled?: boolean;
 }
 
 export default function BlogCoverImageUpload({
   value,
   onChange,
+  disabled = false,
 }: BlogCoverImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -81,39 +83,45 @@ export default function BlogCoverImageUpload({
         </div>
       ) : null}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button
-          type="button"
-          className="admin-btn admin-btn--secondary"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-        >
-          {uploading ? "Uploading…" : value ? "Replace cover" : "Upload cover"}
-        </button>
-        {value ? (
-          <button
-            type="button"
-            className="admin-btn admin-btn--ghost"
-            onClick={() => {
-              const previousUrl = value;
-              onChange("");
-              bestEffortDelete(previousUrl);
-            }}
-          >
-            Remove
-          </button>
+        {!disabled ? (
+          <>
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? "Uploading…" : value ? "Replace cover" : "Upload cover"}
+            </button>
+            {value ? (
+              <button
+                type="button"
+                className="admin-btn admin-btn--ghost"
+                onClick={() => {
+                  const previousUrl = value;
+                  onChange("");
+                  bestEffortDelete(previousUrl);
+                }}
+              >
+                Remove
+              </button>
+            ) : null}
+          </>
         ) : null}
       </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) void uploadFile(file);
-          e.target.value = "";
-        }}
-      />
+      {!disabled ? (
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void uploadFile(file);
+            e.target.value = "";
+          }}
+        />
+      ) : null}
       {error ? (
         <p style={{ color: "#c41e3a", fontSize: 13, marginTop: 8 }} role="alert">
           {error}

@@ -14,6 +14,7 @@ import {
 } from "@/components/admin/AdminUi";
 import { ErrorState } from "@/components/admin/AdminQueryState";
 import { ROUTES } from "@/lib/routes";
+import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
 import type { BlogComment, BlogPost } from "@/types/blog";
 
 const QUERY_KEY = ["admin-blog-posts"] as const;
@@ -76,7 +77,7 @@ function BlogAnalyticsPanel() {
   );
 }
 
-function BlogCommentsPanel() {
+function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["admin-blog-comments-list"],
@@ -136,6 +137,7 @@ function BlogCommentsPanel() {
                     <td>{comment.body}</td>
                     <td>{comment.status}</td>
                     <td>
+                      {blogWrite ? (
                       <div style={{ display: "flex", gap: 8 }}>
                         <button
                           type="button"
@@ -156,6 +158,7 @@ function BlogCommentsPanel() {
                           Reject
                         </button>
                       </div>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -168,10 +171,16 @@ function BlogCommentsPanel() {
   );
 }
 
-function BlogListContent() {
+function BlogListContent({
+  blogWrite,
+  blogDelete,
+}: {
+  blogWrite: boolean;
+  blogDelete: boolean;
+}) {
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
       const res = await fetch("/api/admin/blog");
@@ -190,14 +199,26 @@ function BlogListContent() {
 
   const posts = data?.posts ?? [];
 
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load blog posts."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
+
   return (
     <div className="admin-panel">
       <div className="admin-panel__header">
         <h2 className="admin-panel__title">Blog Posts</h2>
+        {blogWrite ? (
         <Link href={`${ROUTES.adminBlog}/new`} className="admin-btn admin-btn--primary">
           <Plus size={16} />
           New Post
         </Link>
+        ) : null}
       </div>
       <div className="admin-panel__body">
         {isLoading ? (
@@ -254,6 +275,7 @@ function BlogListContent() {
                             <ExternalLink size={14} />
                           </a>
                         ) : null}
+                        {blogWrite ? (
                         <Link
                           href={`${ROUTES.adminBlog}/${post.id}`}
                           className="admin-btn admin-btn--ghost admin-btn--icon"
@@ -261,6 +283,8 @@ function BlogListContent() {
                         >
                           <Pencil size={14} />
                         </Link>
+                        ) : null}
+                        {blogDelete ? (
                         <button
                           type="button"
                           className="admin-btn admin-btn--ghost admin-btn--icon"
@@ -277,6 +301,7 @@ function BlogListContent() {
                         >
                           <Trash2 size={14} />
                         </button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -290,7 +315,13 @@ function BlogListContent() {
   );
 }
 
-function BlogAdminTabs() {
+function BlogAdminTabs({
+  blogWrite,
+  blogDelete,
+}: {
+  blogWrite: boolean;
+  blogDelete: boolean;
+}) {
   const [tab, setTab] = useState<"posts" | "analytics" | "comments">("posts");
 
   return (
@@ -307,9 +338,9 @@ function BlogAdminTabs() {
           </button>
         ))}
       </div>
-      {tab === "posts" ? <BlogListContent /> : null}
+      {tab === "posts" ? <BlogListContent blogWrite={blogWrite} blogDelete={blogDelete} /> : null}
       {tab === "analytics" ? <BlogAnalyticsPanel /> : null}
-      {tab === "comments" ? <BlogCommentsPanel /> : null}
+      {tab === "comments" ? <BlogCommentsPanel blogWrite={blogWrite} /> : null}
     </>
   );
 }
@@ -317,11 +348,14 @@ function BlogAdminTabs() {
 export default function AdminBlogPage() {
   return (
     <AdminGuard>
-      {(admin) => (
+      {(admin) => {
+        const caps = getAdminCapabilities(admin.permissions);
+        return (
         <AdminShell admin={admin} title="Blog">
-          <BlogAdminTabs />
+          <BlogAdminTabs blogWrite={caps.blogWrite} blogDelete={caps.blogDelete} />
         </AdminShell>
-      )}
+        );
+      }}
     </AdminGuard>
   );
 }

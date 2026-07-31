@@ -56,7 +56,13 @@ const EMPTY = {
   detailSpecs: [] as ProductSpec[],
 };
 
-export default function ProductFormPage({ productId }: { productId?: string }) {
+export default function ProductFormPage({
+  productId,
+  readOnly = false,
+}: {
+  productId?: string;
+  readOnly?: boolean;
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY);
@@ -222,7 +228,11 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
   return (
     <div className="admin-panel">
       <div className="admin-panel__body">
-        <div className="admin-form-grid">
+        <fieldset
+          disabled={readOnly}
+          className="admin-form-grid"
+          style={{ border: "none", padding: 0, margin: 0, minWidth: 0 }}
+        >
           <div className="admin-form-group">
             <label htmlFor="product-form-name">Name *</label>
             <input id="product-form-name" className="admin-input" style={{ width: "100%" }} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
@@ -443,12 +453,14 @@ export default function ProductFormPage({ productId }: { productId?: string }) {
               onChange={(guitarSpecs) => setForm({ ...form, guitarSpecs })}
             />
           ) : null}
-        </div>
+        </fieldset>
         {error ? <p className="admin-form-error">{error}</p> : null}
         <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>
-          <button type="button" className="admin-btn admin-btn--primary" disabled={saveMutation.isPending} onClick={() => saveMutation.mutate()}>
-            {saveMutation.isPending ? "Saving…" : productId ? "Update Product" : "Create Product"}
-          </button>
+          {!readOnly ? (
+            <button type="button" className="admin-btn admin-btn--primary" disabled={saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+              {saveMutation.isPending ? "Saving…" : productId ? "Update Product" : "Create Product"}
+            </button>
+          ) : null}
           <button type="button" className="admin-btn admin-btn--secondary" onClick={() => router.push(ROUTES.adminProducts)}>Cancel</button>
         </div>
       </div>

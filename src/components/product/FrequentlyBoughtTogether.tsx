@@ -81,13 +81,25 @@ export default function FrequentlyBoughtTogether({
     Math.round(subtotal * (1 - bundle.discountPercent / 100) * 100) / 100;
   const savings = Math.round((subtotal - bundlePrice) * 100) / 100;
 
+  const discountFactor =
+    subtotal > 0 && savings > 0 ? bundlePrice / subtotal : 1;
+
   function addBundle() {
     selectedProducts.forEach((p) => {
       const qty = quantities[p.id] ?? 1;
+      const unitPrice =
+        discountFactor < 1
+          ? Math.round(p.price * discountFactor * 100) / 100
+          : p.price;
+      const lineProduct =
+        unitPrice < p.price
+          ? { ...p, price: unitPrice, originalPrice: p.price }
+          : p;
+
       if (p.id === mainLine.id) {
-        addItem(mainLine, qty, mainVariant);
+        addItem(lineProduct, qty, mainVariant);
       } else {
-        addItem(p, qty);
+        addItem(lineProduct, qty);
       }
     });
     openDrawer();

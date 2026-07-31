@@ -45,9 +45,13 @@ function fromDatetimeLocal(value: string): string | null {
 
 interface BlogPostFormPageProps {
   postId?: string;
+  readOnly?: boolean;
 }
 
-export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
+export default function BlogPostFormPage({
+  postId,
+  readOnly = false,
+}: BlogPostFormPageProps) {
   const router = useRouter();
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +131,16 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
   return (
     <div className="admin-panel">
       <div className="admin-panel__body">
-        <div className="admin-form-grid">
+        {readOnly ? (
+          <p style={{ margin: "0 0 1rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+            View-only — you do not have permission to edit blog posts.
+          </p>
+        ) : null}
+        <fieldset
+          disabled={readOnly}
+          className="admin-form-grid"
+          style={{ border: "none", padding: 0, margin: 0, minWidth: 0 }}
+        >
           <div className="admin-form-group admin-form-grid--full">
             <label htmlFor="blog-form-title">Title *</label>
             <input
@@ -199,6 +212,7 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             <BlogCoverImageUpload
               value={form.coverImage}
               onChange={(coverImage) => setForm({ ...form, coverImage })}
+              disabled={readOnly}
             />
           </div>
           <div className="admin-form-group admin-form-grid--full">
@@ -206,6 +220,7 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
             <TipTapEditor
               value={form.content}
               onChange={(content) => setForm({ ...form, content })}
+              readOnly={readOnly}
             />
           </div>
           <div className="admin-form-group">
@@ -295,17 +310,19 @@ export default function BlogPostFormPage({ postId }: BlogPostFormPageProps) {
               placeholder={form.excerpt || "Defaults to excerpt"}
             />
           </div>
-        </div>
+        </fieldset>
         {error ? <p className="admin-form-error">{error}</p> : null}
         <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>
-          <button
-            type="button"
-            className="admin-btn admin-btn--primary"
-            disabled={saveMutation.isPending}
-            onClick={() => saveMutation.mutate()}
-          >
-            {saveMutation.isPending ? "Saving…" : postId ? "Update Post" : "Create Post"}
-          </button>
+          {!readOnly ? (
+            <button
+              type="button"
+              className="admin-btn admin-btn--primary"
+              disabled={saveMutation.isPending}
+              onClick={() => saveMutation.mutate()}
+            >
+              {saveMutation.isPending ? "Saving…" : postId ? "Update Post" : "Create Post"}
+            </button>
+          ) : null}
           <button
             type="button"
             className="admin-btn admin-btn--secondary"

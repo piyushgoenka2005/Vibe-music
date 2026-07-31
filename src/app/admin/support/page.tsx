@@ -7,6 +7,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
 import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
+import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
 import { adminOrderPath } from "@/lib/routes";
 import type {
   SupportTicket,
@@ -27,7 +28,7 @@ interface ContactMessage {
   createdAt: string;
 }
 
-function SupportTicketsPanel() {
+function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("");
   const [selected, setSelected] = useState<SupportTicket | null>(null);
@@ -166,60 +167,86 @@ function SupportTicketsPanel() {
                 </p>
               ) : null}
               <p style={{ marginTop: "1rem", whiteSpace: "pre-wrap" }}>{selected.message}</p>
-              <div className="admin-form-group" style={{ marginTop: "1rem" }}>
-                <label>Status</label>
-                <select
-                  className="admin-select"
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value as SupportTicketStatus)}
-                >
-                  <option value="open">Open</option>
-                  <option value="in_progress">In progress</option>
-                  <option value="waiting_customer">Waiting customer</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-              <div className="admin-form-group">
-                <label>Priority</label>
-                <select
-                  className="admin-select"
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value as SupportTicketPriority)}
-                >
-                  <option value="low">Low</option>
-                  <option value="normal">Normal</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-              <div className="admin-form-group">
-                <label>Assigned to</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={assignedTo}
-                  onChange={(e) => setAssignedTo(e.target.value)}
-                  placeholder="Admin email or name"
-                />
-              </div>
-              <div className="admin-form-group">
-                <label>Admin note</label>
-                <textarea
-                  className="admin-textarea"
-                  value={adminNote}
-                  onChange={(e) => setAdminNote(e.target.value)}
-                />
-              </div>
-              <button
-                type="button"
-                className="admin-btn admin-btn--primary"
-                disabled={updateMutation.isPending}
-                onClick={() => updateMutation.mutate()}
-              >
-                {updateMutation.isPending ? "Saving…" : "Update ticket"}
-              </button>
-              <MutationError error={updateMutation.isError ? updateMutation.error : null} />
+              {canWrite ? (
+                <>
+                  <div className="admin-form-group" style={{ marginTop: "1rem" }}>
+                    <label>Status</label>
+                    <select
+                      className="admin-select"
+                      value={newStatus}
+                      onChange={(e) => setNewStatus(e.target.value as SupportTicketStatus)}
+                    >
+                      <option value="open">Open</option>
+                      <option value="in_progress">In progress</option>
+                      <option value="waiting_customer">Waiting customer</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Priority</label>
+                    <select
+                      className="admin-select"
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value as SupportTicketPriority)}
+                    >
+                      <option value="low">Low</option>
+                      <option value="normal">Normal</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Assigned to</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={assignedTo}
+                      onChange={(e) => setAssignedTo(e.target.value)}
+                      placeholder="Admin email or name"
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Admin note</label>
+                    <textarea
+                      className="admin-textarea"
+                      value={adminNote}
+                      onChange={(e) => setAdminNote(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--primary"
+                    disabled={updateMutation.isPending}
+                    onClick={() => updateMutation.mutate()}
+                  >
+                    {updateMutation.isPending ? "Saving…" : "Update ticket"}
+                  </button>
+                  <MutationError error={updateMutation.isError ? updateMutation.error : null} />
+                </>
+              ) : (
+                <>
+                  <p style={{ marginTop: "1rem" }}>
+                    <strong>Status:</strong> {selected.status}
+                  </p>
+                  <p>
+                    <strong>Priority:</strong> {selected.priority ?? "normal"}
+                  </p>
+                  {selected.assignedTo ? (
+                    <p>
+                      <strong>Assigned to:</strong> {selected.assignedTo}
+                    </p>
+                  ) : null}
+                  {selected.adminNote ? (
+                    <p style={{ marginTop: "0.75rem", whiteSpace: "pre-wrap" }}>
+                      <strong>Admin note:</strong> {selected.adminNote}
+                    </p>
+                  ) : null}
+                  <p style={{ marginTop: "1rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+                    View-only — you need orders:write to update tickets.
+                  </p>
+                </>
+              )}
             </>
           )}
         </div>
@@ -228,7 +255,7 @@ function SupportTicketsPanel() {
   );
 }
 
-function ContactMessagesPanel() {
+function ContactMessagesPanel({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("");
   const [selected, setSelected] = useState<ContactMessage | null>(null);
@@ -313,7 +340,7 @@ function ContactMessagesPanel() {
                     style={{ cursor: "pointer" }}
                     onClick={() => {
                       setSelected(message);
-                      if (message.status === "new") {
+                      if (canWrite && message.status === "new") {
                         statusMutation.mutate({ message, status: "read" });
                       }
                     }}
@@ -363,7 +390,7 @@ function ContactMessagesPanel() {
                 >
                   Reply by email
                 </a>
-                {selected.status === "read" ? (
+                {canWrite && selected.status === "read" ? (
                   <button
                     type="button"
                     className="admin-btn admin-btn--secondary"
@@ -372,7 +399,8 @@ function ContactMessagesPanel() {
                   >
                     Mark unread
                   </button>
-                ) : (
+                ) : null}
+                {canWrite && selected.status === "new" ? (
                   <button
                     type="button"
                     className="admin-btn admin-btn--secondary"
@@ -381,8 +409,13 @@ function ContactMessagesPanel() {
                   >
                     Mark read
                   </button>
-                )}
+                ) : null}
               </div>
+              {!canWrite ? (
+                <p style={{ marginTop: "0.75rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+                  View-only — you need orders:write to change message status.
+                </p>
+              ) : null}
               <MutationError error={statusMutation.isError ? statusMutation.error : null} />
             </>
           )}
@@ -392,7 +425,7 @@ function ContactMessagesPanel() {
   );
 }
 
-function SupportContent() {
+function SupportContent({ canWrite }: { canWrite: boolean }) {
   const [tab, setTab] = useState<InboxTab>("tickets");
 
   return (
@@ -413,7 +446,11 @@ function SupportContent() {
           Contact form
         </button>
       </div>
-      {tab === "tickets" ? <SupportTicketsPanel /> : <ContactMessagesPanel />}
+      {tab === "tickets" ? (
+        <SupportTicketsPanel canWrite={canWrite} />
+      ) : (
+        <ContactMessagesPanel canWrite={canWrite} />
+      )}
     </div>
   );
 }
@@ -421,15 +458,18 @@ function SupportContent() {
 export default function AdminSupportPage() {
   return (
     <AdminGuard>
-      {(admin) => (
-        <AdminShell admin={admin} title="Support inbox">
-          {admin.permissions.includes("orders:read") ? (
-            <SupportContent />
-          ) : (
-            <EmptyState message="Insufficient permissions." />
-          )}
-        </AdminShell>
-      )}
+      {(admin) => {
+        const caps = getAdminCapabilities(admin.permissions);
+        return (
+          <AdminShell admin={admin} title="Support inbox">
+            {admin.permissions.includes("orders:read") ? (
+              <SupportContent canWrite={caps.ordersWrite} />
+            ) : (
+              <EmptyState message="Insufficient permissions." />
+            )}
+          </AdminShell>
+        );
+      }}
     </AdminGuard>
   );
 }

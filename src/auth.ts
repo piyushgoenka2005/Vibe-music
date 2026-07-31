@@ -15,7 +15,6 @@ import {
   findUserByEmail,
 } from "@/lib/server/userService";
 import { isGoogleAuthConfigured, getGoogleAuthCredentials } from "@/lib/auth/google-config";
-import { linkGuestOrdersToUser } from "@/lib/server/orderService";
 import { logAuditEvent } from "@/lib/server/auditLog";
 import { loginSchema } from "@/lib/validations/auth";
 import { getAdminSession } from "@/lib/server/adminService";
@@ -170,15 +169,7 @@ export const authConfig = {
             }
           }
 
-          if (user.id && user.email) {
-            void linkGuestOrdersToUser(user.id, user.email).catch(() => undefined);
-          }
-
           return true;
-        }
-
-        if (user.id && user.email) {
-          void linkGuestOrdersToUser(user.id, user.email).catch(() => undefined);
         }
 
         return true;

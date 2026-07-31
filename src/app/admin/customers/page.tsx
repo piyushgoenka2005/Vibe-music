@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -39,7 +40,9 @@ async function fetchCustomers(params: { search: string; cursor?: string }) {
 
 function CustomersContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search")?.trim() ?? "";
+  const [search, setSearch] = useState(initialSearch);
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
     useAdminCursorPagination();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -357,9 +360,11 @@ export default function AdminCustomersPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Customers">
-          <CustomersContent
-            canWrite={admin.permissions.includes("customers:write")}
-          />
+          <Suspense fallback={<LoadingState message="Loading customers…" />}>
+            <CustomersContent
+              canWrite={admin.permissions.includes("customers:write")}
+            />
+          </Suspense>
         </AdminShell>
       )}
     </AdminGuard>

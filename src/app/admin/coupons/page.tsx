@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatusBadge, LoadingState, EmptyState } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { Coupon } from "@/types/admin";
 
 function CouponsContent({
@@ -27,7 +28,7 @@ function CouponsContent({
   });
   const [editId, setEditId] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-coupons"],
     queryFn: async () => {
       const res = await fetch("/api/admin/coupons");
@@ -64,6 +65,15 @@ function CouponsContent({
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load coupons."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   return (
     <>

@@ -65,8 +65,8 @@ const NAV_ITEMS = [
   { href: ROUTES.adminAuditLogs, label: "Audit logs", icon: ScrollText, permission: "audit:read" },
   { href: ROUTES.adminUsers, label: "Admin users", icon: UserCog, permission: "admins:read" },
   { href: ROUTES.adminRoles, label: "Roles", icon: Shield, permission: "admins:read" },
-  { href: ROUTES.adminCms, label: "CMS", icon: FilePenLine, permission: "settings:write" },
-  { href: ROUTES.adminShipping, label: "Shipping zones", icon: Truck, permission: "settings:write" },
+  { href: ROUTES.adminCms, label: "CMS", icon: FilePenLine, permission: "settings:read" },
+  { href: ROUTES.adminShipping, label: "Shipping zones", icon: Truck, permission: "settings:read" },
   { href: ROUTES.adminSettings, label: "Settings", icon: Settings, permission: "settings:read" },
   { href: ROUTES.adminBlog, label: "Blog", icon: FileText, permission: "blog:read" },
 ] as const;

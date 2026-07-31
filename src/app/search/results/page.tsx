@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import SearchResultsPage from "@/components/search/SearchResultsPage";
 import {
   getSearchResults,
   SEARCH_MIN_QUERY_LENGTH,
 } from "@/lib/server/searchResultsService";
 import type { SearchResultsData } from "@/types/search";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: true },
+  alternates: { canonical: "/search" },
+};
 
 interface SearchResultsRouteProps {
   searchParams: Promise<{

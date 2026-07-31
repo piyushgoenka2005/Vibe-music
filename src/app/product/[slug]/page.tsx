@@ -28,9 +28,17 @@ export async function generateMetadata({
   return {
     title: `${product.name} | Vibe Music`,
     description: product.description?.slice(0, 160) ?? product.name,
+    alternates: { canonical: `/product/${slug}` },
     openGraph: {
       title: product.name,
+      url: `/product/${slug}`,
       images: ogImage ? [{ url: ogImage }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description: product.description?.slice(0, 160) ?? product.name,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }
@@ -48,13 +56,17 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
     notFound();
   }
 
+  const defaultVariant =
+    initialData.product.variants.find((v) => v.availability !== "out-of-stock") ??
+    initialData.product.variants[0];
+
   const heroRaw =
     initialData.product.images?.[0]?.src || initialData.product.image;
   const heroImageUrl = heroRaw
     ? storefrontImageUrl(heroRaw, 1200).src
     : undefined;
 
-  const jsonLd = buildProductJsonLd(initialData.product);
+  const jsonLd = buildProductJsonLd(initialData.product, defaultVariant);
 
   return (
     <main className="storefront-page">

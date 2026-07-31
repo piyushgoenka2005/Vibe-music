@@ -40,3 +40,12 @@ export interface ValidateCouponRequest {
 export interface ValidateCouponResponse {
   result: CouponValidationResult;
 }
+
+/** Public storefront coupon row for PDP offer cards and marketing surfaces. */
+export interface StorefrontCouponOffer {
+  code: string;
+  label: string;
+  type: CouponType;
+  value: number;
+  minOrderAmount?: number;
+}

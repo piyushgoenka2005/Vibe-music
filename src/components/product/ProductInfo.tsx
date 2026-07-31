@@ -8,6 +8,7 @@ import {
 } from "@/lib/variants";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
+import CompareButton from "@/components/compare/CompareButton";
 import ProductShareButton from "./ProductShareButton";
 import ProductPriceOffers from "./ProductPriceOffers";
 import ProductPurchaseAssurances from "./ProductPurchaseAssurances";
@@ -90,6 +91,7 @@ export default function ProductInfo({
             showLabel
             className="pdp-meta-share"
           />
+          <CompareButton product={product} className="pdp-meta-compare" size={16} />
           <span className="pdp-meta-separator" aria-hidden="true">|</span>
           <span className="pdp-sku">Item ID: {selectedVariant.sku}</span>
         </div>

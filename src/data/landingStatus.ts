@@ -44,6 +44,7 @@ export const LANDING_TRUST_ITEMS = [
     desc: "Pan-India shipping on in-stock gear",
     status: "Active",
     tone: "success" as StatusTone,
+    href: ROUTES.page("shipping"),
   },
   {
     icon: "shield" as const,
@@ -51,6 +52,7 @@ export const LANDING_TRUST_ITEMS = [
     desc: "Authorized brands, verified stock",
     status: "Verified",
     tone: "success" as StatusTone,
+    href: ROUTES.page("terms"),
   },
   {
     icon: "return" as const,
@@ -58,6 +60,7 @@ export const LANDING_TRUST_ITEMS = [
     desc: "Hassle-free support when you need it",
     status: "7-day window",
     tone: "info" as StatusTone,
+    href: ROUTES.page("returns"),
   },
   {
     icon: "headphones" as const,
@@ -65,6 +68,7 @@ export const LANDING_TRUST_ITEMS = [
     desc: "Real musicians on our support team",
     status: "Email support",
     tone: "info" as StatusTone,
+    href: ROUTES.contact,
   },
 ] as const;
 

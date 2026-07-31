@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   HOMEPAGE_BANNER_ROTATION_MS,
   HOMEPAGE_BANNER_SLIDES,
+  type HomepageBannerSlide,
 } from "@/data/homepageBannerHero";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { useIsClient } from "@/hooks/useIsClient";
@@ -21,12 +22,18 @@ function isSplashCovering(): boolean {
   );
 }
 
-export default function HomepageBannerHero() {
+interface HomepageBannerHeroProps {
+  slides?: HomepageBannerSlide[];
+}
+
+export default function HomepageBannerHero({
+  slides = HOMEPAGE_BANNER_SLIDES,
+}: HomepageBannerHeroProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const ready = useIsClient();
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const reduceMotion = useHydrationSafeReducedMotion();
-  const slideCount = HOMEPAGE_BANNER_SLIDES.length;
+  const slideCount = slides.length;
 
   const goTo = useCallback(
     (index: number) => {
@@ -101,7 +108,7 @@ export default function HomepageBannerHero() {
           setTouchStartX(event.touches[0]?.clientX ?? null);
         }}
       >
-        {HOMEPAGE_BANNER_SLIDES.map((slide, index) => {
+        {slides.map((slide, index) => {
           const isActive = index === activeIndex;
           return (
             <Link

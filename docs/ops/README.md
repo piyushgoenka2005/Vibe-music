@@ -11,8 +11,10 @@ Current production runbooks (VPS + PostgreSQL + Auth.js + **Razorpay-only paymen
 
 | Guide | Purpose |
 |-------|---------|
+| [DEPLOY_READY.md](./DEPLOY_READY.md) | **Start here** — end-to-end deploy + smoke + cron |
 | [GO_LIVE.md](./GO_LIVE.md) | Short production secrets + verify checklist |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Pre-deploy checklist, env vars, CDN, backups, smoke tests |
+| [GOOGLE_SEARCH_CONSOLE.md](./GOOGLE_SEARCH_CONSOLE.md) | GSC verification token + sitemap submit |
 | [POSTGRESQL.md](./POSTGRESQL.md) | Database install, migrations, local Docker |
 | [SMTP.md](./SMTP.md) | Self-hosted mail + Resend SMTP fallback |
 | [VPS-SETUP.md](./VPS-SETUP.md) | Server bootstrap, nginx, PM2 |

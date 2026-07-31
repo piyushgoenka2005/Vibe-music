@@ -49,11 +49,15 @@ npx playwright install chromium
 
 ## 4. Verify after deploy
 
-1. `GET /api/health` → `database: ok` (200)
-2. Admin → **Settings** → **Production integrations** matrix (all required = Configured)
-3. Checkout: online pay appears only when Razorpay keys are live
-4. Password reset + place a test order → email arrives
-5. `npm run verify:integrations` with `VERIFY_BASE_URL` pointed at production
+1. `bash deploy/post-deploy-smoke.sh` (and `BASE_URL=https://vibemusic.in bash deploy/post-deploy-smoke.sh`)
+2. `GET /api/health` → `database: ok` (200)
+3. `GET /api/coupons/active` → 200 `{ coupons: [...] }`
+4. Admin → **Settings** → **Production integrations** matrix (all required = Configured)
+5. Checkout: online pay appears only when Razorpay keys are live
+6. Password reset + place a test order → email arrives
+7. `npm run verify:integrations` with `VERIFY_BASE_URL` pointed at production
+
+Full e2e runbook: [DEPLOY_READY.md](./DEPLOY_READY.md).
 
 ## 5. Where status is visible in the app
 

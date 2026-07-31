@@ -49,10 +49,9 @@ ensure_env "HOSTNAME" "127.0.0.1"
 ensure_env "NEXT_PUBLIC_SITE_URL" "https://${DOMAIN}"
 ensure_env "ALLOW_DEMO_PAYMENTS" "false"
 
-if ! grep -q "^FIRESTORE_STARTUP_DEADLINE_MS=" "$ENV_FILE"; then
-  echo "FIRESTORE_STARTUP_DEADLINE_MS=15000" >> "$ENV_FILE"
+if ! grep -q "^ALLOW_DEMO_PAYMENTS=" "$ENV_FILE"; then
+  echo "ALLOW_DEMO_PAYMENTS=false" >> "$ENV_FILE"
 fi
-
 # --- Phase 3: deploy application ---
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
   log "Installing dependencies"

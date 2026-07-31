@@ -6,7 +6,7 @@ import { completeOrderPayment } from "@/lib/server/orderPaymentService";
 import { canAccessOrder } from "@/lib/server/orderAccess";
 import {
   getOrderById,
-  linkGuestOrdersToUser,
+  attachPaidOrderToUser,
 } from "@/lib/server/orderService";
 import {
   enforceMutationSecurity,
@@ -76,8 +76,12 @@ export async function POST(request: Request) {
     }
 
     const sessionUser = await getSessionUser();
-    if (sessionUser && !order.userId) {
-      await linkGuestOrdersToUser(sessionUser.uid, order.email);
+    if (
+      sessionUser?.email &&
+      !order.userId &&
+      sessionUser.email.trim().toLowerCase() === order.email.trim().toLowerCase()
+    ) {
+      await attachPaidOrderToUser(order.id, sessionUser.uid, sessionUser.email);
     }
 
     const demoPaymentId = `demo_${Date.now()}`;

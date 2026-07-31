@@ -46,6 +46,8 @@ Recommended:
 |----------|---------|
 | `CDN_STORAGE_ROOT`, `CDN_PUBLIC_BASE_URL` | Image uploads |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Distributed rate limiting |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `GA_MEASUREMENT_API_SECRET` | Analytics |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Google Search Console HTML-tag ownership |
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Google OAuth (login/register show a clear note if unset) |
 | `SMTP_ADMIN_TO` | Admin alert recipient |
 | `INVOICE_PDF_ENABLED` + `NEXT_PUBLIC_INVOICE_PDF_ENABLED` | Optional PDF downloads (needs Chromium via Playwright/Puppeteer) |
@@ -111,13 +113,21 @@ CDN_PUBLIC_BASE_URL=https://cdn.vibemusic.in
 
 ## Application deploy
 
-Preferred one-shot updater on the VPS (pull → `npm ci` → migrate → type-check → build → PM2 reload):
+**End-to-end runbook:** [DEPLOY_READY.md](./DEPLOY_READY.md)
+
+Preferred one-shot updater on the VPS (pull → `npm ci` → migrate → type-check → build → PM2 reload → smoke):
 
 ```bash
 cd ~/Vibe-music
 bash deploy/update.sh
 # Optional after catalog JSON changes:
 # SEED_CATALOG=1 bash deploy/update.sh
+```
+
+Full ops close-out (secrets + backups + reservation sweeper + smoke):
+
+```bash
+bash deploy/complete-ops-gaps.sh
 ```
 
 Manual equivalent:
@@ -127,16 +137,19 @@ npm ci
 npm run db:migrate
 ALLOW_POSTGRES_DURING_BUILD=true npm run build
 pm2 restart vibe --update-env
+bash deploy/post-deploy-smoke.sh
 ```
 
 - [ ] Build completes without errors
 - [ ] `/api/health` returns `database: ok`
+- [ ] `/api/coupons/active` returns 200
 - [ ] Login (credentials + Google), register, and password reset work
 - [ ] Checkout with **Razorpay** completes end-to-end (webhook updates payment status)
 - [ ] Order confirmation email arrives
 - [ ] Admin product image upload writes to CDN
 - [ ] Homepage, catalog, **PostgreSQL search** (`/api/search`), and blog load correctly
 - [ ] COD remains disabled unless intentionally enabled via `COD_ENABLED=true`
+- [ ] Reservation sweeper cron installed (`bash deploy/install-reservation-sweeper.sh`)
 
 ## Post-deploy monitoring
 

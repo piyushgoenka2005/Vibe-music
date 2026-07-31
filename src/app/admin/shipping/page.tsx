@@ -21,7 +21,7 @@ function emptyZone(): Omit<ShippingZone, "createdAt" | "updatedAt"> {
   };
 }
 
-function ShippingContent() {
+function ShippingContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<ShippingZone | null>(null);
   const [draft, setDraft] = useState<Omit<ShippingZone, "createdAt" | "updatedAt">>(
@@ -93,16 +93,18 @@ function ShippingContent() {
       </div>
       <div className="admin-panel">
         <div className="admin-toolbar">
-          <button
-            type="button"
-            className="admin-btn admin-btn--secondary"
-            onClick={() => {
-              setSelected(null);
-              setDraft(emptyZone());
-            }}
-          >
-            New zone
-          </button>
+          {canWrite ? (
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              onClick={() => {
+                setSelected(null);
+                setDraft(emptyZone());
+              }}
+            >
+              New zone
+            </button>
+          ) : null}
         </div>
         {zones.length === 0 ? (
           <EmptyState message="No shipping zones configured." />
@@ -140,10 +142,29 @@ function ShippingContent() {
       <div className="admin-panel">
         <div className="admin-panel__header">
           <h2 className="admin-panel__title">
-            {selected ? "Edit zone" : "Create zone"}
+            {selected
+              ? canWrite
+                ? "Edit zone"
+                : "View zone"
+              : canWrite
+                ? "Create zone"
+                : "Zone details"}
           </h2>
         </div>
         <div className="admin-panel__body">
+          {!canWrite && !selected ? (
+            <EmptyState message="Select a zone to view." />
+          ) : (
+            <>
+          {!canWrite ? (
+            <p style={{ margin: "0 0 1rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+              View-only — you need settings:write to edit shipping zones. Checkout still forces free shipping (₹0).
+            </p>
+          ) : null}
+          <fieldset
+            disabled={!canWrite}
+            style={{ border: "none", padding: 0, margin: 0, minWidth: 0 }}
+          >
           <div className="admin-form-group">
             <label>Name</label>
             <input
@@ -254,15 +275,17 @@ function ShippingContent() {
             Active
           </label>
           <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-            <button
-              type="button"
-              className="admin-btn admin-btn--primary"
-              disabled={saveMutation.isPending || !draft.name}
-              onClick={() => saveMutation.mutate()}
-            >
-              {saveMutation.isPending ? "Saving…" : "Save zone"}
-            </button>
-            {selected ? (
+            {canWrite ? (
+              <button
+                type="button"
+                className="admin-btn admin-btn--primary"
+                disabled={saveMutation.isPending || !draft.name}
+                onClick={() => saveMutation.mutate()}
+              >
+                {saveMutation.isPending ? "Saving…" : "Save zone"}
+              </button>
+            ) : null}
+            {canWrite && selected ? (
               <button
                 type="button"
                 className="admin-btn admin-btn--danger"
@@ -273,6 +296,9 @@ function ShippingContent() {
               </button>
             ) : null}
           </div>
+          </fieldset>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -282,15 +308,18 @@ function ShippingContent() {
 export default function AdminShippingPage() {
   return (
     <AdminGuard>
-      {(admin) => (
-        <AdminShell admin={admin} title="Shipping zones">
-          {admin.permissions.includes("settings:write") ? (
-            <ShippingContent />
-          ) : (
-            <EmptyState message="Insufficient permissions." />
-          )}
-        </AdminShell>
-      )}
+      {(admin) => {
+        const canWrite = admin.permissions.includes("settings:write");
+        return (
+          <AdminShell admin={admin} title="Shipping zones">
+            {admin.permissions.includes("settings:read") || canWrite ? (
+              <ShippingContent canWrite={canWrite} />
+            ) : (
+              <EmptyState message="Insufficient permissions." />
+            )}
+          </AdminShell>
+        );
+      }}
     </AdminGuard>
   );
 }

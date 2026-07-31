@@ -8,7 +8,7 @@ import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/
 import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import type { ProductQuestion, ProductQuestionStatus } from "@/types/productQuestion";
 
-function QuestionsContent() {
+function QuestionsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("pending");
   const [selected, setSelected] = useState<ProductQuestion | null>(null);
@@ -141,6 +141,8 @@ function QuestionsContent() {
               <p>
                 <strong>Question:</strong> {selected.question}
               </p>
+              {reviewsWrite ? (
+              <>
               <div className="admin-form-group" style={{ marginTop: "1rem" }}>
                 <label>Answer</label>
                 <textarea
@@ -186,6 +188,8 @@ function QuestionsContent() {
               >
                 Delete
               </button>
+              </>
+              ) : null}
             </>
           )}
         </div>
@@ -194,14 +198,19 @@ function QuestionsContent() {
   );
 }
 
+import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
+
 export default function AdminQuestionsPage() {
   return (
     <AdminGuard>
-      {(admin) => (
+      {(admin) => {
+        const caps = getAdminCapabilities(admin.permissions);
+        return (
         <AdminShell admin={admin} title="Product Q&A">
-          <QuestionsContent />
+          <QuestionsContent reviewsWrite={caps.reviewsWrite} />
         </AdminShell>
-      )}
+        );
+      }}
     </AdminGuard>
   );
 }

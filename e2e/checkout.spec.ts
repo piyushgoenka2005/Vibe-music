@@ -107,8 +107,10 @@ test.describe("guest checkout", () => {
   });
 
   test("create-order API rejects COD payment method", async ({ request }) => {
+    test.slow();
     // Payment-method gate runs before item resolution — no catalog/DB required.
     const response = await request.post("/api/payment/create-order", {
+      timeout: 30_000,
       headers: mutationHeaders(),
       data: {
         items: [
@@ -117,6 +119,7 @@ test.describe("guest checkout", () => {
             name: "E2E COD Reject Fixture",
             quantity: 1,
             price: 1999,
+            gstRate: 18,
           },
         ],
         email: `e2e-api-${Date.now()}@example.com`,

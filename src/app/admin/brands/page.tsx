@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { Brand } from "@/types/brand";
 
 function BrandsContent({
@@ -19,7 +20,7 @@ function BrandsContent({
   const [form, setForm] = useState({ name: "", slug: "" });
   const [editId, setEditId] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-brands"],
     queryFn: async () => {
       const res = await fetch("/api/admin/brands");
@@ -55,6 +56,15 @@ function BrandsContent({
   });
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load brands."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const brands = data?.brands ?? [];
 

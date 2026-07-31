@@ -21,16 +21,16 @@ export default function LoginPage() {
 
   return (
     <AuthPageLayout>
-      <GuestOnlyRoute>
-        <AuthShell
-          title="Log In"
-          description="Sign in to access your account, orders, and wishlist."
-        >
+      <AuthShell
+        title="Log In"
+        description="Sign in to access your account, orders, and wishlist."
+      >
+        <GuestOnlyRoute>
           <Suspense fallback={null}>
             <LoginForm googleAuthEnabled={googleAuthEnabled} />
           </Suspense>
-        </AuthShell>
-      </GuestOnlyRoute>
+        </GuestOnlyRoute>
+      </AuthShell>
     </AuthPageLayout>
   );
 }

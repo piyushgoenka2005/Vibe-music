@@ -10,7 +10,7 @@ import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import { adminOrderPath } from "@/lib/routes";
 import type { ReturnRequest, ReturnRequestStatus } from "@/types/returnRequest";
 
-function ReturnsContent() {
+function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("");
   const [selected, setSelected] = useState<ReturnRequest | null>(null);
@@ -148,6 +148,8 @@ function ReturnsContent() {
               <p>
                 <strong>Status:</strong> <StatusBadge status={selected.status} />
               </p>
+              {ordersWrite ? (
+              <>
               <div className="admin-form-group" style={{ marginTop: "1rem" }}>
                 <label>Update status</label>
                 <select
@@ -180,6 +182,8 @@ function ReturnsContent() {
                 {updateMutation.isPending ? "Saving…" : "Save changes"}
               </button>
               <MutationError error={updateMutation.isError ? updateMutation.error : null} />
+              </>
+              ) : null}
             </>
           )}
         </div>
@@ -188,14 +192,19 @@ function ReturnsContent() {
   );
 }
 
+import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
+
 export default function AdminReturnsPage() {
   return (
     <AdminGuard>
-      {(admin) => (
+      {(admin) => {
+        const caps = getAdminCapabilities(admin.permissions);
+        return (
         <AdminShell admin={admin} title="Returns & RMA">
-          <ReturnsContent />
+          <ReturnsContent ordersWrite={caps.ordersWrite} />
         </AdminShell>
-      )}
+        );
+      }}
     </AdminGuard>
   );
 }

@@ -1,7 +1,7 @@
 ﻿import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import "@/styles/homepage-bundle.css";
-import HomepageBannerHero from "@/components/home/homepage-banner-hero/HomepageBannerHero";
+import HomepageBannerHeroSection from "@/components/home/homepage-banner-hero/HomepageBannerHeroSection";
 import BrowseCategoryCardsSection from "@/components/home/BrowseCategoryCardsSection";
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
@@ -9,6 +9,7 @@ import HomepageNewArrivalsAsync from "@/components/home/HomepageNewArrivalsAsync
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
 import BigNamesDealsSection from "@/components/home/BigNamesDealsSection";
+import HomepagePromoBanner from "@/components/home/HomepagePromoBanner";
 
 import PremiumHero from "@/components/home/PremiumHero";
 
@@ -61,7 +62,7 @@ export default function HomePage() {
     <main className="premium-home">
       <h1 className="visually-hidden">Vibe Music — Musical Instruments & Pro Audio</h1>
 
-      <HomepageBannerHero />
+      <HomepageBannerHeroSection />
       <PremiumHero />
       <HomepageStats />
 
@@ -72,6 +73,8 @@ export default function HomePage() {
       <Suspense fallback={<HomepageSectionsSkeleton />}>
         <BigNamesDealsSection />
       </Suspense>
+
+      <HomepagePromoBanner />
 
       <WhyShopSection />
       <BrowseCategoryCardsSection />

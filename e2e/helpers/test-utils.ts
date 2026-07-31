@@ -65,7 +65,7 @@ async function seedGuestCartViaStorage(
       "vibe-cart-guest",
       JSON.stringify({
         state: { items: [item], couponCode: null, appliedCoupon: null },
-        version: 3,
+        version: 5,
       })
     );
   }, product);

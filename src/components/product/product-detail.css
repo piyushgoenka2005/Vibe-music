@@ -1048,6 +1048,21 @@
   height: 14px;
 }
 
+.pdp-meta-compare.compare-btn {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--pdp-border, #e5e5e5);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+}
+
+.pdp-meta-compare.compare-btn:hover,
+.pdp-meta-compare.compare-btn:focus-visible {
+  border-color: var(--brand-primary, #c41e3a);
+  color: var(--brand-primary, #c41e3a);
+}
+
 .pdp-meta-separator {
   color: var(--pdp-grey10);
   font-size: 14px;

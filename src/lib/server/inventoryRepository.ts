@@ -1,5 +1,6 @@
 import "server-only";
 
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import { invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
@@ -152,6 +153,30 @@ async function loadProductRows(
     }
   }
   return map;
+}
+
+/**
+ * Serialize every order-driven inventory transition.  The payment verifier and
+ * Razorpay webhook can legitimately arrive at the same time; locking the order
+ * row before inspecting its state makes the inventory transition idempotent.
+ * Product locks then prevent a concurrent reservation from calculating from a
+ * stale stock snapshot.
+ */
+async function lockOrderAndProducts(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  orderId: string,
+  productIds: string[]
+): Promise<void> {
+  await tx.$queryRaw`
+    SELECT id FROM orders WHERE id = ${orderId} FOR UPDATE
+  `;
+
+  const uniqueProductIds = [...new Set(productIds.filter(Boolean))];
+  if (uniqueProductIds.length > 0) {
+    await tx.$queryRaw`
+      SELECT id FROM products WHERE id IN (${Prisma.join(uniqueProductIds)}) FOR UPDATE
+    `;
+  }
 }
 
 async function applyVariantStockChanges(
@@ -308,6 +333,11 @@ export async function reserveStockForOrder(
   const variantItems = items.filter((item) => item.variantId);
 
   await prisma.$transaction(async (tx) => {
+    await lockOrderAndProducts(
+      tx,
+      orderId,
+      items.map((item) => item.productId)
+    );
     const order = await tx.order.findUnique({ where: { id: orderId } });
     if (!order) throw new Error("Order not found");
 
@@ -418,6 +448,11 @@ export async function fulfillReservedStockForOrder(
   const variantItems = items.filter((item) => item.variantId);
 
   await prisma.$transaction(async (tx) => {
+    await lockOrderAndProducts(
+      tx,
+      orderId,
+      items.map((item) => item.productId)
+    );
     const order = await tx.order.findUnique({ where: { id: orderId } });
     if (!order) throw new Error("Order not found");
 
@@ -497,6 +532,11 @@ export async function reserveAndFulfillStockForOrder(
   items: OrderInventoryLine[]
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
+    await lockOrderAndProducts(
+      tx,
+      orderId,
+      items.map((item) => item.productId)
+    );
     const order = await tx.order.findUnique({ where: { id: orderId } });
     if (!order) throw new Error("Order not found");
 
@@ -610,6 +650,11 @@ export async function releaseReservedStockForOrder(
   const variantItems = items.filter((item) => item.variantId);
 
   await prisma.$transaction(async (tx) => {
+    await lockOrderAndProducts(
+      tx,
+      orderId,
+      items.map((item) => item.productId)
+    );
     const order = await tx.order.findUnique({ where: { id: orderId } });
     if (!order) throw new Error("Order not found");
 
@@ -683,6 +728,11 @@ export async function restoreStockForCancelledOrder(
   const variantItems = items.filter((item) => item.variantId);
 
   await prisma.$transaction(async (tx) => {
+    await lockOrderAndProducts(
+      tx,
+      orderId,
+      items.map((item) => item.productId)
+    );
     const order = await tx.order.findUnique({ where: { id: orderId } });
     if (!order) throw new Error("Order not found");
 

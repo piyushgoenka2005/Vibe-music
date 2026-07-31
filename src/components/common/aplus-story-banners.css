@@ -10,6 +10,10 @@
   line-height: 0;
 }
 
+.aplus-story__link {
+  display: block;
+}
+
 .aplus-story__image {
   display: block;
   width: 100%;

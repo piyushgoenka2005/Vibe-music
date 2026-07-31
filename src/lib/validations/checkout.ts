@@ -37,7 +37,9 @@ export const createOrderSchema = z.object({
   couponCode: z.string().trim().max(64).nullable().optional(),
   couponDiscount: z.number().nonnegative().optional(),
   shippingAddress: checkoutShippingAddressSchema,
-  paymentMethod: z.literal("razorpay"),
+  paymentMethod: z.literal("razorpay", {
+    message: "Only Razorpay online payment is supported",
+  }),
   buyerState: z.string().trim().max(100).optional(),
   shippingMethod: z.enum(["standard", "express", "overnight"]).optional(),
 });

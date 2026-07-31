@@ -59,7 +59,8 @@ export default defineConfig({
   webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER
     ? undefined
     : {
-        command: "npm run dev",
+        // Webpack avoids intermittent Turbopack panics that abort the E2E webServer.
+        command: "npx next dev --webpack",
         url: baseURL,
         reuseExistingServer: !isCI,
         timeout: 180_000,

@@ -2,14 +2,19 @@
 # Production update on the VPS.
 # Usage: cd ~/Vibe-music && bash deploy/update.sh
 # Optional: SEED_CATALOG=1 bash deploy/update.sh
+# Optional: SKIP_SMOKE=1 bash deploy/update.sh
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 cd "$APP_DIR"
 
 echo "==> Pulling latest main"
-git fetch origin main
-git pull --ff-only origin main
+if [[ "${SKIP_PULL:-0}" == "1" ]]; then
+  echo "   (SKIP_PULL=1 — already up to date)"
+else
+  git fetch origin main
+  git pull --ff-only origin main
+fi
 
 echo "==> Installing dependencies"
 npm ci
@@ -52,7 +57,13 @@ sleep 3
 curl -sS -o /dev/null -w "localhost:3000 → HTTP %{http_code}\n" http://127.0.0.1:3000/ || true
 curl -sS -o /dev/null -w "api/health → HTTP %{http_code}\n" http://127.0.0.1:3000/api/health || true
 
+if [[ "${SKIP_SMOKE:-0}" != "1" ]]; then
+  echo "==> Post-deploy smoke"
+  bash deploy/post-deploy-smoke.sh
+fi
+
 echo "Update complete."
 if [[ "${SEED_CATALOG:-0}" != "1" ]]; then
   echo "Tip: run SEED_CATALOG=1 bash deploy/update.sh after catalog JSON changes."
 fi
+echo "Tip: install sweeper once with bash deploy/install-reservation-sweeper.sh"

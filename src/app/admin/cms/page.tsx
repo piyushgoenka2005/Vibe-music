@@ -16,7 +16,7 @@ const EMPTY_PAGE: ContentPage = {
   sections: [{ paragraphs: ["Write page content here."] }],
 };
 
-function CmsContent() {
+function CmsContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [draft, setDraft] = useState<ContentPage | null>(null);
@@ -122,20 +122,22 @@ function CmsContent() {
     <div className="admin-grid-2">
       <div className="admin-panel">
         <div className="admin-toolbar">
-          <button
-            type="button"
-            className="admin-btn admin-btn--primary"
-            onClick={() => {
-              setCreating(true);
-              setSelectedSlug(null);
-              setDraft({ ...EMPTY_PAGE });
-              setIsSeeded(false);
-              setHasDbOverride(false);
-              setActionError(null);
-            }}
-          >
-            New page
-          </button>
+          {canWrite ? (
+            <button
+              type="button"
+              className="admin-btn admin-btn--primary"
+              onClick={() => {
+                setCreating(true);
+                setSelectedSlug(null);
+                setDraft({ ...EMPTY_PAGE });
+                setIsSeeded(false);
+                setHasDbOverride(false);
+                setActionError(null);
+              }}
+            >
+              New page
+            </button>
+          ) : null}
         </div>
         {pages.length === 0 ? (
           <EmptyState message="No CMS pages found." />
@@ -176,7 +178,7 @@ function CmsContent() {
       <div className="admin-panel">
         <div className="admin-panel__header">
           <h2 className="admin-panel__title">
-            {creating ? "Create page" : "Edit page"}
+            {creating ? "Create page" : canWrite ? "Edit page" : "View page"}
           </h2>
         </div>
         <div className="admin-panel__body">
@@ -187,9 +189,24 @@ function CmsContent() {
           ) : null}
           {(!creating && (!selectedSlug || pageQuery.isLoading || !draft)) ||
           (creating && !draft) ? (
-            <EmptyState message="Select a page to edit, or create a new one." />
+            <EmptyState
+              message={
+                canWrite
+                  ? "Select a page to edit, or create a new one."
+                  : "Select a page to view."
+              }
+            />
           ) : draft ? (
             <>
+              {!canWrite ? (
+                <p style={{ margin: "0 0 1rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+                  View-only — you need settings:write to edit CMS pages.
+                </p>
+              ) : null}
+              <fieldset
+                disabled={!canWrite}
+                style={{ border: "none", padding: 0, margin: 0, minWidth: 0 }}
+              >
               <div className="admin-form-group">
                 <label>Title</label>
                 <input
@@ -303,19 +320,21 @@ function CmsContent() {
                 Add section
               </button>
               <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                <button
-                  type="button"
-                  className="admin-btn admin-btn--primary"
-                  disabled={saveMutation.isPending}
-                  onClick={() => draft && saveMutation.mutate(draft)}
-                >
-                  {saveMutation.isPending
-                    ? "Saving…"
-                    : creating
-                      ? "Create page"
-                      : "Save page"}
-                </button>
-                {!creating && selectedSlug ? (
+                {canWrite ? (
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--primary"
+                    disabled={saveMutation.isPending}
+                    onClick={() => draft && saveMutation.mutate(draft)}
+                  >
+                    {saveMutation.isPending
+                      ? "Saving…"
+                      : creating
+                        ? "Create page"
+                        : "Save page"}
+                  </button>
+                ) : null}
+                {canWrite && !creating && selectedSlug ? (
                   <button
                     type="button"
                     className="admin-btn admin-btn--danger"
@@ -356,6 +375,7 @@ function CmsContent() {
                   </span>
                 ) : null}
               </div>
+              </fieldset>
             </>
           ) : null}
         </div>
@@ -367,15 +387,18 @@ function CmsContent() {
 export default function AdminCmsPage() {
   return (
     <AdminGuard>
-      {(admin) => (
-        <AdminShell admin={admin} title="CMS pages">
-          {admin.permissions.includes("settings:write") ? (
-            <CmsContent />
-          ) : (
-            <EmptyState message="Insufficient permissions." />
-          )}
-        </AdminShell>
-      )}
+      {(admin) => {
+        const canWrite = admin.permissions.includes("settings:write");
+        return (
+          <AdminShell admin={admin} title="CMS pages">
+            {admin.permissions.includes("settings:read") || canWrite ? (
+              <CmsContent canWrite={canWrite} />
+            ) : (
+              <EmptyState message="Insufficient permissions." />
+            )}
+          </AdminShell>
+        );
+      }}
     </AdminGuard>
   );
 }

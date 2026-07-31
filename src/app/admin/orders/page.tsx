@@ -7,8 +7,9 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminOrderShipment from "@/components/admin/AdminOrderShipment";
 import { StatusBadge, LoadingState, EmptyState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
-import { MutationError } from "@/components/admin/AdminQueryState";
+import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
+import type { AdminCapabilities } from "@/lib/auth/adminCapabilities";
 import type { Order, OrderStatus } from "@/types/order";
 
 async function fetchOrders(params: {
@@ -36,7 +37,10 @@ async function fetchOrderDetail(orderId: string): Promise<Order> {
   return data.order;
 }
 
-function OrdersContent() {
+function OrdersContent({
+  ordersWrite,
+  ordersRefund,
+}: Pick<AdminCapabilities, "ordersWrite" | "ordersRefund">) {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const deepLinkOrderId = searchParams.get("orderId");
@@ -53,7 +57,7 @@ function OrdersContent() {
     if (deepLinkOrderId) setSelectedId(deepLinkOrderId);
   }, [deepLinkOrderId]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-orders", search, status, cursor],
     queryFn: () => fetchOrders({ search, status, cursor }),
   });
@@ -123,6 +127,15 @@ function OrdersContent() {
   }
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load orders."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const orders = data?.orders ?? [];
   const hasMore = data?.hasMore ?? false;
@@ -247,6 +260,8 @@ function OrdersContent() {
                     <li key={item.productId}>{item.name} × {item.quantity}</li>
                   ))}
                 </ul>
+                {ordersWrite ? (
+                <>
                 <div className="admin-form-group" style={{ marginTop: "1rem" }}>
                   <label>Update Status</label>
                   <select className="admin-select" value={newStatus} onChange={(e) => setNewStatus(e.target.value as OrderStatus)}>
@@ -267,7 +282,9 @@ function OrdersContent() {
                   {updateMutation.isPending ? "Updating…" : "Update Order"}
                 </button>
                 <MutationError error={updateMutation.isError ? updateMutation.error : null} />
-                {selected.paymentStatus === "paid" && selected.razorpayPaymentId ? (
+                </>
+                ) : null}
+                {ordersRefund && selected.paymentStatus === "paid" && selected.razorpayPaymentId ? (
                   <button
                     type="button"
                     className="admin-btn admin-btn--danger"
@@ -293,7 +310,7 @@ function OrdersContent() {
                       : "Refund failed"}
                   </p>
                 ) : null}
-                <AdminOrderShipment orderId={selected.id} />
+                {ordersWrite ? <AdminOrderShipment orderId={selected.id} /> : null}
               </>
             )}
           </div>
@@ -303,16 +320,24 @@ function OrdersContent() {
   );
 }
 
+import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
+
 export default function AdminOrdersPage() {
   return (
     <AdminGuard>
-      {(admin) => (
+      {(admin) => {
+        const caps = getAdminCapabilities(admin.permissions);
+        return (
         <AdminShell admin={admin} title="Orders">
           <Suspense fallback={<LoadingState />}>
-            <OrdersContent />
+            <OrdersContent
+              ordersWrite={caps.ordersWrite}
+              ordersRefund={caps.ordersRefund}
+            />
           </Suspense>
         </AdminShell>
-      )}
+        );
+      }}
     </AdminGuard>
   );
 }

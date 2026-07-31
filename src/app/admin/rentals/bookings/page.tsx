@@ -20,7 +20,7 @@ const STATUS_OPTIONS: RentalBookingStatus[] = [
   "late",
 ];
 
-function BookingsAdmin() {
+function BookingsAdmin({ rentalsWrite }: { rentalsWrite: boolean }) {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const deepLinkId = searchParams.get("id");
@@ -214,6 +214,8 @@ function BookingsAdmin() {
                 ))}
               </ul>
 
+              {rentalsWrite ? (
+              <>
               <div className="admin-form-group" style={{ marginTop: "1rem" }}>
                 <label>Update status</label>
                 <select
@@ -311,6 +313,8 @@ function BookingsAdmin() {
               >
                 Cancel booking
               </button>
+              </>
+              ) : null}
             </>
           )}
         </div>
@@ -319,16 +323,21 @@ function BookingsAdmin() {
   );
 }
 
+import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
+
 export default function AdminRentalBookingsPage() {
   return (
     <AdminGuard>
-      {(admin) => (
+      {(admin) => {
+        const caps = getAdminCapabilities(admin.permissions);
+        return (
         <AdminShell admin={admin} title="Rental bookings">
           <Suspense fallback={<LoadingState />}>
-            <BookingsAdmin />
+            <BookingsAdmin rentalsWrite={caps.rentalsWrite} />
           </Suspense>
         </AdminShell>
-      )}
+        );
+      }}
     </AdminGuard>
   );
 }

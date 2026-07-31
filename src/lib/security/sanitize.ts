@@ -1,11 +1,13 @@
 const BLOCKED_TAGS =
-  /<\/?(?:script|iframe|object|embed|form|input|button|link|meta|base|style|svg|math|template|foreignObject)[^>]*>/gi;
+  /<\/?(?:script|iframe|object|embed|form|input|button|link|meta|base|style|svg|math|template|foreignObject|textarea|select|option|noscript|applet|frame|frameset)[^>]*>/gi;
 const EVENT_HANDLERS =
-  /\s(on\w+|formaction|xlink:href|xmlns:xlink)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi;
+  /\s(on\w+|formaction|xlink:href|xmlns:xlink|srcdoc)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi;
 const JS_PROTOCOL =
-  /(?:href|src|xlink:href|action|formaction)\s*=\s*("|')?\s*(?:javascript|vbscript|data):/gi;
+  /(?:href|src|xlink:href|action|formaction|poster)\s*=\s*("|')?\s*(?:javascript|vbscript|data\s*:\s*text\/html):/gi;
 const HTML_COMMENTS = /<!--[\s\S]*?-->/g;
 const NULL_BYTES = /\0/g;
+const DANGEROUS_CSS_EXPRESSION =
+  /expression\s*\(|url\s*\(\s*["']?\s*javascript:/gi;
 
 /**
  * Defensive HTML sanitizer for admin-authored CMS/blog/giveaway HTML.
@@ -14,12 +16,12 @@ const NULL_BYTES = /\0/g;
  */
 export function sanitizeHtml(html: string): string {
   let out = html.replace(NULL_BYTES, "").replace(HTML_COMMENTS, "");
-  // Iteratively strip blocked tags / handlers (nested encodings).
-  for (let i = 0; i < 3; i += 1) {
+  for (let i = 0; i < 5; i += 1) {
     const next = out
       .replace(BLOCKED_TAGS, "")
       .replace(EVENT_HANDLERS, "")
-      .replace(JS_PROTOCOL, "");
+      .replace(JS_PROTOCOL, "")
+      .replace(DANGEROUS_CSS_EXPRESSION, "");
     if (next === out) break;
     out = next;
   }

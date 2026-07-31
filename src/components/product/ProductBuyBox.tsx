@@ -9,6 +9,9 @@ import {
   isPurchasablePrice,
 } from "@/utils/currency";
 import type { ProductDetail, ProductVariant } from "@/types/product";
+import Link from "next/link";
+import { ROUTES } from "@/lib/routes";
+import { useToastStore } from "@/store/toastStore";
 import NotifyMeButton from "./NotifyMeButton";
 
 interface ProductBuyBoxProps {
@@ -110,10 +113,15 @@ export default function ProductBuyBox({
   const [showPinInput, setShowPinInput] = useState(false);
   const [pinLoading, setPinLoading] = useState(false);
   const [showDeliveryDetails, setShowDeliveryDetails] = useState(false);
+  const showToast = useToastStore((s) => s.show);
+  const isOutOfStock = selectedVariant.availability === "out-of-stock";
 
   async function updateLocation() {
     const trimmed = pincode.trim();
-    if (!/^\d{6}$/.test(trimmed)) return;
+    if (!/^\d{6}$/.test(trimmed)) {
+      showToast("Enter a valid 6-digit PIN code", "error");
+      return;
+    }
 
     setPinLoading(true);
     try {
@@ -133,7 +141,11 @@ export default function ProductBuyBox({
           data.zone?.name ? `${trimmed} (${data.zone.name})` : trimmed
         );
         setShowPinInput(false);
+      } else {
+        showToast("Could not verify delivery for this PIN code", "error");
       }
+    } catch {
+      showToast("Could not verify delivery for this PIN code", "error");
     } finally {
       setPinLoading(false);
     }
@@ -289,7 +301,7 @@ export default function ProductBuyBox({
         ) : null}
 
         <div className="pdp-buybox__actions">
-          {isComingSoon ? (
+          {isComingSoon || isOutOfStock ? (
             <NotifyMeButton
               variant="pdp-primary"
               productId={product.id}
@@ -334,7 +346,9 @@ export default function ProductBuyBox({
           <div className="pdp-buybox__meta-row">
             <dt>Payment</dt>
             <dd>
-              <span className="pdp-buybox__link">Secure transaction</span>
+              <Link href={ROUTES.page("terms")} className="pdp-buybox__link">
+                Secure transaction
+              </Link>
             </dd>
           </div>
         </dl>

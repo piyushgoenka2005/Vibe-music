@@ -154,8 +154,18 @@ export default function CartCompleteYourOrder({
   const savings = Math.round((subtotal - bundlePrice) * 100) / 100;
 
   function addBundle() {
+    const multiplier = 1 - discountPercent / 100;
     selectedExtras.forEach((product) => {
-      addItem(product, quantityMap[product.id] ?? 1);
+      const qty = quantityMap[product.id] ?? 1;
+      const unitPrice = Math.round(product.price * multiplier * 100) / 100;
+      addItem(
+        {
+          ...product,
+          price: unitPrice,
+          originalPrice: product.price,
+        },
+        qty
+      );
     });
   }
 

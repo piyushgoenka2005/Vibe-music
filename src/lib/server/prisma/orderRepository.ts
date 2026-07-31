@@ -93,16 +93,34 @@ export async function listGuestOrdersByEmail(email: string): Promise<Order[]> {
 }
 
 export async function linkGuestOrdersToUser(
+  _userId: string,
+  _email: string
+): Promise<number> {
+  // Disabled: do not auto-claim all guest orders by email (IDOR).
+  return 0;
+}
+
+export async function attachPaidOrderToUser(
+  orderId: string,
   userId: string,
   email: string
-): Promise<number> {
+): Promise<boolean> {
   const normalized = email.trim().toLowerCase();
+  if (!normalized || !orderId || !userId) return false;
   const timestamp = new Date().toISOString();
+  const existing = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!existing) return false;
+  if (existing.userId && existing.userId !== userId) return false;
+  if ((existing.email ?? "").trim().toLowerCase() !== normalized) return false;
+
   const result = await prisma.order.updateMany({
-    where: { email: normalized, userId: null },
+    where: {
+      id: orderId,
+      userId: null,
+    },
     data: { userId, isGuestOrder: false, updatedAt: timestamp },
   });
-  return result.count;
+  return result.count > 0;
 }
 
 export async function listOrdersPaginated(options: {

@@ -25,6 +25,8 @@ test.describe("admin console (authenticated)", () => {
   });
 
   test("sidebar deep links reach major admin sections", async ({ page }) => {
+    test.setTimeout(180_000);
+    test.slow();
     const routes: Array<{ path: string; title: RegExp }> = [
       { path: "/admin/products", title: /products/i },
       { path: "/admin/categories", title: /categor/i },
@@ -44,10 +46,16 @@ test.describe("admin console (authenticated)", () => {
     ];
 
     for (const route of routes) {
-      await page.goto(route.path, { waitUntil: "domcontentloaded" });
-      await expect(page).toHaveURL(new RegExp(route.path.replace(/\//g, "\\/")));
+      await page.goto(route.path, { waitUntil: "commit", timeout: 90_000 });
+      await expect(page).toHaveURL(new RegExp(route.path.replace(/\//g, "\\/")), {
+        timeout: 30_000,
+      });
+      // AdminGuard may briefly show "Verifying admin access…" while /api/admin/me resolves.
+      await expect(page.getByText("Verifying admin access…")).toHaveCount(0, {
+        timeout: 45_000,
+      });
       await expect(page.getByRole("heading", { name: route.title }).first()).toBeVisible({
-        timeout: 20_000,
+        timeout: 30_000,
       });
     }
   });

@@ -4,9 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 
 function AuditLogsContent() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-audit-logs"],
     queryFn: async () => {
       const res = await fetch("/api/admin/audit-logs?limit=100");
@@ -26,11 +27,13 @@ function AuditLogsContent() {
   });
 
   if (isLoading) return <LoadingState message="Loading audit logs…" />;
-  if (error) {
+  if (isError) {
     return (
-      <div className="admin-empty" role="alert">
-        Unable to load audit logs.
-      </div>
+      <ErrorState
+        message="Unable to load audit logs."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
     );
   }
 

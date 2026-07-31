@@ -8,7 +8,7 @@ import { StatCard, StatusBadge, LoadingState, EmptyState } from "@/components/ad
 import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import type { InventoryRecord } from "@/types/admin";
 
-function InventoryContent() {
+function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
   const queryClient = useQueryClient();
   const [adjustProduct, setAdjustProduct] = useState<InventoryRecord | null>(null);
   const [newQty, setNewQty] = useState(0);
@@ -88,7 +88,7 @@ function InventoryContent() {
         </div>
       ) : null}
 
-      {adjustProduct ? (
+      {inventoryWrite && adjustProduct ? (
         <div className="admin-panel" style={{ marginBottom: "1rem" }}>
           <div className="admin-panel__header"><h2 className="admin-panel__title">Adjust: {adjustProduct.productName}</h2></div>
           <div className="admin-panel__body">
@@ -135,7 +135,9 @@ function InventoryContent() {
                     <td>{item.lowStockThreshold}</td>
                     <td><StatusBadge status={item.availableQuantity !== undefined && item.availableQuantity <= 0 ? "out-of-stock" : item.availableQuantity !== undefined && item.availableQuantity <= item.lowStockThreshold ? "limited" : "in-stock"} /></td>
                     <td>
+                      {inventoryWrite ? (
                       <button type="button" className="admin-btn admin-btn--ghost" onClick={() => { setAdjustProduct(item); setNewQty(item.stockQuantity); }}>Adjust</button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -191,14 +193,19 @@ function InventoryContent() {
   );
 }
 
+import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
+
 export default function AdminInventoryPage() {
   return (
     <AdminGuard>
-      {(admin) => (
+      {(admin) => {
+        const caps = getAdminCapabilities(admin.permissions);
+        return (
         <AdminShell admin={admin} title="Inventory">
-          <InventoryContent />
+          <InventoryContent inventoryWrite={caps.inventoryWrite} />
         </AdminShell>
-      )}
+        );
+      }}
     </AdminGuard>
   );
 }

@@ -1,6 +1,6 @@
 import { BRAND } from "@/lib/brand";
 import { storefrontImageUrl } from "@/lib/storefrontImages";
-import type { ProductDetail } from "@/types/product";
+import type { ProductDetail, ProductVariant } from "@/types/product";
 
 function availabilitySchema(
   availability: ProductDetail["availability"]
@@ -27,7 +27,15 @@ function conditionSchema(condition: ProductDetail["condition"]): string {
 }
 
 /** Google Product / Offer JSON-LD for PDP SEO. */
-export function buildProductJsonLd(product: ProductDetail): Record<string, unknown> {
+export function buildProductJsonLd(
+  product: ProductDetail,
+  variant?: ProductVariant
+): Record<string, unknown> {
+  const selectedVariant =
+    variant ??
+    product.variants.find((entry) => entry.availability !== "out-of-stock") ??
+    product.variants[0];
+  const displayPrice = selectedVariant?.price ?? product.price;
   const hero = product.images?.[0]?.src || product.image;
   const image = hero ? storefrontImageUrl(hero, 1200).src : undefined;
   const url = `${BRAND.siteUrl}/product/${product.slug}`;
@@ -37,7 +45,7 @@ export function buildProductJsonLd(product: ProductDetail): Record<string, unkno
     "@type": "Product",
     name: product.name,
     description: product.description?.slice(0, 5000) || product.name,
-    sku: product.id,
+    sku: selectedVariant?.sku ?? product.id,
     brand: {
       "@type": "Brand",
       name: product.brand,
@@ -60,8 +68,10 @@ export function buildProductJsonLd(product: ProductDetail): Record<string, unkno
       "@type": "Offer",
       url,
       priceCurrency: "INR",
-      price: product.price,
-      availability: availabilitySchema(product.availability),
+      price: displayPrice,
+      availability: availabilitySchema(
+        selectedVariant?.availability ?? product.availability
+      ),
       itemCondition: conditionSchema(product.condition),
       seller: {
         "@type": "Organization",

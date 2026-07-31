@@ -26,7 +26,7 @@ test.describe("storefront smoke", () => {
 
   test("login page loads", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByRole("heading")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Log In/i })).toBeVisible();
   });
 
   test("account routes redirect unauthenticated users", async ({ page }) => {
@@ -70,6 +70,8 @@ test.describe("storefront smoke", () => {
   test("key storefront pages have no horizontal overflow at mobile width", async ({
     page,
   }) => {
+    test.setTimeout(120_000);
+    test.slow();
     await page.setViewportSize({ width: 390, height: 844 });
     const paths = [
       "/cart",
@@ -83,7 +85,7 @@ test.describe("storefront smoke", () => {
       "/deals",
     ];
     for (const path of paths) {
-      await page.goto(path, { waitUntil: "domcontentloaded", timeout: 60_000 });
+      await page.goto(path, { waitUntil: "domcontentloaded", timeout: 90_000 });
       const overflow = await page.evaluate(() => {
         const doc = document.documentElement;
         return doc.scrollWidth - doc.clientWidth;

@@ -14,7 +14,10 @@ import {
   EmptyState,
   formatCurrency,
 } from "@/components/admin/AdminUi";
+import { ErrorState } from "@/components/admin/AdminQueryState";
 import { ROUTES } from "@/lib/routes";
+import type { AdminCapabilities } from "@/lib/auth/adminCapabilities";
+import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import type { AdminProduct } from "@/types/admin";
 import type { Category } from "@/types/category";
@@ -45,7 +48,10 @@ type PendingDelete =
   | { type: "bulk"; ids: string[]; label: string }
   | null;
 
-function ProductsContent() {
+function ProductsContent({
+  productsWrite,
+  productsDelete,
+}: Pick<AdminCapabilities, "productsWrite" | "productsDelete">) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -73,7 +79,7 @@ function ProductsContent() {
     },
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: productsQueryKey,
     queryFn: () => fetchProducts({ search, status, cursor }),
     staleTime: 0,
@@ -232,6 +238,15 @@ function ProductsContent() {
   }
 
   if (isLoading) return <LoadingState />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Unable to load products."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const products = data?.products ?? [];
   const total = data?.total ?? 0;
@@ -258,18 +273,15 @@ function ProductsContent() {
           <option value="draft">Draft</option>
           <option value="archived">Archived</option>
         </select>
+        {productsWrite ? (
         <button type="button" className="admin-btn admin-btn--secondary" onClick={() => setImportOpen(true)}>
           Import CSV
         </button>
-        <button
-          type="button"
-          className="admin-btn admin-btn--secondary"
-          disabled={exporting}
-          onClick={() => void handleExportCsv()}
-        >
+        ) : null}
+        <button type="button" className="admin-btn admin-btn--secondary" disabled={exporting} onClick={() => void handleExportCsv()}>
           {exporting ? "Exporting…" : "Export CSV"}
         </button>
-        {selected.size > 0 ? (
+        {productsWrite && selected.size > 0 ? (
           <>
             <button type="button" className="admin-btn admin-btn--secondary" onClick={() => bulkMutation.mutate({ action: "activate", ids: selectedIds })}>
               Activate ({selected.size})
@@ -277,9 +289,11 @@ function ProductsContent() {
             <button type="button" className="admin-btn admin-btn--secondary" onClick={() => bulkMutation.mutate({ action: "archive", ids: selectedIds })}>
               Archive ({selected.size})
             </button>
-            <button type="button" className="admin-btn admin-btn--danger" onClick={requestBulkDelete}>
-              Delete ({selected.size})
-            </button>
+            {productsDelete ? (
+              <button type="button" className="admin-btn admin-btn--danger" onClick={requestBulkDelete}>
+                Delete ({selected.size})
+              </button>
+            ) : null}
             <input
               className="admin-input"
               style={{ width: 100 }}
@@ -344,10 +358,12 @@ function ProductsContent() {
               <table className="admin-table">
                 <thead>
                   <tr>
+                    {(productsWrite || productsDelete) ? (
                     <th><input type="checkbox" aria-label="Select all" onChange={(e) => {
                       if (e.target.checked) setSelected(new Set(products.map((p) => p.id)));
                       else setSelected(new Set());
                     }} /></th>
+                    ) : null}
                     <th>Product</th>
                     <th>SKU</th>
                     <th>Category</th>
@@ -360,6 +376,7 @@ function ProductsContent() {
                 <tbody>
                   {products.map((product) => (
                     <tr key={product.id}>
+                      {(productsWrite || productsDelete) ? (
                       <td>
                         <input
                           type="checkbox"
@@ -368,6 +385,7 @@ function ProductsContent() {
                           aria-label={`Select ${product.name}`}
                         />
                       </td>
+                      ) : null}
                       <td>
                         <div style={{ fontWeight: 600 }}>{product.name}</div>
                         <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>{product.brand}</div>
@@ -380,11 +398,14 @@ function ProductsContent() {
                       <td>
                         <div style={{ display: "flex", gap: "0.5rem" }}>
                           <Link href={`${ROUTES.adminProducts}/${product.id}`} className="admin-btn admin-btn--ghost" style={{ padding: "0.25rem 0.5rem" }}>
-                            Edit
+                            {productsWrite ? "Edit" : "View"}
                           </Link>
+                          {productsWrite ? (
                           <button type="button" className="admin-btn admin-btn--ghost" style={{ padding: "0.25rem 0.5rem" }} onClick={() => duplicateMutation.mutate(product.id)}>
                             Copy
                           </button>
+                          ) : null}
+                          {productsDelete ? (
                           <button
                             type="button"
                             className="admin-btn admin-btn--icon-danger"
@@ -395,6 +416,7 @@ function ProductsContent() {
                           >
                             <Trash2 size={16} aria-hidden="true" />
                           </button>
+                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -413,11 +435,13 @@ function ProductsContent() {
         )}
       </div>
 
+      {productsWrite ? (
       <BulkImportModal
         open={importOpen}
         onClose={() => setImportOpen(false)}
         onComplete={invalidate}
       />
+      ) : null}
 
       <AdminConfirmDialog
         open={pendingDelete !== null}
@@ -450,19 +474,27 @@ function ProductsContent() {
 export default function AdminProductsPage() {
   return (
     <AdminGuard>
-      {(admin) => (
+      {(admin) => {
+        const caps = getAdminCapabilities(admin.permissions);
+        return (
         <AdminShell
           admin={admin}
           title="Products"
           actions={
+            caps.productsWrite ? (
             <Link href={ROUTES.adminProductNew} className="admin-btn admin-btn--primary">
               Add Product
             </Link>
+            ) : undefined
           }
         >
-          <ProductsContent />
+          <ProductsContent
+            productsWrite={caps.productsWrite}
+            productsDelete={caps.productsDelete}
+          />
         </AdminShell>
-      )}
+        );
+      }}
     </AdminGuard>
   );
 }

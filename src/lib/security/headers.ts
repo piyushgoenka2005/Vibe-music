@@ -1,3 +1,31 @@
+function buildContentSecurityPolicy(): string {
+  // Webpack/Next.js dev tooling evaluates scripts; production bundles do not need this.
+  const allowEval = process.env.NODE_ENV !== "production";
+  const scriptSrc = [
+    "script-src 'self' 'unsafe-inline'",
+    allowEval ? "'unsafe-eval'" : null,
+    "https://checkout.razorpay.com",
+    "https://*.razorpay.com",
+    "https://cdnjs.cloudflare.com",
+    "https://apis.google.com",
+    "https://www.googletagmanager.com",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return [
+    "default-src 'self'",
+    scriptSrc,
+    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.vibemusic.in https://accounts.google.com https://checkout.razorpay.com https://*.razorpay.com",
+    "img-src 'self' data: blob: https: http:",
+    "font-src 'self' data: https://cdn.vibemusic.in https://checkout.razorpay.com https://*.razorpay.com",
+    "connect-src 'self' blob: https://*.googleapis.com https://www.googleapis.com https://api.razorpay.com https://*.razorpay.com https://lumberjack.razorpay.com https://api.web3forms.com https://static.roland.com https://tonejs.github.io https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com",
+    "media-src 'self' blob: https://static.roland.com https://tonejs.github.io",
+    "worker-src 'self' blob:",
+    "frame-src 'self' https://accounts.google.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://sketchfab.com https://www.youtube.com https://www.youtube-nocookie.com",
+  ].join("; ");
+}
+
 export const SECURITY_HEADERS = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
   {
@@ -25,19 +53,9 @@ export const SECURITY_HEADERS = [
   },
   {
     key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.razorpay.com https://cdnjs.cloudflare.com https://apis.google.com",
-      "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.vibemusic.in https://accounts.google.com https://checkout.razorpay.com https://*.razorpay.com",
-      "img-src 'self' data: blob: https: http:",
-      "font-src 'self' data: https://cdn.vibemusic.in https://checkout.razorpay.com https://*.razorpay.com",
-      "connect-src 'self' blob: https://*.googleapis.com https://www.googleapis.com https://api.razorpay.com https://*.razorpay.com https://lumberjack.razorpay.com https://api.web3forms.com https://static.roland.com https://tonejs.github.io",
-      "media-src 'self' blob: https://static.roland.com https://tonejs.github.io",
-      "worker-src 'self' blob:",
-      "frame-src 'self' https://accounts.google.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://sketchfab.com https://www.youtube.com https://www.youtube-nocookie.com",
-    ].join("; "),
+    value: buildContentSecurityPolicy(),
   },
-] as const;
+];
 
 export const API_SECURITY_HEADERS = [
   { key: "Cache-Control", value: "no-store" },

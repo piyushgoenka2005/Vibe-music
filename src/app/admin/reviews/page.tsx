@@ -28,7 +28,7 @@ function buildReviewsQuery(params: Record<string, string | undefined>) {
   return `/api/admin/reviews${qs ? `?${qs}` : ""}`;
 }
 
-function ReviewsContent() {
+function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
   const queryClient = useQueryClient();
   const pagination = useAdminCursorPagination();
   const [statusFilter, setStatusFilter] = useState("");
@@ -278,7 +278,7 @@ function ReviewsContent() {
                       >
                         View
                       </button>
-                      {review.status !== "approved" ? (
+                      {reviewsWrite && review.status !== "approved" ? (
                         <button
                           type="button"
                           className="admin-btn admin-btn--ghost"
@@ -289,7 +289,7 @@ function ReviewsContent() {
                           Approve
                         </button>
                       ) : null}
-                      {review.status !== "rejected" ? (
+                      {reviewsWrite && review.status !== "rejected" ? (
                         <button
                           type="button"
                           className="admin-btn admin-btn--ghost"
@@ -300,6 +300,7 @@ function ReviewsContent() {
                           Reject
                         </button>
                       ) : null}
+                      {reviewsWrite ? (
                       <button
                         type="button"
                         className="admin-btn admin-btn--danger"
@@ -307,6 +308,7 @@ function ReviewsContent() {
                       >
                         Delete
                       </button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -380,6 +382,8 @@ function ReviewsContent() {
               </div>
             ) : null}
 
+            {reviewsWrite ? (
+            <>
             <label className="admin-field">
               <span>Admin reply</span>
               <textarea
@@ -428,6 +432,8 @@ function ReviewsContent() {
                 Reject
               </button>
             </div>
+            </>
+            ) : null}
             <MutationError error={updateMutation.isError ? updateMutation.error : null} />
             <MutationError error={deleteMutation.isError ? deleteMutation.error : null} />
           </div>
@@ -437,14 +443,19 @@ function ReviewsContent() {
   );
 }
 
+import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
+
 export default function AdminReviewsPage() {
   return (
     <AdminGuard>
-      {(admin) => (
+      {(admin) => {
+        const caps = getAdminCapabilities(admin.permissions);
+        return (
         <AdminShell admin={admin} title="Reviews">
-          <ReviewsContent />
+          <ReviewsContent reviewsWrite={caps.reviewsWrite} />
         </AdminShell>
-      )}
+        );
+      }}
     </AdminGuard>
   );
 }

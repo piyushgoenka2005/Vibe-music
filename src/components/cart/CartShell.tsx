@@ -108,6 +108,11 @@ export default function CartShell({
   if (!isClient) {
     return (
       <div className="cart-shell cart-shell--loading" aria-busy="true">
+        <header className="cart-shell__header">
+          <div className="cart-shell__heading">
+            <h1 className="cart-shell__title">Shopping Cart</h1>
+          </div>
+        </header>
         <div className="cart-skeleton-line" />
         <div className="cart-skeleton-line" />
         <div className="cart-skeleton-line" />

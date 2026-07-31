@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCountdownParts } from "@/lib/giveaway/drawEngine";
+import { getCountdownParts } from "@/lib/giveaway/countdown";
 
 export default function CountdownTimer({
   targetIso,

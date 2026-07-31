@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getCampaignPhase, isCampaignAcceptingEntries } from "@/lib/giveaway/eligibilityEngine";
-import { buildDrawPool, runWeightedDraw, getCountdownParts } from "@/lib/giveaway/drawEngine";
+import { getCountdownParts } from "@/lib/giveaway/countdown";
+import { buildDrawPool, runWeightedDraw } from "@/lib/giveaway/drawEngine";
 import {
   detectGiveawayFraud,
   shouldBlockEntry,

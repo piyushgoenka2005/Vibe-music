@@ -16,7 +16,8 @@ describe("admin-route-permissions", () => {
     expect(getRequiredPermissionForAdminPath("/admin/products/new")).toBe(
       "products:read"
     );
-    expect(getRequiredPermissionForAdminPath("/admin/cms")).toBe("settings:write");
+    expect(getRequiredPermissionForAdminPath("/admin/cms")).toBe("settings:read");
+    expect(getRequiredPermissionForAdminPath("/admin/shipping")).toBe("settings:read");
   });
 
   it("treats admin login as public", () => {

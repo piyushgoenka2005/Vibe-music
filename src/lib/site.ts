@@ -5,10 +5,17 @@ export const SITE_DESCRIPTION = BRAND.description;
 export const SITE_URL = BRAND.siteUrl;
 export const SITE_EMAIL = BRAND.email;
 
+/** Google Search Console HTML-tag verification token (Search Console → Settings → Ownership). */
+const googleSiteVerification =
+  process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim() || undefined;
+
 export const DEFAULT_METADATA = {
   title: `${BRAND.name}: Musical Instruments, Pro Audio, Accessories & More`,
   description: BRAND.description,
   metadataBase: new URL(BRAND.siteUrl),
+  verification: googleSiteVerification
+    ? { google: googleSiteVerification }
+    : undefined,
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },

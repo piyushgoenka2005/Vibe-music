@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import * as pg from "@/lib/server/prisma/contentRepository";
 import type { Coupon } from "@/types/admin";
-import type { AppliedCouponSnapshot, CouponValidationResult } from "@/types/coupon";
+import type { AppliedCouponSnapshot, CouponValidationResult, StorefrontCouponOffer } from "@/types/coupon";
 import { validateCouponForSubtotal } from "@/lib/coupons/couponMath";
 
 const STATIC_COUPONS: Record<string, Omit<Coupon, "id">> = {
@@ -185,4 +185,34 @@ export async function deleteCoupon(id: string): Promise<void> {
 
 export async function incrementCouponUsage(code: string): Promise<void> {
   await pg.incrementCouponUsageRecord(code);
+}
+
+function isCouponScheduleActive(coupon: Coupon, at = new Date()): boolean {
+  if (!coupon.isActive) return false;
+  if (coupon.startsAt) {
+    const start = new Date(coupon.startsAt);
+    if (!Number.isNaN(start.getTime()) && at < start) return false;
+  }
+  if (coupon.expiresAt) {
+    const end = new Date(coupon.expiresAt);
+    if (!Number.isNaN(end.getTime()) && at > end) return false;
+  }
+  if (coupon.maxUses != null && coupon.usedCount >= coupon.maxUses) return false;
+  return true;
+}
+
+export async function listActiveCouponsForStorefront(
+  at = new Date()
+): Promise<StorefrontCouponOffer[]> {
+  const { coupons } = await listCoupons({ limit: 100 });
+  return coupons
+    .filter((coupon) => isCouponScheduleActive(coupon, at))
+    .slice(0, 8)
+    .map((coupon) => ({
+      code: coupon.code,
+      label: coupon.label,
+      type: coupon.type,
+      value: coupon.value,
+      minOrderAmount: coupon.minOrderAmount,
+    }));
 }

@@ -51,10 +51,29 @@ export function checkRateLimit(
   };
 }
 
+/**
+ * Client IP behind a trusted reverse proxy (nginx).
+ * Prefer X-Real-IP (set by nginx to $remote_addr).
+ * For X-Forwarded-For, use the rightmost hop(s) controlled by TRUST_PROXY_HOPS
+ * (default 1) so clients cannot spoof the left-most entry.
+ */
 export function getClientIp(request: Request): string {
+  const realIp = request.headers.get("x-real-ip")?.trim();
+  if (realIp) return realIp;
+
   const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() ?? "unknown";
-  return request.headers.get("x-real-ip") ?? "unknown";
+  if (forwarded) {
+    const parts = forwarded
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    if (parts.length === 0) return "unknown";
+    const hops = Math.max(1, Number(process.env.TRUST_PROXY_HOPS ?? "1") || 1);
+    const index = Math.max(0, parts.length - hops);
+    return parts[index] ?? parts[parts.length - 1] ?? "unknown";
+  }
+
+  return "unknown";
 }
 
 export const RATE_LIMITS = {

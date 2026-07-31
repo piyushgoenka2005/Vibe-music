@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   LineChart,
@@ -136,7 +137,11 @@ function DashboardContent() {
               <tbody>
                 {recentOrders.map((order) => (
                   <tr key={order.id}>
-                    <td>{order.id.slice(0, 8)}…</td>
+                    <td>
+                      <Link href={`/admin/orders?orderId=${encodeURIComponent(order.id)}`}>
+                        {order.id.slice(0, 8)}…
+                      </Link>
+                    </td>
                     <td>{order.email}</td>
                     <td>{formatCurrency(order.total)}</td>
                     <td><StatusBadge status={order.status} /></td>
@@ -170,7 +175,11 @@ function DashboardContent() {
                 ) : (
                   lowStock.map((p) => (
                     <tr key={p.id}>
-                      <td>{p.name}</td>
+                      <td>
+                        <Link href={`/admin/products/${encodeURIComponent(p.id)}`}>
+                          {p.name}
+                        </Link>
+                      </td>
                       <td><StatusBadge status={p.stockQuantity <= 0 ? "out-of-stock" : "limited"} /> {p.stockQuantity}</td>
                       <td>{p.lowStockThreshold}</td>
                     </tr>
@@ -198,7 +207,11 @@ function DashboardContent() {
             <tbody>
               {recentCustomers.map((c) => (
                 <tr key={c.uid}>
-                  <td>{c.displayName || "—"}</td>
+                  <td>
+                    <Link href={`/admin/customers?search=${encodeURIComponent(c.email)}`}>
+                      {c.displayName || "—"}
+                    </Link>
+                  </td>
                   <td>{c.email}</td>
                   <td>{formatDate(c.createdAt)}</td>
                 </tr>

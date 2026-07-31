@@ -24,3 +24,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Weekly self-check (email/log on failure)
 0 4 * * 1 BACKUP_DIR=/var/backups/vibe CDN_BACKUP_DIR=/var/backups/vibe MAX_AGE_HOURS=36 bash /home/ubuntu/Vibe-music/deploy/verify-backups.sh >> /var/log/vibe-backup-verify.log 2>&1
+
+# Every 15 minutes: release abandoned checkout inventory reservations (TTL 45m)
+# Prefer installer: bash deploy/install-reservation-sweeper.sh
+# Script loads DATABASE_URL from .env or .env.local (process env wins).
+*/15 * * * * cd /root/Vibe-music && RESERVATION_TTL_MINUTES=45 npm run ops:release-stale-reservations >> /var/log/vibe-reservation-sweeper.log 2>&1

@@ -27,6 +27,7 @@ interface TipTapEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  readOnly?: boolean;
 }
 
 function ToolbarButton({
@@ -57,12 +58,14 @@ export default function TipTapEditor({
   value,
   onChange,
   placeholder = "Write your post content…",
+  readOnly = false,
 }: TipTapEditorProps) {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
+    editable: !readOnly,
     extensions: [
       ...blogEditorExtensions,
       Placeholder.configure({ placeholder }),
@@ -86,6 +89,11 @@ export default function TipTapEditor({
       editor.commands.setContent(parseBlogContent(next), { emitUpdate: false });
     }
   }, [editor, value]);
+
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(!readOnly);
+  }, [editor, readOnly]);
 
   if (!editor) {
     return <div className="tiptap-editor tiptap-editor--loading">Loading editor…</div>;
@@ -129,93 +137,95 @@ export default function TipTapEditor({
 
   return (
     <div className="tiptap-editor">
-      <div className="tiptap-toolbar" role="toolbar" aria-label="Formatting">
-        <ToolbarButton
-          label="Bold"
-          active={editor.isActive("bold")}
-          onClick={() => editor.chain().focus().toggleBold().run()}
-        >
-          <Bold size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Italic"
-          active={editor.isActive("italic")}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-        >
-          <Italic size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Underline"
-          active={editor.isActive("underline")}
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-        >
-          <UnderlineIcon size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Strikethrough"
-          active={editor.isActive("strike")}
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-        >
-          <Strikethrough size={16} />
-        </ToolbarButton>
-        <span className="tiptap-toolbar__divider" aria-hidden="true" />
-        <ToolbarButton
-          label="Heading 2"
-          active={editor.isActive("heading", { level: 2 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        >
-          <Heading2 size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Heading 3"
-          active={editor.isActive("heading", { level: 3 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        >
-          <Heading3 size={16} />
-        </ToolbarButton>
-        <span className="tiptap-toolbar__divider" aria-hidden="true" />
-        <ToolbarButton
-          label="Bullet list"
-          active={editor.isActive("bulletList")}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-        >
-          <List size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Numbered list"
-          active={editor.isActive("orderedList")}
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        >
-          <ListOrdered size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Blockquote"
-          active={editor.isActive("blockquote")}
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        >
-          <Quote size={16} />
-        </ToolbarButton>
-        <ToolbarButton label="Link" active={editor.isActive("link")} onClick={setLink}>
-          <Link2 size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Insert image"
-          onClick={() => imageInputRef.current?.click()}
-        >
-          <ImageIcon size={16} />
-        </ToolbarButton>
-        <input
-          ref={imageInputRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) void uploadInlineImage(file);
-            e.target.value = "";
-          }}
-        />
-      </div>
+      {!readOnly ? (
+        <div className="tiptap-toolbar" role="toolbar" aria-label="Formatting">
+          <ToolbarButton
+            label="Bold"
+            active={editor.isActive("bold")}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+          >
+            <Bold size={16} />
+          </ToolbarButton>
+          <ToolbarButton
+            label="Italic"
+            active={editor.isActive("italic")}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+          >
+            <Italic size={16} />
+          </ToolbarButton>
+          <ToolbarButton
+            label="Underline"
+            active={editor.isActive("underline")}
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+          >
+            <UnderlineIcon size={16} />
+          </ToolbarButton>
+          <ToolbarButton
+            label="Strikethrough"
+            active={editor.isActive("strike")}
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+          >
+            <Strikethrough size={16} />
+          </ToolbarButton>
+          <span className="tiptap-toolbar__divider" aria-hidden="true" />
+          <ToolbarButton
+            label="Heading 2"
+            active={editor.isActive("heading", { level: 2 })}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          >
+            <Heading2 size={16} />
+          </ToolbarButton>
+          <ToolbarButton
+            label="Heading 3"
+            active={editor.isActive("heading", { level: 3 })}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          >
+            <Heading3 size={16} />
+          </ToolbarButton>
+          <span className="tiptap-toolbar__divider" aria-hidden="true" />
+          <ToolbarButton
+            label="Bullet list"
+            active={editor.isActive("bulletList")}
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+          >
+            <List size={16} />
+          </ToolbarButton>
+          <ToolbarButton
+            label="Numbered list"
+            active={editor.isActive("orderedList")}
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          >
+            <ListOrdered size={16} />
+          </ToolbarButton>
+          <ToolbarButton
+            label="Blockquote"
+            active={editor.isActive("blockquote")}
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          >
+            <Quote size={16} />
+          </ToolbarButton>
+          <ToolbarButton label="Link" active={editor.isActive("link")} onClick={setLink}>
+            <Link2 size={16} />
+          </ToolbarButton>
+          <ToolbarButton
+            label="Insert image"
+            onClick={() => imageInputRef.current?.click()}
+          >
+            <ImageIcon size={16} />
+          </ToolbarButton>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void uploadInlineImage(file);
+              e.target.value = "";
+            }}
+          />
+        </div>
+      ) : null}
       {uploadingImage ? (
         <p className="tiptap-editor__status">Uploading image…</p>
       ) : null}

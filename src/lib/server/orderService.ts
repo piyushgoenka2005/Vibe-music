@@ -271,27 +271,29 @@ export async function createOrder(
     logPayment("Order persisted", { orderId });
     void notifyAdminNewOrder(order);
 
-    const reserveInventory = async (): Promise<void> => {
-      try {
-        logPayment("Inventory reservation started (online)", { orderId });
-        await reserveStockForOrder(orderId, inventoryLines);
-        await updateOrder(orderId, { inventoryStatus: "reserved" });
-        logPayment("Inventory reservation completed", { orderId });
-      } catch (inventoryError) {
-        logPaymentError(inventoryError, {
-          orderId,
-          step: "backgroundInventory",
-          paymentMethod: payload.paymentMethod,
-        });
-        await updateOrder(orderId, { inventoryStatus: "none" }).catch(() => undefined);
-      }
-    };
-
-    void reserveInventory();
+    // Reserve inventory BEFORE returning checkout credentials (atomic vs payment race).
+    try {
+      logPayment("Inventory reservation started (online)", { orderId });
+      await reserveStockForOrder(orderId, inventoryLines);
+      await updateOrder(orderId, { inventoryStatus: "reserved" });
+      logPayment("Inventory reservation completed", { orderId });
+    } catch (inventoryError) {
+      logPaymentError(inventoryError, {
+        orderId,
+        step: "inventoryReservation",
+        paymentMethod: payload.paymentMethod,
+      });
+      await releaseOrderReservation(orderId).catch(() => undefined);
+      await removeOrder(orderId).catch(() => undefined);
+      persisted = false;
+      throw inventoryError instanceof Error
+        ? inventoryError
+        : new Error("Unable to reserve inventory for this order.");
+    }
 
     logPayment("Create order completed", { orderId, paymentMethod: payload.paymentMethod });
     return {
-      order: { ...order, razorpayOrderId },
+      order: { ...order, razorpayOrderId, inventoryStatus: "reserved" },
       razorpayOrderId,
       keyId: isRazorpayConfigured()
         ? process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID
@@ -413,7 +415,23 @@ export async function linkGuestOrdersToUser(
   userId: string,
   email: string
 ): Promise<number> {
-  return pgOrder.linkGuestOrdersToUser(userId, email);
+  // Intentionally disabled: bulk email linking is an IDOR vector.
+  // Use attachPaidOrderToUser for cryptographically verified checkout ownership.
+  void userId;
+  void email;
+  return 0;
+}
+
+/**
+ * Attach a single guest order to a user only when the order email matches
+ * the authenticated account email (case-insensitive). Used after payment verify.
+ */
+export async function attachPaidOrderToUser(
+  orderId: string,
+  userId: string,
+  email: string
+): Promise<boolean> {
+  return pgOrder.attachPaidOrderToUser(orderId, userId, email);
 }
 
 export type { PaymentMethod, PaymentStatus };
