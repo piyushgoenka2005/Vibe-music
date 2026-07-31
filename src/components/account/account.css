@@ -30,7 +30,8 @@
 @media (max-width: 767px) {
   .acct__page {
     padding-inline: 0.75rem;
-    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+    /* Clear fixed bottom nav + safe area so content isn’t covered */
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .acct__hero {
@@ -263,16 +264,21 @@
 
 /* ── Mobile Bottom Nav ── */
 .acct__mobile-nav {
+  --acct-blue: var(--brand-primary, #1253ed);
+  --acct-muted: #807f7e;
+  --acct-border: #e5e4e3;
   display: none;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--acct-card);
+  background: #ffffff;
   border-top: 1px solid var(--acct-border);
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
-  z-index: 900;
-  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  /* Above site footer / scroll-reveal panel */
+  z-index: 1100;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
 }
 
 @media (max-width: 767px) {
@@ -280,19 +286,16 @@
     display: flex;
     justify-content: flex-start;
     align-items: stretch;
-    gap: 0;
+    gap: 0.35rem;
     overflow-x: auto;
     scroll-behavior: smooth;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
 
   .acct__mobile-nav::-webkit-scrollbar {
     display: none;
-  }
-
-  .acct__mobile-nav {
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
   }
 }
 
@@ -300,15 +303,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
-  padding: 8px 8px;
+  padding: 8px 10px;
   color: var(--acct-muted);
   text-decoration: none;
   font-size: 11px;
   font-weight: 500;
   border-radius: 8px;
   transition: color 0.15s;
-  min-width: 48px;
+  min-width: 4.25rem;
   min-height: 48px;
   flex: 0 0 auto;
 }
@@ -827,19 +831,20 @@
 .acct__form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 1.25rem;
 }
 
 @media (max-width: 639px) {
   .acct__form-grid {
     grid-template-columns: 1fr;
+    gap: 1.15rem;
   }
 }
 
 .acct__field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.45rem;
 }
 
 .acct__field--full {
@@ -1010,10 +1015,28 @@
 }
 
 .acct__form-actions {
-  margin-top: 20px;
+  margin-top: 1.5rem;
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+@media (max-width: 767px) {
+  .acct__form-actions {
+    margin-top: 1.75rem;
+  }
+
+  .acct__card-body {
+    padding: 1.15rem 1rem 1.25rem;
+  }
+
+  .acct__section-title {
+    margin-bottom: 0.35rem;
+  }
+
+  .acct__section-sub {
+    margin-bottom: 1.25rem;
+  }
 }
 
 .acct__muted {

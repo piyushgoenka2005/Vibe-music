@@ -5,7 +5,7 @@ import { getCachedActiveProducts } from "@/lib/server/catalogSnapshotCache";
 import { listCategories } from "@/lib/server/categoryRepository";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { buildTopBrandStripItems } from "@/data/topBrandStrip";
-import { getCategoryGridImage } from "@/lib/categoryImages";
+import { getCategoryGridImage, hasCuratedCategoryImage } from "@/lib/categoryImages";
 import { categoryPath, productPath } from "@/lib/routes";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import {
@@ -233,7 +233,11 @@ async function resolveCategories(
         slug: category.slug,
         title: item.customTitle || category.name,
         href: item.customHref || categoryPath(category.slug),
-        imageSrc: item.customImage || category.imageUrl || getCategoryGridImage(category.slug),
+        imageSrc:
+          item.customImage ||
+          (hasCuratedCategoryImage(category.slug)
+            ? getCategoryGridImage(category.slug)
+            : category.imageUrl || getCategoryGridImage(category.slug)),
         badge: item.badgeLabel,
       });
     }
@@ -250,7 +254,9 @@ async function resolveCategories(
       slug: category.slug,
       title: category.name,
       href: categoryPath(category.slug),
-      imageSrc: category.imageUrl || getCategoryGridImage(category.slug),
+      imageSrc: hasCuratedCategoryImage(category.slug)
+        ? getCategoryGridImage(category.slug)
+        : category.imageUrl || getCategoryGridImage(category.slug),
     }));
 }
 

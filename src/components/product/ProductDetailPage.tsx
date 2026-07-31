@@ -25,6 +25,7 @@ import ProductBuyBox from "./ProductBuyBox";
 import ProductRelatedRail from "./ProductRelatedRail";
 import ProductDetailSkeleton from "./ProductDetailSkeleton";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
+import { isNonInstrumentGuitarProduct } from "@/lib/product/productRelevance";
 import "./product-detail.css";
 
 const FrequentlyBoughtTogether = dynamic(() => import("./FrequentlyBoughtTogether"), { ssr: false });
@@ -293,7 +294,8 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
       <ProductCrossSell title="Related Products" products={relatedProducts} />
       </div>
 
-      {isGuitarProduct(product.categorySlug, product.category) ? (
+      {isGuitarProduct(product.categorySlug, product.category) &&
+      !isNonInstrumentGuitarProduct(product) ? (
         <div className="pdp pdp--guitar-extensions">
           <GuitarSpecShowcase
             specs={product.specs}

@@ -1,6 +1,7 @@
+import { BIG_NAMES_DEALS } from "@/data/bigNamesDeals";
 import { productPath } from "@/lib/routes";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
-import { BIG_NAMES_DEALS } from "@/data/bigNamesDeals";
+import { isNonInstrumentGuitarProduct } from "@/lib/product/productRelevance";
 import type { CatalogProduct } from "@/types/catalog";
 
 export const BIG_NAMES_DEALS_MAX_ITEMS = 5;
@@ -16,8 +17,7 @@ export interface BigNamesDealItem {
 export function isBigNamesDealsGuitarProduct(product: CatalogProduct): boolean {
   if (product.status !== "active") return false;
   if (!isGuitarProduct(product.categorySlug, product.category)) return false;
-  const name = product.name.toLowerCase();
-  if (name.includes("amplifier") || name.includes(" amp ")) return false;
+  if (isNonInstrumentGuitarProduct(product)) return false;
   return true;
 }
 

@@ -235,9 +235,10 @@
     max-width: 100%;
     margin-inline: 0;
     box-sizing: border-box;
-    padding: 0.75rem max(0.75rem, env(safe-area-inset-left, 0px))
+    /* top | right | bottom | left — keep gutters tight on mobile */
+    padding: 0.75rem max(0.5rem, env(safe-area-inset-right, 0px))
       calc(7.5rem + env(safe-area-inset-bottom, 0px))
-      max(0.75rem, env(safe-area-inset-right, 0px));
+      max(0.5rem, env(safe-area-inset-left, 0px));
   }
 
   .storefront-page .pdp-main,
@@ -337,8 +338,8 @@
   }
 
   .storefront-page .pdp {
-    padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
-    padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
+    padding-left: max(0.35rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.35rem, env(safe-area-inset-right, 0px));
     padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
   }
 

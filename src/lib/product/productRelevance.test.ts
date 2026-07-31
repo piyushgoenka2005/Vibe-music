@@ -63,6 +63,24 @@ describe("productRelevance", () => {
     expect(areMerchandisingPeersCompatible(acoustic, amp)).toBe(false);
   });
 
+  it("keeps guitar multi-effects off instrument classification", () => {
+    const pedal = makeProduct({
+      id: "g1",
+      name: "G1 FOUR Guitar Multi-Effects Processor",
+      subcategory: "Guitars",
+      sku: "G1 FOUR",
+    });
+    expect(getProductInstrumentKind(pedal)).toBe("generic");
+    expect(areMerchandisingPeersCompatible(
+      makeProduct({
+        id: "acoustic",
+        name: "HERTZ HZA-3600 Natural Finish Acoustic Guitar",
+        subcategory: "Acoustic Guitar",
+      }),
+      pedal
+    )).toBe(false);
+  });
+
   it("classifies ukuleles and electro-acoustics", () => {
     const uke = makeProduct({
       id: "uke",

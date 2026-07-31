@@ -24,6 +24,23 @@
   overflow-x: clip;
 }
 
+/* Account fixed bottom nav must paint above the blue footer / reveal panel */
+body.is-account-page .storefront-main,
+body:has(.acct__mobile-nav) .storefront-main {
+  isolation: auto;
+  z-index: 2;
+}
+
+@media (max-width: 767px) {
+  /* Marketing footer fights the account bottom nav — hide it on account mobile */
+  body.is-account-page .site-footer.site-footer--layered,
+  body.is-account-page .footer-products-panel,
+  body:has(.acct__mobile-nav) .site-footer.site-footer--layered,
+  body:has(.acct__mobile-nav) .footer-products-panel {
+    display: none !important;
+  }
+}
+
 /* Homepage — hero banner carries the header offset; avoid double padding */
 .storefront-main:has(> .premium-home) {
   padding-top: 0;

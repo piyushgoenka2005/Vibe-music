@@ -161,16 +161,27 @@ export default function ProductBuyBox({
             </div>
           ) : (
             <>
-              {onSale && product.msrp && quantity === 1 ? (
-                <div className="pdp-buybox__list-row">
-                  <span>List Price:</span>
-                  <span className="pdp-buybox__list-price">
-                    {formatPrice(product.msrp)}
-                  </span>
-                </div>
-              ) : null}
+              <div className="pdp-buybox__price-meta">
+                {onSale && product.msrp && quantity === 1 ? (
+                  <div className="pdp-buybox__list-row">
+                    <span>List Price:</span>
+                    <span className="pdp-buybox__list-price">
+                      {formatPrice(product.msrp)}
+                    </span>
+                  </div>
+                ) : null}
 
-              <div className="pdp-buybox__price">
+                {savings > 0 && quantity === 1 ? (
+                  <p className="pdp-buybox__savings">
+                    You save {formatPrice(savings)}
+                    {product.msrp
+                      ? ` (${Math.round((savings / product.msrp) * 100)}%)`
+                      : ""}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="pdp-buybox__price pdp-buybox__price--tag" aria-label="Current price">
                 <span className="pdp-buybox__price-symbol">{priceParts.symbol}</span>
                 <span className="pdp-buybox__price-whole">{priceParts.whole}</span>
                 {priceParts.fraction ? (
@@ -179,15 +190,6 @@ export default function ProductBuyBox({
                   </span>
                 ) : null}
               </div>
-
-              {savings > 0 && quantity === 1 ? (
-                <p className="pdp-buybox__savings">
-                  You save {formatPrice(savings)}
-                  {product.msrp
-                    ? ` (${Math.round((savings / product.msrp) * 100)}%)`
-                    : ""}
-                </p>
-              ) : null}
             </>
           )}
         </div>

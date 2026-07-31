@@ -13,16 +13,70 @@ function normalizeText(value: string | undefined): string {
   return (value ?? "").trim().toLowerCase();
 }
 
-export function isGuitarAmplifierProduct(product: CatalogProduct): boolean {
+export function isGuitarAmplifierProduct(product: {
+  name: string;
+  sku?: string;
+  subcategory?: string;
+}): boolean {
   const sub = normalizeText(product.subcategory);
   const name = normalizeText(product.name);
-  const sku = product.sku.toUpperCase();
+  const sku = (product.sku ?? "").toUpperCase();
   if (sku === "VM-DG20" || sku === "VM-DG40") return true;
   return (
     sub.includes("amplifier") ||
     name.includes("guitar amplifier") ||
     /\bamplifier\b/.test(name)
   );
+}
+
+/**
+ * Multi-effects / pedals / stomps often inherit categorySlug "guitars"
+ * because titles say "Guitar Multi-Effects…". Keep them off the main
+ * Guitars PLP (same treatment as amplifiers).
+ */
+export function isGuitarEffectsProduct(product: {
+  name: string;
+  sku?: string;
+  subcategory?: string;
+}): boolean {
+  const sub = normalizeText(product.subcategory);
+  const name = normalizeText(product.name);
+  const sku = (product.sku ?? "").toUpperCase().replace(/\s+/g, " ").trim();
+
+  if (
+    sku === "G1 FOUR" ||
+    sku === "G1X FOUR" ||
+    sku.includes("G1 FOUR") ||
+    sku.includes("G1X FOUR")
+  ) {
+    return true;
+  }
+
+  return (
+    sub.includes("effect") ||
+    sub.includes("pedal") ||
+    sub.includes("stomp") ||
+    name.includes("multi-effects") ||
+    name.includes("multi effects") ||
+    name.includes("multieffects") ||
+    name.includes("effects processor") ||
+    name.includes("effect processor") ||
+    name.includes("effects pedal") ||
+    name.includes("effect pedal") ||
+    name.includes("multi-stomp") ||
+    name.includes("multistomp") ||
+    /\bstompbox\b/.test(name) ||
+    /\bpedalboard\b/.test(name)
+  );
+}
+
+/** Amps + effects under guitars — not fretted instruments. */
+export function isNonInstrumentGuitarProduct(product: {
+  name: string;
+  sku?: string;
+  subcategory?: string;
+}): boolean {
+  return isGuitarAmplifierProduct(product) || isGuitarEffectsProduct(product);
 }
 
 function looksLikeUkulele(haystack: string, sku: string): boolean {
@@ -36,6 +90,7 @@ export function getProductInstrumentKind(
   product: CatalogProduct
 ): ProductInstrumentKind {
   if (isGuitarAmplifierProduct(product)) return "amplifier";
+  if (isGuitarEffectsProduct(product)) return "generic";
 
   const sub = normalizeText(product.subcategory);
   const name = normalizeText(product.name);

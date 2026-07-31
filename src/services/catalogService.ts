@@ -12,6 +12,7 @@ import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import { mergeProductSpecs } from "@/lib/product/productSpecs";
 import {
   detectSearchInstrumentIntent,
+  isNonInstrumentGuitarProduct,
   productMatchesSearchIntent,
   searchIntentScoreBoost,
 } from "@/lib/product/productRelevance";
@@ -110,6 +111,10 @@ function applyGuitarSpecifications(
   guitarSpecs?: Record<string, string>
 ): Record<string, string> {
   if (!isGuitarProduct(categorySlug, categoryName)) {
+    return specifications;
+  }
+  // Pedals / amps miscategorized under guitars must not get invented guitar specs.
+  if (isNonInstrumentGuitarProduct({ name })) {
     return specifications;
   }
 
@@ -388,14 +393,14 @@ export function searchInCatalogProducts(
         normalizeCategorySlug(product.category) === resolvedSlug
     );
 
-    // Keep guitar amps off the main Guitars PLP — they belong under the
-    // Amplifiers browse path (`?category=guitars&subcategory=AMPLIFIER`).
+    // Keep guitar amps / multi-effects off the main Guitars PLP — they belong
+    // under Amplifiers / Effects browse paths (`?category=guitars&subcategory=…`).
     if (
       resolvedSlug === "guitars" &&
-      !subcategoryRequestsAmplifiers(options.subcategory)
+      !subcategoryRequestsGuitarAccessories(options.subcategory)
     ) {
       source = source.filter(
-        (product) => !isGuitarAmplifierCatalogProduct(product)
+        (product) => !isNonInstrumentGuitarProduct(product)
       );
     }
   }
@@ -480,16 +485,16 @@ export function searchInCatalogProducts(
         );
       }
 
-      // "guitar" should surface instruments — not guitar amplifiers (those match
-      // via the word "Guitar" in amp titles). Amps stay available for amp queries
-      // and the Amplifiers subcategory browse path.
+      // "guitar" should surface instruments — not guitar amplifiers / multi-effects
+      // (those match via the word "Guitar" in accessory titles). Amps/effects stay
+      // available for dedicated queries and subcategory browse paths.
       if (
         queryLooksLikeGuitarSearch(tokens) &&
-        !queryRequestsAmplifiers(normalized) &&
+        !queryRequestsGuitarAccessories(normalized) &&
         intent !== "amplifier"
       ) {
         source = source.filter(
-          (product) => !isGuitarAmplifierCatalogProduct(product)
+          (product) => !isNonInstrumentGuitarProduct(product)
         );
       }
     }
@@ -652,32 +657,33 @@ function expandSearchToken(token: string): string[] {
   return Array.from(variants);
 }
 
-function isGuitarAmplifierCatalogProduct(product: CatalogProduct): boolean {
-  const sub = (product.subcategory ?? "").toLowerCase();
-  const name = product.name.toLowerCase();
-  const sku = product.sku.toUpperCase();
-  if (sku === "VM-DG20" || sku === "VM-DG40") return true;
+function subcategoryRequestsGuitarAccessories(subcategory?: string): boolean {
+  if (!subcategory) return false;
+  const value = subcategory.toLowerCase();
   return (
-    sub.includes("amplifier") ||
-    name.includes("guitar amplifier") ||
-    /\bamplifier\b/.test(name)
+    value.includes("amplifier") ||
+    /(^|\|)amps?(\||$)/.test(value) ||
+    value.includes("effect") ||
+    value.includes("pedal") ||
+    value.includes("stomp")
   );
 }
 
-function subcategoryRequestsAmplifiers(subcategory?: string): boolean {
-  if (!subcategory) return false;
-  const value = subcategory.toLowerCase();
-  return value.includes("amplifier") || /(^|\|)amps?(\||$)/.test(value);
-}
-
-/** True when the shopper is explicitly looking for amps / guitar amps. */
-function queryRequestsAmplifiers(query: string): boolean {
+/** True when the shopper is explicitly looking for amps / effects / pedals. */
+function queryRequestsGuitarAccessories(query: string): boolean {
   const value = query.toLowerCase().trim();
   if (!value) return false;
   return (
     value.includes("amplifier") ||
     value.includes("amplifiers") ||
-    /(^|\s)amps?(\s|$)/.test(value)
+    /(^|\s)amps?(\s|$)/.test(value) ||
+    value.includes("multi-effects") ||
+    value.includes("multi effects") ||
+    value.includes("effects processor") ||
+    value.includes("effects pedal") ||
+    value.includes("effect pedal") ||
+    /(^|\s)pedals?(\s|$)/.test(value) ||
+    value.includes("stomp")
   );
 }
 

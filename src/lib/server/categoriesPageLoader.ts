@@ -1,7 +1,10 @@
 import "server-only";
 
 import { cache } from "react";
-import { POPULAR_CATEGORY_ITEMS } from "@/data/popularCategories";
+import {
+  getCategoryGridImage,
+  hasCuratedCategoryImage,
+} from "@/lib/categoryImages";
 import { getCategoryCatalog } from "@/lib/server/categoryResolver";
 import { getAllProducts } from "@/services/catalogService";
 import type { Category } from "@/types/category";
@@ -10,13 +13,6 @@ export interface CategoryIndexItem extends Category {
   productCount: number;
   imageSrc?: string;
 }
-
-const IMAGE_BY_SLUG = new Map(
-  POPULAR_CATEGORY_ITEMS.map((item) => {
-    const slug = item.href.split("/").filter(Boolean).pop() ?? "";
-    return [slug, item.imageSrc] as const;
-  })
-);
 
 export const loadCategoriesForIndex = cache(
   async function loadCategoriesForIndex(): Promise<CategoryIndexItem[]> {
@@ -37,10 +33,15 @@ export const loadCategoriesForIndex = cache(
       .map((category) => {
         const productCount =
           countBySlug.get(category.slug) ?? category.productCount ?? 0;
+        // Always prefer curated local art over CMS imageUrl — admin/CMS often
+        // reused the Guitars Les Paul thumb for Bass, Software, etc.
+        const imageSrc = hasCuratedCategoryImage(category.slug)
+          ? getCategoryGridImage(category.slug)
+          : category.imageUrl || getCategoryGridImage(category.slug);
         return {
           ...category,
           productCount,
-          imageSrc: category.imageUrl || IMAGE_BY_SLUG.get(category.slug),
+          imageSrc,
         };
       })
       .filter((category) => category.productCount > 0)

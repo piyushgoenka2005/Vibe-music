@@ -39,6 +39,7 @@ export default function StorefrontChrome({
     pathname.startsWith("/admin") || pathname.startsWith("/gp9");
   const isLandingPage = pathname === "/";
   const isProductPage = /^\/product\/[^/]+$/.test(pathname);
+  const isAccountPage = pathname.startsWith("/account");
   const isListingPage =
     pathname === ROUTES.categories ||
     /^\/category\/[^/]+$/.test(pathname) ||
@@ -69,6 +70,7 @@ export default function StorefrontChrome({
     const hasFooterReveal = isLandingPage || isProductPage;
     document.body.classList.toggle("is-landing-page", isLandingPage);
     document.body.classList.toggle("is-product-page", isProductPage);
+    document.body.classList.toggle("is-account-page", isAccountPage);
     document.body.classList.toggle("has-footer-reveal", hasFooterReveal);
     window.dispatchEvent(new Event("site-header:sync"));
     requestAnimationFrame(() => {
@@ -78,10 +80,11 @@ export default function StorefrontChrome({
       document.body.classList.remove(
         "is-landing-page",
         "is-product-page",
+        "is-account-page",
         "has-footer-reveal"
       );
     };
-  }, [isLandingPage, isProductPage]);
+  }, [isLandingPage, isProductPage, isAccountPage]);
 
   useEffect(() => {
     if (pathname.startsWith("/checkout") || pathname.startsWith("/cart")) {

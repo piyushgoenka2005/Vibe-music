@@ -419,15 +419,29 @@
     min-height: 48px;
   }
 
-  /* PDP — FBT horizontal strip */
+  /* PDP — FBT horizontal strip: scrollable, flush left */
   .pdp-fbt__products {
     gap: 0;
+    padding-left: 0 !important;
     padding-bottom: 0.25rem;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .pdp-fbt__card {
-    width: min(140px, 42vw);
-    flex-shrink: 0;
+  .pdp-fbt {
+    overflow: visible !important;
+  }
+
+  .pdp-section--fbt {
+    overflow: visible !important;
+  }
+
+  .pdp .pdp-fbt__card {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
   }
 
   .pdp-fbt__summary {

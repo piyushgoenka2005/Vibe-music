@@ -21,7 +21,19 @@ const SLUG_TO_HREF: Record<string, string> = {
   "video-cameras": categoryPath("video-cameras"),
 };
 
+/** Canonical department slug used for curated art lookups. */
+const SLUG_ALIASES: Record<string, string> = {
+  "software-plugins": "software-plug-ins",
+  "live-sound": "live-sound-lighting",
+};
+
+function canonicalizeCategorySlug(slug: string): string {
+  const normalized = slug.trim().toLowerCase();
+  return SLUG_ALIASES[normalized] ?? normalized;
+}
+
 const FALLBACK_IMAGE = "/images/m/home/cats/LPR59VOWCSNH.png";
+const THUMB_DIR = "/images/m/home/cats/thumbs";
 
 const GUITAR_MEGA_ELECTRIC_IMAGE =
   "https://res.cloudinary.com/piyushgoenka/image/upload/c_fill,w_800,h_600,g_center,q_82,f_auto/v1782292639/products/guitars/hertz-hzr-4002e-hzr-4002e/03-hza-4001-e-na-amazonfnt.png";
@@ -56,7 +68,7 @@ function cleanLocalPath(path: string): string {
 }
 
 function hrefForCategorySlug(slug: string): string {
-  const normalized = slug.toLowerCase();
+  const normalized = canonicalizeCategorySlug(slug);
   return SLUG_TO_HREF[normalized] ?? categoryPath(normalized);
 }
 
@@ -91,23 +103,52 @@ const HERO_IMAGE_BY_SLUG: Record<string, string> = {
   "video-cameras": "/images/m/home/cats/EOSR82450Kit.png",
 };
 
-/** Grid / carousel category thumbnail (popular categories strip). */
+/** Explicit grid thumbs — never fall back to the Guitars Les Paul for these. */
+const GRID_THUMB_BY_SLUG: Record<string, string> = {
+  guitars: `${THUMB_DIR}/LPR59VOWCSNH.webp`,
+  bass: `${THUMB_DIR}/PBassAPR3SB.webp`,
+  "studio-recording": `${THUMB_DIR}/Arrow-small.webp`,
+  "drums-percussion": `${THUMB_DIR}/LM402.webp`,
+  "keyboards-synthesizers": `${THUMB_DIR}/Matriarch.webp`,
+  "live-sound-lighting": `${THUMB_DIR}/k12_2.webp`,
+  "software-plug-ins": `${THUMB_DIR}/ptstudioann.webp`,
+  "dj-equipment": `${THUMB_DIR}/ATLP120XUSBSV.webp`,
+  "microphones-wireless": `${THUMB_DIR}/SM58-cat.webp`,
+  "band-orchestra": `${THUMB_DIR}/KingSlvFlTr.webp`,
+  "home-audio-electronics": `${THUMB_DIR}/TourOneM2Bk.webp`,
+  "commercial-audio-installation": `${THUMB_DIR}/Control28.webp`,
+  "cables-cases-accessories": `${THUMB_DIR}/M4WP006.webp`,
+  "video-cameras": `${THUMB_DIR}/EOSR82450Kit.webp`,
+};
+
+/** True when we ship dedicated local art for this department slug. */
+export function hasCuratedCategoryImage(slug: string): boolean {
+  const key = canonicalizeCategorySlug(slug);
+  return Boolean(HERO_IMAGE_BY_SLUG[key] || GRID_THUMB_BY_SLUG[key]);
+}
+
+/** Grid / carousel category thumbnail (popular categories strip + /categories). */
 export function getCategoryGridImage(slug: string): string {
-  const href = hrefForCategorySlug(slug);
+  const key = canonicalizeCategorySlug(slug);
+  if (GRID_THUMB_BY_SLUG[key]) return GRID_THUMB_BY_SLUG[key];
+
+  const href = hrefForCategorySlug(key);
   return imageFromPopularCategories(href) ?? FALLBACK_IMAGE;
 }
 
 /** Hero-sized category image for bento tiles and marketing blocks. */
 export function getCategoryHeroImage(slug: string): string {
-  return HERO_IMAGE_BY_SLUG[slug.toLowerCase()] ?? FALLBACK_IMAGE;
+  const key = canonicalizeCategorySlug(slug);
+  return HERO_IMAGE_BY_SLUG[key] ?? FALLBACK_IMAGE;
 }
 
 /** Mega menu featured cards — supports per-category variants (e.g. electric vs acoustic). */
 export function getMegaMenuFeaturedImage(slug: string, variant?: string): string {
+  const key = canonicalizeCategorySlug(slug);
   if (variant) {
-    const override = MEGA_MENU_VARIANT_OVERRIDES[`${slug}:${variant}`];
+    const override = MEGA_MENU_VARIANT_OVERRIDES[`${key}:${variant}`];
     if (override) return cleanLocalPath(override);
   }
 
-  return getCategoryHeroImage(slug);
+  return getCategoryHeroImage(key);
 }

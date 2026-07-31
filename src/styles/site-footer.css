@@ -822,14 +822,31 @@ body.is-landing-page
 
   /* Sticky commerce bars own the bottom edge — keep panel pass-through */
   body:has(.pdp-mobile-bar--visible) .footer-products-panel.is-ready.is-interactive,
-  body:has(.checkout-mobile-bar) .footer-products-panel.is-ready.is-interactive {
+  body:has(.checkout-mobile-bar) .footer-products-panel.is-ready.is-interactive,
+  body:has(.acct__mobile-nav) .footer-products-panel.is-ready.is-interactive {
     z-index: 0;
     pointer-events: none;
   }
 
   body:has(.pdp-mobile-bar--visible) .footer-products-panel.is-ready .footer-product-snippet__add,
-  body:has(.checkout-mobile-bar) .footer-products-panel.is-ready .footer-product-snippet__add {
+  body:has(.checkout-mobile-bar) .footer-products-panel.is-ready .footer-product-snippet__add,
+  body:has(.acct__mobile-nav) .footer-products-panel.is-ready .footer-product-snippet__add {
     pointer-events: none;
+  }
+
+  /* Account pages: hide the blue reveal panel under the bottom nav */
+  body.is-account-page .footer-products-panel,
+  body:has(.acct__mobile-nav) .footer-products-panel {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.is-account-page .site-footer__panel-spacer,
+  body:has(.acct__mobile-nav) .site-footer__panel-spacer {
+    display: none;
+    height: 0 !important;
+    min-height: 0 !important;
   }
 }
 

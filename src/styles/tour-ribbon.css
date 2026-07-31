@@ -156,9 +156,9 @@ body.is-landing-page .premium-home > .tour-ribbon {
     box-shadow: 0 40px 0 0 var(--tour-ribbon-blue);
   }
 
-  /* Trust strip already adds mobile padding-top when present */
+  /* Clearance so the floating trust card (metrics row) isn’t cropped */
   body.is-landing-page .premium-home > .social-proof-strip + .tour-ribbon {
-    padding-top: 3.25rem;
+    padding-top: 3.75rem;
   }
 
   .tour-ribbon__stage {

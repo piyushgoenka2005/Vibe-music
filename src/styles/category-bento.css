@@ -1085,10 +1085,8 @@
 
   .category-bento__showcase-scroll {
     --bento-card-w: min(86vw, 300px);
-    --bento-side-pad: max(
-      env(safe-area-inset-left, 0px),
-      calc((100% - var(--bento-card-w)) / 2)
-    );
+    --bento-side-pad: max(0.875rem, env(safe-area-inset-left, 0px));
+    --bento-side-pad-end: max(0.875rem, env(safe-area-inset-right, 0px));
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x proximity;
@@ -1096,8 +1094,8 @@
     scrollbar-width: none;
     margin-inline: calc(-1 * max(0.875rem, env(safe-area-inset-left, 0px)))
       calc(-1 * max(0.875rem, env(safe-area-inset-right, 0px)));
-    padding-inline: var(--bento-side-pad);
-    scroll-padding-inline: var(--bento-side-pad);
+    padding-inline: var(--bento-side-pad) var(--bento-side-pad-end);
+    scroll-padding-inline: var(--bento-side-pad) var(--bento-side-pad-end);
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
     /* Native pan-x for momentum; pan-y keeps page scroll */
@@ -1133,7 +1131,7 @@
   .category-bento__grid > .category-bento__tile:nth-child(n) {
     flex: 0 0 var(--bento-card-w);
     min-height: 0;
-    scroll-snap-align: center;
+    scroll-snap-align: start;
     scroll-snap-stop: always;
     grid-column: auto;
     grid-row: auto;

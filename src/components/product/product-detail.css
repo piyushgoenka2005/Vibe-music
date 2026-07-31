@@ -20,6 +20,7 @@
 
 @media (max-width: 767px) {
   .pdp {
+    --pdp-pad-x: 0.5rem;
     max-width: 100%;
     margin-inline: 0;
     padding-inline: 0;
@@ -1751,18 +1752,31 @@
 }
 
 .pdp-buybox__price-block {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
   margin-bottom: 10px;
+}
+
+.pdp-buybox__price-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
 .pdp-buybox__list-row {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 6px;
   font-family: var(--font-sans, var(--font-primary)), ui-sans-serif, system-ui, sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: #0f1111;
-  margin-bottom: 2px;
+  margin-bottom: 0;
 }
 
 .pdp-buybox__list-price {
@@ -1780,9 +1794,24 @@
   color: #008a28;
 }
 
+/* Top-right pricing tag (matches annotated buy-box layout) */
+.pdp-buybox__price--tag {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin-left: auto;
+  padding: 0.35rem 0.55rem 0.4rem;
+  border: 1.5px solid #008a28;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, #008a28 6%, #ffffff);
+}
+
 .pdp-buybox__price--coming-soon {
   color: #0f1111;
   align-items: center;
+  margin-left: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
 }
 
 .pdp-buybox__coming-soon-label {
@@ -1811,7 +1840,7 @@
 }
 
 .pdp-buybox__savings {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   font-family: var(--font-sans, var(--font-primary)), ui-sans-serif, system-ui, sans-serif;
   font-size: 13px;
   font-weight: 700;
@@ -3833,7 +3862,7 @@
     display: flex;
     flex-wrap: nowrap;
     align-items: stretch;
-    gap: 0.625rem;
+    gap: 0.5rem;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
@@ -3842,7 +3871,7 @@
     overscroll-behavior-x: contain;
     touch-action: pan-x pan-y;
     padding-bottom: 4px;
-    /* Edge-to-edge rail; peek padding only on the trailing end */
+    /* Small left gutter only — no double inset with page padding */
     margin-inline: 0;
     padding-inline: 0;
     scroll-padding-inline: 0;
@@ -3854,14 +3883,14 @@
   }
 
   .pdp-cross-sell__card-wrap {
-    flex: 0 0 clamp(156px, 44vw, 188px);
-    width: clamp(156px, 44vw, 188px);
-    max-width: clamp(156px, 44vw, 188px);
+    flex: 0 0 clamp(148px, 42vw, 176px);
+    width: clamp(148px, 42vw, 176px);
+    max-width: clamp(148px, 42vw, 176px);
     scroll-snap-align: start;
     align-self: stretch;
   }
 
-  /* First card flush to screen edge; last card has a small end inset */
+  /* First card flush to section edge */
   .pdp-cross-sell__card-wrap:first-child {
     margin-left: 0;
   }
@@ -3879,8 +3908,8 @@
   }
 
   .pdp-section--cross-sell .pdp-section__title {
-    padding-inline: var(--pdp-pad-x);
-    margin-bottom: 14px;
+    padding-inline: 0;
+    margin-bottom: 0.75rem;
   }
 
   .pdp-cross-sell__card {
@@ -4006,7 +4035,8 @@
     border-radius: 0;
     border-left: none;
     border-right: none;
-    overflow: hidden;
+    /* Must stay visible — overflow:hidden breaks nested touch scroll on iOS */
+    overflow: visible;
   }
 
   .pdp-section--fbt {
@@ -4014,37 +4044,58 @@
     max-width: none;
     margin-inline: 0;
     box-sizing: border-box;
-    overflow-x: clip;
+    overflow: visible;
   }
 
   .pdp-section--fbt .pdp-section__title {
-    padding-inline: var(--pdp-pad-x);
-    margin-bottom: 14px;
+    padding-inline: 0;
+    margin-bottom: 0.75rem;
   }
 
   .pdp-fbt__products {
     display: flex;
     flex-wrap: nowrap;
     align-items: stretch;
-    justify-content: stretch;
+    justify-content: flex-start;
     width: 100%;
     max-width: 100%;
-    padding: 0.85rem var(--pdp-pad-x);
+    min-width: 0;
+    /* Flush first card; room on the right to peek the next */
+    padding: 0.85rem var(--pdp-pad-x) 0.85rem 0;
     gap: 0;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 0;
+    touch-action: pan-x pan-y;
     box-sizing: border-box;
+    scrollbar-width: thin;
   }
 
   .pdp-fbt__product-group {
-    flex: 1 1 0;
-    min-width: 0;
-    max-width: none;
+    /* Fixed width so 3+ cards always overflow and can scroll */
+    flex: 0 0 auto;
+    width: min(42vw, 10.75rem);
+    min-width: min(42vw, 10.75rem);
+    max-width: min(42vw, 10.75rem);
+    scroll-snap-align: start;
+  }
+
+  .pdp-fbt__plus {
+    flex: 0 0 auto;
+    padding: 0 0.35rem;
+    font-size: 1rem;
+    align-self: center;
   }
 
   .pdp-fbt__card {
     width: 100%;
     min-width: 0;
-    padding: 0.55rem 0.35rem 0.5rem;
+    max-width: none;
+    flex-shrink: 0;
+    padding: 0.55rem 0.45rem 0.5rem;
   }
 
   .pdp-fbt__image-wrap {
@@ -4084,7 +4135,7 @@
     font-size: 1rem;
   }
 
-  /* Savings already shown in summary — hide circle so 2 cards fit end-to-end */
+  /* Savings already shown in summary — hide circle so cards can scroll */
   .pdp-fbt__savings-cluster {
     display: none;
   }
