@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import Link from "next/link";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { categoryPath, productPath } from "@/lib/routes";
@@ -116,90 +116,92 @@ export default function FrequentlyBoughtTogether({
             const qty = quantities[product.id] ?? 1;
 
             return (
-              <div key={product.id} className="pdp-fbt__product-group">
-                {index > 0 && (
+              <Fragment key={product.id}>
+                {index > 0 ? (
                   <span className="pdp-fbt__plus" aria-hidden="true">
                     +
                   </span>
-                )}
-                <div
-                  className={`pdp-fbt__card${isChecked ? " pdp-fbt__card--selected" : ""}${isMain ? " pdp-fbt__card--main" : ""}`}
-                >
-                  {!isMain && (
-                    <label className="pdp-fbt__checkbox-wrap">
-                      <input
-                        type="checkbox"
-                        className="pdp-fbt__checkbox"
-                        checked={isChecked}
-                        onChange={() => toggleItem(product.id)}
-                        aria-label={`Include ${product.name}`}
-                      />
-                      <span className="pdp-fbt__checkmark" />
-                    </label>
-                  )}
-                  <Link
-                    href={productPath(product.slug)}
-                    className="pdp-fbt__card-link"
+                ) : null}
+                <div className="pdp-fbt__product-group">
+                  <div
+                    className={`pdp-fbt__card${isChecked ? " pdp-fbt__card--selected" : ""}${isMain ? " pdp-fbt__card--main" : ""}`}
                   >
-                    <div className="pdp-fbt__image-wrap">
-                      {product.image ? (
-                        <StorefrontThumbImage
-                          src={product.image}
-                          alt={product.name}
-                          className="pdp-fbt__image"
-                          width={240}
-                          height={240}
-                          preferOriginal
+                    {!isMain && (
+                      <label className="pdp-fbt__checkbox-wrap">
+                        <input
+                          type="checkbox"
+                          className="pdp-fbt__checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleItem(product.id)}
+                          aria-label={`Include ${product.name}`}
                         />
-                      ) : (
-                        <div
-                          className="pdp-fbt__image-placeholder"
-                          style={{ backgroundColor: product.imageColor }}
-                        />
+                        <span className="pdp-fbt__checkmark" />
+                      </label>
+                    )}
+                    <Link
+                      href={productPath(product.slug)}
+                      className="pdp-fbt__card-link"
+                    >
+                      <div className="pdp-fbt__image-wrap">
+                        {product.image ? (
+                          <StorefrontThumbImage
+                            src={product.image}
+                            alt={product.name}
+                            className="pdp-fbt__image"
+                            width={240}
+                            height={240}
+                            preferOriginal
+                          />
+                        ) : (
+                          <div
+                            className="pdp-fbt__image-placeholder"
+                            style={{ backgroundColor: product.imageColor }}
+                          />
+                        )}
+                      </div>
+                    </Link>
+                    <div className="pdp-fbt__card-info">
+                      <span className="pdp-fbt__brand">{product.brand}</span>
+                      <h3 className="pdp-fbt__name" title={product.name}>
+                        {product.name}
+                      </h3>
+                      <span className="pdp-fbt__price">
+                        {formatDisplayPrice(product.price)}
+                      </span>
+                      {!isMain && isChecked && (
+                        <div className="pdp-fbt__qty-row">
+                          <span className="pdp-fbt__qty-label">qty</span>
+                          <div className="pdp-fbt__qty-control">
+                            <button
+                              type="button"
+                              className="pdp-fbt__qty-btn"
+                              onClick={() => updateQty(product.id, -1)}
+                              disabled={qty <= 1}
+                              aria-label="Decrease quantity"
+                            >
+                              −
+                            </button>
+                            <span className="pdp-fbt__qty-value">{qty}</span>
+                            <button
+                              type="button"
+                              className="pdp-fbt__qty-btn"
+                              onClick={() => updateQty(product.id, 1)}
+                              aria-label="Increase quantity"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  </Link>
-                  <div className="pdp-fbt__card-info">
-                    <span className="pdp-fbt__brand">{product.brand}</span>
-                    <h3 className="pdp-fbt__name" title={product.name}>
-                      {product.name}
-                    </h3>
-                    <span className="pdp-fbt__price">
-                      {formatDisplayPrice(product.price)}
-                    </span>
-                    {!isMain && isChecked && (
-                      <div className="pdp-fbt__qty-row">
-                        <span className="pdp-fbt__qty-label">qty</span>
-                        <div className="pdp-fbt__qty-control">
-                          <button
-                            type="button"
-                            className="pdp-fbt__qty-btn"
-                            onClick={() => updateQty(product.id, -1)}
-                            disabled={qty <= 1}
-                            aria-label="Decrease quantity"
-                          >
-                            −
-                          </button>
-                          <span className="pdp-fbt__qty-value">{qty}</span>
-                          <button
-                            type="button"
-                            className="pdp-fbt__qty-btn"
-                            onClick={() => updateQty(product.id, 1)}
-                            aria-label="Increase quantity"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
-              </div>
+              </Fragment>
             );
           })}
 
           {savings > 0 && (
-            <>
+            <div className="pdp-fbt__savings-cluster">
               <span className="pdp-fbt__plus" aria-hidden="true">
                 =
               </span>
@@ -209,7 +211,7 @@ export default function FrequentlyBoughtTogether({
                 </span>
                 <span className="pdp-fbt__savings-label">Bundle<br />Savings</span>
               </div>
-            </>
+            </div>
           )}
         </div>
 

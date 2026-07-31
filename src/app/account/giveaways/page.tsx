@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import AccountShell from "@/components/account/AccountShell";
 import { ROUTES } from "@/lib/routes";
 import "@/styles/giveaway.css";
 
@@ -19,7 +18,7 @@ export default function AccountGiveawaysPage() {
   const entries = data?.entries ?? [];
 
   return (
-    <AccountShell>
+    <>
       <h1>My giveaway entries</h1>
       <p style={{ marginBottom: "1rem" }}>
         <Link href={ROUTES.giveaway}>Browse live giveaways</Link>
@@ -53,6 +52,6 @@ export default function AccountGiveawaysPage() {
           ))}
         </div>
       )}
-    </AccountShell>
+    </>
   );
 }

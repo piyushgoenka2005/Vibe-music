@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import AccountShell from "@/components/account/AccountShell";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrency } from "@/utils/currency";
 import { formatRentalDateRange } from "@/lib/rental/durationUtils";
@@ -26,7 +25,7 @@ export default function AccountRentalDetailPage() {
   const booking = data?.booking;
 
   return (
-    <AccountShell>
+    <>
       <Link href={ROUTES.accountRentals}>← Back to rentals</Link>
       {isLoading || !booking ? (
         <p style={{ marginTop: "1rem" }}>Loading…</p>
@@ -58,6 +57,6 @@ export default function AccountRentalDetailPage() {
           </a>
         </div>
       )}
-    </AccountShell>
+    </>
   );
 }

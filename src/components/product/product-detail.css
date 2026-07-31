@@ -3275,39 +3275,52 @@
 
 /* ── Complete Your Order / FBT ────────────────────────────── */
 .pdp-fbt {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
   align-items: stretch;
   gap: 0;
+  width: 100%;
+  max-width: 100%;
   border: 1px solid var(--pdp-grey10);
   border-radius: 10px;
   background: #fff;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .pdp-fbt__products {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0;
-  padding: 28px 20px;
-  flex: 1;
+  justify-content: flex-start;
+  gap: 0.35rem 0.15rem;
+  padding: 1.25rem 1rem;
   min-width: 0;
-  overflow-x: auto;
-  scroll-behavior: smooth;
+  overflow: hidden;
 }
 
 .pdp-fbt__product-group {
   display: flex;
   align-items: center;
-  flex-shrink: 0;
+  flex: 0 1 11.5rem;
+  min-width: 0;
+  max-width: 12.5rem;
 }
 
 .pdp-fbt__plus {
-  font-size: 22px;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--pdp-grey50);
-  padding: 0 14px;
+  padding: 0 0.5rem;
   flex-shrink: 0;
   user-select: none;
+}
+
+.pdp-fbt__savings-cluster {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .pdp-fbt__card {
@@ -3315,12 +3328,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 170px;
-  padding: 14px 10px 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem 0.5rem 0.65rem;
   border-radius: 8px;
   border: 2px solid transparent;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .pdp-fbt__card--selected {
@@ -3393,12 +3408,14 @@
 }
 
 .pdp-fbt__image-wrap {
-  width: 180px;
-  height: 170px;
+  width: 100%;
+  max-width: 8.75rem;
+  aspect-ratio: 1;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
+  margin: 0 auto 0.55rem;
   background: transparent;
 }
 
@@ -3509,8 +3526,8 @@
 
 /* ─ Bundle savings badge ─ */
 .pdp-fbt__savings-badge {
-  width: 96px;
-  height: 96px;
+  width: 4.75rem;
+  height: 4.75rem;
   border-radius: 50%;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   display: flex;
@@ -3518,23 +3535,24 @@
   align-items: center;
   justify-content: center;
   color: #fff;
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  margin-inline-start: 0.35rem;
   box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
 }
 
 .pdp-fbt__savings-amount {
-  font-size: 18px;
+  font-size: 0.8125rem;
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
 }
 
 .pdp-fbt__savings-label {
-  font-size: 11px;
+  font-size: 0.5625rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
   text-align: center;
   margin-top: 2px;
 }
@@ -3545,12 +3563,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 28px 32px;
+  gap: 0.75rem;
+  padding: 1.25rem 1.25rem;
   border-left: 1px solid var(--pdp-grey10);
   background: #fafafa;
-  min-width: 280px;
+  min-width: 0;
+  width: 100%;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .pdp-fbt__summary-pricing {
@@ -3582,7 +3602,7 @@
 
 .pdp-fbt__add-all {
   width: 100%;
-  max-width: 260px;
+  max-width: none;
   padding: 13px 24px;
   font-size: 15px;
   font-weight: 700;
@@ -3604,13 +3624,48 @@
 
 .pdp-fbt__build-own {
   width: 100%;
-  max-width: 260px;
+  max-width: none;
   padding: 12px 24px;
   font-size: 14px;
   font-weight: 600;
   border-radius: 10px;
   text-align: center;
   text-decoration: none;
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .pdp-fbt {
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 240px);
+  }
+
+  .pdp-fbt__product-group {
+    flex-basis: 9.5rem;
+    max-width: 10.5rem;
+  }
+
+  .pdp-fbt__savings-badge {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .pdp-fbt__savings-amount {
+    font-size: 0.7rem;
+  }
+
+  .pdp-fbt__summary {
+    padding: 1rem 0.85rem;
+  }
+
+  .pdp-fbt__summary-total {
+    font-size: 1.15rem;
+  }
+
+  .pdp-fbt__add-all,
+  .pdp-fbt__build-own {
+    max-width: none;
+    font-size: 0.8125rem;
+    padding: 0.65rem 0.75rem;
+  }
 }
 
 /* Skeleton */
@@ -3919,11 +3974,14 @@
   }
 
   .pdp-fbt {
+    display: flex;
     flex-direction: column;
     width: 100%;
+    max-width: 100%;
     border-radius: 0;
     border-left: none;
     border-right: none;
+    overflow: hidden;
   }
 
   .pdp-section--fbt {
@@ -3931,6 +3989,7 @@
     max-width: none;
     margin-inline: 0;
     box-sizing: border-box;
+    overflow-x: clip;
   }
 
   .pdp-section--fbt .pdp-section__title {
@@ -3939,45 +3998,78 @@
   }
 
   .pdp-fbt__products {
-    padding: 16px var(--pdp-pad-x);
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: stretch;
+    width: 100%;
+    max-width: 100%;
+    padding: 0.85rem var(--pdp-pad-x);
     gap: 0;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .pdp-fbt__product-group {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
   }
 
   .pdp-fbt__card {
-    width: min(150px, 40vw);
+    width: 100%;
+    min-width: 0;
+    padding: 0.55rem 0.35rem 0.5rem;
   }
 
   .pdp-fbt__image-wrap {
-    width: 110px;
-    height: 100px;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    margin-bottom: 0.4rem;
+  }
+
+  .pdp-fbt__name {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .pdp-fbt__price {
+    font-size: 0.8125rem;
+  }
+
+  .pdp-fbt__qty-row {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .pdp-fbt__qty-btn {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .pdp-fbt__qty-value {
+    width: 1.5rem;
+    line-height: 1.5rem;
   }
 
   .pdp-fbt__plus {
-    padding: 0 8px;
-    font-size: 18px;
+    padding: 0 0.3rem;
+    font-size: 1rem;
   }
 
-  .pdp-fbt__savings-badge {
-    width: 76px;
-    height: 76px;
-  }
-
-  .pdp-fbt__savings-amount {
-    font-size: 14px;
-  }
-
-  .pdp-fbt__savings-label {
-    font-size: 9px;
+  /* Savings already shown in summary — hide circle so 2 cards fit end-to-end */
+  .pdp-fbt__savings-cluster {
+    display: none;
   }
 
   .pdp-fbt__summary {
     border-left: none;
     border-top: 1px solid var(--pdp-grey10);
     min-width: 0;
-    padding: 20px var(--pdp-pad-x);
+    width: 100%;
+    padding: 1rem var(--pdp-pad-x);
   }
 
   .pdp-fbt__add-all {
@@ -3999,6 +4091,10 @@
     background: #ffffff;
     color: #0f1111;
     outline: none;
+  }
+
+  .pdp-fbt__build-own {
+    max-width: none;
   }
 
   .pdp-qty__control input {

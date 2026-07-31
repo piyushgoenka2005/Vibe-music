@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import AccountShell from "@/components/account/AccountShell";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrency } from "@/utils/currency";
 import "@/styles/rentals.css";
@@ -20,7 +19,7 @@ export default function AccountRentalsPage() {
   const bookings = data?.bookings ?? [];
 
   return (
-    <AccountShell>
+    <>
       <h1>My rentals</h1>
       {isLoading ? (
         <p>Loading rentals…</p>
@@ -52,6 +51,6 @@ export default function AccountRentalsPage() {
           ))}
         </div>
       )}
-    </AccountShell>
+    </>
   );
 }
