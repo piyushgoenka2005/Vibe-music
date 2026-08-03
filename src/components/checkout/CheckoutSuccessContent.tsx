@@ -5,6 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
+import {
+  clearLastCheckoutMode,
+  readLastCheckoutMode,
+  useBuyNowStore,
+} from "@/store/buyNowStore";
 import { formatOrderIdDisplay } from "@/lib/orderId";
 import {
   isInvoiceGenerated,
@@ -15,6 +20,7 @@ import { ROUTES } from "@/lib/routes";
 import { formatCurrencyPrecise } from "@/utils/currency";
 import {
   clearCachedOrderForConfirmation,
+  readCachedCheckoutMode,
   readCachedOrderForConfirmation,
 } from "@/lib/checkout/orderConfirmationCache";
 import { isInvoiceAvailable, withInvoiceReturnTo } from "@/features/invoice/utils/invoice-utils";
@@ -30,6 +36,7 @@ export default function CheckoutSuccessContent() {
   const emailParam = searchParams.get("email");
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const clearCart = useCartStore((s) => s.clearCart);
+  const clearBuyNow = useBuyNowStore((s) => s.clearBuyNow);
   const missingOrderId = !orderId;
 
   const initial =
@@ -52,10 +59,16 @@ export default function CheckoutSuccessContent() {
   const invoiceUrls = data?.invoiceUrls ?? null;
 
   useEffect(() => {
-    if (orderId) {
+    if (!orderId) return;
+    const mode =
+      readCachedCheckoutMode(orderId) ?? readLastCheckoutMode();
+    if (mode === "buyNow") {
+      clearBuyNow();
+    } else {
       clearCart();
     }
-  }, [clearCart, orderId]);
+    clearLastCheckoutMode();
+  }, [clearBuyNow, clearCart, orderId]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });

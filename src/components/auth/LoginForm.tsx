@@ -172,7 +172,7 @@ export default function LoginForm({ googleAuthEnabled = false }: LoginFormProps)
             name="rememberMe"
             render={({ field }) => (
               <FormItem className="auth-shell__field">
-                <label className="auth-shell__field-row">
+                <label className="auth-shell__checkbox">
                   <input
                     type="checkbox"
                     checked={Boolean(field.value)}

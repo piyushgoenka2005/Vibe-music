@@ -10,15 +10,15 @@ import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
 import { storefrontImageCandidates } from "@/lib/storefrontImages";
 
 const PRODUCT_FALLBACK = "/images/guitar-1.webp";
+const AUTO_ADVANCE_MS = 3500;
+const RESUME_AFTER_IDLE_MS = 4500;
 
 function BigNamesDealItem({
   item,
   index,
-  isDuplicate = false,
 }: {
   item: BigNamesDealItem;
   index: number;
-  isDuplicate?: boolean;
 }) {
   const candidates = useMemo(
     () =>
@@ -39,7 +39,6 @@ function BigNamesDealItem({
     <div
       className="big-names-deals__item"
       role="listitem"
-      aria-hidden={isDuplicate ? true : undefined}
       style={{ "--big-names-index": String(index) } as CSSProperties}
     >
       <Link
@@ -47,7 +46,6 @@ function BigNamesDealItem({
         className="big-names-deals__link"
         href={item.href}
         prefetch
-        tabIndex={isDuplicate ? -1 : undefined}
       >
         <div className="big-names-deals__hang-wrap">
           <div className="big-names-deals__product-stage">
@@ -83,26 +81,11 @@ interface BigNamesDealsShowcaseProps {
 export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcaseProps) {
   const reduceMotion = useHydrationSafeReducedMotion();
   const isMobileViewport = useIsMobileViewport();
-  const enableMobileAuto =
-    isMobileViewport && !reduceMotion && items.length > 1;
-  const showcaseItems = enableMobileAuto ? [...items, ...items] : items;
   const trackRef = useRef<HTMLDivElement>(null);
+  const pauseUntilRef = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
-
-  const scrollClassName = [
-    "big-names-deals__showcase-scroll",
-    "scrollbar-minimal",
-    enableMobileAuto && "big-names-deals__showcase-scroll--mobile-auto",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const showcaseClassName = [
-    "big-names-deals__showcase",
-    enableMobileAuto && "big-names-deals__showcase--mobile-auto",
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const enableAuto =
+    isMobileViewport && !reduceMotion && items.length > 1;
 
   const updateActiveIndex = useCallback(() => {
     const track = trackRef.current;
@@ -112,14 +95,41 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
     if (!slide) return;
 
     const slideWidth = slide.offsetWidth;
-    const gap = parseFloat(getComputedStyle(track).gap) || 0;
-    const index = Math.round(track.scrollLeft / (slideWidth + gap));
+    const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 0;
+    const stride = slideWidth + gap;
+    if (stride <= 0) return;
+
+    const index = Math.round(track.scrollLeft / stride);
     setActiveIndex(Math.min(items.length - 1, Math.max(0, index)));
   }, [items.length]);
 
-  useEffect(() => {
-    if (enableMobileAuto) return undefined;
+  const scrollToIndex = useCallback(
+    (index: number, behavior: ScrollBehavior = "smooth") => {
+      const track = trackRef.current;
+      if (!track) return;
 
+      const slide = track.querySelector<HTMLElement>(".big-names-deals__item");
+      if (!slide) return;
+
+      const slideWidth = slide.offsetWidth;
+      const gap =
+        parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) ||
+        0;
+      const next = ((index % items.length) + items.length) % items.length;
+      track.scrollTo({
+        left: next * (slideWidth + gap),
+        behavior,
+      });
+      setActiveIndex(next);
+    },
+    [items.length]
+  );
+
+  const pauseAuto = useCallback(() => {
+    pauseUntilRef.current = Date.now() + RESUME_AFTER_IDLE_MS;
+  }, []);
+
+  useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
 
@@ -127,54 +137,66 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
     track.addEventListener("scroll", updateActiveIndex, { passive: true });
     window.addEventListener("resize", updateActiveIndex);
 
+    const onInteract = () => pauseAuto();
+    track.addEventListener("pointerdown", onInteract, { passive: true });
+    track.addEventListener("touchstart", onInteract, { passive: true });
+    track.addEventListener("wheel", onInteract, { passive: true });
+
     return () => {
       track.removeEventListener("scroll", updateActiveIndex);
       window.removeEventListener("resize", updateActiveIndex);
+      track.removeEventListener("pointerdown", onInteract);
+      track.removeEventListener("touchstart", onInteract);
+      track.removeEventListener("wheel", onInteract);
     };
-  }, [enableMobileAuto, updateActiveIndex]);
+  }, [pauseAuto, updateActiveIndex]);
 
-  const scrollToIndex = (index: number) => {
-    if (enableMobileAuto) return;
+  useEffect(() => {
+    if (!enableAuto) return undefined;
 
-    const track = trackRef.current;
-    if (!track) return;
+    const id = window.setInterval(() => {
+      if (Date.now() < pauseUntilRef.current) return;
+      const track = trackRef.current;
+      if (!track) return;
 
-    const slide = track.querySelector<HTMLElement>(".big-names-deals__item");
-    if (!slide) return;
+      // Don't fight an active finger drag
+      if (track.matches(":active")) return;
 
-    const slideWidth = slide.offsetWidth;
-    const gap = parseFloat(getComputedStyle(track).gap) || 0;
-    track.scrollTo({
-      left: index * (slideWidth + gap),
-      behavior: "smooth",
-    });
-    setActiveIndex(index);
-  };
+      const slide = track.querySelector<HTMLElement>(".big-names-deals__item");
+      if (!slide) return;
+
+      const slideWidth = slide.offsetWidth;
+      const gap =
+        parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) ||
+        0;
+      const stride = slideWidth + gap;
+      if (stride <= 0) return;
+
+      const current = Math.round(track.scrollLeft / stride);
+      const next = (current + 1) % items.length;
+      track.scrollTo({
+        left: next * stride,
+        behavior: "smooth",
+      });
+    }, AUTO_ADVANCE_MS);
+
+    return () => window.clearInterval(id);
+  }, [enableAuto, items.length]);
 
   return (
     <>
-      <div ref={trackRef} className={scrollClassName}>
-        {enableMobileAuto ? (
-          <div className={showcaseClassName} role="list">
-            {showcaseItems.map((item, index) => (
-              <BigNamesDealItem
-                key={`${item.key}-${index}`}
-                index={index % items.length}
-                item={item}
-                isDuplicate={index >= items.length}
-              />
-            ))}
-          </div>
-        ) : (
-          <RevealGroup className={showcaseClassName} role="list">
-            {items.map((item, index) => (
-              <BigNamesDealItem key={item.key} index={index} item={item} />
-            ))}
-          </RevealGroup>
-        )}
+      <div
+        ref={trackRef}
+        className="big-names-deals__showcase-scroll scrollbar-minimal"
+      >
+        <RevealGroup className="big-names-deals__showcase" role="list">
+          {items.map((item, index) => (
+            <BigNamesDealItem key={item.key} index={index} item={item} />
+          ))}
+        </RevealGroup>
       </div>
 
-      {!enableMobileAuto ? (
+      {items.length > 1 ? (
         <div
           className="big-names-deals__pagination"
           role="tablist"
@@ -188,7 +210,10 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
               aria-selected={index === activeIndex}
               aria-label={`Show ${item.brand}`}
               className={`big-names-deals__dot${index === activeIndex ? " big-names-deals__dot--active" : ""}`}
-              onClick={() => scrollToIndex(index)}
+              onClick={() => {
+                pauseAuto();
+                scrollToIndex(index);
+              }}
             />
           ))}
         </div>

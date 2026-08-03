@@ -1789,9 +1789,9 @@
   display: flex;
   align-items: flex-start;
   line-height: 1;
-  font-family: var(--font-sans, var(--font-primary)), ui-sans-serif, system-ui, sans-serif;
+  font-family: Georgia, "Times New Roman", Times, serif;
   font-weight: 700;
-  color: #008a28;
+  color: #006400;
 }
 
 /* Top-right pricing tag (matches annotated buy-box layout) */
@@ -1800,9 +1800,9 @@
   align-self: flex-start;
   margin-left: auto;
   padding: 0.35rem 0.55rem 0.4rem;
-  border: 1.5px solid #008a28;
+  border: 1.5px solid #006400;
   border-radius: 0.5rem;
-  background: color-mix(in srgb, #008a28 6%, #ffffff);
+  background: transparent;
 }
 
 .pdp-buybox__price--coming-soon {

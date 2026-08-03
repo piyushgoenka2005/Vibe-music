@@ -191,8 +191,8 @@
 }
 
 .used-gear-page .cat-product-card__image-photo {
-  object-fit: cover;
-  padding: 0;
+  object-fit: contain;
+  padding: 0.35rem;
 }
 
 .used-gear-page .cat-product-card__body {

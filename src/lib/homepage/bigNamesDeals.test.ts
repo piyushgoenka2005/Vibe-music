@@ -57,8 +57,8 @@ describe("resolveBigNamesDealFallbacks", () => {
       }),
       guitar({
         id: "5",
-        slug: "hertz-hza-4060-hza-4060",
-        name: "HERTZ HZA-4060 Solid Top Acoustic Guitar",
+        slug: "hertz-hza-6000-hza-6000",
+        name: "HERTZ HZA-6000 Acoustic Guitar",
       }),
     ];
 
@@ -68,7 +68,7 @@ describe("resolveBigNamesDealFallbacks", () => {
       "/product/hertz-hza-3900-hza-3900",
       "/product/hertz-hza-3600-hza-3600",
       "/product/hertz-hza3900eq-hza3900eq",
-      "/product/hertz-hza-4060-hza-4060",
+      "/product/hertz-hza-6000-hza-6000",
     ]);
   });
 

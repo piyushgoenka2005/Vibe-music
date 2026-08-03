@@ -107,7 +107,7 @@ export default function SearchOverlay({
         aria-label="Search"
       >
         {isMobile ? (
-          <div className="sw-search-panel__header">
+          <div className="sw-search-panel__header sw-search-panel__header--brand">
             <input
               ref={inputRef}
               type="search"

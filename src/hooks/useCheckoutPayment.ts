@@ -35,6 +35,8 @@ export interface UseCheckoutPaymentOptions {
   disabled?: boolean;
   /** Warm the create-order API while the user reviews payment options. */
   prefetchEnabled?: boolean;
+  /** Amazon-style Buy Now vs full cart checkout. */
+  checkoutMode?: "cart" | "buyNow";
 }
 
 function orderPayloadKey(payload: CreateOrderPayload): string {
@@ -62,6 +64,7 @@ export function useCheckoutPayment({
   paymentMethod,
   disabled = false,
   prefetchEnabled = false,
+  checkoutMode = "cart",
 }: UseCheckoutPaymentOptions) {
   const router = useRouter();
   const { isReady, isLoading, error, openCheckout } = useRazorpay();
@@ -72,8 +75,10 @@ export function useCheckoutPayment({
     promise: Promise<CreateRazorpayOrderResponse>;
   } | null>(null);
 
-  const couponCode = useCartStore((s) => s.couponCode);
-  const couponDiscount = useCartStore((s) => s.discount());
+  const cartCouponCode = useCartStore((s) => s.couponCode);
+  const cartCouponDiscount = useCartStore((s) => s.discount());
+  const couponCode = checkoutMode === "buyNow" ? null : cartCouponCode;
+  const couponDiscount = checkoutMode === "buyNow" ? 0 : cartCouponDiscount;
   const showToast = useToastStore((s) => s.show);
 
   const isDisabled = disabled || isProcessing;
@@ -187,7 +192,7 @@ export function useCheckoutPayment({
           orderResponse.trackingToken
         );
         if (demo.order) {
-          cacheOrderForConfirmation(demo.order);
+          cacheOrderForConfirmation(demo.order, { checkoutMode });
         }
         router.replace(demo.redirectUrl);
         return;
@@ -249,7 +254,7 @@ export function useCheckoutPayment({
       });
 
       if (verified.order) {
-        cacheOrderForConfirmation(verified.order);
+        cacheOrderForConfirmation(verified.order, { checkoutMode });
       }
 
       goToOrderConfirmation(orderResponse.orderId, trackingToken, email);
@@ -275,6 +280,7 @@ export function useCheckoutPayment({
     router,
     openCheckout,
     goToOrderConfirmation,
+    checkoutMode,
   ]);
 
   return {

@@ -7,6 +7,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
 import { useProduct } from "@/hooks/useProduct";
 import { useCartStore } from "@/store/cartStore";
+import {
+  BUY_NOW_CHECKOUT_HREF,
+  useBuyNowStore,
+} from "@/store/buyNowStore";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import {
@@ -220,8 +224,11 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
 
   function handleBuyNow() {
     if (!isPurchasablePrice(variant.price)) return;
-    addItem(product, quantity, variant);
-    router.push("/checkout");
+    const started = useBuyNowStore
+      .getState()
+      .startBuyNow(product, quantity, variant);
+    if (!started) return;
+    router.push(BUY_NOW_CHECKOUT_HREF);
   }
 
   return (

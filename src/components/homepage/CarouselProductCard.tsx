@@ -16,7 +16,10 @@ import {
   listingQuickAddAriaLabel,
   shouldNavigateForVariants,
 } from "@/lib/product/listingQuickAdd";
-import { useCartStore } from "@/store/cartStore";
+import {
+  BUY_NOW_CHECKOUT_HREF,
+  useBuyNowStore,
+} from "@/store/buyNowStore";
 import type { HomepageProductItem } from "@/types/homepage";
 import type { Product } from "@/types/product";
 import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
@@ -62,8 +65,7 @@ export default function CarouselProductCard({
   imagePriority = false,
 }: CarouselProductCardProps) {
   const router = useRouter();
-  const addItem = useCartStore((state) => state.addItem);
-  const openDrawer = useCartStore((state) => state.openDrawer);
+  const startBuyNow = useBuyNowStore((state) => state.startBuyNow);
   const displayName = formatProductCardTitle(item.name, item.brand);
   const displayPrice = item.salePrice ?? item.price;
   const hasPrice = isPurchasablePrice(displayPrice);
@@ -89,7 +91,7 @@ export default function CarouselProductCard({
   const cartProduct = toCartProduct(item);
   const canQuickAdd = canListingQuickAdd(cartProduct);
 
-  function handleAddToCart(event: MouseEvent<HTMLButtonElement>) {
+  function handleBuyNow(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
     if (!canQuickAdd) return;
@@ -97,8 +99,8 @@ export default function CarouselProductCard({
       router.push(productHref);
       return;
     }
-    addItem(cartProduct);
-    openDrawer();
+    if (!startBuyNow(cartProduct)) return;
+    router.push(BUY_NOW_CHECKOUT_HREF);
   }
 
   return (
@@ -189,7 +191,7 @@ export default function CarouselProductCard({
             <button
               type="button"
               className="new-arrivals-card__buy"
-              onClick={handleAddToCart}
+              onClick={handleBuyNow}
               aria-label={listingQuickAddAriaLabel({
                 name: item.name,
                 requiresVariantSelection: item.requiresVariantSelection,

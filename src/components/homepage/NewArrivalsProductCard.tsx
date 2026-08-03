@@ -18,7 +18,10 @@ import {
   listingQuickAddAriaLabel,
   shouldNavigateForVariants,
 } from "@/lib/product/listingQuickAdd";
-import { useCartStore } from "@/store/cartStore";
+import {
+  BUY_NOW_CHECKOUT_HREF,
+  useBuyNowStore,
+} from "@/store/buyNowStore";
 import type { Product, ProductAvailability } from "@/types/product";
 
 export interface NewArrivalsProductCardProps {
@@ -87,8 +90,7 @@ export default function NewArrivalsProductCard({
   stock,
 }: NewArrivalsProductCardProps) {
   const router = useRouter();
-  const addItem = useCartStore((state) => state.addItem);
-  const openDrawer = useCartStore((state) => state.openDrawer);
+  const startBuyNow = useBuyNowStore((state) => state.startBuyNow);
   const displayPrice = salePrice ?? price;
   const hasPrice = isPurchasablePrice(displayPrice);
   const displayName = formatProductCardTitle(name, brand);
@@ -139,8 +141,8 @@ export default function NewArrivalsProductCard({
       router.push(productHref);
       return;
     }
-    addItem(cartProduct);
-    openDrawer();
+    if (!startBuyNow(cartProduct)) return;
+    router.push(BUY_NOW_CHECKOUT_HREF);
   }
 
   return (

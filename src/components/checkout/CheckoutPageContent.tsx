@@ -27,11 +27,17 @@ import { normalizeIndianPhone } from "@/lib/validations/address";
 import { DEFAULT_GST_RATE } from "@/lib/gstCalculator";
 import { type ShippingMethod, getDefaultShippingMethod, getShippingChargeForMethod, SHIPPING_METHOD_IDS } from "@/lib/shipping/shippingMethods";
 import { useCartHydrated } from "@/hooks/useCartHydrated";
+import { useBuyNowHydrated } from "@/hooks/useBuyNowHydrated";
 import { useCartCatalogReprice } from "@/hooks/useCartCatalogReprice";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
+import {
+  isBuyNowCheckoutSearchParam,
+  setLastCheckoutMode,
+  useBuyNowStore,
+} from "@/store/buyNowStore";
 import { useToastStore } from "@/store/toastStore";
 import { formatCurrencyPrecise } from "@/utils/currency";
 import {
@@ -101,10 +107,15 @@ function isValidEmail(email: string): boolean {
 export default function CheckoutPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const items = useCartStore((s) => s.items);
-  const couponCode = useCartStore((s) => s.couponCode);
+  const isBuyNowMode = isBuyNowCheckoutSearchParam(searchParams.get("buyNow"));
+  const cartItems = useCartStore((s) => s.items);
+  const buyNowItem = useBuyNowStore((s) => s.item);
+  const items = isBuyNowMode ? (buyNowItem ? [buyNowItem] : []) : cartItems;
+  const cartCouponCode = useCartStore((s) => s.couponCode);
   const applyCoupon = useCartStore((s) => s.applyCoupon);
-  const couponDiscount = useCartStore((s) => s.discount());
+  const cartCouponDiscount = useCartStore((s) => s.discount());
+  const couponCode = isBuyNowMode ? null : cartCouponCode;
+  const couponDiscount = isBuyNowMode ? 0 : cartCouponDiscount;
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const phone = useAccountProfileStore((s) => s.phone);
@@ -117,7 +128,9 @@ export default function CheckoutPageContent() {
   } = useAddresses();
   const showToast = useToastStore((s) => s.show);
   const cartHydrated = useCartHydrated();
-  useCartCatalogReprice(true);
+  const buyNowHydrated = useBuyNowHydrated();
+  const checkoutHydrated = isBuyNowMode ? buyNowHydrated : cartHydrated;
+  useCartCatalogReprice(!isBuyNowMode);
   const checkoutTrackedRef = useRef(false);
 
   useEffect(() => {
@@ -125,10 +138,19 @@ export default function CheckoutPageContent() {
   }, []);
 
   useEffect(() => {
-    if (!cartHydrated || items.length === 0 || checkoutTrackedRef.current) return;
+    if (isBuyNowMode) {
+      setLastCheckoutMode("buyNow");
+      return;
+    }
+    setLastCheckoutMode("cart");
+    useBuyNowStore.getState().clearBuyNow();
+  }, [isBuyNowMode]);
+
+  useEffect(() => {
+    if (!checkoutHydrated || items.length === 0 || checkoutTrackedRef.current) return;
     checkoutTrackedRef.current = true;
     trackBeginCheckout(cartItemsToAnalyticsLines(items), couponCode ?? undefined);
-  }, [cartHydrated, items, couponCode]);
+  }, [checkoutHydrated, items, couponCode]);
 
   const [step, setStep] = useState<CheckoutStep>("address");
   const savedAddresses = useMemo(
@@ -225,10 +247,11 @@ export default function CheckoutPageContent() {
   }, [step]);
 
   useEffect(() => {
+    if (isBuyNowMode) return;
     const fromUrl = searchParams.get("coupon") ?? searchParams.get("code");
-    if (!fromUrl || couponCode) return;
+    if (!fromUrl || cartCouponCode) return;
     void applyCoupon(fromUrl);
-  }, [searchParams, couponCode, applyCoupon]);
+  }, [searchParams, cartCouponCode, applyCoupon, isBuyNowMode]);
 
   const placesAutocomplete =
     checkoutCapabilities?.placesAutocomplete ?? false;
@@ -394,6 +417,7 @@ export default function CheckoutPageContent() {
     customerPhone: contactPhone,
     phone: contactPhone || undefined,
     paymentMethod: effectivePaymentMethod,
+    checkoutMode: isBuyNowMode ? "buyNow" : "cart",
     disabled:
       step !== "payment" || !resolvedAddress || !hasValidContact,
     prefetchEnabled:
@@ -404,11 +428,17 @@ export default function CheckoutPageContent() {
   });
 
   useEffect(() => {
-    if (!cartHydrated) return;
+    if (!checkoutHydrated) return;
     if (items.length === 0 && !payment.isProcessing) {
-      router.replace(ROUTES.cart);
+      router.replace(isBuyNowMode ? ROUTES.home : ROUTES.cart);
     }
-  }, [cartHydrated, items.length, payment.isProcessing, router]);
+  }, [
+    checkoutHydrated,
+    items.length,
+    payment.isProcessing,
+    router,
+    isBuyNowMode,
+  ]);
 
   async function handleContinueFromAddress() {
     setAddressError(null);
@@ -552,7 +582,7 @@ export default function CheckoutPageContent() {
     }
   }
 
-  if (!cartHydrated || items.length === 0) {
+  if (!checkoutHydrated || items.length === 0) {
     return (
       <div className="checkout-page checkout-page--loading" aria-busy="true">
         <div className="checkout-skeleton checkout-skeleton--title" />

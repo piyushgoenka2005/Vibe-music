@@ -57,12 +57,12 @@ export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
     productAlt: "Hertz HZA3900EQ electro acoustic guitar",
   },
   {
-    key: "hertz-hza-4060",
+    key: "hertz-hza-6000",
     brand: "Hertz",
-    productSlug: "hertz-hza-4060-hza-4060",
-    href: productPath("hertz-hza-4060-hza-4060"),
+    productSlug: "hertz-hza-6000-hza-6000",
+    href: productPath("hertz-hza-6000-hza-6000"),
     logo: "/images/big-names-deals/fender-logo.svg",
     product: "/images/big-names-deals/fender-product.webp",
-    productAlt: "Hertz HZA-4060 solid top acoustic guitar",
+    productAlt: "Hertz HZA-6000 acoustic guitar",
   },
 ];

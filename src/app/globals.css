@@ -202,7 +202,7 @@ body {
 .cat-product-card__image-photo {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   display: block;
   background: transparent;
