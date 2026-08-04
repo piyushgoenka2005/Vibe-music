@@ -14,11 +14,11 @@
   --homepage-content-max: calc(100dvw - 1.5rem);
   --homepage-gutter: clamp(0.5rem, 1.25vw, 0.875rem);
   --stats-bridge-space: clamp(1.5rem, 3vw, 2.25rem);
-  /* Rest: full product visible (contain); mild hover pop only. */
-  --home-product-image-scale: 1;
-  --home-product-image-scale-hover: 1.06;
-  --home-product-image-scale-hover-strong: 1.08;
-  --home-product-image-inset: 0.75rem;
+  /* Rest: larger fill; hover keeps a clear ~12–15% pop inside the well. */
+  --home-product-image-scale: 1.2;
+  --home-product-image-scale-hover: 1.32;
+  --home-product-image-scale-hover-strong: 1.36;
+  --home-product-image-inset: 0.15rem;
 }
 
 @media (min-width: 1024px) {
@@ -2756,7 +2756,7 @@ body.is-landing-page
   object-position: center center;
   display: block;
   z-index: 2;
-  padding: var(--home-product-image-inset, 0.75rem);
+  padding: var(--home-product-image-inset, 0.15rem);
   box-sizing: border-box;
   transform: scale(var(--home-product-image-scale));
   transform-origin: center center;
@@ -2774,7 +2774,7 @@ body.is-landing-page
 .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
   transform: scale(var(--home-product-image-scale-hover-strong));
   filter: drop-shadow(0 18px 26px rgba(15, 23, 42, 0.22));
-  padding: 0.35rem;
+  padding: 0;
 }
 
 .premium-home .new-arrivals-card__image--placeholder,
@@ -3330,7 +3330,7 @@ body.is-landing-page
     width: 100% !important;
     height: 100% !important;
     max-width: none;
-    padding: var(--home-product-image-inset, 0.75rem);
+    padding: var(--home-product-image-inset, 0.15rem);
     box-sizing: border-box;
     transform: scale(var(--home-product-image-scale));
     transform-origin: center center;
@@ -3345,6 +3345,7 @@ body.is-landing-page
   .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
     transform: scale(var(--home-product-image-scale-hover-strong));
     filter: drop-shadow(0 12px 16px rgba(15, 23, 42, 0.14));
+    padding: 0;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -3354,6 +3355,7 @@ body.is-landing-page
     .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
       transform: scale(var(--home-product-image-scale-hover-strong));
       filter: drop-shadow(0 14px 18px rgba(15, 23, 42, 0.16));
+      padding: 0;
     }
   }
 
@@ -5073,6 +5075,7 @@ body.is-landing-page
   .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
     transform: scale(var(--home-product-image-scale-hover));
     filter: drop-shadow(0 6px 10px rgba(15, 23, 42, 0.08));
+    padding: 0;
   }
 
   .blog-teaser__link:hover .blog-teaser__image,
@@ -5296,7 +5299,7 @@ body.is-landing-page
   height: auto;
   min-height: 0;
   max-height: none;
-  padding: var(--home-product-image-inset, 0.75rem);
+  padding: var(--home-product-image-inset, 0.15rem);
   overflow: hidden;
   background: #ffffff;
   isolation: isolate;
@@ -5602,7 +5605,7 @@ body.is-landing-page
   .premium-home .homepage-deals-section .homepage-deals-card__media,
   .premium-home .homepage-deals-section .tile--image {
     aspect-ratio: 1 / 1;
-    padding: var(--home-product-image-inset, 0.75rem);
+    padding: var(--home-product-image-inset, 0.15rem);
     overflow: hidden;
   }
 

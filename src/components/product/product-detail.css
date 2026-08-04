@@ -235,7 +235,7 @@
   --pdp-thumb-scrollbar-track: #e5e7eb;
   --pdp-thumb-scrollbar-thumb: #9ca3af;
   --pdp-thumb-scrollbar-thumb-hover: #6b7280;
-  --pdp-gallery-photo-scale: 0.94;
+  --pdp-gallery-photo-scale: 1.16;
   /* Rail = cards + whitespace + scrollbar track (no overlap/clipping). */
   --pdp-thumbs-rail-width: calc(
     var(--pdp-thumb-size) + var(--pdp-thumb-scroll-gap) + var(--pdp-thumb-scrollbar-size)
@@ -307,7 +307,7 @@
 
 /* Keep display scale while zooming so lens mapping stays aligned */
 .pdp-gallery__main--zooming .pdp-gallery__photo {
-  transform: scale(var(--pdp-gallery-photo-scale, 0.94));
+  transform: scale(var(--pdp-gallery-photo-scale, 1.16));
 }
 
 .pdp-gallery__main-inner {
@@ -336,7 +336,7 @@
   user-select: none;
   pointer-events: none;
   /* Keep product fully visible inside the square frame (no side crop) */
-  transform: scale(var(--pdp-gallery-photo-scale, 0.94));
+  transform: scale(var(--pdp-gallery-photo-scale, 1.16));
   transform-origin: center center;
 }
 
@@ -579,8 +579,8 @@
     gap: 12px;
     width: 100%;
     max-width: 100%;
-    /* Larger product fill on phone/tablet; well still clips overflow. */
-    --pdp-gallery-photo-scale: 1.22;
+    /* Mild fill — still below crop threshold for wide mics/keyboards. */
+    --pdp-gallery-photo-scale: 1.2;
   }
 
   .pdp-gallery__stage {
@@ -599,7 +599,7 @@
   }
 
   .pdp-gallery__main-inner {
-    padding: 0.2rem;
+    padding: 0.12rem;
   }
 
   .pdp-gallery__photo {
@@ -611,7 +611,7 @@
     object-position: center center;
     margin: 0 auto;
     display: block;
-    transform: scale(var(--pdp-gallery-photo-scale, 1.22));
+    transform: scale(var(--pdp-gallery-photo-scale, 1.2));
     transform-origin: center center;
   }
 
@@ -695,24 +695,24 @@
   }
 }
 
-/* Phones — fill the square more (wide keyboards / mics still stay clipped). */
+/* Phones — slightly larger fill, still no hard crop. */
 @media (max-width: 767px) {
   .pdp-gallery {
-    --pdp-gallery-photo-scale: 1.32;
+    --pdp-gallery-photo-scale: 1.22;
   }
 
   .pdp-gallery__main-inner {
-    padding: 0.1rem;
+    padding: 0.08rem;
   }
 
   .pdp-gallery__photo {
-    transform: scale(var(--pdp-gallery-photo-scale, 1.32));
+    transform: scale(var(--pdp-gallery-photo-scale, 1.22));
   }
 }
 
 @media (max-width: 479px) {
   .pdp-gallery {
-    --pdp-gallery-photo-scale: 1.36;
+    --pdp-gallery-photo-scale: 1.22;
   }
 
   .pdp-gallery__thumb {
@@ -722,9 +722,13 @@
     flex: 0 0 56px;
   }
 
+  .pdp-gallery__main-inner {
+    padding: 0.06rem;
+  }
+
   .pdp-gallery__photo {
     max-height: 100%;
-    transform: scale(var(--pdp-gallery-photo-scale, 1.36));
+    transform: scale(var(--pdp-gallery-photo-scale, 1.22));
   }
 
   .pdp-gallery__thumbs {
