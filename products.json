@@ -265,9 +265,7 @@
     "trending": true,
     "newArrival": true,
     "images": [
-      "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-acon-acon/5ca48922-07d4-46c3-ac80-2f2eaa3fd7a0.png",
-      "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-acon-acon/79d796b4-9dc7-4297-9afa-4130a915fa32.png",
-      "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-acon-acon/daf3d6de-33a3-4253-8272-b638c623ff9e.png"
+      "https://res.cloudinary.com/piyushgoenka/image/upload/c_fit,w_1600,q_85,f_auto/v1782289280/products/live-sound-lighting/adeon-acon-acon/01-artboard-3.png"
     ],
     "description": "The ADEON ACON Professional Audio Mixer Console is designed for reliable sound performance and versatile audio control across professional and home audio environments. Equipped with USB and Bluetooth connectivity, this mixer allows easy integration with microphones, smartphones, laptops, speakers, and musical instruments for flexible sound management.Built with a compact and durable construction, the ADEON ACON mixer is suitable for DJs, musicians, churches, schools, rehearsal studios, event organizers, and home recording setups. Whether for stage performances or personal audio projects, this mixer offers dependable operation, smooth sound control, and high-quality audio output. High-Quality Audio Mixing Performance ADEON ACON delivers clear and balanced sound output suitable for DJs, musicians, live performances, karaoke, podcasting, and studio recording applications. USB & Bluetooth Connectivity Supports seamless connection with smartphones, laptops, microphones, speakers, and musical instruments through built-in USB and Bluetooth functionality. Easy & Precise Sound Controls Features intuitive controls for volume, bass, treble, echo, and channel adjustment for customized and professional-quality sound management. Suitable for Multiple Audio Applications Perfect for stage programs, PA systems, church audio setups, rehearsal studios, online streaming, public speaking, and home recording environments. Durable, Compact & Portable Design Built with a sturdy and lightweight body for long-lasting performance and convenient portability for professional and personal sound setups.",
     "specifications": {
@@ -286,7 +284,7 @@
     "availability": "in-stock",
     "condition": "new",
     "imageColor": "#e8e8e8",
-    "image": "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-acon-acon/5ca48922-07d4-46c3-ac80-2f2eaa3fd7a0.png",
+    "image": "https://res.cloudinary.com/piyushgoenka/image/upload/c_fit,w_1600,q_85,f_auto/v1782289280/products/live-sound-lighting/adeon-acon-acon/01-artboard-3.png",
     "gstRate": 18,
     "detail": {
       "msrp": 3712,
@@ -330,19 +328,7 @@
           "id": "img-0",
           "alt": "ADEON ACON Professional Audio Mixer Console with USB, Bluetooth & Multi-Channel Sound Control for DJ, Karaoke, Studio Recording, Live Performance & PA Systems view 1",
           "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-acon-acon/5ca48922-07d4-46c3-ac80-2f2eaa3fd7a0.png"
-        },
-        {
-          "id": "adeon-acon-acon-3",
-          "alt": "ADEON ACON Professional Audio Mixer Console with USB, Bluetooth & Multi-Channel Sound Control for DJ, Karaoke, Studio Recording, Live Performance & PA Systems",
-          "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-acon-acon/79d796b4-9dc7-4297-9afa-4130a915fa32.png"
-        },
-        {
-          "id": "adeon-acon-acon-4",
-          "alt": "ADEON ACON Professional Audio Mixer Console with USB, Bluetooth & Multi-Channel Sound Control for DJ, Karaoke, Studio Recording, Live Performance & PA Systems",
-          "color": "#e8e8e8",
-          "src": "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-acon-acon/daf3d6de-33a3-4253-8272-b638c623ff9e.png"
+          "src": "https://res.cloudinary.com/piyushgoenka/image/upload/c_fit,w_1600,q_85,f_auto/v1782289280/products/live-sound-lighting/adeon-acon-acon/01-artboard-3.png"
         }
       ],
       "videos": [],

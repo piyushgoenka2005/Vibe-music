@@ -11,7 +11,46 @@ import { storefrontImageCandidates } from "@/lib/storefrontImages";
 
 const PRODUCT_FALLBACK = "/images/guitar-1.webp";
 const AUTO_ADVANCE_MS = 3500;
-const RESUME_AFTER_IDLE_MS = 4500;
+/** Pause at least one full auto period after a finger drag / dot tap. */
+const RESUME_AFTER_IDLE_MS = AUTO_ADVANCE_MS;
+
+function getSlides(track: HTMLElement): HTMLElement[] {
+  return Array.from(
+    track.querySelectorAll<HTMLElement>(".big-names-deals__item")
+  );
+}
+
+/** Left offset that centers a slide in the track (matches scroll-snap-align: center). */
+function centeredScrollLeft(track: HTMLElement, slide: HTMLElement): number {
+  const delta =
+    slide.getBoundingClientRect().left +
+    slide.offsetWidth / 2 -
+    (track.getBoundingClientRect().left + track.clientWidth / 2);
+  const max = Math.max(0, track.scrollWidth - track.clientWidth);
+  return Math.min(max, Math.max(0, track.scrollLeft + delta));
+}
+
+function nearestSlideIndex(track: HTMLElement): number {
+  const slides = getSlides(track);
+  if (slides.length === 0) return 0;
+
+  const trackCenter =
+    track.getBoundingClientRect().left + track.clientWidth / 2;
+  let best = 0;
+  let bestDist = Number.POSITIVE_INFINITY;
+
+  slides.forEach((slide, index) => {
+    const center =
+      slide.getBoundingClientRect().left + slide.offsetWidth / 2;
+    const dist = Math.abs(center - trackCenter);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = index;
+    }
+  });
+
+  return best;
+}
 
 function BigNamesDealItem({
   item,
@@ -83,6 +122,7 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
   const isMobileViewport = useIsMobileViewport();
   const trackRef = useRef<HTMLDivElement>(null);
   const pauseUntilRef = useRef(0);
+  const draggingRef = useRef(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const enableAuto =
     isMobileViewport && !reduceMotion && items.length > 1;
@@ -90,43 +130,32 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
   const updateActiveIndex = useCallback(() => {
     const track = trackRef.current;
     if (!track) return;
-
-    const slide = track.querySelector<HTMLElement>(".big-names-deals__item");
-    if (!slide) return;
-
-    const slideWidth = slide.offsetWidth;
-    const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 0;
-    const stride = slideWidth + gap;
-    if (stride <= 0) return;
-
-    const index = Math.round(track.scrollLeft / stride);
-    setActiveIndex(Math.min(items.length - 1, Math.max(0, index)));
-  }, [items.length]);
+    setActiveIndex(nearestSlideIndex(track));
+  }, []);
 
   const scrollToIndex = useCallback(
     (index: number, behavior: ScrollBehavior = "smooth") => {
       const track = trackRef.current;
       if (!track) return;
 
-      const slide = track.querySelector<HTMLElement>(".big-names-deals__item");
+      const slides = getSlides(track);
+      if (slides.length === 0) return;
+
+      const next = ((index % slides.length) + slides.length) % slides.length;
+      const slide = slides[next];
       if (!slide) return;
 
-      const slideWidth = slide.offsetWidth;
-      const gap =
-        parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) ||
-        0;
-      const next = ((index % items.length) + items.length) % items.length;
       track.scrollTo({
-        left: next * (slideWidth + gap),
+        left: centeredScrollLeft(track, slide),
         behavior,
       });
       setActiveIndex(next);
     },
-    [items.length]
+    []
   );
 
-  const pauseAuto = useCallback(() => {
-    pauseUntilRef.current = Date.now() + RESUME_AFTER_IDLE_MS;
+  const pauseAuto = useCallback((ms = RESUME_AFTER_IDLE_MS) => {
+    pauseUntilRef.current = Date.now() + ms;
   }, []);
 
   useEffect(() => {
@@ -137,57 +166,74 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
     track.addEventListener("scroll", updateActiveIndex, { passive: true });
     window.addEventListener("resize", updateActiveIndex);
 
-    const onInteract = () => pauseAuto();
-    track.addEventListener("pointerdown", onInteract, { passive: true });
-    track.addEventListener("touchstart", onInteract, { passive: true });
-    track.addEventListener("wheel", onInteract, { passive: true });
+    const onPointerDown = (event: PointerEvent) => {
+      draggingRef.current = true;
+      pauseAuto();
+      try {
+        track.setPointerCapture(event.pointerId);
+      } catch {
+        /* ignore */
+      }
+    };
+    const onPointerUp = () => {
+      draggingRef.current = false;
+      pauseAuto();
+    };
+    const onWheel = () => pauseAuto();
+
+    track.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
+    track.addEventListener("wheel", onWheel, { passive: true });
 
     return () => {
       track.removeEventListener("scroll", updateActiveIndex);
       window.removeEventListener("resize", updateActiveIndex);
-      track.removeEventListener("pointerdown", onInteract);
-      track.removeEventListener("touchstart", onInteract);
-      track.removeEventListener("wheel", onInteract);
+      track.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+      track.removeEventListener("wheel", onWheel);
     };
   }, [pauseAuto, updateActiveIndex]);
 
+  /* Mobile only: auto-advance while native swipe / dots stay usable. */
   useEffect(() => {
     if (!enableAuto) return undefined;
 
     const id = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
       if (Date.now() < pauseUntilRef.current) return;
+      if (draggingRef.current) return;
+
       const track = trackRef.current;
       if (!track) return;
-
-      // Don't fight an active finger drag
       if (track.matches(":active")) return;
+      // Don't yank focus while a product link is keyboard-focused.
+      if (track.contains(document.activeElement)) {
+        pauseAuto();
+        return;
+      }
 
-      const slide = track.querySelector<HTMLElement>(".big-names-deals__item");
-      if (!slide) return;
-
-      const slideWidth = slide.offsetWidth;
-      const gap =
-        parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) ||
-        0;
-      const stride = slideWidth + gap;
-      if (stride <= 0) return;
-
-      const current = Math.round(track.scrollLeft / stride);
-      const next = (current + 1) % items.length;
-      track.scrollTo({
-        left: next * stride,
-        behavior: "smooth",
-      });
+      const current = nearestSlideIndex(track);
+      scrollToIndex(current + 1);
     }, AUTO_ADVANCE_MS);
 
     return () => window.clearInterval(id);
-  }, [enableAuto, items.length]);
+  }, [enableAuto, pauseAuto, scrollToIndex]);
 
   return (
     <>
       <div
         ref={trackRef}
-        className="big-names-deals__showcase-scroll scrollbar-minimal"
+        className="big-names-deals__showcase-scroll"
+        role={enableAuto ? "region" : undefined}
+        aria-roledescription={enableAuto ? "carousel" : undefined}
+        aria-label={enableAuto ? "Brand guitar deals" : undefined}
+        style={
+          {
+            "--big-names-item-count": String(Math.max(1, items.length)),
+          } as CSSProperties
+        }
       >
         <RevealGroup className="big-names-deals__showcase" role="list">
           {items.map((item, index) => (
@@ -199,16 +245,15 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
       {items.length > 1 ? (
         <div
           className="big-names-deals__pagination"
-          role="tablist"
+          role="group"
           aria-label="Brand guitars"
         >
           {items.map((item, index) => (
             <button
               key={item.key}
               type="button"
-              role="tab"
-              aria-selected={index === activeIndex}
-              aria-label={`Show ${item.brand}`}
+              aria-current={index === activeIndex ? "true" : undefined}
+              aria-label={`Show guitar ${index + 1}: ${item.productAlt || item.brand}`}
               className={`big-names-deals__dot${index === activeIndex ? " big-names-deals__dot--active" : ""}`}
               onClick={() => {
                 pauseAuto();

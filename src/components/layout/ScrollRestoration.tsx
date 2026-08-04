@@ -3,15 +3,25 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
-  consumeStorefrontBackIntent,
+  clearStorefrontBackIntent,
   getStorefrontNavStackPaths,
+  peekStorefrontBackIntent,
   recordStorefrontNavigation,
 } from "@/lib/navigation/storefrontHistory";
 import {
   HEIGHT_STABLE_MS,
+  PENDING_POP_RESTORE_KEY,
   RESTORE_WINDOW_MS,
+  ROUTE_SCROLL_RESET_PX,
+  SCROLL_NAV_GUARD_MS,
   SCROLL_POSITIONS_KEY,
+  isPendingPopRestoreForKey,
+  mergeScrollPositionForKey,
+  parsePendingPopRestore,
+  resolveScrollYForPersist,
+  serializePendingPopRestore,
   shouldCancelRestoreForUserScroll,
+  shouldIgnoreTransientScrollReset,
   shouldPersistScrollWhileRestoring,
   shouldTreatAsBackNavigation,
   updateHistoryStack,
@@ -19,12 +29,78 @@ import {
 
 /** Set synchronously in capture phase before React / Next handle popstate. */
 let pendingPopNavigation = false;
+/** Module-level — survives Strict Mode remount; location is already updated on popstate. */
+let pendingPopRestoreKey: string | null = null;
+let pendingPopRestoreAt = 0;
+/** While active, refuse to clobber mid-page saved Y with ~0. */
+let scrollNavGuardUntil = 0;
+
+function armScrollNavGuard(ms = SCROLL_NAV_GUARD_MS) {
+  scrollNavGuardUntil = Math.max(scrollNavGuardUntil, Date.now() + ms);
+}
+
+function isScrollNavGuardActive() {
+  return Date.now() < scrollNavGuardUntil;
+}
+
+function markPendingPopRestore(key: string) {
+  pendingPopRestoreKey = key;
+  pendingPopRestoreAt = Date.now();
+  try {
+    sessionStorage.setItem(
+      PENDING_POP_RESTORE_KEY,
+      serializePendingPopRestore({ key, at: pendingPopRestoreAt })
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+function readPendingPopRestore() {
+  if (
+    pendingPopRestoreKey &&
+    Date.now() - pendingPopRestoreAt <= RESTORE_WINDOW_MS
+  ) {
+    return { key: pendingPopRestoreKey, at: pendingPopRestoreAt };
+  }
+  try {
+    const parsed = parsePendingPopRestore(
+      sessionStorage.getItem(PENDING_POP_RESTORE_KEY)
+    );
+    if (parsed) {
+      pendingPopRestoreKey = parsed.key;
+      pendingPopRestoreAt = parsed.at;
+      return parsed;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function isPendingPopRestore(key: string): boolean {
+  return isPendingPopRestoreForKey(readPendingPopRestore(), key);
+}
+
+function clearPendingPopRestore() {
+  pendingPopRestoreKey = null;
+  pendingPopRestoreAt = 0;
+  try {
+    sessionStorage.removeItem(PENDING_POP_RESTORE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 if (typeof window !== "undefined") {
   window.addEventListener(
     "popstate",
     () => {
       pendingPopNavigation = true;
+      armScrollNavGuard();
+      markPendingPopRestore(
+        `${window.location.pathname}${window.location.search}`
+      );
     },
     true
   );
@@ -61,13 +137,18 @@ function applyScrollY(y: number) {
   document.body.scrollTop = y;
 }
 
-function saveScrollForKey(key: string, y: number) {
-  const positions = readPositions();
-  positions[key] = Math.max(0, Math.round(y));
-  writePositions(positions);
+function saveScrollForKey(key: string, y: number, lastKnownY = y) {
+  const nextPositions = mergeScrollPositionForKey(
+    readPositions(),
+    key,
+    y,
+    lastKnownY,
+    isScrollNavGuardActive()
+  );
+  writePositions(nextPositions);
 }
 
-function runScrollRestore(targetY: number) {
+function runScrollRestore(targetY: number, onNaturalStop?: () => void) {
   let stopped = false;
   let resizeObserver: ResizeObserver | null = null;
   let mutationObserver: MutationObserver | null = null;
@@ -76,7 +157,7 @@ function runScrollRestore(targetY: number) {
   let lastHeight = 0;
   let heightStableSince = 0;
 
-  const stop = () => {
+  const teardown = (natural: boolean) => {
     if (stopped) return;
     stopped = true;
     resizeObserver?.disconnect();
@@ -87,7 +168,11 @@ function runScrollRestore(targetY: number) {
     window.removeEventListener("touchstart", onUserGesture, true);
     window.removeEventListener("keydown", onUserGesture, true);
     window.removeEventListener("scroll", onScrollCheck, true);
+    if (natural) onNaturalStop?.();
   };
+
+  const stopNatural = () => teardown(true);
+  const stopForRemount = () => teardown(false);
 
   const restore = () => {
     if (stopped) return;
@@ -103,16 +188,21 @@ function runScrollRestore(targetY: number) {
       return;
     }
     if (shouldCancelRestoreForUserScroll(y, targetY)) {
-      stop();
+      stopNatural();
     }
   };
 
   const onUserGesture = () => {
     if (stopped) return;
     const y = window.scrollY || document.documentElement.scrollTop || 0;
-    // Accidental touch during load: re-apply unless user clearly moved away.
+    // Accidental touch / wheel during load while still at top: keep restoring.
+    if (y <= 2) {
+      restore();
+      return;
+    }
+    // Accidental gesture during load: re-apply unless user clearly moved away.
     if (shouldCancelRestoreForUserScroll(y, targetY)) {
-      stop();
+      stopNatural();
       return;
     }
     restore();
@@ -169,9 +259,9 @@ function runScrollRestore(targetY: number) {
   });
   window.addEventListener("keydown", onUserGesture, true);
   window.addEventListener("scroll", onScrollCheck, { passive: true, capture: true });
-  timeoutId = window.setTimeout(stop, RESTORE_WINDOW_MS);
+  timeoutId = window.setTimeout(stopNatural, RESTORE_WINDOW_MS);
 
-  return stop;
+  return stopForRemount;
 }
 
 /**
@@ -192,6 +282,8 @@ export default function ScrollRestoration() {
   /** Last known scroll for the active key — survives Next scrolling to 0 mid-nav. */
   const lastYRef = useRef(0);
   const activeKeyRef = useRef(pathKey(pathname));
+  /** Ignore Strict Mode cleanup stopping a restore we still need. */
+  const restoreGenerationRef = useRef(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -204,7 +296,10 @@ export default function ScrollRestoration() {
     const key = pathKey(pathname);
     activeKeyRef.current = key;
     if (!restoringRef.current) {
-      lastYRef.current = window.scrollY || document.documentElement.scrollTop || 0;
+      const liveY = window.scrollY || document.documentElement.scrollTop || 0;
+      if (!shouldIgnoreTransientScrollReset(liveY, lastYRef.current)) {
+        lastYRef.current = liveY;
+      }
     }
 
     let ticking = false;
@@ -212,6 +307,10 @@ export default function ScrollRestoration() {
     const persistFromWindow = () => {
       const y = window.scrollY || document.documentElement.scrollTop || 0;
       if (!restoringRef.current) {
+        // Route transitions snap to 0 before pathname updates — keep last real Y.
+        if (shouldIgnoreTransientScrollReset(y, lastYRef.current)) {
+          return;
+        }
         lastYRef.current = y;
       }
       if (!shouldPersistScrollWhileRestoring(restoringRef.current)) return;
@@ -225,8 +324,12 @@ export default function ScrollRestoration() {
     };
 
     const flushBeforeNav = () => {
+      armScrollNavGuard();
       if (!shouldPersistScrollWhileRestoring(restoringRef.current)) return;
-      saveScrollForKey(activeKeyRef.current, lastYRef.current);
+      const liveY = window.scrollY || document.documentElement.scrollTop || 0;
+      const y = resolveScrollYForPersist(liveY, lastYRef.current);
+      lastYRef.current = y;
+      saveScrollForKey(activeKeyRef.current, y);
     };
 
     window.addEventListener("scroll", persistFromWindow, { passive: true });
@@ -240,7 +343,10 @@ export default function ScrollRestoration() {
       document.removeEventListener("pointerdown", flushBeforeNav, true);
       document.removeEventListener("keydown", flushBeforeNav, true);
       if (shouldPersistScrollWhileRestoring(restoringRef.current)) {
-        saveScrollForKey(key, lastYRef.current);
+        const liveY = window.scrollY || document.documentElement.scrollTop || 0;
+        const y = resolveScrollYForPersist(liveY, lastYRef.current);
+        lastYRef.current = y;
+        saveScrollForKey(key, y);
       }
     };
   }, [pathname, searchKey]);
@@ -259,10 +365,11 @@ export default function ScrollRestoration() {
     }
 
     const stack = historyStackRef.current;
-    const pendingPop = pendingPopNavigation;
+    const pendingPopFlag = pendingPopNavigation;
     pendingPopNavigation = false;
+    const pendingPop = pendingPopFlag || isPendingPopRestore(key);
 
-    const intentionalBack = consumeStorefrontBackIntent(key);
+    const intentionalBack = peekStorefrontBackIntent(key);
     const savedY = readPositions()[key];
     const isBack = shouldTreatAsBackNavigation({
       intentionalBack,
@@ -277,26 +384,59 @@ export default function ScrollRestoration() {
     const shouldRestore =
       isBack &&
       savedY != null &&
-      savedY > 0 &&
-      (intentionalBack || pendingPop || prevKey === null || prevKey !== key);
+      savedY > ROUTE_SCROLL_RESET_PX &&
+      (intentionalBack ||
+        pendingPop ||
+        prevKey === null ||
+        prevKey !== key);
 
     if (shouldRestore) {
+      const generation = ++restoreGenerationRef.current;
       restoringRef.current = true;
       restoreTargetYRef.current = savedY;
-      const stop = runScrollRestore(savedY);
+      armScrollNavGuard(RESTORE_WINDOW_MS);
+
+      const stopForRemount = runScrollRestore(savedY, () => {
+        // Natural end (timeout / user cancel) — clear durable back markers.
+        if (restoreGenerationRef.current === generation) {
+          lastYRef.current = restoreTargetYRef.current || savedY;
+          saveScrollForKey(key, lastYRef.current, lastYRef.current);
+          armScrollNavGuard(SCROLL_NAV_GUARD_MS);
+          restoringRef.current = false;
+          restoreTargetYRef.current = 0;
+          clearPendingPopRestore();
+          clearStorefrontBackIntent();
+        }
+      });
+
       return () => {
-        restoringRef.current = false;
-        restoreTargetYRef.current = 0;
-        stop();
+        // Strict Mode remount: tear down listeners but keep session markers so
+        // the next layout effect can restore again. Keep restoringRef true so
+        // persist cleanup does not write Y=0 during the remount gap.
+        stopForRemount();
+        if (restoreGenerationRef.current === generation) {
+          restoringRef.current = true;
+        }
       };
     }
 
     restoringRef.current = false;
     restoreTargetYRef.current = 0;
 
+    // Back detected but nothing to restore (or already at top) — drop markers.
+    if (isBack) {
+      clearPendingPopRestore();
+      clearStorefrontBackIntent();
+    } else {
+      const pending = readPendingPopRestore();
+      if (pending && pending.key !== key) clearPendingPopRestore();
+    }
+
     if (prevKey !== null && prevKey !== key && !isBack) {
+      armScrollNavGuard();
       applyScrollY(0);
       lastYRef.current = 0;
+      clearStorefrontBackIntent();
     }
 
     return undefined;

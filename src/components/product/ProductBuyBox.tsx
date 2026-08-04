@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { MapPin, Truck } from "lucide-react";
 import {
   formatCurrencyPrecise,
-  formatDisplayPrice,
   isPurchasablePrice,
 } from "@/utils/currency";
 import type { ProductDetail, ProductVariant } from "@/types/product";
@@ -26,8 +25,41 @@ interface ProductBuyBoxProps {
   atcSentinelRef?: RefObject<HTMLDivElement | null>;
 }
 
-function formatPrice(value: number): string {
-  return formatDisplayPrice(value);
+function splitPriceParts(price: number) {
+  const formatted = formatCurrencyPrecise(price);
+  const match = formatted.match(/^([^\d]*)([\d,]+)(?:\.(\d{2}))?$/);
+  if (!match) return { symbol: "₹", whole: formatted, fraction: null };
+
+  // en-IN often emits "₹ 11,180" — strip spaces so ₹ sits tight against digits.
+  const symbol = (match[1] || "₹").replace(/\s+/g, "") || "₹";
+
+  return {
+    symbol,
+    whole: match[2],
+    fraction: match[3] ?? null,
+  };
+}
+
+function PriceWithRupee({
+  value,
+  className,
+}: {
+  value: number;
+  className?: string;
+}) {
+  const parts = splitPriceParts(value);
+  const amount = parts.fraction
+    ? `${parts.whole}.${parts.fraction}`
+    : parts.whole;
+
+  return (
+    <span className={className}>
+      <span className="pdp-buybox__rupee" aria-hidden="true">
+        {parts.symbol.trim() || "₹"}
+      </span>
+      <span className="pdp-buybox__amount">{amount}</span>
+    </span>
+  );
 }
 
 function availabilityLabel(av: ProductVariant["availability"]): string {
@@ -70,18 +102,6 @@ function getDeliveryEstimate() {
   }
 
   return { dateLabel, orderWindow };
-}
-
-function splitPriceParts(price: number) {
-  const formatted = formatCurrencyPrecise(price);
-  const match = formatted.match(/^([^\d]*)([\d,]+)(?:\.(\d{2}))?$/);
-  if (!match) return { symbol: "₹", whole: formatted, fraction: null };
-
-  return {
-    symbol: match[1] || "₹",
-    whole: match[2],
-    fraction: match[3] ?? null,
-  };
 }
 
 export default function ProductBuyBox({
@@ -165,15 +185,20 @@ export default function ProductBuyBox({
                 {onSale && product.msrp && quantity === 1 ? (
                   <div className="pdp-buybox__list-row">
                     <span>List Price:</span>
-                    <span className="pdp-buybox__list-price">
-                      {formatPrice(product.msrp)}
-                    </span>
+                    <PriceWithRupee
+                      value={product.msrp}
+                      className="pdp-buybox__list-price"
+                    />
                   </div>
                 ) : null}
 
                 {savings > 0 && quantity === 1 ? (
                   <p className="pdp-buybox__savings">
-                    You save {formatPrice(savings)}
+                    You save{" "}
+                    <PriceWithRupee
+                      value={savings}
+                      className="pdp-buybox__savings-price"
+                    />
                     {product.msrp
                       ? ` (${Math.round((savings / product.msrp) * 100)}%)`
                       : ""}

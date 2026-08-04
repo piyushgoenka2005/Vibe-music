@@ -195,7 +195,7 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       {
         heading: "Stage essentials",
         links: [
-          { label: "Live performance PA", href: categoryPath("live-sound-lighting") },
+          { label: "Live performance PA", href: subSearch("live-sound-lighting", "live PA") },
           { label: "DJ & karaoke PA", href: subSearch("live-sound-lighting", "DJ") },
           { label: "Browse live sound", href: categoryPath("live-sound-lighting") },
         ],

@@ -10,6 +10,12 @@ import {
   markStorefrontBackIntent,
   rewindStorefrontStackTo,
 } from "@/lib/navigation/storefrontHistory";
+import {
+  ROUTE_SCROLL_RESET_PX,
+  SCROLL_POSITIONS_KEY,
+  mergeScrollPositionForKey,
+  resolveScrollYForPersist,
+} from "@/lib/navigation/scrollRestore";
 
 interface UseStorefrontBackOptions {
   /** Override fallback when there is no in-app history. */
@@ -20,11 +26,11 @@ function flushCurrentScroll(): void {
   if (typeof window === "undefined") return;
   try {
     const key = `${window.location.pathname}${window.location.search}`;
-    const y = Math.max(
+    const liveY = Math.max(
       0,
       Math.round(window.scrollY || document.documentElement.scrollTop || 0)
     );
-    const raw = sessionStorage.getItem("vibe:scroll-positions");
+    const raw = sessionStorage.getItem(SCROLL_POSITIONS_KEY);
     let positions: Record<string, number> = {};
     if (raw) {
       const parsed = JSON.parse(raw) as unknown;
@@ -32,8 +38,17 @@ function flushCurrentScroll(): void {
         positions = parsed as Record<string, number>;
       }
     }
-    positions[key] = y;
-    sessionStorage.setItem("vibe:scroll-positions", JSON.stringify(positions));
+    const previous = positions[key] ?? 0;
+    const lastKnown = Math.max(previous, liveY);
+    const y = resolveScrollYForPersist(liveY, lastKnown);
+    const next = mergeScrollPositionForKey(
+      positions,
+      key,
+      y,
+      lastKnown,
+      liveY <= 2 && previous > ROUTE_SCROLL_RESET_PX
+    );
+    sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(next));
   } catch {
     /* ignore */
   }

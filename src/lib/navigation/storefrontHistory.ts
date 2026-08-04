@@ -101,18 +101,31 @@ export function markStorefrontBackIntent(targetPath: string): void {
   }
 }
 
-/** Returns true once if this navigation was an intentional storefront back. */
-export function consumeStorefrontBackIntent(path: string): boolean {
+/** Peek without consuming — survives React Strict Mode double-mount. */
+export function peekStorefrontBackIntent(path: string): boolean {
   if (typeof window === "undefined") return false;
   try {
-    const target = sessionStorage.getItem(BACK_INTENT_KEY);
-    if (!target) return false;
-    if (target !== path) return false;
-    sessionStorage.removeItem(BACK_INTENT_KEY);
-    return true;
+    return sessionStorage.getItem(BACK_INTENT_KEY) === path;
   } catch {
     return false;
   }
+}
+
+/** Clear intentional back marker after restore has started. */
+export function clearStorefrontBackIntent(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(BACK_INTENT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Returns true once if this navigation was an intentional storefront back. */
+export function consumeStorefrontBackIntent(path: string): boolean {
+  if (!peekStorefrontBackIntent(path)) return false;
+  clearStorefrontBackIntent();
+  return true;
 }
 
 /** Truncate the stack to `path` (used when initiating back). */

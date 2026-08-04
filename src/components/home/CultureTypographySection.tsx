@@ -32,6 +32,12 @@ const WORD_CYCLE = [
 
 /** Exactly two quote cycles on mobile + desktop (no extra loop padding). */
 const QUOTE_REPEATS = 2;
+/**
+ * Max pinned scrub distance in sticky-viewport units.
+ * Section ≈ pin + this runway → about two page-scrolls to pass through,
+ * while both quote cycles still animate (just faster).
+ */
+const MAX_SCROLL_RUNWAY_VIEWPORTS = 1;
 
 export interface CultureTypographySectionProps {
   metadataLabel?: string;
@@ -141,10 +147,12 @@ export default function CultureTypographySection({
 
     const update = () => {
       const pin = sticky.clientHeight;
-      // Scroll just enough to reveal both quote cycles in the sticky frame.
+      // Full track overflow (both quote cycles), but never more than ~2 viewports
+      // of pinned scrolling — words scrub faster instead of trapping the user.
       const overflow = Math.max(0, track.scrollHeight - pin);
+      const maxRunway = Math.max(pin, Math.round(pin * MAX_SCROLL_RUNWAY_VIEWPORTS));
       setStickyPinPx(pin);
-      setScrollShiftPx(overflow);
+      setScrollShiftPx(Math.min(overflow, maxRunway));
     };
 
     const frame = window.requestAnimationFrame(update);

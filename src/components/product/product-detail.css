@@ -579,6 +579,8 @@
     gap: 12px;
     width: 100%;
     max-width: 100%;
+    /* Larger product fill on phone/tablet; well still clips overflow. */
+    --pdp-gallery-photo-scale: 1.22;
   }
 
   .pdp-gallery__stage {
@@ -597,7 +599,7 @@
   }
 
   .pdp-gallery__main-inner {
-    padding: clamp(0.5rem, 2.5vw, 0.85rem);
+    padding: 0.2rem;
   }
 
   .pdp-gallery__photo {
@@ -609,7 +611,7 @@
     object-position: center center;
     margin: 0 auto;
     display: block;
-    transform: scale(var(--pdp-gallery-photo-scale, 0.92));
+    transform: scale(var(--pdp-gallery-photo-scale, 1.22));
     transform-origin: center center;
   }
 
@@ -693,7 +695,26 @@
   }
 }
 
+/* Phones — fill the square more (wide keyboards / mics still stay clipped). */
+@media (max-width: 767px) {
+  .pdp-gallery {
+    --pdp-gallery-photo-scale: 1.32;
+  }
+
+  .pdp-gallery__main-inner {
+    padding: 0.1rem;
+  }
+
+  .pdp-gallery__photo {
+    transform: scale(var(--pdp-gallery-photo-scale, 1.32));
+  }
+}
+
 @media (max-width: 479px) {
+  .pdp-gallery {
+    --pdp-gallery-photo-scale: 1.36;
+  }
+
   .pdp-gallery__thumb {
     width: 56px;
     height: 56px;
@@ -703,6 +724,7 @@
 
   .pdp-gallery__photo {
     max-height: 100%;
+    transform: scale(var(--pdp-gallery-photo-scale, 1.36));
   }
 
   .pdp-gallery__thumbs {
@@ -1159,12 +1181,22 @@
 }
 
 .pdp-info-pricing__price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
   font-family: var(--font-sans, var(--font-primary)), ui-sans-serif, system-ui, sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #df2935;
   line-height: 1.15;
+}
+
+.pdp-info-pricing__price .pdp-info-pricing__rupee,
+.pdp-info-pricing__price-amount {
+  font-size: 1em;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .pdp-info-pricing__savings-copy {
@@ -1202,7 +1234,25 @@
 }
 
 .pdp-info-pricing__mrp-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
   text-decoration: line-through;
+}
+
+.pdp-info-pricing__rupee {
+  display: inline-block;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 1em;
+  line-height: 1;
+}
+
+.pdp-info-pricing__mrp-amount {
+  font-size: 1em;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .pdp-info-pricing__tax {
@@ -1787,18 +1837,40 @@
 }
 
 .pdp-buybox__list-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
   text-decoration: line-through;
   color: #0f1111;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-style: normal;
+  font-size: 1.0625rem;
   font-weight: 700;
+  line-height: 1.25;
+}
+
+.pdp-buybox__rupee,
+.pdp-buybox__amount {
+  display: inline-block;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 1em;
+  line-height: 1;
+  letter-spacing: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .pdp-buybox__price {
-  display: flex;
-  align-items: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
   line-height: 1;
-  font-family: Georgia, "Times New Roman", Times, serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-style: normal;
   font-weight: 700;
-  color: #006400;
+  color: #008a28;
 }
 
 /* Top-right selling price (no border box — keeps list price layout clean) */
@@ -1827,23 +1899,24 @@
   letter-spacing: -0.02em;
 }
 
-.pdp-buybox__price-symbol {
-  font-size: 0.82rem;
-  font-weight: 700;
-  margin-top: 0.35rem;
-  margin-right: 2px;
-}
-
+.pdp-buybox__price-symbol,
 .pdp-buybox__price-whole {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 1.75rem;
   font-weight: 700;
+  line-height: 1;
   letter-spacing: -0.02em;
 }
 
+.pdp-buybox__price-symbol {
+  margin: 0;
+  padding: 0;
+}
+
 .pdp-buybox__price-fraction {
-  font-size: 0.82rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  margin-top: 0.35rem;
+  line-height: 1;
 }
 
 .pdp-buybox__savings {
@@ -1853,6 +1926,20 @@
   font-weight: 700;
   color: #0f1111;
   white-space: nowrap;
+}
+
+.pdp-buybox__savings-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1em;
+  font-weight: 700;
+}
+
+.pdp-buybox__savings-price .pdp-buybox__rupee,
+.pdp-buybox__savings-price .pdp-buybox__amount {
+  font-size: 1em;
 }
 
 .pdp-buybox__delivery {

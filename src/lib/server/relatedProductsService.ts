@@ -1,6 +1,6 @@
 import "server-only";
 
-import { prisma } from "@/lib/db/prisma";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import {
   fetchProductsByIds,
@@ -71,6 +71,8 @@ function mapRelation(row: {
 export async function getRelatedListByProductId(
   productId: string
 ): Promise<ProductRelatedList | null> {
+  if (!isPostgresConfigured()) return null;
+
   if (
     relationsCache &&
     isFresh(relationsCacheAt) &&

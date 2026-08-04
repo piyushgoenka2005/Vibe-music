@@ -1,6 +1,6 @@
 import "server-only";
 
-import { prisma } from "@/lib/db/prisma";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import { getProductById, getProductSummaries } from "@/services/catalogService";
 import { toProduct } from "@/services/catalogService";
@@ -60,6 +60,8 @@ function mapBundle(row: {
 export async function getBundleByProductId(
   productId: string
 ): Promise<ProductBundle | null> {
+  if (!isPostgresConfigured()) return null;
+
   if (bundleCache && isFresh(bundleCacheAt) && bundleCache.has(productId)) {
     return bundleCache.get(productId) ?? null;
   }
@@ -83,6 +85,7 @@ export async function getBundleByProductId(
 }
 
 export async function listAllBundles(): Promise<ProductBundle[]> {
+  if (!isPostgresConfigured()) return [];
   const rows = await prisma.productBundle.findMany();
   return rows
     .map(mapBundle)
@@ -93,6 +96,9 @@ export async function upsertProductBundle(
   productId: string,
   input: UpsertProductBundleInput
 ): Promise<ProductBundle> {
+  if (!isPostgresConfigured()) {
+    throw new Error("DATABASE_URL is required to save product bundles");
+  }
   const existing = await prisma.productBundle.findUnique({ where: { productId } });
   const timestamp = now();
 

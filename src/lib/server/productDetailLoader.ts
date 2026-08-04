@@ -112,9 +112,13 @@ export const loadProductDetailPage = cache(async function loadProductDetailPage(
     const merchandising = await loadProductMerchandising(product);
     return { product, ...merchandising };
   } catch (error) {
-    // Merchandising (bundles / related) may fail when Postgres is down.
-    // Still serve the PDP from the catalog / JSON fallback.
-    console.error("[pdp] merchandising failed; serving product core only", error);
+    // Merchandising (bundles / related) may fail when Postgres is down/unset.
+    // Still serve the PDP from the catalog / JSON fallback — avoid noisy stacks
+    // for the expected "DATABASE_URL is not configured" case.
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/DATABASE_URL is not configured/i.test(message)) {
+      console.error("[pdp] merchandising failed; serving product core only", error);
+    }
     return {
       product,
       bundle: null,

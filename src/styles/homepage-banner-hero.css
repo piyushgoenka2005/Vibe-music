@@ -146,6 +146,8 @@
     height: 2.75rem;
     min-width: 44px;
     min-height: 44px;
+    /* Sit lower so arrows clear brand text at the top of creatives */
+    top: 68%;
   }
 
   .homepage-banner-hero__nav--prev {

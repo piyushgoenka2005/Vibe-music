@@ -64,7 +64,12 @@ export default function ProductPriceOffers({
     <section className="pdp-info-pricing" aria-label="Pricing and offers">
       <div className="pdp-info-pricing__headline">
         <span className="pdp-info-pricing__price">
-          {formatCurrencyPrecise(pricing.displayPrice)}
+          <span className="pdp-info-pricing__rupee" aria-hidden="true">
+            ₹
+          </span>
+          <span className="pdp-info-pricing__price-amount">
+            {formatCurrencyPrecise(pricing.displayPrice).replace(/^[^\d]*/, "")}
+          </span>
         </span>
         {pricing.hasDiscount ? (
           <span className="pdp-info-pricing__pct-badge">
@@ -77,7 +82,12 @@ export default function ProductPriceOffers({
         <p className="pdp-info-pricing__mrp">
           <span className="pdp-info-pricing__mrp-label">M.R.P.:</span>{" "}
           <span className="pdp-info-pricing__mrp-value">
-            {formatCurrencyPrecise(pricing.mrp)}
+            <span className="pdp-info-pricing__rupee" aria-hidden="true">
+              ₹
+            </span>
+            <span className="pdp-info-pricing__mrp-amount">
+              {formatCurrencyPrecise(pricing.mrp).replace(/^[^\d]*/, "")}
+            </span>
           </span>
         </p>
       ) : null}

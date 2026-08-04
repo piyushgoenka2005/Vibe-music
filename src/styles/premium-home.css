@@ -14,10 +14,11 @@
   --homepage-content-max: calc(100dvw - 1.5rem);
   --homepage-gutter: clamp(0.5rem, 1.25vw, 0.875rem);
   --stats-bridge-space: clamp(1.5rem, 3vw, 2.25rem);
-  /* Product photos: always 1× at rest; zoom only on hover (all sections inherit). */
-  --home-product-image-scale: 1;
-  --home-product-image-scale-hover: 1.2;
-  --home-product-image-scale-hover-strong: 1.2;
+  /* Rest: fill the well with a tight inset; hover pops harder (clipped). */
+  --home-product-image-scale: 1.38;
+  --home-product-image-scale-hover: 1.58;
+  --home-product-image-scale-hover-strong: 1.58;
+  --home-product-image-inset: 0.1rem;
 }
 
 @media (min-width: 1024px) {
@@ -1317,8 +1318,10 @@ body.is-landing-page
 }
 
 .big-names-deals {
-  --big-names-showcase-h: clamp(13rem, 22vw, 19rem);
-  --big-names-product-scale: 1;
+  /* Tall track fills the vertical gap; products near full height with a clear hover pop */
+  --big-names-showcase-h: clamp(16.5rem, 28vw, 24rem);
+  --big-names-product-scale: 1.06;
+  --big-names-product-scale-hover: 1.18;
   --big-names-ivory: #f9f8f6;
   position: relative;
   width: calc(100% + (var(--full-bleed-inline, 0px) * 2));
@@ -1326,7 +1329,7 @@ body.is-landing-page
   margin-left: calc(-1 * var(--full-bleed-inline, 0px));
   margin-right: calc(-1 * var(--full-bleed-inline, 0px));
   overflow: hidden;
-  padding: clamp(2.5rem, 5vw, 4rem) clamp(1rem, 3vw, 1.5rem) clamp(2.5rem, 4vw, 3.5rem);
+  padding: clamp(2rem, 4vw, 3.25rem) clamp(1rem, 3vw, 1.5rem) clamp(2.25rem, 3.5vw, 3rem);
   background: #f9f8f6;
   color: #111111;
 }
@@ -1343,6 +1346,8 @@ body.is-landing-page
 }
 
 .big-names-deals__header {
+  position: relative;
+  z-index: 2;
   width: 100%;
   text-align: center;
 }
@@ -1383,7 +1388,7 @@ body.is-landing-page
 }
 
 .big-names-deals__subtitle {
-  margin: clamp(1rem, 2vw, 1.35rem) auto 0;
+  margin: clamp(0.55rem, 1.2vw, 0.85rem) auto 0;
   max-width: 44rem;
   padding-inline: 0.5rem;
   text-align: center;
@@ -1399,15 +1404,27 @@ body.is-landing-page
 }
 
 .big-names-deals__showcase-scroll {
-  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  position: relative;
+  z-index: 1;
+  /* Sit the guitars lower under the subtitle / into the space above the CTA */
+  margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
   width: 100%;
-  overflow: visible;
+  /* Clip upward hover pop so headstocks never cover the headline/subtitle. */
+  overflow: hidden;
   overscroll-behavior-x: contain;
+  /* Top pad = hover headroom for scale-up without covering the title */
+  padding-top: 2.35rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.big-names-deals__showcase-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .big-names-deals__showcase {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--big-names-item-count, 5), minmax(0, 1fr));
   gap: clamp(0.15rem, 0.6vw, 0.5rem);
   align-items: end;
   width: 100%;
@@ -1459,8 +1476,8 @@ body.is-landing-page
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.25rem;
-  margin-bottom: clamp(0.5rem, 1vw, 0.85rem);
+  min-height: 2rem;
+  margin-bottom: clamp(0.25rem, 0.6vw, 0.5rem);
 }
 
 .big-names-deals__logo {
@@ -1527,12 +1544,14 @@ body.is-landing-page
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: 92%;
-  max-width: 158%;
+  height: 100%;
+  max-width: 175%;
   transform: scale(var(--big-names-product-scale));
   transform-origin: bottom center;
-  filter: none;
-  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  filter: drop-shadow(0 18px 28px rgba(17, 17, 17, 0.14));
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 420ms ease;
   will-change: transform;
 }
 
@@ -1567,7 +1586,19 @@ body.is-landing-page
 .big-names-deals__link:hover .big-names-deals__product-shadow,
 .big-names-deals__link:focus-visible .big-names-deals__product-shadow {
   animation: none;
-  transform: translateY(-8px) scale(var(--home-product-image-scale-hover));
+  transform: translateY(-10px) scale(var(--big-names-product-scale-hover));
+  filter: drop-shadow(0 26px 36px rgba(17, 17, 17, 0.22));
+}
+
+.big-names-deals__link:hover .big-names-deals__floor-shadow,
+.big-names-deals__link:focus-visible .big-names-deals__floor-shadow {
+  transform: translateX(-50%) scaleX(1.08);
+  opacity: 0.85;
+}
+
+.big-names-deals__link:hover,
+.big-names-deals__link:focus-visible {
+  z-index: 2;
 }
 
 .big-names-deals__link:focus-visible {
@@ -1629,7 +1660,7 @@ body.is-landing-page
 .big-names-deals__cta-wrap {
   display: flex;
   justify-content: center;
-  margin-top: clamp(2rem, 3.5vw, 2.75rem);
+  margin-top: clamp(0.75rem, 1.8vw, 1.25rem);
 }
 
 .big-names-deals__cta {
@@ -1684,8 +1715,9 @@ body.is-landing-page
 
 @media (min-width: 1280px) {
   .big-names-deals {
-    --big-names-showcase-h: clamp(15rem, 24vw, 22rem);
-    --big-names-product-scale: 1;
+    --big-names-showcase-h: clamp(18.5rem, 26vw, 26rem);
+    --big-names-product-scale: 1.08;
+    --big-names-product-scale-hover: 1.2;
   }
 
   .big-names-deals__headline {
@@ -1693,20 +1725,21 @@ body.is-landing-page
   }
 
   .big-names-deals__product-shadow {
-    height: 94%;
-    max-width: 168%;
+    height: 100%;
+    max-width: 185%;
   }
 
   .big-names-deals__link:hover .big-names-deals__product-shadow,
   .big-names-deals__link:focus-visible .big-names-deals__product-shadow {
-    transform: translateY(-12px) scale(var(--home-product-image-scale-hover)) rotate(1.25deg);
+    transform: translateY(-12px) scale(var(--big-names-product-scale-hover)) rotate(0.6deg);
   }
 }
 
 @media (min-width: 768px) and (max-width: 1279px) {
   .big-names-deals {
-    --big-names-showcase-h: clamp(12rem, 20vw, 17rem);
-    --big-names-product-scale: 1;
+    --big-names-showcase-h: clamp(15rem, 24vw, 20rem);
+    --big-names-product-scale: 1.06;
+    --big-names-product-scale-hover: 1.18;
   }
 
   .big-names-deals__headline {
@@ -1720,16 +1753,18 @@ body.is-landing-page
   }
 
   .big-names-deals__product-shadow {
-    height: 90%;
-    max-width: 152%;
+    height: 100%;
+    max-width: 168%;
   }
 }
 
 @media (max-width: 767px) {
   .big-names-deals {
-    --big-names-showcase-h: clamp(11rem, 34vw, 15rem);
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+    --big-names-showcase-h: clamp(13.5rem, 48vw, 17.5rem);
+    --big-names-product-scale: 1.05;
+    --big-names-product-scale-hover: 1.16;
+    padding-top: 1.75rem;
+    padding-bottom: 1.85rem;
   }
 
   .big-names-deals__headline {
@@ -1740,6 +1775,7 @@ body.is-landing-page
   }
 
   .big-names-deals__subtitle {
+    margin-top: 0.45rem;
     font-size: 1.05rem;
     line-height: 1.5;
   }
@@ -1750,7 +1786,9 @@ body.is-landing-page
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
     scrollbar-width: none;
+    margin-top: 1.85rem;
     margin-inline: calc(-1 * max(0.75rem, env(safe-area-inset-left, 0px)));
+    padding-top: 1.15rem;
     padding-inline: max(0.75rem, env(safe-area-inset-left, 0px));
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
@@ -1778,7 +1816,7 @@ body.is-landing-page
   }
 
   .big-names-deals__product-shadow {
-    height: 92%;
+    height: 100%;
     max-width: 100%;
   }
 
@@ -1788,7 +1826,7 @@ body.is-landing-page
   }
 
   .big-names-deals__cta-wrap {
-    margin-top: 1.75rem;
+    margin-top: 0.85rem;
   }
 
   .big-names-deals__cta {
@@ -2691,14 +2729,15 @@ body.is-landing-page
   object-position: center center;
   display: block;
   z-index: 2;
-  padding: 0.55rem;
+  padding: var(--home-product-image-inset, 0.18rem);
   box-sizing: border-box;
   transform: scale(var(--home-product-image-scale));
   transform-origin: center center;
   filter: drop-shadow(0 6px 10px rgba(15, 23, 42, 0.08));
   transition:
     transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 420ms ease;
+    filter 420ms ease,
+    padding 420ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
 
@@ -2707,7 +2746,8 @@ body.is-landing-page
 .premium-home .new-arrivals-card:hover .new-arrivals-card__image,
 .premium-home .new-arrivals-card:focus-visible .new-arrivals-card__image {
   transform: scale(var(--home-product-image-scale-hover-strong));
-  filter: drop-shadow(0 14px 18px rgba(15, 23, 42, 0.16));
+  filter: drop-shadow(0 18px 26px rgba(15, 23, 42, 0.22));
+  padding: 0;
 }
 
 .premium-home .new-arrivals-card__image--placeholder,
@@ -3263,7 +3303,7 @@ body.is-landing-page
     width: 100% !important;
     height: 100% !important;
     max-width: none;
-    padding: 0.45rem;
+    padding: var(--home-product-image-inset, 0.18rem);
     box-sizing: border-box;
     transform: scale(var(--home-product-image-scale));
     transform-origin: center center;
@@ -5229,7 +5269,7 @@ body.is-landing-page
   height: auto;
   min-height: 0;
   max-height: none;
-  padding: 0.2rem;
+  padding: var(--home-product-image-inset, 0.18rem);
   overflow: hidden;
   background: #ffffff;
   isolation: isolate;
@@ -5282,6 +5322,17 @@ body.is-landing-page
 
 .premium-home .homepage-deals-section .tile--image {
   background: #ffffff;
+}
+
+.premium-home .homepage-deals-section .tile--link:hover .homepage-deals-card__media,
+.premium-home .homepage-deals-section .tile--link:focus-visible .homepage-deals-card__media,
+.premium-home .homepage-deals-section .homepage-deals-card-wrap:hover .homepage-deals-card__media,
+.premium-home .homepage-deals-section .homepage-deals-card-wrap:focus-within .homepage-deals-card__media,
+.premium-home .homepage-deals-section .tile--link:hover .tile--image,
+.premium-home .homepage-deals-section .tile--link:focus-visible .tile--image,
+.premium-home .homepage-deals-section .homepage-deals-card-wrap:hover .tile--image,
+.premium-home .homepage-deals-section .homepage-deals-card-wrap:focus-within .tile--image {
+  padding: 0;
 }
 
 .premium-home .homepage-deals-section .tile--link:hover .homepage-deals-card__img-frame,
@@ -5524,7 +5575,7 @@ body.is-landing-page
   .premium-home .homepage-deals-section .homepage-deals-card__media,
   .premium-home .homepage-deals-section .tile--image {
     aspect-ratio: 1 / 1;
-    padding: 0.15rem;
+    padding: var(--home-product-image-inset, 0.18rem);
     overflow: hidden;
   }
 

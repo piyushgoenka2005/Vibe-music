@@ -26,7 +26,7 @@ export default function HeaderMegaMenu({ menu, open }: HeaderMegaMenuProps) {
                 <p className="header-mega__heading">{column.heading}</p>
                 <ul className="header-mega__links">
                   {column.links.map((link) => (
-                    <li key={link.href}>
+                    <li key={`${link.href}:${link.label}`}>
                       <Link href={link.href} className="header-mega__link">
                         {link.label}
                       </Link>
@@ -39,7 +39,7 @@ export default function HeaderMegaMenu({ menu, open }: HeaderMegaMenuProps) {
 
           <div className="header-mega__featured">
             {menu.featured.map((card) => (
-              <Link key={card.href} href={card.href} className="header-mega__card">
+              <Link key={`${card.href}:${card.title}`} href={card.href} className="header-mega__card">
                 {/* eslint-disable-next-line @next/next/no-img-element -- mega-menu featured card art */}
                 <img
                   src={card.image}

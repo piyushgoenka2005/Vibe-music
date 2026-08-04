@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/db/prisma";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import type {
   ProductQuestion,
   ProductQuestionListResponse,
@@ -80,6 +80,10 @@ export async function getProductQuestionById(
 export async function listApprovedQuestionsForProduct(
   productId: string
 ): Promise<ProductQuestionListResponse> {
+  if (!isPostgresConfigured()) {
+    return { questions: [], totalCount: 0 };
+  }
+
   try {
     const rows = await prisma.productQuestion.findMany({
       where: { productId, status: "approved" },
