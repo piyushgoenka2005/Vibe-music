@@ -1128,6 +1128,10 @@
   margin-bottom: 20px;
 }
 
+.acct__entry-verify {
+  margin-top: 4px;
+}
+
 /* ── Order Detail ── */
 .acct__order-detail {
   display: grid;

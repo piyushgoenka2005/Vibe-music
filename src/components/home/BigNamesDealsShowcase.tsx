@@ -10,9 +10,9 @@ import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
 import { storefrontImageCandidates } from "@/lib/storefrontImages";
 
 const PRODUCT_FALLBACK = "/images/guitar-1.webp";
-const AUTO_ADVANCE_MS = 3500;
-/** Pause at least one full auto period after a finger drag / dot tap. */
-const RESUME_AFTER_IDLE_MS = AUTO_ADVANCE_MS;
+const AUTO_ADVANCE_MS = 3200;
+/** Brief pause after swipe / dot tap — auto keeps running alongside manual control. */
+const RESUME_AFTER_IDLE_MS = 1800;
 
 function getSlides(track: HTMLElement): HTMLElement[] {
   return Array.from(
@@ -85,6 +85,7 @@ function BigNamesDealItem({
         className="big-names-deals__link"
         href={item.href}
         prefetch
+        tabIndex={0}
       >
         <div className="big-names-deals__hang-wrap">
           <div className="big-names-deals__product-stage">
@@ -99,6 +100,7 @@ function BigNamesDealItem({
                 loading={index < 2 ? "eager" : "lazy"}
                 src={productSrc}
                 width={640}
+                draggable={false}
                 onError={() => {
                   if (attempt < candidates.length - 1) {
                     setAttempt((current) => current + 1);
@@ -121,8 +123,10 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
   const reduceMotion = useHydrationSafeReducedMotion();
   const isMobileViewport = useIsMobileViewport();
   const trackRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const pauseUntilRef = useRef(0);
   const draggingRef = useRef(false);
+  const inViewRef = useRef(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const enableAuto =
     isMobileViewport && !reduceMotion && items.length > 1;
@@ -155,7 +159,7 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
   );
 
   const pauseAuto = useCallback((ms = RESUME_AFTER_IDLE_MS) => {
-    pauseUntilRef.current = Date.now() + ms;
+    pauseUntilRef.current = Math.max(pauseUntilRef.current, Date.now() + ms);
   }, []);
 
   useEffect(() => {
@@ -166,22 +170,21 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
     track.addEventListener("scroll", updateActiveIndex, { passive: true });
     window.addEventListener("resize", updateActiveIndex);
 
+    // Do NOT setPointerCapture — it cancels native overflow touch scrolling on mobile.
     const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
       draggingRef.current = true;
       pauseAuto();
-      try {
-        track.setPointerCapture(event.pointerId);
-      } catch {
-        /* ignore */
-      }
     };
     const onPointerUp = () => {
+      if (!draggingRef.current) return;
       draggingRef.current = false;
       pauseAuto();
+      window.requestAnimationFrame(updateActiveIndex);
     };
     const onWheel = () => pauseAuto();
 
-    track.addEventListener("pointerdown", onPointerDown);
+    track.addEventListener("pointerdown", onPointerDown, { passive: true });
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
     track.addEventListener("wheel", onWheel, { passive: true });
@@ -196,21 +199,41 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
     };
   }, [pauseAuto, updateActiveIndex]);
 
-  /* Mobile only: auto-advance while native swipe / dots stay usable. */
+  /* Only autoplay while the section is on screen. */
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || !enableAuto) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        inViewRef.current = entry?.isIntersecting ?? false;
+      },
+      { threshold: 0.35 }
+    );
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [enableAuto]);
+
+  /* Mobile: auto-advance + native swipe / dots at the same time. */
   useEffect(() => {
     if (!enableAuto) return undefined;
 
     const id = window.setInterval(() => {
       if (document.visibilityState === "hidden") return;
+      if (!inViewRef.current) return;
       if (Date.now() < pauseUntilRef.current) return;
       if (draggingRef.current) return;
 
       const track = trackRef.current;
       if (!track) return;
-      if (track.matches(":active")) return;
-      // Don't yank focus while a product link is keyboard-focused.
-      if (track.contains(document.activeElement)) {
-        pauseAuto();
+
+      // Keyboard a11y only — touch focus on links must not kill autoplay.
+      const active = document.activeElement;
+      if (
+        active instanceof HTMLElement &&
+        track.contains(active) &&
+        active.matches(":focus-visible")
+      ) {
         return;
       }
 
@@ -219,10 +242,10 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
     }, AUTO_ADVANCE_MS);
 
     return () => window.clearInterval(id);
-  }, [enableAuto, pauseAuto, scrollToIndex]);
+  }, [enableAuto, scrollToIndex]);
 
   return (
-    <>
+    <div ref={rootRef} className="big-names-deals__showcase-root">
       <div
         ref={trackRef}
         className="big-names-deals__showcase-scroll"
@@ -263,6 +286,6 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
           ))}
         </div>
       ) : null}
-    </>
+    </div>
   );
 }
