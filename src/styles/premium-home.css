@@ -84,7 +84,18 @@ body.is-landing-page .premium-home > [data-vibe-section="homepage-banner-hero"] 
   /* Clear fixed header inside the hero (padding, not margin) — no white band */
   margin-top: 0;
   padding-top: var(--site-header-offset, 118px);
-  background: #1a1a1a;
+  /* Avoid a 1px black hairline at the header/banner seam when offset
+     is slightly taller than the sticky header. */
+  background: transparent;
+}
+
+body.is-landing-page .premium-home > .homepage-banner-hero .homepage-banner-hero__viewport,
+body.is-landing-page
+  .premium-home
+  > [data-vibe-section="homepage-banner-hero"]
+  .homepage-banner-hero__viewport {
+  /* Pull the slide flush under the header so no dark strip peeks through */
+  margin-top: -1px;
 }
 
 /* Defer layout/paint for below-the-fold homepage sections.

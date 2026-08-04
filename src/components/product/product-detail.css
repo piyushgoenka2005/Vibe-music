@@ -1050,18 +1050,25 @@
 }
 
 .pdp-meta-compare.compare-btn {
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid var(--pdp-border, #e5e5e5);
-  border-radius: 999px;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   background: transparent;
-  color: inherit;
+  box-shadow: none;
+  color: var(--pdp-blue);
 }
 
 .pdp-meta-compare.compare-btn:hover,
-.pdp-meta-compare.compare-btn:focus-visible {
-  border-color: var(--brand-primary, #c41e3a);
-  color: var(--brand-primary, #c41e3a);
+.pdp-meta-compare.compare-btn:focus-visible,
+.pdp-meta-compare.compare-btn.compare-btn--active {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--pdp-blue);
+  text-decoration: none;
 }
 
 .pdp-meta-separator {
@@ -1794,14 +1801,14 @@
   color: #006400;
 }
 
-/* Top-right pricing tag (matches annotated buy-box layout) */
+/* Top-right selling price (no border box — keeps list price layout clean) */
 .pdp-buybox__price--tag {
   flex: 0 0 auto;
   align-self: flex-start;
   margin-left: auto;
-  padding: 0.35rem 0.55rem 0.4rem;
-  border: 1.5px solid #006400;
-  border-radius: 0.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 0;
   background: transparent;
 }
 
@@ -1845,6 +1852,7 @@
   font-size: 13px;
   font-weight: 700;
   color: #0f1111;
+  white-space: nowrap;
 }
 
 .pdp-buybox__delivery {

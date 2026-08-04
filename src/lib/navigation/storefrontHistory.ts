@@ -24,6 +24,11 @@ function readStack(): StorefrontNavEntry[] {
   }
 }
 
+/** Paths from the persisted in-app nav stack (newest last). */
+export function getStorefrontNavStackPaths(): string[] {
+  return readStack().map((entry) => entry.path);
+}
+
 function writeStack(stack: StorefrontNavEntry[]) {
   if (typeof window === "undefined") return;
   try {
