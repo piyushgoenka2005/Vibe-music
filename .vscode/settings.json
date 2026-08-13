@@ -16,5 +16,6 @@
     "**/.data": true,
     "**/test-results": true,
     "**/playwright-report": true
-  }
+  },
+  "postman.settings.dotenv-detection-notification-visibility": false
 }

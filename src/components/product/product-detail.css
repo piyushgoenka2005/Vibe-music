@@ -235,6 +235,7 @@
   --pdp-thumb-scrollbar-track: #e5e7eb;
   --pdp-thumb-scrollbar-thumb: #9ca3af;
   --pdp-thumb-scrollbar-thumb-hover: #6b7280;
+  /* Rest: larger fill; hover keeps a clear ~12–15% pop inside the well. */
   --pdp-gallery-photo-scale: 1.16;
   /* Rail = cards + whitespace + scrollbar track (no overlap/clipping). */
   --pdp-thumbs-rail-width: calc(
@@ -611,10 +612,7 @@
     object-position: center center;
     margin: 0 auto;
     display: block;
-    transform: scale(var(--pdp-gallery-photo-scale, 1.2));
-    transform-origin: center center;
-  }
-
+     transform: scale(var(--pdp-gallery-photo-scale, 1.2));
   .pdp-gallery__zoom-pane,
   .pdp-gallery__zoom-lens {
     display: none !important;

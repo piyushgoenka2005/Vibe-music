@@ -63,7 +63,21 @@ export default function BulkImportModal({
         method: "POST",
         body: formData,
       });
-      const data = await res.json();
+
+      // Check if response is valid JSON before parsing
+      const contentType = res.headers.get("content-type") ?? "";
+      let data;
+
+      if (contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        // Get text for debugging - could be HTML error page, redirect, etc.
+        const text = await res.text();
+        throw new Error(
+          `API returned non-JSON response (Content-Type: ${contentType}). Body: ${text.substring(0, 200)}`
+        );
+      }
+
       if (!res.ok) throw new Error(data.error ?? "Preview failed");
       setPreview(data.preview ?? []);
     } catch (err) {
@@ -84,7 +98,20 @@ export default function BulkImportModal({
         method: "POST",
         body: buildFormData(true),
       });
-      const data = await res.json();
+
+      // Check if response is valid JSON before parsing
+      const contentType = res.headers.get("content-type") ?? "";
+      let data;
+
+      if (contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(
+          `API returned non-JSON response (Content-Type: ${contentType}). Body: ${text.substring(0, 200)}`
+        );
+      }
+
       if (!res.ok) throw new Error(data.error ?? "Import failed");
       setResult(data.result);
       onComplete();
