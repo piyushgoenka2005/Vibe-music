@@ -1,0 +1,33 @@
+name: Deploy production (vibemusic.in)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-vibemusic-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: github.repository == 'piyushgoenka2005/Vibe-music'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd ~/Vibe-music
+            git fetch origin main
+            git pull --ff-only origin main
+            bash deploy/update.sh
+            npm run publish:independence-banner || true
+            BASE_URL=https://vibemusic.in bash deploy/post-deploy-smoke.sh
