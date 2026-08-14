@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "crypto";
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
+import { isPrismaUnavailableError } from "@/lib/db/prisma-errors";
 import { asJsonValue, asStringArray, toIsoString } from "./mappers";
 import type { StoreSettings } from "@/types/admin";
 import type { Coupon } from "@/types/admin";
@@ -100,14 +101,24 @@ function mapCoupon(row: {
 
 export async function listAllBanners() {
   if (!isPostgresConfigured()) return [];
-  const rows = await prisma.banner.findMany({ orderBy: { priority: "asc" } });
-  return rows.map(mapBanner);
+  try {
+    const rows = await prisma.banner.findMany({ orderBy: { priority: "asc" } });
+    return rows.map(mapBanner);
+  } catch (error) {
+    if (isPrismaUnavailableError(error)) return [];
+    throw error;
+  }
 }
 
 export async function getBannerById(id: string) {
   if (!isPostgresConfigured()) return null;
-  const row = await prisma.banner.findUnique({ where: { id } });
-  return row ? mapBanner(row) : null;
+  try {
+    const row = await prisma.banner.findUnique({ where: { id } });
+    return row ? mapBanner(row) : null;
+  } catch (error) {
+    if (isPrismaUnavailableError(error)) return null;
+    throw error;
+  }
 }
 
 function mapBlogContent(content: unknown): string {

@@ -2,6 +2,7 @@ import "server-only";
 
 import { revalidatePath, revalidateTag } from "next/cache";
 import { unstable_cache } from "next/cache";
+import { isPrismaUnavailableError } from "@/lib/db/prisma-errors";
 import * as pg from "@/lib/server/prisma/contentRepository";
 import type {
   BannerStatus,
@@ -46,8 +47,13 @@ export async function listAllBanners(): Promise<HomepageBanner[]> {
 }
 
 async function fetchActiveBannersFromDb(): Promise<HomepageBanner[]> {
-  const banners = await listAllBanners();
-  return banners.filter((banner) => banner.status === "active");
+  try {
+    const banners = await listAllBanners();
+    return banners.filter((banner) => banner.status === "active");
+  } catch (error) {
+    if (isPrismaUnavailableError(error)) return [];
+    throw error;
+  }
 }
 
 const getCachedActiveBannerRows = unstable_cache(
@@ -57,10 +63,15 @@ const getCachedActiveBannerRows = unstable_cache(
 );
 
 export async function listActiveBanners(at = new Date()): Promise<HomepageBanner[]> {
-  const rows = await getCachedActiveBannerRows();
-  return rows
-    .filter((banner) => isBannerScheduledActive(banner, at))
-    .sort((a, b) => a.priority - b.priority || a.createdAt.localeCompare(b.createdAt));
+  try {
+    const rows = await getCachedActiveBannerRows();
+    return rows
+      .filter((banner) => isBannerScheduledActive(banner, at))
+      .sort((a, b) => a.priority - b.priority || a.createdAt.localeCompare(b.createdAt));
+  } catch (error) {
+    if (isPrismaUnavailableError(error)) return [];
+    throw error;
+  }
 }
 
 export async function getBannerById(id: string): Promise<HomepageBanner | null> {

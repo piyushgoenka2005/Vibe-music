@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { handleRouteError } from "@/lib/api/route-utils";
+import { isPrismaUnavailableError } from "@/lib/db/prisma-errors";
 import { listActiveBanners } from "@/lib/server/bannerService";
 
 export async function GET(request: Request) {
@@ -14,6 +15,16 @@ export async function GET(request: Request) {
       }
     );
   } catch (error) {
+    if (isPrismaUnavailableError(error)) {
+      return NextResponse.json(
+        { banners: [] },
+        {
+          headers: {
+            "Cache-Control": "private, no-store, max-age=0",
+          },
+        }
+      );
+    }
     const message =
       error instanceof Error ? error.message : "Unable to load banners";
     if (message.includes("Quota exceeded")) {
