@@ -111,7 +111,11 @@ body.is-landing-page
 .premium-home > .editorial-split,
 .premium-home > .blog-teaser,
 .premium-home > .why-shop-section,
-.premium-home > .browse-category-cards {
+.premium-home > .browse-category-cards,
+.premium-home > .culture-typography,
+.premium-home > .service-status-carousel,
+.premium-home > .premium-product-carousel,
+.premium-home > .new-arrivals-section {
   content-visibility: auto;
   contain-intrinsic-size: auto 320px;
 }
@@ -1789,16 +1793,23 @@ body.is-landing-page
   }
 
   .big-names-deals__showcase-scroll {
+    --big-names-slide-w: min(82vw, 300px);
+    --big-names-side-pad: max(
+      max(0.75rem, env(safe-area-inset-left, 0px)),
+      calc((100% - var(--big-names-slide-w)) / 2)
+    );
     display: block;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--big-names-side-pad);
     scroll-behavior: smooth;
     scrollbar-width: none;
     margin-top: 1.85rem;
     margin-inline: calc(-1 * max(0.75rem, env(safe-area-inset-left, 0px)));
     padding-top: 1.15rem;
-    padding-inline: max(0.75rem, env(safe-area-inset-left, 0px));
+    /* Equal side padding so first/last slides can snap dead-center. */
+    padding-inline: var(--big-names-side-pad);
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     overscroll-behavior-x: contain;
@@ -1813,20 +1824,22 @@ body.is-landing-page
     display: flex !important;
     grid-template-columns: none !important;
     align-items: flex-end;
+    justify-content: flex-start;
     gap: 0.85rem;
     width: max-content !important;
     min-width: 100%;
     max-width: none;
     padding-bottom: 0.25rem;
-    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+    padding-right: 0;
   }
 
   .big-names-deals__item {
-    flex: 0 0 min(82vw, 300px);
-    width: min(82vw, 300px);
-    min-width: min(82vw, 300px); /* override base min-width:0 so slides stay wide enough to scroll */
-    max-width: min(82vw, 300px);
+    flex: 0 0 var(--big-names-slide-w);
+    width: var(--big-names-slide-w);
+    min-width: var(--big-names-slide-w);
+    max-width: var(--big-names-slide-w);
     scroll-snap-align: center;
+    scroll-snap-stop: always;
     overflow: hidden;
     touch-action: pan-x;
   }
@@ -1845,6 +1858,12 @@ body.is-landing-page
   .big-names-deals__product-shadow {
     height: 100%;
     max-width: 100%;
+    margin-inline: auto;
+  }
+
+  .big-names-deals__product {
+    margin-inline: auto;
+    object-position: bottom center;
   }
 
   .big-names-deals__pagination {

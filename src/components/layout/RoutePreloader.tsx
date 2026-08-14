@@ -2,30 +2,56 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { SPLASH_ACTIVE_CLASS } from "@/components/layout/PageLoadSplash";
 
-/** Lightweight routes only — heavy pages (e.g. /gp9) are excluded to avoid dev compile storms. */
+/** High-intent routes only — avoid prefetch storms during LCP. */
 const ROUTES_TO_PREFETCH =
   process.env.NODE_ENV === "production"
-    ? ["/search", "/compare", "/wishlist", "/cart", "/account", "/deals", "/brands"]
+    ? ["/cart", "/search", "/account"]
     : [];
 
-const PREFETCH_GAP_MS = 400;
+const PREFETCH_GAP_MS = 600;
+const IDLE_TIMEOUT_MS = 8000;
+
+function shouldDeferPrefetch(): boolean {
+  if (typeof window === "undefined") return true;
+
+  if (document.documentElement.classList.contains(SPLASH_ACTIVE_CLASS)) {
+    return true;
+  }
+
+  const connection = (
+    navigator as Navigator & {
+      connection?: { saveData?: boolean; effectiveType?: string };
+    }
+  ).connection;
+
+  if (connection?.saveData) return true;
+  if (
+    connection?.effectiveType &&
+    /(?:2g|slow-2g)/i.test(connection.effectiveType)
+  ) {
+    return true;
+  }
+
+  return false;
+}
 
 export default function RoutePreloader() {
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window === "undefined" || ROUTES_TO_PREFETCH.length === 0) return;
+    if (typeof window === "undefined" || ROUTES_TO_PREFETCH.length === 0) {
+      return;
+    }
 
     let cancelled = false;
     let timer = 0;
-
-    const schedule =
-      typeof window.requestIdleCallback === "function"
-        ? window.requestIdleCallback.bind(window)
-        : (cb: () => void) => window.setTimeout(cb, 1200);
+    let idleId: number | ReturnType<typeof requestIdleCallback> = 0;
 
     const prefetchTask = () => {
+      if (cancelled || shouldDeferPrefetch()) return;
+
       let index = 0;
 
       const prefetchNext = () => {
@@ -46,10 +72,27 @@ export default function RoutePreloader() {
       prefetchNext();
     };
 
-    const idleId = schedule(prefetchTask);
+    const schedulePrefetch = () => {
+      if (cancelled) return;
+
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(prefetchTask, {
+          timeout: IDLE_TIMEOUT_MS,
+        });
+      } else {
+        idleId = window.setTimeout(prefetchTask, IDLE_TIMEOUT_MS);
+      }
+    };
+
+    if (document.readyState === "complete") {
+      schedulePrefetch();
+    } else {
+      window.addEventListener("load", schedulePrefetch, { once: true });
+    }
 
     return () => {
       cancelled = true;
+      window.removeEventListener("load", schedulePrefetch);
       if (timer) window.clearTimeout(timer);
       if (typeof idleId === "number") {
         window.clearTimeout(idleId);

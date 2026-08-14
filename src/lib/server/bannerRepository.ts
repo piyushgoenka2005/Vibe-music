@@ -1,6 +1,6 @@
 import "server-only";
 
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { unstable_cache } from "next/cache";
 import * as pg from "@/lib/server/prisma/contentRepository";
 import type {
@@ -11,11 +11,12 @@ import type {
 } from "@/types/banner";
 
 const ACTIVE_BANNERS_CACHE_KEY = "homepage-active-banners";
-const ACTIVE_BANNERS_REVALIDATE_SECONDS = 300;
+const ACTIVE_BANNERS_REVALIDATE_SECONDS = 30;
 
 function invalidateBannerCache(): void {
   try {
     revalidateTag("banners", "max");
+    revalidatePath("/");
   } catch {
     /* ignore outside request context */
   }

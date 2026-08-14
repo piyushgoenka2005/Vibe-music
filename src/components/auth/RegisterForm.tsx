@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
 import { ROUTES } from "@/lib/routes";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations/auth";
@@ -159,12 +160,11 @@ export default function RegisterForm({ googleAuthEnabled = false }: RegisterForm
               <FormItem className="auth-shell__field">
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    autoComplete="new-password"
-                    disabled={isLoading}
-                    {...field}
-                  />
+                    <PasswordInput
+                      autoComplete="new-password"
+                      disabled={isLoading}
+                      {...field}
+                    />
                 </FormControl>
                 <FormDescription className="auth-shell__hint">
                   At least 8 characters with a letter and a number.
@@ -181,12 +181,11 @@ export default function RegisterForm({ googleAuthEnabled = false }: RegisterForm
               <FormItem className="auth-shell__field">
                 <FormLabel>Confirm password</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    autoComplete="new-password"
-                    disabled={isLoading}
-                    {...field}
-                  />
+                    <PasswordInput
+                      autoComplete="new-password"
+                      disabled={isLoading}
+                      {...field}
+                    />
                 </FormControl>
                 <FormMessage />
               </FormItem>

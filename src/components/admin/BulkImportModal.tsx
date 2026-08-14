@@ -3,6 +3,10 @@
 import { useCallback, useRef, useState, type RefObject } from "react";
 import type { BulkImportPreviewRow, BulkImportResult } from "@/types/catalog";
 import { rowsToCsv } from "@/lib/csv";
+import {
+  validateCsvFile,
+  validateZipFile,
+} from "@/lib/admin/bulkImportValidation";
 import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 
 interface BulkImportModalProps {
@@ -232,10 +236,21 @@ export default function BulkImportModal({
                   hidden
                   onChange={(e) => {
                     const selected = e.target.files?.[0] ?? null;
-                    setCsvFile(selected);
                     setPreview([]);
                     setResult(null);
                     setError(null);
+                    if (!selected) {
+                      setCsvFile(null);
+                      return;
+                    }
+                    const validationError = validateCsvFile(selected);
+                    if (validationError) {
+                      setError(validationError);
+                      setCsvFile(null);
+                      if (csvRef.current) csvRef.current.value = "";
+                      return;
+                    }
+                    setCsvFile(selected);
                   }}
                 />
                 <button
@@ -264,9 +279,20 @@ export default function BulkImportModal({
                   hidden
                   onChange={(e) => {
                     const selected = e.target.files?.[0] ?? null;
-                    setZipFile(selected);
                     setPreview([]);
                     setResult(null);
+                    if (!selected) {
+                      setZipFile(null);
+                      return;
+                    }
+                    const validationError = validateZipFile(selected);
+                    if (validationError) {
+                      setError(validationError);
+                      setZipFile(null);
+                      if (zipRef.current) zipRef.current.value = "";
+                      return;
+                    }
+                    setZipFile(selected);
                   }}
                 />
                 <button

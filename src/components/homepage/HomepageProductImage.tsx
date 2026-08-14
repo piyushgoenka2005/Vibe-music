@@ -40,12 +40,7 @@ export default function HomepageProductImage({
     () => storefrontImageUrl(src, width),
     [src, width]
   );
-  const candidates = useMemo(() => {
-    const list = [preferred.src, src].filter(
-      (value): value is string => Boolean(value?.trim())
-    );
-    return Array.from(new Set(list));
-  }, [preferred.src, src]);
+  const candidates = useMemo(() => [preferred.src].filter(Boolean), [preferred.src]);
   const [attempt, setAttempt] = useState(0);
   const activeSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? src;
 

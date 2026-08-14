@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { isProductionBuildPhase } from "@/lib/db/postgresConfig";
 import CategoryPage from "@/components/category/CategoryPage";
 import { collectCategoryRouteSlugs } from "@/lib/categorySlug";
 import { loadCategoryProducts } from "@/lib/server/categoryPageLoader";
@@ -22,8 +23,15 @@ export async function generateStaticParams() {
   if (process.env.NODE_ENV === "development") {
     return [];
   }
-  const categories = await getCategoryCatalog();
-  return collectCategoryRouteSlugs(categories).map((slug) => ({ slug }));
+  if (isProductionBuildPhase() && process.env.ALLOW_POSTGRES_DURING_BUILD !== "true") {
+    return [];
+  }
+  try {
+    const categories = await getCategoryCatalog();
+    return collectCategoryRouteSlugs(categories).map((slug) => ({ slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({

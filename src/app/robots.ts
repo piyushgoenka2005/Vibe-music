@@ -13,6 +13,8 @@ export default function robots() {
         "/account",
         "/login",
         "/register",
+        "/forgot-password",
+        "/reset-password",
       ],
     },
     sitemap: `${BRAND.siteUrl}/sitemap.xml`,

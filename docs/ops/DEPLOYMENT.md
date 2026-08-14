@@ -148,7 +148,7 @@ bash deploy/post-deploy-smoke.sh
 - [ ] Order confirmation email arrives
 - [ ] Admin product image upload writes to CDN
 - [ ] Homepage, catalog, **PostgreSQL search** (`/api/search`), and blog load correctly
-- [ ] COD remains disabled unless intentionally enabled via `COD_ENABLED=true`
+- [ ] Checkout is Razorpay-only (Cash on Delivery is not implemented in this codebase)
 - [ ] Reservation sweeper cron installed (`bash deploy/install-reservation-sweeper.sh`)
 
 ## Post-deploy monitoring

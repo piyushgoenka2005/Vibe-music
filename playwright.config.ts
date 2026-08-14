@@ -43,12 +43,16 @@ export default defineConfig({
       testIgnore: [
         /admin\.setup\.ts/,
         /admin\.(authenticated|crud-smoke|security)\.spec\.ts/,
+        /admin-features\.authenticated\.spec\.ts/,
       ],
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "admin-authenticated",
-      testMatch: /admin\.(authenticated|crud-smoke|security)\.spec\.ts/,
+      testMatch: [
+        /admin\.(authenticated|crud-smoke|security)\.spec\.ts/,
+        /admin-features\.authenticated\.spec\.ts/,
+      ],
       dependencies: ["admin-setup"],
       use: {
         ...devices["Desktop Chrome"],
@@ -62,13 +66,15 @@ export default defineConfig({
         // Webpack avoids intermittent Turbopack panics that abort the E2E webServer.
         command: "npx next dev --webpack",
         url: baseURL,
-        reuseExistingServer: !isCI,
+        reuseExistingServer: !isCI || Boolean(process.env.PLAYWRIGHT_REUSE_SERVER),
         timeout: 180_000,
         env: {
           ...process.env,
           NODE_OPTIONS: "",
           NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH: "false",
+          NEXT_PUBLIC_ENABLE_SPLASH_CURSOR: "false",
           DISABLE_RATE_LIMIT: "true",
+          E2E_TEST_MODE: "true",
           E2E_ADMIN_EMAIL,
           E2E_ADMIN_PASSWORD,
         },

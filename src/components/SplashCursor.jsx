@@ -711,6 +711,11 @@ function SplashCursor({
 
     function updateFrame() {
       if (!isActive) return;
+      if (document.hidden || config.PAUSED) {
+        lastUpdateTime = Date.now();
+        animationFrameId.current = requestAnimationFrame(updateFrame);
+        return;
+      }
       const dt = calcDeltaTime();
       if (resizeCanvas()) initFramebuffers();
       updateColors(dt);
@@ -1117,11 +1122,17 @@ function SplashCursor({
     window.addEventListener('touchmove', handleTouchMove, false);
     window.addEventListener('touchend', handleTouchEnd);
 
+    const handleVisibilityChange = () => {
+      config.PAUSED = document.hidden;
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     updateFrame();
 
     // Cleanup function
     return () => {
       isActive = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
 
       // Cancel animation frame
       if (animationFrameId.current) {

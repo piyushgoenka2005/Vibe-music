@@ -110,6 +110,9 @@ export default function HomepageBannerHero({
       >
         {slides.map((slide, index) => {
           const isActive = index === activeIndex;
+          const hasCopy = Boolean(
+            slide.title?.trim() || slide.subtitle?.trim() || slide.ctaText?.trim()
+          );
           return (
             <Link
               key={slide.id}
@@ -117,21 +120,57 @@ export default function HomepageBannerHero({
               className={`homepage-banner-hero__slide${isActive ? " is-active" : ""}`}
               aria-hidden={!isActive}
               tabIndex={isActive ? 0 : -1}
+              aria-label={
+                slide.title?.trim()
+                  ? `${slide.title}${slide.subtitle ? ` — ${slide.subtitle}` : ""}`
+                  : slide.alt
+              }
             >
-              <Image
-                src={slide.src}
-                alt={slide.alt}
-                fill
-                priority={index === 0}
-                loading={index === 0 ? "eager" : "lazy"}
-                sizes="100vw"
-                className="homepage-banner-hero__image"
-                style={
-                  slide.objectPosition
-                    ? { objectPosition: slide.objectPosition }
-                    : undefined
-                }
-              />
+              <div className="homepage-banner-hero__media">
+                {slide.mobileSrc ? (
+                  <Image
+                    src={slide.mobileSrc}
+                    alt={slide.alt}
+                    fill
+                    priority={index === 0}
+                    loading={index === 0 ? "eager" : "lazy"}
+                    sizes="100vw"
+                    className="homepage-banner-hero__image homepage-banner-hero__image--mobile"
+                    style={
+                      slide.objectPosition
+                        ? { objectPosition: slide.objectPosition }
+                        : undefined
+                    }
+                  />
+                ) : null}
+                <Image
+                  src={slide.src}
+                  alt={slide.alt}
+                  fill
+                  priority={index === 0}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  sizes="100vw"
+                  className={`homepage-banner-hero__image${slide.mobileSrc ? " homepage-banner-hero__image--desktop" : ""}`}
+                  style={
+                    slide.objectPosition
+                      ? { objectPosition: slide.objectPosition }
+                      : undefined
+                  }
+                />
+              </div>
+              {hasCopy ? (
+                <div className="homepage-banner-hero__copy">
+                  {slide.title ? (
+                    <p className="homepage-banner-hero__title">{slide.title}</p>
+                  ) : null}
+                  {slide.subtitle ? (
+                    <p className="homepage-banner-hero__subtitle">{slide.subtitle}</p>
+                  ) : null}
+                  {slide.ctaText ? (
+                    <span className="homepage-banner-hero__cta">{slide.ctaText}</span>
+                  ) : null}
+                </div>
+              ) : null}
             </Link>
           );
         })}

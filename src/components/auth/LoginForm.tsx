@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
 import { ROUTES } from "@/lib/routes";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
@@ -155,8 +156,7 @@ export default function LoginForm({ googleAuthEnabled = false }: LoginFormProps)
                   </Link>
                 </div>
                 <FormControl>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     autoComplete="current-password"
                     disabled={isLoading}
                     {...field}

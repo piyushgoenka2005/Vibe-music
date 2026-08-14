@@ -9,6 +9,7 @@ services:
       POSTGRES_DB: vibe
     ports:
       - "5432:5432"
+      - "5433:5432"
     volumes:
       - vibe_pg_data:/var/lib/postgresql/data
     healthcheck:

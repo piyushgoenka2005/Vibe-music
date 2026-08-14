@@ -58,9 +58,7 @@ jobs:
         run: npm run db:migrate
 
       - name: Seed catalog and E2E admin
-        run: |
-          npx tsx scripts/catalog/seed-catalog.mts
-          npm run seed:e2e-admin
+        run: npx tsx scripts/db/seed-e2e-prereqs.mts
 
       - name: Production build
         run: npm run build
@@ -77,6 +75,8 @@ jobs:
         env:
           CI: "true"
           DISABLE_RATE_LIMIT: "true"
+          E2E_TEST_MODE: "true"
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
           PLAYWRIGHT_BASE_URL: http://localhost:3000
 
       - name: Upload Playwright report

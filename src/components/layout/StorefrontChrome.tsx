@@ -21,6 +21,14 @@ const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
 const SPLASH_CURSOR_ENABLED =
   process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR !== "false";
 
+function isLowEndDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return (
+    navigator.hardwareConcurrency <= 4 ||
+    /Android [1-8]\./i.test(navigator.userAgent)
+  );
+}
+
 function subscribeNoop() {
   return () => {};
 }
@@ -47,6 +55,11 @@ export default function StorefrontChrome({
     pathname === "/deals";
   const isCheckoutOrCart =
     pathname.startsWith("/checkout") || pathname.startsWith("/cart");
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password" ||
+    pathname.startsWith("/reset-password");
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobileViewport = useIsMobileViewport();
   // Viewport/media queries can differ between SSR and the first client paint.
@@ -64,7 +77,8 @@ export default function StorefrontChrome({
     !prefersReducedMotion &&
     !hideChrome &&
     !isMobileViewport &&
-    !isCheckoutOrCart;
+    !isCheckoutOrCart &&
+    !isAuthPage;
 
   useLayoutEffect(() => {
     const hasFooterReveal = isLandingPage || isProductPage;
@@ -96,6 +110,8 @@ export default function StorefrontChrome({
     return <>{children}</>;
   }
 
+  const lowEndDevice = hasMounted && isLowEndDevice();
+
   const shellClassName = [
     "storefront-shell",
     isLandingPage ? "is-landing-page" : "",
@@ -118,9 +134,9 @@ export default function StorefrontChrome({
       {showHelpWidget ? <HelpWidget /> : null}
       {splashEnabled ? (
         <DeferredSplashCursor
-          DYE_RESOLUTION={480}
-          SIM_RESOLUTION={64}
-          PRESSURE_ITERATIONS={8}
+          DYE_RESOLUTION={lowEndDevice ? 320 : 384}
+          SIM_RESOLUTION={lowEndDevice ? 48 : 64}
+          PRESSURE_ITERATIONS={lowEndDevice ? 4 : 6}
           DENSITY_DISSIPATION={6.5}
           VELOCITY_DISSIPATION={2.75}
           PRESSURE={0.08}
@@ -130,7 +146,7 @@ export default function StorefrontChrome({
           SPLAT_FORCE={2600}
           COLOR_INTENSITY={0.08}
           COLOR_UPDATE_SPEED={10}
-          SHADING
+          SHADING={!lowEndDevice}
           RAINBOW_MODE={false}
           COLOR="#1253ED"
           ZONE_COLOR="#FFFFFF"

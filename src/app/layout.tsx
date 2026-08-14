@@ -47,7 +47,7 @@ export default function RootLayout({
         {splashEnabled ? (
           <script
             dangerouslySetInnerHTML={{
-              __html: `(function(){try{if(sessionStorage.getItem("vibe-splash-seen")==="1")return;}catch(e){}document.documentElement.classList.add("vibe-splash-pending");})();`,
+              __html: `(function(){try{var p=location.pathname;if(/^\\/admin(?:\\/|$)/.test(p)||p==="/login"||p==="/register"||p==="/forgot-password"||p==="/reset-password"||p.startsWith("/checkout")||p.startsWith("/cart"))return;if(sessionStorage.getItem("vibe-splash-seen")==="1")return;}catch(e){}document.documentElement.classList.add("vibe-splash-pending");})();`,
             }}
           />
         ) : null}

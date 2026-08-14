@@ -185,8 +185,12 @@ export default function CultureTypographySection({
 
   useEffect(() => {
     if (!motionReady) return undefined;
+    let lastRounded = -1;
     return scrollYProgress.on("change", (value) => {
-      setScrollProgressValue(Math.round(value * 100));
+      const rounded = Math.round(value * 20) * 5;
+      if (rounded === lastRounded) return;
+      lastRounded = rounded;
+      setScrollProgressValue(rounded);
     });
   }, [scrollYProgress, motionReady]);
 

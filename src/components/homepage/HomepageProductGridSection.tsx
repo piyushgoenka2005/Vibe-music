@@ -3,6 +3,7 @@ import { resolveLinkHref } from "@/lib/routes";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import NewArrivalsProductCard from "@/components/homepage/NewArrivalsProductCard";
 import { isHomepageProductVisible } from "@/lib/homepage/productVisibility";
+import { shouldPrioritizeNewArrivalImage } from "@/lib/performance/lcpBudget";
 import type {
   HomepageProductItem,
   ResolvedHomepageSection,
@@ -36,7 +37,9 @@ function ProductSequence({
           id={item.id}
           image={item.image}
           imageAlt={item.imageAlt}
-          imagePriority={!ariaHidden && index < 4}
+          imagePriority={shouldPrioritizeNewArrivalImage(index, {
+            decorative: ariaHidden,
+          })}
           name={item.name}
           price={item.price}
           rank={item.rank}

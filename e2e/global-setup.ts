@@ -18,22 +18,34 @@ export default async function globalSetup(): Promise<void> {
     fs.writeFileSync(E2E_ADMIN_STORAGE_PATH, EMPTY_STORAGE, "utf8");
   }
 
-  if (!process.env.DATABASE_URL) {
-    console.log("[e2e] DATABASE_URL not set — skipping E2E admin seed");
+  if (!process.env.DATABASE_URL?.trim()) {
+    const message = "[e2e] DATABASE_URL not set — authenticated admin E2E will skip";
+    if (process.env.CI) {
+      throw new Error(`${message} (required in CI)`);
+    }
+    console.log(message);
     return;
   }
 
-  console.log("[e2e] Seeding E2E super-admin account…");
+  console.log("[e2e] Preparing database (migrate, catalog, E2E admin)…");
   try {
-    execSync("npx tsx scripts/db/seed-e2e-admin.mts", {
+    execSync("npx tsx scripts/db/seed-e2e-prereqs.mts", {
       stdio: "inherit",
       env: process.env,
     });
-    fs.writeFileSync(E2E_ADMIN_SEED_MARKER, "1", "utf8");
+    if (!fs.existsSync(E2E_ADMIN_SEED_MARKER)) {
+      throw new Error("E2E admin seed marker was not created");
+    }
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "E2E database preparation failed";
+    if (process.env.CI) {
+      throw new Error(`[e2e] ${message}`);
+    }
     console.warn(
-      "[e2e] Admin seed failed (database unreachable?). Continuing without admin auth setup.",
-      error instanceof Error ? error.message : error
+      `[e2e] Database prep failed (Postgres unreachable?). Authenticated E2E will skip.\n` +
+        `  Fix: docker compose up -d postgres && npm run test:e2e:prep\n` +
+        `  Detail: ${message}`
     );
   }
 }

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import {
+  isPrismaUnavailableError,
+  SERVICE_UNAVAILABLE_MESSAGE,
+} from "@/lib/db/prisma-errors";
+import {
   generatePasswordResetToken,
   hashPasswordResetToken,
 } from "@/lib/auth/password-reset-token";
@@ -32,10 +36,6 @@ export async function POST(request: Request) {
     const csrfError = enforceMutationSecurity(request);
     if (csrfError) return csrfError;
 
-    if (!isSmtpConfigured()) {
-      return NextResponse.json({ error: UNAVAILABLE_MESSAGE }, { status: 503 });
-    }
-
     const body = (await request.json()) as unknown;
     const parsed = forgotPasswordSchema.safeParse(body);
     if (!parsed.success) {
@@ -45,8 +45,23 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!isSmtpConfigured() && process.env.E2E_TEST_MODE !== "true") {
+      return NextResponse.json({ error: UNAVAILABLE_MESSAGE }, { status: 503 });
+    }
+
     const email = parsed.data.email.trim().toLowerCase();
-    const user = await findUserByEmail(email);
+    let user;
+    try {
+      user = await findUserByEmail(email);
+    } catch (error) {
+      if (isPrismaUnavailableError(error)) {
+        return NextResponse.json(
+          { error: SERVICE_UNAVAILABLE_MESSAGE },
+          { status: 503 }
+        );
+      }
+      throw error;
+    }
 
     if (user?.passwordHash) {
       const token = generatePasswordResetToken();
@@ -76,6 +91,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (isPrismaUnavailableError(error)) {
+      return NextResponse.json(
+        { error: SERVICE_UNAVAILABLE_MESSAGE },
+        { status: 503 }
+      );
+    }
     return handleRouteError(error, "api/auth/forgot-password POST", request);
   }
 }

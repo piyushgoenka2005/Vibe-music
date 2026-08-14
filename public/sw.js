@@ -1,7 +1,6 @@
 /* Vibe Music PWA shell service worker — network-first for pages, cache-first for static assets. */
-const CACHE_NAME = "vibe-shell-v2";
+const CACHE_NAME = "vibe-shell-v3";
 const PRECACHE_URLS = [
-  "/",
   "/site.webmanifest",
   "/icon-48.png",
   "/icon-192.png",

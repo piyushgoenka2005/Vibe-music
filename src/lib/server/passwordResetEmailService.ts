@@ -10,6 +10,12 @@ export async function sendPasswordResetEmail(
 ): Promise<boolean> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? BRAND.siteUrl;
 
+  if (process.env.E2E_TEST_MODE === "true") {
+    const { captureResetLinkForE2E } = await import("@/lib/server/e2eResetCapture");
+    captureResetLinkForE2E(email, resetUrl);
+    return true;
+  }
+
   const result = await sendMail({
     from: formatMailboxFrom("support"),
     to: email,

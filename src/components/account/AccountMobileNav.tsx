@@ -1,19 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useIsClient } from "@/hooks/useIsClient";
 import { ACCOUNT_NAV_ITEMS } from "./accountNav";
 import { isAccountNavActive } from "./accountNavActive";
 
 export default function AccountMobileNav() {
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   const nav = (
     <nav className="acct__mobile-nav" aria-label="Account mobile navigation">

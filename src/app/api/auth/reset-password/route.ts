@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import {
+  isPrismaUnavailableError,
+  SERVICE_UNAVAILABLE_MESSAGE,
+} from "@/lib/db/prisma-errors";
 import { hashPasswordResetToken } from "@/lib/auth/password-reset-token";
 import { findUserByEmail, updateUserPassword } from "@/lib/server/userService";
 import { passwordSchema } from "@/lib/validations/auth";
@@ -39,30 +43,64 @@ export async function POST(request: Request) {
     }
 
     const email = parsed.data.email.trim().toLowerCase();
-    const user = await findUserByEmail(email);
+    let user;
+    try {
+      user = await findUserByEmail(email);
+    } catch (error) {
+      if (isPrismaUnavailableError(error)) {
+        return NextResponse.json(
+          { error: SERVICE_UNAVAILABLE_MESSAGE },
+          { status: 503 }
+        );
+      }
+      throw error;
+    }
+
     if (!user) {
-      return NextResponse.json({ error: "Invalid or expired reset link." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid or expired reset link." },
+        { status: 400 }
+      );
     }
 
     const tokenHash = hashPasswordResetToken(parsed.data.token);
-    const verification = await prisma.verificationToken.findFirst({
-      where: {
-        identifier: email,
-        token: tokenHash,
-        expires: { gt: new Date() },
-      },
-    });
+    let verification;
+    try {
+      verification = await prisma.verificationToken.findFirst({
+        where: {
+          identifier: email,
+          token: tokenHash,
+          expires: { gt: new Date() },
+        },
+      });
+    } catch (error) {
+      if (isPrismaUnavailableError(error)) {
+        return NextResponse.json(
+          { error: SERVICE_UNAVAILABLE_MESSAGE },
+          { status: 503 }
+        );
+      }
+      throw error;
+    }
 
     if (!verification) {
-      return NextResponse.json({ error: "Invalid or expired reset link." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid or expired reset link." },
+        { status: 400 }
+      );
     }
 
     await updateUserPassword(user.id, parsed.data.password);
-    // Single-use: invalidate all reset tokens for this identifier.
     await prisma.verificationToken.deleteMany({ where: { identifier: email } });
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (isPrismaUnavailableError(error)) {
+      return NextResponse.json(
+        { error: SERVICE_UNAVAILABLE_MESSAGE },
+        { status: 503 }
+      );
+    }
     return handleRouteError(error, "api/auth/reset-password POST", request);
   }
 }

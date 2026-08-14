@@ -36,6 +36,70 @@
   z-index: 0;
 }
 
+.homepage-banner-hero__slide picture {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.homepage-banner-hero__media {
+  position: absolute;
+  inset: 0;
+}
+
+.homepage-banner-hero__image--mobile {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .homepage-banner-hero__image--desktop {
+    display: none !important;
+  }
+
+  .homepage-banner-hero__image--mobile {
+    display: block !important;
+  }
+}
+
+.homepage-banner-hero__copy {
+  position: absolute;
+  inset: auto auto clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 4vw, 3rem);
+  z-index: 1;
+  max-width: min(36rem, 72vw);
+  color: #fff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.homepage-banner-hero__title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.35rem, 3.2vw, 2.35rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.homepage-banner-hero__subtitle {
+  margin: 0 0 0.85rem;
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  line-height: 1.45;
+  opacity: 0.95;
+}
+
+.homepage-banner-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #111;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
 /* Active slide is always painted — never wait on a fade-in for first view */
 .homepage-banner-hero__slide.is-active {
   opacity: 1;
@@ -156,6 +220,11 @@
 
   .homepage-banner-hero__nav--next {
     right: max(0.5rem, env(safe-area-inset-right, 0px));
+  }
+
+  .homepage-banner-hero__copy {
+    inset: auto clamp(0.75rem, 3vw, 1.25rem) clamp(0.85rem, 3vw, 1.25rem);
+    max-width: none;
   }
 }
 

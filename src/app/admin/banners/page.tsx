@@ -196,6 +196,14 @@ function BannersContent({
   return (
     <>
       <div className="admin-toolbar">
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="admin-btn admin-btn--secondary"
+        >
+          Preview homepage
+        </a>
         {canWrite ? (
         <button type="button" className="admin-btn admin-btn--primary" onClick={openCreate}>
           <Plus size={16} />
@@ -445,6 +453,10 @@ export default function AdminBannersPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Homepage Banners">
+          <p className="admin-page-lead">
+            Hero carousel at the top of the storefront. Changes publish live within
+            ~30 seconds — keep the homepage open to preview without reloading.
+          </p>
           <BannersContent
             canWrite={admin.permissions.includes("banners:write")}
             canDelete={admin.permissions.includes("banners:delete")}

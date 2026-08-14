@@ -67,7 +67,37 @@ check_json "/api/coupons/active" "Array.isArray(d.coupons)" "coupons/active retu
 check_http "/api/checkout/capabilities" "200" "GET /api/checkout/capabilities"
 check_json "/api/checkout/capabilities" "d.razorpayConfigured === true || d.onlinePaymentsAvailable === true" "checkout: Razorpay available"
 
-check_http "/api/banners" "200" "GET /api/banners"
+check_json "/api/banners" "Array.isArray(d.banners)" "banners API returns {banners:[]}"
+
+check_http "/api/products?limit=1" "200" "GET /api/products"
+check_json "/api/products?limit=1" "Array.isArray(d.products) && d.products.length > 0" "catalog has products"
+
+# Password reset must not 503 when SMTP + DB are configured (enumeration-safe 200).
+check_json_post() {
+  local path="$1"
+  local expr="$2"
+  local label="$3"
+  local body
+  body=$(curl -sS --max-time 20 -X POST "${BASE_URL}${path}" \
+    -H "Content-Type: application/json" \
+    -H "Origin: ${BASE_URL}" \
+    -d '{"email":"smoke-check@vibemusic.in"}' || echo "")
+  if echo "$body" | node -e "
+    let d;
+    try { d = JSON.parse(require('fs').readFileSync(0,'utf8')); }
+    catch { process.exit(2); }
+    const ok = Boolean($expr);
+    process.exit(ok ? 0 : 1);
+  " 2>/dev/null; then
+    pass "$label"
+  else
+    fail "$label (body: $(echo "$body" | head -c 160))"
+  fi
+}
+
+check_json_post "/api/auth/forgot-password" "d.ok === true" "POST /api/auth/forgot-password (SMTP+DB)"
+check_http "/api/e2e/password-reset" "404" "GET /api/e2e/password-reset disabled in prod"
+
 check_http "/robots.txt" "200" "GET /robots.txt"
 check_http "/sitemap.xml" "200" "GET /sitemap.xml"
 check_http "/api/admin/me" "401" "GET /api/admin/me (auth enforced)"

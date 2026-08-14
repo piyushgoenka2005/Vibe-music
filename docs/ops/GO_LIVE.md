@@ -9,19 +9,11 @@ Short path from “code is ready” to “production secrets are honest.” Full
 | PostgreSQL | `DATABASE_URL` | App unhealthy |
 | Auth.js | `AUTH_SECRET` (≥32) | Login/session broken |
 | Guest / invoice tokens | `GUEST_ORDER_ACCESS_SECRET` (≥32) | Guest order + invoice links fail |
-| Razorpay | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Online pay hidden (COD is also off by default) |
+| Razorpay | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Online pay hidden |
 | Razorpay webhook | `RAZORPAY_WEBHOOK_SECRET` | Paid status may not auto-update |
 | Email | `SMTP_*` or `RESEND_API_KEY` | Order / reset emails skip or 503 |
 
-### COD eligibility (optional)
-
-| Variable | Default | Effect |
-|----------|---------|--------|
-| `COD_ENABLED` | **off** (must set `true` to enable) | COD only when explicitly `true` |
-| `COD_MAX_ORDER_VALUE` | `50000` | COD blocked above this order value (₹); `0` = no max |
-| `COD_ALLOWED_PIN_PREFIXES` | empty | Comma-separated PIN prefixes; empty = all India |
-
-Production currently runs with COD **disabled**. **Razorpay is the only payment gateway** (no Stripe). Never set `ALLOW_DEMO_PAYMENTS=true` in production.
+**Payments:** **Razorpay only** — Cash on Delivery is **not implemented** in this codebase (no `COD_ENABLED` env). Checkout always uses Razorpay (or demo mode when `ALLOW_DEMO_PAYMENTS=true` in non-production). Never set `ALLOW_DEMO_PAYMENTS=true` in production.
 
 Catalog search uses **PostgreSQL / Prisma** (`/api/search`) — not Elasticsearch.
 

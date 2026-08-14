@@ -10,9 +10,10 @@ import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
 import { storefrontImageCandidates } from "@/lib/storefrontImages";
 
 const PRODUCT_FALLBACK = "/images/guitar-1.webp";
-const AUTO_ADVANCE_MS = 3200;
+/** Slightly snappier than a typical 3–4s carousel. */
+const AUTO_ADVANCE_MS = 2200;
 /** Brief pause after swipe / dot tap — auto keeps running alongside manual control. */
-const RESUME_AFTER_IDLE_MS = 1800;
+const RESUME_AFTER_IDLE_MS = 1600;
 
 function getSlides(track: HTMLElement): HTMLElement[] {
   return Array.from(
@@ -213,6 +214,26 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
     observer.observe(root);
     return () => observer.disconnect();
   }, [enableAuto]);
+
+  /* Center the first (and current) slide once layout is ready — scrollLeft=0 leaves slide 0 left-biased. */
+  useEffect(() => {
+    if (!enableAuto) return undefined;
+    const track = trackRef.current;
+    if (!track) return undefined;
+
+    const centerCurrent = () => {
+      const index = nearestSlideIndex(track);
+      scrollToIndex(index, "instant");
+    };
+
+    centerCurrent();
+    const raf = window.requestAnimationFrame(centerCurrent);
+    window.addEventListener("resize", centerCurrent);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("resize", centerCurrent);
+    };
+  }, [enableAuto, items.length, scrollToIndex]);
 
   /* Mobile: auto-advance + native swipe / dots at the same time. */
   useEffect(() => {

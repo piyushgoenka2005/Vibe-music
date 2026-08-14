@@ -9,6 +9,14 @@ const prisma = new PrismaClient();
 
 const DEFAULT_BANNERS = [
   {
+    title: "Strings of Freedom",
+    subtitle: "Celebrate Independence with Music — 15 August",
+    image: "/independence-day-special.png",
+    mobileImage: "/independence-day-special.png",
+    ctaText: "Shop the sale",
+    ctaLink: "/deals",
+  },
+  {
     title: "Hertz HG 20",
     subtitle: "Portable guitar amp — delay & reverb, 20W",
     image: "/hertz-hg-20.webp",

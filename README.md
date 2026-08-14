@@ -10,7 +10,7 @@ Enterprise ecommerce platform for musical instruments and pro audio.
 
 | Area | Implementation |
 |------|----------------|
-| **Payments** | **Razorpay only** (UPI, cards, net banking via Razorpay Checkout). Stripe is **not** implemented. COD is optional and **off by default** (`COD_ENABLED`). |
+| **Payments** | **Razorpay only** (UPI, cards, net banking via Razorpay Checkout). Stripe and Cash on Delivery are **not** implemented. |
 | **Search** | PostgreSQL / Prisma faceted search (`/api/search`). **Not** Elasticsearch. |
 | **Database** | Self-hosted PostgreSQL on the VPS via Prisma. Firestore is fully decommissioned. |
 | **CDN** | Product/media assets on `cdn.vibemusic.in` (`CDN_STORAGE_ROOT` + `CDN_PUBLIC_BASE_URL`). Sync with `npm run sync:cdn-vps`. nginx config: `deploy/nginx/cdn.vibemusic.in.conf`. |
@@ -87,8 +87,10 @@ Open [http://localhost:3000](http://localhost:3000).
 ```bash
 npm run check:env         # env readiness (secret values hidden)
 npm run validate          # type-check + lint + unit tests + production build
-npm run test:e2e          # Playwright smoke (server must be running)
+npm run test:e2e          # Playwright (Postgres required for admin DB flows)
+npm run test:e2e:prep     # Docker Postgres + migrate + seed + E2E (local)
 npm run validate:ci       # validate + E2E (matches GitHub Actions)
+VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 ```
 
 CI workflow: `.github/workflows/validate.yml`

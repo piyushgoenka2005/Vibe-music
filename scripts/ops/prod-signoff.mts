@@ -24,6 +24,27 @@ async function getJson(path: string): Promise<{ status: number; body: unknown }>
   }
 }
 
+async function postJson(
+  path: string,
+  data: unknown
+): Promise<{ status: number; body: unknown }> {
+  const response = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Origin: BASE_URL,
+    },
+    body: JSON.stringify(data),
+    cache: "no-store",
+  });
+  const text = await response.text();
+  try {
+    return { status: response.status, body: JSON.parse(text) as unknown };
+  } catch {
+    return { status: response.status, body: text.slice(0, 200) };
+  }
+}
+
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 }
@@ -83,6 +104,44 @@ const checks: Check[] = [];
     ok: status === 200 && count > 0,
     detail: `HTTP ${status} count=${count}`,
     blocking: false,
+  });
+}
+
+{
+  const { status, body } = await getJson("/api/products?limit=1");
+  const data = asRecord(body);
+  const products = Array.isArray(data.products) ? data.products : [];
+  checks.push({
+    name: "catalog",
+    ok: status === 200 && products.length > 0,
+    detail: `HTTP ${status} products=${products.length}`,
+    blocking: true,
+  });
+}
+
+{
+  const { status, body } = await postJson("/api/auth/forgot-password", {
+    email: "signoff-check@vibemusic.in",
+  });
+  const data = asRecord(body);
+  const smtpReady = status === 200 && data.ok === true;
+  checks.push({
+    name: "password-reset",
+    ok: smtpReady,
+    detail: smtpReady
+      ? "HTTP 200 SMTP + database ready"
+      : `HTTP ${status} ${JSON.stringify(data).slice(0, 120)}`,
+    blocking: true,
+  });
+}
+
+{
+  const { status } = await getJson("/api/e2e/password-reset");
+  checks.push({
+    name: "e2e-endpoint-off",
+    ok: status === 404,
+    detail: `HTTP ${status} (must be 404 in production)`,
+    blocking: true,
   });
 }
 

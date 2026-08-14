@@ -1,8 +1,14 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
 import AuthShell from "@/components/auth/AuthShell";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import GuestOnlyRoute from "@/components/auth/GuestOnlyRoute";
+
+export const metadata: Metadata = {
+  title: "Forgot Password",
+  robots: { index: false, follow: false },
+};
 
 export default function ForgotPasswordPage() {
   return (

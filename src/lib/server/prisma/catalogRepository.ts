@@ -1,6 +1,7 @@
 import "server-only";
 
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
+import { isProductionBuildPhase } from "@/lib/db/postgresConfig";
 import { normalizeCategorySlug } from "@/lib/categorySlug";
 import type { Brand } from "@/types/brand";
 import type { CatalogProduct, ProductStatus } from "@/types/catalog";
@@ -35,6 +36,8 @@ export function isJsonCatalogFallbackAllowed(): boolean {
   const flag = process.env.ALLOW_JSON_CATALOG_FALLBACK?.trim().toLowerCase();
   if (flag === "true" || flag === "1") return true;
   if (flag === "false" || flag === "0") return false;
+  // `next build` skips Postgres by default — seed JSON enables SSG without a live DB.
+  if (isProductionBuildPhase() && !isPostgresConfigured()) return true;
   return process.env.NODE_ENV !== "production";
 }
 

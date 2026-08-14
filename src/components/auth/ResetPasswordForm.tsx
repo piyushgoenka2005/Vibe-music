@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
 import { ROUTES } from "@/lib/routes";
 import { passwordSchema } from "@/lib/validations/auth";
@@ -118,7 +118,11 @@ export default function ResetPasswordForm() {
               <FormItem className="auth-shell__field">
                 <FormLabel>New password</FormLabel>
                 <FormControl>
-                  <Input type="password" autoComplete="new-password" disabled={isLoading} {...field} />
+                  <PasswordInput
+                    autoComplete="new-password"
+                    disabled={isLoading}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -132,7 +136,11 @@ export default function ResetPasswordForm() {
               <FormItem className="auth-shell__field">
                 <FormLabel>Confirm password</FormLabel>
                 <FormControl>
-                  <Input type="password" autoComplete="new-password" disabled={isLoading} {...field} />
+                  <PasswordInput
+                    autoComplete="new-password"
+                    disabled={isLoading}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -612,7 +612,9 @@
     object-position: center center;
     margin: 0 auto;
     display: block;
-     transform: scale(var(--pdp-gallery-photo-scale, 1.2));
+    transform: scale(var(--pdp-gallery-photo-scale, 1.2));
+  }
+
   .pdp-gallery__zoom-pane,
   .pdp-gallery__zoom-lens {
     display: none !important;

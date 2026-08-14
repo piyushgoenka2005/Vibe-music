@@ -5,6 +5,7 @@ import CarouselProductCard from "@/components/homepage/CarouselProductCard";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import { useHorizontalScroller } from "@/hooks/useHorizontalScroller";
 import { isHomepageProductVisible } from "@/lib/homepage/productVisibility";
+import { shouldPrioritizeHomepageProductImage } from "@/lib/performance/lcpBudget";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageSectionKey, ResolvedHomepageSection } from "@/types/homepage";
 
@@ -175,7 +176,10 @@ export default function HomepageProductCarouselSection({
             {products.map((item, index) => (
               <CarouselProductCard
                 key={item.id}
-                imagePriority={index < 4}
+                imagePriority={shouldPrioritizeHomepageProductImage(
+                  section.key,
+                  index
+                )}
                 item={item}
                 sectionKey={section.key}
               />
