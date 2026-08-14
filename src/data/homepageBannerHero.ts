@@ -66,6 +66,20 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     objectPosition: "center center",
   },
   {
+    id: "banner-independence-day-music-fly",
+    src: "/images/banner-7.png",
+    alt: "This Independence Day let your music fly — Hertz HG-10 guitar amplifier at Vibe Music",
+    href: `${ROUTES.searchResults}?brand=hertz`,
+    objectPosition: "center center",
+  },
+  {
+    id: "banner-independence-day-80th",
+    src: "/images/banner-8.png",
+    alt: "Happy 80th Independence Day — Hertz HG-10 guitar amplifier at Vibe Music",
+    href: `${ROUTES.searchResults}?brand=hertz`,
+    objectPosition: "center center",
+  },
+  {
     id: "banner-endless-sound",
     src: "/images/3.3.webp",
     alt: "Endless Sound — premium electric guitars at Vibe Music",
