@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import ProductImage from "@/components/common/ProductImage";
 import { storefrontImageUrl } from "@/lib/storefrontImages";
 
 type HomepageProductImageProps = {
@@ -48,32 +49,20 @@ export default function HomepageProductImage({
     return <div aria-hidden className={placeholderClass(className)} />;
   }
 
-  const onError = () => setAttempt((current) => current + 1);
-
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <ProductImage
       key={activeSrc}
       alt=""
       className={className}
       decoding="async"
       fetchPriority={priority ? "high" : "auto"}
-      height={fill ? undefined : height}
+      fill={fill}
+      height={height}
       loading={priority ? "eager" : "lazy"}
       src={activeSrc}
-      width={fill ? undefined : width}
-      onError={onError}
-      style={
-        fill
-          ? {
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-            }
-          : undefined
-      }
+      variant="card"
+      width={width}
+      onError={() => setAttempt((current) => current + 1)}
     />
   );
 }

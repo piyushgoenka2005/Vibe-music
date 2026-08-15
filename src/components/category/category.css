@@ -184,7 +184,7 @@
   .cat-product-grid--grid .cat-product-card__image-photo {
     object-fit: contain;
     object-position: center;
-    padding: 0.35rem;
+    padding: var(--product-image-well-padding, clamp(0.5rem, 1.2vw, 0.75rem));
   }
 
   .cat-product-grid--grid .cat-product-card__body {
@@ -428,7 +428,7 @@
   .cat-product-card__image-photo {
     object-fit: contain;
     object-position: center;
-    padding: 0.35rem;
+    padding: var(--product-image-well-padding, clamp(0.5rem, 1.2vw, 0.75rem));
   }
 
   .cat-product-card:hover {
@@ -520,7 +520,7 @@
   height: 100%;
   object-fit: contain;
   object-position: center;
-  padding: 0.4rem;
+  padding: var(--product-image-well-padding, clamp(0.5rem, 1.2vw, 0.75rem));
   box-sizing: border-box;
   display: block;
   background: transparent;

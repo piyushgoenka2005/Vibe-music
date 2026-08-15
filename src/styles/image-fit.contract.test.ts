@@ -8,6 +8,11 @@ function readCss(relativePath: string): string {
   return readFileSync(resolve(ROOT, relativePath), "utf8");
 }
 
+function parseScaleToken(css: string, token: string): number | null {
+  const match = css.match(new RegExp(`${token}:\\s*([\\d.]+)`));
+  return match ? Number(match[1]) : null;
+}
+
 describe("product image fit contract", () => {
   it("PDP gallery photos use object-fit contain (no side crop)", () => {
     const css = readCss("src/components/product/product-detail.css");
@@ -31,5 +36,28 @@ describe("product image fit contract", () => {
   it("account avatars use cover (intentional circular crop)", () => {
     const css = readCss("src/components/account/account.css");
     expect(css).toMatch(/\.acct__hero-avatar-img[\s\S]*object-fit:\s*cover/);
+  });
+
+  it("shared tokens forbid resting product image scale above 1", () => {
+    const css = readCss("src/styles/product-image-tokens.css");
+    expect(parseScaleToken(css, "--product-image-scale-rest")).toBe(1);
+    expect(parseScaleToken(css, "--pdp-gallery-photo-scale")).toBe(1);
+    const hover = parseScaleToken(css, "--product-image-scale-hover");
+    const hoverStrong = parseScaleToken(css, "--product-image-scale-hover-strong");
+    expect(hover).not.toBeNull();
+    expect(hoverStrong).not.toBeNull();
+    expect(hover!).toBeLessThanOrEqual(1.08);
+    expect(hoverStrong!).toBeLessThanOrEqual(1.08);
+  });
+
+  it("premium carousel does not reintroduce resting scale above 1", () => {
+    const css = readCss("src/styles/premium-product-carousel.css");
+    expect(css).not.toMatch(/--home-product-image-scale:\s*1\.[2-9]/);
+    expect(css).toMatch(/product-suggest__item-photo-pop[\s\S]*scale\(var\(--product-image-scale-rest/);
+  });
+
+  it("PDP gallery transform fallbacks do not default above 1", () => {
+    const css = readCss("src/components/product/product-detail.css");
+    expect(css).not.toMatch(/pdp-gallery-photo-scale,\s*1\.(?:1[6-9]|2)/);
   });
 });

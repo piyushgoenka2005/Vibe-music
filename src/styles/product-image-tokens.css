@@ -1,0 +1,23 @@
+/* Shared product image display tokens — import before component styles that reference them. */
+
+:root {
+  /* Resting scale must stay 1 — zoom at rest clips inside overflow:hidden wells. */
+  --product-image-scale-rest: 1;
+  --product-image-scale-hover: 1.05;
+  --product-image-scale-hover-strong: 1.06;
+
+  /* Legacy aliases (homepage premium sections) */
+  --home-product-image-scale: var(--product-image-scale-rest);
+  --home-product-image-scale-hover: var(--product-image-scale-hover);
+  --home-product-image-scale-hover-strong: var(--product-image-scale-hover-strong);
+
+  --product-image-well-padding: clamp(0.5rem, 1.2vw, 0.75rem);
+  --home-product-image-inset: var(--product-image-well-padding);
+
+  /* PDP main photo — no resting zoom; hover lens is separate in ProductGallery */
+  --pdp-gallery-photo-scale: 1;
+
+  /* Big Names showcase — subtle only */
+  --big-names-product-scale: 1;
+  --big-names-product-scale-hover: 1.05;
+}

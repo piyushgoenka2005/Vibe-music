@@ -333,7 +333,7 @@
   /* Only the product photo layer scales — mild pop, clipped in the well */
   .premium-home .premium-product-carousel .product-suggest__item:hover .product-suggest__item-photo-pop,
   .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-photo-pop {
-    transform: scale(var(--home-product-image-scale-hover-strong, 1.36));
+    transform: scale(var(--product-image-scale-hover-strong, 1.06));
     filter: drop-shadow(0 14px 22px rgba(15, 23, 42, 0.22));
   }
 
@@ -403,7 +403,7 @@
   pointer-events: none;
 }
 
-/* Photo layer — 1× at rest; hover zoom only */
+/* Photo layer — 1× at rest; subtle hover zoom only */
 .premium-home .premium-product-carousel .product-suggest__item-photo-pop {
   position: absolute;
   top: 0;
@@ -413,7 +413,7 @@
   z-index: 2;
   display: block;
   width: 100%;
-  transform: scale(var(--home-product-image-scale, 1.2));
+  transform: scale(var(--product-image-scale-rest, 1));
   transform-origin: center center;
   filter: drop-shadow(0 6px 12px rgba(15, 23, 42, 0.1));
   transition:
@@ -452,7 +452,7 @@
 /* Touch / keyboard: same stronger pop when hover media isn't available */
 .premium-home .premium-product-carousel .product-suggest__item:focus-within .product-suggest__item-photo-pop,
 .premium-home .premium-product-carousel .product-suggest__item:active .product-suggest__item-photo-pop {
-  transform: scale(var(--home-product-image-scale-hover-strong, 1.36));
+  transform: scale(var(--product-image-scale-hover-strong, 1.06));
   filter: drop-shadow(0 14px 22px rgba(15, 23, 42, 0.22));
 }
 
@@ -742,13 +742,6 @@
 }
 
 @media (max-width: 767px) {
-  .premium-home {
-    --home-product-image-scale: 1.2;
-    --home-product-image-scale-hover: 1.32;
-    --home-product-image-scale-hover-strong: 1.36;
-    --home-product-image-inset: 0.12rem;
-  }
-
   .premium-home .suggested-products.premium-product-carousel {
     padding: 1.25rem 0 1.5rem;
     overflow-x: clip;
@@ -850,7 +843,7 @@
     left: 0;
     right: 0;
     width: 100%;
-    transform: scale(var(--home-product-image-scale, 1.2));
+    transform: scale(var(--product-image-scale-rest, 1));
     filter: drop-shadow(0 6px 12px rgba(15, 23, 42, 0.1));
     will-change: auto;
   }

@@ -14,11 +14,6 @@
   --homepage-content-max: calc(100dvw - 1.5rem);
   --homepage-gutter: clamp(0.5rem, 1.25vw, 0.875rem);
   --stats-bridge-space: clamp(1.5rem, 3vw, 2.25rem);
-  /* Rest: larger fill; hover keeps a clear ~12–15% pop inside the well. */
-  --home-product-image-scale: 1.2;
-  --home-product-image-scale-hover: 1.32;
-  --home-product-image-scale-hover-strong: 1.36;
-  --home-product-image-inset: 0.15rem;
 }
 
 @media (min-width: 1024px) {
@@ -1322,10 +1317,8 @@ body.is-landing-page
 }
 
 .big-names-deals {
-  /* Tall track fills the vertical gap; products near full height with a clear hover pop */
+  /* Tall track fills the vertical gap; products use shared image scale tokens */
   --big-names-showcase-h: clamp(16.5rem, 28vw, 24rem);
-  --big-names-product-scale: 1.06;
-  --big-names-product-scale-hover: 1.18;
   --big-names-ivory: #f9f8f6;
   position: relative;
   width: calc(100% + (var(--full-bleed-inline, 0px) * 2));
@@ -1720,8 +1713,6 @@ body.is-landing-page
 @media (min-width: 1280px) {
   .big-names-deals {
     --big-names-showcase-h: clamp(18.5rem, 26vw, 26rem);
-    --big-names-product-scale: 1.08;
-    --big-names-product-scale-hover: 1.2;
   }
 
   .big-names-deals__headline {
@@ -1742,8 +1733,6 @@ body.is-landing-page
 @media (min-width: 768px) and (max-width: 1279px) {
   .big-names-deals {
     --big-names-showcase-h: clamp(15rem, 24vw, 20rem);
-    --big-names-product-scale: 1.06;
-    --big-names-product-scale-hover: 1.18;
   }
 
   .big-names-deals__headline {
@@ -1765,8 +1754,6 @@ body.is-landing-page
 @media (max-width: 767px) {
   .big-names-deals {
     --big-names-showcase-h: clamp(13.5rem, 48vw, 17.5rem);
-    --big-names-product-scale: 1.05;
-    --big-names-product-scale-hover: 1.16;
     padding-top: 1.75rem;
     padding-bottom: 1.85rem;
     /* Let the inner track own horizontal scrolling (parent overflow:hidden blocks iOS swipe). */

@@ -1,3 +1,5 @@
+@import "../../styles/product-image-tokens.css";
+
 .pdp {
   --pdp-blue: var(--brand-primary);
   --pdp-red: #d71920;
@@ -235,8 +237,8 @@
   --pdp-thumb-scrollbar-track: #e5e7eb;
   --pdp-thumb-scrollbar-thumb: #9ca3af;
   --pdp-thumb-scrollbar-thumb-hover: #6b7280;
-  /* Rest: larger fill; hover keeps a clear ~12–15% pop inside the well. */
-  --pdp-gallery-photo-scale: 1.16;
+  /* PDP main photo: no resting zoom; hover lens is separate */
+  --pdp-gallery-photo-scale: var(--product-image-scale-rest, 1);
   /* Rail = cards + whitespace + scrollbar track (no overlap/clipping). */
   --pdp-thumbs-rail-width: calc(
     var(--pdp-thumb-size) + var(--pdp-thumb-scroll-gap) + var(--pdp-thumb-scrollbar-size)
@@ -308,7 +310,7 @@
 
 /* Keep display scale while zooming so lens mapping stays aligned */
 .pdp-gallery__main--zooming .pdp-gallery__photo {
-  transform: scale(var(--pdp-gallery-photo-scale, 1.16));
+  transform: scale(var(--pdp-gallery-photo-scale, 1));
 }
 
 .pdp-gallery__main-inner {
@@ -319,7 +321,7 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  padding: clamp(0.65rem, 1.6vw, 1.1rem);
+  padding: var(--product-image-well-padding, clamp(0.5rem, 1.2vw, 0.75rem));
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -337,7 +339,7 @@
   user-select: none;
   pointer-events: none;
   /* Keep product fully visible inside the square frame (no side crop) */
-  transform: scale(var(--pdp-gallery-photo-scale, 1.16));
+  transform: scale(var(--pdp-gallery-photo-scale, 1));
   transform-origin: center center;
 }
 
@@ -580,8 +582,6 @@
     gap: 12px;
     width: 100%;
     max-width: 100%;
-    /* Mild fill — still below crop threshold for wide mics/keyboards. */
-    --pdp-gallery-photo-scale: 1.2;
   }
 
   .pdp-gallery__stage {
@@ -600,7 +600,7 @@
   }
 
   .pdp-gallery__main-inner {
-    padding: 0.12rem;
+    padding: var(--product-image-well-padding, clamp(0.5rem, 1.2vw, 0.75rem));
   }
 
   .pdp-gallery__photo {
@@ -612,7 +612,7 @@
     object-position: center center;
     margin: 0 auto;
     display: block;
-    transform: scale(var(--pdp-gallery-photo-scale, 1.2));
+    transform: scale(var(--pdp-gallery-photo-scale, 1));
   }
 
   .pdp-gallery__zoom-pane,
@@ -695,26 +695,14 @@
   }
 }
 
-/* Phones — slightly larger fill, still no hard crop. */
+/* Phones — consistent framing, no resting zoom. */
 @media (max-width: 767px) {
-  .pdp-gallery {
-    --pdp-gallery-photo-scale: 1.22;
-  }
-
   .pdp-gallery__main-inner {
-    padding: 0.08rem;
-  }
-
-  .pdp-gallery__photo {
-    transform: scale(var(--pdp-gallery-photo-scale, 1.22));
+    padding: var(--product-image-well-padding, clamp(0.5rem, 1.2vw, 0.75rem));
   }
 }
 
 @media (max-width: 479px) {
-  .pdp-gallery {
-    --pdp-gallery-photo-scale: 1.22;
-  }
-
   .pdp-gallery__thumb {
     width: 56px;
     height: 56px;
@@ -723,12 +711,11 @@
   }
 
   .pdp-gallery__main-inner {
-    padding: 0.06rem;
+    padding: var(--product-image-well-padding, clamp(0.5rem, 1.2vw, 0.75rem));
   }
 
   .pdp-gallery__photo {
     max-height: 100%;
-    transform: scale(var(--pdp-gallery-photo-scale, 1.22));
   }
 
   .pdp-gallery__thumbs {

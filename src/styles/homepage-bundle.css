@@ -1,5 +1,6 @@
 /* Homepage-only styles — imported from HomePage to avoid loading on account/admin routes */
 
+@import "./product-image-tokens.css";
 @import "./premium-home.css";
 @import "./homepage-banner-hero.css";
 @import "./category-bento.css";
