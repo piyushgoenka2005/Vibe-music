@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import ProductImage from "@/components/common/ProductImage";
-import { storefrontImageUrl } from "@/lib/storefrontImages";
+import { storefrontImageCandidates } from "@/lib/storefrontImages";
 
 type HomepageProductImageProps = {
   src: string;
@@ -37,11 +37,13 @@ export default function HomepageProductImage({
   priority = false,
   decorative = false,
 }: HomepageProductImageProps) {
-  const preferred = useMemo(
-    () => storefrontImageUrl(src, width),
+  // The thumb endpoint can be temporarily unavailable during a cache miss or
+  // upstream CDN slowdown. Keep the original CDN URL as an immediate fallback
+  // so a failed derivative never leaves a homepage product tile blank.
+  const candidates = useMemo(
+    () => storefrontImageCandidates(src, width),
     [src, width]
   );
-  const candidates = useMemo(() => [preferred.src].filter(Boolean), [preferred.src]);
   const [attempt, setAttempt] = useState(0);
   const activeSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? src;
 

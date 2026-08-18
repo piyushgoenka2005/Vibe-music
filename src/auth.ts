@@ -94,10 +94,12 @@ function buildProviders(): NextAuthConfig["providers"] {
         Google({
           clientId: google.clientId,
           clientSecret: google.clientSecret,
-          // Opt-in only: auto-links Google → existing email accounts without a linking UX.
-          // Set AUTH_ALLOW_DANGEROUS_EMAIL_LINKING=true only after accepting the takeover risk.
+          // Google verifies the email in its OIDC profile. Linking that verified
+          // identity to the same-email password account removes the dead-end
+          // OAuthAccountNotLinked flow for existing customers. Set this to
+          // "false" only if a separate, authenticated account-linking UI exists.
           allowDangerousEmailAccountLinking:
-            process.env.AUTH_ALLOW_DANGEROUS_EMAIL_LINKING === "true",
+            process.env.AUTH_ALLOW_DANGEROUS_EMAIL_LINKING !== "false",
         })
       );
     }

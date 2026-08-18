@@ -9,9 +9,11 @@ import { getAllProducts } from "@/services/catalogService";
 import type { DashboardStats, RevenueDataPoint } from "@/types/admin";
 import type { Order } from "@/types/order";
 
-export async function getDashboardStats(): Promise<DashboardStats> {
+export async function getDashboardStats(
+  ordersOverride?: Order[]
+): Promise<DashboardStats> {
   const [orders, totalCustomers, catalogProducts] = await Promise.all([
-    pgOrder.listAllOrders(),
+    ordersOverride ? Promise.resolve(ordersOverride) : pgOrder.listAllOrders(),
     pgUsers.countUsers(),
     getAllProducts(true),
   ]);
@@ -85,9 +87,12 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 }
 
 export async function getRevenueChartData(
-  days = 30
+  days = 30,
+  ordersOverride?: Order[]
 ): Promise<RevenueDataPoint[]> {
-  const orders = (await pgOrder.findPaidOrders()).filter((o) => o.createdAt);
+  const orders = (ordersOverride ?? (await pgOrder.findPaidOrders())).filter(
+    (o) => o.createdAt
+  );
 
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days + 1);
@@ -114,8 +119,11 @@ export async function getRevenueChartData(
   return Array.from(buckets.values());
 }
 
-export async function getRecentOrders(limit = 10): Promise<Order[]> {
-  const orders = await pgOrder.listAllOrders();
+export async function getRecentOrders(
+  limit = 10,
+  ordersOverride?: Order[]
+): Promise<Order[]> {
+  const orders = ordersOverride ?? (await pgOrder.listAllOrders());
   return orders.slice(0, limit);
 }
 
@@ -137,8 +145,8 @@ export async function getOutOfStockProductList(limit = 10) {
   return getOutOfStockProducts(limit);
 }
 
-export async function getTopProducts(limit = 5) {
-  const orders = await pgOrder.findPaidOrders();
+export async function getTopProducts(limit = 5, ordersOverride?: Order[]) {
+  const orders = ordersOverride ?? (await pgOrder.findPaidOrders());
   const counts = new Map<string, { name: string; units: number; revenue: number }>();
 
   orders.forEach((order) => {

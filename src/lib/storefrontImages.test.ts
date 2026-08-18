@@ -53,4 +53,10 @@ describe("storefrontImageUrl", () => {
     expect(candidates[0]).toContain("/api/media/thumb?");
     expect(candidates).toContain(master);
   });
+
+  it("keeps the original CDN image as the fallback after a thumb request", () => {
+    const candidates = storefrontImageCandidates(master, 480);
+    expect(candidates[0]).toContain("/api/media/thumb?");
+    expect(candidates).toEqual(expect.arrayContaining([master]));
+  });
 });
