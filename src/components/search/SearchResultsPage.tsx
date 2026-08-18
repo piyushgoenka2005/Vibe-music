@@ -288,6 +288,7 @@ function SearchResultsPageContent({
                     view={filters.view}
                     listContext={listContext}
                     listIndex={index}
+                    eager={index < 4}
                   />
                 ))}
               </div>

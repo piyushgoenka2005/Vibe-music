@@ -39,9 +39,6 @@ export default function PremiumHeroRotatingVisual() {
         const description = slide.description ?? slide.alt;
         const rawSrc = failedSrc[slide.src] ? MARKETING_HERO_FALLBACK : slide.src;
         const src = cdnThumbUrl(rawSrc, MOSAIC_WIDTH);
-        const usePlainImg =
-          src.startsWith("/api/media/thumb") ||
-          src.includes("cdn.vibemusic.in");
 
         return (
           <Link
@@ -58,25 +55,6 @@ export default function PremiumHeroRotatingVisual() {
               </span>
             ) : null}
             <div className="premium-hero__mosaic-cell__media">
-            {usePlainImg ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={src}
-                alt=""
-                className="premium-hero__mosaic-photo"
-                loading={index === 0 ? "eager" : "lazy"}
-                decoding="async"
-                fetchPriority={index === 0 ? "high" : "auto"}
-                style={{
-                  ...(slide.objectPosition
-                    ? { objectPosition: slide.objectPosition }
-                    : null),
-                }}
-                onError={() =>
-                  setFailedSrc((prev) => ({ ...prev, [slide.src]: true }))
-                }
-              />
-            ) : (
               <Image
                 src={src}
                 alt=""
@@ -84,7 +62,6 @@ export default function PremiumHeroRotatingVisual() {
                 className="premium-hero__mosaic-photo"
                 sizes="(max-width: 1023px) 50vw, 24vw"
                 priority={index === 0}
-                loading={index === 0 ? "eager" : "lazy"}
                 style={{
                   objectFit: slide.fit === "cover" ? "cover" : "contain",
                   ...(slide.objectPosition
@@ -95,7 +72,6 @@ export default function PremiumHeroRotatingVisual() {
                   setFailedSrc((prev) => ({ ...prev, [slide.src]: true }))
                 }
               />
-            )}
             </div>
             <span className="premium-hero__mosaic-meta" aria-hidden="true">
               {slide.brand ? (

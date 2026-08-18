@@ -21,7 +21,8 @@ function applyFilters(products: Product[], filters: CategoryFilters): Product[] 
   let result = products;
 
   if (filters.brands.length > 0) {
-    result = result.filter((p) => filters.brands.includes(p.brandSlug));
+    const activeBrands = new Set(filters.brands.map((b) => b.toLowerCase()));
+    result = result.filter((p) => activeBrands.has(p.brandSlug.toLowerCase()));
   }
 
   if (filters.minPrice !== null) {

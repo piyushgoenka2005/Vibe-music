@@ -10,9 +10,10 @@ export async function GET(request: Request) {
       200,
       Math.max(10, Number(searchParams.get("limit") ?? "100") || 100)
     );
+    const cursor = searchParams.get("cursor") ?? undefined;
 
-    const logs = await listRecentAuditLogs(limit);
-    return NextResponse.json({ logs });
+    const result = await listRecentAuditLogs(limit, cursor);
+    return NextResponse.json(result);
   } catch (error) {
     return adminErrorResponse(error);
   }

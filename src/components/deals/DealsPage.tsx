@@ -49,6 +49,7 @@ export default function DealsPage({ products }: DealsPageProps) {
                   view="grid"
                   listContext={DEALS_LIST}
                   listIndex={index}
+                  eager={index < 4}
                 />
               </div>
             ))}

@@ -31,18 +31,18 @@ export async function POST(request: Request) {
     }
 
     const folder = productUploadFolder(meta.categorySlug, meta.productSlug);
-    const urls: string[] = [];
-    const masters: string[] = [];
+    const uploadResults = await Promise.all(
+      files.map(async (file) => {
+        const buffer = Buffer.from(await file.arrayBuffer());
+        return uploadOptimizedImageToCdn(buffer, {
+          folder,
+          filenameHint: file.name,
+        });
+      })
+    );
 
-    for (const file of files) {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const uploaded = await uploadOptimizedImageToCdn(buffer, {
-        folder,
-        filenameHint: file.name,
-      });
-      urls.push(uploaded.url);
-      masters.push(uploaded.masterUrl);
-    }
+    const urls = uploadResults.map((r) => r.url);
+    const masters = uploadResults.map((r) => r.masterUrl);
 
     return NextResponse.json({ urls, masters });
   } catch (error) {

@@ -57,7 +57,10 @@ export async function GET(request: Request) {
     }
 
     // Listing page applies brand/sort client-side; only narrow by category here.
-    const apiBrand = returnAll ? undefined : brand;
+    // If it's a pure brand query (no search text or category), we MUST narrow by brand
+    // on the server so we don't fetch the entire catalog into memory.
+    const isBrandOnly = !query && !category && !subcategory;
+    const apiBrand = (returnAll && !isBrandOnly) ? undefined : brand;
     const apiSort = returnAll ? undefined : sort;
     const products = await searchProducts({
       query,

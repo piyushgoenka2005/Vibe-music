@@ -3,7 +3,6 @@ import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { prisma, isPostgresConfigured } from "@/lib/db/prisma";
-import { createAuthPrismaAdapter } from "@/lib/auth/prisma-adapter";
 import { verifyPassword } from "@/lib/auth/password";
 import {
   AUTH_SESSION_REMEMBER_MAX_AGE_SECONDS,
@@ -122,7 +121,6 @@ function resolveAuthSecret(): string | undefined {
 export const authConfig = {
   trustHost: true,
   secret: resolveAuthSecret(),
-  ...(isPostgresConfigured() ? { adapter: createAuthPrismaAdapter(prisma) } : {}),
   session: {
     strategy: "jwt" as const,
     // Ceiling for cookie Max-Age / Auth.js defaults. Per-login lifetime is set

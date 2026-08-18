@@ -33,14 +33,20 @@ export interface AuditLogRecord {
 }
 
 export async function listRecentAuditLogs(
-  limit = 100
-): Promise<AuditLogRecord[]> {
+  limit = 100,
+  cursor?: string
+): Promise<{ logs: AuditLogRecord[]; hasMore: boolean; nextCursor?: string }> {
   const rows = await prisma.auditLog.findMany({
-    orderBy: { createdAt: "desc" },
-    take: limit,
+    orderBy: { id: "desc" }, // changed to id for stable cursor
+    take: limit + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
 
-  return rows.map((row) => ({
+  const hasMore = rows.length > limit;
+  const pageRows = hasMore ? rows.slice(0, limit) : rows;
+  const nextCursor = hasMore ? pageRows[pageRows.length - 1].id : undefined;
+
+  const logs = pageRows.map((row) => ({
     id: row.id,
     action: row.action,
     actorId: row.actorId || null,
@@ -56,6 +62,8 @@ export async function listRecentAuditLogs(
         : null,
     createdAt: row.createdAt,
   }));
+
+  return { logs, hasMore, nextCursor };
 }
 
 export async function logAuditEvent(input: AuditLogInput): Promise<void> {

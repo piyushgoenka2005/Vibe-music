@@ -261,7 +261,7 @@ export default function AccountOrderDetail({
                 <div className="acct__order-item-thumb">
                   {image.src ? (
                     // eslint-disable-next-line @next/next/no-img-element -- order item thumb; CDN URLs with color fallback
-                    <img src={image.src} alt="" />
+                    <ProductImage src={image.src} alt="" />
                   ) : (
                     <div
                       className="acct__order-item-swatch"

@@ -155,6 +155,7 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
                     view={filters.view}
                     listContext={listContext}
                     listIndex={index}
+                    eager={index < 4}
                   />
                 ))}
               </div>

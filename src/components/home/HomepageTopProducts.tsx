@@ -11,6 +11,8 @@ import { optimizeImageUrl } from "@/lib/images";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import Reveal from "@/components/layout/Reveal";
 
+import { generateCdnSrcSet } from "@/components/common/ProductImage";
+
 const HEADLINE_ID = "top-products-title";
 
 export function TopProductCard({ product }: { product: HomepageTopProduct }) {
@@ -27,6 +29,8 @@ export function TopProductCard({ product }: { product: HomepageTopProduct }) {
   ]
     .filter(Boolean)
     .join(" ");
+
+  const srcSet = usePlainImg ? generateCdnSrcSet(imageSrc) : undefined;
 
   return (
     <article className="blog-teaser__card">
@@ -54,7 +58,9 @@ export function TopProductCard({ product }: { product: HomepageTopProduct }) {
                 className={imageClassName}
                 loading="lazy"
                 decoding="async"
+                sizes="(max-width: 767px) 92vw, 360px"
                 src={imageSrc}
+                srcSet={srcSet}
                 style={
                   product.imageObjectPosition
                     ? { objectPosition: product.imageObjectPosition }

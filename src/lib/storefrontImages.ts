@@ -75,19 +75,35 @@ export function storefrontImageUrl(
   if (!url) return { src: url, kind: "direct" };
   try {
     const host = new URL(url).hostname;
+    
+    // Cloudinary: Inject WebP/AVIF auto-formatting directly
+    if (host === "res.cloudinary.com") {
+      const transformed = buildMediaTransformUrl(url, { width, quality: "auto", format: "auto" });
+      return { src: transformed, kind: "direct" };
+    }
+
     if (host === CDN_HOST) {
-      const derivative = cdnDerivativeUrl(url, width);
-      if (derivative) {
-        return { src: derivative, kind: "derivative" };
+      // Implement CDN paths properly: Always rebuild the derivative URL to the requested bucket
+      const snappedW = snapStorefrontThumbWidth(width);
+      const master = cdnMasterUrl(url);
+      const parsed = new URL(master);
+      const file = parsed.pathname.split("/").pop() ?? "";
+      const match = file.match(/^(.+)\.([a-z0-9]+)$/i);
+      
+      if (match && match[2].toLowerCase() === "webp") {
+        const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
+        const name = match[1];
+        return {
+          src: `${parsed.origin}${dir}${name}-w${snappedW}.webp`,
+          kind: "derivative"
+        };
       }
-      const thumbSource = cdnMasterUrl(url);
-      const params = new URLSearchParams({
-        url: thumbSource,
-        w: String(snapStorefrontThumbWidth(width)),
-      });
+      
+      // Fallback: If it's a .png or .jpg on CDN, return the master directly.
+      // The Next.js <Image> component will optimize it, or the browser will load the original.
       return {
-        src: `/api/media/thumb?${params.toString()}`,
-        kind: "thumb",
+        src: master,
+        kind: "direct",
       };
     }
   } catch {

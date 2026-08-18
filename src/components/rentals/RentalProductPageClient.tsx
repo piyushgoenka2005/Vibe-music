@@ -8,6 +8,8 @@ import { ROUTES } from "@/lib/routes";
 import type { RentalDurationType, RentalProduct } from "@/types/rental";
 import { formatCurrency } from "@/utils/currency";
 
+import ProductImage from "@/components/common/ProductImage";
+
 interface RentalProductPageProps {
   product: RentalProduct;
 }

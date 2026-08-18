@@ -41,7 +41,7 @@ export default async function SearchResultsRoute({
         query,
         category: category || undefined,
         subcategory: subcategory || undefined,
-        brand: query ? brand || undefined : undefined,
+        brand: (query || category) ? undefined : (brand || undefined),
       });
     } catch {
       initialResults = null;

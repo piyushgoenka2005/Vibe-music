@@ -87,9 +87,9 @@ export default async function UsedGearPage() {
           className="used-gear-page__grid"
           role="list"
         >
-          {products.map((product) => (
+          {products.map((product, index) => (
             <div key={product.id} role="listitem" className="used-gear-page__grid-item">
-              <ProductCard product={product} view="grid" />
+              <ProductCard product={product} view="grid" eager={index < 4} />
             </div>
           ))}
         </div>

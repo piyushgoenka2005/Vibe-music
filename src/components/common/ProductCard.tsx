@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -27,6 +28,7 @@ interface ProductCardProps {
   view: ViewMode;
   listContext?: ItemListContext;
   listIndex?: number;
+  eager?: boolean;
 }
 
 function availabilityLabel(availability: Product["availability"]): string {
@@ -72,6 +74,7 @@ export default function ProductCard({
   view,
   listContext,
   listIndex,
+  eager,
 }: ProductCardProps) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
@@ -173,14 +176,15 @@ export default function ProductCard({
               {conditionLabel(product.condition)}
             </span>
           ) : null}
-          {imageSrc && !imageFailed ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={imageSrc}
-              src={imageSrc}
+          {product.image && !imageFailed ? (
+            <Image
+              key={product.image}
+              src={product.image}
               alt=""
-              loading="lazy"
-              decoding="async"
+              width={640}
+              height={640}
+              priority={eager}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="cat-product-card__image-photo"
               onError={() => {
                 setImageAttempt((current) => current + 1);

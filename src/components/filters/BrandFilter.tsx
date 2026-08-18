@@ -14,7 +14,9 @@ interface BrandFilterProps {
   onChange: (brands: string[]) => void;
 }
 
-export default function BrandFilter({
+import { memo } from "react";
+
+export default memo(function BrandFilter({
   brands,
   selected,
   onChange,
@@ -52,4 +54,4 @@ export default function BrandFilter({
       </div>
     </FilterSection>
   );
-}
+});

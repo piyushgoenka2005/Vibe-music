@@ -17,12 +17,43 @@ interface FilterSidebarProps {
   className?: string;
 }
 
-export default function FilterSidebar({
+import { memo, useCallback } from "react";
+
+export default memo(function FilterSidebar({
   filters,
   facets,
   onUpdate,
   className = "",
 }: FilterSidebarProps) {
+  const handleBrandsChange = useCallback(
+    (brands: string[]) => onUpdate({ brands }),
+    [onUpdate]
+  );
+  
+  const handlePriceChange = useCallback(
+    (minPrice: number | null, maxPrice: number | null) =>
+      onUpdate({ 
+        minPrice: minPrice ?? undefined, 
+        maxPrice: maxPrice ?? undefined 
+      }),
+    [onUpdate]
+  );
+  
+  const handleConditionsChange = useCallback(
+    (conditions: CategoryFilters["conditions"]) => onUpdate({ conditions }),
+    [onUpdate]
+  );
+  
+  const handleRatingChange = useCallback(
+    (rating: number | null) => onUpdate({ rating: rating ?? undefined }),
+    [onUpdate]
+  );
+  
+  const handleAvailabilityChange = useCallback(
+    (availability: CategoryFilters["availability"]) => onUpdate({ availability }),
+    [onUpdate]
+  );
+
   return (
     <aside
       className={`cat-filter-sidebar ${className}`.trim()}
@@ -31,27 +62,27 @@ export default function FilterSidebar({
       <BrandFilter
         brands={facets.brands}
         selected={filters.brands}
-        onChange={(brands) => onUpdate({ brands })}
+        onChange={handleBrandsChange}
       />
       <PriceRangeFilter
         minPrice={filters.minPrice}
         maxPrice={filters.maxPrice}
         rangeMin={facets.priceRange.min}
         rangeMax={facets.priceRange.max}
-        onChange={(minPrice, maxPrice) => onUpdate({ minPrice, maxPrice })}
+        onChange={handlePriceChange}
       />
       <ConditionFilter
         selected={filters.conditions}
-        onChange={(conditions) => onUpdate({ conditions })}
+        onChange={handleConditionsChange}
       />
       <RatingFilter
         selected={filters.rating}
-        onChange={(rating) => onUpdate({ rating })}
+        onChange={handleRatingChange}
       />
       <AvailabilityFilter
         selected={filters.availability}
-        onChange={(availability) => onUpdate({ availability })}
+        onChange={handleAvailabilityChange}
       />
     </aside>
   );
-}
+});

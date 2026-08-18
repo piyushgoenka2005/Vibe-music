@@ -7,6 +7,7 @@ import {
 } from "@/lib/product/guitarShowcaseSpecs";
 import { optimizeImageUrl } from "@/lib/images";
 import type { ProductSpec } from "@/types/product";
+import ProductImage from "@/components/common/ProductImage";
 import "./guitar-spec-showcase.css";
 
 interface GuitarSpecShowcaseProps {
@@ -55,7 +56,7 @@ export default function GuitarSpecShowcase({
       <div className="guitar-spec-showcase__inner">
         <div className="guitar-spec-showcase__image-wrap" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element -- decorative guitar showcase */}
-          <img
+          <ProductImage
             src={showcaseImage}
             alt=""
             className="guitar-spec-showcase__image"
@@ -81,7 +82,7 @@ export default function GuitarSpecShowcase({
 
         <div className="guitar-spec-showcase__mobile-image">
           {/* eslint-disable-next-line @next/next/no-img-element -- mobile guitar showcase */}
-          <img src={showcaseImage} alt={GUITAR_SHOWCASE_IMAGE_ALT} loading="lazy" />
+          <ProductImage src={showcaseImage} alt={GUITAR_SHOWCASE_IMAGE_ALT} loading="lazy" />
         </div>
       </div>
     </section>

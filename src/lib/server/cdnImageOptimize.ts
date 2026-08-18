@@ -67,18 +67,20 @@ export async function uploadOptimizedImageToCdn(
   const masterUrl = `${publicBase}/${folder}/${masterName}`;
 
   const derivatives: Partial<Record<CdnDerivativeWidth, string>> = {};
-  for (const width of CDN_DERIVATIVE_WIDTHS) {
-    const body = await sharp(masterBody)
-      .resize(width, width, {
-        fit: "inside",
-        withoutEnlargement: true,
-      })
-      .webp({ quality: 92, effort: 5 })
-      .toBuffer();
-    const name = `${id}-w${width}.webp`;
-    await writeFile(path.join(directory, name), body);
-    derivatives[width] = `${publicBase}/${folder}/${name}`;
-  }
+  await Promise.all(
+    CDN_DERIVATIVE_WIDTHS.map(async (width) => {
+      const body = await sharp(masterBody)
+        .resize(width, width, {
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .webp({ quality: 92, effort: 5 })
+        .toBuffer();
+      const name = `${id}-w${width}.webp`;
+      await writeFile(path.join(directory, name), body);
+      derivatives[width] = `${publicBase}/${folder}/${name}`;
+    })
+  );
 
   return {
     url: derivatives[960] ?? derivatives[480] ?? masterUrl,

@@ -84,8 +84,8 @@ export default function SearchEmptyState({ query }: SearchEmptyStateProps) {
             <h3 className="sw-search-empty__section-title">Recommended for you</h3>
           </header>
           <div className="cat-product-grid cat-product-grid--grid">
-            {recommended.map((product) => (
-              <ProductCard key={product.id} product={product} view="grid" />
+            {recommended.map((product, index) => (
+              <ProductCard key={product.id} product={product} view="grid" eager={index < 4} />
             ))}
           </div>
         </section>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import CountdownTimer from "@/components/giveaway/CountdownTimer";
+import ProductImage from "@/components/common/ProductImage";
 import { getCampaignPhase } from "@/lib/giveaway/eligibilityEngine";
 import { ROUTES } from "@/lib/routes";
 import { sanitizeHtml } from "@/lib/security/sanitize";
@@ -91,8 +92,13 @@ export default function GiveawayCampaignPage({ slug }: { slug: string }) {
         <section className="giveaway-card">
           <h2>Prize</h2>
           {campaign.prizeImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={campaign.prizeImageUrl} alt="" className="giveaway-card__image" />
+            <div className="giveaway-card__visual">
+              <ProductImage
+                src={campaign.prizeImageUrl}
+                alt=""
+                className="giveaway-card__image"
+              />
+            </div>
           ) : null}
           <h3>{campaign.prizeTitle}</h3>
           <p>{campaign.prizeDescription}</p>

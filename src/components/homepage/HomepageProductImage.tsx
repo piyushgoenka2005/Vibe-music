@@ -31,6 +31,7 @@ function placeholderClass(className?: string) {
 export default function HomepageProductImage({
   src,
   className,
+  sizes,
   fill = false,
   width = 480,
   height = 480,
@@ -61,6 +62,7 @@ export default function HomepageProductImage({
       fill={fill}
       height={height}
       loading={priority ? "eager" : "lazy"}
+      sizes={sizes}
       src={activeSrc}
       variant="card"
       width={width}

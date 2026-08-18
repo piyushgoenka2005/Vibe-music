@@ -118,6 +118,15 @@ const nextConfig: NextConfig = {
       ),
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/api/auth/error",
+        destination: "/login",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
