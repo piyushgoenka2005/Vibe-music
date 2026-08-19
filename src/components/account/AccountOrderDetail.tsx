@@ -9,6 +9,7 @@ import { formatCurrency, formatCurrencyPrecise } from "@/utils/currency";
 import { isInvoiceAvailable, withInvoiceReturnTo } from "@/features/invoice/utils/invoice-utils";
 import { getInvoiceDownloadAction } from "@/features/invoice/utils/invoice-actions";
 import { useOrderDetail } from "@/hooks/useOrderDetail";
+import ProductImage from "@/components/common/ProductImage";
 import ShipmentTimeline from "@/components/tracking/ShipmentTimeline";
 import {
   formatOrderDate,
