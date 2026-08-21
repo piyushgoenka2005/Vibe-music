@@ -9,7 +9,6 @@ import { formatCurrency, formatCurrencyPrecise } from "@/utils/currency";
 import { isInvoiceAvailable, withInvoiceReturnTo } from "@/features/invoice/utils/invoice-utils";
 import { getInvoiceDownloadAction } from "@/features/invoice/utils/invoice-actions";
 import { useOrderDetail } from "@/hooks/useOrderDetail";
-import ProductImage from "@/components/common/ProductImage";
 import ShipmentTimeline from "@/components/tracking/ShipmentTimeline";
 import {
   formatOrderDate,
@@ -262,7 +261,12 @@ export default function AccountOrderDetail({
                 <div className="acct__order-item-thumb">
                   {image.src ? (
                     // eslint-disable-next-line @next/next/no-img-element -- order item thumb; CDN URLs with color fallback
-                    <ProductImage src={image.src} alt="" />
+                    <img
+                      src={image.src}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
                   ) : (
                     <div
                       className="acct__order-item-swatch"

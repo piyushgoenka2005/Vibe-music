@@ -12,11 +12,14 @@ import {
 import type { HomepageBanner } from "@/types/banner";
 
 const HOMEPAGE_BANNERS_QUERY_KEY = ["homepage-banners"] as const;
-const HOMEPAGE_BANNERS_STALE_MS = 15_000;
-const HOMEPAGE_BANNERS_REFETCH_MS = 30_000;
+/** SSR slides are fresh; only re-check occasionally between deploys/edits. */
+const HOMEPAGE_BANNERS_STALE_MS = 60_000;
+const HOMEPAGE_BANNERS_REFETCH_MS = 300_000;
 
 async function fetchActiveBannerSlides(): Promise<HomepageBannerSlide[]> {
-  const response = await fetch("/api/banners", { cache: "no-store" });
+  // Default HTTP caching — lets the browser reuse the payload instead of
+  // hammering the origin from every open tab.
+  const response = await fetch("/api/banners");
   if (!response.ok) {
     throw new Error("Unable to load homepage banners");
   }
@@ -34,7 +37,7 @@ export function useHomepageBanners(initialSlides: HomepageBannerSlide[]) {
     staleTime: HOMEPAGE_BANNERS_STALE_MS,
     refetchInterval: HOMEPAGE_BANNERS_REFETCH_MS,
     refetchIntervalInBackground: false,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
   const slides = (() => {

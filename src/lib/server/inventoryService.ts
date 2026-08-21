@@ -118,8 +118,8 @@ export async function listAdjustments(limit = 50): Promise<InventoryLog[]> {
   return listInventoryLogs(limit);
 }
 
-export async function getInventoryStats() {
-  const records = await listInventory();
+/** Pure aggregation — lets callers reuse one catalog read for table + stats. */
+export function computeInventoryStats(records: InventoryRecord[]) {
   return {
     totalSkus: records.length,
     lowStock: records.filter((r) =>
@@ -138,6 +138,10 @@ export async function getInventoryStats() {
       0
     ),
   };
+}
+
+export async function getInventoryStats() {
+  return computeInventoryStats(await listInventory());
 }
 
 export async function getLowStockProducts(limit = 10) {

@@ -9,26 +9,22 @@ import {
   getRecentCustomers,
   getTopProducts,
 } from "@/lib/server/dashboardService";
-import { listAllOrders } from "@/lib/server/prisma/orderRepository";
 
 export async function GET() {
   try {
     await requireAdmin("dashboard:read");
 
-    // Every dashboard widget previously issued its own full order-table read.
-    // Load it once per request and share that consistent snapshot across the
-    // aggregates, chart, recent-order list, and top-product calculation.
-    const orders = await listAllOrders();
-
+    // Every widget below is served by Postgres aggregates / bounded queries —
+    // the dashboard no longer loads the whole orders table per request.
     const [stats, revenueChart, recentOrders, recentCustomers, lowStock, outOfStock, topProducts] =
       await Promise.all([
-        getDashboardStats(orders),
-        getRevenueChartData(30, orders),
-        getRecentOrders(10, orders),
+        getDashboardStats(),
+        getRevenueChartData(30),
+        getRecentOrders(10),
         getRecentCustomers(10),
         getLowStockProducts(10),
         getOutOfStockProductList(10),
-        getTopProducts(5, orders),
+        getTopProducts(5),
       ]);
 
     return NextResponse.json({

@@ -107,12 +107,14 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
   const { data: notificationData } = useQuery({
     queryKey: ["admin-notifications-count"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/notifications");
+      // Lightweight count endpoint — full list is only fetched by /admin/notifications.
+      const res = await fetch("/api/admin/notifications/count");
       if (!res.ok) throw new Error("Failed");
       return res.json() as Promise<{ unreadCount: number }>;
     },
     enabled: showNotificationBadge,
-    refetchInterval: 60_000,
+    staleTime: 60_000,
+    refetchInterval: 120_000,
   });
 
   const unreadNotifications = notificationData?.unreadCount ?? 0;

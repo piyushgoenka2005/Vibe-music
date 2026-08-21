@@ -1,7 +1,6 @@
 import {
   buildMediaTransformUrl,
   MEDIA_PRESETS,
-  type MediaTransformOptions,
 } from "@/lib/media-url";
 
 const CDN_HOST = "cdn.vibemusic.in";
@@ -35,37 +34,24 @@ export function cdnMasterUrl(url: string): string {
   }
 }
 
-/**
- * Prefer CDN upload-time derivatives (`{uuid}-wN.webp`) when the URL already
- * points at a sized asset. Never invent missing larger `-wN` files.
- */
-export function cdnDerivativeUrl(url: string, width = 400): string | null {
+/** Absolute CDN URL for SEO surfaces (JSON-LD / OpenGraph) — crawlers must not hit our proxy. */
+export function cdnSeoImageUrl(url: string): string {
+  if (!url) return url;
   try {
-    const parsed = new URL(url);
-    if (parsed.hostname !== CDN_HOST) return null;
-    const file = parsed.pathname.split("/").pop() ?? "";
-    const match = file.match(DERIVATIVE_FILE_RE);
-    if (!match?.[1] || !match[2]) return null;
-    const existingW = Number(match[2]);
-    if (!Number.isFinite(existingW)) return null;
-
-    // Existing derivative is large enough for this request.
-    if (existingW >= width * 0.85) {
-      return url;
-    }
-
-    // Need a larger prebuilt size — do not invent it.
-    return null;
+    const absolute = unwrapStorefrontSrc(url);
+    if (new URL(absolute).hostname === CDN_HOST) return cdnMasterUrl(absolute);
   } catch {
-    return null;
+    /* fall through */
   }
+  return url;
 }
 
 /**
  * Storefront display URL:
- * - Known CDN derivatives (`-wN.webp`) → CDN when large enough
- * - Undersized derivatives → thumb from CDN master (not from the tiny card file)
- * - Legacy CDN masters → `/api/media/thumb`
+ * - Known CDN derivatives (`-wN.webp`) → rebuilt to the requested bucket
+ * - WebP masters → prebuilt derivative bucket
+ * - Legacy PNG/JPG masters (often 1–8 MB) → `/api/media/thumb` Sharp proxy
+ *   which serves a cached WebP at the snapped width — never the raw master.
  * - Other hosts → as-is (Cloudinary transforms applied upstream)
  */
 export function storefrontImageUrl(
@@ -75,7 +61,7 @@ export function storefrontImageUrl(
   if (!url) return { src: url, kind: "direct" };
   try {
     const host = new URL(url).hostname;
-    
+
     // Cloudinary: Inject WebP/AVIF auto-formatting directly
     if (host === "res.cloudinary.com") {
       const transformed = buildMediaTransformUrl(url, { width, quality: "auto", format: "auto" });
@@ -89,7 +75,7 @@ export function storefrontImageUrl(
       const parsed = new URL(master);
       const file = parsed.pathname.split("/").pop() ?? "";
       const match = file.match(/^(.+)\.([a-z0-9]+)$/i);
-      
+
       if (match && match[2].toLowerCase() === "webp") {
         const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
         const name = match[1];
@@ -98,12 +84,12 @@ export function storefrontImageUrl(
           kind: "derivative"
         };
       }
-      
-      // Fallback: If it's a .png or .jpg on CDN, return the master directly.
-      // The Next.js <Image> component will optimize it, or the browser will load the original.
+
+      // PNG/JPG masters are multi-MB uploads — resize via the cached thumb
+      // proxy instead of shipping the raw master to every visitor.
       return {
-        src: master,
-        kind: "direct",
+        src: mediaThumbProxyUrl(master, snappedW),
+        kind: "thumb",
       };
     }
   } catch {
@@ -112,11 +98,16 @@ export function storefrontImageUrl(
   return { src: url, kind: "direct" };
 }
 
+/** Local cached-resize endpoint for oversized CDN masters. */
+function mediaThumbProxyUrl(absoluteUrl: string, width: number): string {
+  return `/api/media/thumb?url=${encodeURIComponent(absoluteUrl)}&w=${width}`;
+}
+
 /**
  * If `url` is already an `/api/media/thumb?...` path, return nested CDN original.
  * Prevents double-optimization from dropping CDN fallbacks.
  */
-export function unwrapStorefrontSrc(url: string): string {
+function unwrapStorefrontSrc(url: string): string {
   if (!url) return url;
   try {
     const absolute = new URL(
@@ -135,12 +126,17 @@ export function unwrapStorefrontSrc(url: string): string {
 
 /**
  * High-res URL for PDP hover zoom / lightbox.
- * Prefer the CDN upload master directly (sharpest; avoids thumb API races).
+ * Served through the cached thumb proxy at the largest bucket — sharp enough
+ * for zoom panes without pulling multi-MB masters over the wire.
  */
 export function storefrontZoomImageUrl(url: string): string {
   if (!url) return url;
   try {
-    const master = cdnMasterUrl(unwrapStorefrontSrc(url));
+    const absolute = unwrapStorefrontSrc(url);
+    if (new URL(absolute).hostname === CDN_HOST) {
+      return mediaThumbProxyUrl(cdnMasterUrl(absolute), 1600);
+    }
+    const master = cdnMasterUrl(absolute);
     if (new URL(master).hostname === CDN_HOST) return master;
   } catch {
     /* fall through */
@@ -172,15 +168,6 @@ export function optimizeImageUrl(
 ): string {
   if (!url) return url;
   const options = MEDIA_PRESETS[preset];
-  const transformed = buildMediaTransformUrl(url, options);
-  return storefrontImageUrl(transformed, options.width ?? 640).src;
-}
-
-export function optimizeImage(
-  url: string,
-  options: MediaTransformOptions
-): string {
-  if (!url) return url;
   const transformed = buildMediaTransformUrl(url, options);
   return storefrontImageUrl(transformed, options.width ?? 640).src;
 }

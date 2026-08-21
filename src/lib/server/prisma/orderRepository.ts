@@ -1,5 +1,6 @@
 import "server-only";
 
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { Order } from "@/types/order";
 import { orderToPrisma, prismaToOrder } from "./mappers";
@@ -39,9 +40,106 @@ export async function listOrdersByEmail(email: string): Promise<Order[]> {
   return rows.map(prismaToOrder);
 }
 
-export async function listAllOrders(): Promise<Order[]> {
-  const rows = await prisma.order.findMany({ orderBy: { createdAt: "desc" } });
+export async function listRecentOrders(limit = 10): Promise<Order[]> {
+  const rows = await prisma.order.findMany({
+    orderBy: { createdAt: "desc" },
+    take: Math.min(Math.max(limit, 1), 100),
+  });
   return rows.map(prismaToOrder);
+}
+
+const PAID_PAYMENT_STATUSES = ["paid", "cod_pending"] as const;
+
+export interface RevenueWindow {
+  /** Inclusive lower bound (ISO string, matches `created_at`). */
+  from?: string;
+  /** Exclusive upper bound (ISO string, matches `created_at`). */
+  to?: string;
+}
+
+function revenueWindowWhere(window?: RevenueWindow) {
+  return {
+    paymentStatus: { in: [...PAID_PAYMENT_STATUSES] },
+    ...(window?.from || window?.to
+      ? {
+          createdAt: {
+            ...(window.from ? { gte: window.from } : {}),
+            ...(window.to ? { lt: window.to } : {}),
+          },
+        }
+      : {}),
+  };
+}
+
+/** SUM(total) over paid orders — computed in Postgres, not by loading every row. */
+export async function sumPaidRevenue(window?: RevenueWindow): Promise<number> {
+  const result = await prisma.order.aggregate({
+    where: revenueWindowWhere(window),
+    _sum: { total: true },
+  });
+  return result._sum.total ?? 0;
+}
+
+/** COUNT(*) over an optional created_at window. */
+export async function countOrdersBetween(
+  window?: RevenueWindow
+): Promise<number> {
+  const where = window?.from || window?.to
+    ? {
+        createdAt: {
+          ...(window.from ? { gte: window.from } : {}),
+          ...(window.to ? { lt: window.to } : {}),
+        },
+      }
+    : undefined;
+  return prisma.order.count({ where });
+}
+
+/** Order counts per status in a single GROUP BY query. */
+export async function countOrdersGroupedByStatus(): Promise<
+  Record<string, number>
+> {
+  const rows = await prisma.order.groupBy({
+    by: ["status"],
+    _count: { _all: true },
+  });
+  return Object.fromEntries(
+    rows.map((row) => [row.status, row._count._all])
+  );
+}
+
+export interface DailyRevenueBucket {
+  date: string;
+  revenue: number;
+  orders: number;
+}
+
+/**
+ * Day-bucketed paid revenue via SQL aggregation. `created_at` is stored as an
+ * ISO string, so cast to timestamptz and bucket in UTC (matches the previous
+ * JS `toISOString().slice(0, 10)` bucketing exactly).
+ */
+export async function getDailyPaidRevenueBuckets(
+  sinceIso: string
+): Promise<DailyRevenueBucket[]> {
+  const paymentStatuses = Prisma.join([...PAID_PAYMENT_STATUSES]);
+  const rows = await prisma.$queryRaw<{ date: string; revenue: number; orders: bigint }[]>(
+    Prisma.sql`
+      SELECT to_char((created_at::timestamptz) AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS date,
+             COALESCE(SUM(total), 0)::float AS revenue,
+             COUNT(*)::int AS orders
+      FROM orders
+      WHERE payment_status IN (${paymentStatuses})
+        AND (created_at::timestamptz) >= ${sinceIso}::timestamptz
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `
+  );
+  return rows.map((row) => ({
+    date: row.date,
+    revenue: Number(row.revenue ?? 0),
+    orders: Number(row.orders ?? 0),
+  }));
 }
 
 export async function createOrder(order: Order): Promise<void> {

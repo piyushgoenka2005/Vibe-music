@@ -1,22 +1,30 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatCard, StatusBadge, LoadingState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
 import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { DashboardStats, RevenueDataPoint } from "@/types/admin";
 import type { Order } from "@/types/order";
+
+/** recharts is code-split out of the dashboard's first paint. */
+const DashboardRevenueChart = dynamic(
+  () => import("@/components/admin/DashboardRevenueChart"),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        aria-hidden
+        style={{ height: 280, display: "grid", placeItems: "center", color: "var(--admin-muted)" }}
+      >
+        Loading chart…
+      </div>
+    ),
+  }
+);
 
 interface DashboardData {
   stats: DashboardStats;
@@ -72,23 +80,7 @@ function DashboardContent() {
             <h2 className="admin-panel__title">Revenue (30 days)</h2>
           </div>
           <div className="admin-panel__body">
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={revenueChart}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2e" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fill: "#a1a1aa", fontSize: 11 }}
-                  tickFormatter={(v: string) => v.slice(5)}
-                />
-                <YAxis tick={{ fill: "#a1a1aa", fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={{ background: "#141416", border: "1px solid #2a2a2e", borderRadius: 8 }}
-                  labelStyle={{ color: "#fafafa" }}
-                  formatter={(value) => [formatCurrency(Number(value ?? 0)), "Revenue"]}
-                />
-                <Line type="monotone" dataKey="revenue" stroke="var(--brand-primary)" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
+            <DashboardRevenueChart data={revenueChart} />
           </div>
         </div>
 

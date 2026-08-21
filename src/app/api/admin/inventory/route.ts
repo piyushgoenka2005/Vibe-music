@@ -4,7 +4,7 @@ import {
   listInventory,
   adjustStock,
   listAdjustments,
-  getInventoryStats,
+  computeInventoryStats,
 } from "@/lib/server/inventoryService";
 import { adminInventoryAdjustSchema } from "@/lib/validations/admin";
 
@@ -34,10 +34,9 @@ export async function GET(request: Request) {
       });
     }
 
-    const [inventory, stats] = await Promise.all([
-      listInventory(),
-      getInventoryStats(),
-    ]);
+    // One catalog read feeds both the table and the stat tiles.
+    const inventory = await listInventory();
+    const stats = computeInventoryStats(inventory);
     return NextResponse.json({ inventory, stats });
   } catch (error) {
     return adminErrorResponse(error);

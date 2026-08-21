@@ -3,7 +3,29 @@ import { getIntegrationChecks } from "@/lib/server/integrationConfig";
 import { verifyPostgresConnection } from "@/lib/server/postgresHealth";
 import { logInfo } from "@/lib/server/logger";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+/**
+ * Brief memoization so bursty uptime monitors don't stack DB probes while the
+ * pool is cold — the first probe pays connection cost, the rest reuse it.
+ */
+const HEALTH_CACHE_TTL_MS = 10_000;
+
+type HealthSnapshot = {
+  at: number;
+  body: Record<string, unknown>;
+  status: number;
+};
+
+let cached: HealthSnapshot | null = null;
+
 export async function GET() {
+  const now = Date.now();
+  if (cached && now - cached.at < HEALTH_CACHE_TTL_MS) {
+    return NextResponse.json(cached.body, { status: cached.status });
+  }
+
   const timestamp = new Date().toISOString();
   const integrations = getIntegrationChecks();
   const databaseHealth = await verifyPostgresConnection();
@@ -28,9 +50,16 @@ export async function GET() {
     version: process.env.VERCEL_GIT_COMMIT_SHA ?? "local",
   };
 
-  logInfo("Health check", "api/health", body);
+  if (!databaseHealth.ok) {
+    logInfo("Health check", "api/health", body);
+  }
 
-  return NextResponse.json(body, {
+  const snapshot: HealthSnapshot = {
+    at: now,
+    body,
     status: canServeTraffic ? 200 : 503,
-  });
+  };
+  cached = snapshot;
+
+  return NextResponse.json(body, { status: snapshot.status });
 }

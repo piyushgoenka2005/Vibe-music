@@ -21,7 +21,7 @@ export type ProductImageProps = {
 };
 
 /** Shared inline styles — never apply resting transform scale here. */
-export function productImageInlineStyle(options: {
+function productImageInlineStyle(options: {
   fill?: boolean;
   variant?: ProductImageVariant;
 }): CSSProperties | undefined {

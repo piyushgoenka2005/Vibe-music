@@ -1,5 +1,5 @@
 import { BRAND } from "@/lib/brand";
-import { storefrontImageUrl } from "@/lib/storefrontImages";
+import { cdnSeoImageUrl } from "@/lib/storefrontImages";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 
 function availabilitySchema(
@@ -37,7 +37,8 @@ export function buildProductJsonLd(
     product.variants[0];
   const displayPrice = selectedVariant?.price ?? product.price;
   const hero = product.images?.[0]?.src || product.image;
-  const image = hero ? storefrontImageUrl(hero, 1200).src : undefined;
+  // JSON-LD images must be absolute CDN URLs — crawlers never fetch our proxy.
+  const image = hero ? cdnSeoImageUrl(hero) : undefined;
   const url = `${BRAND.siteUrl}/product/${product.slug}`;
 
   return {

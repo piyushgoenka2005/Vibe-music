@@ -5,52 +5,46 @@ import {
 } from "@/lib/server/inventoryService";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import * as pgUsers from "@/lib/server/prisma/usersRepository";
-import { getAllProducts } from "@/services/catalogService";
+import { countActiveProducts } from "@/lib/server/prisma/catalogRepository";
 import type { DashboardStats, RevenueDataPoint } from "@/types/admin";
 import type { Order } from "@/types/order";
 
-export async function getDashboardStats(
-  ordersOverride?: Order[]
-): Promise<DashboardStats> {
-  const [orders, totalCustomers, catalogProducts] = await Promise.all([
-    ordersOverride ? Promise.resolve(ordersOverride) : pgOrder.listAllOrders(),
+function isoDaysAgo(days: number, startOfDay = false): string {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  if (startOfDay) d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+/**
+ * All money/count tiles are computed by Postgres aggregates — loading every
+ * order into Node memory just to sum fields is O(table) per dashboard view.
+ */
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const thirtyDaysAgo = isoDaysAgo(30);
+  const sixtyDaysAgo = isoDaysAgo(60);
+
+  const [
+    totalRevenue,
+    recentRevenue,
+    priorRevenue,
+    recentOrderCount,
+    priorOrderCount,
+    statusCounts,
+    totalCustomers,
+    totalProducts,
+    inventoryStats,
+  ] = await Promise.all([
+    pgOrder.sumPaidRevenue(),
+    pgOrder.sumPaidRevenue({ from: thirtyDaysAgo }),
+    pgOrder.sumPaidRevenue({ from: sixtyDaysAgo, to: thirtyDaysAgo }),
+    pgOrder.countOrdersBetween({ from: thirtyDaysAgo }),
+    pgOrder.countOrdersBetween({ from: sixtyDaysAgo, to: thirtyDaysAgo }),
+    pgOrder.countOrdersGroupedByStatus(),
     pgUsers.countUsers(),
-    getAllProducts(true),
+    countActiveProducts(),
+    getInventoryStats(),
   ]);
-
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now);
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const sixtyDaysAgo = new Date(now);
-  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-
-  const paidOrders = orders.filter(
-    (o) => o.paymentStatus === "paid" || o.paymentStatus === "cod_pending"
-  );
-
-  const totalRevenue = paidOrders.reduce((sum, o) => sum + o.total, 0);
-
-  const recentRevenue = paidOrders
-    .filter((o) => o.createdAt && new Date(o.createdAt) >= thirtyDaysAgo)
-    .reduce((sum, o) => sum + o.total, 0);
-
-  const priorRevenue = paidOrders
-    .filter((o) => {
-      if (!o.createdAt) return false;
-      const d = new Date(o.createdAt);
-      return d >= sixtyDaysAgo && d < thirtyDaysAgo;
-    })
-    .reduce((sum, o) => sum + o.total, 0);
-
-  const recentOrders = orders.filter(
-    (o) => o.createdAt && new Date(o.createdAt) >= thirtyDaysAgo
-  ).length;
-
-  const priorOrders = orders.filter((o) => {
-    if (!o.createdAt) return false;
-    const d = new Date(o.createdAt);
-    return d >= sixtyDaysAgo && d < thirtyDaysAgo;
-  }).length;
 
   const revenueChangePercent =
     priorRevenue > 0
@@ -60,25 +54,22 @@ export async function getDashboardStats(
         : 0;
 
   const ordersChangePercent =
-    priorOrders > 0
-      ? Math.round(((recentOrders - priorOrders) / priorOrders) * 100)
-      : recentOrders > 0
+    priorOrderCount > 0
+      ? Math.round(((recentOrderCount - priorOrderCount) / priorOrderCount) * 100)
+      : recentOrderCount > 0
         ? 100
         : 0;
 
-  const inventoryStats = await getInventoryStats();
-
   return {
     totalRevenue,
-    totalOrders: orders.length,
+    totalOrders: Object.values(statusCounts).reduce((sum, n) => sum + n, 0),
     totalCustomers,
-    totalProducts: catalogProducts.filter((p) => p.status === "active").length,
-    pendingOrders: orders.filter((o) => o.status === "pending").length,
-    processingOrders: orders.filter((o) => o.status === "processing").length,
-    completedOrders: orders.filter(
-      (o) => o.status === "delivered" || o.status === "shipped"
-    ).length,
-    cancelledOrders: orders.filter((o) => o.status === "cancelled").length,
+    totalProducts,
+    pendingOrders: statusCounts["pending"] ?? 0,
+    processingOrders: statusCounts["processing"] ?? 0,
+    completedOrders:
+      (statusCounts["delivered"] ?? 0) + (statusCounts["shipped"] ?? 0),
+    cancelledOrders: statusCounts["cancelled"] ?? 0,
     lowStockProducts: inventoryStats.lowStock,
     outOfStockProducts: inventoryStats.outOfStock,
     revenueChangePercent,
@@ -87,43 +78,40 @@ export async function getDashboardStats(
 }
 
 export async function getRevenueChartData(
-  days = 30,
-  ordersOverride?: Order[]
+  days = 30
 ): Promise<RevenueDataPoint[]> {
-  const orders = (ordersOverride ?? (await pgOrder.findPaidOrders())).filter(
-    (o) => o.createdAt
-  );
-
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days + 1);
   startDate.setHours(0, 0, 0, 0);
 
-  const buckets = new Map<string, RevenueDataPoint>();
+  const buckets = await pgOrder.getDailyPaidRevenueBuckets(
+    startDate.toISOString()
+  );
 
+  const byDate = new Map<string, RevenueDataPoint>();
   for (let i = 0; i < days; i++) {
     const d = new Date(startDate);
     d.setDate(d.getDate() + i);
     const key = d.toISOString().slice(0, 10);
-    buckets.set(key, { date: key, revenue: 0, orders: 0 });
+    byDate.set(key, { date: key, revenue: 0, orders: 0 });
+  }
+  for (const bucket of buckets) {
+    const target = byDate.get(bucket.date);
+    if (target) {
+      target.revenue += bucket.revenue;
+      target.orders += bucket.orders;
+    }
   }
 
-  orders.forEach((order) => {
-    const key = order.createdAt!.slice(0, 10);
-    const bucket = buckets.get(key);
-    if (bucket) {
-      bucket.revenue += order.total;
-      bucket.orders += 1;
-    }
-  });
-
-  return Array.from(buckets.values());
+  return Array.from(byDate.values());
 }
 
 export async function getRecentOrders(
   limit = 10,
   ordersOverride?: Order[]
 ): Promise<Order[]> {
-  const orders = ordersOverride ?? (await pgOrder.listAllOrders());
+  const orders =
+    ordersOverride ?? (await pgOrder.listRecentOrders(limit));
   return orders.slice(0, limit);
 }
 
@@ -145,8 +133,17 @@ export async function getOutOfStockProductList(limit = 10) {
   return getOutOfStockProducts(limit);
 }
 
-export async function getTopProducts(limit = 5, ordersOverride?: Order[]) {
-  const orders = ordersOverride ?? (await pgOrder.findPaidOrders());
+/**
+ * Top products need line items, which live in a JSON column — aggregate in JS
+ * but bound the scan to paid orders from the last 90 days (SQL-side filter +
+ * hard row cap) instead of reading the entire order table.
+ */
+export async function getTopProducts(limit = 5) {
+  const orders = await pgOrder.findPaidOrders({ sinceDays: 90 });
+  return topProductsFromOrders(orders, limit);
+}
+
+export function topProductsFromOrders(orders: Order[], limit = 5) {
   const counts = new Map<string, { name: string; units: number; revenue: number }>();
 
   orders.forEach((order) => {

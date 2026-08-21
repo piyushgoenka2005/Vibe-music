@@ -112,7 +112,6 @@
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/adm-zip": "^0.5.8",
-    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
@@ -120,14 +119,12 @@
     "@types/three": "^0.184.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
-    "happy-dom": "^20.10.4",
     "lighthouse": "^13.4.1",
     "playwright": "^1.61.1",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "to-ico": "^1.1.5",
     "typescript": "^5",
-    "vitest": "^3.2.6",
-    "xlsx": "^0.18.5"
+    "vitest": "^3.2.6"
   }
 }

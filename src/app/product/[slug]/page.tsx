@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import ProductDetailPage from "@/components/product/ProductDetailPage";
 import { loadProductDetailPage } from "@/lib/server/productDetailLoader";
 import { buildProductJsonLd } from "@/lib/seo/productJsonLd";
-import { storefrontImageUrl } from "@/lib/storefrontImages";
+import { cdnSeoImageUrl, storefrontImageUrl } from "@/lib/storefrontImages";
 
 export const dynamicParams = true;
 export const revalidate = 300;
@@ -23,7 +23,8 @@ export async function generateMetadata({
   }
 
   const hero = product.images?.[0]?.src || product.image;
-  const ogImage = hero ? storefrontImageUrl(hero, 1200).src : undefined;
+  // Social crawlers need absolute CDN URLs, not our resize proxy.
+  const ogImage = hero ? cdnSeoImageUrl(hero) : undefined;
 
   return {
     title: `${product.name} | Vibe Music`,

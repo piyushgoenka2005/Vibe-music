@@ -205,6 +205,11 @@ export async function listAdminNotifications(limit = 50): Promise<AdminNotificat
   return rows.map(mapAdminNotification);
 }
 
+/** SQL count for badge polling — never ship the full notification list for a number. */
+export async function countUnreadAdminNotifications(): Promise<number> {
+  return prisma.adminNotification.count({ where: { read: false } });
+}
+
 export async function markAdminNotificationRead(id: string): Promise<void> {
   await prisma.adminNotification.update({
     where: { id },

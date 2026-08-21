@@ -30,6 +30,13 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "static.roland.com", pathname: "/**" },
       { protocol: "https", hostname: "framerusercontent.com", pathname: "/**" },
     ],
+    // Next 16 requires explicit allowlists for local optimizer sources.
+    // - /api/media/thumb takes ?url=&w= queries (host/width validated in-route)
+    // - every other local asset must be query-free
+    localPatterns: [
+      { pathname: "/api/media/thumb" },
+      { pathname: "/**", search: "" },
+    ],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 86400,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

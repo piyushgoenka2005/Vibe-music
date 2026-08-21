@@ -119,6 +119,18 @@ export async function fetchAllProducts(
   );
 }
 
+/** Count active products in SQL — never materialize the whole catalog for a stat tile. */
+export async function countActiveProducts(): Promise<number> {
+  return withProductFallback(
+    async () => prisma.product.count({ where: { status: "active" } }),
+    async () => {
+      const { loadProducts } = await import("@/lib/server/catalogRepository");
+      return loadProducts().filter((product) => product.status === "active")
+        .length;
+    }
+  );
+}
+
 export async function fetchProductById(id: string): Promise<CatalogProduct | null> {
   return withProductFallback(
     async () => {

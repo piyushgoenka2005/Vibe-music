@@ -10,7 +10,10 @@ export async function GET(request: Request) {
       { banners },
       {
         headers: {
-          "Cache-Control": "private, no-store, max-age=0",
+          // Public marketing content — safe to cache briefly at the browser,
+          // shared caches, and origin. Admin edits propagate within minutes.
+          "Cache-Control":
+            "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
         },
       }
     );
@@ -20,7 +23,8 @@ export async function GET(request: Request) {
         { banners: [] },
         {
           headers: {
-            "Cache-Control": "private, no-store, max-age=0",
+            "Cache-Control":
+              "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
           },
         }
       );

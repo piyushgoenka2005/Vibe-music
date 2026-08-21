@@ -2,7 +2,10 @@ import { SELLER_STATE, DEFAULT_GST_RATE } from "@/lib/gstCalculator";
 import * as pgContent from "@/lib/server/prisma/contentRepository";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import type { AnalyticsReport, StoreSettings } from "@/types/admin";
-import { getRevenueChartData } from "@/lib/server/dashboardService";
+import {
+  getRevenueChartData,
+  topProductsFromOrders,
+} from "@/lib/server/dashboardService";
 import { isRazorpayConfigured } from "@/lib/server/env";
 
 const DEFAULT_SETTINGS: StoreSettings = {
@@ -47,47 +50,26 @@ export async function updateStoreSettings(
 
 export async function getAnalyticsReport(period = "30d"): Promise<AnalyticsReport> {
   const days = period === "7d" ? 7 : period === "90d" ? 90 : 30;
-  const orders = await pgOrder.listAllOrders();
 
-  const paidOrders = orders.filter(
-    (o) => o.paymentStatus === "paid" || o.paymentStatus === "cod_pending"
-  );
+  // SQL aggregates instead of loading the entire orders table into memory.
+  const [totalRevenue, totalOrders, statusCounts, revenueByMonth, paidOrdersWindow] =
+    await Promise.all([
+      pgOrder.sumPaidRevenue(),
+      pgOrder.countOrdersBetween(),
+      pgOrder.countOrdersGroupedByStatus(),
+      getRevenueChartData(days),
+      pgOrder.findPaidOrders({ sinceDays: 90 }),
+    ]);
 
-  const totalRevenue = paidOrders.reduce((sum, o) => sum + (o.total ?? 0), 0);
-  const totalOrders = orders.length;
   const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-  const productMap = new Map<string, { name: string; units: number; revenue: number }>();
-  paidOrders.forEach((order) => {
-    (order.items ?? []).forEach((item) => {
-      const existing = productMap.get(item.productId) ?? {
-        name: item.name,
-        units: 0,
-        revenue: 0,
-      };
-      existing.units += item.quantity;
-      existing.revenue += item.price * item.quantity;
-      productMap.set(item.productId, existing);
-    });
-  });
-
-  const ordersByStatus: Record<string, number> = {};
-  orders.forEach((order) => {
-    const status = String(order.status ?? "pending");
-    ordersByStatus[status] = (ordersByStatus[status] ?? 0) + 1;
-  });
-
-  const revenueByMonth = await getRevenueChartData(days);
 
   return {
     period,
     totalRevenue,
     totalOrders,
     averageOrderValue,
-    topProducts: Array.from(productMap.values())
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 10),
-    ordersByStatus,
+    topProducts: topProductsFromOrders(paidOrdersWindow, 10),
+    ordersByStatus: statusCounts,
     revenueByMonth,
   };
 }
