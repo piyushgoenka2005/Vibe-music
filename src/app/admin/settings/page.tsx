@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminOpsStatusPanel from "@/components/admin/AdminOpsStatusPanel";
+import AdminTwoFactorPanel from "@/components/admin/AdminTwoFactorPanel";
 import { LoadingState } from "@/components/admin/AdminUi";
 import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
@@ -67,6 +68,7 @@ function SettingsContent({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <AdminTwoFactorPanel />
       {admin.permissions.includes("admins:read") ? (
         <div className="admin-panel">
           <div className="admin-panel__header">

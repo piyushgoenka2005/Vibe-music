@@ -14,7 +14,7 @@ interface AuthState {
   isInitialized: boolean;
   error: string | null;
   signUp: (input: SignUpInput) => Promise<AppUser>;
-  signIn: (input: SignInInput & { rememberMe?: boolean }) => Promise<AppUser>;
+  signIn: (input: SignInInput & { rememberMe?: boolean; totp?: string }) => Promise<AppUser>;
   signInWithGoogle: (callbackUrl?: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -42,12 +42,15 @@ function mapSessionUser(user: {
 async function credentialsSignIn(
   email: string,
   password: string,
-  rememberMe: boolean
+  rememberMe: boolean,
+  totp?: string
 ): Promise<AppUser> {
   const result = await nextAuthSignIn("credentials", {
     email,
     password,
     remember: rememberMe ? "true" : "false",
+    // 6-digit TOTP code — only present for admins with 2FA enabled.
+    ...(totp ? { totp } : {}),
     redirect: false,
   });
 
@@ -125,7 +128,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const user = await credentialsSignIn(
         input.email,
         input.password,
-        input.rememberMe ?? false
+        input.rememberMe ?? false,
+        "totp" in input ? (input as { totp?: string }).totp : undefined
       );
       mergeGuestCartOnAuth();
       set({ user, isAuthenticated: true, isLoading: false });

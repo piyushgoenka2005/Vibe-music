@@ -17,6 +17,7 @@ import { isGoogleAuthConfigured, getGoogleAuthCredentials } from "@/lib/auth/goo
 import { logAuditEvent } from "@/lib/server/auditLog";
 import { loginSchema } from "@/lib/validations/auth";
 import { getAdminSession } from "@/lib/server/adminService";
+import { verifyAdminLoginTotp } from "@/lib/server/adminTotpService";
 import type { AdminRole } from "@/types/admin";
 
 declare module "next-auth" {
@@ -54,6 +55,8 @@ function buildProviders(): NextAuthConfig["providers"] {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
         remember: { label: "Remember Me", type: "text" },
+        /** 6-digit TOTP code — required only for admins with 2FA enabled. */
+        totp: { label: "Two-factor code", type: "text" },
       },
       async authorize(credentials) {
         const parsed = loginSchema.safeParse({
@@ -72,6 +75,15 @@ function buildProviders(): NextAuthConfig["providers"] {
 
         const valid = await verifyPassword(parsed.data.password, user.passwordHash);
         if (!valid) {
+          return null;
+        }
+
+        // Admin accounts may enforce TOTP. Password success alone is not enough.
+        const totpOk = await verifyAdminLoginTotp(
+          user.id,
+          typeof credentials?.totp === "string" ? credentials.totp : undefined
+        );
+        if (!totpOk) {
           return null;
         }
 

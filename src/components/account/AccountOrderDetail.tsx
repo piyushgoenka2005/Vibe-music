@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { formatOrderIdDisplay } from "@/lib/orderId";
@@ -103,6 +105,36 @@ export default function AccountOrderDetail({
   const invoiceUrls = data?.invoiceUrls ?? initialInvoiceUrls;
   const shipment = data?.shipment ?? initialShipment;
   const invoiceDownload = getInvoiceDownloadAction(invoiceUrls);
+  const queryClient = useQueryClient();
+  const [cancelState, setCancelState] = useState<"idle" | "confirm">("idle");
+  const [cancelSubmitting, setCancelSubmitting] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+
+  const canSelfCancel =
+    order.status === "pending" || order.status === "confirmed";
+
+  async function cancelOrder() {
+    if (cancelSubmitting) return;
+    setCancelSubmitting(true);
+    setCancelError(null);
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(order.id)}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackingToken: order.trackingToken }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        throw new Error(body.error || "Unable to cancel this order.");
+      }
+      await queryClient.invalidateQueries({ queryKey: ["order", order.id] });
+      setCancelState("idle");
+    } catch (error) {
+      setCancelError(error instanceof Error ? error.message : "Cancellation failed.");
+    } finally {
+      setCancelSubmitting(false);
+    }
+  }
 
   const productById = new Map(products.map((product) => [product.id, product]));
   const resolvedTrackingNumber = shipment?.trackingNumber ?? "Not assigned yet";
@@ -164,6 +196,35 @@ export default function AccountOrderDetail({
         <Link href={trackHref} className="acct__btn acct__btn--secondary">
           Track Order
         </Link>
+        {canSelfCancel ? (
+          cancelState === "confirm" ? (
+            <>
+              <button
+                type="button"
+                className="acct__btn acct__btn--primary"
+                onClick={() => void cancelOrder()}
+                disabled={cancelSubmitting}
+              >
+                {cancelSubmitting ? "Cancelling…" : "Yes, cancel order"}
+              </button>
+              <button
+                type="button"
+                className="acct__btn acct__btn--secondary"
+                onClick={() => setCancelState("idle")}
+              >
+                Keep order
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="acct__btn acct__btn--secondary"
+              onClick={() => setCancelState("confirm")}
+            >
+              Cancel order
+            </button>
+          )
+        ) : null}
         <Link href={ROUTES.home} className="acct__btn acct__btn--secondary">
           Continue Shopping
         </Link>
@@ -171,6 +232,11 @@ export default function AccountOrderDetail({
           Contact Support
         </a>
       </div>
+      {cancelError ? (
+        <p role="alert" className="acct__muted" style={{ margin: "0.25rem 0 0" }}>
+          {cancelError}
+        </p>
+      ) : null}
 
       <div className="acct__order-detail-grid">
         <section className="acct__card">

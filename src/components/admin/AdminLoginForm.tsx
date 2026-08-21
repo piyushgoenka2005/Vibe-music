@@ -30,6 +30,10 @@ export default function AdminLoginForm() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const [error, setError] = useState<string | null>(null);
 
+  // Two-factor: revealed after a pre-check when the account requires a code.
+  const [needsTotp, setNeedsTotp] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
@@ -38,7 +42,21 @@ export default function AdminLoginForm() {
   async function onSubmit(values: LoginFormValues) {
     setError(null);
     try {
-      await signIn(values);
+      if (!needsTotp) {
+        // Pre-check so the code field appears BEFORE the first failed attempt.
+        const statusRes = await fetch(
+          `/api/auth/2fa/status?email=${encodeURIComponent(values.email)}`
+        );
+        if (statusRes.ok) {
+          const status = (await statusRes.json()) as { totpRequired?: boolean };
+          if (status.totpRequired && !totpCode.trim()) {
+            setNeedsTotp(true);
+            return;
+          }
+        }
+      }
+
+      await signIn({ ...values, totp: totpCode.trim() || undefined });
 
       const adminRes = await fetch("/api/admin/me");
       if (!adminRes.ok) {
@@ -112,8 +130,28 @@ export default function AdminLoginForm() {
             )}
           />
 
+          {needsTotp ? (
+            <div className="auth-shell__field">
+              <label className="text-sm font-medium" htmlFor="admin-totp">
+                Two-factor code
+              </label>
+              <Input
+                id="admin-totp"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="6-digit code"
+                maxLength={7}
+                value={totpCode}
+                onChange={(event) =>
+                  setTotpCode(event.target.value.replace(/[^\d\s]/g, ""))
+                }
+                disabled={isLoading}
+              />
+            </div>
+          ) : null}
+
           <button type="submit" className="auth-submit" disabled={isLoading}>
-            {isLoading ? "Signing in…" : "Admin Login"}
+            {isLoading ? "Signing in…" : needsTotp ? "Verify & Sign in" : "Admin Login"}
           </button>
         </form>
       </Form>
