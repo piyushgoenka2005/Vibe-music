@@ -77,3 +77,7 @@ tmp-out.css
 .tmp-db-default
 cdn-upload-manifest.json
 /tmp/
+
+# deploy release anchors (runtime state)
+.deploy-previous.sha
+.deploy-history.log

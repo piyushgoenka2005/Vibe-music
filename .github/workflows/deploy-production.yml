@@ -31,6 +31,8 @@ jobs:
             cd ~/Vibe-music
             git fetch origin main
             git pull --ff-only origin main
-            bash deploy/update.sh
+            # update.sh already gates on /api/health internally; the final
+            # smoke below runs once against the PUBLIC url (nginx + TLS path).
+            SKIP_SMOKE=1 bash deploy/update.sh
             npm run publish:independence-banner || true
             BASE_URL=https://vibemusic.in bash deploy/post-deploy-smoke.sh
