@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/db/prisma";
+import { clampPageLimit, pageFromRows } from "@/lib/server/prisma/pagination";
 
 export interface SubscriberRecord {
   email: string;
@@ -85,7 +86,7 @@ export async function listNewsletterSubscriberPage(
   nextCursor?: string;
   total: number;
 }> {
-  const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+  const limit = clampPageLimit(options.limit);
 
   const [rows, total] = await Promise.all([
     prisma.newsletterSubscriber.findMany({
@@ -98,10 +99,9 @@ export async function listNewsletterSubscriberPage(
     prisma.newsletterSubscriber.count(),
   ]);
 
-  const hasMore = rows.length > limit;
-  const page = rows.slice(0, limit);
+  const page = pageFromRows(rows, limit, (row) => row.subscribedAt);
   return {
-    subscribers: page.map((row) => ({
+    subscribers: page.items.map((row) => ({
       email: row.email,
       firstName: row.firstName ?? undefined,
       lastName: row.lastName ?? undefined,
@@ -109,11 +109,8 @@ export async function listNewsletterSubscriberPage(
       subscribedAt: row.subscribedAt,
       source: (row.source as SubscriberRecord["source"]) || "website",
     })),
-    hasMore,
-    nextCursor:
-      hasMore && page.length > 0
-        ? page[page.length - 1]!.subscribedAt
-        : undefined,
+    hasMore: page.hasMore,
+    nextCursor: page.nextCursor,
     total,
   };
 }

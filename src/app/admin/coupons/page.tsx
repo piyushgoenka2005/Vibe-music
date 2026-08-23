@@ -32,7 +32,7 @@ function CouponsContent({
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
     useAdminCursorPagination();
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching, dataUpdatedAt } = useQuery({
     queryKey: ["admin-coupons", cursor],
     queryFn: async () => {
       const url = `/api/admin/coupons?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
@@ -45,6 +45,10 @@ function CouponsContent({
         total: number;
       }>;
     },
+    // Live table: poll quietly so usage counts / new coupons appear on their own.
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    placeholderData: (previous) => previous,
   });
   const hasMore = data?.hasMore ?? false;
 
@@ -161,6 +165,8 @@ function CouponsContent({
           <span style={{ color: "var(--admin-muted)", fontSize: "0.85rem" }}>
             Page {pageIndex + 1}
             {typeof data?.total === "number" ? ` · ${data.total} total` : ""}
+            {dataUpdatedAt ? ` · updated ${new Date(dataUpdatedAt).toLocaleTimeString()}` : ""}
+            {isFetching ? " · refreshing…" : ""}
           </span>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button

@@ -18,10 +18,10 @@ type Subscriber = {
 
 function NewsletterContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
-  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
+  const { cursor, pageIndex, canGoPrev, goNext, goPrev } =
     useAdminCursorPagination();
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching, dataUpdatedAt } = useQuery({
     queryKey: ["admin-newsletter", cursor],
     queryFn: async () => {
       const url = `/api/admin/newsletter?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
@@ -34,19 +34,45 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
         nextCursor?: string;
       }>;
     },
+    // Live table: new signups show up without a manual refresh.
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    placeholderData: (previous) => previous,
   });
   const hasMore = data?.hasMore ?? false;
 
   const deleteMutation = useMutation({
+    // Optimistic: the row disappears the instant you confirm.
     mutationFn: async (email: string) => {
       const res = await fetch(
         `/api/admin/newsletter?email=${encodeURIComponent(email)}`,
         { method: "DELETE" }
       );
       if (!res.ok) throw new Error("Delete failed");
+      return email;
     },
-    onSuccess: () => {
-      reset();
+    onMutate: async (email) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-newsletter", cursor] });
+      const previous = queryClient.getQueryData<{
+        subscribers: Subscriber[];
+        total: number;
+        hasMore: boolean;
+      }>(["admin-newsletter", cursor]);
+      if (previous) {
+        queryClient.setQueryData(["admin-newsletter", cursor], {
+          ...previous,
+          subscribers: previous.subscribers.filter((s) => s.email !== email),
+          total: Math.max(0, previous.total - 1),
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _email, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["admin-newsletter", cursor], context.previous);
+      }
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-newsletter"] });
     },
   });
@@ -139,6 +165,8 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
           <span style={{ color: "var(--admin-muted)", fontSize: "0.85rem" }}>
             Page {pageIndex + 1}
             {typeof data?.total === "number" ? ` · ${data.total} total` : ""}
+            {dataUpdatedAt ? ` · updated ${new Date(dataUpdatedAt).toLocaleTimeString()}` : ""}
+            {isFetching ? " · refreshing…" : ""}
           </span>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
