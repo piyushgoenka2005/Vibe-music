@@ -689,6 +689,19 @@ model ContactMessage {
   @@map("contact_messages")
 }
 
+model PushSubscription {
+  id        String @id
+  userId    String @map("user_id")
+  endpoint  String @unique
+  p256dh    String @map("p256dh")
+  auth      String
+  userAgent String? @map("user_agent")
+  createdAt String @map("created_at")
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
 model ProductStockAlert {
   id          String  @id
   email       String

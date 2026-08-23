@@ -2,8 +2,8 @@ import "server-only";
 
 import { calculateGST, SELLER_STATE } from "@/lib/gstCalculator";
 import { incrementCouponUsage } from "@/lib/server/couponService";
-import { sendOrderConfirmationEmail } from "@/lib/server/orderEmailService";
-import { notifyCustomerOrderPlaced, notifyOrderRefunded } from "@/lib/server/orderNotificationService";
+import { notifyAdminNewOrder, notifyOrderRefunded } from "@/lib/server/orderNotificationService";
+import { dispatchLifecycleNotification } from "@/lib/server/notifications";
 import {
   sendServerPurchaseEvent,
   sendServerRefundEvent,
@@ -147,8 +147,23 @@ export async function completeOrderPayment(input: {
   }
 
   const completedOrder = await updateOrder(order.id, updated);
-  void sendOrderConfirmationEmail(completedOrder);
-  void notifyCustomerOrderPlaced(completedOrder);
+  void notifyAdminNewOrder(completedOrder);
+  void dispatchLifecycleNotification({
+    event: "order_confirmed",
+    recipient: {
+      email: completedOrder.email,
+      phone: completedOrder.shippingAddress?.phone ?? null,
+      userId: completedOrder.userId ?? null,
+      customerName: completedOrder.customerName ?? null,
+    },
+    context: {
+      orderId: completedOrder.id,
+      total: completedOrder.total,
+      itemLines: completedOrder.items.map(
+        (item) => `${item.quantity} × ${item.name}`
+      ),
+    },
+  }).catch(() => undefined);
   void sendServerPurchaseEvent(completedOrder);
 
   return {

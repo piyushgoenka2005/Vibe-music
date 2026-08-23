@@ -9,6 +9,7 @@ import {
   updateShipmentStatus,
 } from "@/lib/server/shipmentRepository";
 import type { Order } from "@/types/order";
+import type { LifecycleEvent } from "@/lib/server/notifications/types";
 import type {
   PublicShipmentTracking,
   Shipment,
@@ -149,7 +150,59 @@ export async function upsertOrderShipment(
     await updateOrderStatus(orderId, orderStatus, actor, `Shipment ${shipmentStatusLabel(shipment.status)}`);
   }
 
+  // Realtime customer comms — fire-and-forget, never blocks admin workflow.
+  const statusChanged = existing?.status !== shipment.status;
+  if (statusChanged) {
+    void notifyShipmentTransition(orderId, shipment.status, shipment.trackingNumber, carrierName);
+  }
+
   return { shipment, events };
+}
+
+const SHIPMENT_EVENT_MAP: Partial<Record<ShipmentStatus, LifecycleEvent>> = {
+  picked_up: "packed",
+  in_transit: "shipped",
+  out_for_delivery: "out_for_delivery",
+  delivered: "delivered",
+};
+
+async function notifyShipmentTransition(
+  orderId: string,
+  status: ShipmentStatus,
+  trackingNumber: string,
+  carrierName: string
+): Promise<void> {
+  try {
+    const event = SHIPMENT_EVENT_MAP[status];
+    if (!event) return;
+
+    const { fetchOrderById } = await import("@/lib/server/prisma/orderRepository");
+    const order = await fetchOrderById(orderId);
+    if (!order) return;
+
+    const { dispatchLifecycleNotification } = await import("@/lib/server/notifications");
+    await dispatchLifecycleNotification({
+      event,
+      recipient: {
+        email: order.email,
+        phone: order.shippingAddress?.phone ?? null,
+        userId: order.userId ?? null,
+        customerName: order.customerName ?? null,
+      },
+      context: {
+        orderId: order.id,
+        trackingNumber,
+        courier: carrierName,
+        trackingToken: order.trackingToken ?? null,
+        total: order.total,
+        orderUrl: order.trackingToken
+          ? `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic.in"}/track-order?orderId=${encodeURIComponent(order.id)}&trackingToken=${encodeURIComponent(order.trackingToken)}`
+          : undefined,
+      },
+    });
+  } catch {
+    /* notifications must never break fulfillment */
+  }
 }
 
 export async function addOrderTrackingEvent(

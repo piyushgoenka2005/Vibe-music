@@ -1,8 +1,7 @@
 import "server-only";
 
 import { logAuditEvent } from "@/lib/server/auditLog";
-import { sendMail } from "@/lib/server/email";
-import { mailboxAddress } from "@/lib/server/email/mailboxes";
+import { dispatchLifecycleNotification } from "@/lib/server/notifications";
 import {
   initiateOrderRefund,
 } from "@/lib/server/razorpayRefundService";
@@ -33,28 +32,38 @@ export class OrderCancellationError extends Error {
   }
 }
 
-async function sendCancellationEmail(order: Order): Promise<void> {
+async function sendCancellationComms(
+  order: Order,
+  refunded: boolean
+): Promise<void> {
   try {
-    const text = [
-      `Hi ${order.customerName ?? "there"},`,
-      "",
-      `Your order ${order.id} has been cancelled as requested.`,
-      order.paymentStatus === "paid"
-        ? "Your online payment will be refunded to the original payment method (typically 3-5 working days)."
-        : "No payment was captured for this order.",
-      "",
-      "Need help? Just reply to this email.",
-      "— Vibe Music",
-    ].join("\n");
-    await sendMail({
-      to: order.email,
-      from: mailboxAddress("orders"),
-      subject: `Order ${order.id} cancelled`,
-      html: `<pre style="font-family:inherit;white-space:pre-wrap">${text}</pre>`,
-      text,
+    await dispatchLifecycleNotification({
+      event: "order_cancelled",
+      recipient: {
+        email: order.email,
+        phone: order.shippingAddress?.phone ?? null,
+        userId: order.userId ?? null,
+        customerName: order.customerName ?? null,
+      },
+      context: {
+        orderId: order.id,
+        total: order.total,
+      },
     });
+    if (refunded) {
+      await dispatchLifecycleNotification({
+        event: "refund_initiated",
+        recipient: {
+          email: order.email,
+          phone: order.shippingAddress?.phone ?? null,
+          userId: order.userId ?? null,
+          customerName: order.customerName ?? null,
+        },
+        context: { orderId: order.id, total: order.total },
+      });
+    }
   } catch {
-    // Email is best-effort; cancellation itself must not fail on SMTP hiccups.
+    // Comms are best-effort; cancellation itself must not fail on SMTP hiccups.
   }
 }
 
@@ -164,7 +173,7 @@ export async function cancelOrderAsCustomer(
     },
   }).catch(() => undefined);
 
-  void sendCancellationEmail(updated);
+  void sendCancellationComms(updated, refundInitiated);
 
   return { order: updated, refundInitiated };
 }
