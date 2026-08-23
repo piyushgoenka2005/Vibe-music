@@ -6,6 +6,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatusBadge, LoadingState, EmptyState } from "@/components/admin/AdminUi";
 import { ErrorState } from "@/components/admin/AdminQueryState";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import type { Coupon } from "@/types/admin";
 
 function CouponsContent({
@@ -28,14 +29,24 @@ function CouponsContent({
   });
   const [editId, setEditId] = useState<string | null>(null);
 
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
+    useAdminCursorPagination();
+
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["admin-coupons"],
+    queryKey: ["admin-coupons", cursor],
     queryFn: async () => {
-      const res = await fetch("/api/admin/coupons");
+      const url = `/api/admin/coupons?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{ coupons: Coupon[] }>;
+      return res.json() as Promise<{
+        coupons: Coupon[];
+        hasMore: boolean;
+        nextCursor?: string;
+        total: number;
+      }>;
     },
   });
+  const hasMore = data?.hasMore ?? false;
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -51,6 +62,7 @@ function CouponsContent({
     onSuccess: () => {
       setShowForm(false);
       setEditId(null);
+      reset();
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
     },
   });
@@ -61,7 +73,10 @@ function CouponsContent({
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(json.error ?? "Delete failed");
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-coupons"] }),
+    onSuccess: () => {
+      reset();
+      queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+    },
   });
 
   if (isLoading) return <LoadingState />;
@@ -135,6 +150,37 @@ function CouponsContent({
             </table>
           </div>
         )}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "0.75rem 1rem",
+          }}
+        >
+          <span style={{ color: "var(--admin-muted)", fontSize: "0.85rem" }}>
+            Page {pageIndex + 1}
+            {typeof data?.total === "number" ? ` · ${data.total} total` : ""}
+          </span>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              disabled={!canGoPrev || isFetching}
+              onClick={goPrev}
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              disabled={!hasMore || isFetching}
+              onClick={() => goNext(data?.nextCursor)}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
     </>
   );

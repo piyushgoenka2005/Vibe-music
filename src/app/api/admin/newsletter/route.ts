@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
   deleteNewsletterSubscriber,
+  listNewsletterSubscriberPage,
   listNewsletterSubscribers,
 } from "@/lib/server/newsletterRepository";
 import { logAuditEvent } from "@/lib/server/auditLog";
@@ -11,9 +12,10 @@ export async function GET(request: Request) {
   try {
     await requireAdmin("customers:read");
     const { searchParams } = new URL(request.url);
-    const subscribers = await listNewsletterSubscribers();
 
+    // CSV export intentionally stays complete — pagination is view-only.
     if (searchParams.get("export") === "csv") {
+      const subscribers = await listNewsletterSubscribers();
       const header = "email,firstName,lastName,marketing,subscribedAt,source\n";
       const rows = subscribers
         .map((s) =>
@@ -37,7 +39,12 @@ export async function GET(request: Request) {
       });
     }
 
-    return NextResponse.json({ subscribers, total: subscribers.length });
+    const page = await listNewsletterSubscriberPage({
+      limit: Number(searchParams.get("limit") ?? 20),
+      afterSubscribedAt: searchParams.get("cursor") ?? undefined,
+    });
+
+    return NextResponse.json(page);
   } catch (error) {
     return adminErrorResponse(error);
   }

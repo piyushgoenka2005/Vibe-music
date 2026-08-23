@@ -70,6 +70,54 @@ export async function listNewsletterSubscribers(): Promise<SubscriberRecord[]> {
   }));
 }
 
+export interface NewsletterPageOptions {
+  limit?: number;
+  /** subscribedAt ISO of last row on previous page (keyset cursor). */
+  afterSubscribedAt?: string;
+}
+
+/** SQL keyset pagination for the admin newsletter table. */
+export async function listNewsletterSubscriberPage(
+  options: NewsletterPageOptions = {}
+): Promise<{
+  subscribers: SubscriberRecord[];
+  hasMore: boolean;
+  nextCursor?: string;
+  total: number;
+}> {
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+
+  const [rows, total] = await Promise.all([
+    prisma.newsletterSubscriber.findMany({
+      where: options.afterSubscribedAt
+        ? { subscribedAt: { lt: options.afterSubscribedAt } }
+        : undefined,
+      orderBy: { subscribedAt: "desc" },
+      take: limit + 1,
+    }),
+    prisma.newsletterSubscriber.count(),
+  ]);
+
+  const hasMore = rows.length > limit;
+  const page = rows.slice(0, limit);
+  return {
+    subscribers: page.map((row) => ({
+      email: row.email,
+      firstName: row.firstName ?? undefined,
+      lastName: row.lastName ?? undefined,
+      marketing: row.marketing,
+      subscribedAt: row.subscribedAt,
+      source: (row.source as SubscriberRecord["source"]) || "website",
+    })),
+    hasMore,
+    nextCursor:
+      hasMore && page.length > 0
+        ? page[page.length - 1]!.subscribedAt
+        : undefined,
+    total,
+  };
+}
+
 export async function deleteNewsletterSubscriber(email: string): Promise<boolean> {
   const normalized = email.trim().toLowerCase();
   const existing = await prisma.newsletterSubscriber.findUnique({

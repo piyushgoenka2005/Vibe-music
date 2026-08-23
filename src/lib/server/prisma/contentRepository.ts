@@ -236,6 +236,42 @@ export async function listCoupons(): Promise<Coupon[]> {
   return rows.map(mapCoupon);
 }
 
+export interface CouponPageOptions {
+  limit?: number;
+  /** ISO timestamp of the last row on the previous page (keyset cursor). */
+  afterCreatedAt?: string;
+}
+
+/** SQL-level keyset pagination — never materializes the whole coupons table. */
+export async function listCouponPage(
+  options: CouponPageOptions = {}
+): Promise<{ coupons: Coupon[]; hasMore: boolean; nextCursor?: string }> {
+  if (!isPostgresConfigured()) return { coupons: [], hasMore: false };
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+
+  const rows = await prisma.coupon.findMany({
+    where: options.afterCreatedAt
+      ? { createdAt: { lt: options.afterCreatedAt } }
+      : undefined,
+    orderBy: { createdAt: "desc" },
+    take: limit + 1,
+  });
+
+  const hasMore = rows.length > limit;
+  const page = rows.slice(0, limit).map(mapCoupon);
+  return {
+    coupons: page,
+    hasMore,
+    nextCursor:
+      hasMore && page.length > 0 ? page[page.length - 1]!.createdAt : undefined,
+  };
+}
+
+export async function countCoupons(): Promise<number> {
+  if (!isPostgresConfigured()) return 0;
+  return prisma.coupon.count();
+}
+
 export async function getCouponByCode(code: string): Promise<Coupon | null> {
   if (!isPostgresConfigured()) return null;
   const row = await prisma.coupon.findFirst({

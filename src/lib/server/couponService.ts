@@ -98,28 +98,21 @@ export async function listCoupons(
   coupons: Coupon[];
   hasMore: boolean;
   nextCursor?: string;
+  total: number;
 }> {
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
-  let coupons = await pg.listCoupons();
 
-  if (coupons.length === 0) {
-    coupons = await seedDefaultCoupons();
+  // First-ever load with an empty table seeds the standard promo coupons.
+  if ((await pg.countCoupons()) === 0) {
+    await seedDefaultCoupons();
   }
 
-  if (options.cursor) {
-    const index = coupons.findIndex((coupon) => coupon.id === options.cursor);
-    if (index >= 0) coupons = coupons.slice(index + 1);
-  }
+  const [page, total] = await Promise.all([
+    pg.listCouponPage({ limit, afterCreatedAt: options.cursor }),
+    pg.countCoupons(),
+  ]);
 
-  const page = coupons.slice(0, limit + 1);
-  const hasMore = page.length > limit;
-  const items = page.slice(0, limit);
-
-  return {
-    coupons: items,
-    hasMore,
-    nextCursor: hasMore && items.length > 0 ? items[items.length - 1]!.id : undefined,
-  };
+  return { ...page, total };
 }
 
 export async function getCouponByCode(code: string): Promise<Coupon | null> {

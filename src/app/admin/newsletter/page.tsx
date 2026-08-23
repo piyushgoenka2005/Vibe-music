@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
@@ -17,15 +18,24 @@ type Subscriber = {
 
 function NewsletterContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
+    useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["admin-newsletter"],
+    queryKey: ["admin-newsletter", cursor],
     queryFn: async () => {
-      const res = await fetch("/api/admin/newsletter");
+      const url = `/api/admin/newsletter?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to load");
-      return res.json() as Promise<{ subscribers: Subscriber[]; total: number }>;
+      return res.json() as Promise<{
+        subscribers: Subscriber[];
+        total: number;
+        hasMore: boolean;
+        nextCursor?: string;
+      }>;
     },
   });
+  const hasMore = data?.hasMore ?? false;
 
   const deleteMutation = useMutation({
     mutationFn: async (email: string) => {
@@ -35,8 +45,10 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
       );
       if (!res.ok) throw new Error("Delete failed");
     },
-    onSuccess: () =>
-      void queryClient.invalidateQueries({ queryKey: ["admin-newsletter"] }),
+    onSuccess: () => {
+      reset();
+      void queryClient.invalidateQueries({ queryKey: ["admin-newsletter"] });
+    },
   });
 
   if (isLoading) return <LoadingState />;
@@ -116,6 +128,37 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
             </table>
           </div>
         )}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "0.75rem 1rem",
+          }}
+        >
+          <span style={{ color: "var(--admin-muted)", fontSize: "0.85rem" }}>
+            Page {pageIndex + 1}
+            {typeof data?.total === "number" ? ` · ${data.total} total` : ""}
+          </span>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              disabled={!canGoPrev || isFetching}
+              onClick={goPrev}
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              disabled={!hasMore || isFetching}
+              onClick={() => goNext(data?.nextCursor)}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
     </>
   );
