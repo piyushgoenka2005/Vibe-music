@@ -3,10 +3,21 @@
 # Usage: cd ~/Vibe-music && bash deploy/update.sh
 # Optional: SEED_CATALOG=1 bash deploy/update.sh
 # Optional: SKIP_SMOKE=1 bash deploy/update.sh
+#
+# Safety features (Phase 1):
+#   - records the currently-live commit to .deploy-previous.sha before pulling
+#     (used by deploy/rollback.sh)
+#   - best-effort pg_dump backup before migrations (~/backups/pre-deploy-*.sql.gz,
+#     keeps last 7)
+#   - hard health gate after restart: non-zero exit if /api/health is not OK
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 cd "$APP_DIR"
+
+echo "==> Recording current release for rollback"
+git rev-parse HEAD > .deploy-previous.sha
+echo "    previous=$(cat .deploy-previous.sha)"
 
 echo "==> Pulling latest main"
 if [[ "${SKIP_PULL:-0}" == "1" ]]; then
@@ -14,6 +25,24 @@ if [[ "${SKIP_PULL:-0}" == "1" ]]; then
 else
   git fetch origin main
   git pull --ff-only origin main
+fi
+echo "    deploying $(git rev-parse --short HEAD) — $(git log -1 --pretty=%s)"
+
+echo "==> Pre-migration database backup"
+if [[ -n "${DATABASE_URL:-}" ]] && command -v pg_dump >/dev/null 2>&1; then
+  BACKUP_DIR="${HOME}/backups"
+  mkdir -p "$BACKUP_DIR"
+  STAMP="$(date +%Y%m%d-%H%M%S)"
+  # DATABASE_URL may carry a schema query param — strip it for pg_dump URL form.
+  DUMP_URL="${DATABASE_URL%%\?*}"
+  if pg_dump --no-owner -Fc -f "$BACKUP_DIR/pre-deploy-$STAMP.dump" "$DUMP_URL" 2>/dev/null; then
+    echo "    saved $BACKUP_DIR/pre-deploy-$STAMP.dump"
+    ls -1t "$BACKUP_DIR"/pre-deploy-*.dump 2>/dev/null | tail -n +8 | xargs -r rm -f --
+  else
+    echo "    WARN: pg_dump failed — continuing without backup" >&2
+  fi
+else
+  echo "    SKIP (pg_dump or DATABASE_URL unavailable)"
 fi
 
 echo "==> Installing dependencies"
@@ -52,10 +81,29 @@ else
 fi
 pm2 save
 
-echo "==> Health check"
-sleep 3
-curl -sS -o /dev/null -w "localhost:3000 → HTTP %{http_code}\n" http://127.0.0.1:3000/ || true
-curl -sS -o /dev/null -w "api/health → HTTP %{http_code}\n" http://127.0.0.1:3000/api/health || true
+echo "==> Health gate (up to 60s for cold start + first DB probe)"
+HEALTH_OK=0
+for attempt in $(seq 1 20); do
+  sleep 3
+  HTTP_CODE="$(curl -sS -o /tmp/vibe-health.json -w '%{http_code}' http://127.0.0.1:3000/api/health || echo 000)"
+  if [[ "$HTTP_CODE" == "200" ]]; then
+    HEALTH_OK=1
+    echo "    attempt $attempt: /api/health → 200 OK"
+    break
+  fi
+  echo "    attempt $attempt: /api/health → $HTTP_CODE (waiting…)"
+done
+
+if [[ "$HEALTH_OK" != "1" ]]; then
+  echo "" >&2
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
+  echo "DEPLOY FAILED HEALTH GATE after restart." >&2
+  echo "Last response: $(cat /tmp/vibe-health.json 2>/dev/null || echo 'no body')" >&2
+  echo "Roll back with:  bash deploy/rollback.sh" >&2
+  echo "PM2 logs:        pm2 logs vibe --lines 100" >&2
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
+  exit 1
+fi
 
 if [[ "${SKIP_SMOKE:-0}" != "1" ]]; then
   echo "==> Post-deploy smoke"
