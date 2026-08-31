@@ -75,35 +75,16 @@ export default function CategoryBentoImage({
     objectPosition,
   };
 
-  if (isLocalAsset(imageSrc)) {
-    return (
-      <Image
-        alt={alt}
-        className={`${className}${loadedClass}`}
-        fill
-        onError={handleError}
-        onLoad={markLoaded}
-        priority={priority}
-        sizes={sizes ?? (variant === "hero" ? "(min-width: 1024px) 50vw, 92vw" : "25vw")}
-        src={localImagePath(imageSrc)}
-        style={imageStyle}
-      />
-    );
-  }
-
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- progressive load/error swap for bento tiles
-    <img
-      ref={imgRef}
+    <Image
       alt={alt}
       className={`${className}${loadedClass}`}
-      decoding="async"
-      loading={priority ? "eager" : loading}
+      fill
       onError={handleError}
       onLoad={markLoaded}
-      sizes={sizes}
-      src={imageSrc}
-      srcSet={srcSet}
+      priority={priority}
+      sizes={sizes ?? (variant === "hero" ? "(min-width: 1024px) 50vw, 92vw" : "25vw")}
+      src={isLocalAsset(imageSrc) ? localImagePath(imageSrc) : imageSrc}
       style={imageStyle}
     />
   );

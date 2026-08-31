@@ -51,38 +51,20 @@ export function TopProductCard({ product }: { product: HomepageTopProduct }) {
             .join(" ")}
         >
           {product.image ? (
-            usePlainImg ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                alt=""
-                className={imageClassName}
-                loading="lazy"
-                decoding="async"
-                sizes="(max-width: 767px) 92vw, 360px"
-                src={imageSrc}
-                srcSet={srcSet}
-                style={
-                  product.imageObjectPosition
-                    ? { objectPosition: product.imageObjectPosition }
-                    : undefined
-                }
-              />
-            ) : (
-              <Image
-                alt=""
-                className={imageClassName}
-                fill
-                loading="lazy"
-                sizes="(max-width: 767px) 92vw, 360px"
-                src={imageSrc}
-                style={{
-                  objectFit: imageFit,
-                  ...(product.imageObjectPosition
-                    ? { objectPosition: product.imageObjectPosition }
-                    : null),
-                }}
-              />
-            )
+            <Image
+              alt=""
+              className={imageClassName}
+              fill
+              loading="lazy"
+              sizes="(max-width: 767px) 92vw, 360px"
+              src={imageSrc}
+              style={{
+                objectFit: imageFit,
+                ...(product.imageObjectPosition
+                  ? { objectPosition: product.imageObjectPosition }
+                  : null),
+              }}
+            />
           ) : (
             <div className="blog-teaser__image blog-teaser__image--placeholder" />
           )}

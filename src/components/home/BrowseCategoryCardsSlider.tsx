@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { BrowseCategoryCard } from "@/data/browseCategoryCards";
 import { attachAxisLockedRailScroll } from "@/lib/axisLockedRailScroll";
@@ -92,17 +93,14 @@ export default function BrowseCategoryCardsSlider({
             draggable={false}
           >
             <div className="category-card__image">
-              {/* eslint-disable-next-line @next/next/no-img-element -- static marketing category art with fixed dimensions */}
-              <img
+              <Image
                 alt=""
-                decoding="async"
                 draggable={false}
                 height={item.height}
                 loading="lazy"
                 role="presentation"
                 sizes="(min-width: 1400px) 380px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 84vw"
                 src={item.image}
-                srcSet={item.srcSet}
                 width={item.width}
               />
             </div>

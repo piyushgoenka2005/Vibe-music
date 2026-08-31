@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import Image from "next/image";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
 import { STYLE_STORY_REELS } from "@/data/styleStory";
 import { useVisibleVideo } from "@/hooks/useVisibleVideo";
@@ -112,13 +113,14 @@ export default function GearStoryCard({
     >
       <div className="gear-story-card__media">
         {videoFailed || !story.videoUrl ? (
-          // Posters until reel MP4s are deployed under /public/videos on the VPS.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             className="gear-story-card__video gear-story-card__poster"
             src={story.posterUrl}
             alt=""
             aria-hidden="true"
+            fill
+            sizes="(max-width: 640px) 150px, (max-width: 1024px) 250px, 300px"
+            style={{ objectFit: "cover" }}
           />
         ) : (
           <video

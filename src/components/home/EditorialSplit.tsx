@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ROUTES } from "@/lib/routes";
 import { MARKETING_EDITORIAL_IMAGE } from "@/lib/categoryImages";
 import Reveal from "@/components/layout/Reveal";
@@ -28,12 +29,13 @@ export default function EditorialSplit() {
         <div className="editorial-split__visual">
           <div className="editorial-split__card">
             <div className="editorial-split__orb" />
-            {/* eslint-disable-next-line @next/next/no-img-element -- static marketing editorial asset */}
-            <img
+            <Image
               src={MARKETING_EDITORIAL_IMAGE}
               alt="Fender Stratocaster electric guitar — expert gear advice for every player"
               className="editorial-split__image"
+              fill
               loading="lazy"
+              sizes="(max-width: 1024px) 100vw, 50vw"
             />
           </div>
         </div>

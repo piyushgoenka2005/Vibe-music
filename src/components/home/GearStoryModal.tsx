@@ -9,6 +9,7 @@ import {
   type MouseEvent,
   type RefObject,
 } from "react";
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Heart, X } from "lucide-react";
@@ -106,14 +107,15 @@ function GearStoryMainImage({
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       key={activeSrc}
       src={activeSrc}
       alt={alt}
       className="gear-story-modal__image"
-      decoding="async"
-      fetchPriority="high"
+      fill
+      sizes="(max-width: 1024px) 100vw, 50vw"
+      style={{ objectFit: "contain" }}
+      priority={true}
       onError={() => {
         setAttempt((current) => {
           if (current + 1 < candidates.length) return current + 1;
@@ -153,15 +155,13 @@ function GearStoryThumb({
   if (!activeSrc || failed) return null;
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       key={activeSrc}
       src={activeSrc}
       alt=""
       width={112}
       height={112}
-      loading="eager"
-      decoding="async"
+      priority={true}
       onError={() => {
         setAttempt((current) => {
           if (current + 1 < candidates.length) return current + 1;
