@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type RefObject } from "react";
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
@@ -746,18 +747,16 @@ export default function ProductGallery({
                 />
               </div>
             ) : activeDisplaySrc && !allFailed ? (
-              // Plain img — next/image fill was painting broken icons on thumb API
-              // races; match homepage fallback chain (thumb → CDN master).
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 key={activeDisplaySrc}
                 ref={photoRef}
                 src={activeDisplaySrc}
                 alt={activeImage.alt}
                 className="pdp-gallery__photo"
                 draggable={false}
-                decoding="async"
-                fetchPriority="high"
+                priority={true}
+                width={1000}
+                height={1000}
                 onLoad={(event) => {
                   const image = event.currentTarget;
                   setImageMetrics({

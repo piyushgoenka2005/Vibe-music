@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import RevealGroup from "@/components/layout/RevealGroup";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
@@ -90,15 +91,12 @@ function BigNamesDealItem({
       >
         <div className="big-names-deals__hang-wrap">
           <div className="big-names-deals__product-stage">
-            <span className="big-names-deals__product-shadow">
-              {/* Plain img avoids /_next/image CDN timeouts on large PNG masters */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 alt={item.productAlt}
                 className="big-names-deals__product"
-                decoding="async"
                 height={640}
-                loading={index < 2 ? "eager" : "lazy"}
+                priority={index < 2}
+                sizes="(max-width: 768px) 100vw, 50vw"
                 src={productSrc}
                 width={640}
                 draggable={false}
@@ -108,7 +106,6 @@ function BigNamesDealItem({
                   }
                 }}
               />
-            </span>
           </div>
         </div>
       </Link>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -103,7 +104,7 @@ export default function RentalProductPageClient({ product }: RentalProductPagePr
         <div>
           {product.image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.image} alt="" className="rentals-detail__image" />
+            <Image src={product.image} alt="" className="rentals-detail__image" width={600} height={600} priority={true} />
           ) : (
             <div className="rentals-detail__image" aria-hidden />
           )}

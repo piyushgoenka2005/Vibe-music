@@ -61,8 +61,8 @@ function DashboardContent() {
   const { stats, revenueChart, recentOrders, recentCustomers, lowStock, topProducts } = data;
 
   return (
-    <>
-      <div className="admin-stat-grid">
+    <div className="admin-dashboard-root">
+      <div className="admin-stat-grid-premium">
         <StatCard label="Total Revenue" value={stats.totalRevenue} change={stats.revenueChangePercent} format="currency" />
         <StatCard label="Total Orders" value={stats.totalOrders} change={stats.ordersChangePercent} />
         <StatCard label="Total Customers" value={stats.totalCustomers} />
@@ -74,22 +74,22 @@ function DashboardContent() {
         <StatCard label="Out of Stock" value={stats.outOfStockProducts} />
       </div>
 
-      <div className="admin-grid-2" style={{ marginBottom: "1.5rem" }}>
-        <div className="admin-panel">
-          <div className="admin-panel__header">
-            <h2 className="admin-panel__title">Revenue (30 days)</h2>
+      <div className="admin-grid-2-premium" style={{ marginBottom: "1.5rem" }}>
+        <div className="admin-panel-glass">
+          <div className="admin-panel-glass__header">
+            <h2 className="admin-panel-glass__title">Revenue (30 days)</h2>
           </div>
-          <div className="admin-panel__body">
+          <div className="admin-panel-glass__body">
             <DashboardRevenueChart data={revenueChart} />
           </div>
         </div>
 
-        <div className="admin-panel">
-          <div className="admin-panel__header">
-            <h2 className="admin-panel__title">Top Products</h2>
+        <div className="admin-panel-glass">
+          <div className="admin-panel-glass__header">
+            <h2 className="admin-panel-glass__title">Top Products</h2>
           </div>
           <div className="admin-table-wrap">
-            <table className="admin-table">
+            <table className="admin-table-premium">
               <thead>
                 <tr>
                   <th>Product</th>
@@ -111,13 +111,13 @@ function DashboardContent() {
         </div>
       </div>
 
-      <div className="admin-grid-2">
-        <div className="admin-panel">
-          <div className="admin-panel__header">
-            <h2 className="admin-panel__title">Recent Orders</h2>
+      <div className="admin-grid-2-premium">
+        <div className="admin-panel-glass">
+          <div className="admin-panel-glass__header">
+            <h2 className="admin-panel-glass__title">Recent Orders</h2>
           </div>
           <div className="admin-table-wrap">
-            <table className="admin-table">
+            <table className="admin-table-premium">
               <thead>
                 <tr>
                   <th>Order</th>
@@ -144,12 +144,12 @@ function DashboardContent() {
           </div>
         </div>
 
-        <div className="admin-panel">
-          <div className="admin-panel__header">
-            <h2 className="admin-panel__title">Low Stock Alerts</h2>
+        <div className="admin-panel-glass">
+          <div className="admin-panel-glass__header">
+            <h2 className="admin-panel-glass__title">Low Stock Alerts</h2>
           </div>
           <div className="admin-table-wrap">
-            <table className="admin-table">
+            <table className="admin-table-premium">
               <thead>
                 <tr>
                   <th>Product</th>
@@ -183,12 +183,12 @@ function DashboardContent() {
         </div>
       </div>
 
-      <div className="admin-panel" style={{ marginTop: "1.5rem" }}>
-        <div className="admin-panel__header">
-          <h2 className="admin-panel__title">Recent Customers</h2>
+      <div className="admin-panel-glass" style={{ marginTop: "1.5rem" }}>
+        <div className="admin-panel-glass__header">
+          <h2 className="admin-panel-glass__title">Recent Customers</h2>
         </div>
         <div className="admin-table-wrap">
-          <table className="admin-table">
+          <table className="admin-table-premium">
             <thead>
               <tr>
                 <th>Name</th>
@@ -212,7 +212,7 @@ function DashboardContent() {
           </table>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
