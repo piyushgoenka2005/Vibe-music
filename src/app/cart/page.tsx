@@ -6,7 +6,6 @@ export const metadata: Metadata = {
   title: `Cart | ${BRAND.name}`,
   description: "Review items in your cart before checkout.",
   alternates: { canonical: "/cart" },
-  robots: { index: false, follow: true },
 };
 
 export default function CartRoute() {
