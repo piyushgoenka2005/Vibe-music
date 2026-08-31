@@ -428,12 +428,13 @@ export default function ScrollRestoration() {
         }
       });
 
+      const capturedGeneration = restoreGenerationRef.current;
       return () => {
         // Strict Mode remount: tear down listeners but keep session markers so
         // the next layout effect can restore again. Keep restoringRef true so
         // persist cleanup does not write Y=0 during the remount gap.
         stopForRemount();
-        if (restoreGenerationRef.current === generation) {
+        if (capturedGeneration === generation) {
           restoringRef.current = true;
         }
       };

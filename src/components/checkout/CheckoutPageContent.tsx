@@ -110,7 +110,7 @@ export default function CheckoutPageContent() {
   const isBuyNowMode = isBuyNowCheckoutSearchParam(searchParams.get("buyNow"));
   const cartItems = useCartStore((s) => s.items);
   const buyNowItem = useBuyNowStore((s) => s.item);
-  const items = isBuyNowMode ? (buyNowItem ? [buyNowItem] : []) : cartItems;
+  const items = useMemo(() => isBuyNowMode ? (buyNowItem ? [buyNowItem] : []) : cartItems, [isBuyNowMode, buyNowItem, cartItems]);
   const cartCouponCode = useCartStore((s) => s.couponCode);
   const applyCoupon = useCartStore((s) => s.applyCoupon);
   const cartCouponDiscount = useCartStore((s) => s.discount());

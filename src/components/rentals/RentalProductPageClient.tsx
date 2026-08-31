@@ -9,7 +9,6 @@ import { ROUTES } from "@/lib/routes";
 import type { RentalDurationType, RentalProduct } from "@/types/rental";
 import { formatCurrency } from "@/utils/currency";
 
-import ProductImage from "@/components/common/ProductImage";
 
 interface RentalProductPageProps {
   product: RentalProduct;
@@ -103,7 +102,6 @@ export default function RentalProductPageClient({ product }: RentalProductPagePr
       <div className="rentals-detail" style={{ marginTop: "1rem" }}>
         <div>
           {product.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <Image src={product.image} alt="" className="rentals-detail__image" width={600} height={600} priority={true} />
           ) : (
             <div className="rentals-detail__image" aria-hidden />

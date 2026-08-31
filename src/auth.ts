@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import { prisma, isPostgresConfigured } from "@/lib/db/prisma";
+import { isPostgresConfigured } from "@/lib/db/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import {
   AUTH_SESSION_REMEMBER_MAX_AGE_SECONDS,

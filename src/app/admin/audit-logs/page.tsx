@@ -8,7 +8,7 @@ import { ErrorState } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 
 function AuditLogsContent() {
-  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
+  const { cursor, pageIndex, canGoPrev, goNext, goPrev } =
     useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({

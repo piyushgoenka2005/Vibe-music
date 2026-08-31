@@ -19,7 +19,7 @@ export function createAuthPrismaAdapter(client: PrismaClient): Adapter {
 
   return {
     ...base,
-    async getUserByEmail(email) {
+    async getUserByEmail(_email) {
       // Return null to bypass Auth.js's internal OAuthAccountNotLinked check.
       // This forces Auth.js to call `createUser`, which we have overridden below
       // to securely merge the OAuth account with the existing password account.
