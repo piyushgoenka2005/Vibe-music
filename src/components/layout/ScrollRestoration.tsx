@@ -106,24 +106,43 @@ if (typeof window !== "undefined") {
   );
 }
 
+let scrollPositionsCache: Record<string, number> | null = null;
+let writeTimeoutId = 0;
+
 function readPositions(): Record<string, number> {
+  if (scrollPositionsCache) return scrollPositionsCache;
   try {
     const raw = sessionStorage.getItem(SCROLL_POSITIONS_KEY);
-    if (!raw) return {};
+    if (!raw) {
+      scrollPositionsCache = {};
+      return scrollPositionsCache;
+    }
     const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object") return {};
-    return parsed as Record<string, number>;
+    if (!parsed || typeof parsed !== "object") {
+      scrollPositionsCache = {};
+      return scrollPositionsCache;
+    }
+    scrollPositionsCache = parsed as Record<string, number>;
+    return scrollPositionsCache;
   } catch {
-    return {};
+    scrollPositionsCache = {};
+    return scrollPositionsCache;
   }
 }
 
 function writePositions(positions: Record<string, number>) {
-  try {
-    sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(positions));
-  } catch {
-    /* quota / private mode */
-  }
+  scrollPositionsCache = positions;
+  if (writeTimeoutId) return;
+  writeTimeoutId = window.setTimeout(() => {
+    writeTimeoutId = 0;
+    try {
+      if (scrollPositionsCache) {
+        sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(scrollPositionsCache));
+      }
+    } catch {
+      /* quota / private mode */
+    }
+  }, 250);
 }
 
 function pathKey(pathname: string): string {

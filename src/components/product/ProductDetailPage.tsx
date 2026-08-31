@@ -36,7 +36,7 @@ const FrequentlyBoughtTogether = dynamic(() => import("./FrequentlyBoughtTogethe
 const GuitarSpecShowcase = dynamic(() => import("./GuitarSpecShowcase"), { ssr: false });
 const GuitarTonesInMotion = dynamic(() => import("./GuitarTonesInMotion"), { ssr: false });
 const GuitarStorySections = dynamic(() => import("./GuitarStorySections"), { ssr: false });
-const ProductTabs = dynamic(() => import("./ProductTabs"), { ssr: false });
+const ProductTabs = dynamic(() => import("./ProductTabs"));
 const ProductCrossSell = dynamic(() => import("./ProductCrossSell"), { ssr: false });
 const ProductStickyBar = dynamic(() => import("./ProductStickyBar"), { ssr: false });
 

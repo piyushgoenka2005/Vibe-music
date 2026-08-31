@@ -708,6 +708,7 @@ function SplashCursor({
     initFramebuffers();
     let lastUpdateTime = Date.now();
     let colorUpdateTimer = 0.0;
+    let idleTimer = 0.0;
 
     function updateFrame() {
       if (!isActive) return;
@@ -717,6 +718,27 @@ function SplashCursor({
         return;
       }
       const dt = calcDeltaTime();
+      
+      let isIdle = true;
+      for (let i = 0; i < pointers.length; i++) {
+        if (pointers[i].down || pointers[i].moved) {
+           isIdle = false;
+           break;
+        }
+      }
+      
+      if (isIdle) {
+        idleTimer += dt;
+      } else {
+        idleTimer = 0.0;
+      }
+
+      if (idleTimer > 2.5) {
+        lastUpdateTime = Date.now();
+        animationFrameId.current = requestAnimationFrame(updateFrame);
+        return;
+      }
+
       if (resizeCanvas()) initFramebuffers();
       updateColors(dt);
       applyInputs();
