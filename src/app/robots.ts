@@ -8,8 +8,6 @@ export default function robots() {
       disallow: [
         "/admin",
         "/api/",
-        "/checkout",
-        "/cart",
         "/account",
         "/login",
         "/register",
