@@ -4,6 +4,7 @@ import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { getRentalBookingById } from "@/lib/server/rentalRepository";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { timingSafeEqual } from "node:crypto";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 function verifyToken(stored: string | null | undefined, provided: string | null): boolean {
   const a = stored?.trim();
@@ -46,9 +47,6 @@ export async function GET(
 
     return NextResponse.json({ booking });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to load booking" },
-      { status: 500 }
-    );
+    return publicApiError(error, "Failed to load booking");
   }
 }

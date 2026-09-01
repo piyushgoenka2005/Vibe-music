@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { listReels } from "@/lib/server/gearStoryService";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function GET(request: Request) {
   try {
@@ -11,8 +12,6 @@ export async function GET(request: Request) {
     const data = await listReels();
     return NextResponse.json(data);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to load gear stories";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return publicApiError(error, "Unable to load gear stories");
   }
 }

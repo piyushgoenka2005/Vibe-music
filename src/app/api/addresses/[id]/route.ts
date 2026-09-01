@@ -9,6 +9,7 @@ import {
   updateUserAddress,
 } from "@/lib/server/addressService";
 import { addressInputSchema } from "@/lib/validations/address";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -33,9 +34,7 @@ export async function GET(request: Request, context: RouteContext) {
 
     return NextResponse.json({ address });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to fetch address";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return publicApiError(error, "Unable to fetch address");
   }
 }
 

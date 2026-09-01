@@ -3,6 +3,7 @@ import { enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { listRentalBookingsForUser } from "@/lib/server/rentalRepository";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function GET(request: Request) {
   try {
@@ -16,9 +17,6 @@ export async function GET(request: Request) {
     const bookings = await listRentalBookingsForUser(user.uid);
     return NextResponse.json({ bookings });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to load bookings" },
-      { status: 500 }
-    );
+    return publicApiError(error, "Failed to load bookings");
   }
 }

@@ -7,6 +7,7 @@ import {
   listRentalLocksForProduct,
 } from "@/lib/server/rentalRepository";
 import { buildAvailabilityCalendar } from "@/lib/rental/availabilityEngine";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function GET(
   request: Request,
@@ -41,9 +42,6 @@ export async function GET(
 
     return NextResponse.json({ product });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to load product" },
-      { status: 500 }
-    );
+    return publicApiError(error, "Failed to load product");
   }
 }

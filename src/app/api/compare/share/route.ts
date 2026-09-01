@@ -6,6 +6,7 @@ import { shareCompareList } from "@/lib/server/compareService";
 import { enforceMutationSecurity, enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { getPublicSiteUrl } from "@/lib/publicSiteUrl";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function POST(request: Request) {
   try {
@@ -36,9 +37,6 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Share failed" },
-      { status: 400 }
-    );
+    return publicApiError(error, "Share failed");
   }
 }

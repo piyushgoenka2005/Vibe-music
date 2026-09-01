@@ -3,6 +3,7 @@ import { giveawaySocialClaimSchema } from "@/lib/validations/giveaway";
 import { claimGiveawaySocialBonus } from "@/lib/server/giveawayEntryService";
 import { enforceMutationSecurity, enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function POST(
   request: Request,
@@ -24,9 +25,6 @@ export async function POST(
     const entry = await claimGiveawaySocialBonus(id, parsed.platform, trackingToken);
     return NextResponse.json({ entry });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Claim failed" },
-      { status: 400 }
-    );
+    return publicApiError(error, "Claim failed");
   }
 }

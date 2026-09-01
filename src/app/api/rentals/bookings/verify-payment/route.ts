@@ -3,6 +3,7 @@ import { verifyRentalPaymentSchema } from "@/lib/validations/rental";
 import { verifyRentalPayment } from "@/lib/server/rentalBookingService";
 import { enforceMutationSecurity, enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function POST(request: Request) {
   try {
@@ -21,9 +22,6 @@ export async function POST(request: Request) {
     const booking = await verifyRentalPayment(parsed);
     return NextResponse.json({ booking });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Payment verification failed" },
-      { status: 400 }
-    );
+    return publicApiError(error, "Payment verification failed");
   }
 }

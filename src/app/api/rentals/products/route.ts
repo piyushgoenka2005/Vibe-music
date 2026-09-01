@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { listRentalProducts } from "@/lib/server/rentalRepository";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function GET(request: Request) {
   try {
@@ -16,9 +17,6 @@ export async function GET(request: Request) {
     });
     return NextResponse.json({ products, total: products.length });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to load products" },
-      { status: 500 }
-    );
+    return publicApiError(error, "Failed to load products");
   }
 }

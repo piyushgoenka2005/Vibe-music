@@ -11,6 +11,7 @@ import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import type { Order } from "@/types/order";
 import type { PublicShipmentTracking } from "@/types/shipment";
 import { toOrderTracking } from "@/types/orderTracking";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 const SHIPMENT_LOOKUP_MS = 400;
 
@@ -86,8 +87,6 @@ export async function GET(
 
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to fetch order";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return publicApiError(error, "Unable to fetch order");
   }
 }
