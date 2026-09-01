@@ -1,0 +1,99 @@
+# Prometheus alert rules for Vibe Music
+# Fires alerts when critical thresholds are breached.
+
+groups:
+  - name: vibe_app_alerts
+    rules:
+      # ── App is down ──
+      - alert: AppDown
+        expr: up{job="vibe-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Vibe Music app is DOWN"
+          description: "The Next.js application has been unreachable for more than 1 minute."
+
+      # ── High error rate ──
+      - alert: HighErrorRate
+        expr: |
+          rate(vibe_http_errors_total[5m]) / rate(vibe_http_requests_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Error rate above 5%"
+          description: "The 5xx error rate has exceeded 5% for more than 3 minutes."
+
+      # ── Database unhealthy ──
+      - alert: DatabaseDown
+        expr: vibe_database_healthy == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL database is unreachable"
+          description: "The database health check has been failing for more than 1 minute."
+
+      # ── High memory usage ──
+      - alert: HighMemoryUsage
+        expr: vibe_process_resident_memory_bytes > 700 * 1024 * 1024
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory usage above 700MB"
+          description: "Process RSS memory has exceeded 700MB for 5 minutes. PM2 will restart at 800MB."
+
+      # ── High latency ──
+      - alert: HighLatency
+        expr: vibe_http_request_duration_ms{quantile="0.95"} > 3000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 latency above 3 seconds"
+          description: "The 95th percentile response time has exceeded 3 seconds for 5 minutes."
+
+      # ── Rate limit abuse ──
+      - alert: RateLimitSpike
+        expr: rate(vibe_http_rate_limit_hits_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "High rate limiting activity"
+          description: "More than 10 requests/second are being rate-limited. Possible abuse or misconfigured client."
+
+      # ── Process restart (PM2 memory kill) ──
+      - alert: ProcessRestarts
+        expr: changes(vibe_uptime_seconds[10m]) > 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Process restarting frequently"
+          description: "The app has restarted more than 3 times in 10 minutes. Check PM2 logs."
+
+  - name: vibe_infrastructure_alerts
+    rules:
+      # ── Prometheus scrape failing ──
+      - alert: PrometheusScrapeFailing
+        expr: up{job="vibe-app"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus cannot scrape app metrics"
+          description: "Metrics endpoint has been unreachable for 5 minutes."
+
+      # ── Storage filling up (Prometheus TSDB) ──
+      - alert: PrometheusStorageFilling
+        expr: |
+          (prometheus_tsdb_storage_blocks_bytes / (1024 * 1024 * 1024)) > 5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus storage above 5GB"
+          description: "Consider reducing retention or adding disk space."

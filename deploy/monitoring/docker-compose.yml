@@ -1,0 +1,75 @@
+# ─── Vibe Music Production Monitoring Stack ────────────────────────────────
+# Deploys alongside the PM2 + Nginx stack on the VPS.
+#
+# Usage:
+#   cd deploy/monitoring
+#   docker compose up -d
+#   docker compose logs -f          # watch startup
+#
+# Access:
+#   Grafana:    http://localhost:3001  (admin / vibe-admin-2024)
+#   Prometheus: http://localhost:9090
+#   Uptime Kuma: http://localhost:3002 (setup on first visit)
+# ──────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── Prometheus: scrapes /api/metrics from the Next.js app ──────────────
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: vibe-prometheus
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
+    networks:
+      - monitoring
+
+  # ── Grafana: dashboards for app metrics ────────────────────────────────
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: vibe-grafana
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: vibe-admin-2024
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: "http://localhost:3001"
+      GF_INSTALL_PLUGINS: "grafana-clock-panel"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+
+  # ── Uptime Kuma: uptime monitoring + alerting ──────────────────────────
+  uptime-kuma:
+    image: louislam/uptime-kuma:1.21
+    container_name: vibe-uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3002:3010"
+    volumes:
+      - uptime_kuma_data:/app/data
+    networks:
+      - monitoring
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  uptime_kuma_data:
+
+networks:
+  monitoring:
+    driver: bridge

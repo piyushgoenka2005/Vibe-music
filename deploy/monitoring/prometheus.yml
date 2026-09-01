@@ -1,0 +1,36 @@
+# Prometheus configuration for Vibe Music
+# Scrapes /api/metrics from the Next.js app every 15 seconds.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Alert rules
+rule_files:
+  - "alert-rules.yml"
+
+# Scrape targets
+scrape_configs:
+  # ── Next.js application metrics ──
+  - job_name: "vibe-app"
+    metrics_path: "/api/metrics"
+    scheme: "http"
+    static_configs:
+      - targets: ["host.docker.internal:3000"]
+        labels:
+          service: "vibe-nextjs"
+          environment: "production"
+    # Scrape timeout — if /api/metrics takes >5s, skip this scrape
+    scrape_timeout: 5s
+
+  # ── Node.js process metrics (via prom-client if added later) ──
+  # Uncomment if you add prom-client:
+  # - job_name: "vibe-node"
+  #   metrics_path: "/metrics/node"
+  #   static_configs:
+  #     - targets: ["host.docker.internal:3000"]
+
+  # ── Prometheus self-monitoring ──
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

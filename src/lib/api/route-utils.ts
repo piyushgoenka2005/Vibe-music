@@ -14,6 +14,7 @@ import {
 import { getRequestId } from "@/lib/security/request-log";
 import { reportServerError } from "@/lib/server/errorMonitoring";
 import { logInfo } from "@/lib/server/logger";
+import { recordRequest } from "@/app/api/metrics/route";
 
 export function jsonError(message: string, status: number): NextResponse {
   return NextResponse.json({ error: message }, { status });
@@ -117,13 +118,17 @@ export async function parseJsonBody<T>(
 export function handleRouteError(
   error: unknown,
   context: string,
-  request?: Request
+  request?: Request,
+  statusCode?: number
 ): NextResponse {
   reportServerError(error, {
     source: context,
     requestId: request ? getRequestId(request) : undefined,
     routePath: request ? new URL(request.url).pathname : undefined,
   });
+  // Record metrics (fire-and-forget, never blocks response)
+  const metricsStatus = statusCode ?? 500;
+  try { recordRequest(metricsStatus, 0); } catch { /* non-fatal */ }
   const message =
     error instanceof Error ? error.message : "Internal server error";
   const status = message.toLowerCase().includes("not found")
@@ -163,7 +168,9 @@ export async function withApiGuards(
   }
 
   try {
+    const start = Date.now();
     const response = await handler();
+    try { recordRequest(response.status, Date.now() - start); } catch { /* non-fatal */ }
     return applyRequestIdHeader(response, request);
   } catch (error) {
     return handleRouteError(error, options.context, request);
