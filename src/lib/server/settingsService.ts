@@ -7,6 +7,7 @@ import {
   topProductsFromOrders,
 } from "@/lib/server/dashboardService";
 import { isRazorpayConfigured } from "@/lib/server/env";
+import { getCached, invalidateCache } from "@/lib/server/redisCache";
 
 const DEFAULT_SETTINGS: StoreSettings = {
   storeName: "Vibe Music",
@@ -22,17 +23,26 @@ const DEFAULT_SETTINGS: StoreSettings = {
   updatedAt: new Date().toISOString(),
 };
 
+const SETTINGS_CACHE_KEY = "store-settings";
+const SETTINGS_CACHE_TTL = 300; // 5 minutes — settings change rarely
+
 export async function getStoreSettings(): Promise<StoreSettings> {
-  const settings = await pgContent.getStoreSettings();
-  return {
-    ...DEFAULT_SETTINGS,
-    ...(settings ?? {}),
-    // Storefront shipping is free — ignore any legacy paid charges in DB.
-    freeShippingThreshold: 0,
-    standardShippingCharge: 0,
-    // Always reflect live env — do not trust a stale DB copy of this flag.
-    razorpayEnabled: isRazorpayConfigured(),
-  };
+  return getCached(
+    SETTINGS_CACHE_KEY,
+    async () => {
+      const settings = await pgContent.getStoreSettings();
+      return {
+        ...DEFAULT_SETTINGS,
+        ...(settings ?? {}),
+        // Storefront shipping is free — ignore any legacy paid charges in DB.
+        freeShippingThreshold: 0,
+        standardShippingCharge: 0,
+        // Always reflect live env — do not trust a stale DB copy of this flag.
+        razorpayEnabled: isRazorpayConfigured(),
+      };
+    },
+    SETTINGS_CACHE_TTL
+  );
 }
 
 export async function updateStoreSettings(
@@ -45,6 +55,8 @@ export async function updateStoreSettings(
     updatedAt: new Date().toISOString(),
   };
   await pgContent.upsertStoreSettingsRecord(updated);
+  // Bust the cache so subsequent reads get fresh data
+  await invalidateCache(SETTINGS_CACHE_KEY);
   return updated;
 }
 

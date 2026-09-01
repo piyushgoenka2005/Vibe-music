@@ -62,7 +62,8 @@
     "db:probe": "node scripts/db/probe-db.mjs",
     "validate": "npm run type-check && npm run lint && npm run test && npm run build",
     "validate:ci": "npm run validate && npm run test:e2e",
-    "prepare": "husky"
+    "prepare": "husky",
+    "load:perf": "npx tsx scripts/ops/load-test.mts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

@@ -12,6 +12,16 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+/**
+ * Production-grade connection pool settings:
+ * - connection_limit: 20 handles ~2K concurrent users (each process gets 20
+ *   connections; PM2 cluster multiplies this across CPU cores).
+ * - pool_timeout: 10s — fail fast rather than queuing indefinitely.
+ */
+const isProd = process.env.NODE_ENV === "production";
+const CONNECTION_LIMIT = isProd ? 20 : 10;
+const POOL_TIMEOUT_MS = 10_000;
+
 function createPrismaClient(): PrismaClient {
   if (!isPostgresConfigured()) {
     throw new Error(
@@ -19,11 +29,19 @@ function createPrismaClient(): PrismaClient {
     );
   }
 
+  // Append pool params to DATABASE_URL if not already present.
+  const base = process.env.DATABASE_URL!;
+  const url = new URL(base);
+  if (!url.searchParams.has("connection_limit")) {
+    url.searchParams.set("connection_limit", String(CONNECTION_LIMIT));
+  }
+  if (!url.searchParams.has("pool_timeout")) {
+    url.searchParams.set("pool_timeout", String(POOL_TIMEOUT_MS / 1000));
+  }
+
   return new PrismaClient({
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["warn", "error"]
-        : ["error"],
+    datasourceUrl: url.toString(),
+    log: isProd ? ["error"] : ["warn", "error"],
   });
 }
 

@@ -74,11 +74,15 @@ model Product {
   updatedAt          String  @map("updated_at")
 
   @@index([status])
+  @@index([productId, status])
   @@index([categorySlug])
   @@index([brandSlug])
   @@index([featured])
   @@index([trending])
   @@index([newArrival])
+  @@index([status, featured, createdAt])
+  @@index([status, categorySlug])
+  @@index([status, brandSlug])
   @@map("products")
 }
 
@@ -129,8 +133,11 @@ model Order {
   @@index([userId])
   @@index([email])
   @@index([status])
+  @@index([productId, status])
   @@index([paymentStatus])
   @@index([razorpayOrderId])
+  @@index([userId, createdAt])
+  @@index([status, paymentStatus])
   @@index([createdAt])
   @@map("orders")
 }
@@ -164,6 +171,7 @@ model Review {
   @@index([productId])
   @@index([userId])
   @@index([status])
+  @@index([productId, status])
   @@index([createdAt])
   @@map("reviews")
 }
@@ -349,6 +357,7 @@ model Banner {
   updatedAt   String  @map("updated_at")
 
   @@index([status])
+  @@index([productId, status])
   @@map("banners")
 }
 
@@ -378,6 +387,7 @@ model BlogPost {
   updatedAt      String  @map("updated_at")
 
   @@index([status])
+  @@index([productId, status])
   @@index([categorySlug])
   @@index([featured])
   @@map("blog_posts")
@@ -553,6 +563,7 @@ model ReturnRequest {
 
   @@index([orderId])
   @@index([status])
+  @@index([productId, status])
   @@map("return_requests")
 }
 
@@ -599,6 +610,7 @@ model ProductQuestion {
 
   @@index([productId])
   @@index([status])
+  @@index([productId, status])
   @@map("product_questions")
 }
 
@@ -686,6 +698,7 @@ model ContactMessage {
   createdAt String @map("created_at")
 
   @@index([status])
+  @@index([productId, status])
   @@map("contact_messages")
 }
 
@@ -801,6 +814,7 @@ model SupportTicket {
   resolvedAt String? @map("resolved_at")
 
   @@index([status])
+  @@index([productId, status])
   @@index([userId])
   @@index([email])
   @@map("support_tickets")
@@ -833,6 +847,7 @@ model RentalCategory {
   products        RentalProduct[]
 
   @@index([status])
+  @@index([productId, status])
   @@map("rental_categories")
 }
 
@@ -876,6 +891,7 @@ model RentalProduct {
 
   @@index([categoryId])
   @@index([status])
+  @@index([productId, status])
   @@index([featured])
   @@map("rental_products")
 }
@@ -893,6 +909,7 @@ model RentalInventoryUnit {
 
   @@index([productId])
   @@index([status])
+  @@index([productId, status])
   @@map("rental_inventory_units")
 }
 
@@ -957,6 +974,7 @@ model RentalBooking {
   @@index([userId])
   @@index([email])
   @@index([status])
+  @@index([productId, status])
   @@index([paymentStatus])
   @@index([startAt])
   @@index([createdAt])
@@ -1003,6 +1021,7 @@ model RentalInventoryLock {
   @@index([startAt])
   @@index([endAt])
   @@index([status])
+  @@index([productId, status])
   @@map("rental_inventory_locks")
 }
 
@@ -1084,6 +1103,7 @@ model GiveawayCampaign {
   events                   GiveawayCampaignEvent[]
 
   @@index([status])
+  @@index([productId, status])
   @@index([startsAt])
   @@index([endsAt])
   @@index([featured])
@@ -1125,6 +1145,7 @@ model GiveawayEntry {
   @@index([userId])
   @@index([referralCode])
   @@index([status])
+  @@index([productId, status])
   @@map("giveaway_entries")
 }
 

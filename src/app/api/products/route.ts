@@ -8,6 +8,9 @@ import {
   handleRouteError,
 } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { getCached } from "@/lib/server/redisCache";
+
+const PRODUCTS_CACHE_TTL = 45; // seconds — matches existing s-maxage
 
 export async function GET(request: Request) {
   try {
@@ -56,20 +59,36 @@ export async function GET(request: Request) {
           )
       : [];
 
-    const products = await searchProducts({
-      query,
-      category,
-      brand,
-      sort,
-      condition:
-        conditionValues.length === 1 ? conditionValues[0] : undefined,
-      conditions:
-        conditionValues.length > 1 ? conditionValues : undefined,
-      limit: Number.isFinite(limit) ? limit : undefined,
-      // Category browse must include Coming Soon SKUs (₹0) so departments
-      // like Microphones aren't empty when prices aren't set yet.
-      purchasableOnly: category ? false : undefined,
-    });
+    // Build a stable cache key from the query params
+    const cacheKey = [
+      "products",
+      query ?? "",
+      category ?? "",
+      brand ?? "",
+      sort ?? "",
+      conditionValues.join(","),
+      String(limit ?? ""),
+    ].join(":");
+
+    const products = await getCached(
+      cacheKey,
+      () =>
+        searchProducts({
+          query,
+          category,
+          brand,
+          sort,
+          condition:
+            conditionValues.length === 1 ? conditionValues[0] : undefined,
+          conditions:
+            conditionValues.length > 1 ? conditionValues : undefined,
+          limit: Number.isFinite(limit) ? limit : undefined,
+          // Category browse must include Coming Soon SKUs (₹0) so departments
+          // like Microphones aren't empty when prices aren't set yet.
+          purchasableOnly: category ? false : undefined,
+        }),
+      PRODUCTS_CACHE_TTL
+    );
 
     return NextResponse.json(
       { products },
