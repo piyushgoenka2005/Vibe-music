@@ -3,13 +3,15 @@ import { getSessionUser } from "@/lib/auth/server-session";
 import { cancelRentalBookingSchema } from "@/lib/validations/rental";
 import { cancelRentalBooking } from "@/lib/server/rentalBookingService";
 import { getRentalBookingById } from "@/lib/server/rentalRepository";
-import { enforceMutationSecurity } from "@/lib/api/route-utils";
+import { enforceMutationSecurity, enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { publicApiError } from "@/lib/server/publicApiError";
 
-export async function POST(
-  request: Request,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
+    const rl = await enforceRateLimit(request, "rental-cancel", RATE_LIMITS.checkout);
+    if (rl) return rl;
+
     const csrfError = enforceMutationSecurity(request);
     if (csrfError) return csrfError;
 
@@ -20,9 +22,7 @@ export async function POST(
     }
 
     const sessionUser = await getSessionUser();
-    const isOwnerById =
-      Boolean(sessionUser?.uid) && booking.userId === sessionUser?.uid;
-    // Guest bookings (no userId yet) may be cancelled after login with matching email.
+    const isOwnerById = Boolean(sessionUser?.uid) && booking.userId === sessionUser?.uid;
     const isOwnerByGuestEmail =
       !booking.userId &&
       Boolean(sessionUser?.email) &&
@@ -44,9 +44,6 @@ export async function POST(
 
     return NextResponse.json({ booking: updated });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Cancellation failed" },
-      { status: 400 }
-    );
+    return publicApiError(error, "Cancellation failed");
   }
 }

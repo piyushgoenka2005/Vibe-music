@@ -3,6 +3,7 @@ import { z } from "zod";
 import { enforceRateLimit, parseJsonBody } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { repriceCartLines } from "@/lib/server/cartPricingService";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 const repriceSchema = z.object({
   items: z
@@ -19,17 +20,21 @@ const repriceSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const rateLimited = await enforceRateLimit(request, "cart-reprice", RATE_LIMITS.publicApi);
-  if (rateLimited) return rateLimited;
+  try {
+    const rateLimited = await enforceRateLimit(request, "cart-reprice", RATE_LIMITS.publicApi);
+    if (rateLimited) return rateLimited;
 
-  const parsed = await parseJsonBody(request, repriceSchema);
-  if ("error" in parsed) return parsed.error;
+    const parsed = await parseJsonBody(request, repriceSchema);
+    if ("error" in parsed) return parsed.error;
 
-  const items = await repriceCartLines(parsed.data.items);
-  const subtotal = items.reduce(
-    (sum, item) => sum + (item.error ? 0 : item.price * item.quantity),
-    0
-  );
+    const items = await repriceCartLines(parsed.data.items);
+    const subtotal = items.reduce(
+      (sum, item) => sum + (item.error ? 0 : item.price * item.quantity),
+      0
+    );
 
-  return NextResponse.json({ items, subtotal });
+    return NextResponse.json({ items, subtotal });
+  } catch (error) {
+    return publicApiError(error, "Failed to reprice cart");
+  }
 }

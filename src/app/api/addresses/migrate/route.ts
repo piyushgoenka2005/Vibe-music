@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { migrateLegacyAddresses } from "@/lib/server/addressService";
 import { migrateAddressesSchema } from "@/lib/validations/address";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function POST(request: Request) {
   try {
+    const rl = await enforceRateLimit(request, "addresses-migrate", RATE_LIMITS.auth);
+    if (rl) return rl;
+
     const sessionUser = await getSessionUser();
     if (!sessionUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,16 +30,9 @@ export async function POST(request: Request) {
       country: addr.country,
       isDefault: addr.isDefault ?? false,
     }));
-    const result = await migrateLegacyAddresses(
-      sessionUser.uid,
-      legacyAddresses,
-      parsed.phone ?? ""
-    );
-
+    const result = await migrateLegacyAddresses(sessionUser.uid, legacyAddresses, parsed.phone ?? "");
     return NextResponse.json(result);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to migrate addresses";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return publicApiError(error, "Unable to migrate addresses");
   }
 }

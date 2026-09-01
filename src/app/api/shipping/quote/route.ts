@@ -2,11 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { enforceRateLimit, parseJsonBody } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
-import {
-  isShippingMethod,
-  type ShippingMethod,
-} from "@/lib/shipping/shippingMethods";
+import { isShippingMethod, type ShippingMethod } from "@/lib/shipping/shippingMethods";
 import { getShippingQuotes } from "@/lib/server/shippingQuoteService";
+import { publicApiError } from "@/lib/server/publicApiError";
 
 const quoteSchema = z.object({
   subtotal: z.number().nonnegative(),
@@ -17,24 +15,26 @@ const quoteSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const rateLimited = await enforceRateLimit(request, "shipping-quote", RATE_LIMITS.publicApi);
-  if (rateLimited) return rateLimited;
+  try {
+    const rateLimited = await enforceRateLimit(request, "shipping-quote", RATE_LIMITS.publicApi);
+    if (rateLimited) return rateLimited;
 
-  const parsed = await parseJsonBody(request, quoteSchema);
-  if ("error" in parsed) return parsed.error;
+    const parsed = await parseJsonBody(request, quoteSchema);
+    if ("error" in parsed) return parsed.error;
 
-  const method: ShippingMethod =
-    parsed.data.method && isShippingMethod(parsed.data.method)
-      ? parsed.data.method
-      : "standard";
+    const method: ShippingMethod =
+      parsed.data.method && isShippingMethod(parsed.data.method) ? parsed.data.method : "standard";
 
-  const quote = await getShippingQuotes({
-    subtotal: parsed.data.subtotal,
-    discount: parsed.data.discount,
-    method,
-    postalCode: parsed.data.postalCode,
-    state: parsed.data.state,
-  });
+    const quote = await getShippingQuotes({
+      subtotal: parsed.data.subtotal,
+      discount: parsed.data.discount,
+      method,
+      postalCode: parsed.data.postalCode,
+      state: parsed.data.state,
+    });
 
-  return NextResponse.json(quote);
+    return NextResponse.json(quote);
+  } catch (error) {
+    return publicApiError(error, "Failed to calculate shipping");
+  }
 }
