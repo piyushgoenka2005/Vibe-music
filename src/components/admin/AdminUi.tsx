@@ -1,3 +1,16 @@
+import type { LucideIcon } from "lucide-react";
+
+export type StatCardAccent =
+  | "revenue"
+  | "orders"
+  | "customers"
+  | "products"
+  | "pending"
+  | "processing"
+  | "completed"
+  | "low-stock"
+  | "out-of-stock";
+
 export function StatusBadge({ status }: { status: string }) {
   const normalized = status.toLowerCase().replace(/_/g, " ");
   let variant = "muted";
@@ -24,11 +37,17 @@ export function StatCard({
   value,
   change,
   format = "number",
+  accent,
+  icon: Icon,
 }: {
   label: string;
   value: number;
   change?: number;
   format?: "number" | "currency";
+  /** Visual accent only — does not change underlying stats. */
+  accent?: StatCardAccent;
+  /** Decorative icon — presentation only. */
+  icon?: LucideIcon;
 }) {
   const formatted =
     format === "currency"
@@ -40,8 +59,15 @@ export function StatCard({
       : value.toLocaleString("en-IN");
 
   return (
-    <div className="admin-stat-card">
-      <div className="admin-stat-card__label">{label}</div>
+    <div className={`admin-stat-card${accent ? ` admin-stat-card--${accent}` : ""}`}>
+      <div className="admin-stat-card__top">
+        <div className="admin-stat-card__label">{label}</div>
+        {Icon ? (
+          <span className="admin-stat-card__icon" aria-hidden="true">
+            <Icon size={18} strokeWidth={2} />
+          </span>
+        ) : null}
+      </div>
       <div className="admin-stat-card__value">{formatted}</div>
       {change !== undefined ? (
         <div
@@ -50,6 +76,7 @@ export function StatCard({
           {change >= 0 ? "↑" : "↓"} {Math.abs(change)}% vs prior period
         </div>
       ) : null}
+      <div className="admin-stat-card__spark" aria-hidden="true" />
     </div>
   );
 }

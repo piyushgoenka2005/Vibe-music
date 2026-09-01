@@ -14,7 +14,7 @@ import type { HomepageBanner } from "@/types/banner";
 const HOMEPAGE_BANNERS_QUERY_KEY = ["homepage-banners"] as const;
 /** SSR slides are fresh; only re-check occasionally between deploys/edits. */
 const HOMEPAGE_BANNERS_STALE_MS = 60_000;
-const HOMEPAGE_BANNERS_REFETCH_MS = 300_000;
+const HOMEPAGE_BANNERS_REFETCH_MS = 60_000;
 
 async function fetchActiveBannerSlides(): Promise<HomepageBannerSlide[]> {
   // Default HTTP caching — lets the browser reuse the payload instead of

@@ -3,6 +3,17 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
+import {
+  IndianRupee,
+  ShoppingCart,
+  Users,
+  Package,
+  Clock3,
+  Loader,
+  CircleCheck,
+  TriangleAlert,
+  Ban,
+} from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatCard, StatusBadge, LoadingState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
@@ -63,15 +74,63 @@ function DashboardContent() {
   return (
     <div className="admin-dashboard-root">
       <div className="admin-stat-grid-premium">
-        <StatCard label="Total Revenue" value={stats.totalRevenue} change={stats.revenueChangePercent} format="currency" />
-        <StatCard label="Total Orders" value={stats.totalOrders} change={stats.ordersChangePercent} />
-        <StatCard label="Total Customers" value={stats.totalCustomers} />
-        <StatCard label="Total Products" value={stats.totalProducts} />
-        <StatCard label="Pending Orders" value={stats.pendingOrders} />
-        <StatCard label="Processing" value={stats.processingOrders} />
-        <StatCard label="Completed" value={stats.completedOrders} />
-        <StatCard label="Low Stock" value={stats.lowStockProducts} />
-        <StatCard label="Out of Stock" value={stats.outOfStockProducts} />
+        <StatCard
+          label="Total Revenue"
+          value={stats.totalRevenue}
+          change={stats.revenueChangePercent}
+          format="currency"
+          accent="revenue"
+          icon={IndianRupee}
+        />
+        <StatCard
+          label="Total Orders"
+          value={stats.totalOrders}
+          change={stats.ordersChangePercent}
+          accent="orders"
+          icon={ShoppingCart}
+        />
+        <StatCard
+          label="Total Customers"
+          value={stats.totalCustomers}
+          accent="customers"
+          icon={Users}
+        />
+        <StatCard
+          label="Total Products"
+          value={stats.totalProducts}
+          accent="products"
+          icon={Package}
+        />
+        <StatCard
+          label="Pending Orders"
+          value={stats.pendingOrders}
+          accent="pending"
+          icon={Clock3}
+        />
+        <StatCard
+          label="Processing"
+          value={stats.processingOrders}
+          accent="processing"
+          icon={Loader}
+        />
+        <StatCard
+          label="Completed"
+          value={stats.completedOrders}
+          accent="completed"
+          icon={CircleCheck}
+        />
+        <StatCard
+          label="Low Stock"
+          value={stats.lowStockProducts}
+          accent="low-stock"
+          icon={TriangleAlert}
+        />
+        <StatCard
+          label="Out of Stock"
+          value={stats.outOfStockProducts}
+          accent="out-of-stock"
+          icon={Ban}
+        />
       </div>
 
       <div className="admin-grid-2-premium" style={{ marginBottom: "1.5rem" }}>
