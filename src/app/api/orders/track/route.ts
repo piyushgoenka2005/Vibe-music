@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { getOrderById } from "@/lib/server/orderService";
 import { isPlacedOrder } from "@/lib/server/orderAccess";
 import { buildPublicOrderTracking } from "@/lib/server/shipmentService";
@@ -46,6 +48,9 @@ export async function GET(request: Request) {
   }
 
   try {
+    const rl = await enforceRateLimit(request, "orders-track", RATE_LIMITS.publicApi);
+    if (rl) return rl;
+
     const order = await getOrderById(orderId);
 
     if (!order || !isPlacedOrder(order) || !canTrackOrder(order, trackingToken, email)) {

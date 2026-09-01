@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { getSessionUser } from "@/lib/auth/server-session";
 import {
   deleteUserAddress,
@@ -12,8 +14,11 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   try {
+    const rl = await enforceRateLimit(request, "addresses-id", RATE_LIMITS.auth);
+    if (rl) return rl;
+
     const sessionUser = await getSessionUser();
     if (!sessionUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -65,7 +70,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
     const sessionUser = await getSessionUser();
     if (!sessionUser) {

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { getRentalBookingById } from "@/lib/server/rentalRepository";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { timingSafeEqual } from "node:crypto";
@@ -19,6 +21,9 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rl = await enforceRateLimit(request, "rental-booking-detail", RATE_LIMITS.auth);
+    if (rl) return rl;
+
     const { id } = await context.params;
     const booking = await getRentalBookingById(id);
     if (!booking) {

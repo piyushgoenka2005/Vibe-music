@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { listPublicBlogPostsPaginated } from "@/lib/server/blogService";
 import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function GET(request: Request) {
   try {
+    const rl = await enforceRateLimit(request, "blog-posts", RATE_LIMITS.publicApi);
+    if (rl) return rl;
+
     const { searchParams } = new URL(request.url);
     const page = Number(searchParams.get("page") ?? "1");
     const limit = Number(searchParams.get("limit") ?? "9");

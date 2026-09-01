@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { getGiveawayEntryById, getGiveawayEntryByTrackingToken } from "@/lib/server/giveawayRepository";
 import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const rl = await enforceRateLimit(request, "giveaway-entry", RATE_LIMITS.publicApi);
+    if (rl) return rl;
+
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const trackingToken = searchParams.get("trackingToken");

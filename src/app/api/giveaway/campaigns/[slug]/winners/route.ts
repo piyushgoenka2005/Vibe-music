@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { getGiveawayCampaignBySlug, listGiveawayWinnersForCampaign } from "@/lib/server/giveawayRepository";
 import { publicApiError } from "@/lib/server/publicApiError";
 
-export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const rl = await enforceRateLimit(request, "giveaway-winners", RATE_LIMITS.publicApi);
+    if (rl) return rl;
+
     const { slug } = await params;
     const campaign = await getGiveawayCampaignBySlug(slug);
     if (!campaign) {

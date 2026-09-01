@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { buildCompareExportHtml } from "@/lib/compare/compareExportHtml";
 import { getCompareShareByToken } from "@/lib/server/compareRepository";
 import { trackCompareAction } from "@/lib/server/compareService";
@@ -8,6 +10,9 @@ import { publicApiError } from "@/lib/server/publicApiError";
 
 export async function GET(request: Request) {
   try {
+    const rl = await enforceRateLimit(request, "compare-export", RATE_LIMITS.publicApi);
+    if (rl) return rl;
+
     const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");
     const slugsParam = searchParams.get("slugs");

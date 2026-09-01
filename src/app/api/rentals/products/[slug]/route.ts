@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import {
   getRentalProductBySlug,
   listRentalBlocksForProduct,
@@ -11,6 +13,9 @@ export async function GET(
   context: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const rl = await enforceRateLimit(request, "rental-product-detail", RATE_LIMITS.publicApi);
+    if (rl) return rl;
+
     const { slug } = await context.params;
     const product = await getRentalProductBySlug(slug);
     if (!product) {

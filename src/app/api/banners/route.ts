@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { handleRouteError } from "@/lib/api/route-utils";
 import { isPrismaUnavailableError } from "@/lib/db/prisma-errors";
 import { listActiveBanners } from "@/lib/server/bannerService";
 
 export async function GET(request: Request) {
   try {
+    const rl = await enforceRateLimit(request, "banners", RATE_LIMITS.publicApi);
+    if (rl) return rl;
+
     const banners = await listActiveBanners();
     return NextResponse.json(
       { banners },
