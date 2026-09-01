@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { parseJsonBody } from "@/lib/api/route-utils";
+import { enforceRateLimit, parseJsonBody } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { repriceCartLines } from "@/lib/server/cartPricingService";
 
 const repriceSchema = z.object({
@@ -18,6 +19,9 @@ const repriceSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const rateLimited = await enforceRateLimit(request, "cart-reprice", RATE_LIMITS.publicApi);
+  if (rateLimited) return rateLimited;
+
   const parsed = await parseJsonBody(request, repriceSchema);
   if ("error" in parsed) return parsed.error;
 

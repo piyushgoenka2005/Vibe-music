@@ -11,8 +11,6 @@ import { optimizeImageUrl } from "@/lib/images";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import Reveal from "@/components/layout/Reveal";
 
-import { generateCdnSrcSet } from "@/components/common/ProductImage";
-
 const HEADLINE_ID = "top-products-title";
 
 export function TopProductCard({ product }: { product: HomepageTopProduct }) {
@@ -20,17 +18,12 @@ export function TopProductCard({ product }: { product: HomepageTopProduct }) {
   // Always use sized thumbs/derivatives — full CDN PNG masters can be multi‑MB.
   const imageSrc = optimizeImageUrl(product.image, imagePreset);
   const imageFit = product.imageFit ?? "cover";
-  const usePlainImg =
-    imageSrc.startsWith("/api/media/thumb") ||
-    imageSrc.startsWith("https://cdn.vibemusic.in/");
   const imageClassName = [
     "blog-teaser__image",
     imageFit === "contain" ? "blog-teaser__image--contain" : "",
   ]
     .filter(Boolean)
     .join(" ");
-
-  const srcSet = usePlainImg ? generateCdnSrcSet(imageSrc) : undefined;
 
   return (
     <article className="blog-teaser__card">

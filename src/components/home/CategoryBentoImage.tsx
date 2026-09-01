@@ -28,12 +28,12 @@ function localImagePath(src: string): string {
 export default function CategoryBentoImage({
   alt,
   className,
-  loading = "lazy",
+  loading: _loading = "lazy",
   objectPosition = "center center",
   priority = false,
   sizes,
   src,
-  srcSet,
+  srcSet: _srcSet,
   variant = "card",
 }: CategoryBentoImageProps) {
   const [loaded, setLoaded] = useState(priority);

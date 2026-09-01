@@ -80,6 +80,16 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
     touch-action: pan-x pan-y;
+    /* CSS-only scroll shadows */
+    background:
+      linear-gradient(to right, var(--bg-surface, #fff) 30%, rgba(255,255,255,0)),
+      linear-gradient(to left, var(--bg-surface, #fff) 30%, rgba(255,255,255,0)) 100% 0,
+      radial-gradient(farthest-side at 0 50%, rgba(0,0,0,0.15), rgba(0,0,0,0)),
+      radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,0.15), rgba(0,0,0,0)) 100% 0;
+    background-repeat: no-repeat;
+    background-color: var(--bg-surface, #fff);
+    background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+    background-attachment: local, local, scroll, scroll;
   }
 
   /* Long text safety */

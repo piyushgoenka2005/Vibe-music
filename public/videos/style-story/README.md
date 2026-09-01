@@ -1,26 +1,57 @@
-# Gear style story reels
+# Style Story Reels
 
-Homepage gear-story cards play MP4s from this folder. Until files are present, the UI shows **poster images** (no broken layout).
+This directory holds the Instagram-style reel MP4s used by the Gear Stories
+section on the homepage.
 
-## Required files
+## Naming Convention
 
-| File | Instagram source (reference) |
-|------|------------------------------|
-| `reel-1.mp4` | hertzmusicindia reel DY1irHzlrml |
-| `reel-2.mp4` | hertzmusicindia reel DX6yk91gCun |
-| `reel-3.mp4` | hertzmusicindia reel DXyefWnTR1u |
-| `reel-4.mp4` | hertzmusicindia reel DZDKCzlIvux |
-| `reel-5.mp4` | hertzmusicindia reel DXeh-R9D-s- |
-| `reel-6.mp4` | hertzmusicindia reel DXMnMBDyvdP |
+```
+reel-1.mp4   ← Original (may be 17+ MB)
+reel-2.mp4
+reel-3.mp4
+reel-4.mp4
+reel-5.mp4
+reel-6.mp4
 
-## VPS upload
-
-```bash
-# On your machine — copy exported reels to the server
-scp reel-*.mp4 root@87.232.72.14:~/Vibe-music/public/videos/style-story/
-
-# On the VPS — verify
-cd ~/Vibe-music && npm run verify:gear-videos
+reel-1-opt.mp4  ← Compressed variant (~2-4 MB, 720p)
+reel-2-opt.mp4
+...
 ```
 
-MP4s are not committed to git (size). Posters are under `public/images/style-story/` (`npm run download:style-story`).
+## Compression
+
+Run the compression script to create mobile-optimized variants:
+
+```bash
+bash scripts/ops/compress-style-story-videos.sh
+```
+
+Options:
+- `--dry-run` — Preview what would happen without modifying files
+- `--force` — Re-compress even if `-opt.mp4` already exists
+
+Originals are backed up to `public/videos/style-story/originals/` before
+any compression runs.
+
+## CDN Deployment
+
+For production, these videos should be served from CDN (not origin):
+
+1. **Bunny.net** (recommended for India): Upload to a Storage Zone, create
+   a Pull Zone, and update video `src` attributes in `STYLE_STORY_REELS`.
+
+2. **Cloudflare Stream**: Upload via dashboard; videos are auto-transcoded.
+
+3. **Origin serving** (current fallback): The `-opt.mp4` variants with
+   `preload="metadata"` and visibility-gated playback minimize impact.
+
+## Video Specs
+
+| Property | Original | Compressed |
+|----------|----------|------------|
+| Codec    | varies   | H.264      |
+| CRF      | —        | 28         |
+| Resolution | varies | 720p max   |
+| Audio    | varies   | AAC 96kbps (stripped for autoplay) |
+| Faststart| no       | yes        |
+| Size     | ~17 MB   | ~2-4 MB    |

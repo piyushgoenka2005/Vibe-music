@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { parseJsonBody } from "@/lib/api/route-utils";
+import { enforceRateLimit, parseJsonBody } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import {
   isShippingMethod,
   type ShippingMethod,
@@ -16,6 +17,9 @@ const quoteSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const rateLimited = await enforceRateLimit(request, "shipping-quote", RATE_LIMITS.publicApi);
+  if (rateLimited) return rateLimited;
+
   const parsed = await parseJsonBody(request, quoteSchema);
   if ("error" in parsed) return parsed.error;
 

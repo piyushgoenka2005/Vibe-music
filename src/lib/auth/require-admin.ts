@@ -5,6 +5,8 @@ import { isMutationMethod } from "@/lib/security/mutation-origin";
 import { getAdminSession } from "@/lib/server/adminService";
 import { logAuditEvent } from "@/lib/server/auditLog";
 import { hasPermission } from "@/lib/auth/permissions";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { distributedCheckRateLimit } from "@/lib/security/distributed-rate-limit";
 import type { AdminSession, Permission } from "@/types/admin";
 
 export class AdminAuthError extends Error {
@@ -14,6 +16,20 @@ export class AdminAuthError extends Error {
   ) {
     super(message);
     this.name = "AdminAuthError";
+  }
+}
+
+export class AdminRateLimitError extends Error {
+  public readonly limit: number;
+  public readonly remaining: number;
+  public readonly resetAt: number;
+
+  constructor(limit: number, remaining: number, resetAt: number) {
+    super("Too many requests. Please try again later.");
+    this.name = "AdminRateLimitError";
+    this.limit = limit;
+    this.remaining = remaining;
+    this.resetAt = resetAt;
   }
 }
 
@@ -35,6 +51,23 @@ export async function requireAdmin(
     throw new AdminAuthError("Insufficient permissions", 403);
   }
 
+  // Rate-limit per admin UID (not IP) so shared-NAT admins don't
+  // exhaust each other's budget. Runs after auth so unauthenticated
+  // requests never consume the admin rate-limit bucket.
+  if (request) {
+    const result = await distributedCheckRateLimit(
+      `admin:${adminSession.uid}`,
+      RATE_LIMITS.admin
+    );
+    if (!result.allowed) {
+      throw new AdminRateLimitError(
+        RATE_LIMITS.admin.limit,
+        result.remaining,
+        result.resetAt
+      );
+    }
+  }
+
   if (request && isMutationMethod(request.method)) {
     const { pathname } = new URL(request.url);
     void logAuditEvent({
@@ -54,6 +87,22 @@ export async function requireAdmin(
 }
 
 export function adminErrorResponse(error: unknown, request?: Request): NextResponse {
+  if (error instanceof AdminRateLimitError) {
+    const response = NextResponse.json(
+      { error: error.message },
+      { status: 429 }
+    );
+    response.headers.set("X-RateLimit-Limit", String(error.limit));
+    response.headers.set("X-RateLimit-Remaining", String(error.remaining));
+    response.headers.set("X-RateLimit-Reset", String(error.resetAt));
+    if (request) {
+      response.headers.set(
+        "x-request-id",
+        request.headers.get("x-request-id") ?? ""
+      );
+    }
+    return response;
+  }
   if (error instanceof AdminAuthError) {
     const response = NextResponse.json({ error: error.message }, { status: error.status });
     if (request) {

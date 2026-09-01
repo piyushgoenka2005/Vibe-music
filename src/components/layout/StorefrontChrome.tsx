@@ -18,8 +18,7 @@ const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
   loading: () => null,
 });
 
-const SPLASH_CURSOR_ENABLED =
-  process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR !== "false";
+const SPLASH_CURSOR_ENABLED = false; // Disabled to improve performance and remove latency
 
 function isLowEndDevice(): boolean {
   if (typeof navigator === "undefined") return false;

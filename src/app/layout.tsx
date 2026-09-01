@@ -3,6 +3,7 @@ import { Bebas_Neue } from "next/font/google";
 import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
 import GoogleAnalyticsScripts from "@/components/analytics/GoogleAnalyticsScripts";
+import { WebVitals } from "@/components/common/WebVitals";
 import SocialRailGate from "@/components/layout/SocialRailGate";
 import { DEFAULT_METADATA } from "@/lib/site";
 import "./globals.css";
@@ -38,8 +39,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const splashEnabled =
-    process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH !== "false";
+  const splashEnabled = false; // Disabled to eliminate artificial loading latency
 
   return (
     <html lang="en-IN" className={primaryFont.variable} suppressHydrationWarning>
@@ -54,6 +54,7 @@ export default function RootLayout({
       </head>
       <body className={primaryFont.className} suppressHydrationWarning>
         <GoogleAnalyticsScripts />
+        <WebVitals />
         {splashEnabled ? (
           /* Instant framed brand cover — CSS hides unless html.vibe-splash-pending. */
           <div

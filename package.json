@@ -61,7 +61,8 @@
     "setup:local": "node scripts/db/setup-local-config.mjs",
     "db:probe": "node scripts/db/probe-db.mjs",
     "validate": "npm run type-check && npm run lint && npm run test && npm run build",
-    "validate:ci": "npm run validate && npm run test:e2e"
+    "validate:ci": "npm run validate && npm run test:e2e",
+    "prepare": "husky"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
@@ -124,12 +125,19 @@
     "@types/web-push": "^3.6.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
+    "husky": "^9.1.7",
     "lighthouse": "^13.4.1",
+    "lint-staged": "^17.4.1",
     "playwright": "^1.61.1",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "to-ico": "^1.1.5",
     "typescript": "^5",
     "vitest": "^3.2.6"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix"
+    ]
   }
 }

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { getAdminSession } from "@/lib/server/adminService";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { formatCheckoutError } from "@/lib/server/checkoutErrors";
 import {
   getRazorpayPublicKey,
@@ -19,6 +21,9 @@ export async function POST(
   context: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    const rateLimited = await enforceRateLimit(request, "resume-payment", RATE_LIMITS.checkout);
+    if (rateLimited) return rateLimited;
+
     const { orderId } = await context.params;
     const raw = await request.json().catch(() => ({}));
     const parsed = resumePaymentSchema.safeParse(raw);

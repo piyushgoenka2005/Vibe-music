@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { giveawayVerifySchema } from "@/lib/validations/giveaway";
 import { verifyGiveawayEmail } from "@/lib/server/giveawayEntryService";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 
 export async function POST(request: Request) {
   try {
+    const rateLimited = await enforceRateLimit(request, "giveaway-verify", RATE_LIMITS.auth);
+    if (rateLimited) return rateLimited;
+
     const body = await request.json();
     const parsed = giveawayVerifySchema.parse(body);
     const entry = await verifyGiveawayEmail(parsed.token);
@@ -17,6 +22,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const rateLimited = await enforceRateLimit(request, "giveaway-verify", RATE_LIMITS.auth);
+  if (rateLimited) return rateLimited;
+
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token");
   if (!token) {
