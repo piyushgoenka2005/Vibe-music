@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { verifyPostgresConnection } from "@/lib/server/postgresHealth";
-import { prisma } from "@/lib/db/prisma";
+import { getRawPrisma } from "@/lib/db/prisma";
+import { dbCircuitBreaker, redisCircuitBreaker } from "@/lib/security/circuit-breaker";
+import { getBackpressureStats } from "@/lib/security/backpressure";
+import { getCacheStats } from "@/lib/server/redisCache";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -50,22 +53,33 @@ function prometheusLine(
 export async function GET() {
   const now = Date.now();
 
-  // Database health
+  // Database health (bypass circuit breaker for metrics)
   const dbHealth = await verifyPostgresConnection();
+  const rawPrisma = getRawPrisma();
 
   // Count active products (lightweight query)
   let activeProducts = 0;
   let totalOrders = 0;
   try {
     const [productCount, orderCount] = await Promise.all([
-      prisma.product.count({ where: { status: "active" } }),
-      prisma.order.count(),
+      rawPrisma.product.count({ where: { status: "active" } }),
+      rawPrisma.order.count(),
     ]);
     activeProducts = productCount;
     totalOrders = orderCount;
   } catch {
     // Non-critical — metrics endpoint should not fail
   }
+
+  // Circuit breaker metrics
+  const dbCircuit = dbCircuitBreaker.getMetrics();
+  const redisCircuit = redisCircuitBreaker.getMetrics();
+
+  // Backpressure metrics
+  const backpressure = getBackpressureStats();
+
+  // Cache metrics
+  const cache = getCacheStats();
 
   // Process metrics
   const memUsage = process.memoryUsage();
@@ -208,6 +222,78 @@ export async function GET() {
       "Process heap total in bytes",
       "gauge",
       [String(memUsage.heapTotal)]
+    )
+  );
+
+  // ── Circuit breaker ──
+  const circuitStateMap: Record<string, number> = { closed: 0, open: 1, half_open: 2 };
+  lines.push(
+    prometheusLine(
+      "vibe_circuit_breaker_state",
+      "Circuit breaker state (0=closed, 1=open, 2=half_open)",
+      "gauge",
+      [
+        `{service="database"} ${circuitStateMap[dbCircuit.state] ?? 0}`,
+        `{service="redis"} ${circuitStateMap[redisCircuit.state] ?? 0}`,
+      ]
+    )
+  );
+
+  lines.push(
+    prometheusLine(
+      "vibe_circuit_breaker_failures",
+      "Recent failures in circuit breaker window",
+      "gauge",
+      [
+        `{service="database"} ${dbCircuit.failureCount}`,
+        `{service="redis"} ${redisCircuit.failureCount}`,
+      ]
+    )
+  );
+
+  // ── Backpressure ──
+  for (const scope of backpressure) {
+    lines.push(
+      prometheusLine(
+        `vibe_backpressure_in_flight{scope="${scope.scope}"}`,
+        `Current in-flight requests for scope ${scope.scope}`,
+        "gauge",
+        [String(scope.inFlight)]
+      )
+    );
+    lines.push(
+      prometheusLine(
+        `vibe_backpressure_rejected_total{scope="${scope.scope}"}`,
+        `Total backpressure rejections for scope ${scope.scope}`,
+        "gauge",
+        [String(scope.rejected)]
+      )
+    );
+  }
+
+  // ── Cache ──
+  lines.push(
+    prometheusLine(
+      "vibe_cache_memory_entries",
+      "Number of entries in in-memory cache",
+      "gauge",
+      [String(cache.memoryEntries)]
+    )
+  );
+  lines.push(
+    prometheusLine(
+      "vibe_cache_stale_entries",
+      "Number of stale cache entries (circuit breaker fallback)",
+      "gauge",
+      [String(cache.staleEntries)]
+    )
+  );
+  lines.push(
+    prometheusLine(
+      "vibe_cache_inflight_requests",
+      "Number of in-flight cache fetches",
+      "gauge",
+      [String(cache.inflightRequests)]
     )
   );
 

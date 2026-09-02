@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getIntegrationChecks } from "@/lib/server/integrationConfig";
 import { verifyPostgresConnection } from "@/lib/server/postgresHealth";
 import { logInfo } from "@/lib/server/logger";
+import { dbCircuitBreaker, redisCircuitBreaker } from "@/lib/security/circuit-breaker";
+import { getBackpressureStats, isSystemUnderPressure } from "@/lib/security/backpressure";
+import { getCacheStats } from "@/lib/server/redisCache";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -35,9 +38,24 @@ export async function GET() {
     database: databaseHealth.ok ? "ok" : "error",
   };
 
-  const fullyHealthy = checks.app === "ok" && checks.database === "ok";
-  const canServeTraffic = checks.app === "ok" && databaseHealth.ok;
   const isProduction = process.env.NODE_ENV === "production";
+
+  // Circuit breaker status
+  const dbCircuit = dbCircuitBreaker.getMetrics();
+  const redisCircuit = redisCircuitBreaker.getMetrics();
+
+  // Backpressure stats
+  const backpressure = getBackpressureStats();
+  const underPressure = isSystemUnderPressure();
+
+  // Cache stats
+  const cache = getCacheStats();
+
+  // Determine overall status
+  const circuitBreakerOk = dbCircuit.state !== "open" && redisCircuit.state !== "open";
+  const fullyHealthy = checks.app === "ok" && checks.database === "ok" && circuitBreakerOk && !underPressure;
+  const canServeTraffic = checks.app === "ok" && databaseHealth.ok;
+
   const body = {
     status: fullyHealthy ? "healthy" : canServeTraffic ? "degraded" : "unhealthy",
     timestamp,
@@ -46,8 +64,31 @@ export async function GET() {
       ok: databaseHealth.ok,
       error: databaseHealth.error,
     },
+    circuitBreaker: {
+      database: {
+        state: dbCircuit.state,
+        failures: dbCircuit.failureCount,
+        lastStateChange: new Date(dbCircuit.lastStateChange).toISOString(),
+      },
+      redis: {
+        state: redisCircuit.state,
+        failures: redisCircuit.failureCount,
+        lastStateChange: new Date(redisCircuit.lastStateChange).toISOString(),
+      },
+    },
+    backpressure: {
+      underPressure,
+      scopes: backpressure,
+    },
+    cache: {
+      memoryEntries: cache.memoryEntries,
+      staleEntries: cache.staleEntries,
+      inflightRequests: cache.inflightRequests,
+    },
     integrations: isProduction ? undefined : integrations,
     version: process.env.VERCEL_GIT_COMMIT_SHA ?? "local",
+    uptime: Math.floor(process.uptime()),
+    memoryMB: Math.round(process.memoryUsage().rss / 1024 / 1024),
   };
 
   if (!databaseHealth.ok) {

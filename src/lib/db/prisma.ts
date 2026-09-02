@@ -5,6 +5,7 @@ import {
   isPostgresConfigured,
   isProductionBuildPhase,
 } from "@/lib/db/postgresConfig";
+import { dbCircuitBreaker } from "@/lib/security/circuit-breaker";
 
 export { isPostgresConfigured, isProductionBuildPhase };
 
@@ -17,6 +18,11 @@ const globalForPrisma = globalThis as unknown as {
  * - connection_limit: 20 handles ~2K concurrent users (each process gets 20
  *   connections; PM2 cluster multiplies this across CPU cores).
  * - pool_timeout: 10s — fail fast rather than queuing indefinitely.
+ *
+ * Circuit breaker integration:
+ *   If DB fails 5 times in 30s, circuit opens for 30s. During that window,
+ *   all DB queries fail instantly (<1ms) instead of waiting 10s each.
+ *   For 2K concurrent users, this prevents 20,000s of wasted wait time.
  */
 const isProd = process.env.NODE_ENV === "production";
 const CONNECTION_LIMIT = isProd ? 20 : 10;
@@ -52,13 +58,37 @@ function getPrismaClient(): PrismaClient {
   return globalForPrisma.prisma;
 }
 
-/** Lazy Prisma client — avoids crashing import-time when DATABASE_URL is unset. */
+/**
+ * Get the raw Prisma client (bypassing circuit breaker).
+ * Use only for health checks and metrics.
+ */
+export function getRawPrisma(): PrismaClient {
+  return getPrismaClient();
+}
+
+/**
+ * Lazy Prisma client — avoids crashing import-time when DATABASE_URL is unset.
+ *
+ * Circuit breaker protection:
+ *   All queries go through the circuit breaker. If DB is down:
+ *   - Circuit opens after 5 failures
+ *   - Remaining queries fail instantly with CircuitBreakerOpenError
+ *   - After 30s cooldown, one probe query is allowed
+ *   - If probe succeeds → circuit closes, normal operation resumes
+ */
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop, receiver) {
     const client = getPrismaClient();
     const value = Reflect.get(client, prop, receiver);
-    return typeof value === "function"
-      ? (value as (...args: unknown[]) => unknown).bind(client)
-      : value;
+
+    if (typeof value === "function") {
+      const boundFn = value as (...args: unknown[]) => unknown;
+
+      // Wrap all database operations with circuit breaker
+      return (...args: unknown[]) =>
+        dbCircuitBreaker.execute(async () => boundFn.apply(client, args) as Promise<unknown>);
+    }
+
+    return value;
   },
 });

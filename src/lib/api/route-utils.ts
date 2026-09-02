@@ -15,6 +15,11 @@ import { getRequestId } from "@/lib/security/request-log";
 import { reportServerError } from "@/lib/server/errorMonitoring";
 import { logInfo } from "@/lib/server/logger";
 import { recordRequest } from "@/app/api/metrics/route";
+import {
+  checkBackpressure,
+  releaseBackpressure,
+  getBackpressureScope,
+} from "@/lib/security/backpressure";
 
 export function jsonError(message: string, status: number): NextResponse {
   return NextResponse.json({ error: message }, { status });
@@ -150,29 +155,61 @@ export async function withApiGuards(
     scope: string;
     rateLimit?: RateLimitOptions;
     requireCsrf?: boolean;
+    /** Skip backpressure check (for health, metrics, etc.) */
+    skipBackpressure?: boolean;
   },
   handler: () => Promise<NextResponse>
 ): Promise<NextResponse> {
   logApiRequest(request, options.context);
+
+  // ── Backpressure check: reject immediately if overloaded ──
+  if (!options.skipBackpressure) {
+    const { pathname } = new URL(request.url);
+    const bpScope = getBackpressureScope(pathname);
+    const bpResult = checkBackpressure(bpScope, pathname);
+    if (!bpResult.allowed) {
+      return applyRequestIdHeader(
+        new NextResponse(bpResult.response.body, {
+          status: bpResult.response.status,
+          headers: bpResult.response.headers,
+        }),
+        request
+      );
+    }
+  }
 
   const rateLimited = await enforceRateLimit(
     request,
     options.scope,
     options.rateLimit ?? RATE_LIMITS.publicApi
   );
-  if (rateLimited) return rateLimited;
+  if (rateLimited) {
+    // Release backpressure slot since we're rejecting early
+    const { pathname } = new URL(request.url);
+    releaseBackpressure(getBackpressureScope(pathname));
+    return rateLimited;
+  }
 
   if (options.requireCsrf !== false) {
     const csrfError = enforceMutationSecurity(request);
-    if (csrfError) return csrfError;
+    if (csrfError) {
+      const { pathname } = new URL(request.url);
+      releaseBackpressure(getBackpressureScope(pathname));
+      return csrfError;
+    }
   }
+
+  const { pathname: reqPath } = new URL(request.url);
+  const bpScope = getBackpressureScope(reqPath);
 
   try {
     const start = Date.now();
     const response = await handler();
     try { recordRequest(response.status, Date.now() - start); } catch { /* non-fatal */ }
+    releaseBackpressure(bpScope);
     return applyRequestIdHeader(response, request);
   } catch (error) {
+    releaseBackpressure(bpScope);
     return handleRouteError(error, options.context, request);
   }
 }
