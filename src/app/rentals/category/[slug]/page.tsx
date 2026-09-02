@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import RentalsHubPage from "@/components/rentals/RentalsHubPage";
 import { getRentalCategoryBySlug } from "@/lib/server/rentalRepository";
+import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
 import "@/styles/rentals.css";
 
 export async function generateMetadata({
@@ -22,8 +23,10 @@ export default async function RentalCategoryRoute({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
-  const category = await getRentalCategoryBySlug(slug);
-  if (!category || category.status !== "active") notFound();
-  return <RentalsHubPage initialCategorySlug={slug} />;
+  return withServerPageError(async () => {
+    const { slug } = await params;
+    const category = await getRentalCategoryBySlug(slug);
+    if (!category || category.status !== "active") notFound();
+    return <RentalsHubPage initialCategorySlug={slug} />;
+  }, "Rental Category");
 }

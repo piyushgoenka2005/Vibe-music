@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import GiveawayCampaignPage from "@/components/giveaway/GiveawayCampaignPage";
+import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
 import "@/styles/storefront-pages.css";
 import "@/styles/giveaway.css";
 
@@ -20,6 +21,8 @@ export default async function GiveawayCampaignRoute({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
-  return <GiveawayCampaignPage slug={slug} />;
+  return withServerPageError(async () => {
+    const { slug } = await params;
+    return <GiveawayCampaignPage slug={slug} />;
+  }, "Giveaway");
 }

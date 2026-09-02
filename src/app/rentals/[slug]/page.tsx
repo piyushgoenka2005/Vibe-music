@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import RentalProductPageClient from "@/components/rentals/RentalProductPageClient";
 import { getRentalProductBySlug } from "@/lib/server/rentalRepository";
+import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
 import "@/styles/rentals.css";
 
 export async function generateMetadata({
@@ -23,8 +24,10 @@ export default async function RentalProductRoute({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
-  const product = await getRentalProductBySlug(slug);
-  if (!product || product.status !== "active") notFound();
-  return <RentalProductPageClient product={product} />;
+  return withServerPageError(async () => {
+    const { slug } = await params;
+    const product = await getRentalProductBySlug(slug);
+    if (!product || product.status !== "active") notFound();
+    return <RentalProductPageClient product={product} />;
+  }, "Rental Product");
 }

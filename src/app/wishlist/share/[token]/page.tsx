@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import WishlistSharePage from "@/components/wishlist/WishlistSharePage";
+import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
 import "@/styles/storefront-pages.css";
 import "@/components/account/account.css";
 
@@ -13,6 +14,8 @@ export default async function WishlistShareRoute({
 }: {
   params: Promise<{ token: string }>;
 }) {
-  const { token } = await params;
-  return <WishlistSharePage token={token} />;
+  return withServerPageError(async () => {
+    const { token } = await params;
+    return <WishlistSharePage token={token} />;
+  }, "Wishlist");
 }

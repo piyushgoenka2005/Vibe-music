@@ -5,12 +5,9 @@ import { getAdminSession } from "@/lib/server/adminService";
 import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
 import { canAccessOrder } from "@/lib/server/orderAccess";
 import { getOrderById } from "@/lib/server/orderService";
+import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ orderId: string }>;
-}) {
+export async function generateMetadata({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
   const order = await getOrderById(orderId);
   return {
@@ -25,49 +22,48 @@ export default async function ResumePaymentPage({
   params: Promise<{ orderId: string }>;
   searchParams: Promise<{ email?: string; trackingToken?: string }>;
 }) {
-  const { orderId } = await params;
-  const { email: emailParam, trackingToken: trackingTokenParam } =
-    await searchParams;
-  const guestEmail = emailParam?.trim().toLowerCase();
-  const trackingToken = trackingTokenParam?.trim();
+  return withServerPageError(async () => {
+    const { orderId } = await params;
+    const { email: emailParam, trackingToken: trackingTokenParam } = await searchParams;
+    const guestEmail = emailParam?.trim().toLowerCase();
+    const trackingToken = trackingTokenParam?.trim();
 
-  const order = await getOrderById(orderId);
-  if (!order) notFound();
+    const order = await getOrderById(orderId);
+    if (!order) notFound();
 
-  const sessionUser = await getSessionUser();
-  const adminSession = sessionUser
-    ? await getAdminSession(sessionUser.uid)
-    : null;
+    const sessionUser = await getSessionUser();
+    const adminSession = sessionUser ? await getAdminSession(sessionUser.uid) : null;
 
-  const hasAccess =
-    Boolean(adminSession) ||
-    canAccessOrder(order, {
-      userId: sessionUser?.uid,
-      email: guestEmail ?? sessionUser?.email?.toLowerCase(),
-      trackingToken,
-    });
+    const hasAccess =
+      Boolean(adminSession) ||
+      canAccessOrder(order, {
+        userId: sessionUser?.uid,
+        email: guestEmail ?? sessionUser?.email?.toLowerCase(),
+        trackingToken,
+      });
 
-  if (!hasAccess) notFound();
+    if (!hasAccess) notFound();
 
-  const email = guestEmail ?? sessionUser?.email?.toLowerCase() ?? order.email;
+    const email = guestEmail ?? sessionUser?.email?.toLowerCase() ?? order.email;
 
-  if (order.paymentStatus === "paid") {
-    const successParams = new URLSearchParams({ orderId: order.id, email });
-    if (order.trackingToken) {
-      successParams.set("trackingToken", order.trackingToken);
+    if (order.paymentStatus === "paid") {
+      const successParams = new URLSearchParams({ orderId: order.id, email });
+      if (order.trackingToken) {
+        successParams.set("trackingToken", order.trackingToken);
+      }
+      redirect(`/checkout/success?${successParams.toString()}`);
     }
-    redirect(`/checkout/success?${successParams.toString()}`);
-  }
 
-  if (order.paymentStatus !== "pending" || order.paymentMethod !== "razorpay") {
-    notFound();
-  }
+    if (order.paymentStatus !== "pending" || order.paymentMethod !== "razorpay") {
+      notFound();
+    }
 
-  const demoMode = !isRazorpayConfigured() && isDemoPaymentsAllowed();
+    const demoMode = !isRazorpayConfigured() && isDemoPaymentsAllowed();
 
-  return (
-    <main className="storefront-page storefront-page--subtle">
-      <ResumePaymentClient order={order} email={email} demoMode={demoMode} />
-    </main>
-  );
+    return (
+      <main className="storefront-page storefront-page--subtle">
+        <ResumePaymentClient order={order} email={email} demoMode={demoMode} />
+      </main>
+    );
+  }, "Resume Payment");
 }

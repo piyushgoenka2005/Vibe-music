@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import DealsPage from "@/components/deals/DealsPage";
 import { loadDealProducts } from "@/lib/server/dealsPageLoader";
+import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
 
 export const revalidate = 300;
 
@@ -10,6 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function DealsRoute() {
-  const products = await loadDealProducts();
-  return <DealsPage products={products} />;
+  return withServerPageError(async () => {
+    const products = await loadDealProducts();
+    return <DealsPage products={products} />;
+  }, "Deals");
 }

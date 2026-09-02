@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import CompareSharePage from "@/components/compare/CompareSharePage";
+import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
 import "@/styles/storefront-pages.css";
 import "@/styles/compare.css";
 
@@ -13,6 +14,8 @@ export default async function CompareShareRoute({
 }: {
   params: Promise<{ token: string }>;
 }) {
-  const { token } = await params;
-  return <CompareSharePage token={token} />;
+  return withServerPageError(async () => {
+    const { token } = await params;
+    return <CompareSharePage token={token} />;
+  }, "Compare");
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import BrandsPage from "@/components/brands/BrandsPage";
 import { loadBrandsWithCounts } from "@/lib/server/brandsPageLoader";
+import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
 
 export const revalidate = 300;
 
@@ -10,6 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BrandsRoute() {
-  const brands = await loadBrandsWithCounts();
-  return <BrandsPage brands={brands} />;
+  return withServerPageError(async () => {
+    const brands = await loadBrandsWithCounts();
+    return <BrandsPage brands={brands} />;
+  }, "Brands");
 }
