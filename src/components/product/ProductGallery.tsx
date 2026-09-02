@@ -1,127 +1,37 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type RefObject,
+} from "react";
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
-import {
-  storefrontImageCandidates,
-  storefrontZoomImageUrl,
-} from "@/lib/storefrontImages";
+import { storefrontImageCandidates, storefrontZoomImageUrl } from "@/lib/storefrontImages";
 import type { ProductImage, ProductVideo } from "@/types/product";
 import Product360Viewer from "@/components/product/Product360Viewer";
 import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
-
-const LENS_WIDTH_RATIO = 0.38;
-const PANE_WIDTH = 560;
-const PANE_MIN_WIDTH = 280;
-const PANE_EXTRA_HEIGHT = 120;
-const PANE_MAX_HEIGHT = 560;
-const PANE_GAP = 12;
-const HEADER_SAFE_TOP = 96;
-
-interface ImageMetrics {
-  naturalWidth: number;
-  naturalHeight: number;
-}
-
-interface ImageRect {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
-
-const EMPTY_IMAGE_RECT: ImageRect = {
-  left: 0,
-  top: 0,
-  width: 0,
-  height: 0,
-};
-
-function readCssScale(element: HTMLElement): number {
-  const transform = getComputedStyle(element).transform;
-  if (!transform || transform === "none") return 1;
-
-  const matrix2d = transform.match(/^matrix\((.+)\)$/);
-  if (matrix2d?.[1]) {
-    const parts = matrix2d[1].split(",").map((value) => Number.parseFloat(value.trim()));
-    const scale = Math.hypot(parts[0] ?? 0, parts[1] ?? 0);
-    return Number.isFinite(scale) && scale > 0 ? scale : 1;
-  }
-
-  const matrix3d = transform.match(/^matrix3d\((.+)\)$/);
-  if (matrix3d?.[1]) {
-    const parts = matrix3d[1].split(",").map((value) => Number.parseFloat(value.trim()));
-    const scale = Math.hypot(parts[0] ?? 0, parts[1] ?? 0);
-    return Number.isFinite(scale) && scale > 0 ? scale : 1;
-  }
-
-  return 1;
-}
-
-function measureRenderedImageRect(
-  main: HTMLElement,
-  photo: HTMLImageElement
-): ImageRect {
-  if (photo.naturalWidth <= 0 || photo.naturalHeight <= 0) {
-    return EMPTY_IMAGE_RECT;
-  }
-
-  const mainRect = main.getBoundingClientRect();
-  const photoRect = photo.getBoundingClientRect();
-  const style = getComputedStyle(photo);
-  const padLeft = parseFloat(style.paddingLeft) || 0;
-  const padTop = parseFloat(style.paddingTop) || 0;
-  const padRight = parseFloat(style.paddingRight) || 0;
-  const padBottom = parseFloat(style.paddingBottom) || 0;
-  const scale = readCssScale(photo);
-
-  // Layout box (pre-transform). Visual center stays put with transform-origin: center.
-  const layoutWidth = photo.offsetWidth;
-  const layoutHeight = photo.offsetHeight;
-  const visualCenterX = (photoRect.left + photoRect.right) / 2 - mainRect.left;
-  const visualCenterY = (photoRect.top + photoRect.bottom) / 2 - mainRect.top;
-  const layoutLeft = visualCenterX - layoutWidth / 2;
-  const layoutTop = visualCenterY - layoutHeight / 2;
-
-  const contentWidth = Math.max(photo.clientWidth - padLeft - padRight, 0);
-  const contentHeight = Math.max(photo.clientHeight - padTop - padBottom, 0);
-  if (contentWidth <= 0 || contentHeight <= 0) {
-    return EMPTY_IMAGE_RECT;
-  }
-
-  const imageAspect = photo.naturalWidth / photo.naturalHeight;
-  const contentAspect = contentWidth / contentHeight;
-
-  let width = contentWidth;
-  let height = contentHeight;
-
-  if (imageAspect > contentAspect) {
-    height = contentWidth / imageAspect;
-  } else {
-    width = contentHeight * imageAspect;
-  }
-
-  const unscaledLeft = layoutLeft + padLeft + (contentWidth - width) / 2;
-  const unscaledTop = layoutTop + padTop + (contentHeight - height) / 2;
-  const originX = layoutLeft + layoutWidth / 2;
-  const originY = layoutTop + layoutHeight / 2;
-  const unscaledCenterX = unscaledLeft + width / 2;
-  const unscaledCenterY = unscaledTop + height / 2;
-  const scaledWidth = width * scale;
-  const scaledHeight = height * scale;
-  const scaledCenterX = originX + (unscaledCenterX - originX) * scale;
-  const scaledCenterY = originY + (unscaledCenterY - originY) * scale;
-
-  return {
-    left: scaledCenterX - scaledWidth / 2,
-    top: scaledCenterY - scaledHeight / 2,
-    width: scaledWidth,
-    height: scaledHeight,
-  };
-}
+import {
+  LENS_WIDTH_RATIO,
+  PANE_WIDTH,
+  PANE_MIN_WIDTH,
+  PANE_EXTRA_HEIGHT,
+  PANE_MAX_HEIGHT,
+  PANE_GAP,
+  HEADER_SAFE_TOP,
+  EMPTY_IMAGE_RECT,
+  measureRenderedImageRect,
+  readCssScale,
+  type ImageMetrics,
+  type ImageRect,
+} from "@/components/product/ProductGalleryHelpers";
 
 interface ProductGalleryProps {
   images: ProductImage[];
@@ -149,7 +59,16 @@ function GalleryThumb({ src }: { src: string }) {
   if (!activeSrc || failed) {
     return (
       <div className="pdp-gallery__thumb-placeholder" aria-hidden>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#ccc"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
           <circle cx="8.5" cy="8.5" r="1.5" />
           <polyline points="21 15 16 10 5 21" />
@@ -194,7 +113,7 @@ export default function ProductGallery({
       return () => mq.removeEventListener("change", onStoreChange);
     },
     () => window.matchMedia("(max-width: 767px)").matches,
-    () => false
+    () => false,
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -223,8 +142,7 @@ export default function ProductGallery({
   const thumbsRef = useRef<HTMLDivElement>(null);
 
   const activeImage = images[activeIndex] ?? images[0];
-  const zoomEligible =
-    Boolean(activeImage?.src) && !showVideo && !show360;
+  const zoomEligible = Boolean(activeImage?.src) && !showVideo && !show360;
   const canZoom = zoomEligible && zoomSpaceOk;
   const has360 = spin360Images.length >= 2;
   const activeSrc = activeImage?.src ?? "";
@@ -233,9 +151,7 @@ export default function ProductGallery({
     // then medium fallback, then CDN master as last resort.
     const large = storefrontImageCandidates(activeSrc, 1200);
     const medium = storefrontImageCandidates(activeSrc, 640);
-    return Array.from(
-      new Set([...large, ...medium, activeSrc].filter(Boolean))
-    );
+    return Array.from(new Set([...large, ...medium, activeSrc].filter(Boolean)));
   }, [activeSrc]);
   const [displayAttempt, setDisplayAttempt] = useState(0);
   const [allFailed, setAllFailed] = useState(false);
@@ -245,12 +161,9 @@ export default function ProductGallery({
     setDisplayAttempt(0);
     setAllFailed(false);
   }
-  const safeDisplayAttempt =
-    activeSrc === activeSrcKey ? displayAttempt : 0;
+  const safeDisplayAttempt = activeSrc === activeSrcKey ? displayAttempt : 0;
   const activeDisplaySrc =
-    displayCandidates[
-      Math.min(safeDisplayAttempt, displayCandidates.length - 1)
-    ] ?? "";
+    displayCandidates[Math.min(safeDisplayAttempt, displayCandidates.length - 1)] ?? "";
   const activeZoomSrc = activeSrc ? storefrontZoomImageUrl(activeSrc) : "";
 
   const measureImageRect = useCallback(() => {
@@ -273,11 +186,7 @@ export default function ProductGallery({
     // Prefer the right side; fall back to left. If neither fits, disable zoom
     // instead of sliding a huge pane over the gallery/header.
     const side: "right" | "left" | "none" =
-      spaceRight >= PANE_MIN_WIDTH
-        ? "right"
-        : spaceLeft >= PANE_MIN_WIDTH
-          ? "left"
-          : "none";
+      spaceRight >= PANE_MIN_WIDTH ? "right" : spaceLeft >= PANE_MIN_WIDTH ? "left" : "none";
 
     if (side === "none" || viewportWidth < 1024) {
       setZoomSpaceOk(false);
@@ -291,13 +200,12 @@ export default function ProductGallery({
     const height = Math.min(
       PANE_MAX_HEIGHT,
       Math.round(rect.height + PANE_EXTRA_HEIGHT),
-      Math.max(240, viewportHeight - HEADER_SAFE_TOP - 24)
+      Math.max(240, viewportHeight - HEADER_SAFE_TOP - 24),
     );
-    const left =
-      side === "right" ? rect.right + PANE_GAP : rect.left - PANE_GAP - width;
+    const left = side === "right" ? rect.right + PANE_GAP : rect.left - PANE_GAP - width;
     const top = Math.min(
       Math.max(HEADER_SAFE_TOP, rect.top),
-      Math.max(HEADER_SAFE_TOP, viewportHeight - height - 12)
+      Math.max(HEADER_SAFE_TOP, viewportHeight - height - 12),
     );
 
     setZoomSpaceOk(true);
@@ -325,22 +233,13 @@ export default function ProductGallery({
     }
 
     const paneAspect =
-      effectivePaneSize.height > 0
-        ? effectivePaneSize.width / effectivePaneSize.height
-        : 4 / 3;
+      effectivePaneSize.height > 0 ? effectivePaneSize.width / effectivePaneSize.height : 4 / 3;
     let width = Math.round(baseWidth * LENS_WIDTH_RATIO);
     let height = Math.round(width / paneAspect);
 
     // Keep magnification near native resolution so the zoom pane stays sharp.
-    if (
-      imageMetrics.naturalWidth > 0 &&
-      baseWidth > 0 &&
-      effectivePaneSize.width > 0
-    ) {
-      const maxScale = Math.max(
-        1.15,
-        (imageMetrics.naturalWidth * 1.2) / baseWidth
-      );
+    if (imageMetrics.naturalWidth > 0 && baseWidth > 0 && effectivePaneSize.width > 0) {
+      const maxScale = Math.max(1.15, (imageMetrics.naturalWidth * 1.2) / baseWidth);
       const minLensWidth = Math.ceil(effectivePaneSize.width / maxScale);
       if (width < minLensWidth && minLensWidth < baseWidth) {
         width = minLensWidth;
@@ -455,9 +354,7 @@ export default function ProductGallery({
     if (typeof window === "undefined") return;
     if (!window.matchMedia("(max-width: 768px)").matches) return;
 
-    const active = strip.querySelector<HTMLElement>(
-      ".pdp-gallery__thumb--active"
-    );
+    const active = strip.querySelector<HTMLElement>(".pdp-gallery__thumb--active");
     if (!active) return;
 
     active.scrollIntoView({
@@ -486,9 +383,7 @@ export default function ProductGallery({
 
       // Remeasure each move so CSS photo scale stays synced with the lens.
       const nextRect =
-        photo && photo.naturalWidth > 0
-          ? measureRenderedImageRect(node, photo)
-          : imageRect;
+        photo && photo.naturalWidth > 0 ? measureRenderedImageRect(node, photo) : imageRect;
       if (
         nextRect.width > 0 &&
         (nextRect.width !== imageRect.width ||
@@ -514,7 +409,7 @@ export default function ProductGallery({
         y: Math.min(Math.max(y - lensHeight / 2, minY), maxY),
       });
     },
-    [canZoom, imageRect, lensDimensions]
+    [canZoom, imageRect, lensDimensions],
   );
 
   const onMouseMove = useCallback(
@@ -522,7 +417,7 @@ export default function ProductGallery({
       if (!canZoom) return;
       updateLens(e.clientX, e.clientY);
     },
-    [canZoom, updateLens]
+    [canZoom, updateLens],
   );
 
   const onTouchMove = useCallback(
@@ -534,7 +429,7 @@ export default function ProductGallery({
       if (!touch) return;
       updateLens(touch.clientX, touch.clientY);
     },
-    [updateLens]
+    [updateLens],
   );
 
   const openLightbox = useCallback(() => {
@@ -615,10 +510,7 @@ export default function ProductGallery({
             {image.src ? (
               <GalleryThumb src={image.src} />
             ) : (
-              <div
-                className="pdp-gallery__thumb-swatch"
-                style={{ backgroundColor: image.color }}
-              />
+              <div className="pdp-gallery__thumb-swatch" style={{ backgroundColor: image.color }} />
             )}
           </button>
         ))}
@@ -782,7 +674,17 @@ export default function ProductGallery({
                 role="img"
                 aria-label={activeImage.alt}
               >
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg
+                  width="64"
+                  height="64"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#bbb"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                   <circle cx="8.5" cy="8.5" r="1.5" />
                   <polyline points="21 15 16 10 5 21" />
@@ -844,13 +746,10 @@ export default function ProductGallery({
               }}
               style={{
                 width:
-                  Math.max(imageRect.width > 0 ? imageRect.width : mainSize.width, 1) *
-                  zoomScale.x,
+                  Math.max(imageRect.width > 0 ? imageRect.width : mainSize.width, 1) * zoomScale.x,
                 height:
-                  Math.max(
-                    imageRect.height > 0 ? imageRect.height : mainSize.height,
-                    1
-                  ) * zoomScale.y,
+                  Math.max(imageRect.height > 0 ? imageRect.height : mainSize.height, 1) *
+                  zoomScale.y,
                 transform: `translate(${-(lensPos.x - imageRect.left) * zoomScale.x}px, ${-(lensPos.y - imageRect.top) * zoomScale.y}px)`,
               }}
             />
@@ -955,9 +854,7 @@ export default function ProductGallery({
                     className="pdp-lightbox__nav pdp-lightbox__nav--next"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setActiveIndex((current) =>
-                        Math.min(images.length - 1, current + 1)
-                      );
+                      setActiveIndex((current) => Math.min(images.length - 1, current + 1));
                       setShowVideo(false);
                     }}
                     aria-label="Next image"
@@ -996,7 +893,7 @@ export default function ProductGallery({
                 )}
               </div>
             </div>,
-            document.body
+            document.body,
           )
         : null}
     </div>
