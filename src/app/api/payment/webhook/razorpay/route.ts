@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import {
-  getRazorpayWebhookSecret,
-  verifyRazorpayWebhookSignature,
-} from "@/lib/razorpay/signature";
+import { getRazorpayWebhookSecret, verifyRazorpayWebhookSignature } from "@/lib/razorpay/signature";
 import { processRazorpayWebhook } from "@/lib/server/razorpayWebhookService";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -17,21 +16,18 @@ function isRetryableError(error: unknown): boolean {
 }
 
 export async function POST(request: Request) {
+  const rateLimited = await enforceRateLimit(request, "webhook-razorpay", RATE_LIMITS.auth);
+  if (rateLimited) return rateLimited;
+
   const signature = request.headers.get("x-razorpay-signature");
   const eventId = request.headers.get("x-razorpay-event-id");
 
   if (!signature) {
-    return NextResponse.json(
-      { error: "Missing X-Razorpay-Signature header" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing X-Razorpay-Signature header" }, { status: 400 });
   }
 
   if (!eventId) {
-    return NextResponse.json(
-      { error: "Missing X-Razorpay-Event-Id header" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing X-Razorpay-Event-Id header" }, { status: 400 });
   }
 
   let rawBody: string;
@@ -46,10 +42,7 @@ export async function POST(request: Request) {
     webhookSecret = getRazorpayWebhookSecret();
   } catch (error) {
     console.error("[razorpay-webhook] Configuration error:", error);
-    return NextResponse.json(
-      { error: "Webhook secret not configured" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
   }
 
   const isValid = verifyRazorpayWebhookSignature(rawBody, signature, webhookSecret);
@@ -94,9 +87,6 @@ export async function POST(request: Request) {
     });
 
     const status = isRetryableError(error) ? 500 : 422;
-    return NextResponse.json(
-      { error: "Webhook processing failed", eventId },
-      { status }
-    );
+    return NextResponse.json({ error: "Webhook processing failed", eventId }, { status });
   }
 }

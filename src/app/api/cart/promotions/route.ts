@@ -6,9 +6,11 @@ import {
 } from "@/lib/cart/cartPromotions";
 import { getProductById } from "@/services/catalogService";
 import { resolvePositiveUnitPrice } from "@/lib/pricing/unitPrice";
+import { enforceRateLimit } from "@/lib/api/route-utils";
+import { RATE_LIMITS } from "@/lib/security/rate-limit";
 
 async function resolveGiftProduct(
-  giftProductId: string | null
+  giftProductId: string | null,
 ): Promise<CartGiftProductSummary | null> {
   if (!giftProductId) return null;
 
@@ -16,8 +18,7 @@ async function resolveGiftProduct(
   if (!product || product.status !== "active") return null;
 
   const price = resolvePositiveUnitPrice(product.price) ?? product.price;
-  const originalPrice =
-    product.originalPrice > price ? product.originalPrice : price;
+  const originalPrice = product.originalPrice > price ? product.originalPrice : price;
 
   return {
     id: product.id,
@@ -33,21 +34,29 @@ async function resolveGiftProduct(
   };
 }
 
-export async function GET() {
-  const config = getCartPromotionsConfig();
-  const giftProduct = await resolveGiftProduct(config.giftProductId);
+export async function GET(request: Request) {
+  try {
+    const rateLimited = await enforceRateLimit(request, "cart-promotions", RATE_LIMITS.publicApi);
+    if (rateLimited) return rateLimited;
 
-  const payload: CartPromotionsPublic = {
-    ...config,
-    bannerText: config.giftProductId
-      ? `Free gift on orders above ₹${config.freeGiftThreshold.toLocaleString("en-IN")}`
-      : config.bannerText,
-    giftProduct,
-  };
+    const config = getCartPromotionsConfig();
+    const giftProduct = await resolveGiftProduct(config.giftProductId);
 
-  return NextResponse.json(payload, {
-    headers: {
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-    },
-  });
+    const payload: CartPromotionsPublic = {
+      ...config,
+      bannerText: config.giftProductId
+        ? `Free gift on orders above ₹${config.freeGiftThreshold.toLocaleString("en-IN")}`
+        : config.bannerText,
+      giftProduct,
+    };
+
+    return NextResponse.json(payload, {
+      headers: {
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      },
+    });
+  } catch (error) {
+    console.error("[api/cart/promotions] Error:", error);
+    return NextResponse.json({ error: "Failed to load promotions" }, { status: 500 });
+  }
 }

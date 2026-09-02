@@ -9,19 +9,20 @@ import { RATE_LIMITS } from "@/lib/security/rate-limit";
  * login error already reveals, and rate-limited like other sensitive reads.
  */
 export async function GET(request: Request) {
-  const rateLimited = await enforceRateLimit(
-    request,
-    "totp-status",
-    RATE_LIMITS.sensitiveAccess
-  );
-  if (rateLimited) return rateLimited;
+  try {
+    const rateLimited = await enforceRateLimit(request, "totp-status", RATE_LIMITS.sensitiveAccess);
+    if (rateLimited) return rateLimited;
 
-  const url = new URL(request.url);
-  const email = url.searchParams.get("email")?.trim() ?? "";
-  const required = await totpRequiredForEmail(email);
+    const url = new URL(request.url);
+    const email = url.searchParams.get("email")?.trim() ?? "";
+    const required = await totpRequiredForEmail(email);
 
-  return NextResponse.json(
-    { totpRequired: required },
-    { headers: { "Cache-Control": "private, no-store" } }
-  );
+    return NextResponse.json(
+      { totpRequired: required },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
+  } catch (error) {
+    console.error("[api/auth/2fa/status] Error:", error);
+    return NextResponse.json({ error: "Failed to check 2FA status" }, { status: 500 });
+  }
 }
