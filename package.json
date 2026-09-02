@@ -11,6 +11,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "type-check": "tsc --noEmit",
     "seed:admin": "npx tsx --env-file=.env.local scripts/db/seed-admin.mts",
     "seed:admin-credentials": "npx tsx --env-file=.env.local scripts/db/ensure-admin-credentials.mts",
@@ -68,6 +70,12 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
     "@hookform/resolvers": "^5.4.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.52.0",
+    "@opentelemetry/resources": "^1.25.0",
+    "@opentelemetry/sdk-trace-base": "^1.25.0",
+    "@opentelemetry/sdk-trace-node": "^1.25.0",
+    "@opentelemetry/semantic-conventions": "^1.25.0",
     "@prisma/client": "^6.19.3",
     "@radix-ui/react-accordion": "^1.2.14",
     "@radix-ui/react-dialog": "^1.1.17",
@@ -105,20 +113,14 @@
     "recharts": "^3.8.1",
     "server-only": "^0.0.1",
     "sharp": "0.34.5",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
     "tailwind-merge": "^3.6.0",
     "three": "^0.184.0",
     "tone": "^15.1.22",
     "web-push": "^3.6.7",
     "zod": "^4.4.3",
-    "zustand": "^5.0.14",
-    "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5",
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/sdk-trace-node": "^1.25.0",
-    "@opentelemetry/sdk-trace-base": "^1.25.0",
-    "@opentelemetry/resources": "^1.25.0",
-    "@opentelemetry/semantic-conventions": "^1.25.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.52.0"
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
@@ -138,6 +140,7 @@
     "lighthouse": "^13.4.1",
     "lint-staged": "^17.4.1",
     "playwright": "^1.61.1",
+    "prettier": "^3.9.6",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "to-ico": "^1.1.5",
@@ -146,7 +149,11 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix"
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md,yml,yaml}": [
+      "prettier --write"
     ]
   }
 }
