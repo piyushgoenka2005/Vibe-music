@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useCartStore } from "@/store/cartStore";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import {
@@ -16,10 +16,7 @@ import WishlistButton from "@/components/wishlist/WishlistButton";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
 import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import { optimizeImageUrl } from "@/lib/storefrontImages";
-import {
-  trackSelectItem,
-  type ItemListContext,
-} from "@/lib/analytics/events";
+import { trackSelectItem, type ItemListContext } from "@/lib/analytics/events";
 import type { Product } from "@/types/product";
 import type { ViewMode } from "@/types/filters";
 
@@ -69,7 +66,7 @@ function discountPercent(original: number, current: number): number {
   return Math.round(((original - current) / original) * 100);
 }
 
-export default function ProductCard({
+const ProductCard = memo(function ProductCard({
   product,
   view,
   listContext,
@@ -80,12 +77,11 @@ export default function ProductCard({
   const addItem = useCartStore((s) => s.addItem);
   const openDrawer = useCartStore((s) => s.openDrawer);
   const productHref = `/product/${product.slug}`;
-  const { rating: displayRating, reviewCount: displayReviewCount } =
-    ensureProductReviewMetrics({
-      id: product.id,
-      rating: product.rating,
-      reviewCount: product.reviewCount,
-    });
+  const { rating: displayRating, reviewCount: displayReviewCount } = ensureProductReviewMetrics({
+    id: product.id,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+  });
   const ratingPillLabel = formatRatingPillLabel(displayRating, displayReviewCount);
 
   function prefetchProduct() {
@@ -121,33 +117,24 @@ export default function ProductCard({
   const hasDiscount = originalPrice > product.price && product.price > 0;
   const savingsPercent = discountPercent(originalPrice, product.price);
   const isComingSoon = !isPurchasablePrice(product.price);
-  const canQuickAdd =
-    product.availability !== "out-of-stock" && isPurchasablePrice(product.price);
+  const canQuickAdd = product.availability !== "out-of-stock" && isPurchasablePrice(product.price);
   const quickAddLabel = product.requiresVariantSelection
     ? "Choose options"
     : canQuickAdd
       ? "Add to cart"
       : "Out of stock";
   const isGrid = view === "grid";
-  const preferredSrc = product.image
-    ? optimizeImageUrl(product.image, "productCard")
-    : "";
-  const imageCandidates = Array.from(
-    new Set([preferredSrc, product.image].filter(Boolean))
-  );
+  const preferredSrc = product.image ? optimizeImageUrl(product.image, "productCard") : "";
+  const imageCandidates = Array.from(new Set([preferredSrc, product.image].filter(Boolean)));
   const [imageAttempt, setImageAttempt] = useState(0);
   const [imageSrcKey, setImageSrcKey] = useState(preferredSrc);
   if (preferredSrc !== imageSrcKey) {
     setImageSrcKey(preferredSrc);
     setImageAttempt(0);
   }
-  const safeImageAttempt =
-    preferredSrc === imageSrcKey ? imageAttempt : 0;
-  const imageSrc =
-    imageCandidates[Math.min(safeImageAttempt, imageCandidates.length - 1)] ??
-    "";
-  const imageFailed =
-    !imageSrc || safeImageAttempt >= imageCandidates.length;
+  const safeImageAttempt = preferredSrc === imageSrcKey ? imageAttempt : 0;
+  const imageSrc = imageCandidates[Math.min(safeImageAttempt, imageCandidates.length - 1)] ?? "";
+  const imageFailed = !imageSrc || safeImageAttempt >= imageCandidates.length;
 
   return (
     <article
@@ -192,10 +179,7 @@ export default function ProductCard({
             />
           ) : null}
           {displayReviewCount > 0 ? (
-            <span
-              className="rating-pill"
-              aria-label={`Rated ${displayRating.toFixed(1)} out of 5`}
-            >
+            <span className="rating-pill" aria-label={`Rated ${displayRating.toFixed(1)} out of 5`}>
               <span className="rating-pill__star" aria-hidden="true">
                 ★
               </span>
@@ -204,10 +188,7 @@ export default function ProductCard({
           ) : null}
         </Link>
         <div className="product-card-actions">
-          <ProductShareButton
-            title={`${product.brand} ${product.name}`}
-            url={productHref}
-          />
+          <ProductShareButton title={`${product.brand} ${product.name}`} url={productHref} />
           <CompareButton product={product} />
           <WishlistButton product={product} />
         </div>
@@ -275,9 +256,7 @@ export default function ProductCard({
                 </span>
               ) : null}
             </div>
-            <span
-              className={`cat-product-card__badge ${availabilityClass(product.availability)}`}
-            >
+            <span className={`cat-product-card__badge ${availabilityClass(product.availability)}`}>
               {availabilityLabel(product.availability)}
             </span>
           </div>
@@ -306,4 +285,6 @@ export default function ProductCard({
       </div>
     </article>
   );
-}
+});
+
+export default ProductCard;

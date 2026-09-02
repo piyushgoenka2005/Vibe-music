@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { cartItemToProduct } from "@/lib/cart/cartItemToProduct";
@@ -20,7 +21,7 @@ function discountPercent(price: number, originalPrice?: number): number | null {
   return Math.round(((originalPrice - price) / originalPrice) * 100);
 }
 
-export default function CartItem({ item, compact = false }: CartItemProps) {
+const CartItem = memo(function CartItem({ item, compact = false }: CartItemProps) {
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
   const isUpdating = useCartStore((s) => s.isUpdating);
@@ -33,23 +34,18 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
   const imageColor = item.imageColor ?? "#f2f1f0";
   const image = item.image;
   const pct = discountPercent(item.price, item.originalPrice);
-  const showOriginal =
-    !isGift && item.originalPrice != null && item.originalPrice > item.price;
+  const showOriginal = !isGift && item.originalPrice != null && item.originalPrice > item.price;
   const atMaxQty = item.quantity >= 99;
 
   function handleMoveToWishlist() {
     if (!slug) {
-      useToastStore
-        .getState()
-        .show("This item can’t be saved to wishlist right now.", "error");
+      useToastStore.getState().show("This item can’t be saved to wishlist right now.", "error");
       return;
     }
     if (!isInWishlist) {
       addToWishlist(cartItemToProduct(item));
     } else {
-      useToastStore
-        .getState()
-        .show(`${item.name} is already in your wishlist`, "info");
+      useToastStore.getState().show(`${item.name} is already in your wishlist`, "info");
     }
     removeItem(item.lineId, { silent: true });
   }
@@ -94,22 +90,16 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
             aria-hidden="true"
           />
         )}
-        {pct != null && !isGift ? (
-          <span className="cart-item-card__badge">{pct}% OFF</span>
-        ) : null}
+        {pct != null && !isGift ? <span className="cart-item-card__badge">{pct}% OFF</span> : null}
         {isGift ? (
-          <span className="cart-item-card__badge cart-item-card__badge--gift">
-            Free Gift
-          </span>
+          <span className="cart-item-card__badge cart-item-card__badge--gift">Free Gift</span>
         ) : null}
       </div>
 
       <div className="cart-item-card__content">
         <div className="cart-item-card__top">
           <div className="cart-item-card__copy">
-            {!isGift ? (
-              <div className="cart-item-card__brand">{item.brand}</div>
-            ) : null}
+            {!isGift ? <div className="cart-item-card__brand">{item.brand}</div> : null}
             {item.variantLabel && !isGift ? (
               <div className="cart-item-card__variant">{item.variantLabel}</div>
             ) : null}
@@ -126,18 +116,14 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
             {!isGift ? (
               <p className="cart-item-card__availability">In stock · Ships fast</p>
             ) : (
-              <p className="cart-item-card__gift-reason">
-                Unlocked with your order value
-              </p>
+              <p className="cart-item-card__gift-reason">Unlocked with your order value</p>
             )}
           </div>
 
           <div className="cart-item-card__price-col">
             <div className="cart-item-card__price">{priceLabel}</div>
             {showOriginal ? (
-              <div className="cart-item-card__mrp">
-                {formatDisplayPrice(item.originalPrice!)}
-              </div>
+              <div className="cart-item-card__mrp">{formatDisplayPrice(item.originalPrice!)}</div>
             ) : null}
             {!compact && !isGift && item.price > 0 ? (
               <div className="cart-item-card__line-total">
@@ -195,4 +181,6 @@ export default function CartItem({ item, compact = false }: CartItemProps) {
       </div>
     </article>
   );
-}
+});
+
+export default CartItem;
