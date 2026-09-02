@@ -110,7 +110,15 @@
     "tone": "^15.1.22",
     "web-push": "^3.6.7",
     "zod": "^4.4.3",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.14",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/sdk-trace-node": "^1.25.0",
+    "@opentelemetry/sdk-trace-base": "^1.25.0",
+    "@opentelemetry/resources": "^1.25.0",
+    "@opentelemetry/semantic-conventions": "^1.25.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.52.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
