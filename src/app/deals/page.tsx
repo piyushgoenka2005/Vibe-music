@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import DealsPage from "@/components/deals/DealsPage";
 import { loadDealProducts } from "@/lib/server/dealsPageLoader";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 
 export const revalidate = 300;
 

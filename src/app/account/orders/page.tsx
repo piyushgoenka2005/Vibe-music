@@ -1,5 +1,5 @@
 import AccountOrders from "@/components/account/AccountOrders";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { listOrdersForUser } from "@/lib/server/orderService";
 

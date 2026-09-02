@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import WishlistSharePage from "@/components/wishlist/WishlistSharePage";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 import "@/styles/storefront-pages.css";
 import "@/components/account/account.css";
 

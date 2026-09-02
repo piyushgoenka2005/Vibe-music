@@ -4,10 +4,10 @@ import { BLOG_CATEGORIES } from "@/lib/blog/blogEngine";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { optimizeImageUrl } from "@/lib/images";
 import { listPublicBlogPostsPaginated } from "@/lib/server/blogService";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 import "./blog.css";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: `Blog | ${SITE_NAME}`,

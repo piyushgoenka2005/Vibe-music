@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import AccountOrderDetail from "@/components/account/AccountOrderDetail";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { formatOrderIdDisplay } from "@/lib/orderId";
 import { canAccessOrder, isPlacedOrder } from "@/lib/server/orderAccess";

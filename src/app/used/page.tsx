@@ -4,7 +4,7 @@ import ProductCard from "@/components/common/ProductCard";
 import ProgramLandingPage from "@/components/programs/ProgramLandingPage";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { searchProducts } from "@/lib/server/productRepository";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 import { ROUTES, categoryPath } from "@/lib/routes";
 import "@/styles/storefront-pages.css";
 import "@/styles/program-landing.css";

@@ -3,6 +3,8 @@ import AccountShell from "@/components/account/AccountShell";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { BRAND } from "@/lib/brand";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: `My Account | ${BRAND.name}`,
   description: "Manage your Vibe Music account, orders, wishlist, and settings.",
@@ -10,11 +12,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function AccountLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AccountLayout({ children }: { children: React.ReactNode }) {
   return (
     <main className="storefront-page storefront-page--subtle">
       <ProtectedRoute>

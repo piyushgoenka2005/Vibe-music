@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { resolveContentPage } from "@/lib/server/contentPageRepository";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 import { CONTENT_PAGE_SLUGS } from "@/data/contentPages";
 import { ROUTES } from "@/lib/routes";
 

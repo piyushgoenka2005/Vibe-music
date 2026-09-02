@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { verifyInvoiceAccessToken } from "@/lib/security/invoiceAccessToken";
 

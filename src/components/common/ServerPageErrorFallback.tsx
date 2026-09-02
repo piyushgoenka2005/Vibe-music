@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 
@@ -56,27 +58,4 @@ export default function ServerPageErrorFallback({
       </div>
     </main>
   );
-}
-
-/**
- * Wrap a server page component's async body with error handling.
- * If the body throws, returns ServerPageErrorFallback instead of crashing.
- *
- * Usage in server pages:
- *   import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
- *
- *   export default async function MyPage() {
- *     return withServerPageError(async () => {
- *       const data = await fetchData();
- *       return <MyComponent data={data} />;
- *     }, "My Page");
- *   }
- */
-export async function withServerPageError<T>(fn: () => Promise<T>, pageName?: string): Promise<T> {
-  try {
-    return await fn();
-  } catch (error) {
-    console.error(`[server-page] ${pageName ?? "Page"} render error:`, error);
-    return (<ServerPageErrorFallback error={error} pageName={pageName} />) as T;
-  }
 }

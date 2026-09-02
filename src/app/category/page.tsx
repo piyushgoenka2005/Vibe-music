@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import CategoriesIndexPage from "@/components/category/CategoriesIndexPage";
 import { BRAND } from "@/lib/brand";
 import { loadCategoriesForIndex } from "@/lib/server/categoriesPageLoader";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 
 export const revalidate = 300;
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import CompareSharePage from "@/components/compare/CompareSharePage";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 import "@/styles/storefront-pages.css";
 import "@/styles/compare.css";
 

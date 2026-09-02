@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import BrandsPage from "@/components/brands/BrandsPage";
 import { loadBrandsWithCounts } from "@/lib/server/brandsPageLoader";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 
 export const revalidate = 300;
 

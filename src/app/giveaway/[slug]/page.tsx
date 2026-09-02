@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import GiveawayCampaignPage from "@/components/giveaway/GiveawayCampaignPage";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 import "@/styles/storefront-pages.css";
 import "@/styles/giveaway.css";
 

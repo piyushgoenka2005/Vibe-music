@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import RentalsHubPage from "@/components/rentals/RentalsHubPage";
 import { getRentalCategoryBySlug } from "@/lib/server/rentalRepository";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 import "@/styles/rentals.css";
 
 export async function generateMetadata({

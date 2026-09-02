@@ -5,7 +5,7 @@ import { getAdminSession } from "@/lib/server/adminService";
 import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
 import { canAccessOrder } from "@/lib/server/orderAccess";
 import { getOrderById } from "@/lib/server/orderService";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 
 export async function generateMetadata({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;

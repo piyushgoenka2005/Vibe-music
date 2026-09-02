@@ -13,7 +13,7 @@ import {
   getRelatedPublicPosts,
   recordBlogView,
 } from "@/lib/server/blogService";
-import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
+import { withServerPageError } from "@/lib/serverPageError";
 import "../blog.css";
 
 export const revalidate = 300;
