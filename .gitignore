@@ -16,7 +16,7 @@
 /reports/lighthouse/
 
 # next.js
-/.next/
+.next/
 /out/
 
 # production
