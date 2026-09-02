@@ -7,6 +7,8 @@ import { listPublicBlogPostsPaginated } from "@/lib/server/blogService";
 import { withServerPageError } from "@/components/common/ServerPageErrorFallback";
 import "./blog.css";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: `Blog | ${SITE_NAME}`,
   description: "Guides, gear tips, and music industry insights from the Vibe Music team.",

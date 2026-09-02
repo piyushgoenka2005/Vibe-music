@@ -44,6 +44,13 @@ export default function RootLayout({
   return (
     <html lang="en-IN" className={primaryFont.variable} suppressHydrationWarning>
       <head>
+        {/* Resource hints for faster third-party connections */}
+        <link rel="preconnect" href="https://cdn.vibemusic.in" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://cdn.vibemusic.in" />
+        <link rel="preconnect" href="https://checkout.razorpay.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         {splashEnabled ? (
           <script
             dangerouslySetInnerHTML={{
@@ -57,11 +64,7 @@ export default function RootLayout({
         <WebVitals />
         {splashEnabled ? (
           /* Instant framed brand cover — CSS hides unless html.vibe-splash-pending. */
-          <div
-            id="vibe-boot-splash"
-            className="vibe-boot-splash"
-            aria-hidden="true"
-          >
+          <div id="vibe-boot-splash" className="vibe-boot-splash" aria-hidden="true">
             <div className="page-load-splash__frame page-load-splash__frame--settled">
               <span
                 className={`page-load-splash__text page-load-splash__text--settled ${splashBootFont.className}`}

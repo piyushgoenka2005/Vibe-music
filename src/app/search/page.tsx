@@ -5,6 +5,8 @@ import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { BRAND } from "@/lib/brand";
 import "@/components/search/search.css";
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: `Search | ${BRAND.name}`,
   description: "Find instruments, pro audio, software, and accessories at Vibe Music.",
@@ -20,8 +22,7 @@ export default function SearchPage() {
           <p className="sw-search-landing__eyebrow">Gear discovery</p>
           <h1>Search Vibe Music</h1>
           <p className="sw-search-landing__lead">
-            Find instruments, pro audio, software, and more — start typing or pick a
-            category below.
+            Find instruments, pro audio, software, and more — start typing or pick a category below.
           </p>
           <SearchLandingExperience autoFocus />
         </section>

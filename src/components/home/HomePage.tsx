@@ -12,6 +12,8 @@ import BigNamesDealsSection from "@/components/home/BigNamesDealsSection";
 
 import PremiumHero from "@/components/home/PremiumHero";
 
+// Below-fold components wrapped in Suspense for streaming SSR.
+// Each section loads independently — browser renders as chunks arrive.
 const HomepageStats = dynamic(() => import("@/components/home/HomepageStats"), {
   loading: () => null,
 });
@@ -23,29 +25,25 @@ const SocialProofStrip = dynamic(() => import("@/components/home/SocialProofStri
 });
 const DiscoverLocationsSection = dynamic(
   () => import("@/components/home/DiscoverLocationsSection"),
-  { loading: () => null }
+  { loading: () => null },
 );
-const TourRibbonSection = dynamic(
-  () => import("@/components/home/TourRibbonSection"),
-  { loading: () => null }
-);
+const TourRibbonSection = dynamic(() => import("@/components/home/TourRibbonSection"), {
+  loading: () => null,
+});
 const EditorialSplit = dynamic(() => import("@/components/home/EditorialSplit"), {
   loading: () => null,
 });
-const HomepageAplusContent = dynamic(
-  () => import("@/components/home/HomepageAplusContent"),
-  { loading: () => null }
-);
+const HomepageAplusContent = dynamic(() => import("@/components/home/HomepageAplusContent"), {
+  loading: () => null,
+});
 
-const ServiceStatusCarousel = dynamic(
-  () => import("@/components/home/ServiceStatusCarousel"),
-  { loading: () => null }
-);
+const ServiceStatusCarousel = dynamic(() => import("@/components/home/ServiceStatusCarousel"), {
+  loading: () => null,
+});
 
-const GearStoriesReelsSection = dynamic(
-  () => import("@/components/home/GearStoriesReelsSection"),
-  { loading: () => null }
-);
+const GearStoriesReelsSection = dynamic(() => import("@/components/home/GearStoriesReelsSection"), {
+  loading: () => null,
+});
 
 const CategoryBento = dynamic(() => import("@/components/home/CategoryBento"), {
   loading: () => null,
@@ -53,7 +51,7 @@ const CategoryBento = dynamic(() => import("@/components/home/CategoryBento"), {
 
 const CultureTypographySection = dynamic(
   () => import("@/components/home/CultureTypographySection"),
-  { loading: () => null }
+  { loading: () => null },
 );
 
 export default function HomePage() {

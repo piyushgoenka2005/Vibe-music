@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import SearchResultsPage from "@/components/search/SearchResultsPage";
-import {
-  getSearchResults,
-  SEARCH_MIN_QUERY_LENGTH,
-} from "@/lib/server/searchResultsService";
+import { getSearchResults, SEARCH_MIN_QUERY_LENGTH } from "@/lib/server/searchResultsService";
 import type { SearchResultsData } from "@/types/search";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: true },
@@ -20,9 +19,7 @@ interface SearchResultsRouteProps {
   }>;
 }
 
-export default async function SearchResultsRoute({
-  searchParams,
-}: SearchResultsRouteProps) {
+export default async function SearchResultsRoute({ searchParams }: SearchResultsRouteProps) {
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
   const category = params.category ?? "";
@@ -41,7 +38,7 @@ export default async function SearchResultsRoute({
         query,
         category: category || undefined,
         subcategory: subcategory || undefined,
-        brand: (query || category) ? undefined : (brand || undefined),
+        brand: query || category ? undefined : brand || undefined,
       });
     } catch {
       initialResults = null;

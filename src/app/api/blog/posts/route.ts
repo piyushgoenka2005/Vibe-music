@@ -24,7 +24,11 @@ export async function GET(request: Request) {
       featured: featured || undefined,
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: {
+        "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",
+      },
+    });
   } catch (error) {
     return publicApiError(error, "Failed to load blog posts");
   }
