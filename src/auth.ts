@@ -9,10 +9,7 @@ import {
   resolveSessionMaxAgeSeconds,
 } from "@/lib/auth/session-config";
 import { encode as encodeJwt } from "@auth/core/jwt";
-import {
-  ensureOAuthUserProfile,
-  findUserByEmail,
-} from "@/lib/server/userService";
+import { ensureOAuthUserProfile, findUserByEmail } from "@/lib/server/userService";
 import { isGoogleAuthConfigured, getGoogleAuthCredentials } from "@/lib/auth/google-config";
 import { logAuditEvent } from "@/lib/server/auditLog";
 import { loginSchema } from "@/lib/validations/auth";
@@ -81,7 +78,7 @@ function buildProviders(): NextAuthConfig["providers"] {
         // Admin accounts may enforce TOTP. Password success alone is not enough.
         const totpOk = await verifyAdminLoginTotp(
           user.id,
-          typeof credentials?.totp === "string" ? credentials.totp : undefined
+          typeof credentials?.totp === "string" ? credentials.totp : undefined,
         );
         if (!totpOk) {
           return null;
@@ -111,7 +108,7 @@ function buildProviders(): NextAuthConfig["providers"] {
           // "false" only if a separate, authenticated account-linking UI exists.
           allowDangerousEmailAccountLinking:
             process.env.AUTH_ALLOW_DANGEROUS_EMAIL_LINKING !== "false",
-        })
+        }),
       );
     }
   }
@@ -120,8 +117,7 @@ function buildProviders(): NextAuthConfig["providers"] {
 }
 
 function resolveAuthSecret(): string | undefined {
-  const fromEnv =
-    process.env.AUTH_SECRET?.trim() || process.env.NEXTAUTH_SECRET?.trim();
+  const fromEnv = process.env.AUTH_SECRET?.trim() || process.env.NEXTAUTH_SECRET?.trim();
   if (fromEnv) return fromEnv;
   // Local/dev only — Auth.js throws Configuration without a secret.
   if (process.env.NODE_ENV !== "production") {
@@ -131,6 +127,7 @@ function resolveAuthSecret(): string | undefined {
 }
 
 export const authConfig = {
+  basePath: "/api/auth",
   trustHost: true,
   secret: resolveAuthSecret(),
   session: {
@@ -146,9 +143,7 @@ export const authConfig = {
     async encode(params) {
       const nowSec = Math.floor(Date.now() / 1000);
       const tokenExp =
-        params.token && typeof params.token.exp === "number"
-          ? params.token.exp
-          : null;
+        params.token && typeof params.token.exp === "number" ? params.token.exp : null;
       const maxAge =
         tokenExp != null
           ? Math.max(1, tokenExp - nowSec)
@@ -209,9 +204,7 @@ export const authConfig = {
 
       // Admin DB lookup only on sign-in / session update — not every JWT read.
       const shouldRefreshAdmin =
-        Boolean(user) ||
-        trigger === "update" ||
-        typeof token.isAdmin !== "boolean";
+        Boolean(user) || trigger === "update" || typeof token.isAdmin !== "boolean";
 
       if (shouldRefreshAdmin && isPostgresConfigured()) {
         const uid = typeof token.uid === "string" ? token.uid : token.sub;
@@ -252,8 +245,7 @@ export const authConfig = {
         emailVerified: session.user?.emailVerified ?? null,
         isAdmin: Boolean(token.isAdmin),
         adminRole,
-        authProvider:
-          typeof token.authProvider === "string" ? token.authProvider : "credentials",
+        authProvider: typeof token.authProvider === "string" ? token.authProvider : "credentials",
       };
 
       return session;

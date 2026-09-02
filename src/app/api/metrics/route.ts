@@ -56,15 +56,17 @@ export async function GET() {
     // Count active products (lightweight query)
     let activeProducts = 0;
     let totalOrders = 0;
-    try {
-      const [productCount, orderCount] = await Promise.all([
-        rawPrisma.product.count({ where: { status: "active" } }),
-        rawPrisma.order.count(),
-      ]);
-      activeProducts = productCount;
-      totalOrders = orderCount;
-    } catch {
-      // Non-critical — metrics endpoint should not fail
+    if (rawPrisma) {
+      try {
+        const [productCount, orderCount] = await Promise.all([
+          rawPrisma.product.count({ where: { status: "active" } }),
+          rawPrisma.order.count(),
+        ]);
+        activeProducts = productCount;
+        totalOrders = orderCount;
+      } catch {
+        // Non-critical — metrics endpoint should not fail
+      }
     }
 
     // Circuit breaker metrics

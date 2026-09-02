@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/db/prisma";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import type { Shipment, ShipmentCarrier, ShipmentStatus, TrackingEvent } from "@/types/shipment";
 import { carrierLabel } from "@/types/shipment";
 
@@ -63,10 +63,7 @@ function mapTrackingEvent(row: {
   };
 }
 
-export function normalizeShipment(
-  id: string,
-  data: Record<string, unknown>
-): Shipment {
+export function normalizeShipment(id: string, data: Record<string, unknown>): Shipment {
   const carrier = String(data.carrier ?? "other") as ShipmentCarrier;
   return {
     id,
@@ -83,10 +80,7 @@ export function normalizeShipment(
   };
 }
 
-export function normalizeTrackingEvent(
-  id: string,
-  data: Record<string, unknown>
-): TrackingEvent {
+export function normalizeTrackingEvent(id: string, data: Record<string, unknown>): TrackingEvent {
   return {
     id,
     shipmentId: String(data.shipmentId ?? ""),
@@ -101,16 +95,14 @@ export function normalizeTrackingEvent(
   };
 }
 
-export async function getShipmentByOrderId(
-  orderId: string
-): Promise<Shipment | null> {
+export async function getShipmentByOrderId(orderId: string): Promise<Shipment | null> {
+  if (!isPostgresConfigured()) return null;
   const row = await prisma.shipment.findUnique({ where: { orderId } });
   return row ? mapShipment(row) : null;
 }
 
-export async function getTrackingEventsByOrderId(
-  orderId: string
-): Promise<TrackingEvent[]> {
+export async function getTrackingEventsByOrderId(orderId: string): Promise<TrackingEvent[]> {
+  if (!isPostgresConfigured()) return [];
   const rows = await prisma.trackingEvent.findMany({
     where: { orderId },
     orderBy: { occurredAt: "desc" },
@@ -128,14 +120,12 @@ export async function upsertShipmentRecord(
     estimatedDelivery?: string | null;
     shippedAt?: string | null;
     deliveredAt?: string | null;
-  }
+  },
 ): Promise<Shipment> {
   const existing = await prisma.shipment.findUnique({ where: { orderId } });
   const timestamp = new Date().toISOString();
   const shippedAt =
-    input.shippedAt ??
-    existing?.shippedAt ??
-    (input.status !== "pending" ? timestamp : null);
+    input.shippedAt ?? existing?.shippedAt ?? (input.status !== "pending" ? timestamp : null);
 
   const record: Shipment = {
     id: orderId,
@@ -235,7 +225,7 @@ export async function createTrackingEventRecord(input: {
 export async function updateShipmentStatus(
   orderId: string,
   status: ShipmentStatus,
-  timestamps?: { shippedAt?: string; deliveredAt?: string }
+  timestamps?: { shippedAt?: string; deliveredAt?: string },
 ): Promise<void> {
   const timestamp = new Date().toISOString();
   await prisma.shipment.update({

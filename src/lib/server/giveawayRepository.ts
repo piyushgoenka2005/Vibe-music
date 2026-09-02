@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { prisma } from "@/lib/db/prisma";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import type {
   GiveawayCampaign,
@@ -46,7 +46,7 @@ function mapCampaign(
     updatedAt: string;
     _count?: { entries: number };
   },
-  entryCount?: number
+  entryCount?: number,
 ): GiveawayCampaign {
   return {
     id: row.id,
@@ -256,7 +256,9 @@ export async function upsertGiveawayCampaign(input: {
       requireEmailVerification: input.requireEmailVerification ?? true,
       referralBonusEntries: input.referralBonusEntries ?? 1,
       socialBonusEntries: input.socialBonusEntries ?? 1,
-      allowedSocialPlatforms: asJsonValue(input.allowedSocialPlatforms ?? ["instagram", "youtube", "facebook", "x"]),
+      allowedSocialPlatforms: asJsonValue(
+        input.allowedSocialPlatforms ?? ["instagram", "youtube", "facebook", "x"],
+      ),
       eligibilityRules: asJsonValue(input.eligibilityRules ?? {}),
       termsHtml: input.termsHtml ?? "",
       faqs: asJsonValue(input.faqs ?? []),
@@ -303,7 +305,7 @@ export async function updateGiveawayCampaignFields(
     status: string;
     winnersAnnounced: boolean;
     updatedAt: string;
-  }>
+  }>,
 ): Promise<void> {
   await prisma.giveawayCampaign.update({
     where: { id },
@@ -318,7 +320,7 @@ export async function getNextGiveawayEntrySequence(): Promise<number> {
 
 export async function findGiveawayEntryByEmail(
   campaignId: string,
-  email: string
+  email: string,
 ): Promise<GiveawayEntry | null> {
   const row = await prisma.giveawayEntry.findUnique({
     where: { campaignId_email: { campaignId, email: email.toLowerCase() } },
@@ -328,7 +330,7 @@ export async function findGiveawayEntryByEmail(
 
 export async function findGiveawayEntryByUser(
   campaignId: string,
-  userId: string
+  userId: string,
 ): Promise<GiveawayEntry | null> {
   const row = await prisma.giveawayEntry.findFirst({
     where: { campaignId, userId },
@@ -338,7 +340,7 @@ export async function findGiveawayEntryByUser(
 
 export async function countGiveawayEntriesByIp(
   campaignId: string,
-  ipHash: string
+  ipHash: string,
 ): Promise<number> {
   return prisma.giveawayEntry.count({
     where: { campaignId, ipHash },
@@ -346,7 +348,7 @@ export async function countGiveawayEntriesByIp(
 }
 
 export async function findGiveawayEntryByReferralCode(
-  referralCode: string
+  referralCode: string,
 ): Promise<GiveawayEntry | null> {
   const row = await prisma.giveawayEntry.findUnique({
     where: { referralCode: referralCode.toUpperCase() },
@@ -416,7 +418,7 @@ export async function getGiveawayEntryById(id: string): Promise<GiveawayEntry | 
 }
 
 export async function getGiveawayEntryByTrackingToken(
-  trackingToken: string
+  trackingToken: string,
 ): Promise<GiveawayEntry | null> {
   const row = await prisma.giveawayEntry.findUnique({
     where: { trackingToken },
@@ -429,9 +431,7 @@ export async function getGiveawayEntryByTrackingToken(
   return row ? mapEntry(row) : null;
 }
 
-export async function getGiveawayEntryByVerifyToken(
-  token: string
-): Promise<GiveawayEntry | null> {
+export async function getGiveawayEntryByVerifyToken(token: string): Promise<GiveawayEntry | null> {
   const row = await prisma.giveawayEntry.findUnique({
     where: { emailVerifyToken: token },
     include: {
@@ -445,7 +445,7 @@ export async function getGiveawayEntryByVerifyToken(
 
 export async function listGiveawayEntriesForCampaign(
   campaignId: string,
-  limit = 500
+  limit = 500,
 ): Promise<GiveawayEntry[]> {
   const rows = await prisma.giveawayEntry.findMany({
     where: { campaignId },
@@ -456,6 +456,7 @@ export async function listGiveawayEntriesForCampaign(
 }
 
 export async function listGiveawayEntriesForUser(userId: string): Promise<GiveawayEntry[]> {
+  if (!isPostgresConfigured()) return [];
   const rows = await prisma.giveawayEntry.findMany({
     where: { userId },
     include: {
@@ -479,7 +480,7 @@ export async function updateGiveawayEntryFields(
     emailVerifyToken: string | null;
     status: string;
     updatedAt: string;
-  }>
+  }>,
 ): Promise<void> {
   await prisma.giveawayEntry.update({
     where: { id },
@@ -490,10 +491,7 @@ export async function updateGiveawayEntryFields(
   });
 }
 
-export async function addReferralBonusToEntry(
-  entryId: string,
-  bonus: number
-): Promise<void> {
+export async function addReferralBonusToEntry(entryId: string, bonus: number): Promise<void> {
   const entry = await prisma.giveawayEntry.findUnique({ where: { id: entryId } });
   if (!entry) return;
   const bonusEntries = entry.bonusEntries + bonus;
@@ -508,7 +506,7 @@ export async function addReferralBonusToEntry(
 }
 
 export async function listGiveawayWinnersForCampaign(
-  campaignId: string
+  campaignId: string,
 ): Promise<GiveawayWinner[]> {
   const rows = await prisma.giveawayWinner.findMany({
     where: { campaignId },
@@ -522,7 +520,7 @@ export async function listGiveawayWinnersForCampaign(
 
 export async function createGiveawayWinners(
   campaignId: string,
-  entryIds: string[]
+  entryIds: string[],
 ): Promise<GiveawayWinner[]> {
   const now = new Date().toISOString();
   const winners = [];
@@ -550,7 +548,7 @@ export async function createGiveawayWinners(
 
 export async function markGiveawayWinnersAnnounced(
   campaignId: string,
-  winnerIds: string[]
+  winnerIds: string[],
 ): Promise<void> {
   const now = new Date().toISOString();
   await prisma.giveawayWinner.updateMany({
@@ -640,7 +638,7 @@ export async function exportGiveawayEntriesCsv(campaignId: string): Promise<stri
       e.referralCode,
       `"${e.fraudFlags.join(";")}"`,
       e.createdAt,
-    ].join(",")
+    ].join(","),
   );
   return [header, ...lines].join("\n");
 }

@@ -1,17 +1,14 @@
 function storePhoneFromEnv(): string {
-  return (
-    process.env.NEXT_PUBLIC_STORE_PHONE?.trim() ||
-    process.env.STORE_PHONE?.trim() ||
-    ""
-  );
+  return process.env.NEXT_PUBLIC_STORE_PHONE?.trim() || process.env.STORE_PHONE?.trim() || "";
 }
 
 const storePhone = storePhoneFromEnv();
 
-export function formatIndianPhone(raw: string): {
+export function formatIndianPhone(raw: string | undefined): {
   display: string;
   tel: string;
 } {
+  if (!raw) return { display: "", tel: "" };
   const digits = raw.replace(/\D/g, "");
   if (!digits) return { display: "", tel: "" };
 
@@ -19,9 +16,7 @@ export function formatIndianPhone(raw: string): {
     digits.length === 10 ? `91${digits}` : digits.startsWith("91") ? digits : digits;
   const local = normalized.startsWith("91") ? normalized.slice(2) : normalized;
   const display =
-    local.length === 10
-      ? `+91 ${local.slice(0, 5)} ${local.slice(5)}`
-      : `+${normalized}`;
+    local.length === 10 ? `+91 ${local.slice(0, 5)} ${local.slice(5)}` : `+${normalized}`;
 
   return { display, tel: `+${normalized}` };
 }

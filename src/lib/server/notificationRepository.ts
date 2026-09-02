@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/db/prisma";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
@@ -57,9 +57,8 @@ function mapAdminNotification(row: {
   };
 }
 
-export async function getNotificationPreferences(
-  userId: string
-): Promise<NotificationPreferences> {
+export async function getNotificationPreferences(userId: string): Promise<NotificationPreferences> {
+  if (!isPostgresConfigured()) return DEFAULT_NOTIFICATION_PREFERENCES;
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user?.notificationPreferences) return DEFAULT_NOTIFICATION_PREFERENCES;
   const prefs = user.notificationPreferences as Partial<NotificationPreferences>;
@@ -68,7 +67,7 @@ export async function getNotificationPreferences(
 
 export async function updateNotificationPreferences(
   userId: string,
-  patch: Partial<NotificationPreferences>
+  patch: Partial<NotificationPreferences>,
 ): Promise<NotificationPreferences> {
   const current = await getNotificationPreferences(userId);
   const updated = { ...current, ...patch };
@@ -81,13 +80,8 @@ export async function updateNotificationPreferences(
     select: { email: true, name: true },
   });
 
-  if (
-    user.email &&
-    ("newsletter" in patch || "promotions" in patch)
-  ) {
-    const { syncNewsletterMarketingPreference } = await import(
-      "@/lib/server/newsletterRepository"
-    );
+  if (user.email && ("newsletter" in patch || "promotions" in patch)) {
+    const { syncNewsletterMarketingPreference } = await import("@/lib/server/newsletterRepository");
     void syncNewsletterMarketingPreference({
       email: user.email,
       // Either newsletter or promotions opt-in keeps marketing subscription active.
@@ -135,8 +129,9 @@ export async function createUserNotification(input: {
 
 export async function listUserNotifications(
   userId: string,
-  limit = 30
+  limit = 30,
 ): Promise<UserNotification[]> {
+  if (!isPostgresConfigured()) return [];
   const rows = await prisma.userNotification.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
@@ -147,7 +142,7 @@ export async function listUserNotifications(
 
 export async function markUserNotificationRead(
   userId: string,
-  notificationId: string
+  notificationId: string,
 ): Promise<void> {
   const row = await prisma.userNotification.findFirst({
     where: { id: notificationId, userId },
@@ -198,6 +193,7 @@ export async function createAdminNotification(input: {
 }
 
 export async function listAdminNotifications(limit = 50): Promise<AdminNotification[]> {
+  if (!isPostgresConfigured()) return [];
   const rows = await prisma.adminNotification.findMany({
     orderBy: { createdAt: "desc" },
     take: Math.min(limit, 100),

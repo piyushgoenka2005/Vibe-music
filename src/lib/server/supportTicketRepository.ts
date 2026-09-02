@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/db/prisma";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import type {
   SupportTicket,
   SupportTicketCategory,
@@ -48,10 +48,7 @@ function mapSupportTicket(row: {
 }
 
 export async function createSupportTicket(
-  input: Omit<
-    SupportTicket,
-    "id" | "status" | "priority" | "createdAt" | "updatedAt"
-  >
+  input: Omit<SupportTicket, "id" | "status" | "priority" | "createdAt" | "updatedAt">,
 ): Promise<SupportTicket> {
   const now = new Date().toISOString();
   const record: SupportTicket = {
@@ -87,19 +84,21 @@ export async function createSupportTicket(
   return record;
 }
 
-export async function getSupportTicketById(
-  id: string
-): Promise<SupportTicket | null> {
+export async function getSupportTicketById(id: string): Promise<SupportTicket | null> {
+  if (!isPostgresConfigured()) return null;
   const row = await prisma.supportTicket.findUnique({ where: { id } });
   return row ? mapSupportTicket(row) : null;
 }
 
-export async function listSupportTickets(options: {
-  status?: SupportTicketStatus;
-  userId?: string;
-  email?: string;
-  limit?: number;
-} = {}): Promise<SupportTicket[]> {
+export async function listSupportTickets(
+  options: {
+    status?: SupportTicketStatus;
+    userId?: string;
+    email?: string;
+    limit?: number;
+  } = {},
+): Promise<SupportTicket[]> {
+  if (!isPostgresConfigured()) return [];
   const limit = Math.min(Math.max(options.limit ?? 50, 1), 100);
 
   if (options.userId && options.email) {
@@ -136,15 +135,8 @@ export async function listSupportTickets(options: {
 export async function updateSupportTicket(
   id: string,
   patch: Partial<
-    Pick<
-      SupportTicket,
-      | "status"
-      | "priority"
-      | "adminNote"
-      | "assignedTo"
-      | "resolvedAt"
-    >
-  >
+    Pick<SupportTicket, "status" | "priority" | "adminNote" | "assignedTo" | "resolvedAt">
+  >,
 ): Promise<SupportTicket> {
   const now = new Date().toISOString();
   const resolvedAt =

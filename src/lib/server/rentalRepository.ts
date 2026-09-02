@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { prisma } from "@/lib/db/prisma";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import { asJsonValue, asStringArray, toIsoString } from "@/lib/server/prisma/mappers";
 import type {
   RentalAvailabilityBlock,
@@ -234,6 +234,7 @@ function mapBooking(row: {
 export async function listRentalCategories(options?: {
   includeDraft?: boolean;
 }): Promise<RentalCategory[]> {
+  if (!isPostgresConfigured()) return [];
   const rows = await prisma.rentalCategory.findMany({
     where: options?.includeDraft ? undefined : { status: "active" },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -242,9 +243,8 @@ export async function listRentalCategories(options?: {
   return rows.map(mapCategory);
 }
 
-export async function getRentalCategoryBySlug(
-  slug: string
-): Promise<RentalCategory | null> {
+export async function getRentalCategoryBySlug(slug: string): Promise<RentalCategory | null> {
+  if (!isPostgresConfigured()) return null;
   const row = await prisma.rentalCategory.findUnique({
     where: { slug },
     include: { _count: { select: { products: true } } },
@@ -258,6 +258,7 @@ export async function listRentalProducts(filters?: {
   status?: string | null;
   search?: string;
 }): Promise<RentalProduct[]> {
+  if (!isPostgresConfigured()) return [];
   const where: Record<string, unknown> = {};
   if (filters?.status !== null && filters?.status !== undefined) {
     where.status = filters.status;
@@ -282,9 +283,8 @@ export async function listRentalProducts(filters?: {
   return rows.map(mapProduct);
 }
 
-export async function getRentalProductBySlug(
-  slug: string
-): Promise<RentalProduct | null> {
+export async function getRentalProductBySlug(slug: string): Promise<RentalProduct | null> {
+  if (!isPostgresConfigured()) return null;
   const row = await prisma.rentalProduct.findUnique({
     where: { slug },
     include: { category: { select: { slug: true, name: true } } },
@@ -292,9 +292,8 @@ export async function getRentalProductBySlug(
   return row ? mapProduct(row) : null;
 }
 
-export async function getRentalProductById(
-  id: string
-): Promise<RentalProduct | null> {
+export async function getRentalProductById(id: string): Promise<RentalProduct | null> {
+  if (!isPostgresConfigured()) return null;
   const row = await prisma.rentalProduct.findUnique({
     where: { id },
     include: { category: { select: { slug: true, name: true } } },
@@ -302,9 +301,8 @@ export async function getRentalProductById(
   return row ? mapProduct(row) : null;
 }
 
-export async function listRentalLocksForProduct(
-  productId: string
-): Promise<RentalInventoryLock[]> {
+export async function listRentalLocksForProduct(productId: string): Promise<RentalInventoryLock[]> {
+  if (!isPostgresConfigured()) return [];
   const rows = await prisma.rentalInventoryLock.findMany({
     where: { productId },
   });
@@ -322,8 +320,9 @@ export async function listRentalLocksForProduct(
 }
 
 export async function listRentalBlocksForProduct(
-  productId: string
+  productId: string,
 ): Promise<RentalAvailabilityBlock[]> {
+  if (!isPostgresConfigured()) return [];
   const rows = await prisma.rentalAvailabilityBlock.findMany({
     where: { productId },
     orderBy: { startAt: "asc" },
@@ -340,7 +339,7 @@ export async function listRentalBlocksForProduct(
 }
 
 export async function upsertRentalBlock(
-  input: RentalAvailabilityBlock
+  input: RentalAvailabilityBlock,
 ): Promise<RentalAvailabilityBlock> {
   const row = await prisma.rentalAvailabilityBlock.upsert({
     where: { id: input.id },
@@ -376,6 +375,19 @@ export async function deleteRentalBlock(id: string): Promise<void> {
 }
 
 export async function getRentalPolicy(): Promise<RentalPolicy> {
+  if (!isPostgresConfigured()) {
+    const now = new Date().toISOString();
+    return {
+      id: "default",
+      title: "Rental Terms",
+      termsHtml: "<p>Standard rental terms apply.</p>",
+      agreementHtml: "<p>I agree to the rental agreement and deposit terms.</p>",
+      cancellationPolicy: "Free cancellation up to 24 hours before pickup.",
+      lateFeePolicy: "Late returns incur daily late fees as listed on each product.",
+      damagePolicy: "Damage beyond normal wear is charged at repair/replacement cost.",
+      updatedAt: now,
+    };
+  }
   const row = await prisma.rentalPolicy.findUnique({ where: { id: "default" } });
   if (row) {
     return {
@@ -415,6 +427,7 @@ export async function getRentalPolicy(): Promise<RentalPolicy> {
 }
 
 export async function getRentalBookingById(id: string): Promise<RentalBooking | null> {
+  if (!isPostgresConfigured()) return null;
   const row = await prisma.rentalBooking.findUnique({
     where: { id },
     include: { items: true },
@@ -423,8 +436,9 @@ export async function getRentalBookingById(id: string): Promise<RentalBooking | 
 }
 
 export async function getRentalBookingByNumber(
-  bookingNumber: string
+  bookingNumber: string,
 ): Promise<RentalBooking | null> {
+  if (!isPostgresConfigured()) return null;
   const row = await prisma.rentalBooking.findUnique({
     where: { bookingNumber },
     include: { items: true },
@@ -433,6 +447,7 @@ export async function getRentalBookingByNumber(
 }
 
 export async function listRentalBookingsForUser(userId: string): Promise<RentalBooking[]> {
+  if (!isPostgresConfigured()) return [];
   const rows = await prisma.rentalBooking.findMany({
     where: { userId },
     include: { items: true },
@@ -445,6 +460,7 @@ export async function listAllRentalBookings(options?: {
   status?: string;
   limit?: number;
 }): Promise<RentalBooking[]> {
+  if (!isPostgresConfigured()) return [];
   const rows = await prisma.rentalBooking.findMany({
     where: options?.status ? { status: options.status } : undefined,
     include: { items: true },
@@ -459,7 +475,7 @@ export async function allocateNextRentalBookingNumber(): Promise<string> {
     new Intl.DateTimeFormat("en-IN", {
       timeZone: "Asia/Kolkata",
       year: "numeric",
-    }).format(new Date())
+    }).format(new Date()),
   );
   const key = `rental_booking_${year}`;
   const counter = await prisma.counter.upsert({
@@ -472,7 +488,7 @@ export async function allocateNextRentalBookingNumber(): Promise<string> {
 }
 
 export async function createRentalBookingRecord(
-  booking: Omit<RentalBooking, "items"> & { items: Omit<RentalBookingItem, "id" | "bookingId">[] }
+  booking: Omit<RentalBooking, "items"> & { items: Omit<RentalBookingItem, "id" | "bookingId">[] },
 ): Promise<RentalBooking> {
   const bookingId = booking.id || randomUUID();
   const now = new Date().toISOString();
@@ -545,7 +561,7 @@ export async function createRentalBookingRecord(
 
 export async function updateRentalBookingFields(
   id: string,
-  patch: Partial<RentalBooking>
+  patch: Partial<RentalBooking>,
 ): Promise<RentalBooking> {
   const now = new Date().toISOString();
   await prisma.rentalBooking.update({
@@ -572,7 +588,7 @@ export async function updateRentalBookingFields(
 }
 
 export async function createInventoryLocks(
-  locks: Array<Omit<RentalInventoryLock, "id" | "createdAt">>
+  locks: Array<Omit<RentalInventoryLock, "id" | "createdAt">>,
 ): Promise<void> {
   const now = new Date().toISOString();
   await prisma.rentalInventoryLock.createMany({
@@ -645,7 +661,7 @@ export async function addRentalCharge(input: {
 // ─── Admin CRUD ─────────────────────────────────────────────────────────────
 
 export async function upsertRentalCategory(
-  input: Omit<RentalCategory, "productCount">
+  input: Omit<RentalCategory, "productCount">,
 ): Promise<RentalCategory> {
   const now = new Date().toISOString();
   const row = await prisma.rentalCategory.upsert({
@@ -683,9 +699,7 @@ export async function deleteRentalCategory(id: string): Promise<void> {
   await prisma.rentalCategory.delete({ where: { id } });
 }
 
-export async function upsertRentalProduct(
-  input: RentalProduct
-): Promise<RentalProduct> {
+export async function upsertRentalProduct(input: RentalProduct): Promise<RentalProduct> {
   const now = new Date().toISOString();
   const row = await prisma.rentalProduct.upsert({
     where: { id: input.id },
@@ -763,6 +777,7 @@ export async function deleteRentalProduct(id: string): Promise<void> {
 }
 
 export async function listRentalUnits(productId: string): Promise<RentalInventoryUnit[]> {
+  if (!isPostgresConfigured()) return [];
   const rows = await prisma.rentalInventoryUnit.findMany({
     where: { productId },
     orderBy: { label: "asc" },
