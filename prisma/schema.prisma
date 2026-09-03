@@ -74,7 +74,6 @@ model Product {
   updatedAt          String  @map("updated_at")
 
   @@index([status])
-  @@index([productId, status])
   @@index([categorySlug])
   @@index([brandSlug])
   @@index([featured])
@@ -133,7 +132,6 @@ model Order {
   @@index([userId])
   @@index([email])
   @@index([status])
-  @@index([productId, status])
   @@index([paymentStatus])
   @@index([razorpayOrderId])
   @@index([userId, createdAt])
@@ -357,7 +355,6 @@ model Banner {
   updatedAt   String  @map("updated_at")
 
   @@index([status])
-  @@index([productId, status])
   @@map("banners")
 }
 
@@ -387,7 +384,6 @@ model BlogPost {
   updatedAt      String  @map("updated_at")
 
   @@index([status])
-  @@index([productId, status])
   @@index([categorySlug])
   @@index([featured])
   @@map("blog_posts")
@@ -563,7 +559,6 @@ model ReturnRequest {
 
   @@index([orderId])
   @@index([status])
-  @@index([productId, status])
   @@map("return_requests")
 }
 
@@ -698,7 +693,6 @@ model ContactMessage {
   createdAt String @map("created_at")
 
   @@index([status])
-  @@index([productId, status])
   @@map("contact_messages")
 }
 
@@ -814,7 +808,6 @@ model SupportTicket {
   resolvedAt String? @map("resolved_at")
 
   @@index([status])
-  @@index([productId, status])
   @@index([userId])
   @@index([email])
   @@map("support_tickets")
@@ -847,7 +840,6 @@ model RentalCategory {
   products        RentalProduct[]
 
   @@index([status])
-  @@index([productId, status])
   @@map("rental_categories")
 }
 
@@ -891,7 +883,6 @@ model RentalProduct {
 
   @@index([categoryId])
   @@index([status])
-  @@index([productId, status])
   @@index([featured])
   @@map("rental_products")
 }
@@ -974,7 +965,6 @@ model RentalBooking {
   @@index([userId])
   @@index([email])
   @@index([status])
-  @@index([productId, status])
   @@index([paymentStatus])
   @@index([startAt])
   @@index([createdAt])
@@ -1103,7 +1093,6 @@ model GiveawayCampaign {
   events                   GiveawayCampaignEvent[]
 
   @@index([status])
-  @@index([productId, status])
   @@index([startsAt])
   @@index([endsAt])
   @@index([featured])
@@ -1145,7 +1134,6 @@ model GiveawayEntry {
   @@index([userId])
   @@index([referralCode])
   @@index([status])
-  @@index([productId, status])
   @@map("giveaway_entries")
 }
 
