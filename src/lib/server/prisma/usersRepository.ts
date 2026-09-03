@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Prisma } from "@prisma/client";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "./mappers";
@@ -29,10 +30,7 @@ export async function listAddressesByUserId(userId: string): Promise<Address[]> 
   }));
 }
 
-export async function getAddressById(
-  addressId: string,
-  userId: string
-): Promise<Address | null> {
+export async function getAddressById(addressId: string, userId: string): Promise<Address | null> {
   const row = await prisma.address.findFirst({
     where: { id: addressId, userId },
   });
@@ -115,10 +113,7 @@ function now(): string {
   return new Date().toISOString();
 }
 
-export async function clearDefaultAddressFlags(
-  userId: string,
-  exceptId?: string
-): Promise<void> {
+export async function clearDefaultAddressFlags(userId: string, exceptId?: string): Promise<void> {
   const timestamp = now();
   await prisma.address.updateMany({
     where: {
@@ -133,7 +128,7 @@ export async function clearDefaultAddressFlags(
 export async function createAddressRecord(
   userId: string,
   input: CreateAddressInput,
-  options: { id?: string; isDefault: boolean }
+  options: { id?: string; isDefault: boolean },
 ): Promise<Address> {
   const timestamp = now();
   const id = options.id ?? randomUUID();
@@ -179,7 +174,7 @@ export async function createAddressRecord(
 export async function updateAddressRecord(
   addressId: string,
   userId: string,
-  patch: UpdateAddressInput
+  patch: UpdateAddressInput,
 ): Promise<Address> {
   const timestamp = now();
   await prisma.address.updateMany({
@@ -187,18 +182,14 @@ export async function updateAddressRecord(
     data: {
       ...(patch.fullName !== undefined ? { fullName: patch.fullName.trim() } : {}),
       ...(patch.phone !== undefined ? { phone: patch.phone.trim() } : {}),
-      ...(patch.addressLine1 !== undefined
-        ? { addressLine1: patch.addressLine1.trim() }
-        : {}),
+      ...(patch.addressLine1 !== undefined ? { addressLine1: patch.addressLine1.trim() } : {}),
       ...(patch.addressLine2 !== undefined
         ? { addressLine2: patch.addressLine2.trim() || null }
         : {}),
       ...(patch.city !== undefined ? { city: patch.city.trim() } : {}),
       ...(patch.state !== undefined ? { state: patch.state.trim() } : {}),
       ...(patch.country !== undefined ? { country: patch.country.trim() } : {}),
-      ...(patch.postalCode !== undefined
-        ? { postalCode: patch.postalCode.trim() }
-        : {}),
+      ...(patch.postalCode !== undefined ? { postalCode: patch.postalCode.trim() } : {}),
       ...(patch.label !== undefined ? { label: patch.label.trim() || null } : {}),
       ...(patch.isDefault !== undefined ? { isDefault: patch.isDefault } : {}),
       updatedAt: timestamp,
@@ -210,17 +201,11 @@ export async function updateAddressRecord(
   return updated;
 }
 
-export async function deleteAddressRecord(
-  addressId: string,
-  userId: string
-): Promise<void> {
+export async function deleteAddressRecord(addressId: string, userId: string): Promise<void> {
   await prisma.address.deleteMany({ where: { id: addressId, userId } });
 }
 
-export async function upsertWishlistItems(
-  userId: string,
-  items: unknown[]
-): Promise<void> {
+export async function upsertWishlistItems(userId: string, items: unknown[]): Promise<void> {
   const updatedAt = now();
   await prisma.wishlist.upsert({
     where: { userId },
@@ -244,9 +229,7 @@ export async function updateAdminLastLoginRecord(uid: string): Promise<void> {
   });
 }
 
-export async function createAdminProfileRecord(
-  profile: AdminProfile
-): Promise<AdminProfile> {
+export async function createAdminProfileRecord(profile: AdminProfile): Promise<AdminProfile> {
   await prisma.admin.create({
     data: {
       uid: profile.uid,
@@ -264,7 +247,7 @@ export async function createAdminProfileRecord(
 
 export async function updateAdminProfileRecord(
   uid: string,
-  patch: Partial<Pick<AdminProfile, "displayName" | "role" | "isActive">>
+  patch: Partial<Pick<AdminProfile, "displayName" | "role" | "isActive">>,
 ): Promise<AdminProfile> {
   const timestamp = now();
   await prisma.admin.update({
@@ -282,10 +265,7 @@ export async function countActiveSuperAdmins(): Promise<number> {
   });
 }
 
-export async function updateUserActiveStatus(
-  uid: string,
-  isActive: boolean
-): Promise<void> {
+export async function updateUserActiveStatus(uid: string, isActive: boolean): Promise<void> {
   await prisma.user.update({
     where: { id: uid },
     data: { isActive, updatedAt: now() },
@@ -301,6 +281,74 @@ export async function listRecentUsers(limit: number) {
     orderBy: { createdAt: "desc" },
     take: limit,
   });
+}
+
+const USER_PAGE_ORDER_BY = [
+  { createdAt: "desc" },
+  { id: "desc" },
+] as const satisfies Prisma.UserOrderByWithRelationInput[];
+
+export interface PaginatedUsersResult {
+  users: Array<{
+    id: string;
+    email: string;
+    name: string | null;
+    image: string | null;
+    isActive: boolean;
+    createdAt: string;
+  }>;
+  hasMore: boolean;
+  nextCursor?: string;
+}
+
+/**
+ * DB-side search + pagination across the full user table (no 500-row cap).
+ * Search matches email or display name case-insensitively.
+ */
+export async function listUsersPaginated(options: {
+  search?: string;
+  limit?: number;
+  cursor?: string;
+  offset?: number;
+}): Promise<PaginatedUsersResult> {
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+  const search = options.search?.trim();
+
+  const where: Prisma.UserWhereInput = search
+    ? {
+        OR: [
+          { email: { contains: search, mode: "insensitive" } },
+          { name: { contains: search, mode: "insensitive" } },
+        ],
+      }
+    : {};
+
+  const rows = await prisma.user.findMany({
+    where,
+    orderBy: USER_PAGE_ORDER_BY,
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      image: true,
+      isActive: true,
+      createdAt: true,
+    },
+    take: limit + 1,
+    ...(options.cursor
+      ? { cursor: { id: options.cursor }, skip: 1 }
+      : options.offset && options.offset > 0
+        ? { skip: options.offset }
+        : {}),
+  });
+
+  const hasMore = rows.length > limit;
+  const users = rows.slice(0, limit);
+  return {
+    users,
+    hasMore,
+    nextCursor: hasMore && users.length > 0 ? users[users.length - 1]!.id : undefined,
+  };
 }
 
 export async function countUsers(): Promise<number> {

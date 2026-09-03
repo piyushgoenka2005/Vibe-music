@@ -10,15 +10,13 @@ export async function fetchOrderById(orderId: string): Promise<Order | null> {
   return row ? prismaToOrder(row) : null;
 }
 
-export async function findOrderByRazorpayOrderId(
-  razorpayOrderId: string
-): Promise<Order | null> {
+export async function findOrderByRazorpayOrderId(razorpayOrderId: string): Promise<Order | null> {
   const row = await prisma.order.findFirst({ where: { razorpayOrderId } });
   return row ? prismaToOrder(row) : null;
 }
 
 export async function findOrderByRazorpayPaymentId(
-  razorpayPaymentId: string
+  razorpayPaymentId: string,
 ): Promise<Order | null> {
   const row = await prisma.order.findFirst({ where: { razorpayPaymentId } });
   return row ? prismaToOrder(row) : null;
@@ -81,31 +79,26 @@ export async function sumPaidRevenue(window?: RevenueWindow): Promise<number> {
 }
 
 /** COUNT(*) over an optional created_at window. */
-export async function countOrdersBetween(
-  window?: RevenueWindow
-): Promise<number> {
-  const where = window?.from || window?.to
-    ? {
-        createdAt: {
-          ...(window.from ? { gte: window.from } : {}),
-          ...(window.to ? { lt: window.to } : {}),
-        },
-      }
-    : undefined;
+export async function countOrdersBetween(window?: RevenueWindow): Promise<number> {
+  const where =
+    window?.from || window?.to
+      ? {
+          createdAt: {
+            ...(window.from ? { gte: window.from } : {}),
+            ...(window.to ? { lt: window.to } : {}),
+          },
+        }
+      : undefined;
   return prisma.order.count({ where });
 }
 
 /** Order counts per status in a single GROUP BY query. */
-export async function countOrdersGroupedByStatus(): Promise<
-  Record<string, number>
-> {
+export async function countOrdersGroupedByStatus(): Promise<Record<string, number>> {
   const rows = await prisma.order.groupBy({
     by: ["status"],
     _count: { _all: true },
   });
-  return Object.fromEntries(
-    rows.map((row) => [row.status, row._count._all])
-  );
+  return Object.fromEntries(rows.map((row) => [row.status, row._count._all]));
 }
 
 export interface DailyRevenueBucket {
@@ -119,9 +112,7 @@ export interface DailyRevenueBucket {
  * ISO string, so cast to timestamptz and bucket in UTC (matches the previous
  * JS `toISOString().slice(0, 10)` bucketing exactly).
  */
-export async function getDailyPaidRevenueBuckets(
-  sinceIso: string
-): Promise<DailyRevenueBucket[]> {
+export async function getDailyPaidRevenueBuckets(sinceIso: string): Promise<DailyRevenueBucket[]> {
   const paymentStatuses = Prisma.join([...PAID_PAYMENT_STATUSES]);
   const rows = await prisma.$queryRaw<{ date: string; revenue: number; orders: bigint }[]>(
     Prisma.sql`
@@ -133,7 +124,7 @@ export async function getDailyPaidRevenueBuckets(
         AND (created_at::timestamptz) >= ${sinceIso}::timestamptz
       GROUP BY 1
       ORDER BY 1 ASC
-    `
+    `,
   );
   return rows.map((row) => ({
     date: row.date,
@@ -165,10 +156,7 @@ export async function deleteOrder(orderId: string): Promise<void> {
   await prisma.order.delete({ where: { id: orderId } });
 }
 
-export async function patchOrderFields(
-  orderId: string,
-  patch: Partial<Order>
-): Promise<Order> {
+export async function patchOrderFields(orderId: string, patch: Partial<Order>): Promise<Order> {
   const existing = await fetchOrderById(orderId);
   if (!existing) throw new Error("Order not found");
   const updated: Order = {
@@ -190,10 +178,7 @@ export async function listGuestOrdersByEmail(email: string): Promise<Order[]> {
   return rows.map(prismaToOrder);
 }
 
-export async function linkGuestOrdersToUser(
-  _userId: string,
-  _email: string
-): Promise<number> {
+export async function linkGuestOrdersToUser(_userId: string, _email: string): Promise<number> {
   // Disabled: do not auto-claim all guest orders by email (IDOR).
   return 0;
 }
@@ -201,7 +186,7 @@ export async function linkGuestOrdersToUser(
 export async function attachPaidOrderToUser(
   orderId: string,
   userId: string,
-  email: string
+  email: string,
 ): Promise<boolean> {
   const normalized = email.trim().toLowerCase();
   if (!normalized || !orderId || !userId) return false;
@@ -221,28 +206,47 @@ export async function attachPaidOrderToUser(
   return result.count > 0;
 }
 
+const ORDER_PAGE_ORDER_BY = [
+  { createdAt: "desc" },
+  { id: "desc" },
+] as const satisfies Prisma.OrderOrderByWithRelationInput[];
+
 export async function listOrdersPaginated(options: {
   status?: string;
+  search?: string;
   limit?: number;
   cursor?: string;
   offset?: number;
 }): Promise<{ orders: Order[]; hasMore: boolean; nextCursor?: string }> {
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
-  const where = options.status ? { status: options.status } : undefined;
-  let orders = (await prisma.order.findMany({ where, orderBy: { createdAt: "desc" } })).map(
-    prismaToOrder
-  );
+  const search = options.search?.trim();
 
-  if (options.cursor) {
-    const index = orders.findIndex((order) => order.id === options.cursor);
-    if (index >= 0) orders = orders.slice(index + 1);
-  } else if (options.offset && options.offset > 0) {
-    orders = orders.slice(options.offset);
-  }
+  const where: Prisma.OrderWhereInput = {
+    ...(options.status ? { status: options.status } : {}),
+    ...(search
+      ? {
+          OR: [
+            { id: { contains: search, mode: "insensitive" } },
+            { email: { contains: search, mode: "insensitive" } },
+            { customerName: { contains: search, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
 
-  const page = orders.slice(0, limit + 1);
-  const hasMore = page.length > limit;
-  const items = page.slice(0, limit);
+  const rows = await prisma.order.findMany({
+    where,
+    orderBy: ORDER_PAGE_ORDER_BY,
+    take: limit + 1,
+    ...(options.cursor
+      ? { cursor: { id: options.cursor }, skip: 1 }
+      : options.offset && options.offset > 0
+        ? { skip: options.offset }
+        : {}),
+  });
+
+  const hasMore = rows.length > limit;
+  const items = rows.slice(0, limit).map(prismaToOrder);
   return {
     orders: items,
     hasMore,
@@ -253,10 +257,9 @@ export async function listOrdersPaginated(options: {
 export async function countOrdersByStatus(): Promise<Record<string, number>> {
   const statuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
   const entries = await Promise.all(
-    statuses.map(async (status) => [
-      status,
-      await prisma.order.count({ where: { status } }),
-    ] as const)
+    statuses.map(
+      async (status) => [status, await prisma.order.count({ where: { status } })] as const,
+    ),
   );
   return Object.fromEntries(entries);
 }
@@ -265,9 +268,7 @@ export async function countOrders(): Promise<number> {
   return prisma.order.count();
 }
 
-export async function findPaidOrders(options?: {
-  sinceDays?: number;
-}): Promise<Order[]> {
+export async function findPaidOrders(options?: { sinceDays?: number }): Promise<Order[]> {
   const sinceDays = options?.sinceDays ?? 90;
   const since = new Date();
   since.setDate(since.getDate() - sinceDays);
@@ -303,7 +304,7 @@ export async function listOrdersByUserId(userId: string): Promise<Order[]> {
 export async function findPurchasedProductOrders(
   userId: string,
   email: string | null | undefined,
-  productId: string
+  productId: string,
 ): Promise<Order[]> {
   const orders = new Map<string, Order>();
   for (const order of await listOrdersForUser(userId)) {
@@ -318,6 +319,6 @@ export async function findPurchasedProductOrders(
     (order) =>
       order.paymentStatus === "paid" &&
       ["delivered", "shipped", "confirmed"].includes(order.status) &&
-      order.items.some((item) => item.productId === productId)
+      order.items.some((item) => item.productId === productId),
   );
 }

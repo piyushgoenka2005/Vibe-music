@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { distributedCheckRateLimit } from "@/lib/security/distributed-rate-limit";
-import {
-  getClientIp,
-  RATE_LIMITS,
-  type RateLimitOptions,
-} from "@/lib/security/rate-limit";
+import { getClientIp, RATE_LIMITS, type RateLimitOptions } from "@/lib/security/rate-limit";
 import {
   isMutationMethod,
   isWebhookPath,
@@ -14,7 +10,7 @@ import {
 import { getRequestId } from "@/lib/security/request-log";
 import { reportServerError } from "@/lib/server/errorMonitoring";
 import { logInfo } from "@/lib/server/logger";
-import { recordRequest } from "@/app/api/metrics/route";
+import { recordRequest } from "@/lib/server/requestMetrics";
 import {
   checkBackpressure,
   releaseBackpressure,
@@ -31,17 +27,14 @@ export function notFoundResponse(resource = "Resource"): NextResponse {
 
 export function applyRateLimitHeaders(
   response: NextResponse,
-  result: { remaining: number; resetAt: number }
+  result: { remaining: number; resetAt: number },
 ): NextResponse {
   response.headers.set("X-RateLimit-Remaining", String(result.remaining));
   response.headers.set("X-RateLimit-Reset", String(result.resetAt));
   return response;
 }
 
-export function applyRequestIdHeader(
-  response: NextResponse,
-  request: Request
-): NextResponse {
+export function applyRequestIdHeader(response: NextResponse, request: Request): NextResponse {
   response.headers.set("x-request-id", getRequestId(request));
   return response;
 }
@@ -49,8 +42,14 @@ export function applyRequestIdHeader(
 export async function enforceRateLimit(
   request: Request,
   scope: string,
-  options: RateLimitOptions = RATE_LIMITS.publicApi
+  options: RateLimitOptions = RATE_LIMITS.publicApi,
 ): Promise<NextResponse | null> {
+  // Mirror src/proxy.ts: rate limits are intentionally skipped when disabled
+  // outside production (E2E / local load). Keeps route-level limits consistent
+  // with the proxy-level ones so test suites never self-throttle.
+  if (process.env.DISABLE_RATE_LIMIT === "true" && process.env.NODE_ENV !== "production") {
+    return null;
+  }
   const ip = getClientIp(request);
   const result = await distributedCheckRateLimit(`${scope}:${ip}`, options);
   if (!result.allowed) {
@@ -71,10 +70,7 @@ export function enforceMutationSecurity(request: Request): NextResponse | null {
   }
 
   if (!verifyMutationOrigin(request)) {
-    return applyRequestIdHeader(
-      jsonError("Invalid request origin", 403),
-      request
-    );
+    return applyRequestIdHeader(jsonError("Invalid request origin", 403), request);
   }
   return null;
 }
@@ -82,7 +78,7 @@ export function enforceMutationSecurity(request: Request): NextResponse | null {
 export function logApiRequest(
   request: Request,
   context: string,
-  meta?: Record<string, unknown>
+  meta?: Record<string, unknown>,
 ): void {
   const { pathname } = new URL(request.url);
   logInfo("API request", context, {
@@ -96,7 +92,7 @@ export function logApiRequest(
 
 export async function parseJsonBody<T>(
   request: Request,
-  schema: z.ZodType<T>
+  schema: z.ZodType<T>,
 ): Promise<{ data: T } | { error: NextResponse }> {
   try {
     const body = await request.json();
@@ -106,11 +102,8 @@ export async function parseJsonBody<T>(
     if (error instanceof z.ZodError) {
       return {
         error: applyRequestIdHeader(
-          jsonError(
-            error.issues.map((issue) => issue.message).join("; "),
-            400
-          ),
-          request
+          jsonError(error.issues.map((issue) => issue.message).join("; "), 400),
+          request,
         ),
       };
     }
@@ -124,7 +117,7 @@ export function handleRouteError(
   error: unknown,
   context: string,
   request?: Request,
-  statusCode?: number
+  statusCode?: number,
 ): NextResponse {
   reportServerError(error, {
     source: context,
@@ -133,18 +126,18 @@ export function handleRouteError(
   });
   // Record metrics (fire-and-forget, never blocks response)
   const metricsStatus = statusCode ?? 500;
-  try { recordRequest(metricsStatus, 0); } catch { /* non-fatal */ }
-  const message =
-    error instanceof Error ? error.message : "Internal server error";
+  try {
+    recordRequest(metricsStatus, 0);
+  } catch {
+    /* non-fatal */
+  }
+  const message = error instanceof Error ? error.message : "Internal server error";
   const status = message.toLowerCase().includes("not found")
     ? 404
     : message.includes("denied") || message.includes("permission")
       ? 403
       : 500;
-  const response = jsonError(
-    status === 500 ? "Internal server error" : message,
-    status
-  );
+  const response = jsonError(status === 500 ? "Internal server error" : message, status);
   return request ? applyRequestIdHeader(response, request) : response;
 }
 
@@ -158,7 +151,7 @@ export async function withApiGuards(
     /** Skip backpressure check (for health, metrics, etc.) */
     skipBackpressure?: boolean;
   },
-  handler: () => Promise<NextResponse>
+  handler: () => Promise<NextResponse>,
 ): Promise<NextResponse> {
   logApiRequest(request, options.context);
 
@@ -173,7 +166,7 @@ export async function withApiGuards(
           status: bpResult.response.status,
           headers: bpResult.response.headers,
         }),
-        request
+        request,
       );
     }
   }
@@ -181,7 +174,7 @@ export async function withApiGuards(
   const rateLimited = await enforceRateLimit(
     request,
     options.scope,
-    options.rateLimit ?? RATE_LIMITS.publicApi
+    options.rateLimit ?? RATE_LIMITS.publicApi,
   );
   if (rateLimited) {
     // Release backpressure slot since we're rejecting early
@@ -205,7 +198,11 @@ export async function withApiGuards(
   try {
     const start = Date.now();
     const response = await handler();
-    try { recordRequest(response.status, Date.now() - start); } catch { /* non-fatal */ }
+    try {
+      recordRequest(response.status, Date.now() - start);
+    } catch {
+      /* non-fatal */
+    }
     releaseBackpressure(bpScope);
     return applyRequestIdHeader(response, request);
   } catch (error) {

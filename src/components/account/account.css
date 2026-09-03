@@ -13,7 +13,7 @@
   --acct-shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.08);
   --acct-radius: 12px;
   --acct-radius-sm: 8px;
-  
+
   color: var(--acct-text);
   background: var(--acct-bg);
   min-height: calc(100vh - 200px);
@@ -213,7 +213,9 @@
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   border: none;
   background: transparent;
   width: 100%;
@@ -384,7 +386,9 @@
   border-radius: var(--acct-radius);
   padding: 20px;
   box-shadow: var(--acct-shadow);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
   text-decoration: none;
   color: inherit;
   display: block;
@@ -501,7 +505,9 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    transform 0.1s;
   border: none;
   text-decoration: none;
   line-height: 1.2;
@@ -723,7 +729,9 @@
   border-radius: var(--acct-radius);
   overflow: hidden;
   box-shadow: var(--acct-shadow);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
   display: flex;
   flex-direction: column;
   aspect-ratio: 1 / 1;
@@ -867,7 +875,9 @@
   font-size: 14px;
   color: var(--acct-text);
   background: var(--acct-card);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   font-family: inherit;
 }
 
@@ -1490,12 +1500,7 @@
 
 .acct__skeleton {
   border-radius: var(--acct-radius-sm);
-  background: linear-gradient(
-    90deg,
-    #ececeb 0%,
-    #f5f5f4 50%,
-    #ececeb 100%
-  );
+  background: linear-gradient(90deg, #ececeb 0%, #f5f5f4 50%, #ececeb 100%);
   background-size: 200% 100%;
   animation: acct-skeleton 1.2s ease-in-out infinite;
 }
@@ -1560,4 +1565,418 @@
 .acct__skeleton-block {
   flex: 1;
   min-width: 0;
+}
+
+/* ── Support Tickets & Center ── */
+.acct__section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.acct__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.acct__ticket-create-card {
+  background: var(--acct-card, #ffffff);
+  border: 1px solid var(--acct-border, #e2e8f0);
+  border-radius: var(--acct-radius, 12px);
+  box-shadow: var(--acct-shadow, 0 1px 3px rgba(0, 0, 0, 0.05));
+  margin-bottom: 24px;
+  overflow: hidden;
+  animation: acctFadeIn 0.2s ease-out;
+}
+
+@keyframes acctFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.acct__ticket-create-card .acct__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--acct-border, #e2e8f0);
+  background: var(--acct-bg-subtle, #f8fafc);
+}
+
+.acct__ticket-create-card .acct__card-body {
+  padding: 20px;
+}
+
+.acct__form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.acct__form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.acct__form-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acct-text, #1e293b);
+}
+
+.acct__form-field input,
+.acct__form-field select,
+.acct__form-field textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--acct-border, #cbd5e1);
+  background: var(--acct-input-bg, #ffffff);
+  color: var(--acct-text, #0f172a);
+  font-size: 14px;
+  font-family: inherit;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.acct__form-field input:focus,
+.acct__form-field select:focus,
+.acct__form-field textarea:focus {
+  outline: none;
+  border-color: #0d47a1;
+  box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.12);
+}
+
+.acct__form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--acct-border, #e2e8f0);
+}
+
+/* ── Filter Tabs ── */
+.acct__filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.acct__filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--acct-card, #ffffff);
+  color: var(--acct-muted, #64748b);
+  border: 1px solid var(--acct-border, #e2e8f0);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.acct__filter-btn:hover {
+  background: var(--acct-bg-subtle, #f1f5f9);
+  color: var(--acct-text, #0f172a);
+}
+
+.acct__filter-btn--active {
+  background: #0d47a1;
+  color: #ffffff;
+  border-color: #0d47a1;
+}
+
+.acct__filter-btn--active:hover {
+  background: #0a3880;
+  color: #ffffff;
+}
+
+.acct__filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.acct__filter-btn--active .acct__filter-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* ── Ticket Cards ── */
+.acct__ticket-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.acct__ticket-item {
+  background: var(--acct-card, #ffffff);
+  border: 1px solid var(--acct-border, #e2e8f0);
+  border-radius: var(--acct-radius, 12px);
+  padding: 20px;
+  box-shadow: var(--acct-shadow, 0 1px 3px rgba(0, 0, 0, 0.04));
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.acct__ticket-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.acct__ticket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.acct__ticket-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.acct__ticket-id {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  color: var(--acct-muted, #64748b);
+  background: var(--acct-bg-subtle, #f1f5f9);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.acct__category-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  background: #f1f5f9;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+/* Status Badges */
+.acct__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 16px;
+  text-transform: capitalize;
+}
+
+.acct__badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.acct__badge--open {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.acct__badge--open .acct__badge-dot {
+  background: #2563eb;
+}
+
+.acct__badge--in_progress {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+.acct__badge--in_progress .acct__badge-dot {
+  background: #7c3aed;
+}
+
+.acct__badge--waiting_customer {
+  background: #fffbeb;
+  color: #b45309;
+}
+.acct__badge--waiting_customer .acct__badge-dot {
+  background: #f59e0b;
+}
+
+.acct__badge--resolved {
+  background: #ecfdf5;
+  color: #047857;
+}
+.acct__badge--resolved .acct__badge-dot {
+  background: #10b981;
+}
+
+.acct__badge--closed {
+  background: #f1f5f9;
+  color: #64748b;
+}
+.acct__badge--closed .acct__badge-dot {
+  background: #94a3b8;
+}
+
+.acct__ticket-subject {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--acct-text, #0f172a);
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.acct__ticket-message {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--acct-text-subtle, #334155);
+  margin: 0 0 14px 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.acct__ticket-order {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #0d47a1;
+  background: #e3f2fd;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+/* Support Reply Box */
+.acct__support-reply {
+  background: #f0f7ff;
+  border: 1px solid #bae6fd;
+  border-left: 4px solid #0284c7;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-top: 14px;
+}
+
+.acct__support-reply-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.acct__support-reply-body {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #0f172a;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.acct__ticket-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--acct-border, #f1f5f9);
+  font-size: 12px;
+  color: var(--acct-muted, #94a3b8);
+}
+
+/* Empty State Card */
+.acct__empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--acct-card, #ffffff);
+  border: 1px solid var(--acct-border, #e2e8f0);
+  border-radius: var(--acct-radius, 12px);
+  box-shadow: var(--acct-shadow, 0 1px 3px rgba(0, 0, 0, 0.04));
+}
+
+.acct__empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: #e3f2fd;
+  color: #0d47a1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.acct__empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--acct-text, #0f172a);
+  margin: 0 0 8px 0;
+}
+
+.acct__empty-desc {
+  font-size: 14px;
+  color: var(--acct-muted, #64748b);
+  max-width: 440px;
+  margin: 0 auto 24px auto;
+  line-height: 1.55;
+}
+
+.acct__empty-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.acct__empty-sub {
+  font-size: 13px;
+  color: var(--acct-muted, #64748b);
+  margin: 0;
+}
+
+.acct__empty-sub a {
+  color: #0d47a1;
+  font-weight: 500;
+  text-decoration: underline;
 }

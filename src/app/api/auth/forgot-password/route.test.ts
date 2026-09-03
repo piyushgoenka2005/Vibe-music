@@ -31,6 +31,7 @@ vi.mock("@/lib/server/passwordResetEmailService", () => ({
 
 import { POST } from "@/app/api/auth/forgot-password/route";
 import { findUserByEmail } from "@/lib/server/userService";
+import { sendPasswordResetEmail } from "@/lib/server/passwordResetEmailService";
 
 function postForgot(email: string) {
   return POST(
@@ -41,7 +42,7 @@ function postForgot(email: string) {
         Origin: "http://localhost:3000",
       },
       body: JSON.stringify({ email }),
-    })
+    }),
   );
 }
 
@@ -74,5 +75,27 @@ describe("POST /api/auth/forgot-password", () => {
     const res = await postForgot("admin@vibemusic.in");
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
+  });
+
+  it("builds reset links from the request origin in E2E mode", async () => {
+    vi.mocked(findUserByEmail).mockResolvedValue({
+      id: "u1",
+      email: "admin@vibemusic.in",
+      passwordHash: "hash",
+    } as never);
+    process.env.NEXT_PUBLIC_SITE_URL = "https://vibemusic.in";
+    process.env.E2E_TEST_MODE = "true";
+    try {
+      vi.mocked(sendPasswordResetEmail).mockClear();
+      const res = await postForgot("admin@vibemusic.in");
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ ok: true });
+      expect(sendPasswordResetEmail).toHaveBeenCalledTimes(1);
+      const [email, resetUrl] = vi.mocked(sendPasswordResetEmail).mock.calls[0];
+      expect(email).toBe("admin@vibemusic.in");
+      expect(resetUrl).toMatch(/^http:\/\/localhost:3000\/reset-password\?token=/u);
+    } finally {
+      delete process.env.E2E_TEST_MODE;
+    }
   });
 });

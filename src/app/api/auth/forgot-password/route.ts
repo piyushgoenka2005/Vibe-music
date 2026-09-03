@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import {
-  isPrismaUnavailableError,
-  SERVICE_UNAVAILABLE_MESSAGE,
-} from "@/lib/db/prisma-errors";
+import { isPrismaUnavailableError, SERVICE_UNAVAILABLE_MESSAGE } from "@/lib/db/prisma-errors";
 import {
   generatePasswordResetToken,
   hashPasswordResetToken,
@@ -12,11 +9,7 @@ import { isSmtpConfigured } from "@/lib/server/email/smtp";
 import { sendPasswordResetEmail } from "@/lib/server/passwordResetEmailService";
 import { findUserByEmail } from "@/lib/server/userService";
 import { forgotPasswordSchema } from "@/lib/validations/auth";
-import {
-  enforceMutationSecurity,
-  enforceRateLimit,
-  handleRouteError,
-} from "@/lib/api/route-utils";
+import { enforceMutationSecurity, enforceRateLimit, handleRouteError } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
@@ -26,11 +19,7 @@ const UNAVAILABLE_MESSAGE =
 
 export async function POST(request: Request) {
   try {
-    const rateLimited = await enforceRateLimit(
-      request,
-      "auth-forgot-password",
-      RATE_LIMITS.auth
-    );
+    const rateLimited = await enforceRateLimit(request, "auth-forgot-password", RATE_LIMITS.auth);
     if (rateLimited) return rateLimited;
 
     const csrfError = enforceMutationSecurity(request);
@@ -41,7 +30,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message ?? "Invalid email" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -55,10 +44,7 @@ export async function POST(request: Request) {
       user = await findUserByEmail(email);
     } catch (error) {
       if (isPrismaUnavailableError(error)) {
-        return NextResponse.json(
-          { error: SERVICE_UNAVAILABLE_MESSAGE },
-          { status: 503 }
-        );
+        return NextResponse.json({ error: SERVICE_UNAVAILABLE_MESSAGE }, { status: 503 });
       }
       throw error;
     }
@@ -73,11 +59,15 @@ export async function POST(request: Request) {
         data: { identifier: email, token: tokenHash, expires },
       });
 
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "").trim();
+      const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "").trim();
+      // In E2E mode the reset email is never sent; the link is captured for
+      // tests, so build it from the requester's origin instead of the public
+      // site URL. That keeps the E2E reset flow on the local server (CI and
+      // local runs) instead of navigating to the production domain.
+      const siteUrl =
+        process.env.E2E_TEST_MODE === "true" ? new URL(request.url).origin : configuredSiteUrl;
       if (!siteUrl) {
-        throw new Error(
-          "NEXT_PUBLIC_SITE_URL is required to send password reset emails."
-        );
+        throw new Error("NEXT_PUBLIC_SITE_URL is required to send password reset emails.");
       }
       const resetUrl = `${siteUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
       const sent = await sendPasswordResetEmail(email, resetUrl);
@@ -92,10 +82,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (isPrismaUnavailableError(error)) {
-      return NextResponse.json(
-        { error: SERVICE_UNAVAILABLE_MESSAGE },
-        { status: 503 }
-      );
+      return NextResponse.json({ error: SERVICE_UNAVAILABLE_MESSAGE }, { status: 503 });
     }
     return handleRouteError(error, "api/auth/forgot-password POST", request);
   }

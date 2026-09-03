@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { toCsv } from "@/lib/api/csv";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { listAllOrders } from "@/lib/server/adminOrderService";
 import type { Order } from "@/types/order";
@@ -34,15 +35,13 @@ export async function GET(request: Request) {
       status: searchParams.get("status") ?? undefined,
       search: searchParams.get("search") ?? undefined,
       limit: searchParams.get("limit") ?? 20,
-      offset: searchParams.has("offset")
-        ? searchParams.get("offset")
-        : undefined,
+      offset: searchParams.has("offset") ? searchParams.get("offset") : undefined,
       cursor: searchParams.get("cursor") ?? undefined,
     });
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message ?? "Invalid query" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -67,14 +66,18 @@ export async function POST(request: Request) {
         cursor = batch.hasMore ? batch.nextCursor : undefined;
       } while (cursor);
 
-      const header = "id,email,status,paymentStatus,total,createdAt\n";
-      const rows = allOrders
-        .map(
-          (o) =>
-            `${o.id},${o.email},${o.status},${o.paymentStatus},${o.total},${o.createdAt ?? ""}`
-        )
-        .join("\n");
-      return new NextResponse(header + rows, {
+      const csv = toCsv(
+        ["id", "email", "status", "paymentStatus", "total", "createdAt"],
+        allOrders.map((o) => [
+          o.id,
+          o.email,
+          o.status,
+          o.paymentStatus,
+          o.total,
+          o.createdAt ?? "",
+        ]),
+      );
+      return new NextResponse(csv, {
         headers: {
           "Content-Type": "text/csv",
           "Content-Disposition": 'attachment; filename="orders.csv"',

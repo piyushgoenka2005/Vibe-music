@@ -40,15 +40,6 @@ export interface PaginatedCustomersResult {
   nextCursor?: string;
 }
 
-function matchesOrderSearch(order: Order, query: string): boolean {
-  const q = query.toLowerCase();
-  return (
-    order.id.toLowerCase().includes(q) ||
-    order.email.toLowerCase().includes(q) ||
-    (order.shippingAddress?.name?.toLowerCase().includes(q) ?? false)
-  );
-}
-
 export async function listAllOrders(
   options: {
     status?: OrderStatus;
@@ -56,26 +47,23 @@ export async function listAllOrders(
     limit?: number;
     offset?: number;
     cursor?: string;
-  } = {}
+  } = {},
 ): Promise<PaginatedOrdersResult> {
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+  // Filtering, ordering, and pagination are all pushed into Postgres so admin
+  // order search never loads the full table (or skips rows while paging).
   const page = await pgOrder.listOrdersPaginated({
     status: options.status,
+    search: options.search,
     limit,
     cursor: options.cursor,
     offset: options.offset,
   });
 
-  let orders = page.orders;
-  if (options.search) {
-    orders = orders.filter((order) => matchesOrderSearch(order, options.search!));
-  }
-
   return {
-    orders,
-    hasMore: options.search ? orders.length >= limit : page.hasMore,
+    orders: page.orders,
+    hasMore: page.hasMore,
     nextCursor: page.nextCursor,
-    total: !options.cursor && !options.search ? undefined : undefined,
   };
 }
 
@@ -83,7 +71,7 @@ export async function updateOrderStatus(
   orderId: string,
   status: OrderStatus,
   actor: string,
-  note?: string
+  note?: string,
 ): Promise<Order> {
   const existingOrder = await pgOrder.fetchOrderById(orderId);
   if (!existingOrder) throw new Error("Order not found");
@@ -135,11 +123,7 @@ export async function updateOrderStatus(
   return order;
 }
 
-export async function addOrderNote(
-  orderId: string,
-  note: string,
-  actor: string
-): Promise<void> {
+export async function addOrderNote(orderId: string, note: string, actor: string): Promise<void> {
   const existingOrder = await pgOrder.fetchOrderById(orderId);
   if (!existingOrder) throw new Error("Order not found");
 
@@ -156,7 +140,7 @@ export async function addOrderNote(
 }
 
 async function fetchOrderStatsForUsers(
-  userIds: string[]
+  userIds: string[],
 ): Promise<Map<string, { count: number; spent: number }>> {
   const stats = new Map<string, { count: number; spent: number }>();
   if (userIds.length === 0) return stats;
@@ -182,25 +166,21 @@ export async function listCustomers(
     limit?: number;
     offset?: number;
     cursor?: string;
-  } = {}
+  } = {},
 ): Promise<PaginatedCustomersResult> {
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
-  const users = await pgUsers.listRecentUsers(500);
-  let start = 0;
+  // DB-side search + pagination (previously capped at the 500 most recent
+  // users, which silently hid older customers from search and CSV export).
+  const page = await pgUsers.listUsersPaginated({
+    search: options.search,
+    limit,
+    cursor: options.cursor,
+    offset: options.offset,
+  });
 
-  if (options.cursor) {
-    const index = users.findIndex((user) => user.id === options.cursor);
-    if (index >= 0) start = index + 1;
-  } else if (options.offset && options.offset > 0) {
-    start = options.offset;
-  }
+  const orderStats = await fetchOrderStatsForUsers(page.users.map((user) => user.id));
 
-  const pageUsers = users.slice(start, start + limit + 1);
-  const hasMore = pageUsers.length > limit;
-  const slice = pageUsers.slice(0, limit);
-  const orderStats = await fetchOrderStatsForUsers(slice.map((user) => user.id));
-
-  let customers = slice.map((user) => {
+  const customers = page.users.map((user) => {
     const stats = orderStats.get(user.id) ?? { count: 0, spent: 0 };
     return {
       uid: user.id,
@@ -213,19 +193,10 @@ export async function listCustomers(
     };
   });
 
-  if (options.search) {
-    const q = options.search.toLowerCase();
-    customers = customers.filter(
-      (c) =>
-        c.email.toLowerCase().includes(q) ||
-        c.displayName.toLowerCase().includes(q)
-    );
-  }
-
   return {
     customers,
-    hasMore: options.search ? customers.length >= limit : hasMore,
-    nextCursor: hasMore && slice.length > 0 ? slice[slice.length - 1]!.id : undefined,
+    hasMore: page.hasMore,
+    nextCursor: page.nextCursor,
     total: undefined,
   };
 }
@@ -254,10 +225,7 @@ export async function getCustomerDetail(uid: string) {
   };
 }
 
-export async function updateCustomerStatus(
-  uid: string,
-  isActive: boolean
-): Promise<void> {
+export async function updateCustomerStatus(uid: string, isActive: boolean): Promise<void> {
   await pgUsers.updateUserActiveStatus(uid, isActive);
 }
 

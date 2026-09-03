@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { toCsv } from "@/lib/api/csv";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { listCustomers } from "@/lib/server/adminOrderService";
 
@@ -23,14 +24,18 @@ export async function GET(request: Request) {
         cursor = batch.hasMore ? batch.nextCursor : undefined;
       } while (cursor);
 
-      const header = "id,email,name,orderCount,totalSpent,createdAt\n";
-      const rows = allCustomers
-        .map(
-          (customer) =>
-            `${customer.uid},${customer.email},${customer.displayName ?? ""},${customer.orderCount ?? 0},${customer.totalSpent ?? 0},${customer.createdAt ?? ""}`
-        )
-        .join("\n");
-      return new NextResponse(header + rows, {
+      const csv = toCsv(
+        ["id", "email", "name", "orderCount", "totalSpent", "createdAt"],
+        allCustomers.map((customer) => [
+          customer.uid,
+          customer.email,
+          customer.displayName ?? "",
+          customer.orderCount ?? 0,
+          customer.totalSpent ?? 0,
+          customer.createdAt ?? "",
+        ]),
+      );
+      return new NextResponse(csv, {
         headers: {
           "Content-Type": "text/csv",
           "Content-Disposition": 'attachment; filename="customers.csv"',
@@ -41,9 +46,7 @@ export async function GET(request: Request) {
     const result = await listCustomers({
       search: searchParams.get("search") ?? undefined,
       limit: Number(searchParams.get("limit") ?? 20),
-      offset: searchParams.has("offset")
-        ? Number(searchParams.get("offset") ?? 0)
-        : undefined,
+      offset: searchParams.has("offset") ? Number(searchParams.get("offset") ?? 0) : undefined,
       cursor: searchParams.get("cursor") ?? undefined,
     });
     return NextResponse.json(result);

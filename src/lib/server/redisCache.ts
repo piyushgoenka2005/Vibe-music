@@ -1,7 +1,15 @@
 import "server-only";
 
-import { getUpstashConfig } from "@/lib/security/upstashRedis";
+import { getUpstashConfig, upstashPipeline } from "@/lib/security/upstashRedis";
 import { redisCircuitBreaker } from "@/lib/security/circuit-breaker";
+
+// v2: values are stored with `SET key <json> EX <ttl>` (raw-body semantics),
+// which applies a real TTL. v1 wrote a `{value, ex}` JSON wrapper verbatim —
+// no TTL was applied and reads returned the wrapper itself. Versioning the
+// key means stale v1 payloads can never be read again.
+function buildRedisKey(key: string): string {
+  return `cache:v2:${key}`;
+}
 
 // ─── In-memory LRU fallback (when Upstash is not configured) ──────────────
 
@@ -89,7 +97,7 @@ async function singleFlight<T>(key: string, fn: () => Promise<T>): Promise<T> {
 export async function getCached<T>(
   key: string,
   fetcher: () => Promise<T>,
-  ttlSeconds: number
+  ttlSeconds: number,
 ): Promise<T> {
   const config = getUpstashConfig();
 
@@ -104,9 +112,9 @@ async function getCachedRedis<T>(
   config: { url: string; token: string },
   key: string,
   fetcher: () => Promise<T>,
-  ttlSeconds: number
+  ttlSeconds: number,
 ): Promise<T> {
-  const redisKey = `cache:${key}`;
+  const redisKey = buildRedisKey(key);
 
   // If Redis circuit is open, try stale cache first
   if (!redisCircuitBreaker.isHealthy()) {
@@ -136,10 +144,28 @@ async function getCachedRedis<T>(
     });
     if (result.ok) {
       const text = await result.text();
+      // Upstash REST answers HTTP 200 with `{"result":null}` for a MISSING
+      // key — that is a cache miss, not a hit. Only `result` carrying a real
+      // value is treated as a hit, and the stored value is double-encoded
+      // (JSON string inside the envelope), so unwrap both layers.
       if (text && text !== "nil") {
-        const parsed = JSON.parse(text) as T;
-        staleSet(key, parsed); // Keep as stale backup
-        return parsed;
+        const envelope = JSON.parse(text) as { result?: unknown };
+        const raw = envelope?.result;
+        if (raw !== null && raw !== undefined) {
+          let value: T;
+          if (typeof raw === "string") {
+            try {
+              value = JSON.parse(raw) as T;
+            } catch {
+              value = raw as T; // legacy plain-string payload
+            }
+          } else {
+            value = raw as T;
+          }
+          staleSet(key, value); // Keep as stale backup
+          redisCircuitBreaker.recordSuccess();
+          return value;
+        }
       }
     }
   } catch {
@@ -150,18 +176,14 @@ async function getCachedRedis<T>(
   // Cache miss — fetch with stampede protection
   return singleFlight(key, async () => {
     const value = await fetcher();
+    if (value === undefined) return value; // never cache undefined
     staleSet(key, value);
 
-    // Write to Redis (fire-and-forget)
-    fetch(`${config.url}/set/${redisKey}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${config.token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ value: JSON.stringify(value), ex: ttlSeconds }),
-      cache: "no-store",
-    })
+    // Write to Redis (fire-and-forget). Upstash REST treats the request
+    // body as the raw value and applies no expiry by itself, so we issue the
+    // full `SET key value EX ttl` through the pipeline endpoint (same path
+    // the distributed rate limiter already uses).
+    upstashPipeline([["SET", redisKey, JSON.stringify(value), "EX", String(ttlSeconds)]])
       .then(() => {
         redisCircuitBreaker.recordSuccess();
       })
@@ -176,7 +198,7 @@ async function getCachedRedis<T>(
 async function getCachedMemory<T>(
   key: string,
   fetcher: () => Promise<T>,
-  ttlSeconds: number
+  ttlSeconds: number,
 ): Promise<T> {
   const hit = memoryGet<T>(key);
   if (hit !== undefined) return hit;
@@ -199,7 +221,7 @@ export async function invalidateCache(key: string): Promise<void> {
   const config = getUpstashConfig();
   if (config && redisCircuitBreaker.isHealthy()) {
     try {
-      await fetch(`${config.url}/del/cache:${key}`, {
+      await fetch(`${config.url}/del/${buildRedisKey(key)}`, {
         headers: { Authorization: `Bearer ${config.token}` },
         cache: "no-store",
       });

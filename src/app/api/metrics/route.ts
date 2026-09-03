@@ -4,40 +4,10 @@ import { getRawPrisma } from "@/lib/db/prisma";
 import { dbCircuitBreaker, redisCircuitBreaker } from "@/lib/security/circuit-breaker";
 import { getBackpressureStats } from "@/lib/security/backpressure";
 import { getCacheStats } from "@/lib/server/redisCache";
+import { getRequestMetrics } from "@/lib/server/requestMetrics";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-// ─── In-process counters (resets on process restart — acceptable for Prometheus) ──
-
-let requestCount = 0;
-let errorCount = 0;
-let rateLimitHits = 0;
-const statusCodes: Record<number, number> = {};
-const responseTimes: number[] = [];
-const MAX_LATENCY_SAMPLES = 1000;
-
-export function recordRequest(statusCode: number, durationMs: number) {
-  requestCount++;
-  statusCodes[statusCode] = (statusCodes[statusCode] || 0) + 1;
-  if (statusCode >= 500) errorCount++;
-  if (statusCode === 429) rateLimitHits++;
-  if (responseTimes.length < MAX_LATENCY_SAMPLES) {
-    responseTimes.push(durationMs);
-  }
-}
-
-function percentile(arr: number[], p: number): number {
-  if (arr.length === 0) return 0;
-  const sorted = [...arr].sort((a, b) => a - b);
-  const idx = Math.ceil((p / 100) * sorted.length) - 1;
-  return sorted[Math.max(0, idx)];
-}
-
-function avg(arr: number[]): number {
-  if (arr.length === 0) return 0;
-  return arr.reduce((a, b) => a + b, 0) / arr.length;
-}
 
 // ─── Prometheus text format ──
 
@@ -48,6 +18,7 @@ function prometheusLine(name: string, help: string, type: string, lines: string[
 export async function GET() {
   try {
     const now = Date.now();
+    const metrics = getRequestMetrics();
 
     // Database health (bypass circuit breaker for metrics)
     const dbHealth = await verifyPostgresConnection();
@@ -106,13 +77,13 @@ export async function GET() {
         "vibe_http_requests_total",
         "Total HTTP requests served since process start",
         "gauge",
-        [String(requestCount)],
+        [String(metrics.requestCount)],
       ),
     );
 
     lines.push(
       prometheusLine("vibe_http_errors_total", "Total 5xx errors since process start", "gauge", [
-        String(errorCount),
+        String(metrics.errorCount),
       ]),
     );
 
@@ -121,12 +92,12 @@ export async function GET() {
         "vibe_http_rate_limit_hits_total",
         "Total 429 rate limit responses since process start",
         "gauge",
-        [String(rateLimitHits)],
+        [String(metrics.rateLimitHits)],
       ),
     );
 
     // ── Status code breakdown ──
-    for (const [code, count] of Object.entries(statusCodes)) {
+    for (const [code, count] of Object.entries(metrics.statusCodes)) {
       lines.push(
         prometheusLine(
           `vibe_http_status_code_total{code="${code}"}`,
@@ -138,13 +109,13 @@ export async function GET() {
     }
 
     // ── Latency percentiles ──
-    if (responseTimes.length > 0) {
+    if (metrics.responseTimes.length > 0) {
       const durationLines = [
-        `{quantile="0.5"} ${percentile(responseTimes, 50).toFixed(1)}`,
-        `{quantile="0.9"} ${percentile(responseTimes, 90).toFixed(1)}`,
-        `{quantile="0.95"} ${percentile(responseTimes, 95).toFixed(1)}`,
-        `{quantile="0.99"} ${percentile(responseTimes, 99).toFixed(1)}`,
-        `{quantile="avg"} ${avg(responseTimes).toFixed(1)}`,
+        `{quantile="0.5"} ${metrics.percentiles.p50.toFixed(1)}`,
+        `{quantile="0.9"} ${metrics.percentiles.p90.toFixed(1)}`,
+        `{quantile="0.95"} ${metrics.percentiles.p95.toFixed(1)}`,
+        `{quantile="0.99"} ${metrics.percentiles.p99.toFixed(1)}`,
+        `{quantile="avg"} ${metrics.percentiles.avg.toFixed(1)}`,
       ];
       lines.push(
         prometheusLine(

@@ -93,6 +93,24 @@ describe("route-utils", () => {
       expect(result!.status).toBe(429);
       expect(result!.headers.get("X-RateLimit-Remaining")).toBe("0");
     });
+
+    it("skips the check when rate limiting is disabled outside production", async () => {
+      vi.stubEnv("NODE_ENV", "development");
+      vi.stubEnv("DISABLE_RATE_LIMIT", "true");
+      try {
+        vi.mocked(distributedCheckRateLimit).mockResolvedValue({
+          allowed: false,
+          remaining: 0,
+          resetAt: Date.now() + 60000,
+        });
+        const request = new Request("http://localhost/api/test");
+        const result = await enforceRateLimit(request, "test");
+        expect(result).toBeNull();
+        expect(distributedCheckRateLimit).not.toHaveBeenCalled();
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
   });
 
   describe("enforceMutationSecurity", () => {
@@ -164,18 +182,12 @@ describe("route-utils", () => {
     });
 
     it("returns 404 for not-found errors", () => {
-      const response = handleRouteError(
-        new Error("Product not found"),
-        "test"
-      );
+      const response = handleRouteError(new Error("Product not found"), "test");
       expect(response.status).toBe(404);
     });
 
     it("returns 403 for permission errors", () => {
-      const response = handleRouteError(
-        new Error("Access denied"),
-        "test"
-      );
+      const response = handleRouteError(new Error("Access denied"), "test");
       expect(response.status).toBe(403);
     });
 
@@ -196,10 +208,8 @@ describe("route-utils", () => {
       vi.mocked(isMutationMethod).mockReturnValue(false);
 
       const request = new Request("http://localhost/api/test");
-      const response = await withApiGuards(
-        request,
-        { context: "test", scope: "test" },
-        async () => jsonError("ok", 200)
+      const response = await withApiGuards(request, { context: "test", scope: "test" }, async () =>
+        jsonError("ok", 200),
       );
       expect(response.status).toBe(200);
     });
@@ -212,10 +222,8 @@ describe("route-utils", () => {
       });
 
       const request = new Request("http://localhost/api/test");
-      const response = await withApiGuards(
-        request,
-        { context: "test", scope: "test" },
-        async () => jsonError("ok", 200)
+      const response = await withApiGuards(request, { context: "test", scope: "test" }, async () =>
+        jsonError("ok", 200),
       );
       expect(response.status).toBe(429);
     });
@@ -234,7 +242,7 @@ describe("route-utils", () => {
         { context: "test", scope: "test" },
         async () => {
           throw new Error("boom");
-        }
+        },
       );
       expect(response.status).toBe(500);
     });

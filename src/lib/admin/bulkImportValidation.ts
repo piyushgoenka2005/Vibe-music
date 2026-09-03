@@ -7,9 +7,11 @@ export function validateCsvFile(file: File): string | null {
     return `CSV must be at most ${Math.round(MAX_CSV_BYTES / (1024 * 1024))} MB.`;
   }
   const name = file.name.toLowerCase();
-  if (!name.endsWith(".csv") && !file.type.includes("csv") && file.type !== "text/plain") {
-    return "Upload a .csv file.";
-  }
+  // Extension is authoritative (some OSes/browsers report .csv as text/plain
+  // or an empty type), but never accept a non-CSV name just because the MIME
+  // type is text/plain.
+  const looksCsv = name.endsWith(".csv") || file.type.includes("csv");
+  if (!looksCsv) return "Upload a .csv file.";
   return null;
 }
 

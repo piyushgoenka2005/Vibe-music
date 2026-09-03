@@ -6,15 +6,30 @@ import {
 } from "@/lib/validations/wrFeatures";
 
 describe("wrFeatures validations", () => {
-  it("validates support ticket input", () => {
-    const parsed = createSupportTicketSchema.parse({
-      name: "Jane Doe",
-      email: "jane@example.com",
-      subject: "Order issue",
-      message: "My order has not arrived yet, please help.",
-      category: "order",
-    });
-    expect(parsed.category).toBe("order");
+  it("validates support ticket input for various categories", () => {
+    const categories = ["order", "shipping", "returns", "product", "payment", "other"] as const;
+    for (const category of categories) {
+      const parsed = createSupportTicketSchema.parse({
+        name: "Jane Doe",
+        email: "jane@example.com",
+        subject: `Inquiry regarding ${category}`,
+        message: "Detailed message for the support team.",
+        category,
+        orderId: category === "order" ? "ORD-12345" : undefined,
+      });
+      expect(parsed.category).toBe(category);
+    }
+  });
+
+  it("rejects invalid support ticket input", () => {
+    expect(() =>
+      createSupportTicketSchema.parse({
+        name: "J",
+        email: "not-an-email",
+        subject: "Hi",
+        message: "Short",
+      }),
+    ).toThrow();
   });
 
   it("rejects weak admin passwords when provided", () => {
@@ -24,7 +39,7 @@ describe("wrFeatures validations", () => {
         displayName: "Admin",
         role: "admin",
         password: "short",
-      })
+      }),
     ).toThrow();
   });
 

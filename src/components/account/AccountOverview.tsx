@@ -2,15 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  Package,
-  Heart,
-  MapPin,
-  ShoppingBag,
-  ArrowRight,
-  Bell,
-  Headset,
-} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Package, Heart, MapPin, ShoppingBag, ArrowRight, Bell, Headset } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { useAuthStore } from "@/store/authStore";
@@ -19,11 +12,8 @@ import { useAddresses } from "@/hooks/useAddresses";
 import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
 import { fetchUserOrders } from "@/services/orderService";
 import type { Order } from "@/types/order";
-import {
-  formatOrderDate,
-  formatPaymentLabel,
-  statusBadgeClass,
-} from "./orderDisplay";
+import type { SupportTicket } from "@/types/supportTicket";
+import { formatOrderDate, formatPaymentLabel, statusBadgeClass } from "./orderDisplay";
 
 const RECENT_ORDERS_LIMIT = 3;
 
@@ -35,6 +25,32 @@ export default function AccountOverview() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+
+  const { data: ticketsData } = useQuery({
+    queryKey: ["account-support-tickets"],
+    queryFn: async () => {
+      const res = await fetch("/api/support/tickets");
+      if (!res.ok) return { tickets: [] };
+      return res.json() as Promise<{ tickets: SupportTicket[] }>;
+    },
+    staleTime: 30_000,
+  });
+
+  const { data: notificationsData } = useQuery({
+    queryKey: ["account-notifications"],
+    queryFn: async () => {
+      const res = await fetch("/api/account/notifications");
+      if (!res.ok) return { unreadCount: 0 };
+      return res.json() as Promise<{ unreadCount: number }>;
+    },
+    staleTime: 30_000,
+  });
+
+  const openTicketsCount =
+    ticketsData?.tickets?.filter(
+      (t) => t.status === "open" || t.status === "in_progress" || t.status === "waiting_customer",
+    ).length ?? 0;
+  const unreadNotificationsCount = notificationsData?.unreadCount ?? 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -75,16 +91,16 @@ export default function AccountOverview() {
     },
     {
       href: ROUTES.accountAddresses,
-      label: "Saved Addresses",
+      label: "Addresses",
       value: addressesLoading ? "…" : addresses.length,
       icon: MapPin,
       variant: "green" as const,
     },
     {
-      href: ROUTES.accountNotifications,
-      label: "Notifications",
-      value: "Inbox",
-      icon: Bell,
+      href: ROUTES.cart,
+      label: "Cart",
+      value: "View",
+      icon: ShoppingBag,
       variant: "purple" as const,
     },
   ];
@@ -118,7 +134,7 @@ export default function AccountOverview() {
           </div>
           <p className="acct__stat-label">Notifications</p>
           <p className="acct__stat-value" style={{ fontSize: "0.875rem" }}>
-            View inbox
+            {unreadNotificationsCount > 0 ? `${unreadNotificationsCount} unread` : "View inbox"}
           </p>
         </Link>
         <Link href={ROUTES.accountSupport} className="acct__stat-card">
@@ -127,7 +143,9 @@ export default function AccountOverview() {
           </div>
           <p className="acct__stat-label">Support</p>
           <p className="acct__stat-value" style={{ fontSize: "0.875rem" }}>
-            Your tickets
+            {openTicketsCount > 0
+              ? `${openTicketsCount} active ticket${openTicketsCount === 1 ? "" : "s"}`
+              : "Your tickets"}
           </p>
         </Link>
       </div>
@@ -142,9 +160,7 @@ export default function AccountOverview() {
           </div>
           <div className="acct__card-body">
             {ordersLoading ? (
-              <p style={{ padding: 32, textAlign: "center", color: "#666" }}>
-                Loading orders...
-              </p>
+              <p style={{ padding: 32, textAlign: "center", color: "#666" }}>Loading orders...</p>
             ) : recentOrders.length === 0 ? (
               <div className="acct__empty" style={{ padding: "32px 16px" }}>
                 <div className="acct__empty-icon">
@@ -171,13 +187,9 @@ export default function AccountOverview() {
                       {formatPaymentLabel(order.paymentStatus)}
                     </p>
                   </div>
-                  <span className={statusBadgeClass(order.status)}>
-                    {order.status}
-                  </span>
+                  <span className={statusBadgeClass(order.status)}>{order.status}</span>
                   <div style={{ textAlign: "right" }}>
-                    <p className="acct__order-total">
-                      {formatCurrency(order.total)}
-                    </p>
+                    <p className="acct__order-total">{formatCurrency(order.total)}</p>
                     <Link
                       href={ROUTES.accountOrder(order.id)}
                       className="acct__btn acct__btn--secondary acct__btn--sm"
@@ -196,7 +208,8 @@ export default function AccountOverview() {
           <div className="acct__card-header">
             <h3 className="acct__card-title">Wishlist Preview</h3>
             <Link href={ROUTES.accountWishlist} className="acct__card-link">
-              View all <ArrowRight size={14} style={{ display: "inline", verticalAlign: "middle" }} />
+              View all{" "}
+              <ArrowRight size={14} style={{ display: "inline", verticalAlign: "middle" }} />
             </Link>
           </div>
           <div className="acct__card-body">
@@ -221,11 +234,7 @@ export default function AccountOverview() {
                   <li key={item.productId} className="acct__preview-item">
                     <div className="acct__preview-thumb">
                       {item.image ? (
-                        <StorefrontThumbImage
-                          src={item.image}
-                          width={48}
-                          height={48}
-                        />
+                        <StorefrontThumbImage src={item.image} width={48} height={48} />
                       ) : (
                         <div
                           className="acct__wishlist-swatch"
@@ -234,15 +243,10 @@ export default function AccountOverview() {
                       )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <Link
-                        href={`/product/${item.slug}`}
-                        className="acct__preview-name"
-                      >
+                      <Link href={`/product/${item.slug}`} className="acct__preview-name">
                         {item.name}
                       </Link>
-                      <span className="acct__preview-price">
-                        {formatDisplayPrice(item.price)}
-                      </span>
+                      <span className="acct__preview-price">{formatDisplayPrice(item.price)}</span>
                     </div>
                   </li>
                 ))}

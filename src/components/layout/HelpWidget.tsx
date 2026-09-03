@@ -1,8 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type RefObject,
+} from "react";
 import "@/styles/help-widget.css";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronRight,
   Clock,
@@ -37,6 +46,7 @@ const LINK_ICONS = {
 export default function HelpWidget() {
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -55,18 +65,24 @@ export default function HelpWidget() {
     setLoading(false);
   }, []);
   const panelRef = useDialogA11y(open, close);
-  const openPanel = useCallback(() => {
-    setLoading(true);
-    setOpen(true);
-    if (user) {
-      setTicketForm((current) => ({
-        ...current,
-        name: current.name || user.name || "",
-        email: current.email || user.email || "",
-      }));
-    }
-    window.setTimeout(() => setLoading(false), 380);
-  }, [user]);
+  const openPanel = useCallback(
+    (options?: { openTicketForm?: boolean }) => {
+      setLoading(true);
+      setOpen(true);
+      if (options?.openTicketForm) {
+        setShowTicketForm(true);
+      }
+      if (user) {
+        setTicketForm((current) => ({
+          ...current,
+          name: current.name || user.name || "",
+          email: current.email || user.email || "",
+        }));
+      }
+      window.setTimeout(() => setLoading(false), 380);
+    },
+    [user],
+  );
 
   const toggle = useCallback(() => {
     if (open) {
@@ -75,6 +91,19 @@ export default function HelpWidget() {
     }
     openPanel();
   }, [close, open, openPanel]);
+
+  useEffect(() => {
+    const handleOpenWidget = () => openPanel();
+    const handleOpenTicket = () => openPanel({ openTicketForm: true });
+
+    window.addEventListener("vibe:open-help-widget", handleOpenWidget);
+    window.addEventListener("vibe:open-support-ticket", handleOpenTicket);
+
+    return () => {
+      window.removeEventListener("vibe:open-help-widget", handleOpenWidget);
+      window.removeEventListener("vibe:open-support-ticket", handleOpenTicket);
+    };
+  }, [openPanel]);
 
   async function submitTicket(event: FormEvent) {
     event.preventDefault();
@@ -98,10 +127,10 @@ export default function HelpWidget() {
         message: "",
       }));
       setShowTicketForm(false);
+      queryClient.invalidateQueries({ queryKey: ["account-support-tickets"] });
+      window.dispatchEvent(new CustomEvent("vibe:support-ticket-created"));
     } catch (error) {
-      setTicketStatus(
-        error instanceof Error ? error.message : "Unable to submit ticket."
-      );
+      setTicketStatus(error instanceof Error ? error.message : "Unable to submit ticket.");
     } finally {
       setTicketSubmitting(false);
     }
@@ -152,173 +181,165 @@ export default function HelpWidget() {
             role="dialog"
             aria-modal="true"
           >
-          <header className="help-widget__header">
-            <div className="help-widget__header-copy">
-              <p className="help-widget__eyebrow">{BRAND.supportRole}</p>
-              <h2 className="help-widget__title" id={`${panelId}-title`}>
-                How can we help?
-              </h2>
-            </div>
-            <button
-              aria-label="Close support panel"
-              className="help-widget__close"
-              onClick={close}
-              type="button"
-            >
-              <X aria-hidden size={18} strokeWidth={2.25} />
-            </button>
-          </header>
+            <header className="help-widget__header">
+              <div className="help-widget__header-copy">
+                <p className="help-widget__eyebrow">{BRAND.supportRole}</p>
+                <h2 className="help-widget__title" id={`${panelId}-title`}>
+                  How can we help?
+                </h2>
+              </div>
+              <button
+                aria-label="Close support panel"
+                className="help-widget__close"
+                onClick={close}
+                type="button"
+              >
+                <X aria-hidden size={18} strokeWidth={2.25} />
+              </button>
+            </header>
 
-          <div className="help-widget__body">
-            <p className="help-widget__intro">{HELP_WIDGET_INTRO}</p>
+            <div className="help-widget__body">
+              <p className="help-widget__intro">{HELP_WIDGET_INTRO}</p>
 
-            <nav aria-label="Support links" className="help-widget__links">
-              {HELP_WIDGET_LINKS.map((link) => {
-                const Icon = LINK_ICONS[link.icon];
-                return (
+              <nav aria-label="Support links" className="help-widget__links">
+                {HELP_WIDGET_LINKS.map((link) => {
+                  const Icon = LINK_ICONS[link.icon];
+                  return (
+                    <Link
+                      key={link.href}
+                      className="help-widget__link"
+                      href={link.href}
+                      onClick={close}
+                    >
+                      <span className="help-widget__link-icon" aria-hidden>
+                        <Icon size={16} strokeWidth={2} />
+                      </span>
+                      <span className="help-widget__link-label">{link.label}</span>
+                      <ChevronRight
+                        aria-hidden
+                        className="help-widget__link-chevron"
+                        size={16}
+                        strokeWidth={2}
+                      />
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              <div className="help-widget__actions">
+                {user ? (
                   <Link
-                    key={link.href}
-                    className="help-widget__link"
-                    href={link.href}
+                    className="help-widget__action-btn help-widget__action-btn--secondary"
+                    href={ROUTES.accountSupport}
                     onClick={close}
                   >
-                    <span className="help-widget__link-icon" aria-hidden>
-                      <Icon size={16} strokeWidth={2} />
-                    </span>
-                    <span className="help-widget__link-label">{link.label}</span>
-                    <ChevronRight
-                      aria-hidden
-                      className="help-widget__link-chevron"
-                      size={16}
-                      strokeWidth={2}
-                    />
+                    <Headset aria-hidden size={18} strokeWidth={2} />
+                    My support tickets
                   </Link>
-                );
-              })}
-            </nav>
-
-            <div className="help-widget__actions">
-              {user ? (
-                <Link
-                  className="help-widget__action-btn help-widget__action-btn--secondary"
-                  href={ROUTES.accountSupport}
-                  onClick={close}
+                ) : null}
+                <button
+                  type="button"
+                  className="help-widget__action-btn help-widget__action-btn--primary"
+                  onClick={() => setShowTicketForm((value) => !value)}
                 >
-                  <Headset aria-hidden size={18} strokeWidth={2} />
-                  My support tickets
-                </Link>
-              ) : null}
-              <button
-                type="button"
-                className="help-widget__action-btn help-widget__action-btn--primary"
-                onClick={() => setShowTicketForm((value) => !value)}
-              >
-                <MessageCircle aria-hidden size={18} strokeWidth={2} />
-                Open support ticket
-              </button>
-              <a
-                className="help-widget__action-btn help-widget__action-btn--secondary"
-                href={`mailto:${BRAND.email}?subject=Support%20request`}
-                onClick={close}
-              >
-                <MessageCircle aria-hidden size={18} strokeWidth={2} />
-                Email support
-              </a>
-              {BRAND.phoneTel ? (
+                  <MessageCircle aria-hidden size={18} strokeWidth={2} />
+                  Open support ticket
+                </button>
                 <a
                   className="help-widget__action-btn help-widget__action-btn--secondary"
-                  href={`tel:${BRAND.phoneTel}`}
+                  href={`mailto:${BRAND.email}?subject=Support%20request`}
                   onClick={close}
                 >
-                  <Phone aria-hidden size={18} strokeWidth={2} />
-                  {BRAND.phoneDisplay}
+                  <MessageCircle aria-hidden size={18} strokeWidth={2} />
+                  Email support
                 </a>
-              ) : null}
-            </div>
-
-            {showTicketForm ? (
-              <form className="help-widget__ticket-form" onSubmit={submitTicket}>
-                <label>
-                  Name
-                  <input
-                    required
-                    value={ticketForm.name}
-                    onChange={(e) =>
-                      setTicketForm({ ...ticketForm, name: e.target.value })
-                    }
-                  />
-                </label>
-                <label>
-                  Email
-                  <input
-                    required
-                    type="email"
-                    value={ticketForm.email}
-                    onChange={(e) =>
-                      setTicketForm({ ...ticketForm, email: e.target.value })
-                    }
-                  />
-                </label>
-                <label>
-                  Subject
-                  <input
-                    required
-                    value={ticketForm.subject}
-                    onChange={(e) =>
-                      setTicketForm({ ...ticketForm, subject: e.target.value })
-                    }
-                  />
-                </label>
-                <label>
-                  Message
-                  <textarea
-                    required
-                    rows={4}
-                    value={ticketForm.message}
-                    onChange={(e) =>
-                      setTicketForm({ ...ticketForm, message: e.target.value })
-                    }
-                  />
-                </label>
-                <button type="submit" disabled={ticketSubmitting}>
-                  {ticketSubmitting ? "Submitting…" : "Submit ticket"}
-                </button>
-              </form>
-            ) : null}
-
-            {ticketStatus ? (
-              <p className="help-widget__intro" role="status">
-                {ticketStatus}
-              </p>
-            ) : null}
-
-            <div className="help-widget__hours">
-              <div className="help-widget__hours-head">
-                <Clock aria-hidden size={14} strokeWidth={2} />
-                <span>Support hours</span>
+                {BRAND.phoneTel ? (
+                  <a
+                    className="help-widget__action-btn help-widget__action-btn--secondary"
+                    href={`tel:${BRAND.phoneTel}`}
+                    onClick={close}
+                  >
+                    <Phone aria-hidden size={18} strokeWidth={2} />
+                    {BRAND.phoneDisplay}
+                  </a>
+                ) : null}
               </div>
-              <ul className="help-widget__hours-list">
-                {HELP_WIDGET_HOURS.map((slot) => (
-                  <li key={slot.day}>
-                    <span>{slot.day}</span>
-                    <span>{slot.time}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
 
-            <p className="help-widget__disclaimer">
-              {HELP_WIDGET_DISCLAIMER}{" "}
-              <Link
-                className="help-widget__disclaimer-link"
-                href={`${ROUTES.searchResults}?q=privacy`}
-                onClick={close}
-              >
-                Privacy Policy
-              </Link>
-            </p>
+              {showTicketForm ? (
+                <form className="help-widget__ticket-form" onSubmit={submitTicket}>
+                  <label>
+                    Name
+                    <input
+                      required
+                      value={ticketForm.name}
+                      onChange={(e) => setTicketForm({ ...ticketForm, name: e.target.value })}
+                    />
+                  </label>
+                  <label>
+                    Email
+                    <input
+                      required
+                      type="email"
+                      value={ticketForm.email}
+                      onChange={(e) => setTicketForm({ ...ticketForm, email: e.target.value })}
+                    />
+                  </label>
+                  <label>
+                    Subject
+                    <input
+                      required
+                      value={ticketForm.subject}
+                      onChange={(e) => setTicketForm({ ...ticketForm, subject: e.target.value })}
+                    />
+                  </label>
+                  <label>
+                    Message
+                    <textarea
+                      required
+                      rows={4}
+                      value={ticketForm.message}
+                      onChange={(e) => setTicketForm({ ...ticketForm, message: e.target.value })}
+                    />
+                  </label>
+                  <button type="submit" disabled={ticketSubmitting}>
+                    {ticketSubmitting ? "Submitting…" : "Submit ticket"}
+                  </button>
+                </form>
+              ) : null}
+
+              {ticketStatus ? (
+                <p className="help-widget__intro" role="status">
+                  {ticketStatus}
+                </p>
+              ) : null}
+
+              <div className="help-widget__hours">
+                <div className="help-widget__hours-head">
+                  <Clock aria-hidden size={14} strokeWidth={2} />
+                  <span>Support hours</span>
+                </div>
+                <ul className="help-widget__hours-list">
+                  {HELP_WIDGET_HOURS.map((slot) => (
+                    <li key={slot.day}>
+                      <span>{slot.day}</span>
+                      <span>{slot.time}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <p className="help-widget__disclaimer">
+                {HELP_WIDGET_DISCLAIMER}{" "}
+                <Link
+                  className="help-widget__disclaimer-link"
+                  href={`${ROUTES.searchResults}?q=privacy`}
+                  onClick={close}
+                >
+                  Privacy Policy
+                </Link>
+              </p>
+            </div>
           </div>
-        </div>
         </>
       ) : null}
 

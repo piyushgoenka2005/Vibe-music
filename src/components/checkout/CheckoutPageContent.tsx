@@ -674,30 +674,24 @@ export default function CheckoutPageContent() {
             }`}
           >
             {step === "address" ? (
-              <>
-                <h2 className="checkout-panel__title">Delivery Address</h2>
-
-                {savedAddresses.length > 0 ? (
-                  <AddressStep
-                    addressForm={addressForm}
-                    setAddressForm={setAddressForm}
-                    savedAddresses={savedAddresses}
-                    effectiveSelectedAddressId={effectiveSelectedAddressId}
-                    useNewAddress={useNewAddress}
-                    setUseNewAddressOverride={setUseNewAddressOverride}
-                    setSelectedAddressId={setSelectedAddressId}
-                    user={user}
-                    isAuthenticated={isAuthenticated}
-                    guestEmail={guestEmail}
-                    setGuestEmailInput={setGuestEmailInput}
-                    addressError={addressError}
-                    placesAutocomplete={placesAutocomplete}
-                    onContinue={() => void handleContinueFromAddress()}
-                    onSelectAddress={selectSavedAddress}
-                    onDeleteAddress={(id, e) => void handleDeleteAddress(id, e)}
-                  />
-                ) : null}
-              </>
+              <AddressStep
+                addressForm={addressForm}
+                setAddressForm={setAddressForm}
+                savedAddresses={savedAddresses}
+                effectiveSelectedAddressId={effectiveSelectedAddressId}
+                useNewAddress={useNewAddress}
+                setUseNewAddressOverride={setUseNewAddressOverride}
+                setSelectedAddressId={setSelectedAddressId}
+                user={user}
+                isAuthenticated={isAuthenticated}
+                guestEmail={guestEmail}
+                setGuestEmailInput={setGuestEmailInput}
+                addressError={addressError}
+                placesAutocomplete={placesAutocomplete}
+                onContinue={() => void handleContinueFromAddress()}
+                onSelectAddress={selectSavedAddress}
+                onDeleteAddress={(id, e) => void handleDeleteAddress(id, e)}
+              />
             ) : null}
 
             {step === "summary" ? (
