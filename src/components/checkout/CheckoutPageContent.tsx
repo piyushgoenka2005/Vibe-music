@@ -1,22 +1,12 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useSyncExternalStore,
-  useState,
-  type KeyboardEvent,
-  type MouseEvent,
-} from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { preloadRazorpayCheckout } from "@/hooks/useRazorpay";
 import CheckoutSummary, { computeCheckoutInvoice } from "@/components/checkout/CheckoutSummary";
-import CheckoutPaymentMethods, {
-  type OnlinePaymentChannel,
-} from "@/components/checkout/CheckoutPaymentMethods";
+import type { OnlinePaymentChannel } from "@/components/checkout/CheckoutPaymentMethods";
 import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { AddressStep, ReviewStep, PaymentStep } from "@/components/checkout/CheckoutSteps";
@@ -127,7 +117,7 @@ export default function CheckoutPageContent() {
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const phone = useAccountProfileStore((s) => s.phone);
-  const { addresses, defaultAddress, createAddress, deleteAddress, isDeleting } = useAddresses();
+  const { addresses, defaultAddress, createAddress, deleteAddress } = useAddresses();
   const showToast = useToastStore((s) => s.show);
   const cartHydrated = useCartHydrated();
   const buyNowHydrated = useBuyNowHydrated();
@@ -541,13 +531,6 @@ export default function CheckoutPageContent() {
       }
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Unable to delete address", "error");
-    }
-  }
-
-  function handleAddressCardKeyDown(addressId: string, event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      selectSavedAddress(addressId);
     }
   }
 

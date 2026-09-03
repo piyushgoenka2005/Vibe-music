@@ -28,7 +28,6 @@ import {
   HEADER_SAFE_TOP,
   EMPTY_IMAGE_RECT,
   measureRenderedImageRect,
-  readCssScale,
   type ImageMetrics,
   type ImageRect,
 } from "@/components/product/ProductGalleryHelpers";

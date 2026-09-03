@@ -5,7 +5,6 @@
  * These receive their data via props and handle only the rendering.
  * All business logic stays in CheckoutPageContent.
  */
-import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
@@ -19,7 +18,6 @@ import { formatCurrencyPrecise } from "@/utils/currency";
 import type { ShippingAddress } from "@/types/order";
 import type { Address } from "@/types/address";
 import type { OnlinePaymentChannel } from "@/components/checkout/CheckoutPaymentMethods";
-import type { ShippingMethod } from "@/lib/shipping/shippingMethods";
 
 /* ------------------------------------------------------------------ */
 /*  Address Step                                                       */
