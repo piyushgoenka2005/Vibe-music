@@ -1,5 +1,6 @@
 import Script from "next/script";
 import {
+  ANALYTICS_CONSENT_KEY,
   getGaMeasurementId,
   getGtmId,
   isClientAnalyticsConfigured,
@@ -15,7 +16,7 @@ export default function GoogleAnalyticsScripts() {
     <>
       {gtmId ? (
         <>
-          <Script id="gtm-init" strategy="lazyOnload">
+          <Script id="gtm-init" strategy="afterInteractive">
             {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
@@ -38,15 +39,22 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <>
           <Script
             src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
-            strategy="lazyOnload"
+            strategy="afterInteractive"
           />
-          <Script id="ga4-init" strategy="lazyOnload">
+          <Script id="ga4-init" strategy="afterInteractive">
             {`window.dataLayer=window.dataLayer||[];
 function gtag(){dataLayer.push(arguments);}
 window.gtag=gtag;
 gtag('js',new Date());
+// Read stored consent so returning visitors who previously accepted analytics
+// start GRANTED — the default must match the stored choice before gtag.js
+// processes queued consent updates, otherwise the 'denied' default would
+// overwrite an earlier 'granted' update and block all collection.
+var storedConsent=null;
+try{storedConsent=localStorage.getItem('${ANALYTICS_CONSENT_KEY}');}catch(e){}
+var analyticsState=storedConsent==='granted'?'granted':'denied';
 gtag('consent','default',{
-  analytics_storage:'denied',
+  analytics_storage:analyticsState,
   ad_storage:'denied',
   ad_user_data:'denied',
   ad_personalization:'denied',

@@ -2,10 +2,7 @@ import "server-only";
 
 import nodemailer from "nodemailer";
 import type Mail from "nodemailer/lib/mailer";
-import {
-  isSmtpConfigured,
-  resolveSmtpConfig,
-} from "@/lib/server/email/smtpConfig";
+import { isSmtpConfigured, resolveSmtpConfig } from "@/lib/server/email/smtpConfig";
 
 export { isSmtpConfigured, resolveSmtpConfig };
 
@@ -41,13 +38,30 @@ export function getSmtpTransport(): SmtpTransport | null {
     return null;
   }
 
+  // Only Resend's relay authenticates as the literal user "resend". A missing
+  // SMTP_USER against a self-hosted server must fail loudly instead of
+  // attempting to authenticate as "resend" (which always 535s and silently
+  // breaks transactional email like password resets).
+  const auth =
+    config.source === "resend"
+      ? { user: "resend", pass: config.pass }
+      : config.user
+        ? { user: config.user, pass: config.pass }
+        : null;
+
+  if (!auth) {
+    console.error(
+      `[smtp] SMTP_USER is not configured for host "${config.host}" — refusing to authenticate as a fallback user. Set SMTP_USER (e.g. support@vibemusic.in) or use RESEND_API_KEY.`,
+    );
+    cachedTransport = null;
+    return null;
+  }
+
   cachedTransport = nodemailer.createTransport({
     host: config.host,
     port: config.port,
     secure: config.secure,
-    auth: config.user
-      ? { user: config.user, pass: config.pass }
-      : { user: "resend", pass: config.pass },
+    auth,
     tls:
       process.env.SMTP_TLS_REJECT_UNAUTHORIZED === "false"
         ? { rejectUnauthorized: false }
@@ -71,11 +85,11 @@ export async function sendMail(input: SendMailInput): Promise<SendMailResult> {
   if (!transport) {
     if (process.env.NODE_ENV === "production") {
       console.error(
-        `[smtp] Email not configured — not sent: "${input.subject}" → ${normalizeRecipients(input.to)}`
+        `[smtp] Email not configured — not sent: "${input.subject}" → ${normalizeRecipients(input.to)}`,
       );
     } else {
       console.info(
-        `[smtp] Skipped (SMTP/Resend not configured): "${input.subject}" → ${normalizeRecipients(input.to)}`
+        `[smtp] Skipped (SMTP/Resend not configured): "${input.subject}" → ${normalizeRecipients(input.to)}`,
       );
     }
     return { ok: false, skipped: true };

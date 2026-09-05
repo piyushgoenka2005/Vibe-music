@@ -73,8 +73,13 @@ export function resolveSmtpConfig(): ResolvedSmtpConfig | null {
 /**
  * SMTP availability from env only — does not import nodemailer.
  * Safe for instrumentation and integration checks at startup.
+ *
+ * Self-hosted SMTP requires host + user + pass; only the Resend relay may
+ * authenticate as the literal "resend" user without an SMTP_USER.
  */
 export function isSmtpConfigured(): boolean {
   const config = resolveSmtpConfig();
-  return Boolean(config?.host && config.pass);
+  if (!config?.host || !config.pass) return false;
+  if (config.source === "resend") return true;
+  return Boolean(config.user);
 }
