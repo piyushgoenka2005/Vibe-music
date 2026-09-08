@@ -2,22 +2,14 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import {
-  enforceRateLimit,
-  handleRouteError,
-} from "@/lib/api/route-utils";
-import {
-  isThumbPlaceholderBody,
-} from "@/lib/mediaThumb";
+import { enforceRateLimit, handleRouteError } from "@/lib/api/route-utils";
+import { isThumbPlaceholderBody } from "@/lib/mediaThumb";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { snapStorefrontThumbWidth } from "@/lib/storefrontImages";
 
 export const runtime = "nodejs";
 
-const ALLOWED_HOSTS = new Set([
-  "cdn.vibemusic.in",
-  "res.cloudinary.com",
-]);
+const ALLOWED_HOSTS = new Set(["cdn.vibemusic.in", "res.cloudinary.com"]);
 
 const MAX_WIDTH = 2000;
 const DEFAULT_WIDTH = 800;
@@ -25,8 +17,7 @@ const DEFAULT_WIDTH = 800;
 const MAX_UPSTREAM_BYTES = 24_000_000;
 const MEMORY_CACHE_MAX = 256;
 const DISK_CACHE_DIR = path.join(process.cwd(), ".cache", "media-thumbs");
-const CACHE_CONTROL =
-  "public, max-age=604800, stale-while-revalidate=86400, immutable";
+const CACHE_CONTROL = "public, max-age=31536000, immutable";
 /** Allow time to pull large PNG masters once; cached WebP thereafter. */
 const UPSTREAM_TIMEOUT_MS = 20_000;
 
@@ -44,10 +35,7 @@ function parseWidth(value: string | null): number {
   return snapStorefrontThumbWidth(Math.min(MAX_WIDTH, Math.floor(parsed)));
 }
 
-function thumbHeaders(
-  contentType: string,
-  cache: "hit" | "disk" | "miss"
-) {
+function thumbHeaders(contentType: string, cache: "hit" | "disk" | "miss") {
   return {
     "Content-Type": contentType,
     "Cache-Control": CACHE_CONTROL,
@@ -247,11 +235,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const rateLimited = await enforceRateLimit(
-      request,
-      "media-thumb",
-      RATE_LIMITS.mediaThumb
-    );
+    const rateLimited = await enforceRateLimit(request, "media-thumb", RATE_LIMITS.mediaThumb);
     if (rateLimited) {
       // Prefer a live CDN image over a blank card under burst traffic.
       return NextResponse.redirect(parsed.toString(), {
@@ -264,11 +248,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const { thumb, cache } = await getThumb(
-      cacheKey,
-      parsed.toString(),
-      width
-    );
+    const { thumb, cache } = await getThumb(cacheKey, parsed.toString(), width);
 
     if (!thumb) {
       // Never leave product rails blank — fall back to the upstream CDN asset.

@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import {
-  getProtectedLoginRedirectUrl,
-  isProtectedRoute,
-} from "@/lib/auth/protected-routes";
+import { getProtectedLoginRedirectUrl, isProtectedRoute } from "@/lib/auth/protected-routes";
 import { hasAuthSessionCookie } from "@/lib/auth/session-cookie";
 import { resolveLegacyPath } from "@/lib/routes";
 import { edgeCheckRateLimit } from "@/lib/security/edge-rate-limit";
@@ -46,8 +43,11 @@ function resolveRateLimitScope(pathname: string): {
   return { scope: "public-api", options: RATE_LIMITS.publicApi };
 }
 
-function withSecurityHeaders(response: NextResponse): NextResponse {
+function withSecurityHeaders(response: NextResponse, pathname?: string): NextResponse {
   for (const header of API_SECURITY_HEADERS) {
+    if (header.key === "Cache-Control" && pathname?.startsWith("/api/media/thumb")) {
+      continue;
+    }
     response.headers.set(header.key, header.value);
   }
   return response;
@@ -57,7 +57,7 @@ function jsonApiError(
   requestId: string,
   message: string,
   status: number,
-  extraHeaders?: Record<string, string>
+  extraHeaders?: Record<string, string>,
 ): NextResponse {
   const response = NextResponse.json({ error: message }, { status });
   response.headers.set(REQUEST_ID_HEADER, requestId);
@@ -109,7 +109,7 @@ async function handleApiRequest(request: NextRequest): Promise<NextResponse | nu
     }
   }
 
-  const response = withSecurityHeaders(NextResponse.next());
+  const response = withSecurityHeaders(NextResponse.next(), pathname);
   response.headers.set(REQUEST_ID_HEADER, requestId);
   response.headers.set("X-RateLimit-Remaining", String(rateLimit.remaining));
   response.headers.set("X-RateLimit-Reset", String(rateLimit.resetAt));
@@ -129,9 +129,7 @@ function handleProtectedPage(request: NextRequest): NextResponse | null {
       ip: getClientIp(request),
       reason: "missing",
     });
-    return NextResponse.redirect(
-      new URL(getProtectedLoginRedirectUrl(pathname), request.url)
-    );
+    return NextResponse.redirect(new URL(getProtectedLoginRedirectUrl(pathname), request.url));
   }
 
   return null;
