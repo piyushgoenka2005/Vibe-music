@@ -10,7 +10,13 @@ import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
 import { storefrontImageCandidates } from "@/lib/storefrontImages";
 
-const PRODUCT_FALLBACK = "/images/guitar-1.webp";
+const SHOWCASE_FALLBACKS = [
+  "/images/big-names-deals/gibson-product.webp",
+  "/images/big-names-deals/epiphone-product.webp",
+  "/images/big-names-deals/prs-product.webp",
+  "/images/big-names-deals/ibanez-product.webp",
+  "/images/big-names-deals/fender-product.webp",
+];
 /** Slightly snappier than a typical 3–4s carousel. */
 const AUTO_ADVANCE_MS = 2200;
 /** Brief pause after swipe / dot tap — auto keeps running alongside manual control. */
@@ -51,17 +57,18 @@ function nearestSlideIndex(track: HTMLElement): number {
 }
 
 function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: number }) {
+  const fallback = SHOWCASE_FALLBACKS[index % SHOWCASE_FALLBACKS.length]!;
   const candidates = useMemo(
     () =>
       Array.from(
         new Set(
-          [...storefrontImageCandidates(item.product, 640), PRODUCT_FALLBACK].filter(Boolean),
+          [...storefrontImageCandidates(item.product, 640), fallback].filter(Boolean),
         ),
       ),
-    [item.product],
+    [item.product, fallback],
   );
   const [attempt, setAttempt] = useState(0);
-  const productSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? PRODUCT_FALLBACK;
+  const productSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? fallback;
 
   return (
     <div
@@ -83,6 +90,7 @@ function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: numb
               className="big-names-deals__product"
               height={480}
               priority={index < 2}
+              unoptimized
               sizes="(max-width: 767px) 80vw, (max-width: 1024px) 33vw, 260px"
               src={productSrc}
               width={480}
