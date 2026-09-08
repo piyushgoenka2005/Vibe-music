@@ -104,7 +104,16 @@ export function normalizeVariant(
     stock,
     availability: input.availability ?? stockToVariantAvailability(stock),
     attributes,
-    images: input.images ?? [],
+    images: (Array.isArray(input.images) ? input.images : [])
+      .map((img: unknown) => {
+        if (typeof img === "string") return img;
+        if (img && typeof img === "object") {
+          if ("src" in img && typeof (img as { src?: unknown }).src === "string") return (img as { src: string }).src;
+          if ("url" in img && typeof (img as { url?: unknown }).url === "string") return (img as { url: string }).url;
+        }
+        return "";
+      })
+      .filter((s): s is string => Boolean(s && s !== "[object Object]")),
     isDefault: input.isDefault ?? false,
   };
 }

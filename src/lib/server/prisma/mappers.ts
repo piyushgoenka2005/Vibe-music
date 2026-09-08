@@ -14,7 +14,17 @@ export function toIsoString(value: unknown, fallback = ""): string {
 
 export function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return value.map((item) => String(item));
+  return value
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object") {
+        if ("src" in item && typeof (item as any).src === "string") return (item as any).src;
+        if ("url" in item && typeof (item as any).url === "string") return (item as any).url;
+        if ("image" in item && typeof (item as any).image === "string") return (item as any).image;
+      }
+      return "";
+    })
+    .filter((s): s is string => Boolean(s && s !== "[object Object]"));
 }
 
 export function asJsonValue(value: unknown): Prisma.InputJsonValue {

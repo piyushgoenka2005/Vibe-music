@@ -46,16 +46,18 @@ interface LensPosition {
 }
 
 function GalleryThumb({ src }: { src: string }) {
+  const isInvalid = !src || src === "[object Object]" || (!src.startsWith("http") && !src.startsWith("/"));
   const candidates = useMemo(() => {
+    if (isInvalid) return [];
     const list = storefrontImageCandidates(src, 160);
     const medium = storefrontImageCandidates(src, 320);
-    return Array.from(new Set([...list, ...medium, src].filter(Boolean)));
-  }, [src]);
+    return Array.from(new Set([...list, ...medium, src].filter((u) => Boolean(u && u !== "[object Object]"))));
+  }, [src, isInvalid]);
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
   const activeSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? "";
 
-  if (!activeSrc || failed) {
+  if (isInvalid || !activeSrc || failed) {
     return (
       <div className="pdp-gallery__thumb-placeholder" aria-hidden>
         <svg
@@ -637,7 +639,7 @@ export default function ProductGallery({
                   allowFullScreen
                 />
               </div>
-            ) : activeDisplaySrc && !allFailed ? (
+            ) : activeDisplaySrc && activeDisplaySrc !== "[object Object]" && !allFailed ? (
               <Image
                 key={activeDisplaySrc}
                 ref={photoRef}

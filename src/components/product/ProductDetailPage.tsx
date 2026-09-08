@@ -59,17 +59,56 @@ function buildGalleryImages(
   productName: string,
   imageColor: string
 ): ProductImage[] {
-  if (!variant.images.length) return productImages;
+  const extractSrc = (item: unknown): string => {
+    if (!item) return "";
+    if (typeof item === "string") return item === "[object Object]" ? "" : item;
+    if (typeof item === "object") {
+      const candidate = item as { src?: unknown; url?: unknown };
+      if (typeof candidate.src === "string") {
+        return candidate.src === "[object Object]" ? "" : candidate.src;
+      }
+      if (typeof candidate.url === "string") {
+        return candidate.url === "[object Object]" ? "" : candidate.url;
+      }
+    }
+    return "";
+  };
 
-  const variantImages = variant.images.map((src, index) => ({
-    id: `${variant.id}-img-${index}`,
-    alt: `${productName} — ${variant.label}`,
-    color: imageColor,
-    src,
-  }));
+  const rawVariantImages = Array.isArray(variant?.images) ? variant.images : [];
+  const variantImages: ProductImage[] = rawVariantImages
+    .map((raw, index) => {
+      const src = extractSrc(raw);
+      return {
+        id: `${variant.id}-img-${index}`,
+        alt: `${productName} — ${variant.label}`,
+        color: imageColor,
+        src,
+      };
+    })
+    .filter((img) => Boolean(img.src));
 
-  const variantSrcs = new Set(variant.images);
-  const extras = productImages.filter((img) => img.src && !variantSrcs.has(img.src));
+  const normalizedProductImages: ProductImage[] = (Array.isArray(productImages) ? productImages : [])
+    .map((img, index) => {
+      const candidate = img as unknown;
+      const src = extractSrc(
+        typeof candidate === "string"
+          ? candidate
+          : (candidate as { src?: unknown })?.src ?? candidate
+      );
+      const imgObj = typeof candidate === "object" && candidate !== null ? (candidate as Record<string, unknown>) : null;
+      return {
+        id: (typeof imgObj?.id === "string" && imgObj.id) || `img-${index}`,
+        alt: (typeof imgObj?.alt === "string" && imgObj.alt) || `${productName} view ${index + 1}`,
+        color: (typeof imgObj?.color === "string" && imgObj.color) || imageColor,
+        src,
+      };
+    })
+    .filter((img) => Boolean(img.src));
+
+  if (!variantImages.length) return normalizedProductImages;
+
+  const variantSrcs = new Set(variantImages.map((img) => img.src));
+  const extras = normalizedProductImages.filter((img) => img.src && !variantSrcs.has(img.src));
   return [...variantImages, ...extras];
 }
 

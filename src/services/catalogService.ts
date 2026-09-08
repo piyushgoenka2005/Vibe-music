@@ -62,7 +62,7 @@ import type {
   ProductStatus,
   UpdateProductInput,
 } from "@/types/catalog";
-import type { Product, ProductDetail, ProductSpec, ProductVideo } from "@/types/product";
+import type { Product, ProductDetail, ProductImage, ProductSpec, ProductVideo } from "@/types/product";
 
 async function resolveCategory(
   categoryInput: string
@@ -293,14 +293,45 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
     catalogProduct.stock
   );
 
-  const gallery = Array.isArray(detail.gallery)
-    ? detail.gallery
-    : (catalogProduct.images ?? []).map((src, index) => ({
-        id: `img-${index}`,
-        alt: `${catalogProduct.name} view ${index + 1}`,
-        color: catalogProduct.imageColor,
-        ...(src ? { src } : {}),
-      }));
+  const rawGallery =
+    Array.isArray(detail.gallery) && detail.gallery.length > 0
+      ? detail.gallery
+      : (catalogProduct.images ?? []).map((src, index) => ({
+          id: `img-${index}`,
+          alt: `${catalogProduct.name} view ${index + 1}`,
+          color: catalogProduct.imageColor,
+          ...(src ? { src } : {}),
+        }));
+
+  const gallery: ProductImage[] = rawGallery
+    .map((img: unknown, index: number) => {
+      const candidate = img as { id?: string; alt?: string; color?: string; src?: unknown; url?: unknown };
+      const rawSrc =
+        typeof candidate === "string"
+          ? candidate
+          : typeof candidate?.src === "string"
+            ? candidate.src
+            : typeof candidate?.url === "string"
+              ? candidate.url
+              : "";
+      const cleanSrc = rawSrc && rawSrc !== "[object Object]" ? rawSrc : "";
+      return {
+        id: candidate?.id || `img-${index}`,
+        alt: candidate?.alt || `${catalogProduct.name} view ${index + 1}`,
+        color: candidate?.color || catalogProduct.imageColor,
+        ...(cleanSrc ? { src: cleanSrc } : {}),
+      };
+    })
+    .filter((img) => Boolean(img.src));
+
+  if (gallery.length === 0 && catalogProduct.image && catalogProduct.image !== "[object Object]") {
+    gallery.push({
+      id: "img-0",
+      alt: catalogProduct.name,
+      color: catalogProduct.imageColor,
+      src: catalogProduct.image,
+    });
+  }
 
   return {
     ...toProduct(catalogProduct),
