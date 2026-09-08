@@ -25,8 +25,8 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "res.cloudinary.com" },
-      { protocol: "https", hostname: "cdn.vibemusic.in" },
+      { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
+      { protocol: "https", hostname: "cdn.vibemusic.in", pathname: "/**" },
       { protocol: "https", hostname: "static.roland.com", pathname: "/**" },
       { protocol: "https", hostname: "framerusercontent.com", pathname: "/**" },
     ],
