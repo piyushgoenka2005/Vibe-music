@@ -7,11 +7,7 @@ import { asJsonValue, asStringArray, toIsoString } from "./mappers";
 import { clampPageLimit, pageFromRows } from "./pagination";
 import type { StoreSettings } from "@/types/admin";
 import type { Coupon } from "@/types/admin";
-import type {
-  CreateBannerInput,
-  HomepageBanner,
-  UpdateBannerInput,
-} from "@/types/banner";
+import type { CreateBannerInput, HomepageBanner, UpdateBannerInput } from "@/types/banner";
 import type {
   BlogAnalyticsSummary,
   BlogComment,
@@ -245,15 +241,13 @@ export interface CouponPageOptions {
 
 /** SQL-level keyset pagination — never materializes the whole coupons table. */
 export async function listCouponPage(
-  options: CouponPageOptions = {}
+  options: CouponPageOptions = {},
 ): Promise<{ coupons: Coupon[]; hasMore: boolean; nextCursor?: string }> {
   if (!isPostgresConfigured()) return { coupons: [], hasMore: false };
   const limit = clampPageLimit(options.limit);
 
   const rows = await prisma.coupon.findMany({
-    where: options.afterCreatedAt
-      ? { createdAt: { lt: options.afterCreatedAt } }
-      : undefined,
+    where: options.afterCreatedAt ? { createdAt: { lt: options.afterCreatedAt } } : undefined,
     orderBy: { createdAt: "desc" },
     take: limit + 1,
   });
@@ -379,7 +373,7 @@ export async function createBanner(input: CreateBannerInput): Promise<HomepageBa
 
 export async function updateBannerRecord(
   id: string,
-  input: UpdateBannerInput
+  input: UpdateBannerInput,
 ): Promise<HomepageBanner> {
   const existing = await getBannerById(id);
   if (!existing) throw new Error("Banner not found");
@@ -388,10 +382,7 @@ export async function updateBannerRecord(
   const updated: HomepageBanner = {
     ...existing,
     title: input.title !== undefined ? input.title.trim() : existing.title,
-    subtitle:
-      input.subtitle !== undefined
-        ? input.subtitle.trim() || undefined
-        : existing.subtitle,
+    subtitle: input.subtitle !== undefined ? input.subtitle.trim() || undefined : existing.subtitle,
     image: input.image !== undefined ? input.image.trim() : existing.image,
     mobileImage:
       input.mobileImage !== undefined
@@ -430,17 +421,15 @@ export async function deleteBannerRecord(id: string): Promise<void> {
   await prisma.banner.delete({ where: { id } });
 }
 
-export async function reorderBannerRecords(
-  orderedIds: string[]
-): Promise<HomepageBanner[]> {
+export async function reorderBannerRecords(orderedIds: string[]): Promise<HomepageBanner[]> {
   const timestamp = now();
   await prisma.$transaction(
     orderedIds.map((id, index) =>
       prisma.banner.update({
         where: { id },
         data: { priority: index, updatedAt: timestamp },
-      })
-    )
+      }),
+    ),
   );
   return listAllBanners();
 }
@@ -455,14 +444,16 @@ export async function blogSlugExists(slug: string, excludeId?: string): Promise<
   return Boolean(row);
 }
 
-export async function createBlogPostRecord(input: CreateBlogPostInput & {
-  id: string;
-  slug: string;
-  publishedAt: string | null;
-  scheduledAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}): Promise<BlogPost> {
+export async function createBlogPostRecord(
+  input: CreateBlogPostInput & {
+    id: string;
+    slug: string;
+    publishedAt: string | null;
+    scheduledAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+  },
+): Promise<BlogPost> {
   await prisma.blogPost.create({
     data: {
       id: input.id,
@@ -495,7 +486,7 @@ export async function createBlogPostRecord(input: CreateBlogPostInput & {
 
 export async function updateBlogPostRecord(
   id: string,
-  patch: Partial<BlogPost>
+  patch: Partial<BlogPost>,
 ): Promise<BlogPost> {
   await prisma.blogPost.update({
     where: { id },
@@ -513,9 +504,7 @@ export async function updateBlogPostRecord(
       ...(patch.authorAvatar !== undefined ? { authorAvatar: patch.authorAvatar } : {}),
       ...(patch.viewCount !== undefined ? { viewCount: patch.viewCount } : {}),
       ...(patch.seoTitle !== undefined ? { seoTitle: patch.seoTitle } : {}),
-      ...(patch.seoDescription !== undefined
-        ? { seoDescription: patch.seoDescription }
-        : {}),
+      ...(patch.seoDescription !== undefined ? { seoDescription: patch.seoDescription } : {}),
       ...(patch.status !== undefined ? { status: patch.status } : {}),
       ...(patch.publishedAt !== undefined ? { publishedAt: patch.publishedAt } : {}),
       ...(patch.scheduledAt !== undefined ? { scheduledAt: patch.scheduledAt } : {}),
@@ -574,7 +563,7 @@ export async function createBlogCommentRecord(input: {
 
 export async function listBlogCommentsByPost(
   postId: string,
-  status: BlogCommentStatus
+  status: BlogCommentStatus,
 ): Promise<BlogComment[]> {
   if (!isPostgresConfigured()) return [];
   const rows = await prisma.blogComment.findMany({
@@ -595,7 +584,7 @@ export async function listAllBlogComments(): Promise<BlogComment[]> {
 
 export async function updateBlogCommentStatus(
   id: string,
-  status: BlogCommentStatus
+  status: BlogCommentStatus,
 ): Promise<BlogComment> {
   assertPostgresForWrite();
   const row = await prisma.blogComment.update({
@@ -634,9 +623,7 @@ export async function getBlogAnalyticsSummary(): Promise<BlogAnalyticsSummary> {
     }),
   ]);
 
-  const commentCounts = Object.fromEntries(
-    comments.map((row) => [row.status, row._count._all])
-  );
+  const commentCounts = Object.fromEntries(comments.map((row) => [row.status, row._count._all]));
 
   const viewEvents = await prisma.blogPostEvent.count({ where: { type: "view" } });
   const shareEvents = await prisma.blogPostEvent.count({ where: { type: "share" } });
@@ -645,9 +632,7 @@ export async function getBlogAnalyticsSummary(): Promise<BlogAnalyticsSummary> {
     totalViews: viewEvents,
     totalShares: shareEvents,
     totalComments:
-      (commentCounts.approved ?? 0) +
-      (commentCounts.pending ?? 0) +
-      (commentCounts.rejected ?? 0),
+      (commentCounts.approved ?? 0) + (commentCounts.pending ?? 0) + (commentCounts.rejected ?? 0),
     pendingComments: commentCounts.pending ?? 0,
     topPosts: posts.map((post) => ({
       postId: post.id,
@@ -663,9 +648,7 @@ export async function getBlogAnalyticsSummary(): Promise<BlogAnalyticsSummary> {
   };
 }
 
-export async function createCouponRecord(
-  coupon: Coupon
-): Promise<Coupon> {
+export async function createCouponRecord(coupon: Coupon): Promise<Coupon> {
   await prisma.coupon.create({
     data: {
       id: coupon.id,
@@ -686,10 +669,7 @@ export async function createCouponRecord(
   return coupon;
 }
 
-export async function updateCouponRecord(
-  id: string,
-  patch: Partial<Coupon>
-): Promise<Coupon> {
+export async function updateCouponRecord(id: string, patch: Partial<Coupon>): Promise<Coupon> {
   const timestamp = now();
   const rest = { ...patch };
   delete rest.id;
@@ -703,9 +683,7 @@ export async function updateCouponRecord(
       ...(rest.label !== undefined ? { label: rest.label } : {}),
       ...(rest.type !== undefined ? { type: rest.type } : {}),
       ...(rest.value !== undefined ? { value: rest.value } : {}),
-      ...(rest.minOrderAmount !== undefined
-        ? { minOrderAmount: rest.minOrderAmount ?? null }
-        : {}),
+      ...(rest.minOrderAmount !== undefined ? { minOrderAmount: rest.minOrderAmount ?? null } : {}),
       ...(rest.maxUses !== undefined ? { maxUses: rest.maxUses ?? null } : {}),
       ...(rest.isActive !== undefined ? { isActive: rest.isActive } : {}),
       ...(rest.startsAt !== undefined ? { startsAt: rest.startsAt ?? null } : {}),
@@ -737,9 +715,7 @@ export async function incrementCouponUsageRecord(code: string): Promise<void> {
   });
 }
 
-export async function upsertStoreSettingsRecord(
-  settings: StoreSettings
-): Promise<StoreSettings> {
+export async function upsertStoreSettingsRecord(settings: StoreSettings): Promise<StoreSettings> {
   await prisma.storeSettings.upsert({
     where: { id: "store" },
     create: {
@@ -773,9 +749,7 @@ export async function upsertStoreSettingsRecord(
   return settings;
 }
 
-export async function upsertProductReviewStatsRecord(
-  stats: ProductReviewStats
-): Promise<void> {
+export async function upsertProductReviewStatsRecord(stats: ProductReviewStats): Promise<void> {
   await prisma.productReviewStats.upsert({
     where: { productId: stats.productId },
     create: {
@@ -803,7 +777,7 @@ export async function upsertProductReviewStatsRecord(
 export async function updateProductReviewAggregates(
   productId: string,
   rating: number,
-  reviewCount: number
+  reviewCount: number,
 ): Promise<void> {
   await prisma.product.update({
     where: { id: productId },
@@ -911,8 +885,8 @@ export async function ensureDefaultHomepageSections(): Promise<void> {
           createdAt: timestamp,
           updatedAt: timestamp,
         },
-      })
-    )
+      }),
+    ),
   );
 }
 
@@ -923,9 +897,7 @@ export async function ensureMissingHomepageSections(): Promise<void> {
     select: { sectionKey: true },
   });
   const keys = new Set(existing.map((row) => row.sectionKey));
-  const missing = DEFAULT_HOMEPAGE_SECTIONS.filter(
-    (section) => !keys.has(section.sectionKey)
-  );
+  const missing = DEFAULT_HOMEPAGE_SECTIONS.filter((section) => !keys.has(section.sectionKey));
   if (missing.length === 0) return;
 
   const timestamp = now();
@@ -948,9 +920,31 @@ export async function ensureMissingHomepageSections(): Promise<void> {
           createdAt: timestamp,
           updatedAt: timestamp,
         },
-      })
-    )
+      }),
+    ),
   );
+
+  const hasStorySection = missing.some((s) => s.sectionKey === "featured_stories");
+  if (hasStorySection) {
+    const { HOMEPAGE_APLUS_BANNERS } = await import("@/data/homepageAplusSections");
+    await prisma.$transaction(
+      HOMEPAGE_APLUS_BANNERS.map((banner, index) =>
+        prisma.homepageSectionItem.create({
+          data: {
+            id: banner.id,
+            sectionKey: "featured_stories",
+            sortOrder: index,
+            isActive: true,
+            customImage: banner.imageSrc,
+            customTitle: banner.imageAlt,
+            customHref: banner.href ?? null,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+          },
+        }),
+      ),
+    );
+  }
 }
 
 export async function listHomepageSectionsMapped(): Promise<HomepageSection[]> {
@@ -969,7 +963,7 @@ export async function listHomepageSectionsMapped(): Promise<HomepageSection[]> {
 }
 
 export async function listHomepageSectionItemsMapped(
-  sectionKey?: HomepageSectionKey
+  sectionKey?: HomepageSectionKey,
 ): Promise<HomepageSectionItem[]> {
   if (!isPostgresConfigured()) return [];
   const rows = await prisma.homepageSectionItem.findMany({
@@ -979,9 +973,7 @@ export async function listHomepageSectionItemsMapped(
   return rows.map(mapHomepageSectionItem);
 }
 
-export async function getHomepageSectionItemById(
-  id: string
-): Promise<HomepageSectionItem | null> {
+export async function getHomepageSectionItemById(id: string): Promise<HomepageSectionItem | null> {
   if (!isPostgresConfigured()) return null;
   const row = await prisma.homepageSectionItem.findUnique({ where: { id } });
   return row ? mapHomepageSectionItem(row) : null;
@@ -989,7 +981,7 @@ export async function getHomepageSectionItemById(
 
 export async function updateHomepageSectionRecord(
   sectionKey: HomepageSectionKey,
-  patch: UpdateHomepageSectionInput
+  patch: UpdateHomepageSectionInput,
 ): Promise<HomepageSection> {
   const existing = await prisma.homepageSection.findUnique({
     where: { sectionKey },
@@ -1001,12 +993,8 @@ export async function updateHomepageSectionRecord(
     where: { sectionKey },
     data: {
       ...(patch.title !== undefined ? { title: patch.title.trim() } : {}),
-      ...(patch.subtitle !== undefined
-        ? { subtitle: patch.subtitle.trim() || null }
-        : {}),
-      ...(patch.accentLabel !== undefined
-        ? { accentLabel: patch.accentLabel.trim() || null }
-        : {}),
+      ...(patch.subtitle !== undefined ? { subtitle: patch.subtitle.trim() || null } : {}),
+      ...(patch.accentLabel !== undefined ? { accentLabel: patch.accentLabel.trim() || null } : {}),
       ...(patch.ctaText !== undefined ? { ctaText: patch.ctaText.trim() || null } : {}),
       ...(patch.ctaLink !== undefined ? { ctaLink: patch.ctaLink.trim() || null } : {}),
       ...(patch.isActive !== undefined ? { isActive: patch.isActive } : {}),
@@ -1021,7 +1009,7 @@ export async function updateHomepageSectionRecord(
 }
 
 export async function createHomepageSectionItemRecord(
-  item: HomepageSectionItem
+  item: HomepageSectionItem,
 ): Promise<HomepageSectionItem> {
   await prisma.homepageSectionItem.create({
     data: {
@@ -1048,7 +1036,7 @@ export async function createHomepageSectionItemRecord(
 
 export async function updateHomepageSectionItemRecord(
   id: string,
-  patch: UpdateHomepageSectionItemInput
+  patch: UpdateHomepageSectionItemInput,
 ): Promise<HomepageSectionItem> {
   const timestamp = now();
   const row = await prisma.homepageSectionItem.update({
@@ -1057,16 +1045,10 @@ export async function updateHomepageSectionItemRecord(
       ...(patch.sortOrder !== undefined ? { sortOrder: patch.sortOrder } : {}),
       ...(patch.isActive !== undefined ? { isActive: patch.isActive } : {}),
       ...(patch.productId !== undefined ? { productId: patch.productId || null } : {}),
-      ...(patch.categorySlug !== undefined
-        ? { categorySlug: patch.categorySlug || null }
-        : {}),
+      ...(patch.categorySlug !== undefined ? { categorySlug: patch.categorySlug || null } : {}),
       ...(patch.brandId !== undefined ? { brandId: patch.brandId || null } : {}),
-      ...(patch.customImage !== undefined
-        ? { customImage: patch.customImage || null }
-        : {}),
-      ...(patch.customTitle !== undefined
-        ? { customTitle: patch.customTitle || null }
-        : {}),
+      ...(patch.customImage !== undefined ? { customImage: patch.customImage || null } : {}),
+      ...(patch.customTitle !== undefined ? { customTitle: patch.customTitle || null } : {}),
       ...(patch.customHref !== undefined ? { customHref: patch.customHref || null } : {}),
       ...(patch.badgeLabel !== undefined ? { badgeLabel: patch.badgeLabel || null } : {}),
       ...(patch.offerText !== undefined ? { offerText: patch.offerText || null } : {}),
@@ -1082,22 +1064,20 @@ export async function deleteHomepageSectionItemRecord(id: string): Promise<void>
   await prisma.homepageSectionItem.delete({ where: { id } });
 }
 
-export async function reorderHomepageSectionItems(
-  orderedIds: string[]
-): Promise<void> {
+export async function reorderHomepageSectionItems(orderedIds: string[]): Promise<void> {
   const timestamp = now();
   await prisma.$transaction(
     orderedIds.map((id, index) =>
       prisma.homepageSectionItem.update({
         where: { id },
         data: { sortOrder: index, updatedAt: timestamp },
-      })
-    )
+      }),
+    ),
   );
 }
 
 export async function upsertHomepageSectionRecord(
-  input: CreateHomepageSectionInput
+  input: CreateHomepageSectionInput,
 ): Promise<HomepageSection> {
   const timestamp = now();
   const existing = await prisma.homepageSection.findUnique({

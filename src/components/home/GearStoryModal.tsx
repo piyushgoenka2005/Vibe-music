@@ -57,15 +57,13 @@ function availabilityLabel(availability: GearStory["availability"]): string {
 
 function gallerySources(story: GearStory): string[] {
   const sources =
-    story.images.length > 0
-      ? story.images
-      : [story.image || story.posterUrl].filter(Boolean);
+    story.images.length > 0 ? story.images : [story.image || story.posterUrl].filter(Boolean);
   return Array.from(
     new Set(
       sources
         .map((src) => src?.trim())
-        .filter((src): src is string => Boolean(src) && src !== "null" && src !== "undefined")
-    )
+        .filter((src): src is string => Boolean(src) && src !== "null" && src !== "undefined"),
+    ),
   );
 }
 
@@ -80,9 +78,8 @@ function GearStoryMainImage({
 }) {
   const candidates = useMemo(() => {
     const primary = storefrontImageCandidates(src, 960);
-    const fallback = fallbackSrc && fallbackSrc !== src
-      ? storefrontImageCandidates(fallbackSrc, 960)
-      : [];
+    const fallback =
+      fallbackSrc && fallbackSrc !== src ? storefrontImageCandidates(fallbackSrc, 960) : [];
     return Array.from(new Set([...primary, ...fallback, src, fallbackSrc].filter(Boolean)));
   }, [src, fallbackSrc]);
   const [attempt, setAttempt] = useState(0);
@@ -97,7 +94,16 @@ function GearStoryMainImage({
   if (!activeSrc || failed) {
     return (
       <div className="gear-story-modal__image gear-story-modal__image--placeholder" aria-hidden>
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#ccc"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
           <circle cx="8.5" cy="8.5" r="1.5" />
           <polyline points="21 15 16 10 5 21" />
@@ -113,7 +119,7 @@ function GearStoryMainImage({
       alt={alt}
       className="gear-story-modal__image"
       fill
-      sizes="(max-width: 1024px) 100vw, 50vw"
+      sizes="(max-width: 767px) 92vw, 460px"
       style={{ objectFit: "contain" }}
       priority={true}
       onError={() => {
@@ -127,13 +133,7 @@ function GearStoryMainImage({
   );
 }
 
-function GearStoryThumb({
-  src,
-  onDead,
-}: {
-  src: string;
-  onDead: () => void;
-}) {
+function GearStoryThumb({ src, onDead }: { src: string; onDead: () => void }) {
   const candidates = useMemo(() => {
     const list = storefrontImageCandidates(src, 160);
     const medium = storefrontImageCandidates(src, 320);
@@ -180,9 +180,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
   const zoomRef = useRef<HTMLDivElement>(null);
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openDrawer);
-  const isWishlisted = useWishlistStore((s) =>
-    story ? s.has(story.productId) : false
-  );
+  const isWishlisted = useWishlistStore((s) => (story ? s.has(story.productId) : false));
   const toggleWishlist = useWishlistStore((s) => s.toggle);
 
   const open = Boolean(story);
@@ -204,11 +202,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
   }, [open, story?.id]);
 
   const handleAddToCart = useCallback(() => {
-    if (
-      !story ||
-      story.availability === "out-of-stock" ||
-      !isPurchasablePrice(story.price)
-    ) {
+    if (!story || story.availability === "out-of-stock" || !isPurchasablePrice(story.price)) {
       return;
     }
     addItem(storyToProduct(story), 1);
@@ -216,16 +210,13 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
     onClose();
   }, [addItem, onClose, openCart, story]);
 
-  const handleImageMouseMove = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
-      const bounds = event.currentTarget.getBoundingClientRect();
-      const x = ((event.clientX - bounds.left) / bounds.width) * 100;
-      const y = ((event.clientY - bounds.top) / bounds.height) * 100;
-      zoomRef.current?.style.setProperty("--zoom-x", `${x}%`);
-      zoomRef.current?.style.setProperty("--zoom-y", `${y}%`);
-    },
-    []
-  );
+  const handleImageMouseMove = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - bounds.left) / bounds.width) * 100;
+    const y = ((event.clientY - bounds.top) / bounds.height) * 100;
+    zoomRef.current?.style.setProperty("--zoom-x", `${x}%`);
+    zoomRef.current?.style.setProperty("--zoom-y", `${y}%`);
+  }, []);
 
   const resetImageZoom = useCallback(() => {
     zoomRef.current?.style.setProperty("--zoom-x", "50%");
@@ -241,15 +232,10 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
   const product = storyToProduct(story);
   const displayPrice = story.salePrice ?? story.price;
   const hasCatalogPrice = isPurchasablePrice(displayPrice);
-  const hasDiscount =
-    story.discountPercentage > 0 && story.originalPrice > displayPrice;
+  const hasDiscount = story.discountPercentage > 0 && story.originalPrice > displayPrice;
   const gallery = gallerySources(story).filter((src) => !deadSrcs[src]);
-  const safeActiveIndex = Math.min(
-    activeImage,
-    Math.max(gallery.length - 1, 0)
-  );
-  const activeSrc =
-    gallery[safeActiveIndex] ?? story.image ?? story.posterUrl ?? "";
+  const safeActiveIndex = Math.min(activeImage, Math.max(gallery.length - 1, 0));
+  const activeSrc = gallery[safeActiveIndex] ?? story.image ?? story.posterUrl ?? "";
   const fallbackSrc =
     story.posterUrl && story.posterUrl !== activeSrc
       ? story.posterUrl
@@ -301,11 +287,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                 />
               ) : null}
               {activeSrc ? (
-                <GearStoryMainImage
-                  src={activeSrc}
-                  fallbackSrc={fallbackSrc}
-                  alt={story.name}
-                />
+                <GearStoryMainImage src={activeSrc} fallbackSrc={fallbackSrc} alt={story.name} />
               ) : null}
             </div>
             {gallery.length > 1 ? (
@@ -316,9 +298,7 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                     type="button"
                     role="listitem"
                     className={`gear-story-modal__thumb${
-                      index === safeActiveIndex
-                        ? " gear-story-modal__thumb--active"
-                        : ""
+                      index === safeActiveIndex ? " gear-story-modal__thumb--active" : ""
                     }`}
                     onClick={() => setActiveImage(index)}
                     aria-label={`View image ${index + 1}`}
@@ -370,7 +350,10 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
               >
                 {availabilityLabel(story.availability)}
               </span>
-              <span className="gear-story-modal__rating" aria-label={`Rated ${story.rating} out of 5`}>
+              <span
+                className="gear-story-modal__rating"
+                aria-label={`Rated ${story.rating} out of 5`}
+              >
                 <span aria-hidden="true">{"★".repeat(Math.round(story.rating))}</span>
                 {story.rating.toFixed(1)} ({story.reviewCount})
               </span>
@@ -413,25 +396,25 @@ export default function GearStoryModal({ story, onClose }: GearStoryModalProps) 
                 </Link>
               ) : null}
               {story.slug ? (
-              <button
-                type="button"
-                className="gear-story-modal__btn gear-story-modal__btn--tertiary"
-                onClick={() => toggleWishlist(product)}
-                aria-pressed={isWishlisted}
-              >
-                <Heart
-                  size={18}
-                  fill={isWishlisted ? "currentColor" : "none"}
-                  aria-hidden="true"
-                />
-                {isWishlisted ? "Saved" : "Wishlist"}
-              </button>
+                <button
+                  type="button"
+                  className="gear-story-modal__btn gear-story-modal__btn--tertiary"
+                  onClick={() => toggleWishlist(product)}
+                  aria-pressed={isWishlisted}
+                >
+                  <Heart
+                    size={18}
+                    fill={isWishlisted ? "currentColor" : "none"}
+                    aria-hidden="true"
+                  />
+                  {isWishlisted ? "Saved" : "Wishlist"}
+                </button>
               ) : null}
             </div>
           </div>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

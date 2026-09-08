@@ -1,7 +1,4 @@
-import {
-  buildMediaTransformUrl,
-  MEDIA_PRESETS,
-} from "@/lib/media-url";
+import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
 
 const CDN_HOST = "cdn.vibemusic.in";
 /** Shared thumb buckets — include zoom/PDP sizes for sharp hover zoom. */
@@ -56,7 +53,7 @@ export function cdnSeoImageUrl(url: string): string {
  */
 export function storefrontImageUrl(
   url: string,
-  width = 640
+  width = 640,
 ): { src: string; kind: "derivative" | "thumb" | "direct" } {
   if (!url) return { src: url, kind: "direct" };
   try {
@@ -76,21 +73,14 @@ export function storefrontImageUrl(
       const file = parsed.pathname.split("/").pop() ?? "";
       const match = file.match(/^(.+)\.([a-z0-9]+)$/i);
 
-      if (match && match[2].toLowerCase() === "webp") {
+      if (match) {
         const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
         const name = match[1];
         return {
           src: `${parsed.origin}${dir}${name}-w${snappedW}.webp`,
-          kind: "derivative"
+          kind: "derivative",
         };
       }
-
-      // PNG/JPG masters are multi-MB uploads — resize via the cached thumb
-      // proxy instead of shipping the raw master to every visitor.
-      return {
-        src: mediaThumbProxyUrl(master, snappedW),
-        kind: "thumb",
-      };
     }
   } catch {
     /* fall through */
@@ -112,7 +102,7 @@ function unwrapStorefrontSrc(url: string): string {
   try {
     const absolute = new URL(
       url,
-      typeof window !== "undefined" ? window.location.origin : "http://localhost"
+      typeof window !== "undefined" ? window.location.origin : "http://localhost",
     );
     if (absolute.pathname === "/api/media/thumb") {
       const nested = absolute.searchParams.get("url")?.trim();
@@ -126,18 +116,23 @@ function unwrapStorefrontSrc(url: string): string {
 
 /**
  * High-res URL for PDP hover zoom / lightbox.
- * Served through the cached thumb proxy at the largest bucket — sharp enough
- * for zoom panes without pulling multi-MB masters over the wire.
+ * Served directly via the static CDN WebP derivative at 1600w.
  */
 export function storefrontZoomImageUrl(url: string): string {
   if (!url) return url;
   try {
     const absolute = unwrapStorefrontSrc(url);
     if (new URL(absolute).hostname === CDN_HOST) {
-      return mediaThumbProxyUrl(cdnMasterUrl(absolute), 1600);
+      const master = cdnMasterUrl(absolute);
+      const parsed = new URL(master);
+      const file = parsed.pathname.split("/").pop() ?? "";
+      const match = file.match(/^(.+)\.([a-z0-9]+)$/i);
+      if (match) {
+        const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
+        const name = match[1];
+        return `${parsed.origin}${dir}${name}-w1600.webp`;
+      }
     }
-    const master = cdnMasterUrl(absolute);
-    if (new URL(master).hostname === CDN_HOST) return master;
   } catch {
     /* fall through */
   }
@@ -147,10 +142,7 @@ export function storefrontZoomImageUrl(url: string): string {
 /**
  * Display candidates for a product image: optimized thumb first, then CDN/original.
  */
-export function storefrontImageCandidates(
-  url: string,
-  width = 1200
-): string[] {
+export function storefrontImageCandidates(url: string, width = 1200): string[] {
   if (!url) return [];
   const original = unwrapStorefrontSrc(url);
   const preferred = storefrontImageUrl(original, width).src;
@@ -164,7 +156,7 @@ export function cdnThumbUrl(url: string, width = 640): string {
 
 export function optimizeImageUrl(
   url: string,
-  preset: keyof typeof MEDIA_PRESETS = "productCard"
+  preset: keyof typeof MEDIA_PRESETS = "productCard",
 ): string {
   if (!url) return url;
   const options = MEDIA_PRESETS[preset];

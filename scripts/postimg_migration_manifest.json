@@ -1,0 +1,1297 @@
+{
+  "successfulMigrations": [
+    {
+      "sourceUrl": "https://i.postimg.cc/mZzgGXyV/HERTZ-HZA-3900-EQ-BK-(1).png",
+      "uuid": "b43d84eb-5eac-46ec-8c2b-b07dc03797b8",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice",
+      "masterFilename": "b43d84eb-5eac-46ec-8c2b-b07dc03797b8.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice/b43d84eb-5eac-46ec-8c2b-b07dc03797b8.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice/b43d84eb-5eac-46ec-8c2b-b07dc03797b8-w960.webp",
+      "derivatives": [
+        "b43d84eb-5eac-46ec-8c2b-b07dc03797b8-w320.webp",
+        "b43d84eb-5eac-46ec-8c2b-b07dc03797b8-w480.webp",
+        "b43d84eb-5eac-46ec-8c2b-b07dc03797b8-w800.webp",
+        "b43d84eb-5eac-46ec-8c2b-b07dc03797b8-w960.webp",
+        "b43d84eb-5eac-46ec-8c2b-b07dc03797b8-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/2jbSfc7g/HERTZ-HZA-3900-EQ-BK-(2).png",
+      "uuid": "7c3d79fc-0d97-47e8-a431-fb526876b5cc",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice",
+      "masterFilename": "7c3d79fc-0d97-47e8-a431-fb526876b5cc.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice/7c3d79fc-0d97-47e8-a431-fb526876b5cc.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice/7c3d79fc-0d97-47e8-a431-fb526876b5cc-w960.webp",
+      "derivatives": [
+        "7c3d79fc-0d97-47e8-a431-fb526876b5cc-w320.webp",
+        "7c3d79fc-0d97-47e8-a431-fb526876b5cc-w480.webp",
+        "7c3d79fc-0d97-47e8-a431-fb526876b5cc-w800.webp",
+        "7c3d79fc-0d97-47e8-a431-fb526876b5cc-w960.webp",
+        "7c3d79fc-0d97-47e8-a431-fb526876b5cc-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/ZYB5h7xg/HERTZ-HZA-3900-EQ-BK-(3).png",
+      "uuid": "5e9cdd9e-a47c-44df-8946-f99fd6de19b5",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice",
+      "masterFilename": "5e9cdd9e-a47c-44df-8946-f99fd6de19b5.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice/5e9cdd9e-a47c-44df-8946-f99fd6de19b5.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice/5e9cdd9e-a47c-44df-8946-f99fd6de19b5-w960.webp",
+      "derivatives": [
+        "5e9cdd9e-a47c-44df-8946-f99fd6de19b5-w320.webp",
+        "5e9cdd9e-a47c-44df-8946-f99fd6de19b5-w480.webp",
+        "5e9cdd9e-a47c-44df-8946-f99fd6de19b5-w800.webp",
+        "5e9cdd9e-a47c-44df-8946-f99fd6de19b5-w960.webp",
+        "5e9cdd9e-a47c-44df-8946-f99fd6de19b5-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/bv8NghGn/HERTZ-HZCD-8021-6M.png",
+      "uuid": "6052aee6-5e9f-43d4-b85f-cdf40b94c611",
+      "categorySlug": "cables-cases-accessories",
+      "productSlug": "hertz-hertz-hzcd-8021-6m-guitar-patch-cable-single-angled-instrument-cable-for-guitar-and-bass-connections",
+      "masterFilename": "6052aee6-5e9f-43d4-b85f-cdf40b94c611.webp",
+      "destRelDir": "products/cables-cases-accessories/hertz-hertz-hzcd-8021-6m-guitar-patch-cable-single-angled-instrument-cable-for-guitar-and-bass-connections",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hzcd-8021-6m-guitar-patch-cable-single-angled-instrument-cable-for-guitar-and-bass-connections/6052aee6-5e9f-43d4-b85f-cdf40b94c611.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hzcd-8021-6m-guitar-patch-cable-single-angled-instrument-cable-for-guitar-and-bass-connections/6052aee6-5e9f-43d4-b85f-cdf40b94c611-w960.webp",
+      "derivatives": [
+        "6052aee6-5e9f-43d4-b85f-cdf40b94c611-w320.webp",
+        "6052aee6-5e9f-43d4-b85f-cdf40b94c611-w480.webp",
+        "6052aee6-5e9f-43d4-b85f-cdf40b94c611-w800.webp",
+        "6052aee6-5e9f-43d4-b85f-cdf40b94c611-w960.webp",
+        "6052aee6-5e9f-43d4-b85f-cdf40b94c611-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/LsFx5yJt/DG-15-(1).png",
+      "uuid": "6176be84-0147-40be-a0d0-a30673a4e6df",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance",
+      "masterFilename": "6176be84-0147-40be-a0d0-a30673a4e6df.webp",
+      "destRelDir": "products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance/6176be84-0147-40be-a0d0-a30673a4e6df.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance/6176be84-0147-40be-a0d0-a30673a4e6df-w960.webp",
+      "derivatives": [
+        "6176be84-0147-40be-a0d0-a30673a4e6df-w320.webp",
+        "6176be84-0147-40be-a0d0-a30673a4e6df-w480.webp",
+        "6176be84-0147-40be-a0d0-a30673a4e6df-w800.webp",
+        "6176be84-0147-40be-a0d0-a30673a4e6df-w960.webp",
+        "6176be84-0147-40be-a0d0-a30673a4e6df-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/MG0dQyRX/DG-15-(2).png",
+      "uuid": "b4284844-76a0-433a-9a21-ccf1d1324188",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance",
+      "masterFilename": "b4284844-76a0-433a-9a21-ccf1d1324188.webp",
+      "destRelDir": "products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance/b4284844-76a0-433a-9a21-ccf1d1324188.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance/b4284844-76a0-433a-9a21-ccf1d1324188-w960.webp",
+      "derivatives": [
+        "b4284844-76a0-433a-9a21-ccf1d1324188-w320.webp",
+        "b4284844-76a0-433a-9a21-ccf1d1324188-w480.webp",
+        "b4284844-76a0-433a-9a21-ccf1d1324188-w800.webp",
+        "b4284844-76a0-433a-9a21-ccf1d1324188-w960.webp",
+        "b4284844-76a0-433a-9a21-ccf1d1324188-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/xC0gycy8/DG-15-(3).png",
+      "uuid": "324b0468-0d1f-4858-89b0-1ecdec7c3f05",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance",
+      "masterFilename": "324b0468-0d1f-4858-89b0-1ecdec7c3f05.webp",
+      "destRelDir": "products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance/324b0468-0d1f-4858-89b0-1ecdec7c3f05.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance/324b0468-0d1f-4858-89b0-1ecdec7c3f05-w960.webp",
+      "derivatives": [
+        "324b0468-0d1f-4858-89b0-1ecdec7c3f05-w320.webp",
+        "324b0468-0d1f-4858-89b0-1ecdec7c3f05-w480.webp",
+        "324b0468-0d1f-4858-89b0-1ecdec7c3f05-w800.webp",
+        "324b0468-0d1f-4858-89b0-1ecdec7c3f05-w960.webp",
+        "324b0468-0d1f-4858-89b0-1ecdec7c3f05-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/J4htXmf2/HERTZ-GR-01-(1).png",
+      "uuid": "65e5ef29-32d8-42e2-95cc-5fadf602244e",
+      "categorySlug": "cables-cases-accessories",
+      "productSlug": "hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments",
+      "masterFilename": "65e5ef29-32d8-42e2-95cc-5fadf602244e.webp",
+      "destRelDir": "products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/65e5ef29-32d8-42e2-95cc-5fadf602244e.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/65e5ef29-32d8-42e2-95cc-5fadf602244e-w960.webp",
+      "derivatives": [
+        "65e5ef29-32d8-42e2-95cc-5fadf602244e-w320.webp",
+        "65e5ef29-32d8-42e2-95cc-5fadf602244e-w480.webp",
+        "65e5ef29-32d8-42e2-95cc-5fadf602244e-w800.webp",
+        "65e5ef29-32d8-42e2-95cc-5fadf602244e-w960.webp",
+        "65e5ef29-32d8-42e2-95cc-5fadf602244e-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/gkBjqQdk/HERTZ-GR-01-(2).png",
+      "uuid": "579b30fa-46bb-4bf8-92e3-9fdbbaf5dedc",
+      "categorySlug": "cables-cases-accessories",
+      "productSlug": "hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments",
+      "masterFilename": "579b30fa-46bb-4bf8-92e3-9fdbbaf5dedc.webp",
+      "destRelDir": "products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/579b30fa-46bb-4bf8-92e3-9fdbbaf5dedc.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/579b30fa-46bb-4bf8-92e3-9fdbbaf5dedc-w960.webp",
+      "derivatives": [
+        "579b30fa-46bb-4bf8-92e3-9fdbbaf5dedc-w320.webp",
+        "579b30fa-46bb-4bf8-92e3-9fdbbaf5dedc-w480.webp",
+        "579b30fa-46bb-4bf8-92e3-9fdbbaf5dedc-w800.webp",
+        "579b30fa-46bb-4bf8-92e3-9fdbbaf5dedc-w960.webp",
+        "579b30fa-46bb-4bf8-92e3-9fdbbaf5dedc-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/5NkyqT14/HERTZ-GR-01-(3).png",
+      "uuid": "1dcbf728-68ad-4733-aa5b-885f7c43e6e7",
+      "categorySlug": "cables-cases-accessories",
+      "productSlug": "hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments",
+      "masterFilename": "1dcbf728-68ad-4733-aa5b-885f7c43e6e7.webp",
+      "destRelDir": "products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/1dcbf728-68ad-4733-aa5b-885f7c43e6e7.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/1dcbf728-68ad-4733-aa5b-885f7c43e6e7-w960.webp",
+      "derivatives": [
+        "1dcbf728-68ad-4733-aa5b-885f7c43e6e7-w320.webp",
+        "1dcbf728-68ad-4733-aa5b-885f7c43e6e7-w480.webp",
+        "1dcbf728-68ad-4733-aa5b-885f7c43e6e7-w800.webp",
+        "1dcbf728-68ad-4733-aa5b-885f7c43e6e7-w960.webp",
+        "1dcbf728-68ad-4733-aa5b-885f7c43e6e7-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/m2rh9BxW/HERTZ-GR-01-(4).png",
+      "uuid": "73fcb562-53dc-429a-98be-bd1c66719113",
+      "categorySlug": "cables-cases-accessories",
+      "productSlug": "hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments",
+      "masterFilename": "73fcb562-53dc-429a-98be-bd1c66719113.webp",
+      "destRelDir": "products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/73fcb562-53dc-429a-98be-bd1c66719113.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/73fcb562-53dc-429a-98be-bd1c66719113-w960.webp",
+      "derivatives": [
+        "73fcb562-53dc-429a-98be-bd1c66719113-w320.webp",
+        "73fcb562-53dc-429a-98be-bd1c66719113-w480.webp",
+        "73fcb562-53dc-429a-98be-bd1c66719113-w800.webp",
+        "73fcb562-53dc-429a-98be-bd1c66719113-w960.webp",
+        "73fcb562-53dc-429a-98be-bd1c66719113-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/zG6L5MPT/HERTZ-HZ-CBL-12-10M.png",
+      "uuid": "02ddff24-9d0b-4f45-8377-bd12352b25a1",
+      "categorySlug": "cables-cases-accessories",
+      "productSlug": "hertz-hertz-hz-cbl-12-10m-audio-cable-with-10-meter-length-durable-braided-construction-and-1-4-inch-jack-connectors-for-guitar-amplifier-mixer-keyboard-and-professional-audio-equipment",
+      "masterFilename": "02ddff24-9d0b-4f45-8377-bd12352b25a1.webp",
+      "destRelDir": "products/cables-cases-accessories/hertz-hertz-hz-cbl-12-10m-audio-cable-with-10-meter-length-durable-braided-construction-and-1-4-inch-jack-connectors-for-guitar-amplifier-mixer-keyboard-and-professional-audio-equipment",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hz-cbl-12-10m-audio-cable-with-10-meter-length-durable-braided-construction-and-1-4-inch-jack-connectors-for-guitar-amplifier-mixer-keyboard-and-professional-audio-equipment/02ddff24-9d0b-4f45-8377-bd12352b25a1.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hz-cbl-12-10m-audio-cable-with-10-meter-length-durable-braided-construction-and-1-4-inch-jack-connectors-for-guitar-amplifier-mixer-keyboard-and-professional-audio-equipment/02ddff24-9d0b-4f45-8377-bd12352b25a1-w960.webp",
+      "derivatives": [
+        "02ddff24-9d0b-4f45-8377-bd12352b25a1-w320.webp",
+        "02ddff24-9d0b-4f45-8377-bd12352b25a1-w480.webp",
+        "02ddff24-9d0b-4f45-8377-bd12352b25a1-w800.webp",
+        "02ddff24-9d0b-4f45-8377-bd12352b25a1-w960.webp",
+        "02ddff24-9d0b-4f45-8377-bd12352b25a1-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/rsNWwJty/HERTZ-HZCD-8021-10M.png",
+      "uuid": "012b7457-c5d1-43fb-99ef-69aba6ab6af7",
+      "categorySlug": "cables-cases-accessories",
+      "productSlug": "hertz-hertz-hzcd-8021-10-10-meter-xlr-audio-cable-with-durable-flexible-construction-and-reliable-signal-transfer-and-secure-connectors-for-microphones-mixers-pa-systems-and-audio-equipment",
+      "masterFilename": "012b7457-c5d1-43fb-99ef-69aba6ab6af7.webp",
+      "destRelDir": "products/cables-cases-accessories/hertz-hertz-hzcd-8021-10-10-meter-xlr-audio-cable-with-durable-flexible-construction-and-reliable-signal-transfer-and-secure-connectors-for-microphones-mixers-pa-systems-and-audio-equipment",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hzcd-8021-10-10-meter-xlr-audio-cable-with-durable-flexible-construction-and-reliable-signal-transfer-and-secure-connectors-for-microphones-mixers-pa-systems-and-audio-equipment/012b7457-c5d1-43fb-99ef-69aba6ab6af7.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hzcd-8021-10-10-meter-xlr-audio-cable-with-durable-flexible-construction-and-reliable-signal-transfer-and-secure-connectors-for-microphones-mixers-pa-systems-and-audio-equipment/012b7457-c5d1-43fb-99ef-69aba6ab6af7-w960.webp",
+      "derivatives": [
+        "012b7457-c5d1-43fb-99ef-69aba6ab6af7-w320.webp",
+        "012b7457-c5d1-43fb-99ef-69aba6ab6af7-w480.webp",
+        "012b7457-c5d1-43fb-99ef-69aba6ab6af7-w800.webp",
+        "012b7457-c5d1-43fb-99ef-69aba6ab6af7-w960.webp",
+        "012b7457-c5d1-43fb-99ef-69aba6ab6af7-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/QMd7x1Xp/HZA-3600-MOG-(1).png",
+      "uuid": "27c33f39-066c-4e88-85a9-e9f228ece4fb",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance",
+      "masterFilename": "27c33f39-066c-4e88-85a9-e9f228ece4fb.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/27c33f39-066c-4e88-85a9-e9f228ece4fb.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/27c33f39-066c-4e88-85a9-e9f228ece4fb-w960.webp",
+      "derivatives": [
+        "27c33f39-066c-4e88-85a9-e9f228ece4fb-w320.webp",
+        "27c33f39-066c-4e88-85a9-e9f228ece4fb-w480.webp",
+        "27c33f39-066c-4e88-85a9-e9f228ece4fb-w800.webp",
+        "27c33f39-066c-4e88-85a9-e9f228ece4fb-w960.webp",
+        "27c33f39-066c-4e88-85a9-e9f228ece4fb-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/DzpXW0ZL/HZA-3600-MOG-(2).png",
+      "uuid": "dbc79c67-d292-4a4f-b86e-b2fd2b043db8",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance",
+      "masterFilename": "dbc79c67-d292-4a4f-b86e-b2fd2b043db8.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/dbc79c67-d292-4a4f-b86e-b2fd2b043db8.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/dbc79c67-d292-4a4f-b86e-b2fd2b043db8-w960.webp",
+      "derivatives": [
+        "dbc79c67-d292-4a4f-b86e-b2fd2b043db8-w320.webp",
+        "dbc79c67-d292-4a4f-b86e-b2fd2b043db8-w480.webp",
+        "dbc79c67-d292-4a4f-b86e-b2fd2b043db8-w800.webp",
+        "dbc79c67-d292-4a4f-b86e-b2fd2b043db8-w960.webp",
+        "dbc79c67-d292-4a4f-b86e-b2fd2b043db8-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/KYpMKjz3/HZA-3600-MOG-(3).png",
+      "uuid": "56479646-14ef-406e-ae2b-1b72cf858cf2",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance",
+      "masterFilename": "56479646-14ef-406e-ae2b-1b72cf858cf2.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/56479646-14ef-406e-ae2b-1b72cf858cf2.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/56479646-14ef-406e-ae2b-1b72cf858cf2-w960.webp",
+      "derivatives": [
+        "56479646-14ef-406e-ae2b-1b72cf858cf2-w320.webp",
+        "56479646-14ef-406e-ae2b-1b72cf858cf2-w480.webp",
+        "56479646-14ef-406e-ae2b-1b72cf858cf2-w800.webp",
+        "56479646-14ef-406e-ae2b-1b72cf858cf2-w960.webp",
+        "56479646-14ef-406e-ae2b-1b72cf858cf2-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/7Lt2Ch6S/HZA-3600-MOG-(4).png",
+      "uuid": "a2c1e2db-a573-4560-bf8c-fdecb12fd9a3",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance",
+      "masterFilename": "a2c1e2db-a573-4560-bf8c-fdecb12fd9a3.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/a2c1e2db-a573-4560-bf8c-fdecb12fd9a3.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/a2c1e2db-a573-4560-bf8c-fdecb12fd9a3-w960.webp",
+      "derivatives": [
+        "a2c1e2db-a573-4560-bf8c-fdecb12fd9a3-w320.webp",
+        "a2c1e2db-a573-4560-bf8c-fdecb12fd9a3-w480.webp",
+        "a2c1e2db-a573-4560-bf8c-fdecb12fd9a3-w800.webp",
+        "a2c1e2db-a573-4560-bf8c-fdecb12fd9a3-w960.webp",
+        "a2c1e2db-a573-4560-bf8c-fdecb12fd9a3-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/cJknKCHQ/HZA-3600-MOG-(5).png",
+      "uuid": "0ab6142c-bb6b-469a-852e-d0dc52b66db7",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance",
+      "masterFilename": "0ab6142c-bb6b-469a-852e-d0dc52b66db7.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/0ab6142c-bb6b-469a-852e-d0dc52b66db7.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/0ab6142c-bb6b-469a-852e-d0dc52b66db7-w960.webp",
+      "derivatives": [
+        "0ab6142c-bb6b-469a-852e-d0dc52b66db7-w320.webp",
+        "0ab6142c-bb6b-469a-852e-d0dc52b66db7-w480.webp",
+        "0ab6142c-bb6b-469a-852e-d0dc52b66db7-w800.webp",
+        "0ab6142c-bb6b-469a-852e-d0dc52b66db7-w960.webp",
+        "0ab6142c-bb6b-469a-852e-d0dc52b66db7-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/ydW0n9tK/h-ZA-3600-EQ-NA-(1).png",
+      "uuid": "b4784298-5a69-4181-84fb-f22ab6504189",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance",
+      "masterFilename": "b4784298-5a69-4181-84fb-f22ab6504189.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/b4784298-5a69-4181-84fb-f22ab6504189.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/b4784298-5a69-4181-84fb-f22ab6504189-w960.webp",
+      "derivatives": [
+        "b4784298-5a69-4181-84fb-f22ab6504189-w320.webp",
+        "b4784298-5a69-4181-84fb-f22ab6504189-w480.webp",
+        "b4784298-5a69-4181-84fb-f22ab6504189-w800.webp",
+        "b4784298-5a69-4181-84fb-f22ab6504189-w960.webp",
+        "b4784298-5a69-4181-84fb-f22ab6504189-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/76c0Rhrv/h-ZA-3600-EQ-NA-(2).png",
+      "uuid": "0b00c6dd-b795-46ad-bd64-43fa2883ebd6",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance",
+      "masterFilename": "0b00c6dd-b795-46ad-bd64-43fa2883ebd6.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/0b00c6dd-b795-46ad-bd64-43fa2883ebd6.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/0b00c6dd-b795-46ad-bd64-43fa2883ebd6-w960.webp",
+      "derivatives": [
+        "0b00c6dd-b795-46ad-bd64-43fa2883ebd6-w320.webp",
+        "0b00c6dd-b795-46ad-bd64-43fa2883ebd6-w480.webp",
+        "0b00c6dd-b795-46ad-bd64-43fa2883ebd6-w800.webp",
+        "0b00c6dd-b795-46ad-bd64-43fa2883ebd6-w960.webp",
+        "0b00c6dd-b795-46ad-bd64-43fa2883ebd6-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/LXhjvfw6/h-ZA-3600-EQ-NA-(3).png",
+      "uuid": "efbf83f7-8e7c-4444-9c25-108487fe9e1c",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance",
+      "masterFilename": "efbf83f7-8e7c-4444-9c25-108487fe9e1c.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/efbf83f7-8e7c-4444-9c25-108487fe9e1c.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/efbf83f7-8e7c-4444-9c25-108487fe9e1c-w960.webp",
+      "derivatives": [
+        "efbf83f7-8e7c-4444-9c25-108487fe9e1c-w320.webp",
+        "efbf83f7-8e7c-4444-9c25-108487fe9e1c-w480.webp",
+        "efbf83f7-8e7c-4444-9c25-108487fe9e1c-w800.webp",
+        "efbf83f7-8e7c-4444-9c25-108487fe9e1c-w960.webp",
+        "efbf83f7-8e7c-4444-9c25-108487fe9e1c-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/26JhtyNf/h-ZA-3600-EQ-NA-(4).png",
+      "uuid": "00252a8f-dd20-42dc-a5ad-039bb928c637",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance",
+      "masterFilename": "00252a8f-dd20-42dc-a5ad-039bb928c637.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/00252a8f-dd20-42dc-a5ad-039bb928c637.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/00252a8f-dd20-42dc-a5ad-039bb928c637-w960.webp",
+      "derivatives": [
+        "00252a8f-dd20-42dc-a5ad-039bb928c637-w320.webp",
+        "00252a8f-dd20-42dc-a5ad-039bb928c637-w480.webp",
+        "00252a8f-dd20-42dc-a5ad-039bb928c637-w800.webp",
+        "00252a8f-dd20-42dc-a5ad-039bb928c637-w960.webp",
+        "00252a8f-dd20-42dc-a5ad-039bb928c637-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/26JhtyNN/h-ZA-3600-EQ-NA-(5).png",
+      "uuid": "3832ef6f-6da1-4b75-bb12-2c9b1b0b64f8",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance",
+      "masterFilename": "3832ef6f-6da1-4b75-bb12-2c9b1b0b64f8.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/3832ef6f-6da1-4b75-bb12-2c9b1b0b64f8.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/3832ef6f-6da1-4b75-bb12-2c9b1b0b64f8-w960.webp",
+      "derivatives": [
+        "3832ef6f-6da1-4b75-bb12-2c9b1b0b64f8-w320.webp",
+        "3832ef6f-6da1-4b75-bb12-2c9b1b0b64f8-w480.webp",
+        "3832ef6f-6da1-4b75-bb12-2c9b1b0b64f8-w800.webp",
+        "3832ef6f-6da1-4b75-bb12-2c9b1b0b64f8-w960.webp",
+        "3832ef6f-6da1-4b75-bb12-2c9b1b0b64f8-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/ZYs71WB2/STMP-X-Mint-Green-(1).png",
+      "uuid": "6a11850b-8cdc-4723-94b2-382302ca1d5f",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2",
+      "masterFilename": "6a11850b-8cdc-4723-94b2-382302ca1d5f.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/6a11850b-8cdc-4723-94b2-382302ca1d5f.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/6a11850b-8cdc-4723-94b2-382302ca1d5f-w960.webp",
+      "derivatives": [
+        "6a11850b-8cdc-4723-94b2-382302ca1d5f-w320.webp",
+        "6a11850b-8cdc-4723-94b2-382302ca1d5f-w480.webp",
+        "6a11850b-8cdc-4723-94b2-382302ca1d5f-w800.webp",
+        "6a11850b-8cdc-4723-94b2-382302ca1d5f-w960.webp",
+        "6a11850b-8cdc-4723-94b2-382302ca1d5f-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/rwxf0ghJ/STMP-X-Mint-Green-(2).png",
+      "uuid": "3b7ff4b6-88c4-4130-9d82-68f4417d41f5",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2",
+      "masterFilename": "3b7ff4b6-88c4-4130-9d82-68f4417d41f5.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/3b7ff4b6-88c4-4130-9d82-68f4417d41f5.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/3b7ff4b6-88c4-4130-9d82-68f4417d41f5-w960.webp",
+      "derivatives": [
+        "3b7ff4b6-88c4-4130-9d82-68f4417d41f5-w320.webp",
+        "3b7ff4b6-88c4-4130-9d82-68f4417d41f5-w480.webp",
+        "3b7ff4b6-88c4-4130-9d82-68f4417d41f5-w800.webp",
+        "3b7ff4b6-88c4-4130-9d82-68f4417d41f5-w960.webp",
+        "3b7ff4b6-88c4-4130-9d82-68f4417d41f5-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/m20dgKSB/STMP-X-Mint-Green-(3).png",
+      "uuid": "dfdc903b-f392-4c79-bac6-080d275a7ca0",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2",
+      "masterFilename": "dfdc903b-f392-4c79-bac6-080d275a7ca0.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/dfdc903b-f392-4c79-bac6-080d275a7ca0.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/dfdc903b-f392-4c79-bac6-080d275a7ca0-w960.webp",
+      "derivatives": [
+        "dfdc903b-f392-4c79-bac6-080d275a7ca0-w320.webp",
+        "dfdc903b-f392-4c79-bac6-080d275a7ca0-w480.webp",
+        "dfdc903b-f392-4c79-bac6-080d275a7ca0-w800.webp",
+        "dfdc903b-f392-4c79-bac6-080d275a7ca0-w960.webp",
+        "dfdc903b-f392-4c79-bac6-080d275a7ca0-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/rFvhw79W/STMP-X-Mint-Green-(4).png",
+      "uuid": "d8757634-16c9-455f-bb40-bcb820ddb8d0",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2",
+      "masterFilename": "d8757634-16c9-455f-bb40-bcb820ddb8d0.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/d8757634-16c9-455f-bb40-bcb820ddb8d0.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/d8757634-16c9-455f-bb40-bcb820ddb8d0-w960.webp",
+      "derivatives": [
+        "d8757634-16c9-455f-bb40-bcb820ddb8d0-w320.webp",
+        "d8757634-16c9-455f-bb40-bcb820ddb8d0-w480.webp",
+        "d8757634-16c9-455f-bb40-bcb820ddb8d0-w800.webp",
+        "d8757634-16c9-455f-bb40-bcb820ddb8d0-w960.webp",
+        "d8757634-16c9-455f-bb40-bcb820ddb8d0-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/SKScTF8T/STMP-X-white-(1).png",
+      "uuid": "6497d698-562b-4490-a30e-beeda5a59017",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "6497d698-562b-4490-a30e-beeda5a59017.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6497d698-562b-4490-a30e-beeda5a59017.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6497d698-562b-4490-a30e-beeda5a59017-w960.webp",
+      "derivatives": [
+        "6497d698-562b-4490-a30e-beeda5a59017-w320.webp",
+        "6497d698-562b-4490-a30e-beeda5a59017-w480.webp",
+        "6497d698-562b-4490-a30e-beeda5a59017-w800.webp",
+        "6497d698-562b-4490-a30e-beeda5a59017-w960.webp",
+        "6497d698-562b-4490-a30e-beeda5a59017-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/hGDVyWx6/STMP-X-white-(2).png",
+      "uuid": "39f7d63a-6d9f-425b-ba1f-6cf191a3f93d",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "39f7d63a-6d9f-425b-ba1f-6cf191a3f93d.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/39f7d63a-6d9f-425b-ba1f-6cf191a3f93d.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/39f7d63a-6d9f-425b-ba1f-6cf191a3f93d-w960.webp",
+      "derivatives": [
+        "39f7d63a-6d9f-425b-ba1f-6cf191a3f93d-w320.webp",
+        "39f7d63a-6d9f-425b-ba1f-6cf191a3f93d-w480.webp",
+        "39f7d63a-6d9f-425b-ba1f-6cf191a3f93d-w800.webp",
+        "39f7d63a-6d9f-425b-ba1f-6cf191a3f93d-w960.webp",
+        "39f7d63a-6d9f-425b-ba1f-6cf191a3f93d-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/7LHSs87Q/STMP-X-white-(3).png",
+      "uuid": "3f695410-0718-48d5-83ca-efc48e766a5e",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "3f695410-0718-48d5-83ca-efc48e766a5e.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/3f695410-0718-48d5-83ca-efc48e766a5e.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/3f695410-0718-48d5-83ca-efc48e766a5e-w960.webp",
+      "derivatives": [
+        "3f695410-0718-48d5-83ca-efc48e766a5e-w320.webp",
+        "3f695410-0718-48d5-83ca-efc48e766a5e-w480.webp",
+        "3f695410-0718-48d5-83ca-efc48e766a5e-w800.webp",
+        "3f695410-0718-48d5-83ca-efc48e766a5e-w960.webp",
+        "3f695410-0718-48d5-83ca-efc48e766a5e-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/FKr0W5cq/STMP-X-white-(4).png",
+      "uuid": "9905ebf2-f46b-4585-bcbc-d222dab2264d",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "9905ebf2-f46b-4585-bcbc-d222dab2264d.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/9905ebf2-f46b-4585-bcbc-d222dab2264d.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/9905ebf2-f46b-4585-bcbc-d222dab2264d-w960.webp",
+      "derivatives": [
+        "9905ebf2-f46b-4585-bcbc-d222dab2264d-w320.webp",
+        "9905ebf2-f46b-4585-bcbc-d222dab2264d-w480.webp",
+        "9905ebf2-f46b-4585-bcbc-d222dab2264d-w800.webp",
+        "9905ebf2-f46b-4585-bcbc-d222dab2264d-w960.webp",
+        "9905ebf2-f46b-4585-bcbc-d222dab2264d-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/MG61P2RF/STMP-X-white-(5).png",
+      "uuid": "b3ef0813-35d2-4e09-97b9-a88727bd2892",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "b3ef0813-35d2-4e09-97b9-a88727bd2892.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/b3ef0813-35d2-4e09-97b9-a88727bd2892.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/b3ef0813-35d2-4e09-97b9-a88727bd2892-w960.webp",
+      "derivatives": [
+        "b3ef0813-35d2-4e09-97b9-a88727bd2892-w320.webp",
+        "b3ef0813-35d2-4e09-97b9-a88727bd2892-w480.webp",
+        "b3ef0813-35d2-4e09-97b9-a88727bd2892-w800.webp",
+        "b3ef0813-35d2-4e09-97b9-a88727bd2892-w960.webp",
+        "b3ef0813-35d2-4e09-97b9-a88727bd2892-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/cHJMHyLM/STMP-X-Shell-Pink-(1).png",
+      "uuid": "6f465600-2f01-48de-b6e0-ef6968f4eb69",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "6f465600-2f01-48de-b6e0-ef6968f4eb69.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6f465600-2f01-48de-b6e0-ef6968f4eb69.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6f465600-2f01-48de-b6e0-ef6968f4eb69-w960.webp",
+      "derivatives": [
+        "6f465600-2f01-48de-b6e0-ef6968f4eb69-w320.webp",
+        "6f465600-2f01-48de-b6e0-ef6968f4eb69-w480.webp",
+        "6f465600-2f01-48de-b6e0-ef6968f4eb69-w800.webp",
+        "6f465600-2f01-48de-b6e0-ef6968f4eb69-w960.webp",
+        "6f465600-2f01-48de-b6e0-ef6968f4eb69-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/G2SPT74x/STMP-X-Shell-Pink-(2).png",
+      "uuid": "ae958efb-85e0-48b2-bc99-26a355eddcd7",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "ae958efb-85e0-48b2-bc99-26a355eddcd7.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/ae958efb-85e0-48b2-bc99-26a355eddcd7.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/ae958efb-85e0-48b2-bc99-26a355eddcd7-w960.webp",
+      "derivatives": [
+        "ae958efb-85e0-48b2-bc99-26a355eddcd7-w320.webp",
+        "ae958efb-85e0-48b2-bc99-26a355eddcd7-w480.webp",
+        "ae958efb-85e0-48b2-bc99-26a355eddcd7-w800.webp",
+        "ae958efb-85e0-48b2-bc99-26a355eddcd7-w960.webp",
+        "ae958efb-85e0-48b2-bc99-26a355eddcd7-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/DZYQ4jSQ/STMP-X-Shell-Pink-(3).png",
+      "uuid": "0038572c-18ef-4d34-a2ab-f9fa0233c8ab",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "0038572c-18ef-4d34-a2ab-f9fa0233c8ab.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/0038572c-18ef-4d34-a2ab-f9fa0233c8ab.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/0038572c-18ef-4d34-a2ab-f9fa0233c8ab-w960.webp",
+      "derivatives": [
+        "0038572c-18ef-4d34-a2ab-f9fa0233c8ab-w320.webp",
+        "0038572c-18ef-4d34-a2ab-f9fa0233c8ab-w480.webp",
+        "0038572c-18ef-4d34-a2ab-f9fa0233c8ab-w800.webp",
+        "0038572c-18ef-4d34-a2ab-f9fa0233c8ab-w960.webp",
+        "0038572c-18ef-4d34-a2ab-f9fa0233c8ab-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/XJDKBHr8/STMP-X-Shell-Pink-(4).png",
+      "uuid": "69ef6ae2-1165-4b27-8b90-fc9b678beb1b",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "69ef6ae2-1165-4b27-8b90-fc9b678beb1b.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/69ef6ae2-1165-4b27-8b90-fc9b678beb1b.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/69ef6ae2-1165-4b27-8b90-fc9b678beb1b-w960.webp",
+      "derivatives": [
+        "69ef6ae2-1165-4b27-8b90-fc9b678beb1b-w320.webp",
+        "69ef6ae2-1165-4b27-8b90-fc9b678beb1b-w480.webp",
+        "69ef6ae2-1165-4b27-8b90-fc9b678beb1b-w800.webp",
+        "69ef6ae2-1165-4b27-8b90-fc9b678beb1b-w960.webp",
+        "69ef6ae2-1165-4b27-8b90-fc9b678beb1b-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/cH57t9vM/STMP-X-Shell-Pink-(5).png",
+      "uuid": "1cf1fbcb-3556-4e55-b655-864e4373e7bd",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "1cf1fbcb-3556-4e55-b655-864e4373e7bd.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/1cf1fbcb-3556-4e55-b655-864e4373e7bd.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/1cf1fbcb-3556-4e55-b655-864e4373e7bd-w960.webp",
+      "derivatives": [
+        "1cf1fbcb-3556-4e55-b655-864e4373e7bd-w320.webp",
+        "1cf1fbcb-3556-4e55-b655-864e4373e7bd-w480.webp",
+        "1cf1fbcb-3556-4e55-b655-864e4373e7bd-w800.webp",
+        "1cf1fbcb-3556-4e55-b655-864e4373e7bd-w960.webp",
+        "1cf1fbcb-3556-4e55-b655-864e4373e7bd-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/hv606ygT/STMP-X-Satin-Grey-(1).png",
+      "uuid": "6c9157db-28c1-490b-a6dd-6d65f5cf94b4",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "6c9157db-28c1-490b-a6dd-6d65f5cf94b4.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6c9157db-28c1-490b-a6dd-6d65f5cf94b4.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6c9157db-28c1-490b-a6dd-6d65f5cf94b4-w960.webp",
+      "derivatives": [
+        "6c9157db-28c1-490b-a6dd-6d65f5cf94b4-w320.webp",
+        "6c9157db-28c1-490b-a6dd-6d65f5cf94b4-w480.webp",
+        "6c9157db-28c1-490b-a6dd-6d65f5cf94b4-w800.webp",
+        "6c9157db-28c1-490b-a6dd-6d65f5cf94b4-w960.webp",
+        "6c9157db-28c1-490b-a6dd-6d65f5cf94b4-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/HnRtRZH6/STMP-X-Satin-Grey-(2).png",
+      "uuid": "a3129356-acd7-42b1-a231-3b0acae2026d",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "a3129356-acd7-42b1-a231-3b0acae2026d.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/a3129356-acd7-42b1-a231-3b0acae2026d.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/a3129356-acd7-42b1-a231-3b0acae2026d-w960.webp",
+      "derivatives": [
+        "a3129356-acd7-42b1-a231-3b0acae2026d-w320.webp",
+        "a3129356-acd7-42b1-a231-3b0acae2026d-w480.webp",
+        "a3129356-acd7-42b1-a231-3b0acae2026d-w800.webp",
+        "a3129356-acd7-42b1-a231-3b0acae2026d-w960.webp",
+        "a3129356-acd7-42b1-a231-3b0acae2026d-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/DfM5SZs2/STMP-X-Satin-Grey-(3).png",
+      "uuid": "1e102335-a467-41f9-a493-e52699b31ab4",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "1e102335-a467-41f9-a493-e52699b31ab4.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/1e102335-a467-41f9-a493-e52699b31ab4.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/1e102335-a467-41f9-a493-e52699b31ab4-w960.webp",
+      "derivatives": [
+        "1e102335-a467-41f9-a493-e52699b31ab4-w320.webp",
+        "1e102335-a467-41f9-a493-e52699b31ab4-w480.webp",
+        "1e102335-a467-41f9-a493-e52699b31ab4-w800.webp",
+        "1e102335-a467-41f9-a493-e52699b31ab4-w960.webp",
+        "1e102335-a467-41f9-a493-e52699b31ab4-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/C5X4XPYr/STMP-X-Satin-Grey-(4).png",
+      "uuid": "077ca7e5-772b-4248-bf09-e0d7ec428c31",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "077ca7e5-772b-4248-bf09-e0d7ec428c31.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/077ca7e5-772b-4248-bf09-e0d7ec428c31.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/077ca7e5-772b-4248-bf09-e0d7ec428c31-w960.webp",
+      "derivatives": [
+        "077ca7e5-772b-4248-bf09-e0d7ec428c31-w320.webp",
+        "077ca7e5-772b-4248-bf09-e0d7ec428c31-w480.webp",
+        "077ca7e5-772b-4248-bf09-e0d7ec428c31-w800.webp",
+        "077ca7e5-772b-4248-bf09-e0d7ec428c31-w960.webp",
+        "077ca7e5-772b-4248-bf09-e0d7ec428c31-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/qB5QNRnH/STMP-X-Satin-Grey-(5).png",
+      "uuid": "00b36a2e-440f-400c-a1ec-8e461e606abc",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "00b36a2e-440f-400c-a1ec-8e461e606abc.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/00b36a2e-440f-400c-a1ec-8e461e606abc.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/00b36a2e-440f-400c-a1ec-8e461e606abc-w960.webp",
+      "derivatives": [
+        "00b36a2e-440f-400c-a1ec-8e461e606abc-w320.webp",
+        "00b36a2e-440f-400c-a1ec-8e461e606abc-w480.webp",
+        "00b36a2e-440f-400c-a1ec-8e461e606abc-w800.webp",
+        "00b36a2e-440f-400c-a1ec-8e461e606abc-w960.webp",
+        "00b36a2e-440f-400c-a1ec-8e461e606abc-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/jSN80bDs/STMP-X-Mint-Green-(1).png",
+      "uuid": "c1f6e860-f085-4354-a258-6e54f03f791a",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "c1f6e860-f085-4354-a258-6e54f03f791a.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/c1f6e860-f085-4354-a258-6e54f03f791a.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/c1f6e860-f085-4354-a258-6e54f03f791a-w960.webp",
+      "derivatives": [
+        "c1f6e860-f085-4354-a258-6e54f03f791a-w320.webp",
+        "c1f6e860-f085-4354-a258-6e54f03f791a-w480.webp",
+        "c1f6e860-f085-4354-a258-6e54f03f791a-w800.webp",
+        "c1f6e860-f085-4354-a258-6e54f03f791a-w960.webp",
+        "c1f6e860-f085-4354-a258-6e54f03f791a-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/W1r9LvdJ/STMP-X-Mint-Green-(2).png",
+      "uuid": "7d17d04b-0da0-4f54-a84b-fa0d75c02a6c",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "7d17d04b-0da0-4f54-a84b-fa0d75c02a6c.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/7d17d04b-0da0-4f54-a84b-fa0d75c02a6c.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/7d17d04b-0da0-4f54-a84b-fa0d75c02a6c-w960.webp",
+      "derivatives": [
+        "7d17d04b-0da0-4f54-a84b-fa0d75c02a6c-w320.webp",
+        "7d17d04b-0da0-4f54-a84b-fa0d75c02a6c-w480.webp",
+        "7d17d04b-0da0-4f54-a84b-fa0d75c02a6c-w800.webp",
+        "7d17d04b-0da0-4f54-a84b-fa0d75c02a6c-w960.webp",
+        "7d17d04b-0da0-4f54-a84b-fa0d75c02a6c-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/dVdWPYh1/STMP-X-Mint-Green-(3).png",
+      "uuid": "4a34b023-65e9-4eec-8fc2-3afc50519e63",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "4a34b023-65e9-4eec-8fc2-3afc50519e63.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/4a34b023-65e9-4eec-8fc2-3afc50519e63.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/4a34b023-65e9-4eec-8fc2-3afc50519e63-w960.webp",
+      "derivatives": [
+        "4a34b023-65e9-4eec-8fc2-3afc50519e63-w320.webp",
+        "4a34b023-65e9-4eec-8fc2-3afc50519e63-w480.webp",
+        "4a34b023-65e9-4eec-8fc2-3afc50519e63-w800.webp",
+        "4a34b023-65e9-4eec-8fc2-3afc50519e63-w960.webp",
+        "4a34b023-65e9-4eec-8fc2-3afc50519e63-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/MpRs2Snf/STMP-X-Mint-Green-(4).png",
+      "uuid": "14dc6ef8-d632-4270-938a-852f43abc491",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "14dc6ef8-d632-4270-938a-852f43abc491.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/14dc6ef8-d632-4270-938a-852f43abc491.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/14dc6ef8-d632-4270-938a-852f43abc491-w960.webp",
+      "derivatives": [
+        "14dc6ef8-d632-4270-938a-852f43abc491-w320.webp",
+        "14dc6ef8-d632-4270-938a-852f43abc491-w480.webp",
+        "14dc6ef8-d632-4270-938a-852f43abc491-w800.webp",
+        "14dc6ef8-d632-4270-938a-852f43abc491-w960.webp",
+        "14dc6ef8-d632-4270-938a-852f43abc491-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/vH8MZ0rd/STMP-X-BLACK-(1).png",
+      "uuid": "2465eb17-19ae-4899-8ce0-6fd007994a2c",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "2465eb17-19ae-4899-8ce0-6fd007994a2c.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/2465eb17-19ae-4899-8ce0-6fd007994a2c.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/2465eb17-19ae-4899-8ce0-6fd007994a2c-w960.webp",
+      "derivatives": [
+        "2465eb17-19ae-4899-8ce0-6fd007994a2c-w320.webp",
+        "2465eb17-19ae-4899-8ce0-6fd007994a2c-w480.webp",
+        "2465eb17-19ae-4899-8ce0-6fd007994a2c-w800.webp",
+        "2465eb17-19ae-4899-8ce0-6fd007994a2c-w960.webp",
+        "2465eb17-19ae-4899-8ce0-6fd007994a2c-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/DyfFwxrv/STMP-X-BLACK-(2).png",
+      "uuid": "2ac256b1-b506-4e8f-9db4-6a81fece02e6",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "2ac256b1-b506-4e8f-9db4-6a81fece02e6.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/2ac256b1-b506-4e8f-9db4-6a81fece02e6.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/2ac256b1-b506-4e8f-9db4-6a81fece02e6-w960.webp",
+      "derivatives": [
+        "2ac256b1-b506-4e8f-9db4-6a81fece02e6-w320.webp",
+        "2ac256b1-b506-4e8f-9db4-6a81fece02e6-w480.webp",
+        "2ac256b1-b506-4e8f-9db4-6a81fece02e6-w800.webp",
+        "2ac256b1-b506-4e8f-9db4-6a81fece02e6-w960.webp",
+        "2ac256b1-b506-4e8f-9db4-6a81fece02e6-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/qMB0v1sk/STMP-X-BLACK-(3).png",
+      "uuid": "a57e0bae-9f19-46f5-9cc5-99b6fd14520e",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "a57e0bae-9f19-46f5-9cc5-99b6fd14520e.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/a57e0bae-9f19-46f5-9cc5-99b6fd14520e.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/a57e0bae-9f19-46f5-9cc5-99b6fd14520e-w960.webp",
+      "derivatives": [
+        "a57e0bae-9f19-46f5-9cc5-99b6fd14520e-w320.webp",
+        "a57e0bae-9f19-46f5-9cc5-99b6fd14520e-w480.webp",
+        "a57e0bae-9f19-46f5-9cc5-99b6fd14520e-w800.webp",
+        "a57e0bae-9f19-46f5-9cc5-99b6fd14520e-w960.webp",
+        "a57e0bae-9f19-46f5-9cc5-99b6fd14520e-w1600.webp"
+      ]
+    },
+    {
+      "sourceUrl": "https://i.postimg.cc/tCRy4B3R/STMP-X-BLACK-(4).png",
+      "uuid": "3f90ac92-c095-494e-8f66-00d2933e7d2c",
+      "categorySlug": "guitars",
+      "productSlug": "hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "masterFilename": "3f90ac92-c095-494e-8f66-00d2933e7d2c.webp",
+      "destRelDir": "products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "publicMasterUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/3f90ac92-c095-494e-8f66-00d2933e7d2c.webp",
+      "publicCardUrl": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/3f90ac92-c095-494e-8f66-00d2933e7d2c-w960.webp",
+      "derivatives": [
+        "3f90ac92-c095-494e-8f66-00d2933e7d2c-w320.webp",
+        "3f90ac92-c095-494e-8f66-00d2933e7d2c-w480.webp",
+        "3f90ac92-c095-494e-8f66-00d2933e7d2c-w800.webp",
+        "3f90ac92-c095-494e-8f66-00d2933e7d2c-w960.webp",
+        "3f90ac92-c095-494e-8f66-00d2933e7d2c-w1600.webp"
+      ]
+    }
+  ],
+  "productUpdates": [
+    {
+      "id": "prod-mtk29crv",
+      "name": "Hertz HZA-3900 (bk) Acoustic Guitar, 6-String Dreadnought with Black Finish, Comfortable Playability and Balanced Acoustic Tone for Beginners, Students and Practice",
+      "slug": "hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice",
+      "oldImage": "https://i.postimg.cc/mZzgGXyV/HERTZ-HZA-3900-EQ-BK-(1).png",
+      "newImage": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice/b43d84eb-5eac-46ec-8c2b-b07dc03797b8-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZA-3900 (bk) Acoustic Guitar, 6-String Dreadnought with Black Finish, Comfortable Playability and Balanced Acoustic Tone for Beginners, Students and Practice view 1",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice/b43d84eb-5eac-46ec-8c2b-b07dc03797b8-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-1",
+          "alt": "Hertz HZA-3900 (bk) Acoustic Guitar, 6-String Dreadnought with Black Finish, Comfortable Playability and Balanced Acoustic Tone for Beginners, Students and Practice view 2",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice/7c3d79fc-0d97-47e8-a431-fb526876b5cc-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-2",
+          "alt": "Hertz HZA-3900 (bk) Acoustic Guitar, 6-String Dreadnought with Black Finish, Comfortable Playability and Balanced Acoustic Tone for Beginners, Students and Practice view 3",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3900-bk-acoustic-guitar-6-string-dreadnought-with-black-finish-comfortable-playability-and-balanced-acoustic-tone-for-beginners-students-and-practice/5e9cdd9e-a47c-44df-8946-f99fd6de19b5-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk29cqi",
+      "name": "Hertz HZCD-8021 6M Guitar Patch Cable, Single-Angled Instrument Cable for Guitar and Bass Connections",
+      "slug": "hertz-hertz-hzcd-8021-6m-guitar-patch-cable-single-angled-instrument-cable-for-guitar-and-bass-connections",
+      "oldImage": "https://i.postimg.cc/bv8NghGn/HERTZ-HZCD-8021-6M.png",
+      "newImage": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hzcd-8021-6m-guitar-patch-cable-single-angled-instrument-cable-for-guitar-and-bass-connections/6052aee6-5e9f-43d4-b85f-cdf40b94c611-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZCD-8021 6M Guitar Patch Cable, Single-Angled Instrument Cable for Guitar and Bass Connections view 1",
+          "src": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hzcd-8021-6m-guitar-patch-cable-single-angled-instrument-cable-for-guitar-and-bass-connections/6052aee6-5e9f-43d4-b85f-cdf40b94c611-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk29cod",
+      "name": "Hertz DG-15 15-Inch Guitar Amplifier, Compact Practice Amp for Electric Guitar with Versatile Tone Controls for Home Practice and Performance",
+      "slug": "hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance",
+      "oldImage": "https://i.postimg.cc/LsFx5yJt/DG-15-(1).png",
+      "newImage": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance/6176be84-0147-40be-a0d0-a30673a4e6df-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz DG-15 15-Inch Guitar Amplifier, Compact Practice Amp for Electric Guitar with Versatile Tone Controls for Home Practice and Performance view 1",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance/6176be84-0147-40be-a0d0-a30673a4e6df-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-1",
+          "alt": "Hertz DG-15 15-Inch Guitar Amplifier, Compact Practice Amp for Electric Guitar with Versatile Tone Controls for Home Practice and Performance view 2",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance/b4284844-76a0-433a-9a21-ccf1d1324188-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-2",
+          "alt": "Hertz DG-15 15-Inch Guitar Amplifier, Compact Practice Amp for Electric Guitar with Versatile Tone Controls for Home Practice and Performance view 3",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-dg-15-15-inch-guitar-amplifier-compact-practice-amp-for-electric-guitar-with-versatile-tone-controls-for-home-practice-and-performance/324b0468-0d1f-4858-89b0-1ecdec7c3f05-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk29clf",
+      "name": "Hertz GR-01 Guitar Wireless System with Rechargeable Transmitter and Receiver, 30M Effective Range, Low-Latency Audio Transmission, Type-C USB Charging and Plug-and-Play Connectivity for Electric Guitar, Bass & Musical Instruments",
+      "slug": "hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments",
+      "oldImage": "https://i.postimg.cc/J4htXmf2/HERTZ-GR-01-(1).png",
+      "newImage": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/65e5ef29-32d8-42e2-95cc-5fadf602244e-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz GR-01 Guitar Wireless System with Rechargeable Transmitter and Receiver, 30M Effective Range, Low-Latency Audio Transmission, Type-C USB Charging and Plug-and-Play Connectivity for Electric Guitar, Bass & Musical Instruments view 1",
+          "src": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/65e5ef29-32d8-42e2-95cc-5fadf602244e-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-1",
+          "alt": "Hertz GR-01 Guitar Wireless System with Rechargeable Transmitter and Receiver, 30M Effective Range, Low-Latency Audio Transmission, Type-C USB Charging and Plug-and-Play Connectivity for Electric Guitar, Bass & Musical Instruments view 2",
+          "src": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/579b30fa-46bb-4bf8-92e3-9fdbbaf5dedc-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-2",
+          "alt": "Hertz GR-01 Guitar Wireless System with Rechargeable Transmitter and Receiver, 30M Effective Range, Low-Latency Audio Transmission, Type-C USB Charging and Plug-and-Play Connectivity for Electric Guitar, Bass & Musical Instruments view 3",
+          "src": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/1dcbf728-68ad-4733-aa5b-885f7c43e6e7-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-3",
+          "alt": "Hertz GR-01 Guitar Wireless System with Rechargeable Transmitter and Receiver, 30M Effective Range, Low-Latency Audio Transmission, Type-C USB Charging and Plug-and-Play Connectivity for Electric Guitar, Bass & Musical Instruments view 4",
+          "src": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-gr-01-guitar-wireless-system-with-rechargeable-transmitter-and-receiver-30m-effective-range-low-latency-audio-transmission-type-c-usb-charging-and-plug-and-play-connectivity-for-electric-guitar-bass-musical-instruments/73fcb562-53dc-429a-98be-bd1c66719113-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk29ck5",
+      "name": "Hertz HZ CBL 12-10M Audio Cable with 10-Meter Length, Durable Braided Construction and 1/4-Inch Jack Connectors for Guitar, Amplifier, Mixer, Keyboard and Professional Audio Equipment",
+      "slug": "hertz-hertz-hz-cbl-12-10m-audio-cable-with-10-meter-length-durable-braided-construction-and-1-4-inch-jack-connectors-for-guitar-amplifier-mixer-keyboard-and-professional-audio-equipment",
+      "oldImage": "https://i.postimg.cc/zG6L5MPT/HERTZ-HZ-CBL-12-10M.png",
+      "newImage": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hz-cbl-12-10m-audio-cable-with-10-meter-length-durable-braided-construction-and-1-4-inch-jack-connectors-for-guitar-amplifier-mixer-keyboard-and-professional-audio-equipment/02ddff24-9d0b-4f45-8377-bd12352b25a1-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZ CBL 12-10M Audio Cable with 10-Meter Length, Durable Braided Construction and 1/4-Inch Jack Connectors for Guitar, Amplifier, Mixer, Keyboard and Professional Audio Equipment view 1",
+          "src": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hz-cbl-12-10m-audio-cable-with-10-meter-length-durable-braided-construction-and-1-4-inch-jack-connectors-for-guitar-amplifier-mixer-keyboard-and-professional-audio-equipment/02ddff24-9d0b-4f45-8377-bd12352b25a1-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk29cik",
+      "name": "Hertz HZCD-8021/10 10 Meter XLR Audio Cable with Durable Flexible Construction and Reliable Signal Transfer and Secure Connectors for Microphones, Mixers, PA Systems and Audio Equipment",
+      "slug": "hertz-hertz-hzcd-8021-10-10-meter-xlr-audio-cable-with-durable-flexible-construction-and-reliable-signal-transfer-and-secure-connectors-for-microphones-mixers-pa-systems-and-audio-equipment",
+      "oldImage": "https://i.postimg.cc/rsNWwJty/HERTZ-HZCD-8021-10M.png",
+      "newImage": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hzcd-8021-10-10-meter-xlr-audio-cable-with-durable-flexible-construction-and-reliable-signal-transfer-and-secure-connectors-for-microphones-mixers-pa-systems-and-audio-equipment/012b7457-c5d1-43fb-99ef-69aba6ab6af7-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZCD-8021/10 10 Meter XLR Audio Cable with Durable Flexible Construction and Reliable Signal Transfer and Secure Connectors for Microphones, Mixers, PA Systems and Audio Equipment view 1",
+          "src": "https://cdn.vibemusic.in/products/cables-cases-accessories/hertz-hertz-hzcd-8021-10-10-meter-xlr-audio-cable-with-durable-flexible-construction-and-reliable-signal-transfer-and-secure-connectors-for-microphones-mixers-pa-systems-and-audio-equipment/012b7457-c5d1-43fb-99ef-69aba6ab6af7-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk29cgt",
+      "name": "Hertz HZA-3600EQ (MGO) Acoustic Guitar with Mahogany-Style Natural Finish, Comfortable Neck, Smooth Fingerboard and Balanced Acoustic Tone for Practice, Lessons, Recording and Live Performance",
+      "slug": "hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance",
+      "oldImage": "https://i.postimg.cc/QMd7x1Xp/HZA-3600-MOG-(1).png",
+      "newImage": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/27c33f39-066c-4e88-85a9-e9f228ece4fb-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZA-3600EQ (MGO) Acoustic Guitar with Mahogany-Style Natural Finish, Comfortable Neck, Smooth Fingerboard and Balanced Acoustic Tone for Practice, Lessons, Recording and Live Performance view 1",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/27c33f39-066c-4e88-85a9-e9f228ece4fb-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-1",
+          "alt": "Hertz HZA-3600EQ (MGO) Acoustic Guitar with Mahogany-Style Natural Finish, Comfortable Neck, Smooth Fingerboard and Balanced Acoustic Tone for Practice, Lessons, Recording and Live Performance view 2",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/dbc79c67-d292-4a4f-b86e-b2fd2b043db8-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-2",
+          "alt": "Hertz HZA-3600EQ (MGO) Acoustic Guitar with Mahogany-Style Natural Finish, Comfortable Neck, Smooth Fingerboard and Balanced Acoustic Tone for Practice, Lessons, Recording and Live Performance view 3",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/56479646-14ef-406e-ae2b-1b72cf858cf2-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-3",
+          "alt": "Hertz HZA-3600EQ (MGO) Acoustic Guitar with Mahogany-Style Natural Finish, Comfortable Neck, Smooth Fingerboard and Balanced Acoustic Tone for Practice, Lessons, Recording and Live Performance view 4",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/a2c1e2db-a573-4560-bf8c-fdecb12fd9a3-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-4",
+          "alt": "Hertz HZA-3600EQ (MGO) Acoustic Guitar with Mahogany-Style Natural Finish, Comfortable Neck, Smooth Fingerboard and Balanced Acoustic Tone for Practice, Lessons, Recording and Live Performance view 5",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600eq-mgo-acoustic-guitar-with-mahogany-style-natural-finish-comfortable-neck-smooth-fingerboard-and-balanced-acoustic-tone-for-practice-lessons-recording-and-live-performance/0ab6142c-bb6b-469a-852e-d0dc52b66db7-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk29cew",
+      "name": "Hertz HZA-3600 EQ (NA) Acoustic Guitar with Natural Finish, Comfortable Neck, Smooth Fingerboard and Built-In EQ for Practice, Recording and Live Performance",
+      "slug": "hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance",
+      "oldImage": "https://i.postimg.cc/ydW0n9tK/h-ZA-3600-EQ-NA-(1).png",
+      "newImage": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/b4784298-5a69-4181-84fb-f22ab6504189-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZA-3600 EQ (NA) Acoustic Guitar with Natural Finish, Comfortable Neck, Smooth Fingerboard and Built-In EQ for Practice, Recording and Live Performance view 1",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/b4784298-5a69-4181-84fb-f22ab6504189-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-1",
+          "alt": "Hertz HZA-3600 EQ (NA) Acoustic Guitar with Natural Finish, Comfortable Neck, Smooth Fingerboard and Built-In EQ for Practice, Recording and Live Performance view 2",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/0b00c6dd-b795-46ad-bd64-43fa2883ebd6-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-2",
+          "alt": "Hertz HZA-3600 EQ (NA) Acoustic Guitar with Natural Finish, Comfortable Neck, Smooth Fingerboard and Built-In EQ for Practice, Recording and Live Performance view 3",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/efbf83f7-8e7c-4444-9c25-108487fe9e1c-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-3",
+          "alt": "Hertz HZA-3600 EQ (NA) Acoustic Guitar with Natural Finish, Comfortable Neck, Smooth Fingerboard and Built-In EQ for Practice, Recording and Live Performance view 4",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/00252a8f-dd20-42dc-a5ad-039bb928c637-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-4",
+          "alt": "Hertz HZA-3600 EQ (NA) Acoustic Guitar with Natural Finish, Comfortable Neck, Smooth Fingerboard and Built-In EQ for Practice, Recording and Live Performance view 5",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-3600-eq-na-acoustic-guitar-with-natural-finish-comfortable-neck-smooth-fingerboard-and-built-in-eq-for-practice-recording-and-live-performance/3832ef6f-6da1-4b75-bb12-2c9b1b0b64f8-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk1gf11",
+      "name": "Hertz HZ STMP-X (Mint Green Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap.",
+      "slug": "hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2",
+      "oldImage": "https://i.postimg.cc/ZYs71WB2/STMP-X-Mint-Green-(1).png",
+      "newImage": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/6a11850b-8cdc-4723-94b2-382302ca1d5f-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZ STMP-X (Mint Green Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 1",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/6a11850b-8cdc-4723-94b2-382302ca1d5f-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-1",
+          "alt": "Hertz HZ STMP-X (Mint Green Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 2",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/3b7ff4b6-88c4-4130-9d82-68f4417d41f5-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-2",
+          "alt": "Hertz HZ STMP-X (Mint Green Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 3",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/dfdc903b-f392-4c79-bac6-080d275a7ca0-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-3",
+          "alt": "Hertz HZ STMP-X (Mint Green Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 4",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap-2/d8757634-16c9-455f-bb40-bcb820ddb8d0-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk09eii",
+      "name": "Hertz HZ STMP-X (White Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap.",
+      "slug": "hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "oldImage": "https://i.postimg.cc/SKScTF8T/STMP-X-white-(1).png",
+      "newImage": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6497d698-562b-4490-a30e-beeda5a59017-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZ STMP-X (White Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 1",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6497d698-562b-4490-a30e-beeda5a59017-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-1",
+          "alt": "Hertz HZ STMP-X (White Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 2",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/39f7d63a-6d9f-425b-ba1f-6cf191a3f93d-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-2",
+          "alt": "Hertz HZ STMP-X (White Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 3",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/3f695410-0718-48d5-83ca-efc48e766a5e-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-3",
+          "alt": "Hertz HZ STMP-X (White Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 4",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/9905ebf2-f46b-4585-bcbc-d222dab2264d-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-4",
+          "alt": "Hertz HZ STMP-X (White Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 5",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-white-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/b3ef0813-35d2-4e09-97b9-a88727bd2892-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk09egl",
+      "name": "Hertz HZ STMP-X (Shell Pink Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap.",
+      "slug": "hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "oldImage": "https://i.postimg.cc/cHJMHyLM/STMP-X-Shell-Pink-(1).png",
+      "newImage": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6f465600-2f01-48de-b6e0-ef6968f4eb69-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZ STMP-X (Shell Pink Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 1",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6f465600-2f01-48de-b6e0-ef6968f4eb69-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-1",
+          "alt": "Hertz HZ STMP-X (Shell Pink Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 2",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/ae958efb-85e0-48b2-bc99-26a355eddcd7-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-2",
+          "alt": "Hertz HZ STMP-X (Shell Pink Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 3",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/0038572c-18ef-4d34-a2ab-f9fa0233c8ab-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-3",
+          "alt": "Hertz HZ STMP-X (Shell Pink Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 4",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/69ef6ae2-1165-4b27-8b90-fc9b678beb1b-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-4",
+          "alt": "Hertz HZ STMP-X (Shell Pink Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 5",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-shell-pink-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/1cf1fbcb-3556-4e55-b655-864e4373e7bd-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk09eel",
+      "name": "Hertz HZ STMP-X (Satin Grey Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap.",
+      "slug": "hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "oldImage": "https://i.postimg.cc/hv606ygT/STMP-X-Satin-Grey-(1).png",
+      "newImage": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6c9157db-28c1-490b-a6dd-6d65f5cf94b4-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZ STMP-X (Satin Grey Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 1",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/6c9157db-28c1-490b-a6dd-6d65f5cf94b4-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-1",
+          "alt": "Hertz HZ STMP-X (Satin Grey Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 2",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/a3129356-acd7-42b1-a231-3b0acae2026d-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-2",
+          "alt": "Hertz HZ STMP-X (Satin Grey Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 3",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/1e102335-a467-41f9-a493-e52699b31ab4-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-3",
+          "alt": "Hertz HZ STMP-X (Satin Grey Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 4",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/077ca7e5-772b-4248-bf09-e0d7ec428c31-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-4",
+          "alt": "Hertz HZ STMP-X (Satin Grey Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 5",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-satin-grey-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/00b36a2e-440f-400c-a1ec-8e461e606abc-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk09ecs",
+      "name": "Hertz HZ STMP-X (Mint Green Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap.",
+      "slug": "hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "oldImage": "https://i.postimg.cc/jSN80bDs/STMP-X-Mint-Green-(1).png",
+      "newImage": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/c1f6e860-f085-4354-a258-6e54f03f791a-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZ STMP-X (Mint Green Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 1",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/c1f6e860-f085-4354-a258-6e54f03f791a-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-1",
+          "alt": "Hertz HZ STMP-X (Mint Green Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 2",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/7d17d04b-0da0-4f54-a84b-fa0d75c02a6c-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-2",
+          "alt": "Hertz HZ STMP-X (Mint Green Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 3",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/4a34b023-65e9-4eec-8fc2-3afc50519e63-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-3",
+          "alt": "Hertz HZ STMP-X (Mint Green Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 4",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-mint-green-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/14dc6ef8-d632-4270-938a-852f43abc491-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    },
+    {
+      "id": "prod-mtk09eam",
+      "name": "Hertz HZ STMP-X (Black Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap.",
+      "slug": "hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap",
+      "oldImage": "https://i.postimg.cc/vH8MZ0rd/STMP-X-BLACK-(1).png",
+      "newImage": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/2465eb17-19ae-4899-8ce0-6fd007994a2c-w960.webp",
+      "newImages": [
+        {
+          "id": "img-0",
+          "alt": "Hertz HZ STMP-X (Black Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 1",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/2465eb17-19ae-4899-8ce0-6fd007994a2c-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-1",
+          "alt": "Hertz HZ STMP-X (Black Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 2",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/2ac256b1-b506-4e8f-9db4-6a81fece02e6-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-2",
+          "alt": "Hertz HZ STMP-X (Black Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 3",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/a57e0bae-9f19-46f5-9cc5-99b6fd14520e-w960.webp",
+          "color": "#e8e8e8"
+        },
+        {
+          "id": "img-3",
+          "alt": "Hertz HZ STMP-X (Black Finish) SuperStrat Electric Guitar, Okoume Body, Canadian Maple Neck, Indian Rosewood Fingerboard, 22 Frets, 5-Way Pickup Selector, Coil-Tap. view 4",
+          "src": "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hz-stmp-x-black-finish-superstrat-electric-guitar-okoume-body-canadian-maple-neck-indian-rosewood-fingerboard-22-frets-5-way-pickup-selector-coil-tap/3f90ac92-c095-494e-8f66-00d2933e7d2c-w960.webp",
+          "color": "#e8e8e8"
+        }
+      ],
+      "newDetail": {}
+    }
+  ],
+  "failedMigrations": []
+}

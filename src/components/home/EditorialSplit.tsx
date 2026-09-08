@@ -9,13 +9,15 @@ export default function EditorialSplit() {
     <Reveal as="section" className="editorial-split">
       <div className="editorial-split__inner">
         <div className="editorial-split__copy">
-          <p className="editorial-split__eyebrow premium-section-eyebrow">Gear advisors, not a warehouse</p>
+          <p className="editorial-split__eyebrow premium-section-eyebrow">
+            Gear advisors, not a warehouse
+          </p>
           <h2 className="editorial-split__title">
             Pro gear. Honest advice. Delivered across India.
           </h2>
           <p className="editorial-split__text">
-            Whether you&apos;re building your first home studio or upgrading a worship
-            rig, our team helps you choose gear that fits your budget and your goals.
+            Whether you&apos;re building your first home studio or upgrading a worship rig, our team
+            helps you choose gear that fits your budget and your goals.
           </p>
           <div className="editorial-split__actions">
             <Link href={ROUTES.search} className="premium-btn premium-btn--primary">
@@ -35,7 +37,7 @@ export default function EditorialSplit() {
               className="editorial-split__image"
               fill
               loading="lazy"
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              sizes="(max-width: 640px) 90vw, (max-width: 1024px) 44vw, 500px"
             />
           </div>
         </div>

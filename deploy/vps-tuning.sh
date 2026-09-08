@@ -145,10 +145,10 @@ echo "  ✓ PM2 startup configured"
 # ─── 6. Nginx cache directory ──────────────────────────────────────────────
 echo ""
 echo "📂 Creating Nginx cache directory..."
-mkdir -p /var/cache/nginx/vibe-pages
-chown www-data:www-data /var/cache/nginx/vibe-pages 2>/dev/null || true
-chmod 700 /var/cache/nginx/vibe-pages
-echo "  ✓ /var/cache/nginx/vibe-pages created"
+mkdir -p /var/cache/nginx/vibe-pages /var/cache/nginx/vibe-images
+chown -R www-data:www-data /var/cache/nginx/vibe-pages /var/cache/nginx/vibe-images 2>/dev/null || true
+chmod 700 /var/cache/nginx/vibe-pages /var/cache/nginx/vibe-images
+echo "  ✓ /var/cache/nginx/vibe-pages and vibe-images created"
 
 # ─── 7. Log rotation for PM2 ───────────────────────────────────────────────
 echo ""

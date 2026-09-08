@@ -9,6 +9,7 @@ import HomepageNewArrivalsAsync from "@/components/home/HomepageNewArrivalsAsync
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
 import BigNamesDealsSection from "@/components/home/BigNamesDealsSection";
+import HomepageAplusContent from "@/components/home/HomepageAplusContent";
 
 import PremiumHero from "@/components/home/PremiumHero";
 
@@ -31,9 +32,6 @@ const TourRibbonSection = dynamic(() => import("@/components/home/TourRibbonSect
   loading: () => null,
 });
 const EditorialSplit = dynamic(() => import("@/components/home/EditorialSplit"), {
-  loading: () => null,
-});
-const HomepageAplusContent = dynamic(() => import("@/components/home/HomepageAplusContent"), {
   loading: () => null,
 });
 
@@ -84,7 +82,9 @@ export default function HomePage() {
         <HomepageSectionsAsync />
       </Suspense>
 
-      <HomepageAplusContent />
+      <Suspense fallback={null}>
+        <HomepageAplusContent />
+      </Suspense>
 
       <EditorialSplit />
 

@@ -1,14 +1,20 @@
 import AplusStoryBanners from "@/components/common/AplusStoryBanners";
-import { HOMEPAGE_APLUS_BANNERS } from "@/data/homepageAplusSections";
+import { getHomepageStoryBanners } from "@/lib/server/homepageStoryService";
 
-export default function HomepageAplusContent() {
+export default async function HomepageAplusContent() {
+  const data = await getHomepageStoryBanners();
+
+  if (!data.isActive || data.banners.length === 0) {
+    return null;
+  }
+
   return (
     <section
       className="homepage-aplus"
       data-vibe-section="homepage-aplus"
-      aria-label="Featured gear stories"
+      aria-label={data.sectionTitle || "Featured gear stories"}
     >
-      <AplusStoryBanners banners={HOMEPAGE_APLUS_BANNERS} />
+      <AplusStoryBanners banners={data.banners} />
     </section>
   );
 }

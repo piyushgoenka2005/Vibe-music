@@ -18,6 +18,7 @@ export type ProductImageProps = {
   decoding?: "async" | "sync" | "auto";
   draggable?: boolean;
   onError?: () => void;
+  onLoad?: () => void;
 };
 
 /** Shared inline styles — never apply resting transform scale here. */
@@ -47,7 +48,7 @@ const THUMB_WIDTHS = [320, 480, 800, 960, 1600] as const;
 export function generateCdnSrcSet(src: string): string | undefined {
   if (!src) return undefined;
   if (!src.includes("cdn.vibemusic.in") || !src.endsWith(".webp")) return undefined;
-  
+
   const master = cdnMasterUrl(src);
   // master is something like https://cdn.vibemusic.in/.../uuid.webp
   const parsed = new URL(master);
@@ -57,7 +58,7 @@ export function generateCdnSrcSet(src: string): string | undefined {
 
   const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
   const name = match[1];
-  
+
   return THUMB_WIDTHS.map((w) => `${parsed.origin}${dir}${name}-w${w}.webp ${w}w`).join(", ");
 }
 
@@ -79,6 +80,7 @@ export default function ProductImage({
   decoding = "async",
   draggable,
   onError,
+  onLoad,
 }: ProductImageProps) {
   const srcSet = generateCdnSrcSet(src);
 
@@ -97,6 +99,7 @@ export default function ProductImage({
       srcSet={srcSet}
       width={fill ? undefined : width}
       onError={onError}
+      onLoad={onLoad}
       style={productImageInlineStyle({ fill, variant })}
     />
   );

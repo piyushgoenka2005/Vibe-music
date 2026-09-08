@@ -5,11 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import {
-  EmptyState,
-  LoadingState,
-  StatusBadge,
-} from "@/components/admin/AdminUi";
+import BannerImageUpload from "@/components/admin/BannerImageUpload";
+import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
 import { ErrorState } from "@/components/admin/AdminQueryState";
 import {
   HOMEPAGE_SECTION_KEYS,
@@ -34,10 +31,7 @@ const EMPTY_ITEM = {
   offerText: "",
 };
 
-function itemLabel(
-  item: HomepageSectionItem,
-  productNames: Map<string, string>
-): string {
+function itemLabel(item: HomepageSectionItem, productNames: Map<string, string>): string {
   if (item.productId) {
     return productNames.get(item.productId) ?? `Product: ${item.productId}`;
   }
@@ -80,7 +74,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
 
   const sections = useMemo(
     () => [...(data?.sections ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
-    [data?.sections]
+    [data?.sections],
   );
 
   const activeSection = sections.find((section) => section.sectionKey === activeKey);
@@ -89,18 +83,13 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
       (data?.items ?? [])
         .filter((item) => item.sectionKey === activeKey)
         .sort((a, b) => a.sortOrder - b.sortOrder),
-    [data?.items, activeKey]
+    [data?.items, activeKey],
   );
 
   const productNameMap = useMemo(
     () =>
-      new Map(
-        guitarProducts.map((product) => [
-          product.id,
-          `${product.brand} — ${product.name}`,
-        ])
-      ),
-    [guitarProducts]
+      new Map(guitarProducts.map((product) => [product.id, `${product.brand} — ${product.name}`])),
+    [guitarProducts],
   );
 
   const saveSectionMutation = useMutation({
@@ -158,7 +147,8 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
         body: JSON.stringify(payload),
       });
       const body = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(body.error ?? (editingItemId ? "Update failed" : "Add item failed"));
+      if (!res.ok)
+        throw new Error(body.error ?? (editingItemId ? "Update failed" : "Add item failed"));
     },
     onSuccess: () => {
       setItemForm(EMPTY_ITEM);
@@ -253,14 +243,15 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     maxItems: sectionForm.maxItems ?? activeSection.maxItems,
   };
 
+  const isStorySection = activeKey === "featured_stories";
   const isBigNamesSection = activeKey === "big_names_deals";
   const isProductSection =
     activeKey !== "featured_categories" &&
-    activeKey !== "brand_strip";
+    activeKey !== "brand_strip" &&
+    activeKey !== "featured_stories";
   const isCategorySection = activeKey === "featured_categories";
   const isBrandSection = activeKey === "brand_strip";
-  const canAddBigNamesItem =
-    !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
+  const canAddBigNamesItem = !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
 
   return (
     <>
@@ -364,28 +355,36 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                 }
               />
             </div>
-            {!isBigNamesSection ? (
-            <div className="admin-form-group">
-              <label>Source Mode</label>
-              <select
-                className="admin-input"
-                style={{ width: "100%" }}
-                value={form.sourceMode}
-                onChange={(event) =>
-                  setSectionForm((prev) => ({
-                    ...prev,
-                    sourceMode: event.target.value as HomepageSection["sourceMode"],
-                  }))
-                }
-              >
-                <option value="auto">Auto (catalog flags / sorting)</option>
-                <option value="manual">Manual curation</option>
-              </select>
-            </div>
+            {!isBigNamesSection && !isStorySection ? (
+              <div className="admin-form-group">
+                <label>Source Mode</label>
+                <select
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.sourceMode}
+                  onChange={(event) =>
+                    setSectionForm((prev) => ({
+                      ...prev,
+                      sourceMode: event.target.value as HomepageSection["sourceMode"],
+                    }))
+                  }
+                >
+                  <option value="auto">Auto (catalog flags / sorting)</option>
+                  <option value="manual">Manual curation</option>
+                </select>
+              </div>
+            ) : isBigNamesSection ? (
+              <div className="admin-form-group">
+                <p className="admin-form-hint" style={{ margin: 0 }}>
+                  Manual curation only. Pick up to {BIG_NAMES_DEALS_MAX_ITEMS} guitar products
+                  below.
+                </p>
+              </div>
             ) : (
               <div className="admin-form-group">
                 <p className="admin-form-hint" style={{ margin: 0 }}>
-                  Manual curation only. Pick up to {BIG_NAMES_DEALS_MAX_ITEMS} guitar products below.
+                  Manual curation only. Manage full-width A+ story banners (image, heading,
+                  destination link) below.
                 </p>
               </div>
             )}
@@ -404,170 +403,224 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
           </div>
           <div style={{ marginTop: "1rem" }}>
             {canWrite ? (
-            <button
-              type="button"
-              className="admin-btn admin-btn--primary"
-              disabled={saveSectionMutation.isPending}
-              onClick={() => saveSectionMutation.mutate()}
-            >
-              Save Section
-            </button>
+              <button
+                type="button"
+                className="admin-btn admin-btn--primary"
+                disabled={saveSectionMutation.isPending}
+                onClick={() => saveSectionMutation.mutate()}
+              >
+                Save Section
+              </button>
             ) : null}
           </div>
         </div>
       </div>
 
-      {(form.sourceMode === "manual" || isBigNamesSection) ? (
+      {form.sourceMode === "manual" || isBigNamesSection || isStorySection ? (
         <div className="admin-panel">
           <div className="admin-panel__header">
-            <h2 className="admin-panel__title">Curated Items</h2>
+            <h2 className="admin-panel__title">
+              {isStorySection ? "Story Banners" : "Curated Items"}
+            </h2>
           </div>
           <div className="admin-panel__body">
             <div className="admin-form-grid">
-              {isProductSection ? (
-                isBigNamesSection ? (
-                  <div className="admin-form-group">
-                    <label>Guitar product</label>
-                    <select
-                      className="admin-select"
-                      style={{ width: "100%" }}
-                      value={itemForm.productId}
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, productId: event.target.value }))
-                      }
-                    >
-                      <option value="">Select a guitar</option>
-                      {guitarProducts.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.brand} — {product.name}
-                        </option>
-                      ))}
-                    </select>
+              {isStorySection ? (
+                <>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <BannerImageUpload
+                      label="Story Banner Image (upload directly to CDN)"
+                      value={itemForm.customImage}
+                      onChange={(url) => setItemForm((prev) => ({ ...prev, customImage: url }))}
+                    />
                   </div>
-                ) : (
-                <div className="admin-form-group">
-                  <label>Product ID</label>
-                  <input
-                    className="admin-input"
-                    style={{ width: "100%" }}
-                    value={itemForm.productId}
-                    onChange={(event) =>
-                      setItemForm((prev) => ({ ...prev, productId: event.target.value }))
-                    }
-                    placeholder="Catalog product ID"
-                  />
-                </div>
-                )
-              ) : null}
-              {isCategorySection ? (
-                <div className="admin-form-group">
-                  <label>Category Slug</label>
-                  <input
-                    className="admin-input"
-                    style={{ width: "100%" }}
-                    value={itemForm.categorySlug}
-                    onChange={(event) =>
-                      setItemForm((prev) => ({ ...prev, categorySlug: event.target.value }))
-                    }
-                  />
-                </div>
-              ) : null}
-              {isBrandSection ? (
-                <div className="admin-form-group">
-                  <label>Brand ID / Slug</label>
-                  <input
-                    className="admin-input"
-                    style={{ width: "100%" }}
-                    value={itemForm.brandId}
-                    onChange={(event) =>
-                      setItemForm((prev) => ({ ...prev, brandId: event.target.value }))
-                    }
-                  />
-                </div>
-              ) : null}
-              {!isBigNamesSection ? (
-              <div className="admin-form-group">
-                <label>Custom Title</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={itemForm.customTitle}
-                  onChange={(event) =>
-                    setItemForm((prev) => ({ ...prev, customTitle: event.target.value }))
-                  }
-                />
-              </div>
-              ) : null}
-              {!isBigNamesSection ? (
-              <div className="admin-form-group">
-                <label>Custom Image URL</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={itemForm.customImage}
-                  onChange={(event) =>
-                    setItemForm((prev) => ({ ...prev, customImage: event.target.value }))
-                  }
-                />
-              </div>
-              ) : null}
-              {!isBigNamesSection ? (
-              <div className="admin-form-group">
-                <label>Custom Link</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={itemForm.customHref}
-                  onChange={(event) =>
-                    setItemForm((prev) => ({ ...prev, customHref: event.target.value }))
-                  }
-                />
-              </div>
-              ) : null}
-              {isProductSection && !isBigNamesSection ? (
-                <div className="admin-form-group">
-                  <label>Offer Text</label>
-                  <input
-                    className="admin-input"
-                    style={{ width: "100%" }}
-                    value={itemForm.offerText}
-                    onChange={(event) =>
-                      setItemForm((prev) => ({ ...prev, offerText: event.target.value }))
-                    }
-                  />
-                </div>
-              ) : null}
-              <div className="admin-form-group">
-                {!isBigNamesSection ? (
-                <label>Badge Label</label>
-                ) : null}
-                {!isBigNamesSection ? (
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={itemForm.badgeLabel}
-                  onChange={(event) =>
-                    setItemForm((prev) => ({ ...prev, badgeLabel: event.target.value }))
-                  }
-                />
-                ) : null}
-              </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Or Image URL / Path</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.customImage}
+                      placeholder="/images/guitar-1.webp or https://cdn.vibemusic.in/..."
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, customImage: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Story Title / Alt Text (Heading)</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.customTitle}
+                      placeholder="e.g. An integrated coil-tap for total tonal freedom"
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, customTitle: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Destination Link (Optional click action)</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.customHref}
+                      placeholder="/category/guitars"
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, customHref: event.target.value }))
+                      }
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {isProductSection ? (
+                    isBigNamesSection ? (
+                      <div className="admin-form-group">
+                        <label>Guitar product</label>
+                        <select
+                          className="admin-select"
+                          style={{ width: "100%" }}
+                          value={itemForm.productId}
+                          onChange={(event) =>
+                            setItemForm((prev) => ({ ...prev, productId: event.target.value }))
+                          }
+                        >
+                          <option value="">Select a guitar</option>
+                          {guitarProducts.map((product) => (
+                            <option key={product.id} value={product.id}>
+                              {product.brand} — {product.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="admin-form-group">
+                        <label>Product ID</label>
+                        <input
+                          className="admin-input"
+                          style={{ width: "100%" }}
+                          value={itemForm.productId}
+                          onChange={(event) =>
+                            setItemForm((prev) => ({ ...prev, productId: event.target.value }))
+                          }
+                          placeholder="Catalog product ID"
+                        />
+                      </div>
+                    )
+                  ) : null}
+                  {isCategorySection ? (
+                    <div className="admin-form-group">
+                      <label>Category Slug</label>
+                      <input
+                        className="admin-input"
+                        style={{ width: "100%" }}
+                        value={itemForm.categorySlug}
+                        onChange={(event) =>
+                          setItemForm((prev) => ({ ...prev, categorySlug: event.target.value }))
+                        }
+                      />
+                    </div>
+                  ) : null}
+                  {isBrandSection ? (
+                    <div className="admin-form-group">
+                      <label>Brand ID / Slug</label>
+                      <input
+                        className="admin-input"
+                        style={{ width: "100%" }}
+                        value={itemForm.brandId}
+                        onChange={(event) =>
+                          setItemForm((prev) => ({ ...prev, brandId: event.target.value }))
+                        }
+                      />
+                    </div>
+                  ) : null}
+                  {!isBigNamesSection ? (
+                    <div className="admin-form-group">
+                      <label>Custom Title</label>
+                      <input
+                        className="admin-input"
+                        style={{ width: "100%" }}
+                        value={itemForm.customTitle}
+                        onChange={(event) =>
+                          setItemForm((prev) => ({ ...prev, customTitle: event.target.value }))
+                        }
+                      />
+                    </div>
+                  ) : null}
+                  {!isBigNamesSection ? (
+                    <div className="admin-form-group">
+                      <label>Custom Image URL</label>
+                      <input
+                        className="admin-input"
+                        style={{ width: "100%" }}
+                        value={itemForm.customImage}
+                        onChange={(event) =>
+                          setItemForm((prev) => ({ ...prev, customImage: event.target.value }))
+                        }
+                      />
+                    </div>
+                  ) : null}
+                  {!isBigNamesSection ? (
+                    <div className="admin-form-group">
+                      <label>Custom Link</label>
+                      <input
+                        className="admin-input"
+                        style={{ width: "100%" }}
+                        value={itemForm.customHref}
+                        onChange={(event) =>
+                          setItemForm((prev) => ({ ...prev, customHref: event.target.value }))
+                        }
+                      />
+                    </div>
+                  ) : null}
+                  {isProductSection && !isBigNamesSection ? (
+                    <div className="admin-form-group">
+                      <label>Offer Text</label>
+                      <input
+                        className="admin-input"
+                        style={{ width: "100%" }}
+                        value={itemForm.offerText}
+                        onChange={(event) =>
+                          setItemForm((prev) => ({ ...prev, offerText: event.target.value }))
+                        }
+                      />
+                    </div>
+                  ) : null}
+                  <div className="admin-form-group">
+                    {!isBigNamesSection ? <label>Badge Label</label> : null}
+                    {!isBigNamesSection ? (
+                      <input
+                        className="admin-input"
+                        style={{ width: "100%" }}
+                        value={itemForm.badgeLabel}
+                        onChange={(event) =>
+                          setItemForm((prev) => ({ ...prev, badgeLabel: event.target.value }))
+                        }
+                      />
+                    ) : null}
+                  </div>
+                </>
+              )}
             </div>
             <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               {canWrite ? (
-              <button
-                type="button"
-                className="admin-btn admin-btn--primary"
-                disabled={addItemMutation.isPending || (!editingItemId && !canAddBigNamesItem)}
-                onClick={() => addItemMutation.mutate()}
-              >
-                <Plus size={16} />{" "}
-                {editingItemId
-                  ? "Update Item"
-                  : isBigNamesSection
-                    ? "Add Guitar"
-                    : "Add Item"}
-              </button>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--primary"
+                  disabled={addItemMutation.isPending || (!editingItemId && !canAddBigNamesItem)}
+                  onClick={() => addItemMutation.mutate()}
+                >
+                  <Plus size={16} />{" "}
+                  {editingItemId
+                    ? isStorySection
+                      ? "Update Story Banner"
+                      : "Update Item"
+                    : isStorySection
+                      ? "Add Story Banner"
+                      : isBigNamesSection
+                        ? "Add Guitar"
+                        : "Add Item"}
+                </button>
               ) : null}
               {canWrite && editingItemId ? (
                 <button
@@ -604,73 +657,104 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   <tbody>
                     {sectionItems.map((item, index) => (
                       <tr key={item.id}>
-                        <td>{itemLabel(item, productNameMap)}</td>
+                        <td>
+                          {isStorySection ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              {item.customImage ? (
+                                <img
+                                  src={item.customImage}
+                                  alt={item.customTitle || "Banner thumbnail"}
+                                  style={{
+                                    width: 90,
+                                    height: 40,
+                                    objectFit: "cover",
+                                    borderRadius: 4,
+                                    background: "#111",
+                                    border: "1px solid var(--admin-border, #333)",
+                                  }}
+                                />
+                              ) : null}
+                              <div>
+                                <div style={{ fontWeight: 600 }}>
+                                  {item.customTitle || "Untitled Story Banner"}
+                                </div>
+                                {item.customHref ? (
+                                  <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+                                    Link: {item.customHref}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          ) : (
+                            itemLabel(item, productNameMap)
+                          )}
+                        </td>
                         <td>
                           <StatusBadge status={item.isActive ? "active" : "inactive"} />
                         </td>
                         <td>
                           {canWrite ? (
-                          <div style={{ display: "flex", gap: 4 }}>
-                            <button
-                              type="button"
-                              className="admin-btn admin-btn--ghost"
-                              disabled={index === 0}
-                              onClick={() => moveItem(index, -1)}
-                              aria-label="Move up"
-                            >
-                              <ArrowUp size={16} />
-                            </button>
-                            <button
-                              type="button"
-                              className="admin-btn admin-btn--ghost"
-                              disabled={index === sectionItems.length - 1}
-                              onClick={() => moveItem(index, 1)}
-                              aria-label="Move down"
-                            >
-                              <ArrowDown size={16} />
-                            </button>
-                          </div>
+                            <div style={{ display: "flex", gap: 4 }}>
+                              <button
+                                type="button"
+                                className="admin-btn admin-btn--ghost"
+                                disabled={index === 0}
+                                onClick={() => moveItem(index, -1)}
+                                aria-label="Move up"
+                              >
+                                <ArrowUp size={16} />
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-btn admin-btn--ghost"
+                                disabled={index === sectionItems.length - 1}
+                                onClick={() => moveItem(index, 1)}
+                                aria-label="Move down"
+                              >
+                                <ArrowDown size={16} />
+                              </button>
+                            </div>
                           ) : (
                             index + 1
                           )}
                         </td>
                         <td>
                           {canWrite ? (
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                            <button
-                              type="button"
-                              className="admin-btn admin-btn--ghost"
-                              onClick={() => {
-                                setEditingItemId(item.id);
-                                setItemForm({
-                                  productId: item.productId ?? "",
-                                  categorySlug: item.categorySlug ?? "",
-                                  brandId: item.brandId ?? "",
-                                  customImage: item.customImage ?? "",
-                                  customTitle: item.customTitle ?? "",
-                                  customHref: item.customHref ?? "",
-                                  badgeLabel: item.badgeLabel ?? "",
-                                  offerText: item.offerText ?? "",
-                                });
-                              }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className="admin-btn admin-btn--secondary"
-                              onClick={() => toggleItemMutation.mutate(item)}
-                            >
-                              {item.isActive ? "Deactivate" : "Activate"}
-                            </button>
-                            <button
-                              type="button"
-                              className="admin-btn admin-btn--danger"
-                              onClick={() => deleteItemMutation.mutate(item.id)}
-                            >
-                              Delete
-                            </button>
-                          </div>
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                              <button
+                                type="button"
+                                className="admin-btn admin-btn--ghost"
+                                onClick={() => {
+                                  setEditingItemId(item.id);
+                                  setItemForm({
+                                    productId: item.productId ?? "",
+                                    categorySlug: item.categorySlug ?? "",
+                                    brandId: item.brandId ?? "",
+                                    customImage: item.customImage ?? "",
+                                    customTitle: item.customTitle ?? "",
+                                    customHref: item.customHref ?? "",
+                                    badgeLabel: item.badgeLabel ?? "",
+                                    offerText: item.offerText ?? "",
+                                  });
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-btn admin-btn--secondary"
+                                onClick={() => toggleItemMutation.mutate(item)}
+                              >
+                                {item.isActive ? "Deactivate" : "Activate"}
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-btn admin-btn--danger"
+                                onClick={() => deleteItemMutation.mutate(item.id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
                           ) : (
                             "—"
                           )}

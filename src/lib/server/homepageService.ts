@@ -20,9 +20,7 @@ import {
   HOMEPAGE_POPULAR_CATEGORY_COUNT,
 } from "@/data/popularCategories";
 import { DEFAULT_HOMEPAGE_SECTIONS } from "@/types/homepage";
-import {
-  BIG_NAMES_DEALS_CTA,
-} from "@/data/bigNamesDeals";
+import { BIG_NAMES_DEALS_CTA } from "@/data/bigNamesDeals";
 import {
   BIG_NAMES_DEALS_MAX_ITEMS,
   isBigNamesDealsGuitarProduct,
@@ -44,7 +42,7 @@ import type {
 
 export function invalidatePublicHomepageCache(): void {
   void import("@/lib/server/homepageSnapshotCache").then(({ revalidateHomepageSnapshot }) =>
-    revalidateHomepageSnapshot()
+    revalidateHomepageSnapshot(),
   );
 }
 
@@ -55,10 +53,9 @@ function activeProducts(products: CatalogProduct[]): CatalogProduct[] {
 function toProductItem(
   product: CatalogProduct,
   overrides?: Partial<HomepageSectionItem>,
-  rank?: number
+  rank?: number,
 ): HomepageProductItem {
-  const hasDiscount =
-    product.originalPrice > product.price && product.price > 0;
+  const hasDiscount = product.originalPrice > product.price && product.price > 0;
   const salePrice = hasDiscount ? product.price : null;
   const variantCount = product.detail?.variants?.length ?? 0;
   const { rating, reviewCount } = ensureProductReviewMetrics({
@@ -87,7 +84,7 @@ function toProductItem(
 
 function resolveManualProducts(
   items: HomepageSectionItem[],
-  products: CatalogProduct[]
+  products: CatalogProduct[],
 ): HomepageProductItem[] {
   const productMap = new Map(products.map((product) => [product.id, product]));
 
@@ -104,7 +101,7 @@ function resolveManualProducts(
 function resolveAutoProducts(
   sectionKey: HomepageSectionKey,
   products: CatalogProduct[],
-  maxItems: number
+  maxItems: number,
 ): HomepageProductItem[] {
   const active = activeProducts(products);
 
@@ -112,20 +109,14 @@ function resolveAutoProducts(
     case "new_arrivals":
       return active
         .filter((product) => product.newArrival && product.price > 0)
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, maxItems)
         .map((product, index) => toProductItem(product, undefined, index + 1));
 
     case "trending": {
       const trending = active
         .filter((product) => product.trending && product.price > 0)
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, maxItems)
         .map((product) => toProductItem(product));
 
@@ -137,7 +128,7 @@ function resolveAutoProducts(
           (a, b) =>
             b.reviewCount - a.reviewCount ||
             b.rating - a.rating ||
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         )
         .slice(0, maxItems)
         .map((product) => toProductItem(product));
@@ -146,10 +137,7 @@ function resolveAutoProducts(
     case "staff_picks": {
       const staffPicks = active
         .filter((product) => product.featured && product.price > 0)
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, maxItems)
         .map((product) => toProductItem(product));
 
@@ -161,7 +149,7 @@ function resolveAutoProducts(
           (a, b) =>
             b.reviewCount - a.reviewCount ||
             b.rating - a.rating ||
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         )
         .slice(0, maxItems)
         .map((product) => toProductItem(product));
@@ -179,19 +167,14 @@ function resolveAutoProducts(
         (product) =>
           product.price > 0 &&
           (product.discountPercentage > 0 ||
-            (product.detail?.salePrice != null &&
-              product.detail.salePrice < product.price))
+            (product.detail?.salePrice != null && product.detail.salePrice < product.price)),
       );
       const source =
         discounted.length > 0
-          ? discounted.sort(
-              (a, b) => b.discountPercentage - a.discountPercentage
-            )
+          ? discounted.sort((a, b) => b.discountPercentage - a.discountPercentage)
           : [...active]
               .filter((product) => product.price > 0)
-              .sort(
-                (a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating
-              );
+              .sort((a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating);
       return source.slice(0, maxItems).map((product) => {
         const salePrice = product.detail?.salePrice ?? null;
         const computedPct =
@@ -215,7 +198,7 @@ function resolveAutoProducts(
 
 async function resolveCategories(
   section: HomepageSection,
-  items: HomepageSectionItem[]
+  items: HomepageSectionItem[],
 ): Promise<HomepageCategoryItem[]> {
   const categories = await listCategories();
 
@@ -262,7 +245,7 @@ async function resolveCategories(
 
 async function resolveBrands(
   section: HomepageSection,
-  items: HomepageSectionItem[]
+  items: HomepageSectionItem[],
 ): Promise<HomepageBrandItem[]> {
   const brands = await fetchBrands();
   const brandById = new Map(brands.map((brand) => [brand.id, brand]));
@@ -313,6 +296,7 @@ function sectionDomId(sectionKey: HomepageSectionKey): string {
     deals_of_the_day: "sales-events",
     big_names_deals: "big-names-deals",
     brand_strip: "brand-strip",
+    featured_stories: "featured-gear-stories",
   };
   return map[sectionKey];
 }
@@ -321,9 +305,9 @@ async function resolveSection(
   section: HomepageSection,
   products: CatalogProduct[],
   at: Date,
-  allSectionItems: HomepageSectionItem[]
+  allSectionItems: HomepageSectionItem[],
 ): Promise<ResolvedHomepageSection | null> {
-  if (section.sectionKey === "big_names_deals") {
+  if (section.sectionKey === "big_names_deals" || section.sectionKey === "featured_stories") {
     return null;
   }
 
@@ -332,7 +316,7 @@ async function resolveSection(
       (item) =>
         item.sectionKey === section.sectionKey &&
         item.isActive &&
-        isHomepageItemScheduledActive(item, at)
+        isHomepageItemScheduledActive(item, at),
     )
     .sort((a, b) => a.sortOrder - b.sortOrder);
   const base: ResolvedHomepageSection = {
@@ -346,17 +330,11 @@ async function resolveSection(
     layout: section.layout,
   };
 
-  if (
-    section.sectionKey === "featured_categories" ||
-    section.layout === "category_grid"
-  ) {
+  if (section.sectionKey === "featured_categories" || section.layout === "category_grid") {
     let categories = await resolveCategories(section, items);
-    if (
-      categories.length === 0 &&
-      section.sectionKey === "featured_categories"
-    ) {
+    if (categories.length === 0 && section.sectionKey === "featured_categories") {
       categories = getHomepagePopularCategoryItems(
-        section.maxItems || HOMEPAGE_POPULAR_CATEGORY_COUNT
+        section.maxItems || HOMEPAGE_POPULAR_CATEGORY_COUNT,
       );
     }
     if (categories.length === 0) return null;
@@ -390,7 +368,7 @@ async function resolveSection(
 
 function buildFeaturedCategoriesFallbackSection(at: Date): HomepageSection {
   const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
-    (section) => section.sectionKey === "featured_categories"
+    (section) => section.sectionKey === "featured_categories",
   );
 
   return {
@@ -412,10 +390,10 @@ function buildFeaturedCategoriesFallbackSection(at: Date): HomepageSection {
 }
 
 export async function getBigNamesDealsPublicData(
-  at = new Date()
+  at = new Date(),
 ): Promise<PublicBigNamesDealsData> {
   const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
-    (section) => section.sectionKey === "big_names_deals"
+    (section) => section.sectionKey === "big_names_deals",
   );
 
   try {
@@ -449,7 +427,7 @@ export async function getBigNamesDealsPublicData(
           item.sectionKey === "big_names_deals" &&
           item.isActive &&
           item.productId &&
-          isHomepageItemScheduledActive(item, at)
+          isHomepageItemScheduledActive(item, at),
       )
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .slice(0, BIG_NAMES_DEALS_MAX_ITEMS);
@@ -475,10 +453,7 @@ export async function getBigNamesDealsPublicData(
         "Find all the top brands you already love, at prices that simply can't be beat",
       ctaText: config.ctaText ?? "Shop All Deals",
       ctaLink: config.ctaLink ?? BIG_NAMES_DEALS_CTA,
-      items:
-        curated.length > 0
-          ? curated
-          : resolveBigNamesDealFallbacks(products),
+      items: curated.length > 0 ? curated : resolveBigNamesDealFallbacks(products),
     };
   } catch {
     return {
@@ -496,11 +471,8 @@ export async function getBigNamesDealsPublicData(
   }
 }
 
-export async function getPublicHomepageData(
-  at = new Date()
-): Promise<PublicHomepageData> {
-  const staticFallback = (): Promise<PublicHomepageData> =>
-    getHomepageStaticFallbacks(at);
+export async function getPublicHomepageData(at = new Date()): Promise<PublicHomepageData> {
+  const staticFallback = (): Promise<PublicHomepageData> => getHomepageStaticFallbacks(at);
 
   try {
     const [sections, products, allSectionItems] = await Promise.all([
@@ -510,20 +482,18 @@ export async function getPublicHomepageData(
     ]);
 
     const hasFeaturedCategories = sections.some(
-      (section) => section.sectionKey === "featured_categories"
+      (section) => section.sectionKey === "featured_categories",
     );
 
     const orderedSections = hasFeaturedCategories
       ? sections
       : [...sections, buildFeaturedCategoriesFallbackSection(at)].sort(
-          (a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title)
+          (a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title),
         );
 
     const resolved = (
       await Promise.all(
-        orderedSections.map((section) =>
-          resolveSection(section, products, at, allSectionItems)
-        )
+        orderedSections.map((section) => resolveSection(section, products, at, allSectionItems)),
       )
     ).filter((section): section is ResolvedHomepageSection => section !== null);
 

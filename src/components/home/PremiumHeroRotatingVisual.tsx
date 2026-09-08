@@ -3,14 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import {
-  MARKETING_HERO_FALLBACK,
-  MARKETING_HERO_SLIDES,
-} from "@/data/marketingHeroSlides";
+import { MARKETING_HERO_FALLBACK, MARKETING_HERO_SLIDES } from "@/data/marketingHeroSlides";
 import { cdnThumbUrl } from "@/lib/images";
 
 const MOSAIC_COUNT = 4;
-const MOSAIC_WIDTH = 1200;
+const MOSAIC_WIDTH = 480;
 
 function badgeClassName(badge: string): string {
   const normalized = badge.toLowerCase();
@@ -60,17 +57,13 @@ export default function PremiumHeroRotatingVisual() {
                 alt=""
                 fill
                 className="premium-hero__mosaic-photo"
-                sizes="(max-width: 1023px) 50vw, 24vw"
+                sizes="(max-width: 767px) 48vw, (max-width: 1023px) 240px, 260px"
                 priority={index === 0}
                 style={{
                   objectFit: slide.fit === "cover" ? "cover" : "contain",
-                  ...(slide.objectPosition
-                    ? { objectPosition: slide.objectPosition }
-                    : null),
+                  ...(slide.objectPosition ? { objectPosition: slide.objectPosition } : null),
                 }}
-                onError={() =>
-                  setFailedSrc((prev) => ({ ...prev, [slide.src]: true }))
-                }
+                onError={() => setFailedSrc((prev) => ({ ...prev, [slide.src]: true }))}
               />
             </div>
             <span className="premium-hero__mosaic-meta" aria-hidden="true">

@@ -34,7 +34,7 @@ const safeStorefrontHref = z
         return false;
       }
     },
-    { message: "Link must be a relative path or http(s) URL" }
+    { message: "Link must be a relative path or http(s) URL" },
   );
 
 export const adminProductSchema = z.object({
@@ -51,7 +51,7 @@ export const adminProductSchema = z.object({
   salePrice: z.number().min(0).nullable().optional(),
   sku: z.preprocess(
     (value) => (value === "" ? undefined : value),
-    z.string().min(4).max(20).optional()
+    z.string().min(4).max(20).optional(),
   ),
   gstRate: z.union([z.literal(5), z.literal(12), z.literal(18), z.literal(28)]).optional(),
   rating: z.number().min(0).max(5).optional(),
@@ -148,6 +148,7 @@ const homepageSectionKeySchema = z.enum([
   "deals_of_the_day",
   "big_names_deals",
   "brand_strip",
+  "featured_stories",
 ]);
 
 export const adminHomepageSectionSchema = z.object({
@@ -168,6 +169,7 @@ export const adminHomepageSectionSchema = z.object({
       "deals_slider",
       "brand_strip",
       "big_names_deals",
+      "story_banners",
     ])
     .optional(),
 });
@@ -179,7 +181,7 @@ export const adminHomepageSectionItemSchema = z.object({
   productId: z.string().optional(),
   categorySlug: z.string().optional(),
   brandId: z.string().optional(),
-  customImage: z.string().url().optional().or(z.literal("")),
+  customImage: z.union([z.string().url(), safeStorefrontHref, z.literal("")]).optional(),
   customTitle: z.string().max(200).optional(),
   customHref: z.union([z.literal(""), safeStorefrontHref]).optional(),
   badgeLabel: z.string().max(100).optional(),
@@ -230,7 +232,7 @@ const blogPostFieldsSchema = z.object({
 
 function validateBlogSchedule(
   value: { status?: "draft" | "published" | "scheduled"; scheduledAt?: string | null },
-  ctx: z.RefinementCtx
+  ctx: z.RefinementCtx,
 ): void {
   if (value.status === "scheduled" && !value.scheduledAt) {
     ctx.addIssue({

@@ -25,7 +25,7 @@ export function InteractivePianoSection() {
           observer.disconnect();
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
 
     observer.observe(el);
@@ -50,13 +50,11 @@ export function InteractivePianoSection() {
                 alt="Roland GP-9 digital grand piano"
                 fill
                 className="object-contain bg-gradient-to-b from-secondary to-muted p-6 md:p-10"
-                sizes="100vw"
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 1200px"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-secondary">
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                  Loading…
-                </p>
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Loading…</p>
               </div>
             )}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
@@ -77,10 +75,7 @@ export function InteractivePianoSection() {
                   className="group inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md transition hover:bg-white/20"
                 >
                   Cinematic Showcase
-                  <NavArrowIcon
-                    size="sm"
-                    className="border-white/20 bg-white/10 text-white"
-                  />
+                  <NavArrowIcon size="sm" className="border-white/20 bg-white/10 text-white" />
                 </Link>
               </div>
             </div>

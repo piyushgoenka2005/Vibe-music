@@ -17,9 +17,7 @@ const AUTO_ADVANCE_MS = 2200;
 const RESUME_AFTER_IDLE_MS = 1600;
 
 function getSlides(track: HTMLElement): HTMLElement[] {
-  return Array.from(
-    track.querySelectorAll<HTMLElement>(".big-names-deals__item")
-  );
+  return Array.from(track.querySelectorAll<HTMLElement>(".big-names-deals__item"));
 }
 
 /** Left offset that centers a slide in the track (matches scroll-snap-align: center). */
@@ -36,14 +34,12 @@ function nearestSlideIndex(track: HTMLElement): number {
   const slides = getSlides(track);
   if (slides.length === 0) return 0;
 
-  const trackCenter =
-    track.getBoundingClientRect().left + track.clientWidth / 2;
+  const trackCenter = track.getBoundingClientRect().left + track.clientWidth / 2;
   let best = 0;
   let bestDist = Number.POSITIVE_INFINITY;
 
   slides.forEach((slide, index) => {
-    const center =
-      slide.getBoundingClientRect().left + slide.offsetWidth / 2;
+    const center = slide.getBoundingClientRect().left + slide.offsetWidth / 2;
     const dist = Math.abs(center - trackCenter);
     if (dist < bestDist) {
       bestDist = dist;
@@ -54,27 +50,18 @@ function nearestSlideIndex(track: HTMLElement): number {
   return best;
 }
 
-function BigNamesDealItem({
-  item,
-  index,
-}: {
-  item: BigNamesDealItem;
-  index: number;
-}) {
+function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: number }) {
   const candidates = useMemo(
     () =>
       Array.from(
         new Set(
-          [...storefrontImageCandidates(item.product, 640), PRODUCT_FALLBACK].filter(
-            Boolean
-          )
-        )
+          [...storefrontImageCandidates(item.product, 640), PRODUCT_FALLBACK].filter(Boolean),
+        ),
       ),
-    [item.product]
+    [item.product],
   );
   const [attempt, setAttempt] = useState(0);
-  const productSrc =
-    candidates[Math.min(attempt, candidates.length - 1)] ?? PRODUCT_FALLBACK;
+  const productSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? PRODUCT_FALLBACK;
 
   return (
     <div
@@ -91,21 +78,21 @@ function BigNamesDealItem({
       >
         <div className="big-names-deals__hang-wrap">
           <div className="big-names-deals__product-stage">
-              <Image
-                alt={item.productAlt}
-                className="big-names-deals__product"
-                height={640}
-                priority={index < 2}
-                sizes="(max-width: 768px) 100vw, 50vw"
-                src={productSrc}
-                width={640}
-                draggable={false}
-                onError={() => {
-                  if (attempt < candidates.length - 1) {
-                    setAttempt((current) => current + 1);
-                  }
-                }}
-              />
+            <Image
+              alt={item.productAlt}
+              className="big-names-deals__product"
+              height={480}
+              priority={index < 2}
+              sizes="(max-width: 767px) 80vw, (max-width: 1024px) 33vw, 260px"
+              src={productSrc}
+              width={480}
+              draggable={false}
+              onError={() => {
+                if (attempt < candidates.length - 1) {
+                  setAttempt((current) => current + 1);
+                }
+              }}
+            />
           </div>
         </div>
       </Link>
@@ -126,8 +113,7 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
   const draggingRef = useRef(false);
   const inViewRef = useRef(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const enableAuto =
-    isMobileViewport && !reduceMotion && items.length > 1;
+  const enableAuto = isMobileViewport && !reduceMotion && items.length > 1;
 
   const updateActiveIndex = useCallback(() => {
     const track = trackRef.current;
@@ -135,26 +121,23 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
     setActiveIndex(nearestSlideIndex(track));
   }, []);
 
-  const scrollToIndex = useCallback(
-    (index: number, behavior: ScrollBehavior = "smooth") => {
-      const track = trackRef.current;
-      if (!track) return;
+  const scrollToIndex = useCallback((index: number, behavior: ScrollBehavior = "smooth") => {
+    const track = trackRef.current;
+    if (!track) return;
 
-      const slides = getSlides(track);
-      if (slides.length === 0) return;
+    const slides = getSlides(track);
+    if (slides.length === 0) return;
 
-      const next = ((index % slides.length) + slides.length) % slides.length;
-      const slide = slides[next];
-      if (!slide) return;
+    const next = ((index % slides.length) + slides.length) % slides.length;
+    const slide = slides[next];
+    if (!slide) return;
 
-      track.scrollTo({
-        left: centeredScrollLeft(track, slide),
-        behavior,
-      });
-      setActiveIndex(next);
-    },
-    []
-  );
+    track.scrollTo({
+      left: centeredScrollLeft(track, slide),
+      behavior,
+    });
+    setActiveIndex(next);
+  }, []);
 
   const pauseAuto = useCallback((ms = RESUME_AFTER_IDLE_MS) => {
     pauseUntilRef.current = Math.max(pauseUntilRef.current, Date.now() + ms);
@@ -206,7 +189,7 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
       ([entry]) => {
         inViewRef.current = entry?.isIntersecting ?? false;
       },
-      { threshold: 0.35 }
+      { threshold: 0.35 },
     );
     observer.observe(root);
     return () => observer.disconnect();
@@ -284,11 +267,7 @@ export default function BigNamesDealsShowcase({ items }: BigNamesDealsShowcasePr
       </div>
 
       {items.length > 1 ? (
-        <div
-          className="big-names-deals__pagination"
-          role="group"
-          aria-label="Brand guitars"
-        >
+        <div className="big-names-deals__pagination" role="group" aria-label="Brand guitars">
           {items.map((item, index) => (
             <button
               key={item.key}

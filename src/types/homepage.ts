@@ -9,6 +9,7 @@ export const HOMEPAGE_SECTION_KEYS = [
   "deals_of_the_day",
   "big_names_deals",
   "brand_strip",
+  "featured_stories",
 ] as const;
 
 export type HomepageSectionKey = (typeof HOMEPAGE_SECTION_KEYS)[number];
@@ -21,7 +22,8 @@ export type HomepageSectionLayout =
   | "category_grid"
   | "deals_slider"
   | "brand_strip"
-  | "big_names_deals";
+  | "big_names_deals"
+  | "story_banners";
 
 export interface HomepageSection {
   id: string;
@@ -171,14 +173,14 @@ export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionKey, string> = {
   deals_of_the_day: "Deals Of The Day",
   big_names_deals: "Big Names / Serious Savings",
   brand_strip: "Brand Strip",
+  featured_stories: "Featured Stories (A+ Banners)",
 };
 
 export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
   {
     sectionKey: "new_arrivals",
     title: "Top New Products",
-    subtitle:
-      "Fresh releases and just-landed gear from the brands you trust.",
+    subtitle: "Fresh releases and just-landed gear from the brands you trust.",
     accentLabel: "New arrivals",
     ctaText: "Shop All New Gear",
     ctaLink: "/search/results?q=new",
@@ -248,8 +250,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
   {
     sectionKey: "big_names_deals",
     title: "Big names. Serious savings.",
-    subtitle:
-      "Find all the top brands you already love, at prices that simply can't be beat",
+    subtitle: "Find all the top brands you already love, at prices that simply can't be beat",
     accentLabel: "Shop top brands",
     ctaText: "Shop All Deals",
     ctaLink: "/deals",
@@ -267,5 +268,15 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     sourceMode: "auto",
     maxItems: 16,
     layout: "brand_strip",
+  },
+  {
+    sectionKey: "featured_stories",
+    title: "Featured Gear Stories",
+    subtitle: "Deep dives and tonal versatility from our showcase collections",
+    isActive: true,
+    sortOrder: 8,
+    sourceMode: "manual",
+    maxItems: 8,
+    layout: "story_banners",
   },
 ];

@@ -23,19 +23,15 @@ export default function AplusStoryBanners({ banners }: AplusStoryBannersProps) {
           <Image
             src={banner.imageSrc}
             alt={banner.imageAlt}
-            width={1920}
-            height={640}
+            width={1280}
+            height={427}
             className="aplus-story__image"
-            sizes="100vw"
+            sizes="(max-width: 767px) 100vw, (max-width: 1280px) 100vw, 1280px"
           />
         );
 
         return (
-          <section
-            key={banner.id}
-            className="aplus-story__banner"
-            aria-label={banner.imageAlt}
-          >
+          <section key={banner.id} className="aplus-story__banner" aria-label={banner.imageAlt}>
             {banner.href ? (
               <Link href={banner.href} className="aplus-story__link">
                 {image}

@@ -168,10 +168,10 @@ const ProductCard = memo(function ProductCard({
               key={product.image}
               src={product.image}
               alt=""
-              width={640}
-              height={640}
+              width={480}
+              height={480}
               priority={eager}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes="(max-width: 767px) 50vw, (max-width: 1024px) 33vw, 360px"
               className="cat-product-card__image-photo"
               onError={() => {
                 setImageAttempt((current) => current + 1);

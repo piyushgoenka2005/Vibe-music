@@ -1,16 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import BannerImageUpload from "@/components/admin/BannerImageUpload";
-import {
-  EmptyState,
-  LoadingState,
-  StatusBadge,
-} from "@/components/admin/AdminUi";
+import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
 import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { HomepageBanner } from "@/types/banner";
 
@@ -59,13 +56,7 @@ function scheduleLabel(banner: HomepageBanner): string {
   return `${start} → ${end}`;
 }
 
-function BannersContent({
-  canWrite,
-  canDelete,
-}: {
-  canWrite: boolean;
-  canDelete: boolean;
-}) {
+function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: boolean }) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -83,7 +74,7 @@ function BannersContent({
 
   const banners = useMemo(
     () => [...(data?.banners ?? [])].sort((a, b) => a.priority - b.priority),
-    [data?.banners]
+    [data?.banners],
   );
 
   const saveMutation = useMutation({
@@ -204,20 +195,25 @@ function BannersContent({
         >
           Preview homepage
         </a>
+        <Link
+          href="/admin/homepage"
+          className="admin-btn admin-btn--secondary"
+          title="Manage Landing Page Story Banners (A+)"
+        >
+          Featured Story Banners →
+        </Link>
         {canWrite ? (
-        <button type="button" className="admin-btn admin-btn--primary" onClick={openCreate}>
-          <Plus size={16} />
-          Add Banner
-        </button>
+          <button type="button" className="admin-btn admin-btn--primary" onClick={openCreate}>
+            <Plus size={16} />
+            Add Banner
+          </button>
         ) : null}
       </div>
 
       {showForm ? (
         <div className="admin-panel" style={{ marginBottom: "1rem" }}>
           <div className="admin-panel__header">
-            <h2 className="admin-panel__title">
-              {editId ? "Edit Banner" : "New Banner"}
-            </h2>
+            <h2 className="admin-panel__title">{editId ? "Edit Banner" : "New Banner"}</h2>
           </div>
           <div className="admin-panel__body">
             {formError ? (
@@ -381,59 +377,55 @@ function BannersContent({
                     <td style={{ fontSize: 13 }}>{scheduleLabel(banner)}</td>
                     <td>{banner.priority}</td>
                     <td>
-                      <StatusBadge
-                        status={banner.status === "active" ? "active" : "archived"}
-                      />
+                      <StatusBadge status={banner.status === "active" ? "active" : "archived"} />
                     </td>
                     <td>
                       <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                         {canWrite ? (
-                        <>
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--ghost"
-                          aria-label="Move up"
-                          disabled={index === 0 || reorderMutation.isPending}
-                          onClick={() => moveBanner(banner.id, -1)}
-                        >
-                          <ArrowUp size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--ghost"
-                          aria-label="Move down"
-                          disabled={
-                            index === banners.length - 1 || reorderMutation.isPending
-                          }
-                          onClick={() => moveBanner(banner.id, 1)}
-                        >
-                          <ArrowDown size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--ghost"
-                          onClick={() => openEdit(banner)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--secondary"
-                          disabled={toggleMutation.isPending}
-                          onClick={() => toggleMutation.mutate(banner)}
-                        >
-                          {banner.status === "active" ? "Deactivate" : "Activate"}
-                        </button>
-                        </>
+                          <>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--ghost"
+                              aria-label="Move up"
+                              disabled={index === 0 || reorderMutation.isPending}
+                              onClick={() => moveBanner(banner.id, -1)}
+                            >
+                              <ArrowUp size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--ghost"
+                              aria-label="Move down"
+                              disabled={index === banners.length - 1 || reorderMutation.isPending}
+                              onClick={() => moveBanner(banner.id, 1)}
+                            >
+                              <ArrowDown size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--ghost"
+                              onClick={() => openEdit(banner)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--secondary"
+                              disabled={toggleMutation.isPending}
+                              onClick={() => toggleMutation.mutate(banner)}
+                            >
+                              {banner.status === "active" ? "Deactivate" : "Activate"}
+                            </button>
+                          </>
                         ) : null}
                         {canDelete ? (
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--danger"
-                          onClick={() => deleteMutation.mutate(banner.id)}
-                        >
-                          Delete
-                        </button>
+                          <button
+                            type="button"
+                            className="admin-btn admin-btn--danger"
+                            onClick={() => deleteMutation.mutate(banner.id)}
+                          >
+                            Delete
+                          </button>
                         ) : null}
                       </div>
                     </td>
@@ -454,8 +446,8 @@ export default function AdminBannersPage() {
       {(admin) => (
         <AdminShell admin={admin} title="Homepage Banners">
           <p className="admin-page-lead">
-            Hero carousel at the top of the storefront. Changes publish live within
-            ~30 seconds — keep the homepage open to preview without reloading.
+            Hero carousel at the top of the storefront. Changes publish live within ~30 seconds —
+            keep the homepage open to preview without reloading.
           </p>
           <BannersContent
             canWrite={admin.permissions.includes("banners:write")}

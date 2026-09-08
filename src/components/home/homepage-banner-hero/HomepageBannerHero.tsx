@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -17,8 +16,7 @@ function isSplashCovering(): boolean {
   if (typeof document === "undefined") return false;
   const root = document.documentElement;
   return (
-    root.classList.contains("vibe-splash-pending") ||
-    root.classList.contains("vibe-splash-active")
+    root.classList.contains("vibe-splash-pending") || root.classList.contains("vibe-splash-active")
   );
 }
 
@@ -40,7 +38,7 @@ export default function HomepageBannerHero({
       if (slideCount === 0) return;
       setActiveIndex(((index % slideCount) + slideCount) % slideCount);
     },
-    [slideCount]
+    [slideCount],
   );
 
   useEffect(() => {
@@ -111,7 +109,7 @@ export default function HomepageBannerHero({
         {slides.map((slide, index) => {
           const isActive = index === activeIndex;
           const hasCopy = Boolean(
-            slide.title?.trim() || slide.subtitle?.trim() || slide.ctaText?.trim()
+            slide.title?.trim() || slide.subtitle?.trim() || slide.ctaText?.trim(),
           );
           return (
             <Link
@@ -127,36 +125,28 @@ export default function HomepageBannerHero({
               }
             >
               <div className="homepage-banner-hero__media">
-                {slide.mobileSrc ? (
-                  <Image
-                    src={slide.mobileSrc}
+                <picture className="homepage-banner-hero__picture">
+                  {slide.mobileSrc ? (
+                    <source media="(max-width: 767px)" srcSet={slide.mobileSrc} />
+                  ) : null}
+                  {}
+                  <img
+                    src={slide.src}
                     alt={slide.alt}
-                    fill
-                    priority={index === 0}
                     loading={index === 0 ? "eager" : "lazy"}
-                    sizes="100vw"
-                    className="homepage-banner-hero__image homepage-banner-hero__image--mobile"
-                    style={
-                      slide.objectPosition
-                        ? { objectPosition: slide.objectPosition }
-                        : undefined
-                    }
+                    fetchPriority={index === 0 ? "high" : "auto"}
+                    decoding="async"
+                    className="homepage-banner-hero__image"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: slide.fit ?? "cover",
+                      ...(slide.objectPosition ? { objectPosition: slide.objectPosition } : {}),
+                    }}
                   />
-                ) : null}
-                <Image
-                  src={slide.src}
-                  alt={slide.alt}
-                  fill
-                  priority={index === 0}
-                  loading={index === 0 ? "eager" : "lazy"}
-                  sizes="100vw"
-                  className={`homepage-banner-hero__image${slide.mobileSrc ? " homepage-banner-hero__image--desktop" : ""}`}
-                  style={
-                    slide.objectPosition
-                      ? { objectPosition: slide.objectPosition }
-                      : undefined
-                  }
-                />
+                </picture>
               </div>
               {hasCopy ? (
                 <div className="homepage-banner-hero__copy">

@@ -18,10 +18,7 @@ import {
   listingQuickAddAriaLabel,
   shouldNavigateForVariants,
 } from "@/lib/product/listingQuickAdd";
-import {
-  BUY_NOW_CHECKOUT_HREF,
-  useBuyNowStore,
-} from "@/store/buyNowStore";
+import { BUY_NOW_CHECKOUT_HREF, useBuyNowStore } from "@/store/buyNowStore";
 import type { Product, ProductAvailability } from "@/types/product";
 
 export interface NewArrivalsProductCardProps {
@@ -56,10 +53,7 @@ function slugFromHref(href: string, fallback: string): string {
   return match?.[1] ?? fallback;
 }
 
-function isLimitedStock(
-  availability?: ProductAvailability,
-  stock?: number
-): boolean {
+function isLimitedStock(availability?: ProductAvailability, stock?: number): boolean {
   if (availability === "limited") return true;
   if (typeof stock === "number" && stock > 0 && stock <= 5) return true;
   return false;
@@ -94,24 +88,18 @@ export default function NewArrivalsProductCard({
   const displayPrice = salePrice ?? price;
   const hasPrice = isPurchasablePrice(displayPrice);
   const displayName = formatProductCardTitle(name, brand);
-  const { rating: displayRating, reviewCount: displayReviewCount } =
-    ensureProductReviewMetrics({
-      id,
-      rating,
-      reviewCount,
-    });
+  const { rating: displayRating, reviewCount: displayReviewCount } = ensureProductReviewMetrics({
+    id,
+    rating,
+    reviewCount,
+  });
   const ratingPillLabel = formatRatingPillLabel(displayRating, displayReviewCount);
   const showRating = displayReviewCount > 0;
   const productHref = resolveLinkHref(href);
   const productSlug = slug ?? slugFromHref(href, id);
   const hasRealDiscount =
-    salePrice != null &&
-    salePrice > 0 &&
-    price > salePrice &&
-    displayPrice > 0;
-  const discountPct = hasRealDiscount
-    ? Math.round(((price - salePrice) / price) * 100)
-    : null;
+    salePrice != null && salePrice > 0 && price > salePrice && displayPrice > 0;
+  const discountPct = hasRealDiscount ? Math.round(((price - salePrice) / price) * 100) : null;
   const showLimitedStock = isLimitedStock(availability, stock);
   const cartProduct: Product = {
     id,
@@ -163,37 +151,30 @@ export default function NewArrivalsProductCard({
       >
         <Link
           aria-hidden={ariaHidden || undefined}
-          aria-label={
-            imageAlt ||
-            `${brand} ${name}, ${formatDisplayPrice(price, salePrice)}`
-          }
+          aria-label={imageAlt || `${brand} ${name}, ${formatDisplayPrice(price, salePrice)}`}
           className="new-arrivals-card__link"
           tabIndex={ariaHidden ? -1 : undefined}
           href={productHref}
         >
           <div className="new-arrivals-card__media">
             {showLimitedStock ? (
-              <div
-                className="new-arrivals-card__stock-row"
-                aria-label="Limited stock"
-              >
+              <div className="new-arrivals-card__stock-row" aria-label="Limited stock">
                 <span aria-hidden className="new-arrivals-card__ribbon">
                   Limited stock
                 </span>
               </div>
             ) : null}
-            {badgeLabel ? (
-              <span className="new-arrivals-card__badge">{badgeLabel}</span>
-            ) : null}
+            {badgeLabel ? <span className="new-arrivals-card__badge">{badgeLabel}</span> : null}
             {image ? (
               <HomepageProductImage
                 className="new-arrivals-card__image"
+                decorative={ariaHidden}
                 fill
-                height={640}
+                height={480}
                 priority={!ariaHidden && imagePriority}
                 sizes="(max-width: 767px) 46vw, 360px"
                 src={image}
-                width={640}
+                width={480}
               />
             ) : (
               <div
@@ -215,9 +196,7 @@ export default function NewArrivalsProductCard({
           </div>
 
           <div className="new-arrivals-card__body">
-            {preorderLabel ? (
-              <p className="new-arrivals-card__preorder">{preorderLabel}</p>
-            ) : null}
+            {preorderLabel ? <p className="new-arrivals-card__preorder">{preorderLabel}</p> : null}
             <p className="new-arrivals-card__brand">{brand}</p>
             <h3 className="new-arrivals-card__name" title={name}>
               {displayName}
@@ -230,15 +209,15 @@ export default function NewArrivalsProductCard({
             >
               {discountPct != null ? (
                 <span className="discount-drop" aria-label={`${discountPct}% off`}>
-                  <span className="discount-drop__arrow" aria-hidden="true">↓</span>
+                  <span className="discount-drop__arrow" aria-hidden="true">
+                    ↓
+                  </span>
                   {discountPct}% off
                 </span>
               ) : null}
               <span className="new-arrivals-card__prices">
                 {hasRealDiscount ? (
-                  <span className="new-arrivals-card__was">
-                    {formatDisplayPrice(price)}
-                  </span>
+                  <span className="new-arrivals-card__was">{formatDisplayPrice(price)}</span>
                 ) : null}
                 <span
                   className={`new-arrivals-card__price${
@@ -268,10 +247,7 @@ export default function NewArrivalsProductCard({
               {requiresVariantSelection ? "Choose options" : "Buy Now"}
             </button>
           ) : ariaHidden ? (
-            <span
-              className="new-arrivals-card__buy"
-              aria-hidden="true"
-            >
+            <span className="new-arrivals-card__buy" aria-hidden="true">
               Notify Me
             </span>
           ) : (
