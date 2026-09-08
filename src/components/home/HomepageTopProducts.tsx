@@ -49,6 +49,7 @@ export function TopProductCard({ product }: { product: HomepageTopProduct }) {
               className={imageClassName}
               fill
               loading="lazy"
+              unoptimized={imageSrc.includes("cdn.vibemusic.in")}
               sizes="(max-width: 767px) 92vw, 360px"
               src={imageSrc}
               style={{

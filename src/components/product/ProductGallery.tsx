@@ -648,6 +648,7 @@ export default function ProductGallery({
                 priority={true}
                 width={1000}
                 height={1000}
+                unoptimized={activeDisplaySrc.includes("cdn.vibemusic.in")}
                 onLoad={(event) => {
                   const image = event.currentTarget;
                   setImageMetrics({

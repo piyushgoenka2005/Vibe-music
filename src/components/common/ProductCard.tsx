@@ -163,14 +163,15 @@ const ProductCard = memo(function ProductCard({
               {conditionLabel(product.condition)}
             </span>
           ) : null}
-          {product.image && !imageFailed ? (
+          {imageSrc && !imageFailed ? (
             <Image
-              key={product.image}
-              src={product.image}
+              key={imageSrc}
+              src={imageSrc}
               alt=""
               width={480}
               height={480}
               priority={eager}
+              unoptimized={imageSrc.includes("cdn.vibemusic.in")}
               sizes="(max-width: 767px) 50vw, (max-width: 1024px) 33vw, 360px"
               className="cat-product-card__image-photo"
               onError={() => {
