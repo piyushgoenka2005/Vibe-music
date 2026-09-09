@@ -12,7 +12,7 @@ import {
 export const CDN_MASTER_MAX_EDGE = 2000;
 
 /** Card / mosaic / PDP / banner widths generated at upload. */
-export const CDN_DERIVATIVE_WIDTHS = [240, 480, 960, 1600] as const;
+export const CDN_DERIVATIVE_WIDTHS = [240, 320, 480, 800, 960, 1600] as const;
 
 export type CdnDerivativeWidth = (typeof CDN_DERIVATIVE_WIDTHS)[number];
 

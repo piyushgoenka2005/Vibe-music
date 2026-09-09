@@ -1,4 +1,6 @@
-import type { CSSProperties } from "react";
+"use client";
+
+import { useState, type CSSProperties } from "react";
 
 import { cdnMasterUrl } from "@/lib/storefrontImages";
 
@@ -42,8 +44,8 @@ function productImageInlineStyle(options: {
   };
 }
 
-/** Shared thumb buckets from storefrontImages. */
-const THUMB_WIDTHS = [320, 480, 800, 960, 1600] as const;
+/** Universal thumb buckets supported across all CDN uploads. */
+const THUMB_WIDTHS = [480, 960, 1600] as const;
 
 export function generateCdnSrcSet(src: string): string | undefined {
   if (!src) return undefined;
@@ -82,7 +84,8 @@ export default function ProductImage({
   onError,
   onLoad,
 }: ProductImageProps) {
-  const srcSet = generateCdnSrcSet(src);
+  const [useSrcSet, setUseSrcSet] = useState(true);
+  const srcSet = useSrcSet ? generateCdnSrcSet(src) : undefined;
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -98,7 +101,13 @@ export default function ProductImage({
       src={src}
       srcSet={srcSet}
       width={fill ? undefined : width}
-      onError={onError}
+      onError={() => {
+        if (useSrcSet && srcSet) {
+          setUseSrcSet(false);
+          return;
+        }
+        onError?.();
+      }}
       onLoad={onLoad}
       style={productImageInlineStyle({ fill, variant })}
     />

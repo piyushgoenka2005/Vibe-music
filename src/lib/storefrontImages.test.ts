@@ -21,10 +21,10 @@ describe("storefrontImageUrl", () => {
     const webpMaster =
       "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp";
     const result = storefrontImageUrl(webpMaster, 310);
-    expect(result.src).toContain("-w320.webp");
+    expect(result.src).toContain("-w480.webp");
 
     const card = storefrontImageUrl(webpMaster, 640);
-    expect(card.src).toContain("-w800.webp");
+    expect(card.src).toContain("-w960.webp");
   });
 
   it("serves zoom panes via 1600w static CDN derivative, not runtime Sharp proxy", () => {

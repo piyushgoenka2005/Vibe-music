@@ -1,8 +1,8 @@
 import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
 
 const CDN_HOST = "cdn.vibemusic.in";
-/** Shared thumb buckets — include zoom/PDP sizes for sharp hover zoom. */
-const THUMB_WIDTHS = [320, 480, 800, 960, 1600] as const;
+/** Shared thumb buckets supported across all catalog uploads. */
+const THUMB_WIDTHS = [480, 960, 1600] as const;
 const DERIVATIVE_FILE_RE =
   /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-w(\d+)\.webp$/i;
 
