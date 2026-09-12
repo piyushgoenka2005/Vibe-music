@@ -24,6 +24,7 @@ if [[ "${SKIP_PULL:-0}" == "1" ]]; then
   echo "   (SKIP_PULL=1 — already up to date)"
 else
   git fetch origin main
+  git checkout -- package-lock.json 2>/dev/null || true
   git pull --ff-only origin main
 fi
 echo "    deploying $(git rev-parse --short HEAD) — $(git log -1 --pretty=%s)"
@@ -46,7 +47,7 @@ else
 fi
 
 echo "==> Installing dependencies"
-npm ci
+npm ci || npm install --no-audit
 
 echo "==> Database migrations"
 npm run db:migrate
