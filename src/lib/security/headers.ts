@@ -23,6 +23,9 @@ function buildContentSecurityPolicy(): string {
     "media-src 'self' blob: https://static.roland.com https://tonejs.github.io",
     "worker-src 'self' blob:",
     "frame-src 'self' https://accounts.google.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://sketchfab.com https://www.youtube.com https://www.youtube-nocookie.com",
+    "frame-ancestors 'self'",
+    "base-uri 'self'",
+    "form-action 'self' https://api.razorpay.com https://*.razorpay.com https:",
   ].join("; ");
 }
 

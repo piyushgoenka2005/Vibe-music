@@ -12,6 +12,7 @@ export interface Product {
   brandSlug: string;
   category: string;
   categorySlug: string;
+  subcategory?: string;
   price: number;
   originalPrice?: number;
   /** GST rate in percent (5, 12, 18, or 28). Defaults from category if omitted. */

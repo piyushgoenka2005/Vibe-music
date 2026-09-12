@@ -13,6 +13,7 @@ import {
 } from "@/services/orderService";
 import { useCartStore } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";
+import { normalizeIndianPhone } from "@/lib/validations/address";
 import type { ShippingMethod } from "@/lib/shipping/shippingMethods";
 import type {
   CreateOrderPayload,
@@ -143,21 +144,20 @@ export function useCheckoutPayment({
     return () => window.clearTimeout(timer);
   }, [prefetchEnabled, paymentMethod, disabled, buildPayload]);
 
-  const goToOrderConfirmation = useCallback((
-    orderId: string,
-    trackingToken?: string,
-    orderEmail?: string
-  ) => {
-    const params = new URLSearchParams({ orderId });
-    const resolvedEmail = (orderEmail ?? email).trim().toLowerCase();
-    if (resolvedEmail) {
-      params.set("email", resolvedEmail);
-    }
-    if (trackingToken) {
-      params.set("trackingToken", trackingToken);
-    }
-    router.replace(`/checkout/success?${params.toString()}`);
-  }, [email, router]);
+  const goToOrderConfirmation = useCallback(
+    (orderId: string, trackingToken?: string, orderEmail?: string) => {
+      const params = new URLSearchParams({ orderId });
+      const resolvedEmail = (orderEmail ?? email).trim().toLowerCase();
+      if (resolvedEmail) {
+        params.set("email", resolvedEmail);
+      }
+      if (trackingToken) {
+        params.set("trackingToken", trackingToken);
+      }
+      router.replace(`/checkout/success?${params.toString()}`);
+    },
+    [email, router],
+  );
 
   const pay = useCallback(async () => {
     if (disabled || isProcessing) return;
@@ -171,8 +171,7 @@ export function useCheckoutPayment({
       const payload = buildPayload();
 
       const key = orderPayloadKey(payload);
-      const prefetched =
-        prefetchRef.current?.key === key ? prefetchRef.current.promise : null;
+      const prefetched = prefetchRef.current?.key === key ? prefetchRef.current.promise : null;
       prefetchRef.current = null;
 
       const [orderResponse] = await Promise.all([
@@ -189,7 +188,7 @@ export function useCheckoutPayment({
         const demo = await completeDemoPayment(
           orderResponse.orderId,
           email,
-          orderResponse.trackingToken
+          orderResponse.trackingToken,
         );
         if (demo.order) {
           cacheOrderForConfirmation(demo.order, { checkoutMode });
@@ -200,7 +199,7 @@ export function useCheckoutPayment({
 
       if (!orderResponse.keyId?.startsWith("rzp_")) {
         throw new Error(
-          "Online payments are not configured. Add Razorpay keys to .env.local and restart the dev server."
+          "Online payments are not configured. Add Razorpay keys to .env.local and restart the dev server.",
         );
       }
 
@@ -214,6 +213,9 @@ export function useCheckoutPayment({
 
       setIsProcessing(false);
 
+      const resolvedPhone = phone || customerPhone || shippingAddress.phone;
+      const normalizedContact = resolvedPhone ? normalizeIndianPhone(resolvedPhone) : undefined;
+
       const result = await openCheckout({
         key: orderResponse.keyId,
         amount: orderResponse.amount,
@@ -222,9 +224,12 @@ export function useCheckoutPayment({
         description: "Secure payment for your order",
         order_id: orderResponse.razorpayOrderId,
         prefill: {
-          name: shippingAddress.name,
-          email,
-          contact: phone,
+          name: customerName?.trim() || shippingAddress.name?.trim() || undefined,
+          email: email.trim() || undefined,
+          contact:
+            normalizedContact && normalizedContact.length === 10
+              ? normalizedContact
+              : resolvedPhone || undefined,
         },
         notes: { orderId: orderResponse.orderId },
         theme: { color: "#1253ED" },
@@ -234,14 +239,14 @@ export function useCheckoutPayment({
       if (result.status !== "success") {
         if (trackingToken) {
           await releaseOrderReservation(orderResponse.orderId, trackingToken).catch(
-            () => undefined
+            () => undefined,
           );
         }
         showToast(
           result.status === "failed"
             ? result.message
             : "Payment cancelled or failed. Please try again.",
-          "error"
+          "error",
         );
         return;
       }
@@ -260,9 +265,7 @@ export function useCheckoutPayment({
       goToOrderConfirmation(orderResponse.orderId, trackingToken, email);
     } catch (err) {
       if (pendingOrderId && pendingTrackingToken) {
-        await releaseOrderReservation(pendingOrderId, pendingTrackingToken).catch(
-          () => undefined
-        );
+        await releaseOrderReservation(pendingOrderId, pendingTrackingToken).catch(() => undefined);
       }
       showToast(err instanceof Error ? err.message : "Payment failed", "error");
     } finally {
@@ -275,6 +278,8 @@ export function useCheckoutPayment({
     buildPayload,
     email,
     phone,
+    customerName,
+    customerPhone,
     shippingAddress,
     showToast,
     router,

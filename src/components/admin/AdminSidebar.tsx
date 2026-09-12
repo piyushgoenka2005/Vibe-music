@@ -34,6 +34,7 @@ import {
   Gift,
   GitCompare,
   Mail,
+  ListTree,
 } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
@@ -44,7 +45,18 @@ import { useAdminUiStore } from "@/store/adminUiStore";
 const NAV_ITEMS = [
   { href: ROUTES.admin, label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:read" },
   { href: ROUTES.adminProducts, label: "Products", icon: Package, permission: "products:read" },
-  { href: ROUTES.adminCategories, label: "Categories", icon: FolderTree, permission: "categories:read" },
+  {
+    href: ROUTES.adminCategories,
+    label: "Categories",
+    icon: FolderTree,
+    permission: "categories:read",
+  },
+  {
+    href: ROUTES.adminTaxonomy,
+    label: "Master Taxonomy",
+    icon: ListTree,
+    permission: "categories:read",
+  },
   { href: ROUTES.adminBrands, label: "Brands", icon: Tag, permission: "categories:read" },
   { href: ROUTES.adminOrders, label: "Orders", icon: ShoppingCart, permission: "orders:read" },
   { href: ROUTES.adminRentals, label: "Rentals", icon: KeyRound, permission: "rentals:read" },
@@ -56,12 +68,37 @@ const NAV_ITEMS = [
   { href: ROUTES.adminNewsletter, label: "Newsletter", icon: Mail, permission: "customers:read" },
   { href: ROUTES.adminCoupons, label: "Coupons", icon: Ticket, permission: "coupons:read" },
   { href: ROUTES.adminBanners, label: "Banners", icon: ImageIcon, permission: "banners:read" },
-  { href: ROUTES.adminHomepage, label: "Homepage", icon: LayoutTemplate, permission: "homepage:read" },
+  {
+    href: ROUTES.adminHomepage,
+    label: "Homepage",
+    icon: LayoutTemplate,
+    permission: "homepage:read",
+  },
   { href: ROUTES.adminReviews, label: "Reviews", icon: Star, permission: "reviews:read" },
-  { href: ROUTES.adminQuestions, label: "Q&A", icon: MessageCircleQuestion, permission: "reviews:read" },
-  { href: ROUTES.adminInventory, label: "Inventory", icon: Warehouse, permission: "inventory:read" },
-  { href: ROUTES.adminAnalytics, label: "Analytics", icon: BarChart3, permission: "analytics:read" },
-  { href: ROUTES.adminNotifications, label: "Notifications", icon: Bell, permission: "dashboard:read" },
+  {
+    href: ROUTES.adminQuestions,
+    label: "Q&A",
+    icon: MessageCircleQuestion,
+    permission: "reviews:read",
+  },
+  {
+    href: ROUTES.adminInventory,
+    label: "Inventory",
+    icon: Warehouse,
+    permission: "inventory:read",
+  },
+  {
+    href: ROUTES.adminAnalytics,
+    label: "Analytics",
+    icon: BarChart3,
+    permission: "analytics:read",
+  },
+  {
+    href: ROUTES.adminNotifications,
+    label: "Notifications",
+    icon: Bell,
+    permission: "dashboard:read",
+  },
   { href: ROUTES.adminAuditLogs, label: "Audit logs", icon: ScrollText, permission: "audit:read" },
   { href: ROUTES.adminUsers, label: "Admin users", icon: UserCog, permission: "admins:read" },
   { href: ROUTES.adminRoles, label: "Roles", icon: Shield, permission: "admins:read" },
@@ -97,11 +134,11 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
   }
 
   const visibleItems = NAV_ITEMS.filter((item) =>
-    admin.permissions.includes(item.permission as (typeof admin.permissions)[number])
+    admin.permissions.includes(item.permission as (typeof admin.permissions)[number]),
   );
 
   const showNotificationBadge = visibleItems.some(
-    (item) => item.href === ROUTES.adminNotifications
+    (item) => item.href === ROUTES.adminNotifications,
   );
 
   const { data: notificationData } = useQuery({

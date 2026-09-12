@@ -1,16 +1,9 @@
-const ANNOUNCEMENT_MESSAGE =
-  "Free shipping on all orders · Authorized brands · Secure checkout";
-
-const MARQUEE_COPIES = 8;
+const ANNOUNCEMENT_MESSAGE = "Free shipping on all orders · Authorized brands · Secure checkout";
 
 export default function AnnouncementBar() {
-  const row = Array.from({ length: MARQUEE_COPIES }, (_, index) => ({
+  const items = Array.from({ length: 4 }, (_, index) => ({
     id: `announcement-${index}`,
     text: ANNOUNCEMENT_MESSAGE,
-  }));
-  const items = [...row, ...row].map((item, index) => ({
-    ...item,
-    id: `announcement-${index}`,
   }));
 
   return (

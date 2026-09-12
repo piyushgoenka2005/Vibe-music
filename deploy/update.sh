@@ -81,6 +81,12 @@ else
 fi
 pm2 save
 
+echo "==> Purging Nginx SSR page cache"
+rm -rf /var/cache/nginx/vibe-pages/* 2>/dev/null || true
+if command -v systemctl >/dev/null 2>&1; then
+  sudo systemctl reload nginx 2>/dev/null || true
+fi
+
 echo "==> Health gate (up to 60s for cold start + first DB probe)"
 HEALTH_OK=0
 for attempt in $(seq 1 20); do

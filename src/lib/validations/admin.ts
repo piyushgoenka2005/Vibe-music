@@ -45,6 +45,7 @@ export const adminProductSchema = z.object({
   brandSlug: z.string().optional(),
   category: z.string().min(1),
   categorySlug: z.string().optional(),
+  subcategory: z.string().optional(),
   /** ₹0 allowed for Coming Soon products. */
   price: z.number().min(0),
   originalPrice: z.number().min(0).optional(),

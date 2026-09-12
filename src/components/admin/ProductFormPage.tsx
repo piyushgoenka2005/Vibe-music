@@ -32,6 +32,7 @@ const EMPTY = {
   brand: "",
   category: "",
   categorySlug: "",
+  subcategory: "",
   price: 0,
   originalPrice: 0,
   sku: "",
@@ -67,6 +68,8 @@ export default function ProductFormPage({
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategoryOptions, setSubcategoryOptions] = useState<string[]>([]);
+  const [isCustomSubcategory, setIsCustomSubcategory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(!productId);
 
@@ -78,6 +81,35 @@ export default function ProductFormPage({
   }, []);
 
   useEffect(() => {
+    const activeCategory = form.category || form.categorySlug;
+    let active = true;
+
+    if (!activeCategory) {
+      Promise.resolve().then(() => {
+        if (active) setSubcategoryOptions([]);
+      });
+      return () => {
+        active = false;
+      };
+    }
+
+    fetch(`/api/admin/taxonomy/subcategories?category=${encodeURIComponent(activeCategory)}`)
+      .then((r) => (r.ok ? r.json() : { subcategories: [] }))
+      .then((d) => {
+        if (!active || !Array.isArray(d.subcategories)) return;
+        setSubcategoryOptions(d.subcategories);
+        if (form.subcategory && !d.subcategories.includes(form.subcategory)) {
+          setIsCustomSubcategory(true);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [form.category, form.categorySlug, form.subcategory]);
+
+  useEffect(() => {
     if (!productId) return;
     fetch(`/api/admin/products/${productId}`)
       .then((r) => r.json())
@@ -86,6 +118,7 @@ export default function ProductFormPage({
           setForm({
             ...EMPTY,
             ...d.product,
+            subcategory: d.product.subcategory ?? "",
             featured: d.product.featured ?? false,
             trending: d.product.trending ?? false,
             newArrival: d.product.newArrival ?? false,
@@ -140,18 +173,16 @@ export default function ProductFormPage({
     mutationFn: async () => {
       const slug = slugify(form.slug || `${form.brand}-${form.name}`);
       const selectedCategory = categories.find(
-        (c) => c.slug === form.categorySlug || c.name === form.category
+        (c) => c.slug === form.categorySlug || c.name === form.category,
       );
       const categoryName = selectedCategory?.name ?? form.category;
-      const categorySlug =
-        selectedCategory?.slug ?? form.categorySlug ?? slugify(form.category);
+      const categorySlug = selectedCategory?.slug ?? form.categorySlug ?? slugify(form.category);
       const guitarSpecs = isGuitarProduct(categorySlug, categoryName)
-        ? Object.fromEntries(
-            Object.entries(form.guitarSpecs).filter(([, value]) => value.trim())
-          )
+        ? Object.fromEntries(Object.entries(form.guitarSpecs).filter(([, value]) => value.trim()))
         : {};
       const payload = {
         ...form,
+        subcategory: form.subcategory?.trim() || undefined,
         slug,
         category: categoryName,
         categorySlug,
@@ -162,9 +193,7 @@ export default function ProductFormPage({
         guitarSpecs,
         inTheBox: form.inTheBox.map((item) => item.trim()).filter(Boolean),
         videos: form.videos.filter((v) => v.title.trim() && v.embedUrl.trim()),
-        detailSpecs: form.detailSpecs.filter(
-          (s) => s.label.trim() && s.value.trim()
-        ),
+        detailSpecs: form.detailSpecs.filter((s) => s.label.trim() && s.value.trim()),
       };
       const url = productId ? `/api/admin/products/${productId}` : "/api/admin/products";
       const method = productId ? "PUT" : "POST";
@@ -235,45 +264,132 @@ export default function ProductFormPage({
         >
           <div className="admin-form-group">
             <label htmlFor="product-form-name">Name *</label>
-            <input id="product-form-name" className="admin-input" style={{ width: "100%" }} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            <input
+              id="product-form-name"
+              className="admin-input"
+              style={{ width: "100%" }}
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+            />
           </div>
           <div className="admin-form-group">
             <label htmlFor="product-form-slug">Slug</label>
-            <input id="product-form-slug" className="admin-input" style={{ width: "100%" }} value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+            <input
+              id="product-form-slug"
+              className="admin-input"
+              style={{ width: "100%" }}
+              value={form.slug}
+              onChange={(e) => setForm({ ...form, slug: e.target.value })}
+            />
           </div>
           <div className="admin-form-group">
             <label htmlFor="product-form-brand">Brand *</label>
-            <input id="product-form-brand" className="admin-input" style={{ width: "100%" }} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} required />
+            <input
+              id="product-form-brand"
+              className="admin-input"
+              style={{ width: "100%" }}
+              value={form.brand}
+              onChange={(e) => setForm({ ...form, brand: e.target.value })}
+              required
+            />
           </div>
           <div className="admin-form-group">
             <label htmlFor="product-form-sku">SKU</label>
-            <input id="product-form-sku" className="admin-input" style={{ width: "100%" }} value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
+            <input
+              id="product-form-sku"
+              className="admin-input"
+              style={{ width: "100%" }}
+              value={form.sku}
+              onChange={(e) => setForm({ ...form, sku: e.target.value })}
+            />
           </div>
-          <div className="admin-form-grid--pricing">
-            <div className="admin-form-group" style={{ marginBottom: 0 }}>
-              <label htmlFor="product-form-category">Category *</label>
+          <div className="admin-form-group">
+            <label htmlFor="product-form-category">Category *</label>
+            <select
+              id="product-form-category"
+              className="admin-select"
+              value={form.categorySlug}
+              onChange={(e) => {
+                const category = categories.find((c) => c.slug === e.target.value);
+                setForm({
+                  ...form,
+                  categorySlug: e.target.value,
+                  category: category?.name ?? form.category,
+                  subcategory: "",
+                });
+                setIsCustomSubcategory(false);
+              }}
+              required
+            >
+              <option value="">Select category</option>
+              {categories.map((category) => (
+                <option key={category.slug} value={category.slug}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="admin-form-group">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "0.25rem",
+              }}
+            >
+              <label htmlFor="product-form-subcategory" style={{ margin: 0 }}>
+                Subcategory
+              </label>
+              {subcategoryOptions.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setIsCustomSubcategory(!isCustomSubcategory)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--admin-primary, #6366f1)",
+                    fontSize: "0.75rem",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                    padding: 0,
+                  }}
+                >
+                  {isCustomSubcategory ? "Choose from list" : "Enter custom"}
+                </button>
+              )}
+            </div>
+            {!isCustomSubcategory && subcategoryOptions.length > 0 ? (
               <select
-                id="product-form-category"
+                id="product-form-subcategory"
                 className="admin-select"
-                value={form.categorySlug}
-                onChange={(e) => {
-                  const category = categories.find((c) => c.slug === e.target.value);
-                  setForm({
-                    ...form,
-                    categorySlug: e.target.value,
-                    category: category?.name ?? form.category,
-                  });
-                }}
-                required
+                value={form.subcategory ?? ""}
+                onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
               >
-                <option value="">Select category</option>
-                {categories.map((category) => (
-                  <option key={category.slug} value={category.slug}>
-                    {category.name}
+                <option value="">Select subcategory</option>
+                {subcategoryOptions.map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
                   </option>
                 ))}
               </select>
-            </div>
+            ) : (
+              <input
+                id="product-form-subcategory"
+                className="admin-input"
+                style={{ width: "100%" }}
+                value={form.subcategory ?? ""}
+                onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
+                placeholder={
+                  form.category
+                    ? "e.g. Electric Guitars, Bass Guitars..."
+                    : "Select a category first or enter subcategory"
+                }
+              />
+            )}
+          </div>
+          <div className="admin-form-grid--pricing" style={{ gridTemplateColumns: "1fr 1fr" }}>
             <div className="admin-form-group" style={{ marginBottom: 0 }}>
               <label htmlFor="product-form-mrp">MRP (INR)</label>
               <input
@@ -283,9 +399,7 @@ export default function ProductFormPage({
                 type="number"
                 min={0}
                 value={form.originalPrice}
-                onChange={(e) =>
-                  setForm({ ...form, originalPrice: Number(e.target.value) })
-                }
+                onChange={(e) => setForm({ ...form, originalPrice: Number(e.target.value) })}
                 placeholder="Original list price"
               />
             </div>
@@ -311,15 +425,29 @@ export default function ProductFormPage({
               color: "var(--admin-muted)",
             }}
           >
-            When MRP is higher than selling price, the storefront shows MRP struck through with the selling price.
+            When MRP is higher than selling price, the storefront shows MRP struck through with the
+            selling price.
           </p>
           <div className="admin-form-group">
             <label htmlFor="product-form-stock">Stock Quantity</label>
-            <input id="product-form-stock" className="admin-input" style={{ width: "100%" }} type="number" min={0} value={form.stockQuantity} onChange={(e) => setForm({ ...form, stockQuantity: Number(e.target.value) })} />
+            <input
+              id="product-form-stock"
+              className="admin-input"
+              style={{ width: "100%" }}
+              type="number"
+              min={0}
+              value={form.stockQuantity}
+              onChange={(e) => setForm({ ...form, stockQuantity: Number(e.target.value) })}
+            />
           </div>
           <div className="admin-form-group">
             <label htmlFor="product-form-status">Status</label>
-            <select id="product-form-status" className="admin-select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as typeof form.status })}>
+            <select
+              id="product-form-status"
+              className="admin-select"
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value as typeof form.status })}
+            >
               <option value="active">Active</option>
               <option value="draft">Draft</option>
               <option value="archived">Archived</option>
@@ -345,7 +473,14 @@ export default function ProductFormPage({
           </div>
           <div className="admin-form-group">
             <label htmlFor="product-form-gst">GST Rate (%)</label>
-            <select id="product-form-gst" className="admin-select" value={form.gstRate} onChange={(e) => setForm({ ...form, gstRate: Number(e.target.value) as typeof form.gstRate })}>
+            <select
+              id="product-form-gst"
+              className="admin-select"
+              value={form.gstRate}
+              onChange={(e) =>
+                setForm({ ...form, gstRate: Number(e.target.value) as typeof form.gstRate })
+              }
+            >
               <option value={5}>5%</option>
               <option value={12}>12%</option>
               <option value={18}>18%</option>
@@ -393,8 +528,11 @@ export default function ProductFormPage({
             <h3 className="admin-section-title" style={{ marginBottom: "0.5rem" }}>
               360° view frames
             </h3>
-            <p style={{ color: "var(--admin-muted)", marginBottom: "0.75rem", fontSize: "0.875rem" }}>
-              Upload an ordered sequence of product frames (minimum 2). Leave empty to hide the 360° viewer on the PDP.
+            <p
+              style={{ color: "var(--admin-muted)", marginBottom: "0.75rem", fontSize: "0.875rem" }}
+            >
+              Upload an ordered sequence of product frames (minimum 2). Leave empty to hide the 360°
+              viewer on the PDP.
             </p>
             <ProductImageUpload
               categorySlug={form.categorySlug}
@@ -417,9 +555,7 @@ export default function ProductFormPage({
                 productId={productId}
                 currentProductName={form.name}
                 related={form.related}
-                onChange={(related: ProductRelatedFormState) =>
-                  setForm({ ...form, related })
-                }
+                onChange={(related: ProductRelatedFormState) => setForm({ ...form, related })}
               />
               <ProductBundleEditor
                 productId={productId}
@@ -457,11 +593,22 @@ export default function ProductFormPage({
         {error ? <p className="admin-form-error">{error}</p> : null}
         <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>
           {!readOnly ? (
-            <button type="button" className="admin-btn admin-btn--primary" disabled={saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+            <button
+              type="button"
+              className="admin-btn admin-btn--primary"
+              disabled={saveMutation.isPending}
+              onClick={() => saveMutation.mutate()}
+            >
               {saveMutation.isPending ? "Saving…" : productId ? "Update Product" : "Create Product"}
             </button>
           ) : null}
-          <button type="button" className="admin-btn admin-btn--secondary" onClick={() => router.push(ROUTES.adminProducts)}>Cancel</button>
+          <button
+            type="button"
+            className="admin-btn admin-btn--secondary"
+            onClick={() => router.push(ROUTES.adminProducts)}
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>

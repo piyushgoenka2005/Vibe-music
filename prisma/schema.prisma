@@ -38,6 +38,29 @@ model Category {
   @@map("categories")
 }
 
+model CatalogTaxonomy {
+  id                    String  @id @default(cuid())
+  category              String
+  subcategory           String
+  variant               String?
+  productType           String  @map("product_type")
+  instrumentFamily      String? @map("instrument_family")
+  seoSlug               String  @map("seo_slug")
+  googleProductCategory String? @map("google_product_category")
+  menuLevel1           String? @map("menu_level_1")
+  menuLevel2           String? @map("menu_level_2")
+  menuLevel3           String? @map("menu_level_3")
+  createdAt             String? @map("created_at")
+  updatedAt             String? @map("updated_at")
+
+  @@index([category])
+  @@index([subcategory])
+  @@index([seoSlug])
+  @@index([productType])
+  @@index([menuLevel1])
+  @@map("catalog_taxonomies")
+}
+
 model Product {
   id                 String  @id
   slug               String  @unique

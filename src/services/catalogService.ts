@@ -16,7 +16,7 @@ import {
   productMatchesSearchIntent,
   searchIntentScoreBoost,
 } from "@/lib/product/productRelevance";
-import { slugify } from "@/lib/slug";
+import { normalizeProductSlug, slugify } from "@/lib/slug";
 import {
   batchDeleteProducts as fsBatchDelete,
   batchUpdateProducts as fsBatchUpdate,
@@ -62,10 +62,16 @@ import type {
   ProductStatus,
   UpdateProductInput,
 } from "@/types/catalog";
-import type { Product, ProductDetail, ProductImage, ProductSpec, ProductVideo } from "@/types/product";
+import type {
+  Product,
+  ProductDetail,
+  ProductImage,
+  ProductSpec,
+  ProductVideo,
+} from "@/types/product";
 
 async function resolveCategory(
-  categoryInput: string
+  categoryInput: string,
 ): Promise<{ name: string; slug: string } | null> {
   const categories = await fetchCategories();
   const found = findCategoryInList(categories, categoryInput);
@@ -108,7 +114,7 @@ function applyGuitarSpecifications(
   categorySlug: string,
   categoryName: string,
   specifications: Record<string, string>,
-  guitarSpecs?: Record<string, string>
+  guitarSpecs?: Record<string, string>,
 ): Record<string, string> {
   if (!isGuitarProduct(categorySlug, categoryName)) {
     return specifications;
@@ -120,9 +126,7 @@ function applyGuitarSpecifications(
 
   const merged = {
     ...specifications,
-    ...Object.fromEntries(
-      Object.entries(guitarSpecs ?? {}).filter(([, value]) => value.trim())
-    ),
+    ...Object.fromEntries(Object.entries(guitarSpecs ?? {}).filter(([, value]) => value.trim())),
   };
 
   return enrichGuitarSpecifications(name, brand, merged);
@@ -130,10 +134,10 @@ function applyGuitarSpecifications(
 
 function syncDetailSpecsFromSpecifications(
   detail: NonNullable<CatalogProduct["detail"]>,
-  specifications: Record<string, string>
+  specifications: Record<string, string>,
 ): NonNullable<CatalogProduct["detail"]> {
   const baseSpecs = detail.specs.filter(
-    (spec) => !GUITAR_SHOWCASE_FIELD_LABELS.includes(spec.label)
+    (spec) => !GUITAR_SHOWCASE_FIELD_LABELS.includes(spec.label),
   );
   const guitarSpecs = GUITAR_SHOWCASE_FIELD_LABELS.flatMap((label) => {
     const value = specifications[label]?.trim();
@@ -148,19 +152,13 @@ function syncDetailSpecsFromSpecifications(
 
 function buildDefaultDetail(
   product: CatalogProduct,
-  allProducts: CatalogProduct[]
+  allProducts: CatalogProduct[],
 ): NonNullable<CatalogProduct["detail"]> {
   const sameCategory = allProducts.filter(
-    (p) =>
-      p.categorySlug === product.categorySlug &&
-      p.id !== product.id &&
-      p.status === "active"
+    (p) => p.categorySlug === product.categorySlug && p.id !== product.id && p.status === "active",
   );
   const sameBrand = allProducts.filter(
-    (p) =>
-      p.brandSlug === product.brandSlug &&
-      p.id !== product.id &&
-      p.status === "active"
+    (p) => p.brandSlug === product.brandSlug && p.id !== product.id && p.status === "active",
   );
 
   return {
@@ -191,16 +189,13 @@ function buildDefaultDetail(
       ],
       product.sku,
       product.price,
-      product.stock
+      product.stock,
     ),
     reviews: [],
     qa: [],
     frequentlyBoughtTogether: sameCategory.slice(0, 2).map((p) => p.id),
     similarProductIds: sameCategory.slice(0, 4).map((p) => p.id),
-    relatedProductIds: [
-      ...sameBrand.slice(0, 2),
-      ...sameCategory.slice(2, 4),
-    ].map((p) => p.id),
+    relatedProductIds: [...sameBrand.slice(0, 2), ...sameCategory.slice(2, 4)].map((p) => p.id),
     spin360Images: [],
   };
 }
@@ -215,9 +210,7 @@ function isInventedInTheBox(items: string[], productName: string): boolean {
   );
 }
 
-function normalizeDetailSpecs(
-  specs: Array<{ label?: string; value?: string }>
-): ProductSpec[] {
+function normalizeDetailSpecs(specs: Array<{ label?: string; value?: string }>): ProductSpec[] {
   return specs
     .map((spec) => ({
       label: String(spec.label ?? "").trim(),
@@ -232,7 +225,7 @@ function normalizeProductVideos(
     title?: string;
     thumbnailColor?: string;
     embedUrl?: string;
-  }>
+  }>,
 ): ProductVideo[] {
   return videos
     .map((video, index) => ({
@@ -261,6 +254,7 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
     brandSlug: catalogProduct.brandSlug,
     category: catalogProduct.category,
     categorySlug: catalogProduct.categorySlug,
+    subcategory: catalogProduct.subcategory,
     price: catalogProduct.price,
     originalPrice:
       catalogProduct.originalPrice > catalogProduct.price
@@ -278,8 +272,7 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
 }
 
 export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
-  const detail =
-    catalogProduct.detail ?? buildDefaultDetail(catalogProduct, []);
+  const detail = catalogProduct.detail ?? buildDefaultDetail(catalogProduct, []);
   const rawVariants = Array.isArray(detail.variants) ? detail.variants : [];
   const variants = normalizeVariants(
     rawVariants.map((variant) => ({
@@ -290,7 +283,7 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
     })),
     catalogProduct.sku,
     catalogProduct.price,
-    catalogProduct.stock
+    catalogProduct.stock,
   );
 
   const rawGallery =
@@ -305,7 +298,13 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
 
   const gallery: ProductImage[] = rawGallery
     .map((img: unknown, index: number) => {
-      const candidate = img as { id?: string; alt?: string; color?: string; src?: unknown; url?: unknown };
+      const candidate = img as {
+        id?: string;
+        alt?: string;
+        color?: string;
+        src?: unknown;
+        url?: unknown;
+      };
       const rawSrc =
         typeof candidate === "string"
           ? candidate
@@ -341,7 +340,7 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
     description: catalogProduct.description,
     specs: mergeProductSpecs(
       Array.isArray(detail.specs) ? detail.specs : [],
-      catalogProduct.specifications
+      catalogProduct.specifications,
     ),
     inTheBox: (() => {
       const items = Array.isArray(detail.inTheBox) ? detail.inTheBox : [];
@@ -355,39 +354,27 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
     frequentlyBoughtTogether: Array.isArray(detail.frequentlyBoughtTogether)
       ? detail.frequentlyBoughtTogether
       : [],
-    similarProductIds: Array.isArray(detail.similarProductIds)
-      ? detail.similarProductIds
-      : [],
-    relatedProductIds: Array.isArray(detail.relatedProductIds)
-      ? detail.relatedProductIds
-      : [],
+    similarProductIds: Array.isArray(detail.similarProductIds) ? detail.similarProductIds : [],
+    relatedProductIds: Array.isArray(detail.relatedProductIds) ? detail.relatedProductIds : [],
     spin360Images: Array.isArray(detail.spin360Images)
       ? detail.spin360Images.filter(
-          (src): src is string => typeof src === "string" && src.length > 0
+          (src): src is string => typeof src === "string" && src.length > 0,
         )
       : [],
   };
 }
 
-export async function getAllProducts(
-  includeInactive = false
-): Promise<CatalogProduct[]> {
+export async function getAllProducts(includeInactive = false): Promise<CatalogProduct[]> {
   return getCachedProducts(includeInactive);
 }
 
-async function loadLocalCatalogSnapshot(
-  includeInactive = false
-): Promise<CatalogProduct[]> {
+async function loadLocalCatalogSnapshot(includeInactive = false): Promise<CatalogProduct[]> {
   const { loadProducts } = await import("@/lib/server/catalogRepository");
   const products = loadProducts();
-  return includeInactive
-    ? products
-    : products.filter((product) => product.status === "active");
+  return includeInactive ? products : products.filter((product) => product.status === "active");
 }
 
-async function fetchCatalogSnapshot(
-  includeInactive = false
-): Promise<CatalogProduct[]> {
+async function fetchCatalogSnapshot(includeInactive = false): Promise<CatalogProduct[]> {
   if (isCatalogUnavailable()) {
     return loadLocalCatalogSnapshot(includeInactive);
   }
@@ -407,7 +394,7 @@ async function fetchCatalogSnapshot(
 
 export function searchInCatalogProducts(
   initialSource: CatalogProduct[],
-  options: ProductSearchOptions = {}
+  options: ProductSearchOptions = {},
 ): Product[] {
   let source = initialSource;
 
@@ -421,18 +408,13 @@ export function searchInCatalogProducts(
     source = source.filter(
       (product) =>
         product.categorySlug === resolvedSlug ||
-        normalizeCategorySlug(product.category) === resolvedSlug
+        normalizeCategorySlug(product.category) === resolvedSlug,
     );
 
     // Keep guitar amps / multi-effects off the main Guitars PLP — they belong
     // under Amplifiers / Effects browse paths (`?category=guitars&subcategory=…`).
-    if (
-      resolvedSlug === "guitars" &&
-      !subcategoryRequestsGuitarAccessories(options.subcategory)
-    ) {
-      source = source.filter(
-        (product) => !isNonInstrumentGuitarProduct(product)
-      );
+    if (resolvedSlug === "guitars" && !subcategoryRequestsGuitarAccessories(options.subcategory)) {
+      source = source.filter((product) => !isNonInstrumentGuitarProduct(product));
     }
   }
 
@@ -478,23 +460,18 @@ export function searchInCatalogProducts(
         const discounted = source.filter(
           (product) =>
             product.discountPercentage > 0 ||
-            (product.detail?.salePrice != null &&
-              product.detail.salePrice < product.price)
+            (product.detail?.salePrice != null && product.detail.salePrice < product.price),
         );
         source =
           discounted.length > 0
-            ? discounted.sort(
-                (a, b) => b.discountPercentage - a.discountPercentage
-              )
+            ? discounted.sort((a, b) => b.discountPercentage - a.discountPercentage)
             : sortByPopularity(source);
       }
     } else {
       const tokens = normalized.split(/\s+/).filter(Boolean);
       const intent = detectSearchInstrumentIntent(normalized);
       if (intent) {
-        source = source.filter((product) =>
-          productMatchesSearchIntent(product, intent)
-        );
+        source = source.filter((product) => productMatchesSearchIntent(product, intent));
       }
 
       source = source
@@ -511,9 +488,7 @@ export function searchInCatalogProducts(
       // Multi-word queries must match every token (e.g. brand + model), not
       // just one shared word like "guitar".
       if (!intent && tokens.length >= 2) {
-        source = source.filter((product) =>
-          productMatchesAllSearchTokens(product, tokens)
-        );
+        source = source.filter((product) => productMatchesAllSearchTokens(product, tokens));
       }
 
       // "guitar" should surface instruments — not guitar amplifiers / multi-effects
@@ -524,9 +499,7 @@ export function searchInCatalogProducts(
         !queryRequestsGuitarAccessories(normalized) &&
         intent !== "amplifier"
       ) {
-        source = source.filter(
-          (product) => !isNonInstrumentGuitarProduct(product)
-        );
+        source = source.filter((product) => !isNonInstrumentGuitarProduct(product));
       }
     }
   }
@@ -535,8 +508,7 @@ export function searchInCatalogProducts(
     const brand = options.brand.toLowerCase();
     source = source.filter(
       (product) =>
-        product.brandSlug === brand ||
-        product.brand.toLowerCase().replace(/\s+/g, "-") === brand
+        product.brandSlug === brand || product.brand.toLowerCase().replace(/\s+/g, "-") === brand,
     );
   }
 
@@ -558,8 +530,7 @@ export function searchInCatalogProducts(
   } else if (!options.query) {
     // Keep relevance ordering for text queries; sort by newest otherwise.
     source = [...source].sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }
 
@@ -570,39 +541,52 @@ export function searchInCatalogProducts(
   return products;
 }
 
-export async function getProductById(
-  id: string
-): Promise<CatalogProduct | undefined> {
+export async function getProductById(id: string): Promise<CatalogProduct | undefined> {
   const product = await fetchProductById(id);
   return product ?? undefined;
 }
 
-export async function getCatalogProductBySlug(
-  slug: string
-): Promise<CatalogProduct | undefined> {
+export async function getCatalogProductBySlug(slug: string): Promise<CatalogProduct | undefined> {
   const product = await fetchProductBySlug(slug);
   return product ?? undefined;
 }
 
-export async function getProductBySlug(
-  slug: string
-): Promise<Product | undefined> {
+export async function getProductBySlug(slug: string): Promise<Product | undefined> {
   const product = await getCatalogProductBySlug(slug);
   if (!product || product.status !== "active") return undefined;
   return toProduct(product);
 }
 
-export async function getProductDetailBySlug(
-  slug: string
-): Promise<ProductDetail | undefined> {
+export async function getProductDetailBySlug(slug: string): Promise<ProductDetail | undefined> {
   const product = await getCatalogProductBySlug(slug);
   if (!product || product.status !== "active") return undefined;
   return toProductDetail(product);
 }
 
-export async function getProductsByCategory(
-  categorySlug: string
-): Promise<Product[]> {
+export async function resolveCanonicalProductSlug(slug: string): Promise<string | null> {
+  const normalized = normalizeProductSlug(slug);
+  if (!normalized) return null;
+
+  const direct = await getCatalogProductBySlug(normalized);
+  if (direct && direct.status === "active") return direct.slug;
+
+  const clean = normalized.replace(/^-+|-+$/g, "");
+  if (!clean) return null;
+
+  const products = await fetchCatalogSnapshot();
+  const match = products.find(
+    (p) =>
+      p.status === "active" &&
+      (p.slug === clean ||
+        p.slug.endsWith(`-${clean}`) ||
+        p.slug.includes(clean) ||
+        clean.includes(p.slug)),
+  );
+
+  return match?.slug ?? null;
+}
+
+export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
   const categories = await fetchCategories();
   const category = findCategoryInList(categories, categorySlug);
   const resolvedSlug = category?.slug ?? normalizeCategorySlug(categorySlug);
@@ -615,7 +599,7 @@ function sortByPopularity(products: CatalogProduct[]): CatalogProduct[] {
     (a, b) =>
       b.reviewCount - a.reviewCount ||
       b.rating - a.rating ||
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 }
 
@@ -646,13 +630,8 @@ export async function getNewArrivals(): Promise<Product[]> {
   return products.filter((p) => p.newArrival).map(toProduct);
 }
 
-export async function getRelatedProducts(
-  slug: string,
-  limit = 8
-): Promise<Product[]> {
-  const { resolveRelatedProductsBySlug } = await import(
-    "@/lib/server/relatedProductsService"
-  );
+export async function getRelatedProducts(slug: string, limit = 8): Promise<Product[]> {
+  const { resolveRelatedProductsBySlug } = await import("@/lib/server/relatedProductsService");
   const resolved = await resolveRelatedProductsBySlug(slug, limit);
   return resolved.products;
 }
@@ -721,17 +700,11 @@ function queryRequestsGuitarAccessories(query: string): boolean {
 /** True when the query includes a guitar token (e.g. "guitar", "guitars"). */
 function queryLooksLikeGuitarSearch(tokens: string[]): boolean {
   return tokens.some((token) =>
-    expandSearchToken(token).some(
-      (variant) => variant === "guitar" || variant === "guitars"
-    )
+    expandSearchToken(token).some((variant) => variant === "guitar" || variant === "guitars"),
   );
 }
 
-function scoreProductMatch(
-  product: CatalogProduct,
-  tokens: string[],
-  rawQuery = ""
-): number {
+function scoreProductMatch(product: CatalogProduct, tokens: string[], rawQuery = ""): number {
   if (tokens.length === 0) return 0;
 
   const name = product.name.toLowerCase();
@@ -780,10 +753,7 @@ function scoreProductMatch(
   return score;
 }
 
-function productMatchesAllSearchTokens(
-  product: CatalogProduct,
-  tokens: string[]
-): boolean {
+function productMatchesAllSearchTokens(product: CatalogProduct, tokens: string[]): boolean {
   const name = product.name.toLowerCase();
   const brand = product.brand.toLowerCase();
   const category = product.category.toLowerCase();
@@ -799,13 +769,11 @@ function productMatchesAllSearchTokens(
       fieldIncludes(brand, token) ||
       fieldIncludes(category, token) ||
       fieldIncludes(subcategory, token) ||
-      fieldIncludes(slug, token)
+      fieldIncludes(slug, token),
   );
 }
 
-export async function searchProducts(
-  options: ProductSearchOptions = {}
-): Promise<Product[]> {
+export async function searchProducts(options: ProductSearchOptions = {}): Promise<Product[]> {
   const source = await fetchCatalogSnapshot(options.includeInactive ?? false);
   return searchInCatalogProducts(source, options);
 }
@@ -821,10 +789,7 @@ export async function getCategories(): Promise<Category[]> {
 
   for (const product of products) {
     if (product.status !== "active") continue;
-    countBySlug.set(
-      product.categorySlug,
-      (countBySlug.get(product.categorySlug) ?? 0) + 1
-    );
+    countBySlug.set(product.categorySlug, (countBySlug.get(product.categorySlug) ?? 0) + 1);
   }
 
   return categories.map((category) => ({
@@ -833,9 +798,7 @@ export async function getCategories(): Promise<Category[]> {
   }));
 }
 
-export async function getCategoryBySlug(
-  slug: string
-): Promise<Category | undefined> {
+export async function getCategoryBySlug(slug: string): Promise<Category | undefined> {
   const categories = await fetchCategories();
   return findCategoryInList(categories, slug);
 }
@@ -850,28 +813,20 @@ export async function getAllProductSlugs(): Promise<string[]> {
   return products.map((p) => p.slug);
 }
 
-export async function createProduct(
-  input: CreateProductInput
-): Promise<CatalogProduct> {
+export async function createProduct(input: CreateProductInput): Promise<CatalogProduct> {
   const { slugs, skus } = await fetchExistingSlugsAndSkus();
   const category = await resolveCategory(input.categorySlug ?? input.category);
   if (!category) {
     throw new Error(`Category "${input.category}" not found`);
   }
 
-  const slug = uniqueSlug(
-    slugify(input.slug ?? `${input.brand}-${input.name}`),
-    slugs
-  );
+  const slug = uniqueSlug(slugify(input.slug ?? `${input.brand}-${input.name}`), slugs);
   const sku = input.sku && !skus.has(input.sku) ? input.sku : uniqueSku(skus);
   const brandSlug = input.brandSlug ?? slugify(input.brand);
   const now = new Date().toISOString();
   const stock = input.stock ?? 100;
   const originalPrice = input.originalPrice ?? input.price;
-  const primaryImage =
-    input.image ??
-    input.images?.[0] ??
-    getProductImage(slug, category.name);
+  const primaryImage = input.image ?? input.images?.[0] ?? getProductImage(slug, category.name);
 
   const baseSpecifications = input.specifications ?? {
     Manufacturer: input.brand,
@@ -884,7 +839,7 @@ export async function createProduct(
     category.slug,
     category.name,
     baseSpecifications,
-    input.guitarSpecs
+    input.guitarSpecs,
   );
 
   const product: CatalogProduct = {
@@ -930,7 +885,7 @@ export async function createProduct(
     product.detail = {
       ...product.detail,
       spin360Images: input.spin360Images.filter(
-        (src): src is string => typeof src === "string" && src.length > 0
+        (src): src is string => typeof src === "string" && src.length > 0,
       ),
     };
   }
@@ -958,9 +913,7 @@ export async function createProduct(
 
   if (input.variants?.length) {
     const existingSkus = await fetchAllVariantSkus();
-    return writeProduct(
-      applyVariantsToProduct(product, input.variants, existingSkus)
-    );
+    return writeProduct(applyVariantsToProduct(product, input.variants, existingSkus));
   }
 
   return writeProduct(product);
@@ -968,7 +921,7 @@ export async function createProduct(
 
 export async function updateProduct(
   id: string,
-  patch: UpdateProductInput
+  patch: UpdateProductInput,
 ): Promise<CatalogProduct> {
   const current = await fetchProductById(id);
   if (!current) throw new Error("Product not found");
@@ -1005,7 +958,7 @@ export async function updateProduct(
       ...current.specifications,
       ...(patch.specifications ?? {}),
     },
-    patch.guitarSpecs
+    patch.guitarSpecs,
   );
 
   const updated: CatalogProduct = {
@@ -1019,9 +972,7 @@ export async function updateProduct(
     originalPrice,
     discountPercentage: computeDiscount(price, originalPrice),
     availability: patch.availability ?? stockToAvailability(stock),
-    brandSlug:
-      patch.brandSlug ??
-      (patch.brand ? slugify(patch.brand) : current.brandSlug),
+    brandSlug: patch.brandSlug ?? (patch.brand ? slugify(patch.brand) : current.brandSlug),
     specifications: nextSpecifications,
     updatedAt: now,
   };
@@ -1041,7 +992,7 @@ export async function updateProduct(
   const all = await fetchAllProductsFromDb(true);
   const preservedDetail = syncDetailSpecsFromSpecifications(
     current.detail ?? buildDefaultDetail({ ...current, specifications: nextSpecifications }, all),
-    nextSpecifications
+    nextSpecifications,
   );
 
   if (patch.variants) {
@@ -1049,10 +1000,10 @@ export async function updateProduct(
     updated.detail = applyVariantsToProduct(
       { ...updated, detail: preservedDetail },
       patch.variants,
-      existingSkus
+      existingSkus,
     ).detail;
     const aggregates = syncProductAggregatesFromVariants(
-      getVariantsFromProduct({ ...updated, detail: updated.detail })
+      getVariantsFromProduct({ ...updated, detail: updated.detail }),
     );
     updated.price = aggregates.price;
     updated.stock = aggregates.stock;
@@ -1083,8 +1034,7 @@ export async function updateProduct(
       msrp: originalPrice > price ? originalPrice : null,
       salePrice: originalPrice > price ? price : null,
     };
-    updated.availability =
-      syncProductAggregatesFromVariants(syncedVariants).availability;
+    updated.availability = syncProductAggregatesFromVariants(syncedVariants).availability;
   } else {
     updated.detail = {
       ...preservedDetail,
@@ -1099,7 +1049,7 @@ export async function updateProduct(
       ...(updated.detail ?? preservedDetail),
       specs: mergeProductSpecs(
         updated.detail?.specs ?? preservedDetail.specs,
-        updated.specifications
+        updated.specifications,
       ),
     };
   }
@@ -1108,7 +1058,7 @@ export async function updateProduct(
     updated.detail = {
       ...(updated.detail ?? preservedDetail),
       spin360Images: patch.spin360Images.filter(
-        (src): src is string => typeof src === "string" && src.length > 0
+        (src): src is string => typeof src === "string" && src.length > 0,
       ),
     };
   }
@@ -1141,36 +1091,25 @@ export async function deleteProduct(id: string): Promise<void> {
   await removeProduct(id);
 }
 
-export async function bulkDeleteProducts(
-  ids: string[]
-): Promise<BulkDeleteResult> {
+export async function bulkDeleteProducts(ids: string[]): Promise<BulkDeleteResult> {
   const deleted = await fsBatchDelete(ids);
   return { deleted };
 }
 
-export async function bulkArchiveProducts(
-  ids: string[]
-): Promise<BulkStatusResult> {
+export async function bulkArchiveProducts(ids: string[]): Promise<BulkStatusResult> {
   return bulkSetStatus(ids, "archived");
 }
 
-export async function bulkActivateProducts(
-  ids: string[]
-): Promise<BulkStatusResult> {
+export async function bulkActivateProducts(ids: string[]): Promise<BulkStatusResult> {
   return bulkSetStatus(ids, "active");
 }
 
-async function bulkSetStatus(
-  ids: string[],
-  status: ProductStatus
-): Promise<BulkStatusResult> {
+async function bulkSetStatus(ids: string[], status: ProductStatus): Promise<BulkStatusResult> {
   const updated = await fsBatchUpdate(ids, { status });
   return { updated };
 }
 
-export async function bulkUpdateStock(
-  updates: BulkStockUpdate[]
-): Promise<BulkStatusResult> {
+export async function bulkUpdateStock(updates: BulkStockUpdate[]): Promise<BulkStatusResult> {
   let count = 0;
   for (const { id, stock } of updates) {
     await updateProduct(id, { stock });
@@ -1179,9 +1118,7 @@ export async function bulkUpdateStock(
   return { updated: count };
 }
 
-export async function bulkUpdateCategory(
-  updates: BulkCategoryUpdate[]
-): Promise<BulkStatusResult> {
+export async function bulkUpdateCategory(updates: BulkCategoryUpdate[]): Promise<BulkStatusResult> {
   let count = 0;
   for (const { id, category, categorySlug } of updates) {
     await updateProduct(id, { category, categorySlug });
@@ -1195,9 +1132,7 @@ function parseBool(value: string | undefined): boolean {
   return ["true", "1", "yes", "y"].includes(value.trim().toLowerCase());
 }
 
-export async function previewBulkImport(
-  rows: BulkImportRow[]
-): Promise<BulkImportPreviewRow[]> {
+export async function previewBulkImport(rows: BulkImportRow[]): Promise<BulkImportPreviewRow[]> {
   const { slugs, skus } = await fetchExistingSlugsAndSkus();
   const previewSlugs = new Set<string>();
   const previewSkus = new Set<string>();
@@ -1210,17 +1145,11 @@ export async function previewBulkImport(
       if (!row.name?.trim()) errors.push("Name is required");
       if (!row.brand?.trim()) errors.push("Brand is required");
       if (!row.category?.trim()) errors.push("Category is required");
-      if (
-        row.price == null ||
-        Number.isNaN(Number(row.price)) ||
-        Number(row.price) <= 0
-      ) {
+      if (row.price == null || Number.isNaN(Number(row.price)) || Number(row.price) <= 0) {
         errors.push("Valid price is required");
       }
 
-      const category = row.category?.trim()
-        ? await resolveCategory(row.category.trim())
-        : null;
+      const category = row.category?.trim() ? await resolveCategory(row.category.trim()) : null;
       if (row.category?.trim() && !category) {
         errors.push(`Category "${row.category}" not found`);
       }
@@ -1241,13 +1170,9 @@ export async function previewBulkImport(
       }
       previewSkus.add(generatedSku);
 
-      const imageRefs = [
-        row.image1,
-        row.image2,
-        row.image3,
-        row.image4,
-        row.image5,
-      ].filter(Boolean) as string[];
+      const imageRefs = [row.image1, row.image2, row.image3, row.image4, row.image5].filter(
+        Boolean,
+      ) as string[];
 
       const isUrl = (v: string) =>
         v.startsWith("http://") || v.startsWith("https://") || v.startsWith("/");
@@ -1270,13 +1195,11 @@ export async function previewBulkImport(
         generatedSlug,
         generatedSku,
       };
-    })
+    }),
   );
 }
 
-export async function bulkImportProducts(
-  rows: BulkImportRow[]
-): Promise<BulkImportResult> {
+export async function bulkImportProducts(rows: BulkImportRow[]): Promise<BulkImportResult> {
   const preview = await previewBulkImport(rows);
   const validRows = preview.filter((r) => r.valid);
   const failedRows = preview
@@ -1288,8 +1211,8 @@ export async function bulkImportProducts(
   for (const row of validRows) {
     const images =
       row.resolvedImages ??
-      [row.image1, row.image2, row.image3, row.image4, row.image5].filter(
-        (img): img is string => Boolean(img?.trim())
+      [row.image1, row.image2, row.image3, row.image4, row.image5].filter((img): img is string =>
+        Boolean(img?.trim()),
       );
 
     const product = await createProduct({

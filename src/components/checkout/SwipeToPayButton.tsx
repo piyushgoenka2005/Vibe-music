@@ -30,7 +30,7 @@ interface SwipeToPayButtonProps {
 
 const HANDLE_INSET = 5;
 const HANDLE_SIZE = 54;
-const DRAG_THRESHOLD = 0.88;
+const DRAG_THRESHOLD = 0.45;
 
 const SPRING = {
   type: "spring" as const,
@@ -54,6 +54,7 @@ export default function SwipeToPayButton({
   const [isSwiping, setIsSwiping] = useState(false);
   const [completed, setCompleted] = useState(false);
   const wasLoadingRef = useRef(false);
+  const dragMovedRef = useRef(false);
   const maxDragRef = useRef(0);
   const metricsRef = useRef({
     inset: HANDLE_INSET,
@@ -88,7 +89,8 @@ export default function SwipeToPayButton({
     const track = trackRef.current;
     if (!track) return 0;
     const styles = getComputedStyle(track);
-    const inset = Number.parseFloat(styles.getPropertyValue("--swipe-handle-inset")) || HANDLE_INSET;
+    const inset =
+      Number.parseFloat(styles.getPropertyValue("--swipe-handle-inset")) || HANDLE_INSET;
     const handleSize =
       Number.parseFloat(styles.getPropertyValue("--swipe-handle-size")) || HANDLE_SIZE;
     const next = Math.max(track.clientWidth - handleSize - inset * 2, 0);
@@ -153,18 +155,34 @@ export default function SwipeToPayButton({
     }
   }, [completed, dragX, isLocked, measureMaxDrag, onConfirm]);
 
+  const triggerSlideAndConfirm = useCallback(async () => {
+    if (completed || isLocked) return;
+    const endX = measureMaxDrag();
+    setIsSwiping(true);
+    animate(dragX, endX, {
+      ...SPRING,
+      onComplete: () => {
+        void finishSwipe();
+      },
+    });
+  }, [completed, dragX, finishSwipe, isLocked, measureMaxDrag]);
+
   const handleDragStart = useCallback(() => {
     if (isLocked || completed) return;
+    dragMovedRef.current = false;
     setIsDragging(true);
   }, [completed, isLocked]);
 
   const handleDrag = useCallback(
     (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       if (isLocked || completed) return;
+      if (Math.abs(info.offset.x) > 6) {
+        dragMovedRef.current = true;
+      }
       const right = measureMaxDrag();
       dragX.set(Math.max(0, Math.min(info.offset.x, right)));
     },
-    [completed, dragX, isLocked, measureMaxDrag]
+    [completed, dragX, isLocked, measureMaxDrag],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -175,15 +193,21 @@ export default function SwipeToPayButton({
     const progress = right > 0 ? dragX.get() / right : 0;
 
     if (progress >= DRAG_THRESHOLD) {
-      void finishSwipe();
+      void triggerSlideAndConfirm();
+      return;
+    }
+
+    if (!dragMovedRef.current) {
+      // Direct tap/click without drag
+      void triggerSlideAndConfirm();
       return;
     }
 
     void animate(dragX, 0, SPRING);
-  }, [completed, dragX, finishSwipe, measureMaxDrag]);
+  }, [completed, dragX, measureMaxDrag, triggerSlideAndConfirm]);
 
   const displayLabel = loading
-    ? loadingLabel ?? "Opening Razorpay…"
+    ? (loadingLabel ?? "Opening Razorpay…")
     : preparing
       ? "Preparing secure checkout…"
       : completed
@@ -198,16 +222,21 @@ export default function SwipeToPayButton({
       if (isLocked || completed) return;
       dragControls.start(event);
     },
-    [completed, dragControls, isLocked]
+    [completed, dragControls, isLocked],
   );
 
-  const showIdleMotion =
-    !disabled && !showDeepBlue && !isDragging && dragX.get() < 4;
+  const handleTrackClick = useCallback(() => {
+    if (isLocked || completed || isDragging) return;
+    void triggerSlideAndConfirm();
+  }, [completed, isDragging, isLocked, triggerSlideAndConfirm]);
+
+  const showIdleMotion = !disabled && !showDeepBlue && !isDragging && dragX.get() < 4;
 
   return (
     <div className="checkout-swipe">
       <motion.div
         ref={trackRef}
+        onClick={handleTrackClick}
         className={[
           "checkout-swipe__track",
           disabled && !isProcessing && "checkout-swipe__track--disabled",
@@ -220,9 +249,7 @@ export default function SwipeToPayButton({
           .filter(Boolean)
           .join(" ")}
       >
-        {!isActive && !showDeepBlue && (
-          <GlassSurface tint="rgba(244, 247, 254, 0.45)" />
-        )}
+        {!isActive && !showDeepBlue && <GlassSurface tint="rgba(244, 247, 254, 0.45)" />}
         <AnimatePresence initial={false}>
           {!showDeepBlue ? (
             <motion.div
@@ -247,18 +274,13 @@ export default function SwipeToPayButton({
             </motion.div>
           )}
         </AnimatePresence>
-        {!isActive && !showDeepBlue && (
-          <div className="checkout-swipe__specular" aria-hidden />
-        )}
+        {!isActive && !showDeepBlue && <div className="checkout-swipe__specular" aria-hidden />}
 
         <AnimatePresence mode="wait">
           {!showDeepBlue ? (
             <motion.span
               key="label"
-              className={[
-                "checkout-swipe__label",
-                isActive && "checkout-swipe__label--swiping",
-              ]
+              className={["checkout-swipe__label", isActive && "checkout-swipe__label--swiping"]
                 .filter(Boolean)
                 .join(" ")}
               style={{ opacity: isActive ? 1 : labelOpacity }}
@@ -308,6 +330,12 @@ export default function SwipeToPayButton({
                 disabled={isLocked}
                 aria-label={displayLabel}
                 onPointerDown={handlePointerDown}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (isLocked || completed) return;
+                  if (dragMovedRef.current) return;
+                  void triggerSlideAndConfirm();
+                }}
               >
                 <span className="checkout-swipe__handle-ring" aria-hidden />
                 <span className="checkout-swipe__handle-core">
@@ -346,9 +374,7 @@ export default function SwipeToPayButton({
 
       <p className="checkout-swipe__hint">
         <ShieldCheck size={13} strokeWidth={2.25} aria-hidden />
-        {loading
-          ? "Redirecting to Razorpay secure gateway"
-          : "Slide right to confirm your payment"}
+        {loading ? "Redirecting to Razorpay secure gateway…" : "Slide right or tap to pay securely"}
       </p>
     </div>
   );

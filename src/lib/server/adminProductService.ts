@@ -73,8 +73,7 @@ function toAdminProduct(catalog: CatalogProduct): AdminProduct {
     sku: catalog.sku,
     status: catalog.status,
     originalPrice: catalog.originalPrice,
-    salePrice:
-      catalog.originalPrice > catalog.price ? catalog.price : null,
+    salePrice: catalog.originalPrice > catalog.price ? catalog.price : null,
     stockQuantity: catalog.stock,
     lowStockThreshold: catalog.lowStockThreshold ?? 10,
     description: catalog.description,
@@ -93,14 +92,16 @@ function toAdminProduct(catalog: CatalogProduct): AdminProduct {
   };
 }
 
-export async function listAdminProducts(options: {
-  search?: string;
-  status?: string;
-  category?: string;
-  limit?: number;
-  offset?: number;
-  cursor?: string;
-} = {}): Promise<{
+export async function listAdminProducts(
+  options: {
+    search?: string;
+    status?: string;
+    category?: string;
+    limit?: number;
+    offset?: number;
+    cursor?: string;
+  } = {},
+): Promise<{
   products: AdminProduct[];
   total: number;
   hasMore: boolean;
@@ -115,7 +116,7 @@ export async function listAdminProducts(options: {
         p.name.toLowerCase().includes(q) ||
         p.brand.toLowerCase().includes(q) ||
         p.slug.toLowerCase().includes(q) ||
-        (p.sku?.toLowerCase().includes(q) ?? false)
+        (p.sku?.toLowerCase().includes(q) ?? false),
     );
   }
 
@@ -125,15 +126,12 @@ export async function listAdminProducts(options: {
 
   if (options.category) {
     products = products.filter(
-      (p) =>
-        p.categorySlug === options.category || p.category === options.category
+      (p) => p.categorySlug === options.category || p.category === options.category,
     );
   }
 
   products.sort(
-    (a, b) =>
-      new Date(b.createdAt ?? 0).getTime() -
-      new Date(a.createdAt ?? 0).getTime()
+    (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
   );
 
   const total = products.length;
@@ -170,11 +168,13 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
 }
 
 /** All matching admin products (no pagination) for CSV export. */
-export async function listAdminProductsForExport(options: {
-  search?: string;
-  status?: string;
-  category?: string;
-} = {}): Promise<AdminProduct[]> {
+export async function listAdminProductsForExport(
+  options: {
+    search?: string;
+    status?: string;
+    category?: string;
+  } = {},
+): Promise<AdminProduct[]> {
   const result = await listAdminProducts({
     ...options,
     limit: Number.MAX_SAFE_INTEGER,
@@ -217,7 +217,7 @@ const EXPORT_BASE_HEADERS = [
 
 function filterCatalogForExport(
   products: CatalogProduct[],
-  options: { search?: string; status?: string; category?: string }
+  options: { search?: string; status?: string; category?: string },
 ): CatalogProduct[] {
   let filtered = products;
 
@@ -228,7 +228,7 @@ function filterCatalogForExport(
         p.name.toLowerCase().includes(q) ||
         p.brand.toLowerCase().includes(q) ||
         p.slug.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q)
+        p.sku.toLowerCase().includes(q),
     );
   }
 
@@ -238,35 +238,27 @@ function filterCatalogForExport(
 
   if (options.category) {
     filtered = filtered.filter(
-      (p) =>
-        p.categorySlug === options.category || p.category === options.category
+      (p) => p.categorySlug === options.category || p.category === options.category,
     );
   }
 
-  return filtered.sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 /**
  * CSV of full product details. Image files are not bundled — CDN/public URLs
  * are written as image1…imageN (at least image1–image5 for import compatibility).
  */
-export async function buildAdminProductsExportCsv(options: {
-  search?: string;
-  status?: string;
-  category?: string;
-} = {}): Promise<string> {
+export async function buildAdminProductsExportCsv(
+  options: {
+    search?: string;
+    status?: string;
+    category?: string;
+  } = {},
+): Promise<string> {
   const products = filterCatalogForExport(await fetchAllProducts(true), options);
-  const maxImages = Math.max(
-    5,
-    ...products.map((product) => product.images?.length ?? 0)
-  );
-  const imageHeaders = Array.from(
-    { length: maxImages },
-    (_, index) => `image${index + 1}`
-  );
+  const maxImages = Math.max(5, ...products.map((product) => product.images?.length ?? 0));
+  const imageHeaders = Array.from({ length: maxImages }, (_, index) => `image${index + 1}`);
   const headers = [...EXPORT_BASE_HEADERS, ...imageHeaders];
 
   const rows: ParsedCsvRow[] = products.map((product) => {
@@ -284,10 +276,7 @@ export async function buildAdminProductsExportCsv(options: {
       originalPrice: String(product.originalPrice ?? ""),
       gstRate: product.gstRate != null ? String(product.gstRate) : "",
       stock: String(product.stock ?? ""),
-      lowStockThreshold:
-        product.lowStockThreshold != null
-          ? String(product.lowStockThreshold)
-          : "",
+      lowStockThreshold: product.lowStockThreshold != null ? String(product.lowStockThreshold) : "",
       sku: product.sku ?? "",
       status: product.status ?? "active",
       availability: product.availability ?? "",
@@ -300,9 +289,7 @@ export async function buildAdminProductsExportCsv(options: {
       reviewCount: String(product.reviewCount ?? ""),
       image: product.image ?? "",
       imageColor: product.imageColor ?? "",
-      specifications: product.specifications
-        ? JSON.stringify(product.specifications)
-        : "",
+      specifications: product.specifications ? JSON.stringify(product.specifications) : "",
       spin360Images: product.detail?.spin360Images?.length
         ? JSON.stringify(product.detail.spin360Images)
         : "",
@@ -329,7 +316,7 @@ export async function createAdminProduct(
     inTheBox?: string[];
     videos?: ProductVideo[];
     detailSpecs?: ProductSpec[];
-  }
+  },
 ): Promise<AdminProduct> {
   const created = await createProduct({
     name: input.name,
@@ -337,6 +324,7 @@ export async function createAdminProduct(
     brandSlug: input.brandSlug,
     category: input.category,
     categorySlug: input.categorySlug,
+    subcategory: input.subcategory,
     price: input.price,
     originalPrice: input.originalPrice ?? input.price,
     stock: input.stockQuantity ?? 100,
@@ -376,10 +364,9 @@ export async function updateAdminProduct(
     inTheBox?: string[];
     videos?: ProductVideo[];
     detailSpecs?: ProductSpec[];
-  }
+  },
 ): Promise<AdminProduct> {
-  const needsSnapshot =
-    patch.stockQuantity !== undefined || patch.price !== undefined;
+  const needsSnapshot = patch.stockQuantity !== undefined || patch.price !== undefined;
   const existing = needsSnapshot ? await getProductById(id) : null;
 
   const updated = await updateProduct(id, {
@@ -388,6 +375,7 @@ export async function updateAdminProduct(
     brandSlug: patch.brandSlug,
     category: patch.category,
     categorySlug: patch.categorySlug,
+    subcategory: patch.subcategory,
     price: patch.price,
     originalPrice: patch.originalPrice,
     stock: patch.stockQuantity,
@@ -467,7 +455,7 @@ export async function duplicateAdminProduct(id: string): Promise<AdminProduct> {
 
 export async function bulkUpdateProductStatus(
   ids: string[],
-  status: NonNullable<AdminProduct["status"]>
+  status: NonNullable<AdminProduct["status"]>,
 ): Promise<number> {
   if (status === "active") return (await bulkActivateProducts(ids)).updated;
   if (status === "archived") return (await bulkArchiveProducts(ids)).updated;
@@ -481,12 +469,9 @@ export async function bulkDeleteAdminProducts(ids: string[]): Promise<number> {
 }
 
 export async function bulkUpdateAdminStock(
-  updates: Array<{ id: string; stockQuantity: number }>
+  updates: Array<{ id: string; stockQuantity: number }>,
 ): Promise<number> {
-  const before = new Map<
-    string,
-    { stock: number; reserved: number; name: string; slug: string }
-  >();
+  const before = new Map<string, { stock: number; reserved: number; name: string; slug: string }>();
   for (const update of updates) {
     const product = await getProductById(update.id);
     if (product) {
@@ -499,9 +484,7 @@ export async function bulkUpdateAdminStock(
     }
   }
 
-  const result = await bulkUpdateStock(
-    updates.map((u) => ({ id: u.id, stock: u.stockQuantity }))
-  );
+  const result = await bulkUpdateStock(updates.map((u) => ({ id: u.id, stock: u.stockQuantity })));
 
   for (const update of updates) {
     const prev = before.get(update.id);
@@ -521,7 +504,7 @@ export async function bulkUpdateAdminStock(
 }
 
 export async function bulkUpdateAdminCategory(
-  updates: Array<{ id: string; category: string; categorySlug: string }>
+  updates: Array<{ id: string; category: string; categorySlug: string }>,
 ): Promise<number> {
   return (await bulkUpdateCategory(updates)).updated;
 }

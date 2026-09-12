@@ -35,14 +35,13 @@ export default function TourRibbonSection() {
       data-vibe-section="tour-ribbon"
     >
       <p className="visually-hidden">
-        It&apos;s a vibe — Vibe Music® musical instruments, stage-ready gear,
-        local pickup, and free shipping on every order.
+        It&apos;s a vibe — Vibe Music® musical instruments, stage-ready gear, local pickup, and free
+        shipping on every order.
       </p>
 
       <div className="tour-ribbon__stage" aria-hidden="true">
         {TOUR_RIBBON_BANDS.map((band, index) => {
-          const sequence = [...band.items, ...band.items, ...band.items];
-          const track = [...sequence, ...sequence];
+          const track = [...band.items, ...band.items];
 
           return (
             <div
@@ -62,10 +61,7 @@ export default function TourRibbonSection() {
                 }
               >
                 {track.map((item, itemIndex) => (
-                  <RibbonUnit
-                    key={`${band.id}-${itemIndex}-${item.headline}`}
-                    item={item}
-                  />
+                  <RibbonUnit key={`${band.id}-${itemIndex}-${item.headline}`} item={item} />
                 ))}
               </div>
             </div>

@@ -3,10 +3,7 @@
 import type { RefObject } from "react";
 import { useMemo, useState } from "react";
 import { MapPin, Truck } from "lucide-react";
-import {
-  formatCurrencyPrecise,
-  isPurchasablePrice,
-} from "@/utils/currency";
+import { formatCurrencyPrecise, isPurchasablePrice } from "@/utils/currency";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
@@ -38,28 +35,6 @@ function splitPriceParts(price: number) {
     whole: match[2],
     fraction: match[3] ?? null,
   };
-}
-
-function PriceWithRupee({
-  value,
-  className,
-}: {
-  value: number;
-  className?: string;
-}) {
-  const parts = splitPriceParts(value);
-  const amount = parts.fraction
-    ? `${parts.whole}.${parts.fraction}`
-    : parts.whole;
-
-  return (
-    <span className={className}>
-      <span className="pdp-buybox__rupee" aria-hidden="true">
-        {parts.symbol.trim() || "₹"}
-      </span>
-      <span className="pdp-buybox__amount">{amount}</span>
-    </span>
-  );
 }
 
 function availabilityLabel(av: ProductVariant["availability"]): string {
@@ -118,12 +93,9 @@ export default function ProductBuyBox({
   const displayPrice = selectedVariant.price;
   const lineTotal = displayPrice * quantity;
   const canPurchase =
-    isPurchasablePrice(displayPrice) &&
-    selectedVariant.availability !== "out-of-stock";
+    isPurchasablePrice(displayPrice) && selectedVariant.availability !== "out-of-stock";
   const isComingSoon = !isPurchasablePrice(displayPrice);
-  const onSale = product.salePrice !== null && product.msrp !== null;
-  const savings =
-    onSale && product.msrp ? product.msrp - displayPrice : 0;
+
   const maxQuantity = Math.max(1, Math.min(99, selectedVariant.stock || 99));
   const { dateLabel, orderWindow } = useMemo(() => getDeliveryEstimate(), []);
   const priceParts = splitPriceParts(lineTotal);
@@ -157,9 +129,7 @@ export default function ProductBuyBox({
 
       if (response.ok) {
         const data = (await response.json()) as { zone?: { name: string } | null };
-        setLocationLabel(
-          data.zone?.name ? `${trimmed} (${data.zone.name})` : trimmed
-        );
+        setLocationLabel(data.zone?.name ? `${trimmed} (${data.zone.name})` : trimmed);
         setShowPinInput(false);
       } else {
         showToast("Could not verify delivery for this PIN code", "error");
@@ -180,42 +150,13 @@ export default function ProductBuyBox({
               <span className="pdp-buybox__coming-soon-label">Coming Soon</span>
             </div>
           ) : (
-            <>
-              <div className="pdp-buybox__price-meta">
-                {onSale && product.msrp && quantity === 1 ? (
-                  <div className="pdp-buybox__list-row">
-                    <span>List Price:</span>
-                    <PriceWithRupee
-                      value={product.msrp}
-                      className="pdp-buybox__list-price"
-                    />
-                  </div>
-                ) : null}
-
-                {savings > 0 && quantity === 1 ? (
-                  <p className="pdp-buybox__savings">
-                    You save{" "}
-                    <PriceWithRupee
-                      value={savings}
-                      className="pdp-buybox__savings-price"
-                    />
-                    {product.msrp
-                      ? ` (${Math.round((savings / product.msrp) * 100)}%)`
-                      : ""}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="pdp-buybox__price pdp-buybox__price--tag" aria-label="Current price">
-                <span className="pdp-buybox__price-symbol">{priceParts.symbol}</span>
-                <span className="pdp-buybox__price-whole">{priceParts.whole}</span>
-                {priceParts.fraction ? (
-                  <span className="pdp-buybox__price-fraction">
-                    .{priceParts.fraction}
-                  </span>
-                ) : null}
-              </div>
-            </>
+            <div className="pdp-buybox__price pdp-buybox__price--tag" aria-label="Current price">
+              <span className="pdp-buybox__price-symbol">{priceParts.symbol}</span>
+              <span className="pdp-buybox__price-whole">{priceParts.whole}</span>
+              {priceParts.fraction ? (
+                <span className="pdp-buybox__price-fraction">.{priceParts.fraction}</span>
+              ) : null}
+            </div>
           )}
         </div>
 
@@ -239,8 +180,7 @@ export default function ProductBuyBox({
             </p>
             {showDeliveryDetails ? (
               <p className="pdp-buybox__delivery-urgency">
-                Standard delivery · Dispatches in 1–2 business days · GST invoice
-                included
+                Standard delivery · Dispatches in 1–2 business days · GST invoice included
               </p>
             ) : null}
           </div>
@@ -267,9 +207,7 @@ export default function ProductBuyBox({
               inputMode="numeric"
               placeholder="Enter PIN code"
               value={pincode}
-              onChange={(event) =>
-                setPincode(event.target.value.replace(/\D/g, "").slice(0, 6))
-              }
+              onChange={(event) => setPincode(event.target.value.replace(/\D/g, "").slice(0, 6))}
               maxLength={6}
               aria-label="PIN code"
             />
@@ -284,9 +222,7 @@ export default function ProductBuyBox({
           </div>
         ) : null}
 
-        <p
-          className={`pdp-buybox__stock pdp-buybox__stock--${selectedVariant.availability}`}
-        >
+        <p className={`pdp-buybox__stock pdp-buybox__stock--${selectedVariant.availability}`}>
           {availabilityLabel(selectedVariant.availability)}
         </p>
 
@@ -315,9 +251,7 @@ export default function ProductBuyBox({
               <button
                 type="button"
                 className="pdp-buybox__qty-btn"
-                onClick={() =>
-                  onQuantityChange(Math.min(maxQuantity, quantity + 1))
-                }
+                onClick={() => onQuantityChange(Math.min(maxQuantity, quantity + 1))}
                 disabled={quantity >= maxQuantity}
                 aria-label="Increase quantity"
               >
@@ -361,12 +295,7 @@ export default function ProductBuyBox({
           <div className="pdp-buybox__meta-row">
             <dt>Shipper / Seller</dt>
             <dd className="pdp-buybox__meta-value">
-              <Truck
-                className="pdp-buybox__meta-icon"
-                size={16}
-                strokeWidth={1.75}
-                aria-hidden
-              />
+              <Truck className="pdp-buybox__meta-icon" size={16} strokeWidth={1.75} aria-hidden />
               <span>Vibe Music</span>
             </dd>
           </div>

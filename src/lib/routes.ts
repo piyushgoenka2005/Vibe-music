@@ -9,9 +9,7 @@ export const ROUTES = {
   checkout: "/checkout",
   checkoutSuccess: "/checkout/success",
   orderPay: (orderId: string, email?: string) =>
-    email
-      ? `/orders/${orderId}/pay?email=${encodeURIComponent(email)}`
-      : `/orders/${orderId}/pay`,
+    email ? `/orders/${orderId}/pay?email=${encodeURIComponent(email)}` : `/orders/${orderId}/pay`,
   trackOrder: "/track-order",
   account: "/account",
   accountOrders: "/account/orders",
@@ -35,6 +33,7 @@ export const ROUTES = {
   adminCustomers: "/admin/customers",
   adminNewsletter: "/admin/newsletter",
   adminCategories: "/admin/categories",
+  adminTaxonomy: "/admin/taxonomy",
   adminCoupons: "/admin/coupons",
   adminReviews: "/admin/reviews",
   adminInventory: "/admin/inventory",
@@ -224,7 +223,13 @@ function isValidAppRoute(path: string): boolean {
   if (path === ROUTES.login || path === ROUTES.register) return true;
   if (path === ROUTES.blog || path.startsWith("/blog/")) return true;
   if (path === ROUTES.gp9 || path.startsWith(`${ROUTES.gp9}/`)) return true;
-  if (path === ROUTES.deals || path === ROUTES.brands || path === ROUTES.categories || path === ROUTES.compare) return true;
+  if (
+    path === ROUTES.deals ||
+    path === ROUTES.brands ||
+    path === ROUTES.categories ||
+    path === ROUTES.compare
+  )
+    return true;
   if (path === ROUTES.contact) return true;
   if (path === ROUTES.used || path === ROUTES.rentals) return true;
   if (path.startsWith("/rentals/")) return true;
@@ -357,8 +362,7 @@ export function resolveLinkHref(href: string): string {
   const hash = hashIndex >= 0 ? href.slice(hashIndex) : "";
   const withoutHash = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
   const queryIndex = withoutHash.indexOf("?");
-  const pathname =
-    queryIndex >= 0 ? withoutHash.slice(0, queryIndex) : withoutHash;
+  const pathname = queryIndex >= 0 ? withoutHash.slice(0, queryIndex) : withoutHash;
   const search = queryIndex >= 0 ? withoutHash.slice(queryIndex) : "";
 
   const resolved = resolveLegacyPath(pathname);

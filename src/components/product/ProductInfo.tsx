@@ -1,11 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  attributeKey,
-  findVariantBySelection,
-  getVariantAttributeGroups,
-} from "@/lib/variants";
+import { attributeKey, findVariantBySelection, getVariantAttributeGroups } from "@/lib/variants";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import CompareButton from "@/components/compare/CompareButton";
@@ -36,12 +32,11 @@ export default function ProductInfo({
   liveRating,
   liveReviewCount,
 }: ProductInfoProps) {
-  const { rating: ratingValue, reviewCount: reviewCountValue } =
-    ensureProductReviewMetrics({
-      id: product.id,
-      rating: liveRating ?? product.rating,
-      reviewCount: liveReviewCount ?? product.reviewCount,
-    });
+  const { rating: ratingValue, reviewCount: reviewCountValue } = ensureProductReviewMetrics({
+    id: product.id,
+    rating: liveRating ?? product.rating,
+    reviewCount: liveReviewCount ?? product.reviewCount,
+  });
   const hasReviews = reviewCountValue > 0;
   const attributeGroups = getVariantAttributeGroups(product.variants);
 
@@ -63,24 +58,15 @@ export default function ProductInfo({
                 {"★".repeat(Math.round(ratingValue))}
                 {"☆".repeat(5 - Math.round(ratingValue))}
               </span>
-              <button
-                type="button"
-                className="pdp-rating__link"
-                onClick={onReviewsClick}
-              >
-                {reviewCountValue}{" "}
-                {reviewCountValue === 1 ? "review" : "reviews"}
+              <button type="button" className="pdp-rating__link" onClick={onReviewsClick}>
+                {reviewCountValue} {reviewCountValue === 1 ? "review" : "reviews"}
               </button>
               <span className="pdp-meta-separator" aria-hidden="true">
                 |
               </span>
             </>
           ) : null}
-          <button
-            type="button"
-            className="pdp-rating__link"
-            onClick={onReviewsClick}
-          >
+          <button type="button" className="pdp-rating__link" onClick={onReviewsClick}>
             {hasReviews ? "Write your review" : "Be the first to review"}
           </button>
         </div>
@@ -92,8 +78,10 @@ export default function ProductInfo({
             className="pdp-meta-share"
           />
           <CompareButton product={product} className="pdp-meta-compare" size={16} />
-          <span className="pdp-meta-separator" aria-hidden="true">|</span>
-          <span className="pdp-sku">Item ID: {selectedVariant.sku}</span>
+          <span className="pdp-meta-separator" aria-hidden="true">
+            |
+          </span>
+          <span className="pdp-sku">SKU: {selectedVariant.sku}</span>
         </div>
       </div>
 
@@ -118,8 +106,7 @@ export default function ProductInfo({
                       ...attributeSelection,
                       [key]: value,
                     });
-                    const isDisabled =
-                      !candidate || candidate.availability === "out-of-stock";
+                    const isDisabled = !candidate || candidate.availability === "out-of-stock";
 
                     if (group.type === "color") {
                       return (
@@ -132,11 +119,7 @@ export default function ProductInfo({
                           aria-label={value}
                           disabled={isDisabled}
                           title={value}
-                          style={
-                            isHexColor(value)
-                              ? { backgroundColor: value }
-                              : undefined
-                          }
+                          style={isHexColor(value) ? { backgroundColor: value } : undefined}
                         >
                           {!isHexColor(value) ? value : null}
                         </button>
@@ -166,11 +149,7 @@ export default function ProductInfo({
           <span className="pdp-variants__label" id="variant-label">
             Select Option
           </span>
-          <div
-            className="pdp-variants__options"
-            role="group"
-            aria-labelledby="variant-label"
-          >
+          <div className="pdp-variants__options" role="group" aria-labelledby="variant-label">
             {product.variants.map((variant) => (
               <button
                 key={variant.id}
@@ -182,7 +161,7 @@ export default function ProductInfo({
                     selection[attributeKey(attr)] = attr.value;
                   });
                   Object.entries(selection).forEach(([attrKey, value]) =>
-                    onAttributeChange(attrKey, value)
+                    onAttributeChange(attrKey, value),
                   );
                 }}
                 aria-pressed={selectedVariant.id === variant.id}

@@ -14,9 +14,7 @@ interface GearStoriesSectionProps {
 export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
   const [activeStory, setActiveStory] = useState<GearStory | null>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [userPausedKeys, setUserPausedKeys] = useState<Set<string>>(
-    () => new Set()
-  );
+  const [userPausedKeys, setUserPausedKeys] = useState<Set<string>>(() => new Set());
   const modalOpen = Boolean(activeStory);
   const playbackLocked = modalOpen || isHovered;
   const isStripPaused = playbackLocked || userPausedKeys.size > 0;
@@ -38,9 +36,7 @@ export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
         <h2 id="gear-stories-heading" className="gear-stories__title typo-series">
           {data.title}
         </h2>
-        {data.subtitle ? (
-          <p className="gear-stories__subtitle">{data.subtitle}</p>
-        ) : null}
+        {data.subtitle ? <p className="gear-stories__subtitle">{data.subtitle}</p> : null}
       </Reveal>
 
       <div
@@ -50,10 +46,7 @@ export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
       >
         <Marquee
           ariaLabel="Gear style story reels"
-          className={[
-            "gear-stories__marquee",
-            isStripPaused ? "gear-stories__marquee--paused" : "",
-          ]
+          className={["gear-stories__marquee", isStripPaused ? "gear-stories__marquee--paused" : ""]
             .filter(Boolean)
             .join(" ")}
           duration="42s"
@@ -62,24 +55,20 @@ export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
           sequenceClassName="gear-stories__sequence"
           trackClassName="gear-stories__marquee-track"
         >
-          {[...data.stories, ...data.stories].map((story, index) => {
+          {data.stories.map((story, index) => {
             const cardKey = `${story.id}-${index}`;
 
             return (
-            <div
-              key={cardKey}
-              className="gear-stories__item"
-              role="listitem"
-            >
-              <GearStoryCard
-                story={story}
-                cardKey={cardKey}
-                playbackLocked={playbackLocked}
-                playDelayMs={(index % data.stories.length) * 120}
-                onUserPauseChange={handleUserPauseChange}
-                onOpen={setActiveStory}
-              />
-            </div>
+              <div key={cardKey} className="gear-stories__item" role="listitem">
+                <GearStoryCard
+                  story={story}
+                  cardKey={cardKey}
+                  playbackLocked={playbackLocked}
+                  playDelayMs={(index % data.stories.length) * 120}
+                  onUserPauseChange={handleUserPauseChange}
+                  onOpen={setActiveStory}
+                />
+              </div>
             );
           })}
         </Marquee>
