@@ -17,27 +17,27 @@ const DEFAULT_BANNERS = [
     ctaLink: "/deals",
   },
   {
-    title: "Hertz HG 20",
-    subtitle: "Portable guitar amp — delay & reverb, 20W",
+    title: "",
+    subtitle: "",
     image: "/hertz-hg-20.webp",
     mobileImage: "/hertz-hg-20.webp",
-    ctaText: "Shop Hertz",
+    ctaText: "",
     ctaLink: "/search/results?brand=hertz",
   },
   {
-    title: "Electric guitars",
-    subtitle: "Super Strat & stage-ready electrics",
+    title: "",
+    subtitle: "",
     image: "/electrix-guitar.webp",
     mobileImage: "/electrix-guitar.webp",
-    ctaText: "Browse guitars",
+    ctaText: "",
     ctaLink: "/category/guitars",
   },
   {
-    title: "Zoom MultiStomp",
-    subtitle: "Feel every beat — MS-200D+ & MS-90LP+",
+    title: "",
+    subtitle: "",
     image: "/images/banner-5.jpeg",
     mobileImage: "/images/banner-5.jpeg",
-    ctaText: "Shop Zoom",
+    ctaText: "",
     ctaLink: "/search/results?brand=zoom",
   },
 ] as const;
@@ -91,8 +91,30 @@ async function seedStorePhone(): Promise<void> {
 
 async function seedBanners(): Promise<void> {
   const count = await prisma.banner.count();
+  const timestamp = new Date().toISOString();
+
   if (count > 0) {
-    console.log(`OK  banners already exist (${count})`);
+    console.log(`OK  banners already exist (${count}) — syncing optional copy`);
+    // Clear overlapping text overlay from graphical banners where graphic already has text baked in
+    for (const banner of DEFAULT_BANNERS) {
+      if (banner.title === "") {
+        await prisma.banner.updateMany({
+          where: {
+            image: banner.image,
+            OR: [
+              { title: { in: ["Hertz HG 20", "Electric guitars", "Zoom MultiStomp"] } },
+              { ctaText: { in: ["Shop Hertz", "Browse guitars", "Shop Zoom"] } },
+            ],
+          },
+          data: {
+            title: "",
+            subtitle: null,
+            ctaText: "",
+            updatedAt: timestamp,
+          },
+        });
+      }
+    }
     return;
   }
 

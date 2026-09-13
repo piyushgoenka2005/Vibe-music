@@ -336,12 +336,12 @@ export async function createBanner(input: CreateBannerInput): Promise<HomepageBa
 
   const banner: HomepageBanner = {
     id,
-    title: input.title.trim(),
+    title: input.title?.trim() || "",
     subtitle: input.subtitle?.trim() || undefined,
     image: input.image.trim(),
     mobileImage: input.mobileImage?.trim() || undefined,
-    ctaText: input.ctaText.trim(),
-    ctaLink: input.ctaLink.trim(),
+    ctaText: input.ctaText?.trim() || "",
+    ctaLink: input.ctaLink?.trim() || "/search",
     startDate: input.startDate ?? null,
     endDate: input.endDate ?? null,
     priority,
@@ -353,12 +353,12 @@ export async function createBanner(input: CreateBannerInput): Promise<HomepageBa
   await prisma.banner.create({
     data: {
       id: banner.id,
-      title: banner.title,
+      title: banner.title ?? "",
       subtitle: banner.subtitle ?? null,
       image: banner.image,
       mobileImage: banner.mobileImage ?? null,
-      ctaText: banner.ctaText,
-      ctaLink: banner.ctaLink,
+      ctaText: banner.ctaText ?? "",
+      ctaLink: banner.ctaLink ?? "/search",
       startDate: bannerDate(banner.startDate),
       endDate: bannerDate(banner.endDate),
       priority: banner.priority,
@@ -381,15 +381,18 @@ export async function updateBannerRecord(
   const timestamp = now();
   const updated: HomepageBanner = {
     ...existing,
-    title: input.title !== undefined ? input.title.trim() : existing.title,
+    title: input.title !== undefined ? input.title.trim() : (existing.title ?? ""),
     subtitle: input.subtitle !== undefined ? input.subtitle.trim() || undefined : existing.subtitle,
     image: input.image !== undefined ? input.image.trim() : existing.image,
     mobileImage:
       input.mobileImage !== undefined
         ? input.mobileImage.trim() || undefined
         : existing.mobileImage,
-    ctaText: input.ctaText !== undefined ? input.ctaText.trim() : existing.ctaText,
-    ctaLink: input.ctaLink !== undefined ? input.ctaLink.trim() : existing.ctaLink,
+    ctaText: input.ctaText !== undefined ? input.ctaText.trim() : (existing.ctaText ?? ""),
+    ctaLink:
+      input.ctaLink !== undefined
+        ? input.ctaLink.trim() || "/search"
+        : (existing.ctaLink ?? "/search"),
     startDate: input.startDate !== undefined ? input.startDate : existing.startDate,
     endDate: input.endDate !== undefined ? input.endDate : existing.endDate,
     priority: input.priority !== undefined ? input.priority : existing.priority,
@@ -400,12 +403,12 @@ export async function updateBannerRecord(
   await prisma.banner.update({
     where: { id },
     data: {
-      title: updated.title,
+      title: updated.title ?? "",
       subtitle: updated.subtitle ?? null,
       image: updated.image,
       mobileImage: updated.mobileImage ?? null,
-      ctaText: updated.ctaText,
-      ctaLink: updated.ctaLink,
+      ctaText: updated.ctaText ?? "",
+      ctaLink: updated.ctaLink ?? "/search",
       startDate: bannerDate(updated.startDate),
       endDate: bannerDate(updated.endDate),
       priority: updated.priority,

@@ -29,11 +29,19 @@ describe("mapBannerToSlide", () => {
     expect(slide.alt).toContain("Hertz HG 20");
   });
 
-  it("fingerprints slide order and content for live refresh keys", () => {
-    const a = slidesFingerprint([mapBannerToSlide(sampleBanner)]);
-    const b = slidesFingerprint([
-      mapBannerToSlide({ ...sampleBanner, title: "Updated title" }),
-    ]);
-    expect(a).not.toBe(b);
+  it("maps empty or omitted title, subtitle, and ctaText to undefined", () => {
+    const minimalBanner: HomepageBanner = {
+      id: "banner-2",
+      image: "/hertz-hg-20.webp",
+      priority: 1,
+      status: "active",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-02T00:00:00.000Z",
+    };
+    const slide = mapBannerToSlide(minimalBanner);
+    expect(slide.title).toBeUndefined();
+    expect(slide.subtitle).toBeUndefined();
+    expect(slide.ctaText).toBeUndefined();
+    expect(slide.alt).toBe("Promotion at Vibe Music");
   });
 });

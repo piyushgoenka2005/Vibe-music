@@ -2,12 +2,12 @@ export type BannerStatus = "active" | "inactive";
 
 export interface HomepageBanner {
   id: string;
-  title: string;
+  title?: string;
   subtitle?: string;
   image: string;
   mobileImage?: string;
-  ctaText: string;
-  ctaLink: string;
+  ctaText?: string;
+  ctaLink?: string;
   startDate?: string | null;
   endDate?: string | null;
   priority: number;

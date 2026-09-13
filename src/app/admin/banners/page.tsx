@@ -18,7 +18,7 @@ const EMPTY_FORM = {
   subtitle: "",
   image: "",
   mobileImage: "",
-  ctaText: "Shop Now",
+  ctaText: "",
   ctaLink: "/search",
   startDate: "",
   endDate: "",
@@ -81,8 +81,11 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
     mutationFn: async () => {
       const payload = {
         ...form,
+        title: form.title || "",
         subtitle: form.subtitle || undefined,
         mobileImage: form.mobileImage || undefined,
+        ctaText: form.ctaText || "",
+        ctaLink: form.ctaLink || "/search",
         startDate: fromDatetimeLocal(form.startDate),
         endDate: fromDatetimeLocal(form.endDate),
       };
@@ -151,12 +154,12 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
     setShowForm(true);
     setFormError(null);
     setForm({
-      title: banner.title,
+      title: banner.title ?? "",
       subtitle: banner.subtitle ?? "",
       image: banner.image,
       mobileImage: banner.mobileImage ?? "",
-      ctaText: banner.ctaText,
-      ctaLink: banner.ctaLink,
+      ctaText: banner.ctaText ?? "",
+      ctaLink: banner.ctaLink ?? "/search",
       startDate: toDatetimeLocal(banner.startDate),
       endDate: toDatetimeLocal(banner.endDate),
       status: banner.status,
@@ -223,42 +226,43 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
             ) : null}
             <div className="admin-form-grid">
               <div className="admin-form-group">
-                <label>Title</label>
+                <label>Title (Optional)</label>
                 <input
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  required
+                  placeholder="Optional — leave blank if graphic already has text"
                 />
               </div>
               <div className="admin-form-group">
-                <label>Subtitle</label>
+                <label>Subtitle (Optional)</label>
                 <input
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.subtitle}
                   onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+                  placeholder="Optional — leave blank if graphic already has text"
                 />
               </div>
               <div className="admin-form-group">
-                <label>CTA Text</label>
+                <label>CTA Button Text (Optional)</label>
                 <input
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.ctaText}
                   onChange={(e) => setForm({ ...form, ctaText: e.target.value })}
-                  required
+                  placeholder="e.g. Shop Now (leave blank to hide button)"
                 />
               </div>
               <div className="admin-form-group">
-                <label>CTA Link</label>
+                <label>CTA Link (Optional)</label>
                 <input
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.ctaLink}
                   onChange={(e) => setForm({ ...form, ctaLink: e.target.value })}
-                  required
+                  placeholder="/category/guitars or /deals"
                 />
               </div>
               <div className="admin-form-group">
@@ -312,7 +316,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
               <button
                 type="button"
                 className="admin-btn admin-btn--primary"
-                disabled={saveMutation.isPending || !form.image || !form.title}
+                disabled={saveMutation.isPending || !form.image}
                 onClick={() => saveMutation.mutate()}
               >
                 {saveMutation.isPending ? "Saving…" : "Save Banner"}
@@ -357,7 +361,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={banner.image}
-                        alt={banner.title}
+                        alt={banner.title || "Homepage Banner"}
                         style={{
                           width: 96,
                           height: 48,
@@ -367,11 +371,31 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                       />
                     </td>
                     <td>
-                      <strong>{banner.title}</strong>
+                      <strong>
+                        {banner.title?.trim() || (
+                          <span
+                            style={{
+                              color: "var(--admin-muted)",
+                              fontStyle: "italic",
+                              fontWeight: 400,
+                            }}
+                          >
+                            Image only (No text overlay)
+                          </span>
+                        )}
+                      </strong>
                       {banner.subtitle ? (
                         <div style={{ fontSize: 12, color: "var(--admin-muted)" }}>
                           {banner.subtitle}
                         </div>
+                      ) : null}
+                      {banner.ctaText ? (
+                        <span
+                          className="admin-badge"
+                          style={{ marginTop: 4, display: "inline-block" }}
+                        >
+                          {banner.ctaText}
+                        </span>
                       ) : null}
                     </td>
                     <td style={{ fontSize: 13 }}>{scheduleLabel(banner)}</td>

@@ -52,6 +52,9 @@ npm ci || npm install --no-audit
 echo "==> Database migrations"
 npm run db:migrate
 
+echo "==> Production ops banner sync"
+npx tsx scripts/ops/seed-production-ops.mts || true
+
 if [[ "${SEED_CATALOG:-0}" == "1" ]]; then
   echo "==> Seeding catalog from JSON"
   npm run seed:catalog

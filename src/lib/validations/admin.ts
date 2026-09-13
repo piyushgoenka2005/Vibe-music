@@ -124,12 +124,12 @@ export const adminInventoryAdjustSchema = z.object({
 export { adminReviewStatusSchema } from "@/lib/validations/review";
 
 export const adminBannerSchema = z.object({
-  title: z.string().min(1).max(200),
-  subtitle: z.string().max(500).optional(),
+  title: z.string().max(200).optional().default(""),
+  subtitle: z.string().max(500).optional().or(z.literal("")),
   image: z.string().url("Desktop image URL is required"),
   mobileImage: z.string().url().optional().or(z.literal("")),
-  ctaText: z.string().min(1).max(100),
-  ctaLink: safeStorefrontHref,
+  ctaText: z.string().max(100).optional().default(""),
+  ctaLink: safeStorefrontHref.optional().or(z.literal("")).default("/search"),
   startDate: z.string().optional().nullable(),
   endDate: z.string().optional().nullable(),
   priority: z.number().int().min(0).optional(),
