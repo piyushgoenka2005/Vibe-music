@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useIsClient } from "@/hooks/useIsClient";
 import { useSearchStore } from "@/store/searchStore";
 import type { SearchStatus, SearchSuggestionGroups } from "@/types/search";
 import SearchAutocomplete from "./SearchAutocomplete";
 
 const HEADER_INPUT_SELECTORS =
-  "#sw-search-input, #autocomplete-0-input, #sw-search-input-mobile, .assets-site-header__menu-search-typeahead-field";
+  "#sw-search-input, #autocomplete-0-input, #sw-search-input-mobile, .assets-site-header__menu-search-typeahead-field, .site-header__search-input";
 
 interface SearchOverlayProps {
   query: string;
@@ -28,7 +27,9 @@ interface SearchOverlayProps {
 
 function isHeaderSearchTarget(target: Node): boolean {
   const element = target as Element;
+  if (!element) return false;
   if (element.closest?.(".site-header__search-toggle")) return true;
+  if (element.closest?.(".site-header__search, .assets-site-header__menu-search-form")) return true;
 
   const inputs = document.querySelectorAll(HEADER_INPUT_SELECTORS);
   for (const input of inputs) {
@@ -54,12 +55,12 @@ export default function SearchOverlay({
   const isOverlayOpen = useSearchStore((s) => s.isOverlayOpen);
   const isMobile = useSearchStore((s) => s.isMobile);
   const anchorRect = useSearchStore((s) => s.anchorRect);
-  const panelRef = useDialogA11y(isOverlayOpen, onClose) as RefObject<HTMLDivElement>;
+  const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isClient = useIsClient();
 
   useEffect(() => {
-    if (!isOverlayOpen) return;
+    if (!isOverlayOpen || !isMobile) return;
     const timer = window.setTimeout(() => inputRef.current?.focus(), 0);
     return () => window.clearTimeout(timer);
   }, [isMobile, isOverlayOpen]);
@@ -67,18 +68,58 @@ export default function SearchOverlay({
   useEffect(() => {
     if (!isOverlayOpen) return;
 
-    function onPointerDown(event: MouseEvent) {
-      const target = event.target as Node;
+    function handleOutsideInteraction(event: Event) {
+      const target = event.target as Node | null;
+      if (!target) return;
       if (panelRef.current?.contains(target)) return;
       if (isHeaderSearchTarget(target)) return;
+
       onClose();
+      document
+        .querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS)
+        .forEach((input) => input.blur());
     }
 
-    document.addEventListener("mousedown", onPointerDown);
+    function handleScroll(event: Event) {
+      const target = event.target as Node | null;
+      // Keep dropdown open if user is scrolling inside the suggestions list
+      if (target && panelRef.current?.contains(target)) return;
+
+      onClose();
+      document
+        .querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS)
+        .forEach((input) => input.blur());
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        document
+          .querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS)
+          .forEach((input) => input.blur());
+      }
+    }
+
+    document.addEventListener("pointerdown", handleOutsideInteraction, true);
+    document.addEventListener("mousedown", handleOutsideInteraction, true);
+    document.addEventListener("touchstart", handleOutsideInteraction, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
+    window.addEventListener("resize", handleScroll, { passive: true });
+    window.addEventListener("keydown", handleKeyDown);
+
     return () => {
-      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("pointerdown", handleOutsideInteraction, true);
+      document.removeEventListener("mousedown", handleOutsideInteraction, true);
+      document.removeEventListener("touchstart", handleOutsideInteraction, true);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOverlayOpen, onClose, panelRef]);
+  }, [isOverlayOpen, onClose]);
 
   if (!isOverlayOpen || !isClient) return null;
 
@@ -147,10 +188,7 @@ export default function SearchOverlay({
         />
 
         {isMobile ? (
-          <div
-            className="sw-search-panel__header"
-            style={{ borderTop: "1px solid #e5e4e3" }}
-          >
+          <div className="sw-search-panel__header" style={{ borderTop: "1px solid #e5e4e3" }}>
             <button
               type="button"
               className="sw-search-panel__close"
