@@ -118,7 +118,6 @@ async function seedBanners(): Promise<void> {
     return;
   }
 
-  const timestamp = new Date().toISOString();
   for (const [index, banner] of DEFAULT_BANNERS.entries()) {
     await prisma.banner.create({
       data: {

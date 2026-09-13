@@ -77,10 +77,10 @@ check_json_post() {
   local path="$1"
   local expr="$2"
   local label="$3"
-  local body
+  local origin_hdr="${ORIGIN_URL:-https://vibemusic.in}"
   body=$(curl -sS --max-time 20 -X POST "${BASE_URL}${path}" \
     -H "Content-Type: application/json" \
-    -H "Origin: ${BASE_URL}" \
+    -H "Origin: ${origin_hdr}" \
     -d '{"email":"smoke-check@vibemusic.in"}' || echo "")
   if echo "$body" | node -e "
     let d;
