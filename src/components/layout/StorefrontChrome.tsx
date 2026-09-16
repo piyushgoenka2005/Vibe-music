@@ -18,14 +18,11 @@ const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
   loading: () => null,
 });
 
-const SPLASH_CURSOR_ENABLED = false; // Disabled to improve performance and remove latency
+const SPLASH_CURSOR_ENABLED = process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR !== "false";
 
 function isLowEndDevice(): boolean {
   if (typeof navigator === "undefined") return false;
-  return (
-    navigator.hardwareConcurrency <= 4 ||
-    /Android [1-8]\./i.test(navigator.userAgent)
-  );
+  return navigator.hardwareConcurrency <= 4 || /Android [1-8]\./i.test(navigator.userAgent);
 }
 
 function subscribeNoop() {
@@ -33,17 +30,16 @@ function subscribeNoop() {
 }
 
 function useHasMounted() {
-  return useSyncExternalStore(subscribeNoop, () => true, () => false);
+  return useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false,
+  );
 }
 
-export default function StorefrontChrome({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function StorefrontChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
-  const hideChrome =
-    pathname.startsWith("/admin") || pathname.startsWith("/gp9");
+  const hideChrome = pathname.startsWith("/admin") || pathname.startsWith("/gp9");
   const isLandingPage = pathname === "/";
   const isProductPage = /^\/product\/[^/]+$/.test(pathname);
   const isAccountPage = pathname.startsWith("/account");
@@ -52,8 +48,7 @@ export default function StorefrontChrome({
     /^\/category\/[^/]+$/.test(pathname) ||
     pathname.startsWith("/search") ||
     pathname === "/deals";
-  const isCheckoutOrCart =
-    pathname.startsWith("/checkout") || pathname.startsWith("/cart");
+  const isCheckoutOrCart = pathname.startsWith("/checkout") || pathname.startsWith("/cart");
   const isAuthPage =
     pathname === "/login" ||
     pathname === "/register" ||
@@ -94,7 +89,7 @@ export default function StorefrontChrome({
         "is-landing-page",
         "is-product-page",
         "is-account-page",
-        "has-footer-reveal"
+        "has-footer-reveal",
       );
     };
   }, [isLandingPage, isProductPage, isAccountPage]);
