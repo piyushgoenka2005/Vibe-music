@@ -151,7 +151,9 @@
   left: 0;
   bottom: 0;
   z-index: 40;
-  transition: width 0.2s ease, transform 0.2s ease;
+  transition:
+    width 0.2s ease,
+    transform 0.2s ease;
   overflow: hidden;
   color-scheme: dark;
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.02);
@@ -209,7 +211,9 @@
   color: var(--admin-text);
   text-decoration: none;
   min-width: 0;
-  transition: opacity 0.15s ease, color 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease;
 }
 
 .admin-sidebar__brand-text:hover {
@@ -233,7 +237,10 @@
   background: var(--admin-surface-2);
   color: var(--admin-muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .admin-sidebar__toggle:hover {
@@ -270,7 +277,10 @@
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
   margin-bottom: 0.125rem;
 }
 
@@ -278,7 +288,9 @@
   flex-shrink: 0;
   color: inherit;
   opacity: 0.9;
-  transition: color 0.15s ease, opacity 0.15s ease;
+  transition:
+    color 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .admin-sidebar__link-label {
@@ -410,7 +422,10 @@
   background: var(--admin-surface-2);
   color: var(--admin-text);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .admin-header__menu:hover {
@@ -446,7 +461,11 @@
   background: var(--admin-surface-2);
   color: var(--admin-muted);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .admin-icon-btn:hover {
@@ -491,7 +510,10 @@
   border-radius: var(--admin-radius, 0.875rem);
   padding: 1.15rem 1.2rem 1.05rem;
   box-shadow: var(--admin-shadow-sm);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .admin-stat-card::before {
@@ -563,12 +585,11 @@
   margin-top: 0.85rem;
   height: 2.25rem;
   border-radius: 0.5rem;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--stat-accent) 18%, transparent),
-      transparent 70%
-    );
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--stat-accent) 18%, transparent),
+    transparent 70%
+  );
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 36' preserveAspectRatio='none'%3E%3Cpath d='M0 28 C12 26 18 10 30 14 C42 18 48 30 60 24 C72 18 78 6 90 10 C102 14 110 22 120 16 L120 36 L0 36 Z' fill='black'/%3E%3C/svg%3E");
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 36' preserveAspectRatio='none'%3E%3Cpath d='M0 28 C12 26 18 10 30 14 C42 18 48 30 60 24 C72 18 78 6 90 10 C102 14 110 22 120 16 L120 36 L0 36 Z' fill='black'/%3E%3C/svg%3E");
   mask-size: 100% 100%;
@@ -628,7 +649,9 @@
   border-radius: var(--admin-radius, 0.875rem);
   overflow: hidden;
   box-shadow: var(--admin-shadow-sm);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .admin-panel:hover {
@@ -778,7 +801,9 @@
   font-weight: 500;
   cursor: pointer;
   border: none;
-  transition: background 0.15s, opacity 0.15s;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
   text-decoration: none;
 }
 
@@ -790,12 +815,16 @@
 .admin-btn--primary {
   background: var(--admin-accent);
   color: #fff;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 6px 16px color-mix(in srgb, var(--admin-accent) 28%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 6px 16px color-mix(in srgb, var(--admin-accent) 28%, transparent);
 }
 
 .admin-btn--primary:hover:not(:disabled) {
   background: var(--admin-accent-hover);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.14) inset, 0 8px 18px color-mix(in srgb, var(--admin-accent) 34%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.14) inset,
+    0 8px 18px color-mix(in srgb, var(--admin-accent) 34%, transparent);
 }
 
 .admin-btn--secondary {
@@ -1166,7 +1195,9 @@
   padding: 2rem;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .admin-upload-zone--active,
@@ -1187,7 +1218,6 @@
   gap: 1rem;
   margin-top: 1rem;
 }
-
 
 .admin-checkbox {
   display: inline-flex;
@@ -1401,8 +1431,146 @@
   border-color: color-mix(in srgb, var(--admin-warning, #b45309) 35%, transparent);
 }
 
+.admin-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface-2);
+}
+
+.admin-notice__title {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.875rem;
+}
+
+.admin-notice__text {
+  font-size: 0.8125rem;
+  color: var(--admin-muted);
+  line-height: 1.45;
+}
+
+.admin-notice__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.admin-notice--info {
+  border-color: color-mix(in srgb, var(--admin-info) 40%, var(--admin-border));
+  background: var(--admin-info-soft);
+}
+
+.admin-notice--warning {
+  border-color: color-mix(in srgb, var(--admin-warning) 45%, var(--admin-border));
+  background: var(--admin-warning-soft);
+}
+
+.admin-notice--danger {
+  border-color: color-mix(in srgb, var(--admin-danger) 45%, var(--admin-border));
+  background: var(--admin-danger-soft);
+}
+
+.admin-notice--success {
+  border-color: color-mix(in srgb, var(--admin-success) 45%, var(--admin-border));
+  background: var(--admin-success-soft);
+}
+
+.admin-stock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.admin-stock-pill--ok {
+  color: var(--admin-success);
+}
+.admin-stock-pill--low {
+  color: var(--admin-warning);
+}
+.admin-stock-pill--out {
+  color: var(--admin-danger);
+}
+
+.admin-toolbar--wrap {
+  flex-wrap: wrap;
+  row-gap: 0.65rem;
+}
+
+.admin-quick-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-quick-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.admin-quick-link:hover {
+  border-color: var(--admin-accent);
+  background: var(--admin-surface-2);
+}
+
+.admin-quick-link__label {
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+.admin-quick-link__hint {
+  font-size: 0.72rem;
+  color: var(--admin-muted);
+}
+
+.admin-order-money {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  margin: 0.75rem 0 1rem;
+  font-size: 0.875rem;
+}
+
+.admin-order-money__total {
+  font-weight: 700;
+  border-top: 1px solid var(--admin-border);
+  padding-top: 0.35rem;
+  margin-top: 0.15rem;
+}
+
 .admin-ops-status__badge--missing {
   color: var(--admin-danger, #dc2626);
   border-color: color-mix(in srgb, var(--admin-danger, #dc2626) 35%, transparent);
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -14,13 +14,16 @@ export function toIsoString(value: unknown, fallback = ""): string {
 
 export function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
+  const record = (item: object): Record<string, unknown> => item as Record<string, unknown>;
   return value
     .map((item) => {
       if (typeof item === "string") return item;
       if (item && typeof item === "object") {
-        if ("src" in item && typeof (item as any).src === "string") return (item as any).src;
-        if ("url" in item && typeof (item as any).url === "string") return (item as any).url;
-        if ("image" in item && typeof (item as any).image === "string") return (item as any).image;
+        const entry = record(item);
+        for (const key of ["src", "url", "image"] as const) {
+          const candidate = entry[key];
+          if (typeof candidate === "string") return candidate;
+        }
       }
       return "";
     })
@@ -32,9 +35,7 @@ export function asJsonValue(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
 }
 
-export function productToPrisma(
-  product: CatalogProduct
-): Prisma.ProductUncheckedCreateInput {
+export function productToPrisma(product: CatalogProduct): Prisma.ProductUncheckedCreateInput {
   return {
     id: product.id,
     slug: product.slug,
@@ -147,9 +148,7 @@ export function prismaToProduct(row: {
   };
 }
 
-export function categoryToPrisma(
-  category: Category
-): Prisma.CategoryUncheckedCreateInput {
+export function categoryToPrisma(category: Category): Prisma.CategoryUncheckedCreateInput {
   return {
     id: category.id,
     name: category.name,
@@ -190,11 +189,7 @@ export function brandToPrisma(brand: Brand): Prisma.BrandUncheckedCreateInput {
   };
 }
 
-export function prismaToBrand(row: {
-  id: string;
-  name: string;
-  slug: string;
-}): Brand {
+export function prismaToBrand(row: { id: string; name: string; slug: string }): Brand {
   return { id: row.id, name: row.name, slug: row.slug };
 }
 

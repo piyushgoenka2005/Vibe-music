@@ -111,6 +111,8 @@ export interface CreateProductInput {
   videos?: ProductVideo[];
   /** Spec rows for the PDP Specs tab. */
   detailSpecs?: ProductSpec[];
+  /** When true, reject import if the requested SKU already exists. */
+  strictSku?: boolean;
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {
@@ -137,12 +139,29 @@ export interface BulkImportRow {
   image5?: string;
   /** Cloudinary URLs resolved from ZIP import */
   resolvedImages?: string[];
+  /** Vibemusic bulk sheet → catalog specifications (ASIN, Color, Warranty, …). */
+  specifications?: Record<string, string>;
+  /** Spec rows for the PDP Specs tab. */
+  detailSpecs?: ProductSpec[];
+  /** Package / special-feature lines for In The Box. */
+  inTheBox?: string[];
+  /** Generic keywords from the vibemusic bulk sheet. */
+  keywords?: string[];
+  /** Detected upload format for validation rules. */
+  sourceFormat?: "vibemusic-bulk" | "legacy";
+  /** ZIP image filenames matched during preview (no CDN upload yet). */
+  zipImageMatches?: string[];
+  /** Selling Price was blank; MRP was used as the list price. */
+  priceFromMrpFallback?: boolean;
 }
 
 export interface BulkImportPreviewRow extends BulkImportRow {
   rowNumber: number;
   errors: string[];
+  warnings?: string[];
   valid: boolean;
+  action?: "create" | "update" | "skip";
+  existingProductId?: string;
   resolvedCategorySlug?: string;
   generatedSlug?: string;
   generatedSku?: string;
@@ -150,7 +169,10 @@ export interface BulkImportPreviewRow extends BulkImportRow {
 
 export interface BulkImportResult {
   imported: number;
+  updated: number;
+  /** Rows rejected during preview validation. */
   skipped: number;
+  /** Rows that failed while writing after preview passed. */
   errors: number;
   failedRows: Array<BulkImportPreviewRow & { reason: string }>;
   products: CatalogProduct[];

@@ -81,6 +81,13 @@ export async function updateOrderStatus(
   }
 
   if (status === "refunded" && existingOrder.status !== "refunded") {
+    // Paid Razorpay orders must be refunded through the payment gateway — never
+    // silently flip status/payment to refunded and skip the money movement.
+    if (existingOrder.paymentStatus === "paid" && Boolean(existingOrder.razorpayPaymentId)) {
+      throw new Error(
+        "This order is still paid on Razorpay. Use “Refund via Razorpay” before marking it refunded.",
+      );
+    }
     await releaseOrderInventory(existingOrder);
   }
 

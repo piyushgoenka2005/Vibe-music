@@ -27,6 +27,7 @@ describe("getHomepageStoryBanners", () => {
       createdAt: "",
       updatedAt: "",
     });
+    vi.spyOn(homepageRepo, "listSectionItems").mockResolvedValueOnce([]);
 
     const data = await getHomepageStoryBanners();
     expect(data.isActive).toBe(false);

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
   deleteSectionItem,
-  invalidatePublicHomepageCache,
+  invalidatePublicHomepageCacheAsync,
   updateSectionItem,
 } from "@/lib/server/homepageService";
 import { adminHomepageSectionItemSchema } from "@/lib/validations/admin";
@@ -16,14 +16,12 @@ export async function PUT(request: Request, { params }: RouteParams) {
     await requireAdmin("homepage:write", request);
     const { id } = await params;
     const body = await request.json();
-    const parsed = adminHomepageSectionItemSchema
-      .omit({ sectionKey: true })
-      .parse(body);
+    const parsed = adminHomepageSectionItemSchema.omit({ sectionKey: true }).parse(body);
     const item = await updateSectionItem(id, {
       ...parsed,
       customImage: parsed.customImage || undefined,
     });
-    invalidatePublicHomepageCache();
+    await invalidatePublicHomepageCacheAsync();
     return NextResponse.json({ item });
   } catch (error) {
     return adminErrorResponse(error);
@@ -35,7 +33,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     await requireAdmin("homepage:write", _request);
     const { id } = await params;
     await deleteSectionItem(id);
-    invalidatePublicHomepageCache();
+    await invalidatePublicHomepageCacheAsync();
     return NextResponse.json({ ok: true });
   } catch (error) {
     return adminErrorResponse(error);

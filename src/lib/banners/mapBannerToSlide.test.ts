@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapBannerToSlide, slidesFingerprint } from "@/lib/banners/mapBannerToSlide";
+import { mapBannerToSlide } from "@/lib/banners/mapBannerToSlide";
 import type { HomepageBanner } from "@/types/banner";
 
 const sampleBanner: HomepageBanner = {

@@ -85,6 +85,13 @@
   padding: 2rem 1.25rem 4rem;
 }
 
+/* Clear the fixed left social rail on desktop storefront shells */
+@media (min-width: 1024px) {
+  .storefront-page__inner {
+    padding-inline-start: max(1.25rem, var(--social-rail-clearance, 4.5rem));
+  }
+}
+
 .storefront-page__header {
   display: flex;
   flex-wrap: wrap;
@@ -237,8 +244,7 @@
     box-sizing: border-box;
     /* top | right | bottom | left — keep gutters tight on mobile */
     padding: 0.75rem max(0.5rem, env(safe-area-inset-right, 0px))
-      calc(7.5rem + env(safe-area-inset-bottom, 0px))
-      max(0.5rem, env(safe-area-inset-left, 0px));
+      calc(7.5rem + env(safe-area-inset-bottom, 0px)) max(0.5rem, env(safe-area-inset-left, 0px));
   }
 
   .storefront-page .pdp-main,
@@ -251,8 +257,7 @@
 
   .storefront-page .cat-page {
     padding: 0.4rem max(0.75rem, env(safe-area-inset-left, 0px))
-      calc(4rem + env(safe-area-inset-bottom, 0px))
-      max(0.75rem, env(safe-area-inset-right, 0px));
+      calc(4rem + env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-right, 0px));
   }
 
   .premium-home {
@@ -261,14 +266,12 @@
 
   .storefront-page .cart-page {
     padding: 1rem max(1rem, env(safe-area-inset-left, 0px))
-      calc(10.5rem + env(safe-area-inset-bottom, 0px))
-      max(1rem, env(safe-area-inset-right, 0px));
+      calc(10.5rem + env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-right, 0px));
   }
 
   .storefront-page .checkout-page {
     padding: 1rem max(1rem, env(safe-area-inset-left, 0px))
-      calc(5.5rem + env(safe-area-inset-bottom, 0px))
-      max(1rem, env(safe-area-inset-right, 0px));
+      calc(5.5rem + env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-right, 0px));
     min-height: 0;
   }
 
@@ -360,14 +363,12 @@
 
   .storefront-page .cart-page {
     padding: 0.75rem max(0.75rem, env(safe-area-inset-left, 0px))
-      calc(10.5rem + env(safe-area-inset-bottom, 0px))
-      max(0.75rem, env(safe-area-inset-right, 0px));
+      calc(10.5rem + env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-right, 0px));
   }
 
   .storefront-page .checkout-page {
     padding: 0.75rem max(0.75rem, env(safe-area-inset-left, 0px))
-      calc(5.5rem + env(safe-area-inset-bottom, 0px))
-      max(0.75rem, env(safe-area-inset-right, 0px));
+      calc(5.5rem + env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-right, 0px));
     min-height: 0;
   }
 }
@@ -425,7 +426,9 @@
   border-radius: var(--radius-sm);
   border-width: 2px;
   background: transparent;
-  transition: border-color var(--duration-fast), transform var(--duration-fast);
+  transition:
+    border-color var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 .storefront-page .pdp-gallery__thumb:hover {
@@ -469,8 +472,7 @@
 
 @media (min-width: 768px) {
   .storefront-page .pdp-info {
-    position: sticky;
-    top: calc(var(--site-header-offset, 148px) + 0.75rem);
+    position: static;
     align-self: start;
   }
 }
@@ -772,7 +774,9 @@
 
 .storefront-page .cart-cross-sell__card {
   border-radius: var(--radius-md);
-  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+  transition:
+    transform var(--duration-fast),
+    box-shadow var(--duration-fast);
 }
 
 .storefront-page .cart-cross-sell__card:hover {
@@ -832,7 +836,9 @@
 
 .storefront-page .checkout-payment-option {
   border-radius: var(--radius-md);
-  transition: border-color var(--duration-fast), background var(--duration-fast);
+  transition:
+    border-color var(--duration-fast),
+    background var(--duration-fast);
 }
 
 .storefront-page .checkout-payment-option--selected {
@@ -845,7 +851,9 @@
 .storefront-page .checkout-form textarea {
   border-radius: var(--radius-sm);
   border-color: var(--border-default);
-  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+  transition:
+    border-color var(--duration-fast),
+    box-shadow var(--duration-fast);
 }
 
 .storefront-page .checkout-form input:focus,
@@ -938,7 +946,9 @@
 
 .acct__wishlist-card {
   border-radius: var(--radius-md);
-  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+  transition:
+    transform var(--duration-fast),
+    box-shadow var(--duration-fast);
 }
 
 .acct__wishlist-card:hover {
@@ -966,7 +976,9 @@
 
 .blog-card {
   border-radius: var(--radius-lg);
-  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+  transition:
+    transform var(--duration-fast),
+    box-shadow var(--duration-fast);
 }
 
 .blog-card:hover {
@@ -1023,7 +1035,9 @@
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
   font: inherit;
-  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+  transition:
+    border-color var(--duration-fast),
+    box-shadow var(--duration-fast);
 }
 
 .track-form__input:focus {
@@ -1343,7 +1357,12 @@
 .page-skeleton__line {
   height: 14px;
   border-radius: 8px;
-  background: linear-gradient(90deg, var(--surface-muted) 25%, var(--surface-base) 50%, var(--surface-muted) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--surface-muted) 25%,
+    var(--surface-base) 50%,
+    var(--surface-muted) 75%
+  );
   background-size: 200% 100%;
   animation: page-skeleton-shimmer 1.2s ease-in-out infinite;
 }
@@ -1358,8 +1377,12 @@
 }
 
 @keyframes page-skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

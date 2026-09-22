@@ -17,6 +17,7 @@ import {
   notifyWaitlistOnRestock,
 } from "@/lib/server/restockNotificationService";
 import { getProductImage } from "@/data/productImages";
+import { AMAZON_LISTING_HEADERS, catalogProductToAmazonRow } from "@/lib/amazonListingImport";
 import { rowsToCsv, type ParsedCsvRow } from "@/lib/csv";
 import { prisma } from "@/lib/db/prisma";
 import type { AdminProduct } from "@/types/admin";
@@ -97,6 +98,7 @@ export async function listAdminProducts(
     search?: string;
     status?: string;
     category?: string;
+    stock?: "in" | "low" | "out";
     limit?: number;
     offset?: number;
     cursor?: string;
@@ -128,6 +130,16 @@ export async function listAdminProducts(
     products = products.filter(
       (p) => p.categorySlug === options.category || p.category === options.category,
     );
+  }
+
+  if (options.stock) {
+    products = products.filter((p) => {
+      const qty = p.stockQuantity ?? 0;
+      const threshold = p.lowStockThreshold ?? 10;
+      if (options.stock === "out") return qty <= 0;
+      if (options.stock === "low") return qty > 0 && qty <= threshold;
+      return qty > threshold;
+    });
   }
 
   products.sort(
@@ -183,38 +195,6 @@ export async function listAdminProductsForExport(
   return result.products;
 }
 
-const EXPORT_BASE_HEADERS = [
-  "id",
-  "slug",
-  "name",
-  "brand",
-  "brandSlug",
-  "category",
-  "categorySlug",
-  "subcategory",
-  "price",
-  "originalPrice",
-  "gstRate",
-  "stock",
-  "lowStockThreshold",
-  "sku",
-  "status",
-  "availability",
-  "condition",
-  "featured",
-  "trending",
-  "newArrival",
-  "description",
-  "rating",
-  "reviewCount",
-  "image",
-  "imageColor",
-  "specifications",
-  "spin360Images",
-  "createdAt",
-  "updatedAt",
-] as const;
-
 function filterCatalogForExport(
   products: CatalogProduct[],
   options: { search?: string; status?: string; category?: string },
@@ -246,8 +226,7 @@ function filterCatalogForExport(
 }
 
 /**
- * CSV of full product details. Image files are not bundled — CDN/public URLs
- * are written as image1…imageN (at least image1–image5 for import compatibility).
+ * CSV in the vibemusic bulk template format so exports re-import cleanly.
  */
 export async function buildAdminProductsExportCsv(
   options: {
@@ -257,50 +236,25 @@ export async function buildAdminProductsExportCsv(
   } = {},
 ): Promise<string> {
   const products = filterCatalogForExport(await fetchAllProducts(true), options);
-  const maxImages = Math.max(5, ...products.map((product) => product.images?.length ?? 0));
-  const imageHeaders = Array.from({ length: maxImages }, (_, index) => `image${index + 1}`);
-  const headers = [...EXPORT_BASE_HEADERS, ...imageHeaders];
+  const headers = [...AMAZON_LISTING_HEADERS];
 
   const rows: ParsedCsvRow[] = products.map((product) => {
-    const images = product.images ?? [];
-    const row: ParsedCsvRow = {
-      id: product.id,
-      slug: product.slug,
+    const amazon = catalogProductToAmazonRow({
       name: product.name,
       brand: product.brand,
-      brandSlug: product.brandSlug,
       category: product.category,
-      categorySlug: product.categorySlug,
-      subcategory: product.subcategory ?? "",
-      price: String(product.price ?? ""),
-      originalPrice: String(product.originalPrice ?? ""),
-      gstRate: product.gstRate != null ? String(product.gstRate) : "",
-      stock: String(product.stock ?? ""),
-      lowStockThreshold: product.lowStockThreshold != null ? String(product.lowStockThreshold) : "",
-      sku: product.sku ?? "",
-      status: product.status ?? "active",
-      availability: product.availability ?? "",
-      condition: product.condition ?? "",
-      featured: String(Boolean(product.featured)),
-      trending: String(Boolean(product.trending)),
-      newArrival: String(Boolean(product.newArrival)),
-      description: product.description ?? "",
-      rating: String(product.rating ?? ""),
-      reviewCount: String(product.reviewCount ?? ""),
-      image: product.image ?? "",
-      imageColor: product.imageColor ?? "",
-      specifications: product.specifications ? JSON.stringify(product.specifications) : "",
-      spin360Images: product.detail?.spin360Images?.length
-        ? JSON.stringify(product.detail.spin360Images)
-        : "",
-      createdAt: product.createdAt ?? "",
-      updatedAt: product.updatedAt ?? "",
-    };
-
-    for (let i = 0; i < maxImages; i += 1) {
-      row[`image${i + 1}`] = images[i] ?? "";
+      subcategory: product.subcategory,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      sku: product.sku,
+      description: product.description,
+      specifications: product.specifications,
+      inTheBox: Array.isArray(product.detail?.inTheBox) ? product.detail.inTheBox : [],
+    });
+    const row: ParsedCsvRow = {};
+    for (const header of headers) {
+      row[header] = amazon[header] ?? "";
     }
-
     return row;
   });
 
@@ -328,6 +282,7 @@ export async function createAdminProduct(
     price: input.price,
     originalPrice: input.originalPrice ?? input.price,
     stock: input.stockQuantity ?? 100,
+    lowStockThreshold: input.lowStockThreshold,
     sku: input.sku,
     status: input.status ?? "active",
     description: input.description,
@@ -379,6 +334,7 @@ export async function updateAdminProduct(
     price: patch.price,
     originalPrice: patch.originalPrice,
     stock: patch.stockQuantity,
+    lowStockThreshold: patch.lowStockThreshold,
     sku: patch.sku,
     status: patch.status,
     description: patch.description,

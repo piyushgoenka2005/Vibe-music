@@ -19,6 +19,7 @@ export {
   fetchBrands,
   fetchCategories,
   fetchExistingSlugsAndSkus,
+  fetchProductSkuIndex,
   batchWriteCategories,
   batchWriteBrands,
   slugExists,
@@ -27,9 +28,7 @@ export {
 
 export async function invalidateCatalogCache(): Promise<void> {
   try {
-    const { revalidateCatalogSnapshot } = await import(
-      "@/lib/server/catalogSnapshotCache"
-    );
+    const { revalidateCatalogSnapshot } = await import("@/lib/server/catalogSnapshotCache");
     await revalidateCatalogSnapshot();
   } catch (error) {
     // Never fail a catalog write/delete because cache busting threw.
@@ -62,7 +61,7 @@ export async function batchDeleteProducts(ids: string[]): Promise<number> {
 
 export async function batchUpdateProducts(
   ids: string[],
-  patch: Parameters<typeof pg.batchUpdateProducts>[1]
+  patch: Parameters<typeof pg.batchUpdateProducts>[1],
 ): Promise<number> {
   const updated = await pg.batchUpdateProducts(ids, patch);
   await invalidateCatalogCache();

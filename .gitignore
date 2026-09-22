@@ -68,6 +68,11 @@ ui-debug.log
 *.zip
 /Vibe images/
 /*.xlsx
+/**/*.xlsx
+!docs/templates/**/*.xlsx
+/public/vibemusic bulk.csv
+/public/vibemusic bulk.xlsx
+/docs/Amazn Listing*
 /catalog-import-manifest.json
 /migration-report.json
 tmp-out.css

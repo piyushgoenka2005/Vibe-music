@@ -39,7 +39,7 @@ function playMuted(video: HTMLVideoElement) {
         () => {
           void video.play().catch(() => {});
         },
-        { once: true }
+        { once: true },
       );
     }
   });
@@ -47,33 +47,37 @@ function playMuted(video: HTMLVideoElement) {
 
 function getVisibleOverlap(
   container: HTMLElement,
-  strip: HTMLElement | null
-): { overlap: number; ratio: number } {
+  strip: HTMLElement | null,
+): { overlap: number; ratio: number; verticalOverlap: number } {
   const cardRect = container.getBoundingClientRect();
-  if (cardRect.width <= 0) return { overlap: 0, ratio: 0 };
+  if (cardRect.width <= 0) return { overlap: 0, ratio: 0, verticalOverlap: 0 };
 
   const rootRect = strip?.getBoundingClientRect() ?? {
     left: 0,
     right: window.innerWidth,
   };
 
-  const overlap =
-    Math.min(cardRect.right, rootRect.right) -
-    Math.max(cardRect.left, rootRect.left);
+  const overlap = Math.min(cardRect.right, rootRect.right) - Math.max(cardRect.left, rootRect.left);
+
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+  const verticalOverlap = Math.min(cardRect.bottom, viewportHeight) - Math.max(cardRect.top, 0);
 
   return {
     overlap,
     ratio: overlap / cardRect.width,
+    verticalOverlap: Math.max(0, verticalOverlap),
   };
 }
 
 function isVisibleInStrip(
   container: HTMLElement,
   strip: HTMLElement | null,
-  visibilityRatio: number
+  visibilityRatio: number,
 ): boolean {
-  const { overlap, ratio } = getVisibleOverlap(container, strip);
-  return overlap > 1 && ratio >= visibilityRatio;
+  const { overlap, ratio, verticalOverlap } = getVisibleOverlap(container, strip);
+  // A card must be horizontally aligned in the strip AND vertically within the
+  // viewport — otherwise whole multi-MB reels download while below the fold.
+  return overlap > 1 && ratio >= visibilityRatio && verticalOverlap > 1;
 }
 
 /**
@@ -81,7 +85,7 @@ function isVisibleInStrip(
  */
 export function useContinuousVideo(
   videoRef: RefObject<HTMLVideoElement | null>,
-  { forcePaused = false, playDelayMs = 0 }: UseContinuousVideoOptions = {}
+  { forcePaused = false, playDelayMs = 0 }: UseContinuousVideoOptions = {},
 ) {
   useEffect(() => {
     const video = videoRef.current;
@@ -153,7 +157,7 @@ export function useVisibleVideo(
     visibilityRatio = 0.05,
     scrollRootRef,
     playDelayMs = 0,
-  }: UseVisibleVideoOptions = {}
+  }: UseVisibleVideoOptions = {},
 ) {
   useEffect(() => {
     const video = videoRef.current;
@@ -165,8 +169,7 @@ export function useVisibleVideo(
     let playTimer = 0;
     let cancelled = false;
 
-    const isPlaybackLocked = () =>
-      forcePaused || Boolean(manualPausedRef?.current);
+    const isPlaybackLocked = () => forcePaused || Boolean(manualPausedRef?.current);
 
     const syncPlayback = () => {
       if (cancelled || !videoRef.current || !containerRef.current) return;
@@ -177,11 +180,7 @@ export function useVisibleVideo(
       }
 
       const strip = scrollRootRef?.current ?? null;
-      const visible = isVisibleInStrip(
-        containerRef.current,
-        strip,
-        visibilityRatio
-      );
+      const visible = isVisibleInStrip(containerRef.current, strip, visibilityRatio);
 
       if (visible) {
         if (videoRef.current.paused) {
@@ -204,9 +203,9 @@ export function useVisibleVideo(
         if (isPlaybackLocked()) return;
 
         const strip = scrollRootRef?.current ?? null;
-        const { overlap } = getVisibleOverlap(containerRef.current, strip);
+        const { overlap, verticalOverlap } = getVisibleOverlap(containerRef.current, strip);
 
-        if (overlap > 1 && videoRef.current.paused) {
+        if (overlap > 1 && verticalOverlap > 1 && videoRef.current.paused) {
           playMuted(videoRef.current);
         }
       }, 1200);
@@ -227,7 +226,7 @@ export function useVisibleVideo(
       {
         root: strip,
         threshold: [0, 0.05, 0.15, 0.35, 0.55, 0.75, 1],
-      }
+      },
     );
 
     observer.observe(container);

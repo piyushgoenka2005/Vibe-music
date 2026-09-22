@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { randomUUID } from "crypto";
 import * as pg from "@/lib/server/prisma/contentRepository";
 import {
@@ -17,7 +18,8 @@ import {
   type UpdateHomepageSectionItemInput,
 } from "@/types/homepage";
 
-const CACHE_TTL_MS = 45_000;
+/** Process-local TTL — long enough to absorb refresh storms; admin writes invalidate. */
+const CACHE_TTL_MS = 5 * 60_000;
 
 let sectionsCache: HomepageSection[] | null = null;
 let sectionsCacheAt = 0;
@@ -41,7 +43,7 @@ export function invalidateHomepageCache(): void {
 
 export function isHomepageItemScheduledActive(
   item: Pick<HomepageSectionItem, "startDate" | "endDate">,
-  at: Date
+  at: Date,
 ): boolean {
   if (item.startDate) {
     const start = new Date(item.startDate);
@@ -56,7 +58,7 @@ export function isHomepageItemScheduledActive(
   return true;
 }
 
-export async function listAllSections(): Promise<HomepageSection[]> {
+async function listAllSectionsUncached(): Promise<HomepageSection[]> {
   if (sectionsCache && isFresh(sectionsCacheAt)) {
     return sectionsCache;
   }
@@ -67,19 +69,22 @@ export async function listAllSections(): Promise<HomepageSection[]> {
   return sections;
 }
 
+/** Dedupes multiple homepage islands within a single RSC request. */
+export const listAllSections = cache(listAllSectionsUncached);
+
 export async function listActiveSections(): Promise<HomepageSection[]> {
   const sections = await listAllSections();
   return sections.filter((section) => section.isActive);
 }
 
 export async function getSectionByKey(
-  sectionKey: HomepageSectionKey
+  sectionKey: HomepageSectionKey,
 ): Promise<HomepageSection | null> {
   const sections = await listAllSections();
   return sections.find((section) => section.sectionKey === sectionKey) ?? null;
 }
 
-export async function listAllSectionItems(): Promise<HomepageSectionItem[]> {
+async function listAllSectionItemsUncached(): Promise<HomepageSectionItem[]> {
   if (itemsCache && isFresh(itemsCacheAt)) {
     return itemsCache;
   }
@@ -90,8 +95,10 @@ export async function listAllSectionItems(): Promise<HomepageSectionItem[]> {
   return items;
 }
 
+export const listAllSectionItems = cache(listAllSectionItemsUncached);
+
 export async function listSectionItems(
-  sectionKey: HomepageSectionKey
+  sectionKey: HomepageSectionKey,
 ): Promise<HomepageSectionItem[]> {
   const items = await listAllSectionItems();
   return items.filter((item) => item.sectionKey === sectionKey);
@@ -99,7 +106,7 @@ export async function listSectionItems(
 
 export async function listActiveSectionItems(
   sectionKey: HomepageSectionKey,
-  at = new Date()
+  at = new Date(),
 ): Promise<HomepageSectionItem[]> {
   const items = await listSectionItems(sectionKey);
   return items
@@ -107,15 +114,13 @@ export async function listActiveSectionItems(
     .sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
-export async function getSectionItemById(
-  id: string
-): Promise<HomepageSectionItem | null> {
+export async function getSectionItemById(id: string): Promise<HomepageSectionItem | null> {
   return pg.getHomepageSectionItemById(id);
 }
 
 export async function updateSection(
   sectionKey: HomepageSectionKey,
-  input: UpdateHomepageSectionInput
+  input: UpdateHomepageSectionInput,
 ): Promise<HomepageSection> {
   const updated = await pg.updateHomepageSectionRecord(sectionKey, input);
   invalidateHomepageCache();
@@ -129,7 +134,7 @@ async function getNextItemSortOrder(sectionKey: HomepageSectionKey): Promise<num
 }
 
 export async function createSectionItem(
-  input: CreateHomepageSectionItemInput
+  input: CreateHomepageSectionItemInput,
 ): Promise<HomepageSectionItem> {
   const section = await getSectionByKey(input.sectionKey);
   if (!section) throw new Error("Homepage section not found");
@@ -154,9 +159,7 @@ export async function createSectionItem(
 
   const timestamp = now();
   const sortOrder =
-    input.sortOrder !== undefined
-      ? input.sortOrder
-      : await getNextItemSortOrder(input.sectionKey);
+    input.sortOrder !== undefined ? input.sortOrder : await getNextItemSortOrder(input.sectionKey);
 
   const item: HomepageSectionItem = {
     id: randomUUID(),
@@ -184,7 +187,7 @@ export async function createSectionItem(
 
 export async function updateSectionItem(
   id: string,
-  input: UpdateHomepageSectionItemInput
+  input: UpdateHomepageSectionItemInput,
 ): Promise<HomepageSectionItem> {
   const existing = await getSectionItemById(id);
   if (!existing) throw new Error("Homepage section item not found");
@@ -203,16 +206,14 @@ export async function deleteSectionItem(id: string): Promise<void> {
 
 export async function reorderSectionItems(
   sectionKey: HomepageSectionKey,
-  orderedIds: string[]
+  orderedIds: string[],
 ): Promise<HomepageSectionItem[]> {
   await pg.reorderHomepageSectionItems(orderedIds);
   invalidateHomepageCache();
   return listSectionItems(sectionKey);
 }
 
-export async function upsertSection(
-  input: CreateHomepageSectionInput
-): Promise<HomepageSection> {
+export async function upsertSection(input: CreateHomepageSectionInput): Promise<HomepageSection> {
   const section = await pg.upsertHomepageSectionRecord(input);
   invalidateHomepageCache();
   return section;

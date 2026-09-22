@@ -15,10 +15,7 @@ import {
   productToPrisma,
 } from "./mappers";
 
-function filterActive(
-  products: CatalogProduct[],
-  includeInactive: boolean
-): CatalogProduct[] {
+function filterActive(products: CatalogProduct[], includeInactive: boolean): CatalogProduct[] {
   if (includeInactive) return products;
   return products.filter((product) => product.status === "active");
 }
@@ -49,7 +46,7 @@ function assertPostgresForWrite(): void {
 
 /** Cached empty-DB probe so an unseeded Postgres doesn't hide the local JSON catalog. */
 let emptyCatalogProbe: { checkedAt: number; empty: boolean } | null = null;
-const EMPTY_CATALOG_PROBE_TTL_MS = 30_000;
+const EMPTY_CATALOG_PROBE_TTL_MS = 5 * 60_000;
 
 export function invalidateEmptyCatalogProbe(): void {
   emptyCatalogProbe = null;
@@ -57,10 +54,7 @@ export function invalidateEmptyCatalogProbe(): void {
 
 async function isPostgresCatalogEmpty(): Promise<boolean> {
   const now = Date.now();
-  if (
-    emptyCatalogProbe &&
-    now - emptyCatalogProbe.checkedAt < EMPTY_CATALOG_PROBE_TTL_MS
-  ) {
+  if (emptyCatalogProbe && now - emptyCatalogProbe.checkedAt < EMPTY_CATALOG_PROBE_TTL_MS) {
     return emptyCatalogProbe.empty;
   }
 
@@ -82,7 +76,7 @@ async function loadLocalProducts(includeInactive: boolean): Promise<CatalogProdu
 /** Prefer Postgres; optionally fall back to local JSON (dev / explicit opt-in). */
 async function withProductFallback<T>(
   dbQuery: () => Promise<T>,
-  localFallback: () => Promise<T> | T
+  localFallback: () => Promise<T> | T,
 ): Promise<T> {
   const allowJson = isJsonCatalogFallbackAllowed();
 
@@ -107,15 +101,68 @@ async function withProductFallback<T>(
   }
 }
 
-export async function fetchAllProducts(
-  includeInactive = false
-): Promise<CatalogProduct[]> {
+export async function fetchAllProducts(includeInactive = false): Promise<CatalogProduct[]> {
   return withProductFallback(
     async () => {
       const rows = await prisma.product.findMany({ orderBy: { name: "asc" } });
       return filterActive(rows.map(prismaToProduct), includeInactive);
     },
-    async () => sortByName(await loadLocalProducts(includeInactive))
+    async () => sortByName(await loadLocalProducts(includeInactive)),
+  );
+}
+
+/**
+ * Lean active-product list for homepage / marquees — skips heavy JSON blobs
+ * (description, specifications, detail) that dominate payload size.
+ */
+export async function fetchHomepageCatalogProducts(): Promise<CatalogProduct[]> {
+  return withProductFallback(
+    async () => {
+      const rows = await prisma.product.findMany({
+        where: { status: "active" },
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          brand: true,
+          category: true,
+          subcategory: true,
+          price: true,
+          originalPrice: true,
+          discountPercentage: true,
+          rating: true,
+          reviewCount: true,
+          stock: true,
+          reservedStock: true,
+          lowStockThreshold: true,
+          sku: true,
+          status: true,
+          featured: true,
+          trending: true,
+          newArrival: true,
+          image: true,
+          imageColor: true,
+          brandSlug: true,
+          categorySlug: true,
+          availability: true,
+          condition: true,
+          gstRate: true,
+          images: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+      return rows.map((row) =>
+        prismaToProduct({
+          ...row,
+          description: "",
+          specifications: {},
+          detail: null,
+        }),
+      );
+    },
+    async () => sortByName(await loadLocalProducts(false)),
   );
 }
 
@@ -125,9 +172,8 @@ export async function countActiveProducts(): Promise<number> {
     async () => prisma.product.count({ where: { status: "active" } }),
     async () => {
       const { loadProducts } = await import("@/lib/server/catalogRepository");
-      return loadProducts().filter((product) => product.status === "active")
-        .length;
-    }
+      return loadProducts().filter((product) => product.status === "active").length;
+    },
   );
 }
 
@@ -140,13 +186,11 @@ export async function fetchProductById(id: string): Promise<CatalogProduct | nul
     async () => {
       const { loadProducts } = await import("@/lib/server/catalogRepository");
       return loadProducts().find((product) => product.id === id) ?? null;
-    }
+    },
   );
 }
 
-export async function fetchProductBySlug(
-  slug: string
-): Promise<CatalogProduct | null> {
+export async function fetchProductBySlug(slug: string): Promise<CatalogProduct | null> {
   const fromLocal = async () => {
     const { loadProducts } = await import("@/lib/server/catalogRepository");
     return loadProducts().find((product) => product.slug === slug) ?? null;
@@ -163,7 +207,7 @@ export async function fetchProductBySlug(
 
 export async function fetchProductsByIds(
   ids: string[],
-  includeInactive = true
+  includeInactive = true,
 ): Promise<CatalogProduct[]> {
   if (ids.length === 0) return [];
 
@@ -183,13 +227,13 @@ export async function fetchProductsByIds(
         .map((id) => byId.get(id))
         .filter((product): product is CatalogProduct => Boolean(product))
         .filter((product) => includeInactive || product.status === "active");
-    }
+    },
   );
 }
 
 export async function fetchProductsByCategory(
   categorySlug: string,
-  includeInactive = false
+  includeInactive = false,
 ): Promise<CatalogProduct[]> {
   const resolved = normalizeCategorySlug(categorySlug);
 
@@ -205,17 +249,16 @@ export async function fetchProductsByCategory(
       const { loadProducts } = await import("@/lib/server/catalogRepository");
       const products = loadProducts().filter(
         (product) =>
-          product.categorySlug === resolved ||
-          normalizeCategorySlug(product.category) === resolved
+          product.categorySlug === resolved || normalizeCategorySlug(product.category) === resolved,
       );
       return filterActive(products, includeInactive);
-    }
+    },
   );
 }
 
 export async function fetchProductsByBrandSlug(
   brandSlug: string,
-  includeInactive = false
+  includeInactive = false,
 ): Promise<CatalogProduct[]> {
   return withProductFallback(
     async () => {
@@ -229,7 +272,7 @@ export async function fetchProductsByBrandSlug(
       const { loadProducts } = await import("@/lib/server/catalogRepository");
       const products = loadProducts().filter((product) => product.brandSlug === brandSlug);
       return filterActive(products, includeInactive);
-    }
+    },
   );
 }
 
@@ -251,9 +294,7 @@ export async function fetchProductsPage(options: {
     let products = await loadLocalProducts(includeInactive);
     if (options.categorySlug) {
       const resolved = normalizeCategorySlug(options.categorySlug);
-      products = products.filter(
-        (product) => normalizeCategorySlug(product.category) === resolved
-      );
+      products = products.filter((product) => normalizeCategorySlug(product.category) === resolved);
     }
     if (options.status) {
       products = products.filter((product) => product.status === options.status);
@@ -261,7 +302,7 @@ export async function fetchProductsPage(options: {
     products.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() ||
-        b.id.localeCompare(a.id)
+        b.id.localeCompare(a.id),
     );
     if (options.cursor) {
       const index = products.findIndex((product) => product.id === options.cursor);
@@ -298,7 +339,7 @@ export async function fetchProductsPage(options: {
     products.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() ||
-        b.id.localeCompare(a.id)
+        b.id.localeCompare(a.id),
     );
 
     if (options.cursor) {
@@ -329,7 +370,7 @@ export async function fetchBrands(): Promise<Brand[]> {
     async () => {
       const { loadBrands } = await import("@/lib/server/catalogRepository");
       return loadBrands();
-    }
+    },
   );
 }
 
@@ -342,7 +383,7 @@ export async function fetchCategories(): Promise<Category[]> {
     async () => {
       const { loadCategories } = await import("@/lib/server/catalogRepository");
       return loadCategories();
-    }
+    },
   );
 }
 
@@ -365,7 +406,26 @@ export async function fetchExistingSlugsAndSkus(): Promise<{
         slugs: new Set(products.map((product) => product.slug)),
         skus: new Set(products.map((product) => product.sku)),
       };
-    }
+    },
+  );
+}
+
+export async function fetchProductSkuIndex(): Promise<Map<string, string>> {
+  return withProductFallback(
+    async () => {
+      const rows = await prisma.product.findMany({
+        select: { id: true, sku: true },
+      });
+      return new Map(rows.filter((row) => row.sku?.trim()).map((row) => [row.sku.trim(), row.id]));
+    },
+    async () => {
+      const { loadProducts } = await import("@/lib/server/catalogRepository");
+      return new Map(
+        loadProducts()
+          .filter((product) => product.sku?.trim())
+          .map((product) => [product.sku.trim(), product.id]),
+      );
+    },
   );
 }
 
@@ -393,8 +453,8 @@ export async function batchWriteProducts(products: CatalogProduct[]): Promise<vo
         where: { id: product.id },
         create: productToPrisma(product),
         update: productToPrisma(product),
-      })
-    )
+      }),
+    ),
   );
   invalidateEmptyCatalogProbe();
 }
@@ -407,8 +467,8 @@ export async function batchWriteCategories(categories: Category[]): Promise<void
         where: { id: category.id },
         create: categoryToPrisma(category),
         update: categoryToPrisma(category),
-      })
-    )
+      }),
+    ),
   );
 }
 
@@ -420,14 +480,14 @@ export async function batchWriteBrands(brands: Brand[]): Promise<void> {
         where: { id: brand.id },
         create: brandToPrisma(brand),
         update: brandToPrisma(brand),
-      })
-    )
+      }),
+    ),
   );
 }
 
 export async function batchUpdateProducts(
   ids: string[],
-  patch: Partial<CatalogProduct>
+  patch: Partial<CatalogProduct>,
 ): Promise<number> {
   assertPostgresForWrite();
   if (ids.length === 0) return 0;
@@ -472,10 +532,8 @@ export async function slugExists(slug: string, excludeId?: string): Promise<bool
     },
     async () => {
       const { loadProducts } = await import("@/lib/server/catalogRepository");
-      return loadProducts().some(
-        (product) => product.slug === slug && product.id !== excludeId
-      );
-    }
+      return loadProducts().some((product) => product.slug === slug && product.id !== excludeId);
+    },
   );
 }
 
@@ -492,10 +550,8 @@ export async function skuExists(sku: string, excludeId?: string): Promise<boolea
     },
     async () => {
       const { loadProducts } = await import("@/lib/server/catalogRepository");
-      return loadProducts().some(
-        (product) => product.sku === sku && product.id !== excludeId
-      );
-    }
+      return loadProducts().some((product) => product.sku === sku && product.id !== excludeId);
+    },
   );
 }
 

@@ -2,7 +2,8 @@ import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import { isPostgresConfigured } from "@/lib/db/prisma";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
+import { createAuthPrismaAdapter } from "@/lib/auth/prisma-adapter";
 import { verifyPassword } from "@/lib/auth/password";
 import {
   AUTH_SESSION_REMEMBER_MAX_AGE_SECONDS,
@@ -130,6 +131,9 @@ export const authConfig = {
   basePath: "/api/auth",
   trustHost: true,
   secret: resolveAuthSecret(),
+  // Required for Google→password account linking (Account rows + createUser merge).
+  // JWT sessions still use this adapter for OAuth user/account persistence only.
+  ...(isPostgresConfigured() ? { adapter: createAuthPrismaAdapter(prisma) } : {}),
   session: {
     strategy: "jwt" as const,
     // Ceiling for cookie Max-Age / Auth.js defaults. Per-login lifetime is set

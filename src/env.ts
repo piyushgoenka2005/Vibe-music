@@ -105,16 +105,12 @@ export function validateEnv(): void {
     SMTP_USER: envValue(process.env.SMTP_USER),
     SMTP_PASS: envValue(process.env.SMTP_PASS),
     SMTP_SECURE: envValue(process.env.SMTP_SECURE) as "true" | "false" | undefined,
-    SMTP_TLS_REJECT_UNAUTHORIZED: envValue(
-      process.env.SMTP_TLS_REJECT_UNAUTHORIZED
-    ) as "true" | "false" | undefined,
+    SMTP_TLS_REJECT_UNAUTHORIZED: envValue(process.env.SMTP_TLS_REJECT_UNAUTHORIZED) as
+      "true" | "false" | undefined,
     SMTP_ADMIN_TO: envValue(process.env.SMTP_ADMIN_TO),
     ADMIN_NOTIFICATION_EMAIL: envValue(process.env.ADMIN_NOTIFICATION_EMAIL),
     GUEST_ORDER_ACCESS_SECRET: envValue(process.env.GUEST_ORDER_ACCESS_SECRET),
-    ALLOW_DEMO_PAYMENTS: envValue(process.env.ALLOW_DEMO_PAYMENTS) as
-      | "true"
-      | "false"
-      | undefined,
+    ALLOW_DEMO_PAYMENTS: envValue(process.env.ALLOW_DEMO_PAYMENTS) as "true" | "false" | undefined,
     DATABASE_URL: envValue(process.env.DATABASE_URL),
     RESEND_API_KEY: envValue(process.env.RESEND_API_KEY),
   });
@@ -133,15 +129,17 @@ export function validateEnv(): void {
       RAZORPAY_KEY_SECRET: envValue(process.env.RAZORPAY_KEY_SECRET),
       RAZORPAY_WEBHOOK_SECRET: envValue(process.env.RAZORPAY_WEBHOOK_SECRET),
       GUEST_ORDER_ACCESS_SECRET: envValue(process.env.GUEST_ORDER_ACCESS_SECRET),
-      SMTP_HOST: envValue(process.env.SMTP_HOST) ?? (envValue(process.env.RESEND_API_KEY) ? "smtp.resend.com" : undefined),
-      SMTP_USER: envValue(process.env.SMTP_USER) ?? (envValue(process.env.RESEND_API_KEY) ? "resend" : undefined),
+      SMTP_HOST:
+        envValue(process.env.SMTP_HOST) ??
+        (envValue(process.env.RESEND_API_KEY) ? "smtp.resend.com" : undefined),
+      SMTP_USER:
+        envValue(process.env.SMTP_USER) ??
+        (envValue(process.env.RESEND_API_KEY) ? "resend" : undefined),
       SMTP_PASS: envValue(process.env.SMTP_PASS) ?? envValue(process.env.RESEND_API_KEY),
     });
 
     if (!productionResult.success) {
-      // throw new Error(
-      //   `Missing production environment: ${formatZodErrors(productionResult.error)}`
-      // );
+      throw new Error(`Missing production environment: ${formatZodErrors(productionResult.error)}`);
     }
 
     if (serverResult.data.ALLOW_DEMO_PAYMENTS === "true") {
@@ -151,15 +149,15 @@ export function validateEnv(): void {
     const authUrl = envValue(process.env.AUTH_URL);
     if (authUrl && /localhost|127\.0\.0\.1/i.test(authUrl)) {
       throw new Error(
-        "AUTH_URL must be the public site URL in production (not localhost). Set AUTH_URL=https://vibemusic.in or omit it."
+        "AUTH_URL must be the public site URL in production (not localhost). Set AUTH_URL=https://vibemusic.in or omit it.",
       );
     }
 
     const siteUrl = envValue(process.env.NEXT_PUBLIC_SITE_URL);
     if (siteUrl && /localhost|127\.0\.0\.1/i.test(siteUrl)) {
-      // throw new Error(
-      //   "NEXT_PUBLIC_SITE_URL must be the public site URL in production (not localhost)."
-      // );
+      throw new Error(
+        "NEXT_PUBLIC_SITE_URL must be the public site URL in production (not localhost).",
+      );
     }
   }
 

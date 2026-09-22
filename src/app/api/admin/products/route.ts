@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
+import { vibemusicBulkExportFilename } from "@/lib/admin/bulkImportTemplate";
 import {
   listAdminProducts,
   createAdminProduct,
@@ -15,6 +16,9 @@ export async function GET(request: Request) {
     const search = searchParams.get("search") ?? undefined;
     const status = searchParams.get("status") ?? undefined;
     const category = searchParams.get("category") ?? undefined;
+    const stockRaw = searchParams.get("stock");
+    const stock =
+      stockRaw === "in" || stockRaw === "low" || stockRaw === "out" ? stockRaw : undefined;
 
     if (searchParams.get("export") === "csv") {
       const csv = await buildAdminProductsExportCsv({
@@ -22,11 +26,11 @@ export async function GET(request: Request) {
         status,
         category,
       });
-      const stamp = new Date().toISOString().slice(0, 10);
+      const filename = vibemusicBulkExportFilename("csv");
       return new NextResponse(csv, {
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
-          "Content-Disposition": `attachment; filename="vibe-products-${stamp}.csv"`,
+          "Content-Disposition": `attachment; filename="${filename}"`,
         },
       });
     }
@@ -35,10 +39,9 @@ export async function GET(request: Request) {
       search,
       status,
       category,
+      stock,
       limit: Number(searchParams.get("limit") ?? 20),
-      offset: searchParams.has("offset")
-        ? Number(searchParams.get("offset") ?? 0)
-        : undefined,
+      offset: searchParams.has("offset") ? Number(searchParams.get("offset") ?? 0) : undefined,
       cursor: searchParams.get("cursor") ?? undefined,
     });
     return NextResponse.json(result, {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { exportTaxonomyCsv } from "@/lib/server/taxonomyRepository";
+import { taxonomyApiErrorResponse } from "@/lib/server/taxonomyApiErrors";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +17,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    return adminErrorResponse(error);
+    return taxonomyApiErrorResponse(error, request);
   }
 }

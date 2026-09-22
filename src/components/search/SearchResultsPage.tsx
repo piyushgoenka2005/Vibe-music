@@ -96,22 +96,21 @@ function SearchResultsPageContent({
         subcategory: initialSubcategory,
         brand: listingBrand || undefined,
       },
-    }
+    },
   );
 
   const listingProducts = useMemo(
     () => (results?.products ?? []).map(toListingProduct),
-    [results?.products]
+    [results?.products],
   );
 
   const data = useMemo(
     () => buildCategoryProductsResult(listingProducts, filters),
-    [listingProducts, filters]
+    [listingProducts, filters],
   );
 
   const facets = data.facets;
   const total = data.total;
-  const isLoading = status === "loading";
   const isError = status === "error";
   const brandLabel =
     filters.brands.length > 0
@@ -120,7 +119,7 @@ function SearchResultsPageContent({
             slug
               .split("-")
               .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-              .join(" ")
+              .join(" "),
           )
           .join(", ")
       : "";
@@ -129,6 +128,7 @@ function SearchResultsPageContent({
     Boolean(urlCategory) ||
     Boolean(urlSubcategory) ||
     filters.brands.length > 0;
+  const isLoading = status === "loading" || (status === "idle" && hasQuery && !results);
   const listContext = useMemo(
     () => ({
       itemListId: query.trim()
@@ -142,7 +142,7 @@ function SearchResultsPageContent({
           ? `Brand: ${brandLabel}`
           : "Search Results",
     }),
-    [query, brandLabel, filters.brands]
+    [query, brandLabel, filters.brands],
   );
 
   useEffect(() => {
@@ -165,9 +165,7 @@ function SearchResultsPageContent({
 
       <h1 className="cat-page__title">
         {query.trim() ? (
-          <>
-            Results for &ldquo;{query.trim()}&rdquo;
-          </>
+          <>Results for &ldquo;{query.trim()}&rdquo;</>
         ) : brandLabel ? (
           <>{brandLabel}</>
         ) : urlSubcategory.toLowerCase().includes("acoustic") ? (
@@ -197,23 +195,15 @@ function SearchResultsPageContent({
           >
             <SlidersHorizontal size={16} strokeWidth={2.25} aria-hidden />
             <span>Filters</span>
-            {activeCount > 0 ? (
-              <span className="cat-toolbar__badge">{activeCount}</span>
-            ) : null}
+            {activeCount > 0 ? <span className="cat-toolbar__badge">{activeCount}</span> : null}
           </button>
           <span className="cat-toolbar__count" aria-live="polite">
             {isLoading ? "Loading…" : `${total} products`}
           </span>
         </div>
         <div className="cat-toolbar__controls">
-          <SortDropdown
-            value={filters.sort}
-            onChange={(sort) => updateFilters({ sort })}
-          />
-          <ViewToggle
-            value={filters.view}
-            onChange={(view) => updateFilters({ view }, false)}
-          />
+          <SortDropdown value={filters.sort} onChange={(sort) => updateFilters({ sort })} />
+          <ViewToggle value={filters.view} onChange={(view) => updateFilters({ view }, false)} />
         </div>
       </div>
 
@@ -277,10 +267,7 @@ function SearchResultsPageContent({
 
           {!isLoading && !isError && data.products.length > 0 ? (
             <>
-              <div
-                className={`cat-product-grid cat-product-grid--${filters.view}`}
-                role="list"
-              >
+              <div className={`cat-product-grid cat-product-grid--${filters.view}`} role="list">
                 {data.products.map((product, index) => (
                   <ProductCard
                     key={product.id}

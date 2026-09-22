@@ -2,15 +2,13 @@
 
 import type { ReactNode } from "react";
 import type { ProductDetail } from "@/types/product";
-import ProductDescription from "./ProductDescription";
+import ProductDetailsPanel from "./ProductDetailsPanel";
 import ProductReviewsSection from "./reviews/ProductReviewsSection";
 import ProductQASection from "./qa/ProductQASection";
 import "@/styles/product-reviews.css";
 
 const SECTIONS = [
-  { id: "description", label: "Description" },
-  { id: "specs", label: "Specs" },
-  { id: "in-the-box", label: "In The Box" },
+  { id: "details", label: "Product Details" },
   { id: "reviews", label: "Reviews" },
   { id: "qa", label: "Q&A" },
   { id: "videos", label: "Videos" },
@@ -38,20 +36,14 @@ function ProductSectionHeading({
       <span className="pdp-sections__heading-line" aria-hidden="true" />
       <h2 className="pdp-sections__heading-text">
         {children}
-        {count != null ? (
-          <span className="pdp-sections__heading-count">({count})</span>
-        ) : null}
+        {count != null ? <span className="pdp-sections__heading-count">({count})</span> : null}
       </h2>
       <span className="pdp-sections__heading-line" aria-hidden="true" />
     </div>
   );
 }
 
-export default function ProductTabs({
-  product,
-  productSlug,
-  reviewCount,
-}: ProductTabsProps) {
+export default function ProductTabs({ product, productSlug, reviewCount }: ProductTabsProps) {
   const displayedReviewCount = reviewCount ?? product.reviewCount;
 
   function sectionHeading(sectionId: SectionId, label: string) {
@@ -65,19 +57,10 @@ export default function ProductTabs({
   }
 
   return (
-    <section className="pdp-sections" aria-label="Product details">
+    <section className="pdp-sections" aria-label="Product information">
       <div className="pdp-sections__list">
         {SECTIONS.map((section) => {
-          if (
-            section.id === "in-the-box" &&
-            product.inTheBox.length === 0
-          ) {
-            return null;
-          }
           if (section.id === "videos" && product.videos.length === 0) {
-            return null;
-          }
-          if (section.id === "specs" && product.specs.length === 0) {
             return null;
           }
 
@@ -86,79 +69,54 @@ export default function ProductTabs({
           return (
             <article
               key={section.id}
-              className="pdp-sections__block"
-              aria-labelledby={`section-${section.id}`}
+              className={`pdp-sections__block${
+                section.id === "details" ? " pdp-sections__block--details" : ""
+              }`}
+              aria-labelledby={
+                section.id === "details" ? "section-details" : `section-${section.id}`
+              }
             >
-            <ProductSectionHeading id={section.id} count={heading.count}>
-              {heading.label}
-            </ProductSectionHeading>
-
-            <div className="pdp-sections__body">
-              {section.id === "description" ? (
-                <ProductDescription description={product.description} />
+              {section.id !== "details" ? (
+                <ProductSectionHeading id={section.id} count={heading.count}>
+                  {heading.label}
+                </ProductSectionHeading>
               ) : null}
 
-              {section.id === "specs" ? (
-                product.specs.length === 0 ? (
-                  <p className="pdp-sections__empty">
-                    No specifications listed for this product.
-                  </p>
-                ) : (
-                  <div className="pdp-sections__panel pdp-specs-wrap">
-                    <table className="pdp-specs">
-                      <tbody>
-                        {product.specs.map((spec) => (
-                          <tr key={spec.label}>
-                            <th scope="row">{spec.label}</th>
-                            <td>{spec.value}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )
-              ) : null}
+              <div className="pdp-sections__body">
+                {section.id === "details" ? <ProductDetailsPanel product={product} /> : null}
 
-              {section.id === "in-the-box" ? (
-                <ul className="pdp-sections__panel pdp-in-the-box">
-                  {product.inTheBox.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              ) : null}
+                {section.id === "reviews" ? (
+                  <ProductReviewsSection productSlug={productSlug} productId={product.id} />
+                ) : null}
 
-              {section.id === "reviews" ? (
-                <ProductReviewsSection productSlug={productSlug} productId={product.id} />
-              ) : null}
+                {section.id === "qa" ? (
+                  <ProductQASection productSlug={productSlug} staticQa={product.qa} />
+                ) : null}
 
-              {section.id === "qa" ? (
-                <ProductQASection productSlug={productSlug} staticQa={product.qa} />
-              ) : null}
-
-              {section.id === "videos" ? (
-                product.videos.length === 0 ? (
-                  <p className="pdp-sections__empty">No product videos available.</p>
-                ) : (
-                  <div className="pdp-videos">
-                    {product.videos.map((video) => (
-                      <div key={video.id} className="pdp-videos__item">
-                        <h3 className="pdp-sections__subheading pdp-videos__title">
-                          {video.title}
-                        </h3>
-                        <div className="pdp-video-embed">
-                          <iframe
-                            src={video.embedUrl}
-                            title={video.title}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
+                {section.id === "videos" ? (
+                  product.videos.length === 0 ? (
+                    <p className="pdp-sections__empty">No product videos available.</p>
+                  ) : (
+                    <div className="pdp-videos">
+                      {product.videos.map((video) => (
+                        <div key={video.id} className="pdp-videos__item">
+                          <h3 className="pdp-sections__subheading pdp-videos__title">
+                            {video.title}
+                          </h3>
+                          <div className="pdp-video-embed">
+                            <iframe
+                              src={video.embedUrl}
+                              title={video.title}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )
-              ) : null}
-            </div>
+                      ))}
+                    </div>
+                  )
+                ) : null}
+              </div>
             </article>
           );
         })}

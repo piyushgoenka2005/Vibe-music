@@ -2,9 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import Reveal from "@/components/layout/Reveal";
 import BigNamesDealsShowcase from "@/components/home/BigNamesDealsShowcase";
-import {
-  getBigNamesDealsPublicData,
-} from "@/lib/server/homepageService";
+import { getCachedBigNamesDealsPublicData } from "@/lib/server/homepageSnapshotCache";
 import type { PublicBigNamesDealsData } from "@/types/homepage";
 
 const HEADLINE_ID = "bigNamesDealsHeadline";
@@ -32,10 +30,7 @@ export function BigNamesDealsView({ data }: { data: PublicBigNamesDealsData }) {
           </Reveal>
 
           <Reveal immediate delay={40}>
-            <h2
-              className="big-names-deals__headline typo-series"
-              id={HEADLINE_ID}
-            >
+            <h2 className="big-names-deals__headline typo-series" id={HEADLINE_ID}>
               {data.headline}
             </h2>
           </Reveal>
@@ -71,6 +66,6 @@ export function BigNamesDealsView({ data }: { data: PublicBigNamesDealsData }) {
 }
 
 export default async function BigNamesDealsSection() {
-  const data = await getBigNamesDealsPublicData();
+  const data = await getCachedBigNamesDealsPublicData();
   return <BigNamesDealsView data={data} />;
 }

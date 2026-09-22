@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import {
   getTaxonomies,
   getTaxonomyStats,
   getTaxonomyFilterOptions,
 } from "@/lib/server/taxonomyRepository";
+import { taxonomyApiErrorResponse } from "@/lib/server/taxonomyApiErrors";
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,6 +33,6 @@ export async function GET(request: NextRequest) {
       ...(filterOptions && { filterOptions }),
     });
   } catch (error) {
-    return adminErrorResponse(error);
+    return taxonomyApiErrorResponse(error, request);
   }
 }

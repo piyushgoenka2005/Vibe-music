@@ -2,10 +2,10 @@ import "server-only";
 
 import type { ParsedPlaceAddress } from "@/lib/address/parseGoogleAddressComponents";
 import { matchIndianState } from "@/lib/address/indianStates";
+import { withTimeout } from "@/lib/server/withTimeout";
 
 const NOMINATIM_PREFIX = "nominatim:";
-const USER_AGENT =
-  "VibeMusicStorefront/1.0 (https://vibemusic.in; support@vibemusic.in)";
+const USER_AGENT = "VibeMusicStorefront/1.0 (https://vibemusic.in; support@vibemusic.in)";
 
 interface NominatimAddress {
   house_number?: string;
@@ -50,7 +50,7 @@ function parseOsmId(placeId: string): string | null {
 
 function mapNominatimAddress(
   address: NominatimAddress | undefined,
-  displayName: string
+  displayName: string,
 ): ParsedPlaceAddress {
   const house = address?.house_number?.trim() ?? "";
   const road = address?.road?.trim() ?? "";
@@ -59,10 +59,7 @@ function mapNominatimAddress(
     line1 = displayName.split(",")[0]?.trim() ?? displayName;
   }
 
-  const line2 =
-    address?.neighbourhood?.trim() ||
-    address?.suburb?.trim() ||
-    "";
+  const line2 = address?.neighbourhood?.trim() || address?.suburb?.trim() || "";
 
   const city =
     address?.city?.trim() ||
@@ -87,18 +84,22 @@ function mapNominatimAddress(
 }
 
 async function nominatimFetch(url: string): Promise<Response> {
-  return fetch(url, {
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-      "User-Agent": USER_AGENT,
-    },
-  });
+  return withTimeout(
+    fetch(url, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        "User-Agent": USER_AGENT,
+      },
+    }),
+    8000,
+    "Nominatim request",
+  );
 }
 
-export async function nominatimAutocomplete(input: string): Promise<
-  Array<{ description: string; placeId: string }>
-> {
+export async function nominatimAutocomplete(
+  input: string,
+): Promise<Array<{ description: string; placeId: string }>> {
   const params = new URLSearchParams({
     q: input,
     format: "jsonv2",
@@ -107,9 +108,7 @@ export async function nominatimAutocomplete(input: string): Promise<
     limit: "8",
   });
 
-  const response = await nominatimFetch(
-    `https://nominatim.openstreetmap.org/search?${params}`
-  );
+  const response = await nominatimFetch(`https://nominatim.openstreetmap.org/search?${params}`);
   if (!response.ok) {
     throw new Error(`Nominatim search HTTP ${response.status}`);
   }
@@ -124,14 +123,10 @@ export async function nominatimAutocomplete(input: string): Promise<
       if (!placeId || !description) return null;
       return { description, placeId };
     })
-    .filter((row): row is { description: string; placeId: string } =>
-      Boolean(row)
-    );
+    .filter((row): row is { description: string; placeId: string } => Boolean(row));
 }
 
-export async function nominatimPlaceDetails(
-  placeId: string
-): Promise<ParsedPlaceAddress | null> {
+export async function nominatimPlaceDetails(placeId: string): Promise<ParsedPlaceAddress | null> {
   const osmId = parseOsmId(placeId);
   if (!osmId) return null;
 
@@ -141,9 +136,7 @@ export async function nominatimPlaceDetails(
     addressdetails: "1",
   });
 
-  const response = await nominatimFetch(
-    `https://nominatim.openstreetmap.org/lookup?${params}`
-  );
+  const response = await nominatimFetch(`https://nominatim.openstreetmap.org/lookup?${params}`);
   if (!response.ok) {
     throw new Error(`Nominatim lookup HTTP ${response.status}`);
   }

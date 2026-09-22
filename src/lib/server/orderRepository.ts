@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Prisma } from "@prisma/client";
 import { formatOrderId, getOrderYear, ORDER_ID_SEQUENCE_START } from "@/lib/orderId";
 import { isPostgresConfigured } from "@/lib/db/prisma";
 import * as pg from "@/lib/server/prisma/orderRepository";
@@ -20,21 +21,34 @@ export async function fetchOrderById(orderId: string): Promise<Order | null> {
   return pg.fetchOrderById(orderId);
 }
 
-export async function updateOrder(orderId: string, patch: Partial<Order>): Promise<Order> {
-  const existing = await pg.fetchOrderById(orderId);
-  if (!existing) {
-    throw new Error("Order not found");
+export async function lockOrderInTx(
+  tx: Prisma.TransactionClient,
+  orderId: string,
+): Promise<Order | null> {
+  if (!isPostgresConfigured()) {
+    return pg.fetchOrderById(orderId);
   }
+  return pg.lockOrderInTx(tx, orderId);
+}
 
-  const updated: Order = {
-    ...existing,
-    ...patch,
-    id: orderId,
-    updatedAt: patch.updatedAt ?? new Date().toISOString(),
-  };
+export async function updateOrderInTx(
+  tx: Prisma.TransactionClient,
+  order: Order,
+  patch?: Partial<Order>,
+): Promise<Order> {
+  return pg.updateOrderInTx(tx, order, patch);
+}
 
-  await pg.updateOrder(updated);
-  return updated;
+/**
+ * Atomic scalar-field update without a read-modify-write fetch. Returns false
+ * when the order does not exist (or Postgres is not configured).
+ */
+export async function updateOrderFields(
+  orderId: string,
+  data: Prisma.OrderUpdateManyMutationInput,
+): Promise<boolean> {
+  if (!isPostgresConfigured()) return false;
+  return pg.updateOrderFields(orderId, data);
 }
 
 export async function removeOrder(orderId: string): Promise<void> {

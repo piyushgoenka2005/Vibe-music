@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -13,6 +14,8 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
   const [adjustProduct, setAdjustProduct] = useState<InventoryRecord | null>(null);
   const [newQty, setNewQty] = useState(0);
   const [reason, setReason] = useState("");
+  const [search, setSearch] = useState("");
+  const [stockFilter, setStockFilter] = useState<"all" | "low" | "out" | "ok">("all");
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-inventory"],
@@ -63,6 +66,25 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
     },
   });
 
+  const inventory: InventoryRecord[] = useMemo(() => data?.inventory ?? [], [data?.inventory]);
+  const stats = data?.stats;
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return inventory.filter((item) => {
+      const available = item.availableQuantity ?? item.stockQuantity;
+      if (stockFilter === "out" && available > 0) return false;
+      if (stockFilter === "low" && !(available > 0 && available <= item.lowStockThreshold)) {
+        return false;
+      }
+      if (stockFilter === "ok" && available <= item.lowStockThreshold) return false;
+      if (!q) return true;
+      return (
+        item.productName.toLowerCase().includes(q) || (item.sku?.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [inventory, search, stockFilter]);
+
   if (isLoading) return <LoadingState />;
   if (isError) {
     return (
@@ -73,9 +95,6 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
       />
     );
   }
-
-  const inventory = data?.inventory ?? [];
-  const stats = data?.stats;
 
   return (
     <>
@@ -90,22 +109,73 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
 
       {inventoryWrite && adjustProduct ? (
         <div className="admin-panel" style={{ marginBottom: "1rem" }}>
-          <div className="admin-panel__header"><h2 className="admin-panel__title">Adjust: {adjustProduct.productName}</h2></div>
+          <div className="admin-panel__header">
+            <h2 className="admin-panel__title">Adjust: {adjustProduct.productName}</h2>
+          </div>
           <div className="admin-panel__body">
             <div className="admin-form-grid">
-              <div className="admin-form-group"><label>New Quantity</label><input className="admin-input" style={{ width: "100%" }} type="number" min={0} value={newQty} onChange={(e) => setNewQty(Number(e.target.value))} /></div>
-              <div className="admin-form-group"><label>Reason</label><input className="admin-input" style={{ width: "100%" }} value={reason} onChange={(e) => setReason(e.target.value)} /></div>
+              <div className="admin-form-group">
+                <label>New Quantity</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  type="number"
+                  min={0}
+                  value={newQty}
+                  onChange={(e) => setNewQty(Number(e.target.value))}
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>Reason</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                />
+              </div>
             </div>
             <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
-              <button type="button" className="admin-btn admin-btn--primary" onClick={() => adjustMutation.mutate()}>Save Adjustment</button>
-              <button type="button" className="admin-btn admin-btn--secondary" onClick={() => setAdjustProduct(null)}>Cancel</button>
+              <button
+                type="button"
+                className="admin-btn admin-btn--primary"
+                onClick={() => adjustMutation.mutate()}
+              >
+                Save Adjustment
+              </button>
+              <button
+                type="button"
+                className="admin-btn admin-btn--secondary"
+                onClick={() => setAdjustProduct(null)}
+              >
+                Cancel
+              </button>
             </div>
             <MutationError error={adjustMutation.isError ? adjustMutation.error : null} />
           </div>
         </div>
       ) : null}
 
-      <div className="admin-toolbar">
+      <div className="admin-toolbar admin-toolbar--wrap">
+        <input
+          className="admin-input"
+          placeholder="Search product or SKU…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search inventory"
+        />
+        <select
+          className="admin-select"
+          style={{ width: "auto" }}
+          value={stockFilter}
+          onChange={(e) => setStockFilter(e.target.value as typeof stockFilter)}
+          aria-label="Filter stock level"
+        >
+          <option value="all">All stock levels</option>
+          <option value="ok">Healthy</option>
+          <option value="low">Low stock</option>
+          <option value="out">Out of stock</option>
+        </select>
         <button
           type="button"
           className="admin-btn admin-btn--secondary"
@@ -115,29 +185,75 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
         >
           Export CSV
         </button>
+        <span style={{ fontSize: "0.8125rem", color: "var(--admin-muted)" }}>
+          Showing {filtered.length} of {inventory.length}
+        </span>
       </div>
 
       <div className="admin-panel">
-        {inventory.length === 0 ? (
-          <EmptyState message="No inventory records." />
+        {filtered.length === 0 ? (
+          <EmptyState message="No inventory records match your filters." />
         ) : (
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>Product</th><th>SKU</th><th>On Hand</th><th>Reserved</th><th>Available</th><th>Threshold</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>SKU</th>
+                  <th>On Hand</th>
+                  <th>Reserved</th>
+                  <th>Available</th>
+                  <th>Threshold</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
               <tbody>
-                {inventory.map((item: InventoryRecord) => (
+                {filtered.map((item: InventoryRecord) => (
                   <tr key={item.productId}>
-                    <td>{item.productName}</td>
+                    <td>
+                      <Link href={`/admin/products/${encodeURIComponent(item.productId)}`}>
+                        {item.productName}
+                      </Link>
+                    </td>
                     <td>{item.sku ?? "—"}</td>
                     <td>{item.stockQuantity}</td>
                     <td>{item.reservedQuantity ?? 0}</td>
                     <td>{item.availableQuantity ?? item.stockQuantity}</td>
                     <td>{item.lowStockThreshold}</td>
-                    <td><StatusBadge status={item.availableQuantity !== undefined && item.availableQuantity <= 0 ? "out-of-stock" : item.availableQuantity !== undefined && item.availableQuantity <= item.lowStockThreshold ? "limited" : "in-stock"} /></td>
                     <td>
-                      {inventoryWrite ? (
-                      <button type="button" className="admin-btn admin-btn--ghost" onClick={() => { setAdjustProduct(item); setNewQty(item.stockQuantity); }}>Adjust</button>
-                      ) : null}
+                      <StatusBadge
+                        status={
+                          item.availableQuantity !== undefined && item.availableQuantity <= 0
+                            ? "out-of-stock"
+                            : item.availableQuantity !== undefined &&
+                                item.availableQuantity <= item.lowStockThreshold
+                              ? "limited"
+                              : "in-stock"
+                        }
+                      />
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+                        {inventoryWrite ? (
+                          <button
+                            type="button"
+                            className="admin-btn admin-btn--ghost"
+                            onClick={() => {
+                              setAdjustProduct(item);
+                              setNewQty(item.stockQuantity);
+                            }}
+                          >
+                            Adjust
+                          </button>
+                        ) : null}
+                        <Link
+                          href={`/admin/products/${encodeURIComponent(item.productId)}`}
+                          className="admin-btn admin-btn--ghost"
+                        >
+                          Edit
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -201,9 +317,9 @@ export default function AdminInventoryPage() {
       {(admin) => {
         const caps = getAdminCapabilities(admin.permissions);
         return (
-        <AdminShell admin={admin} title="Inventory">
-          <InventoryContent inventoryWrite={caps.inventoryWrite} />
-        </AdminShell>
+          <AdminShell admin={admin} title="Inventory">
+            <InventoryContent inventoryWrite={caps.inventoryWrite} />
+          </AdminShell>
         );
       }}
     </AdminGuard>

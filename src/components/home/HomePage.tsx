@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import "@/styles/homepage-bundle.css";
 import HomepageBannerHeroSection from "@/components/home/homepage-banner-hero/HomepageBannerHeroSection";
 import BrowseCategoryCardsSection from "@/components/home/BrowseCategoryCardsSection";
+import CategoryBento from "@/components/home/CategoryBento";
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
 import HomepageNewArrivalsAsync from "@/components/home/HomepageNewArrivalsAsync";
@@ -40,10 +41,6 @@ const GearStoriesReelsSection = dynamic(() => import("@/components/home/GearStor
   loading: () => null,
 });
 
-const CategoryBento = dynamic(() => import("@/components/home/CategoryBento"), {
-  loading: () => null,
-});
-
 const CultureTypographySection = dynamic(
   () => import("@/components/home/CultureTypographySection"),
   { loading: () => null },
@@ -54,10 +51,11 @@ export default function HomePage() {
     <main className="premium-home">
       <h1 className="visually-hidden">Vibe Music — Musical Instruments & Pro Audio</h1>
 
-      <HomepageBannerHeroSection />
+      <Suspense fallback={null}>
+        <HomepageBannerHeroSection />
+      </Suspense>
       <PremiumHero />
       <HomepageStats />
-
       <Suspense fallback={<HomepageSectionsSkeleton />}>
         <HomepageNewArrivalsAsync />
       </Suspense>
@@ -67,13 +65,17 @@ export default function HomePage() {
       </Suspense>
 
       <WhyShopSection />
-      <BrowseCategoryCardsSection />
+      <Suspense fallback={null}>
+        <BrowseCategoryCardsSection />
+      </Suspense>
 
       <Suspense fallback={null}>
         <GearStoriesReelsSection />
       </Suspense>
 
-      <CategoryBento />
+      <Suspense fallback={null}>
+        <CategoryBento />
+      </Suspense>
 
       <Suspense fallback={<HomepageSectionsSkeleton />}>
         <HomepageSectionsAsync />

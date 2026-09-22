@@ -116,20 +116,41 @@ test.describe("Bulk import upload", () => {
   test("preview valid CSV and reject invalid file type", async ({ page }) => {
     test.setTimeout(120_000);
     await page.goto("/admin/products", { waitUntil: "domcontentloaded" });
-    await page.getByRole("button", { name: /Import CSV/i }).click();
+    await page.getByRole("button", { name: /Import products/i }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
 
-    await page.locator("#bulk-import-csv").setInputFiles({
+    await page.locator("#bulk-import-sheet").setInputFiles({
       name: "bad.txt",
       mimeType: "text/plain",
       buffer: Buffer.from("not,a,valid,import"),
     });
-    await expect(page.getByText(/Upload a \.csv file/i)).toBeVisible();
+    await expect(page.getByText(/Vibe Music bulk template as \.xlsx or \.csv/i)).toBeVisible();
 
-    await page.locator("#bulk-import-csv").setInputFiles(FIXTURE_CSV);
-    await page.getByRole("button", { name: /Preview import/i }).click();
-    await expect(page.getByText(/Preview ready:/i)).toBeVisible({ timeout: 30_000 });
+    await page.locator("#bulk-import-sheet").setInputFiles(FIXTURE_CSV);
+    await page.getByRole("button", { name: /Continue to options/i }).click();
+    await page.getByRole("button", { name: /Run validation preview/i }).click();
+    await expect(page.getByText(/Creates/i)).toBeVisible({ timeout: 30_000 });
     await expect(page.locator(".admin-table tbody tr").first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /vibemusic bulk\.xlsx/i })).toHaveAttribute(
+      "href",
+      "/vibemusic%20bulk.xlsx",
+    );
+  });
+
+  test("legacy CSV headers are rejected at preview", async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.goto("/admin/products", { waitUntil: "domcontentloaded" });
+    await page.getByRole("button", { name: /Import products/i }).click();
+
+    const legacyCsv = "name,brand,category,price\nLegacy Product,Legacy Brand,Guitars,1000\n";
+    await page.locator("#bulk-import-sheet").setInputFiles({
+      name: "legacy.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(legacyCsv),
+    });
+    await page.getByRole("button", { name: /Continue to options/i }).click();
+    await page.getByRole("button", { name: /Run validation preview/i }).click();
+    await expect(page.getByText(/vibemusic bulk template/i)).toBeVisible({ timeout: 30_000 });
   });
 });
 

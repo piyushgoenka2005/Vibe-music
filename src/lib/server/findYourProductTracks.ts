@@ -1,7 +1,8 @@
 import "server-only";
 
 import type { ScannerProduct } from "@/components/home/find-your-product/types";
-import { fetchAllProducts } from "@/lib/server/storeCatalogRepository";
+import { getCachedHomepageProducts } from "@/lib/server/catalogSnapshotCache";
+import { storefrontImageUrl } from "@/lib/storefrontImages";
 import { formatDisplayPrice } from "@/utils/currency";
 
 const TRACK_COUNT = 3;
@@ -17,15 +18,19 @@ function toScannerProduct(
     image?: string;
     slug: string;
   },
-  index: number
+  index: number,
 ): ScannerProduct {
+  const image = product.image
+    ? storefrontImageUrl(product.image, 480).src
+    : "/images/guitar-1.webp";
+
   return {
     id: product.id || `catalog-${index}`,
     name: product.name,
     price: formatDisplayPrice(product.price),
     revenue: product.brand,
     growth: product.category,
-    image: product.image || "/images/guitar-1.webp",
+    image,
     imageAlt: `${product.brand} ${product.name}`,
     slug: product.slug,
   };
@@ -38,7 +43,7 @@ function toScannerProduct(
  */
 export async function loadFindYourProductTracks(): Promise<ScannerProduct[][]> {
   try {
-    const catalog = await fetchAllProducts(false);
+    const catalog = await getCachedHomepageProducts();
     const active = catalog.filter((p) => p.status === "active" && p.slug);
 
     if (active.length === 0) {

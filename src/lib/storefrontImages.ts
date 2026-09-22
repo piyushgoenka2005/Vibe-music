@@ -88,11 +88,6 @@ export function storefrontImageUrl(
   return { src: url, kind: "direct" };
 }
 
-/** Local cached-resize endpoint for oversized CDN masters. */
-function mediaThumbProxyUrl(absoluteUrl: string, width: number): string {
-  return `/api/media/thumb?url=${encodeURIComponent(absoluteUrl)}&w=${width}`;
-}
-
 /**
  * If `url` is already an `/api/media/thumb?...` path, return nested CDN original.
  * Prevents double-optimization from dropping CDN fallbacks.

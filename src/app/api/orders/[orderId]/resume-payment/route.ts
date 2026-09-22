@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { getAdminSession } from "@/lib/server/adminService";
-import { enforceRateLimit } from "@/lib/api/route-utils";
+import { enforceMutationSecurity, enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { formatCheckoutError } from "@/lib/server/checkoutErrors";
+import { withTimeout } from "@/lib/server/withTimeout";
 import {
   getRazorpayPublicKey,
   isDemoPaymentsAllowed,
@@ -13,16 +14,16 @@ import {
 import { canAccessOrder } from "@/lib/server/orderAccess";
 import { getOrderById } from "@/lib/server/orderService";
 import { toPaise } from "@/lib/gstCalculator";
-import { updateOrder } from "@/lib/server/orderRepository";
+import { updateOrderFields } from "@/lib/server/orderRepository";
 import { resumePaymentSchema } from "@/lib/validations/checkout";
 
-export async function POST(
-  request: Request,
-  context: { params: Promise<{ orderId: string }> }
-) {
+export async function POST(request: Request, context: { params: Promise<{ orderId: string }> }) {
   try {
     const rateLimited = await enforceRateLimit(request, "resume-payment", RATE_LIMITS.checkout);
     if (rateLimited) return rateLimited;
+
+    const csrfError = enforceMutationSecurity(request);
+    if (csrfError) return csrfError;
 
     const { orderId } = await context.params;
     const raw = await request.json().catch(() => ({}));
@@ -30,7 +31,7 @@ export async function POST(
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message ?? "Invalid request body" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const guestEmail = parsed.data.email?.trim().toLowerCase();
@@ -42,9 +43,7 @@ export async function POST(
     }
 
     const sessionUser = await getSessionUser();
-    const adminSession = sessionUser
-      ? await getAdminSession(sessionUser.uid)
-      : null;
+    const adminSession = sessionUser ? await getAdminSession(sessionUser.uid) : null;
 
     const hasAccess =
       Boolean(adminSession) ||
@@ -68,30 +67,24 @@ export async function POST(
           error: "This order is already paid.",
           redirectUrl: `/checkout/success?${params.toString()}`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (order.paymentStatus !== "pending") {
       return NextResponse.json(
         { error: "Payment cannot be resumed for this order." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (order.paymentMethod === "cod") {
-      return NextResponse.json(
-        { error: "This is a cash-on-delivery order." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "This is a cash-on-delivery order." }, { status: 400 });
     }
 
     if (!isRazorpayConfigured()) {
       if (!isDemoPaymentsAllowed()) {
-        return NextResponse.json(
-          { error: "Payment gateway unavailable." },
-          { status: 503 }
-        );
+        return NextResponse.json({ error: "Payment gateway unavailable." }, { status: 503 });
       }
 
       return NextResponse.json({
@@ -106,28 +99,29 @@ export async function POST(
       key_secret: process.env.RAZORPAY_KEY_SECRET!,
     });
 
-    const razorpayOrder = await razorpay.orders.create({
-      amount: toPaise(order.total),
-      currency: "INR",
-      receipt: order.id,
-      notes: {
-        email: order.email,
-        orderId: order.id,
-        resumed: "true",
-      },
-    });
+    const razorpayOrder = (await withTimeout(
+      razorpay.orders.create({
+        amount: toPaise(order.total),
+        currency: "INR",
+        receipt: order.id,
+        notes: {
+          email: order.email,
+          orderId: order.id,
+          resumed: "true",
+        },
+      }),
+      15000,
+      "Razorpay order.create (resume)",
+    )) as { id: string; amount: number; currency: string };
 
-    await updateOrder(order.id, {
+    await updateOrderFields(order.id, {
       razorpayOrderId: razorpayOrder.id,
       updatedAt: new Date().toISOString(),
     });
 
     const keyId = getRazorpayPublicKey();
     if (!keyId) {
-      return NextResponse.json(
-        { error: "Payment gateway is misconfigured." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Payment gateway is misconfigured." }, { status: 500 });
     }
 
     return NextResponse.json({

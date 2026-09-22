@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
-  invalidatePublicHomepageCache,
+  invalidatePublicHomepageCacheAsync,
   reorderSectionItems,
 } from "@/lib/server/homepageService";
 import { adminHomepageItemReorderSchema } from "@/lib/validations/admin";
@@ -14,9 +14,9 @@ export async function POST(request: Request) {
     const parsed = adminHomepageItemReorderSchema.parse(body);
     const items = await reorderSectionItems(
       parsed.sectionKey as HomepageSectionKey,
-      parsed.orderedIds
+      parsed.orderedIds,
     );
-    invalidatePublicHomepageCache();
+    await invalidatePublicHomepageCacheAsync();
     return NextResponse.json({ items });
   } catch (error) {
     return adminErrorResponse(error);

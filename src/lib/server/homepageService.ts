@@ -1,12 +1,14 @@
 import "server-only";
 
-import { fetchBrands } from "@/lib/server/storeCatalogRepository";
-import { getCachedActiveProducts } from "@/lib/server/catalogSnapshotCache";
-import { listCategories } from "@/lib/server/categoryRepository";
+import {
+  getCachedBrands,
+  getCachedCategories,
+  getCachedHomepageProducts,
+} from "@/lib/server/catalogSnapshotCache";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { buildTopBrandStripItems } from "@/data/topBrandStrip";
 import { getCategoryGridImage, hasCuratedCategoryImage } from "@/lib/categoryImages";
-import { categoryPath, productPath } from "@/lib/routes";
+import { categoryPath, productPath, ROUTES } from "@/lib/routes";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import {
   getSectionByKey,
@@ -28,6 +30,9 @@ import {
   resolveBigNamesDealFallbacks,
 } from "@/lib/homepage/bigNamesDeals";
 import type { CatalogProduct } from "@/types/catalog";
+import { unpackCategoryOfferText } from "@/lib/homepage/categoryOfferText";
+import { BROWSE_CATEGORY_CARDS, BROWSE_CATEGORY_CARDS_CTA } from "@/data/browseCategoryCards";
+import { CATEGORY_BENTO_ITEMS } from "@/data/categoryBento";
 import type {
   HomepageBrandItem,
   HomepageCategoryItem,
@@ -40,10 +45,26 @@ import type {
   ResolvedHomepageSection,
 } from "@/types/homepage";
 
+export interface PublicCategorySectionData {
+  isActive: boolean;
+  title: string;
+  subtitle?: string;
+  accentLabel?: string;
+  ctaText: string;
+  ctaLink: string;
+  items: HomepageCategoryItem[];
+}
+
 export function invalidatePublicHomepageCache(): void {
   void import("@/lib/server/homepageSnapshotCache").then(({ revalidateHomepageSnapshot }) =>
     revalidateHomepageSnapshot(),
   );
+}
+
+/** Awaitable invalidation for admin writes (read-your-own-writes on storefront). */
+export async function invalidatePublicHomepageCacheAsync(): Promise<void> {
+  const { revalidateHomepageSnapshot } = await import("@/lib/server/homepageSnapshotCache");
+  await revalidateHomepageSnapshot();
 }
 
 function activeProducts(products: CatalogProduct[]): CatalogProduct[] {
@@ -200,32 +221,46 @@ async function resolveCategories(
   section: HomepageSection,
   items: HomepageSectionItem[],
 ): Promise<HomepageCategoryItem[]> {
-  const categories = await listCategories();
+  const categories = await getCachedCategories();
+  const allowFreeform =
+    section.layout === "browse_category_cards" ||
+    section.layout === "category_bento" ||
+    section.sectionKey === "browse_by_categories" ||
+    section.sectionKey === "category_bento";
 
   if (section.sourceMode === "manual") {
     const categoryMap = new Map(categories.map((category) => [category.slug, category]));
     const resolved: HomepageCategoryItem[] = [];
 
     for (const item of items) {
-      if (!item.categorySlug) continue;
-      const category = categoryMap.get(item.categorySlug);
-      if (!category) continue;
+      const category = item.categorySlug ? categoryMap.get(item.categorySlug) : undefined;
+      const { desc, brands } = unpackCategoryOfferText(item.offerText);
+
+      if (!category && !allowFreeform) continue;
+      if (!category && !(item.customTitle || item.customHref || item.customImage)) {
+        continue;
+      }
+
+      const slug =
+        item.categorySlug || category?.slug || item.id.replace(/^(browse|bento|popular)-cat-/, "");
 
       resolved.push({
-        id: category.id,
-        slug: category.slug,
-        title: item.customTitle || category.name,
-        href: item.customHref || categoryPath(category.slug),
+        id: item.id,
+        slug,
+        title: item.customTitle || category?.name || slug,
+        href: item.customHref || (category ? categoryPath(category.slug) : categoryPath(slug)),
         imageSrc:
           item.customImage ||
-          (hasCuratedCategoryImage(category.slug)
+          (category && hasCuratedCategoryImage(category.slug)
             ? getCategoryGridImage(category.slug)
-            : category.imageUrl || getCategoryGridImage(category.slug)),
-        badge: item.badgeLabel,
+            : category?.imageUrl || getCategoryGridImage(slug)),
+        badge: item.badgeLabel || undefined,
+        desc,
+        brands,
       });
     }
 
-    return resolved;
+    return resolved.slice(0, section.maxItems);
   }
 
   return categories
@@ -247,16 +282,11 @@ async function resolveBrands(
   section: HomepageSection,
   items: HomepageSectionItem[],
 ): Promise<HomepageBrandItem[]> {
-  const brands = await fetchBrands();
+  const brands = await getCachedBrands();
   const brandById = new Map(brands.map((brand) => [brand.id, brand]));
   const brandBySlug = new Map(brands.map((brand) => [brand.slug, brand]));
 
-  // Shop Top Brands always follows TOP_BRAND_STRIP_SLUGS (ignores CMS manual picks).
-  if (section.sectionKey === "brand_strip") {
-    return buildTopBrandStripItems(brands);
-  }
-
-  if (section.sourceMode === "manual") {
+  const resolveManual = (): HomepageBrandItem[] => {
     const resolved: HomepageBrandItem[] = [];
 
     for (const item of items) {
@@ -275,6 +305,19 @@ async function resolveBrands(
     }
 
     return resolved;
+  };
+
+  if (section.sectionKey === "brand_strip") {
+    if (section.sourceMode === "manual") {
+      const curated = resolveManual();
+      if (curated.length > 0) return curated.slice(0, section.maxItems);
+    }
+    // Auto mode, or manual with no curated rows yet — keep storefront filled.
+    return buildTopBrandStripItems(brands).slice(0, section.maxItems);
+  }
+
+  if (section.sourceMode === "manual") {
+    return resolveManual();
   }
 
   return brands.slice(0, section.maxItems).map((brand) => ({
@@ -293,6 +336,8 @@ function sectionDomId(sectionKey: HomepageSectionKey): string {
     trending: "trending-products",
     staff_picks: "suggested-products",
     featured_categories: "popular-categories",
+    browse_by_categories: "browse-by-categories",
+    category_bento: "category-bento",
     deals_of_the_day: "sales-events",
     big_names_deals: "big-names-deals",
     brand_strip: "brand-strip",
@@ -307,7 +352,12 @@ async function resolveSection(
   at: Date,
   allSectionItems: HomepageSectionItem[],
 ): Promise<ResolvedHomepageSection | null> {
-  if (section.sectionKey === "big_names_deals" || section.sectionKey === "featured_stories") {
+  if (
+    section.sectionKey === "big_names_deals" ||
+    section.sectionKey === "featured_stories" ||
+    section.sectionKey === "browse_by_categories" ||
+    section.sectionKey === "category_bento"
+  ) {
     return null;
   }
 
@@ -340,13 +390,9 @@ async function resolveSection(
     if (categories.length === 0) return null;
     return {
       ...base,
-      ...(section.sectionKey === "featured_categories"
-        ? {
-            title: "Popular Categories",
-            ctaText: "Browse All Categories",
-            ctaLink: section.ctaLink || "/categories",
-          }
-        : null),
+      title: section.title || "Popular Categories",
+      ctaText: section.ctaText || "Browse All Categories",
+      ctaLink: section.ctaLink || "/categories",
       categories,
     };
   }
@@ -399,7 +445,7 @@ export async function getBigNamesDealsPublicData(
   try {
     const [section, products, allItems] = await Promise.all([
       getSectionByKey("big_names_deals"),
-      getCachedActiveProducts(),
+      getCachedHomepageProducts(),
       listAllSectionItems(),
     ]);
 
@@ -471,15 +517,197 @@ export async function getBigNamesDealsPublicData(
   }
 }
 
+export async function getBrowseByCategoriesPublicData(
+  at = new Date(),
+): Promise<PublicCategorySectionData> {
+  const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
+    (section) => section.sectionKey === "browse_by_categories",
+  );
+
+  const fallbackItems: HomepageCategoryItem[] = BROWSE_CATEGORY_CARDS.map((card) => ({
+    id: card.id,
+    slug: card.id,
+    title: card.title,
+    href: card.href,
+    imageSrc: card.image,
+  }));
+
+  try {
+    const [section, allItems] = await Promise.all([
+      getSectionByKey("browse_by_categories"),
+      listAllSectionItems(),
+    ]);
+
+    const config = section ?? {
+      id: "browse_by_categories",
+      sectionKey: "browse_by_categories" as const,
+      title: defaults?.title ?? "Browse by Categories",
+      subtitle: defaults?.subtitle,
+      accentLabel: defaults?.accentLabel,
+      ctaText: defaults?.ctaText ?? "View All Gear",
+      ctaLink: defaults?.ctaLink ?? BROWSE_CATEGORY_CARDS_CTA,
+      isActive: defaults?.isActive ?? true,
+      sortOrder: defaults?.sortOrder ?? 5,
+      sourceMode: "manual" as const,
+      maxItems: defaults?.maxItems ?? 12,
+      layout: "browse_category_cards" as const,
+      createdAt: at.toISOString(),
+      updatedAt: at.toISOString(),
+    };
+
+    if (!config.isActive) {
+      return {
+        isActive: false,
+        title: config.title,
+        ctaText: config.ctaText ?? "View All Gear",
+        ctaLink: config.ctaLink ?? BROWSE_CATEGORY_CARDS_CTA,
+        items: [],
+      };
+    }
+
+    const items = allItems
+      .filter(
+        (item) =>
+          item.sectionKey === "browse_by_categories" &&
+          item.isActive &&
+          isHomepageItemScheduledActive(item, at),
+      )
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const resolved = await resolveCategories(config, items);
+
+    return {
+      isActive: true,
+      title: config.title || "Browse by Categories",
+      subtitle: config.subtitle,
+      accentLabel: config.accentLabel,
+      ctaText: config.ctaText || "View All Gear",
+      ctaLink: config.ctaLink || BROWSE_CATEGORY_CARDS_CTA,
+      items: resolved.length > 0 ? resolved : fallbackItems,
+    };
+  } catch {
+    return {
+      isActive: true,
+      title: defaults?.title ?? "Browse by Categories",
+      ctaText: defaults?.ctaText ?? "View All Gear",
+      ctaLink: defaults?.ctaLink ?? BROWSE_CATEGORY_CARDS_CTA,
+      items: fallbackItems,
+    };
+  }
+}
+
+export async function getCategoryBentoPublicData(
+  at = new Date(),
+): Promise<PublicCategorySectionData> {
+  const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
+    (section) => section.sectionKey === "category_bento",
+  );
+
+  const fallbackItems: HomepageCategoryItem[] = CATEGORY_BENTO_ITEMS.map((item) => ({
+    id: item.slug,
+    slug: item.slug,
+    title: item.title,
+    href: categoryPath(item.slug),
+    imageSrc: item.image,
+    badge: item.badge,
+    desc: item.desc,
+    brands: item.brands,
+  }));
+
+  try {
+    const [section, allItems] = await Promise.all([
+      getSectionByKey("category_bento"),
+      listAllSectionItems(),
+    ]);
+
+    const config = section ?? {
+      id: "category_bento",
+      sectionKey: "category_bento" as const,
+      title: defaults?.title ?? "Shop by Category",
+      subtitle: defaults?.subtitle,
+      accentLabel: defaults?.accentLabel ?? "Explore Category",
+      ctaText: defaults?.ctaText ?? "Browse all categories",
+      ctaLink: defaults?.ctaLink ?? ROUTES.categories,
+      isActive: defaults?.isActive ?? true,
+      sortOrder: defaults?.sortOrder ?? 6,
+      sourceMode: "manual" as const,
+      maxItems: defaults?.maxItems ?? 12,
+      layout: "category_bento" as const,
+      createdAt: at.toISOString(),
+      updatedAt: at.toISOString(),
+    };
+
+    if (!config.isActive) {
+      return {
+        isActive: false,
+        title: config.title,
+        accentLabel: config.accentLabel,
+        ctaText: config.ctaText ?? "Browse all categories",
+        ctaLink: config.ctaLink ?? ROUTES.categories,
+        items: [],
+      };
+    }
+
+    const items = allItems
+      .filter(
+        (item) =>
+          item.sectionKey === "category_bento" &&
+          item.isActive &&
+          isHomepageItemScheduledActive(item, at),
+      )
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const resolved = await resolveCategories(config, items);
+
+    // Merge CMS fields with static presentation defaults (size/variant/images).
+    const staticBySlug = new Map(CATEGORY_BENTO_ITEMS.map((item) => [item.slug, item]));
+    const merged =
+      resolved.length > 0
+        ? resolved.map((item) => {
+            const fallback = staticBySlug.get(item.slug);
+            return {
+              ...item,
+              imageSrc: item.imageSrc || fallback?.image || item.imageSrc,
+              desc: item.desc || fallback?.desc,
+              brands: item.brands || fallback?.brands,
+              badge: item.badge || fallback?.badge,
+            };
+          })
+        : fallbackItems;
+
+    return {
+      isActive: true,
+      title: config.title || "Shop by Category",
+      subtitle: config.subtitle,
+      accentLabel: config.accentLabel || "Explore Category",
+      ctaText: config.ctaText || "Browse all categories",
+      ctaLink: config.ctaLink || ROUTES.categories,
+      items: merged,
+    };
+  } catch {
+    return {
+      isActive: true,
+      title: defaults?.title ?? "Shop by Category",
+      accentLabel: defaults?.accentLabel ?? "Explore Category",
+      ctaText: defaults?.ctaText ?? "Browse all categories",
+      ctaLink: defaults?.ctaLink ?? ROUTES.categories,
+      items: fallbackItems,
+    };
+  }
+}
+
 export async function getPublicHomepageData(at = new Date()): Promise<PublicHomepageData> {
   const staticFallback = (): Promise<PublicHomepageData> => getHomepageStaticFallbacks(at);
 
   try {
     const [sections, products, allSectionItems] = await Promise.all([
       listActiveSections(),
-      getCachedActiveProducts(),
+      getCachedHomepageProducts(),
       listAllSectionItems(),
     ]);
+
+    // Warm shared taxonomy caches once before parallel section resolve (avoids stampede).
+    await Promise.all([getCachedCategories(), getCachedBrands()]);
 
     const hasFeaturedCategories = sections.some(
       (section) => section.sectionKey === "featured_categories",

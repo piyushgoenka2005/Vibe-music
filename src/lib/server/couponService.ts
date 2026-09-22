@@ -1,7 +1,11 @@
 import { randomUUID } from "crypto";
 import * as pg from "@/lib/server/prisma/contentRepository";
 import type { Coupon } from "@/types/admin";
-import type { AppliedCouponSnapshot, CouponValidationResult, StorefrontCouponOffer } from "@/types/coupon";
+import type {
+  AppliedCouponSnapshot,
+  CouponValidationResult,
+  StorefrontCouponOffer,
+} from "@/types/coupon";
 import { validateCouponForSubtotal } from "@/lib/coupons/couponMath";
 
 const STATIC_COUPONS: Record<string, Omit<Coupon, "id">> = {
@@ -92,9 +96,7 @@ async function seedDefaultCoupons(): Promise<Coupon[]> {
   return coupons;
 }
 
-export async function listCoupons(
-  options: { limit?: number; cursor?: string } = {}
-): Promise<{
+export async function listCoupons(options: { limit?: number; cursor?: string } = {}): Promise<{
   coupons: Coupon[];
   hasMore: boolean;
   nextCursor?: string;
@@ -123,7 +125,7 @@ export async function getCouponByCode(code: string): Promise<Coupon | null> {
 
 export async function validateCoupon(
   code: string,
-  subtotal: number
+  subtotal: number,
 ): Promise<CouponValidationResult> {
   const coupon = await getCouponByCode(code);
   if (!coupon) {
@@ -151,7 +153,7 @@ export async function validateCoupon(
 }
 
 export async function createCoupon(
-  input: Omit<Coupon, "id" | "usedCount" | "createdAt" | "updatedAt">
+  input: Omit<Coupon, "id" | "usedCount" | "createdAt" | "updatedAt">,
 ): Promise<Coupon> {
   const now = new Date().toISOString();
   const record: Coupon = {
@@ -165,10 +167,7 @@ export async function createCoupon(
   return pg.createCouponRecord(record);
 }
 
-export async function updateCoupon(
-  id: string,
-  patch: Partial<Coupon>
-): Promise<Coupon> {
+export async function updateCoupon(id: string, patch: Partial<Coupon>): Promise<Coupon> {
   return pg.updateCouponRecord(id, patch);
 }
 
@@ -176,8 +175,8 @@ export async function deleteCoupon(id: string): Promise<void> {
   await pg.deleteCouponRecord(id);
 }
 
-export async function incrementCouponUsage(code: string): Promise<void> {
-  await pg.incrementCouponUsageRecord(code);
+export async function incrementCouponUsage(code: string): Promise<boolean> {
+  return pg.incrementCouponUsageRecord(code);
 }
 
 function isCouponScheduleActive(coupon: Coupon, at = new Date()): boolean {
@@ -195,7 +194,7 @@ function isCouponScheduleActive(coupon: Coupon, at = new Date()): boolean {
 }
 
 export async function listActiveCouponsForStorefront(
-  at = new Date()
+  at = new Date(),
 ): Promise<StorefrontCouponOffer[]> {
   const { coupons } = await listCoupons({ limit: 100 });
   return coupons

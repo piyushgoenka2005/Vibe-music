@@ -33,6 +33,8 @@ type ProductRow = {
   detail: unknown;
 };
 
+type Tx = Prisma.TransactionClient;
+
 function readSnapshot(productId: string, row: ProductRow): ProductStockSnapshot {
   const stock = Number(row.stock ?? row.stockQuantity ?? 0);
   const reservedStock = Number(row.reservedStock ?? 0);
@@ -70,11 +72,11 @@ function readVariantStock(row: ProductRow, variantId: string): number | null {
 function buildVariantStockPatch(
   row: ProductRow,
   variantId: string,
-  delta: number
+  delta: number,
 ): Record<string, unknown> {
   const detail = (row.detail as Record<string, unknown> | null) ?? {};
   const variants = Array.isArray((detail as { variants?: unknown }).variants)
-    ? [...((detail as { variants: Array<Record<string, unknown>> }).variants)]
+    ? [...(detail as { variants: Array<Record<string, unknown>> }).variants]
     : [];
   const index = variants.findIndex((entry) => entry.id === variantId);
   if (index < 0) {
@@ -93,14 +95,10 @@ function buildVariantStockPatch(
   variants[index] = {
     ...variants[index],
     stock: newStock,
-    availability:
-      newStock <= 0 ? "out-of-stock" : newStock <= 5 ? "limited" : "in-stock",
+    availability: newStock <= 0 ? "out-of-stock" : newStock <= 5 ? "limited" : "in-stock",
   };
 
-  const parentStock = variants.reduce(
-    (sum, entry) => sum + Number(entry.stock ?? 0),
-    0
-  );
+  const parentStock = variants.reduce((sum, entry) => sum + Number(entry.stock ?? 0), 0);
   const reservedStock = Number(row.reservedStock ?? 0);
   const now = new Date().toISOString();
 
@@ -115,7 +113,7 @@ function buildVariantStockPatch(
 
 async function writeInventoryLog(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
-  log: Omit<InventoryLog, "id"> & { id?: string }
+  log: Omit<InventoryLog, "id"> & { id?: string },
 ): Promise<void> {
   const id = log.id ?? createLogId();
   await tx.inventoryLog.create({
@@ -139,7 +137,7 @@ async function writeInventoryLog(
 
 async function loadProductRows(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
-  productIds: string[]
+  productIds: string[],
 ): Promise<Map<string, ProductRow>> {
   const uniqueIds = [...new Set(productIds)];
   const rows = await tx.product.findMany({ where: { id: { in: uniqueIds } } });
@@ -165,7 +163,7 @@ async function loadProductRows(
 async function lockOrderAndProducts(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
   orderId: string,
-  productIds: string[]
+  productIds: string[],
 ): Promise<void> {
   await tx.$queryRaw`
     SELECT id FROM orders WHERE id = ${orderId} FOR UPDATE
@@ -187,7 +185,7 @@ async function applyVariantStockChanges(
   deltaForItem: (item: OrderInventoryLine) => number,
   action: InventoryLogAction,
   now: string,
-  adminId?: string | null
+  adminId?: string | null,
 ): Promise<void> {
   const byProduct = new Map<string, OrderInventoryLine[]>();
   for (const item of items) {
@@ -232,7 +230,7 @@ async function applyVariantStockChanges(
 }
 
 export async function fetchProductStockSnapshots(
-  productIds: string[]
+  productIds: string[],
 ): Promise<Map<string, ProductStockSnapshot>> {
   const uniqueIds = [...new Set(productIds.filter(Boolean))];
   const map = new Map<string, ProductStockSnapshot>();
@@ -245,9 +243,7 @@ export async function fetchProductStockSnapshots(
   return map;
 }
 
-export async function validateStockAvailability(
-  items: OrderInventoryLine[]
-): Promise<void> {
+export async function validateStockAvailability(items: OrderInventoryLine[]): Promise<void> {
   const variantErrors: string[] = [];
   const parentItems: OrderInventoryLine[] = [];
   const variantItems: OrderInventoryLine[] = [];
@@ -282,7 +278,7 @@ export async function validateStockAvailability(
 
       if (item.quantity > available) {
         variantErrors.push(
-          `${item.name ?? item.productId}: requested ${item.quantity}, available ${available}`
+          `${item.name ?? item.productId}: requested ${item.quantity}, available ${available}`,
         );
       }
     }
@@ -294,9 +290,7 @@ export async function validateStockAvailability(
 
   if (parentItems.length === 0) return;
 
-  const snapshots = await fetchProductStockSnapshots(
-    parentItems.map((item) => item.productId)
-  );
+  const snapshots = await fetchProductStockSnapshots(parentItems.map((item) => item.productId));
 
   const errors = validateAvailability(
     parentItems.map((item) => ({
@@ -313,8 +307,8 @@ export async function validateStockAvailability(
           reservedStock: snap.reservedStock,
           status: snap.status,
         },
-      ])
-    )
+      ]),
+    ),
   );
 
   if (errors.length > 0) {
@@ -327,7 +321,7 @@ export async function validateStockAvailability(
 
 export async function reserveStockForOrder(
   orderId: string,
-  items: OrderInventoryLine[]
+  items: OrderInventoryLine[],
 ): Promise<void> {
   const parentItems = items.filter((item) => !item.variantId);
   const variantItems = items.filter((item) => item.variantId);
@@ -336,7 +330,7 @@ export async function reserveStockForOrder(
     await lockOrderAndProducts(
       tx,
       orderId,
-      items.map((item) => item.productId)
+      items.map((item) => item.productId),
     );
     const order = await tx.order.findUnique({ where: { id: orderId } });
     if (!order) throw new Error("Order not found");
@@ -348,13 +342,16 @@ export async function reserveStockForOrder(
 
     const productRows = await loadProductRows(
       tx,
-      items.map((item) => item.productId)
+      items.map((item) => item.productId),
     );
 
     if (parentItems.length > 0) {
       const snapshots = new Map<string, ProductStockSnapshot>();
       for (const item of parentItems) {
-        snapshots.set(item.productId, readSnapshot(item.productId, productRows.get(item.productId)!));
+        snapshots.set(
+          item.productId,
+          readSnapshot(item.productId, productRows.get(item.productId)!),
+        );
       }
 
       const errors = validateAvailability(
@@ -372,8 +369,8 @@ export async function reserveStockForOrder(
               reservedStock: snap.reservedStock,
               status: snap.status,
             },
-          ])
-        )
+          ]),
+        ),
       );
 
       if (errors.length > 0) {
@@ -389,7 +386,7 @@ export async function reserveStockForOrder(
       const available = readVariantStock(row, item.variantId!) ?? 0;
       if (item.quantity > available) {
         throw new Error(
-          `Insufficient variant stock for ${item.name ?? item.variantId}: requested ${item.quantity}, available ${available}`
+          `Insufficient variant stock for ${item.name ?? item.variantId}: requested ${item.quantity}, available ${available}`,
         );
       }
     }
@@ -428,7 +425,7 @@ export async function reserveStockForOrder(
       productRows,
       (item) => -item.quantity,
       "order_created",
-      now
+      now,
     );
 
     await tx.order.update({
@@ -440,189 +437,73 @@ export async function reserveStockForOrder(
   invalidateCatalogCache();
 }
 
-export async function fulfillReservedStockForOrder(
+export async function fulfillReservedStockForOrderInTx(
+  tx: Tx,
   orderId: string,
-  items: OrderInventoryLine[]
+  items: OrderInventoryLine[],
 ): Promise<void> {
   const parentItems = items.filter((item) => !item.variantId);
   const variantItems = items.filter((item) => item.variantId);
 
-  await prisma.$transaction(async (tx) => {
-    await lockOrderAndProducts(
-      tx,
-      orderId,
-      items.map((item) => item.productId)
-    );
-    const order = await tx.order.findUnique({ where: { id: orderId } });
-    if (!order) throw new Error("Order not found");
+  await lockOrderAndProducts(
+    tx,
+    orderId,
+    items.map((item) => item.productId),
+  );
+  const order = await tx.order.findUnique({ where: { id: orderId } });
+  if (!order) throw new Error("Order not found");
 
-    const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
-    if (currentStatus === "fulfilled") return;
-    if (currentStatus !== "reserved") {
-      throw new Error(`Cannot fulfill inventory for order in status: ${currentStatus}`);
+  const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
+  if (currentStatus === "fulfilled") return;
+  if (currentStatus !== "reserved") {
+    throw new Error(`Cannot fulfill inventory for order in status: ${currentStatus}`);
+  }
+
+  const productRows = await loadProductRows(
+    tx,
+    items.map((item) => item.productId),
+  );
+  const now = new Date().toISOString();
+  const variantInventoryHeld = variantItems.length > 0;
+
+  for (const item of parentItems) {
+    const snap = readSnapshot(item.productId, productRows.get(item.productId)!);
+    const previousStock = snap.stock;
+    const previousReserved = snap.reservedStock;
+    const newStock = previousStock - item.quantity;
+    const newReserved = previousReserved - item.quantity;
+
+    if (newStock < 0 || newReserved < 0) {
+      throw new Error(`Invalid stock state for product ${item.productId}`);
     }
 
-    const productRows = await loadProductRows(
-      tx,
-      items.map((item) => item.productId)
-    );
-    const now = new Date().toISOString();
-    const variantInventoryHeld = variantItems.length > 0;
-
-    for (const item of parentItems) {
-      const snap = readSnapshot(item.productId, productRows.get(item.productId)!);
-      const previousStock = snap.stock;
-      const previousReserved = snap.reservedStock;
-      const newStock = previousStock - item.quantity;
-      const newReserved = previousReserved - item.quantity;
-
-      if (newStock < 0 || newReserved < 0) {
-        throw new Error(`Invalid stock state for product ${item.productId}`);
-      }
-
-      await tx.product.update({
-        where: { id: item.productId },
-        data: {
-          stock: newStock,
-          stockQuantity: newStock,
-          reservedStock: newReserved,
-          availability: stockToAvailability(newStock, newReserved),
-          updatedAt: now,
-        },
-      });
-
-      await writeInventoryLog(tx, {
-        productId: item.productId,
-        sku: snap.sku,
-        orderId,
-        previousStock,
-        newStock,
-        quantityChanged: -item.quantity,
-        action: "order_paid",
-        adminId: null,
-        timestamp: now,
-        previousReserved,
-        newReserved,
-      });
-    }
-
-    if (!variantInventoryHeld) {
-      await applyVariantStockChanges(
-        tx,
-        orderId,
-        variantItems,
-        productRows,
-        (item) => -item.quantity,
-        "order_paid",
-        now
-      );
-    }
-
-    await tx.order.update({
-      where: { id: orderId },
-      data: { inventoryStatus: "fulfilled", updatedAt: now },
+    await tx.product.update({
+      where: { id: item.productId },
+      data: {
+        stock: newStock,
+        stockQuantity: newStock,
+        reservedStock: newReserved,
+        availability: stockToAvailability(newStock, newReserved),
+        updatedAt: now,
+      },
     });
-  });
 
-  invalidateCatalogCache();
-}
-
-export async function reserveAndFulfillStockForOrder(
-  orderId: string,
-  items: OrderInventoryLine[]
-): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    await lockOrderAndProducts(
-      tx,
+    await writeInventoryLog(tx, {
+      productId: item.productId,
+      sku: snap.sku,
       orderId,
-      items.map((item) => item.productId)
-    );
-    const order = await tx.order.findUnique({ where: { id: orderId } });
-    if (!order) throw new Error("Order not found");
+      previousStock,
+      newStock,
+      quantityChanged: -item.quantity,
+      action: "order_paid",
+      adminId: null,
+      timestamp: now,
+      previousReserved,
+      newReserved,
+    });
+  }
 
-    const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
-    if (currentStatus === "fulfilled") return;
-
-    const productRows = await loadProductRows(
-      tx,
-      items.map((item) => item.productId)
-    );
-    const snapshots = new Map<string, ProductStockSnapshot>();
-    for (const [productId, row] of productRows) {
-      snapshots.set(productId, readSnapshot(productId, row));
-    }
-
-    const parentItems = items.filter((item) => !item.variantId);
-    const variantItems = items.filter((item) => item.variantId);
-
-    const errors = validateAvailability(
-      items.map((item) => ({
-        productId: item.productId,
-        name: snapshots.get(item.productId)?.name ?? item.productId,
-        quantity: item.quantity,
-      })),
-      new Map(
-        [...snapshots.entries()].map(([id, snap]) => [
-          id,
-          {
-            name: snap.name,
-            stock: snap.stock,
-            reservedStock: snap.reservedStock,
-            status: snap.status,
-          },
-        ])
-      )
-    );
-
-    if (errors.length > 0) {
-      const detail = errors
-        .map((e) => `${e.name}: requested ${e.quantity}, available ${e.available}`)
-        .join("; ");
-      throw new Error(`Insufficient stock: ${detail}`);
-    }
-
-    for (const item of variantItems) {
-      const row = productRows.get(item.productId)!;
-      const available = readVariantStock(row, item.variantId!) ?? 0;
-      if (item.quantity > available) {
-        throw new Error(
-          `Insufficient variant stock for ${item.name ?? item.variantId}: requested ${item.quantity}, available ${available}`
-        );
-      }
-    }
-
-    const now = new Date().toISOString();
-
-    for (const item of parentItems) {
-      const snap = snapshots.get(item.productId)!;
-      const previousStock = snap.stock;
-      const newStock = previousStock - item.quantity;
-
-      await tx.product.update({
-        where: { id: item.productId },
-        data: {
-          stock: newStock,
-          stockQuantity: newStock,
-          availability: stockToAvailability(newStock, snap.reservedStock),
-          updatedAt: now,
-        },
-      });
-
-      await writeInventoryLog(tx, {
-        productId: item.productId,
-        sku: snap.sku,
-        orderId,
-        previousStock,
-        newStock,
-        quantityChanged: -item.quantity,
-        action: "order_paid",
-        adminId: null,
-        timestamp: now,
-        previousReserved: snap.reservedStock,
-        newReserved: snap.reservedStock,
-      });
-    }
-
+  if (!variantInventoryHeld) {
     await applyVariantStockChanges(
       tx,
       orderId,
@@ -630,151 +511,203 @@ export async function reserveAndFulfillStockForOrder(
       productRows,
       (item) => -item.quantity,
       "order_paid",
-      now
+      now,
     );
+  }
 
-    await tx.order.update({
-      where: { id: orderId },
-      data: { inventoryStatus: "fulfilled", updatedAt: now },
-    });
+  await tx.order.update({
+    where: { id: orderId },
+    data: { inventoryStatus: "fulfilled", updatedAt: now },
   });
-
-  invalidateCatalogCache();
 }
 
-export async function releaseReservedStockForOrder(
-  orderId: string,
-  items: OrderInventoryLine[]
-): Promise<void> {
-  const parentItems = items.filter((item) => !item.variantId);
-  const variantItems = items.filter((item) => item.variantId);
-
-  await prisma.$transaction(async (tx) => {
-    await lockOrderAndProducts(
-      tx,
-      orderId,
-      items.map((item) => item.productId)
-    );
-    const order = await tx.order.findUnique({ where: { id: orderId } });
-    if (!order) throw new Error("Order not found");
-
-    const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
-    if (currentStatus === "released" || currentStatus === "fulfilled") return;
-    if (currentStatus !== "reserved") return;
-
-    const productRows = await loadProductRows(
-      tx,
-      items.map((item) => item.productId)
-    );
-    const now = new Date().toISOString();
-    const variantInventoryHeld = variantItems.length > 0;
-
-    for (const item of parentItems) {
-      const snap = readSnapshot(item.productId, productRows.get(item.productId)!);
-      const previousReserved = snap.reservedStock;
-      const newReserved = Math.max(0, previousReserved - item.quantity);
-
-      await tx.product.update({
-        where: { id: item.productId },
-        data: {
-          reservedStock: newReserved,
-          availability: stockToAvailability(snap.stock, newReserved),
-          updatedAt: now,
-        },
-      });
-
-      await writeInventoryLog(tx, {
-        productId: item.productId,
-        sku: snap.sku,
-        orderId,
-        previousStock: snap.stock,
-        newStock: snap.stock,
-        quantityChanged: -item.quantity,
-        action: "order_cancelled",
-        adminId: null,
-        timestamp: now,
-        previousReserved,
-        newReserved,
-      });
-    }
-
-    if (variantInventoryHeld) {
-      await applyVariantStockChanges(
-        tx,
-        orderId,
-        variantItems,
-        productRows,
-        (item) => item.quantity,
-        "order_cancelled",
-        now
-      );
-    }
-
-    await tx.order.update({
-      where: { id: orderId },
-      data: { inventoryStatus: "released", updatedAt: now },
-    });
-  });
-
-  invalidateCatalogCache();
-}
-
-export async function restoreStockForCancelledOrder(
+export async function fulfillReservedStockForOrder(
   orderId: string,
   items: OrderInventoryLine[],
-  adminId?: string
+): Promise<void> {
+  await prisma.$transaction((tx) => fulfillReservedStockForOrderInTx(tx, orderId, items));
+
+  invalidateCatalogCache();
+}
+
+export async function reserveAndFulfillStockForOrderInTx(
+  tx: Tx,
+  orderId: string,
+  items: OrderInventoryLine[],
+): Promise<void> {
+  await lockOrderAndProducts(
+    tx,
+    orderId,
+    items.map((item) => item.productId),
+  );
+  const order = await tx.order.findUnique({ where: { id: orderId } });
+  if (!order) throw new Error("Order not found");
+
+  const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
+  if (currentStatus === "fulfilled") return;
+
+  const productRows = await loadProductRows(
+    tx,
+    items.map((item) => item.productId),
+  );
+  const snapshots = new Map<string, ProductStockSnapshot>();
+  for (const [productId, row] of productRows) {
+    snapshots.set(productId, readSnapshot(productId, row));
+  }
+
+  const parentItems = items.filter((item) => !item.variantId);
+  const variantItems = items.filter((item) => item.variantId);
+
+  const errors = validateAvailability(
+    items.map((item) => ({
+      productId: item.productId,
+      name: snapshots.get(item.productId)?.name ?? item.productId,
+      quantity: item.quantity,
+    })),
+    new Map(
+      [...snapshots.entries()].map(([id, snap]) => [
+        id,
+        {
+          name: snap.name,
+          stock: snap.stock,
+          reservedStock: snap.reservedStock,
+          status: snap.status,
+        },
+      ]),
+    ),
+  );
+
+  if (errors.length > 0) {
+    const detail = errors
+      .map((e) => `${e.name}: requested ${e.quantity}, available ${e.available}`)
+      .join("; ");
+    throw new Error(`Insufficient stock: ${detail}`);
+  }
+
+  for (const item of variantItems) {
+    const row = productRows.get(item.productId)!;
+    const available = readVariantStock(row, item.variantId!) ?? 0;
+    if (item.quantity > available) {
+      throw new Error(
+        `Insufficient variant stock for ${item.name ?? item.variantId}: requested ${item.quantity}, available ${available}`,
+      );
+    }
+  }
+
+  const now = new Date().toISOString();
+
+  for (const item of parentItems) {
+    const snap = snapshots.get(item.productId)!;
+    const previousStock = snap.stock;
+    const newStock = previousStock - item.quantity;
+
+    await tx.product.update({
+      where: { id: item.productId },
+      data: {
+        stock: newStock,
+        stockQuantity: newStock,
+        availability: stockToAvailability(newStock, snap.reservedStock),
+        updatedAt: now,
+      },
+    });
+
+    await writeInventoryLog(tx, {
+      productId: item.productId,
+      sku: snap.sku,
+      orderId,
+      previousStock,
+      newStock,
+      quantityChanged: -item.quantity,
+      action: "order_paid",
+      adminId: null,
+      timestamp: now,
+      previousReserved: snap.reservedStock,
+      newReserved: snap.reservedStock,
+    });
+  }
+
+  await applyVariantStockChanges(
+    tx,
+    orderId,
+    variantItems,
+    productRows,
+    (item) => -item.quantity,
+    "order_paid",
+    now,
+  );
+
+  await tx.order.update({
+    where: { id: orderId },
+    data: { inventoryStatus: "fulfilled", updatedAt: now },
+  });
+}
+
+export async function reserveAndFulfillStockForOrder(
+  orderId: string,
+  items: OrderInventoryLine[],
+): Promise<void> {
+  await prisma.$transaction((tx) => reserveAndFulfillStockForOrderInTx(tx, orderId, items));
+
+  invalidateCatalogCache();
+}
+
+export async function releaseReservedStockForOrderInTx(
+  tx: Tx,
+  orderId: string,
+  items: OrderInventoryLine[],
 ): Promise<void> {
   const parentItems = items.filter((item) => !item.variantId);
   const variantItems = items.filter((item) => item.variantId);
 
-  await prisma.$transaction(async (tx) => {
-    await lockOrderAndProducts(
-      tx,
+  await lockOrderAndProducts(
+    tx,
+    orderId,
+    items.map((item) => item.productId),
+  );
+  const order = await tx.order.findUnique({ where: { id: orderId } });
+  if (!order) throw new Error("Order not found");
+
+  const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
+  if (currentStatus === "released" || currentStatus === "fulfilled") return;
+  if (currentStatus !== "reserved") return;
+
+  const productRows = await loadProductRows(
+    tx,
+    items.map((item) => item.productId),
+  );
+  const now = new Date().toISOString();
+  const variantInventoryHeld = variantItems.length > 0;
+
+  for (const item of parentItems) {
+    const snap = readSnapshot(item.productId, productRows.get(item.productId)!);
+    const previousReserved = snap.reservedStock;
+    const newReserved = Math.max(0, previousReserved - item.quantity);
+
+    await tx.product.update({
+      where: { id: item.productId },
+      data: {
+        reservedStock: newReserved,
+        availability: stockToAvailability(snap.stock, newReserved),
+        updatedAt: now,
+      },
+    });
+
+    await writeInventoryLog(tx, {
+      productId: item.productId,
+      sku: snap.sku,
       orderId,
-      items.map((item) => item.productId)
-    );
-    const order = await tx.order.findUnique({ where: { id: orderId } });
-    if (!order) throw new Error("Order not found");
+      previousStock: snap.stock,
+      newStock: snap.stock,
+      quantityChanged: -item.quantity,
+      action: "order_cancelled",
+      adminId: null,
+      timestamp: now,
+      previousReserved,
+      newReserved,
+    });
+  }
 
-    const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
-    if (currentStatus !== "fulfilled") return;
-
-    const productRows = await loadProductRows(
-      tx,
-      items.map((item) => item.productId)
-    );
-    const now = new Date().toISOString();
-
-    for (const item of parentItems) {
-      const snap = readSnapshot(item.productId, productRows.get(item.productId)!);
-      const previousStock = snap.stock;
-      const newStock = previousStock + item.quantity;
-
-      await tx.product.update({
-        where: { id: item.productId },
-        data: {
-          stock: newStock,
-          stockQuantity: newStock,
-          availability: stockToAvailability(newStock, snap.reservedStock),
-          updatedAt: now,
-        },
-      });
-
-      await writeInventoryLog(tx, {
-        productId: item.productId,
-        sku: snap.sku,
-        orderId,
-        previousStock,
-        newStock,
-        quantityChanged: item.quantity,
-        action: "order_cancelled",
-        adminId: adminId ?? null,
-        timestamp: now,
-        previousReserved: snap.reservedStock,
-        newReserved: snap.reservedStock,
-      });
-    }
-
+  if (variantInventoryHeld) {
     await applyVariantStockChanges(
       tx,
       orderId,
@@ -783,14 +716,103 @@ export async function restoreStockForCancelledOrder(
       (item) => item.quantity,
       "order_cancelled",
       now,
-      adminId
     );
+  }
 
-    await tx.order.update({
-      where: { id: orderId },
-      data: { inventoryStatus: "released", updatedAt: now },
-    });
+  await tx.order.update({
+    where: { id: orderId },
+    data: { inventoryStatus: "released", updatedAt: now },
   });
+}
+
+export async function releaseReservedStockForOrder(
+  orderId: string,
+  items: OrderInventoryLine[],
+): Promise<void> {
+  await prisma.$transaction((tx) => releaseReservedStockForOrderInTx(tx, orderId, items));
+
+  invalidateCatalogCache();
+}
+
+export async function restoreStockForCancelledOrderInTx(
+  tx: Tx,
+  orderId: string,
+  items: OrderInventoryLine[],
+  adminId?: string,
+): Promise<void> {
+  const parentItems = items.filter((item) => !item.variantId);
+  const variantItems = items.filter((item) => item.variantId);
+
+  await lockOrderAndProducts(
+    tx,
+    orderId,
+    items.map((item) => item.productId),
+  );
+  const order = await tx.order.findUnique({ where: { id: orderId } });
+  if (!order) throw new Error("Order not found");
+
+  const currentStatus = (order.inventoryStatus ?? "none") as OrderInventoryStatus;
+  if (currentStatus !== "fulfilled") return;
+
+  const productRows = await loadProductRows(
+    tx,
+    items.map((item) => item.productId),
+  );
+  const now = new Date().toISOString();
+
+  for (const item of parentItems) {
+    const snap = readSnapshot(item.productId, productRows.get(item.productId)!);
+    const previousStock = snap.stock;
+    const newStock = previousStock + item.quantity;
+
+    await tx.product.update({
+      where: { id: item.productId },
+      data: {
+        stock: newStock,
+        stockQuantity: newStock,
+        availability: stockToAvailability(newStock, snap.reservedStock),
+        updatedAt: now,
+      },
+    });
+
+    await writeInventoryLog(tx, {
+      productId: item.productId,
+      sku: snap.sku,
+      orderId,
+      previousStock,
+      newStock,
+      quantityChanged: item.quantity,
+      action: "order_cancelled",
+      adminId: adminId ?? null,
+      timestamp: now,
+      previousReserved: snap.reservedStock,
+      newReserved: snap.reservedStock,
+    });
+  }
+
+  await applyVariantStockChanges(
+    tx,
+    orderId,
+    variantItems,
+    productRows,
+    (item) => item.quantity,
+    "order_cancelled",
+    now,
+    adminId,
+  );
+
+  await tx.order.update({
+    where: { id: orderId },
+    data: { inventoryStatus: "released", updatedAt: now },
+  });
+}
+
+export async function restoreStockForCancelledOrder(
+  orderId: string,
+  items: OrderInventoryLine[],
+  adminId?: string,
+): Promise<void> {
+  await prisma.$transaction((tx) => restoreStockForCancelledOrderInTx(tx, orderId, items, adminId));
 
   invalidateCatalogCache();
 }
@@ -803,7 +825,7 @@ export async function setProductStock(
     orderId?: string;
     adminId?: string;
     note?: string;
-  }
+  },
 ): Promise<InventoryLog> {
   let log!: InventoryLog;
 
@@ -872,7 +894,7 @@ export async function listInventoryLogs(limit = 50): Promise<InventoryLog[]> {
 }
 
 export async function recordInventoryLogEntry(
-  entry: Omit<InventoryLog, "id">
+  entry: Omit<InventoryLog, "id">,
 ): Promise<InventoryLog> {
   const log: InventoryLog = { ...entry, id: createLogId() };
   await prisma.inventoryLog.create({
@@ -893,4 +915,27 @@ export async function recordInventoryLogEntry(
     },
   });
   return log;
+}
+
+export async function recordInventoryLogEntries(
+  entries: Array<Omit<InventoryLog, "id">>,
+): Promise<void> {
+  if (entries.length === 0) return;
+  await prisma.inventoryLog.createMany({
+    data: entries.map((entry) => ({
+      id: createLogId(),
+      productId: entry.productId,
+      sku: entry.sku,
+      orderId: entry.orderId ?? null,
+      previousStock: entry.previousStock,
+      newStock: entry.newStock,
+      quantityChanged: entry.quantityChanged,
+      action: entry.action,
+      adminId: entry.adminId ?? null,
+      timestamp: entry.timestamp,
+      previousReserved: entry.previousReserved ?? null,
+      newReserved: entry.newReserved ?? null,
+      note: entry.note ?? null,
+    })),
+  });
 }

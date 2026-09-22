@@ -1,9 +1,7 @@
 import Razorpay from "razorpay";
 import { cache } from "react";
 import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
-import {
-  verifyRazorpayPaymentSignature,
-} from "@/lib/razorpay/signature";
+import { verifyRazorpayPaymentSignature } from "@/lib/razorpay/signature";
 import {
   calculateGST,
   DEFAULT_GST_RATE,
@@ -11,16 +9,12 @@ import {
   toPaise,
   type GSTRate,
 } from "@/lib/gstCalculator";
-import {
-  getDefaultShippingMethod,
-} from "@/lib/shipping/shippingMethods";
+import { getDefaultShippingMethod } from "@/lib/shipping/shippingMethods";
 import { notifyAdminNewOrder } from "@/lib/server/orderNotificationService";
 import { resolveAuthoritativeShippingCharge } from "@/lib/server/shippingQuoteService";
-import {
-  reserveStockForOrder,
-  releaseReservedStockForOrder,
-} from "@/lib/server/inventoryService";
+import { reserveStockForOrder, releaseReservedStockForOrder } from "@/lib/server/inventoryService";
 import { completeOrderPayment } from "@/lib/server/orderPaymentService";
+import { withTimeout } from "@/lib/server/withTimeout";
 import { allocateNextOrderId } from "@/lib/server/orderIdGenerator";
 import {
   logPayment,
@@ -32,7 +26,7 @@ import {
   listOrdersForUser as listStoredOrdersForUser,
   persistOrder,
   removeOrder,
-  updateOrder,
+  updateOrderFields,
 } from "@/lib/server/orderRepository";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import { isPlacedOrder } from "@/lib/server/orderAccess";
@@ -55,9 +49,7 @@ function getRazorpayInstance(): Razorpay {
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keyId || !keySecret) {
-    throw new Error(
-      "Missing Razorpay env vars: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET"
-    );
+    throw new Error("Missing Razorpay env vars: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET");
   }
 
   const instance = new Razorpay({ key_id: keyId, key_secret: keySecret });
@@ -85,9 +77,7 @@ function extractRazorpayError(error: unknown): string | null {
   );
 }
 
-function toInventoryLines(
-  items: CreateOrderPayload["items"]
-): OrderInventoryLine[] {
+function toInventoryLines(items: CreateOrderPayload["items"]): OrderInventoryLine[] {
   return items.map((item) => ({
     productId: item.productId,
     variantId: item.variantId,
@@ -100,7 +90,7 @@ function buildOrderRecord(
   orderId: string,
   payload: CreateOrderPayload,
   userId: string | undefined,
-  shippingCharge: number
+  shippingCharge: number,
 ): Omit<Order, "id"> {
   const shippingMethod = payload.shippingMethod ?? getDefaultShippingMethod();
 
@@ -145,9 +135,7 @@ function buildOrderRecord(
   const now = new Date().toISOString();
   const customerName = payload.customerName?.trim() || payload.shippingAddress.name.trim();
   const customerPhone =
-    payload.customerPhone?.trim() ||
-    payload.shippingAddress.phone?.trim() ||
-    undefined;
+    payload.customerPhone?.trim() || payload.shippingAddress.phone?.trim() || undefined;
 
   return {
     userId,
@@ -182,33 +170,35 @@ function buildOrderRecord(
 async function createRazorpayPaymentOrder(
   order: Order,
   payload: CreateOrderPayload,
-  orderId: string
+  orderId: string,
 ): Promise<string> {
   const razorpay = getRazorpayInstance();
   try {
-    const razorpayOrder = (await razorpay.orders.create({
-      amount: toPaise(order.total),
-      currency: "INR",
-      receipt: orderId,
-      notes: {
-        email: payload.email,
-        orderId,
-      },
-    })) as { id: string };
+    const razorpayOrder = (await withTimeout(
+      razorpay.orders.create({
+        amount: toPaise(order.total),
+        currency: "INR",
+        receipt: orderId,
+        notes: {
+          email: payload.email,
+          orderId,
+        },
+      }),
+      15000,
+      "Razorpay order.create",
+    )) as { id: string };
     return razorpayOrder.id;
   } catch (razorpayError) {
     const description = extractRazorpayError(razorpayError);
     throw new Error(
-      description
-        ? `Razorpay: ${description}`
-        : "Unable to create Razorpay payment order"
+      description ? `Razorpay: ${description}` : "Unable to create Razorpay payment order",
     );
   }
 }
 
 export async function createOrder(
   payload: CreateOrderPayload,
-  userId?: string
+  userId?: string,
 ): Promise<{
   order: Order;
   razorpayOrderId?: string;
@@ -224,10 +214,7 @@ export async function createOrder(
   const orderId = await allocateNextOrderId();
   logPayment("Order ID allocated", { orderId });
 
-  const subtotal = payload.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const subtotal = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shippingMethod = payload.shippingMethod ?? getDefaultShippingMethod();
   const shippingCharge = await resolveAuthoritativeShippingCharge({
     method: shippingMethod,
@@ -249,19 +236,13 @@ export async function createOrder(
     if (payload.paymentMethod === "razorpay") {
       if (isRazorpayConfigured()) {
         logPayment("Creating Razorpay order", { orderId, amountPaise: toPaise(order.total) });
-        razorpayOrderId = await createRazorpayPaymentOrder(
-          order,
-          payload,
-          orderId
-        );
+        razorpayOrderId = await createRazorpayPaymentOrder(order, payload, orderId);
         logPayment("Razorpay order created", { orderId, razorpayOrderId });
         order.razorpayOrderId = razorpayOrderId;
       } else if (canUseDemoPayments()) {
         demoMode = true;
       } else {
-        throw new Error(
-          "Online payments are not configured. Add Razorpay keys to .env.local."
-        );
+        throw new Error("Online payments are not configured. Add Razorpay keys to .env.local.");
       }
     }
 
@@ -275,7 +256,10 @@ export async function createOrder(
     try {
       logPayment("Inventory reservation started (online)", { orderId });
       await reserveStockForOrder(orderId, inventoryLines);
-      await updateOrder(orderId, { inventoryStatus: "reserved" });
+      await updateOrderFields(orderId, {
+        inventoryStatus: "reserved",
+        updatedAt: new Date().toISOString(),
+      });
       logPayment("Inventory reservation completed", { orderId });
     } catch (inventoryError) {
       logPaymentError(inventoryError, {
@@ -296,12 +280,9 @@ export async function createOrder(
       order: { ...order, razorpayOrderId, inventoryStatus: "reserved" },
       razorpayOrderId,
       keyId: isRazorpayConfigured()
-        ? process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID
+        ? (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID)
         : undefined,
-      demoMode:
-        payload.paymentMethod === "razorpay" && canUseDemoPayments()
-          ? true
-          : demoMode,
+      demoMode: payload.paymentMethod === "razorpay" && canUseDemoPayments() ? true : demoMode,
     };
   } catch (error) {
     logPaymentError(error, { orderId, step: "createOrder" });
@@ -316,7 +297,7 @@ export async function createOrder(
 export function verifyRazorpaySignature(
   razorpayOrderId: string,
   razorpayPaymentId: string,
-  razorpaySignature: string
+  razorpaySignature: string,
 ): boolean {
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
   if (!keySecret) {
@@ -327,49 +308,35 @@ export function verifyRazorpaySignature(
     razorpayOrderId,
     razorpayPaymentId,
     razorpaySignature,
-    keySecret
+    keySecret,
   );
 }
 
-export async function verifyAndCompletePayment(
-  payload: VerifyPaymentPayload
-): Promise<Order> {
+export async function verifyAndCompletePayment(payload: VerifyPaymentPayload): Promise<Order> {
   const isValid = verifyRazorpaySignature(
     payload.razorpayOrderId,
     payload.razorpayPaymentId,
-    payload.razorpaySignature
+    payload.razorpaySignature,
   );
 
   if (!isValid) {
     throw new Error("Invalid payment signature");
   }
 
+  // Signature is persisted inside the same transaction that marks the order
+  // paid, so there is no second read-modify-write window.
   const result = await completeOrderPayment({
     orderId: payload.orderId,
     razorpayPaymentId: payload.razorpayPaymentId,
     razorpayOrderId: payload.razorpayOrderId,
+    razorpaySignature: payload.razorpaySignature,
     source: "client_verify",
   });
 
-  if (result.skipped) {
-    return result.order;
-  }
-
-  await updateOrder(payload.orderId, {
-    razorpaySignature: payload.razorpaySignature,
-    updatedAt: new Date().toISOString(),
-  });
-
-  return {
-    ...result.order,
-    razorpaySignature: payload.razorpaySignature,
-  };
+  return result.order;
 }
 
-export async function releaseOrderReservation(
-  orderId: string,
-  email?: string
-): Promise<void> {
+export async function releaseOrderReservation(orderId: string, email?: string): Promise<void> {
   const order = await fetchOrderById(orderId);
   if (!order) {
     return;
@@ -398,10 +365,7 @@ export const getOrderById = cache(async (orderId: string): Promise<Order | null>
   return fetchOrderById(orderId);
 });
 
-export async function listOrdersForUser(
-  uid?: string,
-  email?: string
-): Promise<Order[]> {
+export async function listOrdersForUser(uid?: string, email?: string): Promise<Order[]> {
   const orders = await listStoredOrdersForUser(uid, email);
   return orders.filter(isPlacedOrder);
 }
@@ -411,10 +375,7 @@ export function normalizeGstRate(rate: number | undefined): GSTRate {
   return DEFAULT_GST_RATE;
 }
 
-export async function linkGuestOrdersToUser(
-  userId: string,
-  email: string
-): Promise<number> {
+export async function linkGuestOrdersToUser(userId: string, email: string): Promise<number> {
   // Intentionally disabled: bulk email linking is an IDOR vector.
   // Use attachPaidOrderToUser for cryptographically verified checkout ownership.
   void userId;
@@ -429,7 +390,7 @@ export async function linkGuestOrdersToUser(
 export async function attachPaidOrderToUser(
   orderId: string,
   userId: string,
-  email: string
+  email: string,
 ): Promise<boolean> {
   return pgOrder.attachPaidOrderToUser(orderId, userId, email);
 }

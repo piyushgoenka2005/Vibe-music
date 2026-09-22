@@ -47,7 +47,7 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
   // Fetch Taxonomy Data + Stats + Filter Options
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-taxonomy", page, limit, search, selectedCategory],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -60,13 +60,22 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
       if (selectedCategory !== "all") params.set("category", selectedCategory);
 
       const res = await fetch(`/api/admin/taxonomy?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to load taxonomy data");
-      return res.json() as Promise<{
+      const json = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        items?: CatalogTaxonomyItem[];
+        pagination?: { page: number; limit: number; total: number; totalPages: number };
+        stats?: TaxonomyStats;
+        filterOptions?: { categories: string[]; subcategories: string[] };
+      };
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to load taxonomy data");
+      }
+      return json as {
         items: CatalogTaxonomyItem[];
         pagination: { page: number; limit: number; total: number; totalPages: number };
         stats?: TaxonomyStats;
         filterOptions?: { categories: string[]; subcategories: string[] };
-      }>;
+      };
     },
   });
 
@@ -138,7 +147,7 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
   if (isError) {
     return (
       <ErrorState
-        message="Unable to load catalog taxonomy."
+        message={error instanceof Error ? error.message : "Unable to load catalog taxonomy."}
         onRetry={() => void refetch()}
         isRetrying={isFetching}
       />

@@ -4,6 +4,7 @@ import Razorpay from "razorpay";
 import { refundOrderPayment } from "@/lib/server/orderPaymentService";
 import { fetchOrderById } from "@/lib/server/orderRepository";
 import { logAuditEvent } from "@/lib/server/auditLog";
+import { withTimeout } from "@/lib/server/withTimeout";
 
 function getRazorpayInstance(): Razorpay {
   const keyId = process.env.RAZORPAY_KEY_ID;
@@ -14,6 +15,26 @@ function getRazorpayInstance(): Razorpay {
   return new Razorpay({ key_id: keyId, key_secret: keySecret });
 }
 
+/**
+ * Per-order in-process lock so a double-click/double HTTP retry cannot post two
+ * partial refunds to Razorpay for the same order. Razorpay's own full-refund
+ * rejection backstops this on multi-instance deployments.
+ */
+const refundLocks = new Map<string, Promise<unknown>>();
+
+async function serializeRefund<T>(orderId: string, run: () => Promise<T>): Promise<T> {
+  const previous = refundLocks.get(orderId) ?? Promise.resolve();
+  const current = previous.then(run, run);
+  refundLocks.set(orderId, current);
+  try {
+    return await current;
+  } finally {
+    if (refundLocks.get(orderId) === current) {
+      refundLocks.delete(orderId);
+    }
+  }
+}
+
 export async function initiateOrderRefund(input: {
   orderId: string;
   amountPaise?: number;
@@ -21,50 +42,56 @@ export async function initiateOrderRefund(input: {
   note?: string;
   request?: Request;
 }): Promise<{ orderId: string; razorpayRefundId?: string; skipped?: boolean }> {
-  const order = await fetchOrderById(input.orderId);
-  if (!order) {
-    throw new Error("Order not found");
-  }
+  return serializeRefund(input.orderId, async () => {
+    const order = await fetchOrderById(input.orderId);
+    if (!order) {
+      throw new Error("Order not found");
+    }
 
-  if (order.paymentStatus === "refunded") {
-    return { orderId: order.id, skipped: true };
-  }
+    if (order.paymentStatus === "refunded") {
+      return { orderId: order.id, skipped: true };
+    }
 
-  if (!order.razorpayPaymentId) {
-    throw new Error("No Razorpay payment on this order");
-  }
+    if (!order.razorpayPaymentId) {
+      throw new Error("No Razorpay payment on this order");
+    }
 
-  const razorpay = getRazorpayInstance();
-  const refund = await razorpay.payments.refund(order.razorpayPaymentId, {
-    amount: input.amountPaise,
-    notes: {
+    const razorpay = getRazorpayInstance();
+    const refund = (await withTimeout(
+      razorpay.payments.refund(order.razorpayPaymentId, {
+        amount: input.amountPaise,
+        notes: {
+          orderId: order.id,
+          initiatedBy: input.actorEmail,
+          ...(input.note?.trim() ? { note: input.note.trim().slice(0, 200) } : {}),
+        },
+      }),
+      20000,
+      "Razorpay payment.refund",
+    )) as { id: string };
+
+    const result = await refundOrderPayment({
       orderId: order.id,
-      initiatedBy: input.actorEmail,
-      ...(input.note?.trim() ? { note: input.note.trim().slice(0, 200) } : {}),
-    },
-  });
-
-  const result = await refundOrderPayment({
-    orderId: order.id,
-    razorpayPaymentId: order.razorpayPaymentId,
-    razorpayRefundId: refund.id,
-  });
-
-  await logAuditEvent({
-    action: "order.refund_initiated",
-    actorEmail: input.actorEmail,
-    resourceType: "order",
-    resourceId: order.id,
-    request: input.request,
-    metadata: {
+      razorpayPaymentId: order.razorpayPaymentId,
       razorpayRefundId: refund.id,
-      amountPaise: input.amountPaise ?? null,
-      ...(input.note?.trim() ? { note: input.note.trim() } : {}),
-    },
-  });
+    });
 
-  return {
-    orderId: result.order.id,
-    razorpayRefundId: refund.id,
-  };
+    await logAuditEvent({
+      action: "order.refund_initiated",
+      actorEmail: input.actorEmail,
+      resourceType: "order",
+      resourceId: order.id,
+      request: input.request,
+      metadata: {
+        razorpayRefundId: refund.id,
+        amountPaise: input.amountPaise ?? null,
+        ...(input.note?.trim() ? { note: input.note.trim() } : {}),
+      },
+    });
+
+    return {
+      orderId: result.order.id,
+      razorpayRefundId: refund.id,
+    };
+  });
 }

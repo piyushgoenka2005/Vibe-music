@@ -9,13 +9,7 @@ import { ErrorState } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import type { Coupon } from "@/types/admin";
 
-function CouponsContent({
-  canWrite,
-  canDelete,
-}: {
-  canWrite: boolean;
-  canDelete: boolean;
-}) {
+function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: boolean }) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -25,12 +19,12 @@ function CouponsContent({
     value: 10,
     isActive: true,
     maxUses: undefined as number | undefined,
+    minOrderAmount: undefined as number | undefined,
     expiresAt: "",
   });
   const [editId, setEditId] = useState<string | null>(null);
 
-  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
-    useAdminCursorPagination();
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching, dataUpdatedAt } = useQuery({
     queryKey: ["admin-coupons", cursor],
@@ -98,7 +92,13 @@ function CouponsContent({
     <>
       <div className="admin-toolbar">
         {canWrite ? (
-        <button type="button" className="admin-btn admin-btn--primary" onClick={() => setShowForm(true)}>Add Coupon</button>
+          <button
+            type="button"
+            className="admin-btn admin-btn--primary"
+            onClick={() => setShowForm(true)}
+          >
+            Add Coupon
+          </button>
         ) : null}
       </div>
       {deleteMutation.isError ? (
@@ -112,16 +112,105 @@ function CouponsContent({
         <div className="admin-panel" style={{ marginBottom: "1rem" }}>
           <div className="admin-panel__body">
             <div className="admin-form-grid">
-              <div className="admin-form-group"><label>Code</label><input className="admin-input" style={{ width: "100%" }} value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} /></div>
-              <div className="admin-form-group"><label>Label</label><input className="admin-input" style={{ width: "100%" }} value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} /></div>
-              <div className="admin-form-group"><label>Type</label><select className="admin-select" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as "percentage" | "flat" })}><option value="percentage">Percentage</option><option value="flat">Flat</option></select></div>
-              <div className="admin-form-group"><label>Value</label><input className="admin-input" style={{ width: "100%" }} type="number" value={form.value} onChange={(e) => setForm({ ...form, value: Number(e.target.value) })} /></div>
-              <div className="admin-form-group"><label>Max Uses</label><input className="admin-input" style={{ width: "100%" }} type="number" value={form.maxUses ?? ""} onChange={(e) => setForm({ ...form, maxUses: e.target.value ? Number(e.target.value) : undefined })} /></div>
-              <div className="admin-form-group"><label>Expires At</label><input className="admin-input" style={{ width: "100%" }} type="date" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} /></div>
+              <div className="admin-form-group">
+                <label>Code</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.code}
+                  onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>Label</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.label}
+                  onChange={(e) => setForm({ ...form, label: e.target.value })}
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>Type</label>
+                <select
+                  className="admin-select"
+                  value={form.type}
+                  onChange={(e) =>
+                    setForm({ ...form, type: e.target.value as "percentage" | "flat" })
+                  }
+                >
+                  <option value="percentage">Percentage</option>
+                  <option value="flat">Flat</option>
+                </select>
+              </div>
+              <div className="admin-form-group">
+                <label>Value</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  type="number"
+                  value={form.value}
+                  onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>Max Uses</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  type="number"
+                  value={form.maxUses ?? ""}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      maxUses: e.target.value ? Number(e.target.value) : undefined,
+                    })
+                  }
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>Min order amount (INR)</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  type="number"
+                  min={0}
+                  value={form.minOrderAmount ?? ""}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      minOrderAmount: e.target.value ? Number(e.target.value) : undefined,
+                    })
+                  }
+                  placeholder="Optional"
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>Expires At</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  type="date"
+                  value={form.expiresAt}
+                  onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+                />
+              </div>
             </div>
             <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
-              <button type="button" className="admin-btn admin-btn--primary" onClick={() => saveMutation.mutate()}>Save</button>
-              <button type="button" className="admin-btn admin-btn--secondary" onClick={() => setShowForm(false)}>Cancel</button>
+              <button
+                type="button"
+                className="admin-btn admin-btn--primary"
+                onClick={() => saveMutation.mutate()}
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                className="admin-btn admin-btn--secondary"
+                onClick={() => setShowForm(false)}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -132,20 +221,62 @@ function CouponsContent({
         ) : (
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>Code</th><th>Discount</th><th>Used</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Discount</th>
+                  <th>Min order</th>
+                  <th>Used</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
               <tbody>
                 {(data?.coupons ?? []).map((c) => (
                   <tr key={c.id}>
-                    <td><strong>{c.code}</strong></td>
+                    <td>
+                      <strong>{c.code}</strong>
+                    </td>
                     <td>{c.type === "percentage" ? `${c.value}%` : `₹${c.value}`}</td>
-                    <td>{c.usedCount}{c.maxUses ? ` / ${c.maxUses}` : ""}</td>
-                    <td><StatusBadge status={c.isActive ? "active" : "archived"} /></td>
+                    <td>{c.minOrderAmount != null ? `₹${c.minOrderAmount}` : "—"}</td>
+                    <td>
+                      {c.usedCount}
+                      {c.maxUses ? ` / ${c.maxUses}` : ""}
+                    </td>
+                    <td>
+                      <StatusBadge status={c.isActive ? "active" : "archived"} />
+                    </td>
                     <td>
                       {canWrite ? (
-                      <button type="button" className="admin-btn admin-btn--ghost" onClick={() => { setEditId(c.id); setForm({ code: c.code, label: c.label, type: c.type, value: c.value, isActive: c.isActive, maxUses: c.maxUses, expiresAt: c.expiresAt?.slice(0, 10) ?? "" }); setShowForm(true); }}>Edit</button>
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--ghost"
+                          onClick={() => {
+                            setEditId(c.id);
+                            setForm({
+                              code: c.code,
+                              label: c.label,
+                              type: c.type,
+                              value: c.value,
+                              isActive: c.isActive,
+                              maxUses: c.maxUses,
+                              minOrderAmount: c.minOrderAmount,
+                              expiresAt: c.expiresAt?.slice(0, 10) ?? "",
+                            });
+                            setShowForm(true);
+                          }}
+                        >
+                          Edit
+                        </button>
                       ) : null}
                       {canDelete ? (
-                      <button type="button" className="admin-btn admin-btn--danger" onClick={() => deleteMutation.mutate(c.id)}>Delete</button>
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--danger"
+                          onClick={() => deleteMutation.mutate(c.id)}
+                        >
+                          Delete
+                        </button>
                       ) : null}
                     </td>
                   </tr>

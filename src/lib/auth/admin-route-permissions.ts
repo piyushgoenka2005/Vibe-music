@@ -8,6 +8,7 @@ const ADMIN_ROUTE_PERMISSIONS = (
     { prefix: ROUTES.adminProductNew, permission: "products:read" },
     { prefix: ROUTES.adminProducts, permission: "products:read" },
     { prefix: ROUTES.adminCategories, permission: "categories:read" },
+    { prefix: ROUTES.adminTaxonomy, permission: "categories:read" },
     { prefix: ROUTES.adminBrands, permission: "categories:read" },
     { prefix: ROUTES.adminOrders, permission: "orders:read" },
     { prefix: ROUTES.adminRentalProducts, permission: "rentals:read" },
@@ -21,9 +22,9 @@ const ADMIN_ROUTE_PERMISSIONS = (
     { prefix: ROUTES.adminCompare, permission: "compare:read" },
     { prefix: ROUTES.adminReturns, permission: "orders:read" },
     { prefix: ROUTES.adminSupport, permission: "orders:read" },
-  { prefix: ROUTES.adminCustomers, permission: "customers:read" },
-  { prefix: ROUTES.adminNewsletter, permission: "customers:read" },
-  { prefix: ROUTES.adminCoupons, permission: "coupons:read" },
+    { prefix: ROUTES.adminCustomers, permission: "customers:read" },
+    { prefix: ROUTES.adminNewsletter, permission: "customers:read" },
+    { prefix: ROUTES.adminCoupons, permission: "coupons:read" },
     { prefix: ROUTES.adminBanners, permission: "banners:read" },
     { prefix: ROUTES.adminHomepage, permission: "homepage:read" },
     { prefix: ROUTES.adminReviews, permission: "reviews:read" },
@@ -44,9 +45,7 @@ const ADMIN_ROUTE_PERMISSIONS = (
   .slice()
   .sort((a, b) => b.prefix.length - a.prefix.length);
 
-export function getRequiredPermissionForAdminPath(
-  pathname: string
-): Permission | null {
+export function getRequiredPermissionForAdminPath(pathname: string): Permission | null {
   const path = pathname.replace(/\/+$/, "") || "/";
   if (path === ROUTES.adminLogin) return null;
 
@@ -58,10 +57,7 @@ export function getRequiredPermissionForAdminPath(
   return "dashboard:read";
 }
 
-export function canAccessAdminPath(
-  permissions: Permission[],
-  pathname: string
-): boolean {
+export function canAccessAdminPath(permissions: Permission[], pathname: string): boolean {
   const required = getRequiredPermissionForAdminPath(pathname);
   if (!required) return true;
   return hasPermission(permissions, required);

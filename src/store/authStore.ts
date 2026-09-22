@@ -1,9 +1,9 @@
 "use client";
 
 import { create } from "zustand";
-import { signIn as nextAuthSignIn, signOut as nextAuthSignOut } from "next-auth/react";
+import { getSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from "next-auth/react";
 import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
-import { mergeGuestCartOnAuth, snapshotGuestCart } from "@/lib/cart/mergeGuestCart";
+import { snapshotGuestCart } from "@/lib/cart/mergeGuestCart";
 import { useCartStore } from "@/store/cartStore";
 import type { AppUser, SignInInput, SignUpInput } from "@/types/user";
 
@@ -43,7 +43,7 @@ async function credentialsSignIn(
   email: string,
   password: string,
   rememberMe: boolean,
-  totp?: string
+  totp?: string,
 ): Promise<AppUser> {
   const result = await nextAuthSignIn("credentials", {
     email,
@@ -58,16 +58,18 @@ async function credentialsSignIn(
     throw new Error(result.error);
   }
 
-  const sessionRes = await fetch("/api/auth/session");
-  const session = (await sessionRes.json()) as {
-    user?: { id: string; email: string; name?: string | null; image?: string | null };
-  };
-
-  if (!session.user?.id) {
+  // Prefer NextAuth client session cache over a raw /api/auth/session fetch.
+  const session = await getSession();
+  if (!session?.user?.id || !session.user.email) {
     throw new Error("CredentialsSignin");
   }
 
-  return mapSessionUser(session.user);
+  return mapSessionUser({
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+    image: session.user.image,
+  });
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -110,7 +112,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       const user = await credentialsSignIn(input.email, input.password, false);
-      mergeGuestCartOnAuth();
+      // Guest cart merge runs once in AuthProvider when the session becomes ready.
       set({ user, isAuthenticated: true, isLoading: false });
       return user;
     } catch (error) {
@@ -129,9 +131,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         input.email,
         input.password,
         input.rememberMe ?? false,
-        "totp" in input ? (input as { totp?: string }).totp : undefined
+        "totp" in input ? (input as { totp?: string }).totp : undefined,
       );
-      mergeGuestCartOnAuth();
+      // Guest cart merge runs once in AuthProvider when the session becomes ready.
       set({ user, isAuthenticated: true, isLoading: false });
       return user;
     } catch (error) {

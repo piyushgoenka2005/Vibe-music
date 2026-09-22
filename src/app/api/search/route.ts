@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  enforceRateLimit,
-  handleRouteError,
-} from "@/lib/api/route-utils";
+import { enforceRateLimit, handleRouteError } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import {
   buildBrandFacets,
@@ -13,6 +10,8 @@ import { searchProducts } from "@/lib/server/productRepository";
 
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 48;
+/** Ceiling for `all=1` full-match payloads; guards serialization cost as the catalog grows. */
+const MAX_ALL_LIMIT = 1500;
 
 function parsePositiveInt(value: string | null, fallback: number): number {
   const parsed = Number(value);
@@ -34,14 +33,9 @@ export async function GET(request: Request) {
     const mode = searchParams.get("mode") ?? "results";
     const returnAll = searchParams.get("all") === "1";
     const page = parsePositiveInt(searchParams.get("page"), 1);
-    const limit = Math.min(
-      parsePositiveInt(searchParams.get("limit"), DEFAULT_LIMIT),
-      MAX_LIMIT
-    );
+    const limit = Math.min(parsePositiveInt(searchParams.get("limit"), DEFAULT_LIMIT), MAX_LIMIT);
 
-    const hasFilter = Boolean(
-      category?.trim() || subcategory?.trim() || brand?.trim()
-    );
+    const hasFilter = Boolean(category?.trim() || subcategory?.trim() || brand?.trim());
     if (query.length < MIN_QUERY_LENGTH && !hasFilter) {
       return NextResponse.json({
         query,
@@ -60,7 +54,7 @@ export async function GET(request: Request) {
     // If it's a pure brand query (no search text or category), we MUST narrow by brand
     // on the server so we don't fetch the entire catalog into memory.
     const isBrandOnly = !query && !category && !subcategory;
-    const apiBrand = (returnAll && !isBrandOnly) ? undefined : brand;
+    const apiBrand = returnAll && !isBrandOnly ? undefined : brand;
     const apiSort = returnAll ? undefined : sort;
     const products = await searchProducts({
       query,
@@ -91,17 +85,19 @@ export async function GET(request: Request) {
           headers: {
             "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
           },
-        }
+        },
       );
     }
 
     const total = products.length;
 
     if (returnAll) {
+      const truncated = total > MAX_ALL_LIMIT;
+      const payloadProducts = truncated ? products.slice(0, MAX_ALL_LIMIT) : products;
       return NextResponse.json(
         {
           query,
-          products,
+          products: payloadProducts,
           categories,
           brands,
           total,
@@ -109,12 +105,13 @@ export async function GET(request: Request) {
           limit: total,
           totalPages: 1,
           hasMore: false,
+          truncated,
         },
         {
           headers: {
             "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
           },
-        }
+        },
       );
     }
 
@@ -137,7 +134,7 @@ export async function GET(request: Request) {
         headers: {
           "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
         },
-      }
+      },
     );
   } catch (error) {
     return handleRouteError(error, "api/search");

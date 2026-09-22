@@ -1,33 +1,41 @@
 import "server-only";
 
 import { cache } from "react";
-import { getAllProducts, getBrands } from "@/services/catalogService";
-import type { Brand } from "@/types/brand";
+import { getBrandLogoUrl } from "@/lib/brandLogos";
+import { groupCatalogByBrand } from "@/lib/brands/groupCatalogByBrand";
+import { getCachedBrands, getCachedHomepageProducts } from "@/lib/server/catalogSnapshotCache";
+import { toProduct } from "@/services/catalogService";
+import type { BrandDirectoryGroup, BrandWithCount } from "@/types/brandDirectory";
 
-export interface BrandWithCount extends Brand {
-  productCount: number;
-}
+export type { BrandDirectoryGroup, BrandWithCount };
 
-export const loadBrandsWithCounts = cache(async function loadBrandsWithCounts(): Promise<BrandWithCount[]> {
-  const [brands, products] = await Promise.all([
-    getBrands(),
-    getAllProducts(false),
-  ]);
+export const loadBrandDirectory = cache(async function loadBrandDirectory(): Promise<
+  BrandDirectoryGroup[]
+> {
+  const [brands, catalog] = await Promise.all([getCachedBrands(), getCachedHomepageProducts()]);
 
-  const countBySlug = new Map<string, number>();
-  for (const product of products) {
-    if (product.status !== "active") continue;
-    countBySlug.set(
-      product.brandSlug,
-      (countBySlug.get(product.brandSlug) ?? 0) + 1
-    );
-  }
+  return groupCatalogByBrand(catalog, brands).map((group) => {
+    const logoUrl = getBrandLogoUrl(group.slug);
+    return {
+      id: group.id,
+      name: group.name,
+      slug: group.slug,
+      productCount: group.products.length,
+      letter: group.letter,
+      ...(logoUrl ? { logoUrl } : {}),
+      products: group.products.map(toProduct),
+    };
+  });
+});
 
-  return brands
-    .map((brand) => ({
-      ...brand,
-      productCount: countBySlug.get(brand.slug) ?? 0,
-    }))
-    .filter((brand) => brand.productCount > 0)
-    .sort((a, b) => a.name.localeCompare(b.name));
+export const loadBrandsWithCounts = cache(async function loadBrandsWithCounts(): Promise<
+  BrandWithCount[]
+> {
+  const directory = await loadBrandDirectory();
+  return directory.map(({ id, name, slug, productCount }) => ({
+    id,
+    name,
+    slug,
+    productCount,
+  }));
 });

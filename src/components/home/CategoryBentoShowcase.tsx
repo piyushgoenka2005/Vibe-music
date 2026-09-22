@@ -78,15 +78,19 @@ function CategoryBadge({ badge, tag = false }: { badge: string; tag?: boolean })
   );
 }
 
-function ExploreButton({ dark = false }: { dark?: boolean }) {
+function ExploreButton({
+  dark = false,
+  label = "Explore Category",
+}: {
+  dark?: boolean;
+  label?: string;
+}) {
   return (
-    <span
-      className={`category-bento__explore${dark ? " category-bento__explore--hero" : ""}`}
-    >
+    <span className={`category-bento__explore${dark ? " category-bento__explore--hero" : ""}`}>
       <span className="category-bento__explore-text">
         <span className="category-bento__explore-text-viewport">
           <span className="category-bento__explore-text-stack">
-            <span className="category-bento__explore-text-line">Explore Category</span>
+            <span className="category-bento__explore-text-line">{label}</span>
             <span className="category-bento__explore-text-line">Shop now</span>
           </span>
         </span>
@@ -96,6 +100,10 @@ function ExploreButton({ dark = false }: { dark?: boolean }) {
       </span>
     </span>
   );
+}
+
+function bentoHref(cat: CategoryBentoItem): string {
+  return cat.href || categoryPath(cat.slug);
 }
 
 function CategoryMeta({
@@ -111,9 +119,7 @@ function CategoryMeta({
 }) {
   return (
     <>
-      {cat.badge && !isTagBadge(cat.badge) ? (
-        <CategoryBadge badge={cat.badge} />
-      ) : null}
+      {cat.badge && !isTagBadge(cat.badge) ? <CategoryBadge badge={cat.badge} /> : null}
       <h3 className={`category-bento__name${dark ? " category-bento__name--hero" : ""}`}>
         {cat.title}
       </h3>
@@ -140,10 +146,12 @@ function CategoryBentoHeroTile({
   cat,
   index,
   reduceMotion,
+  exploreLabel = "Explore Category",
 }: {
   cat: CategoryBentoItem;
   index: number;
   reduceMotion: boolean;
+  exploreLabel?: string;
 }) {
   return (
     <motion.article
@@ -154,7 +162,7 @@ function CategoryBentoHeroTile({
       whileHover={reduceMotion ? undefined : tileHover}
     >
       <Link
-        href={categoryPath(cat.slug)}
+        href={bentoHref(cat)}
         className="category-bento__link category-bento__link--hero"
         aria-label={`Explore ${cat.title}: ${cat.desc}`}
       >
@@ -187,14 +195,12 @@ function CategoryBentoHeroTile({
             ))}
           </div>
           {cat.productCount ? (
-            <p className="category-bento__count category-bento__count--hero">
-              {cat.productCount}
-            </p>
+            <p className="category-bento__count category-bento__count--hero">{cat.productCount}</p>
           ) : null}
           {cat.brands ? (
             <p className="category-bento__brands category-bento__brands--hero">{cat.brands}</p>
           ) : null}
-          <ExploreButton dark />
+          <ExploreButton dark label={exploreLabel} />
         </div>
       </Link>
     </motion.article>
@@ -205,10 +211,12 @@ function CategoryBentoCard({
   cat,
   index,
   reduceMotion,
+  exploreLabel = "Explore Category",
 }: {
   cat: CategoryBentoItem;
   index: number;
   reduceMotion: boolean;
+  exploreLabel?: string;
 }) {
   const wide = Boolean(cat.wide);
 
@@ -222,7 +230,7 @@ function CategoryBentoCard({
         whileHover={reduceMotion ? undefined : tileHover}
       >
         <Link
-          href={categoryPath(cat.slug)}
+          href={bentoHref(cat)}
           className="category-bento__link category-bento__link--card category-bento__link--wide"
           aria-label={`Explore ${cat.title}: ${cat.desc}`}
         >
@@ -244,7 +252,7 @@ function CategoryBentoCard({
           </div>
           <div className="category-bento__card-body category-bento__card-body--wide">
             <CategoryMeta cat={cat} />
-            <ExploreButton />
+            <ExploreButton label={exploreLabel} />
           </div>
         </Link>
       </motion.article>
@@ -260,7 +268,7 @@ function CategoryBentoCard({
       whileHover={reduceMotion ? undefined : tileHover}
     >
       <Link
-        href={categoryPath(cat.slug)}
+        href={bentoHref(cat)}
         className="category-bento__link category-bento__link--card category-bento__link--overlay"
         aria-label={`Explore ${cat.title}: ${cat.desc}`}
       >
@@ -286,19 +294,30 @@ function CategoryBentoCard({
         <div className="category-bento__card-caption">
           <h3 className="category-bento__name">{cat.title}</h3>
           <p className="category-bento__desc">{cat.desc}</p>
-          {cat.brands ? (
-            <p className="category-bento__brands">{cat.brands}</p>
-          ) : null}
-          <ExploreButton />
+          {cat.brands ? <p className="category-bento__brands">{cat.brands}</p> : null}
+          <ExploreButton label={exploreLabel} />
         </div>
       </Link>
     </motion.article>
   );
 }
 
-export default function CategoryBentoShowcase() {
+export default function CategoryBentoShowcase({
+  items = CATEGORY_BENTO_ITEMS,
+  title,
+  ctaText = "Browse all categories",
+  ctaLink = ROUTES.categories,
+  exploreLabel = "Explore Category",
+}: {
+  items?: CategoryBentoItem[];
+  title?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  exploreLabel?: string;
+}) {
   const reduceMotion = useHydrationSafeReducedMotion();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const catalog = items.length > 0 ? items : CATEGORY_BENTO_ITEMS;
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -308,9 +327,7 @@ export default function CategoryBentoShowcase() {
     const usePointerDrag =
       typeof window !== "undefined" &&
       window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-    const detachAxis = usePointerDrag
-      ? attachAxisLockedRailScroll(el)
-      : () => undefined;
+    const detachAxis = usePointerDrag ? attachAxisLockedRailScroll(el) : () => undefined;
     const detachWheel = attachHorizontalWheelScroll(el);
     return () => {
       detachAxis();
@@ -319,7 +336,7 @@ export default function CategoryBentoShowcase() {
   }, []);
 
   return (
-    <section className="category-bento" aria-label="Featured category departments">
+    <section className="category-bento" aria-label={title || "Featured category departments"}>
       <div className="category-bento__atmosphere" aria-hidden>
         <span className="category-bento__grid-texture" />
         <span className="category-bento__noise" />
@@ -335,13 +352,14 @@ export default function CategoryBentoShowcase() {
             whileInView="visible"
             viewport={{ once: true, margin: "-40px" }}
           >
-            {CATEGORY_BENTO_ITEMS.map((cat, index) =>
+            {catalog.map((cat, index) =>
               cat.size === "large" ? (
                 <CategoryBentoHeroTile
                   key={cat.slug}
                   cat={cat}
                   index={index}
                   reduceMotion={reduceMotion}
+                  exploreLabel={exploreLabel}
                 />
               ) : (
                 <CategoryBentoCard
@@ -349,8 +367,9 @@ export default function CategoryBentoShowcase() {
                   cat={cat}
                   index={index}
                   reduceMotion={reduceMotion}
+                  exploreLabel={exploreLabel}
                 />
-              )
+              ),
             )}
           </motion.div>
         </div>
@@ -362,27 +381,17 @@ export default function CategoryBentoShowcase() {
           viewport={{ once: true }}
           whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
         >
-          <Link
-            href={ROUTES.categories}
-            className="category-bento__browse-btn"
-          >
+          <Link href={ctaLink} className="category-bento__browse-btn">
             <span className="category-bento__browse-btn-label">
               <span className="category-bento__browse-btn-track">
                 <span className="category-bento__browse-btn-segment">
-                  {CATEGORY_BENTO_ITEMS.map((cat) => cat.title).join(" · ")} · Browse
-                  all categories ·{" "}
+                  {catalog.map((cat) => cat.title).join(" · ")} · {ctaText} ·{" "}
                 </span>
-                <span
-                  aria-hidden
-                  className="category-bento__browse-btn-segment"
-                >
-                  {CATEGORY_BENTO_ITEMS.map((cat) => cat.title).join(" · ")} · Browse
-                  all categories ·{" "}
+                <span aria-hidden className="category-bento__browse-btn-segment">
+                  {catalog.map((cat) => cat.title).join(" · ")} · {ctaText} ·{" "}
                 </span>
               </span>
-              <span className="category-bento__browse-btn-static">
-                Browse all categories
-              </span>
+              <span className="category-bento__browse-btn-static">{ctaText}</span>
             </span>
             <span className="category-bento__browse-btn-icon" aria-hidden>
               <ArrowUpRight size={18} strokeWidth={2.25} />

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
+import AdminNotice from "@/components/admin/AdminNotice";
 import { EmptyState, LoadingState } from "@/components/admin/AdminUi";
 import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { ShippingZone } from "@/types/shippingZone";
@@ -25,9 +26,7 @@ function emptyZone(): Omit<ShippingZone, "createdAt" | "updatedAt"> {
 function ShippingContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<ShippingZone | null>(null);
-  const [draft, setDraft] = useState<Omit<ShippingZone, "createdAt" | "updatedAt">>(
-    emptyZone()
-  );
+  const [draft, setDraft] = useState<Omit<ShippingZone, "createdAt" | "updatedAt">>(emptyZone());
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-shipping-zones"],
@@ -50,7 +49,7 @@ function ShippingContent({ canWrite }: { canWrite: boolean }) {
             states: draft.states.filter(Boolean),
             pinCodePrefixes: draft.pinCodePrefixes.filter(Boolean),
           }),
-        }
+        },
       );
       if (!res.ok) throw new Error("Save failed");
     },
@@ -88,18 +87,11 @@ function ShippingContent({ canWrite }: { canWrite: boolean }) {
 
   return (
     <div className="admin-grid-2">
-      <div
-        className="admin-panel"
-        style={{ gridColumn: "1 / -1", marginBottom: "1rem" }}
-      >
-        <div className="admin-panel__body">
-          <p style={{ margin: 0, fontWeight: 600 }}>Checkout shipping is free (₹0)</p>
-          <p style={{ margin: "0.35rem 0 0", color: "var(--text-secondary, #64748b)" }}>
-            Zone charge fields below are for coverage/ETA planning only. The storefront
-            checkout resolver currently returns ₹0 for every method — customers always
-            see free shipping.
-          </p>
-        </div>
+      <div style={{ gridColumn: "1 / -1" }}>
+        <AdminNotice tone="warning" title="Checkout shipping is free (₹0)">
+          Zone charge fields below are for coverage and ETA planning. The storefront checkout
+          resolver currently returns ₹0 for every method — customers always see free shipping.
+        </AdminNotice>
       </div>
       <div className="admin-panel">
         <div className="admin-toolbar">
@@ -166,147 +158,153 @@ function ShippingContent({ canWrite }: { canWrite: boolean }) {
             <EmptyState message="Select a zone to view." />
           ) : (
             <>
-          {!canWrite ? (
-            <p style={{ margin: "0 0 1rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>
-              View-only — you need settings:write to edit shipping zones. Checkout still forces free shipping (₹0).
-            </p>
-          ) : null}
-          <fieldset
-            disabled={!canWrite}
-            style={{ border: "none", padding: 0, margin: 0, minWidth: 0 }}
-          >
-          <div className="admin-form-group">
-            <label>Name</label>
-            <input
-              className="admin-input"
-              style={{ width: "100%" }}
-              value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-            />
-          </div>
-          <div className="admin-form-group">
-            <label>Description</label>
-            <textarea
-              className="admin-textarea"
-              value={draft.description ?? ""}
-              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-            />
-          </div>
-          <div className="admin-form-group">
-            <label>States (comma-separated)</label>
-            <input
-              className="admin-input"
-              style={{ width: "100%" }}
-              value={draft.states.join(", ")}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  states: e.target.value.split(",").map((item) => item.trim()).filter(Boolean),
-                })
-              }
-            />
-          </div>
-          <div className="admin-form-group">
-            <label>Pin code prefixes (comma-separated)</label>
-            <input
-              className="admin-input"
-              style={{ width: "100%" }}
-              value={draft.pinCodePrefixes.join(", ")}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  pinCodePrefixes: e.target.value
-                    .split(",")
-                    .map((item) => item.trim())
-                    .filter(Boolean),
-                })
-              }
-            />
-          </div>
-          <div className="admin-form-grid">
-            <div className="admin-form-group">
-              <label>Standard (₹)</label>
-              <input
-                className="admin-input"
-                type="number"
-                value={draft.methodCharges.standard ?? 0}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    methodCharges: {
-                      ...draft.methodCharges,
-                      standard: Number(e.target.value),
-                    },
-                  })
-                }
-              />
-            </div>
-            <div className="admin-form-group">
-              <label>Express (₹)</label>
-              <input
-                className="admin-input"
-                type="number"
-                value={draft.methodCharges.express ?? 0}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    methodCharges: {
-                      ...draft.methodCharges,
-                      express: Number(e.target.value),
-                    },
-                  })
-                }
-              />
-            </div>
-            <div className="admin-form-group">
-              <label>Overnight (₹)</label>
-              <input
-                className="admin-input"
-                type="number"
-                value={draft.methodCharges.overnight ?? 0}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    methodCharges: {
-                      ...draft.methodCharges,
-                      overnight: Number(e.target.value),
-                    },
-                  })
-                }
-              />
-            </div>
-          </div>
-          <label className="admin-checkbox">
-            <input
-              type="checkbox"
-              checked={draft.isActive}
-              onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })}
-            />
-            Active
-          </label>
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-            {canWrite ? (
-              <button
-                type="button"
-                className="admin-btn admin-btn--primary"
-                disabled={saveMutation.isPending || !draft.name}
-                onClick={() => saveMutation.mutate()}
+              {!canWrite ? (
+                <p
+                  style={{ margin: "0 0 1rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}
+                >
+                  View-only — you need settings:write to edit shipping zones. Checkout still forces
+                  free shipping (₹0).
+                </p>
+              ) : null}
+              <fieldset
+                disabled={!canWrite}
+                style={{ border: "none", padding: 0, margin: 0, minWidth: 0 }}
               >
-                {saveMutation.isPending ? "Saving…" : "Save zone"}
-              </button>
-            ) : null}
-            {canWrite && selected ? (
-              <button
-                type="button"
-                className="admin-btn admin-btn--danger"
-                disabled={deleteMutation.isPending}
-                onClick={() => deleteMutation.mutate(selected.id)}
-              >
-                Delete
-              </button>
-            ) : null}
-          </div>
-          </fieldset>
+                <div className="admin-form-group">
+                  <label>Name</label>
+                  <input
+                    className="admin-input"
+                    style={{ width: "100%" }}
+                    value={draft.name}
+                    onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                  />
+                </div>
+                <div className="admin-form-group">
+                  <label>Description</label>
+                  <textarea
+                    className="admin-textarea"
+                    value={draft.description ?? ""}
+                    onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                  />
+                </div>
+                <div className="admin-form-group">
+                  <label>States (comma-separated)</label>
+                  <input
+                    className="admin-input"
+                    style={{ width: "100%" }}
+                    value={draft.states.join(", ")}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        states: e.target.value
+                          .split(",")
+                          .map((item) => item.trim())
+                          .filter(Boolean),
+                      })
+                    }
+                  />
+                </div>
+                <div className="admin-form-group">
+                  <label>Pin code prefixes (comma-separated)</label>
+                  <input
+                    className="admin-input"
+                    style={{ width: "100%" }}
+                    value={draft.pinCodePrefixes.join(", ")}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        pinCodePrefixes: e.target.value
+                          .split(",")
+                          .map((item) => item.trim())
+                          .filter(Boolean),
+                      })
+                    }
+                  />
+                </div>
+                <div className="admin-form-grid">
+                  <div className="admin-form-group">
+                    <label>Standard (₹)</label>
+                    <input
+                      className="admin-input"
+                      type="number"
+                      value={draft.methodCharges.standard ?? 0}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          methodCharges: {
+                            ...draft.methodCharges,
+                            standard: Number(e.target.value),
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Express (₹)</label>
+                    <input
+                      className="admin-input"
+                      type="number"
+                      value={draft.methodCharges.express ?? 0}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          methodCharges: {
+                            ...draft.methodCharges,
+                            express: Number(e.target.value),
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Overnight (₹)</label>
+                    <input
+                      className="admin-input"
+                      type="number"
+                      value={draft.methodCharges.overnight ?? 0}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          methodCharges: {
+                            ...draft.methodCharges,
+                            overnight: Number(e.target.value),
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <label className="admin-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={draft.isActive}
+                    onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })}
+                  />
+                  Active
+                </label>
+                <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+                  {canWrite ? (
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--primary"
+                      disabled={saveMutation.isPending || !draft.name}
+                      onClick={() => saveMutation.mutate()}
+                    >
+                      {saveMutation.isPending ? "Saving…" : "Save zone"}
+                    </button>
+                  ) : null}
+                  {canWrite && selected ? (
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--danger"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => deleteMutation.mutate(selected.id)}
+                    >
+                      Delete
+                    </button>
+                  ) : null}
+                </div>
+              </fieldset>
             </>
           )}
         </div>

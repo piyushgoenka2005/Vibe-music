@@ -23,10 +23,7 @@ interface NavGooItem {
   active?: boolean;
 }
 
-export default function SiteHeaderNav({
-  onNavigate,
-  onMegaMenuOpenChange,
-}: SiteHeaderNavProps) {
+export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: SiteHeaderNavProps) {
   const pathname = usePathname() ?? "";
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
@@ -43,6 +40,12 @@ export default function SiteHeaderNav({
       active: activeSlug === menu.slug,
     })),
     {
+      key: "brands",
+      label: "Brands",
+      href: ROUTES.brands,
+      active: pathname === ROUTES.brands || pathname.startsWith(`${ROUTES.brands}/`),
+    },
+    {
       key: "deals",
       label: "Deals",
       href: ROUTES.deals,
@@ -56,8 +59,7 @@ export default function SiteHeaderNav({
       key: "gp9",
       label: "Grand Piano",
       href: ROUTES.gp9,
-      active:
-        pathname === ROUTES.gp9 || pathname.startsWith(`${ROUTES.gp9}/`),
+      active: pathname === ROUTES.gp9 || pathname.startsWith(`${ROUTES.gp9}/`),
     },
   ];
 
@@ -88,7 +90,7 @@ export default function SiteHeaderNav({
       clearCloseTimer();
       setActiveSlug(slug);
     },
-    [clearCloseTimer]
+    [clearCloseTimer],
   );
 
   const scheduleClose = useCallback(() => {
@@ -102,15 +104,13 @@ export default function SiteHeaderNav({
     onNavigate?.();
   }, [onNavigate]);
 
-  const activeMenu = activeSlug ? MEGA_MENU_BY_SLUG[activeSlug] ?? null : null;
+  const activeMenu = activeSlug ? (MEGA_MENU_BY_SLUG[activeSlug] ?? null) : null;
 
   useEffect(() => {
     onMegaMenuOpenChange?.(Boolean(activeSlug));
   }, [activeSlug, onMegaMenuOpenChange]);
 
-  const hoveredIndex = hoveredKey
-    ? navItems.findIndex((item) => item.key === hoveredKey)
-    : -1;
+  const hoveredIndex = hoveredKey ? navItems.findIndex((item) => item.key === hoveredKey) : -1;
 
   const shouldPull = (index: number) => {
     if (hoveredIndex < 0 || index <= 0) return false;
@@ -180,9 +180,7 @@ export default function SiteHeaderNav({
                     href={item.href}
                     className={hitClass(item)}
                     onClick={handleNavigate}
-                    aria-expanded={
-                      item.slug ? activeSlug === item.slug : undefined
-                    }
+                    aria-expanded={item.slug ? activeSlug === item.slug : undefined}
                     aria-haspopup={item.slug ? "true" : undefined}
                   >
                     {item.label}

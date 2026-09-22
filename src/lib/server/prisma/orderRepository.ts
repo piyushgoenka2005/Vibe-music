@@ -3,7 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { Order } from "@/types/order";
-import { orderToPrisma, prismaToOrder } from "./mappers";
+import { asJsonValue, orderToPrisma, prismaToOrder } from "./mappers";
 
 export async function fetchOrderById(orderId: string): Promise<Order | null> {
   const row = await prisma.order.findUnique({ where: { id: orderId } });
@@ -137,11 +137,101 @@ export async function createOrder(order: Order): Promise<void> {
   await prisma.order.create({ data: orderToPrisma(order) });
 }
 
-export async function updateOrder(order: Order): Promise<void> {
-  await prisma.order.update({
+/**
+ * Lock the order row (`SELECT ... FOR UPDATE`) and return it merged onto the
+ * `Order` type. Callers must complete all mutually-dependent reads/writes inside
+ * the same transaction to serialize concurrent payment events.
+ */
+export async function lockOrderInTx(
+  tx: Prisma.TransactionClient,
+  orderId: string,
+): Promise<Order | null> {
+  const [locked] = await tx.$queryRaw<{ id: string }[]>(
+    Prisma.sql`SELECT id FROM orders WHERE id = ${orderId} FOR UPDATE`,
+  );
+  if (!locked) return null;
+  const row = await tx.order.findUnique({ where: { id: orderId } });
+  return row ? prismaToOrder(row) : null;
+}
+
+/** Merge `patch` onto `order` and persist within `tx`, returning the result. */
+export async function updateOrderInTx(
+  tx: Prisma.TransactionClient,
+  order: Order,
+  patch?: Partial<Order>,
+): Promise<Order> {
+  const updated: Order = {
+    ...order,
+    ...(patch ?? {}),
+    id: order.id,
+    updatedAt: patch?.updatedAt ?? order.updatedAt ?? new Date().toISOString(),
+  };
+  await tx.order.update({
     where: { id: order.id },
-    data: orderToPrisma(order),
+    data: orderToPrisma(updated),
   });
+  return updated;
+}
+
+/**
+ * Atomic scalar-field update with no read-modify-write round-trip. Use for
+ * single-field assignments (e.g. recording a created Razorpay order) that do
+ * not need a compare-and-swap on payment state.
+ */
+export async function updateOrderFields(
+  orderId: string,
+  data: Prisma.OrderUpdateManyMutationInput,
+): Promise<boolean> {
+  const result = await prisma.order.updateMany({
+    where: { id: orderId },
+    data,
+  });
+  return result.count > 0;
+}
+
+function orderPatchToPrisma(patch: Partial<Order>): Prisma.OrderUpdateManyMutationInput {
+  const data: Prisma.OrderUpdateManyMutationInput = {};
+  if (patch.status) data.status = patch.status;
+  if (patch.paymentStatus) data.paymentStatus = patch.paymentStatus;
+  if (patch.inventoryStatus) data.inventoryStatus = patch.inventoryStatus;
+  if (patch.razorpayPaymentId !== undefined)
+    data.razorpayPaymentId = patch.razorpayPaymentId ?? null;
+  if (patch.razorpayOrderId !== undefined) data.razorpayOrderId = patch.razorpayOrderId ?? null;
+  if (patch.razorpayRefundId !== undefined) data.razorpayRefundId = patch.razorpayRefundId ?? null;
+  if (patch.razorpaySignature !== undefined)
+    data.razorpaySignature = patch.razorpaySignature ?? null;
+  if (patch.paymentCompletedAt !== undefined)
+    data.paymentCompletedAt = patch.paymentCompletedAt ?? null;
+  if (patch.paymentSource !== undefined) data.paymentSource = patch.paymentSource ?? null;
+  if (patch.paymentFailureReason !== undefined)
+    data.paymentFailureReason = patch.paymentFailureReason ?? null;
+  if (patch.refundedAt !== undefined) data.refundedAt = patch.refundedAt ?? null;
+  if (patch.invoice !== undefined) data.invoice = asJsonValue(patch.invoice);
+  if (patch.couponCode !== undefined) data.couponCode = patch.couponCode ?? null;
+  if (patch.couponDiscount !== undefined) data.couponDiscount = patch.couponDiscount;
+  if (patch.couponUsageApplied !== undefined) data.couponUsageApplied = patch.couponUsageApplied;
+  if (patch.updatedAt) data.updatedAt = patch.updatedAt;
+  return data;
+}
+
+/**
+ * Atomically apply a field patch with no read-modify-write: only the patched
+ * columns are written (last writer wins per column), then the fresh row is read
+ * back for the caller.
+ */
+export async function patchOrderFields(orderId: string, patch: Partial<Order>): Promise<Order> {
+  const result = await prisma.order.updateMany({
+    where: { id: orderId },
+    data: orderPatchToPrisma(patch),
+  });
+  if (result.count === 0) {
+    throw new Error("Order not found");
+  }
+  const row = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!row) {
+    throw new Error("Order not found");
+  }
+  return prismaToOrder(row);
 }
 
 export async function upsertOrder(order: Order): Promise<void> {
@@ -154,19 +244,6 @@ export async function upsertOrder(order: Order): Promise<void> {
 
 export async function deleteOrder(orderId: string): Promise<void> {
   await prisma.order.delete({ where: { id: orderId } });
-}
-
-export async function patchOrderFields(orderId: string, patch: Partial<Order>): Promise<Order> {
-  const existing = await fetchOrderById(orderId);
-  if (!existing) throw new Error("Order not found");
-  const updated: Order = {
-    ...existing,
-    ...patch,
-    id: orderId,
-    updatedAt: patch.updatedAt ?? new Date().toISOString(),
-  };
-  await updateOrder(updated);
-  return updated;
 }
 
 export async function listGuestOrdersByEmail(email: string): Promise<Order[]> {

@@ -10,11 +10,7 @@ import {
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { productPath, ROUTES } from "@/lib/routes";
 import { fetchProductSummaries } from "@/services/products.api";
-import type {
-  SearchResultsData,
-  SearchSuggestion,
-  SearchSuggestionGroups,
-} from "@/types/search";
+import type { SearchResultsData, SearchSuggestion, SearchSuggestionGroups } from "@/types/search";
 
 const MIN_QUERY_LENGTH = 2;
 const SUGGEST_CACHE_TTL_MS = 60_000;
@@ -59,8 +55,8 @@ const EMPTY_GROUPS: SearchSuggestionGroups = {
   recent: [],
 };
 
-async function readSearchApi<T>(url: string): Promise<T> {
-  const response = await fetch(url);
+async function readSearchApi<T>(url: string, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(url, signal ? { signal } : undefined);
   const body = (await response.json()) as T & { error?: string };
 
   if (!response.ok) {
@@ -77,8 +73,7 @@ function readSuggestCache(query: string): SearchApiSuggestResponse | null {
   }
   if (exact) suggestCache.delete(query);
 
-  let bestMatch: { data: SearchApiSuggestResponse; at: number; key: string } | null =
-    null;
+  let bestMatch: { data: SearchApiSuggestResponse; at: number; key: string } | null = null;
 
   for (const [key, entry] of suggestCache.entries()) {
     if (Date.now() - entry.at > SUGGEST_CACHE_TTL_MS) {
@@ -99,11 +94,7 @@ function writeSuggestCache(query: string, data: SearchApiSuggestResponse) {
   suggestCache.set(query, { data, at: Date.now() });
 }
 
-function mapRecentSearches(
-  recentSearches: string[],
-  query: string,
-  limit = 5
-): SearchSuggestion[] {
+function mapRecentSearches(recentSearches: string[], query: string, limit = 5): SearchSuggestion[] {
   const trimmed = query.trim();
   const filtered = trimmed
     ? recentSearches.filter((item) => matchesSearchQuery(item, trimmed))
@@ -120,7 +111,7 @@ function mapRecentSearches(
 function mergeBrandSuggestions(
   apiBrands: SearchResultsData["brands"],
   query: string,
-  limit = 5
+  limit = 5,
 ): SearchSuggestion[] {
   const seen = new Set<string>();
   const results: SearchSuggestion[] = [];
@@ -151,7 +142,7 @@ function mergeBrandSuggestions(
 }
 
 function hasSuggestionResults(
-  groups: Omit<SearchSuggestionGroups, "recent" | "recentlyViewed">
+  groups: Omit<SearchSuggestionGroups, "recent" | "recentlyViewed">,
 ): boolean {
   return (
     groups.keywords.length +
@@ -162,9 +153,7 @@ function hasSuggestionResults(
   );
 }
 
-function withDiscoveryFallback(
-  groups: SearchSuggestionGroups
-): SearchSuggestionGroups {
+function withDiscoveryFallback(groups: SearchSuggestionGroups): SearchSuggestionGroups {
   if (hasSuggestionResults(groups)) return groups;
 
   const discovery = buildEmptyStateSuggestions();
@@ -179,7 +168,7 @@ function withDiscoveryFallback(
 export async function mapRecentlyViewedSuggestions(
   recentlyViewedIds: string[],
   query: string,
-  limit = 4
+  limit = 4,
 ): Promise<SearchSuggestion[]> {
   if (recentlyViewedIds.length === 0) return [];
 
@@ -191,7 +180,7 @@ export async function mapRecentlyViewedSuggestions(
           (product) =>
             matchesSearchQuery(formatProductCardTitle(product.name, product.brand), trimmed) ||
             matchesSearchQuery(product.brand, trimmed) ||
-            matchesSearchQuery(product.name, trimmed)
+            matchesSearchQuery(product.name, trimmed),
         )
       : products;
 
@@ -213,7 +202,7 @@ export async function mapRecentlyViewedSuggestions(
 export function buildClientSearchSuggestions(
   query: string,
   recentSearches: string[] = [],
-  options: SearchSuggestionsOptions = {}
+  options: SearchSuggestionsOptions = {},
 ): SearchSuggestionGroups {
   const trimmed = query.trim();
   const popularQueries = options.popularQueries ?? [];
@@ -231,7 +220,7 @@ export function buildClientSearchSuggestions(
 export async function fetchSearchSuggestions(
   query: string,
   recentSearches: string[] = [],
-  options: SearchSuggestionsOptions = {}
+  options: SearchSuggestionsOptions & { signal?: AbortSignal } = {},
 ): Promise<SearchSuggestionGroups> {
   const trimmed = query.trim();
   const popularQueries = options.popularQueries ?? [];
@@ -239,10 +228,7 @@ export async function fetchSearchSuggestions(
   const recent = mapRecentSearches(recentSearches, trimmed);
 
   if (trimmed.length < MIN_QUERY_LENGTH) {
-    const recentlyViewed = await mapRecentlyViewedSuggestions(
-      recentlyViewedIds,
-      trimmed
-    );
+    const recentlyViewed = await mapRecentlyViewedSuggestions(recentlyViewedIds, trimmed);
     return {
       keywords: buildKeywordSuggestions(trimmed, 8, popularQueries),
       categories: [],
@@ -260,7 +246,8 @@ export async function fetchSearchSuggestions(
       mode: "suggest",
     });
     data = await readSearchApi<SearchApiSuggestResponse>(
-      `/api/search?${params.toString()}`
+      `/api/search?${params.toString()}`,
+      options.signal,
     );
     writeSuggestCache(trimmed, data);
   }
@@ -293,13 +280,10 @@ export async function fetchSearchSuggestions(
   const keywords = enrichKeywordSuggestions(
     buildKeywordSuggestions(trimmed, 8, popularQueries),
     facetLabels,
-    trimmed
+    trimmed,
   );
 
-  const recentlyViewed = await mapRecentlyViewedSuggestions(
-    recentlyViewedIds,
-    trimmed
-  );
+  const recentlyViewed = await mapRecentlyViewedSuggestions(recentlyViewedIds, trimmed);
 
   return withDiscoveryFallback({
     keywords,
@@ -320,13 +304,12 @@ export async function fetchSearchResults(
     sort?: string;
     /** Return every match for client-side listing filters (category layout). */
     all?: boolean;
-  }
+    signal?: AbortSignal;
+  },
 ): Promise<SearchResultsData> {
   const trimmed = query.trim();
   const hasFilter = Boolean(
-    filters?.category?.trim() ||
-      filters?.subcategory?.trim() ||
-      filters?.brand?.trim()
+    filters?.category?.trim() || filters?.subcategory?.trim() || filters?.brand?.trim(),
   );
 
   if (trimmed.length < MIN_QUERY_LENGTH && !hasFilter) {
@@ -355,14 +338,13 @@ export async function fetchSearchResults(
   }
 
   return readSearchApi<SearchApiResultsResponse>(
-    `/api/search?${params.toString()}`
+    `/api/search?${params.toString()}`,
+    filters?.signal,
   );
 }
 
 export { MIN_QUERY_LENGTH, EMPTY_GROUPS as SEARCH_EMPTY_GROUPS };
 
-export function buildPopularQueriesFromStore(
-  analytics: Array<{ query: string }>
-): string[] {
+export function buildPopularQueriesFromStore(analytics: Array<{ query: string }>): string[] {
   return getPopularQueriesFromAnalytics(analytics);
 }

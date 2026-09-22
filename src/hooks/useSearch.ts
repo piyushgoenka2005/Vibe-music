@@ -31,7 +31,7 @@ function readHeaderSearchQuery(): string {
   if (typeof document === "undefined") return "";
 
   const focused = document.querySelector<HTMLInputElement>(
-    `${HEADER_SEARCH_INPUT_SELECTORS}:focus`
+    `${HEADER_SEARCH_INPUT_SELECTORS}:focus`,
   );
   if (focused?.value.trim()) return focused.value.trim();
 
@@ -87,17 +87,14 @@ export function useSearch(options: UseSearchOptions = {}) {
   const [groups, setGroups] = useState<SearchSuggestionGroups>(SEARCH_EMPTY_GROUPS);
   const [activeIndex, setActiveIndex] = useState(-1);
 
-  const popularQueries = useMemo(
-    () => buildPopularQueriesFromStore(analytics),
-    [analytics]
-  );
+  const popularQueries = useMemo(() => buildPopularQueriesFromStore(analytics), [analytics]);
 
   const suggestionOptions = useMemo(
     () => ({
       recentlyViewedIds,
       popularQueries,
     }),
-    [recentlyViewedIds, popularQueries]
+    [recentlyViewedIds, popularQueries],
   );
 
   const flatSuggestions = useMemo(() => flattenSuggestions(groups), [groups]);
@@ -106,6 +103,8 @@ export function useSearch(options: UseSearchOptions = {}) {
     if (!suggestionsActive) return;
 
     let cancelled = false;
+    const controller = new AbortController();
+    const suggestionOpts = { ...suggestionOptions, signal: controller.signal };
 
     async function run() {
       if (debouncedQuery.length === 0) {
@@ -117,10 +116,7 @@ export function useSearch(options: UseSearchOptions = {}) {
           label: item,
           href: `${ROUTES.searchResults}?q=${encodeURIComponent(item)}`,
         }));
-        const recentlyViewed = await mapRecentlyViewedSuggestions(
-          recentlyViewedIds,
-          ""
-        );
+        const recentlyViewed = await mapRecentlyViewedSuggestions(recentlyViewedIds, "");
         if (cancelled) return;
 
         if (recent.length === 0 && recentlyViewed.length === 0) {
@@ -148,11 +144,7 @@ export function useSearch(options: UseSearchOptions = {}) {
         setStatus("success");
         setError(null);
         try {
-          const next = await fetchSearchSuggestions(
-            debouncedQuery,
-            recentSearches,
-            suggestionOptions
-          );
+          const next = await fetchSearchSuggestions(debouncedQuery, recentSearches, suggestionOpts);
           if (cancelled) return;
           setGroups(next);
           setActiveIndex(-1);
@@ -167,30 +159,27 @@ export function useSearch(options: UseSearchOptions = {}) {
       const clientGroups = buildClientSearchSuggestions(
         debouncedQuery,
         recentSearches,
-        suggestionOptions
+        suggestionOptions,
       );
       setGroups(clientGroups);
       setStatus("loading");
       setError(null);
 
       try {
-        const next = await fetchSearchSuggestions(
-          debouncedQuery,
-          recentSearches,
-          suggestionOptions
-        );
+        const next = await fetchSearchSuggestions(debouncedQuery, recentSearches, suggestionOpts);
         if (cancelled) return;
         setGroups(next);
         setStatus("success");
         setActiveIndex(-1);
-      } catch {
+      } catch (err) {
+        if (cancelled || (err instanceof DOMException && err.name === "AbortError")) {
+          return;
+        }
         if (cancelled) return;
         setGroups({
           ...clientGroups,
           recent: recentSearches
-            .filter((item) =>
-              item.toLowerCase().includes(debouncedQuery.toLowerCase())
-            )
+            .filter((item) => item.toLowerCase().includes(debouncedQuery.toLowerCase()))
             .slice(0, 3)
             .map((item, index) => ({
               id: `recent-match-${index}`,
@@ -208,6 +197,7 @@ export function useSearch(options: UseSearchOptions = {}) {
     run();
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [debouncedQuery, recentSearches, recentlyViewedIds, suggestionOptions, suggestionsActive]);
 
@@ -219,7 +209,7 @@ export function useSearch(options: UseSearchOptions = {}) {
     (anchorRect: DOMRect | null, inputId: string, isMobile: boolean) => {
       searchStore.openOverlay(anchorRect, inputId, isMobile);
     },
-    []
+    [],
   );
 
   const closeOverlay = useCallback(() => {
@@ -237,7 +227,7 @@ export function useSearch(options: UseSearchOptions = {}) {
       closeOverlay();
       router.push(`${ROUTES.searchResults}?q=${encodeURIComponent(next)}`);
     },
-    [closeOverlay, query, router]
+    [closeOverlay, query, router],
   );
 
   const selectSuggestion = useCallback(
@@ -258,7 +248,7 @@ export function useSearch(options: UseSearchOptions = {}) {
       closeOverlay();
       router.push(suggestion.href);
     },
-    [closeOverlay, query, router]
+    [closeOverlay, query, router],
   );
 
   const moveActiveIndex = useCallback(
@@ -275,7 +265,7 @@ export function useSearch(options: UseSearchOptions = {}) {
         return next;
       });
     },
-    [flatSuggestions.length]
+    [flatSuggestions.length],
   );
 
   const handleEnter = useCallback(() => {
@@ -286,8 +276,7 @@ export function useSearch(options: UseSearchOptions = {}) {
     submitSearch();
   }, [activeIndex, flatSuggestions, selectSuggestion, submitSearch]);
 
-  const activeDescendantId =
-    activeIndex >= 0 ? `sw-search-option-${activeIndex}` : undefined;
+  const activeDescendantId = activeIndex >= 0 ? `sw-search-option-${activeIndex}` : undefined;
 
   return {
     query,
@@ -329,16 +318,20 @@ export function useSearchResults(
       subcategory?: string;
       brand?: string;
     };
-  }
+  },
 ) {
   const initialResults = options?.initialResults ?? null;
+  const hasPendingScope = Boolean(
+    query.trim() ||
+    filters?.category?.trim() ||
+    filters?.subcategory?.trim() ||
+    filters?.brand?.trim(),
+  );
   const [status, setStatus] = useState<SearchStatus>(
-    initialResults ? "success" : "idle"
+    initialResults ? "success" : hasPendingScope ? "loading" : "idle",
   );
   const [error, setError] = useState<string | null>(null);
-  const [results, setResults] = useState<SearchResultsData | null>(
-    initialResults
-  );
+  const [results, setResults] = useState<SearchResultsData | null>(initialResults);
   const category = filters?.category;
   const subcategory = filters?.subcategory;
   const brand = filters?.brand;
@@ -353,11 +346,12 @@ export function useSearchResults(
           options?.initialFilters?.brand ?? "",
           all ? "all" : "",
         ].join("|")
-      : null
+      : null,
   );
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
 
     // Server already rendered these exact results — skip the duplicate fetch.
     const requestKey = [
@@ -376,14 +370,15 @@ export function useSearchResults(
           source: "results-page",
         });
       }
-      return;
+      return () => {
+        cancelled = true;
+        controller.abort();
+      };
     }
     initialKeyRef.current = null;
 
     async function run() {
-      const hasFilter = Boolean(
-        category?.trim() || subcategory?.trim() || brand?.trim()
-      );
+      const hasFilter = Boolean(category?.trim() || subcategory?.trim() || brand?.trim());
 
       if (query.trim().length < MIN_QUERY_LENGTH && !hasFilter) {
         setResults({
@@ -407,6 +402,7 @@ export function useSearchResults(
           brand,
           sort: all ? undefined : sort,
           all,
+          signal: controller.signal,
         });
         if (cancelled) return;
         setResults(data);
@@ -416,7 +412,10 @@ export function useSearchResults(
           resultCount: data.total,
           source: "results-page",
         });
-      } catch {
+      } catch (err) {
+        if (cancelled || (err instanceof DOMException && err.name === "AbortError")) {
+          return;
+        }
         if (cancelled) return;
         setStatus("error");
         setError("We could not load search results. Please try again.");
@@ -426,6 +425,7 @@ export function useSearchResults(
     run();
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [query, category, subcategory, brand, sort, all, initialResults]);
 

@@ -355,8 +355,9 @@ body.is-landing-page .site-header__nav-gooey .gooey-linkup__hit {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  transition: box-shadow var(--duration-normal) var(--ease-premium),
-              border-color var(--duration-normal) var(--ease-premium);
+  transition:
+    box-shadow var(--duration-normal) var(--ease-premium),
+    border-color var(--duration-normal) var(--ease-premium);
 }
 
 .site-header--scrolled {
@@ -372,9 +373,10 @@ body.is-landing-page .site-header__nav-gooey .gooey-linkup__hit {
 }
 
 .site-header.site-header--ready {
-  transition: transform var(--duration-fast) var(--ease-premium),
-              box-shadow var(--duration-normal) var(--ease-premium),
-              border-color var(--duration-normal) var(--ease-premium);
+  transition:
+    transform var(--duration-fast) var(--ease-premium),
+    box-shadow var(--duration-normal) var(--ease-premium),
+    border-color var(--duration-normal) var(--ease-premium);
 }
 
 .site-header--hidden {
@@ -661,7 +663,9 @@ body.site-nav-open .site-header--scroll-hidden {
   font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  transition: background var(--duration-fast), color var(--duration-fast);
+  transition:
+    background var(--duration-fast),
+    color var(--duration-fast);
 }
 
 .site-header__action:hover {
@@ -752,10 +756,10 @@ body.site-nav-open .site-header--scroll-hidden {
     border-radius: 0;
     font-family: var(--font-primary);
     font-size: 0.8125rem;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.03em;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    color: #0a0a0a;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -802,7 +806,7 @@ body.site-nav-open .site-header--scroll-hidden {
 .site-header__nav-gooey .gooey-linkup__hit:hover,
 .site-header__nav-gooey .gooey-linkup__hit:focus-visible,
 .site-header__nav-gooey .gooey-linkup__hit--active {
-  color: var(--text-primary);
+  color: #000000;
   outline: none;
 }
 
@@ -1169,7 +1173,9 @@ body.site-nav-open .site-header--hidden {
   background: transparent;
   color: var(--text-primary);
   cursor: pointer;
-  transition: background var(--duration-fast), color var(--duration-fast);
+  transition:
+    background var(--duration-fast),
+    color var(--duration-fast);
 }
 
 .wl-nav-btn:hover {
@@ -1510,7 +1516,9 @@ body.site-nav-open .site-header--hidden {
     font-weight: 700;
     line-height: 1.25;
     text-decoration: none;
-    transition: background var(--duration-fast), color var(--duration-fast);
+    transition:
+      background var(--duration-fast),
+      color var(--duration-fast);
   }
 
   .site-header__mobile-nav-link:hover,
@@ -1546,7 +1554,9 @@ body.site-nav-open .site-header--hidden {
     background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: background var(--duration-fast), color var(--duration-fast);
+    transition:
+      background var(--duration-fast),
+      color var(--duration-fast);
   }
 
   .site-header__mobile-nav-toggle:hover,
@@ -1599,7 +1609,9 @@ body.site-nav-open .site-header--hidden {
     font-weight: 500;
     line-height: 1.35;
     text-decoration: none;
-    transition: background var(--duration-fast), color var(--duration-fast);
+    transition:
+      background var(--duration-fast),
+      color var(--duration-fast);
   }
 
   .site-header__mobile-submenu-link:hover,
@@ -1629,7 +1641,9 @@ body.site-nav-open .site-header--hidden {
     font-size: 0.9375rem;
     font-weight: 700;
     text-decoration: none;
-    transition: background var(--duration-fast), color var(--duration-fast);
+    transition:
+      background var(--duration-fast),
+      color var(--duration-fast);
   }
 
   .site-header__mobile-nav-footer-link--primary {
@@ -1662,9 +1676,8 @@ body.site-nav-open .site-header--hidden {
     grid-template-columns: auto 1fr auto auto auto;
     grid-template-areas: "logo . search-toggle actions menu";
     gap: 0.15rem 0.15rem;
-    padding:
-      0.45rem max(0.5rem, env(safe-area-inset-right, 0px))
-      0.45rem max(0.5rem, env(safe-area-inset-left, 0px));
+    padding: 0.45rem max(0.5rem, env(safe-area-inset-right, 0px)) 0.45rem
+      max(0.5rem, env(safe-area-inset-left, 0px));
     min-height: 3.25rem;
   }
 
@@ -1821,9 +1834,8 @@ body:has(.cart-page) {
 
   .site-header__inner {
     gap: 0.1rem 0.1rem;
-    padding:
-      0.4rem max(0.4rem, env(safe-area-inset-right, 0px))
-      0.4rem max(0.4rem, env(safe-area-inset-left, 0px));
+    padding: 0.4rem max(0.4rem, env(safe-area-inset-right, 0px)) 0.4rem
+      max(0.4rem, env(safe-area-inset-left, 0px));
   }
 
   .site-header__logo img,

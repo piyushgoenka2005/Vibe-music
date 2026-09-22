@@ -129,7 +129,9 @@ export default function HomepageBannerHero({
                   {slide.mobileSrc ? (
                     <source media="(max-width: 767px)" srcSet={slide.mobileSrc} />
                   ) : null}
-                  {}
+                  {slide.srcOptimized ? (
+                    <source type="image/webp" srcSet={slide.srcOptimized} />
+                  ) : null}
                   <img
                     src={slide.src}
                     alt={slide.alt}

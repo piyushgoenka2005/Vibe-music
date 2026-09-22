@@ -5,16 +5,11 @@ import Link from "next/link";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
-import FooterAccordion, {
-  type FooterAccordionSection,
-} from "@/components/layout/FooterAccordion";
+import FooterAccordion, { type FooterAccordionSection } from "@/components/layout/FooterAccordion";
 import FooterClock from "@/components/layout/FooterClock";
 import FooterProductsPanel from "@/components/layout/FooterProductsPanel";
 import { useToastStore } from "@/store/toastStore";
-import {
-  submitNewsletterToWeb3Forms,
-  isWeb3FormsConfigured,
-} from "@/lib/web3formsClient";
+import { submitNewsletterToWeb3Forms, isWeb3FormsConfigured } from "@/lib/web3formsClient";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -23,6 +18,7 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
     id: "service",
     label: "01 / Customer Service",
     links: [
+      { label: "Shop brands", href: ROUTES.brands },
       { label: "Track your order", href: ROUTES.trackOrder },
       { label: "Contact support", href: ROUTES.contact },
       ...(BRAND.phoneTel
@@ -94,7 +90,7 @@ export default function SiteFooter() {
           syncSpacer();
         }
       },
-      { threshold: 0.08, rootMargin: "0px 0px 0px 0px" }
+      { threshold: 0.08, rootMargin: "0px 0px 0px 0px" },
     );
 
     readyObserver.observe(shell ?? footer);
@@ -190,7 +186,7 @@ export default function SiteFooter() {
       setEmail("");
       showToast(
         data.message ?? "You're subscribed! We'll email you about new products and deals.",
-        "success"
+        "success",
       );
     } catch (error) {
       const message =
@@ -226,8 +222,8 @@ export default function SiteFooter() {
                   Inside Vibe Music
                 </h2>
                 <p className="site-footer-newsletter__body">
-                  Subscribe for the latest product drops, restock alerts, and exclusive
-                  deals from India&apos;s trusted gear destination.
+                  Subscribe for the latest product drops, restock alerts, and exclusive deals from
+                  India&apos;s trusted gear destination.
                 </p>
               </div>
 

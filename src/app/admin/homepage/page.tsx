@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -48,6 +49,10 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
   const [itemForm, setItemForm] = useState(EMPTY_ITEM);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [productSearch, setProductSearch] = useState("");
+  const [productResults, setProductResults] = useState<AdminProduct[]>([]);
+  const [productSearching, setProductSearching] = useState(false);
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: QUERY_KEY,
@@ -72,6 +77,47 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     enabled: activeKey === "big_names_deals",
   });
 
+  const { data: catalogBrands = [] } = useQuery({
+    queryKey: ["admin-homepage-brands"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/brands");
+      if (!res.ok) throw new Error("Failed to load brands");
+      const body = (await res.json()) as {
+        brands?: Array<{ id: string; name: string; slug: string }>;
+      };
+      return body.brands ?? [];
+    },
+    enabled: activeKey === "brand_strip",
+  });
+
+  const { data: catalogProductCount } = useQuery({
+    queryKey: ["admin-homepage-product-count"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/products?limit=1");
+      if (!res.ok) return null;
+      const body = (await res.json()) as { total?: number; products?: AdminProduct[] };
+      return body.total ?? body.products?.length ?? 0;
+    },
+  });
+
+  async function runProductSearch(query: string) {
+    setProductSearch(query);
+    if (query.trim().length < 2) {
+      setProductResults([]);
+      return;
+    }
+    setProductSearching(true);
+    try {
+      const res = await fetch(
+        `/api/admin/products?search=${encodeURIComponent(query.trim())}&limit=12`,
+      );
+      const body = (await res.json()) as { products?: AdminProduct[] };
+      setProductResults(body.products ?? []);
+    } finally {
+      setProductSearching(false);
+    }
+  }
+
   const sections = useMemo(
     () => [...(data?.sections ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
     [data?.sections],
@@ -86,11 +132,15 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     [data?.items, activeKey],
   );
 
-  const productNameMap = useMemo(
-    () =>
-      new Map(guitarProducts.map((product) => [product.id, `${product.brand} — ${product.name}`])),
-    [guitarProducts],
-  );
+  const productNameMap = useMemo(() => {
+    const map = new Map(
+      guitarProducts.map((product) => [product.id, `${product.brand} — ${product.name}`]),
+    );
+    for (const product of productResults) {
+      map.set(product.id, `${product.brand} — ${product.name}`);
+    }
+    return map;
+  }, [guitarProducts, productResults]);
 
   const saveSectionMutation = useMutation({
     mutationFn: async () => {
@@ -106,7 +156,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
           ctaLink: sectionForm.ctaLink ?? activeSection.ctaLink ?? "",
           isActive: sectionForm.isActive ?? activeSection.isActive,
           sourceMode:
-            activeKey === "big_names_deals"
+            activeKey === "big_names_deals" ||
+            activeKey === "featured_stories" ||
+            activeKey === "featured_categories" ||
+            activeKey === "browse_by_categories" ||
+            activeKey === "category_bento"
               ? "manual"
               : (sectionForm.sourceMode ?? activeSection.sourceMode),
           maxItems:
@@ -120,6 +174,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     },
     onSuccess: () => {
       setFormError(null);
+      setSaveNotice("Section saved. Storefront cache refreshed — reload the homepage to verify.");
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
     onError: (error: Error) => setFormError(error.message),
@@ -153,7 +208,10 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     onSuccess: () => {
       setItemForm(EMPTY_ITEM);
       setEditingItemId(null);
+      setProductSearch("");
+      setProductResults([]);
       setFormError(null);
+      setSaveNotice("Item saved. Storefront cache refreshed — reload the homepage to verify.");
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
     onError: (error: Error) => setFormError(error.message),
@@ -164,7 +222,10 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
       const res = await fetch(`/api/admin/homepage/items/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      setSaveNotice("Item removed. Storefront cache refreshed.");
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
   });
 
   const toggleItemMutation = useMutation({
@@ -176,7 +237,10 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
       });
       if (!res.ok) throw new Error("Update failed");
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      setSaveNotice("Item status updated. Storefront cache refreshed.");
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
   });
 
   const reorderMutation = useMutation({
@@ -188,14 +252,20 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
       });
       if (!res.ok) throw new Error("Reorder failed");
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      setSaveNotice("Order updated. Storefront cache refreshed.");
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
   });
 
   function selectSection(key: HomepageSectionKey) {
     setActiveKey(key);
     setFormError(null);
+    setSaveNotice(null);
     setEditingItemId(null);
     setItemForm(EMPTY_ITEM);
+    setProductSearch("");
+    setProductResults([]);
     const section = sections.find((entry) => entry.sectionKey === key);
     if (section) {
       setSectionForm({
@@ -245,13 +315,26 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
 
   const isStorySection = activeKey === "featured_stories";
   const isBigNamesSection = activeKey === "big_names_deals";
+  const isCategorySection =
+    activeKey === "featured_categories" ||
+    activeKey === "browse_by_categories" ||
+    activeKey === "category_bento";
+  const isBentoSection = activeKey === "category_bento";
+  const isBrowseSection = activeKey === "browse_by_categories";
   const isProductSection =
     activeKey !== "featured_categories" &&
+    activeKey !== "browse_by_categories" &&
+    activeKey !== "category_bento" &&
     activeKey !== "brand_strip" &&
     activeKey !== "featured_stories";
-  const isCategorySection = activeKey === "featured_categories";
   const isBrandSection = activeKey === "brand_strip";
+  const forceManualSource = isStorySection || isBigNamesSection || isCategorySection;
   const canAddBigNamesItem = !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
+  const showCatalogEmptyWarning =
+    isProductSection &&
+    !isBigNamesSection &&
+    form.sourceMode === "auto" &&
+    catalogProductCount === 0;
 
   return (
     <>
@@ -266,11 +349,42 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
             {HOMEPAGE_SECTION_LABELS[key]}
           </button>
         ))}
+        <a
+          className="admin-btn admin-btn--secondary"
+          href="/"
+          target="_blank"
+          rel="noreferrer"
+          style={{ marginLeft: "auto" }}
+        >
+          Preview storefront ↗
+        </a>
       </div>
 
       {formError ? (
         <p style={{ color: "#c41e3a", marginBottom: 12 }} role="alert">
           {formError}
+        </p>
+      ) : null}
+      {saveNotice ? (
+        <p style={{ color: "#0a7a3e", marginBottom: 12 }} role="status">
+          {saveNotice}
+        </p>
+      ) : null}
+      {showCatalogEmptyWarning ? (
+        <p
+          style={{
+            color: "#8a5a00",
+            background: "#fff8e6",
+            border: "1px solid #f0d78c",
+            borderRadius: 8,
+            padding: "0.75rem 1rem",
+            marginBottom: 12,
+          }}
+          role="status"
+        >
+          Catalog has 0 products. Auto sections (New Arrivals, Best Sellers, Trending, Staff Picks,
+          Deals) stay empty until you import products. Switch to Manual and add product IDs, or run
+          bulk import first.
         </p>
       ) : null}
 
@@ -302,9 +416,15 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                 }
               />
             </div>
-            {activeKey === "deals_of_the_day" || isBigNamesSection ? (
+            {activeKey === "deals_of_the_day" || isBigNamesSection || isBentoSection ? (
               <div className="admin-form-group">
-                <label>{isBigNamesSection ? "Eyebrow" : "Accent Label"}</label>
+                <label>
+                  {isBigNamesSection
+                    ? "Eyebrow"
+                    : isBentoSection
+                      ? "Card CTA label (Explore Category)"
+                      : "Accent Label"}
+                </label>
                 <input
                   className="admin-input"
                   style={{ width: "100%" }}
@@ -355,7 +475,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                 }
               />
             </div>
-            {!isBigNamesSection && !isStorySection ? (
+            {!isBigNamesSection && !isStorySection && !forceManualSource ? (
               <div className="admin-form-group">
                 <label>Source Mode</label>
                 <select
@@ -378,6 +498,14 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                 <p className="admin-form-hint" style={{ margin: 0 }}>
                   Manual curation only. Pick up to {BIG_NAMES_DEALS_MAX_ITEMS} guitar products
                   below.
+                </p>
+              </div>
+            ) : isCategorySection ? (
+              <div className="admin-form-group">
+                <p className="admin-form-hint" style={{ margin: 0 }}>
+                  Manual curation only. Edit title, CTA, images, links
+                  {isBentoSection ? ", badges, subcategory and brand lines" : ""}
+                  {isBrowseSection ? ", and card photos" : ""} below. Use Manual source mode.
                 </p>
               </div>
             ) : (
@@ -416,7 +544,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
         </div>
       </div>
 
-      {form.sourceMode === "manual" || isBigNamesSection || isStorySection ? (
+      {form.sourceMode === "manual" || isBigNamesSection || isStorySection || forceManualSource ? (
         <div className="admin-panel">
           <div className="admin-panel__header">
             <h2 className="admin-panel__title">
@@ -494,8 +622,57 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                         </select>
                       </div>
                     ) : (
-                      <div className="admin-form-group">
-                        <label>Product ID</label>
+                      <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                        <label>Search catalog product</label>
+                        <input
+                          className="admin-input"
+                          style={{ width: "100%" }}
+                          value={productSearch}
+                          onChange={(event) => void runProductSearch(event.target.value)}
+                          placeholder="Type 2+ characters to search…"
+                        />
+                        {productSearching ? <p className="admin-form-hint">Searching…</p> : null}
+                        {productResults.length > 0 ? (
+                          <ul
+                            style={{
+                              listStyle: "none",
+                              margin: "0.5rem 0 0",
+                              padding: 0,
+                              border: "1px solid var(--admin-border, #333)",
+                              borderRadius: 8,
+                              maxHeight: 220,
+                              overflow: "auto",
+                            }}
+                          >
+                            {productResults.map((product) => (
+                              <li key={product.id}>
+                                <button
+                                  type="button"
+                                  className="admin-btn admin-btn--ghost"
+                                  style={{
+                                    width: "100%",
+                                    justifyContent: "flex-start",
+                                    borderRadius: 0,
+                                  }}
+                                  onClick={() => {
+                                    setItemForm((prev) => ({
+                                      ...prev,
+                                      productId: product.id,
+                                      customTitle: prev.customTitle || product.name,
+                                    }));
+                                    setProductSearch(`${product.brand} — ${product.name}`);
+                                    setProductResults([]);
+                                  }}
+                                >
+                                  {product.brand} — {product.name}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                        <label style={{ marginTop: 8, display: "block" }}>
+                          Selected Product ID
+                        </label>
                         <input
                           className="admin-input"
                           style={{ width: "100%" }}
@@ -523,7 +700,33 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   ) : null}
                   {isBrandSection ? (
                     <div className="admin-form-group">
-                      <label>Brand ID / Slug</label>
+                      <label>Brand</label>
+                      <select
+                        className="admin-select"
+                        style={{ width: "100%" }}
+                        value={itemForm.brandId}
+                        onChange={(event) => {
+                          const brand = catalogBrands.find(
+                            (entry) => entry.id === event.target.value,
+                          );
+                          setItemForm((prev) => ({
+                            ...prev,
+                            brandId: event.target.value,
+                            customTitle: brand?.name || prev.customTitle,
+                            customHref: brand
+                              ? `/search/results?brand=${encodeURIComponent(brand.slug)}`
+                              : prev.customHref,
+                          }));
+                        }}
+                      >
+                        <option value="">Select a brand</option>
+                        {catalogBrands.map((brand) => (
+                          <option key={brand.id} value={brand.id}>
+                            {brand.name} ({brand.slug})
+                          </option>
+                        ))}
+                      </select>
+                      <label style={{ marginTop: 8, display: "block" }}>Or Brand ID / Slug</label>
                       <input
                         className="admin-input"
                         style={{ width: "100%" }}
@@ -531,6 +734,15 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                         onChange={(event) =>
                           setItemForm((prev) => ({ ...prev, brandId: event.target.value }))
                         }
+                      />
+                    </div>
+                  ) : null}
+                  {isCategorySection || isBrandSection ? (
+                    <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                      <BannerImageUpload
+                        label={isBrandSection ? "Brand logo (optional)" : "Card / category image"}
+                        value={itemForm.customImage}
+                        onChange={(url) => setItemForm((prev) => ({ ...prev, customImage: url }))}
                       />
                     </div>
                   ) : null}
@@ -584,6 +796,23 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                           setItemForm((prev) => ({ ...prev, offerText: event.target.value }))
                         }
                       />
+                    </div>
+                  ) : null}
+                  {isBentoSection ? (
+                    <div className="admin-form-group">
+                      <label>Subcategories + Brands</label>
+                      <textarea
+                        className="admin-input"
+                        style={{ width: "100%", minHeight: 64 }}
+                        value={itemForm.offerText}
+                        onChange={(event) =>
+                          setItemForm((prev) => ({ ...prev, offerText: event.target.value }))
+                        }
+                        placeholder={"Acoustic • Electric • Bass\nFender • Gibson • Ibanez"}
+                      />
+                      <p className="admin-form-hint" style={{ margin: "0.35rem 0 0" }}>
+                        Line 1 = subcategory tags. Line 2 = brand names.
+                      </p>
                     </div>
                   ) : null}
                   <div className="admin-form-group">
@@ -661,9 +890,12 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                           {isStorySection ? (
                             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                               {item.customImage ? (
-                                <img
+                                <Image
                                   src={item.customImage}
                                   alt={item.customTitle || "Banner thumbnail"}
+                                  width={180}
+                                  height={80}
+                                  unoptimized
                                   style={{
                                     width: 90,
                                     height: 40,

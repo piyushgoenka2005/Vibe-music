@@ -27,9 +27,13 @@ export async function POST(request: Request) {
         const updated = await bulkUpdateProductStatus(parsed.ids, "active");
         return NextResponse.json({ updated });
       }
+      case "draft": {
+        const updated = await bulkUpdateProductStatus(parsed.ids, "draft");
+        return NextResponse.json({ updated });
+      }
       case "update_stock": {
         const updated = await bulkUpdateAdminStock(
-          parsed.ids.map((id) => ({ id, stockQuantity: parsed.stock }))
+          parsed.ids.map((id) => ({ id, stockQuantity: parsed.stock })),
         );
         return NextResponse.json({ updated });
       }
@@ -39,7 +43,7 @@ export async function POST(request: Request) {
             id,
             category: parsed.category,
             categorySlug: parsed.categorySlug,
-          }))
+          })),
         );
         return NextResponse.json({ updated });
       }

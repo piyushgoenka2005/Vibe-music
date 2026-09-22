@@ -1,35 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import BulkImportModal from "@/components/admin/BulkImportModal";
 import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
-import {
-  StatusBadge,
-  LoadingState,
-  EmptyState,
-  formatCurrency,
-} from "@/components/admin/AdminUi";
+import { StatusBadge, LoadingState, EmptyState, formatCurrency } from "@/components/admin/AdminUi";
 import { ErrorState } from "@/components/admin/AdminQueryState";
 import { ROUTES } from "@/lib/routes";
 import type { AdminCapabilities } from "@/lib/auth/adminCapabilities";
 import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
+import {
+  VIBEMUSIC_BULK_IMPORT_SHORT_LABEL,
+  vibemusicBulkExportFilename,
+} from "@/lib/admin/bulkImportTemplate";
 import type { AdminProduct } from "@/types/admin";
 import type { Category } from "@/types/category";
 
 async function fetchProducts(params: {
   search: string;
   status: string;
+  category: string;
+  stock: string;
   cursor?: string;
 }) {
   const sp = new URLSearchParams({ limit: "20" });
   if (params.search) sp.set("search", params.search);
   if (params.status) sp.set("status", params.status);
+  if (params.category) sp.set("category", params.category);
+  if (params.stock) sp.set("stock", params.stock);
   if (params.cursor) sp.set("cursor", params.cursor);
   const res = await fetch(`/api/admin/products?${sp}`);
   if (!res.ok) throw new Error("Failed to load products");
@@ -41,22 +45,41 @@ async function fetchProducts(params: {
   }>;
 }
 
+function stockTone(product: AdminProduct): "ok" | "low" | "out" {
+  const qty = product.stockQuantity ?? 0;
+  const threshold = product.lowStockThreshold ?? 10;
+  if (qty <= 0) return "out";
+  if (qty <= threshold) return "low";
+  return "ok";
+}
+
 type ProductsQueryData = Awaited<ReturnType<typeof fetchProducts>>;
 
 type PendingDelete =
-  | { type: "single"; product: AdminProduct }
-  | { type: "bulk"; ids: string[]; label: string }
-  | null;
+  { type: "single"; product: AdminProduct } | { type: "bulk"; ids: string[]; label: string } | null;
 
 function ProductsContent({
   productsWrite,
   productsDelete,
 }: Pick<AdminCapabilities, "productsWrite" | "productsDelete">) {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
-  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
-    useAdminCursorPagination();
+  const [category, setCategory] = useState("");
+  const [stockFilter, setStockFilter] = useState(() => {
+    const stock = searchParams.get("stock");
+    return stock === "in" || stock === "low" || stock === "out" ? stock : "";
+  });
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
+
+  useEffect(() => {
+    const stock = searchParams.get("stock");
+    if (stock === "in" || stock === "low" || stock === "out") {
+      setStockFilter(stock);
+      reset();
+    }
+  }, [searchParams, reset]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [importOpen, setImportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -66,7 +89,14 @@ function ProductsContent({
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null);
 
-  const productsQueryKey = ["admin-products", search, status, cursor] as const;
+  const productsQueryKey = [
+    "admin-products",
+    search,
+    status,
+    category,
+    stockFilter,
+    cursor,
+  ] as const;
 
   useQuery({
     queryKey: ["admin-categories"],
@@ -81,18 +111,12 @@ function ProductsContent({
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: productsQueryKey,
-    queryFn: () => fetchProducts({ search, status, cursor }),
-    staleTime: 0,
-    refetchOnMount: "always",
+    queryFn: () => fetchProducts({ search, status, category, stock: stockFilter, cursor }),
+    staleTime: 30_000,
+    refetchOnMount: true,
   });
 
-  // Always refetch when landing on this page (e.g. after create/import).
-  useEffect(() => {
-    void queryClient.invalidateQueries({
-      queryKey: ["admin-products"],
-      refetchType: "active",
-    });
-  }, [queryClient]);
+  // Intentionally no mount-time invalidate — that forced a double fetch on every visit.
 
   function removeProductsFromCache(ids: string[]) {
     const idSet = new Set(ids);
@@ -218,6 +242,7 @@ function ProductsContent({
       const sp = new URLSearchParams({ export: "csv" });
       if (search) sp.set("search", search);
       if (status) sp.set("status", status);
+      if (category) sp.set("category", category);
       const res = await fetch(`/api/admin/products?${sp}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -227,7 +252,7 @@ function ProductsContent({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `vibe-products-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = vibemusicBulkExportFilename("csv");
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -255,42 +280,110 @@ function ProductsContent({
 
   return (
     <>
-      <div className="admin-toolbar">
+      <div className="admin-toolbar admin-toolbar--wrap">
         <input
           className="admin-input"
-          placeholder="Search products…"
+          placeholder="Search name, brand, SKU…"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); reset(); }}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            reset();
+          }}
+          aria-label="Search products"
         />
         <select
           className="admin-select"
           style={{ width: "auto" }}
           value={status}
-          onChange={(e) => { setStatus(e.target.value); reset(); }}
+          onChange={(e) => {
+            setStatus(e.target.value);
+            reset();
+          }}
+          aria-label="Filter by status"
         >
           <option value="">All statuses</option>
           <option value="active">Active</option>
           <option value="draft">Draft</option>
           <option value="archived">Archived</option>
         </select>
+        <select
+          className="admin-select"
+          style={{ width: "auto" }}
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            reset();
+          }}
+          aria-label="Filter by category"
+        >
+          <option value="">All categories</option>
+          {categories.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <select
+          className="admin-select"
+          style={{ width: "auto" }}
+          value={stockFilter}
+          onChange={(e) => {
+            setStockFilter(e.target.value);
+            reset();
+          }}
+          aria-label="Filter by stock"
+        >
+          <option value="">All stock levels</option>
+          <option value="in">Healthy stock</option>
+          <option value="low">Low stock</option>
+          <option value="out">Out of stock</option>
+        </select>
         {productsWrite ? (
-        <button type="button" className="admin-btn admin-btn--secondary" onClick={() => setImportOpen(true)}>
-          Import CSV
-        </button>
+          <button
+            type="button"
+            className="admin-btn admin-btn--secondary"
+            onClick={() => setImportOpen(true)}
+          >
+            {VIBEMUSIC_BULK_IMPORT_SHORT_LABEL}
+          </button>
         ) : null}
-        <button type="button" className="admin-btn admin-btn--secondary" disabled={exporting} onClick={() => void handleExportCsv()}>
-          {exporting ? "Exporting…" : "Export CSV"}
+        <button
+          type="button"
+          className="admin-btn admin-btn--secondary"
+          disabled={exporting}
+          onClick={() => void handleExportCsv()}
+        >
+          {exporting ? "Exporting…" : "Export vibemusic bulk"}
         </button>
         {productsWrite && selected.size > 0 ? (
           <>
-            <button type="button" className="admin-btn admin-btn--secondary" onClick={() => bulkMutation.mutate({ action: "activate", ids: selectedIds })}>
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              onClick={() => bulkMutation.mutate({ action: "activate", ids: selectedIds })}
+            >
               Activate ({selected.size})
             </button>
-            <button type="button" className="admin-btn admin-btn--secondary" onClick={() => bulkMutation.mutate({ action: "archive", ids: selectedIds })}>
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              onClick={() => bulkMutation.mutate({ action: "draft", ids: selectedIds })}
+            >
+              Draft ({selected.size})
+            </button>
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              onClick={() => bulkMutation.mutate({ action: "archive", ids: selectedIds })}
+            >
               Archive ({selected.size})
             </button>
             {productsDelete ? (
-              <button type="button" className="admin-btn admin-btn--danger" onClick={requestBulkDelete}>
+              <button
+                type="button"
+                className="admin-btn admin-btn--danger"
+                onClick={requestBulkDelete}
+              >
                 Delete ({selected.size})
               </button>
             ) : null}
@@ -307,7 +400,13 @@ function ProductsContent({
               type="button"
               className="admin-btn admin-btn--secondary"
               disabled={!bulkStock}
-              onClick={() => bulkMutation.mutate({ action: "update_stock", ids: selectedIds, stock: Number(bulkStock) })}
+              onClick={() =>
+                bulkMutation.mutate({
+                  action: "update_stock",
+                  ids: selectedIds,
+                  stock: Number(bulkStock),
+                })
+              }
             >
               Update Stock
             </button>
@@ -318,8 +417,10 @@ function ProductsContent({
               onChange={(e) => setBulkCategorySlug(e.target.value)}
             >
               <option value="">Bulk category…</option>
-              {categories.map((category) => (
-                <option key={category.slug} value={category.slug}>{category.name}</option>
+              {categories.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.name}
+                </option>
               ))}
             </select>
             <button
@@ -327,13 +428,13 @@ function ProductsContent({
               className="admin-btn admin-btn--secondary"
               disabled={!bulkCategorySlug}
               onClick={() => {
-                const category = categories.find((c) => c.slug === bulkCategorySlug);
-                if (!category) return;
+                const cat = categories.find((c) => c.slug === bulkCategorySlug);
+                if (!cat) return;
                 bulkMutation.mutate({
                   action: "update_category",
                   ids: selectedIds,
-                  category: category.name,
-                  categorySlug: category.slug,
+                  category: cat.name,
+                  categorySlug: cat.slug,
                 });
               }}
             >
@@ -358,11 +459,17 @@ function ProductsContent({
               <table className="admin-table">
                 <thead>
                   <tr>
-                    {(productsWrite || productsDelete) ? (
-                    <th><input type="checkbox" aria-label="Select all" onChange={(e) => {
-                      if (e.target.checked) setSelected(new Set(products.map((p) => p.id)));
-                      else setSelected(new Set());
-                    }} /></th>
+                    {productsWrite || productsDelete ? (
+                      <th>
+                        <input
+                          type="checkbox"
+                          aria-label="Select all"
+                          onChange={(e) => {
+                            if (e.target.checked) setSelected(new Set(products.map((p) => p.id)));
+                            else setSelected(new Set());
+                          }}
+                        />
+                      </th>
                     ) : null}
                     <th>Product</th>
                     <th>SKU</th>
@@ -376,46 +483,65 @@ function ProductsContent({
                 <tbody>
                   {products.map((product) => (
                     <tr key={product.id}>
-                      {(productsWrite || productsDelete) ? (
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selected.has(product.id)}
-                          onChange={() => toggleSelect(product.id)}
-                          aria-label={`Select ${product.name}`}
-                        />
-                      </td>
+                      {productsWrite || productsDelete ? (
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={selected.has(product.id)}
+                            onChange={() => toggleSelect(product.id)}
+                            aria-label={`Select ${product.name}`}
+                          />
+                        </td>
                       ) : null}
                       <td>
                         <div style={{ fontWeight: 600 }}>{product.name}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>{product.brand}</div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+                          {product.brand}
+                        </div>
                       </td>
                       <td>{product.sku ?? "—"}</td>
                       <td>{product.category}</td>
                       <td>{formatCurrency(product.price)}</td>
-                      <td>{product.stockQuantity ?? "—"}</td>
-                      <td><StatusBadge status={product.status ?? "active"} /></td>
+                      <td>
+                        <span
+                          className={`admin-stock-pill admin-stock-pill--${stockTone(product)}`}
+                        >
+                          {product.stockQuantity ?? "—"}
+                        </span>
+                      </td>
+                      <td>
+                        <StatusBadge status={product.status ?? "active"} />
+                      </td>
                       <td>
                         <div style={{ display: "flex", gap: "0.5rem" }}>
-                          <Link href={`${ROUTES.adminProducts}/${product.id}`} className="admin-btn admin-btn--ghost" style={{ padding: "0.25rem 0.5rem" }}>
+                          <Link
+                            href={`${ROUTES.adminProducts}/${product.id}`}
+                            className="admin-btn admin-btn--ghost"
+                            style={{ padding: "0.25rem 0.5rem" }}
+                          >
                             {productsWrite ? "Edit" : "View"}
                           </Link>
                           {productsWrite ? (
-                          <button type="button" className="admin-btn admin-btn--ghost" style={{ padding: "0.25rem 0.5rem" }} onClick={() => duplicateMutation.mutate(product.id)}>
-                            Copy
-                          </button>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--ghost"
+                              style={{ padding: "0.25rem 0.5rem" }}
+                              onClick={() => duplicateMutation.mutate(product.id)}
+                            >
+                              Copy
+                            </button>
                           ) : null}
                           {productsDelete ? (
-                          <button
-                            type="button"
-                            className="admin-btn admin-btn--icon-danger"
-                            title={`Delete ${product.name}`}
-                            aria-label={`Delete ${product.name}`}
-                            disabled={deleteMutation.isPending}
-                            onClick={() => requestDelete(product)}
-                          >
-                            <Trash2 size={16} aria-hidden="true" />
-                          </button>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--icon-danger"
+                              title={`Delete ${product.name}`}
+                              aria-label={`Delete ${product.name}`}
+                              disabled={deleteMutation.isPending}
+                              onClick={() => requestDelete(product)}
+                            >
+                              <Trash2 size={16} aria-hidden="true" />
+                            </button>
                           ) : null}
                         </div>
                       </td>
@@ -425,10 +551,26 @@ function ProductsContent({
               </table>
             </div>
             <div className="admin-pagination">
-              <span>{total} products · page {pageIndex + 1}</span>
+              <span>
+                {total} products · page {pageIndex + 1}
+              </span>
               <div style={{ display: "flex", gap: "0.5rem" }}>
-                <button type="button" className="admin-btn admin-btn--secondary" disabled={!canGoPrev} onClick={goPrev}>Previous</button>
-                <button type="button" className="admin-btn admin-btn--secondary" disabled={!hasMore} onClick={() => goNext(data?.nextCursor)}>Next</button>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--secondary"
+                  disabled={!canGoPrev}
+                  onClick={goPrev}
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--secondary"
+                  disabled={!hasMore}
+                  onClick={() => goNext(data?.nextCursor)}
+                >
+                  Next
+                </button>
               </div>
             </div>
           </>
@@ -436,20 +578,16 @@ function ProductsContent({
       </div>
 
       {productsWrite ? (
-      <BulkImportModal
-        open={importOpen}
-        onClose={() => setImportOpen(false)}
-        onComplete={invalidate}
-      />
+        <BulkImportModal
+          open={importOpen}
+          onClose={() => setImportOpen(false)}
+          onComplete={invalidate}
+        />
       ) : null}
 
       <AdminConfirmDialog
         open={pendingDelete !== null}
-        title={
-          pendingDelete?.type === "bulk"
-            ? "Delete selected products?"
-            : "Delete product?"
-        }
+        title={pendingDelete?.type === "bulk" ? "Delete selected products?" : "Delete product?"}
         description={
           pendingDelete?.type === "bulk"
             ? `Delete ${pendingDelete.label}? This cannot be undone.`
@@ -477,22 +615,24 @@ export default function AdminProductsPage() {
       {(admin) => {
         const caps = getAdminCapabilities(admin.permissions);
         return (
-        <AdminShell
-          admin={admin}
-          title="Products"
-          actions={
-            caps.productsWrite ? (
-            <Link href={ROUTES.adminProductNew} className="admin-btn admin-btn--primary">
-              Add Product
-            </Link>
-            ) : undefined
-          }
-        >
-          <ProductsContent
-            productsWrite={caps.productsWrite}
-            productsDelete={caps.productsDelete}
-          />
-        </AdminShell>
+          <AdminShell
+            admin={admin}
+            title="Products"
+            actions={
+              caps.productsWrite ? (
+                <Link href={ROUTES.adminProductNew} className="admin-btn admin-btn--primary">
+                  Add Product
+                </Link>
+              ) : undefined
+            }
+          >
+            <Suspense fallback={<LoadingState />}>
+              <ProductsContent
+                productsWrite={caps.productsWrite}
+                productsDelete={caps.productsDelete}
+              />
+            </Suspense>
+          </AdminShell>
         );
       }}
     </AdminGuard>

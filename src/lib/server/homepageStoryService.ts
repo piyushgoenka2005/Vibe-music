@@ -21,7 +21,11 @@ export interface HomepageStoryBannersData {
  */
 export async function getHomepageStoryBanners(): Promise<HomepageStoryBannersData> {
   try {
-    const section = await getSectionByKey("featured_stories");
+    const [section, items] = await Promise.all([
+      getSectionByKey("featured_stories"),
+      listSectionItems("featured_stories"),
+    ]);
+
     if (section && !section.isActive) {
       return {
         isActive: false,
@@ -30,7 +34,6 @@ export async function getHomepageStoryBanners(): Promise<HomepageStoryBannersDat
       };
     }
 
-    const items = await listSectionItems("featured_stories");
     const now = new Date();
     const activeItems = items.filter(
       (item) => item.isActive && isHomepageItemScheduledActive(item, now),

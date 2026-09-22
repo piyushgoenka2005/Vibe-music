@@ -3,10 +3,9 @@ import type { HomepageBanner } from "@/types/banner";
 
 /** Map an admin banner row to a storefront hero slide. */
 export function mapBannerToSlide(banner: HomepageBanner): HomepageBannerSlide {
-  const alt =
-    banner.subtitle?.trim()
-      ? `${banner.title} — ${banner.subtitle}`
-      : banner.title?.trim() || "Promotion at Vibe Music";
+  const alt = banner.subtitle?.trim()
+    ? `${banner.title} — ${banner.subtitle}`
+    : banner.title?.trim() || "Promotion at Vibe Music";
 
   return {
     id: `admin-banner-${banner.id}`,
@@ -31,7 +30,7 @@ export function slidesFingerprint(slides: HomepageBannerSlide[]): string {
   return slides
     .map(
       (slide) =>
-        `${slide.id}|${slide.src}|${slide.mobileSrc ?? ""}|${slide.href}|${slide.title ?? ""}|${slide.subtitle ?? ""}|${slide.ctaText ?? ""}|${slide.updatedAt ?? ""}`
+        `${slide.id}|${slide.src}|${slide.srcOptimized ?? ""}|${slide.mobileSrc ?? ""}|${slide.href}|${slide.title ?? ""}|${slide.subtitle ?? ""}|${slide.ctaText ?? ""}|${slide.updatedAt ?? ""}`,
     )
     .join(";;");
 }

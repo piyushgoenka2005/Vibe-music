@@ -20,6 +20,8 @@ export interface CategoryBentoItem {
   productCount?: string;
   brands?: string;
   badge?: CategoryBentoBadge;
+  /** Optional CMS override; falls back to categoryPath(slug). */
+  href?: string;
 }
 
 const CAT = "/images/m/home/cats";
@@ -51,8 +53,9 @@ const BENTO_IMAGE_FILES: Record<string, string> = {
 export function resolveBentoImage(slug: string): string {
   const base =
     BENTO_IMAGE_FILES[slug] ??
-    POPULAR_CATEGORY_ITEMS.find((item) => item.href === SLUG_TO_HREF[slug])
-      ?.imageSrc.split("?")[0] ??
+    POPULAR_CATEGORY_ITEMS.find((item) => item.href === SLUG_TO_HREF[slug])?.imageSrc.split(
+      "?",
+    )[0] ??
     `${CAT}/LPR59VOWCSNH.png`;
 
   return base;
@@ -61,8 +64,9 @@ export function resolveBentoImage(slug: string): string {
 function resolveBentoSrcSet(slug: string, size: "hero" | "card" = "card"): string | undefined {
   const base =
     BENTO_IMAGE_FILES[slug] ??
-    POPULAR_CATEGORY_ITEMS.find((item) => item.href === SLUG_TO_HREF[slug])
-      ?.imageSrc.split("?")[0] ??
+    POPULAR_CATEGORY_ITEMS.find((item) => item.href === SLUG_TO_HREF[slug])?.imageSrc.split(
+      "?",
+    )[0] ??
     `${CAT}/LPR59VOWCSNH.png`;
 
   const widths = size === "hero" ? [800, 1200, 1600] : [480, 768, 1200];

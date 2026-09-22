@@ -11,6 +11,11 @@ import { useShallow } from "zustand/react/shallow";
 
 const MOBILE_EXTRA_LINKS = [
   {
+    key: "brands",
+    label: "Brands",
+    href: ROUTES.brands,
+  },
+  {
     key: "deals",
     label: "Deals",
     href: `${ROUTES.searchResults}?q=deals`,
@@ -37,7 +42,7 @@ export default function SiteHeaderMobileNav({ onNavigate }: SiteHeaderMobileNavP
     useShallow((state) => ({
       isAuthenticated: state.isAuthenticated,
       isInitialized: state.isInitialized,
-    }))
+    })),
   );
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [expandedForPath, setExpandedForPath] = useState(pathname);
@@ -55,8 +60,7 @@ export default function SiteHeaderMobileNav({ onNavigate }: SiteHeaderMobileNavP
     setExpandedSlug((current) => (current === slug ? null : slug));
   }, []);
 
-  const accountHref =
-    isInitialized && isAuthenticated ? ROUTES.account : ROUTES.login;
+  const accountHref = isInitialized && isAuthenticated ? ROUTES.account : ROUTES.login;
 
   return (
     <div className="site-header__mobile-nav">
@@ -88,18 +92,10 @@ export default function SiteHeaderMobileNav({ onNavigate }: SiteHeaderMobileNavP
                 </button>
               </div>
               {expanded ? (
-                <div
-                  id={`mobile-nav-panel-${menu.slug}`}
-                  className="site-header__mobile-submenu"
-                >
+                <div id={`mobile-nav-panel-${menu.slug}`} className="site-header__mobile-submenu">
                   {menu.columns.map((column) => (
-                    <div
-                      key={column.heading}
-                      className="site-header__mobile-submenu-section"
-                    >
-                      <p className="site-header__mobile-submenu-heading">
-                        {column.heading}
-                      </p>
+                    <div key={column.heading} className="site-header__mobile-submenu-section">
+                      <p className="site-header__mobile-submenu-heading">{column.heading}</p>
                       <ul className="site-header__mobile-submenu-list">
                         {column.links.map((link) => (
                           <li key={link.href}>
@@ -127,9 +123,7 @@ export default function SiteHeaderMobileNav({ onNavigate }: SiteHeaderMobileNavP
               key={link.key}
               href={link.href}
               className={`site-header__mobile-nav-link site-header__mobile-nav-link--solo${
-                "accent" in link && link.accent
-                  ? " site-header__mobile-nav-link--accent"
-                  : ""
+                "accent" in link && link.accent ? " site-header__mobile-nav-link--accent" : ""
               }`}
               onClick={handleNavigate}
             >

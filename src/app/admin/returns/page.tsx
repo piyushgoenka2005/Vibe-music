@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
+import AdminNotice from "@/components/admin/AdminNotice";
 import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
 import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import { adminOrderPath } from "@/lib/routes";
@@ -58,137 +59,158 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
   const returns = data?.returns ?? [];
 
   return (
-    <div className="admin-grid-2">
-      <div className="admin-panel">
-        <div className="admin-toolbar">
-          <select
-            className="admin-select"
-            style={{ width: "auto" }}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="received">Received</option>
-            <option value="refunded">Refunded</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-        {returns.length === 0 ? (
-          <EmptyState message="No return requests." />
-        ) : (
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Order</th>
-                  <th>Reason</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {returns.map((item) => (
-                  <tr
-                    key={item.id}
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setSelected(item);
-                      setNewStatus(item.status);
-                      setAdminNote(item.adminNote ?? "");
-                    }}
-                  >
-                    <td>
-                      <Link
-                        href={adminOrderPath(item.orderId)}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {item.orderId.slice(0, 8)}…
-                      </Link>
-                    </td>
-                    <td>{item.reason}</td>
-                    <td>
-                      <StatusBadge status={item.status} />
-                    </td>
-                    <td>{formatDate(item.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+    <>
+      <AdminNotice tone="warning" title="Return “Refunded” does not move money">
+        Updating a return to Refunded only tracks the return workflow. To repay the customer, open
+        the linked order and use <strong>Refund via Razorpay</strong>.
+      </AdminNotice>
+      <div className="admin-grid-2">
+        <div className="admin-panel">
+          <div className="admin-toolbar">
+            <select
+              className="admin-select"
+              style={{ width: "auto" }}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="received">Received</option>
+              <option value="refunded">Refunded</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
-        )}
-      </div>
-
-      <div className="admin-panel">
-        <div className="admin-panel__header">
-          <h2 className="admin-panel__title">Return details</h2>
-        </div>
-        <div className="admin-panel__body">
-          {!selected ? (
-            <EmptyState message="Select a return request." />
+          {returns.length === 0 ? (
+            <EmptyState message="No return requests." />
           ) : (
-            <>
-              <p>
-                <strong>Order:</strong>{" "}
-                <Link href={adminOrderPath(selected.orderId)}>{selected.orderId}</Link>
-              </p>
-              <p>
-                <strong>Email:</strong> {selected.email}
-              </p>
-              <p>
-                <strong>Reason:</strong> {selected.reason}
-              </p>
-              {selected.details ? (
-                <p>
-                  <strong>Details:</strong> {selected.details}
-                </p>
-              ) : null}
-              <p>
-                <strong>Status:</strong> <StatusBadge status={selected.status} />
-              </p>
-              {ordersWrite ? (
-              <>
-              <div className="admin-form-group" style={{ marginTop: "1rem" }}>
-                <label>Update status</label>
-                <select
-                  className="admin-select"
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value as ReturnRequestStatus)}
-                >
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="received">Received</option>
-                  <option value="refunded">Refunded</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
-              <div className="admin-form-group">
-                <label>Admin note</label>
-                <textarea
-                  className="admin-textarea"
-                  value={adminNote}
-                  onChange={(e) => setAdminNote(e.target.value)}
-                />
-              </div>
-              <button
-                type="button"
-                className="admin-btn admin-btn--primary"
-                disabled={updateMutation.isPending}
-                onClick={() => updateMutation.mutate()}
-              >
-                {updateMutation.isPending ? "Saving…" : "Save changes"}
-              </button>
-              <MutationError error={updateMutation.isError ? updateMutation.error : null} />
-              </>
-              ) : null}
-            </>
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Order</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {returns.map((item) => (
+                    <tr
+                      key={item.id}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => {
+                        setSelected(item);
+                        setNewStatus(item.status);
+                        setAdminNote(item.adminNote ?? "");
+                      }}
+                    >
+                      <td>
+                        <Link
+                          href={adminOrderPath(item.orderId)}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {item.orderId.slice(0, 8)}…
+                        </Link>
+                      </td>
+                      <td>{item.reason}</td>
+                      <td>
+                        <StatusBadge status={item.status} />
+                      </td>
+                      <td>{formatDate(item.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
+
+        <div className="admin-panel">
+          <div className="admin-panel__header">
+            <h2 className="admin-panel__title">Return details</h2>
+          </div>
+          <div className="admin-panel__body">
+            {!selected ? (
+              <EmptyState message="Select a return request." />
+            ) : (
+              <>
+                <p>
+                  <strong>Order:</strong>{" "}
+                  <Link href={adminOrderPath(selected.orderId)}>{selected.orderId}</Link>
+                </p>
+                <p>
+                  <strong>Email:</strong> {selected.email}
+                </p>
+                <p>
+                  <strong>Reason:</strong> {selected.reason}
+                </p>
+                {selected.details ? (
+                  <p>
+                    <strong>Details:</strong> {selected.details}
+                  </p>
+                ) : null}
+                <p>
+                  <strong>Status:</strong> <StatusBadge status={selected.status} />
+                </p>
+                {ordersWrite ? (
+                  <>
+                    <div className="admin-form-group" style={{ marginTop: "1rem" }}>
+                      <label>Update status</label>
+                      <select
+                        className="admin-select"
+                        value={newStatus}
+                        onChange={(e) => setNewStatus(e.target.value as ReturnRequestStatus)}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="received">Received</option>
+                        <option value="refunded">Refunded</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                    <div className="admin-form-group">
+                      <label>Admin note</label>
+                      <textarea
+                        className="admin-textarea"
+                        value={adminNote}
+                        onChange={(e) => setAdminNote(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--primary"
+                      disabled={updateMutation.isPending}
+                      onClick={() => updateMutation.mutate()}
+                    >
+                      {updateMutation.isPending ? "Saving…" : "Save changes"}
+                    </button>
+                    {newStatus === "refunded" ? (
+                      <p
+                        style={{
+                          marginTop: "0.75rem",
+                          fontSize: "0.8125rem",
+                          color: "var(--admin-muted)",
+                        }}
+                      >
+                        After saving,{" "}
+                        <Link href={adminOrderPath(selected.orderId)} className="admin-link">
+                          open the order
+                        </Link>{" "}
+                        to issue the Razorpay refund.
+                      </p>
+                    ) : null}
+                    <MutationError error={updateMutation.isError ? updateMutation.error : null} />
+                  </>
+                ) : null}
+              </>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -200,9 +222,9 @@ export default function AdminReturnsPage() {
       {(admin) => {
         const caps = getAdminCapabilities(admin.permissions);
         return (
-        <AdminShell admin={admin} title="Returns & RMA">
-          <ReturnsContent ordersWrite={caps.ordersWrite} />
-        </AdminShell>
+          <AdminShell admin={admin} title="Returns & RMA">
+            <ReturnsContent ordersWrite={caps.ordersWrite} />
+          </AdminShell>
         );
       }}
     </AdminGuard>

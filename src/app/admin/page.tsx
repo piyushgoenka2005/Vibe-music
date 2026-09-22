@@ -16,26 +16,29 @@ import {
 } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { StatCard, StatusBadge, LoadingState, formatCurrency, formatDate } from "@/components/admin/AdminUi";
+import {
+  StatCard,
+  StatusBadge,
+  LoadingState,
+  formatCurrency,
+  formatDate,
+} from "@/components/admin/AdminUi";
 import { ErrorState } from "@/components/admin/AdminQueryState";
 import type { DashboardStats, RevenueDataPoint } from "@/types/admin";
 import type { Order } from "@/types/order";
 
 /** recharts is code-split out of the dashboard's first paint. */
-const DashboardRevenueChart = dynamic(
-  () => import("@/components/admin/DashboardRevenueChart"),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        aria-hidden
-        style={{ height: 280, display: "grid", placeItems: "center", color: "var(--admin-muted)" }}
-      >
-        Loading chart…
-      </div>
-    ),
-  }
-);
+const DashboardRevenueChart = dynamic(() => import("@/components/admin/DashboardRevenueChart"), {
+  ssr: false,
+  loading: () => (
+    <div
+      aria-hidden
+      style={{ height: 280, display: "grid", placeItems: "center", color: "var(--admin-muted)" }}
+    >
+      Loading chart…
+    </div>
+  ),
+});
 
 interface DashboardData {
   stats: DashboardStats;
@@ -43,6 +46,7 @@ interface DashboardData {
   recentOrders: Order[];
   recentCustomers: Array<{ uid: string; email: string; displayName: string; createdAt: string }>;
   lowStock: Array<{ id: string; name: string; stockQuantity: number; lowStockThreshold: number }>;
+  outOfStock: Array<{ id: string; name: string; stockQuantity: number; lowStockThreshold: number }>;
   topProducts: Array<{ name: string; units: number; revenue: number }>;
 }
 
@@ -69,10 +73,45 @@ function DashboardContent() {
     );
   }
 
-  const { stats, revenueChart, recentOrders, recentCustomers, lowStock, topProducts } = data;
+  const { stats, revenueChart, recentOrders, recentCustomers, lowStock, outOfStock, topProducts } =
+    data;
+
+  const stockAlerts = [
+    ...outOfStock.map((p) => ({ ...p, state: "out-of-stock" as const })),
+    ...lowStock
+      .filter((p) => !outOfStock.some((o) => o.id === p.id))
+      .map((p) => ({ ...p, state: "limited" as const })),
+  ].slice(0, 12);
 
   return (
     <div className="admin-dashboard-root">
+      <div className="admin-quick-links">
+        <Link href="/admin/orders?status=pending" className="admin-quick-link">
+          <span className="admin-quick-link__label">Pending orders</span>
+          <span className="admin-quick-link__hint">{stats.pendingOrders} need attention</span>
+        </Link>
+        <Link href="/admin/products?stock=low" className="admin-quick-link">
+          <span className="admin-quick-link__label">Low stock</span>
+          <span className="admin-quick-link__hint">{stats.lowStockProducts} SKUs</span>
+        </Link>
+        <Link href="/admin/products?stock=out" className="admin-quick-link">
+          <span className="admin-quick-link__label">Out of stock</span>
+          <span className="admin-quick-link__hint">{stats.outOfStockProducts} SKUs</span>
+        </Link>
+        <Link href="/admin/inventory" className="admin-quick-link">
+          <span className="admin-quick-link__label">Inventory</span>
+          <span className="admin-quick-link__hint">Adjust &amp; export</span>
+        </Link>
+        <Link href="/admin/products" className="admin-quick-link">
+          <span className="admin-quick-link__label">Catalog</span>
+          <span className="admin-quick-link__hint">Import vibemusic bulk</span>
+        </Link>
+        <Link href="/admin/returns" className="admin-quick-link">
+          <span className="admin-quick-link__label">Returns</span>
+          <span className="admin-quick-link__hint">Moderate requests</span>
+        </Link>
+      </div>
+
       <div className="admin-stat-grid-premium">
         <StatCard
           label="Total Revenue"
@@ -195,7 +234,9 @@ function DashboardContent() {
                     </td>
                     <td>{order.email}</td>
                     <td>{formatCurrency(order.total)}</td>
-                    <td><StatusBadge status={order.status} /></td>
+                    <td>
+                      <StatusBadge status={order.status} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -205,7 +246,7 @@ function DashboardContent() {
 
         <div className="admin-panel-glass">
           <div className="admin-panel-glass__header">
-            <h2 className="admin-panel-glass__title">Low Stock Alerts</h2>
+            <h2 className="admin-panel-glass__title">Stock Alerts</h2>
           </div>
           <div className="admin-table-wrap">
             <table className="admin-table-premium">
@@ -214,25 +255,27 @@ function DashboardContent() {
                   <th>Product</th>
                   <th>Stock</th>
                   <th>Threshold</th>
+                  <th>State</th>
                 </tr>
               </thead>
               <tbody>
-                {lowStock.length === 0 ? (
+                {stockAlerts.length === 0 ? (
                   <tr>
-                    <td colSpan={3} style={{ textAlign: "center", color: "var(--admin-muted)" }}>
+                    <td colSpan={4} style={{ textAlign: "center", color: "var(--admin-muted)" }}>
                       All products adequately stocked
                     </td>
                   </tr>
                 ) : (
-                  lowStock.map((p) => (
+                  stockAlerts.map((p) => (
                     <tr key={p.id}>
                       <td>
-                        <Link href={`/admin/products/${encodeURIComponent(p.id)}`}>
-                          {p.name}
-                        </Link>
+                        <Link href={`/admin/products/${encodeURIComponent(p.id)}`}>{p.name}</Link>
                       </td>
-                      <td><StatusBadge status={p.stockQuantity <= 0 ? "out-of-stock" : "limited"} /> {p.stockQuantity}</td>
+                      <td>{p.stockQuantity}</td>
                       <td>{p.lowStockThreshold}</td>
+                      <td>
+                        <StatusBadge status={p.state} />
+                      </td>
                     </tr>
                   ))
                 )}

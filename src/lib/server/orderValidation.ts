@@ -1,11 +1,8 @@
-import { getProductById } from "@/services/catalogService";
+import { getProductsByIds } from "@/services/catalogService";
 import { loadProducts } from "@/lib/server/catalogRepository";
 import { getVariantFromProduct } from "@/lib/server/variantService";
 import type { CatalogProduct } from "@/types/catalog";
-import {
-  getDefaultGstRateForCategory,
-  type GSTRate,
-} from "@/lib/gstCalculator";
+import { getDefaultGstRateForCategory, type GSTRate } from "@/lib/gstCalculator";
 import { getAvailableStock } from "@/lib/inventory/stockMath";
 import { resolvePositiveUnitPrice } from "@/lib/pricing/unitPrice";
 import { validateCoupon } from "@/lib/server/couponService";
@@ -21,7 +18,7 @@ type StockCheckLine = {
 
 function validateStockFromLocalCatalog(
   items: StockCheckLine[],
-  localProducts: CatalogProduct[]
+  localProducts: CatalogProduct[],
 ): void {
   const byId = new Map(localProducts.map((product) => [product.id, product]));
   const errors: string[] = [];
@@ -39,22 +36,14 @@ function validateStockFromLocalCatalog(
       continue;
     }
 
-    const parentAvailable = getAvailableStock(
-      product.stock,
-      product.reservedStock ?? 0
-    );
+    const parentAvailable = getAvailableStock(product.stock, product.reservedStock ?? 0);
     const available =
       variant && item.variantId
-        ? getAvailableStock(
-            variant.stock ?? product.stock,
-            product.reservedStock ?? 0
-          )
+        ? getAvailableStock(variant.stock ?? product.stock, product.reservedStock ?? 0)
         : parentAvailable;
 
     if (item.quantity > available) {
-      errors.push(
-        `${item.name}: requested ${item.quantity}, available ${available}`
-      );
+      errors.push(`${item.name}: requested ${item.quantity}, available ${available}`);
     }
   }
 
@@ -64,51 +53,48 @@ function validateStockFromLocalCatalog(
 }
 
 export async function resolveOrderItems(
-  items: CreateOrderPayload["items"]
+  items: CreateOrderPayload["items"],
 ): Promise<CreateOrderPayload["items"]> {
   const localProducts = loadProducts();
   const localById = new Map(localProducts.map((product) => [product.id, product]));
 
-  const resolved = await Promise.all(
-    items.map(async (item) => {
-      let product = localById.get(item.productId) ?? null;
-
-      if (!product) {
-        product = (await getProductById(item.productId)) ?? null;
-      }
-
-      if (!product || product.status !== "active") {
-        throw new Error(
-          `Product "${item.name}" is unavailable or no longer active`
-        );
-      }
-
-      const variant = getVariantFromProduct(product, item.variantId);
-      if (item.variantId && !variant) {
-        throw new Error(`Selected variant for "${product.name}" is no longer available`);
-      }
-
-      const unitPrice = resolvePositiveUnitPrice(product.price, variant?.price);
-      if (unitPrice == null) {
-        throw new Error(
-          `"${product.name}" is not available for purchase yet (Coming Soon)`
-        );
-      }
-
-      return {
-        productId: item.productId,
-        variantId: variant?.id,
-        variantSku: variant?.sku ?? item.variantSku,
-        variantLabel: variant?.label ?? item.variantLabel,
-        name: variant?.label ? `${product.name} — ${variant.label}` : product.name,
-        quantity: item.quantity,
-        price: unitPrice,
-        gstRate: (product.gstRate ??
-          item.gstRate ??
-          getDefaultGstRateForCategory(product.category)) as GSTRate,
-      };
-    })
+  // Single batched round-trip for lines missing from the local JSON catalog.
+  const missingIds = [...new Set(items.map((item) => item.productId))].filter(
+    (id) => !localById.has(id),
   );
+  const dbProducts = missingIds.length > 0 ? await getProductsByIds(missingIds) : [];
+  const dbById = new Map(dbProducts.map((product) => [product.id, product]));
+
+  const resolved = items.map((item) => {
+    const product = localById.get(item.productId) ?? dbById.get(item.productId) ?? null;
+
+    if (!product || product.status !== "active") {
+      throw new Error(`Product "${item.name}" is unavailable or no longer active`);
+    }
+
+    const variant = getVariantFromProduct(product, item.variantId);
+    if (item.variantId && !variant) {
+      throw new Error(`Selected variant for "${product.name}" is no longer available`);
+    }
+
+    const unitPrice = resolvePositiveUnitPrice(product.price, variant?.price);
+    if (unitPrice == null) {
+      throw new Error(`"${product.name}" is not available for purchase yet (Coming Soon)`);
+    }
+
+    return {
+      productId: item.productId,
+      variantId: variant?.id,
+      variantSku: variant?.sku ?? item.variantSku,
+      variantLabel: variant?.label ?? item.variantLabel,
+      name: variant?.label ? `${product.name} — ${variant.label}` : product.name,
+      quantity: item.quantity,
+      price: unitPrice,
+      gstRate: (product.gstRate ??
+        item.gstRate ??
+        getDefaultGstRateForCategory(product.category)) as GSTRate,
+    };
+  });
 
   const stockLines: StockCheckLine[] = resolved.map((item) => ({
     productId: item.productId,
@@ -128,7 +114,7 @@ export async function resolveOrderItems(
 
 export async function resolveCouponDiscount(
   couponCode: string | null | undefined,
-  subtotal: number
+  subtotal: number,
 ): Promise<number> {
   if (!couponCode) return 0;
   const result = await validateCoupon(couponCode, subtotal);

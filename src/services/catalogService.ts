@@ -1,6 +1,20 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
 import { getProductImage } from "@/data/productImages";
+import {
+  DEFAULT_BULK_IMPORT_OPTIONS,
+  type BulkImportOptions,
+  type BulkImportPublishStatus,
+} from "@/lib/admin/bulkImportTypes";
+import { BULK_IMPORT_WRITE_BATCH_SIZE } from "@/lib/admin/bulkImportValidation";
+import { buildBulkImportPreviewSummary } from "@/lib/admin/bulkImportSummary";
+import {
+  collectBulkImportCategoryCandidates,
+  formatBulkImportCategoryHint,
+  isGenericBulkCategoryValue,
+  resolveBulkImportCategory,
+} from "@/lib/admin/bulkImportCategoryResolver";
 import { findCategoryInList, normalizeCategorySlug } from "@/lib/categorySlug";
 import {
   enrichGuitarSpecifications,
@@ -25,9 +39,11 @@ import {
   fetchBrands,
   fetchCategories,
   fetchExistingSlugsAndSkus,
+  fetchProductSkuIndex,
   fetchProductById,
   fetchProductBySlug,
   fetchProductsByCategory,
+  fetchProductsByBrandSlug,
   fetchProductsByIds,
   isCatalogUnavailable,
   removeProduct,
@@ -36,7 +52,10 @@ import {
   writeProduct,
 } from "@/lib/server/storeCatalogRepository";
 import { getCachedCategories, getCachedProducts } from "@/lib/server/catalogSnapshotCache";
-import { recordInventoryLogEntry } from "@/lib/server/inventoryRepository";
+import {
+  recordInventoryLogEntries,
+  recordInventoryLogEntry,
+} from "@/lib/server/inventoryRepository";
 import {
   applyVariantsToProduct,
   fetchAllVariantSkus,
@@ -74,6 +93,13 @@ async function resolveCategory(
   categoryInput: string,
 ): Promise<{ name: string; slug: string } | null> {
   const categories = await fetchCategories();
+  return resolveCategoryFromList(categories, categoryInput);
+}
+
+function resolveCategoryFromList(
+  categories: Awaited<ReturnType<typeof fetchCategories>>,
+  categoryInput: string,
+): { name: string; slug: string } | null {
   const found = findCategoryInList(categories, categoryInput);
   if (!found) return null;
   return { name: found.name, slug: found.slug };
@@ -546,6 +572,12 @@ export async function getProductById(id: string): Promise<CatalogProduct | undef
   return product ?? undefined;
 }
 
+/** Batch `getProductById` — active products only, single round-trip. */
+export async function getProductsByIds(ids: string[]): Promise<CatalogProduct[]> {
+  if (ids.length === 0) return [];
+  return fetchProductsByIds(ids, false);
+}
+
 export async function getCatalogProductBySlug(slug: string): Promise<CatalogProduct | undefined> {
   const product = await fetchProductBySlug(slug);
   return product ?? undefined;
@@ -774,7 +806,28 @@ function productMatchesAllSearchTokens(product: CatalogProduct, tokens: string[]
 }
 
 export async function searchProducts(options: ProductSearchOptions = {}): Promise<Product[]> {
-  const source = await fetchCatalogSnapshot(options.includeInactive ?? false);
+  const includeInactive = options.includeInactive ?? false;
+  const query = options.query?.trim() ?? "";
+  const brand = options.brand?.trim() ?? "";
+  const category = options.category?.trim() ?? "";
+  const subcategory = options.subcategory?.trim() ?? "";
+
+  // Scoped browse: avoid loading the full catalogue snapshot when we can hit
+  // indexed brand/category queries first, then apply in-memory filters/sort.
+  if (!query && brand && !category && !subcategory) {
+    const scoped = await fetchProductsByBrandSlug(slugify(brand), includeInactive);
+    return searchInCatalogProducts(scoped, options);
+  }
+
+  if (!query && category && !brand) {
+    const resolved = normalizeCategorySlug(category);
+    if (resolved) {
+      const scoped = await fetchProductsByCategory(resolved, includeInactive);
+      return searchInCatalogProducts(scoped, options);
+    }
+  }
+
+  const source = await fetchCatalogSnapshot(includeInactive);
   return searchInCatalogProducts(source, options);
 }
 
@@ -821,18 +874,36 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
   }
 
   const slug = uniqueSlug(slugify(input.slug ?? `${input.brand}-${input.name}`), slugs);
-  const sku = input.sku && !skus.has(input.sku) ? input.sku : uniqueSku(skus);
+  let sku: string;
+  const requestedSku = input.sku?.trim();
+  if (requestedSku) {
+    if (skus.has(requestedSku)) {
+      if (input.strictSku) {
+        throw new Error(`SKU "${requestedSku}" already exists in catalog`);
+      }
+      sku = uniqueSku(skus);
+    } else {
+      sku = requestedSku;
+    }
+  } else {
+    sku = uniqueSku(skus);
+  }
   const brandSlug = input.brandSlug ?? slugify(input.brand);
   const now = new Date().toISOString();
   const stock = input.stock ?? 100;
   const originalPrice = input.originalPrice ?? input.price;
   const primaryImage = input.image ?? input.images?.[0] ?? getProductImage(slug, category.name);
 
-  const baseSpecifications = input.specifications ?? {
+  const baseSpecifications = {
     Manufacturer: input.brand,
     Category: category.name,
     SKU: sku,
+    ...(input.specifications ?? {}),
   };
+  // Prefer caller SKU / category when present; keep Manufacturer from brand if blank.
+  if (!baseSpecifications.Category) baseSpecifications.Category = category.name;
+  if (!baseSpecifications.SKU) baseSpecifications.SKU = sku;
+  if (!baseSpecifications.Manufacturer) baseSpecifications.Manufacturer = input.brand;
   const specifications = applyGuitarSpecifications(
     input.name,
     input.brand,
@@ -843,7 +914,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
   );
 
   const product: CatalogProduct = {
-    id: `prod-${Date.now().toString(36)}`,
+    id: `prod-${randomUUID()}`,
     slug,
     name: input.name,
     brand: input.brand,
@@ -1132,126 +1203,383 @@ function parseBool(value: string | undefined): boolean {
   return ["true", "1", "yes", "y"].includes(value.trim().toLowerCase());
 }
 
-export async function previewBulkImport(rows: BulkImportRow[]): Promise<BulkImportPreviewRow[]> {
-  const { slugs, skus } = await fetchExistingSlugsAndSkus();
+export async function previewBulkImport(
+  rows: BulkImportRow[],
+  options: BulkImportOptions = DEFAULT_BULK_IMPORT_OPTIONS,
+): Promise<BulkImportPreviewRow[]> {
+  const [{ slugs, skus }, categories, skuIndex] = await Promise.all([
+    fetchExistingSlugsAndSkus(),
+    fetchCategories(),
+    fetchProductSkuIndex(),
+  ]);
   const previewSlugs = new Set<string>();
   const previewSkus = new Set<string>();
 
-  return Promise.all(
-    rows.map(async (row, index) => {
-      const errors: string[] = [];
-      const rowNumber = index + 2;
+  return rows.map((row, index) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    let action: BulkImportPreviewRow["action"] = "create";
+    let existingProductId: string | undefined;
+    const rowNumber = index + 2;
 
-      if (!row.name?.trim()) errors.push("Name is required");
-      if (!row.brand?.trim()) errors.push("Brand is required");
-      if (!row.category?.trim()) errors.push("Category is required");
-      if (row.price == null || Number.isNaN(Number(row.price)) || Number(row.price) <= 0) {
-        errors.push("Valid price is required");
+    if (!row.name?.trim()) errors.push("ITEM TITLE is required");
+    if (!row.brand?.trim()) errors.push("Brand is required");
+    if (!collectBulkImportCategoryCandidates(row).length && !row.category?.trim()) {
+      errors.push("Category is required");
+    }
+    if (row.price == null || Number.isNaN(Number(row.price)) || Number(row.price) <= 0) {
+      errors.push(
+        "Selling Price must be a positive number (fill Selling Price or MRP in the sheet)",
+      );
+    } else if (row.priceFromMrpFallback) {
+      warnings.push("Selling Price was empty — using MRP as Selling Price");
+    }
+
+    const sellingPrice = Number(row.price);
+    const mrp = row.originalPrice != null ? Number(row.originalPrice) : undefined;
+    if (
+      mrp != null &&
+      !Number.isNaN(mrp) &&
+      !Number.isNaN(sellingPrice) &&
+      mrp > 0 &&
+      mrp < sellingPrice &&
+      !row.priceFromMrpFallback
+    ) {
+      errors.push("MRP must be greater than or equal to Selling Price");
+    }
+
+    const categoryResolution = resolveBulkImportCategory(categories, row);
+    const category = categoryResolution.category;
+    if (!category) {
+      const label = categoryResolution.matchedLabel ?? row.category?.trim() ?? "Unknown";
+      errors.push(
+        `Category "${label}" not found in catalog. Use a Vibe category such as ${formatBulkImportCategoryHint(categories)}`,
+      );
+    } else if (categoryResolution.inferredFromTitle) {
+      warnings.push(`Category inferred as "${category.name}" from product title`);
+    } else if (isGenericBulkCategoryValue(row.category) && category) {
+      warnings.push(`Mapped generic "${row.category}" to "${category.name}"`);
+    }
+
+    const generatedSlug = row.name
+      ? uniqueSlug(`${row.brand}-${row.name}`, new Set([...slugs, ...previewSlugs]))
+      : "";
+    if (previewSlugs.has(generatedSlug)) {
+      errors.push("Duplicate product title in this file");
+    }
+    previewSlugs.add(generatedSlug);
+
+    const generatedSku = row.sku?.trim()
+      ? row.sku.trim()
+      : uniqueSku(new Set([...skus, ...previewSkus]));
+
+    if (previewSkus.has(generatedSku)) {
+      errors.push(`Duplicate SKU "${generatedSku}" in this file`);
+    } else if (skus.has(generatedSku)) {
+      const existingId = skuIndex.get(generatedSku);
+      if (options.duplicateStrategy === "fail") {
+        errors.push(`SKU "${generatedSku}" already exists in catalog`);
+      } else if (options.duplicateStrategy === "skip") {
+        action = "skip";
+        existingProductId = existingId;
+        warnings.push(`SKU "${generatedSku}" exists — row will be skipped`);
+      } else {
+        action = "update";
+        existingProductId = existingId;
+        warnings.push(`SKU "${generatedSku}" exists — row will update the catalog product`);
       }
+    }
+    previewSkus.add(generatedSku);
 
-      const category = row.category?.trim() ? await resolveCategory(row.category.trim()) : null;
-      if (row.category?.trim() && !category) {
-        errors.push(`Category "${row.category}" not found`);
-      }
+    const imageRefs = [row.image1, row.image2, row.image3, row.image4, row.image5].filter(
+      Boolean,
+    ) as string[];
 
-      const generatedSlug = row.name
-        ? uniqueSlug(`${row.brand}-${row.name}`, new Set([...slugs, ...previewSlugs]))
-        : "";
-      if (previewSlugs.has(generatedSlug)) {
-        errors.push("Duplicate slug in import batch");
-      }
-      previewSlugs.add(generatedSlug);
+    const isUrl = (v: string) =>
+      v.startsWith("http://") || v.startsWith("https://") || v.startsWith("/");
 
-      const generatedSku = row.sku?.trim()
-        ? row.sku.trim()
-        : uniqueSku(new Set([...skus, ...previewSkus]));
-      if (skus.has(generatedSku) || previewSkus.has(generatedSku)) {
-        errors.push("Duplicate SKU");
-      }
-      previewSkus.add(generatedSku);
+    const zipMatches = row.zipImageMatches?.length ?? 0;
+    const resolvedUrlCount = row.resolvedImages?.length ?? 0;
+    const imagesOptional = row.sourceFormat === "vibemusic-bulk";
+    const totalResolvedImages = resolvedUrlCount + zipMatches;
 
-      const imageRefs = [row.image1, row.image2, row.image3, row.image4, row.image5].filter(
-        Boolean,
-      ) as string[];
-
-      const isUrl = (v: string) =>
-        v.startsWith("http://") || v.startsWith("https://") || v.startsWith("/");
-
-      if (imageRefs.length === 0 && !row.resolvedImages?.length) {
-        errors.push("At least one image is required");
-      } else if (
-        row.resolvedImages?.length &&
-        row.resolvedImages.length < imageRefs.filter((r) => !isUrl(r)).length
-      ) {
+    if (totalResolvedImages === 0 && !imagesOptional) {
+      errors.push("At least one image is required");
+    } else if (imageRefs.length > 0) {
+      const zipFilenames = imageRefs.filter((ref) => !isUrl(ref));
+      if (zipFilenames.length > 0 && zipMatches + resolvedUrlCount < zipFilenames.length) {
         errors.push("Some image filenames were not found in ZIP");
       }
+    }
 
-      return {
-        ...row,
-        rowNumber,
-        errors,
-        valid: errors.length === 0,
-        resolvedCategorySlug: category?.slug,
-        generatedSlug,
-        generatedSku,
-      };
-    }),
-  );
+    return {
+      ...row,
+      category: category?.name ?? row.category,
+      rowNumber,
+      errors,
+      warnings: warnings.length > 0 ? warnings : undefined,
+      valid: errors.length === 0,
+      action,
+      existingProductId,
+      resolvedCategorySlug: category?.slug,
+      generatedSlug,
+      generatedSku,
+    };
+  });
 }
 
-export async function bulkImportProducts(rows: BulkImportRow[]): Promise<BulkImportResult> {
-  const preview = await previewBulkImport(rows);
-  const validRows = preview.filter((r) => r.valid);
-  const failedRows = preview
-    .filter((r) => !r.valid)
-    .map((r) => ({ ...r, reason: r.errors.join("; ") }));
+export { buildBulkImportPreviewSummary };
+
+function buildBulkImportCatalogProduct(
+  row: BulkImportPreviewRow,
+  category: Category,
+  publishStatus: BulkImportPublishStatus,
+): CatalogProduct {
+  const now = new Date().toISOString();
+  const stock = row.stock != null ? Number(row.stock) : 0;
+  const price = Number(row.price);
+  const originalPrice = row.originalPrice != null ? Number(row.originalPrice) : price;
+  const slug = row.generatedSlug ?? slugify(`${row.brand}-${row.name}`);
+  const sku = row.generatedSku ?? row.sku ?? uniqueSku(new Set());
+  const brandSlug = slugify(row.brand);
+  const images =
+    row.resolvedImages ??
+    [row.image1, row.image2, row.image3, row.image4, row.image5].filter((img): img is string =>
+      Boolean(img?.trim()),
+    );
+  const primaryImage = images[0] ?? getProductImage(slug, category.name);
+
+  const baseSpecifications = {
+    Manufacturer: row.brand,
+    Category: category.name,
+    SKU: sku,
+    ...(row.specifications ?? {}),
+  };
+  const specifications = applyGuitarSpecifications(
+    row.name,
+    row.brand,
+    category.slug,
+    category.name,
+    baseSpecifications,
+  );
+
+  const product: CatalogProduct = {
+    id: `prod-${randomUUID()}`,
+    slug,
+    name: row.name.trim(),
+    brand: row.brand.trim(),
+    category: category.name,
+    subcategory: row.subcategory?.trim() ?? "",
+    price,
+    originalPrice,
+    discountPercentage: computeDiscount(price, originalPrice),
+    rating: 0,
+    reviewCount: 0,
+    stock,
+    reservedStock: 0,
+    lowStockThreshold: 10,
+    sku,
+    status: publishStatus,
+    featured: parseBool(String(row.featured ?? "")),
+    trending: parseBool(String(row.trending ?? "")),
+    newArrival: parseBool(String(row.newArrival ?? "")),
+    images: images.length > 0 ? images : [primaryImage],
+    description:
+      row.description?.trim() ??
+      `The ${row.brand} ${row.name} delivers professional-grade performance for ${category.name.toLowerCase()} applications.`,
+    specifications,
+    createdAt: now,
+    updatedAt: now,
+    brandSlug,
+    categorySlug: category.slug,
+    availability: stockToAvailability(stock),
+    condition: "new",
+    imageColor: "#e8e8e8",
+    image: primaryImage,
+  };
+
+  product.detail = {
+    msrp: originalPrice > price ? originalPrice : null,
+    salePrice: originalPrice > price ? price : null,
+    specs:
+      row.detailSpecs ?? Object.entries(specifications).map(([label, value]) => ({ label, value })),
+    inTheBox: row.inTheBox ?? [],
+    gallery: product.images.map((src, index) => ({
+      id: `img-${index}`,
+      alt: `${product.name} view ${index + 1}`,
+      color: product.imageColor,
+      ...(src ? { src } : {}),
+    })),
+    videos: [],
+    variants: normalizeVariants(
+      [
+        {
+          id: "var-default",
+          label: "Standard",
+          sku: product.sku,
+          price: product.price,
+          stock: product.stock,
+          isDefault: true,
+        },
+      ],
+      product.sku,
+      product.price,
+      product.stock,
+    ),
+    reviews: [],
+    qa: [],
+    frequentlyBoughtTogether: [],
+    similarProductIds: [],
+    relatedProductIds: [],
+    spin360Images: [],
+  };
+
+  return product;
+}
+
+export async function bulkImportProducts(
+  rows: BulkImportRow[],
+  options: BulkImportOptions & { adminId?: string } = DEFAULT_BULK_IMPORT_OPTIONS,
+): Promise<BulkImportResult> {
+  const { adminId, ...importOptions } = options;
+  const [preview, categories] = await Promise.all([
+    previewBulkImport(rows, importOptions),
+    fetchCategories(),
+  ]);
+  const categoryBySlug = new Map(categories.map((item) => [item.slug, item]));
+
+  const importableRows = preview.filter((row) => row.valid && row.action !== "skip");
+  const createRows = importableRows.filter((row) => row.action === "create");
+  const updateRows = importableRows.filter((row) => row.action === "update");
+  const validationFailures = preview
+    .filter((row) => !row.valid)
+    .map((row) => ({ ...row, reason: row.errors.join("; ") }));
+  const skippedRows = preview
+    .filter((row) => row.valid && row.action === "skip")
+    .map((row) => ({
+      ...row,
+      reason: row.warnings?.join("; ") ?? "Existing SKU skipped",
+    }));
 
   const importedProducts: CatalogProduct[] = [];
+  const runtimeFailures: Array<BulkImportPreviewRow & { reason: string }> = [];
+  let updatedCount = 0;
 
-  for (const row of validRows) {
-    const images =
-      row.resolvedImages ??
-      [row.image1, row.image2, row.image3, row.image4, row.image5].filter((img): img is string =>
-        Boolean(img?.trim()),
+  const productsToCreate: CatalogProduct[] = [];
+  for (const row of createRows) {
+    const category =
+      (row.resolvedCategorySlug ? categoryBySlug.get(row.resolvedCategorySlug) : undefined) ??
+      findCategoryInList(categories, row.category);
+    if (!category) {
+      runtimeFailures.push({ ...row, reason: `Category "${row.category}" not found in catalog` });
+      continue;
+    }
+    try {
+      productsToCreate.push(
+        buildBulkImportCatalogProduct(row, category, importOptions.publishStatus),
       );
+    } catch (err) {
+      runtimeFailures.push({
+        ...row,
+        reason: err instanceof Error ? err.message : "Could not build product",
+      });
+    }
+  }
 
-    const product = await createProduct({
-      name: row.name.trim(),
-      brand: row.brand.trim(),
-      category: row.category.trim(),
-      categorySlug: row.resolvedCategorySlug,
-      subcategory: row.subcategory?.trim() ?? "",
-      price: Number(row.price),
-      originalPrice: row.originalPrice ? Number(row.originalPrice) : undefined,
-      stock: row.stock != null ? Number(row.stock) : undefined,
-      sku: row.generatedSku,
-      slug: row.generatedSlug,
-      description: row.description?.trim(),
-      featured: parseBool(String(row.featured ?? "")),
-      trending: parseBool(String(row.trending ?? "")),
-      newArrival: parseBool(String(row.newArrival ?? "")),
-      images,
-    });
-    importedProducts.push(product);
-    await recordInventoryLogEntry({
-      productId: product.id,
-      sku: product.sku,
-      orderId: null,
-      previousStock: 0,
-      newStock: product.stock,
-      quantityChanged: product.stock,
-      action: "bulk_import",
-      adminId: null,
-      timestamp: new Date().toISOString(),
-      note: "Initial stock from bulk import",
-    });
+  for (let offset = 0; offset < productsToCreate.length; offset += BULK_IMPORT_WRITE_BATCH_SIZE) {
+    const chunk = productsToCreate.slice(offset, offset + BULK_IMPORT_WRITE_BATCH_SIZE);
+    try {
+      await batchWriteProducts(chunk);
+      importedProducts.push(...chunk);
+      const timestamp = new Date().toISOString();
+      await recordInventoryLogEntries(
+        chunk.map((product) => ({
+          productId: product.id,
+          sku: product.sku,
+          orderId: null,
+          previousStock: 0,
+          newStock: product.stock,
+          quantityChanged: product.stock,
+          action: "bulk_import" as const,
+          adminId: adminId ?? null,
+          timestamp,
+          note: "Initial stock from bulk import",
+        })),
+      );
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : "Batch import failed";
+      for (const product of chunk) {
+        try {
+          await writeProduct(product);
+          importedProducts.push(product);
+          await recordInventoryLogEntry({
+            productId: product.id,
+            sku: product.sku,
+            orderId: null,
+            previousStock: 0,
+            newStock: product.stock,
+            quantityChanged: product.stock,
+            action: "bulk_import",
+            adminId: adminId ?? null,
+            timestamp: new Date().toISOString(),
+            note: "Initial stock from bulk import",
+          });
+        } catch (singleErr) {
+          const sourceRow = createRows.find((row) => row.generatedSku === product.sku);
+          if (sourceRow) {
+            runtimeFailures.push({
+              ...sourceRow,
+              reason: singleErr instanceof Error ? singleErr.message : reason,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  for (const row of updateRows) {
+    try {
+      const images =
+        row.resolvedImages ??
+        [row.image1, row.image2, row.image3, row.image4, row.image5].filter((img): img is string =>
+          Boolean(img?.trim()),
+        );
+      const stockDefault = row.sourceFormat === "vibemusic-bulk" ? 0 : undefined;
+      const product = await updateProduct(row.existingProductId!, {
+        name: row.name.trim(),
+        brand: row.brand.trim(),
+        category: row.category.trim(),
+        categorySlug: row.resolvedCategorySlug,
+        subcategory: row.subcategory?.trim() ?? "",
+        price: Number(row.price),
+        originalPrice: row.originalPrice ? Number(row.originalPrice) : undefined,
+        stock: row.stock != null ? Number(row.stock) : stockDefault,
+        description: row.description?.trim(),
+        featured: parseBool(String(row.featured ?? "")),
+        trending: parseBool(String(row.trending ?? "")),
+        newArrival: parseBool(String(row.newArrival ?? "")),
+        images: images.length > 0 ? images : undefined,
+        specifications: row.specifications,
+        detailSpecs: row.detailSpecs,
+        inTheBox: row.inTheBox,
+        status: importOptions.publishStatus,
+      });
+      importedProducts.push(product);
+      updatedCount += 1;
+    } catch (err) {
+      runtimeFailures.push({
+        ...row,
+        reason: err instanceof Error ? err.message : "Import failed",
+      });
+    }
   }
 
   return {
-    imported: importedProducts.length,
-    skipped: failedRows.length,
-    errors: failedRows.length,
-    failedRows,
+    imported: importedProducts.length - updatedCount,
+    updated: updatedCount,
+    skipped: validationFailures.length + skippedRows.length,
+    errors: runtimeFailures.length,
+    failedRows: [...validationFailures, ...skippedRows, ...runtimeFailures],
     products: importedProducts,
   };
 }

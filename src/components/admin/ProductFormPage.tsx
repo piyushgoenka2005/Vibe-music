@@ -24,6 +24,7 @@ import ProductSpecsEditor from "@/components/admin/ProductSpecsEditor";
 import ProductVideosEditor from "@/components/admin/ProductVideosEditor";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import type { Category } from "@/types/category";
+import type { Brand } from "@/types/brand";
 import type { ProductSpec, ProductVariant, ProductVideo } from "@/types/product";
 
 const EMPTY = {
@@ -39,10 +40,10 @@ const EMPTY = {
   description: "",
   stockQuantity: 100,
   lowStockThreshold: 10,
-  status: "active" as const,
-  availability: "in-stock" as const,
-  condition: "new" as const,
-  gstRate: 18 as const,
+  status: "active" as "active" | "draft" | "archived",
+  availability: "in-stock" as "in-stock" | "out-of-stock" | "limited",
+  condition: "new" as "new" | "used" | "open-box",
+  gstRate: 18 as 5 | 12 | 18 | 28,
   featured: false,
   trending: false,
   newArrival: false,
@@ -68,6 +69,7 @@ export default function ProductFormPage({
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [subcategoryOptions, setSubcategoryOptions] = useState<string[]>([]);
   const [isCustomSubcategory, setIsCustomSubcategory] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +79,11 @@ export default function ProductFormPage({
     fetch("/api/catalog/categories")
       .then((r) => r.json())
       .then((d) => setCategories(d.categories ?? []))
+      .catch(() => undefined);
+
+    fetch("/api/admin/brands")
+      .then((r) => (r.ok ? r.json() : { brands: [] }))
+      .then((d) => setBrands(Array.isArray(d.brands) ? d.brands : []))
       .catch(() => undefined);
   }, []);
 
@@ -289,10 +296,24 @@ export default function ProductFormPage({
               id="product-form-brand"
               className="admin-input"
               style={{ width: "100%" }}
+              list="product-brand-options"
               value={form.brand}
               onChange={(e) => setForm({ ...form, brand: e.target.value })}
               required
+              placeholder="Select or type a brand"
             />
+            <datalist id="product-brand-options">
+              {brands.map((brand) => (
+                <option key={brand.id} value={brand.name} />
+              ))}
+            </datalist>
+            <p className="admin-form-hint" style={{ marginTop: "0.35rem" }}>
+              Brands from{" "}
+              <a href={ROUTES.adminBrands} className="admin-link">
+                Brands admin
+              </a>{" "}
+              appear here — you can still type a new name.
+            </p>
           </div>
           <div className="admin-form-group">
             <label htmlFor="product-form-sku">SKU</label>
@@ -437,8 +458,61 @@ export default function ProductFormPage({
               type="number"
               min={0}
               value={form.stockQuantity}
-              onChange={(e) => setForm({ ...form, stockQuantity: Number(e.target.value) })}
+              onChange={(e) => {
+                const stockQuantity = Number(e.target.value);
+                const availability =
+                  stockQuantity <= 0
+                    ? "out-of-stock"
+                    : stockQuantity <= form.lowStockThreshold
+                      ? "limited"
+                      : "in-stock";
+                setForm({ ...form, stockQuantity, availability });
+              }}
             />
+          </div>
+          <div className="admin-form-group">
+            <label htmlFor="product-form-low-stock">Low Stock Threshold</label>
+            <input
+              id="product-form-low-stock"
+              className="admin-input"
+              style={{ width: "100%" }}
+              type="number"
+              min={0}
+              value={form.lowStockThreshold}
+              onChange={(e) => {
+                const lowStockThreshold = Number(e.target.value);
+                const availability =
+                  form.stockQuantity <= 0
+                    ? "out-of-stock"
+                    : form.stockQuantity <= lowStockThreshold
+                      ? "limited"
+                      : form.availability === "out-of-stock" || form.availability === "limited"
+                        ? "in-stock"
+                        : form.availability;
+                setForm({ ...form, lowStockThreshold, availability });
+              }}
+            />
+            <p className="admin-form-hint" style={{ marginTop: "0.35rem" }}>
+              Dashboard and inventory alerts fire when stock is at or below this number.
+            </p>
+          </div>
+          <div className="admin-form-group">
+            <label htmlFor="product-form-availability">Availability</label>
+            <select
+              id="product-form-availability"
+              className="admin-select"
+              value={form.availability}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  availability: e.target.value as typeof form.availability,
+                })
+              }
+            >
+              <option value="in-stock">In stock</option>
+              <option value="limited">Limited</option>
+              <option value="out-of-stock">Out of stock</option>
+            </select>
           </div>
           <div className="admin-form-group">
             <label htmlFor="product-form-status">Status</label>

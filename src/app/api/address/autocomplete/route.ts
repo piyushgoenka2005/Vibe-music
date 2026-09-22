@@ -7,17 +7,14 @@ import {
   warnIfGooglePlacesMisconfigured,
 } from "@/lib/server/googlePlaces";
 import { nominatimAutocomplete } from "@/lib/server/nominatimAddress";
+import { withTimeout } from "@/lib/server/withTimeout";
 
 interface PlacesAutocompletePrediction {
   description: string;
   place_id: string;
 }
 
-const CONFIG_ERROR_STATUSES = new Set([
-  "REQUEST_DENIED",
-  "INVALID_REQUEST",
-  "UNKNOWN_ERROR",
-]);
+const CONFIG_ERROR_STATUSES = new Set(["REQUEST_DENIED", "INVALID_REQUEST", "UNKNOWN_ERROR"]);
 
 async function googleAutocomplete(input: string, apiKey: string) {
   const params = new URLSearchParams({
@@ -29,9 +26,12 @@ async function googleAutocomplete(input: string, apiKey: string) {
 
   let response: Response;
   try {
-    response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params}`,
-      { cache: "no-store" }
+    response = await withTimeout(
+      fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?${params}`, {
+        cache: "no-store",
+      }),
+      8000,
+      "Google Places autocomplete",
     );
   } catch (error) {
     warnGooglePlacesApiFailure(
@@ -39,7 +39,7 @@ async function googleAutocomplete(input: string, apiKey: string) {
       {
         error: error instanceof Error ? error.message : String(error),
       },
-      "api/address/autocomplete"
+      "api/address/autocomplete",
     );
     return null;
   }
@@ -48,7 +48,7 @@ async function googleAutocomplete(input: string, apiKey: string) {
     warnGooglePlacesApiFailure(
       "Google Places autocomplete HTTP error",
       { httpStatus: response.status },
-      "api/address/autocomplete"
+      "api/address/autocomplete",
     );
     return null;
   }
@@ -79,7 +79,7 @@ async function googleAutocomplete(input: string, apiKey: string) {
         placesStatus: status,
         errorMessage: data.error_message ?? null,
       },
-      "api/address/autocomplete"
+      "api/address/autocomplete",
     );
     return null;
   }
@@ -90,7 +90,7 @@ async function googleAutocomplete(input: string, apiKey: string) {
       placesStatus: status,
       errorMessage: data.error_message ?? null,
     },
-    "api/address/autocomplete"
+    "api/address/autocomplete",
   );
   return {
     available: true as const,
@@ -103,7 +103,7 @@ export async function GET(request: Request) {
   const rateLimited = await enforceRateLimit(
     request,
     "address-autocomplete",
-    RATE_LIMITS.publicApi
+    RATE_LIMITS.publicApi,
   );
   if (rateLimited) return rateLimited;
 
@@ -132,7 +132,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.warn(
       "[address-autocomplete] Nominatim fallback failed",
-      error instanceof Error ? error.message : error
+      error instanceof Error ? error.message : error,
     );
     return NextResponse.json({ predictions: [], available: false });
   }

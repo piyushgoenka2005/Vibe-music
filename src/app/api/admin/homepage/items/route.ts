@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
   createSectionItem,
-  invalidatePublicHomepageCache,
+  invalidatePublicHomepageCacheAsync,
 } from "@/lib/server/homepageService";
 import { adminHomepageSectionItemSchema } from "@/lib/validations/admin";
 
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       ...parsed,
       customImage: parsed.customImage || undefined,
     });
-    invalidatePublicHomepageCache();
+    await invalidatePublicHomepageCacheAsync();
     return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
     return adminErrorResponse(error);

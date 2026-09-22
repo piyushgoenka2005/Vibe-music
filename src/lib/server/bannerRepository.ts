@@ -12,7 +12,7 @@ import type {
 } from "@/types/banner";
 
 const ACTIVE_BANNERS_CACHE_KEY = "homepage-active-banners";
-const ACTIVE_BANNERS_REVALIDATE_SECONDS = 30;
+const ACTIVE_BANNERS_REVALIDATE_SECONDS = 120;
 
 function invalidateBannerCache(): void {
   try {
@@ -23,10 +23,7 @@ function invalidateBannerCache(): void {
   }
 }
 
-function isBannerScheduledActive(
-  banner: HomepageBanner,
-  at: Date
-): boolean {
+function isBannerScheduledActive(banner: HomepageBanner, at: Date): boolean {
   if (banner.status !== "active") return false;
 
   if (banner.startDate) {
@@ -59,7 +56,7 @@ async function fetchActiveBannersFromDb(): Promise<HomepageBanner[]> {
 const getCachedActiveBannerRows = unstable_cache(
   fetchActiveBannersFromDb,
   [ACTIVE_BANNERS_CACHE_KEY],
-  { revalidate: ACTIVE_BANNERS_REVALIDATE_SECONDS, tags: ["banners"] }
+  { revalidate: ACTIVE_BANNERS_REVALIDATE_SECONDS, tags: ["banners"] },
 );
 
 export async function listActiveBanners(at = new Date()): Promise<HomepageBanner[]> {
@@ -84,10 +81,7 @@ export async function createBanner(input: CreateBannerInput): Promise<HomepageBa
   return banner;
 }
 
-export async function updateBanner(
-  id: string,
-  input: UpdateBannerInput
-): Promise<HomepageBanner> {
+export async function updateBanner(id: string, input: UpdateBannerInput): Promise<HomepageBanner> {
   const banner = await pg.updateBannerRecord(id, input);
   invalidateBannerCache();
   return banner;

@@ -704,18 +704,19 @@ export async function deleteCouponRecord(id: string): Promise<void> {
   await prisma.coupon.delete({ where: { id } });
 }
 
-export async function incrementCouponUsageRecord(code: string): Promise<void> {
-  const row = await prisma.coupon.findFirst({
-    where: { code: code.toUpperCase() },
-  });
-  if (!row) return;
-  await prisma.coupon.update({
-    where: { id: row.id },
+export async function incrementCouponUsageRecord(code: string): Promise<boolean> {
+  const normalized = code.toUpperCase();
+  const result = await prisma.coupon.updateMany({
+    where: {
+      code: normalized,
+      OR: [{ maxUses: null }, { usedCount: { lt: prisma.coupon.fields.maxUses } }],
+    },
     data: {
-      usedCount: row.usedCount + 1,
+      usedCount: { increment: 1 },
       updatedAt: now(),
     },
   });
+  return result.count > 0;
 }
 
 export async function upsertStoreSettingsRecord(settings: StoreSettings): Promise<StoreSettings> {
@@ -864,6 +865,146 @@ function mapHomepageSectionItem(row: {
   };
 }
 
+/** Seed curated CMS rows when a section exists but has zero items (idempotent). */
+export async function seedHomepageCuratedItemsIfEmpty(): Promise<void> {
+  if (!isPostgresConfigured()) return;
+  const timestamp = now();
+
+  async function empty(sectionKey: HomepageSectionKey): Promise<boolean> {
+    const count = await prisma.homepageSectionItem.count({ where: { sectionKey } });
+    return count === 0;
+  }
+
+  if (await empty("featured_stories")) {
+    const { HOMEPAGE_APLUS_BANNERS } = await import("@/data/homepageAplusSections");
+    await prisma.homepageSectionItem.createMany({
+      data: HOMEPAGE_APLUS_BANNERS.map((banner, index) => ({
+        id: banner.id,
+        sectionKey: "featured_stories",
+        sortOrder: index,
+        isActive: true,
+        customImage: banner.imageSrc,
+        customTitle: banner.imageAlt,
+        customHref: banner.href ?? null,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  if (await empty("featured_categories")) {
+    const { POPULAR_CATEGORY_ITEMS } = await import("@/data/popularCategories");
+    await prisma.homepageSectionItem.createMany({
+      data: POPULAR_CATEGORY_ITEMS.map((item, index) => {
+        const slug = item.href.split("/").filter(Boolean).pop() ?? `category-${item.slot}`;
+        return {
+          id: `popular-cat-${item.slot}`,
+          sectionKey: "featured_categories" as const,
+          sortOrder: index,
+          isActive: true,
+          categorySlug: slug,
+          customTitle: item.title,
+          customImage: item.imageSrc,
+          customHref: item.href,
+          badgeLabel: item.badge ?? null,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        };
+      }),
+      skipDuplicates: true,
+    });
+  }
+
+  if (await empty("browse_by_categories")) {
+    const { BROWSE_CATEGORY_CARDS } = await import("@/data/browseCategoryCards");
+    await prisma.homepageSectionItem.createMany({
+      data: BROWSE_CATEGORY_CARDS.map((card, index) => ({
+        id: `browse-cat-${card.id}`,
+        sectionKey: "browse_by_categories",
+        sortOrder: index,
+        isActive: true,
+        categorySlug: card.id,
+        customTitle: card.title,
+        customImage: card.image,
+        customHref: card.href,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  if (await empty("category_bento")) {
+    const { CATEGORY_BENTO_ITEMS } = await import("@/data/categoryBento");
+    const { packCategoryOfferText } = await import("@/lib/homepage/categoryOfferText");
+    const { categoryPath } = await import("@/lib/routes");
+    await prisma.homepageSectionItem.createMany({
+      data: CATEGORY_BENTO_ITEMS.map((item, index) => ({
+        id: `bento-cat-${item.slug}`,
+        sectionKey: "category_bento",
+        sortOrder: index,
+        isActive: true,
+        categorySlug: item.slug,
+        customTitle: item.title,
+        customImage: item.image,
+        customHref: categoryPath(item.slug),
+        badgeLabel: item.badge ?? null,
+        offerText: packCategoryOfferText(item.desc, item.brands) ?? null,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  if (await empty("brand_strip")) {
+    const { TOP_BRAND_STRIP_SLUGS } = await import("@/data/topBrandStrip");
+    const { getBrandLogoUrl } = await import("@/lib/brandLogos");
+    let brands = await prisma.brand.findMany({
+      where: { slug: { in: [...TOP_BRAND_STRIP_SLUGS] } },
+      select: { id: true, slug: true, name: true },
+    });
+    if (brands.length === 0) {
+      brands = await prisma.brand.findMany({
+        take: 16,
+        orderBy: { name: "asc" },
+        select: { id: true, slug: true, name: true },
+      });
+    }
+    const bySlug = new Map(brands.map((brand) => [brand.slug, brand]));
+    const preferred = TOP_BRAND_STRIP_SLUGS.map((slug) => bySlug.get(slug)).filter(
+      (brand): brand is NonNullable<typeof brand> => Boolean(brand),
+    );
+    const ordered = preferred.length > 0 ? preferred : brands;
+    const rows = ordered.map((brand, index) => {
+      const logoUrl = getBrandLogoUrl(brand.slug);
+      return {
+        id: `brand-strip-${brand.slug}`,
+        sectionKey: "brand_strip" as const,
+        sortOrder: index,
+        isActive: true,
+        brandId: brand.id,
+        customTitle: brand.name,
+        customImage: logoUrl || null,
+        customHref: `/search/results?brand=${encodeURIComponent(brand.slug)}`,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      };
+    });
+    if (rows.length > 0) {
+      await prisma.homepageSectionItem.createMany({
+        data: rows,
+        skipDuplicates: true,
+      });
+      await prisma.homepageSection.updateMany({
+        where: { sectionKey: "brand_strip" },
+        data: { sourceMode: "manual", updatedAt: timestamp },
+      });
+    }
+  }
+}
+
 export async function ensureDefaultHomepageSections(): Promise<void> {
   if (!isPostgresConfigured()) return;
   const count = await prisma.homepageSection.count();
@@ -891,63 +1032,79 @@ export async function ensureDefaultHomepageSections(): Promise<void> {
       }),
     ),
   );
+  await seedHomepageCuratedItemsIfEmpty();
 }
 
 export async function ensureMissingHomepageSections(): Promise<void> {
   if (!isPostgresConfigured()) return;
-  await ensureDefaultHomepageSections();
-  const existing = await prisma.homepageSection.findMany({
-    select: { sectionKey: true },
-  });
-  const keys = new Set(existing.map((row) => row.sectionKey));
-  const missing = DEFAULT_HOMEPAGE_SECTIONS.filter((section) => !keys.has(section.sectionKey));
-  if (missing.length === 0) return;
 
-  const timestamp = now();
-  await prisma.$transaction(
-    missing.map((section) =>
-      prisma.homepageSection.create({
-        data: {
-          id: section.sectionKey,
-          sectionKey: section.sectionKey,
-          title: section.title,
-          subtitle: section.subtitle ?? null,
-          accentLabel: section.accentLabel ?? null,
-          ctaText: section.ctaText ?? null,
-          ctaLink: section.ctaLink ?? null,
-          isActive: section.isActive,
-          sortOrder: section.sortOrder,
-          sourceMode: section.sourceMode,
-          maxItems: section.maxItems,
-          layout: section.layout,
-          createdAt: timestamp,
-          updatedAt: timestamp,
-        },
-      }),
-    ),
-  );
-
-  const hasStorySection = missing.some((s) => s.sectionKey === "featured_stories");
-  if (hasStorySection) {
-    const { HOMEPAGE_APLUS_BANNERS } = await import("@/data/homepageAplusSections");
-    await prisma.$transaction(
-      HOMEPAGE_APLUS_BANNERS.map((banner, index) =>
-        prisma.homepageSectionItem.create({
-          data: {
-            id: banner.id,
-            sectionKey: "featured_stories",
-            sortOrder: index,
-            isActive: true,
-            customImage: banner.imageSrc,
-            customTitle: banner.imageAlt,
-            customHref: banner.href ?? null,
-            createdAt: timestamp,
-            updatedAt: timestamp,
-          },
-        }),
-      ),
-    );
+  // Public reads must not re-probe/seed on every cold cache miss.
+  // Once the process has confirmed defaults exist, skip further ensure work.
+  const g = globalThis as typeof globalThis & {
+    __vibeHomepageSectionsEnsured?: boolean;
+    __vibeHomepageSectionsEnsurePromise?: Promise<void>;
+  };
+  if (g.__vibeHomepageSectionsEnsured) return;
+  if (g.__vibeHomepageSectionsEnsurePromise) {
+    await g.__vibeHomepageSectionsEnsurePromise;
+    return;
   }
+
+  g.__vibeHomepageSectionsEnsurePromise = (async () => {
+    await ensureDefaultHomepageSections();
+    const existing = await prisma.homepageSection.findMany({
+      select: { sectionKey: true },
+    });
+    const keys = new Set(existing.map((row) => row.sectionKey));
+    const missing = DEFAULT_HOMEPAGE_SECTIONS.filter((section) => !keys.has(section.sectionKey));
+
+    if (missing.length > 0) {
+      const timestamp = now();
+      await prisma.$transaction(
+        missing.map((section) =>
+          prisma.homepageSection.create({
+            data: {
+              id: section.sectionKey,
+              sectionKey: section.sectionKey,
+              title: section.title,
+              subtitle: section.subtitle ?? null,
+              accentLabel: section.accentLabel ?? null,
+              ctaText: section.ctaText ?? null,
+              ctaLink: section.ctaLink ?? null,
+              isActive: section.isActive,
+              sortOrder: section.sortOrder,
+              sourceMode: section.sourceMode,
+              maxItems: section.maxItems,
+              layout: section.layout,
+              createdAt: timestamp,
+              updatedAt: timestamp,
+            },
+          }),
+        ),
+      );
+    }
+
+    // Always backfill curated defaults for sections that exist but have zero items
+    // (e.g. fresh DB that created section rows without item seeds).
+    await seedHomepageCuratedItemsIfEmpty();
+    g.__vibeHomepageSectionsEnsured = true;
+  })();
+
+  try {
+    await g.__vibeHomepageSectionsEnsurePromise;
+  } finally {
+    g.__vibeHomepageSectionsEnsurePromise = undefined;
+  }
+}
+
+/** Allow admin writes / migrations to re-run ensure if section keys are added later. */
+export function resetHomepageSectionsEnsureGate(): void {
+  const g = globalThis as typeof globalThis & {
+    __vibeHomepageSectionsEnsured?: boolean;
+    __vibeHomepageSectionsEnsurePromise?: Promise<void>;
+  };
+  g.__vibeHomepageSectionsEnsured = false;
+  g.__vibeHomepageSectionsEnsurePromise = undefined;
 }
 
 export async function listHomepageSectionsMapped(): Promise<HomepageSection[]> {

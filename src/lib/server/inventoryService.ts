@@ -4,7 +4,9 @@ import {
   listInventoryLogs,
   recordInventoryLogEntry,
   releaseReservedStockForOrder,
+  releaseReservedStockForOrderInTx,
   restoreStockForCancelledOrder,
+  restoreStockForCancelledOrderInTx,
   setProductStock,
 } from "@/lib/server/inventoryRepository";
 import { sendLowStockAdminNotification } from "@/lib/server/adminNotificationEmailService";
@@ -19,11 +21,14 @@ import type { InventoryAdjustment, InventoryRecord } from "@/types/admin";
 import type { InventoryLog, OrderInventoryLine } from "@/types/inventory";
 import { DEFAULT_LOW_STOCK_THRESHOLD } from "@/types/inventory";
 import type { Order } from "@/types/order";
+import type { Prisma } from "@prisma/client";
 
 export {
   fulfillReservedStockForOrder,
+  fulfillReservedStockForOrderInTx,
   releaseReservedStockForOrder,
   reserveAndFulfillStockForOrder,
+  reserveAndFulfillStockForOrderInTx,
   reserveStockForOrder,
   validateStockAvailability,
 } from "@/lib/server/inventoryRepository";
@@ -64,7 +69,7 @@ export async function adjustStock(
   productId: string,
   newQuantity: number,
   reason: string,
-  adjustedBy: string
+  adjustedBy: string,
 ): Promise<InventoryAdjustment> {
   const product = await getProductById(productId);
   if (!product) throw new Error("Product not found");
@@ -123,19 +128,14 @@ export function computeInventoryStats(records: InventoryRecord[]) {
   return {
     totalSkus: records.length,
     lowStock: records.filter((r) =>
-      isLowStock(
-        r.stockQuantity,
-        r.reservedQuantity ?? 0,
-        r.lowStockThreshold
-      )
+      isLowStock(r.stockQuantity, r.reservedQuantity ?? 0, r.lowStockThreshold),
     ).length,
-    outOfStock: records.filter((r) =>
-      isOutOfStock(r.stockQuantity, r.reservedQuantity ?? 0)
-    ).length,
+    outOfStock: records.filter((r) => isOutOfStock(r.stockQuantity, r.reservedQuantity ?? 0))
+      .length,
     totalUnits: records.reduce((sum, r) => sum + r.stockQuantity, 0),
     totalAvailableUnits: records.reduce(
       (sum, r) => sum + (r.availableQuantity ?? r.stockQuantity),
-      0
+      0,
     ),
   };
 }
@@ -153,9 +153,7 @@ export async function getLowStockProducts(limit = 10) {
       const available = calcAvailable(product.stock, reservedStock);
       return { product, reservedStock, threshold, available };
     })
-    .filter(
-      ({ available, threshold }) => available > 0 && available <= threshold
-    )
+    .filter(({ available, threshold }) => available > 0 && available <= threshold)
     .sort((a, b) => a.available - b.available)
     .slice(0, limit)
     .map(({ product, threshold, available, reservedStock }) => ({
@@ -197,9 +195,7 @@ export async function releaseOrderInventory(order: Order): Promise<void> {
   const status = order.inventoryStatus ?? "none";
 
   if (status === "reserved") {
-    const before = await fetchProductStockSnapshots(
-      lines.map((line) => line.productId)
-    );
+    const before = await fetchProductStockSnapshots(lines.map((line) => line.productId));
     await releaseReservedStockForOrder(order.id, lines);
 
     for (const line of lines) {
@@ -221,9 +217,7 @@ export async function releaseOrderInventory(order: Order): Promise<void> {
   }
 
   if (status === "fulfilled") {
-    const before = await fetchProductStockSnapshots(
-      lines.map((line) => line.productId)
-    );
+    const before = await fetchProductStockSnapshots(lines.map((line) => line.productId));
     await restoreStockForCancelledOrder(order.id, lines);
 
     for (const line of lines) {
@@ -244,11 +238,59 @@ export async function releaseOrderInventory(order: Order): Promise<void> {
   }
 }
 
+/**
+ * Transaction-scoped inventory release shared with the payment lifecycle so the
+ * order-row lock, the inventory mutation, and the payment-state write all commit
+ * atomically. Waitlist notifications are dispatched separately after commit via
+ * `notifyWaitlistForReleasedOrder`.
+ */
+export async function releaseOrderInventoryInTx(
+  tx: Prisma.TransactionClient,
+  order: Order,
+): Promise<void> {
+  const lines = orderToInventoryLines(order);
+  const status = order.inventoryStatus ?? "none";
+
+  if (status === "reserved") {
+    await releaseReservedStockForOrderInTx(tx, order.id, lines);
+    return;
+  }
+
+  if (status === "fulfilled") {
+    await restoreStockForCancelledOrderInTx(tx, order.id, lines);
+  }
+}
+
+/** Fire-and-forget waitlist notifications after a reserved/cleared order releases stock. */
+export async function notifyWaitlistForReleasedOrder(order: Order): Promise<void> {
+  const lines = orderToInventoryLines(order);
+  const status = order.inventoryStatus ?? "none";
+  if (status !== "reserved" && status !== "fulfilled") return;
+
+  const ids = [...new Set(lines.map((line) => line.productId))];
+  const before = await fetchProductStockSnapshots(ids);
+  for (const id of ids) {
+    const snap = before.get(id);
+    if (!snap) continue;
+    const product = await getProductById(id);
+    if (!product) continue;
+    void notifyWaitlistOnRestock({
+      productId: id,
+      productName: product.name,
+      productSlug: product.slug,
+      previousStock: snap.stock,
+      previousReserved: snap.reservedStock,
+      newStock: product.stock,
+      newReserved: product.reservedStock ?? 0,
+    }).catch(() => undefined);
+  }
+}
+
 export async function logBulkImportStock(
   productId: string,
   sku: string,
   stock: number,
-  adminId?: string
+  adminId?: string,
 ): Promise<void> {
   await recordInventoryLogEntry({
     productId,
@@ -265,11 +307,9 @@ export async function logBulkImportStock(
 }
 
 export async function checkProductsAvailability(
-  items: OrderInventoryLine[]
+  items: OrderInventoryLine[],
 ): Promise<Map<string, number>> {
-  const snapshots = await fetchProductStockSnapshots(
-    items.map((item) => item.productId)
-  );
+  const snapshots = await fetchProductStockSnapshots(items.map((item) => item.productId));
   const map = new Map<string, number>();
   snapshots.forEach((snap, id) => {
     map.set(id, getAvailableStock(snap.stock, snap.reservedStock));

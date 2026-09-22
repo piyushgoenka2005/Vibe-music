@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { parseTaxonomyBuffer, bulkImportTaxonomies } from "@/lib/server/taxonomyRepository";
+import { taxonomyApiErrorResponse } from "@/lib/server/taxonomyApiErrors";
 
 export const maxDuration = 60; // Allow sufficient time for 40k row parsing and bulk db insert
 
@@ -43,6 +44,6 @@ export async function POST(request: NextRequest) {
       result,
     });
   } catch (error) {
-    return adminErrorResponse(error);
+    return taxonomyApiErrorResponse(error, request);
   }
 }

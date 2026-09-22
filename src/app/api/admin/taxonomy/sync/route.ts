@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { syncCategoriesFromTaxonomy } from "@/lib/server/taxonomyRepository";
+import { taxonomyApiErrorResponse } from "@/lib/server/taxonomyApiErrors";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +14,6 @@ export async function POST(request: NextRequest) {
       result,
     });
   } catch (error) {
-    return adminErrorResponse(error);
+    return taxonomyApiErrorResponse(error, request);
   }
 }

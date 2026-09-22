@@ -3,6 +3,8 @@ import { ROUTES, categoryPath } from "@/lib/routes";
 export interface HomepageBannerSlide {
   id: string;
   src: string;
+  /** Smaller/next-gen variant of `src` served via `<source>` when supported. */
+  srcOptimized?: string;
   /** Optional mobile-specific artwork; falls back to `src`. */
   mobileSrc?: string;
   alt: string;
@@ -22,6 +24,7 @@ export interface HomepageBannerSlide {
 export const HOMEPAGE_BANNER_ROTATION_MS = 4000;
 
 const INDEPENDENCE_DAY_BANNER_SRC = "/independence-day-special.png";
+const INDEPENDENCE_DAY_BANNER_WEBP = "/independence-day-special.webp";
 
 /** Client-approved homepage hero banner carousel slides.
  *  Index 0 is always the first frame on load (priority + eager).
@@ -30,6 +33,7 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
   {
     id: "banner-independence-day-2026",
     src: INDEPENDENCE_DAY_BANNER_SRC,
+    srcOptimized: INDEPENDENCE_DAY_BANNER_WEBP,
     alt: "Strings of Freedom — Celebrate Independence Day with music at Vibe Music",
     href: ROUTES.deals,
     title: "Strings of Freedom",
@@ -68,6 +72,7 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
   {
     id: "banner-independence-day-music-fly",
     src: "/images/banner-7.png",
+    srcOptimized: "/images/banner-7.webp",
     alt: "This Independence Day let your music fly — Hertz HG-10 guitar amplifier at Vibe Music",
     href: `${ROUTES.searchResults}?brand=hertz`,
     objectPosition: "center center",
@@ -75,6 +80,7 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
   {
     id: "banner-independence-day-80th",
     src: "/images/banner-8.png",
+    srcOptimized: "/images/banner-8.webp",
     alt: "Happy 80th Independence Day — Hertz HG-10 guitar amplifier at Vibe Music",
     href: `${ROUTES.searchResults}?brand=hertz`,
     objectPosition: "center center",

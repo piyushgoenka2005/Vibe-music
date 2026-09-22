@@ -6,6 +6,8 @@ export const HOMEPAGE_SECTION_KEYS = [
   "trending",
   "staff_picks",
   "featured_categories",
+  "browse_by_categories",
+  "category_bento",
   "deals_of_the_day",
   "big_names_deals",
   "brand_strip",
@@ -20,6 +22,8 @@ export type HomepageSectionLayout =
   | "product_grid"
   | "product_carousel"
   | "category_grid"
+  | "browse_category_cards"
+  | "category_bento"
   | "deals_slider"
   | "brand_strip"
   | "big_names_deals"
@@ -86,6 +90,10 @@ export interface HomepageCategoryItem {
   href: string;
   imageSrc: string;
   badge?: string;
+  /** Subcategory line (category bento). */
+  desc?: string;
+  /** Brands line (category bento). */
+  brands?: string;
 }
 
 export interface HomepageBrandItem {
@@ -169,7 +177,9 @@ export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionKey, string> = {
   best_sellers: "Best Sellers",
   trending: "Trending",
   staff_picks: "Staff Picks",
-  featured_categories: "Featured Categories",
+  featured_categories: "Popular Categories",
+  browse_by_categories: "Browse by Categories",
+  category_bento: "Category Discover Cards",
   deals_of_the_day: "Deals Of The Day",
   big_names_deals: "Big Names / Serious Savings",
   brand_strip: "Brand Strip",
@@ -231,9 +241,32 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     ctaLink: "/categories",
     isActive: true,
     sortOrder: 4,
-    sourceMode: "auto",
+    sourceMode: "manual",
     maxItems: 12,
     layout: "category_grid",
+  },
+  {
+    sectionKey: "browse_by_categories",
+    title: "Browse by Categories",
+    ctaText: "View All Gear",
+    ctaLink: "/categories",
+    isActive: true,
+    sortOrder: 5,
+    sourceMode: "manual",
+    maxItems: 12,
+    layout: "browse_category_cards",
+  },
+  {
+    sectionKey: "category_bento",
+    title: "Shop by Category",
+    accentLabel: "Explore Category",
+    ctaText: "Browse all categories",
+    ctaLink: "/categories",
+    isActive: true,
+    sortOrder: 6,
+    sourceMode: "manual",
+    maxItems: 12,
+    layout: "category_bento",
   },
   {
     sectionKey: "deals_of_the_day",
@@ -242,7 +275,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     ctaText: "Shop All Deals",
     ctaLink: "/deals",
     isActive: true,
-    sortOrder: 5,
+    sortOrder: 7,
     sourceMode: "auto",
     maxItems: 8,
     layout: "deals_slider",
@@ -255,7 +288,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     ctaText: "Shop All Deals",
     ctaLink: "/deals",
     isActive: true,
-    sortOrder: 6,
+    sortOrder: 8,
     sourceMode: "manual",
     maxItems: 5,
     layout: "big_names_deals",
@@ -264,8 +297,8 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     sectionKey: "brand_strip",
     title: "Shop Top Brands",
     isActive: true,
-    sortOrder: 7,
-    sourceMode: "auto",
+    sortOrder: 9,
+    sourceMode: "manual",
     maxItems: 16,
     layout: "brand_strip",
   },
@@ -274,7 +307,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     title: "Featured Gear Stories",
     subtitle: "Deep dives and tonal versatility from our showcase collections",
     isActive: true,
-    sortOrder: 8,
+    sortOrder: 10,
     sourceMode: "manual",
     maxItems: 8,
     layout: "story_banners",

@@ -151,8 +151,9 @@ describe("couponService", () => {
     });
 
     it("delegates incrementCouponUsage to repository", async () => {
-      vi.mocked(pg.incrementCouponUsageRecord).mockResolvedValue();
-      await incrementCouponUsage("SAVE10");
+      vi.mocked(pg.incrementCouponUsageRecord).mockResolvedValue(true);
+      const applied = await incrementCouponUsage("SAVE10");
+      expect(applied).toBe(true);
       expect(pg.incrementCouponUsageRecord).toHaveBeenCalledWith("SAVE10");
     });
   });

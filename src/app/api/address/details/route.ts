@@ -7,10 +7,8 @@ import {
   warnGooglePlacesApiFailure,
   warnIfGooglePlacesMisconfigured,
 } from "@/lib/server/googlePlaces";
-import {
-  isNominatimPlaceId,
-  nominatimPlaceDetails,
-} from "@/lib/server/nominatimAddress";
+import { isNominatimPlaceId, nominatimPlaceDetails } from "@/lib/server/nominatimAddress";
+import { withTimeout } from "@/lib/server/withTimeout";
 
 interface PlacesAddressComponent {
   long_name: string;
@@ -18,18 +16,10 @@ interface PlacesAddressComponent {
   types: string[];
 }
 
-const CONFIG_ERROR_STATUSES = new Set([
-  "REQUEST_DENIED",
-  "INVALID_REQUEST",
-  "UNKNOWN_ERROR",
-]);
+const CONFIG_ERROR_STATUSES = new Set(["REQUEST_DENIED", "INVALID_REQUEST", "UNKNOWN_ERROR"]);
 
 export async function GET(request: Request) {
-  const rateLimited = await enforceRateLimit(
-    request,
-    "address-details",
-    RATE_LIMITS.publicApi
-  );
+  const rateLimited = await enforceRateLimit(request, "address-details", RATE_LIMITS.publicApi);
   if (rateLimited) return rateLimited;
 
   const placeId = new URL(request.url).searchParams.get("placeId")?.trim();
@@ -51,7 +41,7 @@ export async function GET(request: Request) {
     } catch (error) {
       console.warn(
         "[address-details] Nominatim lookup failed",
-        error instanceof Error ? error.message : error
+        error instanceof Error ? error.message : error,
       );
       return jsonError("Place details unavailable", 502);
     }
@@ -71,9 +61,12 @@ export async function GET(request: Request) {
 
   let response: Response;
   try {
-    response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/details/json?${params}`,
-      { cache: "no-store" }
+    response = await withTimeout(
+      fetch(`https://maps.googleapis.com/maps/api/place/details/json?${params}`, {
+        cache: "no-store",
+      }),
+      8000,
+      "Google Places details",
     );
   } catch (error) {
     warnGooglePlacesApiFailure(
@@ -81,7 +74,7 @@ export async function GET(request: Request) {
       {
         error: error instanceof Error ? error.message : String(error),
       },
-      "api/address/details"
+      "api/address/details",
     );
     return jsonError("Place details unavailable", 502);
   }
@@ -90,7 +83,7 @@ export async function GET(request: Request) {
     warnGooglePlacesApiFailure(
       "Google Places details HTTP error",
       { httpStatus: response.status },
-      "api/address/details"
+      "api/address/details",
     );
     return jsonError("Place details unavailable", 502);
   }
@@ -128,7 +121,7 @@ export async function GET(request: Request) {
         placesStatus: status,
         errorMessage: data.error_message ?? null,
       },
-      "api/address/details"
+      "api/address/details",
     );
     return NextResponse.json({ available: false, address: null });
   }
@@ -139,7 +132,7 @@ export async function GET(request: Request) {
       placesStatus: status,
       errorMessage: data.error_message ?? null,
     },
-    "api/address/details"
+    "api/address/details",
   );
   return NextResponse.json({ available: true, address: null });
 }

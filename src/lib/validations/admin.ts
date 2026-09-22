@@ -146,6 +146,8 @@ const homepageSectionKeySchema = z.enum([
   "trending",
   "staff_picks",
   "featured_categories",
+  "browse_by_categories",
+  "category_bento",
   "deals_of_the_day",
   "big_names_deals",
   "brand_strip",
@@ -167,6 +169,8 @@ export const adminHomepageSectionSchema = z.object({
       "product_grid",
       "product_carousel",
       "category_grid",
+      "browse_category_cards",
+      "category_bento",
       "deals_slider",
       "brand_strip",
       "big_names_deals",
@@ -186,7 +190,7 @@ export const adminHomepageSectionItemSchema = z.object({
   customTitle: z.string().max(200).optional(),
   customHref: z.union([z.literal(""), safeStorefrontHref]).optional(),
   badgeLabel: z.string().max(100).optional(),
-  offerText: z.string().max(200).optional(),
+  offerText: z.string().max(500).optional(),
   startDate: z.string().optional().nullable(),
   endDate: z.string().optional().nullable(),
 });
@@ -282,6 +286,10 @@ export const adminProductBulkSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("activate"),
+    ids: z.array(z.string().min(1)).min(1).max(500),
+  }),
+  z.object({
+    action: z.literal("draft"),
     ids: z.array(z.string().min(1)).min(1).max(500),
   }),
   z.object({
