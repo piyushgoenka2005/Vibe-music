@@ -12,7 +12,7 @@ import {
   VIBEMUSIC_BULK_TEMPLATE_XLSX_URL,
   VIBEMUSIC_BULK_FAILED_ROWS_FILENAME,
 } from "@/lib/admin/bulkImportTemplate";
-import { failedImportRowsToBulkCsv } from "@/lib/amazonListingImport";
+import { failedImportRowsToBulkCsv } from "@/lib/admin/bulkImportTemplate";
 import {
   DEFAULT_BULK_IMPORT_OPTIONS,
   type BulkImportOptions,

@@ -1,6 +1,9 @@
 /**
  * Canonical Vibe Music bulk product import format.
  * Headers must match `public/vibemusic bulk.csv` exactly.
+ *
+ * Prefer importing from `@/lib/admin/bulkImportTemplate` in app/UI code.
+ * Amazon-prefixed exports below are deprecated aliases only.
  */
 import * as XLSX from "xlsx";
 import { rowsToCsv } from "@/lib/csv";
@@ -9,7 +12,7 @@ import type { ProductSpec } from "@/types/product";
 import { isGenericBulkCategoryValue } from "@/lib/admin/bulkImportCategoryResolver";
 
 /** Exact header order from `public/vibemusic bulk.csv`. */
-export const AMAZON_LISTING_HEADERS = [
+export const VIBEMUSIC_BULK_HEADERS = [
   "Brand",
   "SKU",
   "MODEL NO.",
@@ -81,15 +84,11 @@ export const AMAZON_LISTING_HEADERS = [
   "Item Weight Unit",
 ] as const;
 
-/** Alias — same columns as `public/vibemusic bulk.csv`. */
-export const VIBEMUSIC_BULK_HEADERS = AMAZON_LISTING_HEADERS;
+export type VibemusicBulkHeader = (typeof VIBEMUSIC_BULK_HEADERS)[number];
 
-export type AmazonListingHeader = (typeof AMAZON_LISTING_HEADERS)[number];
-export type VibemusicBulkHeader = AmazonListingHeader;
+export const VIBEMUSIC_BULK_COLUMN_COUNT = VIBEMUSIC_BULK_HEADERS.length;
 
-export const VIBEMUSIC_BULK_COLUMN_COUNT = AMAZON_LISTING_HEADERS.length;
-
-const VIBEMUSIC_BULK_SIGNATURE_HEADERS = [
+export const VIBEMUSIC_BULK_SIGNATURE_HEADERS = [
   "ITEM TITLE",
   "Selling Price",
   "Brand",
@@ -97,7 +96,11 @@ const VIBEMUSIC_BULK_SIGNATURE_HEADERS = [
   "Category",
 ] as const;
 
-/** @deprecated Prefer VIBEMUSIC_BULK_SIGNATURE_HEADERS */
+/** @deprecated Use VIBEMUSIC_BULK_HEADERS */
+export const AMAZON_LISTING_HEADERS = VIBEMUSIC_BULK_HEADERS;
+/** @deprecated Use VibemusicBulkHeader */
+export type AmazonListingHeader = VibemusicBulkHeader;
+/** @deprecated Use VIBEMUSIC_BULK_SIGNATURE_HEADERS */
 export const AMAZON_SIGNATURE_HEADERS = VIBEMUSIC_BULK_SIGNATURE_HEADERS;
 
 /** Spec labels written into catalog specifications / PDP detail specs. */
@@ -401,7 +404,7 @@ function pickBulkImportCategoryFields(
   return { category, subcategory };
 }
 
-export function amazonRowToImportRow(
+export function vibemusicBulkRowToImportRow(
   row: Record<string, unknown>,
   headerMap: Map<string, string>,
 ): BulkImportRow | null {
@@ -464,7 +467,8 @@ export function amazonRowToImportRow(
   };
 }
 
-export const vibemusicBulkRowToImportRow = amazonRowToImportRow;
+/** @deprecated Use vibemusicBulkRowToImportRow */
+export const amazonRowToImportRow = vibemusicBulkRowToImportRow;
 
 function legacyRowToImportRow(
   row: Record<string, unknown>,
@@ -569,7 +573,7 @@ export function parseProductImportBuffer(
   for (const raw of rawJson) {
     const mapped =
       format === "vibemusic-bulk"
-        ? amazonRowToImportRow(raw, headerMap)
+        ? vibemusicBulkRowToImportRow(raw, headerMap)
         : legacyRowToImportRow(raw, headerMap);
 
     if (!mapped) {
@@ -629,21 +633,23 @@ export function validateAmazonListingHeaders(headers: string[]): string | null {
 }
 
 /** Build a blank CSV matching `public/vibemusic bulk.csv`. */
-export function buildAmazonListingTemplateCsv(): string {
-  return `${AMAZON_LISTING_HEADERS.join(",")}\n`;
+export function buildVibemusicBulkTemplateCsv(): string {
+  return `${VIBEMUSIC_BULK_HEADERS.join(",")}\n`;
 }
 
-export const buildVibemusicBulkTemplateCsv = buildAmazonListingTemplateCsv;
+/** @deprecated Use buildVibemusicBulkTemplateCsv */
+export const buildAmazonListingTemplateCsv = buildVibemusicBulkTemplateCsv;
 
 /** Build a blank workbook matching `public/vibemusic bulk.xlsx`. */
-export function buildAmazonListingTemplateXlsx(): Buffer {
+export function buildVibemusicBulkTemplateXlsx(): Buffer {
   const workbook = XLSX.utils.book_new();
-  const sheet = XLSX.utils.aoa_to_sheet([[...AMAZON_LISTING_HEADERS]]);
+  const sheet = XLSX.utils.aoa_to_sheet([[...VIBEMUSIC_BULK_HEADERS]]);
   XLSX.utils.book_append_sheet(workbook, sheet, "Sheet1");
   return Buffer.from(XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as ArrayBuffer);
 }
 
-export const buildVibemusicBulkTemplateXlsx = buildAmazonListingTemplateXlsx;
+/** @deprecated Use buildVibemusicBulkTemplateXlsx */
+export const buildAmazonListingTemplateXlsx = buildVibemusicBulkTemplateXlsx;
 
 /**
  * Resolve product images from a ZIP using SKU naming conventions.
@@ -728,9 +734,9 @@ function splitDescriptionBullets(description: string): {
 }
 
 /**
- * Map a catalog product back to an Amazon listing row for export / re-import.
+ * Map a catalog product back to a Vibe Music bulk row for export / re-import.
  */
-export function catalogProductToAmazonRow(product: {
+export function catalogProductToBulkRow(product: {
   name: string;
   brand: string;
   category: string;
@@ -741,7 +747,7 @@ export function catalogProductToAmazonRow(product: {
   description?: string;
   specifications?: Record<string, string>;
   inTheBox?: string[];
-}): Record<AmazonListingHeader, string> {
+}): Record<VibemusicBulkHeader, string> {
   const specs = product.specifications ?? {};
   const { intro, bullets } = splitDescriptionBullets(product.description ?? "");
   const fromBox = (product.inTheBox ?? []).filter(Boolean);
@@ -756,8 +762,8 @@ export function catalogProductToAmazonRow(product: {
   const [weightValue, ...weightUnitParts] = itemWeight.split(/\s+/);
   const weightUnit = weightUnitParts.join(" ");
 
-  const row = Object.fromEntries(AMAZON_LISTING_HEADERS.map((header) => [header, ""])) as Record<
-    AmazonListingHeader,
+  const row = Object.fromEntries(VIBEMUSIC_BULK_HEADERS.map((header) => [header, ""])) as Record<
+    VibemusicBulkHeader,
     string
   >;
 
@@ -851,12 +857,13 @@ export function catalogProductToAmazonRow(product: {
   return row;
 }
 
-export const catalogProductToBulkRow = catalogProductToAmazonRow;
+/** @deprecated Use catalogProductToBulkRow */
+export const catalogProductToAmazonRow = catalogProductToBulkRow;
 
 const FAILED_IMPORT_ERROR_HEADER = "Import Errors";
 
 /** Export failed import rows in the Vibe Music bulk template format for fix-and-reupload. */
-export function failedImportRowsToAmazonCsv(
+export function failedImportRowsToBulkCsv(
   rows: Array<{
     name: string;
     brand: string;
@@ -870,9 +877,9 @@ export function failedImportRowsToAmazonCsv(
     reason: string;
   }>,
 ): string {
-  const headers = [...AMAZON_LISTING_HEADERS, FAILED_IMPORT_ERROR_HEADER];
+  const headers = [...VIBEMUSIC_BULK_HEADERS, FAILED_IMPORT_ERROR_HEADER];
   const parsedRows = rows.map((row) => {
-    const amazon = catalogProductToAmazonRow({
+    const bulk = catalogProductToBulkRow({
       name: row.name,
       brand: row.brand,
       category: row.category,
@@ -883,11 +890,12 @@ export function failedImportRowsToAmazonCsv(
       description: row.description,
     });
     return {
-      ...amazon,
+      ...bulk,
       [FAILED_IMPORT_ERROR_HEADER]: row.reason,
     };
   });
   return rowsToCsv(headers, parsedRows);
 }
 
-export const failedImportRowsToBulkCsv = failedImportRowsToAmazonCsv;
+/** @deprecated Use failedImportRowsToBulkCsv */
+export const failedImportRowsToAmazonCsv = failedImportRowsToBulkCsv;

@@ -17,7 +17,7 @@ import {
   notifyWaitlistOnRestock,
 } from "@/lib/server/restockNotificationService";
 import { getProductImage } from "@/data/productImages";
-import { AMAZON_LISTING_HEADERS, catalogProductToAmazonRow } from "@/lib/amazonListingImport";
+import { VIBEMUSIC_BULK_HEADERS, catalogProductToBulkRow } from "@/lib/amazonListingImport";
 import { rowsToCsv, type ParsedCsvRow } from "@/lib/csv";
 import { prisma } from "@/lib/db/prisma";
 import type { AdminProduct } from "@/types/admin";
@@ -236,10 +236,10 @@ export async function buildAdminProductsExportCsv(
   } = {},
 ): Promise<string> {
   const products = filterCatalogForExport(await fetchAllProducts(true), options);
-  const headers = [...AMAZON_LISTING_HEADERS];
+  const headers = [...VIBEMUSIC_BULK_HEADERS];
 
   const rows: ParsedCsvRow[] = products.map((product) => {
-    const amazon = catalogProductToAmazonRow({
+    const bulk = catalogProductToBulkRow({
       name: product.name,
       brand: product.brand,
       category: product.category,
@@ -253,7 +253,7 @@ export async function buildAdminProductsExportCsv(
     });
     const row: ParsedCsvRow = {};
     for (const header of headers) {
-      row[header] = amazon[header] ?? "";
+      row[header] = bulk[header] ?? "";
     }
     return row;
   });

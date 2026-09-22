@@ -12,7 +12,7 @@ import { slimBulkImportPreviewRows } from "@/lib/admin/bulkImportResponse";
 import {
   isSpreadsheetUpload,
   parseProductImportBuffer,
-  validateAmazonListingHeaders,
+  validateVibemusicBulkHeaders,
 } from "@/lib/amazonListingImport";
 import { resolveBulkImportImages } from "@/lib/server/bulkImportImageResolver";
 import {
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     }
 
     if (parsed.format === "vibemusic-bulk") {
-      const headerError = validateAmazonListingHeaders(parsed.headers);
+      const headerError = validateVibemusicBulkHeaders(parsed.headers);
       if (headerError) {
         return NextResponse.json({ error: headerError }, { status: 400 });
       }
