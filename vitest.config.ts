@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 /**
- * Unit/integration test config — aligned with VIBE_QA_TEST_REPORT.md (525 tests, 95 files).
+ * Unit/integration test config for src test files.
  * Run: npm test · Coverage gates enforced when using `vitest run --coverage`.
  */
 export default defineConfig({
@@ -12,7 +12,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],
-      // Minimum coverage gates for CI / release sign-off (see VIBE_CLIENT_ACCEPTANCE_SCORECARD.md)
+      // Minimum coverage gates for CI / release sign-off
       thresholds: {
         statements: 70,
         branches: 60,
