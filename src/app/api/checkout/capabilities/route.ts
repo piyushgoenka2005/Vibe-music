@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
+import { isDemoPaymentsAllowed, isRazorpayConfigured, getRazorpayKeyMode } from "@/lib/server/env";
 import { isClientAnalyticsConfigured } from "@/lib/analytics/config";
 import { warnIfGooglePlacesMisconfigured } from "@/lib/server/googlePlaces";
 import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
@@ -22,6 +22,7 @@ export async function GET(request: Request) {
 
     const razorpayConfigured = isRazorpayConfigured();
     const demoPaymentsAllowed = isDemoPaymentsAllowed();
+    const razorpayMode = getRazorpayKeyMode();
     const placesAutocomplete = isAddressAutocompleteConfigured();
     // Log Google Places status for ops; autocomplete still works via Nominatim.
     warnIfGooglePlacesMisconfigured("api/checkout/capabilities");
@@ -35,6 +36,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       placesAutocomplete,
       razorpayConfigured,
+      razorpayMode,
       demoPaymentsAllowed,
       /** True when Razorpay is live, or demo checkout is allowed without keys. */
       onlinePaymentsAvailable: razorpayConfigured || demoPaymentsAllowed,

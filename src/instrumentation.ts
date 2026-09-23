@@ -11,45 +11,51 @@ export async function register() {
       if (integrations.upstash !== "ok") {
         logWarn(
           "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are missing; using in-memory rate limiting",
-          "instrumentation"
+          "instrumentation",
         );
       }
       if (integrations.razorpayWebhook !== "ok") {
         logWarn(
           "RAZORPAY_WEBHOOK_SECRET is missing; webhook verification endpoints may fail",
-          "instrumentation"
+          "instrumentation",
+        );
+      }
+      const { getRazorpayKeyMode, requiresLiveRazorpay } = await import("@/lib/server/env");
+      if (requiresLiveRazorpay() && getRazorpayKeyMode() === "test") {
+        logWarn(
+          "Razorpay test keys detected on production/vibemusic.in — replace with rzp_live_ keys or checkout will refuse payments",
+          "instrumentation",
+        );
+      }
+      if (requiresLiveRazorpay() && integrations.razorpay !== "ok") {
+        logWarn(
+          "Razorpay live keys are not configured; online checkout is unavailable",
+          "instrumentation",
         );
       }
       if (integrations.database !== "ok") {
-        logWarn(
-          "DATABASE_URL is missing; the application cannot persist data",
-          "instrumentation"
-        );
+        logWarn("DATABASE_URL is missing; the application cannot persist data", "instrumentation");
       }
     }
 
     {
-      const { warnIfGooglePlacesMisconfigured } = await import(
-        "@/lib/server/googlePlaces"
-      );
+      const { warnIfGooglePlacesMisconfigured } = await import("@/lib/server/googlePlaces");
       warnIfGooglePlacesMisconfigured("instrumentation");
     }
 
     try {
-      const { verifyPostgresConnection } = await import(
-        "@/lib/server/postgresHealth"
-      );
+      const { verifyPostgresConnection } = await import("@/lib/server/postgresHealth");
       const databaseHealth = await verifyPostgresConnection();
       if (!databaseHealth.ok && process.env.NODE_ENV === "production") {
         logWarn(
           `PostgreSQL initialization failed at startup: ${databaseHealth.error ?? "unknown"}`,
-          "instrumentation"
+          "instrumentation",
         );
       }
     } catch (error) {
       logWarn(
         `PostgreSQL health check skipped: ${error instanceof Error ? error.message : String(error)}`,
-        "instrumentation"
+        "instrumentation",
       );
     }
   }
@@ -62,7 +68,7 @@ export async function onRequestError(
     routerKind: string;
     routePath: string;
     routeType: string;
-  }
+  },
 ): Promise<void> {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 

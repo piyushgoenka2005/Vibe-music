@@ -2,10 +2,7 @@ import { isSmtpConfigured } from "@/lib/server/email/smtpConfig";
 import { isPostgresConfigured } from "@/lib/db/postgresConfig";
 import { isGoogleAuthConfigured } from "@/lib/auth/google-config";
 import { isRazorpayConfigured, isDemoPaymentsAllowed } from "@/lib/server/env";
-import {
-  isClientAnalyticsConfigured,
-  isServerAnalyticsConfigured,
-} from "@/lib/analytics/config";
+import { isClientAnalyticsConfigured, isServerAnalyticsConfigured } from "@/lib/analytics/config";
 import { isGooglePlacesConfigured } from "@/lib/server/googlePlaces";
 import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
 
@@ -40,10 +37,7 @@ function configured(...values: Array<string | undefined>): IntegrationStatus {
   return values.every((value) => Boolean(value?.trim())) ? "ok" : "missing";
 }
 
-function secretWithMinLength(
-  value: string | undefined,
-  minLength: number
-): IntegrationStatus {
+function secretWithMinLength(value: string | undefined, minLength: number): IntegrationStatus {
   const trimmed = value?.trim() ?? "";
   if (!trimmed) return "missing";
   if (trimmed.length < minLength) return "partial";
@@ -63,29 +57,20 @@ export function getIntegrationChecks(): IntegrationChecks {
     database: isPostgresConfigured() ? "ok" : "missing",
     auth: secretWithMinLength(process.env.AUTH_SECRET, 32),
     smtp: isSmtpConfigured() ? "ok" : "missing",
-    razorpay: isRazorpayConfigured() &&
+    razorpay:
+      isRazorpayConfigured() &&
       Boolean(
-        process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim() ||
-          process.env.RAZORPAY_KEY_ID?.trim()
+        process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim() || process.env.RAZORPAY_KEY_ID?.trim(),
       )
-      ? "ok"
-      : "missing",
+        ? "ok"
+        : "missing",
     razorpayWebhook: configured(process.env.RAZORPAY_WEBHOOK_SECRET),
-    cdn: configured(
-      process.env.CDN_STORAGE_ROOT,
-      process.env.CDN_PUBLIC_BASE_URL
-    ),
-    upstash: configured(
-      process.env.UPSTASH_REDIS_REST_URL,
-      process.env.UPSTASH_REDIS_REST_TOKEN
-    ),
+    cdn: configured(process.env.CDN_STORAGE_ROOT, process.env.CDN_PUBLIC_BASE_URL),
+    upstash: configured(process.env.UPSTASH_REDIS_REST_URL, process.env.UPSTASH_REDIS_REST_TOKEN),
     googleOAuth: isGoogleAuthConfigured() ? "ok" : "missing",
     places: isAddressAutocompleteConfigured() ? "ok" : "missing",
     invoicePdf: invoicePdfStatus(),
-    guestOrderSecret: secretWithMinLength(
-      process.env.GUEST_ORDER_ACCESS_SECRET,
-      32
-    ),
+    guestOrderSecret: secretWithMinLength(process.env.GUEST_ORDER_ACCESS_SECRET, 32),
     analyticsClient: isClientAnalyticsConfigured() ? "ok" : "missing",
     analyticsServer: isServerAnalyticsConfigured()
       ? "ok"
@@ -130,7 +115,8 @@ export function getOpsStatusReport(): {
       label: "Razorpay keys",
       status: checks.razorpay,
       tier: "required",
-      detail: "RAZORPAY_KEY_ID / SECRET + NEXT_PUBLIC_RAZORPAY_KEY_ID",
+      detail:
+        "RAZORPAY_KEY_ID / SECRET + NEXT_PUBLIC_RAZORPAY_KEY_ID must be rzp_live_… on vibemusic.in (rzp_test_ shows Test Mode)",
     },
     {
       key: "razorpayWebhook",

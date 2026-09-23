@@ -4,14 +4,14 @@ Short path from “code is ready” to “production secrets are honest.” Full
 
 ## 1. Required before taking real payments
 
-| Item | Env / action | Storefront effect if missing |
-|------|----------------|------------------------------|
-| PostgreSQL | `DATABASE_URL` | App unhealthy |
-| Auth.js | `AUTH_SECRET` (≥32) | Login/session broken |
-| Guest / invoice tokens | `GUEST_ORDER_ACCESS_SECRET` (≥32) | Guest order + invoice links fail |
-| Razorpay | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Online pay hidden |
-| Razorpay webhook | `RAZORPAY_WEBHOOK_SECRET` | Paid status may not auto-update |
-| Email | `SMTP_*` or `RESEND_API_KEY` | Order / reset emails skip or 503 |
+| Item                   | Env / action                                                                                                                                                      | Storefront effect if missing     |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| PostgreSQL             | `DATABASE_URL`                                                                                                                                                    | App unhealthy                    |
+| Auth.js                | `AUTH_SECRET` (≥32)                                                                                                                                               | Login/session broken             |
+| Guest / invoice tokens | `GUEST_ORDER_ACCESS_SECRET` (≥32)                                                                                                                                 | Guest order + invoice links fail |
+| Razorpay               | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID` — must be **`rzp_live_…`** on vibemusic.in (`rzp_test_…` shows Test Mode and is rejected) | Online pay hidden                |
+| Razorpay webhook       | `RAZORPAY_WEBHOOK_SECRET`                                                                                                                                         | Paid status may not auto-update  |
+| Email                  | `SMTP_*` or `RESEND_API_KEY`                                                                                                                                      | Order / reset emails skip or 503 |
 
 **Payments:** **Razorpay only** — Cash on Delivery is **not implemented** in this codebase (no `COD_ENABLED` env). Checkout always uses Razorpay (or demo mode when `ALLOW_DEMO_PAYMENTS=true` in non-production). Never set `ALLOW_DEMO_PAYMENTS=true` in production.
 
@@ -19,18 +19,18 @@ Catalog search uses **PostgreSQL / Prisma** (`/api/search`) — not Elasticsearc
 
 ## 2. Strongly recommended (multi-worker VPS)
 
-| Item | Env | Effect if missing |
-|------|-----|-------------------|
-| Upstash Redis | `UPSTASH_*` | Rate limits are per-process only |
-| CDN | `CDN_STORAGE_ROOT`, `CDN_PUBLIC_BASE_URL` | Admin image uploads fail / local-only. Serve via `deploy/nginx/cdn.vibemusic.in.conf`. |
+| Item          | Env                                       | Effect if missing                                                                      |
+| ------------- | ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| Upstash Redis | `UPSTASH_*`                               | Rate limits are per-process only                                                       |
+| CDN           | `CDN_STORAGE_ROOT`, `CDN_PUBLIC_BASE_URL` | Admin image uploads fail / local-only. Serve via `deploy/nginx/cdn.vibemusic.in.conf`. |
 
 ## 3. Optional UX upgrades
 
-| Item | Env | Effect if missing |
-|------|-----|-------------------|
-| Google sign-in | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Email/password only + unavailable note |
-| Places autocomplete | `GOOGLE_PLACES_API_KEY` | Manual address entry (honest hint) |
-| Invoice PDF button | **Both** `INVOICE_PDF_ENABLED=true` and `NEXT_PUBLIC_INVOICE_PDF_ENABLED=true` + Chromium | HTML + Print / Save as PDF still work |
+| Item                | Env                                                                                       | Effect if missing                      |
+| ------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------- |
+| Google sign-in      | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`                                                    | Email/password only + unavailable note |
+| Places autocomplete | `GOOGLE_PLACES_API_KEY`                                                                   | Manual address entry (honest hint)     |
+| Invoice PDF button  | **Both** `INVOICE_PDF_ENABLED=true` and `NEXT_PUBLIC_INVOICE_PDF_ENABLED=true` + Chromium | HTML + Print / Save as PDF still work  |
 
 Install Chromium on the VPS:
 

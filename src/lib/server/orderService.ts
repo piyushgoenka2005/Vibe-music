@@ -4,6 +4,7 @@ import {
   isDemoPaymentsAllowed,
   isRazorpayConfigured,
   getRazorpayPublicKey,
+  assertLiveRazorpayKeys,
 } from "@/lib/server/env";
 import { verifyRazorpayPaymentSignature } from "@/lib/razorpay/signature";
 import {
@@ -48,6 +49,7 @@ const PLATFORM_FEE = 0;
 
 function getRazorpayInstance(): Razorpay {
   logRazorpayEnvPresence();
+  assertLiveRazorpayKeys();
 
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;

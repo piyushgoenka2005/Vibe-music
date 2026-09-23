@@ -68,6 +68,16 @@ checks.push({
   blocking: process.env.NODE_ENV === "production" && demoAllowed,
 });
 checks.push({
+  name: "razorpay_key_mode",
+  ok: !isProdRuntime || isLiveKey,
+  detail: isLiveKey
+    ? "live (rzp_live_…) — production OK"
+    : keyId?.startsWith("rzp_test")
+      ? "TEST keys — vibemusic.in must use rzp_live_… (Test Mode ribbon)"
+      : "unknown / missing key prefix",
+  blocking: isProdRuntime && !isLiveKey,
+});
+checks.push({
   name: "key_id_match",
   ok:
     !envPresent("RAZORPAY_KEY_ID") ||
