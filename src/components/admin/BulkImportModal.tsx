@@ -4,15 +4,15 @@ import { useCallback, useMemo, useRef, useState, type DragEvent, type RefObject 
 import type { BulkImportPreviewRow, BulkImportResult } from "@/types/catalog";
 import {
   VIBEMUSIC_BULK_COLUMN_COUNT,
+  VIBEMUSIC_BULK_FAILED_ROWS_FILENAME,
   VIBEMUSIC_BULK_IMPORT_TITLE,
   VIBEMUSIC_BULK_REQUIRED_COLUMNS,
   VIBEMUSIC_BULK_TEMPLATE_CSV_FILE,
   VIBEMUSIC_BULK_TEMPLATE_CSV_URL,
   VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE,
   VIBEMUSIC_BULK_TEMPLATE_XLSX_URL,
-  VIBEMUSIC_BULK_FAILED_ROWS_FILENAME,
+  failedImportRowsToBulkCsv,
 } from "@/lib/admin/bulkImportTemplate";
-import { failedImportRowsToBulkCsv } from "@/lib/admin/bulkImportTemplate";
 import {
   DEFAULT_BULK_IMPORT_OPTIONS,
   type BulkImportOptions,
@@ -375,34 +375,43 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
 
             {step === "upload" ? (
               <>
-                <p className="bulk-import-help" style={{ marginBottom: "1rem" }}>
-                  Use <strong>vibemusic bulk.csv</strong> or <strong>vibemusic bulk.xlsx</strong>{" "}
-                  without changing the header row. Fill one product per row, then upload here.
-                  Optionally attach a SKU-named images ZIP.
-                </p>
-                <p
-                  style={{
-                    marginBottom: "1rem",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <a
-                    href={VIBEMUSIC_BULK_TEMPLATE_XLSX_URL}
-                    download={VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE}
-                    className="admin-link"
-                  >
-                    Download {VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE}
-                  </a>
-                  <a
-                    href={VIBEMUSIC_BULK_TEMPLATE_CSV_URL}
-                    download={VIBEMUSIC_BULK_TEMPLATE_CSV_FILE}
-                    className="admin-link"
-                  >
-                    Download {VIBEMUSIC_BULK_TEMPLATE_CSV_FILE}
-                  </a>
-                </p>
+                <div className="bulk-import-template-panel">
+                  <div className="bulk-import-template-panel__intro">
+                    <p className="bulk-import-template-panel__title">Download blank template</p>
+                    <p className="bulk-import-template-panel__hint">
+                      {VIBEMUSIC_BULK_COLUMN_COUNT} columns in exact order · up to{" "}
+                      {MAX_IMPORT_ROWS.toLocaleString()} products per file
+                    </p>
+                  </div>
+                  <div className="bulk-import-template-cards">
+                    <a
+                      href={VIBEMUSIC_BULK_TEMPLATE_XLSX_URL}
+                      download={VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE}
+                      className="bulk-import-template-card bulk-import-template-card--xlsx"
+                    >
+                      <span className="bulk-import-template-card__badge">Excel</span>
+                      <strong className="bulk-import-template-card__name">
+                        {VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE}
+                      </strong>
+                      <span className="bulk-import-template-card__meta">
+                        Recommended for editing
+                      </span>
+                    </a>
+                    <a
+                      href={VIBEMUSIC_BULK_TEMPLATE_CSV_URL}
+                      download={VIBEMUSIC_BULK_TEMPLATE_CSV_FILE}
+                      className="bulk-import-template-card bulk-import-template-card--csv"
+                    >
+                      <span className="bulk-import-template-card__badge">CSV</span>
+                      <strong className="bulk-import-template-card__name">
+                        {VIBEMUSIC_BULK_TEMPLATE_CSV_FILE}
+                      </strong>
+                      <span className="bulk-import-template-card__meta">
+                        Lightweight text format
+                      </span>
+                    </a>
+                  </div>
+                </div>
 
                 <div className="bulk-import-grid">
                   <div

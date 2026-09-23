@@ -113,11 +113,35 @@ test.describe("Bulk import upload", () => {
   test.skip(!adminReady, "DATABASE_URL / seeded E2E admin required");
   test.skip(!fs.existsSync(FIXTURE_CSV), "bulk-import-e2e.csv fixture missing");
 
+  test("authenticated template API returns CSV and XLSX downloads", async ({ request }) => {
+    const csvRes = await request.get("/api/admin/products/import/template?format=csv");
+    expect(csvRes.ok()).toBeTruthy();
+    expect(csvRes.headers()["content-type"]).toContain("text/csv");
+    expect(csvRes.headers()["content-disposition"]).toMatch(/vibemusic bulk\.csv/i);
+    const csvBody = await csvRes.text();
+    expect(csvBody.split(",").length).toBeGreaterThanOrEqual(69);
+
+    const xlsxRes = await request.get("/api/admin/products/import/template?format=xlsx");
+    expect(xlsxRes.ok()).toBeTruthy();
+    expect(xlsxRes.headers()["content-type"]).toContain("spreadsheetml.sheet");
+    expect(xlsxRes.headers()["content-disposition"]).toMatch(/vibemusic bulk\.xlsx/i);
+    expect((await xlsxRes.body()).byteLength).toBeGreaterThan(100);
+  });
+
   test("preview valid CSV and reject invalid file type", async ({ page }) => {
     test.setTimeout(120_000);
     await page.goto("/admin/products", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /Import products/i }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
+
+    await expect(page.getByRole("link", { name: /vibemusic bulk\.xlsx/i })).toHaveAttribute(
+      "href",
+      "/api/admin/products/import/template?format=xlsx",
+    );
+    await expect(page.getByRole("link", { name: /vibemusic bulk\.csv/i })).toHaveAttribute(
+      "href",
+      "/api/admin/products/import/template?format=csv",
+    );
 
     await page.locator("#bulk-import-sheet").setInputFiles({
       name: "bad.txt",
@@ -131,10 +155,6 @@ test.describe("Bulk import upload", () => {
     await page.getByRole("button", { name: /Run validation preview/i }).click();
     await expect(page.getByText(/Creates/i)).toBeVisible({ timeout: 30_000 });
     await expect(page.locator(".admin-table tbody tr").first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /vibemusic bulk\.xlsx/i })).toHaveAttribute(
-      "href",
-      "/vibemusic%20bulk.xlsx",
-    );
   });
 
   test("legacy CSV headers are rejected at preview", async ({ page }) => {
@@ -150,7 +170,9 @@ test.describe("Bulk import upload", () => {
     });
     await page.getByRole("button", { name: /Continue to options/i }).click();
     await page.getByRole("button", { name: /Run validation preview/i }).click();
-    await expect(page.getByText(/vibemusic bulk template/i)).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator(".admin-form-error")).toContainText(/vibemusic bulk\.(csv|xlsx)/i, {
+      timeout: 30_000,
+    });
   });
 });
 

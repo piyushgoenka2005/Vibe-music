@@ -1,27 +1,24 @@
 /**
- * Regenerate public Vibe Music bulk-import templates from canonical headers.
+ * Write reference copies for local inspection (optional — not used at runtime).
+ * Production downloads: GET /api/admin/products/import/template?format=csv|xlsx
+ *
  * Usage: npm run generate:vibemusic-bulk-template
  */
 import fs from "node:fs";
 import path from "node:path";
 import {
-  VIBEMUSIC_BULK_TEMPLATE_CSV_FILE,
-  VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE,
   buildVibemusicBulkTemplateCsv,
   buildVibemusicBulkTemplateXlsx,
 } from "../../src/lib/admin/bulkImportTemplate";
 
-const publicDir = path.join(process.cwd(), "public");
+const outDir = path.join(process.cwd(), "docs", "templates");
+fs.mkdirSync(outDir, { recursive: true });
 
-fs.writeFileSync(
-  path.join(publicDir, VIBEMUSIC_BULK_TEMPLATE_CSV_FILE),
-  buildVibemusicBulkTemplateCsv(),
-  "utf8",
-);
-fs.writeFileSync(
-  path.join(publicDir, VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE),
-  buildVibemusicBulkTemplateXlsx(),
-);
+const csvPath = path.join(outDir, "vibemusic-bulk.csv");
+const xlsxPath = path.join(outDir, "vibemusic-bulk.xlsx");
 
-console.log(`Wrote public/${VIBEMUSIC_BULK_TEMPLATE_CSV_FILE}`);
-console.log(`Wrote public/${VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE}`);
+fs.writeFileSync(csvPath, buildVibemusicBulkTemplateCsv(), "utf8");
+fs.writeFileSync(xlsxPath, buildVibemusicBulkTemplateXlsx());
+
+console.log(`Wrote ${path.relative(process.cwd(), csvPath)}`);
+console.log(`Wrote ${path.relative(process.cwd(), xlsxPath)}`);

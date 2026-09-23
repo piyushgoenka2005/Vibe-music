@@ -146,6 +146,27 @@ const checks: Check[] = [];
 }
 
 {
+  const { status } = await getJson("/api/admin/me");
+  checks.push({
+    name: "admin-auth",
+    ok: status === 401,
+    detail: `HTTP ${status} (must be 401 without session)`,
+    blocking: true,
+  });
+}
+
+{
+  const csv = await getJson("/api/admin/products/import/template?format=csv");
+  const xlsx = await getJson("/api/admin/products/import/template?format=xlsx");
+  checks.push({
+    name: "bulk-template-api",
+    ok: csv.status === 401 && xlsx.status === 401,
+    detail: `csv=${csv.status} xlsx=${xlsx.status} (must be 401 without session)`,
+    blocking: true,
+  });
+}
+
+{
   const { status } = await getJson("/");
   checks.push({
     name: "homepage",

@@ -5,8 +5,6 @@ import * as XLSX from "xlsx";
 import {
   VIBEMUSIC_BULK_COLUMN_COUNT,
   VIBEMUSIC_BULK_HEADERS,
-  VIBEMUSIC_BULK_TEMPLATE_CSV_FILE,
-  VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE,
   buildVibemusicBulkTemplateCsv,
   buildVibemusicBulkTemplateXlsx,
   catalogProductToBulkRow,
@@ -233,14 +231,13 @@ describe("vibemusic bulk import", () => {
     expect(row["Package Weight Unit"]).toBe("kg");
   });
 
-  it("ships public vibemusic bulk templates that match the canonical header order", () => {
-    const publicDir = path.join(process.cwd(), "public");
-    const csvPath = path.join(publicDir, VIBEMUSIC_BULK_TEMPLATE_CSV_FILE);
-    const xlsxPath = path.join(publicDir, VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE);
+  it("reference templates in docs/templates match the canonical header order", () => {
+    const templatesDir = path.join(process.cwd(), "docs", "templates");
+    const csvPath = path.join(templatesDir, "vibemusic-bulk.csv");
+    const xlsxPath = path.join(templatesDir, "vibemusic-bulk.xlsx");
 
     if (!fs.existsSync(csvPath) || !fs.existsSync(xlsxPath)) {
-      // Templates are generated locally via `npm run generate:vibemusic-bulk-template`
-      // and are gitignored client assets — skip when absent in CI checkouts.
+      // Optional local artifacts from `npm run generate:vibemusic-bulk-template`
       return;
     }
 

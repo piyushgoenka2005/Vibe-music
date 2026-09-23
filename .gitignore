@@ -70,8 +70,6 @@ ui-debug.log
 /*.xlsx
 /**/*.xlsx
 !docs/templates/**/*.xlsx
-/public/vibemusic bulk.csv
-/public/vibemusic bulk.xlsx
 /docs/Amazn Listing*
 /catalog-import-manifest.json
 /migration-report.json

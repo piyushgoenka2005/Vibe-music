@@ -1,26 +1,11 @@
-/**
- * @deprecated Use `npm run generate:vibemusic-bulk-template`
- */
-import fs from "node:fs";
+/** @deprecated Use `npm run generate:vibemusic-bulk-template` */
+import { spawnSync } from "node:child_process";
 import path from "node:path";
-import {
-  VIBEMUSIC_BULK_TEMPLATE_CSV_FILE,
-  VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE,
-  buildVibemusicBulkTemplateCsv,
-  buildVibemusicBulkTemplateXlsx,
-} from "../../src/lib/admin/bulkImportTemplate";
 
-const publicDir = path.join(process.cwd(), "public");
+const script = path.join(process.cwd(), "scripts", "catalog", "generate-vibemusic-bulk-template.mts");
+const result = spawnSync(process.execPath, ["--import", "tsx", script], {
+  stdio: "inherit",
+  cwd: process.cwd(),
+});
 
-fs.writeFileSync(
-  path.join(publicDir, VIBEMUSIC_BULK_TEMPLATE_CSV_FILE),
-  buildVibemusicBulkTemplateCsv(),
-  "utf8",
-);
-fs.writeFileSync(
-  path.join(publicDir, VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE),
-  buildVibemusicBulkTemplateXlsx(),
-);
-
-console.log(`Wrote public/${VIBEMUSIC_BULK_TEMPLATE_CSV_FILE}`);
-console.log(`Wrote public/${VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE}`);
+process.exit(result.status ?? 1);

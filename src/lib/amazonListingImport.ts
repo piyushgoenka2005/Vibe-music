@@ -1,7 +1,5 @@
 /**
- * Canonical Vibe Music bulk product import format.
- * Headers must match `public/vibemusic bulk.csv` exactly.
- *
+ * Canonical Vibe Music bulk product import format (69 columns, fixed order).
  * Prefer importing from `@/lib/admin/bulkImportTemplate` in app/UI code.
  * Amazon-prefixed exports below are deprecated aliases only.
  */
@@ -11,7 +9,7 @@ import type { BulkImportRow } from "@/types/catalog";
 import type { ProductSpec } from "@/types/product";
 import { isGenericBulkCategoryValue } from "@/lib/admin/bulkImportCategoryResolver";
 
-/** Exact header order from `public/vibemusic bulk.csv`. */
+/** Exact header order for the vibemusic bulk import template. */
 export const VIBEMUSIC_BULK_HEADERS = [
   "Brand",
   "SKU",
@@ -601,14 +599,14 @@ export function parseProductImportBuffer(
 }
 
 /**
- * Validate uploaded headers match `public/vibemusic bulk.csv` exactly:
+ * Validate uploaded headers match the vibemusic bulk template exactly:
  * all 69 columns, canonical spelling, canonical order.
  */
 export function validateVibemusicBulkHeaders(headers: string[]): string | null {
   const trimmed = headers.map((header) => header.trim()).filter(Boolean);
 
   if (trimmed.length !== VIBEMUSIC_BULK_COLUMN_COUNT) {
-    return `Vibe Music bulk template requires exactly ${VIBEMUSIC_BULK_COLUMN_COUNT} columns in the official order (found ${trimmed.length}). Download "vibemusic bulk.csv" from the Import dialog and try again.`;
+    return `Vibe Music bulk template requires exactly ${VIBEMUSIC_BULK_COLUMN_COUNT} columns in the official order (found ${trimmed.length}). Download the template from the Import dialog (Excel or CSV).`;
   }
 
   const mismatches: string[] = [];
@@ -632,7 +630,7 @@ export function validateAmazonListingHeaders(headers: string[]): string | null {
   return validateVibemusicBulkHeaders(headers);
 }
 
-/** Build a blank CSV matching `public/vibemusic bulk.csv`. */
+/** Build a blank CSV for the vibemusic bulk template. */
 export function buildVibemusicBulkTemplateCsv(): string {
   return `${VIBEMUSIC_BULK_HEADERS.join(",")}\n`;
 }
@@ -640,7 +638,7 @@ export function buildVibemusicBulkTemplateCsv(): string {
 /** @deprecated Use buildVibemusicBulkTemplateCsv */
 export const buildAmazonListingTemplateCsv = buildVibemusicBulkTemplateCsv;
 
-/** Build a blank workbook matching `public/vibemusic bulk.xlsx`. */
+/** Build a blank workbook for the vibemusic bulk template. */
 export function buildVibemusicBulkTemplateXlsx(): Buffer {
   const workbook = XLSX.utils.book_new();
   const sheet = XLSX.utils.aoa_to_sheet([[...VIBEMUSIC_BULK_HEADERS]]);

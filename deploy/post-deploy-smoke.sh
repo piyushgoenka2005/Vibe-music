@@ -101,6 +101,8 @@ check_http "/api/e2e/password-reset" "404" "GET /api/e2e/password-reset disabled
 check_http "/robots.txt" "200" "GET /robots.txt"
 check_http "/sitemap.xml" "200" "GET /sitemap.xml"
 check_http "/api/admin/me" "401" "GET /api/admin/me (auth enforced)"
+check_http "/api/admin/products/import/template?format=csv" "401" "GET bulk import template (auth enforced)"
+check_http "/api/admin/products/import/template?format=xlsx" "401" "GET bulk import template XLSX (auth enforced)"
 
 check_http "/giveaway" "200" "GET /giveaway"
 check_http "/rentals" "200" "GET /rentals"

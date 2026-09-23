@@ -1,7 +1,7 @@
 /**
- * Canonical Vibe Music product bulk-import template (public assets + labels + API).
- * Column parsing lives in `amazonListingImport.ts` — headers must match
- * `public/vibemusic bulk.csv` / `public/vibemusic bulk.xlsx` exactly.
+ * Canonical Vibe Music product bulk-import template (labels + download API).
+ * Column spec lives in `amazonListingImport.ts` — 69 headers in fixed order.
+ * Templates are generated on demand; do not duplicate static copies in /public.
  */
 export {
   VIBEMUSIC_BULK_HEADERS,
@@ -24,12 +24,14 @@ export {
 } from "@/lib/amazonListingImport";
 export { MAX_IMPORT_ROWS } from "@/lib/admin/bulkImportValidation";
 
+/** Filename shown when admins download the template (Excel / CSV). */
 export const VIBEMUSIC_BULK_TEMPLATE_CSV_FILE = "vibemusic bulk.csv";
 export const VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE = "vibemusic bulk.xlsx";
 
-/** URL-encoded paths for static files in /public (filenames contain a space). */
-export const VIBEMUSIC_BULK_TEMPLATE_CSV_URL = "/vibemusic%20bulk.csv";
-export const VIBEMUSIC_BULK_TEMPLATE_XLSX_URL = "/vibemusic%20bulk.xlsx";
+/** Admin-authenticated download endpoints (production-safe — no /public static files). */
+export const VIBEMUSIC_BULK_TEMPLATE_API_PATH = "/api/admin/products/import/template";
+export const VIBEMUSIC_BULK_TEMPLATE_CSV_URL = `${VIBEMUSIC_BULK_TEMPLATE_API_PATH}?format=csv`;
+export const VIBEMUSIC_BULK_TEMPLATE_XLSX_URL = `${VIBEMUSIC_BULK_TEMPLATE_API_PATH}?format=xlsx`;
 
 export const VIBEMUSIC_BULK_EXPORT_FILENAME_PREFIX = "vibemusic-bulk-export";
 export const VIBEMUSIC_BULK_FAILED_ROWS_FILENAME = "vibemusic-bulk-import-failed-rows.csv";
