@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { getSession } from "next-auth/react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Form,
@@ -22,17 +20,17 @@ import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
 import { ROUTES } from "@/lib/routes";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/authStore";
+import type { AdminSession } from "@/types/admin";
+
+type AdminLoginResponse =
+  { ok: true; admin: AdminSession } | { ok?: false; error?: string; code?: string };
 
 export default function AdminLoginForm() {
-  const router = useRouter();
   const queryClient = useQueryClient();
-  const [, startTransition] = useTransition();
+  const setSessionUser = useAuthStore((s) => s.setSessionUser);
 
-  const signIn = useAuthStore((s) => s.signIn);
-  const isLoading = useAuthStore((s) => s.isLoading);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Two-factor: revealed when the server returns totp_required after password success.
   const [needsTotp, setNeedsTotp] = useState(false);
   const [totpCode, setTotpCode] = useState("");
 
@@ -43,45 +41,47 @@ export default function AdminLoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     setError(null);
+    setIsLoading(true);
+
     try {
-      await signIn({
-        ...values,
-        totp: totpCode.trim() || undefined,
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+          totp: totpCode.trim() || undefined,
+        }),
       });
 
-      // Session JWT already carries isAdmin from authorize — no /api/admin/me round trip.
-      const session = await getSession();
-      if (!session?.user?.isAdmin) {
-        await useAuthStore.getState().logout();
-        throw new Error("This account does not have admin access.");
+      const payload = (await res.json().catch(() => ({}))) as AdminLoginResponse;
+
+      if (!res.ok || !("ok" in payload && payload.ok === true)) {
+        if ("code" in payload && payload.code === "totp_required") {
+          setNeedsTotp(true);
+          setError(null);
+          setIsLoading(false);
+          return;
+        }
+
+        throw new Error(("error" in payload && payload.error) || "Admin sign in failed.");
       }
 
-      // Last-login stamp is non-blocking; do not delay navigation.
-      void fetch("/api/admin/me", { method: "POST" }).catch(() => undefined);
-      void queryClient.invalidateQueries({ queryKey: ["admin-session"] });
-
-      startTransition(() => {
-        router.replace(ROUTES.admin);
+      // Seed client caches so /admin paints without waiting for /api/admin/me.
+      queryClient.setQueryData(["admin-session"], payload.admin);
+      setSessionUser({
+        id: payload.admin.uid,
+        email: payload.admin.email,
+        name: payload.admin.displayName,
+        photoURL: null,
       });
+
+      // Hard navigate so the next document request carries the new cookie
+      // and the server layout bootstraps immediately.
+      window.location.assign(ROUTES.admin);
     } catch (err) {
-      const code =
-        err && typeof err === "object" && "code" in err
-          ? String((err as { code: unknown }).code)
-          : err instanceof Error
-            ? err.message
-            : "";
-
-      if (code === "totp_required") {
-        setNeedsTotp(true);
-        setError(null);
-        return;
-      }
-
-      setError(
-        err instanceof Error && err.message.includes("admin access")
-          ? err.message
-          : getAuthErrorMessage(err, "Admin sign in failed."),
-      );
+      setError(getAuthErrorMessage(err, "Admin sign in failed."));
+      setIsLoading(false);
     }
   }
 

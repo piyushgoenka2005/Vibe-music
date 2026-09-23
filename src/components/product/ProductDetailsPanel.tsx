@@ -162,12 +162,7 @@ function GroupedSpecAccordion({ group, baseId }: { group: ProductSpecGroup; base
   const panelId = `${baseId}-${group.id}-panel`;
 
   return (
-    <SpecAccordionCard
-      title={group.title}
-      triggerId={triggerId}
-      panelId={panelId}
-      defaultOpen={false}
-    >
+    <SpecAccordionCard title={group.title} triggerId={triggerId} panelId={panelId} defaultOpen>
       <SpecKeyValueTable specs={group.specs} dense />
     </SpecAccordionCard>
   );
@@ -178,12 +173,7 @@ function InTheBoxAccordion({ items, baseId }: { items: string[]; baseId: string 
   const panelId = `${baseId}-in-the-box-panel`;
 
   return (
-    <SpecAccordionCard
-      title="In the box"
-      triggerId={triggerId}
-      panelId={panelId}
-      defaultOpen={false}
-    >
+    <SpecAccordionCard title="In the box" triggerId={triggerId} panelId={panelId} defaultOpen>
       <ul className="pdp-product-details__box-list">
         {items.map((item, index) => (
           <li key={`${item}-${index}`}>{item}</li>

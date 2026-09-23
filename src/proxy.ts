@@ -26,6 +26,10 @@ function resolveRateLimitScope(pathname: string): {
     return { scope: "health", options: RATE_LIMITS.health };
   }
   if (pathname.startsWith("/api/admin")) {
+    // Unauthenticated login must use the stricter auth bucket, not admin-api.
+    if (pathname === "/api/admin/login") {
+      return { scope: "auth-api", options: RATE_LIMITS.auth };
+    }
     return { scope: "admin-api", options: RATE_LIMITS.admin };
   }
   if (pathname.startsWith("/api/auth") || pathname === "/api/contact") {
