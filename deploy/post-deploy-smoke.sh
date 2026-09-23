@@ -72,6 +72,8 @@ check_json "/api/banners" "Array.isArray(d.banners)" "banners API returns {banne
 check_http "/api/products?limit=1" "200" "GET /api/products"
 check_json "/api/products?limit=1" "Array.isArray(d.products) && d.products.length > 0" "catalog has products"
 
+check_http "/deals" "200" "GET /deals (SSR page)"
+
 # Password reset must not 503 when SMTP + DB are configured (enumeration-safe 200).
 check_json_post() {
   local path="$1"

@@ -176,6 +176,16 @@ const checks: Check[] = [];
   });
 }
 
+{
+  const { status } = await getJson("/deals");
+  checks.push({
+    name: "deals-page",
+    ok: status === 200,
+    detail: `HTTP ${status}`,
+    blocking: true,
+  });
+}
+
 console.log(`\nVibe Music production sign-off — ${BASE_URL}\n`);
 for (const check of checks) {
   const mark = check.ok ? "OK  " : check.blocking ? "FAIL" : "WARN";

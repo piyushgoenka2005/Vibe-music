@@ -79,16 +79,19 @@ mkdir -p /var/log/vibe
 
 echo "==> Restarting PM2"
 if pm2 describe vibe >/dev/null 2>&1; then
-  pm2 restart vibe --update-env
+  pm2 reload vibe --update-env
 else
   pm2 start deploy/ecosystem.config.cjs --update-env
 fi
 pm2 save
 
-echo "==> Purging Nginx SSR page cache"
-rm -rf /var/cache/nginx/vibe-pages/* 2>/dev/null || true
-if command -v systemctl >/dev/null 2>&1; then
-  sudo systemctl reload nginx 2>/dev/null || true
+if command -v nginx >/dev/null 2>&1 && [[ -f /etc/nginx/sites-available/vibemusic.in ]]; then
+  echo "==> Syncing Nginx site config from repo"
+  cp deploy/nginx/vibemusic.in.conf /etc/nginx/sites-available/vibemusic.in
+  nginx -t
+  if command -v systemctl >/dev/null 2>&1; then
+    sudo systemctl reload nginx 2>/dev/null || systemctl reload nginx
+  fi
 fi
 
 echo "==> Health gate (up to 60s for cold start + first DB probe)"
@@ -114,6 +117,9 @@ if [[ "$HEALTH_OK" != "1" ]]; then
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
   exit 1
 fi
+
+echo "==> Purging Nginx SSR page cache (after app is healthy)"
+rm -rf /var/cache/nginx/vibe-pages/* 2>/dev/null || true
 
 if [[ "${SKIP_SMOKE:-0}" != "1" ]]; then
   echo "==> Post-deploy smoke"
