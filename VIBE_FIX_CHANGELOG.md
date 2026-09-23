@@ -1,5 +1,36 @@
 # VIBE_FIX_CHANGELOG.md
 
+## 2026-09-23 — Storefront polish, social rail CMS, production sign-off
+
+### Storefront & CMS
+
+- **Social rail CMS** — `social_rail` homepage section; admin editor at `/admin/homepage`; server cache + defaults from `contentRepository`.
+- **PDP “About this item”** — Branch/node timeline; `deriveAboutItems` dedupes intro + feature blocks; balanced PDP padding with related rail.
+- **PLP / search layout** — `auto-fit` grids, tighter padding; search results use same edge-to-edge rules as category pages.
+- **Find Your Product** — Scanner cards use catalog slugs + `storefrontImageUrl`; `heroMarqueeProductHref` accepts slim `ScannerProduct` type.
+
+### Payments & ops
+
+- Razorpay live-key enforcement on `vibemusic.in` (`48e3217`).
+- Checkout UPI mark + open gateway on selected method (`54470b6`).
+- `deploy/razorpay-preflight.sh`, `scripts/ops/run-verify-razorpay-ops.mjs`, env check updates.
+
+### QA & tooling
+
+- E2E: admin products search uses `getByRole('textbox')`; dev overlay dismiss on logout; `isE2EServerMode` guard for password-reset tests.
+- ESLint ignores `playwright-report/**`, `test-results/**`, `.data/**`.
+- Load test script: `npm run load:perf`.
+
+### Verification (2026-09-23)
+
+- Vitest **525/525** (95 files)
+- Playwright **132** tests (18 spec files)
+- `npm run validate` — pass
+- `VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff` — **PASSED**
+- Production Lighthouse (mobile): perf **67**, LCP **6.8 s**, TBT **210 ms**, CLS **0.038**, payload **24.7 MB**
+
+---
+
 ## 2026-09-21 — Payment-safety, external-call hardening, LCP pass
 
 ### Payments & inventory (PAY-01/02/03/04)
@@ -14,42 +45,39 @@
 - Removed superseded `transitionOrderPaymentStatus`/`paymentPatchToPrisma` — the row-lock design replaced the CAS path.
 - Final RMW cleanup (PAY-05): `updateOrderFields` atomic `updateMany` now used by resume-payment (`razorpayOrderId`) and order reservation (`inventoryStatus`); `patchOrderFields` (admin status + customer cancellation) writes only the patched columns then re-reads; all full-object `updateOrder` read-modify-write code removed.
 
-## 2026-09-21 - Live production CWV measurement & homepage payload fixes (IMG-01/02, VIDEO-01)
+### Live production CWV measurement & homepage payload fixes (IMG-01/02, VIDEO-01)
 
-Measured `https://vibemusic.in` (mobile Lighthouse, `scripts/ops/lighthouse-audit.mjs`):
+Measured `https://vibemusic.in` (mobile Lighthouse, 2026-09-21):
 
-| Metric              | Before                                   |
-| ------------------- | ---------------------------------------- |
-| Performance         | 41 (min 50)                              |
-| LCP                 | 7.4 s (target ≤ 2.5 s)                   |
-| Total Blocking Time | 1,400 ms                                 |
-| CLS                 | 0.111                                    |
-| Payload             | **44.5 MB** (23.4MB images + 20MB media) |
+| Metric              | Before      |
+| ------------------- | ----------- |
+| Performance         | 41          |
+| LCP                 | 7.4 s       |
+| Total Blocking Time | 1,400 ms    |
+| CLS                 | 0.111       |
+| Payload             | **44.5 MB** |
 
-Two production leaks found and fixed in code:
+Fixes shipped:
 
-- **IMG-02** — the Find-Your-Product marquee used the raw catalog master (`products.json` `image` = CDN PNG, 6–8.7MB each) on every card. `findYourProductTracks` now maps images through `storefrontImageUrl(image, 480)` → `-w480.webp` (35–100KB). CDN derivatives were confirmed present for all three heavy masters (AD15DSP / AD12-DSP / ADM-01).
-- **VIDEO-01** — `useVisibleVideo` only measured **horizontal** strip alignment, so reel cards below the fold were treated as visible and ~20MB of mp4s downloaded on page load. `isVisibleInStrip` and the retry loop now require the card to be vertically inside the viewport; `GearStoryCard` additionally defers mounting `<video src>` until the card is within 500px of the viewport (poster `<Image>` shown before that).
+- **IMG-02** — Find-Your-Product marquee maps images through `storefrontImageUrl(image, 480)` → `-w480.webp`.
+- **VIDEO-01** — `useVisibleVideo` requires vertical viewport overlap; `<video src>` deferred until within 500px.
 
-Expected impact after deploy: payload 44.5MB → ~2MB; TBT/LCP should fall with far less network/decode work. Re-run `npm run audit:lighthouse` against production to confirm.
+Post-fix production (2026-09-23): perf **67**, TBT **210 ms**, payload **24.7 MB**.
 
 ### Security (SEC-01/02/03/04)
 
 - `POST /api/cart/reprice` and `POST /api/orders/[id]/resume-payment` now run `enforceMutationSecurity`.
-- Removed dead `src/lib/server/socket.ts` (never initialized; unauthenticated `order:track`/`admin:join` room joins).
-- Review image uploads now sniff magic bytes (JPEG/PNG/WebP) for clean 400s instead of 500s on spoofed MIME.
-- Restored production env validation throws (kept Resend→SMTP fallback for `SMTP_*` requirement).
+- Removed dead `src/lib/server/socket.ts`.
+- Review image uploads sniff magic bytes (JPEG/PNG/WebP).
+- Restored production env validation throws.
 
 ### Performance (PERF-01/02/03/05)
 
-- Hero banner LCP: 1.96MB PNG → 126KB WebP (sharp, 1920px q82); `<picture>` serves `srcOptimized` WebP with PNG fallback for the four large banners.
-- Cart reprice batches missing-product lookups into one `fetchProductsByIds` (`getProductsByIds`), eliminating the N+1.
-- Order validation (`resolveOrderItems`) uses the same batched lookup instead of per-line `getProductById`.
-- `/api/search?all=1` payload capped at 1500 with a `truncated` flag.
+- Hero banner LCP: 1.96MB PNG → 126KB WebP; `<picture>` WebP + PNG fallback.
+- Cart reprice + order validation batched via `getProductsByIds`.
+- `/api/search?all=1` capped at 1500 with `truncated` flag.
 
-### Static checks
-
-- `npm run type-check` clean, `npm run lint` clean, Vitest **472/472** (83 files).
+---
 
 ## 2026-09-18 — Production readiness pass
 
@@ -65,7 +93,7 @@ Expected impact after deploy: payload 44.5MB → ~2MB; TBT/LCP should fall with 
 - AbortController cancels stale suggest/results requests
 - Brand-only and category-only browse use scoped Prisma queries
 
-### Admin (this + prior session)
+### Admin
 
 - Amazon listing import/export canonical template
 - Refund safety + partial refunds
@@ -74,8 +102,4 @@ Expected impact after deploy: payload 44.5MB → ~2MB; TBT/LCP should fall with 
 
 ### Docs
 
-- `VIBE_FIX_TRACKER.md`
-- `VIBE_ROOT_CAUSE_ANALYSIS.md`
-- `VIBE_HOSTING_ACTIONS_REQUIRED.md`
-- `VIBE_QA_TEST_REPORT.md`
-- `VIBE_CLIENT_ACCEPTANCE_SCORECARD.md`
+- Full VIBE report suite (`VIBE_*_*.md`)
