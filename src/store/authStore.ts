@@ -54,11 +54,18 @@ async function credentialsSignIn(
     redirect: false,
   });
 
+  if (result?.code === "totp_required") {
+    const error = new Error("totp_required") as Error & { code: string };
+    error.code = "totp_required";
+    throw error;
+  }
+
   if (result?.error) {
     throw new Error(result.error);
   }
 
   // Prefer NextAuth client session cache over a raw /api/auth/session fetch.
+  // Successful signIn already refreshed the client session via _getSession.
   const session = await getSession();
   if (!session?.user?.id || !session.user.email) {
     throw new Error("CredentialsSignin");

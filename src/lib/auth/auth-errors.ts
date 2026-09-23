@@ -1,5 +1,6 @@
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   CredentialsSignin: "Invalid email or password.",
+  totp_required: "Enter the 6-digit code from your authenticator app.",
   OAuthSignin: "Google sign-in failed. Please try again or use email and password.",
   OAuthCallback: "Google sign-in failed. Please try again or use email and password.",
   OAuthAccountNotLinked:

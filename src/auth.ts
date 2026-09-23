@@ -10,12 +10,16 @@ import {
   resolveSessionMaxAgeSeconds,
 } from "@/lib/auth/session-config";
 import { encode as encodeJwt } from "@auth/core/jwt";
-import { ensureOAuthUserProfile, findUserByEmail } from "@/lib/server/userService";
+import { ensureOAuthUserProfile, findUserForCredentials } from "@/lib/server/userService";
 import { isGoogleAuthConfigured, getGoogleAuthCredentials } from "@/lib/auth/google-config";
 import { logAuditEvent } from "@/lib/server/auditLog";
 import { loginSchema } from "@/lib/validations/auth";
-import { getAdminSession } from "@/lib/server/adminService";
-import { verifyAdminLoginTotp } from "@/lib/server/adminTotpService";
+import { TotpRequiredError } from "@/lib/auth/credentials-errors";
+import {
+  getAdminJwtClaims,
+  loadAdminLoginGate,
+  verifyAdminTotpCode,
+} from "@/lib/server/adminLoginGate";
 import type { AdminRole } from "@/types/admin";
 
 declare module "next-auth" {
@@ -35,12 +39,17 @@ declare module "next-auth" {
 
   interface User {
     rememberMe?: boolean;
+    isAdmin?: boolean;
+    adminRole?: AdminRole;
   }
 }
 
 declare module "@auth/core/jwt" {
   interface JWT {
     authProvider?: string;
+    isAdmin?: boolean;
+    adminRole?: AdminRole;
+    uid?: string;
   }
 }
 
@@ -66,7 +75,8 @@ function buildProviders(): NextAuthConfig["providers"] {
         }
 
         const rememberMe = credentials?.remember === "true";
-        const user = await findUserByEmail(parsed.data.email);
+        const totpRaw = typeof credentials?.totp === "string" ? credentials.totp.trim() : "";
+        const user = await findUserForCredentials(parsed.data.email);
         if (!user || !user.isActive) {
           return null;
         }
@@ -76,13 +86,16 @@ function buildProviders(): NextAuthConfig["providers"] {
           return null;
         }
 
-        // Admin accounts may enforce TOTP. Password success alone is not enough.
-        const totpOk = await verifyAdminLoginTotp(
-          user.id,
-          typeof credentials?.totp === "string" ? credentials.totp : undefined,
-        );
-        if (!totpOk) {
-          return null;
+        // One admin row read covers 2FA + JWT isAdmin claims (no second session query).
+        const gate = await loadAdminLoginGate(user.id);
+        if (gate.totpEnabled) {
+          if (!totpRaw) {
+            throw new TotpRequiredError();
+          }
+          const totpOk = await verifyAdminTotpCode(gate.totpSecret!, totpRaw);
+          if (!totpOk) {
+            return null;
+          }
         }
 
         return {
@@ -91,6 +104,8 @@ function buildProviders(): NextAuthConfig["providers"] {
           name: user.name,
           image: user.image,
           rememberMe,
+          isAdmin: gate.isAdmin,
+          adminRole: gate.role,
         };
       },
     }),
@@ -196,6 +211,12 @@ export const authConfig = {
         const rememberMe = user.rememberMe ?? false;
         const maxAge = resolveSessionMaxAgeSeconds(rememberMe);
         token.exp = Math.floor(Date.now() / 1000) + maxAge;
+
+        // Credentials authorize already resolved admin claims — reuse them.
+        if (typeof user.isAdmin === "boolean") {
+          token.isAdmin = user.isAdmin;
+          token.adminRole = user.adminRole;
+        }
       }
 
       if (account?.provider) {
@@ -206,17 +227,20 @@ export const authConfig = {
         token.name = session.user.name;
       }
 
-      // Admin DB lookup only on sign-in / session update — not every JWT read.
+      // Refresh admin claims only when missing or explicitly updating the session.
+      // Skip the heavy permission-matrix path used by requireAdmin().
       const shouldRefreshAdmin =
-        Boolean(user) || trigger === "update" || typeof token.isAdmin !== "boolean";
+        trigger === "update" ||
+        (Boolean(user) && typeof token.isAdmin !== "boolean") ||
+        (!user && typeof token.isAdmin !== "boolean");
 
       if (shouldRefreshAdmin && isPostgresConfigured()) {
         const uid = typeof token.uid === "string" ? token.uid : token.sub;
         if (uid) {
           try {
-            const adminSession = await getAdminSession(uid);
-            token.isAdmin = Boolean(adminSession);
-            token.adminRole = adminSession?.role;
+            const claims = await getAdminJwtClaims(uid);
+            token.isAdmin = claims.isAdmin;
+            token.adminRole = claims.role;
           } catch {
             token.isAdmin = false;
             token.adminRole = undefined;
@@ -225,9 +249,6 @@ export const authConfig = {
           token.isAdmin = false;
           token.adminRole = undefined;
         }
-      } else if (shouldRefreshAdmin) {
-        token.isAdmin = false;
-        token.adminRole = undefined;
       }
 
       return token;

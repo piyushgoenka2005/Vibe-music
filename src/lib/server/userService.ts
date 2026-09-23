@@ -46,14 +46,26 @@ export async function findUserByEmail(email: string) {
   });
 }
 
+/** Lean credentials lookup — only fields authorize() needs. */
+export async function findUserForCredentials(email: string) {
+  return prisma.user.findUnique({
+    where: { email: email.trim().toLowerCase() },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      image: true,
+      isActive: true,
+      passwordHash: true,
+    },
+  });
+}
+
 export async function findUserById(id: string) {
   return prisma.user.findUnique({ where: { id } });
 }
 
-export async function updateUserDisplayName(
-  userId: string,
-  displayName: string
-): Promise<void> {
+export async function updateUserDisplayName(userId: string, displayName: string): Promise<void> {
   const now = new Date().toISOString();
   await prisma.user.update({
     where: { id: userId },
@@ -67,19 +79,15 @@ export async function updateUserProfile(
     displayName?: string;
     phone?: string;
     dateOfBirth?: string;
-  }
+  },
 ): Promise<{ name: string | null; phone: string | null; dateOfBirth: string | null }> {
   const now = new Date().toISOString();
   const user = await prisma.user.update({
     where: { id: userId },
     data: {
-      ...(input.displayName != null
-        ? { name: input.displayName.trim() }
-        : {}),
+      ...(input.displayName != null ? { name: input.displayName.trim() } : {}),
       ...(input.phone != null ? { phone: input.phone.trim() || null } : {}),
-      ...(input.dateOfBirth != null
-        ? { dateOfBirth: input.dateOfBirth.trim() || null }
-        : {}),
+      ...(input.dateOfBirth != null ? { dateOfBirth: input.dateOfBirth.trim() || null } : {}),
       updatedAt: now,
     },
     select: {
@@ -91,10 +99,7 @@ export async function updateUserProfile(
   return user;
 }
 
-export async function updateUserPassword(
-  userId: string,
-  password: string
-): Promise<void> {
+export async function updateUserPassword(userId: string, password: string): Promise<void> {
   const passwordHash = await hashPassword(password);
   const now = new Date().toISOString();
   await prisma.user.update({
@@ -117,9 +122,7 @@ export async function ensureOAuthUserProfile(input: {
   if (byId) {
     // Avoid unique collisions if another row already owns this email.
     const emailOwner =
-      byId.email === email
-        ? byId
-        : await prisma.user.findUnique({ where: { email } });
+      byId.email === email ? byId : await prisma.user.findUnique({ where: { email } });
     if (emailOwner && emailOwner.id !== byId.id) {
       await prisma.user.update({
         where: { id: emailOwner.id },

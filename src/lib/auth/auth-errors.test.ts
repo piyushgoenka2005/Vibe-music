@@ -11,4 +11,8 @@ describe("getAuthErrorMessage", () => {
   it("maps CredentialsSignin clearly", () => {
     expect(getAuthErrorMessage("CredentialsSignin")).toMatch(/invalid email or password/i);
   });
+
+  it("maps totp_required clearly", () => {
+    expect(getAuthErrorMessage("totp_required")).toMatch(/authenticator/i);
+  });
 });
