@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import ProductDetailPage from "@/components/product/ProductDetailPage";
-import { loadProductDetailPage } from "@/lib/server/productDetailLoader";
+import { loadProductCorePage, loadProductDetailPage } from "@/lib/server/productDetailLoader";
 import { resolveCanonicalProductSlug } from "@/services/catalogService";
 import { buildProductJsonLd } from "@/lib/seo/productJsonLd";
 import { cdnSeoImageUrl, storefrontImageUrl } from "@/lib/storefrontImages";
@@ -17,8 +17,8 @@ interface ProductRouteProps {
 export async function generateMetadata({ params }: ProductRouteProps): Promise<Metadata> {
   const { slug } = await params;
   const canonicalSlug = (await resolveCanonicalProductSlug(slug)) ?? slug;
-  const detail = await loadProductDetailPage(canonicalSlug);
-  const product = detail?.product;
+  // Core only — merchandising must not block SEO metadata.
+  const product = await loadProductCorePage(canonicalSlug);
   if (!product) {
     return {
       title: `Product not found | ${BRAND.name}`,

@@ -2,17 +2,11 @@
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  buildPdpOfferRows,
-  resolvePdpPricing,
-} from "@/lib/product/pdpOffers";
+import { buildPdpOfferRows, resolvePdpPricing } from "@/lib/product/pdpOffers";
 import { buildPdpOfferRowsFromCoupons } from "@/lib/product/pdpOffersFromCoupons";
 import type { StorefrontCouponOffer } from "@/types/coupon";
 import type { ProductDetail, ProductVariant } from "@/types/product";
-import {
-  formatCurrencyPrecise,
-  isPurchasablePrice,
-} from "@/utils/currency";
+import { formatCurrencyPrecise, isPurchasablePrice } from "@/utils/currency";
 import { BadgePercent, ChevronRight } from "lucide-react";
 
 interface ProductPriceOffersProps {
@@ -20,19 +14,11 @@ interface ProductPriceOffersProps {
   selectedVariant: ProductVariant;
 }
 
-export default function ProductPriceOffers({
-  product,
-  selectedVariant,
-}: ProductPriceOffersProps) {
+export default function ProductPriceOffers({ product, selectedVariant }: ProductPriceOffersProps) {
   const displayPrice = selectedVariant.price;
   const pricing = useMemo(
-    () =>
-      resolvePdpPricing(
-        displayPrice,
-        product.msrp,
-        product.originalPrice
-      ),
-    [displayPrice, product.msrp, product.originalPrice]
+    () => resolvePdpPricing(displayPrice, product.msrp, product.originalPrice),
+    [displayPrice, product.msrp, product.originalPrice],
   );
 
   const offersQuery = useQuery({
@@ -43,7 +29,11 @@ export default function ProductPriceOffers({
       const data = (await res.json()) as { coupons: StorefrontCouponOffer[] };
       return data.coupons ?? [];
     },
-    staleTime: 120_000,
+    staleTime: 180_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    // Defer off the buy-box critical path — paint price first.
+    enabled: typeof window !== "undefined",
   });
 
   const offers = useMemo(() => {
@@ -72,9 +62,7 @@ export default function ProductPriceOffers({
           </span>
         </span>
         {pricing.hasDiscount ? (
-          <span className="pdp-info-pricing__pct-badge">
-            - {pricing.savingsPercent}%
-          </span>
+          <span className="pdp-info-pricing__pct-badge">- {pricing.savingsPercent}%</span>
         ) : null}
       </div>
 
@@ -108,22 +96,13 @@ export default function ProductPriceOffers({
           </div>
 
           <div className="pdp-offers__carousel-wrap">
-            <div
-              className="pdp-offers__track"
-              role="list"
-              aria-label="Available offers"
-            >
+            <div className="pdp-offers__track" role="list" aria-label="Available offers">
               {offers.map((offer) => (
-                <article
-                  key={offer.id}
-                  className="pdp-offers__card"
-                  role="listitem"
-                >
+                <article key={offer.id} className="pdp-offers__card" role="listitem">
                   <h4 className="pdp-offers__card-title">{offer.title}</h4>
                   <p className="pdp-offers__card-detail">{offer.detail}</p>
                   <span className="pdp-offers__card-link" aria-hidden="true">
-                    {offer.offerCount}{" "}
-                    {offer.offerCount === 1 ? "offer" : "offers"}
+                    {offer.offerCount} {offer.offerCount === 1 ? "offer" : "offers"}
                     <ChevronRight size={14} aria-hidden />
                   </span>
                 </article>

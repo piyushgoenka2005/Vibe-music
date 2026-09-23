@@ -8,9 +8,7 @@ import {
   resolveRelatedProductsForProduct,
   resolveSimilarProductsForProduct,
 } from "@/lib/server/relatedProductsService";
-import {
-  getProductDetailBySlug,
-} from "@/services/catalogService";
+import { getProductDetailBySlug } from "@/services/catalogService";
 import type { ProductDetailResult } from "@/services/product.service";
 import type { ProductDetail } from "@/types/product";
 import type { ResolvedProductBundle } from "@/types/bundle";
@@ -30,7 +28,7 @@ const PRODUCT_DETAIL_REVALIDATE_SECONDS =
  * revalidate window (previously "This page hit a wrong note" for live SKUs).
  */
 export const loadProductCorePage = cache(async function loadProductCorePage(
-  slug: string
+  slug: string,
 ): Promise<ProductDetail | null> {
   const normalizedSlug = normalizeProductSlug(slug);
   if (!normalizedSlug) return null;
@@ -46,64 +44,49 @@ const loadCachedProductMerchandising = unstable_cache(
   async function loadCachedProductMerchandising(
     productId: string,
     productPrice: number,
-    similarIdsKey: string
+    similarIdsKey: string,
   ): Promise<Omit<ProductDetailResult, "product">> {
-    const similarProductIds = similarIdsKey
-      ? similarIdsKey.split("|").filter(Boolean)
-      : [];
+    const similarProductIds = similarIdsKey ? similarIdsKey.split("|").filter(Boolean) : [];
 
-    const [bundle, similarProducts] = await Promise.all([
+    const [bundle, similarProducts, relatedResult] = await Promise.all([
       resolveBundleForProduct(productId, productPrice),
-      resolveSimilarProductsForProduct(
-        productId,
-        similarProductIds,
-        SIMILAR_PRODUCTS_LIMIT
-      ),
+      resolveSimilarProductsForProduct(productId, similarProductIds, SIMILAR_PRODUCTS_LIMIT),
+      resolveRelatedProductsForProduct(productId, RELATED_PRODUCTS_LIMIT, []),
     ]);
 
-    const similarIds = similarProducts.map((product) => product.id);
-    const relatedResult = await resolveRelatedProductsForProduct(
-      productId,
-      RELATED_PRODUCTS_LIMIT,
-      similarIds
-    );
+    const similarIds = new Set(similarProducts.map((product) => product.id));
+    const relatedProducts = relatedResult.products.filter((product) => !similarIds.has(product.id));
 
     return {
       bundle,
       frequentlyBoughtTogether: bundle?.items ?? [],
       similarProducts,
-      relatedProducts: relatedResult.products,
+      relatedProducts,
     };
   },
-  ["product-detail-merchandising-v6"],
+  ["product-detail-merchandising-v7"],
   {
     revalidate: PRODUCT_DETAIL_REVALIDATE_SECONDS,
     tags: ["catalog", "product-detail", "product-merchandising"],
-  }
+  },
 );
 
-export const loadProductMerchandising = cache(
-  async function loadProductMerchandising(
-    product: ProductDetail,
-    initialBundle?: ResolvedProductBundle | null
-  ): Promise<Omit<ProductDetailResult, "product">> {
-    const similarIdsKey = (product.similarProductIds ?? []).join("|");
-    const result = await loadCachedProductMerchandising(
-      product.id,
-      product.price,
-      similarIdsKey
-    );
+export const loadProductMerchandising = cache(async function loadProductMerchandising(
+  product: ProductDetail,
+  initialBundle?: ResolvedProductBundle | null,
+): Promise<Omit<ProductDetailResult, "product">> {
+  const similarIdsKey = (product.similarProductIds ?? []).join("|");
+  const result = await loadCachedProductMerchandising(product.id, product.price, similarIdsKey);
 
-    if (initialBundle) {
-      return { ...result, bundle: initialBundle };
-    }
-
-    return result;
+  if (initialBundle) {
+    return { ...result, bundle: initialBundle };
   }
-);
+
+  return result;
+});
 
 export const loadProductDetailPage = cache(async function loadProductDetailPage(
-  slug: string
+  slug: string,
 ): Promise<ProductDetailResult | null> {
   const product = await loadProductCorePage(slug);
   if (!product) return null;

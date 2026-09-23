@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -7,7 +8,6 @@ import { Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import BulkImportModal from "@/components/admin/BulkImportModal";
 import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
 import { StatusBadge, LoadingState, EmptyState, formatCurrency } from "@/components/admin/AdminUi";
 import { ErrorState } from "@/components/admin/AdminQueryState";
@@ -21,6 +21,10 @@ import {
 } from "@/lib/admin/bulkImportTemplate";
 import type { AdminProduct } from "@/types/admin";
 import type { Category } from "@/types/category";
+
+const BulkImportModal = dynamic(() => import("@/components/admin/BulkImportModal"), {
+  ssr: false,
+});
 
 async function fetchProducts(params: {
   search: string;
@@ -112,8 +116,9 @@ function ProductsContent({
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: productsQueryKey,
     queryFn: () => fetchProducts({ search, status, category, stock: stockFilter, cursor }),
-    staleTime: 30_000,
-    refetchOnMount: true,
+    staleTime: 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // Intentionally no mount-time invalidate — that forced a double fetch on every visit.

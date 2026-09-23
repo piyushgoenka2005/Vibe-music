@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { resolvePermissionsForRole } from "@/lib/server/rolePermissionsService";
 import * as pg from "@/lib/server/prisma/usersRepository";
 import type { AdminProfile, AdminRole, AdminSession } from "@/types/admin";
@@ -14,7 +15,10 @@ export async function countActiveSuperAdmins(): Promise<number> {
   return pg.countActiveSuperAdmins();
 }
 
-export async function getAdminSession(uid: string): Promise<AdminSession | null> {
+/** Per-request dedupe across requireAdmin / layout / multiple admin APIs. */
+export const getAdminSession = cache(async function getAdminSession(
+  uid: string,
+): Promise<AdminSession | null> {
   const profile = await getAdminProfile(uid);
   if (!profile) return null;
 
@@ -25,7 +29,7 @@ export async function getAdminSession(uid: string): Promise<AdminSession | null>
     role: profile.role,
     permissions: await resolvePermissionsForRole(profile.role),
   };
-}
+});
 
 export async function updateAdminLastLogin(uid: string): Promise<void> {
   await pg.updateAdminLastLoginRecord(uid);
@@ -33,7 +37,7 @@ export async function updateAdminLastLogin(uid: string): Promise<void> {
 
 export async function createAdminProfile(
   uid: string,
-  data: Pick<AdminProfile, "email" | "displayName" | "role">
+  data: Pick<AdminProfile, "email" | "displayName" | "role">,
 ): Promise<AdminProfile> {
   const now = new Date().toISOString();
   const profile: AdminProfile = {
@@ -55,7 +59,7 @@ export async function listAdmins(): Promise<AdminProfile[]> {
 
 export async function updateAdminProfile(
   uid: string,
-  patch: Partial<Pick<AdminProfile, "displayName" | "role" | "isActive">>
+  patch: Partial<Pick<AdminProfile, "displayName" | "role" | "isActive">>,
 ): Promise<AdminProfile> {
   return pg.updateAdminProfileRecord(uid, patch);
 }

@@ -7,7 +7,7 @@ import AdminThemeToggle from "@/components/admin/AdminThemeToggle";
 import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
 import { useAdminUiStore } from "@/store/adminUiStore";
 import type { AdminSession } from "@/types/admin";
-import "@/components/admin/admin.css";
+// admin.css is loaded once from app/admin/layout.tsx — do not re-import here.
 
 interface AdminShellProps {
   admin: AdminSession;

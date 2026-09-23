@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import AdminShell from "@/components/admin/AdminShell";
+import { useAdminSessionBootstrap } from "@/components/admin/AdminSessionBootstrap";
 import { canAccessAdminPath } from "@/lib/auth/admin-route-permissions";
 import { ROUTES } from "@/lib/routes";
 import AuthLoading from "@/components/auth/AuthLoading";
@@ -19,11 +20,18 @@ async function fetchAdminSession(): Promise<AdminSession | null> {
 }
 
 export function useAdminSession() {
+  const bootstrap = useAdminSessionBootstrap();
   return useQuery({
     queryKey: ["admin-session"],
     queryFn: fetchAdminSession,
     retry: false,
-    staleTime: 60_000,
+    staleTime: 120_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    // Server layout already resolved the session — paint immediately.
+    // Treat bootstrap as freshly resolved so React Query won't background-refetch.
+    initialData: bootstrap === undefined ? undefined : (bootstrap ?? undefined),
+    initialDataUpdatedAt: bootstrap ? Number.MAX_SAFE_INTEGER : undefined,
   });
 }
 
@@ -34,16 +42,17 @@ interface AdminGuardProps {
 export default function AdminGuard({ children }: AdminGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { data: admin, isLoading, isError } = useAdminSession();
+  const { data: admin, isLoading, isError, isFetched } = useAdminSession();
 
   useEffect(() => {
     if (isLoading) return;
-    if (!admin) {
+    // Only redirect after a real fetch miss (or bootstrap null with fetch done).
+    if (!admin && (isFetched || admin === null)) {
       router.replace(`${ROUTES.adminLogin}?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [admin, isLoading, pathname, router]);
+  }, [admin, isLoading, isFetched, pathname, router]);
 
-  if (isLoading) {
+  if (isLoading && !admin) {
     return (
       <div className="admin-root">
         <div className="admin-loading">Verifying admin access…</div>
@@ -60,9 +69,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
       <AdminShell admin={admin} title="Access denied">
         <div className="admin-panel">
           <div className="admin-panel__body" role="alert">
-            <p style={{ margin: "0 0 1rem" }}>
-              You do not have permission to view this page.
-            </p>
+            <p style={{ margin: "0 0 1rem" }}>You do not have permission to view this page.</p>
             <Link href={ROUTES.admin} className="admin-btn admin-btn--primary">
               Back to dashboard
             </Link>

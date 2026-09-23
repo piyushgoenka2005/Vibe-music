@@ -19,11 +19,13 @@ import {
 import { getProductImage } from "@/data/productImages";
 import { VIBEMUSIC_BULK_HEADERS, catalogProductToBulkRow } from "@/lib/amazonListingImport";
 import { rowsToCsv, type ParsedCsvRow } from "@/lib/csv";
-import { prisma } from "@/lib/db/prisma";
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import type { AdminProduct } from "@/types/admin";
 import type { CatalogProduct, CreateProductInput } from "@/types/catalog";
 import type { ProductSpec, ProductVideo } from "@/types/product";
 import { paginateSortedById } from "@/lib/admin/paginateByCursor";
+import { prismaToProduct } from "@/lib/server/prisma/mappers";
+import type { Prisma } from "@prisma/client";
 
 async function purgeProductSideData(productIds: string[]): Promise<void> {
   if (productIds.length === 0) return;
@@ -109,6 +111,121 @@ export async function listAdminProducts(
   hasMore: boolean;
   nextCursor?: string;
 }> {
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+
+  if (isPostgresConfigured()) {
+    return listAdminProductsFromDb({ ...options, limit });
+  }
+
+  return listAdminProductsInMemory({ ...options, limit });
+}
+
+async function listAdminProductsFromDb(options: {
+  search?: string;
+  status?: string;
+  category?: string;
+  stock?: "in" | "low" | "out";
+  limit: number;
+  offset?: number;
+  cursor?: string;
+}): Promise<{
+  products: AdminProduct[];
+  total: number;
+  hasMore: boolean;
+  nextCursor?: string;
+}> {
+  const where: Prisma.ProductWhereInput = {};
+
+  if (options.status) {
+    where.status = options.status;
+  }
+
+  if (options.category) {
+    where.OR = [{ categorySlug: options.category }, { category: options.category }];
+  }
+
+  if (options.search?.trim()) {
+    const q = options.search.trim();
+    where.AND = [
+      ...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []),
+      {
+        OR: [
+          { name: { contains: q, mode: "insensitive" } },
+          { brand: { contains: q, mode: "insensitive" } },
+          { slug: { contains: q, mode: "insensitive" } },
+          { sku: { contains: q, mode: "insensitive" } },
+        ],
+      },
+    ];
+  }
+
+  if (options.stock === "out") {
+    where.stock = { lte: 0 };
+  } else if (options.stock === "in") {
+    // "In stock" above typical low threshold; exact threshold is per-row so use stock > 10.
+    where.stock = { gt: 10 };
+  } else if (options.stock === "low") {
+    where.stock = { gt: 0, lte: 10 };
+  }
+
+  const orderBy: Prisma.ProductOrderByWithRelationInput[] = [{ createdAt: "desc" }, { id: "desc" }];
+
+  let cursorSkip = 0;
+  if (options.cursor) {
+    const cursorRow = await prisma.product.findUnique({
+      where: { id: options.cursor },
+      select: { id: true, createdAt: true },
+    });
+    if (cursorRow) {
+      where.AND = [
+        ...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []),
+        {
+          OR: [
+            { createdAt: { lt: cursorRow.createdAt } },
+            { createdAt: cursorRow.createdAt, id: { lt: cursorRow.id } },
+          ],
+        },
+      ];
+    }
+  } else if (options.offset && options.offset > 0) {
+    cursorSkip = options.offset;
+  }
+
+  const [total, rows] = await Promise.all([
+    prisma.product.count({ where }),
+    prisma.product.findMany({
+      where,
+      orderBy,
+      take: options.limit + 1,
+      skip: cursorSkip,
+    }),
+  ]);
+
+  const hasMore = rows.length > options.limit;
+  const page = rows.slice(0, options.limit).map((row) => toAdminProduct(prismaToProduct(row)));
+
+  return {
+    products: page,
+    total,
+    hasMore,
+    nextCursor: hasMore ? page[page.length - 1]?.id : undefined,
+  };
+}
+
+async function listAdminProductsInMemory(options: {
+  search?: string;
+  status?: string;
+  category?: string;
+  stock?: "in" | "low" | "out";
+  limit: number;
+  offset?: number;
+  cursor?: string;
+}): Promise<{
+  products: AdminProduct[];
+  total: number;
+  hasMore: boolean;
+  nextCursor?: string;
+}> {
   let products = (await fetchAllProducts(true)).map(toAdminProduct);
 
   if (options.search) {
@@ -162,9 +279,8 @@ export async function listAdminProducts(
   }
 
   const offset = options.offset ?? 0;
-  const limit = options.limit ?? 20;
-  products = products.slice(offset, offset + limit);
-  const hasMore = offset + limit < total;
+  products = products.slice(offset, offset + options.limit);
+  const hasMore = offset + options.limit < total;
 
   return {
     products,
