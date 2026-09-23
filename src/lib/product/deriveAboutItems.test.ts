@@ -19,4 +19,23 @@ describe("deriveAboutItems", () => {
       { title: "", body: "Feature two" },
     ]);
   });
+
+  it("combines intro paragraphs and feature blocks without duplicates", () => {
+    const items = deriveAboutItems(
+      "Premium sound for live performance.\n\nDeep Bass\nRich low-end response for live performance.",
+    );
+
+    expect(items).toEqual([
+      { title: "", body: "Premium sound for live performance." },
+      { title: "Deep Bass", body: "Rich low-end response for live performance." },
+    ]);
+  });
+
+  it("drops repeated about items from duplicated import text", () => {
+    const items = deriveAboutItems(
+      "USB & Bluetooth Connectivity Supports easy connection.\nUSB & Bluetooth Connectivity Supports easy connection.",
+    );
+
+    expect(items).toHaveLength(1);
+  });
 });

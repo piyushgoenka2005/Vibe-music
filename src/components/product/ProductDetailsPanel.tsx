@@ -183,6 +183,26 @@ function InTheBoxAccordion({ items, baseId }: { items: string[]; baseId: string 
   );
 }
 
+function ProductDetailsTitle({ titleId = "section-details" }: { titleId?: string }) {
+  return (
+    <>
+      <h2 className="pdp-product-details__summary-title" id={titleId}>
+        Product details
+      </h2>
+      <span className="pdp-product-details__summary-icon" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M7 4h10a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+      </span>
+    </>
+  );
+}
+
 export default function ProductDetailsPanel({ product }: ProductDetailsPanelProps) {
   const baseId = useId().replace(/:/g, "");
 
@@ -196,29 +216,25 @@ export default function ProductDetailsPanel({ product }: ProductDetailsPanelProp
 
   return (
     <article className="pdp-product-details" aria-labelledby="section-details">
-      <header className="pdp-product-details__header">
-        <h2 className="pdp-product-details__title" id="section-details">
-          Product details
-        </h2>
-        <span className="pdp-product-details__header-icon" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M7 4h10a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-            <path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.5" />
-          </svg>
-        </span>
-      </header>
-
-      {viewModel.introBlocks.length > 0 ? (
-        <div className="pdp-product-details__lead">
-          {viewModel.introBlocks.map((block, index) => (
-            <p key={`intro-${index}`}>{block.text}</p>
-          ))}
-        </div>
-      ) : null}
+      {viewModel.quickSpecs.length > 0 ? (
+        <section className="pdp-product-details__summary-card" aria-label="Key specifications">
+          <header className="pdp-product-details__summary-header">
+            <ProductDetailsTitle />
+          </header>
+          <dl className="pdp-product-details__quick-grid">
+            {viewModel.quickSpecs.map((spec, index) => (
+              <div key={`${spec.label}-${index}`} className="pdp-product-details__quick-row">
+                <dt>{spec.label}</dt>
+                <dd>{spec.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : (
+        <header className="pdp-product-details__summary-header pdp-product-details__summary-header--solo">
+          <ProductDetailsTitle />
+        </header>
+      )}
 
       {viewModel.sizeAndFitSpecs.length > 0 ? (
         <DetailSubsection title="Size & Fit">
@@ -238,31 +254,29 @@ export default function ProductDetailsPanel({ product }: ProductDetailsPanelProp
         </p>
       ) : null}
 
-      {viewModel.quickSpecs.length > 0 ? (
-        <section className="pdp-product-details__quick-specs" aria-label="Key specifications">
-          <dl className="pdp-product-details__quick-grid">
-            {viewModel.quickSpecs.map((spec, index) => (
-              <div key={`${spec.label}-${index}`} className="pdp-product-details__quick-row">
-                <dt>{spec.label}</dt>
-                <dd>{spec.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      ) : null}
-
       {viewModel.aboutItems.length > 0 ? (
         <section className="pdp-product-details__about" aria-label="About this item">
           <h3 className="pdp-product-details__about-title">About this item</h3>
           <ul className="pdp-product-details__about-list">
             {viewModel.aboutItems.map((item, index) => (
-              <li key={`about-${index}`} className="pdp-product-details__about-item">
-                {item.title ? (
-                  <span className="pdp-product-details__about-item-title">{item.title}</span>
-                ) : null}
-                {item.body ? (
-                  <span className="pdp-product-details__about-item-body">{item.body}</span>
-                ) : null}
+              <li
+                key={`about-${index}`}
+                className={[
+                  "pdp-product-details__about-item",
+                  item.title ? "pdp-product-details__about-item--spec" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                <span className="pdp-product-details__about-node" aria-hidden="true" />
+                <div className="pdp-product-details__about-item-content">
+                  {item.title ? (
+                    <span className="pdp-product-details__about-item-title">{item.title}</span>
+                  ) : null}
+                  {item.body ? (
+                    <span className="pdp-product-details__about-item-body">{item.body}</span>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>

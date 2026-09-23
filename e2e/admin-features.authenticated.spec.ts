@@ -5,6 +5,7 @@ import { E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD } from "./helpers/e2e-credentials";
 import { isE2EAdminReady } from "./helpers/admin-ready";
 import { e2eMutationHeaders } from "./helpers/e2e-origin";
 import { loginAsE2EAdmin } from "./helpers/admin-auth";
+import { isE2EServerMode } from "./helpers/e2e-server";
 
 const adminReady = isE2EAdminReady();
 
@@ -17,6 +18,7 @@ test.describe("Admin password reset full flow", () => {
 
   test("request reset, set new password, login, restore password", async ({ page, request }) => {
     test.setTimeout(120_000);
+    test.skip(!(await isE2EServerMode(request)), "Server must run with E2E_TEST_MODE=true");
 
     // /reset-password is a guest-only route; drop the admin session so the
     // reset form renders instead of redirecting to /account.
@@ -72,6 +74,7 @@ test.describe("Admin password reset full flow", () => {
 
   test("rejects reused reset token", async ({ page, request }) => {
     test.setTimeout(90_000);
+    test.skip(!(await isE2EServerMode(request)), "Server must run with E2E_TEST_MODE=true");
     // Guest-only reset page — drop the authenticated admin session first.
     await page.context().clearCookies();
     await request.delete("/api/e2e/password-reset");

@@ -4,7 +4,7 @@ import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
 import GoogleAnalyticsScripts from "@/components/analytics/GoogleAnalyticsScripts";
 import { WebVitals } from "@/components/common/WebVitals";
-import SocialRailGate from "@/components/layout/SocialRailGate";
+import SocialRailShell from "@/components/layout/SocialRailShell";
 import { DEFAULT_METADATA } from "@/lib/site";
 import "./globals.css";
 import "@/styles/typography.css";
@@ -74,7 +74,7 @@ export default function RootLayout({
             </div>
           </div>
         ) : null}
-        <SocialRailGate />
+        <SocialRailShell />
         <AppShell>{children}</AppShell>
       </body>
     </html>

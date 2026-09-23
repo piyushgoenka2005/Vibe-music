@@ -40,6 +40,18 @@ describe("storefrontImageUrl", () => {
     expect(candidates).toEqual(expect.arrayContaining([master]));
   });
 
+  it("steps down CDN derivative buckets when larger sizes are missing", () => {
+    const webpMaster =
+      "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp";
+    const candidates = storefrontImageCandidates(webpMaster, 1200);
+    expect(candidates).toEqual([
+      `${webpMaster.replace(".webp", "")}-w1600.webp`,
+      `${webpMaster.replace(".webp", "")}-w960.webp`,
+      `${webpMaster.replace(".webp", "")}-w480.webp`,
+      webpMaster,
+    ]);
+  });
+
   it("exposes absolute CDN URLs for SEO surfaces", () => {
     expect(cdnSeoImageUrl(storefrontImageUrl(master, 480).src)).toBe(
       "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp",

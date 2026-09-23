@@ -12,6 +12,25 @@ function splitDescriptionSentences(text: string): string[] {
   return [trimmed];
 }
 
+function normalizeAboutKey(item: ProductDetailsAboutItem): string {
+  const combined = item.title ? `${item.title} ${item.body}`.trim() : item.body.trim();
+  return combined.toLowerCase().replace(/\s+/g, " ");
+}
+
+function dedupeAboutItems(items: ProductDetailsAboutItem[]): ProductDetailsAboutItem[] {
+  const seen = new Set<string>();
+  const result: ProductDetailsAboutItem[] = [];
+
+  for (const item of items) {
+    const key = normalizeAboutKey(item);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(item);
+  }
+
+  return result;
+}
+
 /**
  * Build "About this item" bullets from description content.
  * Falls back to sentence splitting for prose-only descriptions (common after bulk import).
@@ -20,27 +39,31 @@ export function deriveAboutItems(description: string): ProductDetailsAboutItem[]
   const blocks = parseProductDescription(description);
   const bulletBlocks = blocks.filter((block) => block.type === "bullet");
   const featureBlocks = blocks.filter((block) => block.type === "feature");
+  const introBlocks = blocks.filter((block) => block.type === "intro");
 
   if (bulletBlocks.length > 0) {
-    return bulletBlocks.map((block) => ({ title: "", body: block.text }));
+    return dedupeAboutItems(bulletBlocks.map((block) => ({ title: "", body: block.text })));
   }
 
-  if (featureBlocks.length > 0) {
-    return featureBlocks.map((block) => ({
-      title: block.title,
-      body: block.body,
-    }));
+  const items: ProductDetailsAboutItem[] = [];
+
+  for (const block of introBlocks) {
+    items.push({ title: "", body: block.text });
   }
 
-  const introBlocks = blocks.filter((block) => block.type === "intro");
-  const proseSource =
-    introBlocks
-      .map((block) => block.text)
-      .join(" ")
-      .trim() || description.trim();
+  for (const block of featureBlocks) {
+    items.push({ title: block.title, body: block.body });
+  }
 
-  return splitDescriptionSentences(proseSource).map((sentence) => ({
-    title: "",
-    body: sentence,
-  }));
+  if (items.length > 0) {
+    return dedupeAboutItems(items);
+  }
+
+  const proseSource = description.trim();
+  return dedupeAboutItems(
+    splitDescriptionSentences(proseSource).map((sentence) => ({
+      title: "",
+      body: sentence,
+    })),
+  );
 }

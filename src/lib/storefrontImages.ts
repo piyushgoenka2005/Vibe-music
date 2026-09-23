@@ -135,13 +135,32 @@ export function storefrontZoomImageUrl(url: string): string {
 }
 
 /**
- * Display candidates for a product image: optimized thumb first, then CDN/original.
+ * Display candidates for a product image: largest snapped bucket first, then smaller
+ * CDN derivatives (many uploads only have -w480), then the stored URL.
  */
 export function storefrontImageCandidates(url: string, width = 1200): string[] {
   if (!url) return [];
   const original = unwrapStorefrontSrc(url);
-  const preferred = storefrontImageUrl(original, width).src;
-  return Array.from(new Set([preferred, original].filter(Boolean)));
+  const candidates: string[] = [];
+
+  try {
+    if (new URL(original).hostname === CDN_HOST) {
+      const targetBucket = snapStorefrontThumbWidth(width) as (typeof THUMB_WIDTHS)[number];
+      const startIdx = THUMB_WIDTHS.indexOf(targetBucket);
+      if (startIdx >= 0) {
+        for (const bucket of THUMB_WIDTHS.slice(0, startIdx + 1).reverse()) {
+          candidates.push(storefrontImageUrl(original, bucket).src);
+        }
+      }
+    } else {
+      candidates.push(storefrontImageUrl(original, width).src);
+    }
+  } catch {
+    candidates.push(storefrontImageUrl(original, width).src);
+  }
+
+  candidates.push(original);
+  return Array.from(new Set(candidates.filter(Boolean)));
 }
 
 /** Resize CDN masters via derivative rewrite or local Sharp proxy. */

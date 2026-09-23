@@ -1,7 +1,6 @@
 import Razorpay from "razorpay";
 import { cache } from "react";
 import {
-  isDemoPaymentsAllowed,
   isRazorpayConfigured,
   getRazorpayPublicKey,
   assertLiveRazorpayKeys,
@@ -61,10 +60,6 @@ function getRazorpayInstance(): Razorpay {
   const instance = new Razorpay({ key_id: keyId, key_secret: keySecret });
   logPayment("Razorpay initialized");
   return instance;
-}
-
-function canUseDemoPayments(): boolean {
-  return isDemoPaymentsAllowed() && !isRazorpayConfigured();
 }
 
 function extractRazorpayError(error: unknown): string | null {
@@ -209,7 +204,6 @@ export async function createOrder(
   order: Order;
   razorpayOrderId?: string;
   keyId?: string;
-  demoMode?: boolean;
 }> {
   logPayment("Starting create order", {
     paymentMethod: payload.paymentMethod,
@@ -235,21 +229,20 @@ export async function createOrder(
 
   const order: Order = { id: orderId, ...orderData };
   let razorpayOrderId: string | undefined;
-  let demoMode: boolean | undefined;
   let persisted = false;
 
   try {
     if (payload.paymentMethod === "razorpay") {
-      if (isRazorpayConfigured()) {
-        logPayment("Creating Razorpay order", { orderId, amountPaise: toPaise(order.total) });
-        razorpayOrderId = await createRazorpayPaymentOrder(order, payload, orderId);
-        logPayment("Razorpay order created", { orderId, razorpayOrderId });
-        order.razorpayOrderId = razorpayOrderId;
-      } else if (canUseDemoPayments()) {
-        demoMode = true;
-      } else {
-        throw new Error("Online payments are not configured. Add Razorpay keys to .env.local.");
+      if (!isRazorpayConfigured()) {
+        throw new Error(
+          "Online payments are not configured. Add Razorpay keys to .env.local and restart the dev server.",
+        );
       }
+
+      logPayment("Creating Razorpay order", { orderId, amountPaise: toPaise(order.total) });
+      razorpayOrderId = await createRazorpayPaymentOrder(order, payload, orderId);
+      logPayment("Razorpay order created", { orderId, razorpayOrderId });
+      order.razorpayOrderId = razorpayOrderId;
     }
 
     logPayment("Persisting order", { orderId });
@@ -285,8 +278,7 @@ export async function createOrder(
     return {
       order: { ...order, razorpayOrderId, inventoryStatus: "reserved" },
       razorpayOrderId,
-      keyId: isRazorpayConfigured() ? getRazorpayPublicKey() : undefined,
-      demoMode: Boolean(demoMode),
+      keyId: getRazorpayPublicKey(),
     };
   } catch (error) {
     logPaymentError(error, { orderId, step: "createOrder" });

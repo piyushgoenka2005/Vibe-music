@@ -7,7 +7,6 @@ import { cacheOrderForConfirmation } from "@/lib/checkout/orderConfirmationCache
 import { ensureRazorpayScriptLoaded, useRazorpay } from "@/hooks/useRazorpay";
 import {
   createPaymentOrder,
-  completeDemoPayment,
   releaseOrderReservation,
   verifyPayment,
 } from "@/services/orderService";
@@ -196,19 +195,6 @@ export function useCheckoutPayment({
       pendingTrackingToken = orderResponse.trackingToken;
       const trackingToken = pendingTrackingToken;
       setProcessingLabel("Opening Razorpay…");
-
-      if (orderResponse.demoMode) {
-        const demo = await completeDemoPayment(
-          orderResponse.orderId,
-          email,
-          orderResponse.trackingToken,
-        );
-        if (demo.order) {
-          cacheOrderForConfirmation(demo.order, { checkoutMode });
-        }
-        router.replace(demo.redirectUrl);
-        return;
-      }
 
       if (!orderResponse.keyId?.startsWith("rzp_")) {
         throw new Error(

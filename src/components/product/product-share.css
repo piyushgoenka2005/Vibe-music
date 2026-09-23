@@ -17,7 +17,9 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: color 150ms ease, opacity 150ms ease;
+  transition:
+    color 150ms ease,
+    opacity 150ms ease;
 }
 
 .product-share-btn:not(.product-share-btn--labeled):hover {
@@ -121,7 +123,9 @@
 .compare-btn {
   color: #334155;
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
 }
 
 .compare-btn--active,
@@ -201,21 +205,6 @@
 .acct__wishlist-card,
 .scanner-card-wrap {
   position: relative;
-}
-
-.scanner-card-wrap {
-  display: flex;
-  align-items: stretch;
-}
-
-.scanner-card-wrap .scanner-card {
-  flex: 1;
-}
-
-.scanner-card__share {
-  align-self: center;
-  margin-right: 6px;
-  flex-shrink: 0;
 }
 
 .pdp-share-btn.product-share-btn {

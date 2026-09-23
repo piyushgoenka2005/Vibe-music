@@ -7,8 +7,8 @@ import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { formatCheckoutError } from "@/lib/server/checkoutErrors";
 import { withTimeout } from "@/lib/server/withTimeout";
 import {
+  assertLiveRazorpayKeys,
   getRazorpayPublicKey,
-  isDemoPaymentsAllowed,
   isRazorpayConfigured,
 } from "@/lib/server/env";
 import { canAccessOrder } from "@/lib/server/orderAccess";
@@ -83,16 +83,10 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
     }
 
     if (!isRazorpayConfigured()) {
-      if (!isDemoPaymentsAllowed()) {
-        return NextResponse.json({ error: "Payment gateway unavailable." }, { status: 503 });
-      }
-
-      return NextResponse.json({
-        orderId: order.id,
-        email: order.email,
-        demoMode: true,
-      });
+      return NextResponse.json({ error: "Payment gateway unavailable." }, { status: 503 });
     }
+
+    assertLiveRazorpayKeys();
 
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID!,
@@ -127,7 +121,6 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
     return NextResponse.json({
       orderId: order.id,
       email: order.email,
-      demoMode: false,
       razorpay: {
         orderId: razorpayOrder.id,
         amount: razorpayOrder.amount,

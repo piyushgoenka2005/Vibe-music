@@ -342,6 +342,7 @@ function sectionDomId(sectionKey: HomepageSectionKey): string {
     big_names_deals: "big-names-deals",
     brand_strip: "brand-strip",
     featured_stories: "featured-gear-stories",
+    social_rail: "social-rail",
   };
   return map[sectionKey];
 }
@@ -356,7 +357,8 @@ async function resolveSection(
     section.sectionKey === "big_names_deals" ||
     section.sectionKey === "featured_stories" ||
     section.sectionKey === "browse_by_categories" ||
-    section.sectionKey === "category_bento"
+    section.sectionKey === "category_bento" ||
+    section.sectionKey === "social_rail"
   ) {
     return null;
   }

@@ -159,7 +159,6 @@
   top: 42%;
 }
 
-
 .midlife-zone {
   position: relative;
   overflow: hidden;
@@ -203,9 +202,23 @@
 
 .midlife-display-framer-text {
   flex: 1;
-  white-space: pre-wrap;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
   word-break: break-word;
   transition: transform 0.1s ease-out;
+}
+
+.midlife-display-framer-line {
+  display: block;
+}
+
+.midlife-display-framer-line--accent {
+  color: var(--midlife-orange);
+}
+
+.midlife-display-framer-line--muted {
+  color: rgba(226, 222, 213, 0.72);
 }
 
 .midlife-display-framer-cursor {
@@ -215,8 +228,14 @@
 }
 
 @keyframes midlife-framer-blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
 }
 
 /* ── Speaker + power zone ── */
@@ -338,8 +357,15 @@
 }
 
 @keyframes midlife-indicator-pulse {
-  0%, 100% { transform: scale(0.99); opacity: 0.35; }
-  50% { transform: scale(1.08); opacity: 0.55; }
+  0%,
+  100% {
+    transform: scale(0.99);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.55;
+  }
 }
 
 /* ── Top row layout ── */
@@ -415,7 +441,9 @@
   touch-action: none;
 }
 
-.midlife-knob:active { cursor: grabbing; }
+.midlife-knob:active {
+  cursor: grabbing;
+}
 
 .midlife-knob-ring {
   position: absolute;
@@ -436,10 +464,18 @@
     rgba(0, 0, 0, 0.55) -1px -1px 1px 0px inset;
 }
 
-.midlife-knob-cap--dark { background: #3a4450; }
-.midlife-knob-cap--orange { background: #4a3a30; }
-.midlife-knob-cap--green { background: #3a4a3a; }
-.midlife-knob-cap--silver { background: #c8c8c8; }
+.midlife-knob-cap--dark {
+  background: #3a4450;
+}
+.midlife-knob-cap--orange {
+  background: #4a3a30;
+}
+.midlife-knob-cap--green {
+  background: #3a4a3a;
+}
+.midlife-knob-cap--silver {
+  background: #c8c8c8;
+}
 
 .midlife-knob-dimple {
   position: absolute;
@@ -452,10 +488,18 @@
   box-shadow: rgba(255, 255, 255, 0.25) 1px 1px 2px 0px inset;
 }
 
-.midlife-knob-dimple--orange { background: var(--midlife-orange); }
-.midlife-knob-dimple--blue { background: #4a7cff; }
-.midlife-knob-dimple--green { background: #4caf50; }
-.midlife-knob-dimple--white { background: #fff; }
+.midlife-knob-dimple--orange {
+  background: var(--midlife-orange);
+}
+.midlife-knob-dimple--blue {
+  background: #4a7cff;
+}
+.midlife-knob-dimple--green {
+  background: #4caf50;
+}
+.midlife-knob-dimple--white {
+  background: #fff;
+}
 
 /* ── Visualiser / sequencer pads ── */
 .midlife-visualiser {
@@ -720,8 +764,15 @@
 }
 
 @keyframes midlife-rec-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.92); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.92);
+  }
 }
 
 /* ── Parallax stage ── */
@@ -803,8 +854,13 @@
   color: rgba(0, 0, 0, 0.42);
 }
 
-.midlife-parallax-side--left { left: clamp(1rem, 4vw, 3rem); }
-.midlife-parallax-side--right { right: clamp(1rem, 4vw, 3rem); text-align: right; }
+.midlife-parallax-side--left {
+  left: clamp(1rem, 4vw, 3rem);
+}
+.midlife-parallax-side--right {
+  right: clamp(1rem, 4vw, 3rem);
+  text-align: right;
+}
 
 .midlife-parallax-center {
   position: relative;
@@ -836,9 +892,16 @@
 }
 
 @media (max-width: 900px) {
-  .midlife-parallax-zone { height: 170vh; }
-  .midlife-parallax-word { font-size: clamp(3.5rem, 22vw, 6rem); top: 10%; }
-  .midlife-parallax-side { display: none; }
+  .midlife-parallax-zone {
+    height: 170vh;
+  }
+  .midlife-parallax-word {
+    font-size: clamp(3.5rem, 22vw, 6rem);
+    top: 10%;
+  }
+  .midlife-parallax-side {
+    display: none;
+  }
 
   .midlife-chassis {
     max-width: 420px;
@@ -855,7 +918,9 @@
 }
 
 @media (max-width: 520px) {
-  .midlife-chassis { overflow-x: visible; }
+  .midlife-chassis {
+    overflow-x: visible;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

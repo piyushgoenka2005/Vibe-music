@@ -11,21 +11,24 @@ function stripBulletMarker(line: string): string {
 export function descriptionToBulletLines(description: string): string[] {
   const trimmed = description.replace(/\r\n/g, "\n").trim();
   if (!trimmed) return [""];
-  const lines = trimmed
-    .split("\n")
-    .map(stripBulletMarker)
-    .filter(Boolean);
+  const lines = trimmed.split("\n").map(stripBulletMarker).filter(Boolean);
   return lines.length > 0 ? [...lines, ""] : [""];
 }
 
 export function bulletLinesToDescription(lines: string[]): string {
-  return lines.map((line) => line.trim()).filter(Boolean).join("\n");
+  return lines
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n");
 }
 
 function parseBulletListDescription(normalized: string): DescriptionBlock[] | null {
   if (/\n\n/.test(normalized)) return null;
 
-  const rawLines = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
+  const rawLines = normalized
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
   if (rawLines.length === 0) return null;
 
   if (rawLines.length === 1) {
@@ -61,6 +64,8 @@ const BODY_STARTERS = new Set([
   "made",
   "crafted",
   "equipped",
+  "compact",
+  "portable",
 ]);
 
 const TITLE_END_NOUNS = new Set([
@@ -78,6 +83,7 @@ const TITLE_END_NOUNS = new Set([
   "clarity",
   "connectivity",
   "construction",
+  "mixing",
 ]);
 
 const CONNECTORS = new Set(["for", "and", "with", "&", "the", "a", "an", "of", "in", "to"]);
@@ -115,6 +121,7 @@ function splitTitleBody(chunk: string): { title: string; body: string } {
   for (let i = 3; i < Math.min(words.length, 10); i += 1) {
     const word = words[i];
     const prev = words[i - 1]?.toLowerCase() ?? "";
+    const next = words[i + 1];
 
     if (word.startsWith("Built-")) {
       splitIndex = i;
@@ -122,7 +129,14 @@ function splitTitleBody(chunk: string): { title: string; body: string } {
     }
 
     if (BODY_STARTERS.has(word.toLowerCase())) {
-      if (word.toLowerCase() === "features" && /^Features?$/.test(word)) {
+      // Keep "… Premium Features" as a title when the next word is still title-case.
+      if (
+        word.toLowerCase() === "features" &&
+        /^Features?$/.test(word) &&
+        next &&
+        isTitleCaseWord(next) &&
+        !BODY_STARTERS.has(next.toLowerCase())
+      ) {
         continue;
       }
       splitIndex = i;
@@ -149,10 +163,7 @@ function splitTitleBody(chunk: string): { title: string; body: string } {
     }
   }
 
-  return cleanFeatureTitle(
-    words.slice(0, splitIndex).join(" "),
-    words.slice(splitIndex).join(" ")
-  );
+  return cleanFeatureTitle(words.slice(0, splitIndex).join(" "), words.slice(splitIndex).join(" "));
 }
 
 function cleanFeatureTitle(title: string, body: string): { title: string; body: string } {
@@ -175,8 +186,11 @@ function cleanFeatureTitle(title: string, body: string): { title: string; body: 
 }
 
 function findFirstFeatureIndex(text: string): number {
+  // Title words may include "&" / "for" / "and" / "with" as connectors.
+  // Do NOT put a trailing space inside the "&" alternative — the outer group
+  // already requires a leading space, and "& " would steal the next word's space.
   const marker =
-    /\.\s+(?:[A-Z][A-Za-z0-9\-]+(?: (?:& |for |and |with |[A-Z][A-Za-z0-9\-]+)){2,6})\s+(?:Built-in|ADEON|Suitable|Compatible|Strong|[A-Z]{2,})/;
+    /\.\s+(?:[A-Z][A-Za-z0-9\-]+(?: (?:&|for|and|with|[A-Z][A-Za-z0-9\-]+)){2,8})\s+(?:Built-in|ADEON|Suitable|Compatible|Strong|Ideal|Compact|Supports|Features|Delivers|[A-Z]{2,})/;
   const match = marker.exec(text);
   return match ? match.index + 2 : -1;
 }
@@ -210,8 +224,9 @@ function splitIntroParagraphs(intro: string): string[] {
   const trimmed = intro.trim();
   if (!trimmed) return [];
 
-  const sentences =
-    trimmed.match(/[^.!?]+[.!?]+(?:\s|$)/g)?.map((sentence) => sentence.trim()) ?? [trimmed];
+  const sentences = trimmed.match(/[^.!?]+[.!?]+(?:\s|$)/g)?.map((sentence) => sentence.trim()) ?? [
+    trimmed,
+  ];
 
   if (sentences.length <= 2) {
     return [trimmed];
@@ -251,11 +266,17 @@ function parseInlineDescription(text: string): {
 }
 
 function parseStructuredSections(normalized: string): DescriptionBlock[] {
-  const sections = normalized.split(/\n\n+/).map((section) => section.trim()).filter(Boolean);
+  const sections = normalized
+    .split(/\n\n+/)
+    .map((section) => section.trim())
+    .filter(Boolean);
   const blocks: DescriptionBlock[] = [];
 
   for (const section of sections) {
-    const lines = section.split("\n").map((line) => line.trim()).filter(Boolean);
+    const lines = section
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
 
     if (lines.length >= 2 && looksLikeHeading(lines[0])) {
       blocks.push({

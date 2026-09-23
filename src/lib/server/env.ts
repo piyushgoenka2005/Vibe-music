@@ -4,10 +4,10 @@ export function isProduction(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
-/** Demo payments when Razorpay is off — never allowed in production. */
+/** Simulated checkout without Razorpay — opt-in via ALLOW_DEMO_PAYMENTS=true; never in production. */
 export function isDemoPaymentsAllowed(): boolean {
   if (isProduction()) return false;
-  return process.env.ALLOW_DEMO_PAYMENTS !== "false";
+  return process.env.ALLOW_DEMO_PAYMENTS === "true";
 }
 
 export type RazorpayKeyMode = "live" | "test" | "missing";
@@ -31,35 +31,34 @@ export function getRazorpayKeyMode(): RazorpayKeyMode {
   return "missing";
 }
 
-/**
- * vibemusic.in / production must never accept Razorpay test keys
- * (those show the red "Test Mode" ribbon in Checkout).
- */
+/** Production must never accept Razorpay test keys (Test Mode ribbon in Checkout). */
 export function requiresLiveRazorpay(): boolean {
-  if (isProduction()) return true;
-  const site = (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.AUTH_URL ||
-    process.env.NEXTAUTH_URL ||
-    ""
-  ).toLowerCase();
-  return site.includes("vibemusic.in");
+  return isProduction();
 }
 
-export function isRazorpayConfigured(): boolean {
+/** Human-readable reason when Razorpay cannot open checkout (safe to show in admin/checkout). */
+export function describeRazorpayMisconfiguration(): string | null {
   const keyId = process.env.RAZORPAY_KEY_ID?.trim();
   const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
   const publicKey = getRazorpayPublicKey();
-  if (!keyId || !keySecret || !publicKey) return false;
 
-  if (requiresLiveRazorpay()) {
-    // Reject test keys on the live storefront so checkout cannot open Test Mode.
-    if (!keyId.startsWith("rzp_live_") || !publicKey.startsWith("rzp_live_")) {
-      return false;
-    }
+  if (!keyId || !keySecret) {
+    return "Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET on the server.";
   }
+  if (!publicKey) {
+    return "Set NEXT_PUBLIC_RAZORPAY_KEY_ID (must match RAZORPAY_KEY_ID), then rebuild the app.";
+  }
+  if (keyId !== publicKey) {
+    return "RAZORPAY_KEY_ID and NEXT_PUBLIC_RAZORPAY_KEY_ID must match.";
+  }
+  if (requiresLiveRazorpay() && !keyId.startsWith("rzp_live_")) {
+    return "Production requires live Razorpay keys (rzp_live_…). Test keys are rejected.";
+  }
+  return null;
+}
 
-  return true;
+export function isRazorpayConfigured(): boolean {
+  return describeRazorpayMisconfiguration() === null;
 }
 
 /** Throw if production/vibemusic tries to charge with test keys. */

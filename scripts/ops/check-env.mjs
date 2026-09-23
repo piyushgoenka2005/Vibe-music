@@ -179,6 +179,22 @@ if (/localhost|127\.0\.0\.1/i.test(siteUrl)) {
     "NEXT_PUBLIC_SITE_URL is localhost — set https://vibemusic.in for production."
   );
 }
+const razorpayKeyId = env.RAZORPAY_KEY_ID?.trim() ?? "";
+const razorpayPublicKey = env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim() ?? "";
+if (razorpayKeyId && razorpayPublicKey && razorpayKeyId !== razorpayPublicKey) {
+  console.log("RAZORPAY_KEY_ID and NEXT_PUBLIC_RAZORPAY_KEY_ID must match.");
+}
+if (
+  /vibemusic\.in/i.test(siteUrl) &&
+  razorpayKeyId.startsWith("rzp_test_")
+) {
+  console.log(
+    "Razorpay test keys with vibemusic.in — production VPS must use rzp_live_… keys."
+  );
+}
+if (env.ALLOW_DEMO_PAYMENTS === "true" && /vibemusic\.in/i.test(siteUrl)) {
+  console.log("ALLOW_DEMO_PAYMENTS must be false on the production storefront.");
+}
 if (!missingRequired.length) {
   console.log("All production-required keys are present in local env files.");
   console.log(

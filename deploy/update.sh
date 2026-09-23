@@ -63,6 +63,9 @@ fi
 echo "==> Clearing stale Next.js build cache"
 rm -rf .next
 
+echo "==> Production env + Razorpay preflight"
+bash deploy/razorpay-preflight.sh
+
 echo "==> Type-check"
 npm run type-check
 

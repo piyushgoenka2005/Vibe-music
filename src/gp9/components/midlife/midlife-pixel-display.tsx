@@ -10,17 +10,35 @@ type MidlifePixelDisplayProps = {
   className?: string;
 };
 
-function buildDisplayCopy(status: DisplayStatus, powered: boolean) {
+type DisplayLine = { text: string; tone?: "muted" | "accent" };
+
+function buildDisplayLines(status: DisplayStatus, powered: boolean): DisplayLine[] {
   if (!powered) {
-    return "MIDLIFE ENGINEERING v2.0\nSYSTEM STATUS: DORMANT\n\nPower required. Please switch on the machine.";
+    return [
+      { text: "MIDLIFE ENGINEERING v2.0" },
+      { text: "SYSTEM STATUS: DORMANT", tone: "accent" },
+      { text: "Turn the POWER knob to wake the lab.", tone: "muted" },
+    ];
   }
   if (status === "RECORDING") {
-    return "MIDLIFE ENGINEERING v2.0\nSYSTEM STATUS: RECORDING\n\nCapturing your mix session.";
+    return [
+      { text: "MIDLIFE ENGINEERING v2.0" },
+      { text: "SYSTEM STATUS: RECORDING", tone: "accent" },
+      { text: "Capturing your mix session.", tone: "muted" },
+    ];
   }
   if (status === "DORMANT") {
-    return "MIDLIFE ENGINEERING v2.0\nSYSTEM STATUS: DORMANT\n\nReady. Select a beat or layer.";
+    return [
+      { text: "MIDLIFE ENGINEERING v2.0" },
+      { text: "SYSTEM STATUS: DORMANT", tone: "accent" },
+      { text: "Select a beat, track, or ambient layer.", tone: "muted" },
+    ];
   }
-  return "> INIT DRONE\nHold still.\nLet it breathe.";
+  return [
+    { text: "> INIT DRONE" },
+    { text: "Hold still." },
+    { text: "Let it breathe.", tone: "muted" },
+  ];
 }
 
 export function MidlifePixelDisplay({
@@ -28,16 +46,27 @@ export function MidlifePixelDisplay({
   powered = false,
   className,
 }: MidlifePixelDisplayProps) {
-  const copy = buildDisplayCopy(status, powered);
+  const lines = buildDisplayLines(status, powered);
 
   return (
     <div className={cn("midlife-display-framer", className)} aria-live="polite">
-      <span className="midlife-display-framer-text">
-        {copy}
+      <div className="midlife-display-framer-text">
+        {lines.map((line) => (
+          <span
+            key={line.text}
+            className={cn(
+              "midlife-display-framer-line",
+              line.tone === "accent" && "midlife-display-framer-line--accent",
+              line.tone === "muted" && "midlife-display-framer-line--muted",
+            )}
+          >
+            {line.text}
+          </span>
+        ))}
         <span className="midlife-display-framer-cursor" aria-hidden>
           |
         </span>
-      </span>
+      </div>
     </div>
   );
 }

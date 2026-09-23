@@ -1,7 +1,11 @@
 import { isSmtpConfigured } from "@/lib/server/email/smtpConfig";
 import { isPostgresConfigured } from "@/lib/db/postgresConfig";
 import { isGoogleAuthConfigured } from "@/lib/auth/google-config";
-import { isRazorpayConfigured, isDemoPaymentsAllowed } from "@/lib/server/env";
+import {
+  describeRazorpayMisconfiguration,
+  isRazorpayConfigured,
+  isDemoPaymentsAllowed,
+} from "@/lib/server/env";
 import { isClientAnalyticsConfigured, isServerAnalyticsConfigured } from "@/lib/analytics/config";
 import { isGooglePlacesConfigured } from "@/lib/server/googlePlaces";
 import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
@@ -116,7 +120,8 @@ export function getOpsStatusReport(): {
       status: checks.razorpay,
       tier: "required",
       detail:
-        "RAZORPAY_KEY_ID / SECRET + NEXT_PUBLIC_RAZORPAY_KEY_ID must be rzp_live_… on vibemusic.in (rzp_test_ shows Test Mode)",
+        describeRazorpayMisconfiguration() ??
+        "RAZORPAY_KEY_ID / SECRET + NEXT_PUBLIC_RAZORPAY_KEY_ID (live keys in production)",
     },
     {
       key: "razorpayWebhook",

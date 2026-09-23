@@ -18,11 +18,8 @@ import {
 import { MidlifeGrain } from "@/gp9/components/midlife/midlife-grain";
 import { MidlifePowerKnob } from "@/gp9/components/midlife/midlife-power-knob";
 import { RotaryKnob } from "@/gp9/components/midlife/rotary-knob";
-import {
-  Gp9MotionButton,
-  Gp9MotionLed,
-  Gp9PanelStagger,
-} from "@/gp9/components/gp9/gp9-motion";
+import { Gp9MotionButton, Gp9MotionLed, Gp9PanelStagger } from "@/gp9/components/gp9/gp9-motion";
+import Gp9ModelStatusNote from "@/gp9/components/ui/gp9-model-status-note";
 import { cn } from "@/gp9/lib/utils";
 import {
   Gp9PianoEngine,
@@ -55,7 +52,7 @@ import {
 
 const ShowroomCanvas = dynamic(
   () => import("@/gp9/components/gp9-scene").then((m) => m.ShowroomCanvas),
-  { ssr: false, loading: () => null }
+  { ssr: false, loading: () => null },
 );
 
 // ============================================================================
@@ -422,7 +419,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       performanceModeId: s.performanceModeId,
       chorus: GP9_PRESETS.find((p) => p.id === s.presetId)?.chorus ?? 0.08,
     }),
-    []
+    [],
   );
 
   const syncEngine = useCallback(() => {
@@ -459,7 +456,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_PRESET", id });
       if (state.powered) engine.applyPreset(id);
     },
-    [engine, state.powered]
+    [engine, state.powered],
   );
 
   const setPerformanceMode = useCallback(
@@ -467,7 +464,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_PERFORMANCE_MODE", id });
       if (state.powered) engine.setParams({ performanceModeId: id });
     },
-    [engine, state.powered]
+    [engine, state.powered],
   );
 
   const setSustain = useCallback(
@@ -475,7 +472,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_SUSTAIN", value: on });
       engine.setSustain(on);
     },
-    [engine]
+    [engine],
   );
 
   const setSoftPedal = useCallback(
@@ -483,7 +480,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_SOFT_PEDAL", value: on });
       engine.setSoftPedal(on);
     },
-    [engine]
+    [engine],
   );
 
   const setSostenuto = useCallback(
@@ -491,7 +488,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_SOSTENUTO", value: on });
       engine.setParams({ sostenuto: on });
     },
-    [engine]
+    [engine],
   );
 
   const setHeadphoneMode = useCallback(
@@ -499,7 +496,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_HEADPHONE", value: on });
       if (state.powered) engine.setParams({ headphoneMode: on });
     },
-    [engine, state.powered]
+    [engine, state.powered],
   );
 
   const setMetronome = useCallback(
@@ -507,7 +504,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_METRONOME", value: on });
       if (state.powered) engine.setMetronome(on, state.tempo, state.metronomeLevel);
     },
-    [engine, state.powered, state.tempo, state.metronomeLevel]
+    [engine, state.powered, state.tempo, state.metronomeLevel],
   );
 
   const setTempo = useCallback(
@@ -521,7 +518,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [engine, state.phraseLoop, state.phraseSteps]
+    [engine, state.phraseLoop, state.phraseSteps],
   );
 
   const setMetronomeLevel = useCallback(
@@ -531,7 +528,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
         engine.setMetronome(true, state.tempo, level);
       }
     },
-    [engine, state.powered, state.metronomeOn, state.tempo]
+    [engine, state.powered, state.metronomeOn, state.tempo],
   );
 
   const setTranspose = useCallback(
@@ -540,7 +537,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_TRANSPOSE", value: clamped });
       if (state.powered) engine.setParams({ transpose: clamped });
     },
-    [engine, state.powered]
+    [engine, state.powered],
   );
 
   const noteOn = useCallback(
@@ -556,7 +553,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "NOTE_ON", midi });
       engine.noteOn(midi, velocity);
     },
-    [engine, state, buildEngineParams]
+    [engine, state, buildEngineParams],
   );
 
   const noteOff = useCallback(
@@ -564,7 +561,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "NOTE_OFF", midi });
       engine.noteOff(midi);
     },
-    [engine]
+    [engine],
   );
 
   const setParam = useCallback(
@@ -572,7 +569,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_PARAM", key, value });
       if (state.powered) engine.setParams({ [key]: value });
     },
-    [engine, state.powered]
+    [engine, state.powered],
   );
 
   const startRecording = useCallback(async () => {
@@ -639,7 +636,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
   const togglePhraseStep = useCallback(
     (index: number) => {
       const nextSteps = state.phraseSteps.map((s, i) =>
-        i === index ? { ...s, active: !s.active } : s
+        i === index ? { ...s, active: !s.active } : s,
       );
       dispatch({ type: "SET_PHRASE_STEPS", steps: nextSteps });
       if (state.phraseLoop) {
@@ -649,7 +646,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [engine, state.phraseLoop, state.phraseSteps, state.tempo]
+    [engine, state.phraseLoop, state.phraseSteps, state.tempo],
   );
 
   const setArpeggiator = useCallback(
@@ -658,7 +655,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_ARP", enabled: on, pattern: pat });
       if (state.powered) engine.setArpeggiator(on, pat);
     },
-    [engine, state.powered, state.arpPattern]
+    [engine, state.powered, state.arpPattern],
   );
 
   const connectMidi = useCallback(async () => {
@@ -710,7 +707,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_TOUCH_CURVE", value: curve });
       if (state.powered) engine.setParams({ touchCurve: curve });
     },
-    [engine, state.powered]
+    [engine, state.powered],
   );
 
   const setSplitEnabled = useCallback(
@@ -722,7 +719,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [engine, state.powered, state.splitPoint]
+    [engine, state.powered, state.splitPoint],
   );
 
   const setSplitPoint = useCallback(
@@ -732,7 +729,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
         engine.setParams({ splitPoint: midi });
       }
     },
-    [engine, state.powered, state.splitEnabled]
+    [engine, state.powered, state.splitEnabled],
   );
 
   const setSplitArmMode = useCallback((on: boolean) => {
@@ -744,7 +741,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_SPLIT_VOICES", low, high });
       if (state.powered) engine.setParams({ splitLowVoice: low, splitHighVoice: high });
     },
-    [engine, state.powered]
+    [engine, state.powered],
   );
 
   useEffect(() => {
@@ -872,7 +869,7 @@ export function Gp9PianoProvider({ children }: { children: ReactNode }) {
       setSplitPoint,
       setSplitArmMode,
       setSplitVoices,
-    ]
+    ],
   );
 
   return <Gp9PianoContext.Provider value={value}>{children}</Gp9PianoContext.Provider>;
@@ -895,48 +892,50 @@ export function Gp9HudDisplay() {
     GP9_PERFORMANCE_MODES.find((m) => m.id === state.performanceModeId)?.label.toUpperCase() ??
     "RECITAL";
 
-  let copy: string;
-  if (!state.powered) {
-    copy =
-      "GRAND PIANO 9 · PHASE 7\nSYSTEM STATUS: STANDBY\n\nKeyboard nav · focus rings · mobile touch targets.";
-  } else if (!state.engineReady) {
-    copy = "GRAND PIANO 9 · PHASE 7\nLOADING SAMPLES…\n\nInitializing Salamander concert grand.";
-  } else {
-    const sustain = state.sustain ? "HELD" : "OFF";
-    const rec = state.recording
-      ? "REC ●"
-      : state.sessionPlaying
-        ? "PLAYING"
-        : state.hasSession
-          ? `${state.sessionEvents.length} EVTS`
-          : "IDLE";
-    const loop = state.phraseLoop ? "PHRASE ON" : "PHRASE OFF";
-    const arp = state.arpEnabled ? `ARP ${state.arpPattern.toUpperCase()}` : "ARP OFF";
-    const touch = state.touchCurve.toUpperCase();
-    const layer = Math.round(state.layerBlend * 100);
-    const split = state.splitEnabled
-      ? `SPLIT ${state.splitPoint !== null ? midiToNoteName(state.splitPoint) : "—"}`
-      : "SPLIT OFF";
-    copy = [
-      "GRAND PIANO 9 · PLAYABLE",
-      `MODE: ${mode} · PRESET: ${preset} · TOUCH: ${touch}`,
-      `SESSION: ${rec} · ${loop} · ${arp}`,
-      `TONE: LAYER ${layer}% · DELAY ${Math.round(state.delay * 100)}% · ${split}`,
-      `TEMPO: ${state.tempo} BPM · SUSTAIN: ${sustain}`,
-    ].join("\n");
-  }
+  const lines: string[] = !state.powered
+    ? ["GRAND PIANO 9 · PHASE 7", "SYSTEM STATUS: STANDBY", "Tap POWER or any key to start."]
+    : !state.engineReady
+      ? ["GRAND PIANO 9 · PHASE 7", "LOADING SAMPLES…", "Initializing Salamander concert grand."]
+      : (() => {
+          const sustain = state.sustain ? "HELD" : "OFF";
+          const rec = state.recording
+            ? "REC ●"
+            : state.sessionPlaying
+              ? "PLAYING"
+              : state.hasSession
+                ? `${state.sessionEvents.length} EVTS`
+                : "IDLE";
+          const loop = state.phraseLoop ? "PHRASE ON" : "PHRASE OFF";
+          const arp = state.arpEnabled ? `ARP ${state.arpPattern.toUpperCase()}` : "ARP OFF";
+          const touch = state.touchCurve.toUpperCase();
+          const layer = Math.round(state.layerBlend * 100);
+          const split = state.splitEnabled
+            ? `SPLIT ${state.splitPoint !== null ? midiToNoteName(state.splitPoint) : "—"}`
+            : "SPLIT OFF";
+          return [
+            "GRAND PIANO 9 · PLAYABLE",
+            `MODE: ${mode} · PRESET: ${preset} · TOUCH: ${touch}`,
+            `SESSION: ${rec} · ${loop} · ${arp}`,
+            `TONE: LAYER ${layer}% · DELAY ${Math.round(state.delay * 100)}% · ${split}`,
+            `TEMPO: ${state.tempo} BPM · SUSTAIN: ${sustain}`,
+          ];
+        })();
 
   return (
     <div
       className={cn("gp9-hud-display", state.recording && "gp9-hud-display--recording")}
       aria-live="polite"
     >
-      <span className="gp9-hud-display-text">
-        {copy}
+      <div className="gp9-hud-display-text">
+        {lines.map((line) => (
+          <span key={line} className="gp9-hud-display-line">
+            {line}
+          </span>
+        ))}
         <span className="gp9-hud-cursor" aria-hidden>
           |
         </span>
-      </span>
+      </div>
     </div>
   );
 }
@@ -974,7 +973,7 @@ export function Gp9InstrumentConsole() {
                 type="button"
                 className={cn(
                   "gp9-preset-btn",
-                  state.presetId === preset.id && "gp9-preset-btn--active"
+                  state.presetId === preset.id && "gp9-preset-btn--active",
                 )}
                 onClick={() => {
                   void powerOn();
@@ -1088,7 +1087,7 @@ export function Gp9Keyboard() {
       if (fromTouch && state.hapticsEnabled) triggerKeyHaptic(velocity);
       await noteOn(midi, velocity);
     },
-    [noteOn, state.hapticsEnabled, state.splitArmMode, state.splitEnabled, setSplitPoint]
+    [noteOn, state.hapticsEnabled, state.splitArmMode, state.splitEnabled, setSplitPoint],
   );
 
   const handleUp = useCallback(
@@ -1096,7 +1095,7 @@ export function Gp9Keyboard() {
       pointerHeld.current.delete(midi);
       noteOff(midi);
     },
-    [noteOff]
+    [noteOff],
   );
 
   const handleKeyPlayDown = useCallback(
@@ -1107,7 +1106,7 @@ export function Gp9Keyboard() {
         void handleDown(midi, 88);
       }
     },
-    [handleDown]
+    [handleDown],
   );
 
   const handleKeyPlayUp = useCallback(
@@ -1117,7 +1116,7 @@ export function Gp9Keyboard() {
         handleUp(midi);
       }
     },
-    [handleUp]
+    [handleUp],
   );
 
   return (
@@ -1161,7 +1160,7 @@ export function Gp9Keyboard() {
                   active && "gp9-key--active",
                   splitOn && key.midi < state.splitPoint! && "gp9-key--split-low",
                   splitOn && key.midi >= state.splitPoint! && "gp9-key--split-high",
-                  splitOn && key.midi === state.splitPoint && "gp9-key--split-point"
+                  splitOn && key.midi === state.splitPoint && "gp9-key--split-point",
                 )}
                 onPointerDown={(e) => {
                   e.currentTarget.setPointerCapture(e.pointerId);
@@ -1195,7 +1194,7 @@ export function Gp9Keyboard() {
                   active && "gp9-key--active",
                   splitOn && key.midi < state.splitPoint! && "gp9-key--split-low",
                   splitOn && key.midi >= state.splitPoint! && "gp9-key--split-high",
-                  splitOn && key.midi === state.splitPoint && "gp9-key--split-point"
+                  splitOn && key.midi === state.splitPoint && "gp9-key--split-point",
                 )}
                 style={{ left: `${leftPx}px` }}
                 onPointerDown={(e) => {
@@ -1312,7 +1311,7 @@ export function Gp9PerformanceModes() {
             type="button"
             className={cn(
               "gp9-mode-btn",
-              state.performanceModeId === mode.id && "gp9-mode-btn--active"
+              state.performanceModeId === mode.id && "gp9-mode-btn--active",
             )}
             onClick={() => {
               void powerOn();
@@ -1358,7 +1357,11 @@ export function Gp9ConnectPanel() {
             CONNECT MIDI
           </button>
         ) : (
-          <button type="button" className="gp9-connect-btn gp9-connect-btn--on" onClick={disconnectMidi}>
+          <button
+            type="button"
+            className="gp9-connect-btn gp9-connect-btn--on"
+            onClick={disconnectMidi}
+          >
             DISCONNECT MIDI
           </button>
         )}
@@ -1367,7 +1370,7 @@ export function Gp9ConnectPanel() {
           type="button"
           className={cn(
             "gp9-connect-btn",
-            state.hapticsEnabled && state.hapticsSupported && "gp9-connect-btn--on"
+            state.hapticsEnabled && state.hapticsSupported && "gp9-connect-btn--on",
           )}
           disabled={!state.hapticsSupported}
           onClick={() => setHaptics(!state.hapticsEnabled)}
@@ -1442,7 +1445,7 @@ export function Gp9PhraseSequencer() {
               type="button"
               className={cn(
                 "gp9-arp-pattern",
-                state.arpPattern === id && state.arpEnabled && "gp9-arp-pattern--on"
+                state.arpPattern === id && state.arpEnabled && "gp9-arp-pattern--on",
               )}
               onClick={async () => {
                 await powerOn();
@@ -1464,7 +1467,7 @@ export function Gp9PhraseSequencer() {
             className={cn(
               "gp9-phrase-step",
               step.active && "gp9-phrase-step--on",
-              state.phrasePlayhead === i && state.phraseLoop && "gp9-phrase-step--playhead"
+              state.phrasePlayhead === i && state.phraseLoop && "gp9-phrase-step--playhead",
             )}
             onClick={async () => {
               await powerOn();
@@ -1529,9 +1532,7 @@ export function Gp9Piano3DView() {
         enableOrbit={false}
         playingBoost={playingBoost}
       />
-      <p className="gp9-scene-3d-hint">
-        Interactive showroom · drag finishes &amp; play keys live
-      </p>
+      <p className="gp9-scene-3d-hint">Interactive showroom · drag finishes &amp; play keys live</p>
     </div>
   );
 }
@@ -1593,10 +1594,7 @@ export function Gp9RecorderPanel() {
 
         <Gp9MotionButton
           type="button"
-          className={cn(
-            "gp9-recorder-btn",
-            state.sessionLoopPlayback && "gp9-recorder-btn--on"
-          )}
+          className={cn("gp9-recorder-btn", state.sessionLoopPlayback && "gp9-recorder-btn--on")}
           disabled={!state.hasSession}
           onClick={() => setSessionLoopPlayback(!state.sessionLoopPlayback)}
           aria-pressed={state.sessionLoopPlayback}
@@ -1670,7 +1668,7 @@ export function Gp9ToneControls() {
             type="button"
             className={cn(
               "gp9-touch-curve-btn",
-              state.touchCurve === id && "gp9-touch-curve-btn--on"
+              state.touchCurve === id && "gp9-touch-curve-btn--on",
             )}
             onClick={() => setTouchCurve(id)}
             aria-pressed={state.touchCurve === id}
@@ -1705,17 +1703,10 @@ export function Gp9ToneControls() {
 // ============================================================================
 
 export function Gp9SplitPanel() {
-  const {
-    state,
-    powerOn,
-    setSplitEnabled,
-    setSplitArmMode,
-    setSplitVoices,
-    setSplitPoint,
-  } = useGp9Piano();
+  const { state, powerOn, setSplitEnabled, setSplitArmMode, setSplitVoices, setSplitPoint } =
+    useGp9Piano();
 
-  const splitLabel =
-    state.splitPoint !== null ? midiToNoteName(state.splitPoint) : "—";
+  const splitLabel = state.splitPoint !== null ? midiToNoteName(state.splitPoint) : "—";
 
   return (
     <div className="midlife-zone gp9-split-panel">
@@ -1735,10 +1726,7 @@ export function Gp9SplitPanel() {
         </button>
         <button
           type="button"
-          className={cn(
-            "gp9-connect-btn",
-            state.splitArmMode && "gp9-connect-btn--on"
-          )}
+          className={cn("gp9-connect-btn", state.splitArmMode && "gp9-connect-btn--on")}
           disabled={!state.splitEnabled}
           onClick={() => setSplitArmMode(!state.splitArmMode)}
           aria-pressed={state.splitArmMode}
@@ -1762,9 +1750,7 @@ export function Gp9SplitPanel() {
             value={state.splitLowVoice}
             disabled={!state.splitEnabled}
             aria-label="Split low voice"
-            onChange={(e) =>
-              setSplitVoices(e.target.value as Gp9SplitVoice, state.splitHighVoice)
-            }
+            onChange={(e) => setSplitVoices(e.target.value as Gp9SplitVoice, state.splitHighVoice)}
           >
             <option value="piano">Piano</option>
             <option value="pad">Pad</option>
@@ -1777,9 +1763,7 @@ export function Gp9SplitPanel() {
             value={state.splitHighVoice}
             disabled={!state.splitEnabled}
             aria-label="Split high voice"
-            onChange={(e) =>
-              setSplitVoices(state.splitLowVoice, e.target.value as Gp9SplitVoice)
-            }
+            onChange={(e) => setSplitVoices(state.splitLowVoice, e.target.value as Gp9SplitVoice)}
           >
             <option value="piano">Piano</option>
             <option value="pad">Pad</option>
@@ -1933,6 +1917,7 @@ function Gp9InstrumentInner() {
         <p className="gp9-instrument-sub">
           Playable keyboard · touch-friendly · reduced-motion safe
         </p>
+        <Gp9ModelStatusNote />
       </div>
 
       <div className={cn("gp9-scene-wrap", sceneClass, isPlaying && "gp9-scene-wrap--playing")}>
@@ -1975,15 +1960,8 @@ export function Gp9InstrumentPanel() {
 // ============================================================================
 
 export function ShowroomExperience() {
-  const {
-    state,
-    powerOn,
-    setPerformanceMode,
-    setSustain,
-    setParam,
-    noteOn,
-    noteOff,
-  } = useGp9Piano();
+  const { state, powerOn, setPerformanceMode, setSustain, setParam, noteOn, noteOff } =
+    useGp9Piano();
 
   const [mounted, setMounted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -2005,7 +1983,7 @@ export function ShowroomExperience() {
           observer.disconnect();
         }
       },
-      { rootMargin: "120px" }
+      { rootMargin: "120px" },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -2080,7 +2058,7 @@ export function ShowroomExperience() {
                     type="button"
                     className={cn(
                       "gp9-showroom-pill",
-                      cameraPreset === p.id && "gp9-showroom-pill--on"
+                      cameraPreset === p.id && "gp9-showroom-pill--on",
                     )}
                     onClick={() => setCameraPreset(p.id)}
                     aria-pressed={cameraPreset === p.id}
@@ -2100,7 +2078,7 @@ export function ShowroomExperience() {
                     type="button"
                     className={cn(
                       "gp9-showroom-pill",
-                      finishId === f.id && "gp9-showroom-pill--on"
+                      finishId === f.id && "gp9-showroom-pill--on",
                     )}
                     onClick={() => setFinishId(f.id)}
                     aria-pressed={finishId === f.id}
@@ -2120,7 +2098,7 @@ export function ShowroomExperience() {
                     type="button"
                     className={cn(
                       "gp9-showroom-pill",
-                      state.performanceModeId === m.id && "gp9-showroom-pill--on"
+                      state.performanceModeId === m.id && "gp9-showroom-pill--on",
                     )}
                     onClick={async () => {
                       await handlePower();
@@ -2153,7 +2131,7 @@ export function ShowroomExperience() {
                   type="button"
                   className={cn(
                     "gp9-showroom-cta gp9-showroom-cta--ghost",
-                    state.sustain && "gp9-showroom-cta--on"
+                    state.sustain && "gp9-showroom-cta--on",
                   )}
                   onClick={async () => {
                     await handlePower();
@@ -2181,7 +2159,8 @@ export function ShowroomExperience() {
       </div>
 
       <p className="gp9-showroom-foot">
-        Luxury digital instrument showroom · 88 keys · velocity · MIDI · recording · real-time lighting
+        Luxury digital instrument showroom · 88 keys · velocity · MIDI · recording · real-time
+        lighting
         {!state.powered ? " · Power on to play" : " · Scroll to Sound Lab for full instrument"}
       </p>
     </div>

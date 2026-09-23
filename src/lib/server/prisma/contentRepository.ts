@@ -935,6 +935,23 @@ export async function seedHomepageCuratedItemsIfEmpty(): Promise<void> {
     });
   }
 
+  if (await empty("social_rail")) {
+    const { DEFAULT_SOCIAL_RAIL_ITEMS } = await import("@/lib/socialRail");
+    await prisma.homepageSectionItem.createMany({
+      data: DEFAULT_SOCIAL_RAIL_ITEMS.map((item, index) => ({
+        id: item.id,
+        sectionKey: "social_rail",
+        sortOrder: index,
+        isActive: true,
+        customTitle: item.platform,
+        customHref: item.href,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
   if (await empty("category_bento")) {
     const { CATEGORY_BENTO_ITEMS } = await import("@/data/categoryBento");
     const { packCategoryOfferText } = await import("@/lib/homepage/categoryOfferText");

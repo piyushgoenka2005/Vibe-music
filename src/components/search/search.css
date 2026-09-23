@@ -416,15 +416,20 @@
 .sw-search-results-page {
   width: 100%;
   max-width: none;
-  margin: 0 auto;
+  margin: 0;
   box-sizing: border-box;
-  padding: 24px clamp(0.75rem, 1.5vw, 1.25rem) 48px;
+  padding: 1.5rem clamp(0.5rem, 1vw, 0.75rem) 3rem;
 }
 
 @media (min-width: 1024px) {
   .sw-search-results-page {
-    padding-inline-start: max(1rem, var(--social-rail-clearance, 4.5rem));
-    padding-inline-end: clamp(0.75rem, 1.5vw, 1.25rem);
+    --social-rail-content-gap: 2.5rem;
+    --social-rail-clearance: calc(
+      var(--social-rail-inset-left) + var(--social-rail-track-width) +
+        var(--social-rail-content-gap)
+    );
+    padding-inline-start: max(0.75rem, var(--social-rail-clearance, 4.5rem));
+    padding-inline-end: clamp(0.5rem, 1vw, 0.75rem);
   }
 }
 

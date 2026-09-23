@@ -3,8 +3,7 @@ import fs from "node:fs";
 import { loginAsE2EAdmin } from "./helpers/admin-auth";
 import { E2E_ADMIN_SEED_MARKER } from "./helpers/e2e-paths";
 
-const adminReady =
-  Boolean(process.env.DATABASE_URL) && fs.existsSync(E2E_ADMIN_SEED_MARKER);
+const adminReady = Boolean(process.env.DATABASE_URL) && fs.existsSync(E2E_ADMIN_SEED_MARKER);
 
 test.describe("admin console (authenticated)", () => {
   test.skip(!adminReady, "DATABASE_URL / seeded E2E admin required");
@@ -69,10 +68,15 @@ test.describe("admin console (authenticated)", () => {
   });
 
   test("logout returns to admin login", async ({ page }) => {
+    const { dismissNextDevOverlay } = await import("./helpers/e2e-server");
     await page.goto("/admin");
-    await page.getByRole("button", { name: /open admin navigation/i }).click().catch(() => undefined);
+    await page
+      .getByRole("button", { name: /open admin navigation/i })
+      .click()
+      .catch(() => undefined);
     const logout = page.getByRole("button", { name: /sign out/i }).first();
     await expect(logout).toBeVisible({ timeout: 15_000 });
+    await dismissNextDevOverlay(page);
     await logout.click();
     await expect(page).toHaveURL(/\/admin\/login/, { timeout: 20_000 });
   });

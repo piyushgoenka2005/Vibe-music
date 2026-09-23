@@ -3,12 +3,12 @@ export interface ScannerProduct {
   id: string;
   name: string;
   price: string;
-  revenue: string;
-  growth: string;
   image: string;
   imageAlt: string;
   href?: string;
   slug?: string;
+  /** Optional badge e.g. Featured, Trending, New. */
+  tag?: string | null;
 }
 
 export type ScannerRowCurve = "up" | "flat" | "down";

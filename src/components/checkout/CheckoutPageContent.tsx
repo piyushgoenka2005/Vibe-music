@@ -167,6 +167,7 @@ export default function CheckoutPageContent() {
   const [checkoutCapabilities, setCheckoutCapabilities] = useState<{
     placesAutocomplete: boolean;
     razorpayConfigured: boolean;
+    razorpayIssue?: string | null;
     demoPaymentsAllowed: boolean;
     onlinePaymentsAvailable: boolean;
   } | null>(null);
@@ -210,6 +211,7 @@ export default function CheckoutPageContent() {
         return response.json() as Promise<{
           placesAutocomplete: boolean;
           razorpayConfigured: boolean;
+          razorpayIssue?: string | null;
           demoPaymentsAllowed: boolean;
           onlinePaymentsAvailable: boolean;
         }>;
@@ -246,10 +248,7 @@ export default function CheckoutPageContent() {
     Boolean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith("rzp_"));
   const onlinePaymentsAvailable =
     checkoutCapabilities?.onlinePaymentsAvailable ?? razorpayConfigured;
-  const demoPaymentsLikely =
-    onlinePaymentsAvailable &&
-    !razorpayConfigured &&
-    (checkoutCapabilities?.demoPaymentsAllowed ?? process.env.NODE_ENV !== "production");
+  const razorpayIssue = checkoutCapabilities?.razorpayIssue ?? null;
 
   const checkoutItems = items.map((item) => ({
     productId: item.productId,
@@ -738,7 +737,7 @@ export default function CheckoutPageContent() {
                 setOnlineChannel={setOnlineChannel}
                 effectivePaymentMethod={effectivePaymentMethod}
                 onlinePaymentsAvailable={onlinePaymentsAvailable}
-                demoPaymentsLikely={demoPaymentsLikely}
+                razorpayIssue={razorpayIssue}
                 resolvedAddress={resolvedAddress}
                 hasValidContact={hasValidContact}
                 onBackToReview={() => setStep("summary")}

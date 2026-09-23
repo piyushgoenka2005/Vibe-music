@@ -1,4 +1,5 @@
-import { SOCIAL_LINKS } from "@/lib/socialLinks";
+import type { ComponentType } from "react";
+import type { SocialRailLink, SocialRailPlatform, SocialRailPublicConfig } from "@/lib/socialRail";
 
 interface IconProps {
   size?: number;
@@ -44,42 +45,57 @@ function YouTubeIcon({ size = 17 }: IconProps) {
   );
 }
 
-const SOCIAL_ITEMS = [
-  { key: "facebook", label: "Facebook", href: SOCIAL_LINKS.facebook, Icon: FacebookIcon },
-  { key: "twitter", label: "X (Twitter)", href: SOCIAL_LINKS.twitter, Icon: XIcon },
-  { key: "instagram", label: "Instagram", href: SOCIAL_LINKS.instagram, Icon: InstagramIcon },
-  { key: "linkedin", label: "LinkedIn", href: SOCIAL_LINKS.linkedin, Icon: LinkedInIcon },
-  { key: "youtube", label: "YouTube", href: SOCIAL_LINKS.youtube, Icon: YouTubeIcon },
-] as const;
+const PLATFORM_ICONS: Record<SocialRailPlatform, ComponentType<IconProps>> = {
+  facebook: FacebookIcon,
+  twitter: XIcon,
+  instagram: InstagramIcon,
+  linkedin: LinkedInIcon,
+  youtube: YouTubeIcon,
+};
 
-export default function SocialRail() {
+interface SocialRailProps {
+  config: SocialRailPublicConfig;
+}
+
+export default function SocialRail({ config }: SocialRailProps) {
+  const { links, newsletter } = config;
+
+  if (links.length === 0 && !newsletter) return null;
+
   return (
     <aside className="social-rail" aria-label="Social navigation">
-      <nav aria-label="Social media">
-        <ul className="social-rail__list">
-          {SOCIAL_ITEMS.map(({ key, label, href, Icon }) => (
-            <li key={key}>
-              <a
-                href={href}
-                className="social-rail__link"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Follow Vibe Music on ${label}`}
-              >
-                <Icon />
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      {links.length > 0 ? (
+        <nav aria-label="Social media">
+          <ul className="social-rail__list">
+            {links.map((link: SocialRailLink) => {
+              const Icon = PLATFORM_ICONS[link.platform];
+              return (
+                <li key={link.platform}>
+                  <a
+                    href={link.href}
+                    className="social-rail__link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Follow Vibe Music on ${link.label}`}
+                  >
+                    <Icon />
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      ) : null}
 
-      <a
-        href="#newsletter"
-        className="social-rail__newsletter"
-        aria-label="Subscribe to newsletter"
-      >
-        <span className="social-rail__newsletter-text">Newsletter</span>
-      </a>
+      {newsletter ? (
+        <a
+          href={newsletter.href}
+          className="social-rail__newsletter"
+          aria-label={`${newsletter.label} — subscribe to newsletter`}
+        >
+          <span className="social-rail__newsletter-text">{newsletter.label}</span>
+        </a>
+      ) : null}
     </aside>
   );
 }

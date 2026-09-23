@@ -16,6 +16,11 @@ import {
   type HomepageSectionItem,
   type HomepageSectionKey,
 } from "@/types/homepage";
+import {
+  SOCIAL_RAIL_PLATFORMS,
+  SOCIAL_RAIL_PLATFORM_LABELS,
+  normalizeSocialRailPlatform,
+} from "@/lib/socialRail";
 import { BIG_NAMES_DEALS_MAX_ITEMS } from "@/lib/homepage/bigNamesDeals";
 import type { AdminProduct } from "@/types/admin";
 
@@ -160,7 +165,8 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
             activeKey === "featured_stories" ||
             activeKey === "featured_categories" ||
             activeKey === "browse_by_categories" ||
-            activeKey === "category_bento"
+            activeKey === "category_bento" ||
+            activeKey === "social_rail"
               ? "manual"
               : (sectionForm.sourceMode ?? activeSection.sourceMode),
           maxItems:
@@ -315,6 +321,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
 
   const isStorySection = activeKey === "featured_stories";
   const isBigNamesSection = activeKey === "big_names_deals";
+  const isSocialRailSection = activeKey === "social_rail";
   const isCategorySection =
     activeKey === "featured_categories" ||
     activeKey === "browse_by_categories" ||
@@ -326,9 +333,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     activeKey !== "browse_by_categories" &&
     activeKey !== "category_bento" &&
     activeKey !== "brand_strip" &&
-    activeKey !== "featured_stories";
+    activeKey !== "featured_stories" &&
+    activeKey !== "social_rail";
   const isBrandSection = activeKey === "brand_strip";
-  const forceManualSource = isStorySection || isBigNamesSection || isCategorySection;
+  const forceManualSource =
+    isStorySection || isBigNamesSection || isCategorySection || isSocialRailSection;
   const canAddBigNamesItem = !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
   const showCatalogEmptyWarning =
     isProductSection &&
@@ -394,28 +403,40 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
         </div>
         <div className="admin-panel__body">
           <div className="admin-form-grid">
-            <div className="admin-form-group">
-              <label>{isBigNamesSection ? "Headline" : "Title"}</label>
-              <input
-                className="admin-input"
-                style={{ width: "100%" }}
-                value={form.title}
-                onChange={(event) =>
-                  setSectionForm((prev) => ({ ...prev, title: event.target.value }))
-                }
-              />
-            </div>
-            <div className="admin-form-group">
-              <label>Subtitle</label>
-              <input
-                className="admin-input"
-                style={{ width: "100%" }}
-                value={form.subtitle}
-                onChange={(event) =>
-                  setSectionForm((prev) => ({ ...prev, subtitle: event.target.value }))
-                }
-              />
-            </div>
+            {!isSocialRailSection ? (
+              <div className="admin-form-group">
+                <label>{isBigNamesSection ? "Headline" : "Title"}</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.title}
+                  onChange={(event) =>
+                    setSectionForm((prev) => ({ ...prev, title: event.target.value }))
+                  }
+                />
+              </div>
+            ) : null}
+            {!isSocialRailSection ? (
+              <div className="admin-form-group">
+                <label>Subtitle</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.subtitle}
+                  onChange={(event) =>
+                    setSectionForm((prev) => ({ ...prev, subtitle: event.target.value }))
+                  }
+                />
+              </div>
+            ) : (
+              <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                <p className="admin-form-hint" style={{ margin: 0 }}>
+                  Controls the fixed left sidebar on storefront pages (social icons + newsletter).
+                  Reorder, enable, or disable links below. Clear the newsletter label to hide the
+                  newsletter button.
+                </p>
+              </div>
+            )}
             {activeKey === "deals_of_the_day" || isBigNamesSection || isBentoSection ? (
               <div className="admin-form-group">
                 <label>
@@ -436,45 +457,49 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
               </div>
             ) : null}
             <div className="admin-form-group">
-              <label>CTA Text</label>
+              <label>{isSocialRailSection ? "Newsletter button label" : "CTA Text"}</label>
               <input
                 className="admin-input"
                 style={{ width: "100%" }}
                 value={form.ctaText}
+                placeholder={isSocialRailSection ? "Newsletter" : undefined}
                 onChange={(event) =>
                   setSectionForm((prev) => ({ ...prev, ctaText: event.target.value }))
                 }
               />
             </div>
             <div className="admin-form-group">
-              <label>CTA Link</label>
+              <label>{isSocialRailSection ? "Newsletter link" : "CTA Link"}</label>
               <input
                 className="admin-input"
                 style={{ width: "100%" }}
                 value={form.ctaLink}
+                placeholder={isSocialRailSection ? "#newsletter" : undefined}
                 onChange={(event) =>
                   setSectionForm((prev) => ({ ...prev, ctaLink: event.target.value }))
                 }
               />
             </div>
-            <div className="admin-form-group">
-              <label>Max Items</label>
-              <input
-                className="admin-input"
-                type="number"
-                min={1}
-                max={50}
-                style={{ width: "100%" }}
-                value={isBigNamesSection ? BIG_NAMES_DEALS_MAX_ITEMS : form.maxItems}
-                disabled={isBigNamesSection}
-                onChange={(event) =>
-                  setSectionForm((prev) => ({
-                    ...prev,
-                    maxItems: Number(event.target.value),
-                  }))
-                }
-              />
-            </div>
+            {!isSocialRailSection ? (
+              <div className="admin-form-group">
+                <label>Max Items</label>
+                <input
+                  className="admin-input"
+                  type="number"
+                  min={1}
+                  max={50}
+                  style={{ width: "100%" }}
+                  value={isBigNamesSection ? BIG_NAMES_DEALS_MAX_ITEMS : form.maxItems}
+                  disabled={isBigNamesSection}
+                  onChange={(event) =>
+                    setSectionForm((prev) => ({
+                      ...prev,
+                      maxItems: Number(event.target.value),
+                    }))
+                  }
+                />
+              </div>
+            ) : null}
             {!isBigNamesSection && !isStorySection && !forceManualSource ? (
               <div className="admin-form-group">
                 <label>Source Mode</label>
@@ -508,6 +533,13 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   {isBrowseSection ? ", and card photos" : ""} below. Use Manual source mode.
                 </p>
               </div>
+            ) : isSocialRailSection ? (
+              <div className="admin-form-group">
+                <p className="admin-form-hint" style={{ margin: 0 }}>
+                  Manage each social profile link below. One row per platform (Facebook, X,
+                  Instagram, LinkedIn, YouTube).
+                </p>
+              </div>
             ) : (
               <div className="admin-form-group">
                 <p className="admin-form-hint" style={{ margin: 0 }}>
@@ -525,7 +557,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                     setSectionForm((prev) => ({ ...prev, isActive: event.target.checked }))
                   }
                 />
-                Section active
+                {isSocialRailSection ? "Show social rail on storefront" : "Section active"}
               </label>
             </div>
           </div>
@@ -548,7 +580,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
         <div className="admin-panel">
           <div className="admin-panel__header">
             <h2 className="admin-panel__title">
-              {isStorySection ? "Story Banners" : "Curated Items"}
+              {isStorySection
+                ? "Story Banners"
+                : isSocialRailSection
+                  ? "Social Links"
+                  : "Curated Items"}
             </h2>
           </div>
           <div className="admin-panel__body">
@@ -593,6 +629,39 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                       style={{ width: "100%" }}
                       value={itemForm.customHref}
                       placeholder="/category/guitars"
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, customHref: event.target.value }))
+                      }
+                    />
+                  </div>
+                </>
+              ) : isSocialRailSection ? (
+                <>
+                  <div className="admin-form-group">
+                    <label>Platform</label>
+                    <select
+                      className="admin-select"
+                      style={{ width: "100%" }}
+                      value={itemForm.customTitle}
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, customTitle: event.target.value }))
+                      }
+                    >
+                      <option value="">Select a platform</option>
+                      {SOCIAL_RAIL_PLATFORMS.map((platform) => (
+                        <option key={platform} value={platform}>
+                          {SOCIAL_RAIL_PLATFORM_LABELS[platform]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Profile URL</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.customHref}
+                      placeholder="https://www.instagram.com/vibemusic"
                       onChange={(event) =>
                         setItemForm((prev) => ({ ...prev, customHref: event.target.value }))
                       }
@@ -843,12 +912,16 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   {editingItemId
                     ? isStorySection
                       ? "Update Story Banner"
-                      : "Update Item"
+                      : isSocialRailSection
+                        ? "Update Social Link"
+                        : "Update Item"
                     : isStorySection
                       ? "Add Story Banner"
-                      : isBigNamesSection
-                        ? "Add Guitar"
-                        : "Add Item"}
+                      : isSocialRailSection
+                        ? "Add Social Link"
+                        : isBigNamesSection
+                          ? "Add Guitar"
+                          : "Add Item"}
                 </button>
               ) : null}
               {canWrite && editingItemId ? (
@@ -916,6 +989,19 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                                   </div>
                                 ) : null}
                               </div>
+                            </div>
+                          ) : isSocialRailSection ? (
+                            <div>
+                              <div style={{ fontWeight: 600 }}>
+                                {SOCIAL_RAIL_PLATFORM_LABELS[
+                                  normalizeSocialRailPlatform(item.customTitle) ?? "facebook"
+                                ] ?? item.customTitle}
+                              </div>
+                              {item.customHref ? (
+                                <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+                                  {item.customHref}
+                                </div>
+                              ) : null}
                             </div>
                           ) : (
                             itemLabel(item, productNameMap)

@@ -264,11 +264,10 @@
     const errorPanel = document.getElementById("error-panel");
     const errorMessage = document.getElementById("error-message");
 
-    // Model paths (relative to this HTML file in public/gp9-viewer/)
+    // Model paths (canonical public URLs — matches Next.js Sound Lab)
     const MODEL_CANDIDATES = [
-      "../models/gp9_piano.glb",
-      "../models/gp9-grand.glb",
-      "./gp9_piano.glb",
+      "/models/gp9-grand.glb",
+      "/models/gp9_piano.glb",
     ];
     const HDRI_URL = "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/royal_esplanade_1k.hdr";
     const SALAMANDER_BASE = "https://tonejs.github.io/audio/salamander/";

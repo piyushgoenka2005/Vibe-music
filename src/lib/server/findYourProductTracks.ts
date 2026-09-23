@@ -8,15 +8,28 @@ import { formatDisplayPrice } from "@/utils/currency";
 const TRACK_COUNT = 3;
 const ITEMS_PER_TRACK = 9;
 
+function deriveScannerTag(product: {
+  featured: boolean;
+  trending: boolean;
+  newArrival: boolean;
+}): string | null {
+  if (product.featured) return "Featured";
+  if (product.trending) return "Trending";
+  if (product.newArrival) return "New";
+  return null;
+}
+
 function toScannerProduct(
   product: {
     id: string;
     name: string;
     brand: string;
-    category: string;
     price: number;
     image?: string;
     slug: string;
+    featured: boolean;
+    trending: boolean;
+    newArrival: boolean;
   },
   index: number,
 ): ScannerProduct {
@@ -28,11 +41,10 @@ function toScannerProduct(
     id: product.id || `catalog-${index}`,
     name: product.name,
     price: formatDisplayPrice(product.price),
-    revenue: product.brand,
-    growth: product.category,
     image,
-    imageAlt: `${product.brand} ${product.name}`,
+    imageAlt: product.name,
     slug: product.slug,
+    tag: deriveScannerTag(product),
   };
 }
 

@@ -12,6 +12,7 @@ export const HOMEPAGE_SECTION_KEYS = [
   "big_names_deals",
   "brand_strip",
   "featured_stories",
+  "social_rail",
 ] as const;
 
 export type HomepageSectionKey = (typeof HOMEPAGE_SECTION_KEYS)[number];
@@ -27,7 +28,8 @@ export type HomepageSectionLayout =
   | "deals_slider"
   | "brand_strip"
   | "big_names_deals"
-  | "story_banners";
+  | "story_banners"
+  | "social_rail";
 
 export interface HomepageSection {
   id: string;
@@ -184,6 +186,7 @@ export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionKey, string> = {
   big_names_deals: "Big Names / Serious Savings",
   brand_strip: "Brand Strip",
   featured_stories: "Featured Stories (A+ Banners)",
+  social_rail: "Social Rail (Sidebar)",
 };
 
 export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
@@ -311,5 +314,18 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     sourceMode: "manual",
     maxItems: 8,
     layout: "story_banners",
+  },
+  {
+    sectionKey: "social_rail",
+    title: "Social Rail",
+    subtitle:
+      "Fixed left sidebar on storefront pages — social profile links and newsletter button.",
+    ctaText: "Newsletter",
+    ctaLink: "#newsletter",
+    isActive: true,
+    sortOrder: 11,
+    sourceMode: "manual",
+    maxItems: 10,
+    layout: "social_rail",
   },
 ];

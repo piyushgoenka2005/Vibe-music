@@ -146,6 +146,18 @@ export function validateEnv(): void {
       throw new Error("ALLOW_DEMO_PAYMENTS must not be enabled in production");
     }
 
+    const razorpayKeyId = envValue(process.env.RAZORPAY_KEY_ID);
+    const razorpayPublicKeyId = envValue(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
+    if (razorpayKeyId && razorpayPublicKeyId && razorpayKeyId !== razorpayPublicKeyId) {
+      throw new Error("RAZORPAY_KEY_ID and NEXT_PUBLIC_RAZORPAY_KEY_ID must match in production.");
+    }
+    if (razorpayKeyId && !razorpayKeyId.startsWith("rzp_live_")) {
+      throw new Error("Production requires live Razorpay keys (rzp_live_…).");
+    }
+    if (razorpayPublicKeyId && !razorpayPublicKeyId.startsWith("rzp_live_")) {
+      throw new Error("NEXT_PUBLIC_RAZORPAY_KEY_ID must be a live key (rzp_live_…) in production.");
+    }
+
     const authUrl = envValue(process.env.AUTH_URL);
     if (authUrl && /localhost|127\.0\.0\.1/i.test(authUrl)) {
       throw new Error(

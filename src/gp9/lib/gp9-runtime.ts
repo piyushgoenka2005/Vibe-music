@@ -90,7 +90,7 @@ export function encodeAudioBufferToWav(buffer: AudioBuffer): Blob {
 export function serializeGp9Session(
   takes: Gp9MidiEvent[][],
   tempo: number,
-  loopPlayback: boolean
+  loopPlayback: boolean,
 ): string {
   const payload: Gp9StoredSession = {
     version: 1,
@@ -115,7 +115,7 @@ export function parseGp9Session(raw: string): Gp9StoredSession | null {
 export function saveGp9SessionToStorage(
   takes: Gp9MidiEvent[][],
   tempo: number,
-  loopPlayback: boolean
+  loopPlayback: boolean,
 ): boolean {
   if (typeof window === "undefined") return false;
   try {
@@ -141,7 +141,7 @@ export function loadGp9SessionFromStorage(): Gp9StoredSession | null {
 
 export async function renderSessionTakesToWav(
   takes: Gp9MidiEvent[][],
-  options: { transpose?: number; tempo?: number; masterVolume?: number } = {}
+  options: { transpose?: number; tempo?: number; masterVolume?: number } = {},
 ): Promise<Blob | null> {
   const nonEmpty = takes.filter((t) => t.length > 0);
   if (nonEmpty.length === 0) return null;
@@ -157,6 +157,7 @@ export async function renderSessionTakesToWav(
     const reverb = new Tone.Reverb({ decay: 3.5, wet: 0.28 }).connect(out);
     const sampler = new Tone.Sampler({
       urls: buildSalamanderUrls(),
+      baseUrl: SALAMANDER_BASE,
       release: 1.2,
     }).connect(reverb);
 
@@ -164,7 +165,7 @@ export async function renderSessionTakesToWav(
       const pairs: [number, Gp9MidiEvent][] = take.map((e) => [e.time, e]);
       const part = new Tone.Part((time, event: Gp9MidiEvent) => {
         const midi = Math.max(MIDI_LOW, Math.min(MIDI_HIGH, event.midi + transpose));
-        const name = midiToNoteName(midi);
+        const name = midiToToneNoteName(midi);
         const gain = Math.max(0.05, Math.min(1, event.velocity / 127));
         if (event.kind === "noteOn") sampler.triggerAttack(name, time, gain);
         else sampler.triggerRelease(name, time);
@@ -207,10 +208,17 @@ export const MIDI_HIGH = 108; // C8
 export const KEY_COUNT = MIDI_HIGH - MIDI_LOW + 1;
 
 const NOTE_NAMES = ["C", "Cs", "D", "Ds", "E", "F", "Fs", "G", "Gs", "A", "As", "B"] as const;
+const TONE_NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
 
 export function midiToNoteName(midi: number): string {
   const octave = Math.floor(midi / 12) - 1;
   return `${NOTE_NAMES[midi % 12]}${octave}`;
+}
+
+/** Scientific pitch notation accepted by Tone.js (`C#4`, not `Cs4`). */
+export function midiToToneNoteName(midi: number): string {
+  const octave = Math.floor(midi / 12) - 1;
+  return `${TONE_NOTE_NAMES[midi % 12]}${octave}`;
 }
 
 export function isBlackKey(midi: number): boolean {
@@ -250,7 +258,7 @@ export const PIANO_KEYS: PianoKeyDef[] = Array.from({ length: KEY_COUNT }, (_, i
 });
 
 export const VISIBLE_PIANO_KEYS = PIANO_KEYS.filter(
-  (k) => k.midi >= VISIBLE_KEY_START && k.midi <= VISIBLE_KEY_END
+  (k) => k.midi >= VISIBLE_KEY_START && k.midi <= VISIBLE_KEY_END,
 );
 
 /** Computer keyboard → MIDI (two octaves, standard DAW-style layout). */
@@ -294,15 +302,44 @@ export const QWERTY_TO_MIDI: Record<string, number> = {
   "=": 84,
 };
 
-export const SALAMANDER_BASE = "https://tonejs.github.io/audio/salamander";
+export const SALAMANDER_BASE = "https://tonejs.github.io/audio/salamander/";
+
+/** Sparse Salamander map — Tone note keys → sample filenames (see tonejs.github.io/examples/sampler). */
+export const SALAMANDER_SAMPLER_URLS: Record<string, string> = {
+  A0: "A0.mp3",
+  C1: "C1.mp3",
+  "D#1": "Ds1.mp3",
+  "F#1": "Fs1.mp3",
+  A1: "A1.mp3",
+  C2: "C2.mp3",
+  "D#2": "Ds2.mp3",
+  "F#2": "Fs2.mp3",
+  A2: "A2.mp3",
+  C3: "C3.mp3",
+  "D#3": "Ds3.mp3",
+  "F#3": "Fs3.mp3",
+  A3: "A3.mp3",
+  C4: "C4.mp3",
+  "D#4": "Ds4.mp3",
+  "F#4": "Fs4.mp3",
+  A4: "A4.mp3",
+  C5: "C5.mp3",
+  "D#5": "Ds5.mp3",
+  "F#5": "Fs5.mp3",
+  A5: "A5.mp3",
+  C6: "C6.mp3",
+  "D#6": "Ds6.mp3",
+  "F#6": "Fs6.mp3",
+  A6: "A6.mp3",
+  C7: "C7.mp3",
+  "D#7": "Ds7.mp3",
+  "F#7": "Fs7.mp3",
+  A7: "A7.mp3",
+  C8: "C8.mp3",
+};
 
 export function buildSalamanderUrls(): Record<string, string> {
-  const urls: Record<string, string> = {};
-  for (let midi = MIDI_LOW; midi <= MIDI_HIGH; midi++) {
-    const name = midiToNoteName(midi);
-    urls[name] = `${SALAMANDER_BASE}/${name}.mp3`;
-  }
-  return urls;
+  return { ...SALAMANDER_SAMPLER_URLS };
 }
 
 // ============================================================================
@@ -1165,12 +1202,7 @@ export class Gp9SessionRecorder {
     return true;
   }
 
-  playSession(
-    engine: Gp9PianoEngine,
-    takes: Gp9MidiEvent[][],
-    loop = false,
-    tempo = 120
-  ) {
+  playSession(engine: Gp9PianoEngine, takes: Gp9MidiEvent[][], loop = false, tempo = 120) {
     this.stopPlayback(engine);
     const nonEmpty = takes.filter((t) => t.length > 0);
     if (nonEmpty.length === 0) return;
@@ -1227,7 +1259,7 @@ export class Gp9SessionRecorder {
     engine: Gp9PianoEngine,
     steps: Gp9PhraseStep[],
     tempo: number,
-    onStep?: (index: number) => void
+    onStep?: (index: number) => void,
   ) {
     this.stopPhraseLoop();
     Tone.getTransport().bpm.value = tempo;
@@ -1243,7 +1275,7 @@ export class Gp9SessionRecorder {
         engine.playbackNoteOff(step.midi, offTime);
       },
       Array.from({ length: 16 }, (_, i) => i),
-      "16n"
+      "16n",
     );
 
     this.phraseSequence.loop = true;
@@ -1472,7 +1504,7 @@ export class Gp9PianoEngine {
       this.eq,
       this.widener,
       this.masterVolume,
-      Tone.getDestination()
+      Tone.getDestination(),
     );
 
     this.keyOffNoise = new Tone.NoiseSynth({
@@ -1499,6 +1531,7 @@ export class Gp9PianoEngine {
     const urls = buildSalamanderUrls();
     this.sampler = new Tone.Sampler({
       urls,
+      baseUrl: SALAMANDER_BASE,
       release: 1.2,
       onload: () => {
         this.ready = true;
@@ -1689,14 +1722,14 @@ export class Gp9PianoEngine {
     const transposed = this.transposeMidi(midi);
     const vel = this.shapedVelocity(velocity);
     const gain = this.velocityToGain(vel);
-    const name = midiToNoteName(transposed);
+    const name = midiToToneNoteName(transposed);
     this.sampler.triggerAttack(name, time ?? Tone.now(), gain);
   }
 
   private triggerPianoRelease(midi: number, time?: number) {
     if (!this.sampler) return;
     const transposed = this.transposeMidi(midi);
-    const name = midiToNoteName(transposed);
+    const name = midiToToneNoteName(transposed);
     this.sampler.triggerRelease(name, time ?? Tone.now() + 0.02);
   }
 
@@ -1839,7 +1872,7 @@ export class Gp9PianoEngine {
     this.onVisualNote?.("noteOn", midi);
     const transposed = this.transposeMidi(midi);
     const gain = this.velocityToGain(this.shapedVelocity(velocity));
-    const name = midiToNoteName(transposed);
+    const name = midiToToneNoteName(transposed);
     const t = time ?? Tone.now();
     const voice = this.voiceForMidi(midi);
     if (voice === "blend") {
@@ -1869,13 +1902,13 @@ export class Gp9PianoEngine {
     const voice = this.voiceForMidi(midi);
     if (voice === "blend") {
       const transposed = this.transposeMidi(midi);
-      this.sampler.triggerRelease(midiToNoteName(transposed), t);
+      this.sampler.triggerRelease(midiToToneNoteName(transposed), t);
       this.triggerPadRelease(midi, t);
       return;
     }
     if (voice === "piano") {
       const transposed = this.transposeMidi(midi);
-      this.sampler.triggerRelease(midiToNoteName(transposed), t);
+      this.sampler.triggerRelease(midiToToneNoteName(transposed), t);
       return;
     }
     this.triggerPadRelease(midi, t);
@@ -1902,11 +1935,7 @@ export class Gp9PianoEngine {
     this.session.stopPlayback(this);
   }
 
-  startPhraseLoop(
-    steps: Gp9PhraseStep[],
-    tempo: number,
-    onStep?: (index: number) => void
-  ) {
+  startPhraseLoop(steps: Gp9PhraseStep[], tempo: number, onStep?: (index: number) => void) {
     this.session.startPhraseLoop(this, steps, tempo, onStep);
   }
 

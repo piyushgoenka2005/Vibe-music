@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { isDemoPaymentsAllowed, isRazorpayConfigured, getRazorpayKeyMode } from "@/lib/server/env";
+import {
+  describeRazorpayMisconfiguration,
+  isDemoPaymentsAllowed,
+  isRazorpayConfigured,
+  getRazorpayKeyMode,
+} from "@/lib/server/env";
 import { isClientAnalyticsConfigured } from "@/lib/analytics/config";
 import { warnIfGooglePlacesMisconfigured } from "@/lib/server/googlePlaces";
 import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
@@ -37,9 +42,9 @@ export async function GET(request: Request) {
       placesAutocomplete,
       razorpayConfigured,
       razorpayMode,
+      razorpayIssue: describeRazorpayMisconfiguration(),
       demoPaymentsAllowed,
-      /** True when Razorpay is live, or demo checkout is allowed without keys. */
-      onlinePaymentsAvailable: razorpayConfigured || demoPaymentsAllowed,
+      onlinePaymentsAvailable: razorpayConfigured,
       storePhoneConfigured: Boolean(phone.tel),
       storePhoneDisplay: phone.display || null,
       storePhoneTel: phone.tel || null,

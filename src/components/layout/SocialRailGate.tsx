@@ -2,9 +2,15 @@
 
 import { usePathname } from "next/navigation";
 import SocialRail from "@/components/layout/SocialRail";
+import type { SocialRailPublicConfig } from "@/lib/socialRail";
 
-export default function SocialRailGate() {
+interface SocialRailGateProps {
+  config: SocialRailPublicConfig;
+}
+
+export default function SocialRailGate({ config }: SocialRailGateProps) {
   const pathname = usePathname() ?? "";
   if (pathname.startsWith("/admin") || pathname.startsWith("/gp9")) return null;
-  return <SocialRail />;
+  if (!config.isActive) return null;
+  return <SocialRail config={config} />;
 }

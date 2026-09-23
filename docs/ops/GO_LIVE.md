@@ -13,7 +13,7 @@ Short path from “code is ready” to “production secrets are honest.” Full
 | Razorpay webhook       | `RAZORPAY_WEBHOOK_SECRET`                                                                                                                                         | Paid status may not auto-update  |
 | Email                  | `SMTP_*` or `RESEND_API_KEY`                                                                                                                                      | Order / reset emails skip or 503 |
 
-**Payments:** **Razorpay only** — Cash on Delivery is **not implemented** in this codebase (no `COD_ENABLED` env). Checkout always uses Razorpay (or demo mode when `ALLOW_DEMO_PAYMENTS=true` in non-production). Never set `ALLOW_DEMO_PAYMENTS=true` in production.
+**Payments:** **Razorpay only** — checkout always uses the live Razorpay modal when keys are configured. Never set `ALLOW_DEMO_PAYMENTS=true` in production.
 
 Catalog search uses **PostgreSQL / Prisma** (`/api/search`) — not Elasticsearch.
 
@@ -45,9 +45,11 @@ npx playwright install chromium
 2. `GET /api/health` → `database: ok` (200)
 3. `GET /api/coupons/active` → 200 `{ coupons: [...] }`
 4. Admin → **Settings** → **Production integrations** matrix (all required = Configured)
-5. Checkout: online pay appears only when Razorpay keys are live
-6. Password reset + place a test order → email arrives
-7. `npm run verify:integrations` with `VERIFY_BASE_URL` pointed at production
+5. Checkout: Razorpay modal opens; place a live test order
+6. Razorpay Dashboard → Webhooks → `https://vibemusic.in/api/payment/webhook/razorpay` (secret in `RAZORPAY_WEBHOOK_SECRET`)
+7. `npm run verify:razorpay-ops` on the VPS (blocking checks must pass)
+8. Password reset + order confirmation emails arrive
+9. `npm run verify:integrations` with `VERIFY_BASE_URL` pointed at production
 
 Full e2e runbook: [DEPLOY_READY.md](./DEPLOY_READY.md).
 

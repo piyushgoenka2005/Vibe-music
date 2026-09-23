@@ -115,6 +115,10 @@ describe("buildProductDetailsViewModel", () => {
     expect(model.introBlocks).toHaveLength(1);
     expect(model.aboutItems).toEqual([
       {
+        title: "",
+        body: "Premium sound for live performance.",
+      },
+      {
         title: "Deep Bass",
         body: "Rich low-end response for live performance.",
       },

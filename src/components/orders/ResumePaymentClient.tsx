@@ -5,11 +5,7 @@ import { useRouter } from "next/navigation";
 import { BRAND } from "@/lib/brand";
 import { cacheOrderForConfirmation } from "@/lib/checkout/orderConfirmationCache";
 import { useRazorpay } from "@/hooks/useRazorpay";
-import {
-  completeDemoPayment,
-  resumePayment,
-  verifyPayment,
-} from "@/services/orderService";
+import { resumePayment, verifyPayment } from "@/services/orderService";
 import { useToastStore } from "@/store/toastStore";
 import { formatCurrencyPrecise } from "@/utils/currency";
 import type { Order } from "@/types/order";
@@ -18,14 +14,9 @@ import "@/components/checkout/checkout.css";
 export interface ResumePaymentClientProps {
   order: Order;
   email: string;
-  demoMode: boolean;
 }
 
-export function ResumePaymentClient({
-  order,
-  email,
-  demoMode,
-}: ResumePaymentClientProps) {
+export function ResumePaymentClient({ order, email }: ResumePaymentClientProps) {
   const router = useRouter();
   const { isReady, isLoading, openCheckout } = useRazorpay();
   const showToast = useToastStore((s) => s.show);
@@ -50,15 +41,6 @@ export function ResumePaymentClient({
         email,
         trackingToken: order.trackingToken,
       });
-
-      if (session.demoMode) {
-        const demo = await completeDemoPayment(order.id, email, order.trackingToken);
-        if (demo.order) {
-          cacheOrderForConfirmation(demo.order);
-        }
-        router.replace(demo.redirectUrl);
-        return;
-      }
 
       if (!session.razorpay) {
         throw new Error("Payment gateway unavailable.");
@@ -92,7 +74,7 @@ export function ResumePaymentClient({
           result.status === "failed"
             ? result.message
             : "Payment cancelled or failed. Please try again.",
-          "error"
+          "error",
         );
         return;
       }
@@ -119,7 +101,7 @@ export function ResumePaymentClient({
   }, [email, openCheckout, order, router, showToast, successUrl]);
 
   const loading = isProcessing || isLoading;
-  const disabled = loading || (!demoMode && !isReady);
+  const disabled = loading || !isReady;
 
   return (
     <div className="checkout-success">
@@ -127,20 +109,13 @@ export function ResumePaymentClient({
         <p className="checkout-hero__eyebrow">Complete payment</p>
         <h1 className="checkout-panel__title">Order {order.id}</h1>
         <p className="checkout-panel__lead">
-          {order.items.length} item{order.items.length === 1 ? "" : "s"} ·{" "}
-          {order.email}
+          {order.items.length} item{order.items.length === 1 ? "" : "s"} · {order.email}
         </p>
 
         <p className="checkout-mobile-bar__total" style={{ marginTop: "1.5rem" }}>
           <span>Amount due</span>
           <strong>{formatCurrencyPrecise(order.total)}</strong>
         </p>
-
-        {demoMode ? (
-          <p className="checkout-panel__alert" role="note">
-            Demo mode — payment will be simulated (no charge).
-          </p>
-        ) : null}
 
         {error ? (
           <p className="checkout-panel__alert" role="alert">

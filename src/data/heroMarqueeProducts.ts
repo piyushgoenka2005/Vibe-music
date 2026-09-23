@@ -72,7 +72,11 @@ const HERO_MARQUEE_SLUGS: Record<string, string> = {
 };
 
 /** Always resolve to a single product PDP — never a search/results list. */
-export function heroMarqueeProductHref(product: HeroMarqueeProduct): string {
+export function heroMarqueeProductHref(product: {
+  id: string;
+  href?: string;
+  slug?: string;
+}): string {
   if (product.href?.startsWith("/product/")) return product.href;
 
   const slug = product.slug ?? HERO_MARQUEE_SLUGS[product.id];
@@ -232,7 +236,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
     },
     {
       id: "t2-7",
-      name: "PA Speaker 12\"",
+      name: 'PA Speaker 12"',
       price: "₹34,999",
       revenue: "₹2,01,012",
       growth: "22.7%",
@@ -353,7 +357,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
     },
     {
       id: "t4-2",
-      name: "Subwoofer 18\"",
+      name: 'Subwoofer 18"',
       price: "₹42,999",
       revenue: "₹2,14,880",
       growth: "19.1%",
@@ -511,9 +515,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
 
 export const HERO_MARQUEE_ITEMS_PER_COLUMN = 6;
 
-export function trimMarqueeTrack(
-  track: HeroMarqueeProduct[]
-): HeroMarqueeProduct[] {
+export function trimMarqueeTrack(track: HeroMarqueeProduct[]): HeroMarqueeProduct[] {
   return track.slice(0, HERO_MARQUEE_ITEMS_PER_COLUMN);
 }
 

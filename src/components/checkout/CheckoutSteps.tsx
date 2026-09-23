@@ -354,7 +354,7 @@ interface PaymentStepProps {
   setOnlineChannel: (ch: OnlinePaymentChannel) => void;
   effectivePaymentMethod: "razorpay";
   onlinePaymentsAvailable: boolean;
-  demoPaymentsLikely: boolean;
+  razorpayIssue?: string | null;
   resolvedAddress: ShippingAddress | null;
   hasValidContact: boolean;
   onBackToReview: () => void;
@@ -370,7 +370,7 @@ export function PaymentStep({
   setOnlineChannel,
   effectivePaymentMethod,
   onlinePaymentsAvailable,
-  demoPaymentsLikely,
+  razorpayIssue,
   resolvedAddress,
   hasValidContact,
   onBackToReview,
@@ -401,15 +401,9 @@ export function PaymentStep({
 
       {!onlinePaymentsAvailable ? (
         <p className="checkout-panel__alert" role="alert">
-          <strong>Online payments unavailable:</strong> Razorpay is not configured on this store.
-          Please contact support to complete your order.
-        </p>
-      ) : null}
-
-      {demoPaymentsLikely && effectivePaymentMethod === "razorpay" ? (
-        <p className="checkout-panel__alert" role="note">
-          <strong>Demo mode:</strong> Razorpay keys are not configured. Payment will be simulated —
-          your order and invoice are still created.
+          <strong>Online payments unavailable:</strong>{" "}
+          {razorpayIssue ??
+            "Razorpay is not configured on this store. Please contact support to complete your order."}
         </p>
       ) : null}
 

@@ -46,12 +46,15 @@ interface LensPosition {
 }
 
 function GalleryThumb({ src }: { src: string }) {
-  const isInvalid = !src || src === "[object Object]" || (!src.startsWith("http") && !src.startsWith("/"));
+  const isInvalid =
+    !src || src === "[object Object]" || (!src.startsWith("http") && !src.startsWith("/"));
   const candidates = useMemo(() => {
     if (isInvalid) return [];
     const list = storefrontImageCandidates(src, 160);
     const medium = storefrontImageCandidates(src, 320);
-    return Array.from(new Set([...list, ...medium, src].filter((u) => Boolean(u && u !== "[object Object]"))));
+    return Array.from(
+      new Set([...list, ...medium, src].filter((u) => Boolean(u && u !== "[object Object]"))),
+    );
   }, [src, isInvalid]);
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -147,13 +150,7 @@ export default function ProductGallery({
   const canZoom = zoomEligible && zoomSpaceOk;
   const has360 = spin360Images.length >= 2;
   const activeSrc = activeImage?.src ?? "";
-  const displayCandidates = useMemo(() => {
-    // Thumb API is most reliable (local Sharp proxy); try large first,
-    // then medium fallback, then CDN master as last resort.
-    const large = storefrontImageCandidates(activeSrc, 1200);
-    const medium = storefrontImageCandidates(activeSrc, 640);
-    return Array.from(new Set([...large, ...medium, activeSrc].filter(Boolean)));
-  }, [activeSrc]);
+  const displayCandidates = useMemo(() => storefrontImageCandidates(activeSrc, 1200), [activeSrc]);
   const [displayAttempt, setDisplayAttempt] = useState(0);
   const [allFailed, setAllFailed] = useState(false);
   const [activeSrcKey, setActiveSrcKey] = useState(activeSrc);

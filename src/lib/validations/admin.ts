@@ -152,6 +152,7 @@ const homepageSectionKeySchema = z.enum([
   "big_names_deals",
   "brand_strip",
   "featured_stories",
+  "social_rail",
 ]);
 
 export const adminHomepageSectionSchema = z.object({
@@ -175,6 +176,7 @@ export const adminHomepageSectionSchema = z.object({
       "brand_strip",
       "big_names_deals",
       "story_banners",
+      "social_rail",
     ])
     .optional(),
 });

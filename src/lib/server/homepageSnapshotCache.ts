@@ -34,6 +34,7 @@ export const getCachedHomepageStoryBanners = unstable_cache(
 export async function revalidateHomepageSnapshot(): Promise<void> {
   try {
     revalidateTag("homepage", "max");
+    revalidateTag("social-rail", "max");
     revalidateTag("catalog", "max");
     // Bust the storefront shell so admin edits show on the next request.
     revalidatePath("/");

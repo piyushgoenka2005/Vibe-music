@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { ResumePaymentClient } from "@/components/orders/ResumePaymentClient";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { getAdminSession } from "@/lib/server/adminService";
-import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
 import { canAccessOrder } from "@/lib/server/orderAccess";
 import { getOrderById } from "@/lib/server/orderService";
 import { withServerPageError } from "@/lib/serverPageError";
@@ -58,11 +57,9 @@ export default async function ResumePaymentPage({
       notFound();
     }
 
-    const demoMode = !isRazorpayConfigured() && isDemoPaymentsAllowed();
-
     return (
       <main className="storefront-page storefront-page--subtle">
-        <ResumePaymentClient order={order} email={email} demoMode={demoMode} />
+        <ResumePaymentClient order={order} email={email} />
       </main>
     );
   }, "Resume Payment");

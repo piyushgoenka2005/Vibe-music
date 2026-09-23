@@ -408,16 +408,29 @@
   padding: 2rem 1.25rem 4rem;
 }
 
+@media (min-width: 1024px) {
+  .storefront-page .pdp {
+    --social-rail-content-gap: 1.5rem;
+    --social-rail-clearance: calc(
+      var(--social-rail-inset-left) + var(--social-rail-track-width) +
+        var(--social-rail-content-gap)
+    );
+    padding-inline-start: max(0.75rem, var(--social-rail-clearance, 4.5rem));
+    padding-inline-end: clamp(1rem, 2vw, 2rem);
+  }
+}
+
 @media (min-width: 1280px) {
   .storefront-page .pdp {
     max-width: none;
     width: 100%;
-    padding-left: clamp(1.25rem, 2.5vw, 2.5rem);
-    padding-right: 0;
-  }
-
-  .storefront-page .pdp:has(.pdp-main:not(.pdp-main--with-rail)) {
-    padding-right: clamp(1.25rem, 2.5vw, 2.5rem);
+    --social-rail-content-gap: 1.65rem;
+    --social-rail-clearance: calc(
+      var(--social-rail-inset-left) + var(--social-rail-track-width) +
+        var(--social-rail-content-gap)
+    );
+    padding-inline-start: max(0.75rem, var(--social-rail-clearance, 4.5rem));
+    padding-inline-end: clamp(1rem, 2.5vw, 2.5rem);
   }
 }
 

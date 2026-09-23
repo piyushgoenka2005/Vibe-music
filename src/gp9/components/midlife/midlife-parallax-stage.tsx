@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  type ReactNode,
-} from "react";
-import Gp9ModelStatusNote from "@/gp9/components/ui/gp9-model-status-note";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import {
   clamp,
   isCoarsePointer,
@@ -213,7 +207,6 @@ export function MidlifeParallaxStage({ children }: MidlifeParallaxStageProps) {
     >
       <div className="midlife-parallax-sticky">
         <h2 className="midlife-parallax-title">Sound Lab</h2>
-        <Gp9ModelStatusNote />
         <div className="midlife-parallax-center">
           <div ref={shadowRef} className="midlife-parallax-shadow" aria-hidden />
           <div ref={stageRef} className="midlife-parallax-stage">
