@@ -22,6 +22,7 @@ import type {
   ShippingAddress,
 } from "@/types/order";
 import type { CheckoutSummaryItem } from "@/components/checkout/CheckoutSummary";
+import type { OnlinePaymentChannel } from "@/components/checkout/CheckoutPaymentMethods";
 
 export interface UseCheckoutPaymentOptions {
   items: CheckoutSummaryItem[];
@@ -33,6 +34,8 @@ export interface UseCheckoutPaymentOptions {
   customerPhone?: string;
   phone?: string;
   paymentMethod: PaymentMethod;
+  /** Preferred Razorpay instrument tab (UPI / card / netbanking). */
+  onlineChannel?: OnlinePaymentChannel;
   disabled?: boolean;
   /** Warm the create-order API while the user reviews payment options. */
   prefetchEnabled?: boolean;
@@ -53,6 +56,15 @@ function orderPayloadKey(payload: CreateOrderPayload): string {
   });
 }
 
+function razorpayPrefillMethod(
+  channel: OnlinePaymentChannel | undefined,
+): "card" | "upi" | "netbanking" | undefined {
+  if (channel === "card") return "card";
+  if (channel === "upi") return "upi";
+  if (channel === "netbanking") return "netbanking";
+  return undefined;
+}
+
 export function useCheckoutPayment({
   items,
   shippingAddress,
@@ -63,6 +75,7 @@ export function useCheckoutPayment({
   customerPhone,
   phone,
   paymentMethod,
+  onlineChannel = "upi",
   disabled = false,
   prefetchEnabled = false,
   checkoutMode = "cart",
@@ -216,6 +229,8 @@ export function useCheckoutPayment({
       const resolvedPhone = phone || customerPhone || shippingAddress.phone;
       const normalizedContact = resolvedPhone ? normalizeIndianPhone(resolvedPhone) : undefined;
 
+      const preferredMethod = razorpayPrefillMethod(onlineChannel);
+
       const result = await openCheckout({
         key: orderResponse.keyId,
         amount: orderResponse.amount,
@@ -230,6 +245,7 @@ export function useCheckoutPayment({
             normalizedContact && normalizedContact.length === 10
               ? normalizedContact
               : resolvedPhone || undefined,
+          ...(preferredMethod ? { method: preferredMethod } : {}),
         },
         notes: { orderId: orderResponse.orderId },
         theme: { color: "#1253ED" },
@@ -281,6 +297,7 @@ export function useCheckoutPayment({
     customerName,
     customerPhone,
     shippingAddress,
+    onlineChannel,
     showToast,
     router,
     openCheckout,

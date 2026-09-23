@@ -156,10 +156,33 @@
 }
 
 /* ─── Deals / listing pages (storefront-page__inner shell) ─── */
-.deals-page__inner,
+.deals-page__inner {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  /* Edge-to-edge product grid — only keep small gutters + social rail clearance */
+  padding-inline: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+@media (min-width: 1024px) {
+  .deals-page__inner {
+    padding-inline-start: max(1rem, var(--social-rail-clearance, 4.5rem));
+    padding-inline-end: clamp(0.75rem, 1.5vw, 1.25rem);
+  }
+}
+
 .used-gear-page__inner {
   width: 100%;
+  max-width: none;
   box-sizing: border-box;
+  padding-inline: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+@media (min-width: 1024px) {
+  .used-gear-page__inner {
+    padding-inline-start: max(1rem, var(--social-rail-clearance, 4.5rem));
+    padding-inline-end: clamp(0.75rem, 1.5vw, 1.25rem);
+  }
 }
 
 .deals-page__header {
@@ -172,11 +195,17 @@
   min-width: 0;
 }
 
+/* Stretch cards across the full deals row instead of leaving empty side gutters */
+.deals-page__grid.cat-product-grid--grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
 .used-gear-page__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 260px));
-  gap: 1.25rem;
-  justify-content: start;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
+  justify-content: stretch;
 }
 
 .deals-page__grid-item,
@@ -665,10 +694,18 @@
   background: var(--brand-primary-muted) !important;
 }
 
-/* ─── Category PLP ─── */
+/* ─── Category / search PLP — edge-to-edge product listings ─── */
 .storefront-page .cat-page {
-  max-width: var(--content-max);
-  padding: 2rem 1.25rem 4rem;
+  width: 100%;
+  max-width: none;
+  padding: 2rem clamp(0.75rem, 1.5vw, 1.25rem) 4rem;
+}
+
+@media (min-width: 1024px) {
+  .storefront-page .cat-page {
+    padding-inline-start: max(1rem, var(--social-rail-clearance, 4.5rem));
+    padding-inline-end: clamp(0.75rem, 1.5vw, 1.25rem);
+  }
 }
 
 .storefront-page .cat-page__title {

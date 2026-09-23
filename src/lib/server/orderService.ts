@@ -1,6 +1,10 @@
 import Razorpay from "razorpay";
 import { cache } from "react";
-import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
+import {
+  isDemoPaymentsAllowed,
+  isRazorpayConfigured,
+  getRazorpayPublicKey,
+} from "@/lib/server/env";
 import { verifyRazorpayPaymentSignature } from "@/lib/razorpay/signature";
 import {
   calculateGST,
@@ -279,10 +283,8 @@ export async function createOrder(
     return {
       order: { ...order, razorpayOrderId, inventoryStatus: "reserved" },
       razorpayOrderId,
-      keyId: isRazorpayConfigured()
-        ? (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY_ID)
-        : undefined,
-      demoMode: payload.paymentMethod === "razorpay" && canUseDemoPayments() ? true : demoMode,
+      keyId: isRazorpayConfigured() ? getRazorpayPublicKey() : undefined,
+      demoMode: Boolean(demoMode),
     };
   } catch (error) {
     logPaymentError(error, { orderId, step: "createOrder" });

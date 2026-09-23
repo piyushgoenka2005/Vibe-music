@@ -358,6 +358,11 @@ interface PaymentStepProps {
   resolvedAddress: ShippingAddress | null;
   hasValidContact: boolean;
   onBackToReview: () => void;
+  onPay: () => void | Promise<void>;
+  payDisabled: boolean;
+  payLoading: boolean;
+  payLoadingLabel?: string | null;
+  payError?: string | null;
 }
 
 export function PaymentStep({
@@ -369,7 +374,15 @@ export function PaymentStep({
   resolvedAddress,
   hasValidContact,
   onBackToReview,
+  onPay,
+  payDisabled,
+  payLoading,
+  payLoadingLabel,
+  payError,
 }: PaymentStepProps) {
+  const canPay =
+    onlinePaymentsAvailable && Boolean(resolvedAddress) && hasValidContact && !payDisabled;
+
   return (
     <>
       <h2 className="checkout-panel__title">Payment Method</h2>
@@ -408,9 +421,30 @@ export function PaymentStep({
         </p>
       ) : null}
 
+      {payError ? (
+        <p className="checkout-panel__alert" role="alert">
+          {payError}
+        </p>
+      ) : null}
+
       <div className="checkout-actions checkout-actions--payment">
         <CheckoutGlassButton onClick={onBackToReview} variant="ghost">
           Back to Review
+        </CheckoutGlassButton>
+        <CheckoutGlassButton
+          variant="solid"
+          disabled={!canPay || payLoading}
+          onClick={() => void onPay()}
+        >
+          {payLoading
+            ? (payLoadingLabel ?? "Opening Razorpay…")
+            : onlineChannel === "upi"
+              ? "Pay with UPI"
+              : onlineChannel === "card"
+                ? "Pay with Card"
+                : onlineChannel === "netbanking"
+                  ? "Pay with Net Banking"
+                  : "Pay with Razorpay"}
         </CheckoutGlassButton>
       </div>
     </>

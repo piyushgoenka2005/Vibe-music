@@ -5,10 +5,20 @@
   --cat-grey50: #969695;
   --cat-grey60: #807f7e;
   --cat-grey100: #2e2e2d;
-  
-  max-width: 1200px;
+
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
-  padding: 1.75rem 16px 48px;
+  box-sizing: border-box;
+  /* Edge-to-edge PLP — small gutters only; clear fixed social rail on desktop */
+  padding: 1.75rem clamp(0.75rem, 1.5vw, 1.25rem) 48px;
+}
+
+@media (min-width: 1024px) {
+  .cat-page {
+    padding-inline-start: max(1rem, var(--social-rail-clearance, 4.5rem));
+    padding-inline-end: clamp(0.75rem, 1.5vw, 1.25rem);
+  }
 }
 
 .cat-breadcrumb {
@@ -117,7 +127,7 @@
 }
 
 .cat-product-grid--grid {
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
 }
 
 @media (max-width: 900px) {
@@ -860,4 +870,3 @@
   height: 100%;
   object-fit: contain;
 }
-

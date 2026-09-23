@@ -28,9 +28,18 @@ export interface RazorpayCheckoutOptions {
     name?: string;
     email?: string;
     contact?: string;
+    /** Opens Razorpay on this method tab when supported. */
+    method?: "card" | "netbanking" | "wallet" | "emi" | "upi";
   };
   notes?: Record<string, string>;
   theme?: { color?: string };
+  /** Prefer / limit instruments shown in Checkout (Standard Checkout config). */
+  config?: {
+    display?: {
+      hide?: Array<{ method: string }>;
+      preferences?: { show_default_blocks?: boolean };
+    };
+  };
   modal?: {
     ondismiss?: () => void;
   };
@@ -82,7 +91,7 @@ function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
       () => {
         finish(() => resolve());
       },
-      { once: true }
+      { once: true },
     );
 
     script.addEventListener(
@@ -90,7 +99,7 @@ function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
       () => {
         finish(() => reject(new Error("Failed to load Razorpay SDK")));
       },
-      { once: true }
+      { once: true },
     );
   });
 }
@@ -105,7 +114,7 @@ function injectRazorpayScript(): Promise<void> {
   }
 
   const existing = document.querySelector<HTMLScriptElement>(
-    `script[src="${RAZORPAY_SCRIPT_URL}"]`
+    `script[src="${RAZORPAY_SCRIPT_URL}"]`,
   );
 
   if (existing) {
@@ -160,10 +169,7 @@ export function preloadRazorpayCheckout(): void {
   if (typeof window === "undefined") return;
   void ensureRazorpayScriptLoaded().catch(() => undefined);
 
-  for (const href of [
-    "https://checkout.razorpay.com",
-    "https://api.razorpay.com",
-  ]) {
+  for (const href of ["https://checkout.razorpay.com", "https://api.razorpay.com"]) {
     if (document.querySelector(`link[data-razorpay-preconnect="${href}"]`)) {
       continue;
     }
@@ -193,9 +199,7 @@ export function useRazorpay() {
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Failed to load Razorpay"
-          );
+          setError(err instanceof Error ? err.message : "Failed to load Razorpay");
         }
       });
 
@@ -205,9 +209,7 @@ export function useRazorpay() {
   }, []);
 
   const openCheckout = useCallback(
-    async (
-      options: RazorpayCheckoutOptions
-    ): Promise<RazorpayCheckoutResult> => {
+    async (options: RazorpayCheckoutOptions): Promise<RazorpayCheckoutResult> => {
       setIsLoading(true);
       setError(null);
 
@@ -220,7 +222,7 @@ export function useRazorpay() {
 
         if (!options.key?.startsWith("rzp_")) {
           throw new Error(
-            "Payment gateway is not configured. Add NEXT_PUBLIC_RAZORPAY_KEY_ID to .env.local."
+            "Payment gateway is not configured. Add NEXT_PUBLIC_RAZORPAY_KEY_ID to .env.local.",
           );
         }
 
@@ -264,9 +266,7 @@ export function useRazorpay() {
             razorpay.open();
           } catch (openError) {
             const message =
-              openError instanceof Error
-                ? openError.message
-                : "Unable to open Razorpay checkout";
+              openError instanceof Error ? openError.message : "Unable to open Razorpay checkout";
             setError(message);
             finish({ status: "failed", message });
           }
@@ -283,14 +283,13 @@ export function useRazorpay() {
 
         return await Promise.race([checkoutPromise, timeoutPromise]);
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Unable to open Razorpay checkout";
+        const message = err instanceof Error ? err.message : "Unable to open Razorpay checkout";
         setError(message);
         setIsLoading(false);
         return { status: "failed", message };
       }
     },
-    []
+    [],
   );
 
   return {

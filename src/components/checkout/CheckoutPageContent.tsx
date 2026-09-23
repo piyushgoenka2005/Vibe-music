@@ -391,6 +391,7 @@ export default function CheckoutPageContent() {
     customerPhone: contactPhone,
     phone: contactPhone || undefined,
     paymentMethod: effectivePaymentMethod,
+    onlineChannel,
     checkoutMode: isBuyNowMode ? "buyNow" : "cart",
     disabled: step !== "payment" || !resolvedAddress || !hasValidContact,
     prefetchEnabled:
@@ -591,6 +592,34 @@ export default function CheckoutPageContent() {
           </CheckoutGlassButton>
         )}
       </div>
+    ) : resolvedAddress && hasValidContact && onlinePaymentsAvailable ? (
+      <div
+        className={`checkout-mobile-bar checkout-mobile-bar--pay${
+          footerInView ? " checkout-mobile-bar--hidden" : ""
+        }`}
+        role="region"
+        aria-label="Pay securely"
+        aria-hidden={footerInView}
+      >
+        <div className="checkout-mobile-bar__total">
+          <span className="checkout-mobile-bar__label">Total</span>
+          <strong className="checkout-mobile-bar__amount">
+            {formatCurrencyPrecise(invoice.grandTotal)}
+          </strong>
+        </div>
+        <CheckoutGlassButton
+          variant="solid"
+          className="checkout-mobile-bar__cta"
+          disabled={payment.isDisabled || footerInView}
+          onClick={() => void payment.pay()}
+        >
+          {payment.isProcessing || payment.isLoading
+            ? (payment.processingLabel ?? "Opening…")
+            : onlineChannel === "upi"
+              ? "Pay with UPI"
+              : "Pay now"}
+        </CheckoutGlassButton>
+      </div>
     ) : null;
 
   return (
@@ -713,6 +742,13 @@ export default function CheckoutPageContent() {
                 resolvedAddress={resolvedAddress}
                 hasValidContact={hasValidContact}
                 onBackToReview={() => setStep("summary")}
+                onPay={payment.pay}
+                payDisabled={payment.isDisabled}
+                payLoading={payment.isProcessing || payment.isLoading}
+                payLoadingLabel={
+                  payment.processingLabel ?? (payment.isLoading ? "Opening Razorpay…" : null)
+                }
+                payError={payment.error}
               />
             ) : null}
           </div>

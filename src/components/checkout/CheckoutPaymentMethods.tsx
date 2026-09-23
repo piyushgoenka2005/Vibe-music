@@ -1,10 +1,9 @@
 "use client";
 
-import { Check, CreditCard, Landmark, Lock, Smartphone } from "lucide-react";
-import {
-  GlassEffect,
-  GlassEffectButton,
-} from "@/components/ui/liquid-glass";
+import type { ComponentType } from "react";
+import { Check, CreditCard, Landmark, Lock } from "lucide-react";
+import { GlassEffect, GlassEffectButton } from "@/components/ui/liquid-glass";
+import { UpiIcon } from "@/components/checkout/UpiIcon";
 import type { PaymentMethod } from "@/types/order";
 
 export type OnlinePaymentChannel = "card" | "upi" | "netbanking";
@@ -18,12 +17,14 @@ interface CheckoutPaymentMethodsProps {
   onlinePaymentsAvailable?: boolean;
 }
 
+type ChannelIcon = ComponentType<{ size?: number }>;
+
 const ONLINE_CHANNELS: Array<{
   id: OnlinePaymentChannel;
   title: string;
   subtitle: string;
   tags: string[];
-  icon: typeof CreditCard;
+  icon: ChannelIcon;
 }> = [
   {
     id: "card",
@@ -37,7 +38,7 @@ const ONLINE_CHANNELS: Array<{
     title: "UPI",
     subtitle: "Instant bank transfer",
     tags: ["GPay", "PhonePe", "Paytm"],
-    icon: Smartphone,
+    icon: UpiIcon,
   },
   {
     id: "netbanking",
@@ -54,7 +55,7 @@ interface PaymentGlassCardProps {
   channel?: boolean;
   disabled?: boolean;
   onClick: () => void;
-  icon: typeof CreditCard;
+  icon: ChannelIcon;
   iconSize?: number;
   title: string;
   subtitle: string;
@@ -97,9 +98,7 @@ function PaymentGlassCard({
         </span>
       ) : null}
       <span
-        className={`checkout-pay-card__icon${
-          channel ? " checkout-pay-card__icon--sm" : ""
-        }`}
+        className={`checkout-pay-card__icon${channel ? " checkout-pay-card__icon--sm" : ""}`}
         aria-hidden
       >
         <Icon size={iconSize} />
