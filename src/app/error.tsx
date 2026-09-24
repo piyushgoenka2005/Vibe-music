@@ -21,8 +21,8 @@ export default function Error({
         <p className="storefront-page__eyebrow">Error</p>
         <h1 className="error-page__title">Something went wrong</h1>
         <p className="error-page__lead">
-          We hit an unexpected problem loading this page. You can try again or
-          return to the homepage.
+          We hit an unexpected problem loading this page. You can try again or return to the
+          homepage.
         </p>
         <div className="error-page__actions">
           <div className="error-page__btn-row">
@@ -33,11 +33,11 @@ export default function Error({
             >
               Try again
             </button>
-            <Link
-              href={ROUTES.home}
-              className="error-page__btn error-page__btn--secondary"
-            >
+            <Link href={ROUTES.home} className="error-page__btn error-page__btn--secondary">
               Back to home
+            </Link>
+            <Link href={ROUTES.search} className="error-page__btn error-page__btn--secondary">
+              Search products
             </Link>
           </div>
         </div>

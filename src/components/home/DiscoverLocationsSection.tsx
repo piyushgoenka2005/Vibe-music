@@ -7,13 +7,7 @@ import { LANDING_LOCATIONS, type StatusTone } from "@/data/landingStatus";
 import Reveal from "@/components/layout/Reveal";
 import { ROUTES } from "@/lib/routes";
 
-function LocationStatusTag({
-  label,
-  tone,
-}: {
-  label: string;
-  tone: StatusTone;
-}) {
+function LocationStatusTag({ label, tone }: { label: string; tone: StatusTone }) {
   return (
     <span className={`location-status-tag location-status-tag--${tone}`}>
       {tone === "live" ? <span className="location-status-tag__dot" aria-hidden /> : null}
@@ -63,12 +57,11 @@ export default function DiscoverLocationsSection() {
     <Reveal as="section" className="locations-strip">
       <div className="locations-strip__inner">
         <header className="locations-strip__header">
-          <p className="locations-strip__eyebrow premium-section-eyebrow">
-            Store network
-          </p>
+          <p className="locations-strip__eyebrow premium-section-eyebrow">Store network</p>
           <h2 className="locations-strip__title">Discover our locations</h2>
-          <p className="locations-strip__cities">
-            Delhi · Kolkata · Nagpur · North East · Mumbai
+          <p className="locations-strip__cities">Delhi · Kolkata · Nagpur · North East · Mumbai</p>
+          <p className="locations-strip__note">
+            Store hours vary by location — contact an advisor before visiting.
           </p>
         </header>
 
@@ -89,12 +82,7 @@ export default function DiscoverLocationsSection() {
           href={ROUTES.contact}
           className="locations-strip__cta premium-btn premium-btn--outline"
         >
-          <MapPin
-            className="locations-strip__cta-icon"
-            size={16}
-            strokeWidth={2.25}
-            aria-hidden
-          />
+          <MapPin className="locations-strip__cta-icon" size={16} strokeWidth={2.25} aria-hidden />
           Contact a store advisor
         </Link>
       </div>

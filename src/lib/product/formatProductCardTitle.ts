@@ -12,11 +12,7 @@ const LONG_TITLE_BREAKS = [
 ];
 
 /** Short card title — brand shown separately; full name stays on PDP via `title`. */
-export function formatProductCardTitle(
-  name: string,
-  brand?: string,
-  maxLength = 64
-): string {
+export function formatProductCardTitle(name: string, brand?: string, maxLength = 48): string {
   let title = cleanProductName(name);
   if (!title) return "";
 

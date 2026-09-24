@@ -84,20 +84,15 @@ export default function SiteHeader() {
       user: state.user,
       isAuthenticated: state.isAuthenticated,
       isInitialized: state.isInitialized,
-    }))
+    })),
   );
 
   const accountHref = isAuthenticated ? ROUTES.account : ROUTES.login;
   const accountAriaLabel =
-    isInitialized && isAuthenticated && user?.name
-      ? user.name.split(" ")[0]
-      : "Account";
-  const accountPhotoUrl =
-    isInitialized && isAuthenticated ? user?.photoURL ?? null : null;
+    isInitialized && isAuthenticated && user?.name ? user.name.split(" ")[0] : "Account";
+  const accountPhotoUrl = isInitialized && isAuthenticated ? (user?.photoURL ?? null) : null;
 
-  const cartCount = useCartStore((s) =>
-    s.items.reduce((sum, item) => sum + item.quantity, 0)
-  );
+  const cartCount = useCartStore((s) => s.items.reduce((sum, item) => sum + item.quantity, 0));
   const openCartDrawer = useCartStore((s) => s.openDrawer);
   const openWishlistDrawer = useWishlistStore((s) => s.openDrawer);
   const cartCountRef = useRef<HTMLSpanElement>(null);
@@ -133,7 +128,7 @@ export default function SiteHeader() {
       event.preventDefault();
       openCartDrawer();
     },
-    [openCartDrawer]
+    [openCartDrawer],
   );
 
   const handleSearchSubmit = useCallback(
@@ -144,7 +139,7 @@ export default function SiteHeader() {
       if (query.length < MIN_QUERY_LENGTH) return;
       router.push(`${ROUTES.searchResults}?q=${encodeURIComponent(query)}`);
     },
-    [router]
+    [router],
   );
 
   const handleMobileSearchOpen = useCallback(() => {
@@ -257,14 +252,19 @@ export default function SiteHeader() {
               onClick={handleCartClick}
             >
               <ShoppingCart size={20} strokeWidth={1.75} aria-hidden />
-              <span
-                ref={cartCountRef}
-                className="site-header__cart-count assets-site-header__menu-cart-count"
-                data-count={cartDataCount}
-              >
-                {cartCountText}
+              {cartCount > 0 ? (
+                <span
+                  ref={cartCountRef}
+                  className="site-header__cart-count assets-site-header__menu-cart-count"
+                  data-count={cartDataCount}
+                  aria-hidden="true"
+                >
+                  {cartCountText}
+                </span>
+              ) : null}
+              <span className="site-header__action-label" aria-hidden="true">
+                Cart
               </span>
-              <span className="site-header__action-label">Cart</span>
             </Link>
           </div>
 

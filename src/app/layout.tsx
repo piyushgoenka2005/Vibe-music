@@ -51,6 +51,8 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         {splashEnabled ? (
           <script
             dangerouslySetInnerHTML={{

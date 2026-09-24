@@ -24,7 +24,7 @@ export const LANDING_STATS = [
   {
     value: "Mon–Sat",
     label: "Gear support",
-    status: "Email within 1–2 days",
+    status: "Same-day · Mon–Sat",
     tone: "info" as StatusTone,
   },
 ] as const;
@@ -123,22 +123,22 @@ export const LANDING_SOCIAL_PROOF = {
 export const LANDING_LOCATIONS = [
   {
     city: "Delhi",
-    status: "Open",
-    tone: "live" as StatusTone,
+    status: "Visit us",
+    tone: "info" as StatusTone,
     accent: "#1e3a8a",
     image: "/images/locations/delhi.jpg",
   },
   {
     city: "Kolkata",
-    status: "Open",
-    tone: "live" as StatusTone,
+    status: "Visit us",
+    tone: "info" as StatusTone,
     accent: "#0f766e",
     image: "/images/locations/kolkata.jpg",
   },
   {
     city: "Nagpur",
-    status: "Open",
-    tone: "live" as StatusTone,
+    status: "Visit us",
+    tone: "info" as StatusTone,
     accent: "#9a3412",
     image: "/images/locations/nagpur.jpg",
   },

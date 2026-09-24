@@ -21,9 +21,7 @@ export default function GlobalError({
           <div className="error-page__inner">
             <p className="storefront-page__eyebrow">Error</p>
             <h1 className="error-page__title">Something went wrong</h1>
-            <p className="error-page__lead">
-              The application encountered an unexpected error.
-            </p>
+            <p className="error-page__lead">The application encountered an unexpected error.</p>
             <div className="error-page__actions">
               <div className="error-page__btn-row">
                 <button
@@ -35,6 +33,9 @@ export default function GlobalError({
                 </button>
                 <a href={ROUTES.home} className="error-page__btn error-page__btn--secondary">
                   Back to home
+                </a>
+                <a href={ROUTES.search} className="error-page__btn error-page__btn--secondary">
+                  Search products
                 </a>
               </div>
             </div>
