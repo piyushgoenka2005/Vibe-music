@@ -76,7 +76,7 @@ check_http "/api/coupons/active" "200" "GET /api/coupons/active"
 check_json "/api/coupons/active" "Array.isArray(d.coupons)" "coupons/active returns {coupons:[]}"
 
 check_http "/api/checkout/capabilities" "200" "GET /api/checkout/capabilities"
-check_json "/api/checkout/capabilities" "d.razorpayConfigured === true && d.onlinePaymentsAvailable === true && d.demoPaymentsAllowed !== true" "checkout: live Razorpay configured"
+check_json "/api/checkout/capabilities" "d.razorpayConfigured === true && d.onlinePaymentsAvailable === true && d.demoPaymentsAllowed !== true && d.razorpayMode === 'live'" "checkout: live Razorpay configured (razorpayMode=live)"
 
 check_json "/api/banners" "Array.isArray(d.banners)" "banners API returns {banners:[]}"
 

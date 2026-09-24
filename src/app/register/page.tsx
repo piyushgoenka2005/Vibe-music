@@ -4,7 +4,8 @@ import AuthPageLayout from "@/components/auth/AuthPageLayout";
 import AuthShell from "@/components/auth/AuthShell";
 import GuestOnlyRoute from "@/components/auth/GuestOnlyRoute";
 import RegisterForm from "@/components/auth/RegisterForm";
-import { isGoogleAuthConfigured } from "@/lib/auth/google-config";
+import { isGoogleAuthConfigured, isGoogleSignInAvailable } from "@/lib/auth/google-config";
+import type { GoogleAuthUnavailableReason } from "@/components/auth/GoogleAuthUnavailableNote";
 import { BRAND } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +17,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export default function RegisterPage() {
-  const googleAuthEnabled = isGoogleAuthConfigured();
+export default async function RegisterPage() {
+  const googleConfigured = isGoogleAuthConfigured();
+  const googleAuthEnabled = await isGoogleSignInAvailable();
+  const googleAuthUnavailableReason: GoogleAuthUnavailableReason | undefined = googleAuthEnabled
+    ? undefined
+    : googleConfigured
+      ? "database"
+      : "oauth";
 
   return (
     <AuthPageLayout wide>
@@ -27,7 +34,10 @@ export default function RegisterPage() {
           description="Join Vibe Music to save your wishlist and track orders."
         >
           <Suspense fallback={null}>
-            <RegisterForm googleAuthEnabled={googleAuthEnabled} />
+            <RegisterForm
+              googleAuthEnabled={googleAuthEnabled}
+              googleAuthUnavailableReason={googleAuthUnavailableReason}
+            />
           </Suspense>
         </AuthShell>
       </GuestOnlyRoute>

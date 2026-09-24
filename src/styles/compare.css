@@ -183,7 +183,7 @@
   padding: 3rem 1rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .compare-table-wrap {
     display: block;
   }

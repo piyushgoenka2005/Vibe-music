@@ -11,10 +11,10 @@ import {
   rewindStorefrontStackTo,
 } from "@/lib/navigation/storefrontHistory";
 import {
-  ROUTE_SCROLL_RESET_PX,
+  SCROLL_ANCHORS_KEY,
   SCROLL_POSITIONS_KEY,
-  mergeScrollPositionForKey,
-  resolveScrollYForPersist,
+  persistStorefrontScroll,
+  readScrollPositions,
 } from "@/lib/navigation/scrollRestore";
 
 interface UseStorefrontBackOptions {
@@ -28,27 +28,20 @@ function flushCurrentScroll(): void {
     const key = `${window.location.pathname}${window.location.search}`;
     const liveY = Math.max(
       0,
-      Math.round(window.scrollY || document.documentElement.scrollTop || 0)
+      Math.round(window.scrollY || document.documentElement.scrollTop || 0),
     );
-    const raw = sessionStorage.getItem(SCROLL_POSITIONS_KEY);
-    let positions: Record<string, number> = {};
-    if (raw) {
-      const parsed = JSON.parse(raw) as unknown;
-      if (parsed && typeof parsed === "object") {
-        positions = parsed as Record<string, number>;
-      }
-    }
-    const previous = positions[key] ?? 0;
+    const positionsRaw = sessionStorage.getItem(SCROLL_POSITIONS_KEY);
+    const anchorsRaw = sessionStorage.getItem(SCROLL_ANCHORS_KEY);
+    const previous = readScrollPositions(positionsRaw)[key] ?? 0;
     const lastKnown = Math.max(previous, liveY);
-    const y = resolveScrollYForPersist(liveY, lastKnown);
-    const next = mergeScrollPositionForKey(
-      positions,
+    persistStorefrontScroll({
       key,
-      y,
-      lastKnown,
-      liveY <= 2 && previous > ROUTE_SCROLL_RESET_PX
-    );
-    sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(next));
+      liveY,
+      lastKnownY: lastKnown,
+      navGuardActive: liveY <= 2 && previous > 48,
+      positionsRaw,
+      anchorsRaw,
+    });
   } catch {
     /* ignore */
   }
@@ -73,8 +66,7 @@ export function useStorefrontBack(options: UseStorefrontBackOptions = {}) {
     };
   }, [pathname, refresh]);
 
-  const fallbackHref =
-    options.fallbackHref ?? defaultStorefrontBackHref(pathname);
+  const fallbackHref = options.fallbackHref ?? defaultStorefrontBackHref(pathname);
 
   const goBack = useCallback(() => {
     flushCurrentScroll();

@@ -556,14 +556,15 @@ export default function CheckoutPageContent() {
   }
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
+  const hideMobileBar = footerInView || payment.isProcessing || payment.isLoading;
 
   const mobileBar =
     step !== "payment" ? (
       <div
-        className={`checkout-mobile-bar${footerInView ? " checkout-mobile-bar--hidden" : ""}`}
+        className={`checkout-mobile-bar${hideMobileBar ? " checkout-mobile-bar--hidden" : ""}`}
         role="region"
         aria-label="Order total and continue"
-        aria-hidden={footerInView}
+        aria-hidden={hideMobileBar}
       >
         <div className="checkout-mobile-bar__total">
           <span className="checkout-mobile-bar__label">Total</span>
@@ -575,7 +576,7 @@ export default function CheckoutPageContent() {
           <CheckoutGlassButton
             variant="solid"
             className="checkout-mobile-bar__cta"
-            disabled={!canProceedFromAddress || footerInView}
+            disabled={!canProceedFromAddress || hideMobileBar}
             onClick={() => void handleContinueFromAddress()}
           >
             Continue
@@ -584,7 +585,7 @@ export default function CheckoutPageContent() {
           <CheckoutGlassButton
             variant="solid"
             className="checkout-mobile-bar__cta"
-            disabled={footerInView}
+            disabled={hideMobileBar}
             onClick={handleContinueToPayment}
           >
             Continue
@@ -594,11 +595,11 @@ export default function CheckoutPageContent() {
     ) : resolvedAddress && hasValidContact && onlinePaymentsAvailable ? (
       <div
         className={`checkout-mobile-bar checkout-mobile-bar--pay${
-          footerInView ? " checkout-mobile-bar--hidden" : ""
+          hideMobileBar ? " checkout-mobile-bar--hidden" : ""
         }`}
         role="region"
         aria-label="Pay securely"
-        aria-hidden={footerInView}
+        aria-hidden={hideMobileBar}
       >
         <div className="checkout-mobile-bar__total">
           <span className="checkout-mobile-bar__label">Total</span>
@@ -609,7 +610,7 @@ export default function CheckoutPageContent() {
         <CheckoutGlassButton
           variant="solid"
           className="checkout-mobile-bar__cta"
-          disabled={payment.isDisabled || footerInView}
+          disabled={payment.isDisabled || hideMobileBar}
           onClick={() => void payment.pay()}
         >
           {payment.isProcessing || payment.isLoading

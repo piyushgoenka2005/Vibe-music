@@ -184,16 +184,29 @@ const razorpayPublicKey = env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim() ?? "";
 if (razorpayKeyId && razorpayPublicKey && razorpayKeyId !== razorpayPublicKey) {
   console.log("RAZORPAY_KEY_ID and NEXT_PUBLIC_RAZORPAY_KEY_ID must match.");
 }
+let productionMisconfig = false;
 if (
   /vibemusic\.in/i.test(siteUrl) &&
   razorpayKeyId.startsWith("rzp_test_")
 ) {
   console.log(
-    "Razorpay test keys with vibemusic.in — production VPS must use rzp_live_… keys."
+    "BLOCKING: Razorpay test keys with vibemusic.in — production VPS must use rzp_live_… keys."
   );
+  productionMisconfig = true;
+}
+if (
+  /vibemusic\.in/i.test(siteUrl) &&
+  razorpayKeyId &&
+  !razorpayKeyId.startsWith("rzp_live_")
+) {
+  console.log(
+    "BLOCKING: RAZORPAY_KEY_ID must start with rzp_live_ when NEXT_PUBLIC_SITE_URL is vibemusic.in."
+  );
+  productionMisconfig = true;
 }
 if (env.ALLOW_DEMO_PAYMENTS === "true" && /vibemusic\.in/i.test(siteUrl)) {
-  console.log("ALLOW_DEMO_PAYMENTS must be false on the production storefront.");
+  console.log("BLOCKING: ALLOW_DEMO_PAYMENTS must be false on the production storefront.");
+  productionMisconfig = true;
 }
 if (!missingRequired.length) {
   console.log("All production-required keys are present in local env files.");
@@ -202,4 +215,4 @@ if (!missingRequired.length) {
   );
 }
 console.log("");
-process.exit(missingRequired.length ? 1 : 0);
+process.exit(missingRequired.length || productionMisconfig ? 1 : 0);

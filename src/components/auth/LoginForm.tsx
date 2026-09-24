@@ -6,7 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import AuthDivider from "@/components/auth/AuthDivider";
-import GoogleAuthUnavailableNote from "@/components/auth/GoogleAuthUnavailableNote";
+import GoogleAuthUnavailableNote, {
+  type GoogleAuthUnavailableReason,
+} from "@/components/auth/GoogleAuthUnavailableNote";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -27,15 +29,16 @@ import { useAuthStore } from "@/store/authStore";
 
 interface LoginFormProps {
   googleAuthEnabled?: boolean;
+  googleAuthUnavailableReason?: GoogleAuthUnavailableReason;
 }
 
-export default function LoginForm({ googleAuthEnabled = false }: LoginFormProps) {
+export default function LoginForm({
+  googleAuthEnabled = false,
+  googleAuthUnavailableReason = "oauth",
+}: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = sanitizeAuthRedirect(
-    searchParams.get("redirect"),
-    ROUTES.account
-  );
+  const redirectTo = sanitizeAuthRedirect(searchParams.get("redirect"), ROUTES.account);
   const registerHref =
     searchParams.get("redirect") && redirectTo !== ROUTES.account
       ? `${ROUTES.register}?redirect=${encodeURIComponent(redirectTo)}`
@@ -89,9 +92,7 @@ export default function LoginForm({ googleAuthEnabled = false }: LoginFormProps)
 
   async function handleGoogleSignIn() {
     if (!googleAuthEnabled) {
-      setFormError(
-        "Google sign-in is unavailable right now. Please use email and password."
-      );
+      setFormError("Google sign-in is unavailable right now. Please use email and password.");
       return;
     }
     setFormError(null);
@@ -116,14 +117,11 @@ export default function LoginForm({ googleAuthEnabled = false }: LoginFormProps)
           <AuthDivider />
         </>
       ) : (
-        <GoogleAuthUnavailableNote />
+        <GoogleAuthUnavailableNote reason={googleAuthUnavailableReason} />
       )}
 
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="auth-shell__form"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="auth-shell__form">
           <FormField
             control={form.control}
             name="email"
@@ -156,11 +154,7 @@ export default function LoginForm({ googleAuthEnabled = false }: LoginFormProps)
                   </Link>
                 </div>
                 <FormControl>
-                  <PasswordInput
-                    autoComplete="current-password"
-                    disabled={isLoading}
-                    {...field}
-                  />
+                  <PasswordInput autoComplete="current-password" disabled={isLoading} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

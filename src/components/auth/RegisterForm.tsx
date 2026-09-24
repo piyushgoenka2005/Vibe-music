@@ -6,7 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import AuthDivider from "@/components/auth/AuthDivider";
-import GoogleAuthUnavailableNote from "@/components/auth/GoogleAuthUnavailableNote";
+import GoogleAuthUnavailableNote, {
+  type GoogleAuthUnavailableReason,
+} from "@/components/auth/GoogleAuthUnavailableNote";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -29,15 +31,16 @@ import { useAuthStore } from "@/store/authStore";
 
 interface RegisterFormProps {
   googleAuthEnabled?: boolean;
+  googleAuthUnavailableReason?: GoogleAuthUnavailableReason;
 }
 
-export default function RegisterForm({ googleAuthEnabled = false }: RegisterFormProps) {
+export default function RegisterForm({
+  googleAuthEnabled = false,
+  googleAuthUnavailableReason = "oauth",
+}: RegisterFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = sanitizeAuthRedirect(
-    searchParams.get("redirect"),
-    ROUTES.account
-  );
+  const redirectTo = sanitizeAuthRedirect(searchParams.get("redirect"), ROUTES.account);
   const loginHref =
     searchParams.get("redirect") && redirectTo !== ROUTES.account
       ? `${ROUTES.login}?redirect=${encodeURIComponent(redirectTo)}`
@@ -75,9 +78,7 @@ export default function RegisterForm({ googleAuthEnabled = false }: RegisterForm
 
   async function handleGoogleSignIn() {
     if (!googleAuthEnabled) {
-      setError(
-        "Google sign-in is unavailable right now. Please create an account with email."
-      );
+      setError("Google sign-in is unavailable right now. Please create an account with email.");
       return;
     }
     setError(null);
@@ -106,14 +107,11 @@ export default function RegisterForm({ googleAuthEnabled = false }: RegisterForm
           <AuthDivider />
         </>
       ) : (
-        <GoogleAuthUnavailableNote />
+        <GoogleAuthUnavailableNote reason={googleAuthUnavailableReason} />
       )}
 
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="auth-shell__form"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="auth-shell__form">
           <FormField
             control={form.control}
             name="name"
@@ -160,11 +158,7 @@ export default function RegisterForm({ googleAuthEnabled = false }: RegisterForm
               <FormItem className="auth-shell__field">
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                    <PasswordInput
-                      autoComplete="new-password"
-                      disabled={isLoading}
-                      {...field}
-                    />
+                  <PasswordInput autoComplete="new-password" disabled={isLoading} {...field} />
                 </FormControl>
                 <FormDescription className="auth-shell__hint">
                   At least 8 characters with a letter and a number.
@@ -181,11 +175,7 @@ export default function RegisterForm({ googleAuthEnabled = false }: RegisterForm
               <FormItem className="auth-shell__field">
                 <FormLabel>Confirm password</FormLabel>
                 <FormControl>
-                    <PasswordInput
-                      autoComplete="new-password"
-                      disabled={isLoading}
-                      {...field}
-                    />
+                  <PasswordInput autoComplete="new-password" disabled={isLoading} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

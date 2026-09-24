@@ -74,11 +74,12 @@ const checks: Check[] = [];
     data.razorpayConfigured === true &&
     data.onlinePaymentsAvailable === true &&
     data.demoPaymentsAllowed === false &&
+    data.razorpayMode === "live" &&
     methods.includes("razorpay");
   checks.push({
     name: "payments",
     ok: status === 200 && razorpay,
-    detail: `HTTP ${status} razorpay=${String(data.razorpayConfigured)} demo=${String(data.demoPaymentsAllowed)} methods=${JSON.stringify(methods)}`,
+    detail: `HTTP ${status} razorpay=${String(data.razorpayConfigured)} mode=${String(data.razorpayMode)} demo=${String(data.demoPaymentsAllowed)} methods=${JSON.stringify(methods)}`,
     blocking: true,
   });
   checks.push({

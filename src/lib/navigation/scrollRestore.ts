@@ -3,6 +3,8 @@
  */
 
 export const SCROLL_POSITIONS_KEY = "vibe:scroll-positions";
+/** Section anchor saved when leaving a long page (homepage grids, etc.). */
+export const SCROLL_ANCHORS_KEY = "vibe:scroll-anchors";
 /** Survives React Strict Mode / Suspense remount after browser Back. */
 export const PENDING_POP_RESTORE_KEY = "vibe:pending-pop-restore";
 /** Re-apply saved Y while async sections / images expand after back. */
@@ -24,11 +26,14 @@ export type PendingPopRestore = {
   at: number;
 };
 
-export function isBackToKey(
-  key: string,
-  stack: string[],
-  pendingPop: boolean
-): boolean {
+export type ScrollAnchorRecord = {
+  sectionId: string;
+  y: number;
+};
+
+export type ScrollAnchorsMap = Record<string, ScrollAnchorRecord>;
+
+export function isBackToKey(key: string, stack: string[], pendingPop: boolean): boolean {
   const index = stack.lastIndexOf(key);
   if (pendingPop) {
     // Browser back/forward: only treat as back when this URL already exists earlier.
@@ -55,11 +60,7 @@ export function shouldTreatAsBackNavigation(options: {
   return false;
 }
 
-export function updateHistoryStack(
-  stack: string[],
-  key: string,
-  isBack: boolean
-): string[] {
+export function updateHistoryStack(stack: string[], key: string, isBack: boolean): string[] {
   if (isBack) {
     const index = stack.lastIndexOf(key);
     return index === -1 ? stack : stack.slice(0, index + 1);
@@ -75,7 +76,7 @@ export function shouldPersistScrollWhileRestoring(restoring: boolean): boolean {
 export function shouldCancelRestoreForUserScroll(
   currentY: number,
   targetY: number,
-  thresholdPx = USER_SCROLL_CANCEL_PX
+  thresholdPx = USER_SCROLL_CANCEL_PX,
 ): boolean {
   // Still parked at the top while Next resets scroll — keep restoring.
   if (currentY <= 2 && targetY > thresholdPx) return false;
@@ -89,7 +90,7 @@ export function shouldCancelRestoreForUserScroll(
 export function shouldIgnoreTransientScrollReset(
   currentY: number,
   lastY: number,
-  resetPx = ROUTE_SCROLL_RESET_PX
+  resetPx = ROUTE_SCROLL_RESET_PX,
 ): boolean {
   return currentY <= 2 && lastY > resetPx;
 }
@@ -131,7 +132,7 @@ export function serializePendingPopRestore(value: PendingPopRestore): string {
 export function parsePendingPopRestore(
   raw: string | null,
   now = Date.now(),
-  ttlMs = RESTORE_WINDOW_MS
+  ttlMs = RESTORE_WINDOW_MS,
 ): PendingPopRestore | null {
   if (!raw) return null;
   try {
@@ -161,7 +162,7 @@ export function isPendingPopRestoreForKey(
   pending: PendingPopRestore | null,
   key: string,
   now = Date.now(),
-  ttlMs = RESTORE_WINDOW_MS
+  ttlMs = RESTORE_WINDOW_MS,
 ): boolean {
   if (!pending) return false;
   if (pending.key !== key) return false;
@@ -174,7 +175,7 @@ export function mergeScrollPositionForKey(
   key: string,
   liveY: number,
   lastKnownY = 0,
-  navGuardActive = false
+  navGuardActive = false,
 ): Record<string, number> {
   const next = Math.max(0, Math.round(resolveScrollYForPersist(liveY, lastKnownY)));
   const previous = positions[key] ?? 0;
@@ -197,12 +198,134 @@ export function shouldSkipSplashScrollToTop(options: {
   intentionalBack: boolean;
   resetPx?: number;
 }): boolean {
-  const {
-    savedY,
-    pendingPopMatches,
-    intentionalBack,
-    resetPx = ROUTE_SCROLL_RESET_PX,
-  } = options;
+  const { savedY, pendingPopMatches, intentionalBack, resetPx = ROUTE_SCROLL_RESET_PX } = options;
   if (intentionalBack || pendingPopMatches) return true;
   return typeof savedY === "number" && savedY > resetPx;
+}
+
+/** True for in-app paths that should persist scroll before navigation. */
+export function isSameOriginPathHref(href: string): boolean {
+  const trimmed = href.trim();
+  if (
+    !trimmed ||
+    trimmed.startsWith("#") ||
+    trimmed.startsWith("mailto:") ||
+    trimmed.startsWith("tel:")
+  ) {
+    return false;
+  }
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    try {
+      return new URL(trimmed).origin === window.location.origin;
+    } catch {
+      return false;
+    }
+  }
+  return trimmed.startsWith("/");
+}
+
+/**
+ * Nearest homepage section id for scroll restore — prefers `<section id>`.
+ */
+export function findSectionAnchorId(from: Element | null): string | null {
+  if (!from) return null;
+  let el: Element | null = from;
+  let fallback: string | null = null;
+  while (el) {
+    if (el.tagName === "SECTION" && el instanceof HTMLElement && el.id) {
+      return el.id;
+    }
+    const vibe = el.getAttribute?.("data-vibe-section");
+    if (vibe) fallback = fallback ?? vibe;
+    const hp = el.getAttribute?.("data-hp-section");
+    if (hp) fallback = fallback ?? hp;
+    el = el.parentElement;
+  }
+  return fallback;
+}
+
+export function mergeScrollAnchorForKey(
+  anchors: ScrollAnchorsMap,
+  key: string,
+  sectionId: string,
+  y: number,
+): ScrollAnchorsMap {
+  if (!sectionId) return anchors;
+  return {
+    ...anchors,
+    [key]: { sectionId, y: Math.max(0, Math.round(y)) },
+  };
+}
+
+/** Pick the stronger restore target when a section anchor exists in the DOM. */
+export function computeRestoreScrollY(
+  savedY: number,
+  sectionTopPx: number | null,
+  headerOffsetPx: number,
+): number {
+  const baseY = Math.max(0, Math.round(savedY));
+  if (sectionTopPx == null) return baseY;
+  const anchorY = Math.max(0, Math.round(sectionTopPx - headerOffsetPx));
+  return Math.max(baseY, anchorY);
+}
+
+export function readScrollPositions(raw: string | null): Record<string, number> {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
+export function readScrollAnchors(raw: string | null): ScrollAnchorsMap {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+    const map = parsed as Record<string, ScrollAnchorRecord>;
+    const next: ScrollAnchorsMap = {};
+    for (const [key, value] of Object.entries(map)) {
+      if (value && typeof value.sectionId === "string" && typeof value.y === "number") {
+        next[key] = value;
+      }
+    }
+    return next;
+  } catch {
+    return {};
+  }
+}
+
+/** Persist scroll (+ optional section anchor) synchronously before route change. */
+export function persistStorefrontScroll(options: {
+  key: string;
+  liveY: number;
+  lastKnownY: number;
+  navGuardActive: boolean;
+  sectionId?: string | null;
+  positionsRaw?: string | null;
+  anchorsRaw?: string | null;
+}): void {
+  const { key, liveY, lastKnownY, navGuardActive, sectionId, positionsRaw, anchorsRaw } = options;
+  const y = Math.max(0, Math.round(resolveScrollYForPersist(liveY, lastKnownY)));
+  const positions = mergeScrollPositionForKey(
+    readScrollPositions(positionsRaw ?? null),
+    key,
+    y,
+    lastKnownY,
+    navGuardActive,
+  );
+  sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(positions));
+
+  if (sectionId) {
+    const anchors = mergeScrollAnchorForKey(
+      readScrollAnchors(anchorsRaw ?? null),
+      key,
+      sectionId,
+      y,
+    );
+    sessionStorage.setItem(SCROLL_ANCHORS_KEY, JSON.stringify(anchors));
+  }
 }

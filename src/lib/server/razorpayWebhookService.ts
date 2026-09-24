@@ -7,10 +7,7 @@ import {
   findOrderByRazorpayPaymentId,
   refundOrderPayment,
 } from "@/lib/server/orderPaymentService";
-import {
-  createOrGetPaymentLog,
-  updatePaymentLogStatus,
-} from "@/lib/server/paymentLogRepository";
+import { createOrGetPaymentLog, updatePaymentLogStatus } from "@/lib/server/paymentLogRepository";
 import type { RazorpayWebhookEventType } from "@/types/payment";
 
 interface RazorpayPaymentEntity {
@@ -41,26 +38,21 @@ export interface WebhookProcessResult {
 const HANDLED_EVENTS: RazorpayWebhookEventType[] = [
   "payment.captured",
   "payment.failed",
+  "refund.created",
   "refund.processed",
 ];
 
-function extractPaymentEntity(
-  payload: Record<string, unknown>
-): RazorpayPaymentEntity | null {
+function extractPaymentEntity(payload: Record<string, unknown>): RazorpayPaymentEntity | null {
   const payment = payload.payment as { entity?: RazorpayPaymentEntity } | undefined;
   return payment?.entity ?? null;
 }
 
-function extractRefundEntity(
-  payload: Record<string, unknown>
-): RazorpayRefundEntity | null {
+function extractRefundEntity(payload: Record<string, unknown>): RazorpayRefundEntity | null {
   const refund = payload.refund as { entity?: RazorpayRefundEntity } | undefined;
   return refund?.entity ?? null;
 }
 
-async function resolveOrderIdFromPayment(
-  payment: RazorpayPaymentEntity
-): Promise<string | null> {
+async function resolveOrderIdFromPayment(payment: RazorpayPaymentEntity): Promise<string | null> {
   const notesOrderId = payment.notes?.orderId;
   if (notesOrderId) return notesOrderId;
 
@@ -68,9 +60,7 @@ async function resolveOrderIdFromPayment(
   return match?.id ?? null;
 }
 
-async function resolveOrderIdFromRefund(
-  refund: RazorpayRefundEntity
-): Promise<string | null> {
+async function resolveOrderIdFromRefund(refund: RazorpayRefundEntity): Promise<string | null> {
   const match = await findOrderByRazorpayPaymentId(refund.payment_id);
   return match?.id ?? null;
 }
@@ -153,9 +143,7 @@ export async function processRazorpayWebhook(input: {
         if (!orderId) throw new Error("Order not found for payment.failed");
 
         const failureReason =
-          payment.error_description ??
-          payment.error_reason ??
-          `Payment failed (${payment.status})`;
+          payment.error_description ?? payment.error_reason ?? `Payment failed (${payment.status})`;
 
         const result = await failOrderPayment({
           orderId,
@@ -166,6 +154,15 @@ export async function processRazorpayWebhook(input: {
         message = result.skipped
           ? `Failure already recorded (${result.reason})`
           : "Payment failed and order cancelled";
+        break;
+      }
+
+      case "refund.created": {
+        if (!refund) throw new Error("Missing refund entity in payload");
+        orderId = await resolveOrderIdFromRefund(refund);
+        message = orderId
+          ? "Refund initiated — awaiting refund.processed"
+          : "Refund created (order not linked yet)";
         break;
       }
 
@@ -208,8 +205,7 @@ export async function processRazorpayWebhook(input: {
       message,
     };
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Webhook processing failed";
+    const errorMessage = error instanceof Error ? error.message : "Webhook processing failed";
 
     await updatePaymentLogStatus(input.eventId, {
       status: "failed",

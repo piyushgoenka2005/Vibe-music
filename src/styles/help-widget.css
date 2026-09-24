@@ -484,7 +484,7 @@
   }
 
   .help-widget--open .help-widget__action-btn {
-    min-height: 2.65rem;
+    min-height: var(--touch-target-min, 44px);
     padding: 0.65rem 0.9rem;
     font-size: 0.8125rem;
   }

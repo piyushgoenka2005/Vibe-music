@@ -22,17 +22,27 @@
 
 @media (max-width: 767px) {
   .pdp {
-    --pdp-pad-x: 0.5rem;
+    --pdp-pad-x: 0;
+    --pdp-edge-pad: max(0.75rem, env(safe-area-inset-left, 0px));
+    --pdp-edge-pad-end: max(0.75rem, env(safe-area-inset-right, 0px));
     max-width: 100%;
     margin-inline: 0;
     padding-inline: 0;
   }
 
   .pdp > .pdp-breadcrumb,
+  .pdp > .pdp-main .pdp-info > :not(.pdp-info-pricing),
+  .pdp-sections__heading,
+  .pdp-section--fbt .pdp-section__title,
+  .pdp-section--cross-sell .pdp-section__title {
+    padding-inline: var(--pdp-edge-pad) var(--pdp-edge-pad-end);
+    box-sizing: border-box;
+  }
+
   .pdp > .pdp-main,
   .pdp > .pdp-sections,
   .pdp > .pdp-section:not(.pdp-section--fbt):not(.pdp-section--cross-sell) {
-    padding-inline: var(--pdp-pad-x);
+    padding-inline: 0;
     box-sizing: border-box;
   }
 }
@@ -643,7 +653,8 @@
     height: auto;
     margin: 0;
     /* Reset desktop vertical-rail padding / fixed width for horizontal strip */
-    padding: 4px 2px 10px;
+    padding: 4px max(0.75rem, env(safe-area-inset-right, 0px)) 10px
+      max(0.75rem, env(safe-area-inset-left, 0px));
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-x: contain;
@@ -3386,8 +3397,8 @@
     --pdp-details-spec-label-min: 6.25rem;
     --pdp-details-spec-label-max: 8.5rem;
     --pdp-details-spec-pair-gap: 0;
-    --pdp-details-panel-pad-x: 0.75rem;
-    --pdp-details-header-pad-x: 0.75rem;
+    --pdp-details-panel-pad-x: max(0.75rem, env(safe-area-inset-left, 0px));
+    --pdp-details-header-pad-x: max(0.75rem, env(safe-area-inset-left, 0px));
   }
 
   .pdp-product-details__spec-grid,
@@ -3628,6 +3639,73 @@
 
   .pdp-btn--wishlist {
     min-width: 0;
+  }
+
+  /* Edge-to-edge cards and panels on phones */
+  .pdp-info-pricing,
+  .pdp-buybox__card,
+  .pdp-product-details__summary-card,
+  .pdp-product-details__summary-header--solo,
+  .pdp-product-details__about,
+  .pdp-product-details__complete-specs,
+  .pdp-product-details__accordion,
+  .pdp-sections__panel,
+  .pdp-review-summary,
+  .pdp-review-form,
+  .pdp-qa-form {
+    border-radius: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    box-sizing: border-box;
+  }
+
+  .pdp-product-details {
+    gap: 0;
+  }
+
+  .pdp-product-details__accordion-grid {
+    gap: 0;
+  }
+
+  .pdp-product-details__accordion:not(:first-child) {
+    border-top-width: 0;
+  }
+
+  .pdp-sections__block {
+    padding-inline: 0;
+  }
+
+  .pdp-sections__body {
+    gap: 0;
+  }
+
+  .pdp-buybox__card {
+    padding-inline: var(--pdp-edge-pad) var(--pdp-edge-pad-end);
+  }
+
+  .pdp-buybox__wishlist {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 1px solid var(--pdp-grey10);
+    border-bottom: 1px solid var(--pdp-grey10);
+    padding-inline: var(--pdp-edge-pad);
+    box-sizing: border-box;
+  }
+
+  .pdp-assurances {
+    padding-inline: var(--pdp-edge-pad);
+    box-sizing: border-box;
+  }
+
+  .pdp-assurances__list {
+    padding-inline-end: 0;
   }
 }
 
@@ -4357,8 +4435,8 @@
     width: 100%;
     max-width: 100dvw;
     box-sizing: border-box;
-    padding: 0.625rem max(1rem, env(safe-area-inset-right, 0px))
-      calc(0.625rem + env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+    padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    gap: 0;
     background: rgba(255, 255, 255, 0.98);
     border-top: 1px solid var(--border-default);
     box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.1);
@@ -4396,6 +4474,9 @@
     min-width: 0;
     max-width: none;
     width: 100%;
+    padding-inline: var(--pdp-edge-pad, max(0.75rem, env(safe-area-inset-left, 0px)))
+      var(--pdp-edge-pad-end, max(0.75rem, env(safe-area-inset-right, 0px)));
+    box-sizing: border-box;
   }
 
   .pdp-mobile-bar__label {
@@ -4423,7 +4504,7 @@
   .pdp-mobile-bar__cta {
     min-height: 44px;
     border: 0;
-    border-radius: var(--radius-md);
+    border-radius: 0;
     font-size: clamp(0.8125rem, 3.4vw, 0.9375rem);
     font-weight: 600;
     line-height: 1.15;

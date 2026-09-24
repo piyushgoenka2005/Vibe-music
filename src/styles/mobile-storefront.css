@@ -17,7 +17,8 @@
   }
 
   .premium-home,
-  .premium-home > section:not(.homepage-banner-hero):not([data-vibe-section="homepage-banner-hero"]),
+  .premium-home
+    > section:not(.homepage-banner-hero):not([data-vibe-section="homepage-banner-hero"]),
   .premium-home > div {
     max-width: 100%;
     min-width: 0;
@@ -165,7 +166,10 @@
     overflow-x: clip;
   }
 
-  .storefront-page img:not(.pdp-gallery__photo):not(.pdp-gallery__thumb-photo):not(.pdp-lightbox__photo):not(.cat-product-card__image-photo):not(.new-arrivals-card__image):not(.product-suggest__item-photo),
+  .storefront-page
+    img:not(.pdp-gallery__photo):not(.pdp-gallery__thumb-photo):not(.pdp-lightbox__photo):not(
+      .cat-product-card__image-photo
+    ):not(.new-arrivals-card__image):not(.product-suggest__item-photo),
   .storefront-page video,
   .storefront-page iframe {
     max-width: 100%;
@@ -327,8 +331,7 @@
   }
 
   .pdp-lightbox {
-    padding: max(12px, env(safe-area-inset-top)) 12px
-      max(12px, env(safe-area-inset-bottom));
+    padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
   }
 
   .pdp-lightbox__close {
@@ -456,9 +459,14 @@
     border-top: 1px solid var(--pdp-grey10, #e5e4e3);
   }
 
-  /* Search overlay */
-  .search-overlay__panel {
+  /* Search overlay (class names from SearchOverlay.tsx) */
+  .sw-search-overlay .sw-search-panel {
     max-height: 92dvh;
+  }
+
+  .sw-search-panel--mobile {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   /* Help widget — mobile sheet layout handled in help-widget.css */

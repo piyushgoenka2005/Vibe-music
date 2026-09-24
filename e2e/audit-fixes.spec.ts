@@ -86,7 +86,8 @@ test.describe("audit-fix E2E: out-of-stock and coupon flows", () => {
   });
 
   // E2E-03: Coupon code API validation
-  test("coupon API rejects invalid coupon code", async ({ request }) => {
+  test("coupon API rejects invalid coupon code", async ({ request, requiresDatabase }) => {
+    void requiresDatabase;
     const response = await request.post("/api/coupons/validate", {
       headers: mutationHeaders(),
       data: {

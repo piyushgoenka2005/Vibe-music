@@ -1802,6 +1802,14 @@ body.site-nav-open .site-header--hidden {
     bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--floating-ui-clearance));
   }
 
+  body:has(.cart-drawer--open) .help-widget,
+  body:has(.cart-drawer--open) .back-to-top,
+  body:has(.sw-search-overlay) .help-widget,
+  body:has(.sw-search-overlay) .back-to-top {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   body.is-landing-page .back-to-top,
   body.is-landing-page .help-widget {
     display: none !important;

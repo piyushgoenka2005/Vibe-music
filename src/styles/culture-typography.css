@@ -5,7 +5,9 @@
   height: var(--culture-scroll-height, 220vh);
   background: #1253ed;
   isolation: isolate;
+  /* Sticky scroll-scrub needs full layout height — never defer with content-visibility */
   content-visibility: visible;
+  contain: none;
   contain-intrinsic-size: auto none;
   --spotlight-x: 50%;
   --spotlight-y: 50%;
@@ -87,22 +89,12 @@
 
 .culture-typography__scroll-fade--top {
   top: 0;
-  background: linear-gradient(
-    to bottom,
-    #1253ed 0%,
-    rgba(18, 83, 237, 0.85) 40%,
-    transparent 100%
-  );
+  background: linear-gradient(to bottom, #1253ed 0%, rgba(18, 83, 237, 0.85) 40%, transparent 100%);
 }
 
 .culture-typography__scroll-fade--bottom {
   bottom: 0;
-  background: linear-gradient(
-    to top,
-    #1253ed 0%,
-    rgba(18, 83, 237, 0.85) 40%,
-    transparent 100%
-  );
+  background: linear-gradient(to top, #1253ed 0%, rgba(18, 83, 237, 0.85) 40%, transparent 100%);
 }
 
 .culture-typography__spotlight-orb {
@@ -117,7 +109,12 @@
   transform: translate(-50%, -50%);
   pointer-events: none;
   background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 28%, transparent 68%),
+    radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0.08) 28%,
+      transparent 68%
+    ),
     radial-gradient(circle, rgba(59, 130, 246, 0.28) 0%, transparent 55%);
   mix-blend-mode: screen;
   /* blur on orb only — never on scrolling word glyphs */
@@ -127,7 +124,11 @@
 .culture-typography__word--lit {
   opacity: 0.92;
   background-color: rgba(255, 255, 255, 0.4);
-  background-image: radial-gradient(circle at center, rgba(255, 255, 255, 1) 1.15px, transparent 1.25px);
+  background-image: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 1) 1.15px,
+    transparent 1.25px
+  );
   background-size: 4px 4px;
 }
 
@@ -139,7 +140,12 @@
   background:
     radial-gradient(ellipse 70% 55% at 72% 48%, rgba(255, 255, 255, 0.14), transparent 62%),
     radial-gradient(ellipse 45% 40% at 18% 72%, rgba(255, 255, 255, 0.08), transparent 58%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 42%, rgba(10, 52, 150, 0.22) 100%);
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      transparent 42%,
+      rgba(10, 52, 150, 0.22) 100%
+    );
 }
 
 .culture-typography__noise {
@@ -175,7 +181,11 @@
   white-space: nowrap;
   color: transparent;
   background-color: rgba(255, 255, 255, 0.24);
-  background-image: radial-gradient(circle at center, rgba(255, 255, 255, 1) 1.1px, transparent 1.2px);
+  background-image: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 1) 1.1px,
+    transparent 1.2px
+  );
   background-size: 5px 5px;
   -webkit-background-clip: text;
   background-clip: text;
@@ -375,9 +385,12 @@
 
 /* Mobile — CSS-first layout (no JS class required) */
 @media (max-width: 767px) {
-  .culture-typography--scrollable {
-    --culture-scroll-height: calc(100svh + 100vh);
-    min-height: calc(100svh - var(--site-header-offset, 90px));
+  .culture-typography--scrollable,
+  .culture-typography--mobile-scroll {
+    /* Full viewport + ~42% of pinned area — matches JS (innerHeight + runway). */
+    --culture-scroll-height: calc(100svh + (100svh - var(--site-header-offset, 90px)) * 0.42);
+    touch-action: pan-y;
+    overscroll-behavior-y: auto;
   }
 
   .culture-typography__sticky {
@@ -396,8 +409,7 @@
     z-index: 4;
     opacity: 1 !important;
     transform: none !important;
-    padding: clamp(1.25rem, 4vw, 1.75rem) clamp(1.1rem, 4.5vw, 1.5rem)
-      clamp(3.75rem, 11vh, 4.75rem);
+    padding: clamp(1.25rem, 4vw, 1.75rem) clamp(1.1rem, 4.5vw, 1.5rem) clamp(3.75rem, 11vh, 4.75rem);
   }
 
   .culture-typography__content-inner {
@@ -461,6 +473,16 @@
     left: clamp(1rem, 4vw, 1.5rem);
     right: clamp(1rem, 4vw, 1.5rem);
     bottom: clamp(0.85rem, 2.5vh, 1.25rem);
+  }
+
+  .culture-typography__scroll-hint {
+    bottom: clamp(2.75rem, 8vh, 3.5rem);
+    opacity: 0.9;
+    z-index: 6;
+  }
+
+  .culture-typography--mobile-scroll .culture-typography__scroll-hint {
+    display: flex;
   }
 
   .culture-typography__bg,
@@ -547,6 +569,6 @@
   }
 
   .culture-typography__scroll-hint {
-    bottom: 0.75rem;
+    bottom: clamp(2.5rem, 7vh, 3.25rem);
   }
 }

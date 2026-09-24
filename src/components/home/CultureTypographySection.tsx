@@ -38,6 +38,16 @@ const QUOTE_REPEATS = 2;
  * while both quote cycles still animate (just faster).
  */
 const MAX_SCROLL_RUNWAY_VIEWPORTS = 1;
+/** Shorter pinned scrub on phones — a small scroll nudge, not a long trap. */
+const MAX_SCROLL_RUNWAY_VIEWPORTS_MOBILE = 0.42;
+
+/** Mobile sticky sits below the header — section height must be viewport + runway, not pin + runway. */
+function resolveCultureSectionHeight(pinPx: number, shiftPx: number, mobile: boolean): number {
+  if (mobile && typeof window !== "undefined") {
+    return Math.round(window.innerHeight + shiftPx);
+  }
+  return Math.round(pinPx + shiftPx);
+}
 
 export interface CultureTypographySectionProps {
   metadataLabel?: string;
@@ -57,13 +67,7 @@ function getWordScale(word: string): number {
   return Math.min(1, maxCharsAtFullSize / word.length);
 }
 
-function BackgroundWords({
-  lines,
-  lit = false,
-}: {
-  lines: string[];
-  lit?: boolean;
-}) {
+function BackgroundWords({ lines, lit = false }: { lines: string[]; lit?: boolean }) {
   return (
     <>
       {lines.map((word, index) => (
@@ -103,7 +107,7 @@ export default function CultureTypographySection({
 
   const quoteLines = useMemo(
     () => (backgroundWords.length > 0 ? [...backgroundWords] : [...WORD_CYCLE]),
-    [backgroundWords]
+    [backgroundWords],
   );
 
   /** Stable across SSR + hydration — never branch on isMobile here. */
@@ -140,19 +144,37 @@ export default function CultureTypographySection({
     }
 
     const track = trackRef.current;
-    const sticky = sectionRef.current?.querySelector<HTMLElement>(
-      ".culture-typography__sticky"
-    );
+    const sticky = sectionRef.current?.querySelector<HTMLElement>(".culture-typography__sticky");
     if (!track || !sticky) return undefined;
 
     const update = () => {
       const pin = sticky.clientHeight;
-      // Full track overflow (both quote cycles), but never more than ~2 viewports
-      // of pinned scrolling — words scrub faster instead of trapping the user.
-      const overflow = Math.max(0, track.scrollHeight - pin);
-      const maxRunway = Math.max(pin, Math.round(pin * MAX_SCROLL_RUNWAY_VIEWPORTS));
+      if (pin <= 0) return;
+
+      const runwayFactor = isMobile
+        ? MAX_SCROLL_RUNWAY_VIEWPORTS_MOBILE
+        : MAX_SCROLL_RUNWAY_VIEWPORTS;
+      const maxRunway = Math.round(pin * runwayFactor);
+      const minMobileRunway = isMobile ? maxRunway : 0;
+
+      // Full track overflow (both quote cycles), capped so scrub stays snappy.
+      let overflow = Math.max(0, track.scrollHeight - pin);
+
+      // Before webfonts settle, scrollHeight can read as ~pin — estimate from lines.
+      if (overflow < minMobileRunway) {
+        const sampleLine = track.querySelector<HTMLElement>(".culture-typography__word");
+        const lineHeight = sampleLine?.offsetHeight ?? 0;
+        if (lineHeight > 0) {
+          const estimated = Math.max(0, lineHeight * scrollLines.length - pin);
+          overflow = Math.max(overflow, estimated);
+        }
+      }
+
+      const cappedShift = Math.min(overflow, maxRunway);
+      const shiftPx = isMobile && cappedShift <= 0 ? minMobileRunway : cappedShift;
+
       setStickyPinPx(pin);
-      setScrollShiftPx(Math.min(overflow, maxRunway));
+      setScrollShiftPx(shiftPx);
     };
 
     const frame = window.requestAnimationFrame(update);
@@ -160,13 +182,14 @@ export default function CultureTypographySection({
     observer.observe(track);
     observer.observe(sticky);
     window.addEventListener("resize", update);
+    document.fonts?.ready.then(update).catch(() => undefined);
 
     return () => {
       window.cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener("resize", update);
     };
-  }, [motionReady, scrollLines]);
+  }, [isMobile, motionReady, scrollLines]);
 
   // Always numeric px — never mix % and px (framer-motion glitch source).
   const backgroundY = useTransform(scrollYProgress, (progress) => {
@@ -179,7 +202,7 @@ export default function CultureTypographySection({
   const hintOpacity = useTransform(
     scrollYProgress,
     [0, 0.03, 0.1, 0.2],
-    motionReady ? [0, 1, 1, 0] : [0, 0, 0, 0]
+    motionReady ? [0, 1, 1, 0] : [0, 0, 0, 0],
   );
   const progressScaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
@@ -230,7 +253,7 @@ export default function CultureTypographySection({
       spotlightY.set(((event.clientY - rect.top) / rect.height) * 100);
       spotlightOpacity.set(1);
     },
-    [isMobile, motionReady, spotlightOpacity, spotlightX, spotlightY]
+    [isMobile, motionReady, spotlightOpacity, spotlightX, spotlightY],
   );
 
   const handleMouseLeave = useCallback(() => {
@@ -239,11 +262,14 @@ export default function CultureTypographySection({
 
   const scrollTrackStyle = motionReady ? { y: backgroundY } : undefined;
 
-  // Keep section runway locked to measured pin + overflow (same on mobile + desktop).
   const sectionStyle = {
     ...(motionReady && scrollShiftPx > 0 && stickyPinPx > 0
       ? {
-          "--culture-scroll-height": `${Math.round(stickyPinPx + scrollShiftPx)}px`,
+          "--culture-scroll-height": `${resolveCultureSectionHeight(
+            stickyPinPx,
+            scrollShiftPx,
+            isMobile,
+          )}px`,
         }
       : null),
   } as React.CSSProperties;
@@ -251,6 +277,7 @@ export default function CultureTypographySection({
   const sectionClassName = [
     "culture-typography",
     reduceMotion ? "culture-typography--static" : "culture-typography--scrollable",
+    isMobile && !reduceMotion ? "culture-typography--mobile-scroll" : "",
     className,
   ]
     .filter(Boolean)
@@ -292,9 +319,7 @@ export default function CultureTypographySection({
             </motion.div>
           ) : null}
 
-          {motionReady && !isMobile ? (
-            <div className="culture-typography__spotlight-orb" />
-          ) : null}
+          {motionReady && !isMobile ? <div className="culture-typography__spotlight-orb" /> : null}
 
           <div className="culture-typography__scroll-fade culture-typography__scroll-fade--top" />
           <div className="culture-typography__scroll-fade culture-typography__scroll-fade--bottom" />
@@ -302,11 +327,7 @@ export default function CultureTypographySection({
 
         <motion.div
           className="culture-typography__content"
-          style={
-            motionReady && !isMobile
-              ? { opacity: contentOpacity, y: contentY }
-              : undefined
-          }
+          style={motionReady && !isMobile ? { opacity: contentOpacity, y: contentY } : undefined}
         >
           <div className="culture-typography__content-inner">
             <p className="culture-typography__meta">{metadataLabel}</p>
@@ -315,9 +336,7 @@ export default function CultureTypographySection({
               {title}
             </h2>
 
-            {subtitle ? (
-              <p className="culture-typography__subtitle">{subtitle}</p>
-            ) : null}
+            {subtitle ? <p className="culture-typography__subtitle">{subtitle}</p> : null}
 
             <div className="culture-typography__cta-wrap">
               <Link href={buttonHref} className="culture-typography__cta">
@@ -332,20 +351,18 @@ export default function CultureTypographySection({
 
         {!reduceMotion ? (
           <>
-            {!isMobile ? (
-              <motion.div
-                className="culture-typography__scroll-hint"
-                style={{ opacity: hintOpacity }}
-                aria-hidden
-              >
-                <span className="culture-typography__scroll-hint-label">Scroll</span>
-                <ChevronDown
-                  className="culture-typography__scroll-hint-icon"
-                  size={20}
-                  strokeWidth={2.25}
-                />
-              </motion.div>
-            ) : null}
+            <motion.div
+              className="culture-typography__scroll-hint"
+              style={{ opacity: hintOpacity }}
+              aria-hidden
+            >
+              <span className="culture-typography__scroll-hint-label">Scroll</span>
+              <ChevronDown
+                className="culture-typography__scroll-hint-icon"
+                size={20}
+                strokeWidth={2.25}
+              />
+            </motion.div>
 
             <div
               className="culture-typography__progress"

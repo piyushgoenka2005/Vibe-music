@@ -271,9 +271,24 @@
     max-width: 100%;
     margin-inline: 0;
     box-sizing: border-box;
-    /* top | right | bottom | left — keep gutters tight on mobile */
-    padding: 0.75rem max(0.5rem, env(safe-area-inset-right, 0px))
-      calc(7.5rem + env(safe-area-inset-bottom, 0px)) max(0.5rem, env(safe-area-inset-left, 0px));
+    /* Edge-to-edge panels; text blocks use --pdp-edge-pad inside product-detail.css */
+    padding: 0.75rem 0 calc(7.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .storefront-page .pdp-info-pricing,
+  .storefront-page .pdp-sections__panel,
+  .storefront-page .pdp-specs-wrap,
+  .storefront-page .pdp-in-the-box,
+  .storefront-page .pdp-qa-form,
+  .storefront-page .pdp-review-summary,
+  .storefront-page .pdp-review-form,
+  .storefront-page .pdp-product-details__summary-card,
+  .storefront-page .pdp-product-details__about,
+  .storefront-page .pdp-product-details__complete-specs,
+  .storefront-page .pdp-product-details__accordion {
+    border-radius: 0;
+    border-left-width: 0;
+    border-right-width: 0;
   }
 
   .storefront-page .pdp-main,
@@ -370,8 +385,8 @@
   }
 
   .storefront-page .pdp {
-    padding-left: max(0.35rem, env(safe-area-inset-left, 0px));
-    padding-right: max(0.35rem, env(safe-area-inset-right, 0px));
+    padding-left: 0;
+    padding-right: 0;
     padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
   }
 

@@ -67,10 +67,10 @@
 @media (min-width: 768px) {
   .premium-home > .homepage-banner-hero,
   .premium-home > [data-vibe-section="homepage-banner-hero"] {
-    width: 100dvw;
-    max-width: 100dvw;
-    margin-left: calc(50% - 50dvw);
-    margin-right: calc(50% - 50dvw);
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
     padding: 0;
   }
 }
@@ -98,6 +98,19 @@ body.is-landing-page
    Keep near-footer sections (locations / service-status) out of this
    list — contain-intrinsic-size left a tall empty white band above the
    trust strip + tour ribbon on mobile. */
+/* Full layout height while scroll-restore re-applies a mid-page Y after Back. */
+body.is-scroll-restoring .premium-home > * {
+  content-visibility: visible !important;
+}
+
+/* Sticky scroll-scrub — never collapse to intrinsic 320px on phones. */
+.premium-home > .culture-typography,
+.premium-home > [data-vibe-section="culture-typography"] {
+  content-visibility: visible;
+  contain: none;
+  contain-intrinsic-size: auto none;
+}
+
 .premium-home > .gear-stories,
 .premium-home > .big-names-deals,
 .premium-home > .category-bento,
@@ -107,7 +120,6 @@ body.is-landing-page
 .premium-home > .blog-teaser,
 .premium-home > .why-shop-section,
 .premium-home > .browse-category-cards,
-.premium-home > .culture-typography,
 .premium-home > .service-status-carousel,
 .premium-home > .premium-product-carousel,
 .premium-home > .new-arrivals-section {
@@ -3437,7 +3449,7 @@ body.is-landing-page
 
   .premium-home .new-arrivals-card__buy {
     width: 100%;
-    min-height: 2.125rem;
+    min-height: var(--touch-target-min, 44px);
     padding: 0.45rem 0.95rem;
     font-size: 0.8125rem;
   }
@@ -4212,7 +4224,7 @@ body.is-landing-page
   .homepage-stats__chip.status-chip,
   .homepage-stats .status-chip {
     max-width: 100%;
-    min-height: 2.1rem;
+    min-height: var(--touch-target-min, 44px);
     box-sizing: border-box;
     justify-content: center;
     white-space: normal;

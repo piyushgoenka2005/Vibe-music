@@ -13,11 +13,18 @@ import {
   PENDING_POP_RESTORE_KEY,
   RESTORE_WINDOW_MS,
   ROUTE_SCROLL_RESET_PX,
+  SCROLL_ANCHORS_KEY,
   SCROLL_NAV_GUARD_MS,
   SCROLL_POSITIONS_KEY,
+  type ScrollAnchorsMap,
+  computeRestoreScrollY,
+  findSectionAnchorId,
   isPendingPopRestoreForKey,
+  isSameOriginPathHref,
+  mergeScrollAnchorForKey,
   mergeScrollPositionForKey,
   parsePendingPopRestore,
+  readScrollAnchors,
   resolveScrollYForPersist,
   serializePendingPopRestore,
   shouldCancelRestoreForUserScroll,
@@ -49,7 +56,7 @@ function markPendingPopRestore(key: string) {
   try {
     sessionStorage.setItem(
       PENDING_POP_RESTORE_KEY,
-      serializePendingPopRestore({ key, at: pendingPopRestoreAt })
+      serializePendingPopRestore({ key, at: pendingPopRestoreAt }),
     );
   } catch {
     /* ignore */
@@ -57,16 +64,11 @@ function markPendingPopRestore(key: string) {
 }
 
 function readPendingPopRestore() {
-  if (
-    pendingPopRestoreKey &&
-    Date.now() - pendingPopRestoreAt <= RESTORE_WINDOW_MS
-  ) {
+  if (pendingPopRestoreKey && Date.now() - pendingPopRestoreAt <= RESTORE_WINDOW_MS) {
     return { key: pendingPopRestoreKey, at: pendingPopRestoreAt };
   }
   try {
-    const parsed = parsePendingPopRestore(
-      sessionStorage.getItem(PENDING_POP_RESTORE_KEY)
-    );
+    const parsed = parsePendingPopRestore(sessionStorage.getItem(PENDING_POP_RESTORE_KEY));
     if (parsed) {
       pendingPopRestoreKey = parsed.key;
       pendingPopRestoreAt = parsed.at;
@@ -98,15 +100,14 @@ if (typeof window !== "undefined") {
     () => {
       pendingPopNavigation = true;
       armScrollNavGuard();
-      markPendingPopRestore(
-        `${window.location.pathname}${window.location.search}`
-      );
+      markPendingPopRestore(`${window.location.pathname}${window.location.search}`);
     },
-    true
+    true,
   );
 }
 
 let scrollPositionsCache: Record<string, number> | null = null;
+let scrollAnchorsCache: ScrollAnchorsMap | null = null;
 let writeTimeoutId = 0;
 
 function readPositions(): Record<string, number> {
@@ -130,19 +131,77 @@ function readPositions(): Record<string, number> {
   }
 }
 
-function writePositions(positions: Record<string, number>) {
+function flushPositionsSync() {
+  if (writeTimeoutId) {
+    window.clearTimeout(writeTimeoutId);
+    writeTimeoutId = 0;
+  }
+  try {
+    if (scrollPositionsCache) {
+      sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(scrollPositionsCache));
+    }
+    if (scrollAnchorsCache) {
+      sessionStorage.setItem(SCROLL_ANCHORS_KEY, JSON.stringify(scrollAnchorsCache));
+    }
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+function writePositions(positions: Record<string, number>, sync = false) {
   scrollPositionsCache = positions;
+  if (sync) {
+    flushPositionsSync();
+    return;
+  }
   if (writeTimeoutId) return;
   writeTimeoutId = window.setTimeout(() => {
     writeTimeoutId = 0;
-    try {
-      if (scrollPositionsCache) {
-        sessionStorage.setItem(SCROLL_POSITIONS_KEY, JSON.stringify(scrollPositionsCache));
-      }
-    } catch {
-      /* quota / private mode */
-    }
+    flushPositionsSync();
   }, 250);
+}
+
+function readAnchors(): ScrollAnchorsMap {
+  if (scrollAnchorsCache) return scrollAnchorsCache;
+  try {
+    scrollAnchorsCache = readScrollAnchors(sessionStorage.getItem(SCROLL_ANCHORS_KEY));
+    return scrollAnchorsCache;
+  } catch {
+    scrollAnchorsCache = {};
+    return scrollAnchorsCache;
+  }
+}
+
+function writeAnchors(anchors: ScrollAnchorsMap, sync = false) {
+  scrollAnchorsCache = anchors;
+  if (sync) {
+    flushPositionsSync();
+    return;
+  }
+  if (writeTimeoutId) return;
+  writeTimeoutId = window.setTimeout(() => {
+    writeTimeoutId = 0;
+    flushPositionsSync();
+  }, 250);
+}
+
+function readHeaderOffsetPx(): number {
+  const root = document.documentElement;
+  const raw =
+    getComputedStyle(root).getPropertyValue("--site-header-offset") ||
+    getComputedStyle(root).getPropertyValue("--header-height");
+  const parsed = Number.parseFloat(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
+}
+
+function resolveSectionTopPx(sectionId: string): number | null {
+  const el =
+    document.getElementById(sectionId) ??
+    document.querySelector<HTMLElement>(`[data-vibe-section="${CSS.escape(sectionId)}"]`) ??
+    document.querySelector<HTMLElement>(`[data-hp-section="${CSS.escape(sectionId)}"]`);
+  if (!el) return null;
+  const rect = el.getBoundingClientRect();
+  return Math.max(0, Math.round(rect.top + (window.scrollY || 0)));
 }
 
 function pathKey(pathname: string): string {
@@ -156,18 +215,36 @@ function applyScrollY(y: number) {
   document.body.scrollTop = y;
 }
 
-function saveScrollForKey(key: string, y: number, lastKnownY = y) {
+function saveScrollForKey(
+  key: string,
+  y: number,
+  lastKnownY = y,
+  sync = false,
+  sectionId?: string | null,
+) {
   const nextPositions = mergeScrollPositionForKey(
     readPositions(),
     key,
     y,
     lastKnownY,
-    isScrollNavGuardActive()
+    isScrollNavGuardActive(),
   );
-  writePositions(nextPositions);
+  writePositions(nextPositions, sync);
+  if (sectionId) {
+    const nextAnchors = mergeScrollAnchorForKey(readAnchors(), key, sectionId, y);
+    writeAnchors(nextAnchors, sync);
+  }
 }
 
-function runScrollRestore(targetY: number, onNaturalStop?: () => void) {
+function resolveRestoreTargetY(key: string, savedY: number): number {
+  const anchor = readAnchors()[key];
+  if (!anchor?.sectionId) return savedY;
+  const sectionTop = resolveSectionTopPx(anchor.sectionId);
+  return computeRestoreScrollY(savedY, sectionTop, readHeaderOffsetPx());
+}
+
+function runScrollRestore(key: string, savedY: number, onNaturalStop?: () => void) {
+  document.body.classList.add("is-scroll-restoring");
   let stopped = false;
   let resizeObserver: ResizeObserver | null = null;
   let mutationObserver: MutationObserver | null = null;
@@ -179,6 +256,7 @@ function runScrollRestore(targetY: number, onNaturalStop?: () => void) {
   const teardown = (natural: boolean) => {
     if (stopped) return;
     stopped = true;
+    document.body.classList.remove("is-scroll-restoring");
     resizeObserver?.disconnect();
     mutationObserver?.disconnect();
     if (timeoutId) window.clearTimeout(timeoutId);
@@ -193,14 +271,17 @@ function runScrollRestore(targetY: number, onNaturalStop?: () => void) {
   const stopNatural = () => teardown(true);
   const stopForRemount = () => teardown(false);
 
+  const currentTargetY = () => resolveRestoreTargetY(key, savedY);
+
   const restore = () => {
     if (stopped) return;
-    applyScrollY(targetY);
+    applyScrollY(currentTargetY());
   };
 
   const onScrollCheck = () => {
     if (stopped) return;
     const y = window.scrollY || document.documentElement.scrollTop || 0;
+    const targetY = currentTargetY();
     // Ignore Next/App Router forcing scroll to ~0 during restore.
     if (y <= 2) {
       restore();
@@ -214,6 +295,7 @@ function runScrollRestore(targetY: number, onNaturalStop?: () => void) {
   const onUserGesture = () => {
     if (stopped) return;
     const y = window.scrollY || document.documentElement.scrollTop || 0;
+    const targetY = currentTargetY();
     // Accidental touch / wheel during load while still at top: keep restoring.
     if (y <= 2) {
       restore();
@@ -342,24 +424,40 @@ export default function ScrollRestoration() {
       });
     };
 
-    const flushBeforeNav = () => {
+    const flushBeforeNav = (event?: Event) => {
       armScrollNavGuard();
       if (!shouldPersistScrollWhileRestoring(restoringRef.current)) return;
       const liveY = window.scrollY || document.documentElement.scrollTop || 0;
       const y = resolveScrollYForPersist(liveY, lastYRef.current);
       lastYRef.current = y;
-      saveScrollForKey(activeKeyRef.current, y);
+
+      let sectionId: string | null = null;
+      const target = event?.target;
+      if (target instanceof Element) {
+        const link = target.closest("a[href]");
+        if (link instanceof HTMLAnchorElement) {
+          const href = link.getAttribute("href");
+          if (href && isSameOriginPathHref(href)) {
+            sectionId = findSectionAnchorId(link);
+          }
+        }
+      }
+
+      saveScrollForKey(activeKeyRef.current, y, y, true, sectionId);
     };
 
     window.addEventListener("scroll", persistFromWindow, { passive: true });
-    window.addEventListener("pagehide", flushBeforeNav);
+    const flushOnPageHide = () => flushBeforeNav();
+    window.addEventListener("pagehide", flushOnPageHide);
     document.addEventListener("pointerdown", flushBeforeNav, true);
+    document.addEventListener("click", flushBeforeNav, true);
     document.addEventListener("keydown", flushBeforeNav, true);
 
     return () => {
       window.removeEventListener("scroll", persistFromWindow);
-      window.removeEventListener("pagehide", flushBeforeNav);
+      window.removeEventListener("pagehide", flushOnPageHide);
       document.removeEventListener("pointerdown", flushBeforeNav, true);
+      document.removeEventListener("click", flushBeforeNav, true);
       document.removeEventListener("keydown", flushBeforeNav, true);
       if (shouldPersistScrollWhileRestoring(restoringRef.current)) {
         const liveY = window.scrollY || document.documentElement.scrollTop || 0;
@@ -404,22 +502,20 @@ export default function ScrollRestoration() {
       isBack &&
       savedY != null &&
       savedY > ROUTE_SCROLL_RESET_PX &&
-      (intentionalBack ||
-        pendingPop ||
-        prevKey === null ||
-        prevKey !== key);
+      (intentionalBack || pendingPop || prevKey === null || prevKey !== key);
 
     if (shouldRestore) {
       const generation = ++restoreGenerationRef.current;
       restoringRef.current = true;
-      restoreTargetYRef.current = savedY;
+      const targetY = resolveRestoreTargetY(key, savedY);
+      restoreTargetYRef.current = targetY;
       armScrollNavGuard(RESTORE_WINDOW_MS);
 
-      const stopForRemount = runScrollRestore(savedY, () => {
+      const stopForRemount = runScrollRestore(key, savedY, () => {
         // Natural end (timeout / user cancel) — clear durable back markers.
         if (restoreGenerationRef.current === generation) {
-          lastYRef.current = restoreTargetYRef.current || savedY;
-          saveScrollForKey(key, lastYRef.current, lastYRef.current);
+          lastYRef.current = restoreTargetYRef.current || targetY;
+          saveScrollForKey(key, lastYRef.current, lastYRef.current, true);
           armScrollNavGuard(SCROLL_NAV_GUARD_MS);
           restoringRef.current = false;
           restoreTargetYRef.current = 0;
@@ -453,6 +549,10 @@ export default function ScrollRestoration() {
     }
 
     if (prevKey !== null && prevKey !== key && !isBack) {
+      const departingY = lastYRef.current;
+      if (departingY > ROUTE_SCROLL_RESET_PX) {
+        saveScrollForKey(prevKey, departingY, departingY, true);
+      }
       armScrollNavGuard();
       applyScrollY(0);
       lastYRef.current = 0;

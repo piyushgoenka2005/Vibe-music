@@ -13,7 +13,9 @@
   cursor: pointer;
   text-decoration: none;
   border-radius: var(--radius-sm);
-  transition: color var(--duration-fast), background var(--duration-fast);
+  transition:
+    color var(--duration-fast),
+    background var(--duration-fast);
 }
 
 .wl-nav-btn:hover {
@@ -42,7 +44,7 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
-  z-index: 1000000;
+  z-index: 380;
   backdrop-filter: blur(2px);
 }
 
@@ -53,7 +55,7 @@
   bottom: 0;
   width: min(400px, 100dvw);
   background: var(--surface-base);
-  z-index: 1000001;
+  z-index: 390;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-lg);
@@ -180,7 +182,9 @@
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
-  transition: background 160ms ease, transform 160ms ease;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
 }
 
 .wl-empty__cta:hover {
@@ -212,12 +216,7 @@
 .wl-skeleton-line {
   height: 4.5rem;
   border-radius: 12px;
-  background: linear-gradient(
-    90deg,
-    #f1f5f9 0%,
-    #e2e8f0 50%,
-    #f1f5f9 100%
-  );
+  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
   background-size: 200% 100%;
   animation: wl-skeleton-shimmer 1.2s ease-in-out infinite;
 }

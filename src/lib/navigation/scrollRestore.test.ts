@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  computeRestoreScrollY,
+  findSectionAnchorId,
   isBackToKey,
   isPendingPopRestoreForKey,
+  mergeScrollAnchorForKey,
   mergeScrollPositionForKey,
   parsePendingPopRestore,
   resolveScrollYForPersist,
@@ -24,9 +27,7 @@ describe("scrollRestore helpers", () => {
 
   it("isBackToKey requires earlier stack membership without pop", () => {
     expect(isBackToKey("/", ["/", "/category/guitars"], false)).toBe(true);
-    expect(isBackToKey("/category/guitars", ["/", "/category/guitars"], false)).toBe(
-      false
-    );
+    expect(isBackToKey("/category/guitars", ["/", "/category/guitars"], false)).toBe(false);
   });
 
   it("shouldTreatAsBackNavigation restores popstate even with empty stack when savedY exists", () => {
@@ -37,7 +38,7 @@ describe("scrollRestore helpers", () => {
         stack: [],
         pendingPop: true,
         savedY: 1400,
-      })
+      }),
     ).toBe(true);
 
     expect(
@@ -47,7 +48,7 @@ describe("scrollRestore helpers", () => {
         stack: [],
         pendingPop: true,
         savedY: 0,
-      })
+      }),
     ).toBe(false);
 
     expect(
@@ -57,7 +58,7 @@ describe("scrollRestore helpers", () => {
         stack: [],
         pendingPop: false,
         savedY: null,
-      })
+      }),
     ).toBe(true);
   });
 
@@ -74,12 +75,8 @@ describe("scrollRestore helpers", () => {
 
   it("shouldCancelRestoreForUserScroll only after meaningful delta", () => {
     expect(shouldCancelRestoreForUserScroll(1400, 1400)).toBe(false);
-    expect(shouldCancelRestoreForUserScroll(1400 + USER_SCROLL_CANCEL_PX, 1400)).toBe(
-      false
-    );
-    expect(
-      shouldCancelRestoreForUserScroll(1400 + USER_SCROLL_CANCEL_PX + 1, 1400)
-    ).toBe(true);
+    expect(shouldCancelRestoreForUserScroll(1400 + USER_SCROLL_CANCEL_PX, 1400)).toBe(false);
+    expect(shouldCancelRestoreForUserScroll(1400 + USER_SCROLL_CANCEL_PX + 1, 1400)).toBe(true);
     // Still at top while Next resets — do not cancel restore.
     expect(shouldCancelRestoreForUserScroll(0, 1400)).toBe(false);
     expect(shouldCancelRestoreForUserScroll(2, 1400)).toBe(false);
@@ -104,7 +101,7 @@ describe("scrollRestore helpers", () => {
         nextY: 0,
         previousY: 1800,
         navGuardActive: true,
-      })
+      }),
     ).toBe(true);
     expect(
       shouldSkipZeroScrollClobber({
@@ -112,28 +109,28 @@ describe("scrollRestore helpers", () => {
         previousY: 0,
         lastKnownY: 1800,
         navGuardActive: true,
-      })
+      }),
     ).toBe(true);
     expect(
       shouldSkipZeroScrollClobber({
         nextY: 0,
         previousY: 1800,
         navGuardActive: false,
-      })
+      }),
     ).toBe(false);
     expect(
       shouldSkipZeroScrollClobber({
         nextY: 0,
         previousY: 10,
         navGuardActive: true,
-      })
+      }),
     ).toBe(false);
     expect(
       shouldSkipZeroScrollClobber({
         nextY: 400,
         previousY: 1800,
         navGuardActive: true,
-      })
+      }),
     ).toBe(false);
   });
 
@@ -148,24 +145,31 @@ describe("scrollRestore helpers", () => {
 
   it("isPendingPopRestoreForKey matches key within TTL", () => {
     const now = 5_000;
-    expect(
-      isPendingPopRestoreForKey({ key: "/", at: now - 100 }, "/", now)
-    ).toBe(true);
-    expect(
-      isPendingPopRestoreForKey({ key: "/a", at: now - 100 }, "/", now)
-    ).toBe(false);
-    expect(
-      isPendingPopRestoreForKey({ key: "/", at: now - 20_000 }, "/", now)
-    ).toBe(false);
+    expect(isPendingPopRestoreForKey({ key: "/", at: now - 100 }, "/", now)).toBe(true);
+    expect(isPendingPopRestoreForKey({ key: "/a", at: now - 100 }, "/", now)).toBe(false);
+    expect(isPendingPopRestoreForKey({ key: "/", at: now - 20_000 }, "/", now)).toBe(false);
   });
 
   it("mergeScrollPositionForKey keeps mid-page Y during guard", () => {
-    expect(
-      mergeScrollPositionForKey({ "/": 1800 }, "/", 0, 1800, true)["/"]
-    ).toBe(1800);
-    expect(
-      mergeScrollPositionForKey({ "/": 1800 }, "/", 900, 900, false)["/"]
-    ).toBe(900);
+    expect(mergeScrollPositionForKey({ "/": 1800 }, "/", 0, 1800, true)["/"]).toBe(1800);
+    expect(mergeScrollPositionForKey({ "/": 1800 }, "/", 900, 900, false)["/"]).toBe(900);
+  });
+
+  it("findSectionAnchorId returns null without a DOM node", () => {
+    expect(findSectionAnchorId(null)).toBeNull();
+  });
+
+  it("computeRestoreScrollY uses section top when higher than saved Y", () => {
+    expect(computeRestoreScrollY(800, 2400, 60)).toBe(2340);
+    expect(computeRestoreScrollY(2500, 2400, 60)).toBe(2500);
+    expect(computeRestoreScrollY(800, null, 60)).toBe(800);
+  });
+
+  it("mergeScrollAnchorForKey stores section anchor per path", () => {
+    expect(mergeScrollAnchorForKey({}, "/", "new-arrivals", 1800)["/"]).toEqual({
+      sectionId: "new-arrivals",
+      y: 1800,
+    });
   });
 
   it("shouldSkipSplashScrollToTop when restoring or mid-page saved", () => {
@@ -174,28 +178,28 @@ describe("scrollRestore helpers", () => {
         savedY: 1400,
         pendingPopMatches: false,
         intentionalBack: false,
-      })
+      }),
     ).toBe(true);
     expect(
       shouldSkipSplashScrollToTop({
         savedY: 0,
         pendingPopMatches: true,
         intentionalBack: false,
-      })
+      }),
     ).toBe(true);
     expect(
       shouldSkipSplashScrollToTop({
         savedY: 0,
         pendingPopMatches: false,
         intentionalBack: true,
-      })
+      }),
     ).toBe(true);
     expect(
       shouldSkipSplashScrollToTop({
         savedY: 10,
         pendingPopMatches: false,
         intentionalBack: false,
-      })
+      }),
     ).toBe(false);
   });
 });

@@ -1,7 +1,6 @@
 import "server-only";
 
-const PLACEHOLDER_RE =
-  /^(your[_-]?|changeme|xxx+|todo|replace|example|placeholder|<.*>)$/i;
+const PLACEHOLDER_RE = /^(your[_-]?|changeme|xxx+|todo|replace|example|placeholder|<.*>)$/i;
 
 function readEnv(...keys: string[]): string | undefined {
   for (const key of keys) {
@@ -33,4 +32,12 @@ export function getGoogleAuthCredentials(): {
     clientId: readEnv("AUTH_GOOGLE_ID", "GOOGLE_CLIENT_ID")!,
     clientSecret: readEnv("AUTH_GOOGLE_SECRET", "GOOGLE_CLIENT_SECRET")!,
   };
+}
+
+/** Google OAuth persists accounts in Postgres — require a live database connection. */
+export async function isGoogleSignInAvailable(): Promise<boolean> {
+  if (!isGoogleAuthConfigured()) return false;
+  const { verifyPostgresConnection } = await import("@/lib/server/postgresHealth");
+  const database = await verifyPostgresConnection();
+  return database.ok;
 }

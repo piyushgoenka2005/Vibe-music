@@ -10,7 +10,10 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
     "Google sign-in could not finish. Please try again or use email and password.",
   AccessDenied:
     "We could not finish Google sign-in for this account. Sign in with email and password first, then try Google again to link.",
-  Configuration: "Google sign-in is temporarily unavailable. Please use email and password.",
+  Configuration:
+    process.env.NODE_ENV === "production"
+      ? "Google sign-in is temporarily unavailable. Please use email and password."
+      : "Google sign-in could not finish — usually because Postgres is offline or DATABASE_URL points at the wrong port. Run npm run db:start, verify DATABASE_URL, restart the dev server, then try again.",
   Verification: "The verification link is invalid or has expired.",
   Default: "Something went wrong. Please try again.",
 };
