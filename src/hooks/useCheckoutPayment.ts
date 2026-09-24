@@ -285,7 +285,6 @@ export function useCheckoutPayment({
     shippingAddress,
     onlineChannel,
     showToast,
-    router,
     openCheckout,
     goToOrderConfirmation,
     checkoutMode,

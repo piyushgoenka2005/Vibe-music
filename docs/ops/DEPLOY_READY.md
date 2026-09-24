@@ -9,10 +9,9 @@ Companion: [DEPLOYMENT.md](./DEPLOYMENT.md) · [GO_LIVE.md](./GO_LIVE.md) · [GO
 ## 0. Preflight (local or CI)
 
 ```bash
-npm run type-check
+npm run release:ready      # type-check + lint + test + build (+ prod sign-off if VERIFY_BASE_URL is set)
 npm run check:env          # against VPS .env values, not localhost AUTH_URL
-npm test                   # unit
-# optional: npm run validate
+# full CI parity: npm run validate:ci
 ```
 
 Ensure the commit you want live is on **`origin/main`** (`deploy/update.sh` pulls `main` only).
@@ -78,14 +77,14 @@ BASE_URL=https://vibemusic.in bash deploy/post-deploy-smoke.sh
 
 **Recommended for 100% live config:**
 
-| Key | Why |
-|-----|-----|
-| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | GSC HTML-tag ownership |
-| `NEXT_PUBLIC_GA_MEASUREMENT_ID` + `GA_MEASUREMENT_API_SECRET` | Analytics |
-| `NEXT_PUBLIC_STORE_PHONE` | Storefront/contact |
-| `GOOGLE_PLACES_API_KEY` (or alias) | Checkout autocomplete |
-| `CDN_STORAGE_ROOT` + `CDN_PUBLIC_BASE_URL` | Admin uploads |
-| `UPSTASH_*` | Multi-worker rate limits |
+| Key                                                           | Why                      |
+| ------------------------------------------------------------- | ------------------------ |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`                        | GSC HTML-tag ownership   |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` + `GA_MEASUREMENT_API_SECRET` | Analytics                |
+| `NEXT_PUBLIC_STORE_PHONE`                                     | Storefront/contact       |
+| `GOOGLE_PLACES_API_KEY` (or alias)                            | Checkout autocomplete    |
+| `CDN_STORAGE_ROOT` + `CDN_PUBLIC_BASE_URL`                    | Admin uploads            |
+| `UPSTASH_*`                                                   | Multi-worker rate limits |
 
 After changing `NEXT_PUBLIC_*`, rebuild or restart with a fresh build (`update.sh` rebuilds).
 
@@ -93,14 +92,14 @@ After changing `NEXT_PUBLIC_*`, rebuild or restart with a fresh build (`update.s
 
 ## 4. Smoke gates (must be green)
 
-| Check | Expect |
-|-------|--------|
-| `GET /api/health` | 200, DB ok |
-| `GET /api/coupons/active` | **200** `{ coupons: [...] }` |
-| `GET /api/checkout/capabilities` | razorpay on, demo off |
-| `GET /api/admin/me` | 401 |
-| `GET /robots.txt` + `/sitemap.xml` | 200 |
-| `GET /` `/giveaway` `/rentals` `/blog` | 200 |
+| Check                                  | Expect                       |
+| -------------------------------------- | ---------------------------- |
+| `GET /api/health`                      | 200, DB ok                   |
+| `GET /api/coupons/active`              | **200** `{ coupons: [...] }` |
+| `GET /api/checkout/capabilities`       | razorpay on, demo off        |
+| `GET /api/admin/me`                    | 401                          |
+| `GET /robots.txt` + `/sitemap.xml`     | 200                          |
+| `GET /` `/giveaway` `/rentals` `/blog` | 200                          |
 
 Script: `bash deploy/post-deploy-smoke.sh`
 
@@ -108,9 +107,9 @@ Script: `bash deploy/post-deploy-smoke.sh`
 
 ## 5. Ops cron (once per host)
 
-| Cron | Installer |
-|------|-----------|
-| Daily Postgres + CDN backups | `bash deploy/install-backups.sh` |
+| Cron                           | Installer                                    |
+| ------------------------------ | -------------------------------------------- |
+| Daily Postgres + CDN backups   | `bash deploy/install-backups.sh`             |
 | Reservation TTL sweeper (*/15) | `bash deploy/install-reservation-sweeper.sh` |
 
 Example lines also in `deploy/crontab.backups.example`.

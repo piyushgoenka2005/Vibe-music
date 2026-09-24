@@ -68,6 +68,7 @@
     "db:probe": "node scripts/db/probe-db.mjs",
     "validate": "npm run type-check && npm run lint && npm run test && npm run build",
     "validate:ci": "npm run validate && npm run test:e2e",
+    "release:ready": "npx tsx scripts/ops/release-ready.mts",
     "prepare": "husky",
     "load:perf": "npx tsx scripts/ops/load-test.mts"
   },

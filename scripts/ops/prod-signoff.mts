@@ -167,11 +167,26 @@ const checks: Check[] = [];
 }
 
 {
-  const { status } = await getJson("/");
+  const response = await fetch(`${BASE_URL}/`, { cache: "no-store" });
+  const hsts = response.headers.get("strict-transport-security") ?? "";
+  const csp = response.headers.get("content-security-policy") ?? "";
+  const nosniff = response.headers.get("x-content-type-options") ?? "";
+  const headersOk =
+    hsts.includes("max-age=") &&
+    csp.includes("default-src") &&
+    nosniff.toLowerCase() === "nosniff";
+  checks.push({
+    name: "security-headers",
+    ok: headersOk,
+    detail: headersOk
+      ? "HSTS + CSP + nosniff present"
+      : `hsts=${hsts ? "yes" : "no"} csp=${csp ? "yes" : "no"} nosniff=${nosniff || "no"}`,
+    blocking: true,
+  });
   checks.push({
     name: "homepage",
-    ok: status === 200,
-    detail: `HTTP ${status}`,
+    ok: response.status === 200,
+    detail: `HTTP ${response.status}`,
     blocking: true,
   });
 }

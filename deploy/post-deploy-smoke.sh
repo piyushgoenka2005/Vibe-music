@@ -58,6 +58,17 @@ echo "════════════════════════�
 echo ""
 
 check_http "/" "200" "GET /"
+
+# Security headers (SEC-01)
+sec_headers=$(curl -sS -I --max-time 20 "${BASE_URL}/" || echo "")
+if echo "$sec_headers" | grep -qi "strict-transport-security:.*max-age=" && \
+   echo "$sec_headers" | grep -qi "content-security-policy:.*default-src" && \
+   echo "$sec_headers" | grep -qi "x-content-type-options: nosniff"; then
+  pass "security headers (HSTS, CSP, nosniff)"
+else
+  fail "security headers missing or incomplete on GET /"
+fi
+
 check_http "/api/health" "200" "GET /api/health"
 check_json "/api/health" "(d.status === 'healthy' || d.status === 'degraded') && d.checks && d.checks.database === 'ok'" "health: database ok"
 
