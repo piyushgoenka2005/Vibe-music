@@ -26,7 +26,11 @@ If all are absent, traffic is likely hitting the origin directly.
 2. Enable **SSL/TLS → Full (strict)**.
 3. Turn on **WAF managed rules** (free tier basics) and **Bot Fight Mode** if needed.
 4. Add a **rate limiting** rule for `/api/auth/*` and `/api/payment/*` (complements in-app limits).
-5. **Firewall the origin VPS** so only Cloudflare IP ranges can reach ports 80/443.
+5. **Firewall the origin VPS** so only Cloudflare IP ranges can reach ports 80/443:
+   ```bash
+   sudo bash deploy/cloudflare-ufw.sh
+   # or full go-live: sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh
+   ```
 6. Rotate origin IP if historical DNS records exposed the bare VPS IP (L-23).
 
 ## After changes

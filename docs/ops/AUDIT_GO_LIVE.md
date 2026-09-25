@@ -41,6 +41,18 @@ Complete after deploying latest `main` to production.
 
 ## One-shot production sign-off
 
+**On the VPS (recommended):**
+
+```bash
+cp deploy/ops-secrets.env.example deploy/ops-secrets.env
+# Edit: GSTIN, legal entity, GA4, phone
+sudo bash deploy/complete-audit-go-live.sh
+# After Cloudflare proxied DNS is live:
+sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh
+```
+
+**From CI / dev machine:**
+
 ```bash
 VERIFY_BASE_URL=https://vibemusic.in npm run release:ready
 ```

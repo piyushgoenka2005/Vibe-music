@@ -39,15 +39,22 @@ apt-get update -qq
 apt-get install -y -qq ufw fail2ban unattended-upgrades apt-listchanges
 
 # --- UFW ---
-log "Configuring firewall (UFW)"
-ufw --force reset
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow OpenSSH
-ufw allow 'Nginx Full'
-# Node listens on 127.0.0.1:3000 only — do not expose :3000 publicly
-ufw --force enable
-ufw status verbose
+if [ "${CLOUDFLARE_ONLY:-0}" = "1" ]; then
+  log "Configuring Cloudflare-only firewall (L-23)"
+  APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+  bash "$APP_DIR/deploy/cloudflare-ufw.sh"
+else
+  log "Configuring firewall (UFW)"
+  ufw --force reset
+  ufw default deny incoming
+  ufw default allow outgoing
+  ufw allow OpenSSH
+  ufw allow 'Nginx Full'
+  # Node listens on 127.0.0.1:3000 only — do not expose :3000 publicly
+  # After Cloudflare is live, re-run with CLOUDFLARE_ONLY=1 or deploy/cloudflare-ufw.sh
+  ufw --force enable
+  ufw status verbose
+fi
 
 # --- fail2ban ---
 log "Enabling fail2ban (sshd jail)"

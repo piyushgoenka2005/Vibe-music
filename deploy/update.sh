@@ -91,6 +91,11 @@ pm2 save
 if command -v nginx >/dev/null 2>&1 && [[ -f /etc/nginx/sites-available/vibemusic.in ]]; then
   echo "==> Syncing Nginx site config from repo"
   cp deploy/nginx/vibemusic.in.conf /etc/nginx/sites-available/vibemusic.in
+  if [[ -f deploy/nginx/cloudflare-real-ip.conf ]]; then
+    install -d /etc/nginx/conf.d
+    cp deploy/nginx/cloudflare-real-ip.conf /etc/nginx/conf.d/cloudflare-real-ip.conf
+    echo "    synced cloudflare-real-ip.conf (L-22)"
+  fi
   nginx -t
   if command -v systemctl >/dev/null 2>&1; then
     sudo systemctl reload nginx 2>/dev/null || systemctl reload nginx

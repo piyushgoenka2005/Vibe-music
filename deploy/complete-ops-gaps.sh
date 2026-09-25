@@ -116,6 +116,9 @@ check_env_key "NEXT_PUBLIC_GA_MEASUREMENT_ID"
 check_env_key "GA_MEASUREMENT_API_SECRET"
 check_env_key "NEXT_PUBLIC_STORE_PHONE"
 check_env_key "NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION"
+check_env_key "NEXT_PUBLIC_LEGAL_ENTITY_NAME"
+check_env_key "NEXT_PUBLIC_GSTIN"
+check_env_key "TRUST_PROXY_HOPS"
 
 # Places is optional (Nominatim India fallback); warn only if unset
 if grep -q "^GOOGLE_PLACES_API_KEY=.\+" .env 2>/dev/null || \
@@ -141,11 +144,21 @@ else
 fi
 
 echo ""
+echo ""
+echo "▶ Audit edge (L-22) — optional until Cloudflare is proxied"
+if VERIFY_BASE_URL=https://vibemusic.in npm run check:edge 2>/dev/null; then
+  echo "   ✅ CDN edge active"
+else
+  echo "   ⚠️  No cf-ray — complete deploy/cloudflare/README.md then:"
+  echo "      sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh"
+fi
+
+echo ""
 if [[ $MISSING -eq 0 ]]; then
   echo "✅ All ops gaps addressed. Platform deploy-ready at 100%."
 else
   echo "⚠️  $MISSING item(s) still need attention (see above)."
-  echo "   Edit deploy/ops-secrets.env → bash deploy/complete-ops-gaps.sh"
+  echo "   Edit deploy/ops-secrets.env → bash deploy/complete-audit-go-live.sh"
   echo "   Runbook: docs/ops/DEPLOY_READY.md"
 fi
 echo ""

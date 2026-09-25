@@ -50,43 +50,71 @@ function resolveStorePhone(): string {
   );
 }
 
-async function seedStorePhone(): Promise<void> {
-  const phone = resolveStorePhone();
-  if (!phone) {
-    console.log("SKIP store phone — set NEXT_PUBLIC_STORE_PHONE in .env");
-    return;
-  }
+function resolveLegalName(): string {
+  return process.env.NEXT_PUBLIC_LEGAL_ENTITY_NAME?.trim() || "Vibe Music";
+}
 
-  const existing = await prisma.storeSettings.findUnique({ where: { id: "store" } });
+function resolveGstin(): string {
+  return process.env.NEXT_PUBLIC_GSTIN?.trim() || "";
+}
+
+async function seedStoreSettings(): Promise<void> {
+  const phone = resolveStorePhone();
+  const legalName = resolveLegalName();
+  const gstin = resolveGstin();
   const timestamp = new Date().toISOString();
 
-  if (existing?.storePhone?.trim()) {
-    console.log(`OK  store phone already set (${existing.storePhone})`);
+  const existing = await prisma.storeSettings.findUnique({ where: { id: "store" } });
+
+  const updateData: Record<string, string | number | boolean> = {
+    updatedAt: timestamp,
+  };
+  if (phone && !existing?.storePhone?.trim()) {
+    updateData.storePhone = phone;
+  }
+  if (legalName && (!existing?.storeName?.trim() || existing.storeName === "Vibe Music")) {
+    updateData.storeName = legalName;
+  }
+  if (gstin && !existing?.gstNumber?.trim()) {
+    updateData.gstNumber = gstin;
+  }
+
+  if (existing) {
+    if (Object.keys(updateData).length > 1) {
+      await prisma.storeSettings.update({
+        where: { id: "store" },
+        data: updateData,
+      });
+      console.log("OK  store settings synced from env (phone/legal/GSTIN)");
+    } else {
+      console.log(`OK  store settings unchanged (phone=${existing.storePhone || "unset"})`);
+    }
     return;
   }
 
-  await prisma.storeSettings.upsert({
-    where: { id: "store" },
-    create: {
+  if (!phone) {
+    console.log("SKIP store settings — set NEXT_PUBLIC_STORE_PHONE in .env");
+    return;
+  }
+
+  await prisma.storeSettings.create({
+    data: {
       id: "store",
-      storeName: "Vibe Music",
+      storeName: legalName,
       storeEmail: "support@vibemusic.in",
       storePhone: phone,
-      storeAddress: "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071",
-      gstNumber: "",
+      storeAddress:
+        "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071",
+      gstNumber: gstin,
       defaultGstRate: 18,
-      sellerState: "Maharashtra",
+      sellerState: "West Bengal",
       freeShippingThreshold: 0,
       standardShippingCharge: 0,
       razorpayEnabled: true,
       updatedAt: timestamp,
     },
-    update: {
-      storePhone: phone,
-      updatedAt: timestamp,
-    },
   });
-  console.log(`OK  store phone set from env`);
+  console.log("OK  store settings created from env");
 }
 
 async function seedBanners(): Promise<void> {
@@ -141,7 +169,7 @@ async function seedBanners(): Promise<void> {
 }
 
 async function main() {
-  await seedStorePhone();
+  await seedStoreSettings();
   await seedBanners();
   console.log("\nProduction ops seed complete.\n");
 }

@@ -211,6 +211,16 @@ if (env.ALLOW_DEMO_PAYMENTS === "true" && /vibemusic\.in/i.test(siteUrl)) {
   console.log("BLOCKING: ALLOW_DEMO_PAYMENTS must be false on the production storefront.");
   productionMisconfig = true;
 }
+if (/vibemusic\.in/i.test(siteUrl) && !env.NEXT_PUBLIC_GSTIN?.trim()) {
+  console.log(
+    "WARN (L-30): NEXT_PUBLIC_GSTIN unset — footer/invoices will omit GSTIN on vibemusic.in."
+  );
+}
+if (/vibemusic\.in/i.test(siteUrl) && env.TRUST_PROXY_HOPS?.trim() !== "1") {
+  console.log(
+    "WARN (L-22): TRUST_PROXY_HOPS should be 1 behind nginx/Cloudflare on production."
+  );
+}
 if (!missingRequired.length) {
   console.log("All production-required keys are present in local env files.");
   console.log(
