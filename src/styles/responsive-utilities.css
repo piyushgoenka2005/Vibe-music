@@ -34,8 +34,22 @@
 /* Universal overflow guard for interactive shells */
 .storefront-page,
 .admin-main,
-.gp9-page {
+.gp9-page,
+.blog-page,
+.rentals-page,
+.giveaway-page,
+.auth-shell,
+.acct {
   min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .storefront-main img:not([width]):not(.site-header__logo img),
+  .storefront-main video,
+  .storefront-main iframe {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 767px) {
@@ -47,9 +61,25 @@
   .cat-page,
   .pdp,
   .checkout-page,
-  .cart-page {
+  .cart-page,
+  .blog-page,
+  .rentals-page,
+  .giveaway-page,
+  .program-landing,
+  .compare-page,
+  .contact-page {
     max-width: 100%;
     min-width: 0;
+  }
+
+  .storefront-page__header,
+  .storefront-page__actions,
+  .compare-page__actions,
+  .blog-page__toolbar,
+  .blog-share__actions,
+  .blog-article__footer-actions {
+    flex-wrap: wrap;
+    gap: 0.65rem;
   }
 }
 

@@ -9,6 +9,7 @@ export type FooterAccordionSection = {
   id: string;
   label: string;
   links: { label: string; href: string; external?: boolean }[];
+  noteLines?: string[];
 };
 
 interface FooterAccordionProps {
@@ -47,10 +48,7 @@ export default function FooterAccordion({ sections }: FooterAccordionProps) {
               <span className="site-footer-accordion__label">{section.label}</span>
               <span className="site-footer-accordion__icon" aria-hidden />
             </button>
-            <div
-              className="site-footer-accordion__content"
-              data-open={isOpen ? "true" : "false"}
-            >
+            <div className="site-footer-accordion__content" data-open={isOpen ? "true" : "false"}>
               <ul className="site-footer-accordion__list">
                 {section.links.map((link) => {
                   const isNativeLink =
@@ -59,27 +57,34 @@ export default function FooterAccordion({ sections }: FooterAccordionProps) {
                     link.href.startsWith("tel:");
 
                   return (
-                  <li key={`${section.id}-${link.label}`}>
-                    {isNativeLink ? (
-                      <a
-                        href={link.href}
-                        target={link.external ? "_blank" : undefined}
-                        rel={link.external ? "noopener noreferrer" : undefined}
-                        className="site-footer-accordion__link"
-                      >
-                        <ArrowUpRight size={12} strokeWidth={2.5} aria-hidden />
-                        <FooterRollText>{link.label}</FooterRollText>
-                      </a>
-                    ) : (
-                      <Link href={link.href} className="site-footer-accordion__link">
-                        <ArrowUpRight size={12} strokeWidth={2.5} aria-hidden />
-                        <FooterRollText>{link.label}</FooterRollText>
-                      </Link>
-                    )}
-                  </li>
+                    <li key={`${section.id}-${link.label}`}>
+                      {isNativeLink ? (
+                        <a
+                          href={link.href}
+                          target={link.external ? "_blank" : undefined}
+                          rel={link.external ? "noopener noreferrer" : undefined}
+                          className="site-footer-accordion__link"
+                        >
+                          <ArrowUpRight size={12} strokeWidth={2.5} aria-hidden />
+                          <FooterRollText>{link.label}</FooterRollText>
+                        </a>
+                      ) : (
+                        <Link href={link.href} className="site-footer-accordion__link">
+                          <ArrowUpRight size={12} strokeWidth={2.5} aria-hidden />
+                          <FooterRollText>{link.label}</FooterRollText>
+                        </Link>
+                      )}
+                    </li>
                   );
                 })}
               </ul>
+              {section.noteLines?.length ? (
+                <div className="site-footer-accordion__note">
+                  {section.noteLines.map((line) => (
+                    <p key={line}>{line}</p>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
         );

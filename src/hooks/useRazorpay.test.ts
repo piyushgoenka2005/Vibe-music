@@ -20,7 +20,10 @@ describe("ensureRazorpayScriptLoaded", () => {
   });
 
   it("resolves immediately when Razorpay is already on window", async () => {
-    (window as Window & { Razorpay?: unknown }).Razorpay = class {};
+    window.Razorpay = class {
+      open() {}
+      on() {}
+    } as NonNullable<Window["Razorpay"]>;
     await expect(ensureRazorpayScriptLoaded()).resolves.toBeUndefined();
   });
 });

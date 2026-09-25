@@ -210,3 +210,41 @@
   display: grid;
   gap: 0.35rem;
 }
+
+@media (max-width: 767px) {
+  .rentals-page {
+    padding: 1.25rem max(1rem, env(safe-area-inset-left, 0px))
+      calc(3rem + env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .rentals-categories {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .rentals-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .rentals-form input,
+  .rentals-form select,
+  .rentals-form textarea,
+  .rentals-btn {
+    min-height: 44px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .rentals-calendar__day {
+    min-height: 40px;
+    font-size: 0.6875rem;
+  }
+}
+
+@media (max-width: 479px) {
+  .rentals-categories {
+    grid-template-columns: 1fr;
+  }
+}

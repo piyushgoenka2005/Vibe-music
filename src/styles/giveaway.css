@@ -100,10 +100,20 @@
   margin-top: 0.5rem;
 }
 
-.giveaway-countdown__grid div {
+.giveaway-countdown__grid div,
+.giveaway-countdown__cell {
   display: grid;
   text-align: center;
   min-width: 3rem;
+}
+
+.giveaway-countdown__value {
+  font-variant-numeric: tabular-nums;
+}
+
+.giveaway-countdown__unit {
+  font-size: 0.75rem;
+  opacity: 0.75;
 }
 
 .giveaway-countdown--ended {
@@ -159,7 +169,8 @@
     gap: 0.5rem;
   }
 
-  .giveaway-countdown__grid div {
+  .giveaway-countdown__grid div,
+  .giveaway-countdown__cell {
     min-width: 3.25rem;
   }
 }

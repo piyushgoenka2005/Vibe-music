@@ -10,7 +10,7 @@ export default function GoogleAuthUnavailableNote({
 }: GoogleAuthUnavailableNoteProps) {
   const message =
     reason === "database"
-      ? "Google sign-in needs the database online. On local dev run npm run db:start, confirm DATABASE_URL (port 5432), then restart the dev server."
+      ? "Google sign-in needs the database online. On local dev run npm run db:start (or restart npm run dev — it starts Postgres automatically on Windows), confirm DATABASE_URL in .env.local, then refresh this page."
       : "Google sign-in is unavailable on this store right now. Continue with your email and password below.";
 
   return (

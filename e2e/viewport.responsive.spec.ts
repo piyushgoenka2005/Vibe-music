@@ -23,6 +23,25 @@ const STOREFRONT_PATHS = [
   "/contact",
   "/track-order",
   "/category/guitars",
+  "/brands",
+  "/blog",
+  "/rentals",
+  "/giveaway",
+  "/used",
+  "/login",
+  "/register",
+  "/account",
+];
+
+const TABLET_PATHS = [
+  "/",
+  "/cart",
+  "/search",
+  "/checkout",
+  "/deals",
+  "/brands",
+  "/blog",
+  "/rentals",
 ];
 
 test.describe("viewport responsive smoke", () => {
@@ -57,11 +76,23 @@ test.describe("viewport responsive smoke", () => {
   });
 
   test("storefront routes render without horizontal overflow (tablet 834px)", async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     await page.setViewportSize(TABLET);
-    for (const path of ["/", "/cart", "/search", "/checkout", "/deals"]) {
+    for (const path of TABLET_PATHS) {
       await page.goto(path, { waitUntil: "domcontentloaded", timeout: 90_000 });
       await assertNoHorizontalOverflow(page, path);
+    }
+  });
+
+  test("storefront routes render without horizontal overflow (small phone 320px)", async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    await page.setViewportSize(SMALL_PHONE);
+    for (const path of STOREFRONT_PATHS) {
+      await page.goto(path, { waitUntil: "domcontentloaded", timeout: 90_000 });
+      await expect(page.locator("body")).toBeVisible();
+      await assertNoHorizontalOverflow(page, `${path}@320`);
     }
   });
 

@@ -1813,7 +1813,7 @@ body.is-scroll-restoring .premium-home > * {
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     overscroll-behavior-x: contain;
-    max-width: 100vw;
+    max-width: 100%;
   }
 
   .big-names-deals__showcase-scroll::-webkit-scrollbar {
@@ -5101,11 +5101,63 @@ body.is-scroll-restoring .premium-home > * {
 }
 
 .premium-home .homepage-deals-section__countdown {
-  margin-top: 0.75rem;
+  margin-top: 1rem;
+}
+
+.premium-home .homepage-deals-section__countdown .giveaway-countdown {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.premium-home .homepage-deals-section__countdown .giveaway-countdown__label {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #475569;
 }
 
 .premium-home .homepage-deals-section__countdown .giveaway-countdown__grid {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: center;
   gap: 0.5rem;
+  margin: 0;
+}
+
+.premium-home .homepage-deals-section__countdown .giveaway-countdown__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.25rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.premium-home .homepage-deals-section__countdown .giveaway-countdown__value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.premium-home .homepage-deals-section__countdown .giveaway-countdown__unit {
+  margin-top: 0.15rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
 }
 
 .premium-home .homepage-section-fallback {
@@ -5567,6 +5619,44 @@ body.is-scroll-restoring .premium-home > * {
   .premium-home .homepage-deals-section__header {
     text-align: left;
     margin-bottom: 1.15rem;
+  }
+
+  .premium-home .homepage-deals-section__eyebrow {
+    justify-content: flex-start;
+  }
+
+  .premium-home .homepage-deals-section__countdown {
+    margin-top: 0.85rem;
+  }
+
+  .premium-home .homepage-deals-section__countdown .giveaway-countdown {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .premium-home .homepage-deals-section__countdown .giveaway-countdown__grid {
+    justify-content: flex-start;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .premium-home .homepage-deals-section__countdown .giveaway-countdown__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .premium-home .homepage-deals-section__countdown .giveaway-countdown__cell {
+    flex: 0 0 auto;
+    min-width: 3rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .premium-home .homepage-deals-section__countdown .giveaway-countdown__value {
+    font-size: 1.125rem;
   }
 
   .premium-home .homepage-deals-section__title {

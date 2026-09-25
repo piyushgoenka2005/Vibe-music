@@ -17,6 +17,7 @@ import "@/styles/site-footer.css";
 import "@/styles/storefront-pages.css";
 import "@/styles/mobile-storefront.css";
 import "@/styles/responsive-utilities.css";
+import "@/styles/mobile-site-wide.css";
 import "@/styles/buttons.css";
 import "@/styles/notify-me.css";
 import "@/styles/page-load-splash.css";

@@ -1,0 +1,236 @@
+/* ─── Mobile site-wide layer (≤767px) — loaded last for cross-route coverage ─── */
+
+@media (max-width: 767px) {
+  /* Route shells */
+  .premium-home,
+  .storefront-page,
+  .blog-page,
+  .rentals-page,
+  .giveaway-page,
+  .gp9-page,
+  .program-landing,
+  .acct,
+  .admin-main,
+  .auth-shell {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: clip;
+  }
+
+  /* Pages without storefront-page__inner padding */
+  .blog-page,
+  .rentals-page,
+  .giveaway-page {
+    padding-inline: max(1rem, env(safe-area-inset-left, 0px))
+      max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .giveaway-page {
+    padding-top: 1.25rem;
+    padding-bottom: calc(3rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Typography — long titles / URLs */
+  h1,
+  h2,
+  h3,
+  .storefront-page__title,
+  .blog-page__title,
+  .blog-article__title,
+  .rentals-hero__title,
+  .giveaway-hero .rentals-hero__title,
+  .acct__hero-title,
+  .program-landing__status {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* Rich content safety */
+  .blog-article__content pre,
+  .blog-article__content table,
+  .vibe-html-section table,
+  .cms-page__content table,
+  .pdp-description table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .blog-article__content iframe,
+  .vibe-html-section iframe,
+  .cms-page__content iframe {
+    max-width: 100%;
+  }
+
+  /* Program landing (/used, etc.) */
+  .program-landing__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .program-landing__btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .program-landing__list,
+  .program-landing__status,
+  .program-landing__footer {
+    max-width: 100%;
+  }
+
+  /* Rentals */
+  .rentals-categories {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .rentals-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .rentals-calendar {
+    gap: 0.25rem;
+  }
+
+  .rentals-calendar__day {
+    font-size: 0.6875rem;
+    min-height: 40px;
+    padding: 0;
+  }
+
+  .rentals-form input,
+  .rentals-form select,
+  .rentals-form textarea,
+  .rentals-btn {
+    min-height: 44px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .rentals-detail {
+    gap: 1.25rem;
+  }
+
+  /* Giveaway */
+  .giveaway-grid,
+  .giveaway-grid--split {
+    grid-template-columns: 1fr;
+  }
+
+  .giveaway-form input,
+  .giveaway-form button,
+  .giveaway-card button {
+    min-height: 44px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* GP9 */
+  .gp9-page {
+    padding-inline: max(0.75rem, env(safe-area-inset-left, 0px))
+      max(0.75rem, env(safe-area-inset-right, 0px));
+  }
+
+  /* Compare */
+  .compare-page__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .compare-page__actions .premium-btn,
+  .compare-page__clear {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  /* Contact / static CMS */
+  .contact-form,
+  .contact-page .storefront-page__inner {
+    max-width: 100%;
+  }
+
+  .contact-form input,
+  .contact-form textarea,
+  .contact-form button {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+  }
+
+  /* Wishlist share */
+  .wl-share-page,
+  .wl-share-page__grid {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* Floating chrome — safe areas */
+  .help-widget,
+  .back-to-top,
+  .site-header {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .help-widget__panel {
+    max-width: min(100%, calc(100dvw - 1.5rem));
+    margin-inline: auto;
+  }
+
+  /* Homepage A+ banners */
+  .homepage-aplus,
+  .aplus-story,
+  .aplus-story__banner {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+}
+
+/* Small phones */
+@media (max-width: 479px) {
+  .rentals-categories {
+    grid-template-columns: 1fr;
+  }
+
+  .blog-related__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .giveaway-countdown__grid {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* Tablet bridge (768–1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .blog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rentals-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rentals-categories {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .storefront-page__inner,
+  .blog-page,
+  .rentals-page,
+  .giveaway-page {
+    padding-inline: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .program-landing__actions {
+    gap: 0.875rem;
+  }
+}
