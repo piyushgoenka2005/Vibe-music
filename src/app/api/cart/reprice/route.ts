@@ -8,12 +8,14 @@ import { publicApiError } from "@/lib/server/publicApiError";
 const repriceSchema = z.object({
   items: z
     .array(
-      z.object({
-        productId: z.string().min(1),
-        variantId: z.string().optional(),
-        quantity: z.number().int().positive().max(99),
-        name: z.string().optional(),
-      }),
+      z
+        .object({
+          productId: z.string().min(1),
+          variantId: z.string().optional(),
+          quantity: z.number().int().positive().max(99),
+          name: z.string().optional(),
+        })
+        .strict(),
     )
     .min(1)
     .max(100),

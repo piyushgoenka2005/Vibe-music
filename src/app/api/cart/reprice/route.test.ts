@@ -34,14 +34,10 @@ describe("POST /api/cart/reprice", () => {
   });
 
   it("reprices cart successfully", async () => {
-    const mockResult = [
-      { id: "1", price: 5000, quantity: 1 },
-    ];
+    const mockResult = [{ id: "1", price: 5000, quantity: 1 }];
     (repriceCartLines as ReturnType<typeof vi.fn>).mockResolvedValue(mockResult);
 
-    const res = await POST(
-      makePostRequest({ items: [{ productId: "1", quantity: 1 }] })
-    );
+    const res = await POST(makePostRequest({ items: [{ productId: "1", quantity: 1 }] }));
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -51,11 +47,21 @@ describe("POST /api/cart/reprice", () => {
 
   it("returns 429 when rate limited", async () => {
     (enforceRateLimit as ReturnType<typeof vi.fn>).mockResolvedValue(
-      new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 })
+      new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 }),
     );
 
     const res = await POST(makePostRequest({ items: [{ productId: "1", quantity: 1 }] }));
     expect(res.status).toBe(429);
+  });
+
+  it("rejects client-supplied price fields (L-15)", async () => {
+    const res = await POST(
+      makePostRequest({
+        items: [{ productId: "1", quantity: 1, price: 1 }],
+      }),
+    );
+    expect(res.status).toBe(400);
+    expect(repriceCartLines).not.toHaveBeenCalled();
   });
 
   it("returns 400 for invalid body (missing items)", async () => {
@@ -64,7 +70,7 @@ describe("POST /api/cart/reprice", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
-      })
+      }),
     );
     expect(res.status).toBe(400);
   });
@@ -75,19 +81,17 @@ describe("POST /api/cart/reprice", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "not json",
-      })
+      }),
     );
     expect(res.status).toBe(400);
   });
 
   it("handles service errors gracefully", async () => {
     (repriceCartLines as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("Product not found")
+      new Error("Product not found"),
     );
 
-    const res = await POST(
-      makePostRequest({ items: [{ productId: "invalid", quantity: 1 }] })
-    );
+    const res = await POST(makePostRequest({ items: [{ productId: "invalid", quantity: 1 }] }));
     // publicApiError returns 400 for safe domain error messages
     expect(res.status).toBe(400);
   });
