@@ -25,6 +25,8 @@ const formattedPhone = formatIndianPhone(storePhone);
 
 export const BRAND = {
   name: "Vibe Music",
+  legalName: process.env.NEXT_PUBLIC_LEGAL_ENTITY_NAME?.trim() || "Vibe Music",
+  gstin: process.env.NEXT_PUBLIC_GSTIN?.trim() || "",
   shortName: "VibeMusic",
   tagline: "Your Sound, Delivered",
   description:

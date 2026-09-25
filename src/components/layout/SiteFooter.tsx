@@ -296,6 +296,13 @@ export default function SiteFooter() {
               <FooterAccordion sections={FOOTER_SECTIONS} />
 
               <div className="site-footer-base">
+                <div className="site-footer-base__item site-footer-base__item--legal">
+                  <p className="site-footer-legal__entity">{BRAND.legalName}</p>
+                  <p className="site-footer-legal__address">{BRAND.address}</p>
+                  {BRAND.gstin ? (
+                    <p className="site-footer-legal__gstin">GSTIN: {BRAND.gstin}</p>
+                  ) : null}
+                </div>
                 <div className="site-footer-base__item">
                   ©{year} /{" "}
                   <Link href={ROUTES.home} title={BRAND.name}>

@@ -413,6 +413,24 @@ body.is-landing-page .storefront-main + .site-footer.site-footer--layered .site-
   color: #fff;
 }
 
+.site-footer-base__item--legal {
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.5;
+}
+
+.site-footer-legal__entity {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+}
+
+.site-footer-legal__address,
+.site-footer-legal__gstin {
+  margin: 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
 .site-footer__panel-spacer {
   position: relative;
   z-index: 0;
