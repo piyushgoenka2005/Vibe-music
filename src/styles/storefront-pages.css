@@ -271,8 +271,8 @@
     max-width: 100%;
     margin-inline: 0;
     box-sizing: border-box;
-    /* Edge-to-edge panels; text blocks use --pdp-edge-pad inside product-detail.css */
-    padding: 0.75rem 0 calc(7.5rem + env(safe-area-inset-bottom, 0px));
+    /* Full-bleed mobile PDP — side padding only on text rails via --pdp-edge-pad */
+    padding: 0 0 calc(7.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .storefront-page .pdp-info-pricing,
@@ -417,10 +417,12 @@
   }
 }
 
-/* ─── Product detail (PDP) ─── */
-.storefront-page .pdp {
-  max-width: var(--content-max);
-  padding: 2rem 1.25rem 4rem;
+/* ─── Product detail (PDP) — desktop padding only (mobile is edge-to-edge below) ─── */
+@media (min-width: 768px) {
+  .storefront-page .pdp {
+    max-width: var(--content-max);
+    padding: 2rem 1.25rem 4rem;
+  }
 }
 
 @media (min-width: 1024px) {

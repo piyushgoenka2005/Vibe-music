@@ -23,11 +23,12 @@
 @media (max-width: 767px) {
   .pdp {
     --pdp-pad-x: 0;
-    --pdp-edge-pad: max(0.75rem, env(safe-area-inset-left, 0px));
-    --pdp-edge-pad-end: max(0.75rem, env(safe-area-inset-right, 0px));
+    --pdp-edge-pad: max(1rem, env(safe-area-inset-left, 0px));
+    --pdp-edge-pad-end: max(1rem, env(safe-area-inset-right, 0px));
     max-width: 100%;
     margin-inline: 0;
-    padding-inline: 0;
+    padding: 0 0 48px;
+    padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .pdp > .pdp-breadcrumb,
@@ -37,6 +38,13 @@
   .pdp-section--cross-sell .pdp-section__title {
     padding-inline: var(--pdp-edge-pad) var(--pdp-edge-pad-end);
     box-sizing: border-box;
+  }
+
+  .pdp-info-pricing {
+    padding-inline: var(--pdp-edge-pad) var(--pdp-edge-pad-end);
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
   }
 
   .pdp > .pdp-main,
@@ -4474,8 +4482,8 @@
     min-width: 0;
     max-width: none;
     width: 100%;
-    padding-inline: var(--pdp-edge-pad, max(0.75rem, env(safe-area-inset-left, 0px)))
-      var(--pdp-edge-pad-end, max(0.75rem, env(safe-area-inset-right, 0px)));
+    padding-inline: max(1rem, env(safe-area-inset-left, 0px))
+      max(1rem, env(safe-area-inset-right, 0px));
     box-sizing: border-box;
   }
 
