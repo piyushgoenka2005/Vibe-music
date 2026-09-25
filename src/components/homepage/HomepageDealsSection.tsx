@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import DealProductCard from "@/components/homepage/DealProductCard";
+import DealsCountdown from "@/components/homepage/DealsCountdown";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import { useHorizontalScroller } from "@/hooks/useHorizontalScroller";
 import { ROUTES, resolveLinkHref } from "@/lib/routes";
@@ -16,25 +17,15 @@ export default function HomepageDealsSection({ section }: HomepageDealsSectionPr
   const titleId = `${section.sectionId}-title`;
   const ctaText = section.ctaText ?? "Shop All Deals";
   const ctaLink = resolveLinkHref(section.ctaLink || ROUTES.deals);
-  const {
-    scrollerRef,
-    hasOverflow,
-    canScrollPrev,
-    canScrollNext,
-    scrollByCard,
-    scrollerProps,
-  } = useHorizontalScroller(section.key, products.length);
+  const { scrollerRef, hasOverflow, canScrollPrev, canScrollNext, scrollByCard, scrollerProps } =
+    useHorizontalScroller(section.key, products.length);
 
   if (products.length === 0) {
     return null;
   }
 
   return (
-    <section
-      aria-labelledby={titleId}
-      className="homepage-deals-section"
-      id={section.sectionId}
-    >
+    <section aria-labelledby={titleId} className="homepage-deals-section" id={section.sectionId}>
       <div className="homepage-deals-section__inner tile-block">
         <header className="homepage-deals-section__header">
           {section.accentLabel ? (
@@ -48,6 +39,7 @@ export default function HomepageDealsSection({ section }: HomepageDealsSectionPr
           {section.subtitle ? (
             <p className="homepage-deals-section__subtitle">{section.subtitle}</p>
           ) : null}
+          <DealsCountdown />
         </header>
 
         <div className="homepage-deals-section__stage">
