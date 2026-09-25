@@ -133,8 +133,6 @@
     "recharts": "^3.8.1",
     "server-only": "^0.0.1",
     "sharp": "^0.35.4",
-    "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5",
     "tailwind-merge": "^3.6.0",
     "three": "^0.184.0",
     "tone": "^15.1.22",
