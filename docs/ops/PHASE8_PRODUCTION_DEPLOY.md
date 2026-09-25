@@ -8,13 +8,15 @@ Ship Phases 1–7 remediation commits to `origin/main` and the live VPS.
 
 ## Status
 
-| Step                       | Status                 | Notes                                             |
-| -------------------------- | ---------------------- | ------------------------------------------------- |
-| Local commits on `main`    | **21 ahead of origin** | Phases 1–7 + maintenance CI                       |
-| GitHub Actions deploy      | **Blocked**            | VPS SSH key not accepted (`Permission denied`)    |
-| Live sign-off (pre-deploy) | **PASS**               | Health, payments, catalog green                   |
-| L-22 edge                  | **FAIL**               | No `cf-ray` on vibemusic.in                       |
-| L-30 GSTIN HTML            | **FAIL**               | Fixed in Phase 9 code; needs deploy + GSTIN value |
+| Step                       | Status      | Notes                                                         |
+| -------------------------- | ----------- | ------------------------------------------------------------- |
+| `origin/main`              | **Synced**  | All remediation commits pushed                                |
+| GitHub Actions deploy      | **Blocked** | VPS SSH key not on server (`Permission denied`)               |
+| `deploy/deploy_key.pub`    | **Fixed**   | Now matches local `~/.ssh/vibe_vps_deploy.pub`                |
+| Live `/api/health` version | **`local`** | Phase 8 code not on VPS yet — run install key + deploy        |
+| Live sign-off              | **PASS**    | Health, payments, catalog green on current build              |
+| L-22 edge                  | **FAIL**    | No `cf-ray` on vibemusic.in                                   |
+| L-30 GSTIN HTML            | **FAIL**    | Phase 9 code pending deploy + GSTIN via `apply-compliance.sh` |
 
 ## Operator actions
 
@@ -24,11 +26,17 @@ Ship Phases 1–7 remediation commits to `origin/main` and the live VPS.
 git push origin main
 ```
 
-### 2. Fix VPS SSH (CloudOnFire panel)
+### 2. Fix VPS SSH (CloudOnFire web console — paste as root)
 
 ```bash
-powershell -ExecutionPolicy Bypass -File scripts/ops/verify-ssh.ps1
-# Install public key on VPS if failing — see deploy/install-deploy-key.sh
+curl -fsSL https://raw.githubusercontent.com/piyushgoenka2005/Vibe-music/main/deploy/install-deploy-key.sh | bash
+```
+
+Then from dev machine:
+
+```bash
+npm run phase8:status
+# GitHub → Settings → Secrets → VPS_SSH_KEY = ~/.ssh/vibe_vps_deploy (private key)
 ```
 
 ### 3. Deploy

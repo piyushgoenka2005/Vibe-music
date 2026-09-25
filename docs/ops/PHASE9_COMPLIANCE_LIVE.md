@@ -18,17 +18,13 @@ Footer legal entity and GSTIN resolve at **request time** from:
 1. **Admin store settings** (`storeSettings.gstNumber`, `storeName`) — no rebuild required
 2. **Build-time env** (`NEXT_PUBLIC_GSTIN`, `NEXT_PUBLIC_LEGAL_ENTITY_NAME`) — fallback
 
-Set GSTIN via either path:
+**One-shot on VPS (recommended):**
 
 ```bash
-# VPS — preferred for invoices + footer (survives rebuilds)
-# Admin → Settings → GST number
-
-# Or build-time (deploy/ops-secrets.env):
-NEXT_PUBLIC_GSTIN=19XXXXXXXXXXXXX
-NEXT_PUBLIC_LEGAL_ENTITY_NAME="Your Registered Entity"
-bash deploy/update.sh
+cd ~/Vibe-music && bash deploy/apply-compliance.sh
 ```
+
+Or set via Admin → Settings → GST number (no rebuild) after Phase 8 deploy lands.
 
 ## Verify
 

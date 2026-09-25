@@ -32,11 +32,12 @@ sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh
 
 Guide: `docs/ops/ORIGIN_IP_PROTECTION.md`
 
-### Step 3 — Strict sign-off
+### Step 3 — Automated handoff script
 
 ```bash
-REQUIRE_CDN_EDGE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
-npm run verify:readiness
+VERIFY_BASE_URL=https://vibemusic.in bash deploy/phase10-edge-handoff.sh
+# After cf-ray present on VPS:
+sudo CLOUDFLARE_ONLY=1 bash deploy/phase10-edge-handoff.sh
 ```
 
 ## Phase 10 exit criteria

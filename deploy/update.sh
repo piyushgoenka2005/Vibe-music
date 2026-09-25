@@ -27,7 +27,16 @@ else
   git checkout -- package-lock.json 2>/dev/null || true
   git pull --ff-only origin main
 fi
+DEPLOY_SHA="$(git rev-parse HEAD)"
 echo "    deploying $(git rev-parse --short HEAD) — $(git log -1 --pretty=%s)"
+
+echo "==> Recording GIT_COMMIT_SHA for /api/health"
+if grep -q '^GIT_COMMIT_SHA=' .env 2>/dev/null; then
+  sed -i "s/^GIT_COMMIT_SHA=.*/GIT_COMMIT_SHA=${DEPLOY_SHA}/" .env
+else
+  echo "GIT_COMMIT_SHA=${DEPLOY_SHA}" >> .env
+fi
+export GIT_COMMIT_SHA="${DEPLOY_SHA}"
 
 echo "==> Pre-migration database backup"
 if [[ -n "${DATABASE_URL:-}" ]] && command -v pg_dump >/dev/null 2>&1; then

@@ -62,6 +62,7 @@
     "verify:integrations": "npx tsx --env-file=.env.local scripts/ops/verify-integrations.mts",
     "verify:prod-signoff": "npx tsx scripts/ops/prod-signoff.mts",
     "verify:readiness": "npx tsx scripts/ops/verify-readiness-scorecard.mts",
+    "phase8:status": "npx tsx scripts/ops/phase8-deploy-status.mts",
     "monitor:checkout": "npx tsx scripts/ops/synthetic-checkout-monitor.mts",
     "verify:e2e-catalog": "npx tsx scripts/ops/verify-e2e-catalog.mts",
     "verify:razorpay-ops": "node scripts/ops/run-verify-razorpay-ops.mjs",

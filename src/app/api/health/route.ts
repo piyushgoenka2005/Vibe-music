@@ -88,7 +88,8 @@ export async function GET() {
         inflightRequests: cache.inflightRequests,
       },
       integrations: isProduction ? undefined : integrations,
-      version: process.env.VERCEL_GIT_COMMIT_SHA ?? "local",
+      version:
+        process.env.GIT_COMMIT_SHA?.trim() || process.env.VERCEL_GIT_COMMIT_SHA?.trim() || "local",
       uptime: Math.floor(process.uptime()),
       memoryMB: Math.round(process.memoryUsage().rss / 1024 / 1024),
     };
