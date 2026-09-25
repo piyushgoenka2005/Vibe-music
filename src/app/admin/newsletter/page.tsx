@@ -6,6 +6,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
 import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
+import { downloadFromApi } from "@/lib/client/downloadFromApi";
 
 type Subscriber = {
   email: string;
@@ -18,8 +19,7 @@ type Subscriber = {
 
 function NewsletterContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
-  const { cursor, pageIndex, canGoPrev, goNext, goPrev } =
-    useAdminCursorPagination();
+  const { cursor, pageIndex, canGoPrev, goNext, goPrev } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching, dataUpdatedAt } = useQuery({
     queryKey: ["admin-newsletter", cursor],
@@ -44,10 +44,9 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
   const deleteMutation = useMutation({
     // Optimistic: the row disappears the instant you confirm.
     mutationFn: async (email: string) => {
-      const res = await fetch(
-        `/api/admin/newsletter?email=${encodeURIComponent(email)}`,
-        { method: "DELETE" }
-      );
+      const res = await fetch(`/api/admin/newsletter?email=${encodeURIComponent(email)}`, {
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error("Delete failed");
       return email;
     },
@@ -98,7 +97,7 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
           type="button"
           className="admin-btn admin-btn--secondary"
           onClick={() => {
-            window.location.href = "/api/admin/newsletter?export=csv";
+            downloadFromApi("/api/admin/newsletter?export=csv");
           }}
         >
           Export CSV
@@ -125,9 +124,7 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
                 {subscribers.map((s) => (
                   <tr key={s.email}>
                     <td>{s.email}</td>
-                    <td>
-                      {[s.firstName, s.lastName].filter(Boolean).join(" ") || "—"}
-                    </td>
+                    <td>{[s.firstName, s.lastName].filter(Boolean).join(" ") || "—"}</td>
                     <td>
                       <StatusBadge status={s.marketing ? "active" : "cancelled"} />
                     </td>

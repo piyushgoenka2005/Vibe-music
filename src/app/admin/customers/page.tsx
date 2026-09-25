@@ -16,6 +16,7 @@ import {
 import { ErrorState } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import { adminOrderPath } from "@/lib/routes";
+import { downloadFromApi } from "@/lib/client/downloadFromApi";
 
 async function fetchCustomers(params: { search: string; cursor?: string }) {
   const sp = new URLSearchParams({ limit: "20" });
@@ -43,8 +44,7 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get("search")?.trim() ?? "";
   const [search, setSearch] = useState(initialSearch);
-  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } =
-    useAdminCursorPagination();
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
 
@@ -72,9 +72,7 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
         body: JSON.stringify({ isActive }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as
-          | { error?: string }
-          | null;
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
         throw new Error(body?.error ?? "Status update failed");
       }
       return res.json();
@@ -87,9 +85,7 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
       });
     },
     onError: (error) => {
-      setStatusError(
-        error instanceof Error ? error.message : "Status update failed"
-      );
+      setStatusError(error instanceof Error ? error.message : "Status update failed");
     },
   });
 
@@ -153,7 +149,7 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
           type="button"
           className="admin-btn admin-btn--secondary"
           onClick={() => {
-            window.location.href = "/api/admin/customers?export=csv";
+            downloadFromApi("/api/admin/customers?export=csv");
           }}
         >
           Export CSV
@@ -191,9 +187,7 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
                         <td>{c.orderCount}</td>
                         <td>{formatCurrency(c.totalSpent)}</td>
                         <td>
-                          <StatusBadge
-                            status={c.isActive ? "active" : "cancelled"}
-                          />
+                          <StatusBadge status={c.isActive ? "active" : "cancelled"} />
                         </td>
                       </tr>
                     ))}
@@ -238,18 +232,21 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
                 </p>
                 <p>{customer.email}</p>
                 <p>
-                  Orders: {customer.orderCount} · Spent:{" "}
-                  {formatCurrency(customer.totalSpent)}
+                  Orders: {customer.orderCount} · Spent: {formatCurrency(customer.totalSpent)}
                 </p>
                 <p>Joined: {formatDate(customer.createdAt)}</p>
                 <p>
-                  Account:{" "}
-                  <StatusBadge
-                    status={customer.isActive ? "active" : "cancelled"}
-                  />
+                  Account: <StatusBadge status={customer.isActive ? "active" : "cancelled"} />
                 </p>
                 {canWrite ? (
-                  <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <div
+                    style={{
+                      marginTop: "0.75rem",
+                      display: "flex",
+                      gap: "0.5rem",
+                      flexWrap: "wrap",
+                    }}
+                  >
                     <button
                       type="button"
                       className={
@@ -273,7 +270,7 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
                       onClick={() => {
                         if (
                           window.confirm(
-                            `Permanently erase ${customer.email}? Orders stay for records but personal data is redacted.`
+                            `Permanently erase ${customer.email}? Orders stay for records but personal data is redacted.`,
                           )
                         ) {
                           eraseMutation.mutate(selectedId!);
@@ -318,13 +315,11 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
                       marginTop: "0.35rem",
                     }}
                   >
-                    Deactivated customers cannot sign in with email/password. Erase
-                    permanently removes the account and redacts personal order data.
+                    Deactivated customers cannot sign in with email/password. Erase permanently
+                    removes the account and redacts personal order data.
                   </p>
                 ) : null}
-                <h3 style={{ fontSize: "0.875rem", marginTop: "1rem" }}>
-                  Order History
-                </h3>
+                <h3 style={{ fontSize: "0.875rem", marginTop: "1rem" }}>Order History</h3>
                 {customer.orders?.length === 0 ? (
                   <p
                     style={{
@@ -361,9 +356,7 @@ export default function AdminCustomersPage() {
       {(admin) => (
         <AdminShell admin={admin} title="Customers">
           <Suspense fallback={<LoadingState message="Loading customers…" />}>
-            <CustomersContent
-              canWrite={admin.permissions.includes("customers:write")}
-            />
+            <CustomersContent canWrite={admin.permissions.includes("customers:write")} />
           </Suspense>
         </AdminShell>
       )}

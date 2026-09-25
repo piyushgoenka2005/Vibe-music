@@ -8,6 +8,7 @@ import AdminShell from "@/components/admin/AdminShell";
 import { StatCard, StatusBadge, LoadingState, EmptyState } from "@/components/admin/AdminUi";
 import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
 import type { InventoryRecord } from "@/types/admin";
+import { downloadFromApi } from "@/lib/client/downloadFromApi";
 
 function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
   const queryClient = useQueryClient();
@@ -180,7 +181,7 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
           type="button"
           className="admin-btn admin-btn--secondary"
           onClick={() => {
-            window.location.href = "/api/admin/inventory?export=csv";
+            downloadFromApi("/api/admin/inventory?export=csv");
           }}
         >
           Export CSV

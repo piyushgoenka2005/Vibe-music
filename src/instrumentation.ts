@@ -43,6 +43,17 @@ export async function register() {
       warnIfGooglePlacesMisconfigured("instrumentation");
     }
 
+    if (process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim()) {
+      try {
+        await import("@/lib/server/tracing");
+      } catch (error) {
+        logWarn(
+          `OpenTelemetry tracing failed to initialize: ${error instanceof Error ? error.message : String(error)}`,
+          "instrumentation",
+        );
+      }
+    }
+
     try {
       const { verifyPostgresConnection } = await import("@/lib/server/postgresHealth");
       const databaseHealth = await verifyPostgresConnection();
