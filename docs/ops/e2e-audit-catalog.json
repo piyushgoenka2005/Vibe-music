@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "description": "Critical audit E2E cases required on every CI merge (L-26 merge gate). Patterns match Playwright --list output.",
+  "mergeGate": [
+    { "id": "SEC-01", "finding": "L-16", "pattern": "homepage returns security headers" },
+    { "id": "SEC-08", "finding": "L-16", "pattern": "admin routes send X-Robots-Tag noindex" },
+    {
+      "id": "L-15-tamper",
+      "finding": "L-15",
+      "pattern": "checkout rejects tampered item price via API"
+    },
+    {
+      "id": "L-15-idor-tamper",
+      "finding": "L-15",
+      "pattern": "create-order rejects tampered line prices"
+    },
+    {
+      "id": "L-19-unauth-order",
+      "finding": "L-19",
+      "pattern": "unauthenticated order detail returns 401"
+    },
+    {
+      "id": "L-19-wishlist-auth",
+      "finding": "L-19",
+      "pattern": "wishlist API requires authentication"
+    },
+    { "id": "L-19-owner-order", "finding": "L-19", "pattern": "owner can read their order" },
+    {
+      "id": "L-19-foreign-order",
+      "finding": "L-19",
+      "pattern": "other authenticated user cannot read foreign order"
+    },
+    {
+      "id": "L-19-foreign-address",
+      "finding": "L-19",
+      "pattern": "other authenticated user cannot read foreign address"
+    },
+    {
+      "id": "L-17-rate-limit-headers",
+      "finding": "L-17",
+      "pattern": "API responses include nosniff and rate-limit headers"
+    },
+    {
+      "id": "L-18-forgot-password",
+      "finding": "L-18",
+      "pattern": "forgot-password returns ok for unknown email"
+    },
+    {
+      "id": "E2E-03-coupon",
+      "finding": "L-26",
+      "pattern": "coupon API rejects invalid coupon code"
+    },
+    { "id": "E2E-05-track-order", "finding": "L-26", "pattern": "track order page renders" },
+    {
+      "id": "E2E-07-oos",
+      "finding": "L-26",
+      "pattern": "out-of-stock product disables purchase buttons"
+    },
+    {
+      "id": "E2E-09-mobile-checkout",
+      "finding": "L-26",
+      "pattern": "mobile viewport checkout form is reachable"
+    },
+    {
+      "id": "L-07-search",
+      "finding": "L-07",
+      "pattern": "header search overlay shows suggestions"
+    },
+    {
+      "id": "L-26-checkout-razorpay",
+      "finding": "L-26",
+      "pattern": "checkout shows Razorpay-only payment options"
+    },
+    { "id": "L-26-smoke-health", "finding": "L-26", "pattern": "health endpoint responds" },
+    { "id": "L-26-empty-cart", "finding": "L-26", "pattern": "create-order rejects empty cart" },
+    {
+      "id": "L-26-admin-guard",
+      "finding": "L-26",
+      "pattern": "admin routes redirect unauthenticated users"
+    }
+  ]
+}
