@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
 const SCRIPT_LOAD_TIMEOUT_MS = 15_000;
 const CHECKOUT_SESSION_TIMEOUT_MS = 15 * 60 * 1000;
+const RAZORPAY_POLL_INTERVAL_MS = 50;
 
 export interface RazorpaySuccessResponse {
   razorpay_order_id: string;
@@ -71,9 +72,53 @@ declare global {
 
 let scriptLoadPromise: Promise<void> | null = null;
 
+function pollForRazorpayGlobal(timeoutMs = SCRIPT_LOAD_TIMEOUT_MS): Promise<void> {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Razorpay can only load in the browser"));
+  }
+
+  if (window.Razorpay) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const deadline = Date.now() + timeoutMs;
+
+    const tick = () => {
+      if (window.Razorpay) {
+        resolve();
+        return;
+      }
+      if (Date.now() >= deadline) {
+        reject(new Error("Razorpay SDK load timed out"));
+        return;
+      }
+      window.setTimeout(tick, RAZORPAY_POLL_INTERVAL_MS);
+    };
+
+    tick();
+  });
+}
+
+function markScriptLoaded(script: HTMLScriptElement): void {
+  script.dataset.razorpayLoaded = "true";
+}
+
+function isScriptAlreadyLoaded(script: HTMLScriptElement): boolean {
+  return (
+    script.dataset.razorpayLoaded === "true" ||
+    script.getAttribute("data-razorpay-loaded") === "true" ||
+    script.getAttribute("data-nscript") === "afterInteractive"
+  );
+}
+
 function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
   if (window.Razorpay) {
     return Promise.resolve();
+  }
+
+  if (isScriptAlreadyLoaded(script)) {
+    return pollForRazorpayGlobal();
   }
 
   return new Promise((resolve, reject) => {
@@ -89,7 +134,10 @@ function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
     script.addEventListener(
       "load",
       () => {
-        finish(() => resolve());
+        markScriptLoaded(script);
+        finish(() => {
+          void pollForRazorpayGlobal().then(resolve).catch(reject);
+        });
       },
       { once: true },
     );
@@ -133,7 +181,8 @@ function injectRazorpayScript(): Promise<void> {
 
     script.onload = () => {
       window.clearTimeout(timeoutId);
-      resolve();
+      markScriptLoaded(script);
+      void pollForRazorpayGlobal().then(resolve).catch(reject);
     };
 
     script.onerror = () => {

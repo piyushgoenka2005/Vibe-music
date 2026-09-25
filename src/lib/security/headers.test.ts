@@ -14,7 +14,10 @@ describe("SECURITY_HEADERS", () => {
   });
 
   it("includes CSP, frame protection, and MIME sniffing guards", () => {
-    expect(headerValue("Content-Security-Policy")).toContain("default-src 'self'");
+    const csp = headerValue("Content-Security-Policy");
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("https://checkout.razorpay.com");
+    expect(csp).toContain("form-action 'self' https://api.razorpay.com");
     expect(headerValue("X-Frame-Options")).toBe("SAMEORIGIN");
     expect(headerValue("X-Content-Type-Options")).toBe("nosniff");
   });

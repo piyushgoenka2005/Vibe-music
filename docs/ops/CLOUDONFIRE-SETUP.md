@@ -108,6 +108,20 @@ sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh
 
 ---
 
+## Razorpay checkout stuck loading?
+
+If the Razorpay modal spins forever, the VPS likely has **duplicate CSP headers** (nginx + Next.js). After `git pull`:
+
+```bash
+sudo cp ~/Vibe-music/deploy/nginx/vibemusic.in.conf /etc/nginx/sites-available/vibemusic.in
+sudo nginx -t && sudo systemctl reload nginx
+cd ~/Vibe-music && bash deploy/update.sh
+```
+
+Also confirm **vibemusic.in** is whitelisted in the [Razorpay Dashboard](https://dashboard.razorpay.com) → Settings → Website / App details (Live mode).
+
+---
+
 ## Step 7 — Verify (from your PC)
 
 ```bash
