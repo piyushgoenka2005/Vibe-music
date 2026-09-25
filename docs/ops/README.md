@@ -14,6 +14,9 @@ Current production runbooks (VPS + PostgreSQL + Auth.js + **Razorpay-only paymen
 | [DEPLOY_READY.md](./DEPLOY_READY.md)                                       | **Start here** — end-to-end deploy + smoke + cron         |
 | [PRODUCTION_READINESS_SCORECARD.md](./PRODUCTION_READINESS_SCORECARD.md)   | **20-point GA scorecard** (Phases 0–7)                    |
 | [PHASE7_PRODUCTION_CERTIFICATION.md](./PHASE7_PRODUCTION_CERTIFICATION.md) | Final certification + maintenance CI                      |
+| [PHASE8_PRODUCTION_DEPLOY.md](./PHASE8_PRODUCTION_DEPLOY.md)               | Push + VPS deploy sync                                    |
+| [PHASE9_COMPLIANCE_LIVE.md](./PHASE9_COMPLIANCE_LIVE.md)                   | L-30 GSTIN live (SSR + admin)                             |
+| [PHASE10_EDGE_SECURITY.md](./PHASE10_EDGE_SECURITY.md)                     | L-22/L-23 Cloudflare + UFW                                |
 | [GO_LIVE.md](./GO_LIVE.md)                                                 | Short production secrets + verify checklist               |
 | [DEPLOYMENT.md](./DEPLOYMENT.md)                                           | Pre-deploy checklist, env vars, CDN, backups, smoke tests |
 | [GOOGLE_SEARCH_CONSOLE.md](./GOOGLE_SEARCH_CONSOLE.md)                     | GSC verification token + sitemap submit                   |

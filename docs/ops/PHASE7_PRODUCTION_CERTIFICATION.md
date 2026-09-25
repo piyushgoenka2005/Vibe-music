@@ -69,6 +69,12 @@ REQUIRE_CDN_EDGE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-s
 LIGHTHOUSE_BASE_URL=https://vibemusic.in npm run check:cwv:strict
 ```
 
-## Program complete
+## Next phases (production go-live)
 
-Phases 0–7 of the Loopholes Register remediation are **complete in source**. Remaining work is **infrastructure and env configuration on the VPS** — not further code changes.
+| Phase | Focus                    | Doc                           |
+| ----- | ------------------------ | ----------------------------- |
+| 8     | Deploy sync (push + VPS) | `PHASE8_PRODUCTION_DEPLOY.md` |
+| 9     | L-30 compliance live     | `PHASE9_COMPLIANCE_LIVE.md`   |
+| 10    | L-22/L-23 edge security  | `PHASE10_EDGE_SECURITY.md`    |
+
+Phases 0–7 are **complete in source**. Phases 8–10 close the remaining **17 → 20/20** scorecard gap.
