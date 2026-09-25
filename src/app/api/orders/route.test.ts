@@ -29,6 +29,7 @@ describe("GET /api/orders", () => {
     vi.mocked(getSessionUser).mockResolvedValue({
       uid: "user_a",
       email: "buyer@example.com",
+      name: "Buyer",
     });
     vi.mocked(listOrdersForUser).mockResolvedValue([]);
 

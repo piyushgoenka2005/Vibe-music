@@ -30,6 +30,7 @@ console.log("  Vibe Music — release readiness");
 console.log("═══════════════════════════════════════════════════════════");
 
 const steps: Array<[string, string, string[], Record<string, string>?]> = [
+  ["Dependency audit (L-20)", "npm", ["run", "audit:deps"]],
   ["TypeScript", "npm", ["run", "type-check"]],
   ["ESLint", "npm", ["run", "lint"]],
   ["Unit tests", "npm", ["test"]],

@@ -2,46 +2,46 @@
 
 Last updated after full HIGH-severity pass. **Infra** = operator action on VPS/Cloudflare.
 
-| ID   | Severity | Status       | Notes                                                          |
-| ---- | -------- | ------------ | -------------------------------------------------------------- |
-| L-01 | Medium   | **Fixed**    | Marquee clones `aria-hidden` (`7216ec4`).                      |
-| L-02 | Medium   | **Verified** | Cart `aria-label`; count hidden at zero.                       |
-| L-03 | Medium   | **Verified** | `formatProductCardTitle` on grid cards.                        |
-| L-04 | Medium   | **Fixed**    | Optional Crisp chat via `NEXT_PUBLIC_CRISP_WEBSITE_ID`.        |
-| L-05 | Low      | **Fixed**    | Grand Piano nav uses promo `accent` styling.                   |
-| L-06 | Low      | **Fixed**    | Deals section IST end-of-day countdown.                        |
-| L-07 | **High** | **Fixed**    | Search autosuggest + E2E header overlay test.                  |
-| L-08 | Medium   | **Fixed**    | `buildProductSlug` dedupes brand tokens.                       |
-| L-09 | Medium   | **Verified** | `robots.ts` + `sitemap.ts`.                                    |
-| L-10 | Medium   | **Verified** | Product JSON-LD on PDPs.                                       |
-| L-11 | **High** | **Fixed**    | Dynamic imports, section error boundaries, carousel cap 8.     |
-| L-12 | Medium   | **Fixed**    | Deal cards use `HomepageProductImage` + `sizes`.               |
-| L-13 | Low      | **Verified** | Preconnect hints in `layout.tsx`.                              |
-| L-14 | **High** | **Fixed**    | `npm run check:cwv` Lighthouse gate on 5 page types.           |
-| L-15 | Critical | **Fixed**    | Server-side checkout price verification.                       |
-| L-16 | **High** | **Verified** | Security headers + E2E SEC-01.                                 |
-| L-17 | **High** | **Verified** | Rate limits on auth/checkout/search APIs.                      |
-| L-18 | Medium   | **Verified** | Generic auth errors; forgot-password oracle-safe.              |
-| L-19 | Critical | **Fixed**    | Order list IDOR closed (userId-only).                          |
-| L-20 | **High** | **Partial**  | `npm run audit:deps`; safe fixes applied; major bumps pending. |
-| L-21 | **High** | **Verified** | Razorpay webhook signature verification.                       |
-| L-22 | Critical | **Infra**    | `npm run check:edge` + `CDN_WAF_EDGE_CHECKLIST.md`.            |
-| L-23 | **High** | **Infra**    | `ORIGIN_IP_PROTECTION.md` — rotate IP + firewall origin.       |
-| L-24 | **High** | **Verified** | `FOR UPDATE` locks + reserved-stock transactions.              |
-| L-25 | Medium   | **Fixed**    | `scripts/k6/smoke.js` + `npm run load:k6`; `load:perf` exists. |
-| L-26 | Critical | **Verified** | Playwright checkout + audit E2E in CI.                         |
-| L-27 | Medium   | **Fixed**    | `HomeSectionErrorBoundary` on homepage sections.               |
-| L-28 | Medium   | **Fixed**    | `DISASTER_RECOVERY.md` (RPO/RTO + drill).                      |
-| L-29 | Medium   | **Fixed**    | `trackPageView` gated on analytics consent + unit test.        |
-| L-30 | Medium   | **Fixed**    | Footer legal entity, address, optional GSTIN env.              |
+| ID   | Severity | Status       | Notes                                                                           |
+| ---- | -------- | ------------ | ------------------------------------------------------------------------------- |
+| L-01 | Medium   | **Fixed**    | Marquee clones `aria-hidden` (`7216ec4`).                                       |
+| L-02 | Medium   | **Verified** | Cart `aria-label`; count hidden at zero.                                        |
+| L-03 | Medium   | **Verified** | `formatProductCardTitle` on grid cards.                                         |
+| L-04 | Medium   | **Fixed**    | Optional Crisp chat via `NEXT_PUBLIC_CRISP_WEBSITE_ID`.                         |
+| L-05 | Low      | **Fixed**    | Grand Piano nav uses promo `accent` styling.                                    |
+| L-06 | Low      | **Fixed**    | Deals section IST end-of-day countdown.                                         |
+| L-07 | **High** | **Fixed**    | Search autosuggest + E2E header overlay test.                                   |
+| L-08 | Medium   | **Fixed**    | `buildProductSlug` dedupes brand tokens.                                        |
+| L-09 | Medium   | **Verified** | `robots.ts` + `sitemap.ts`.                                                     |
+| L-10 | Medium   | **Verified** | Product JSON-LD on PDPs.                                                        |
+| L-11 | **High** | **Fixed**    | Dynamic imports, section error boundaries, carousel cap 8.                      |
+| L-12 | Medium   | **Fixed**    | Deal cards use `HomepageProductImage` + `sizes`.                                |
+| L-13 | Low      | **Verified** | Preconnect hints in `layout.tsx`.                                               |
+| L-14 | **High** | **Fixed**    | `npm run check:cwv` Lighthouse gate on 5 page types.                            |
+| L-15 | Critical | **Fixed**    | Server-side checkout price verification.                                        |
+| L-16 | **High** | **Verified** | Security headers + E2E SEC-01.                                                  |
+| L-17 | **High** | **Verified** | Rate limits on auth/checkout/search APIs.                                       |
+| L-18 | Medium   | **Verified** | Generic auth errors; forgot-password oracle-safe.                               |
+| L-19 | Critical | **Fixed**    | Order list IDOR closed (userId-only).                                           |
+| L-20 | **High** | **Fixed**    | Upgraded next/sharp/adm-zip; `npm run audit:deps` gate + `DEPENDENCY_AUDIT.md`. |
+| L-21 | **High** | **Verified** | Razorpay webhook signature verification.                                        |
+| L-22 | Critical | **Infra**    | `npm run check:edge` + `CDN_WAF_EDGE_CHECKLIST.md`.                             |
+| L-23 | **High** | **Infra**    | `ORIGIN_IP_PROTECTION.md` — rotate IP + firewall origin.                        |
+| L-24 | **High** | **Verified** | `FOR UPDATE` locks + reserved-stock transactions.                               |
+| L-25 | Medium   | **Fixed**    | `scripts/k6/smoke.js` + `npm run load:k6`; `load:perf` exists.                  |
+| L-26 | Critical | **Verified** | Playwright checkout + audit E2E in CI.                                          |
+| L-27 | Medium   | **Fixed**    | `HomeSectionErrorBoundary` on homepage sections.                                |
+| L-28 | Medium   | **Fixed**    | `DISASTER_RECOVERY.md` (RPO/RTO + drill).                                       |
+| L-29 | Medium   | **Fixed**    | `trackPageView` gated on analytics consent + unit test.                         |
+| L-30 | Medium   | **Fixed**    | Footer legal entity, address, optional GSTIN env.                               |
 
 ## Severity summary
 
-| Tier            | Count                                                | Status                                          |
-| --------------- | ---------------------------------------------------- | ----------------------------------------------- |
-| Critical (4)    | L-15, L-19, L-22, L-26                               | 3 fixed in code · L-22 needs Cloudflare on live |
-| High (9)        | L-07, L-11, L-14, L-16, L-17, L-20, L-21, L-23, L-24 | 7 done · L-20 partial · L-23 infra              |
-| Medium/Low (17) | L-01–L-06, L-08–L-13, L-18, L-25–L-30                | All addressed in code or verified               |
+| Tier            | Count                                                | Status                                           |
+| --------------- | ---------------------------------------------------- | ------------------------------------------------ |
+| Critical (4)    | L-15, L-19, L-22, L-26                               | 3 fixed in code · L-22 needs Cloudflare on live  |
+| High (9)        | L-07, L-11, L-14, L-16, L-17, L-20, L-21, L-23, L-24 | 7 fixed/verified · L-22/L-23 need Cloudflare/VPS |
+| Medium/Low (17) | L-01–L-06, L-08–L-13, L-18, L-25–L-30                | All addressed in code or verified                |
 
 ## Operator checklist (production)
 
@@ -49,7 +49,8 @@ Last updated after full HIGH-severity pass. **Infra** = operator action on VPS/C
 # Deploy latest main, then:
 VERIFY_BASE_URL=https://vibemusic.in npm run check:edge      # L-22
 VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
-npm run audit:deps                                            # L-20
+npm run audit:deps                                            # L-20 (release-ready includes this)
+REQUIRE_CDN_EDGE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff  # L-22 strict
 # Optional: LIGHTHOUSE_BASE_URL=... npm run check:cwv         # L-14 (needs running server)
 # Optional: k6 run -e BASE_URL=https://vibemusic.in scripts/k6/smoke.js  # L-25
 ```

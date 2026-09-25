@@ -30,7 +30,16 @@ describe("hasPurchasedProduct", () => {
         sgst: 0,
         igst: 0,
         total: 100,
-        items: [{ productId: "prod_1", variantId: "var_1", quantity: 1, price: 100 }],
+        items: [
+          {
+            productId: "prod_1",
+            variantId: "var_1",
+            quantity: 1,
+            price: 100,
+            name: "Test product",
+            gstRate: 18,
+          },
+        ],
         shippingAddress: {
           name: "Buyer",
           line1: "1 Test St",

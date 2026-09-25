@@ -193,13 +193,14 @@ const checks: Check[] = [];
 
   const edgeMarkers = ["cf-ray", "x-vercel-id", "x-amz-cf-id", "cf-cache-status"];
   const edgeHit = edgeMarkers.some((name) => response.headers.get(name));
+  const requireCdn = process.env.REQUIRE_CDN_EDGE === "true";
   checks.push({
     name: "cdn-edge",
     ok: edgeHit,
     detail: edgeHit
       ? `edge marker present (${edgeMarkers.find((name) => response.headers.get(name)) ?? "ok"})`
       : "no cf-ray / x-vercel-id — origin may be exposed (see docs/ops/CDN_WAF_EDGE_CHECKLIST.md)",
-    blocking: false,
+    blocking: requireCdn,
   });
 }
 

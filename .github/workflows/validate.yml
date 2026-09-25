@@ -45,6 +45,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Dependency audit report (L-20)
+        run: npm run audit:deps:report
+
       - name: Type check
         run: npm run type-check
 
