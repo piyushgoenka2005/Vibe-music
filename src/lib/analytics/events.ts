@@ -7,14 +7,14 @@ import {
   sumLineValue,
   type CartAnalyticsLine,
 } from "@/lib/analytics/items";
-import { trackGaEcommerce, trackGaEvent } from "@/lib/analytics/gtag";
+import { hasAnalyticsConsent, trackGaEcommerce, trackGaEvent } from "@/lib/analytics/gtag";
 import type { Order } from "@/types/order";
 import type { Product } from "@/types/product";
 
 const PURCHASE_DEDUPE_PREFIX = "vibe-ga-purchase-";
 
 function canTrack(): boolean {
-  return typeof window !== "undefined" && isAnalyticsEnabled();
+  return typeof window !== "undefined" && isAnalyticsEnabled() && hasAnalyticsConsent();
 }
 
 export type ItemListContext = {
@@ -22,14 +22,11 @@ export type ItemListContext = {
   itemListName: string;
 };
 
-export function trackViewItemList(
-  products: Product[],
-  list: ItemListContext
-): void {
+export function trackViewItemList(products: Product[], list: ItemListContext): void {
   if (!canTrack() || products.length === 0) return;
-  const items = products.slice(0, 30).map((product, index) =>
-    productToGa4Item(product, { quantity: 1, index })
-  );
+  const items = products
+    .slice(0, 30)
+    .map((product, index) => productToGa4Item(product, { quantity: 1, index }));
   trackGaEcommerce("view_item_list", {
     currency: "INR",
     item_list_id: list.itemListId,
@@ -38,11 +35,7 @@ export function trackViewItemList(
   });
 }
 
-export function trackSelectItem(
-  product: Product,
-  list: ItemListContext,
-  index?: number
-): void {
+export function trackSelectItem(product: Product, list: ItemListContext, index?: number): void {
   if (!canTrack()) return;
   trackGaEcommerce("select_item", {
     currency: "INR",
@@ -54,7 +47,7 @@ export function trackSelectItem(
 
 export function trackViewItem(
   product: Product,
-  options?: { variantLabel?: string; value?: number }
+  options?: { variantLabel?: string; value?: number },
 ): void {
   if (!canTrack()) return;
   const item = productToGa4Item(product, {
@@ -68,11 +61,7 @@ export function trackViewItem(
   });
 }
 
-export function trackAddToCart(
-  product: Product,
-  quantity: number,
-  variantLabel?: string
-): void {
+export function trackAddToCart(product: Product, quantity: number, variantLabel?: string): void {
   if (!canTrack()) return;
   const item = productToGa4Item(product, { quantity, variantLabel });
   trackGaEcommerce("add_to_cart", {
@@ -120,10 +109,7 @@ export function trackAddShippingInfo(lines: CartAnalyticsLine[]): void {
   });
 }
 
-export function trackAddPaymentInfo(
-  lines: CartAnalyticsLine[],
-  paymentType = "razorpay"
-): void {
+export function trackAddPaymentInfo(lines: CartAnalyticsLine[], paymentType = "razorpay"): void {
   if (!canTrack() || lines.length === 0) return;
   trackGaEcommerce("add_payment_info", {
     currency: "INR",

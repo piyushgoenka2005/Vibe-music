@@ -66,4 +66,15 @@ describe("trackPageView consent gating (L-29)", () => {
 
     expect(gtag).toHaveBeenCalled();
   });
+
+  it("does not emit ecommerce events before consent (L-29 funnel)", async () => {
+    vi.resetModules();
+    vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-TESTMEASURE");
+    window.localStorage.setItem(ANALYTICS_CONSENT_KEY, "denied");
+
+    const { trackGaEcommerce } = await import("@/lib/analytics/gtag");
+    trackGaEcommerce("begin_checkout", { currency: "INR", value: 100, items: [] });
+
+    expect(gtag).not.toHaveBeenCalled();
+  });
 });

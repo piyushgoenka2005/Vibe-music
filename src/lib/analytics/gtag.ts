@@ -41,11 +41,17 @@ export function setAnalyticsUserId(userId: string | null): void {
   gtag("config", measurementId, { user_id: userId });
 }
 
+function canEmitClientAnalytics(): boolean {
+  return Boolean(getGaMeasurementId()) && hasAnalyticsConsent();
+}
+
 export function trackGaEvent(event: Ga4EventName | string, params?: Record<string, unknown>): void {
+  if (!canEmitClientAnalytics()) return;
   gtag("event", event, params ?? {});
 }
 
 export function trackGaEcommerce(event: Ga4EventName, params: Ga4EcommerceParams): void {
+  if (!canEmitClientAnalytics()) return;
   gtag("event", event, {
     currency: params.currency ?? "INR",
     ...params,
@@ -62,8 +68,7 @@ export function hasAnalyticsConsent(): boolean {
 }
 
 export function trackPageView(path: string, title?: string): void {
-  const measurementId = getGaMeasurementId();
-  if (!measurementId || !hasAnalyticsConsent()) return;
+  if (!canEmitClientAnalytics()) return;
   gtag("event", "page_view", {
     page_path: path,
     page_title: title ?? document.title,
