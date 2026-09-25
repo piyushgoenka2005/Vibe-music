@@ -169,6 +169,7 @@ const checks: Check[] = [];
 
 {
   const response = await fetch(`${BASE_URL}/`, { cache: "no-store" });
+  const homeHtml = await response.text();
   const hsts = response.headers.get("strict-transport-security") ?? "";
   const csp = response.headers.get("content-security-policy") ?? "";
   const nosniff = response.headers.get("x-content-type-options") ?? "";
@@ -189,6 +190,29 @@ const checks: Check[] = [];
     ok: response.status === 200,
     detail: `HTTP ${response.status}`,
     blocking: true,
+  });
+
+  const expectedLegal =
+    process.env.EXPECTED_LEGAL_ENTITY_NAME?.trim() || "Vibe Music";
+  const hasLegalEntity =
+    homeHtml.includes("Sikkim Commerce House") || homeHtml.includes(expectedLegal);
+  const gstinMatch = homeHtml.match(/GSTIN:\s*([0-9A-Z]{15})/i);
+  const requireCompliance = process.env.REQUIRE_COMPLIANCE === "true";
+  checks.push({
+    name: "compliance-legal",
+    ok: hasLegalEntity,
+    detail: hasLegalEntity
+      ? `legal entity visible (${expectedLegal})`
+      : "footer missing registered business identity (L-30)",
+    blocking: requireCompliance,
+  });
+  checks.push({
+    name: "compliance-gstin",
+    ok: Boolean(gstinMatch),
+    detail: gstinMatch
+      ? `GSTIN present (${gstinMatch[1]})`
+      : "GSTIN not in homepage HTML — set NEXT_PUBLIC_GSTIN (L-30)",
+    blocking: requireCompliance,
   });
 
   const edgeMarkers = ["cf-ray", "x-vercel-id", "x-amz-cf-id", "cf-cache-status"];
