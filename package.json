@@ -61,6 +61,7 @@
     "audit:lighthouse": "node scripts/ops/lighthouse-audit.mjs",
     "verify:integrations": "npx tsx --env-file=.env.local scripts/ops/verify-integrations.mts",
     "verify:prod-signoff": "npx tsx scripts/ops/prod-signoff.mts",
+    "verify:readiness": "npx tsx scripts/ops/verify-readiness-scorecard.mts",
     "monitor:checkout": "npx tsx scripts/ops/synthetic-checkout-monitor.mts",
     "verify:e2e-catalog": "npx tsx scripts/ops/verify-e2e-catalog.mts",
     "verify:razorpay-ops": "node scripts/ops/run-verify-razorpay-ops.mjs",
