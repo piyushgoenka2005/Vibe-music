@@ -64,6 +64,7 @@
     "verify:f14-payment-proof": "npx tsx --env-file=.env.local scripts/ops/close-f14-payment-proof.mts",
     "ops:release-stale-reservations": "npx tsx scripts/ops/release-stale-reservations.mts",
     "check:env": "node scripts/ops/check-env.mjs",
+    "check:edge": "node scripts/ops/check-edge-headers.mjs",
     "setup:local": "node scripts/db/setup-local-config.mjs",
     "db:probe": "node scripts/db/probe-db.mjs",
     "validate": "npm run type-check && npm run lint && npm run test && npm run build",
