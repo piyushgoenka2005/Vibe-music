@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Lock, Package, Tag } from "lucide-react";
+import { CHECKOUT_TRUST_SUMMARY } from "@/data/trustSignals";
 import { formatCurrencyPrecise } from "@/utils/currency";
 import type { ShippingMethod } from "@/lib/shipping/shippingMethods";
 import { getShippingChargeForMethod } from "@/lib/shipping/shippingMethods";
@@ -70,13 +71,9 @@ function SummaryRow({
   negative?: boolean;
 }) {
   return (
-    <div
-      className={`checkout-summary__row${highlight ? " checkout-summary__row--total" : ""}`}
-    >
+    <div className={`checkout-summary__row${highlight ? " checkout-summary__row--total" : ""}`}>
       <span>{label}</span>
-      <span className={negative ? "checkout-summary__negative" : undefined}>
-        {value}
-      </span>
+      <span className={negative ? "checkout-summary__negative" : undefined}>{value}</span>
     </div>
   );
 }
@@ -87,15 +84,11 @@ export function computeCheckoutInvoice(
   buyerState: string,
   platformFee = 0,
   shippingMethod: ShippingMethod = "standard",
-  shippingChargeOverride?: number
+  shippingChargeOverride?: number,
 ): GSTInvoiceData {
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shippingCharge =
-    shippingChargeOverride ??
-    getShippingChargeForMethod(shippingMethod, subtotal, couponDiscount);
+    shippingChargeOverride ?? getShippingChargeForMethod(shippingMethod, subtotal, couponDiscount);
 
   return calculateGST({
     items: items.map((item) => ({
@@ -132,7 +125,7 @@ export default function CheckoutSummary({
     buyerState,
     platformFee,
     shippingMethod,
-    shippingChargeOverride
+    shippingChargeOverride,
   );
 
   const couponCode = useCartStore((s) => s.couponCode);
@@ -172,9 +165,7 @@ export default function CheckoutSummary({
         {showLineItems ? (
           <ul className="checkout-summary__items" aria-label="Order items">
             {lineItems.map((item, index) => {
-              const key =
-                item.lineId ??
-                `${item.productId}-${item.variantId ?? "base"}-${index}`;
+              const key = item.lineId ?? `${item.productId}-${item.variantId ?? "base"}-${index}`;
               return (
                 <li key={key} className="checkout-summary__product">
                   {item.image ? (
@@ -215,9 +206,7 @@ export default function CheckoutSummary({
               <div className="checkout-summary__promo-applied">
                 <span>
                   <strong>{couponCode}</strong>
-                  {appliedCoupon
-                    ? ` (${formatCouponLabel(appliedCoupon)})`
-                    : null}
+                  {appliedCoupon ? ` (${formatCouponLabel(appliedCoupon)})` : null}
                 </span>
                 <button type="button" onClick={removeCoupon}>
                   Remove
@@ -230,9 +219,7 @@ export default function CheckoutSummary({
                     type="text"
                     placeholder="e.g. SAVE10"
                     value={couponInput}
-                    onChange={(e) =>
-                      setCouponInput(e.target.value.toUpperCase())
-                    }
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                     aria-label="Promo code"
                     disabled={isApplyingCoupon}
                   />
@@ -257,10 +244,7 @@ export default function CheckoutSummary({
 
         <div className="checkout-summary__totals">
           <p className="checkout-summary__totals-label">Price breakdown</p>
-          <SummaryRow
-            label="Subtotal"
-            value={formatCurrencyPrecise(invoice.subtotal)}
-          />
+          <SummaryRow label="Subtotal" value={formatCurrencyPrecise(invoice.subtotal)} />
 
           {invoice.couponDiscount > 0 ? (
             <SummaryRow
@@ -272,17 +256,10 @@ export default function CheckoutSummary({
 
           <SummaryRow label="Shipping" value="FREE" />
           {invoice.platformFee > 0 ? (
-            <SummaryRow
-              label="Platform Fee"
-              value={formatCurrencyPrecise(invoice.platformFee)}
-            />
+            <SummaryRow label="Platform Fee" value={formatCurrencyPrecise(invoice.platformFee)} />
           ) : null}
 
-          <SummaryRow
-            label="Total"
-            value={formatCurrencyPrecise(invoice.grandTotal)}
-            highlight
-          />
+          <SummaryRow label="Total" value={formatCurrencyPrecise(invoice.grandTotal)} highlight />
         </div>
 
         {paymentAction ? (
@@ -312,7 +289,7 @@ export default function CheckoutSummary({
 
         <p className="checkout-summary__trust">
           <Lock size={12} aria-hidden />
-          Secure checkout in INR — UPI · Cards · Net Banking
+          {CHECKOUT_TRUST_SUMMARY}
         </p>
       </div>
     </aside>

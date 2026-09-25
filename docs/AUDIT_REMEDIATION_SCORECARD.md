@@ -1,6 +1,6 @@
 # Audit remediation scorecard (L-01 – L-30)
 
-Last updated after audit go-live automation. **Infra** = run `deploy/complete-audit-go-live.sh` on VPS after Cloudflare DNS.
+Last updated after Phase 5 marketing USP conversion. **Infra** = run `deploy/complete-audit-go-live.sh` on VPS after Cloudflare DNS. **USPs** = `docs/marketing/VIBEMUSIC_TRUST_USPS.md`.
 
 | ID   | Severity | Status        | Notes                                                                                     |
 | ---- | -------- | ------------- | ----------------------------------------------------------------------------------------- |

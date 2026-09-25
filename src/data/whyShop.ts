@@ -1,3 +1,4 @@
+import { WHY_SHOP_SECURE_PAYMENTS_SUBTITLE } from "@/data/trustSignals";
 import { ROUTES } from "@/lib/routes";
 import { BRAND } from "@/lib/brand";
 
@@ -40,7 +41,7 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
     id: "pay-your-way",
     iconId: "payments",
     title: "Secure Payments",
-    subtitle: "UPI, cards, and net banking at checkout.",
+    subtitle: WHY_SHOP_SECURE_PAYMENTS_SUBTITLE,
     href: ROUTES.checkout,
   },
   {

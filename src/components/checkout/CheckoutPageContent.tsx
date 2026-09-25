@@ -630,7 +630,9 @@ export default function CheckoutPageContent() {
             <StorefrontBackButton fallbackHref="/cart" />
             <p className="storefront-page__eyebrow">Secure checkout</p>
             <h1 className="storefront-page__title checkout-page__title">Checkout</h1>
-            <p className="storefront-page__subtitle">Encrypted payments via Razorpay</p>
+            <p className="storefront-page__subtitle">
+              Server-verified totals · Encrypted payments via Razorpay
+            </p>
           </div>
 
           <ol className="checkout-steps" aria-label="Checkout progress">

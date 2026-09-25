@@ -1,6 +1,7 @@
 "use client";
 
 import type { ComponentType } from "react";
+import { PAYMENT_TRUST_BADGES } from "@/data/trustSignals";
 import { Check, CreditCard, Landmark, Lock } from "lucide-react";
 import { GlassEffect, GlassEffectButton } from "@/components/ui/liquid-glass";
 import { UpiIcon } from "@/components/checkout/UpiIcon";
@@ -176,11 +177,11 @@ export default function CheckoutPaymentMethods({
           <div className="checkout-pay-methods__trust">
             <span>
               <Lock size={12} strokeWidth={2} aria-hidden />
-              256-bit SSL · PCI-DSS compliant
+              {PAYMENT_TRUST_BADGES[0]}
             </span>
             <span>
               {onlinePaymentsAvailable
-                ? "Powered by Razorpay"
+                ? PAYMENT_TRUST_BADGES[1]
                 : "Contact support to complete payment"}
             </span>
           </div>

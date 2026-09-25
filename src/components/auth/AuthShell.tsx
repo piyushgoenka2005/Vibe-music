@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AUTH_TRUST_BULLETS } from "@/data/trustSignals";
 import { LOGO_PATH } from "@/lib/mediaAssets";
 
 interface AuthShellProps {
@@ -11,7 +12,7 @@ interface AuthShellProps {
   children: React.ReactNode;
 }
 
-const DEFAULT_TRUST = ["Secure sign-in", "Wishlist sync", "Order tracking"];
+const DEFAULT_TRUST = [...AUTH_TRUST_BULLETS];
 
 export default function AuthShell({
   title,
@@ -34,9 +35,7 @@ export default function AuthShell({
             width={160}
           />
           <h1 className="auth-shell__title">{title}</h1>
-          {description ? (
-            <p className="auth-shell__description">{description}</p>
-          ) : null}
+          {description ? <p className="auth-shell__description">{description}</p> : null}
         </header>
         <div className="auth-shell__body">{children}</div>
         {footer ? <footer className="auth-footer-note">{footer}</footer> : null}
@@ -52,13 +51,7 @@ export default function AuthShell({
   );
 }
 
-export function AuthFooterLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
+export function AuthFooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link href={href} className="auth-link">
       {children}
