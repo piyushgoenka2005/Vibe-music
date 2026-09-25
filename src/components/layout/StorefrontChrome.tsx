@@ -12,6 +12,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import DeferredSplashCursor from "@/components/layout/DeferredSplashCursor";
 import { ROUTES } from "@/lib/routes";
+import type { PublicLegalInfo } from "@/types/publicLegal";
 
 const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
   ssr: false,
@@ -37,7 +38,13 @@ function useHasMounted() {
   );
 }
 
-export default function StorefrontChrome({ children }: { children: React.ReactNode }) {
+export default function StorefrontChrome({
+  children,
+  legal,
+}: {
+  children: React.ReactNode;
+  legal: PublicLegalInfo;
+}) {
   const pathname = usePathname() ?? "";
   const hideChrome = pathname.startsWith("/admin") || pathname.startsWith("/gp9");
   const isLandingPage = pathname === "/";
@@ -123,7 +130,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
       <div className="storefront-main" id="main-content" tabIndex={-1}>
         {children}
       </div>
-      <SiteFooter />
+      <SiteFooter legal={legal} />
       {showBackToTop ? <BackToTop /> : null}
       {showHelpWidget ? <HelpWidget /> : null}
       {splashEnabled ? (

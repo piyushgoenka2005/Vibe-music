@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bebas_Neue } from "next/font/google";
 import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
+import { resolvePublicLegal } from "@/lib/brand/resolvePublicLegal";
 import GoogleAnalyticsScripts from "@/components/analytics/GoogleAnalyticsScripts";
 import { WebVitals } from "@/components/common/WebVitals";
 import SocialRailShell from "@/components/layout/SocialRailShell";
@@ -34,11 +35,12 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const legal = await resolvePublicLegal();
   const splashEnabled = false; // Disabled to eliminate artificial loading latency
 
   return (
@@ -77,7 +79,7 @@ export default function RootLayout({
           </div>
         ) : null}
         <SocialRailShell />
-        <AppShell>{children}</AppShell>
+        <AppShell legal={legal}>{children}</AppShell>
       </body>
     </html>
   );

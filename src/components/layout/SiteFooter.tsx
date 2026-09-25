@@ -10,6 +10,7 @@ import FooterClock from "@/components/layout/FooterClock";
 import FooterProductsPanel from "@/components/layout/FooterProductsPanel";
 import { useToastStore } from "@/store/toastStore";
 import { submitNewsletterToWeb3Forms, isWeb3FormsConfigured } from "@/lib/web3formsClient";
+import type { PublicLegalInfo } from "@/types/publicLegal";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -50,7 +51,7 @@ const FOOTER_SECTIONS: FooterAccordionSection[] = [
   },
 ];
 
-export default function SiteFooter() {
+export default function SiteFooter({ legal }: { legal: PublicLegalInfo }) {
   const showToast = useToastStore((state) => state.show);
   const footerRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -297,10 +298,10 @@ export default function SiteFooter() {
 
               <div className="site-footer-base">
                 <div className="site-footer-base__item site-footer-base__item--legal">
-                  <p className="site-footer-legal__entity">{BRAND.legalName}</p>
-                  <p className="site-footer-legal__address">{BRAND.address}</p>
-                  {BRAND.gstin ? (
-                    <p className="site-footer-legal__gstin">GSTIN: {BRAND.gstin}</p>
+                  <p className="site-footer-legal__entity">{legal.legalName}</p>
+                  <p className="site-footer-legal__address">{legal.address}</p>
+                  {legal.gstin ? (
+                    <p className="site-footer-legal__gstin">GSTIN: {legal.gstin}</p>
                   ) : null}
                 </div>
                 <div className="site-footer-base__item">

@@ -25,6 +25,7 @@ import SplashPendingClear from "@/components/layout/SplashPendingClear";
 import ServiceWorkerRegister from "@/components/layout/ServiceWorkerRegister";
 import AnalyticsProvider from "@/components/analytics/AnalyticsProvider";
 import SupportChatLoader from "@/components/support/SupportChatLoader";
+import type { PublicLegalInfo } from "@/types/publicLegal";
 
 const ENABLE_PAGE_LOAD_SPLASH = isPageLoadSplashEnabled();
 
@@ -33,7 +34,13 @@ const StorefrontDrawers = dynamic(() => import("@/components/layout/StorefrontDr
   loading: () => null,
 });
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({
+  children,
+  legal,
+}: {
+  children: React.ReactNode;
+  legal: PublicLegalInfo;
+}) {
   const pathname = usePathname() ?? "";
   const isAdmin = pathname.startsWith("/admin");
 
@@ -97,7 +104,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <ScrollRestoration />
           </Suspense>
           <div className="storefront-root">
-            <StorefrontChrome>
+            <StorefrontChrome legal={legal}>
               <DeferredHtmlLinkInterceptor />
               <DeferredGlobalSearch />
               <StorefrontDrawers />
