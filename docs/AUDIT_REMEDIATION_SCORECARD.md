@@ -1,6 +1,6 @@
 # Audit remediation scorecard (L-01 – L-30)
 
-Last updated after Phase 5 marketing USP conversion. **Infra** = run `deploy/complete-audit-go-live.sh` on VPS after Cloudflare DNS. **USPs** = `docs/marketing/VIBEMUSIC_TRUST_USPS.md`.
+Last updated after **Phase 7 production certification**. **Scorecard** = `docs/ops/PRODUCTION_READINESS_SCORECARD.md` (**17/20** — READY WITH CONDITIONS). **Infra** = run `deploy/complete-audit-go-live.sh` on VPS after Cloudflare DNS. **USPs** = `docs/marketing/VIBEMUSIC_TRUST_USPS.md`.
 
 | ID   | Severity | Status        | Notes                                                                                     |
 | ---- | -------- | ------------- | ----------------------------------------------------------------------------------------- |
@@ -59,3 +59,13 @@ REQUIRE_CDN_EDGE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-s
 Set `NEXT_PUBLIC_GSTIN` and `NEXT_PUBLIC_LEGAL_ENTITY_NAME` in production env for L-30.
 VERIFY_BASE_URL=https://vibemusic.in npm run monitor:checkout
 REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
+
+## Phase 7 certification
+
+| Metric                              |                Score |
+| ----------------------------------- | -------------------: |
+| Code + CI (L-01–L-21, L-24–L-29)    |            **10/10** |
+| Production infra (L-22, L-23, L-30) | **pending operator** |
+| **20-point scorecard**              |            **17/20** |
+
+See `docs/ops/PHASE7_PRODUCTION_CERTIFICATION.md` and `.github/workflows/maintenance.yml`.

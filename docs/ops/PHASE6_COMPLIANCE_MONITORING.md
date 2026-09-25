@@ -69,4 +69,4 @@ REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod
 - **Live L-30 on vibemusic.in:** pending env + deploy
 - **Production edge:** 5/10 (L-22 unchanged)
 
-Proceed to **Phase 7 — 20-point readiness scorecard** and maintenance CI jobs.
+**Phase 7 complete** — see `PHASE7_PRODUCTION_CERTIFICATION.md` and `PRODUCTION_READINESS_SCORECARD.md`.

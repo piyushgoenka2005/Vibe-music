@@ -9,14 +9,16 @@ Current production runbooks (VPS + PostgreSQL + Auth.js + **Razorpay-only paymen
 - Media: **VPS CDN** (`cdn.vibemusic.in`) — set `CDN_STORAGE_ROOT` + `CDN_PUBLIC_BASE_URL`
 - Backups: daily `pg_dump` + CDN tarball — see [DEPLOYMENT.md#backup-checklist](./DEPLOYMENT.md#backup-checklist)
 
-| Guide | Purpose |
-|-------|---------|
-| [DEPLOY_READY.md](./DEPLOY_READY.md) | **Start here** — end-to-end deploy + smoke + cron |
-| [GO_LIVE.md](./GO_LIVE.md) | Short production secrets + verify checklist |
-| [DEPLOYMENT.md](./DEPLOYMENT.md) | Pre-deploy checklist, env vars, CDN, backups, smoke tests |
-| [GOOGLE_SEARCH_CONSOLE.md](./GOOGLE_SEARCH_CONSOLE.md) | GSC verification token + sitemap submit |
-| [POSTGRESQL.md](./POSTGRESQL.md) | Database install, migrations, local Docker |
-| [SMTP.md](./SMTP.md) | Self-hosted mail + Resend SMTP fallback |
-| [VPS-SETUP.md](./VPS-SETUP.md) | Server bootstrap, nginx, PM2 |
+| Guide                                                                      | Purpose                                                   |
+| -------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [DEPLOY_READY.md](./DEPLOY_READY.md)                                       | **Start here** — end-to-end deploy + smoke + cron         |
+| [PRODUCTION_READINESS_SCORECARD.md](./PRODUCTION_READINESS_SCORECARD.md)   | **20-point GA scorecard** (Phases 0–7)                    |
+| [PHASE7_PRODUCTION_CERTIFICATION.md](./PHASE7_PRODUCTION_CERTIFICATION.md) | Final certification + maintenance CI                      |
+| [GO_LIVE.md](./GO_LIVE.md)                                                 | Short production secrets + verify checklist               |
+| [DEPLOYMENT.md](./DEPLOYMENT.md)                                           | Pre-deploy checklist, env vars, CDN, backups, smoke tests |
+| [GOOGLE_SEARCH_CONSOLE.md](./GOOGLE_SEARCH_CONSOLE.md)                     | GSC verification token + sitemap submit                   |
+| [POSTGRESQL.md](./POSTGRESQL.md)                                           | Database install, migrations, local Docker                |
+| [SMTP.md](./SMTP.md)                                                       | Self-hosted mail + Resend SMTP fallback                   |
+| [VPS-SETUP.md](./VPS-SETUP.md)                                             | Server bootstrap, nginx, PM2                              |
 
 Executable deploy scripts live in [`../../deploy/`](../../deploy/) — docs here, scripts there.
