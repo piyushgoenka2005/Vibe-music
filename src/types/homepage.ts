@@ -302,7 +302,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     isActive: true,
     sortOrder: 9,
     sourceMode: "manual",
-    maxItems: 16,
+    maxItems: 12,
     layout: "brand_strip",
   },
   {

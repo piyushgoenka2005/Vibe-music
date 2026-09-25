@@ -30,6 +30,7 @@ import {
   resolveBigNamesDealFallbacks,
 } from "@/lib/homepage/bigNamesDeals";
 import type { CatalogProduct } from "@/types/catalog";
+import { clampHomepageMaxItems } from "@/lib/homepage/homepageLimits";
 import { unpackCategoryOfferText } from "@/lib/homepage/categoryOfferText";
 import { BROWSE_CATEGORY_CARDS, BROWSE_CATEGORY_CARDS_CTA } from "@/data/browseCategoryCards";
 import { CATEGORY_BENTO_ITEMS } from "@/data/categoryBento";
@@ -353,12 +354,17 @@ async function resolveSection(
   at: Date,
   allSectionItems: HomepageSectionItem[],
 ): Promise<ResolvedHomepageSection | null> {
+  const effectiveSection: HomepageSection = {
+    ...section,
+    maxItems: clampHomepageMaxItems(section.layout, section.maxItems),
+  };
+
   if (
-    section.sectionKey === "big_names_deals" ||
-    section.sectionKey === "featured_stories" ||
-    section.sectionKey === "browse_by_categories" ||
-    section.sectionKey === "category_bento" ||
-    section.sectionKey === "social_rail"
+    effectiveSection.sectionKey === "big_names_deals" ||
+    effectiveSection.sectionKey === "featured_stories" ||
+    effectiveSection.sectionKey === "browse_by_categories" ||
+    effectiveSection.sectionKey === "category_bento" ||
+    effectiveSection.sectionKey === "social_rail"
   ) {
     return null;
   }
@@ -366,49 +372,52 @@ async function resolveSection(
   const items = allSectionItems
     .filter(
       (item) =>
-        item.sectionKey === section.sectionKey &&
+        item.sectionKey === effectiveSection.sectionKey &&
         item.isActive &&
         isHomepageItemScheduledActive(item, at),
     )
     .sort((a, b) => a.sortOrder - b.sortOrder);
   const base: ResolvedHomepageSection = {
-    key: section.sectionKey,
-    sectionId: sectionDomId(section.sectionKey),
-    title: section.title,
-    subtitle: section.subtitle,
-    accentLabel: section.accentLabel,
-    ctaText: section.ctaText,
-    ctaLink: section.ctaLink,
-    layout: section.layout,
+    key: effectiveSection.sectionKey,
+    sectionId: sectionDomId(effectiveSection.sectionKey),
+    title: effectiveSection.title,
+    subtitle: effectiveSection.subtitle,
+    accentLabel: effectiveSection.accentLabel,
+    ctaText: effectiveSection.ctaText,
+    ctaLink: effectiveSection.ctaLink,
+    layout: effectiveSection.layout,
   };
 
-  if (section.sectionKey === "featured_categories" || section.layout === "category_grid") {
-    let categories = await resolveCategories(section, items);
-    if (categories.length === 0 && section.sectionKey === "featured_categories") {
+  if (
+    effectiveSection.sectionKey === "featured_categories" ||
+    effectiveSection.layout === "category_grid"
+  ) {
+    let categories = await resolveCategories(effectiveSection, items);
+    if (categories.length === 0 && effectiveSection.sectionKey === "featured_categories") {
       categories = getHomepagePopularCategoryItems(
-        section.maxItems || HOMEPAGE_POPULAR_CATEGORY_COUNT,
+        effectiveSection.maxItems || HOMEPAGE_POPULAR_CATEGORY_COUNT,
       );
     }
     if (categories.length === 0) return null;
     return {
       ...base,
-      title: section.title || "Popular Categories",
-      ctaText: section.ctaText || "Browse All Categories",
-      ctaLink: section.ctaLink || "/categories",
+      title: effectiveSection.title || "Popular Categories",
+      ctaText: effectiveSection.ctaText || "Browse All Categories",
+      ctaLink: effectiveSection.ctaLink || "/categories",
       categories,
     };
   }
 
-  if (section.sectionKey === "brand_strip" || section.layout === "brand_strip") {
-    const brands = await resolveBrands(section, items);
+  if (effectiveSection.sectionKey === "brand_strip" || effectiveSection.layout === "brand_strip") {
+    const brands = await resolveBrands(effectiveSection, items);
     if (brands.length === 0) return null;
     return { ...base, brands };
   }
 
   const resolvedProducts =
-    section.sourceMode === "manual"
+    effectiveSection.sourceMode === "manual"
       ? resolveManualProducts(items, products)
-      : resolveAutoProducts(section.sectionKey, products, section.maxItems);
+      : resolveAutoProducts(effectiveSection.sectionKey, products, effectiveSection.maxItems);
 
   if (resolvedProducts.length === 0) return null;
   return { ...base, products: resolvedProducts };
