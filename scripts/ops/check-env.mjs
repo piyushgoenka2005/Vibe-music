@@ -79,6 +79,9 @@ const recommended = [
   "CDN_PUBLIC_BASE_URL",
   "SMTP_ADMIN_TO",
   "GOOGLE_PLACES_API_KEY",
+  "NEXT_PUBLIC_LEGAL_ENTITY_NAME",
+  "NEXT_PUBLIC_GSTIN",
+  "NEXT_PUBLIC_CRISP_WEBSITE_ID",
 ];
 
 /** Aliases accepted by src/lib/server/googlePlaces.ts (any one is enough). */
