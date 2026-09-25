@@ -8,14 +8,14 @@ Enterprise ecommerce platform for musical instruments and pro audio.
 
 ## Architecture notes (current)
 
-| Area | Implementation |
-|------|----------------|
-| **Payments** | **Razorpay only** (UPI, cards, net banking via Razorpay Checkout). Stripe and Cash on Delivery are **not** implemented. |
-| **Search** | PostgreSQL / Prisma faceted search (`/api/search`). **Not** Elasticsearch. |
-| **Database** | Self-hosted PostgreSQL on the VPS via Prisma. Firestore is fully decommissioned. |
-| **CDN** | Product/media assets on `cdn.vibemusic.in` (`CDN_STORAGE_ROOT` + `CDN_PUBLIC_BASE_URL`). Sync with `npm run sync:cdn-vps`. nginx config: `deploy/nginx/cdn.vibemusic.in.conf`. |
-| **Email** | Self-hosted SMTP or Resend relay — see [`docs/ops/SMTP.md`](docs/ops/SMTP.md). |
-| **Auth** | Auth.js (credentials + optional Google OAuth). |
+| Area         | Implementation                                                                                                                                                                 |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Payments** | **Razorpay only** (UPI, cards, net banking via Razorpay Checkout). Stripe and Cash on Delivery are **not** implemented.                                                        |
+| **Search**   | PostgreSQL / Prisma faceted search (`/api/search`). **Not** Elasticsearch.                                                                                                     |
+| **Database** | Self-hosted PostgreSQL on the VPS via Prisma. Firestore is fully decommissioned.                                                                                               |
+| **CDN**      | Product/media assets on `cdn.vibemusic.in` (`CDN_STORAGE_ROOT` + `CDN_PUBLIC_BASE_URL`). Sync with `npm run sync:cdn-vps`. nginx config: `deploy/nginx/cdn.vibemusic.in.conf`. |
+| **Email**    | Self-hosted SMTP or Resend relay — see [`docs/ops/SMTP.md`](docs/ops/SMTP.md).                                                                                                 |
+| **Auth**     | Auth.js (credentials + optional Google OAuth).                                                                                                                                 |
 
 ### Extra features (beyond the April 2026 WRD)
 
@@ -90,27 +90,32 @@ npm run validate          # type-check + lint + unit tests + production build
 npm run test:e2e          # Playwright (Postgres required for admin DB flows)
 npm run test:e2e:prep     # Docker Postgres + migrate + seed + E2E (local)
 npm run validate:ci       # validate + E2E (matches GitHub Actions)
+npm run verify:audit      # full repo remediation gate (30 loopholes)
 VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 ```
 
-CI workflow: `.github/workflows/validate.yml`
+CI workflow: `.github/workflows/validate.yml` (blocks merge on any test failure).
+
+**Secrets:** never commit `.env` / `.env.local`. Production values live in VPS `deploy/ops-secrets.env` and GitHub Actions secrets (`VPS_SSH_KEY`). See [`.env.example`](.env.example) and [`.env.production.example`](.env.production.example).
+
+**Architecture decisions:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · **Pre-production report:** [docs/ops/PRE_PRODUCTION_PASS.md](docs/ops/PRE_PRODUCTION_PASS.md)
 
 ---
 
 ## Production deployment (VPS)
 
-| Step | Command / doc |
-|------|----------------|
-| Ops index | [`docs/ops/`](docs/ops/) |
-| Go-live short list | [`docs/ops/GO_LIVE.md`](docs/ops/GO_LIVE.md) |
-| VPS + PostgreSQL setup | [`docs/ops/VPS-SETUP.md`](docs/ops/VPS-SETUP.md) |
-| PostgreSQL guide | [`docs/ops/POSTGRESQL.md`](docs/ops/POSTGRESQL.md) |
-| Deploy checklist | [`docs/ops/DEPLOYMENT.md`](docs/ops/DEPLOYMENT.md) |
-| Production env template | [`.env.production.example`](.env.production.example) |
-| CDN nginx | [`deploy/nginx/cdn.vibemusic.in.conf`](deploy/nginx/cdn.vibemusic.in.conf) |
-| Apply migrations | `npm run db:migrate` |
-| Seed admin | `npm run seed:admin` |
-| Build & reload | `deploy/update.sh` (or `npm run build && npm run start`) |
+| Step                    | Command / doc                                                              |
+| ----------------------- | -------------------------------------------------------------------------- |
+| Ops index               | [`docs/ops/`](docs/ops/)                                                   |
+| Go-live short list      | [`docs/ops/GO_LIVE.md`](docs/ops/GO_LIVE.md)                               |
+| VPS + PostgreSQL setup  | [`docs/ops/VPS-SETUP.md`](docs/ops/VPS-SETUP.md)                           |
+| PostgreSQL guide        | [`docs/ops/POSTGRESQL.md`](docs/ops/POSTGRESQL.md)                         |
+| Deploy checklist        | [`docs/ops/DEPLOYMENT.md`](docs/ops/DEPLOYMENT.md)                         |
+| Production env template | [`.env.production.example`](.env.production.example)                       |
+| CDN nginx               | [`deploy/nginx/cdn.vibemusic.in.conf`](deploy/nginx/cdn.vibemusic.in.conf) |
+| Apply migrations        | `npm run db:migrate`                                                       |
+| Seed admin              | `npm run seed:admin`                                                       |
+| Build & reload          | `deploy/update.sh` (or `npm run build && npm run start`)                   |
 
 ### CDN (required for admin image uploads)
 
@@ -125,14 +130,14 @@ Then restart PM2. Push local staging assets with `npm run sync:cdn-vps` when nee
 
 ## Key npm scripts
 
-| Script | Purpose |
-|--------|---------|
-| `npm run setup:local` | Local DB bootstrap + env sync + migrate |
-| `npm run check:env` | Report missing production env keys |
-| `npm run db:migrate` | Apply Prisma migrations |
-| `npm run seed:catalog` | Seed products/brands/categories |
-| `npm run verify:integrations` | Smoke-test public APIs + env |
-| `npm run sync:cdn-vps` | Sync CDN assets to the VPS |
+| Script                        | Purpose                                 |
+| ----------------------------- | --------------------------------------- |
+| `npm run setup:local`         | Local DB bootstrap + env sync + migrate |
+| `npm run check:env`           | Report missing production env keys      |
+| `npm run db:migrate`          | Apply Prisma migrations                 |
+| `npm run seed:catalog`        | Seed products/brands/categories         |
+| `npm run verify:integrations` | Smoke-test public APIs + env            |
+| `npm run sync:cdn-vps`        | Sync CDN assets to the VPS              |
 
 ---
 
