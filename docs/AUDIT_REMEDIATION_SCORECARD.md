@@ -14,10 +14,10 @@ Last updated after audit go-live automation. **Infra** = run `deploy/complete-au
 | L-08 | Medium   | **Fixed**     | `buildProductSlug` dedupes brand tokens.                                                  |
 | L-09 | Medium   | **Verified**  | `robots.ts` + `sitemap.ts`.                                                               |
 | L-10 | Medium   | **Verified**  | Product JSON-LD on PDPs.                                                                  |
-| L-11 | **High** | **Fixed**     | Dynamic imports, section error boundaries, carousel cap 8.                                |
+| L-11 | **High** | **Verified**  | `clampHomepageMaxItems` enforces cap 8; dynamic imports + error boundaries.               |
 | L-12 | Medium   | **Fixed**     | Deal cards use `HomepageProductImage` + `sizes`.                                          |
 | L-13 | Low      | **Verified**  | Preconnect hints in `layout.tsx`.                                                         |
-| L-14 | **High** | **Fixed**     | `npm run check:cwv` Lighthouse gate on 5 page types.                                      |
+| L-14 | **High** | **Verified**  | `check:cwv` (a11y/seo/bp 90); `check:cwv:strict` for prod 90+ perf target.                |
 | L-15 | Critical | **Verified**  | Server recomputes prices; strict schemas + tamper tests (`create-order`, `reprice`, E2E). |
 | L-16 | **High** | **Verified**  | Security headers + E2E SEC-01; see `PHASE2_SECURITY_VERIFICATION.md`.                     |
 | L-17 | **High** | **Verified**  | Edge + route rate limits; `proxy.test.ts` + E2E rate-limit headers.                       |
@@ -51,7 +51,8 @@ VERIFY_BASE_URL=https://vibemusic.in npm run check:edge      # L-22
 VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 npm run audit:deps                                            # L-20 (release-ready includes this)
 REQUIRE_CDN_EDGE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff  # L-22 strict
-# Optional: LIGHTHOUSE_BASE_URL=... npm run check:cwv         # L-14 (needs running server)
+# L-14: LIGHTHOUSE_BASE_URL=http://127.0.0.1:3000 npm run check:cwv   # after build+start
+# L-14 strict: LIGHTHOUSE_BASE_URL=https://vibemusic.in npm run check:cwv:strict
 # Optional: k6 run -e BASE_URL=https://vibemusic.in scripts/k6/smoke.js  # L-25
 ```
 
