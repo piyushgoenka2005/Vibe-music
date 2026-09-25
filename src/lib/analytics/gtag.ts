@@ -1,6 +1,6 @@
 "use client";
 
-import { getGaMeasurementId } from "@/lib/analytics/config";
+import { ANALYTICS_CONSENT_KEY, getGaMeasurementId } from "@/lib/analytics/config";
 import type { Ga4EcommerceParams, Ga4EventName } from "@/lib/analytics/types";
 
 declare global {
@@ -41,26 +41,29 @@ export function setAnalyticsUserId(userId: string | null): void {
   gtag("config", measurementId, { user_id: userId });
 }
 
-export function trackGaEvent(
-  event: Ga4EventName | string,
-  params?: Record<string, unknown>
-): void {
+export function trackGaEvent(event: Ga4EventName | string, params?: Record<string, unknown>): void {
   gtag("event", event, params ?? {});
 }
 
-export function trackGaEcommerce(
-  event: Ga4EventName,
-  params: Ga4EcommerceParams
-): void {
+export function trackGaEcommerce(event: Ga4EventName, params: Ga4EcommerceParams): void {
   gtag("event", event, {
     currency: params.currency ?? "INR",
     ...params,
   });
 }
 
+export function hasAnalyticsConsent(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(ANALYTICS_CONSENT_KEY) === "granted";
+  } catch {
+    return false;
+  }
+}
+
 export function trackPageView(path: string, title?: string): void {
   const measurementId = getGaMeasurementId();
-  if (!measurementId) return;
+  if (!measurementId || !hasAnalyticsConsent()) return;
   gtag("event", "page_view", {
     page_path: path,
     page_title: title ?? document.title,

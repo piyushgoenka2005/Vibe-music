@@ -30,6 +30,29 @@ test.describe("audit-fix E2E: security and accessibility", () => {
 });
 
 test.describe("audit-fix E2E: search and commerce", () => {
+  test("header search overlay shows suggestions (L-07)", async ({
+    page,
+    request,
+    requiresDatabase,
+  }) => {
+    void requiresDatabase;
+    const api = await request.get("/api/search?q=guitar&mode=suggest");
+    expect(api.status()).toBeLessThan(500);
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    const toggle = page.getByRole("button", { name: /open search/i });
+    if (await toggle.count()) {
+      await toggle.click();
+    }
+
+    const input = page.locator("#sw-search-input-mobile, #sw-search-input").first();
+    await expect(input).toBeVisible({ timeout: 10_000 });
+    await input.fill("guitar");
+    await expect(
+      page.locator("[role='listbox'], .search-suggest, .search-overlay").first(),
+    ).toBeVisible({ timeout: 15_000 });
+  });
+
   test("search typeahead returns suggestions for guitar (UX-07)", async ({
     page,
     request,

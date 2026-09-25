@@ -1,6 +1,6 @@
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
-import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
+import HomepageProductImage from "@/components/homepage/HomepageProductImage";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { resolveDealBadgeLabel } from "@/lib/product/resolveDealBadgeLabel";
 import { formatDisplayPrice } from "@/utils/currency";
@@ -28,56 +28,55 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
         url={productHref}
       />
       <Link
-      href={productHref}
-      className="tile--link"
-      data-hp-section="sale events"
-      data-hp-slot="slider"
-      data-id={item.id}
-      data-hp-slot-position={slotPosition}
-    >
-      <div className="tile multi multi--slider radius-lg bg-white homepage-deals-card">
-        <span className="homepage-deals-card__ribbon" aria-hidden="true">
-          <span className="homepage-deals-card__ribbon-text">{badgeLabel}</span>
-        </span>
-        <div className="tile--body">
-          <div className="tile--image bg-white homepage-deals-card__media">
-            <div className="homepage-deals-card__img-frame">
-              {item.image ? (
-                <StorefrontThumbImage
-                  src={item.image}
-                  alt={item.imageAlt}
-                  width={480}
-                  height={480}
-                />
-              ) : null}
+        href={productHref}
+        className="tile--link"
+        data-hp-section="sale events"
+        data-hp-slot="slider"
+        data-id={item.id}
+        data-hp-slot-position={slotPosition}
+      >
+        <div className="tile multi multi--slider radius-lg bg-white homepage-deals-card">
+          <span className="homepage-deals-card__ribbon" aria-hidden="true">
+            <span className="homepage-deals-card__ribbon-text">{badgeLabel}</span>
+          </span>
+          <div className="tile--body">
+            <div className="tile--image bg-white homepage-deals-card__media">
+              <div className="homepage-deals-card__img-frame">
+                {item.image ? (
+                  <HomepageProductImage
+                    src={item.image}
+                    className="homepage-deals-card__img"
+                    width={480}
+                    height={480}
+                    sizes="(max-width: 767px) 46vw, 280px"
+                  />
+                ) : null}
+              </div>
             </div>
-          </div>
-          <div className="content">
-            <p className="product-brand">{item.brand}</p>
-            <h3 className="product-name type-sm text-black" title={item.name}>
-              {displayName}
-            </h3>
-            <div
-              className={`special-offer type-fixed-14 text-red${item.offerText ? "" : " special-offer--empty"}`}
-              aria-hidden={!item.offerText}
-            >
-              {item.offerText ?? "\u00a0"}
-            </div>
-            <div className="price-block">
-              <span
-                className={
-                  isEnquiry
-                    ? "homepage-price-enquiry"
-                    : "type-fixed-20 text-black weight-demi"
-                }
+            <div className="content">
+              <p className="product-brand">{item.brand}</p>
+              <h3 className="product-name type-sm text-black" title={item.name}>
+                {displayName}
+              </h3>
+              <div
+                className={`special-offer type-fixed-14 text-red${item.offerText ? "" : " special-offer--empty"}`}
+                aria-hidden={!item.offerText}
               >
-                {formatDisplayPrice(item.price, item.salePrice)}
-              </span>
+                {item.offerText ?? "\u00a0"}
+              </div>
+              <div className="price-block">
+                <span
+                  className={
+                    isEnquiry ? "homepage-price-enquiry" : "type-fixed-20 text-black weight-demi"
+                  }
+                >
+                  {formatDisplayPrice(item.price, item.salePrice)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
     </div>
   );
 }
