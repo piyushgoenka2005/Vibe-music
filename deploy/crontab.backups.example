@@ -29,3 +29,6 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Prefer installer: bash deploy/install-reservation-sweeper.sh (auto-detects APP_DIR)
 # Script loads DATABASE_URL from .env or .env.local (process env wins).
 # */15 * * * * cd /path/to/Vibe-music && RESERVATION_TTL_MINUTES=45 npm run ops:release-stale-reservations >> /var/log/vibe-reservation-sweeper.log 2>&1
+
+# Every 15 minutes: synthetic checkout path monitor (Phase 6 / L-26)
+# */15 * * * * cd /path/to/Vibe-music && VERIFY_BASE_URL=https://vibemusic.in npm run monitor:checkout >> /var/log/vibe-checkout-monitor.log 2>&1

@@ -1,0 +1,52 @@
+# Scheduled production health probes (Phase 7)
+name: Maintenance
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 6 hours — aligns with synthetic checkout monitor cadence
+    - cron: "0 */6 * * *"
+
+jobs:
+  production-probes:
+    if: github.repository == 'piyushgoenka2005/Vibe-music'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      VERIFY_BASE_URL: https://vibemusic.in
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Edge headers (L-22)
+        id: edge
+        continue-on-error: true
+        run: npm run check:edge
+
+      - name: Synthetic checkout monitor
+        run: npm run monitor:checkout
+
+      - name: Production sign-off
+        run: npm run verify:prod-signoff
+
+      - name: Dependency audit report (L-20)
+        continue-on-error: true
+        run: npm run audit:deps:report
+
+      - name: Summarize probe results
+        if: always()
+        run: |
+          echo "## Maintenance probe — $(date -u +%Y-%m-%dT%H:%MZ)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Base URL: $VERIFY_BASE_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Edge check (L-22): ${{ steps.edge.outcome }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "See [PRODUCTION_READINESS_SCORECARD.md](docs/ops/PRODUCTION_READINESS_SCORECARD.md) for 20-point grading." >> "$GITHUB_STEP_SUMMARY"
