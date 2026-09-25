@@ -68,6 +68,7 @@
     "check:env": "node scripts/ops/check-env.mjs",
     "check:edge": "node scripts/ops/check-edge-headers.mjs",
     "check:cwv": "node scripts/ops/check-cwv.mjs",
+    "check:cwv:strict": "node scripts/ops/check-cwv-strict.mjs",
     "audit:deps": "node scripts/ops/audit-deps.mjs",
     "audit:deps:report": "node scripts/ops/audit-deps.mjs --report",
     "load:k6": "k6 run scripts/k6/smoke.js",
