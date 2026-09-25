@@ -42,6 +42,11 @@ async function main(): Promise<void> {
     env: process.env,
   });
 
+  execSync("npx tsx scripts/db/seed-e2e-customers.mts", {
+    stdio: "inherit",
+    env: process.env,
+  });
+
   fs.mkdirSync(path.dirname(markerPath), { recursive: true });
   fs.writeFileSync(markerPath, new Date().toISOString(), "utf8");
   console.log("[e2e] Database prerequisites ready");
