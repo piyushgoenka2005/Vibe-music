@@ -19,12 +19,12 @@ Last updated after audit go-live automation. **Infra** = run `deploy/complete-au
 | L-13 | Low      | **Verified**  | Preconnect hints in `layout.tsx`.                                                         |
 | L-14 | **High** | **Fixed**     | `npm run check:cwv` Lighthouse gate on 5 page types.                                      |
 | L-15 | Critical | **Verified**  | Server recomputes prices; strict schemas + tamper tests (`create-order`, `reprice`, E2E). |
-| L-16 | **High** | **Verified**  | Security headers + E2E SEC-01.                                                            |
-| L-17 | **High** | **Verified**  | Rate limits on auth/checkout/search APIs.                                                 |
-| L-18 | Medium   | **Verified**  | Generic auth errors; forgot-password oracle-safe.                                         |
+| L-16 | **High** | **Verified**  | Security headers + E2E SEC-01; see `PHASE2_SECURITY_VERIFICATION.md`.                     |
+| L-17 | **High** | **Verified**  | Edge + route rate limits; `proxy.test.ts` + E2E rate-limit headers.                       |
+| L-18 | Medium   | **Verified**  | Generic auth errors; forgot-password oracle-safe; E2E in `security-hardening.spec.ts`.    |
 | L-19 | Critical | **Verified**  | userId-scoped orders/wishlist/addresses; route + E2E IDOR tests (`idor.spec.ts`).         |
 | L-20 | **High** | **Fixed**     | Upgraded next/sharp/adm-zip; `npm run audit:deps` gate + `DEPENDENCY_AUDIT.md`.           |
-| L-21 | **High** | **Verified**  | Razorpay webhook signature verification.                                                  |
+| L-21 | **High** | **Verified**  | Razorpay webhook HMAC + `webhook/razorpay/route.test.ts`.                                 |
 | L-22 | Critical | **Automated** | `deploy/complete-audit-go-live.sh` + `check:edge`; needs Cloudflare proxied DNS.          |
 | L-23 | **High** | **Automated** | `deploy/cloudflare-ufw.sh` — run after L-22 (`CLOUDFLARE_ONLY=1`).                        |
 | L-24 | **High** | **Verified**  | `FOR UPDATE` locks + `inventoryRepository.reserve.test.ts` concurrency cases.             |
