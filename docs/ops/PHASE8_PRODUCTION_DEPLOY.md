@@ -26,7 +26,11 @@ Ship Phases 1–7 remediation commits to `origin/main` and the live VPS.
 git push origin main
 ```
 
-### 2. Fix VPS SSH (CloudOnFire web console — paste as root)
+### 2. CloudOnFire VPS must be **Online** first
+
+If [cp.cloudonfire.com](https://cp.cloudonfire.com) shows **"VPS pending setup"** or **0 Running VPS**, complete **Launch VPS** / **Complete Setup** (Ubuntu 22.04+, attach SSH key). Full checklist: [`CLOUDONFIRE-SETUP.md`](./CLOUDONFIRE-SETUP.md).
+
+### 3. Fix VPS SSH (CloudOnFire Serial Console — paste as root)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/piyushgoenka2005/Vibe-music/main/deploy/install-deploy-key.sh | bash
@@ -39,7 +43,7 @@ npm run phase8:status
 # GitHub → Settings → Secrets → VPS_SSH_KEY = ~/.ssh/vibe_vps_deploy (private key)
 ```
 
-### 3. Deploy
+### 4. Deploy
 
 **Option A — GitHub Actions:** Actions → _Deploy production (vibemusic.in)_ → Run workflow
 
