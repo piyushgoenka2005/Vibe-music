@@ -3,7 +3,7 @@ import { mutationHeaders } from "./helpers/test-utils";
 
 /**
  * L-19 IDOR — API-level checks (Appendix D pattern).
- * Authenticated cross-user cases require seeded multi-user sessions (Phase 3).
+ * Authenticated cross-user cases: see idor.authenticated.spec.ts (customers-setup).
  */
 test.describe("L-19 IDOR: order and account boundaries", () => {
   test("unauthenticated order detail returns 401 without tracking token", async ({ request }) => {

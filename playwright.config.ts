@@ -1,8 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import {
-  E2E_ADMIN_EMAIL,
-  E2E_ADMIN_PASSWORD,
-} from "./e2e/helpers/e2e-credentials";
+import { E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD } from "./e2e/helpers/e2e-credentials";
 import { loadLocalEnv } from "./e2e/load-env";
 
 loadLocalEnv();
@@ -39,12 +36,24 @@ export default defineConfig({
       testMatch: /admin\.setup\.ts/,
     },
     {
+      name: "customers-setup",
+      testMatch: /customers\.setup\.ts/,
+    },
+    {
       name: "chromium",
       testIgnore: [
         /admin\.setup\.ts/,
+        /customers\.setup\.ts/,
         /admin\.(authenticated|crud-smoke|security)\.spec\.ts/,
         /admin-features\.authenticated\.spec\.ts/,
+        /idor\.authenticated\.spec\.ts/,
       ],
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "idor-authenticated",
+      testMatch: /idor\.authenticated\.spec\.ts/,
+      dependencies: ["customers-setup"],
       use: { ...devices["Desktop Chrome"] },
     },
     {
