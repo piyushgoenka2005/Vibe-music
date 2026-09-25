@@ -30,7 +30,7 @@ import {
   productMatchesSearchIntent,
   searchIntentScoreBoost,
 } from "@/lib/product/productRelevance";
-import { normalizeProductSlug, slugify } from "@/lib/slug";
+import { buildProductSlug, normalizeProductSlug, slugify } from "@/lib/slug";
 import {
   batchDeleteProducts as fsBatchDelete,
   batchUpdateProducts as fsBatchUpdate,
@@ -873,7 +873,10 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
     throw new Error(`Category "${input.category}" not found`);
   }
 
-  const slug = uniqueSlug(slugify(input.slug ?? `${input.brand}-${input.name}`), slugs);
+  const slug = uniqueSlug(
+    input.slug?.trim() ? slugify(input.slug) : buildProductSlug(input.brand, input.name),
+    slugs,
+  );
   let sku: string;
   const requestedSku = input.sku?.trim();
   if (requestedSku) {
@@ -1262,7 +1265,7 @@ export async function previewBulkImport(
     }
 
     const generatedSlug = row.name
-      ? uniqueSlug(`${row.brand}-${row.name}`, new Set([...slugs, ...previewSlugs]))
+      ? uniqueSlug(buildProductSlug(row.brand, row.name), new Set([...slugs, ...previewSlugs]))
       : "";
     if (previewSlugs.has(generatedSlug)) {
       errors.push("Duplicate product title in this file");
@@ -1339,7 +1342,7 @@ function buildBulkImportCatalogProduct(
   const stock = row.stock != null ? Number(row.stock) : 0;
   const price = Number(row.price);
   const originalPrice = row.originalPrice != null ? Number(row.originalPrice) : price;
-  const slug = row.generatedSlug ?? slugify(`${row.brand}-${row.name}`);
+  const slug = row.generatedSlug ?? buildProductSlug(row.brand, row.name);
   const sku = row.generatedSku ?? row.sku ?? uniqueSku(new Set());
   const brandSlug = slugify(row.brand);
   const images =
