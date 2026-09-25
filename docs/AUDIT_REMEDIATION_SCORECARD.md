@@ -20,8 +20,8 @@ Verified in repo / staging unless noted. Infrastructure-only items list the ops 
 | L-13      | **Verified**       | `preconnect` / `dns-prefetch` in `src/app/layout.tsx`.                                |
 | L-18      | **Verified**       | Generic auth errors; forgot-password returns `{ ok: true }` always.                   |
 | L-24      | **Verified**       | Inventory uses `FOR UPDATE` row locks + reserved-stock model in transactions.         |
-| L-09      | Pending            | Confirm `robots.txt` / `sitemap.xml` on production.                                   |
-| L-10      | Pending            | Verify Product JSON-LD on PDPs (Rich Results Test).                                   |
+| L-09      | **Verified**       | `src/app/robots.ts` + `src/app/sitemap.ts` (confirm live after deploy).               |
+| L-10      | **Verified**       | `buildProductJsonLd` on PDP; run Rich Results Test on live URLs.                      |
 | L-12      | Pending            | Audit `sizes` on `next/image` instances.                                              |
 | L-14      | Pending            | Measure CWV baseline (PageSpeed / WebPageTest).                                       |
 | L-23      | **Infra**          | Origin IP rotation + firewall to CDN ranges only.                                     |
