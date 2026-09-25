@@ -32,8 +32,8 @@ Last updated after Phase 5 marketing USP conversion. **Infra** = run `deploy/com
 | L-26 | Critical | **Verified**  | Playwright in CI + `verify:e2e-catalog` merge gate; multi-user IDOR E2E.                  |
 | L-27 | Medium   | **Fixed**     | `HomeSectionErrorBoundary` on homepage sections.                                          |
 | L-28 | Medium   | **Fixed**     | `DISASTER_RECOVERY.md` (RPO/RTO + drill).                                                 |
-| L-29 | Medium   | **Fixed**     | `trackPageView` gated on analytics consent + unit test.                                   |
-| L-30 | Medium   | **Fixed**     | Footer legal entity, address, optional GSTIN env.                                         |
+| L-29 | Medium   | **Verified**  | Full GA4 funnel gated on consent; `gtag.test.ts` + `PHASE6_COMPLIANCE_MONITORING.md`.     |
+| L-30 | Medium   | **Verified**  | Footer legal/GSTIN env; `REQUIRE_COMPLIANCE` sign-off + `monitor:checkout`.               |
 
 ## Severity summary
 
@@ -57,3 +57,5 @@ REQUIRE_CDN_EDGE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-s
 ```
 
 Set `NEXT_PUBLIC_GSTIN` and `NEXT_PUBLIC_LEGAL_ENTITY_NAME` in production env for L-30.
+VERIFY_BASE_URL=https://vibemusic.in npm run monitor:checkout
+REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
