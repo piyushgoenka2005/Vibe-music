@@ -59,6 +59,7 @@ export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: Site
       key: "gp9",
       label: "Grand Piano",
       href: ROUTES.gp9,
+      accent: true,
       active: pathname === ROUTES.gp9 || pathname.startsWith(`${ROUTES.gp9}/`),
     },
   ];
