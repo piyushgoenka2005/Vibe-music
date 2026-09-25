@@ -377,8 +377,8 @@ export const getOrderById = cache(async (orderId: string): Promise<Order | null>
   return fetchOrderById(orderId);
 });
 
-export async function listOrdersForUser(uid?: string, email?: string): Promise<Order[]> {
-  const orders = await listStoredOrdersForUser(uid, email);
+export async function listOrdersForUser(uid?: string): Promise<Order[]> {
+  const orders = await listStoredOrdersForUser(uid);
   return orders.filter(isPlacedOrder);
 }
 

@@ -380,19 +380,10 @@ export async function listOrdersByUserId(userId: string): Promise<Order[]> {
 
 export async function findPurchasedProductOrders(
   userId: string,
-  email: string | null | undefined,
   productId: string,
 ): Promise<Order[]> {
-  const orders = new Map<string, Order>();
-  for (const order of await listOrdersForUser(userId)) {
-    orders.set(order.id, order);
-  }
-  if (email) {
-    for (const order of await listOrdersByEmail(email.trim().toLowerCase())) {
-      orders.set(order.id, order);
-    }
-  }
-  return [...orders.values()].filter(
+  const orders = await listOrdersForUser(userId);
+  return orders.filter(
     (order) =>
       order.paymentStatus === "paid" &&
       ["delivered", "shipped", "confirmed"].includes(order.status) &&

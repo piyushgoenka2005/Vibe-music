@@ -6,9 +6,7 @@ import { listOrdersForUser } from "@/lib/server/orderService";
 export default async function AccountOrdersPage() {
   return withServerPageError(async () => {
     const sessionUser = await getSessionUser();
-    const initialOrders = sessionUser
-      ? await listOrdersForUser(sessionUser.uid, sessionUser.email ?? undefined)
-      : [];
+    const initialOrders = sessionUser ? await listOrdersForUser(sessionUser.uid) : [];
 
     return <AccountOrders initialOrders={initialOrders} />;
   }, "Orders");

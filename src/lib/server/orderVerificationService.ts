@@ -9,10 +9,9 @@ export interface PurchaseVerification {
 
 export async function hasPurchasedProduct(
   userId: string,
-  email: string | null | undefined,
-  productId: string
+  productId: string,
 ): Promise<PurchaseVerification> {
-  const orders = await pgOrder.findPurchasedProductOrders(userId, email, productId);
+  const orders = await pgOrder.findPurchasedProductOrders(userId, productId);
   const match = orders[0];
   if (!match) return { verified: false };
   return { verified: true, orderId: match.id };

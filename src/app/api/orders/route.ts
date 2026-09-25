@@ -15,10 +15,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const orders = await listOrdersForUser(
-      sessionUser.uid,
-      sessionUser.email ?? undefined
-    );
+    const orders = await listOrdersForUser(sessionUser.uid);
 
     return NextResponse.json({ orders });
   } catch (error) {

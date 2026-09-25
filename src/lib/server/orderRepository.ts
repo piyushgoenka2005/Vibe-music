@@ -71,26 +71,11 @@ export async function findOrderByRazorpayPaymentId(
   return pg.findOrderByRazorpayPaymentId(razorpayPaymentId);
 }
 
-export async function listOrdersForUser(uid?: string, email?: string): Promise<Order[]> {
-  if (!isPostgresConfigured()) {
+export async function listOrdersForUser(uid?: string): Promise<Order[]> {
+  if (!isPostgresConfigured() || !uid) {
     return [];
   }
 
-  const byId = new Map<string, Order>();
-
-  if (uid) {
-    for (const order of await pg.listOrdersForUser(uid)) {
-      byId.set(order.id, order);
-    }
-  }
-
-  if (email) {
-    for (const order of await pg.listOrdersByEmail(email.trim().toLowerCase())) {
-      byId.set(order.id, order);
-    }
-  }
-
-  return Array.from(byId.values()).sort((a, b) =>
-    String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? "")),
-  );
+  const orders = await pg.listOrdersForUser(uid);
+  return orders.sort((a, b) => String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? "")));
 }

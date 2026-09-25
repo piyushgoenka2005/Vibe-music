@@ -30,9 +30,7 @@ import type {
 } from "@/types/review";
 
 async function seedReviewsFromStatic(): Promise<Review[]> {
-  const { getAllProducts, getProductDetailBySlug } = await import(
-    "@/services/catalogService"
-  );
+  const { getAllProducts, getProductDetailBySlug } = await import("@/services/catalogService");
   const reviews: Review[] = [];
   const now = new Date().toISOString();
 
@@ -83,9 +81,7 @@ export async function listReviewsForAdmin(params: AdminReviewListParams = {}) {
   return result;
 }
 
-export async function listReviewsForProduct(
-  params: ReviewListParams
-): Promise<ReviewListResponse> {
+export async function listReviewsForProduct(params: ReviewListParams): Promise<ReviewListResponse> {
   const stats = await getProductReviewStats(params.productId);
   const result = await listProductReviews(params);
   return {
@@ -103,20 +99,12 @@ export async function submitProductReview(input: {
   author: string;
   payload: CreateReviewInput;
 }): Promise<Review> {
-  const eligibility = await getReviewEligibility(
-    input.userId,
-    input.userEmail,
-    input.productId
-  );
+  const eligibility = await getReviewEligibility(input.userId, input.userEmail, input.productId);
   if (!eligibility.canReview) {
     throw new Error(eligibility.reason ?? "You cannot review this product");
   }
 
-  const purchase = await hasPurchasedProduct(
-    input.userId,
-    input.userEmail,
-    input.productId
-  );
+  const purchase = await hasPurchasedProduct(input.userId, input.productId);
   const images = (input.payload.images ?? []).slice(0, MAX_REVIEW_IMAGES);
 
   const review = await createReviewRecord({
@@ -142,7 +130,7 @@ export async function submitProductReview(input: {
 export async function updateReviewStatus(
   id: string,
   status: ReviewStatus,
-  options: { adminReply?: string; rejectionReason?: string } = {}
+  options: { adminReply?: string; rejectionReason?: string } = {},
 ): Promise<Review> {
   const existing = await getReviewById(id);
   if (!existing) throw new Error("Review not found");

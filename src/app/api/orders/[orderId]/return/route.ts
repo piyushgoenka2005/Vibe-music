@@ -7,6 +7,7 @@ import {
   jsonError,
   parseJsonBody,
 } from "@/lib/api/route-utils";
+import { canAccessOrder } from "@/lib/server/orderAccess";
 import { getOrderById } from "@/lib/server/orderService";
 import {
   createReturnRequest,
@@ -18,11 +19,12 @@ import { createReturnRequestSchema } from "@/lib/validations/wrFeatures";
 
 type RouteContext = { params: Promise<{ orderId: string }> };
 
-async function canAccessOrder(orderId: string, userId: string) {
+async function loadAccessibleOrder(orderId: string, userId: string) {
   const order = await getOrderById(orderId);
-  if (!order) return null;
-  if (order.userId === userId) return order;
-  return null;
+  if (!order || !canAccessOrder(order, { userId })) {
+    return null;
+  }
+  return order;
 }
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -33,7 +35,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
 
     const { orderId } = await context.params;
-    const order = await canAccessOrder(orderId, sessionUser.uid);
+    const order = await loadAccessibleOrder(orderId, sessionUser.uid);
     if (!order) {
       return jsonError("Order not found", 404);
     }
@@ -62,7 +64,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const { orderId } = await context.params;
-    const order = await canAccessOrder(orderId, sessionUser.uid);
+    const order = await loadAccessibleOrder(orderId, sessionUser.uid);
     if (!order) {
       return jsonError("Order not found", 404);
     }
@@ -72,9 +74,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const existing = await listReturnRequestsByOrderId(orderId);
-    const open = existing.find((item) =>
-      ["pending", "approved", "received"].includes(item.status)
-    );
+    const open = existing.find((item) => ["pending", "approved", "received"].includes(item.status));
     if (open) {
       return jsonError("A return request is already open for this order", 409);
     }
