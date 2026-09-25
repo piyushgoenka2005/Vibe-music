@@ -128,6 +128,7 @@ export async function processRazorpayWebhook(input: {
           orderId,
           razorpayPaymentId: payment.id,
           razorpayOrderId: payment.order_id,
+          paymentAmountPaise: payment.amount,
           source: "webhook",
         });
 

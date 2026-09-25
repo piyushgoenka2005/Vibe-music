@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-const gstRateSchema = z.union([
-  z.literal(5),
-  z.literal(12),
-  z.literal(18),
-  z.literal(28),
-]);
-
 export const checkoutShippingAddressSchema = z.object({
   name: z.string().trim().min(1).max(120),
   line1: z.string().trim().min(1).max(200),
@@ -18,31 +11,32 @@ export const checkoutShippingAddressSchema = z.object({
   phone: z.string().trim().max(20).optional(),
 });
 
-export const createOrderItemSchema = z.object({
-  productId: z.string().trim().min(1).max(120),
-  variantId: z.string().trim().max(120).optional(),
-  variantSku: z.string().trim().max(120).optional(),
-  variantLabel: z.string().trim().max(200).optional(),
-  name: z.string().trim().min(1).max(240),
-  quantity: z.number().int().positive().max(99),
-  price: z.number().nonnegative(),
-  gstRate: gstRateSchema,
-});
+export const createOrderItemSchema = z
+  .object({
+    productId: z.string().trim().min(1).max(120),
+    variantId: z.string().trim().max(120).optional(),
+    variantSku: z.string().trim().max(120).optional(),
+    variantLabel: z.string().trim().max(200).optional(),
+    name: z.string().trim().max(240).optional(),
+    quantity: z.number().int().positive().max(99),
+  })
+  .strict();
 
-export const createOrderSchema = z.object({
-  items: z.array(createOrderItemSchema).min(1).max(50),
-  email: z.string().trim().email().max(160),
-  customerName: z.string().trim().max(120).optional(),
-  customerPhone: z.string().trim().max(20).optional(),
-  couponCode: z.string().trim().max(64).nullable().optional(),
-  couponDiscount: z.number().nonnegative().optional(),
-  shippingAddress: checkoutShippingAddressSchema,
-  paymentMethod: z.literal("razorpay", {
-    message: "Only Razorpay online payment is supported",
-  }),
-  buyerState: z.string().trim().max(100).optional(),
-  shippingMethod: z.enum(["standard", "express", "overnight"]).optional(),
-});
+export const createOrderSchema = z
+  .object({
+    items: z.array(createOrderItemSchema).min(1).max(50),
+    email: z.string().trim().email().max(160),
+    customerName: z.string().trim().max(120).optional(),
+    customerPhone: z.string().trim().max(20).optional(),
+    couponCode: z.string().trim().max(64).nullable().optional(),
+    shippingAddress: checkoutShippingAddressSchema,
+    paymentMethod: z.literal("razorpay", {
+      message: "Only Razorpay online payment is supported",
+    }),
+    buyerState: z.string().trim().max(100).optional(),
+    shippingMethod: z.enum(["standard", "express", "overnight"]).optional(),
+  })
+  .strict();
 
 export const verifyPaymentSchema = z.object({
   orderId: z.string().trim().min(1).max(120),
@@ -92,7 +86,7 @@ export const accountWishlistPutSchema = z.object({
         imageColor: z.string().max(64),
         image: z.string().max(500),
         addedAt: z.coerce.number().optional(),
-      })
+      }),
     )
     .max(200),
 });

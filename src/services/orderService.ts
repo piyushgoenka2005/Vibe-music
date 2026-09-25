@@ -1,5 +1,5 @@
 import type {
-  CreateOrderPayload,
+  CreateOrderRequest,
   CreateRazorpayOrderResponse,
   DemoPaymentResponse,
   Order,
@@ -25,7 +25,7 @@ async function parseJson<T>(response: Response): Promise<T> {
 }
 
 export async function createPaymentOrder(
-  payload: CreateOrderPayload
+  payload: CreateOrderRequest,
 ): Promise<CreateRazorpayOrderResponse> {
   const response = await fetch("/api/payment/create-order", {
     method: "POST",
@@ -35,9 +35,7 @@ export async function createPaymentOrder(
   return parseJson<CreateRazorpayOrderResponse>(response);
 }
 
-export async function verifyPayment(
-  payload: VerifyPaymentPayload
-): Promise<VerifyPaymentResponse> {
+export async function verifyPayment(payload: VerifyPaymentPayload): Promise<VerifyPaymentResponse> {
   const response = await fetch("/api/payment/verify-payment", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -48,7 +46,7 @@ export async function verifyPayment(
 
 export async function releaseOrderReservation(
   orderId: string,
-  trackingToken: string
+  trackingToken: string,
 ): Promise<void> {
   const response = await fetch("/api/payment/release-reservation", {
     method: "POST",
@@ -64,7 +62,7 @@ export async function releaseOrderReservation(
 export async function completeDemoPayment(
   orderId: string,
   email: string,
-  trackingToken?: string
+  trackingToken?: string,
 ): Promise<DemoPaymentResponse> {
   const response = await fetch("/api/payment/demo", {
     method: "POST",
@@ -76,7 +74,7 @@ export async function completeDemoPayment(
 
 export async function resumePayment(
   orderId: string,
-  context: { email?: string; trackingToken?: string }
+  context: { email?: string; trackingToken?: string },
 ): Promise<ResumePaymentResponse> {
   const response = await fetch(`/api/orders/${orderId}/resume-payment`, {
     method: "POST",
@@ -93,15 +91,13 @@ export async function fetchOrder(orderId: string): Promise<OrderFetchResult> {
 
 export async function fetchGuestOrder(
   orderId: string,
-  context: { email?: string; trackingToken?: string }
+  context: { email?: string; trackingToken?: string },
 ): Promise<OrderFetchResult> {
   const params = new URLSearchParams();
   if (context.email) params.set("email", context.email);
   if (context.trackingToken) params.set("trackingToken", context.trackingToken);
   const query = params.toString();
-  const response = await fetch(
-    `/api/orders/${orderId}${query ? `?${query}` : ""}`
-  );
+  const response = await fetch(`/api/orders/${orderId}${query ? `?${query}` : ""}`);
   return parseJson<OrderFetchResult>(response);
 }
 

@@ -22,6 +22,7 @@ import {
   reserveAndFulfillStockForOrderInTx,
 } from "@/lib/server/inventoryService";
 import type { OrderInventoryLine, OrderInventoryStatus } from "@/types/inventory";
+import { assertRazorpayAmountMatchesOrder } from "@/lib/server/paymentAmountVerification";
 import type { Order, OrderStatus, PaymentStatus } from "@/types/order";
 
 function issueInvoiceForOrder(order: Order) {
@@ -98,6 +99,7 @@ export async function completeOrderPayment(input: {
   razorpayPaymentId: string;
   razorpayOrderId?: string;
   razorpaySignature?: string;
+  paymentAmountPaise?: number;
   source: "client_verify" | "webhook";
 }): Promise<PaymentCompletionResult> {
   const result = await prisma.$transaction(async (tx) => {
@@ -112,6 +114,10 @@ export async function completeOrderPayment(input: {
       order.razorpayOrderId !== input.razorpayOrderId
     ) {
       throw new Error("Razorpay order mismatch");
+    }
+
+    if (input.paymentAmountPaise != null) {
+      assertRazorpayAmountMatchesOrder(order, input.paymentAmountPaise);
     }
 
     if (order.paymentStatus === "paid") {

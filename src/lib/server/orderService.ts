@@ -308,6 +308,19 @@ export function verifyRazorpaySignature(
   );
 }
 
+export async function fetchRazorpayOrderAmountPaise(razorpayOrderId: string): Promise<number> {
+  const razorpay = getRazorpayInstance();
+  const remote = (await withTimeout(
+    razorpay.orders.fetch(razorpayOrderId),
+    15000,
+    "Razorpay orders.fetch",
+  )) as { amount?: number };
+  if (typeof remote.amount !== "number" || remote.amount <= 0) {
+    throw new Error("Unable to read Razorpay order amount");
+  }
+  return remote.amount;
+}
+
 export async function verifyAndCompletePayment(payload: VerifyPaymentPayload): Promise<Order> {
   const isValid = verifyRazorpaySignature(
     payload.razorpayOrderId,
@@ -319,6 +332,8 @@ export async function verifyAndCompletePayment(payload: VerifyPaymentPayload): P
     throw new Error("Invalid payment signature");
   }
 
+  const paymentAmountPaise = await fetchRazorpayOrderAmountPaise(payload.razorpayOrderId);
+
   // Signature is persisted inside the same transaction that marks the order
   // paid, so there is no second read-modify-write window.
   const result = await completeOrderPayment({
@@ -326,6 +341,7 @@ export async function verifyAndCompletePayment(payload: VerifyPaymentPayload): P
     razorpayPaymentId: payload.razorpayPaymentId,
     razorpayOrderId: payload.razorpayOrderId,
     razorpaySignature: payload.razorpaySignature,
+    paymentAmountPaise,
     source: "client_verify",
   });
 

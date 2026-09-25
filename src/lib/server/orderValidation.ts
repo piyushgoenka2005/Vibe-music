@@ -7,7 +7,19 @@ import { getAvailableStock } from "@/lib/inventory/stockMath";
 import { resolvePositiveUnitPrice } from "@/lib/pricing/unitPrice";
 import { validateCoupon } from "@/lib/server/couponService";
 import { validateStockAvailability } from "@/lib/server/inventoryService";
-import type { CreateOrderPayload } from "@/types/order";
+import type { CreateOrderRequestItem, ResolvedOrderItem } from "@/types/order";
+
+function resolveCatalogGstRate(product: CatalogProduct): GSTRate {
+  if (
+    product.gstRate === 5 ||
+    product.gstRate === 12 ||
+    product.gstRate === 18 ||
+    product.gstRate === 28
+  ) {
+    return product.gstRate;
+  }
+  return getDefaultGstRateForCategory(product.category);
+}
 
 type StockCheckLine = {
   productId: string;
@@ -53,8 +65,8 @@ function validateStockFromLocalCatalog(
 }
 
 export async function resolveOrderItems(
-  items: CreateOrderPayload["items"],
-): Promise<CreateOrderPayload["items"]> {
+  items: CreateOrderRequestItem[],
+): Promise<ResolvedOrderItem[]> {
   const localProducts = loadProducts();
   const localById = new Map(localProducts.map((product) => [product.id, product]));
 
@@ -69,7 +81,8 @@ export async function resolveOrderItems(
     const product = localById.get(item.productId) ?? dbById.get(item.productId) ?? null;
 
     if (!product || product.status !== "active") {
-      throw new Error(`Product "${item.name}" is unavailable or no longer active`);
+      const label = item.name?.trim() || item.productId;
+      throw new Error(`Product "${label}" is unavailable or no longer active`);
     }
 
     const variant = getVariantFromProduct(product, item.variantId);
@@ -90,9 +103,7 @@ export async function resolveOrderItems(
       name: variant?.label ? `${product.name} — ${variant.label}` : product.name,
       quantity: item.quantity,
       price: unitPrice,
-      gstRate: (product.gstRate ??
-        item.gstRate ??
-        getDefaultGstRateForCategory(product.category)) as GSTRate,
+      gstRate: resolveCatalogGstRate(product),
     };
   });
 

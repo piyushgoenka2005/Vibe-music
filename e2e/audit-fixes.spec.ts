@@ -155,18 +155,16 @@ test.describe("audit-fix E2E: out-of-stock and coupon flows", () => {
     });
   });
 
-  // Security: verify server-side price validation rejects tampered cart total
+  // Security: verify create-order rejects client-supplied price fields (L-15)
   test("checkout rejects tampered item price via API", async ({ request }) => {
-    // Try to create an order with suspiciously low price (price manipulation attempt)
     const response = await request.post("/api/payment/create-order", {
       headers: mutationHeaders(),
       data: {
         items: [
           {
             productId: "nonexistent-product-tamper-test",
-            name: "Tamper Test Product",
             quantity: 1,
-            price: 1, // Clearly wrong price
+            price: 1,
             gstRate: 18,
           },
         ],
@@ -175,7 +173,7 @@ test.describe("audit-fix E2E: out-of-stock and coupon flows", () => {
         shippingAddress: {
           name: "Test User",
           phone: "9876543210",
-          addressLine1: "123 Test Street",
+          line1: "123 Test Street",
           city: "Mumbai",
           state: "Maharashtra",
           postalCode: "400001",
@@ -183,9 +181,8 @@ test.describe("audit-fix E2E: out-of-stock and coupon flows", () => {
         },
       },
     });
-    // Should fail — product doesn't exist so order can't be created
-    expect([400, 404, 422, 500]).toContain(response.status());
-    // Must NOT return 200 with a valid order for a nonexistent product
-    expect(response.status()).not.toBe(200);
+    expect(response.status()).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBeTruthy();
   });
 });

@@ -27,11 +27,7 @@ test.describe("catalog browse", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 
-  test("product detail page loads from API slug", async ({
-    page,
-    request,
-    requiresDatabase,
-  }) => {
+  test("product detail page loads from API slug", async ({ page, request, requiresDatabase }) => {
     void requiresDatabase;
     const product = await fetchTrendingProduct(request);
     await page.goto(`/product/${product.slug}`, { waitUntil: "domcontentloaded" });
@@ -116,10 +112,7 @@ test.describe("guest checkout", () => {
         items: [
           {
             productId: "e2e-cod-rejected",
-            name: "E2E COD Reject Fixture",
             quantity: 1,
-            price: 1999,
-            gstRate: 18,
           },
         ],
         email: `e2e-api-${Date.now()}@example.com`,

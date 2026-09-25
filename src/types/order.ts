@@ -4,20 +4,9 @@ import type { ShippingMethod } from "@/lib/shipping/shippingMethods";
 import type { OrderInventoryStatus } from "@/types/inventory";
 
 export type OrderStatus =
-  | "pending"
-  | "confirmed"
-  | "processing"
-  | "shipped"
-  | "delivered"
-  | "cancelled"
-  | "refunded";
+  "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
 
-export type PaymentStatus =
-  | "pending"
-  | "paid"
-  | "failed"
-  | "cod_pending"
-  | "refunded";
+export type PaymentStatus = "pending" | "paid" | "failed" | "cod_pending" | "refunded";
 
 export type PaymentMethod = "razorpay" | "cod";
 
@@ -91,17 +80,44 @@ export interface Order {
   updatedAt?: string;
 }
 
+/** Client/API request line — prices are never accepted from the browser. */
+export interface CreateOrderRequestItem {
+  productId: string;
+  variantId?: string;
+  variantSku?: string;
+  variantLabel?: string;
+  /** Optional display hint for errors before catalog lookup. */
+  name?: string;
+  quantity: number;
+}
+
+/** Checkout POST body from the storefront (no client totals). */
+export interface CreateOrderRequest {
+  items: CreateOrderRequestItem[];
+  email: string;
+  customerName?: string;
+  customerPhone?: string;
+  couponCode?: string | null;
+  shippingAddress: ShippingAddress;
+  paymentMethod: PaymentMethod;
+  buyerState?: string;
+  shippingMethod?: ShippingMethod;
+}
+
+export interface ResolvedOrderItem {
+  productId: string;
+  variantId?: string;
+  variantSku?: string;
+  variantLabel?: string;
+  name: string;
+  quantity: number;
+  price: number;
+  gstRate: GSTRate;
+}
+
+/** Server-side order creation input after catalog repricing. */
 export interface CreateOrderPayload {
-  items: Array<{
-    productId: string;
-    variantId?: string;
-    variantSku?: string;
-    variantLabel?: string;
-    name: string;
-    quantity: number;
-    price: number;
-    gstRate: GSTRate;
-  }>;
+  items: ResolvedOrderItem[];
   email: string;
   customerName?: string;
   customerPhone?: string;

@@ -15,7 +15,7 @@ import { useToastStore } from "@/store/toastStore";
 import { normalizeIndianPhone } from "@/lib/validations/address";
 import type { ShippingMethod } from "@/lib/shipping/shippingMethods";
 import type {
-  CreateOrderPayload,
+  CreateOrderRequest,
   CreateRazorpayOrderResponse,
   PaymentMethod,
   ShippingAddress,
@@ -42,13 +42,12 @@ export interface UseCheckoutPaymentOptions {
   checkoutMode?: "cart" | "buyNow";
 }
 
-function orderPayloadKey(payload: CreateOrderPayload): string {
+function orderPayloadKey(payload: CreateOrderRequest): string {
   return JSON.stringify({
     items: payload.items,
     email: payload.email,
     shipping: payload.shippingAddress,
     coupon: payload.couponCode,
-    discount: payload.couponDiscount,
     method: payload.paymentMethod,
     shippingMethod: payload.shippingMethod,
     buyerState: payload.buyerState,
@@ -89,14 +88,12 @@ export function useCheckoutPayment({
   } | null>(null);
 
   const cartCouponCode = useCartStore((s) => s.couponCode);
-  const cartCouponDiscount = useCartStore((s) => s.discount());
   const couponCode = checkoutMode === "buyNow" ? null : cartCouponCode;
-  const couponDiscount = checkoutMode === "buyNow" ? 0 : cartCouponDiscount;
   const showToast = useToastStore((s) => s.show);
 
   const isDisabled = disabled || isProcessing;
 
-  const buildPayload = useCallback((): CreateOrderPayload => {
+  const buildPayload = useCallback((): CreateOrderRequest => {
     return {
       items: items.map((item) => ({
         productId: item.productId,
@@ -105,14 +102,11 @@ export function useCheckoutPayment({
         variantLabel: item.variantLabel,
         name: item.name,
         quantity: item.quantity,
-        price: item.price,
-        gstRate: item.gstRate,
       })),
       email,
       customerName: customerName ?? shippingAddress.name,
       customerPhone: customerPhone ?? shippingAddress.phone,
       couponCode,
-      couponDiscount,
       shippingAddress,
       paymentMethod,
       shippingMethod,
@@ -125,7 +119,6 @@ export function useCheckoutPayment({
     customerPhone,
     shippingAddress,
     couponCode,
-    couponDiscount,
     paymentMethod,
     shippingMethod,
     buyerState,
