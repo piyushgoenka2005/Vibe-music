@@ -29,7 +29,7 @@ Last updated after audit go-live automation. **Infra** = run `deploy/complete-au
 | L-23 | **High** | **Automated** | `deploy/cloudflare-ufw.sh` — run after L-22 (`CLOUDFLARE_ONLY=1`).                        |
 | L-24 | **High** | **Verified**  | `FOR UPDATE` locks + `inventoryRepository.reserve.test.ts` concurrency cases.             |
 | L-25 | Medium   | **Fixed**     | `scripts/k6/smoke.js` + `npm run load:k6`; `load:perf` exists.                            |
-| L-26 | Critical | **Verified**  | Playwright checkout + audit E2E in CI.                                                    |
+| L-26 | Critical | **Verified**  | Playwright in CI + `verify:e2e-catalog` merge gate; multi-user IDOR E2E.                  |
 | L-27 | Medium   | **Fixed**     | `HomeSectionErrorBoundary` on homepage sections.                                          |
 | L-28 | Medium   | **Fixed**     | `DISASTER_RECOVERY.md` (RPO/RTO + drill).                                                 |
 | L-29 | Medium   | **Fixed**     | `trackPageView` gated on analytics consent + unit test.                                   |
