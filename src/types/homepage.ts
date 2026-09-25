@@ -211,7 +211,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     isActive: true,
     sortOrder: 1,
     sourceMode: "auto",
-    maxItems: 12,
+    maxItems: 8,
     layout: "product_carousel",
   },
   {
@@ -222,7 +222,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     isActive: true,
     sortOrder: 2,
     sourceMode: "auto",
-    maxItems: 12,
+    maxItems: 8,
     layout: "product_carousel",
   },
   {
@@ -234,7 +234,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     isActive: true,
     sortOrder: 3,
     sourceMode: "auto",
-    maxItems: 12,
+    maxItems: 8,
     layout: "product_carousel",
   },
   {

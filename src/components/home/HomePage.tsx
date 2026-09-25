@@ -1,21 +1,28 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import "@/styles/homepage-bundle.css";
+import HomeSectionErrorBoundary from "@/components/home/HomeSectionErrorBoundary";
 import HomepageBannerHeroSection from "@/components/home/homepage-banner-hero/HomepageBannerHeroSection";
-import BrowseCategoryCardsSection from "@/components/home/BrowseCategoryCardsSection";
-import CategoryBento from "@/components/home/CategoryBento";
 import HomepageSectionsAsync from "@/components/homepage/HomepageSectionsAsync";
 import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkeleton";
 import HomepageNewArrivalsAsync from "@/components/home/HomepageNewArrivalsAsync";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
-import BigNamesDealsSection from "@/components/home/BigNamesDealsSection";
-import HomepageAplusContent from "@/components/home/HomepageAplusContent";
-
 import PremiumHero from "@/components/home/PremiumHero";
 
-// Below-fold components wrapped in Suspense for streaming SSR.
-// Each section loads independently — browser renders as chunks arrive.
+const BrowseCategoryCardsSection = dynamic(
+  () => import("@/components/home/BrowseCategoryCardsSection"),
+  { loading: () => null },
+);
+const CategoryBento = dynamic(() => import("@/components/home/CategoryBento"), {
+  loading: () => null,
+});
+const BigNamesDealsSection = dynamic(() => import("@/components/home/BigNamesDealsSection"), {
+  loading: () => null,
+});
+const HomepageAplusContent = dynamic(() => import("@/components/home/HomepageAplusContent"), {
+  loading: () => null,
+});
 const HomepageStats = dynamic(() => import("@/components/home/HomepageStats"), {
   loading: () => null,
 });
@@ -32,67 +39,82 @@ const DiscoverLocationsSection = dynamic(
 const EditorialSplit = dynamic(() => import("@/components/home/EditorialSplit"), {
   loading: () => null,
 });
-
 const ServiceStatusCarousel = dynamic(() => import("@/components/home/ServiceStatusCarousel"), {
   loading: () => null,
 });
-
 const GearStoriesReelsSection = dynamic(() => import("@/components/home/GearStoriesReelsSection"), {
   loading: () => null,
 });
-
 const CultureTypographySection = dynamic(
   () => import("@/components/home/CultureTypographySection"),
   { loading: () => null },
 );
+
+function Section({
+  name,
+  children,
+  fallback = null,
+}: {
+  name: string;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}) {
+  return (
+    <HomeSectionErrorBoundary sectionName={name}>
+      <Suspense fallback={fallback}>{children}</Suspense>
+    </HomeSectionErrorBoundary>
+  );
+}
 
 export default function HomePage() {
   return (
     <main className="premium-home">
       <h1 className="visually-hidden">Vibe Music — Musical Instruments & Pro Audio</h1>
 
-      <Suspense fallback={null}>
+      <Section name="Hero banner" fallback={null}>
         <HomepageBannerHeroSection />
-      </Suspense>
+      </Section>
+
       <PremiumHero />
       <HomepageStats />
-      <Suspense fallback={<HomepageSectionsSkeleton />}>
-        <HomepageNewArrivalsAsync />
-      </Suspense>
 
-      <Suspense fallback={<HomepageSectionsSkeleton />}>
+      <Section name="New arrivals" fallback={<HomepageSectionsSkeleton />}>
+        <HomepageNewArrivalsAsync />
+      </Section>
+
+      <Section name="Big names deals" fallback={<HomepageSectionsSkeleton />}>
         <BigNamesDealsSection />
-      </Suspense>
+      </Section>
 
       <WhyShopSection />
-      <Suspense fallback={null}>
+
+      <Section name="Browse categories" fallback={null}>
         <BrowseCategoryCardsSection />
-      </Suspense>
+      </Section>
 
-      <Suspense fallback={null}>
+      <Section name="Gear stories" fallback={null}>
         <GearStoriesReelsSection />
-      </Suspense>
+      </Section>
 
-      <Suspense fallback={null}>
+      <Section name="Category bento" fallback={null}>
         <CategoryBento />
-      </Suspense>
+      </Section>
 
-      <Suspense fallback={<HomepageSectionsSkeleton />}>
+      <Section name="Homepage sections" fallback={<HomepageSectionsSkeleton />}>
         <HomepageSectionsAsync />
-      </Suspense>
+      </Section>
 
-      <Suspense fallback={null}>
+      <Section name="A+ content" fallback={null}>
         <HomepageAplusContent />
-      </Suspense>
+      </Section>
 
       <EditorialSplit />
 
-      <Suspense fallback={<BlogTeaserSkeleton />}>
+      <Section name="Blog teaser" fallback={<BlogTeaserSkeleton />}>
         <HomepageBlogTeaser />
-      </Suspense>
+      </Section>
 
       <CultureTypographySection />
-
       <ServiceStatusCarousel />
       <DiscoverLocationsSection />
       <SocialProofStrip />

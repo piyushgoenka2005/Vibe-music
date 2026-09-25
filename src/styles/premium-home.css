@@ -5100,6 +5100,25 @@ body.is-scroll-restoring .premium-home > * {
   }
 }
 
+.premium-home .homepage-deals-section__countdown {
+  margin-top: 0.75rem;
+}
+
+.premium-home .homepage-deals-section__countdown .giveaway-countdown__grid {
+  gap: 0.5rem;
+}
+
+.premium-home .homepage-section-fallback {
+  padding: 2rem 1.25rem;
+  text-align: center;
+  color: var(--color-muted, #666);
+}
+
+.premium-home .homepage-section-fallback__text {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
 .premium-home .homepage-deals-section__header {
   margin-bottom: clamp(1rem, 2vw, 1.35rem);
   text-align: center;
