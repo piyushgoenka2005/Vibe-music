@@ -29,15 +29,7 @@ const EXTENSION_BY_MIME: Record<string, string> = {
   "image/svg+xml": ".svg",
 };
 
-const ALLOWED_EXTENSIONS = new Set([
-  ".jpg",
-  ".jpeg",
-  ".png",
-  ".webp",
-  ".gif",
-  ".avif",
-  ".svg",
-]);
+const ALLOWED_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif", ".svg"]);
 
 /** `{uuid}.webp` or `{uuid}-w960.webp` from uploadOptimizedImageToCdn. */
 const OPTIMIZED_CDN_FILE_RE =
@@ -48,16 +40,13 @@ export function getCdnStorageRoot(): string {
 }
 
 export function getCdnPublicBaseUrl(): string {
-  const base =
-    process.env.CDN_PUBLIC_BASE_URL?.trim() || DEFAULT_PUBLIC_BASE_URL;
+  const base = process.env.CDN_PUBLIC_BASE_URL?.trim() || DEFAULT_PUBLIC_BASE_URL;
   return base.replace(/\/+$/, "");
 }
 
 /** Public bases we may see on stored URLs (env + production default). */
 function getKnownCdnPublicBases(): string[] {
-  return Array.from(
-    new Set([getCdnPublicBaseUrl(), DEFAULT_PUBLIC_BASE_URL.replace(/\/+$/, "")])
-  );
+  return Array.from(new Set([getCdnPublicBaseUrl(), DEFAULT_PUBLIC_BASE_URL.replace(/\/+$/, "")]));
 }
 
 function sanitizeSegment(value: string, fallback: string): string {
@@ -97,7 +86,7 @@ export interface CdnUploadOptions {
 export async function uploadBufferToCdn(
   buffer: Buffer,
   filename: string,
-  options: CdnUploadOptions
+  options: CdnUploadOptions,
 ): Promise<string> {
   const folder = options.folder.replace(/^\/+|\/+$/g, "");
   assertAllowedFolder(folder);
@@ -106,15 +95,15 @@ export async function uploadBufferToCdn(
   const storedName = `${randomUUID()}${extension}`;
 
   const root = getCdnStorageRoot();
-  const directory = path.resolve(root, folder);
+  const directory = path.resolve(/* turbopackIgnore: true */ root, folder);
 
   // Guard against path traversal via crafted folder values.
-  if (!directory.startsWith(path.resolve(root) + path.sep)) {
+  if (!directory.startsWith(path.resolve(/* turbopackIgnore: true */ root) + path.sep)) {
     throw new Error(`CDN upload folder escapes storage root: ${folder}`);
   }
 
   await mkdir(directory, { recursive: true });
-  await writeFile(path.join(directory, storedName), buffer);
+  await writeFile(path.join(/* turbopackIgnore: true */ directory, storedName), buffer);
 
   return `${getCdnPublicBaseUrl()}/${folder}/${storedName}`;
 }
@@ -159,12 +148,9 @@ async function unlinkRelativeCdnPath(relativePath: string): Promise<boolean> {
   }
 
   const root = getCdnStorageRoot();
-  const resolvedRoot = path.resolve(root);
-  const filePath = path.resolve(root, relativePath);
-  if (
-    filePath !== resolvedRoot &&
-    !filePath.startsWith(resolvedRoot + path.sep)
-  ) {
+  const resolvedRoot = path.resolve(/* turbopackIgnore: true */ root);
+  const filePath = path.resolve(/* turbopackIgnore: true */ root, relativePath);
+  if (filePath !== resolvedRoot && !filePath.startsWith(resolvedRoot + path.sep)) {
     return false;
   }
 
@@ -188,17 +174,12 @@ export async function deleteImageFromCdn(url: string): Promise<boolean> {
   if (!relativePath) return false;
 
   const targets = relatedOptimizedRelativePaths(relativePath);
-  const results = await Promise.all(
-    targets.map((target) => unlinkRelativeCdnPath(target))
-  );
+  const results = await Promise.all(targets.map((target) => unlinkRelativeCdnPath(target)));
   // Success if the requested file (or any related optimized asset) was removed.
   return results.some(Boolean);
 }
 
-export function productUploadFolder(
-  categorySlug: string,
-  productSlug?: string
-): string {
+export function productUploadFolder(categorySlug: string, productSlug?: string): string {
   const category = sanitizeSegment(categorySlug, "general");
   const product = sanitizeSegment(productSlug ?? "", "general");
   return `products/${category}/${product}`;
