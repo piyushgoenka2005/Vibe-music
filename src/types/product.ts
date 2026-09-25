@@ -25,6 +25,8 @@ export interface Product {
   image: string;
   /** True when the SKU has multiple purchasable variants — PLP must open PDP before add-to-cart. */
   requiresVariantSelection?: boolean;
+  /** Normalized specification values used by listing sidebar filters. */
+  filterSpecs?: Record<string, string>;
 }
 
 export interface ProductImage {

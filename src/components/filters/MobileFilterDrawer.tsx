@@ -5,19 +5,18 @@ import { createPortal } from "react-dom";
 import { SlidersHorizontal, X } from "lucide-react";
 import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useFilterStore } from "@/store/filterStore";
+import { DEFAULT_FACETS } from "@/types/filters";
 import type { CategoryFilters } from "@/types/filters";
 import { countActiveFilters } from "@/lib/filterUrl";
 import FilterSidebar from "./FilterSidebar";
 
 interface MobileFilterDrawerProps {
   filters: CategoryFilters;
-  facets: {
-    brands: Array<{ slug: string; name: string; count: number }>;
-    priceRange: { min: number; max: number };
-  };
+  facets: typeof DEFAULT_FACETS;
   onUpdate: (patch: Partial<CategoryFilters>) => void;
   onClearAll?: () => void;
   resultCount: number;
+  showCategoryFacets?: boolean;
 }
 
 export default function MobileFilterDrawer({
@@ -26,6 +25,7 @@ export default function MobileFilterDrawer({
   onUpdate,
   onClearAll,
   resultCount,
+  showCategoryFacets = false,
 }: MobileFilterDrawerProps) {
   const open = useFilterStore((s) => s.mobileDrawerOpen);
   const close = useFilterStore((s) => s.closeMobileDrawer);
@@ -44,11 +44,7 @@ export default function MobileFilterDrawer({
 
   return createPortal(
     <>
-      <div
-        className="cat-mobile-drawer-overlay"
-        onClick={close}
-        aria-hidden="true"
-      />
+      <div className="cat-mobile-drawer-overlay" onClick={close} aria-hidden="true" />
       <div
         ref={drawerRef as RefObject<HTMLDivElement>}
         className="cat-mobile-drawer cat-mobile-drawer--open"
@@ -87,31 +83,24 @@ export default function MobileFilterDrawer({
             filters={filters}
             facets={facets}
             onUpdate={onUpdate}
+            showCategoryFacets={showCategoryFacets}
           />
         </div>
 
         <div className="cat-mobile-drawer__footer">
           {onClearAll && activeCount > 0 ? (
-            <button
-              type="button"
-              className="cat-mobile-drawer__clear"
-              onClick={onClearAll}
-            >
+            <button type="button" className="cat-mobile-drawer__clear" onClick={onClearAll}>
               Clear all
             </button>
           ) : (
             <span className="cat-mobile-drawer__footer-spacer" />
           )}
-          <button
-            type="button"
-            className="cat-mobile-drawer__apply"
-            onClick={close}
-          >
+          <button type="button" className="cat-mobile-drawer__apply" onClick={close}>
             Show {resultCount} result{resultCount === 1 ? "" : "s"}
           </button>
         </div>
       </div>
     </>,
-    document.body
+    document.body,
   );
 }

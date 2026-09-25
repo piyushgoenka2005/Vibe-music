@@ -3,19 +3,34 @@
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
+  countActiveFilters,
   filtersToSearchParams,
   hasActiveFilters,
-  countActiveFilters,
   parseFiltersFromSearchParams,
 } from "@/lib/filterUrl";
 import { DEFAULT_FILTERS, type CategoryFilters } from "@/types/filters";
 
-export function useCategoryFilters() {
+/** Listing filters on `/brands`, preserving the A–Z `letter` param. */
+export function useBrandsBrowseFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const letter = searchParams.get("letter")?.trim() ?? "";
+  const brandParam = searchParams.get("brand")?.split(",")[0]?.trim() ?? "";
+
   const filters = useMemo(() => parseFiltersFromSearchParams(searchParams), [searchParams]);
+
+  const applyPreserved = useCallback(
+    (params: URLSearchParams) => {
+      if (letter) params.set("letter", letter);
+      else params.delete("letter");
+      if (brandParam) params.set("brand", brandParam);
+      else params.delete("brand");
+      return params;
+    },
+    [brandParam, letter],
+  );
 
   const updateFilters = useCallback(
     (patch: Partial<CategoryFilters>, resetPage = true) => {
@@ -24,14 +39,34 @@ export function useCategoryFilters() {
         ...patch,
         page: resetPage ? 1 : (patch.page ?? filters.page),
       };
-      const params = filtersToSearchParams(next);
+      const params = applyPreserved(filtersToSearchParams(next));
       const qs = params.toString();
       router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [filters, pathname, router],
+    [applyPreserved, filters, pathname, router],
+  );
+
+  const setLetter = useCallback(
+    (nextLetter: string | null) => {
+      const params = applyPreserved(filtersToSearchParams(filters));
+      if (nextLetter) params.set("letter", nextLetter);
+      else params.delete("letter");
+      params.delete("page");
+      const qs = params.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [applyPreserved, filters, pathname, router],
   );
 
   const clearAllFilters = useCallback(() => {
+    const params = new URLSearchParams();
+    if (letter) params.set("letter", letter);
+    if (brandParam) params.set("brand", brandParam);
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [brandParam, letter, pathname, router]);
+
+  const clearBrowse = useCallback(() => {
     router.push(pathname, { scroll: false });
   }, [pathname, router]);
 
@@ -84,9 +119,12 @@ export function useCategoryFilters() {
   );
 
   return {
+    letter,
     filters,
     updateFilters,
+    setLetter,
     clearAllFilters,
+    clearBrowse,
     removeBrand,
     removeCategory,
     removeSubcategory,

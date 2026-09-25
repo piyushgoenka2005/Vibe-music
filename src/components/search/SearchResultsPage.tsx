@@ -46,6 +46,7 @@ function toListingProduct(product: SearchProduct): Product {
     brandSlug: full.brandSlug ?? slugify(product.brand),
     category: product.category,
     categorySlug: full.categorySlug ?? slugify(product.category),
+    subcategory: full.subcategory,
     price: product.price,
     originalPrice: full.originalPrice,
     gstRate: full.gstRate,
@@ -55,6 +56,7 @@ function toListingProduct(product: SearchProduct): Product {
     condition: full.condition ?? "new",
     imageColor: product.imageColor ?? full.imageColor ?? "#e8e8e8",
     image: product.image,
+    filterSpecs: full.filterSpecs,
   };
 }
 
@@ -69,6 +71,9 @@ function SearchResultsPageContent({
     updateFilters,
     clearAllFilters,
     removeBrand,
+    removeCategory,
+    removeSubcategory,
+    removeSpec,
     removeCondition,
     hasActive,
     activeCount,
@@ -110,6 +115,17 @@ function SearchResultsPageContent({
   );
 
   const facets = data.facets;
+  const facetLabels = useMemo(
+    () => ({
+      brands: Object.fromEntries(facets.brands.map((brand) => [brand.slug, brand.name])),
+      categories: Object.fromEntries(facets.categories.map((entry) => [entry.slug, entry.name])),
+      subcategories: Object.fromEntries(
+        facets.subcategories.map((entry) => [entry.slug, entry.name]),
+      ),
+      specs: facets.specs,
+    }),
+    [facets],
+  );
   const total = data.total;
   const isError = status === "error";
   const brandLabel =
@@ -209,7 +225,11 @@ function SearchResultsPageContent({
 
       <FilterChips
         filters={filters}
+        facetLabels={facetLabels}
         onRemoveBrand={removeBrand}
+        onRemoveCategory={removeCategory}
+        onRemoveSubcategory={removeSubcategory}
+        onRemoveSpec={removeSpec}
         onRemoveCondition={removeCondition}
         onUpdate={updateFilters}
         onClearAll={clearAllFilters}
@@ -221,6 +241,7 @@ function SearchResultsPageContent({
           facets={facets}
           onUpdate={updateFilters}
           className="cat-filter-sidebar--desktop"
+          showCategoryFacets
         />
 
         <div>
@@ -267,7 +288,10 @@ function SearchResultsPageContent({
 
           {!isLoading && !isError && data.products.length > 0 ? (
             <>
-              <div className={`cat-product-grid cat-product-grid--${filters.view}`} role="list">
+              <div
+                className={`cat-product-grid cat-product-grid--${filters.view} cat-product-grid--sparse`}
+                role="list"
+              >
                 {data.products.map((product, index) => (
                   <ProductCard
                     key={product.id}
@@ -295,6 +319,7 @@ function SearchResultsPageContent({
         onUpdate={updateFilters}
         onClearAll={clearAllFilters}
         resultCount={total}
+        showCategoryFacets
       />
 
       <SearchRecentlyViewed className="sw-search-recent--results" />

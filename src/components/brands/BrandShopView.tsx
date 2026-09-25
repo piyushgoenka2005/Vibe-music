@@ -1,11 +1,16 @@
 "use client";
 
-import { Suspense, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { useFilterStore } from "@/store/filterStore";
 import { useCategoryFilters } from "@/hooks/useCategoryFilters";
-import { useCategoryProducts } from "@/hooks/useCategoryProducts";
-import ProductCard from "@/components/common/ProductCard";
+import { buildCategoryProductsResult } from "@/lib/catalog/categoryProductsCore";
 import { trackViewItemList } from "@/lib/analytics/events";
+import { ROUTES } from "@/lib/routes";
+import ProductCard from "@/components/common/ProductCard";
+import CategoryPagination from "@/components/category/CategoryPagination";
+import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import {
   FilterChips,
   FilterSidebar,
@@ -13,20 +18,17 @@ import {
   SortDropdown,
   ViewToggle,
 } from "@/components/filters";
-import CategoryBreadcrumb from "./CategoryBreadcrumb";
-import CategoryPagination from "./CategoryPagination";
 import { SlidersHorizontal } from "lucide-react";
-import type { Category } from "@/types/category";
-import { DEFAULT_FACETS, type CategoryProductsResult } from "@/types/filters";
-import "../filters/filters.css";
-import "./category.css";
+import type { BrandDirectoryGroup } from "@/types/brandDirectory";
+import "@/components/filters/filters.css";
+import "@/components/category/category.css";
+import "./brands-directory.css";
 
-interface CategoryPageProps {
-  category: Category;
-  initialData?: CategoryProductsResult;
+interface BrandShopViewProps {
+  brand: BrandDirectoryGroup;
 }
 
-function CategoryPageContent({ category, initialData }: CategoryPageProps) {
+function BrandShopViewContent({ brand }: BrandShopViewProps) {
   const {
     filters,
     updateFilters,
@@ -40,13 +42,21 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
     activeCount,
   } = useCategoryFilters();
   const openMobileDrawer = useFilterStore((s) => s.openMobileDrawer);
-  const { data, isLoading, isError } = useCategoryProducts(category.slug, filters, initialData);
 
-  const facets = data?.facets ?? DEFAULT_FACETS;
-  const total = data?.total ?? 0;
+  useEffect(() => {
+    if (filters.brands.includes(brand.slug)) return;
+    updateFilters({ brands: [brand.slug] });
+  }, [brand.slug, filters.brands, updateFilters]);
+
+  const data = useMemo(
+    () => buildCategoryProductsResult(brand.products, filters),
+    [brand.products, filters],
+  );
+
+  const facets = data.facets;
   const facetLabels = useMemo(
     () => ({
-      brands: Object.fromEntries(facets.brands.map((brand) => [brand.slug, brand.name])),
+      brands: Object.fromEntries(facets.brands.map((entry) => [entry.slug, entry.name])),
       categories: Object.fromEntries(facets.categories.map((entry) => [entry.slug, entry.name])),
       subcategories: Object.fromEntries(
         facets.subcategories.map((entry) => [entry.slug, entry.name]),
@@ -55,24 +65,66 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
     }),
     [facets],
   );
+
   const listContext = useMemo(
     () => ({
-      itemListId: `category_${category.slug}`,
-      itemListName: category.name,
+      itemListId: `brand_${brand.slug}`,
+      itemListName: brand.name,
     }),
-    [category.slug, category.name],
+    [brand.slug, brand.name],
   );
 
   useEffect(() => {
-    if (!data?.products?.length) return;
+    if (!data.products.length) return;
     trackViewItemList(data.products, listContext);
-  }, [listContext, data?.products, data?.page]);
+  }, [listContext, data.products, data.page]);
+
+  const handleClearAll = () => {
+    clearAllFilters();
+  };
 
   return (
-    <div className="cat-page">
-      <CategoryBreadcrumb categoryName={category.name} />
-      <h1 className="cat-page__title">{category.name}</h1>
-      <p className="cat-page__desc">{category.description}</p>
+    <div className="cat-page brands-shop">
+      <div className="storefront-nav-chrome">
+        <StorefrontBackButton fallbackHref={ROUTES.brands} />
+        <nav className="cat-breadcrumb" aria-label="Breadcrumb">
+          <Link href={ROUTES.home}>Home</Link>
+          <span className="cat-breadcrumb__sep" aria-hidden="true">
+            /
+          </span>
+          <Link href={ROUTES.brands}>Brands</Link>
+          <span className="cat-breadcrumb__sep" aria-hidden="true">
+            /
+          </span>
+          <span aria-current="page">{brand.name}</span>
+        </nav>
+      </div>
+
+      <header className="brands-shop__hero">
+        <span className="brands-shop__mark" aria-hidden>
+          {brand.logoUrl ? (
+            <Image
+              src={brand.logoUrl}
+              alt=""
+              width={160}
+              height={72}
+              className="brands-directory__logo-img"
+            />
+          ) : (
+            <span className="brands-directory__monogram brands-directory__monogram--lg">
+              {brand.name.trim().charAt(0)}
+            </span>
+          )}
+        </span>
+        <div>
+          <p className="brands-directory__house-letter">{brand.letter}</p>
+          <h1 className="cat-page__title brands-shop__title">{brand.name}</h1>
+          <p className="cat-page__desc">
+            {data.total} {data.total === 1 ? "product" : "products"} · refine by category,
+            specifications, price, and more.
+          </p>
+        </div>
+      </header>
 
       <div className="cat-toolbar">
         <div className="cat-toolbar__primary">
@@ -86,7 +138,7 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
             {activeCount > 0 ? <span className="cat-toolbar__badge">{activeCount}</span> : null}
           </button>
           <span className="cat-toolbar__count" aria-live="polite">
-            {isLoading ? "Loading…" : `${total} products`}
+            {data.total} products
           </span>
         </div>
         <div className="cat-toolbar__controls">
@@ -104,7 +156,7 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
         onRemoveSpec={removeSpec}
         onRemoveCondition={removeCondition}
         onUpdate={updateFilters}
-        onClearAll={clearAllFilters}
+        onClearAll={handleClearAll}
       />
 
       <div className="cat-page__layout">
@@ -113,40 +165,28 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
           facets={facets}
           onUpdate={updateFilters}
           className="cat-filter-sidebar--desktop"
+          showCategoryFacets
         />
 
         <div>
-          {isLoading ? (
-            <div className="cat-loading" role="status" aria-live="polite">
-              <div className="cat-loading__spinner" aria-hidden="true" />
-              Loading products...
-            </div>
-          ) : null}
-
-          {isError ? (
-            <div className="cat-empty" role="alert">
-              <p>Unable to load products. Please try again.</p>
-            </div>
-          ) : null}
-
-          {!isLoading && !isError && data && data.products.length === 0 ? (
+          {data.products.length === 0 ? (
             <div className="cat-empty">
               <h2 style={{ margin: "0 0 8px" }}>No products match your filters</h2>
-              <p style={{ margin: 0, color: "#807f7e" }}>Try adjusting or clearing your filters.</p>
+              <p style={{ margin: 0, color: "#807f7e" }}>
+                Try adjusting or clearing your filters for {brand.name}.
+              </p>
               {hasActive ? (
                 <button
                   type="button"
                   className="cat-filter-clear"
                   style={{ marginTop: 16 }}
-                  onClick={clearAllFilters}
+                  onClick={handleClearAll}
                 >
                   Clear All Filters
                 </button>
               ) : null}
             </div>
-          ) : null}
-
-          {!isLoading && !isError && data && data.products.length > 0 ? (
+          ) : (
             <>
               <div
                 className={`cat-product-grid cat-product-grid--${filters.view} cat-product-grid--sparse`}
@@ -169,7 +209,7 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
                 onPageChange={(page) => updateFilters({ page }, false)}
               />
             </>
-          ) : null}
+          )}
         </div>
       </div>
 
@@ -177,50 +217,14 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
         filters={filters}
         facets={facets}
         onUpdate={updateFilters}
-        onClearAll={clearAllFilters}
-        resultCount={total}
+        onClearAll={handleClearAll}
+        resultCount={data.total}
+        showCategoryFacets
       />
     </div>
   );
 }
 
-function CategoryInitialFallback({ category, initialData }: CategoryPageProps) {
-  const products = initialData?.products ?? [];
-  return (
-    <div className="cat-page">
-      <CategoryBreadcrumb categoryName={category.name} />
-      <h1 className="cat-page__title">{category.name}</h1>
-      {category.description ? <p className="cat-page__desc">{category.description}</p> : null}
-      <div className="cat-toolbar">
-        <div className="cat-toolbar__primary">
-          <span className="cat-toolbar__count">
-            {initialData?.total ?? products.length} products
-          </span>
-        </div>
-      </div>
-      <div className="cat-layout">
-        <div className="cat-main">
-          {products.length > 0 ? (
-            <div className="cat-grid cat-grid--grid" role="list">
-              {products.map((product, index) => (
-                <ProductCard key={product.id} product={product} view="grid" eager={index < 4} />
-              ))}
-            </div>
-          ) : (
-            <div className="cat-loading" style={{ padding: 48 }}>
-              Loading products...
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function CategoryPage({ category, initialData }: CategoryPageProps) {
-  return (
-    <Suspense fallback={<CategoryInitialFallback category={category} initialData={initialData} />}>
-      <CategoryPageContent category={category} initialData={initialData} />
-    </Suspense>
-  );
+export default function BrandShopView(props: BrandShopViewProps) {
+  return <BrandShopViewContent {...props} />;
 }

@@ -13,18 +13,26 @@ interface CategoriesIndexPageProps {
 
 export default function CategoriesIndexPage({ categories }: CategoriesIndexPageProps) {
   return (
-    <main className="storefront-page storefront-page--subtle brands-page categories-index">
-      <div className="storefront-page__inner">
-        <header className="storefront-page__header">
-          <StorefrontBackButton />
-          <p className="storefront-page__eyebrow">Shop by department</p>
-          <h1 className="storefront-page__title">Categories</h1>
-          <p className="storefront-page__meta">
-            {categories.length > 0
-              ? `Browse ${categories.length} departments stocked at Vibe Music.`
-              : "Departments will appear here once the catalog is available."}
-          </p>
-        </header>
+    <main className="storefront-page storefront-page--subtle">
+      <div className="cat-page categories-index">
+        <div className="storefront-nav-chrome">
+          <StorefrontBackButton fallbackHref={ROUTES.home} />
+          <nav className="cat-breadcrumb" aria-label="Breadcrumb">
+            <Link href={ROUTES.home}>Home</Link>
+            <span className="cat-breadcrumb__sep" aria-hidden="true">
+              /
+            </span>
+            <span aria-current="page">Categories</span>
+          </nav>
+        </div>
+
+        <p className="categories-index__eyebrow">Shop by department</p>
+        <h1 className="cat-page__title">Categories</h1>
+        <p className="cat-page__desc">
+          {categories.length > 0
+            ? `Browse ${categories.length} departments stocked at Vibe Music.`
+            : "Departments will appear here once the catalog is available."}
+        </p>
 
         {categories.length === 0 ? (
           <div className="cat-empty">
@@ -34,26 +42,26 @@ export default function CategoriesIndexPage({ categories }: CategoriesIndexPageP
             </Link>
           </div>
         ) : (
-          <ul className="cat-product-grid cat-product-grid--grid brands-page__grid">
+          <ul className="categories-index__grid">
             {categories.map((category) => (
               <li key={category.id}>
                 <Link
-                  href={categoryPath(category.slug)}
-                  className="cat-product-card brands-page__card categories-index__card"
+                  href={category.href ?? categoryPath(category.slug)}
+                  className="categories-index__card"
                 >
                   {category.imageSrc ? (
                     <span className="categories-index__thumb-wrap">
                       <Image
                         src={category.imageSrc}
-                        alt={category.name}
-                        width={96}
-                        height={96}
+                        alt=""
+                        fill
+                        sizes="(max-width: 640px) 45vw, (max-width: 1023px) 30vw, 18vw"
                         className="categories-index__thumb"
                       />
                     </span>
                   ) : null}
-                  <span className="brands-page__name">{category.name}</span>
-                  <span className="brands-page__count">
+                  <span className="categories-index__name">{category.name}</span>
+                  <span className="categories-index__count">
                     {category.productCount} {category.productCount === 1 ? "product" : "products"}
                   </span>
                 </Link>

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { GitCompare } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useIsClient } from "@/hooks/useIsClient";
 import { ROUTES } from "@/lib/routes";
 import { useCompareStore } from "@/store/compareStore";
 import { useToastStore } from "@/store/toastStore";
@@ -14,16 +15,14 @@ interface CompareButtonProps {
   className?: string;
 }
 
-export default function CompareButton({
-  product,
-  size = 18,
-  className = "",
-}: CompareButtonProps) {
+export default function CompareButton({ product, size = 18, className = "" }: CompareButtonProps) {
   const router = useRouter();
-  const isCompared = useCompareStore((s) => s.has(product.id));
+  const storeCompared = useCompareStore((s) => s.has(product.id));
   const add = useCompareStore((s) => s.add);
   const remove = useCompareStore((s) => s.remove);
   const showToast = useToastStore((s) => s.show);
+  const hydrated = useIsClient();
+  const isCompared = hydrated && storeCompared;
   const btnRef = useRef<HTMLButtonElement>(null);
   const prevCompared = useRef(isCompared);
 
@@ -71,9 +70,7 @@ export default function CompareButton({
       }}
       aria-pressed={isCompared}
       aria-label={
-        isCompared
-          ? `Remove ${product.name} from compare`
-          : `Add ${product.name} to compare`
+        isCompared ? `Remove ${product.name} from compare` : `Add ${product.name} to compare`
       }
     >
       <GitCompare size={size} />

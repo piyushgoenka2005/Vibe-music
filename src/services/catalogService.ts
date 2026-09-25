@@ -16,6 +16,7 @@ import {
   resolveBulkImportCategory,
 } from "@/lib/admin/bulkImportCategoryResolver";
 import { findCategoryInList, normalizeCategorySlug } from "@/lib/categorySlug";
+import { extractListingFilterSpecs } from "@/lib/catalog/listingFilterSpecs";
 import {
   enrichGuitarSpecifications,
   GUITAR_SHOWCASE_FIELD_LABELS,
@@ -294,6 +295,7 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
     imageColor: catalogProduct.imageColor,
     image: catalogProduct.image,
     requiresVariantSelection: variantCount > 1,
+    filterSpecs: extractListingFilterSpecs(catalogProduct.specifications),
   };
 }
 

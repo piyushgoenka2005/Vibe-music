@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Heart } from "lucide-react";
+import { useIsClient } from "@/hooks/useIsClient";
 import { useWishlistStore } from "@/store/wishlistStore";
 import type { Product } from "@/types/product";
 
@@ -16,8 +17,10 @@ export default function WishlistButton({
   size = 20,
   className = "",
 }: WishlistButtonProps) {
-  const isWishlisted = useWishlistStore((s) => s.has(product.id));
+  const storeWishlisted = useWishlistStore((s) => s.has(product.id));
   const toggle = useWishlistStore((s) => s.toggle);
+  const hydrated = useIsClient();
+  const isWishlisted = hydrated && storeWishlisted;
   const btnRef = useRef<HTMLButtonElement>(null);
   const prevWishlisted = useRef(isWishlisted);
 
@@ -51,9 +54,7 @@ export default function WishlistButton({
       }}
       aria-pressed={isWishlisted}
       aria-label={
-        isWishlisted
-          ? `Remove ${product.name} from wishlist`
-          : `Add ${product.name} to wishlist`
+        isWishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`
       }
     >
       <Heart size={size} fill={isWishlisted ? "currentColor" : "none"} />

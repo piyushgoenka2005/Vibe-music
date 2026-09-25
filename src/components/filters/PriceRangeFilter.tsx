@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { formatCurrency } from "@/utils/currency";
 import FilterSection from "./FilterSection";
 
@@ -11,6 +12,13 @@ interface PriceRangeFilterProps {
   onChange: (min: number | null, max: number | null) => void;
 }
 
+function parsePriceInput(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const num = Number(trimmed);
+  return Number.isFinite(num) && num >= 0 ? num : null;
+}
+
 export default function PriceRangeFilter({
   minPrice,
   maxPrice,
@@ -18,6 +26,23 @@ export default function PriceRangeFilter({
   rangeMax,
   onChange,
 }: PriceRangeFilterProps) {
+  const externalKey = `${minPrice ?? ""}|${maxPrice ?? ""}`;
+  const [localMin, setLocalMin] = useState(minPrice != null ? String(minPrice) : "");
+  const [localMax, setLocalMax] = useState(maxPrice != null ? String(maxPrice) : "");
+  const [syncKey, setSyncKey] = useState(externalKey);
+
+  if (externalKey !== syncKey) {
+    setSyncKey(externalKey);
+    setLocalMin(minPrice != null ? String(minPrice) : "");
+    setLocalMax(maxPrice != null ? String(maxPrice) : "");
+  }
+
+  const commit = (nextMin: string, nextMax: string) => {
+    onChange(parsePriceInput(nextMin), parsePriceInput(nextMax));
+  };
+
+  const hasRange = rangeMax > rangeMin;
+
   return (
     <FilterSection title="Price Range">
       <div className="cat-filter-price">
@@ -26,16 +51,15 @@ export default function PriceRangeFilter({
           <input
             id="cat-filter-price-min"
             type="number"
-            min={rangeMin}
-            max={rangeMax}
-            placeholder={rangeMax > rangeMin ? formatCurrency(rangeMin) : "Min"}
-            value={minPrice ?? ""}
-            onChange={(e) =>
-              onChange(
-                e.target.value ? Number(e.target.value) : null,
-                maxPrice
-              )
-            }
+            min={0}
+            max={hasRange ? rangeMax : undefined}
+            placeholder={hasRange ? formatCurrency(rangeMin) : "₹0"}
+            value={localMin}
+            onChange={(event) => {
+              const value = event.target.value;
+              setLocalMin(value);
+              commit(value, localMax);
+            }}
             aria-label="Minimum price"
           />
         </div>
@@ -44,16 +68,15 @@ export default function PriceRangeFilter({
           <input
             id="cat-filter-price-max"
             type="number"
-            min={rangeMin}
-            max={rangeMax || undefined}
-            placeholder={rangeMax > rangeMin ? formatCurrency(rangeMax) : "Max"}
-            value={maxPrice ?? ""}
-            onChange={(e) =>
-              onChange(
-                minPrice,
-                e.target.value ? Number(e.target.value) : null
-              )
-            }
+            min={0}
+            max={hasRange ? rangeMax : undefined}
+            placeholder={hasRange ? formatCurrency(rangeMax) : "Any"}
+            value={localMax}
+            onChange={(event) => {
+              const value = event.target.value;
+              setLocalMax(value);
+              commit(localMin, value);
+            }}
             aria-label="Maximum price"
           />
         </div>

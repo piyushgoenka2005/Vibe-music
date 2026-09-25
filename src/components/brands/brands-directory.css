@@ -10,6 +10,23 @@
   padding-bottom: 5rem;
 }
 
+.brands-directory__layout {
+  align-items: start;
+}
+
+.brands-directory__filter-toolbar {
+  margin-bottom: 0.75rem;
+}
+
+.brands-directory__filter-sidebar {
+  position: sticky;
+  top: calc(var(--site-header-offset, 118px) + 1rem);
+}
+
+.brands-directory__main {
+  min-width: 0;
+}
+
 @media (min-width: 1024px) {
   .brands-directory__inner {
     /* Extra breathing room beyond shared storefront clearance */
@@ -371,4 +388,83 @@
   .brands-directory__products-skeleton {
     animation: none;
   }
+}
+
+/* Brand shop (/brands?brand=…) */
+.brands-shop__hero--inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-default);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.brands-shop__hero--inline .brands-browse__reset {
+  margin-left: auto;
+}
+
+.brands-shop__mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 5.5rem;
+  height: 5.5rem;
+  padding: 0.5rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f8fafc, #eef2ff);
+}
+
+.brands-shop__title {
+  margin-bottom: 0.35rem;
+}
+
+.brands-shop .cat-filter-sidebar--desktop {
+  position: sticky;
+  top: calc(var(--site-header-offset, 118px) + 1rem);
+}
+
+.brands-browse__hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.brands-browse__title {
+  margin-bottom: 0.35rem;
+}
+
+.brands-browse__reset {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--brand-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.brands-browse__reset:hover {
+  border-color: rgba(18, 83, 237, 0.35);
+  background: var(--brand-primary-soft);
+}
+
+.brands-browse__toolbar {
+  margin-bottom: 1rem;
+}
+
+.brands-browse .cat-filter-sidebar--desktop {
+  position: sticky;
+  top: calc(var(--site-header-offset, 118px) + 1rem);
 }

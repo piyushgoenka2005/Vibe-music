@@ -12,8 +12,7 @@
 .cat-filter-sidebar {
   border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, #f8fafc 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, #f8fafc 100%);
   padding: 1rem 1.05rem 1.15rem;
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.8) inset,
@@ -130,6 +129,87 @@
 .cat-filter-brand--active .cat-filter-brand__count {
   border-color: rgba(18, 83, 237, 0.22);
   color: var(--brand-primary);
+}
+
+/* Facet checkbox lists (brands, categories, specs) */
+.cat-filter-facet-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.cat-filter-facet {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.35rem 0.15rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.cat-filter-facet:hover {
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.cat-filter-facet--active {
+  background: var(--brand-primary-muted);
+}
+
+.cat-filter-facet input {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  accent-color: var(--brand-primary);
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.cat-filter-facet__label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #334155;
+  line-height: 1.35;
+}
+
+.cat-filter-facet--active .cat-filter-facet__label {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.cat-filter-facet__count {
+  margin-left: 0.2rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.cat-filter-facet-more {
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.15rem 0.15rem 0;
+  border: 0;
+  background: transparent;
+  color: #e11d48;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.cat-filter-facet-more:hover {
+  text-decoration: underline;
+}
+
+.cat-filter-facet-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #94a3b8;
 }
 
 /* Pill selectors */
@@ -295,8 +375,7 @@
   padding: 0.45rem 0.5rem;
   border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 16px;
-  background:
-    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.9) inset,
     0 8px 24px rgba(15, 23, 42, 0.05);
@@ -491,8 +570,7 @@
   max-height: min(92dvh, 920px);
   display: flex;
   flex-direction: column;
-  background:
-    linear-gradient(180deg, #ffffff 0%, #f8fafc 48%, #f1f5f9 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 48%, #f1f5f9 100%);
   z-index: 100001;
   overflow: hidden;
   padding: 0;

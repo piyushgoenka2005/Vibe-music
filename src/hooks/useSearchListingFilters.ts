@@ -16,10 +16,7 @@ export function useSearchListingFilters() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const filters = useMemo(
-    () => parseFiltersFromSearchParams(searchParams),
-    [searchParams]
-  );
+  const filters = useMemo(() => parseFiltersFromSearchParams(searchParams), [searchParams]);
 
   const preserved = useMemo(
     () => ({
@@ -27,7 +24,7 @@ export function useSearchListingFilters() {
       category: searchParams.get("category"),
       subcategory: searchParams.get("subcategory"),
     }),
-    [searchParams]
+    [searchParams],
   );
 
   const applyPreserved = useCallback(
@@ -40,7 +37,7 @@ export function useSearchListingFilters() {
       else params.delete("subcategory");
       return params;
     },
-    [preserved.category, preserved.q, preserved.subcategory]
+    [preserved.category, preserved.q, preserved.subcategory],
   );
 
   const updateFilters = useCallback(
@@ -54,7 +51,7 @@ export function useSearchListingFilters() {
       const qs = params.toString();
       router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [applyPreserved, filters, pathname, router]
+    [applyPreserved, filters, pathname, router],
   );
 
   const clearAllFilters = useCallback(() => {
@@ -66,19 +63,49 @@ export function useSearchListingFilters() {
   const removeBrand = useCallback(
     (brandSlug: string) => {
       updateFilters({
-        brands: filters.brands.filter((b) => b !== brandSlug),
+        brands: filters.brands.filter((brand) => brand !== brandSlug),
       });
     },
-    [filters.brands, updateFilters]
+    [filters.brands, updateFilters],
+  );
+
+  const removeCategory = useCallback(
+    (categorySlug: string) => {
+      updateFilters({
+        categories: filters.categories.filter((category) => category !== categorySlug),
+      });
+    },
+    [filters.categories, updateFilters],
+  );
+
+  const removeSubcategory = useCallback(
+    (subcategorySlug: string) => {
+      updateFilters({
+        subcategories: filters.subcategories.filter((entry) => entry !== subcategorySlug),
+      });
+    },
+    [filters.subcategories, updateFilters],
+  );
+
+  const removeSpec = useCallback(
+    (label: string, valueSlug: string) => {
+      const current = filters.specs[label] ?? [];
+      const nextValues = current.filter((value) => value !== valueSlug);
+      const specs = { ...filters.specs };
+      if (nextValues.length) specs[label] = nextValues;
+      else delete specs[label];
+      updateFilters({ specs });
+    },
+    [filters.specs, updateFilters],
   );
 
   const removeCondition = useCallback(
     (condition: CategoryFilters["conditions"][number]) => {
       updateFilters({
-        conditions: filters.conditions.filter((c) => c !== condition),
+        conditions: filters.conditions.filter((entry) => entry !== condition),
       });
     },
-    [filters.conditions, updateFilters]
+    [filters.conditions, updateFilters],
   );
 
   return {
@@ -86,6 +113,9 @@ export function useSearchListingFilters() {
     updateFilters,
     clearAllFilters,
     removeBrand,
+    removeCategory,
+    removeSubcategory,
+    removeSpec,
     removeCondition,
     hasActive: hasActiveFilters(filters),
     activeCount: countActiveFilters(filters),
