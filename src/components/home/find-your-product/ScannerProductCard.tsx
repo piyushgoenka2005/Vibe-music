@@ -11,16 +11,26 @@ const IMAGE_FALLBACK = "/images/guitar-1.webp";
 
 interface ScannerProductCardProps {
   product: ScannerProduct;
+  ariaHidden?: boolean;
 }
 
-export default function ScannerProductCard({ product }: ScannerProductCardProps) {
+export default function ScannerProductCard({
+  product,
+  ariaHidden = false,
+}: ScannerProductCardProps) {
   const [failed, setFailed] = useState(false);
   const href = heroMarqueeProductHref(product);
   const imageSrc = failed ? IMAGE_FALLBACK : product.image;
 
   return (
-    <div className="scanner-card-wrap">
-      <Link className="scanner-card" href={href} prefetch aria-label={`View ${product.name}`}>
+    <div className="scanner-card-wrap" aria-hidden={ariaHidden || undefined}>
+      <Link
+        className="scanner-card"
+        href={href}
+        prefetch
+        aria-label={ariaHidden ? undefined : `View ${product.name}`}
+        tabIndex={ariaHidden ? -1 : undefined}
+      >
         <Image
           className="scanner-card__img"
           src={imageSrc}

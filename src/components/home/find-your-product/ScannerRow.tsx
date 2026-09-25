@@ -36,6 +36,7 @@ export default function ScannerRow({ products, duration, curve }: ScannerRowProp
             <ScannerProductCard
               key={`full-${product.id}-${index}`}
               product={product}
+              ariaHidden={index >= products.length}
             />
           ))}
         </div>
