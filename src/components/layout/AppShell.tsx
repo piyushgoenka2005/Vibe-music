@@ -20,19 +20,18 @@ import {
   shouldSkipSplashScrollToTop,
 } from "@/lib/navigation/scrollRestore";
 import ScrollRestoration from "@/components/layout/ScrollRestoration";
-import PageLoadSplash, {
-  isPageLoadSplashEnabled,
-} from "@/components/layout/PageLoadSplash";
+import PageLoadSplash, { isPageLoadSplashEnabled } from "@/components/layout/PageLoadSplash";
 import SplashPendingClear from "@/components/layout/SplashPendingClear";
 import ServiceWorkerRegister from "@/components/layout/ServiceWorkerRegister";
 import AnalyticsProvider from "@/components/analytics/AnalyticsProvider";
+import SupportChatLoader from "@/components/support/SupportChatLoader";
 
 const ENABLE_PAGE_LOAD_SPLASH = isPageLoadSplashEnabled();
 
-const StorefrontDrawers = dynamic(
-  () => import("@/components/layout/StorefrontDrawers"),
-  { ssr: false, loading: () => null }
-);
+const StorefrontDrawers = dynamic(() => import("@/components/layout/StorefrontDrawers"), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
@@ -50,11 +49,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         const parsed = JSON.parse(raw) as Record<string, number>;
         savedY = parsed?.[key];
       }
-      const pending = parsePendingPopRestore(
-        sessionStorage.getItem(PENDING_POP_RESTORE_KEY)
-      );
-      const intentionalBack =
-        sessionStorage.getItem("vibe:nav-back-intent") === key;
+      const pending = parsePendingPopRestore(sessionStorage.getItem(PENDING_POP_RESTORE_KEY));
+      const intentionalBack = sessionStorage.getItem("vibe:nav-back-intent") === key;
       if (
         shouldSkipSplashScrollToTop({
           savedY,
@@ -91,11 +87,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <NextAuthSessionProvider>
         <AuthProvider>
           <SplashPendingClear />
-          {ENABLE_PAGE_LOAD_SPLASH ? (
-            <PageLoadSplash onComplete={handleSplashComplete} />
-          ) : null}
+          {ENABLE_PAGE_LOAD_SPLASH ? <PageLoadSplash onComplete={handleSplashComplete} /> : null}
           <WebVitalsReporter />
           <AnalyticsProvider />
+          <SupportChatLoader />
           <ServiceWorkerRegister />
           <RoutePreloader />
           <Suspense fallback={null}>
