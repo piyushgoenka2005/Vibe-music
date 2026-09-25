@@ -75,7 +75,7 @@ echo ""
 
 # ── Step 9: Razorpay ops readiness (no charge) ────────────────────────────
 echo "▶ Step 9/11 — Razorpay ops readiness"
-if npx tsx --env-file=.env scripts/ops/verify-razorpay-ops.mts; then
+if npx tsx scripts/ops/verify-razorpay-ops.mts; then
   echo "   ✅ razorpay ops checks"
 else
   echo "   ⚠️  razorpay ops warnings/failures — see output above"

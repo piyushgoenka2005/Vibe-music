@@ -3,11 +3,14 @@
  * Checks env, optional Razorpay API reachability, and recent paid orders in DB.
  *
  * Usage:
- *   npx tsx --env-file=.env.local scripts/ops/verify-razorpay-ops.mts
- *   npx tsx --env-file=.env scripts/ops/verify-razorpay-ops.mts
+ *   npx tsx scripts/ops/verify-razorpay-ops.mts
+ *   (loads .env + .env.local + .env.production + .env.production.local)
  */
 
+import { applyMergedEnvToProcess } from "./load-merged-env.mjs";
 import { PrismaClient } from "@prisma/client";
+
+applyMergedEnvToProcess();
 
 type Check = { name: string; ok: boolean; detail: string; blocking: boolean };
 

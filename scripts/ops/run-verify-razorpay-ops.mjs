@@ -1,23 +1,23 @@
 /**
- * Run verify-razorpay-ops.mts against the best available env file (.env for VPS, .env.local for dev).
+ * Run verify-razorpay-ops.mts (merged env files loaded inside the script).
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { MERGED_ENV_FILES } from "./load-merged-env.mjs";
 
 const root = process.cwd();
-const candidates = [".env", ".env.production", ".env.local"];
-const envFile = candidates.find((file) => fs.existsSync(path.join(root, file)));
+const hasEnv = MERGED_ENV_FILES.some((file) => fs.existsSync(path.join(root, file)));
 
-if (!envFile) {
-  console.error("No .env, .env.production, or .env.local found.");
+if (!hasEnv) {
+  console.error("No .env / .env.local / .env.production env files found.");
   process.exit(1);
 }
 
-const result = spawnSync(
-  "npx",
-  ["tsx", `--env-file=${envFile}`, "scripts/ops/verify-razorpay-ops.mts"],
-  { stdio: "inherit", cwd: root, shell: true },
-);
+const result = spawnSync("npx", ["tsx", "scripts/ops/verify-razorpay-ops.mts"], {
+  stdio: "inherit",
+  cwd: root,
+  shell: true,
+});
 
 process.exit(result.status ?? 1);

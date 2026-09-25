@@ -28,4 +28,5 @@ echo "==> Razorpay ops readiness (no charge)"
 echo "    Webhook URL (Razorpay Dashboard): ${SITE_URL}/api/payment/webhook/razorpay"
 echo "    Events: payment.captured, payment.failed, refund.created, refund.processed"
 echo ""
-npx tsx --env-file="$ENV_FILE" scripts/ops/verify-razorpay-ops.mts
+# verify-razorpay-ops loads merged env (.env + .env.local + …) internally
+npx tsx scripts/ops/verify-razorpay-ops.mts

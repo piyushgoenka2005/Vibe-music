@@ -29,7 +29,7 @@ bash deploy/install-backups.sh
 echo
 
 echo "▶ Razorpay ops (no charge)"
-npx tsx --env-file=.env scripts/ops/verify-razorpay-ops.mts
+npx tsx scripts/ops/verify-razorpay-ops.mts
 echo
 
 echo "▶ Public prod smoke"
@@ -39,5 +39,5 @@ echo
 
 echo "✅ F-14 automation finished."
 echo "   If paid_orders_db was WARN: place one live Razorpay order, then re-run:"
-echo "   npx tsx --env-file=.env scripts/ops/verify-razorpay-ops.mts"
+echo "   npx tsx scripts/ops/verify-razorpay-ops.mts"
 echo

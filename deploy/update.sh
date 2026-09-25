@@ -39,6 +39,10 @@ fi
 export GIT_COMMIT_SHA="${DEPLOY_SHA}"
 
 echo "==> Pre-migration database backup"
+if [[ -z "${DATABASE_URL:-}" ]] && [[ -f scripts/ops/load-merged-env.mjs ]]; then
+  DATABASE_URL="$(node scripts/ops/load-merged-env.mjs --get DATABASE_URL 2>/dev/null || true)"
+  export DATABASE_URL
+fi
 if [[ -n "${DATABASE_URL:-}" ]] && command -v pg_dump >/dev/null 2>&1; then
   BACKUP_DIR="${HOME}/backups"
   mkdir -p "$BACKUP_DIR"
