@@ -11,9 +11,13 @@ describe("DealProductCard (L-12)", () => {
           id: "p1",
           name: "Studio Monitor",
           brand: "Adeon",
+          slug: "adeon-studio-monitor",
           price: 12000,
           href: "/product/adeon-studio-monitor",
           image: "/images/test.jpg",
+          imageAlt: "Adeon studio monitor",
+          rating: 4.5,
+          reviewCount: 12,
         }}
       />,
     );

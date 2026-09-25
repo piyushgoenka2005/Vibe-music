@@ -1,0 +1,420 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-25T10:48:27.252Z",
+  "product": "vibemusic.in",
+  "loopholesRegister": [
+    {
+      "id": "L-01",
+      "severity": "medium",
+      "category": "ux",
+      "title": "Marquee SSR duplication / screen reader noise",
+      "repoStatus": "fixed",
+      "verifyCommand": "npm test -- src/components/common/Marquee.test.tsx",
+      "testRefs": ["Marquee.test.tsx"]
+    },
+    {
+      "id": "L-02",
+      "severity": "medium",
+      "category": "ux",
+      "title": "Cart badge accessible label",
+      "repoStatus": "verified",
+      "verifyCommand": "npx playwright test e2e/accessibility.spec.ts -g cart",
+      "testRefs": ["e2e/accessibility.spec.ts"]
+    },
+    {
+      "id": "L-03",
+      "severity": "medium",
+      "category": "ux",
+      "title": "Product card title scannability",
+      "repoStatus": "verified",
+      "verifyCommand": "npm test -- src/lib/product/formatProductCardTitle.test.ts",
+      "testRefs": ["formatProductCardTitle.test.ts"]
+    },
+    {
+      "id": "L-04",
+      "severity": "medium",
+      "category": "ux",
+      "title": "Optional live chat (Crisp)",
+      "repoStatus": "fixed",
+      "verifyCommand": "grep NEXT_PUBLIC_CRISP_WEBSITE_ID .env.production.example",
+      "testRefs": ["SupportChatLoader.tsx"]
+    },
+    {
+      "id": "L-05",
+      "severity": "low",
+      "category": "ux",
+      "title": "Grand Piano nav IA",
+      "repoStatus": "fixed",
+      "verifyCommand": "manual: homepage nav visual",
+      "testRefs": []
+    },
+    {
+      "id": "L-06",
+      "severity": "low",
+      "category": "ux",
+      "title": "Deals countdown urgency",
+      "repoStatus": "fixed",
+      "verifyCommand": "npm test -- src/lib/deals/dealsCountdown.test.ts",
+      "testRefs": ["dealsCountdown.test.ts"]
+    },
+    {
+      "id": "L-07",
+      "severity": "high",
+      "category": "ux",
+      "title": "Search autosuggest",
+      "repoStatus": "fixed",
+      "verifyCommand": "npx playwright test e2e -g 'search overlay'",
+      "testRefs": ["e2e-audit-catalog.json#L-07-search"]
+    },
+    {
+      "id": "L-08",
+      "severity": "medium",
+      "category": "seo",
+      "title": "Product slug deduplication",
+      "repoStatus": "fixed",
+      "verifyCommand": "npm test -- src/lib/categorySlug.test.ts",
+      "testRefs": ["buildProductSlug"]
+    },
+    {
+      "id": "L-09",
+      "severity": "medium",
+      "category": "seo",
+      "title": "robots.txt + sitemap",
+      "repoStatus": "verified",
+      "verifyCommand": "curl -s $VERIFY_BASE_URL/robots.txt && curl -s $VERIFY_BASE_URL/sitemap.xml",
+      "testRefs": ["src/app/robots.ts", "src/app/sitemap.ts"]
+    },
+    {
+      "id": "L-10",
+      "severity": "medium",
+      "category": "seo",
+      "title": "Product JSON-LD",
+      "repoStatus": "verified",
+      "verifyCommand": "npm test -- src/lib/seo/productJsonLd.test.ts",
+      "testRefs": ["productJsonLd.test.ts"]
+    },
+    {
+      "id": "L-11",
+      "severity": "high",
+      "category": "performance",
+      "title": "Homepage section payload cap",
+      "repoStatus": "verified",
+      "verifyCommand": "npm test -- src/lib/homepage/homepageLimits.test.ts",
+      "testRefs": ["homepageLimits.test.ts", "homepageService.ts"]
+    },
+    {
+      "id": "L-12",
+      "severity": "medium",
+      "category": "performance",
+      "title": "Deal card responsive images",
+      "repoStatus": "fixed",
+      "verifyCommand": "npm test -- src/components/homepage/DealProductCard.test.tsx",
+      "testRefs": ["DealProductCard.test.tsx"]
+    },
+    {
+      "id": "L-13",
+      "severity": "low",
+      "category": "performance",
+      "title": "Preconnect resource hints",
+      "repoStatus": "verified",
+      "verifyCommand": "grep preconnect src/app/layout.tsx",
+      "testRefs": ["layout.tsx"]
+    },
+    {
+      "id": "L-14",
+      "severity": "high",
+      "category": "performance",
+      "title": "CWV / Lighthouse gates",
+      "repoStatus": "verified",
+      "verifyCommand": "npm run check:cwv",
+      "testRefs": [".github/workflows/lighthouse.yml"]
+    },
+    {
+      "id": "L-15",
+      "severity": "critical",
+      "category": "security",
+      "title": "Server-side checkout pricing",
+      "repoStatus": "verified",
+      "verifyCommand": "npm test -- src/app/api/payment/create-order/route.test.ts",
+      "testRefs": ["e2e-audit-catalog.json#L-15-tamper"]
+    },
+    {
+      "id": "L-16",
+      "severity": "high",
+      "category": "security",
+      "title": "Security headers (CSP/HSTS)",
+      "repoStatus": "verified",
+      "verifyCommand": "npm run verify:prod-signoff",
+      "testRefs": ["headers.test.ts", "e2e/audit-fixes.spec.ts"]
+    },
+    {
+      "id": "L-17",
+      "severity": "high",
+      "category": "security",
+      "title": "Rate limits + CSRF",
+      "repoStatus": "verified",
+      "verifyCommand": "npm test -- src/proxy.test.ts",
+      "testRefs": ["proxy.test.ts"]
+    },
+    {
+      "id": "L-18",
+      "severity": "medium",
+      "category": "security",
+      "title": "Auth oracle safety",
+      "repoStatus": "verified",
+      "verifyCommand": "npx playwright test e2e/security-hardening.spec.ts",
+      "testRefs": ["security-hardening.spec.ts"]
+    },
+    {
+      "id": "L-19",
+      "severity": "critical",
+      "category": "security",
+      "title": "IDOR on orders/wishlist/addresses",
+      "repoStatus": "verified",
+      "verifyCommand": "npx playwright test e2e/idor.spec.ts e2e/idor.authenticated.spec.ts",
+      "testRefs": ["idor.spec.ts", "idor.authenticated.spec.ts"]
+    },
+    {
+      "id": "L-20",
+      "severity": "high",
+      "category": "security",
+      "title": "Dependency audit gate",
+      "repoStatus": "fixed",
+      "verifyCommand": "npm run audit:deps",
+      "testRefs": ["scripts/ops/audit-deps.mjs"]
+    },
+    {
+      "id": "L-21",
+      "severity": "high",
+      "category": "security",
+      "title": "Razorpay webhook HMAC",
+      "repoStatus": "verified",
+      "verifyCommand": "npm test -- src/app/api/payment/webhook/razorpay/route.test.ts",
+      "testRefs": ["webhook/razorpay/route.test.ts"]
+    },
+    {
+      "id": "L-22",
+      "severity": "critical",
+      "category": "infra",
+      "title": "CDN/WAF edge (Cloudflare)",
+      "repoStatus": "automated",
+      "verifyCommand": "VERIFY_BASE_URL=https://vibemusic.in npm run check:edge",
+      "testRefs": ["deploy/complete-audit-go-live.sh"]
+    },
+    {
+      "id": "L-23",
+      "severity": "high",
+      "category": "infra",
+      "title": "Origin firewall Cloudflare-only",
+      "repoStatus": "automated",
+      "verifyCommand": "sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh",
+      "testRefs": ["deploy/cloudflare-ufw.sh"]
+    },
+    {
+      "id": "L-24",
+      "severity": "high",
+      "category": "reliability",
+      "title": "Inventory FOR UPDATE locks",
+      "repoStatus": "verified",
+      "verifyCommand": "npm test -- src/lib/server/inventoryRepository.reserve.test.ts",
+      "testRefs": ["inventoryRepository.reserve.test.ts"]
+    },
+    {
+      "id": "L-25",
+      "severity": "medium",
+      "category": "reliability",
+      "title": "Load test scripts (k6)",
+      "repoStatus": "fixed",
+      "verifyCommand": "npm run load:k6",
+      "testRefs": ["scripts/k6/smoke.js"]
+    },
+    {
+      "id": "L-26",
+      "severity": "critical",
+      "category": "testing",
+      "title": "Checkout E2E CI merge gate",
+      "repoStatus": "verified",
+      "verifyCommand": "npm run verify:e2e-catalog",
+      "testRefs": ["docs/ops/e2e-audit-catalog.json"]
+    },
+    {
+      "id": "L-27",
+      "severity": "medium",
+      "category": "reliability",
+      "title": "Homepage error boundaries",
+      "repoStatus": "fixed",
+      "verifyCommand": "grep HomeSectionErrorBoundary src/components/home/HomePage.tsx",
+      "testRefs": ["HomeSectionErrorBoundary.tsx"]
+    },
+    {
+      "id": "L-28",
+      "severity": "medium",
+      "category": "ops",
+      "title": "Disaster recovery runbook",
+      "repoStatus": "fixed",
+      "verifyCommand": "test -f docs/ops/DISASTER_RECOVERY.md",
+      "testRefs": ["DISASTER_RECOVERY.md"]
+    },
+    {
+      "id": "L-29",
+      "severity": "medium",
+      "category": "compliance",
+      "title": "Analytics consent gates GA4",
+      "repoStatus": "verified",
+      "verifyCommand": "npm test -- src/lib/analytics/gtag.test.ts",
+      "testRefs": ["gtag.test.ts"]
+    },
+    {
+      "id": "L-30",
+      "severity": "medium",
+      "category": "compliance",
+      "title": "Legal entity + GSTIN in footer",
+      "repoStatus": "verified",
+      "verifyCommand": "REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff",
+      "testRefs": ["resolvePublicLegal.ts", "deploy/apply-compliance.sh"]
+    }
+  ],
+  "mergeGateE2E": [
+    {
+      "id": "SEC-01",
+      "finding": "L-16",
+      "pattern": "homepage returns security headers"
+    },
+    {
+      "id": "SEC-08",
+      "finding": "L-16",
+      "pattern": "admin routes send X-Robots-Tag noindex"
+    },
+    {
+      "id": "L-15-tamper",
+      "finding": "L-15",
+      "pattern": "checkout rejects tampered item price via API"
+    },
+    {
+      "id": "L-15-idor-tamper",
+      "finding": "L-15",
+      "pattern": "create-order rejects tampered line prices"
+    },
+    {
+      "id": "L-19-unauth-order",
+      "finding": "L-19",
+      "pattern": "unauthenticated order detail returns 401"
+    },
+    {
+      "id": "L-19-wishlist-auth",
+      "finding": "L-19",
+      "pattern": "wishlist API requires authentication"
+    },
+    {
+      "id": "L-19-owner-order",
+      "finding": "L-19",
+      "pattern": "owner can read their order"
+    },
+    {
+      "id": "L-19-foreign-order",
+      "finding": "L-19",
+      "pattern": "other authenticated user cannot read foreign order"
+    },
+    {
+      "id": "L-19-foreign-address",
+      "finding": "L-19",
+      "pattern": "other authenticated user cannot read foreign address"
+    },
+    {
+      "id": "L-17-rate-limit-headers",
+      "finding": "L-17",
+      "pattern": "API responses include nosniff and rate-limit headers"
+    },
+    {
+      "id": "L-18-forgot-password",
+      "finding": "L-18",
+      "pattern": "forgot-password returns ok for unknown email"
+    },
+    {
+      "id": "E2E-03-coupon",
+      "finding": "L-26",
+      "pattern": "coupon API rejects invalid coupon code"
+    },
+    {
+      "id": "E2E-05-track-order",
+      "finding": "L-26",
+      "pattern": "track order page renders"
+    },
+    {
+      "id": "E2E-07-oos",
+      "finding": "L-26",
+      "pattern": "out-of-stock product disables purchase buttons"
+    },
+    {
+      "id": "E2E-09-mobile-checkout",
+      "finding": "L-26",
+      "pattern": "mobile viewport checkout form is reachable"
+    },
+    {
+      "id": "L-07-search",
+      "finding": "L-07",
+      "pattern": "header search overlay shows suggestions"
+    },
+    {
+      "id": "L-26-checkout-razorpay",
+      "finding": "L-26",
+      "pattern": "checkout shows Razorpay-only payment options"
+    },
+    {
+      "id": "L-26-smoke-health",
+      "finding": "L-26",
+      "pattern": "health endpoint responds"
+    },
+    {
+      "id": "L-26-empty-cart",
+      "finding": "L-26",
+      "pattern": "create-order rejects empty cart"
+    },
+    {
+      "id": "L-26-admin-guard",
+      "finding": "L-26",
+      "pattern": "admin routes redirect unauthenticated users"
+    }
+  ],
+  "playwrightSuite": {
+    "totalListed": 163,
+    "samples": [
+      "[admin-setup] › admin.setup.ts:12:6 › create E2E admin session",
+      "[customers-setup] › customers.setup.ts:21:6 › create E2E customer A session",
+      "[customers-setup] › customers.setup.ts:31:6 › create E2E customer B session",
+      "[chromium] › accessibility.spec.ts:22:7 › accessibility basics › skip to content link targets main landmark",
+      "[chromium] › accessibility.spec.ts:30:9 › accessibility basics › Home has main landmark and h1",
+      "[chromium] › accessibility.spec.ts:30:9 › accessibility basics › Search has main landmark and h1",
+      "[chromium] › accessibility.spec.ts:30:9 › accessibility basics › Cart has main landmark and h1",
+      "[chromium] › accessibility.spec.ts:30:9 › accessibility basics › Compare has main landmark and h1",
+      "[chromium] › accessibility.spec.ts:30:9 › accessibility basics › Contact has main landmark and h1",
+      "[chromium] › accessibility.spec.ts:30:9 › accessibility basics › Login has main landmark and h1",
+      "[chromium] › accessibility.spec.ts:42:7 › accessibility basics › checkout form fields have labels",
+      "[chromium] › accessibility.spec.ts:57:7 › accessibility basics › mobile homepage has no horizontal overflow",
+      "[chromium] › accessibility.spec.ts:67:7 › accessibility basics › mobile checkout and cart have no horizontal overflow",
+      "[chromium] › accessibility.spec.ts:80:7 › accessibility basics › narrow phone homepage and search have no horizontal overflow",
+      "[chromium] › accessibility.spec.ts:95:7 › accessibility basics › compact phone storefront has no horizontal overflow",
+      "[chromium] › accessibility.spec.ts:115:7 › accessibility basics › mobile search trending pills meet 44px tap target",
+      "[chromium] › accessibility.spec.ts:125:7 › accessibility basics › product sticky bar CTAs meet mobile tap targets",
+      "[chromium] › admin-features.spec.ts:12:7 › Admin password eye toggle › shows, hides, and preserves password on admin login",
+      "[chromium] › admin-features.spec.ts:30:7 › Admin forgot password entry point › admin login links to forgot password page",
+      "[chromium] › admin-features.spec.ts:38:7 › Admin forgot password entry point › forgot password form submits and shows success message",
+      "[chromium] › admin-features.spec.ts:54:7 › Admin forgot password entry point › reset page without token shows invalid link message",
+      "[chromium] › admin-features.spec.ts:60:7 › Admin forgot password entry point › reset password fields support visibility toggle",
+      "[chromium] › admin.spec.ts:4:7 › admin console › admin login page loads",
+      "[chromium] › admin.spec.ts:9:7 › admin console › admin routes redirect unauthenticated users",
+      "[chromium] › admin.spec.ts:14:7 › admin console › admin sub-routes redirect when unauthenticated",
+      "[chromium] › admin.spec.ts:30:7 › admin APIs › admin analytics requires auth",
+      "[chromium] › admin.spec.ts:35:7 › admin APIs › admin health-adjacent rental analytics requires auth",
+      "[chromium] › admin.spec.ts:40:7 › admin APIs › admin core APIs require auth",
+      "[chromium] › admin.spec.ts:54:7 › admin APIs › CSRF blocks cross-origin admin mutation without session",
+      "[chromium] › audit-fixes.spec.ts:10:7 › audit-fix E2E: security and accessibility › homepage returns security headers (SEC-01)"
+    ]
+  },
+  "productionGates": [
+    "npm run verify:prod-signoff",
+    "npm run check:edge",
+    "npm run monitor:checkout",
+    "npm run verify:readiness"
+  ]
+}

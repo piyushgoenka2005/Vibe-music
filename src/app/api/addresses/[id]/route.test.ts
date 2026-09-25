@@ -46,6 +46,8 @@ describe("GET /api/addresses/[id] (L-19 IDOR)", () => {
       country: "IN",
       isDefault: true,
       label: "Home",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
     });
 
     const res = await GET(new Request("http://localhost/api/addresses/addr_1"), {

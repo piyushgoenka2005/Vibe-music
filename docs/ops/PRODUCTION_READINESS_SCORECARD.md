@@ -45,7 +45,7 @@ Each criterion scores **1 point** when fully met in production (or verified in C
 |   15–17 | **8/10**  | Code certified; infra handoff blocking full score |
 | &lt; 15 | —         | Do not accept live payments                       |
 
-**Current verdict:** **8.5/10 code · 17/20 overall** — **READY WITH CONDITIONS** (see [PHASE7_PRODUCTION_CERTIFICATION.md](./PHASE7_PRODUCTION_CERTIFICATION.md)).
+**Current verdict:** **10/10 repository** (`npm run verify:audit`) · **17/20 live** — **NOT end-to-end certified** until VPS go-live + Cloudflare (see [FINAL_AUDIT_CERTIFICATION.md](../audit/FINAL_AUDIT_CERTIFICATION.md)).
 
 ## Operator actions to reach 20/20
 
