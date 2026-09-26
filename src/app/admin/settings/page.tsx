@@ -123,7 +123,7 @@ function SettingsContent({
                 style={{ width: "100%" }}
                 value={form.storePhone}
                 onChange={(e) => updateField("storePhone", e.target.value)}
-                placeholder="8910482950"
+                placeholder="+91 891 048 2950"
               />
             </div>
             <div className="admin-form-group">

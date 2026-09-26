@@ -4,8 +4,11 @@
  */
 import { PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
+import { DEFAULT_STORE_PHONE } from "../../src/lib/brand";
 
 const prisma = new PrismaClient();
+
+const LEGACY_STORE_PHONE_DIGITS = new Set(["919773651006", "9773651006"]);
 
 const DEFAULT_BANNERS = [
   {
@@ -42,11 +45,17 @@ const DEFAULT_BANNERS = [
   },
 ] as const;
 
+function normalizeStorePhoneDigits(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) return digits.slice(2);
+  return digits;
+}
+
 function resolveStorePhone(): string {
-  return (
+  return normalizeStorePhoneDigits(
     process.env.NEXT_PUBLIC_STORE_PHONE?.trim() ||
-    process.env.STORE_PHONE?.trim() ||
-    "919773651006"
+      process.env.STORE_PHONE?.trim() ||
+      DEFAULT_STORE_PHONE,
   );
 }
 
@@ -69,7 +78,13 @@ async function seedStoreSettings(): Promise<void> {
   const updateData: Record<string, string | number | boolean> = {
     updatedAt: timestamp,
   };
-  if (phone && !existing?.storePhone?.trim()) {
+  const existingPhoneDigits = normalizeStorePhoneDigits(existing?.storePhone ?? "");
+  const shouldSyncPhone =
+    Boolean(phone) &&
+    (!existing?.storePhone?.trim() ||
+      existingPhoneDigits !== phone ||
+      LEGACY_STORE_PHONE_DIGITS.has(existing?.storePhone?.replace(/\D/g, "") ?? ""));
+  if (shouldSyncPhone) {
     updateData.storePhone = phone;
   }
   if (legalName && (!existing?.storeName?.trim() || existing.storeName === "Vibe Music")) {

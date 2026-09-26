@@ -1,5 +1,5 @@
 import "server-only";
-import { BRAND } from "@/lib/brand";
+import { BRAND, formatIndianPhone } from "@/lib/brand";
 import { getStoreSettings } from "@/lib/server/settingsService";
 import type { InvoiceSellerMeta } from "@/features/invoice/types";
 
@@ -19,7 +19,7 @@ export async function getInvoiceSellerMeta(): Promise<InvoiceSellerMeta> {
     tagline: BRAND.tagline,
     address: settings.storeAddress || BRAND.address,
     email: settings.storeEmail || BRAND.email,
-    phone: settings.storePhone || BRAND.phoneDisplay,
+    phone: formatIndianPhone(settings.storePhone || BRAND.phone).display || BRAND.phoneDisplay,
     website: BRAND.domain,
     gstin: settings.gstNumber?.trim() || BRAND.gstin || undefined,
     pan: undefined,

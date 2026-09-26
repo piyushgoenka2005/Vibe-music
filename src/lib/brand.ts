@@ -1,6 +1,9 @@
 /** Canonical storefront support number (10-digit Indian mobile). */
 export const DEFAULT_STORE_PHONE = "8910482950";
 
+/** Human-readable storefront support number shown in UI, invoices, and footer. */
+export const DEFAULT_STORE_PHONE_DISPLAY = "+91 891 048 2950";
+
 export const SUPPORT_WHATSAPP_MESSAGE =
   "Hi Vibe Music, I need help with my order or have a product question.";
 
@@ -25,7 +28,9 @@ export function formatIndianPhone(raw: string | undefined): {
     digits.length === 10 ? `91${digits}` : digits.startsWith("91") ? digits : digits;
   const local = normalized.startsWith("91") ? normalized.slice(2) : normalized;
   const display =
-    local.length === 10 ? `+91 ${local.slice(0, 5)} ${local.slice(5)}` : `+${normalized}`;
+    local.length === 10
+      ? `+91 ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`
+      : `+${normalized}`;
 
   return { display, tel: `+${normalized}`, whatsappDigits: normalized };
 }
@@ -33,7 +38,8 @@ export function formatIndianPhone(raw: string | undefined): {
 export function buildWhatsAppUrl(phoneTelOrDigits: string, message?: string): string {
   const digits = phoneTelOrDigits.replace(/\D/g, "");
   if (!digits) return "";
-  const base = `https://wa.me/${digits}`;
+  const normalized = digits.length === 10 ? `91${digits}` : digits;
+  const base = `https://wa.me/${normalized}`;
   if (!message) return base;
   return `${base}?text=${encodeURIComponent(message)}`;
 }
