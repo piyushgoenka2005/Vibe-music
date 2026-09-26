@@ -69,12 +69,12 @@ function useInViewOnce(rootMargin = "240px"): {
   visible: boolean;
 } {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [visible, setVisible] = useState(() => typeof IntersectionObserver === "undefined");
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (visible) return;
     const node = ref.current;
-    if (!node) return;
+    if (!node || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
