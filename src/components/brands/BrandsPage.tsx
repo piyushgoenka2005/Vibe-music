@@ -15,7 +15,6 @@ import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/common/ProductCard";
 import BrandsAzNav from "@/components/brands/BrandsAzNav";
 import BrandsStaticFilterLayout from "@/components/brands/BrandsStaticFilterLayout";
-import { ListingFilterShell } from "@/components/filters";
 import CategoryPagination from "@/components/category/CategoryPagination";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { useBrandsBrowseFilters } from "@/hooks/useBrandsBrowseFilters";
@@ -272,6 +271,35 @@ function BrandsPageContent({ brands }: BrandsPageProps) {
   return (
     <main className="storefront-page storefront-page--subtle brands-directory">
       <div className="storefront-page__inner brands-directory__inner cat-page">
+        <header className="brands-directory__hero">
+          <StorefrontBackButton />
+          <p className="storefront-page__eyebrow">Authorized catalog</p>
+          <h1 className="brands-directory__title">
+            {activeBrand ? activeBrand.name : letter ? `Brands · ${letter}` : "Brands"}
+          </h1>
+          <p className="brands-directory__lede">
+            {activeBrand
+              ? `${data.total} products · refine by category, specifications, price, and more.`
+              : "Every brand we stock, with filters always available on the left. Jump by letter, search a name, or open a brand collection."}
+          </p>
+          {!activeBrand ? (
+            <dl className="brands-directory__stats">
+              <div>
+                <dt>Brands</dt>
+                <dd>{brands.length}</dd>
+              </div>
+              <div>
+                <dt>Products</dt>
+                <dd>{productTotal}</dd>
+              </div>
+              <div>
+                <dt>Showing</dt>
+                <dd>{data.total}</dd>
+              </div>
+            </dl>
+          ) : null}
+        </header>
+
         {brands.length === 0 ? (
           <div className="cat-empty">
             <p>Brands will appear here once the catalog is available.</p>
@@ -280,45 +308,7 @@ function BrandsPageContent({ brands }: BrandsPageProps) {
             </Link>
           </div>
         ) : (
-          <ListingFilterShell
-            filters={filters}
-            facets={data.facets}
-            onUpdate={updateFilters}
-            showCategoryFacets
-            resultCount={data.total}
-            hasActive={hasActive}
-            activeCount={activeCount}
-            onClearAll={clearAllFilters}
-          >
-            <header className="brands-directory__hero">
-              <StorefrontBackButton />
-              <p className="storefront-page__eyebrow">Authorized catalog</p>
-              <h1 className="brands-directory__title">
-                {activeBrand ? activeBrand.name : letter ? `Brands · ${letter}` : "Brands"}
-              </h1>
-              <p className="brands-directory__lede">
-                {activeBrand
-                  ? `${data.total} products · refine by category, specifications, price, and more.`
-                  : "Every brand we stock, with filters always available on the left. Jump by letter, search a name, or open a brand collection."}
-              </p>
-              {!activeBrand ? (
-                <dl className="brands-directory__stats">
-                  <div>
-                    <dt>Brands</dt>
-                    <dd>{brands.length}</dd>
-                  </div>
-                  <div>
-                    <dt>Products</dt>
-                    <dd>{productTotal}</dd>
-                  </div>
-                  <div>
-                    <dt>Showing</dt>
-                    <dd>{data.total}</dd>
-                  </div>
-                </dl>
-              ) : null}
-            </header>
-
+          <>
             {!activeBrand ? (
               <div className="brands-directory__toolbar" role="search">
                 <label className="brands-directory__search">
@@ -354,7 +344,6 @@ function BrandsPageContent({ brands }: BrandsPageProps) {
               onRemoveCondition={removeCondition}
               hasActive={hasActive}
               activeCount={activeCount}
-              sidebarInRail
             >
               {activeBrand ? (
                 data.products.length === 0 ? (
@@ -520,7 +509,7 @@ function BrandsPageContent({ brands }: BrandsPageProps) {
                 </>
               )}
             </BrandsStaticFilterLayout>
-          </ListingFilterShell>
+          </>
         )}
       </div>
     </main>
