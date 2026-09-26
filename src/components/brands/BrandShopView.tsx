@@ -13,7 +13,7 @@ import CategoryPagination from "@/components/category/CategoryPagination";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import {
   FilterChips,
-  FilterSidebar,
+  ListingFilterShell,
   MobileFilterDrawer,
   SortDropdown,
   ViewToggle,
@@ -85,133 +85,136 @@ function BrandShopViewContent({ brand }: BrandShopViewProps) {
 
   return (
     <div className="cat-page brands-shop">
-      <div className="storefront-nav-chrome">
-        <StorefrontBackButton fallbackHref={ROUTES.brands} />
-        <nav className="cat-breadcrumb" aria-label="Breadcrumb">
-          <Link href={ROUTES.home}>Home</Link>
-          <span className="cat-breadcrumb__sep" aria-hidden="true">
-            /
-          </span>
-          <Link href={ROUTES.brands}>Brands</Link>
-          <span className="cat-breadcrumb__sep" aria-hidden="true">
-            /
-          </span>
-          <span aria-current="page">{brand.name}</span>
-        </nav>
-      </div>
-
-      <header className="brands-shop__hero">
-        <span className="brands-shop__mark" aria-hidden>
-          {brand.logoUrl ? (
-            <Image
-              src={brand.logoUrl}
-              alt=""
-              width={160}
-              height={72}
-              className="brands-directory__logo-img"
-            />
-          ) : (
-            <span className="brands-directory__monogram brands-directory__monogram--lg">
-              {brand.name.trim().charAt(0)}
-            </span>
-          )}
-        </span>
-        <div>
-          <p className="brands-directory__house-letter">{brand.letter}</p>
-          <h1 className="cat-page__title brands-shop__title">{brand.name}</h1>
-          <p className="cat-page__desc">
-            {data.total} {data.total === 1 ? "product" : "products"} · refine by category,
-            specifications, price, and more.
-          </p>
-        </div>
-      </header>
-
-      <div className="cat-toolbar">
-        <div className="cat-toolbar__primary">
-          <button
-            type="button"
-            className={`cat-toolbar__mobile-btn${hasActive ? " cat-toolbar__mobile-btn--active" : ""}`}
-            onClick={openMobileDrawer}
-          >
-            <SlidersHorizontal size={16} strokeWidth={2.25} aria-hidden />
-            <span>Filters</span>
-            {activeCount > 0 ? <span className="cat-toolbar__badge">{activeCount}</span> : null}
-          </button>
-          <span className="cat-toolbar__count" aria-live="polite">
-            {data.total} products
-          </span>
-        </div>
-        <div className="cat-toolbar__controls">
-          <SortDropdown value={filters.sort} onChange={(sort) => updateFilters({ sort })} />
-          <ViewToggle value={filters.view} onChange={(view) => updateFilters({ view }, false)} />
-        </div>
-      </div>
-
-      <FilterChips
+      <ListingFilterShell
         filters={filters}
-        facetLabels={facetLabels}
-        onRemoveBrand={removeBrand}
-        onRemoveCategory={removeCategory}
-        onRemoveSubcategory={removeSubcategory}
-        onRemoveSpec={removeSpec}
-        onRemoveCondition={removeCondition}
+        facets={facets}
         onUpdate={updateFilters}
+        showCategoryFacets
+        resultCount={data.total}
+        hasActive={hasActive}
+        activeCount={activeCount}
         onClearAll={handleClearAll}
-      />
+      >
+        <div className="storefront-nav-chrome">
+          <StorefrontBackButton fallbackHref={ROUTES.brands} />
+          <nav className="cat-breadcrumb" aria-label="Breadcrumb">
+            <Link href={ROUTES.home}>Home</Link>
+            <span className="cat-breadcrumb__sep" aria-hidden="true">
+              /
+            </span>
+            <Link href={ROUTES.brands}>Brands</Link>
+            <span className="cat-breadcrumb__sep" aria-hidden="true">
+              /
+            </span>
+            <span aria-current="page">{brand.name}</span>
+          </nav>
+        </div>
 
-      <div className="cat-page__layout">
-        <FilterSidebar
+        <header className="brands-shop__hero">
+          <span className="brands-shop__mark" aria-hidden>
+            {brand.logoUrl ? (
+              <Image
+                src={brand.logoUrl}
+                alt=""
+                width={160}
+                height={72}
+                className="brands-directory__logo-img"
+              />
+            ) : (
+              <span className="brands-directory__monogram brands-directory__monogram--lg">
+                {brand.name.trim().charAt(0)}
+              </span>
+            )}
+          </span>
+          <div>
+            <p className="brands-directory__house-letter">{brand.letter}</p>
+            <h1 className="cat-page__title brands-shop__title">{brand.name}</h1>
+            <p className="cat-page__desc">
+              {data.total} {data.total === 1 ? "product" : "products"} · refine by category,
+              specifications, price, and more.
+            </p>
+          </div>
+        </header>
+
+        <div className="cat-toolbar">
+          <div className="cat-toolbar__primary">
+            <button
+              type="button"
+              className={`cat-toolbar__mobile-btn${hasActive ? " cat-toolbar__mobile-btn--active" : ""}`}
+              onClick={openMobileDrawer}
+            >
+              <SlidersHorizontal size={16} strokeWidth={2.25} aria-hidden />
+              <span>Filters</span>
+              {activeCount > 0 ? <span className="cat-toolbar__badge">{activeCount}</span> : null}
+            </button>
+            <span className="cat-toolbar__count" aria-live="polite">
+              {data.total} products
+            </span>
+          </div>
+          <div className="cat-toolbar__controls">
+            <SortDropdown value={filters.sort} onChange={(sort) => updateFilters({ sort })} />
+            <ViewToggle value={filters.view} onChange={(view) => updateFilters({ view }, false)} />
+          </div>
+        </div>
+
+        <FilterChips
           filters={filters}
-          facets={facets}
+          facetLabels={facetLabels}
+          onRemoveBrand={removeBrand}
+          onRemoveCategory={removeCategory}
+          onRemoveSubcategory={removeSubcategory}
+          onRemoveSpec={removeSpec}
+          onRemoveCondition={removeCondition}
           onUpdate={updateFilters}
-          className="cat-filter-sidebar--desktop"
-          showCategoryFacets
+          onClearAll={handleClearAll}
         />
 
-        <div>
-          {data.products.length === 0 ? (
-            <div className="cat-empty">
-              <h2 style={{ margin: "0 0 8px" }}>No products match your filters</h2>
-              <p style={{ margin: 0, color: "#807f7e" }}>
-                Try adjusting or clearing your filters for {brand.name}.
-              </p>
-              {hasActive ? (
-                <button
-                  type="button"
-                  className="cat-filter-clear"
-                  style={{ marginTop: 16 }}
-                  onClick={handleClearAll}
-                >
-                  Clear All Filters
-                </button>
-              ) : null}
-            </div>
-          ) : (
-            <>
-              <div
-                className={`cat-product-grid cat-product-grid--${filters.view} cat-product-grid--sparse`}
-                role="list"
-              >
-                {data.products.map((product, index) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    view={filters.view}
-                    listContext={listContext}
-                    listIndex={index}
-                    eager={index < 4}
-                  />
-                ))}
+        <div className="cat-page__layout cat-page__layout--rail-external">
+          <div>
+            {data.products.length === 0 ? (
+              <div className="cat-empty">
+                <h2 style={{ margin: "0 0 8px" }}>No products match your filters</h2>
+                <p style={{ margin: 0, color: "#807f7e" }}>
+                  Try adjusting or clearing your filters for {brand.name}.
+                </p>
+                {hasActive ? (
+                  <button
+                    type="button"
+                    className="cat-filter-clear"
+                    style={{ marginTop: 16 }}
+                    onClick={handleClearAll}
+                  >
+                    Clear All Filters
+                  </button>
+                ) : null}
               </div>
-              <CategoryPagination
-                page={data.page}
-                totalPages={data.totalPages}
-                onPageChange={(page) => updateFilters({ page }, false)}
-              />
-            </>
-          )}
+            ) : (
+              <>
+                <div
+                  className={`cat-product-grid cat-product-grid--${filters.view} cat-product-grid--sparse`}
+                  role="list"
+                >
+                  {data.products.map((product, index) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      view={filters.view}
+                      listContext={listContext}
+                      listIndex={index}
+                      eager={index < 4}
+                    />
+                  ))}
+                </div>
+                <CategoryPagination
+                  page={data.page}
+                  totalPages={data.totalPages}
+                  onPageChange={(page) => updateFilters({ page }, false)}
+                />
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      </ListingFilterShell>
 
       <MobileFilterDrawer
         filters={filters}

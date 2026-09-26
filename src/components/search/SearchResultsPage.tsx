@@ -12,7 +12,7 @@ import { slugify } from "@/lib/slug";
 import ProductCard from "@/components/common/ProductCard";
 import {
   FilterChips,
-  FilterSidebar,
+  ListingFilterShell,
   MobileFilterDrawer,
   SortDropdown,
   ViewToggle,
@@ -168,150 +168,153 @@ function SearchResultsPageContent({
 
   return (
     <div className="cat-page">
-      <div className="storefront-nav-chrome">
-        <StorefrontBackButton fallbackHref={ROUTES.search} />
-        <nav className="cat-breadcrumb" aria-label="Breadcrumb">
-          <Link href={ROUTES.home}>Home</Link>
-          <span className="cat-breadcrumb__sep" aria-hidden="true">
-            /
-          </span>
-          <span aria-current="page">Search</span>
-        </nav>
-      </div>
-
-      <h1 className="cat-page__title">
-        {query.trim() ? (
-          <>Results for &ldquo;{query.trim()}&rdquo;</>
-        ) : brandLabel ? (
-          <>{brandLabel}</>
-        ) : urlSubcategory.toLowerCase().includes("acoustic") ? (
-          "Acoustic Guitars"
-        ) : urlSubcategory.toLowerCase().includes("amplifier") ? (
-          "Amplifiers"
-        ) : urlSubcategory ? (
-          urlSubcategory
-        ) : urlCategory ? (
-          <>Browsing {urlCategory.replace(/-/g, " ")}</>
-        ) : (
-          "Search Results"
-        )}
-      </h1>
-      <p className="cat-page__desc">
-        {hasQuery
-          ? "Browse matching products and refine with filters."
-          : "Enter a search term to see products."}
-      </p>
-
-      <div className="cat-toolbar">
-        <div className="cat-toolbar__primary">
-          <button
-            type="button"
-            className={`cat-toolbar__mobile-btn${hasActive ? " cat-toolbar__mobile-btn--active" : ""}`}
-            onClick={openMobileDrawer}
-          >
-            <SlidersHorizontal size={16} strokeWidth={2.25} aria-hidden />
-            <span>Filters</span>
-            {activeCount > 0 ? <span className="cat-toolbar__badge">{activeCount}</span> : null}
-          </button>
-          <span className="cat-toolbar__count" aria-live="polite">
-            {isLoading ? "Loading…" : `${total} products`}
-          </span>
-        </div>
-        <div className="cat-toolbar__controls">
-          <SortDropdown value={filters.sort} onChange={(sort) => updateFilters({ sort })} />
-          <ViewToggle value={filters.view} onChange={(view) => updateFilters({ view }, false)} />
-        </div>
-      </div>
-
-      <FilterChips
+      <ListingFilterShell
         filters={filters}
-        facetLabels={facetLabels}
-        onRemoveBrand={removeBrand}
-        onRemoveCategory={removeCategory}
-        onRemoveSubcategory={removeSubcategory}
-        onRemoveSpec={removeSpec}
-        onRemoveCondition={removeCondition}
+        facets={facets}
         onUpdate={updateFilters}
+        showCategoryFacets
+        resultCount={total}
+        hasActive={hasActive}
+        activeCount={activeCount}
         onClearAll={clearAllFilters}
-      />
+      >
+        <div className="storefront-nav-chrome">
+          <StorefrontBackButton fallbackHref={ROUTES.search} />
+          <nav className="cat-breadcrumb" aria-label="Breadcrumb">
+            <Link href={ROUTES.home}>Home</Link>
+            <span className="cat-breadcrumb__sep" aria-hidden="true">
+              /
+            </span>
+            <span aria-current="page">Search</span>
+          </nav>
+        </div>
 
-      <div className="cat-page__layout">
-        <FilterSidebar
+        <h1 className="cat-page__title">
+          {query.trim() ? (
+            <>Results for &ldquo;{query.trim()}&rdquo;</>
+          ) : brandLabel ? (
+            <>{brandLabel}</>
+          ) : urlSubcategory.toLowerCase().includes("acoustic") ? (
+            "Acoustic Guitars"
+          ) : urlSubcategory.toLowerCase().includes("amplifier") ? (
+            "Amplifiers"
+          ) : urlSubcategory ? (
+            urlSubcategory
+          ) : urlCategory ? (
+            <>Browsing {urlCategory.replace(/-/g, " ")}</>
+          ) : (
+            "Search Results"
+          )}
+        </h1>
+        <p className="cat-page__desc">
+          {hasQuery
+            ? "Browse matching products and refine with filters."
+            : "Enter a search term to see products."}
+        </p>
+
+        <div className="cat-toolbar">
+          <div className="cat-toolbar__primary">
+            <button
+              type="button"
+              className={`cat-toolbar__mobile-btn${hasActive ? " cat-toolbar__mobile-btn--active" : ""}`}
+              onClick={openMobileDrawer}
+            >
+              <SlidersHorizontal size={16} strokeWidth={2.25} aria-hidden />
+              <span>Filters</span>
+              {activeCount > 0 ? <span className="cat-toolbar__badge">{activeCount}</span> : null}
+            </button>
+            <span className="cat-toolbar__count" aria-live="polite">
+              {isLoading ? "Loading…" : `${total} products`}
+            </span>
+          </div>
+          <div className="cat-toolbar__controls">
+            <SortDropdown value={filters.sort} onChange={(sort) => updateFilters({ sort })} />
+            <ViewToggle value={filters.view} onChange={(view) => updateFilters({ view }, false)} />
+          </div>
+        </div>
+
+        <FilterChips
           filters={filters}
-          facets={facets}
+          facetLabels={facetLabels}
+          onRemoveBrand={removeBrand}
+          onRemoveCategory={removeCategory}
+          onRemoveSubcategory={removeSubcategory}
+          onRemoveSpec={removeSpec}
+          onRemoveCondition={removeCondition}
           onUpdate={updateFilters}
-          className="cat-filter-sidebar--desktop"
-          showCategoryFacets
+          onClearAll={clearAllFilters}
         />
 
-        <div>
-          {isLoading ? (
-            <div className="cat-loading" role="status" aria-live="polite">
-              <div className="cat-loading__spinner" aria-hidden="true" />
-              Loading products...
-            </div>
-          ) : null}
+        <div className="cat-page__layout cat-page__layout--rail-external">
+          <div>
+            {isLoading ? (
+              <div className="cat-loading" role="status" aria-live="polite">
+                <div className="cat-loading__spinner" aria-hidden="true" />
+                Loading products...
+              </div>
+            ) : null}
 
-          {isError ? (
-            <div className="cat-empty" role="alert">
-              <p>{error ?? "Unable to load products. Please try again."}</p>
-            </div>
-          ) : null}
+            {isError ? (
+              <div className="cat-empty" role="alert">
+                <p>{error ?? "Unable to load products. Please try again."}</p>
+              </div>
+            ) : null}
 
-          {!isLoading && !isError && hasQuery && data.products.length === 0 ? (
-            hasActive ? (
-              <div className="cat-empty">
-                <h2 style={{ margin: "0 0 8px" }}>No products match your filters</h2>
-                <p style={{ margin: 0, color: "#807f7e" }}>
-                  {brandLabel
-                    ? `We don’t currently stock ${brandLabel}. Clear the brand filter or browse guitars below.`
-                    : "Try adjusting or clearing your filters."}
-                </p>
-                <button
-                  type="button"
-                  className="cat-filter-clear"
-                  style={{ marginTop: 16 }}
-                  onClick={clearAllFilters}
-                >
-                  Clear All Filters
-                </button>
-                <div style={{ marginTop: 16 }}>
-                  <Link href="/category/guitars" className="cat-filter-clear">
-                    Browse all guitars
-                  </Link>
+            {!isLoading && !isError && hasQuery && data.products.length === 0 ? (
+              hasActive ? (
+                <div className="cat-empty">
+                  <h2 style={{ margin: "0 0 8px" }}>No products match your filters</h2>
+                  <p style={{ margin: 0, color: "#807f7e" }}>
+                    {brandLabel
+                      ? `We don’t currently stock ${brandLabel}. Clear the brand filter or browse guitars below.`
+                      : "Try adjusting or clearing your filters."}
+                  </p>
+                  <button
+                    type="button"
+                    className="cat-filter-clear"
+                    style={{ marginTop: 16 }}
+                    onClick={clearAllFilters}
+                  >
+                    Clear All Filters
+                  </button>
+                  <div style={{ marginTop: 16 }}>
+                    <Link href="/category/guitars" className="cat-filter-clear">
+                      Browse all guitars
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <SearchEmptyState query={query || brandLabel} />
-            )
-          ) : null}
+              ) : (
+                <SearchEmptyState query={query || brandLabel} />
+              )
+            ) : null}
 
-          {!isLoading && !isError && data.products.length > 0 ? (
-            <>
-              <div
-                className={`cat-product-grid cat-product-grid--${filters.view} cat-product-grid--sparse`}
-                role="list"
-              >
-                {data.products.map((product, index) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    view={filters.view}
-                    listContext={listContext}
-                    listIndex={index}
-                    eager={index < 4}
-                  />
-                ))}
-              </div>
-              <CategoryPagination
-                page={data.page}
-                totalPages={data.totalPages}
-                onPageChange={(page) => updateFilters({ page }, false)}
-              />
-            </>
-          ) : null}
+            {!isLoading && !isError && data.products.length > 0 ? (
+              <>
+                <div
+                  className={`cat-product-grid cat-product-grid--${filters.view} cat-product-grid--sparse`}
+                  role="list"
+                >
+                  {data.products.map((product, index) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      view={filters.view}
+                      listContext={listContext}
+                      listIndex={index}
+                      eager={index < 4}
+                    />
+                  ))}
+                </div>
+                <CategoryPagination
+                  page={data.page}
+                  totalPages={data.totalPages}
+                  onPageChange={(page) => updateFilters({ page }, false)}
+                />
+              </>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </ListingFilterShell>
 
       <MobileFilterDrawer
         filters={filters}

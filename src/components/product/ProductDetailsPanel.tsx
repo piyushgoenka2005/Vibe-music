@@ -279,7 +279,7 @@ export default function ProductDetailsPanel({ product }: ProductDetailsPanelProp
         >
           <h3 className="pdp-product-details__complete-specs-title">Complete specifications</h3>
           <div className="pdp-product-details__complete-specs-body">
-            <SpecKeyValueTable specs={viewModel.completeSpecs} dense paired />
+            <SpecKeyValueTable specs={viewModel.completeSpecs} dense />
           </div>
         </section>
       ) : null}

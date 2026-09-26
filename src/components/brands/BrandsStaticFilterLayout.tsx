@@ -38,6 +38,8 @@ interface BrandsStaticFilterLayoutProps {
   onRemoveCondition: (condition: CategoryFilters["conditions"][number]) => void;
   hasActive: boolean;
   activeCount: number;
+  /** Desktop sidebar is rendered in ListingFilterShell rail. */
+  sidebarInRail?: boolean;
   children: ReactNode;
 }
 
@@ -56,6 +58,7 @@ export default function BrandsStaticFilterLayout({
   onRemoveCondition,
   hasActive,
   activeCount,
+  sidebarInRail = false,
   children,
 }: BrandsStaticFilterLayoutProps) {
   const openMobileDrawer = useFilterStore((s) => s.openMobileDrawer);
@@ -95,14 +98,24 @@ export default function BrandsStaticFilterLayout({
         onClearAll={onClearAll}
       />
 
-      <div className="cat-page__layout brands-directory__layout">
-        <FilterSidebar
-          filters={filters}
-          facets={facets}
-          onUpdate={onUpdate}
-          className="cat-filter-sidebar--desktop brands-directory__filter-sidebar"
-          showCategoryFacets
-        />
+      <div
+        className={[
+          "cat-page__layout",
+          "brands-directory__layout",
+          sidebarInRail ? "cat-page__layout--rail-external" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {!sidebarInRail ? (
+          <FilterSidebar
+            filters={filters}
+            facets={facets}
+            onUpdate={onUpdate}
+            className="cat-filter-sidebar--desktop brands-directory__filter-sidebar"
+            showCategoryFacets
+          />
+        ) : null}
 
         <div className="brands-directory__main">{children}</div>
       </div>

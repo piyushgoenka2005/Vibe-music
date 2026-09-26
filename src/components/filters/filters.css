@@ -8,6 +8,97 @@
   font-family: inherit;
 }
 
+/* ─── Listing shell: sticky left rail (desktop) ─── */
+.cat-listing-shell {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.cat-listing-shell__main {
+  min-width: 0;
+}
+
+.cat-filter-rail__summary {
+  margin-bottom: 0.75rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 8px 22px rgba(15, 23, 42, 0.05);
+}
+
+.cat-filter-rail__title {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.cat-filter-rail__count {
+  margin: 0.35rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.cat-filter-rail__clear {
+  margin-top: 0.65rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand-primary);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cat-filter-rail__clear:hover {
+  color: var(--brand-primary-hover, #0e42be);
+}
+
+@media (min-width: 1024px) {
+  .cat-listing-shell {
+    display: grid;
+    grid-template-columns: minmax(220px, 240px) minmax(0, 1fr);
+    gap: clamp(0.75rem, 1.25vw, 1rem);
+    align-items: start;
+  }
+
+  .cat-listing-shell__rail {
+    position: sticky;
+    top: calc(var(--site-header-offset, 118px) + 0.75rem);
+    align-self: start;
+    max-height: calc(100dvh - var(--site-header-offset, 118px) - 1.25rem);
+    overflow-y: auto;
+    padding-bottom: 0.35rem;
+    scrollbar-width: thin;
+  }
+
+  .cat-page__layout--rail-external {
+    display: block;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cat-page__layout--rail-external > .cat-filter-sidebar--desktop {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .cat-listing-shell__rail {
+    display: none;
+  }
+}
+
 /* ─── Desktop sidebar ─── */
 .cat-filter-sidebar {
   border: 1px solid rgba(226, 232, 240, 0.9);
