@@ -65,39 +65,6 @@ export default function BrandsStaticFilterLayout({
 
   return (
     <>
-      <div className="cat-toolbar brands-directory__filter-toolbar">
-        <div className="cat-toolbar__primary">
-          <button
-            type="button"
-            className={`cat-toolbar__mobile-btn${hasActive ? " cat-toolbar__mobile-btn--active" : ""}`}
-            onClick={openMobileDrawer}
-          >
-            <SlidersHorizontal size={16} strokeWidth={2.25} aria-hidden />
-            <span>Filters</span>
-            {activeCount > 0 ? <span className="cat-toolbar__badge">{activeCount}</span> : null}
-          </button>
-          <span className="cat-toolbar__count" aria-live="polite">
-            {resultCount} products
-          </span>
-        </div>
-        <div className="cat-toolbar__controls">
-          <SortDropdown value={filters.sort} onChange={(sort) => onUpdate({ sort })} />
-          <ViewToggle value={filters.view} onChange={(view) => onUpdate({ view }, false)} />
-        </div>
-      </div>
-
-      <FilterChips
-        filters={filters}
-        facetLabels={facetLabels}
-        onRemoveBrand={onRemoveBrand}
-        onRemoveCategory={onRemoveCategory}
-        onRemoveSubcategory={onRemoveSubcategory}
-        onRemoveSpec={onRemoveSpec}
-        onRemoveCondition={onRemoveCondition}
-        onUpdate={onUpdate}
-        onClearAll={onClearAll}
-      />
-
       <div
         className={[
           "cat-page__layout",
@@ -117,7 +84,42 @@ export default function BrandsStaticFilterLayout({
           />
         ) : null}
 
-        <div className="brands-directory__main">{children}</div>
+        <div className="brands-directory__main">
+          <div className="cat-toolbar brands-directory__filter-toolbar">
+            <div className="cat-toolbar__primary">
+              <button
+                type="button"
+                className={`cat-toolbar__mobile-btn${hasActive ? " cat-toolbar__mobile-btn--active" : ""}`}
+                onClick={openMobileDrawer}
+              >
+                <SlidersHorizontal size={16} strokeWidth={2.25} aria-hidden />
+                <span>Filters</span>
+                {activeCount > 0 ? <span className="cat-toolbar__badge">{activeCount}</span> : null}
+              </button>
+              <span className="cat-toolbar__count" aria-live="polite">
+                {resultCount} products
+              </span>
+            </div>
+            <div className="cat-toolbar__controls">
+              <SortDropdown value={filters.sort} onChange={(sort) => onUpdate({ sort })} />
+              <ViewToggle value={filters.view} onChange={(view) => onUpdate({ view }, false)} />
+            </div>
+          </div>
+
+          <FilterChips
+            filters={filters}
+            facetLabels={facetLabels}
+            onRemoveBrand={onRemoveBrand}
+            onRemoveCategory={onRemoveCategory}
+            onRemoveSubcategory={onRemoveSubcategory}
+            onRemoveSpec={onRemoveSpec}
+            onRemoveCondition={onRemoveCondition}
+            onUpdate={onUpdate}
+            onClearAll={onClearAll}
+          />
+
+          {children}
+        </div>
       </div>
 
       <MobileFilterDrawer
