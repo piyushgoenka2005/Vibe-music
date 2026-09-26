@@ -1,3 +1,5 @@
+import "./register-cli-stubs-side-effect.mts";
+
 /**
  * Release abandoned inventory reservations (TTL sweeper).
  * Finds pending/unpaid orders stuck in inventoryStatus=reserved beyond TTL.

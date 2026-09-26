@@ -32,20 +32,8 @@
   position: relative;
   width: 100%;
   overflow: hidden;
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    #000 4%,
-    #000 96%,
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    #000 4%,
-    #000 96%,
-    transparent 100%
-  );
+  mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
 }
 
 .why-shop__marquee-track {
@@ -107,9 +95,9 @@
   text-align: center;
   flex: 0 0 auto;
   width: clamp(168px, 16vw, 196px);
-  min-height: 11.5rem;
+  min-height: 12rem;
   margin-top: 1.75rem;
-  padding: 2rem 0.85rem 1rem;
+  padding: 2rem 0.85rem 1.25rem;
   border-radius: 12px;
   background: #ffffff;
   border: 1px solid #d9dde3;
@@ -145,10 +133,6 @@
 .why-shop__card:active .why-shop__card-desc,
 .why-shop__card:active .why-shop__card-cta {
   color: #ffffff;
-}
-
-.why-shop__card:active .why-shop__card-cta .footer-roll-text__track {
-  transform: translate3d(0, -50%, 0);
 }
 
 .why-shop__icon-badge {
@@ -211,12 +195,14 @@
 }
 
 .why-shop__card-cta {
-  margin-top: 0;
+  display: block;
+  margin-top: auto;
   padding-top: 0.75rem;
   text-align: center;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  line-height: 1.35;
   color: var(--brand-primary, #1253ed);
   opacity: 1;
   transform: none;
@@ -224,13 +210,6 @@
     color 220ms ease,
     opacity 220ms ease,
     transform 220ms ease;
-}
-
-.why-shop__card-cta .footer-roll-text {
-  font-size: inherit;
-  font-weight: inherit;
-  letter-spacing: inherit;
-  color: inherit;
 }
 
 .why-shop__card:focus-visible .why-shop__card-title,
@@ -248,10 +227,6 @@
 .why-shop__card:focus-visible .why-shop__icon-badge {
   border-color: #ffffff;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-}
-
-.why-shop__card:focus-visible .why-shop__card-cta .footer-roll-text__track {
-  transform: translate3d(0, -50%, 0);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -289,12 +264,7 @@
   .why-shop__card:hover .why-shop__card-cta,
   .why-shop__card:focus-visible .why-shop__card-cta {
     opacity: 1;
-    transform: translateY(0);
-  }
-
-  .why-shop__card:hover .why-shop__card-cta .footer-roll-text__track,
-  .why-shop__card:focus-visible .why-shop__card-cta .footer-roll-text__track {
-    transform: translate3d(0, -50%, 0);
+    transform: none;
   }
 }
 
@@ -335,20 +305,8 @@
 
   .why-shop__marquee--mobile-auto {
     overflow: hidden;
-    mask-image: linear-gradient(
-      90deg,
-      transparent 0%,
-      #000 6%,
-      #000 94%,
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      90deg,
-      transparent 0%,
-      #000 6%,
-      #000 94%,
-      transparent 100%
-    );
+    mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
   }
 
   .why-shop__marquee--mobile-auto .why-shop__marquee-track {
@@ -444,8 +402,7 @@
 
   .why-shop__card,
   .why-shop__icon-badge,
-  .why-shop__card-cta,
-  .why-shop__card-cta .footer-roll-text__track {
+  .why-shop__card-cta {
     transition: none;
   }
 
@@ -471,11 +428,6 @@
 
   .why-shop__card-cta {
     opacity: 1;
-    transform: none;
-  }
-
-  .why-shop__card:active .why-shop__card-cta .footer-roll-text__track,
-  .why-shop__card:focus-visible .why-shop__card-cta .footer-roll-text__track {
     transform: none;
   }
 }

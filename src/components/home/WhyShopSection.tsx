@@ -5,7 +5,6 @@ import { WHY_SHOP_HEADING, WHY_SHOP_ITEMS } from "@/data/whyShop";
 import WhyShopValueIcon from "@/components/home/WhyShopValueIcons";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
-import FooterRollText from "@/components/layout/FooterRollText";
 import Reveal from "@/components/layout/Reveal";
 
 function WhyShopCard({
@@ -30,9 +29,7 @@ function WhyShopCard({
         <h3 className="why-shop__card-title">{item.title}</h3>
         <p className="why-shop__card-desc">{item.subtitle}</p>
       </div>
-      <span className="why-shop__card-cta">
-        <FooterRollText>Learn More</FooterRollText>
-      </span>
+      <span className="why-shop__card-cta">Learn More</span>
     </Link>
   );
 }

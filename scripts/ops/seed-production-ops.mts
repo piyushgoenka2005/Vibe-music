@@ -52,11 +52,19 @@ function normalizeStorePhoneDigits(raw: string): string {
 }
 
 function resolveStorePhone(): string {
-  return normalizeStorePhoneDigits(
+  const raw =
     process.env.NEXT_PUBLIC_STORE_PHONE?.trim() ||
-      process.env.STORE_PHONE?.trim() ||
-      DEFAULT_STORE_PHONE,
-  );
+    process.env.STORE_PHONE?.trim() ||
+    DEFAULT_STORE_PHONE;
+  const phone = normalizeStorePhoneDigits(raw);
+  const digits = phone.replace(/\D/g, "");
+  if (
+    LEGACY_STORE_PHONE_DIGITS.has(digits) ||
+    LEGACY_STORE_PHONE_DIGITS.has(digits.length === 10 ? `91${digits}` : digits)
+  ) {
+    return DEFAULT_STORE_PHONE;
+  }
+  return phone;
 }
 
 function resolveLegalName(): string {
