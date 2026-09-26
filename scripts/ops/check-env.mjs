@@ -211,15 +211,48 @@ if (env.ALLOW_DEMO_PAYMENTS === "true" && /vibemusic\.in/i.test(siteUrl)) {
   console.log("BLOCKING: ALLOW_DEMO_PAYMENTS must be false on the production storefront.");
   productionMisconfig = true;
 }
-if (/vibemusic\.in/i.test(siteUrl) && !env.NEXT_PUBLIC_GSTIN?.trim()) {
-  console.log(
-    "WARN (L-30): NEXT_PUBLIC_GSTIN unset — footer/invoices will omit GSTIN on vibemusic.in."
+const LEGACY_STORE_PHONE_DIGITS = new Set(["919773651006", "9773651006"]);
+function storePhoneDigits(raw) {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.length === 12 && digits.startsWith("91")) return digits.slice(2);
+  return digits;
+}
+function isLegacyStorePhone(raw) {
+  const digits = storePhoneDigits(raw);
+  if (!digits) return false;
+  return (
+    LEGACY_STORE_PHONE_DIGITS.has(digits) ||
+    LEGACY_STORE_PHONE_DIGITS.has(digits.length === 10 ? `91${digits}` : digits)
   );
 }
-if (/vibemusic\.in/i.test(siteUrl) && env.TRUST_PROXY_HOPS?.trim() !== "1") {
+const storePhone =
+  env.NEXT_PUBLIC_STORE_PHONE?.trim() || env.STORE_PHONE?.trim() || "";
+if (/vibemusic\.in/i.test(siteUrl) && isLegacyStorePhone(storePhone)) {
   console.log(
-    "WARN (L-22): TRUST_PROXY_HOPS should be 1 behind nginx/Cloudflare on production."
+    "BLOCKING: Legacy store phone detected — run node scripts/ops/normalize-production-env.mjs and redeploy."
   );
+  productionMisconfig = true;
+}
+const strictCompliance = process.env.STRICT_COMPLIANCE === "true";
+if (/vibemusic\.in/i.test(siteUrl) && !env.NEXT_PUBLIC_GSTIN?.trim()) {
+  const msg =
+    "NEXT_PUBLIC_GSTIN unset — footer/invoices will omit GSTIN on vibemusic.in (L-30).";
+  if (strictCompliance) {
+    console.log(`BLOCKING (L-30): ${msg}`);
+    productionMisconfig = true;
+  } else {
+    console.log(`WARN (L-30): ${msg}`);
+  }
+}
+if (/vibemusic\.in/i.test(siteUrl) && env.TRUST_PROXY_HOPS?.trim() !== "1") {
+  const msg = "TRUST_PROXY_HOPS should be 1 behind nginx/Cloudflare on production.";
+  if (strictCompliance) {
+    console.log(`BLOCKING (L-22): ${msg}`);
+    productionMisconfig = true;
+  } else {
+    console.log(`WARN (L-22): ${msg}`);
+  }
 }
 if (!missingRequired.length) {
   console.log("All production-required keys are present in local env files.");

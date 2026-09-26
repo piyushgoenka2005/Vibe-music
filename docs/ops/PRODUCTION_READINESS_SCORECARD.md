@@ -1,7 +1,7 @@
 # Production readiness scorecard (20 points)
 
 **Product:** vibemusic.in · **Program:** Loopholes remediation Phases 0–7  
-**Last updated:** 2026-09-25
+**Last updated:** 2026-09-27
 
 Each criterion scores **1 point** when fully met in production (or verified in CI for code-only gates). **Target for GA:** ≥ 18/20 with no critical gaps open.
 
@@ -15,7 +15,7 @@ Each criterion scores **1 point** when fully met in production (or verified in C
 | 6   | Security    | Dependency audit gate (L-20)                        | `npm run audit:deps` in CI + `release:ready`                | **1** |
 | 7   | Payments    | Live Razorpay + no demo payments                    | `verify:prod-signoff` → `payments`                          | **1** |
 | 8   | Reliability | Inventory `FOR UPDATE` locks (L-24)                 | `inventoryRepository.reserve.test.ts`                       | **1** |
-| 9   | Testing     | Unit test suite green                               | `npm test` — **583** tests                                  | **1** |
+| 9   | Testing     | Unit test suite green                               | `npm test` — **597** tests                                  | **1** |
 | 10  | Testing     | E2E merge gate (L-26)                               | `verify:e2e-catalog` + Playwright in CI                     | **1** |
 | 11  | Performance | Homepage section caps (L-11)                        | `clampHomepageMaxItems` + unit tests                        | **1** |
 | 12  | Performance | CWV / Lighthouse gates (L-14)                       | `check:cwv` + weekly `lighthouse.yml`                       | **1** |

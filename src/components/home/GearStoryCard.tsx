@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getReelVideoCandidateUrls } from "@/data/reelVideos";
 import { GEAR_STORY_SEEDS } from "@/data/gearStories";
@@ -166,12 +167,13 @@ export default function GearStoryCard({
     >
       <div className="gear-story-card__media">
         {story.posterUrl ? (
-          <img
+          <Image
             className="gear-story-card__poster"
             src={story.posterUrl}
             alt=""
             aria-hidden="true"
-            decoding="async"
+            fill
+            sizes="(max-width: 768px) 22vw, 260px"
           />
         ) : null}
         {shouldMountVideo ? (

@@ -48,8 +48,10 @@ upsert_secret() {
 upsert_secret "NEXT_PUBLIC_GSTIN" "$GSTIN"
 upsert_secret "NEXT_PUBLIC_LEGAL_ENTITY_NAME" "$LEGAL"
 
-echo "==> Merging ops secrets into .env"
-node scripts/ops/merge-ops-secrets.mjs
+echo "==> Merging ops secrets into .env (force GSTIN + legal name)"
+MERGE_OVERWRITE_KEYS="NEXT_PUBLIC_GSTIN,NEXT_PUBLIC_LEGAL_ENTITY_NAME" \
+  node scripts/ops/merge-ops-secrets.mjs
+node scripts/ops/normalize-production-env.mjs
 
 echo "==> Deploying with compliance env"
 bash deploy/update.sh

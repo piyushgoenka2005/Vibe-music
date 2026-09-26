@@ -23,8 +23,9 @@ echo "  Vibe Music — Audit go-live (L-22 / L-23 / L-30)"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-# ── Merge ops secrets (legal entity, GSTIN, phone, analytics) ─────────────
-echo "▶ Merge deploy/ops-secrets.env → .env"
+# ── Normalize + merge ops secrets (legal entity, GSTIN, phone, analytics) ─
+echo "▶ Normalize + merge deploy/ops-secrets.env → .env"
+node scripts/ops/normalize-production-env.mjs
 node scripts/ops/merge-ops-secrets.mjs
 
 ensure_env() {

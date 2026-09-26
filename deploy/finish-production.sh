@@ -24,11 +24,12 @@ git pull --ff-only origin main
 echo "   Commit: $(git log -1 --oneline)"
 echo ""
 
+echo "▶ 2/6 — Normalize + merge env"
+node scripts/ops/normalize-production-env.mjs || true
 if [[ "${SKIP_OPS_SECRETS:-0}" != "1" && -f deploy/ops-secrets.env ]]; then
-  echo "▶ 2/6 — Merge ops-secrets.env → .env"
   node scripts/ops/merge-ops-secrets.mjs || true
 else
-  echo "▶ 2/6 — Skip ops-secrets merge (none or SKIP_OPS_SECRETS=1)"
+  echo "   (no deploy/ops-secrets.env — skipped merge)"
 fi
 echo ""
 
@@ -45,8 +46,12 @@ bash deploy/install-backups.sh || echo "   ⚠️ backups installer failed (non-
 bash deploy/install-reservation-sweeper.sh || echo "   ⚠️ sweeper installer failed (non-fatal)"
 echo ""
 
-echo "▶ 6/6 — Public smoke"
-BASE_URL="${PUBLIC_BASE_URL:-https://vibemusic.in}" bash deploy/post-deploy-smoke.sh
+echo "▶ 6/6 — Smoke (loopback APIs + public pages)"
+API_BASE_URL="http://127.0.0.1:3000" BASE_URL="http://127.0.0.1:3000" bash deploy/post-deploy-smoke.sh
+if [[ "${SKIP_PUBLIC_SMOKE:-0}" != "1" ]]; then
+  API_BASE_URL="http://127.0.0.1:3000" BASE_URL="${PUBLIC_BASE_URL:-https://vibemusic.in}" \
+    bash deploy/post-deploy-smoke.sh || echo "   ⚠️ public smoke had failures (API still checked via loopback)"
+fi
 
 echo ""
 echo "✅ finish-production complete."

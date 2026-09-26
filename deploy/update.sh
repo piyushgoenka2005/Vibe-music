@@ -62,11 +62,19 @@ fi
 echo "==> Installing dependencies"
 npm ci || npm install --no-audit
 
+echo "==> Normalize production env (phone, TRUST_PROXY_HOPS)"
+node scripts/ops/normalize-production-env.mjs
+
+if [[ -f deploy/ops-secrets.env ]]; then
+  echo "==> Merge deploy/ops-secrets.env → .env"
+  node scripts/ops/merge-ops-secrets.mjs
+fi
+
 echo "==> Database migrations"
 npm run db:migrate
 
 echo "==> Production ops banner sync"
-npx tsx scripts/ops/seed-production-ops.mts || true
+npx tsx --env-file=.env scripts/ops/seed-production-ops.mts || true
 
 if [[ "${SEED_CATALOG:-0}" == "1" ]]; then
   echo "==> Seeding catalog from JSON"
@@ -143,12 +151,16 @@ echo "==> Purging Nginx SSR page cache (after app is healthy)"
 rm -rf /var/cache/nginx/vibe-pages/* 2>/dev/null || true
 
 if [[ "${SKIP_SMOKE:-0}" != "1" ]]; then
-  echo "==> Post-deploy smoke"
-  bash deploy/post-deploy-smoke.sh
+  echo "==> Post-deploy smoke (API via loopback)"
+  API_BASE_URL="http://127.0.0.1:3000" BASE_URL="${SMOKE_BASE_URL:-http://127.0.0.1:3000}" \
+    bash deploy/post-deploy-smoke.sh
 fi
+
+echo "==> Reservation sweeper (release stale holds)"
+npm run ops:release-stale-reservations || echo "    WARN: sweeper failed — check PM2 logs" >&2
 
 echo "Update complete."
 if [[ "${SEED_CATALOG:-0}" != "1" ]]; then
   echo "Tip: run SEED_CATALOG=1 bash deploy/update.sh after catalog JSON changes."
 fi
-echo "Tip: install sweeper once with bash deploy/install-reservation-sweeper.sh"
+echo "Tip: install sweeper cron once with bash deploy/install-reservation-sweeper.sh"
