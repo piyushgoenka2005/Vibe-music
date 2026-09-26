@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getReelVideoCandidateUrls } from "@/data/reelVideos";
+import { GEAR_STORY_SEEDS } from "@/data/gearStories";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
 import { STYLE_STORY_REELS } from "@/data/styleStory";
 import { useVisibleVideo } from "@/hooks/useVisibleVideo";
@@ -25,6 +26,13 @@ interface GearStoryCardProps {
   onOpen: (story: GearStory) => void;
 }
 
+function storySeedIndex(story: GearStory): number {
+  const fromSeed = GEAR_STORY_SEEDS.findIndex((seed) => seed.id === story.id);
+  if (fromSeed >= 0) return fromSeed;
+  const fromReel = STYLE_STORY_REELS.findIndex((reel) => reel.videoSrc === story.videoUrl);
+  return fromReel >= 0 ? fromReel : 0;
+}
+
 export default function GearStoryCard({
   story,
   cardKey,
@@ -38,20 +46,29 @@ export default function GearStoryCard({
   const userPausedRef = useRef(false);
   const [userPaused, setUserPaused] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const [nearViewport, setNearViewport] = useState(false);
-  const reelUrl =
-    STYLE_STORY_REELS.find((reel) => reel.videoSrc === story.videoUrl)?.reelUrl ??
-    SOCIAL_LINKS.instagram;
+  const seedIndex = storySeedIndex(story);
+  const reelUrl = STYLE_STORY_REELS[seedIndex]?.reelUrl ?? SOCIAL_LINKS.instagram;
+  const videoCandidates = useMemo(() => getReelVideoCandidateUrls(seedIndex), [seedIndex]);
+  const [candidateIndex, setCandidateIndex] = useState(0);
+  const videoSrc = videoCandidates[candidateIndex] ?? videoCandidates[0] ?? story.videoUrl;
 
-  // Reels are multi-MB masters — never let the browser start pulling video
-  // bytes on page load. Mount the `<video src>` only once the card is close to
-  // the viewport; below-fold visitors (the common case) download zero bytes.
+  useEffect(() => {
+    setCandidateIndex(0);
+    setVideoFailed(false);
+    setVideoReady(false);
+  }, [story.id, seedIndex]);
+
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || typeof IntersectionObserver === "undefined") {
+    if (!container) return;
+
+    if (typeof IntersectionObserver === "undefined") {
       setNearViewport(true);
       return;
     }
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
@@ -59,11 +76,21 @@ export default function GearStoryCard({
           observer.disconnect();
         }
       },
-      { rootMargin: "500px 0px", threshold: 0.01 },
+      { rootMargin: "160px 0px", threshold: 0.01 },
     );
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
+
+  const shouldMountVideo = Boolean(videoSrc) && nearViewport && !videoFailed;
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !shouldMountVideo) return;
+
+    setVideoReady(false);
+    video.load();
+  }, [videoSrc, shouldMountVideo]);
 
   useVisibleVideo(videoRef, containerRef, {
     forcePaused: playbackLocked || userPaused,
@@ -109,6 +136,18 @@ export default function GearStoryCard({
     [togglePause],
   );
 
+  const handleVideoError = useCallback(() => {
+    if (candidateIndex + 1 < videoCandidates.length) {
+      setCandidateIndex((index) => index + 1);
+      return;
+    }
+    setVideoFailed(true);
+  }, [candidateIndex, videoCandidates.length]);
+
+  const handleVideoReady = useCallback(() => {
+    setVideoReady(true);
+  }, []);
+
   return (
     <article
       ref={containerRef}
@@ -126,22 +165,22 @@ export default function GearStoryCard({
       }
     >
       <div className="gear-story-card__media">
-        {videoFailed || !story.videoUrl || !nearViewport ? (
-          <Image
-            className="gear-story-card__video gear-story-card__poster"
+        {story.posterUrl ? (
+          <img
+            className="gear-story-card__poster"
             src={story.posterUrl}
             alt=""
             aria-hidden="true"
-            fill
-            sizes="(max-width: 640px) 150px, (max-width: 1024px) 250px, 300px"
-            style={{ objectFit: "cover" }}
+            decoding="async"
           />
-        ) : (
+        ) : null}
+        {shouldMountVideo ? (
           <video
             ref={videoRef}
-            className="gear-story-card__video"
-            src={story.videoUrl}
-            poster={story.posterUrl || undefined}
+            className={["gear-story-card__video", videoReady ? "gear-story-card__video--ready" : ""]
+              .filter(Boolean)
+              .join(" ")}
+            src={videoSrc}
             muted
             loop
             playsInline
@@ -149,9 +188,11 @@ export default function GearStoryCard({
             disablePictureInPicture
             controls={false}
             aria-hidden="true"
-            onError={() => setVideoFailed(true)}
+            onError={handleVideoError}
+            onLoadedData={handleVideoReady}
+            onCanPlay={handleVideoReady}
           />
-        )}
+        ) : null}
         <div className="gear-story-card__overlay">
           <a
             href={reelUrl}

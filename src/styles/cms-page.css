@@ -1,0 +1,176 @@
+/* ─── CMS / policy pages (shipping, returns, privacy, terms, cookies) ─── */
+
+.cms-page__article {
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.cms-page__header {
+  margin-bottom: 1.5rem;
+}
+
+.cms-page__lede {
+  margin: 0.5rem 0 0;
+  max-width: 52ch;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.cms-page__panel {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.05);
+}
+
+.cms-page__content {
+  padding: 1.35rem 1.25rem 1.5rem;
+  overflow-wrap: anywhere;
+}
+
+.cms-page__section + .cms-page__section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.cms-page__section-title {
+  margin: 0 0 0.65rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.cms-page__paragraph {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.cms-page__paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.cms-page__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.75rem;
+}
+
+.cms-page__related {
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 0;
+  background: #f8fafc;
+}
+
+.cms-page__related-label {
+  margin: 0 0 0.65rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.cms-page__related-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+}
+
+.cms-page__related-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 0;
+  background: #ffffff;
+  color: var(--brand-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color var(--duration-fast) ease,
+    background var(--duration-fast) ease;
+}
+
+.cms-page__related-link:hover {
+  border-color: rgba(18, 83, 237, 0.28);
+  background: rgba(18, 83, 237, 0.04);
+}
+
+.cms-page__related-link.is-active {
+  border-color: var(--brand-primary);
+  background: rgba(18, 83, 237, 0.08);
+  color: var(--text-primary);
+}
+
+.cms-page__back a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--brand-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.cms-page__back a:hover {
+  text-decoration: underline;
+}
+
+.cms-page__content table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+}
+
+.cms-page__content th,
+.cms-page__content td {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  text-align: left;
+}
+
+@media (max-width: 767px) {
+  .cms-page__article {
+    max-width: none;
+  }
+
+  .cms-page__content {
+    padding: 1.1rem 1rem 1.25rem;
+  }
+
+  .cms-page__lede {
+    font-size: 0.9375rem;
+  }
+
+  .cms-page__section-title {
+    font-size: 1rem;
+  }
+
+  .cms-page__related-list {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cms-page__related-link {
+    justify-content: center;
+    min-height: 2.75rem;
+  }
+}

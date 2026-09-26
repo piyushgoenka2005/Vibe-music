@@ -32,6 +32,9 @@ function buildFooterSections(legal: PublicLegalInfo): FooterAccordionSection[] {
         ...(BRAND.phoneTel
           ? [{ label: `Call ${BRAND.phoneDisplay}`, href: `tel:${BRAND.phoneTel}` }]
           : [{ label: `Email ${BRAND.email}`, href: `mailto:${BRAND.email}` }]),
+        ...(BRAND.whatsappUrl
+          ? [{ label: "Chat on WhatsApp", href: BRAND.whatsappUrl, external: true }]
+          : []),
         { label: "Shipping & delivery", href: ROUTES.page("shipping") },
         { label: "Returns & exchanges", href: ROUTES.page("returns") },
       ],
@@ -55,6 +58,9 @@ function buildFooterSections(legal: PublicLegalInfo): FooterAccordionSection[] {
         { label: "YouTube", href: SOCIAL_LINKS.youtube, external: true },
         { label: "Facebook", href: SOCIAL_LINKS.facebook, external: true },
         { label: "LinkedIn", href: SOCIAL_LINKS.linkedin, external: true },
+        ...(BRAND.whatsappUrl
+          ? [{ label: "WhatsApp", href: BRAND.whatsappUrl, external: true }]
+          : []),
       ],
     },
   ];

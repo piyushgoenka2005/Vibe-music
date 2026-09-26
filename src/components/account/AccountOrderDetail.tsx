@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import { BRAND } from "@/lib/brand";
 import { formatOrderIdDisplay } from "@/lib/orderId";
 import { ROUTES, productPath } from "@/lib/routes";
@@ -31,13 +32,11 @@ export interface AccountOrderDetailProps {
   order: Order;
   shipment: PublicShipmentTracking | null;
   invoiceUrls: InvoiceUrls | null;
-  products: Array<
-    Pick<CatalogProduct, "id" | "slug" | "image" | "images" | "imageColor">
-  >;
+  products: Array<Pick<CatalogProduct, "id" | "slug" | "image" | "images" | "imageColor">>;
 }
 
 function productImage(
-  product: Pick<CatalogProduct, "image" | "images" | "imageColor"> | undefined
+  product: Pick<CatalogProduct, "image" | "images" | "imageColor"> | undefined,
 ): { src?: string; color: string } {
   const src = product?.images?.[0] ?? product?.image;
   return {
@@ -73,9 +72,7 @@ function OrderTimelineSection({
               <div className="acct__timeline-content">
                 <p className="acct__timeline-label">{step.label}</p>
                 <p className="acct__timeline-meta">
-                  {step.state === "upcoming"
-                    ? "Pending"
-                    : formatTimelineDate(step.occurredAt)}
+                  {step.state === "upcoming" ? "Pending" : formatTimelineDate(step.occurredAt)}
                 </p>
                 {step.description ? (
                   <p className="acct__timeline-description">{step.description}</p>
@@ -110,8 +107,7 @@ export default function AccountOrderDetail({
   const [cancelSubmitting, setCancelSubmitting] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
 
-  const canSelfCancel =
-    order.status === "pending" || order.status === "confirmed";
+  const canSelfCancel = order.status === "pending" || order.status === "confirmed";
 
   async function cancelOrder() {
     if (cancelSubmitting) return;
@@ -146,7 +142,7 @@ export default function AccountOrderDetail({
     ? `${ROUTES.trackOrder}?orderId=${encodeURIComponent(order.id)}&trackingToken=${encodeURIComponent(order.trackingToken)}`
     : ROUTES.trackOrder;
   const supportMailto = `mailto:${BRAND.email}?subject=${encodeURIComponent(
-    `Order support — ${formatOrderIdDisplay(order.id)}`
+    `Order support — ${formatOrderIdDisplay(order.id)}`,
   )}`;
 
   return (
@@ -159,9 +155,7 @@ export default function AccountOrderDetail({
 
         <div className="acct__order-detail-heading">
           <div>
-            <h1 className="acct__section-title">
-              Order {formatOrderIdDisplay(order.id)}
-            </h1>
+            <h1 className="acct__section-title">Order {formatOrderIdDisplay(order.id)}</h1>
             <p className="acct__section-sub acct__order-detail-sub">
               Placed on {formatOrderDate(order.createdAt)}
             </p>
@@ -181,15 +175,10 @@ export default function AccountOrderDetail({
             {invoiceDownload.label}
           </a>
         ) : (
-          <span className="acct__btn acct__btn--secondary acct__btn--disabled">
-            Print invoice
-          </span>
+          <span className="acct__btn acct__btn--secondary acct__btn--disabled">Print invoice</span>
         )}
         {canShowInvoice && invoiceViewUrl ? (
-          <a
-            href={invoiceViewUrl}
-            className="acct__btn acct__btn--secondary"
-          >
+          <a href={invoiceViewUrl} className="acct__btn acct__btn--secondary">
             View invoice
           </a>
         ) : null}
@@ -327,12 +316,7 @@ export default function AccountOrderDetail({
                 <div className="acct__order-item-thumb">
                   {image.src ? (
                     // eslint-disable-next-line @next/next/no-img-element -- order item thumb; CDN URLs with color fallback
-                    <img
-                      src={image.src}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                    />
+                    <img src={image.src} alt="" loading="lazy" decoding="async" />
                   ) : (
                     <div
                       className="acct__order-item-swatch"
@@ -354,12 +338,8 @@ export default function AccountOrderDetail({
                   <p className="acct__order-item-qty">Qty: {item.quantity}</p>
                 </div>
                 <div className="acct__order-item-pricing">
-                  <p className="acct__order-item-unit">
-                    {formatCurrency(item.price)} each
-                  </p>
-                  <p className="acct__order-item-total">
-                    {formatCurrency(lineTotal)}
-                  </p>
+                  <p className="acct__order-item-unit">{formatCurrency(item.price)} each</p>
+                  <p className="acct__order-item-total">{formatCurrency(lineTotal)}</p>
                 </div>
               </article>
             );
@@ -373,18 +353,14 @@ export default function AccountOrderDetail({
           </div>
           {order.couponCode ? (
             <div className="acct__order-totals-row acct__order-totals-row--discount">
-              <span>
-                Coupon ({order.couponCode})
-              </span>
+              <span>Coupon ({order.couponCode})</span>
               <strong>-{formatCurrencyPrecise(order.couponDiscount)}</strong>
             </div>
           ) : null}
           <div className="acct__order-totals-row">
             <span>Shipping</span>
             <strong>
-              {order.shippingCharge > 0
-                ? formatCurrencyPrecise(order.shippingCharge)
-                : "Free"}
+              {order.shippingCharge > 0 ? formatCurrencyPrecise(order.shippingCharge) : "Free"}
             </strong>
           </div>
           <div className="acct__order-totals-row">
@@ -408,10 +384,7 @@ export default function AccountOrderDetail({
         <div className="acct__card-header">
           <h3 className="acct__card-title">Shipment tracking</h3>
           {canShowInvoice && invoiceViewUrl ? (
-            <a
-              href={invoiceViewUrl}
-              className="acct__card-link"
-            >
+            <a href={invoiceViewUrl} className="acct__card-link">
               View invoice
             </a>
           ) : null}
@@ -422,13 +395,11 @@ export default function AccountOrderDetail({
           ) : (
             <div className="acct__tracking-empty">
               <p>
-                Shipment details are not available yet. Tracking will appear here
-                once your order has been packed and handed to the carrier.
+                Shipment details are not available yet. Tracking will appear here once your order
+                has been packed and handed to the carrier.
               </p>
               {resolvedTrackingNumber !== "Not assigned yet" ? (
-                <p className="acct__detail-kv-mono">
-                  Tracking number: {resolvedTrackingNumber}
-                </p>
+                <p className="acct__detail-kv-mono">Tracking number: {resolvedTrackingNumber}</p>
               ) : null}
             </div>
           )}
@@ -440,8 +411,7 @@ export default function AccountOrderDetail({
           <div>
             <h3 className="acct__card-title">Need help with this order?</h3>
             <p className="acct__muted">
-              Our gear advisors can help with delivery, returns, and product
-              questions.
+              Our gear advisors can help with delivery, returns, and product questions.
             </p>
           </div>
           <div className="acct__support-links">
@@ -453,6 +423,17 @@ export default function AccountOrderDetail({
               <a href={`tel:${BRAND.phoneTel}`} className="acct__support-link">
                 <Phone size={16} aria-hidden />
                 {BRAND.phoneDisplay}
+              </a>
+            ) : null}
+            {BRAND.whatsappUrl ? (
+              <a
+                href={BRAND.whatsappUrl}
+                className="acct__support-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <WhatsAppIcon size={16} />
+                WhatsApp support
               </a>
             ) : null}
           </div>

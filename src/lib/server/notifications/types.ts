@@ -24,7 +24,7 @@ export type LifecycleEvent =
 export interface LifecycleRecipient {
   /** Customer email — used by the email channel and as an idempotency key. */
   email: string;
-  /** E.164 digits for SMS/WhatsApp (e.g. 919773651006). Optional. */
+  /** E.164 digits for SMS/WhatsApp (e.g. 918910482950). Optional. */
   phone?: string | null;
   /** Logged-in user id — enables preference gating + web push. Optional. */
   userId?: string | null;
@@ -66,9 +66,5 @@ export interface ChannelProvider {
   readonly channel: NotificationChannel;
   /** Report whether credentials are present so dispatch can skip cleanly. */
   isConfigured(): boolean;
-  send(input: {
-    to: string;
-    message: RenderedMessage;
-    event: LifecycleEvent;
-  }): Promise<SendResult>;
+  send(input: { to: string; message: RenderedMessage; event: LifecycleEvent }): Promise<SendResult>;
 }

@@ -259,24 +259,13 @@ export default function ProductDetailsPanel({ product }: ProductDetailsPanelProp
           <h3 className="pdp-product-details__about-title">About this item</h3>
           <ul className="pdp-product-details__about-list">
             {viewModel.aboutItems.map((item, index) => (
-              <li
-                key={`about-${index}`}
-                className={[
-                  "pdp-product-details__about-item",
-                  item.title ? "pdp-product-details__about-item--spec" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                <span className="pdp-product-details__about-node" aria-hidden="true" />
-                <div className="pdp-product-details__about-item-content">
-                  {item.title ? (
-                    <span className="pdp-product-details__about-item-title">{item.title}</span>
-                  ) : null}
-                  {item.body ? (
-                    <span className="pdp-product-details__about-item-body">{item.body}</span>
-                  ) : null}
-                </div>
+              <li key={`about-${index}`} className="pdp-product-details__about-item">
+                {item.title ? (
+                  <span className="pdp-product-details__about-item-title">{item.title}</span>
+                ) : null}
+                {item.body ? (
+                  <span className="pdp-product-details__about-item-body">{item.body}</span>
+                ) : null}
               </li>
             ))}
           </ul>

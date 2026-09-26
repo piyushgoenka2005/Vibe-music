@@ -2,18 +2,16 @@ import { SELLER_STATE, DEFAULT_GST_RATE } from "@/lib/gstCalculator";
 import * as pgContent from "@/lib/server/prisma/contentRepository";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import type { AnalyticsReport, StoreSettings } from "@/types/admin";
-import {
-  getRevenueChartData,
-  topProductsFromOrders,
-} from "@/lib/server/dashboardService";
+import { getRevenueChartData, topProductsFromOrders } from "@/lib/server/dashboardService";
 import { isRazorpayConfigured } from "@/lib/server/env";
 import { getCached, invalidateCache } from "@/lib/server/redisCache";
 
 const DEFAULT_SETTINGS: StoreSettings = {
   storeName: "Vibe Music",
   storeEmail: "support@vibemusic.in",
-  storePhone: "",
-  storeAddress: "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071",
+  storePhone: "8910482950",
+  storeAddress:
+    "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071",
   gstNumber: "",
   defaultGstRate: DEFAULT_GST_RATE,
   sellerState: SELLER_STATE,
@@ -41,13 +39,11 @@ export async function getStoreSettings(): Promise<StoreSettings> {
         razorpayEnabled: isRazorpayConfigured(),
       };
     },
-    SETTINGS_CACHE_TTL
+    SETTINGS_CACHE_TTL,
   );
 }
 
-export async function updateStoreSettings(
-  patch: Partial<StoreSettings>
-): Promise<StoreSettings> {
+export async function updateStoreSettings(patch: Partial<StoreSettings>): Promise<StoreSettings> {
   const current = await getStoreSettings();
   const updated: StoreSettings = {
     ...current,

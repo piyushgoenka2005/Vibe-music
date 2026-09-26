@@ -1,7 +1,9 @@
+import { BRAND } from "@/lib/brand";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
 import type { HomepageSection, HomepageSectionItem } from "@/types/homepage";
 
 export const SOCIAL_RAIL_PLATFORMS = [
+  "whatsapp",
   "facebook",
   "twitter",
   "instagram",
@@ -12,12 +14,18 @@ export const SOCIAL_RAIL_PLATFORMS = [
 export type SocialRailPlatform = (typeof SOCIAL_RAIL_PLATFORMS)[number];
 
 export const SOCIAL_RAIL_PLATFORM_LABELS: Record<SocialRailPlatform, string> = {
+  whatsapp: "WhatsApp",
   facebook: "Facebook",
   twitter: "X (Twitter)",
   instagram: "Instagram",
   linkedin: "LinkedIn",
   youtube: "YouTube",
 };
+
+function getDefaultSocialRailHref(platform: SocialRailPlatform): string {
+  if (platform === "whatsapp") return BRAND.whatsappUrl;
+  return SOCIAL_LINKS[platform];
+}
 
 export interface SocialRailLink {
   platform: SocialRailPlatform;
@@ -56,7 +64,7 @@ export function getDefaultSocialRailConfig(): SocialRailPublicConfig {
     links: SOCIAL_RAIL_PLATFORMS.map((platform) => ({
       platform,
       label: SOCIAL_RAIL_PLATFORM_LABELS[platform],
-      href: SOCIAL_LINKS[platform],
+      href: getDefaultSocialRailHref(platform),
     })),
   };
 }
@@ -107,5 +115,5 @@ export const DEFAULT_SOCIAL_RAIL_ITEMS: Array<{
 }> = SOCIAL_RAIL_PLATFORMS.map((platform) => ({
   id: `social-rail-${platform}`,
   platform,
-  href: SOCIAL_LINKS[platform],
+  href: getDefaultSocialRailHref(platform),
 }));

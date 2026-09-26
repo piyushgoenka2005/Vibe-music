@@ -42,9 +42,8 @@ const EditorialSplit = dynamic(() => import("@/components/home/EditorialSplit"),
 const ServiceStatusCarousel = dynamic(() => import("@/components/home/ServiceStatusCarousel"), {
   loading: () => null,
 });
-const GearStoriesReelsSection = dynamic(() => import("@/components/home/GearStoriesReelsSection"), {
-  loading: () => null,
-});
+import GearStoriesReelsSection from "@/components/home/GearStoriesReelsSection";
+import GearStoriesSectionSkeleton from "@/components/home/GearStoriesSectionSkeleton";
 const CultureTypographySection = dynamic(
   () => import("@/components/home/CultureTypographySection"),
   { loading: () => null },
@@ -92,7 +91,7 @@ export default function HomePage() {
         <BrowseCategoryCardsSection />
       </Section>
 
-      <Section name="Gear stories" fallback={null}>
+      <Section name="Gear stories" fallback={<GearStoriesSectionSkeleton />}>
         <GearStoriesReelsSection />
       </Section>
 

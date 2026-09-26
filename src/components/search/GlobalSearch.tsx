@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useSearch } from "@/hooks/useSearch";
+import { resolveHeaderSearchQuery } from "@/lib/search/headerSearchQuery";
 import { searchStore } from "@/store/searchStore";
 import SearchOverlay from "./SearchOverlay";
 import "./search.css";
@@ -12,8 +14,7 @@ const HEADER_INPUT_SELECTORS =
 const HEADER_FORM_SELECTORS =
   ".assets-site-header__menu-search-form, .site-header__search, #search-mount .aa-Form, .aa-Form";
 
-const HEADER_SUBMIT_SELECTORS =
-  ".assets-site-header__menu-search-submit, .aa-SubmitButton";
+const HEADER_SUBMIT_SELECTORS = ".assets-site-header__menu-search-submit, .aa-SubmitButton";
 
 function isMobileViewport(): boolean {
   return window.matchMedia("(max-width: 767px)").matches;
@@ -22,9 +23,7 @@ function isMobileViewport(): boolean {
 /** Show the classic typeahead field; hide the disabled federated-search mount. */
 export function activateHeaderSearch() {
   const searchMount = document.getElementById("search-mount");
-  const classic = document.querySelector<HTMLElement>(
-    "[classic-search-container]"
-  );
+  const classic = document.querySelector<HTMLElement>("[classic-search-container]");
 
   if (searchMount) {
     searchMount.style.display = "none";
@@ -33,15 +32,13 @@ export function activateHeaderSearch() {
     classic.style.removeProperty("display");
   }
 
-  document
-    .querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS)
-    .forEach((input) => {
-      input.disabled = false;
-      input.removeAttribute("disabled");
-      if (!input.placeholder || input.placeholder === "Loading...") {
-        input.placeholder = " ";
-      }
-    });
+  document.querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS).forEach((input) => {
+    input.disabled = false;
+    input.removeAttribute("disabled");
+    if (!input.placeholder || input.placeholder === "Loading...") {
+      input.placeholder = " ";
+    }
+  });
 
   document.querySelectorAll(".federated-search--loading").forEach((el) => {
     el.classList.remove("federated-search--loading");
@@ -52,15 +49,13 @@ function bindHeaderSearch() {
   activateHeaderSearch();
 
   const inputs = Array.from(
-    document.querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS)
+    document.querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS),
   ).filter((input) => !input.disabled && input.offsetParent !== null);
 
-  const forms = Array.from(
-    document.querySelectorAll<HTMLFormElement>(HEADER_FORM_SELECTORS)
-  );
+  const forms = Array.from(document.querySelectorAll<HTMLFormElement>(HEADER_FORM_SELECTORS));
 
   const submitButtons = Array.from(
-    document.querySelectorAll<HTMLButtonElement>(HEADER_SUBMIT_SELECTORS)
+    document.querySelectorAll<HTMLButtonElement>(HEADER_SUBMIT_SELECTORS),
   );
 
   return { inputs, forms, submitButtons };
@@ -70,7 +65,7 @@ function isFullyBound(
   bound: WeakSet<Element>,
   inputs: HTMLInputElement[],
   forms: HTMLFormElement[],
-  submitButtons: HTMLButtonElement[]
+  submitButtons: HTMLButtonElement[],
 ): boolean {
   return (
     inputs.length > 0 &&
@@ -81,6 +76,7 @@ function isFullyBound(
 }
 
 export default function GlobalSearch() {
+  const pathname = usePathname() ?? "";
   const boundElementsRef = useRef<WeakSet<Element>>(new WeakSet());
   const handlersRef = useRef<{
     onHeaderFocus: EventListener;
@@ -110,17 +106,32 @@ export default function GlobalSearch() {
   } = useSearch();
 
   const syncNativeInputs = useCallback((value: string) => {
-    document
-      .querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS)
-      .forEach((input) => {
-        if (input.value !== value) input.value = value;
-      });
+    document.querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS).forEach((input) => {
+      if (input.value === value) return;
+      input.value = value;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
   }, []);
 
-  const getSearchAnchorRect = useCallback((input: HTMLInputElement) => {
-    const form = input.closest<HTMLElement>(
-      ".assets-site-header__menu-search-form"
+  const syncSearchFromRoute = useCallback(() => {
+    const nextQuery = resolveHeaderSearchQuery(
+      pathname,
+      typeof window !== "undefined" ? window.location.search : "",
     );
+
+    if (searchStore.getState().query !== nextQuery) {
+      searchStore.setQuery(nextQuery);
+    }
+
+    syncNativeInputs(nextQuery);
+
+    if (!nextQuery) {
+      searchStore.closeOverlay();
+    }
+  }, [pathname, syncNativeInputs]);
+
+  const getSearchAnchorRect = useCallback((input: HTMLInputElement) => {
+    const form = input.closest<HTMLElement>(".assets-site-header__menu-search-form");
     return (form ?? input).getBoundingClientRect();
   }, []);
 
@@ -133,7 +144,7 @@ export default function GlobalSearch() {
       syncNativeInputs(value);
       openOverlay(rect, target.id, isMobileViewport());
     },
-    [getSearchAnchorRect, openOverlay, setQuery, syncNativeInputs]
+    [getSearchAnchorRect, openOverlay, setQuery, syncNativeInputs],
   );
 
   const onHeaderInput = useCallback(
@@ -147,7 +158,7 @@ export default function GlobalSearch() {
         openOverlay(rect, target.id, isMobileViewport());
       }
     },
-    [getSearchAnchorRect, openOverlay, setQuery, syncNativeInputs]
+    [getSearchAnchorRect, openOverlay, setQuery, syncNativeInputs],
   );
 
   const onHeaderKeyDown = useCallback(
@@ -181,7 +192,14 @@ export default function GlobalSearch() {
         target.blur();
       }
     },
-    [closeOverlay, flatSuggestions.length, getSearchAnchorRect, handleEnter, moveActiveIndex, openOverlay]
+    [
+      closeOverlay,
+      flatSuggestions.length,
+      getSearchAnchorRect,
+      handleEnter,
+      moveActiveIndex,
+      openOverlay,
+    ],
   );
 
   const onFormSubmit = useCallback(
@@ -192,7 +210,7 @@ export default function GlobalSearch() {
       const formQuery = String(new FormData(form).get("q") ?? "").trim();
       submitSearch(formQuery || undefined);
     },
-    [submitSearch]
+    [submitSearch],
   );
 
   const onSubmitClick = useCallback(
@@ -201,12 +219,10 @@ export default function GlobalSearch() {
       event.stopPropagation();
       const button = event.currentTarget as HTMLButtonElement;
       const form = button.closest("form");
-      const formQuery = form
-        ? String(new FormData(form).get("q") ?? "").trim()
-        : "";
+      const formQuery = form ? String(new FormData(form).get("q") ?? "").trim() : "";
       submitSearch(formQuery || undefined);
     },
-    [submitSearch]
+    [submitSearch],
   );
 
   useEffect(() => {
@@ -217,36 +233,46 @@ export default function GlobalSearch() {
       onFormSubmit: onFormSubmit as EventListener,
       onSubmitClick: onSubmitClick as EventListener,
     };
-  }, [
-    onHeaderFocus,
-    onHeaderInput,
-    onHeaderKeyDown,
-    onFormSubmit,
-    onSubmitClick,
-  ]);
+  }, [onHeaderFocus, onHeaderInput, onHeaderKeyDown, onFormSubmit, onSubmitClick]);
 
   useEffect(() => {
     searchStore.hydrate();
   }, []);
 
   useEffect(() => {
+    syncSearchFromRoute();
+  }, [syncSearchFromRoute]);
+
+  useEffect(() => {
+    const onHistoryNavigation = () => {
+      window.requestAnimationFrame(syncSearchFromRoute);
+    };
+
+    window.addEventListener("popstate", onHistoryNavigation);
+    window.addEventListener("pageshow", onHistoryNavigation);
+
+    return () => {
+      window.removeEventListener("popstate", onHistoryNavigation);
+      window.removeEventListener("pageshow", onHistoryNavigation);
+    };
+  }, [syncSearchFromRoute]);
+
+  useEffect(() => {
     syncNativeInputs(query);
   }, [query, syncNativeInputs]);
 
   useEffect(() => {
-    document
-      .querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS)
-      .forEach((input) => {
-        input.setAttribute("role", "combobox");
-        input.setAttribute("aria-autocomplete", "list");
-        input.setAttribute("aria-controls", "sw-search-panel-listbox");
-        input.setAttribute("aria-expanded", isOverlayOpen ? "true" : "false");
-        if (activeDescendantId) {
-          input.setAttribute("aria-activedescendant", activeDescendantId);
-        } else {
-          input.removeAttribute("aria-activedescendant");
-        }
-      });
+    document.querySelectorAll<HTMLInputElement>(HEADER_INPUT_SELECTORS).forEach((input) => {
+      input.setAttribute("role", "combobox");
+      input.setAttribute("aria-autocomplete", "list");
+      input.setAttribute("aria-controls", "sw-search-panel-listbox");
+      input.setAttribute("aria-expanded", isOverlayOpen ? "true" : "false");
+      if (activeDescendantId) {
+        input.setAttribute("aria-activedescendant", activeDescendantId);
+      } else {
+        input.removeAttribute("aria-activedescendant");
+      }
+    });
   }, [isOverlayOpen, activeDescendantId]);
 
   useEffect(() => {
@@ -277,12 +303,7 @@ export default function GlobalSearch() {
         boundElementsRef.current.add(button);
       });
 
-      return isFullyBound(
-        boundElementsRef.current,
-        inputs,
-        forms,
-        submitButtons
-      );
+      return isFullyBound(boundElementsRef.current, inputs, forms, submitButtons);
     }
 
     const onHeaderReady = () => {
@@ -291,9 +312,7 @@ export default function GlobalSearch() {
 
     attach();
 
-    const headerSection = document.querySelector(
-      '[data-vibe-section="header"]'
-    );
+    const headerSection = document.querySelector('[data-vibe-section="header"]');
     const observer = headerSection
       ? new MutationObserver(() => {
           attach();

@@ -77,7 +77,6 @@ export default function StorefrontChrome({
     SPLASH_CURSOR_ENABLED &&
     !prefersReducedMotion &&
     !hideChrome &&
-    !isMobileViewport &&
     !isCheckoutOrCart &&
     !isAuthPage;
 
@@ -112,6 +111,7 @@ export default function StorefrontChrome({
   }
 
   const lowEndDevice = hasMounted && isLowEndDevice();
+  const mobileOrLowEnd = hasMounted && (isMobileViewport || lowEndDevice);
 
   const shellClassName = [
     "storefront-shell",
@@ -135,19 +135,19 @@ export default function StorefrontChrome({
       {showHelpWidget ? <HelpWidget /> : null}
       {splashEnabled ? (
         <DeferredSplashCursor
-          DYE_RESOLUTION={lowEndDevice ? 320 : 384}
-          SIM_RESOLUTION={lowEndDevice ? 48 : 64}
-          PRESSURE_ITERATIONS={lowEndDevice ? 4 : 6}
+          DYE_RESOLUTION={mobileOrLowEnd ? 256 : 384}
+          SIM_RESOLUTION={mobileOrLowEnd ? 40 : 64}
+          PRESSURE_ITERATIONS={mobileOrLowEnd ? 4 : 6}
           DENSITY_DISSIPATION={6.5}
           VELOCITY_DISSIPATION={2.75}
           PRESSURE={0.08}
           CURL={1.75}
-          SPLAT_RADIUS={0.11}
+          SPLAT_RADIUS={mobileOrLowEnd ? 0.14 : 0.11}
           ZONE_SPLAT_RADIUS={0.09}
-          SPLAT_FORCE={2600}
-          COLOR_INTENSITY={0.08}
+          SPLAT_FORCE={mobileOrLowEnd ? 3200 : 2600}
+          COLOR_INTENSITY={mobileOrLowEnd ? 0.1 : 0.08}
           COLOR_UPDATE_SPEED={10}
-          SHADING={!lowEndDevice}
+          SHADING={!mobileOrLowEnd}
           RAINBOW_MODE={false}
           COLOR="#1253ED"
           ZONE_COLOR="#FFFFFF"

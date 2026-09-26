@@ -1,16 +1,25 @@
-function storePhoneFromEnv(): string {
-  return process.env.NEXT_PUBLIC_STORE_PHONE?.trim() || process.env.STORE_PHONE?.trim() || "";
-}
+/** Canonical storefront support number (10-digit Indian mobile). */
+export const DEFAULT_STORE_PHONE = "8910482950";
 
-const storePhone = storePhoneFromEnv();
+export const SUPPORT_WHATSAPP_MESSAGE =
+  "Hi Vibe Music, I need help with my order or have a product question.";
+
+function storePhoneFromEnv(): string {
+  return (
+    process.env.NEXT_PUBLIC_STORE_PHONE?.trim() ||
+    process.env.STORE_PHONE?.trim() ||
+    DEFAULT_STORE_PHONE
+  );
+}
 
 export function formatIndianPhone(raw: string | undefined): {
   display: string;
   tel: string;
+  whatsappDigits: string;
 } {
-  if (!raw) return { display: "", tel: "" };
+  if (!raw) return { display: "", tel: "", whatsappDigits: "" };
   const digits = raw.replace(/\D/g, "");
-  if (!digits) return { display: "", tel: "" };
+  if (!digits) return { display: "", tel: "", whatsappDigits: "" };
 
   const normalized =
     digits.length === 10 ? `91${digits}` : digits.startsWith("91") ? digits : digits;
@@ -18,10 +27,20 @@ export function formatIndianPhone(raw: string | undefined): {
   const display =
     local.length === 10 ? `+91 ${local.slice(0, 5)} ${local.slice(5)}` : `+${normalized}`;
 
-  return { display, tel: `+${normalized}` };
+  return { display, tel: `+${normalized}`, whatsappDigits: normalized };
 }
 
+export function buildWhatsAppUrl(phoneTelOrDigits: string, message?: string): string {
+  const digits = phoneTelOrDigits.replace(/\D/g, "");
+  if (!digits) return "";
+  const base = `https://wa.me/${digits}`;
+  if (!message) return base;
+  return `${base}?text=${encodeURIComponent(message)}`;
+}
+
+const storePhone = storePhoneFromEnv();
 const formattedPhone = formatIndianPhone(storePhone);
+const whatsappUrl = buildWhatsAppUrl(formattedPhone.whatsappDigits, SUPPORT_WHATSAPP_MESSAGE);
 
 export const BRAND = {
   name: "Vibe Music",
@@ -35,6 +54,8 @@ export const BRAND = {
   phone: storePhone,
   phoneDisplay: formattedPhone.display || storePhone,
   phoneTel: formattedPhone.tel,
+  whatsappUrl,
+  whatsappDigits: formattedPhone.whatsappDigits,
   email: "support@vibemusic.in",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic.in",
   domain: "vibemusic.in",

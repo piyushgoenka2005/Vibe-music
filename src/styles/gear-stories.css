@@ -136,12 +136,30 @@
   touch-action: manipulation;
 }
 
-.gear-story-card__video {
+.gear-story-card__poster {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
   background: #111;
+}
+
+.gear-story-card__video {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.gear-story-card__video--ready {
+  opacity: 1;
 }
 
 .gear-story-card__overlay {

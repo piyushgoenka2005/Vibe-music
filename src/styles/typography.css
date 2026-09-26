@@ -156,6 +156,7 @@ h2 {
 .checkout-summary__title,
 .checkout-confirm__title,
 .account-page__title,
+.cms-page__section-title,
 .blog-post__title,
 .blog-index__title {
   font-family: var(--font-primary);

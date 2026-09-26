@@ -2,40 +2,28 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 import { GEAR_STORIES_SECTION, GEAR_STORY_SEEDS } from "@/data/gearStories";
+import { getMirroredReelVideoUrl } from "@/data/reelVideos";
 import { STYLE_STORY_REELS } from "@/data/styleStory";
 import { getProductImage } from "@/data/productImages";
-import {
-  fetchProductsByIds,
-  isCatalogUnavailable,
-} from "@/lib/server/storeCatalogRepository";
+import { fetchProductsByIds, isCatalogUnavailable } from "@/lib/server/storeCatalogRepository";
 import type { CatalogProduct } from "@/types/catalog";
-import type {
-  GearStoriesSectionData,
-  GearStory,
-  GearStorySeed,
-} from "@/types/gear-story";
+import type { GearStoriesSectionData, GearStory, GearStorySeed } from "@/types/gear-story";
 
-function enrichStory(
-  seed: GearStorySeed,
-  product: CatalogProduct,
-  index: number
-): GearStory {
+function enrichStory(seed: GearStorySeed, product: CatalogProduct, index: number): GearStory {
   const reel = STYLE_STORY_REELS[index];
   const posterUrl =
-    reel?.thumbnailSrc?.trim() ||
-    product.image ||
-    getProductImage(product.slug, product.category);
-  const images =
-    product.images.length > 0 ? product.images : [posterUrl];
+    reel?.thumbnailSrc?.trim() || product.image || getProductImage(product.slug, product.category);
+  const images = product.images.length > 0 ? product.images : [posterUrl];
   const salePrice =
-    product.detail?.salePrice ??
-    (product.price < product.originalPrice ? product.price : null);
+    product.detail?.salePrice ?? (product.price < product.originalPrice ? product.price : null);
 
   return {
     id: seed.id,
     title: seed.title,
     productId: product.id,
-    videoUrl: reel?.videoSrc?.trim() ? reel.videoSrc : seed.videoUrl,
+    videoUrl: reel?.videoSrc?.trim()
+      ? getMirroredReelVideoUrl(index)
+      : seed.videoUrl || getMirroredReelVideoUrl(index),
     posterUrl,
     category: product.category,
     price: product.price,
@@ -57,10 +45,11 @@ function enrichStory(
 
 function buildPlaceholderStory(seed: GearStorySeed, index: number): GearStory {
   const reel = STYLE_STORY_REELS[index];
-  const videoUrl = reel?.videoSrc?.trim() ? reel.videoSrc : seed.videoUrl;
-  const posterUrl = reel?.thumbnailSrc ?? (index % 2 === 0
-    ? "/images/guitar-1.webp"
-    : "/images/guitar-2.webp");
+  const videoUrl = reel?.videoSrc?.trim()
+    ? getMirroredReelVideoUrl(index)
+    : seed.videoUrl || getMirroredReelVideoUrl(index);
+  const posterUrl =
+    reel?.thumbnailSrc ?? (index % 2 === 0 ? "/images/guitar-1.webp" : "/images/guitar-2.webp");
 
   return {
     id: seed.id,
@@ -87,9 +76,7 @@ function buildPlaceholderStory(seed: GearStorySeed, index: number): GearStory {
   };
 }
 
-function buildStoriesFromProducts(
-  products: Array<CatalogProduct | undefined>
-): GearStory[] {
+function buildStoriesFromProducts(products: Array<CatalogProduct | undefined>): GearStory[] {
   return GEAR_STORY_SEEDS.map((seed, index) => {
     const product = products[index];
     if (product && product.status === "active") {
@@ -102,32 +89,24 @@ function buildStoriesFromProducts(
 async function resolveFromLocalCatalog(): Promise<Array<CatalogProduct | undefined>> {
   const { loadProducts } = await import("@/lib/server/catalogRepository");
   const local = loadProducts();
-  return GEAR_STORY_SEEDS.map((seed) =>
-    local.find((product) => product.id === seed.productId)
-  );
+  return GEAR_STORY_SEEDS.map((seed) => local.find((product) => product.id === seed.productId));
 }
 
 async function resolveSeedProducts(): Promise<Array<CatalogProduct | undefined>> {
-  let fromDb: Array<CatalogProduct | undefined> = [];
-
-  if (!isCatalogUnavailable()) {
-    try {
-      const ids = GEAR_STORY_SEEDS.map((seed) => seed.productId);
-      const products = await fetchProductsByIds(ids);
-      const byId = new Map(products.map((product) => [product.id, product]));
-      fromDb = GEAR_STORY_SEEDS.map((seed) => byId.get(seed.productId));
-    } catch {
-      fromDb = [];
-    }
-  }
-
-  const missing = fromDb.length === 0 || fromDb.some((product) => !product);
-  if (!missing) return fromDb;
-
   const fromLocal = await resolveFromLocalCatalog();
-  if (fromDb.length === 0) return fromLocal;
+  const hasLocal = fromLocal.some((product) => Boolean(product));
+  if (hasLocal) return fromLocal;
 
-  return GEAR_STORY_SEEDS.map((_, index) => fromDb[index] ?? fromLocal[index]);
+  if (isCatalogUnavailable()) return fromLocal;
+
+  try {
+    const ids = GEAR_STORY_SEEDS.map((seed) => seed.productId);
+    const products = await fetchProductsByIds(ids);
+    const byId = new Map(products.map((product) => [product.id, product]));
+    return GEAR_STORY_SEEDS.map((seed) => byId.get(seed.productId));
+  } catch {
+    return fromLocal;
+  }
 }
 
 export async function listGearStories(): Promise<GearStoriesSectionData> {
@@ -136,16 +115,15 @@ export async function listGearStories(): Promise<GearStoriesSectionData> {
   return buildStaticGearStories(products);
 }
 
-const GEAR_STORIES_REVALIDATE_SECONDS = 60;
+const GEAR_STORIES_REVALIDATE_SECONDS = 3600;
 
-export const getCachedGearStories = unstable_cache(
-  listGearStories,
-  ["gear-stories-section"],
-  { revalidate: GEAR_STORIES_REVALIDATE_SECONDS, tags: ["gear-stories", "catalog"] }
-);
+export const getCachedGearStories = unstable_cache(listGearStories, ["gear-stories-section"], {
+  revalidate: GEAR_STORIES_REVALIDATE_SECONDS,
+  tags: ["gear-stories", "catalog"],
+});
 
 export async function buildStaticGearStories(
-  products?: Array<CatalogProduct | undefined>
+  products?: Array<CatalogProduct | undefined>,
 ): Promise<GearStoriesSectionData> {
   const resolved = products ?? (await resolveFromLocalCatalog());
   return {

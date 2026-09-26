@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Mail, MapPin, Phone } from "lucide-react";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import { trackGenerateLead } from "@/lib/analytics/events";
 import { NavArrowIcon } from "@/gp9/components/ui/nav-arrow-icon";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
@@ -19,9 +20,7 @@ export default function ContactPageContent() {
   const [messageOverride, setMessageOverride] = useState<string | null>(null);
   const subject = subjectOverride ?? querySubject;
   const message = messageOverride ?? queryMessage;
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
-    "idle"
-  );
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [feedback, setFeedback] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -49,9 +48,7 @@ export default function ContactPageContent() {
       setMessageOverride("");
     } catch (error) {
       setStatus("error");
-      setFeedback(
-        error instanceof Error ? error.message : "Unable to send message"
-      );
+      setFeedback(error instanceof Error ? error.message : "Unable to send message");
     }
   }
 
@@ -62,8 +59,8 @@ export default function ContactPageContent() {
         <p className="storefront-page__eyebrow">Support</p>
         <h1 className="storefront-page__title">Contact Vibe Music</h1>
         <p className="storefront-page__subtitle">
-          Questions about orders, gear, or repairs? Send us a message and our team
-          will get back to you.
+          Questions about orders, gear, or repairs? Send us a message and our team will get back to
+          you.
         </p>
       </header>
 
@@ -81,14 +78,20 @@ export default function ContactPageContent() {
                 <a href={`tel:${BRAND.phoneTel}`}>{BRAND.phoneDisplay}</a>
               </li>
             ) : null}
+            {BRAND.whatsappUrl ? (
+              <li>
+                <WhatsAppIcon size={18} />
+                <a href={BRAND.whatsappUrl} target="_blank" rel="noopener noreferrer">
+                  Chat on WhatsApp
+                </a>
+              </li>
+            ) : null}
             <li>
               <MapPin size={18} aria-hidden />
               <span>{BRAND.address}</span>
             </li>
           </ul>
-          <p className="contact-page__hint">
-            Typical response time: 1–2 business days (Mon–Sat).
-          </p>
+          <p className="contact-page__hint">Typical response time: 1–2 business days (Mon–Sat).</p>
         </section>
 
         <section className="contact-page__card">
@@ -115,11 +118,7 @@ export default function ContactPageContent() {
             </label>
             <label>
               <span>Phone (optional)</span>
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                autoComplete="tel"
-              />
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
             </label>
             <label>
               <span>Subject</span>
@@ -146,10 +145,7 @@ export default function ContactPageContent() {
               <span className="contact-page__submit-label">
                 {status === "loading" ? "Sending…" : "Send message"}
               </span>
-              <NavArrowIcon
-                size="sm"
-                className="contact-page__submit-arrow"
-              />
+              <NavArrowIcon size="sm" className="contact-page__submit-arrow" />
             </button>
             {feedback ? (
               <p

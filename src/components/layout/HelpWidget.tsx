@@ -16,14 +16,16 @@ import {
   ChevronRight,
   Clock,
   Headset,
-  MessageCircle,
+  Mail,
   Package,
   Phone,
   RotateCcw,
   ShieldAlert,
+  Ticket,
   Truck,
   X,
 } from "lucide-react";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
@@ -36,6 +38,7 @@ import {
 } from "@/data/helpWidget";
 
 const LINK_ICONS = {
+  whatsapp: WhatsAppIcon,
   package: Package,
   rotate: RotateCcw,
   truck: Truck,
@@ -187,6 +190,7 @@ export default function HelpWidget() {
                 <h2 className="help-widget__title" id={`${panelId}-title`}>
                   How can we help?
                 </h2>
+                <p className="help-widget__subtitle">{HELP_WIDGET_INTRO}</p>
               </div>
               <button
                 aria-label="Close support panel"
@@ -199,15 +203,45 @@ export default function HelpWidget() {
             </header>
 
             <div className="help-widget__body">
-              <p className="help-widget__intro">{HELP_WIDGET_INTRO}</p>
-
-              <nav aria-label="Support links" className="help-widget__links">
+              <nav aria-label="Support links" className="help-widget__links help-widget__card">
                 {HELP_WIDGET_LINKS.map((link) => {
                   const Icon = LINK_ICONS[link.icon];
+                  const isExternal = "external" in link && link.external;
+                  const linkClassName = [
+                    "help-widget__link",
+                    link.icon === "whatsapp" ? "help-widget__link--whatsapp" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ");
+
+                  if (isExternal) {
+                    return (
+                      <a
+                        key={link.href}
+                        className={linkClassName}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={close}
+                      >
+                        <span className="help-widget__link-icon" aria-hidden>
+                          <Icon size={16} strokeWidth={link.icon === "whatsapp" ? undefined : 2} />
+                        </span>
+                        <span className="help-widget__link-label">{link.label}</span>
+                        <ChevronRight
+                          aria-hidden
+                          className="help-widget__link-chevron"
+                          size={16}
+                          strokeWidth={2}
+                        />
+                      </a>
+                    );
+                  }
+
                   return (
                     <Link
                       key={link.href}
-                      className="help-widget__link"
+                      className={linkClassName}
                       href={link.href}
                       onClick={close}
                     >
@@ -226,23 +260,26 @@ export default function HelpWidget() {
                 })}
               </nav>
 
-              <div className="help-widget__actions">
-                {user ? (
-                  <Link
-                    className="help-widget__action-btn help-widget__action-btn--secondary"
-                    href={ROUTES.accountSupport}
-                    onClick={close}
-                  >
-                    <Headset aria-hidden size={18} strokeWidth={2} />
-                    My support tickets
-                  </Link>
-                ) : null}
+              <div className="help-widget__actions help-widget__card">
+                <p className="help-widget__section-label">Contact us</p>
+                <a
+                  className="help-widget__action-btn help-widget__action-btn--whatsapp"
+                  href={BRAND.whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={close}
+                >
+                  <WhatsAppIcon size={16} />
+                  Chat on WhatsApp
+                </a>
                 <button
                   type="button"
                   className="help-widget__action-btn help-widget__action-btn--primary"
                   onClick={() => setShowTicketForm((value) => !value)}
                 >
-                  <MessageCircle aria-hidden size={18} strokeWidth={2} />
+                  <span className="help-widget__action-icon" aria-hidden>
+                    <Ticket size={15} strokeWidth={2} />
+                  </span>
                   Open support ticket
                 </button>
                 <a
@@ -250,7 +287,9 @@ export default function HelpWidget() {
                   href={`mailto:${BRAND.email}?subject=Support%20request`}
                   onClick={close}
                 >
-                  <MessageCircle aria-hidden size={18} strokeWidth={2} />
+                  <span className="help-widget__action-icon" aria-hidden>
+                    <Mail size={15} strokeWidth={2} />
+                  </span>
                   Email support
                 </a>
                 {BRAND.phoneTel ? (
@@ -259,9 +298,19 @@ export default function HelpWidget() {
                     href={`tel:${BRAND.phoneTel}`}
                     onClick={close}
                   >
-                    <Phone aria-hidden size={18} strokeWidth={2} />
+                    <Phone aria-hidden size={15} strokeWidth={2} />
                     {BRAND.phoneDisplay}
                   </a>
+                ) : null}
+                {user ? (
+                  <Link
+                    className="help-widget__action-btn help-widget__action-btn--ghost"
+                    href={ROUTES.accountSupport}
+                    onClick={close}
+                  >
+                    <Headset aria-hidden size={15} strokeWidth={2} />
+                    My support tickets
+                  </Link>
                 ) : null}
               </div>
 
@@ -308,7 +357,7 @@ export default function HelpWidget() {
               ) : null}
 
               {ticketStatus ? (
-                <p className="help-widget__intro" role="status">
+                <p className="help-widget__status-msg" role="status">
                   {ticketStatus}
                 </p>
               ) : null}

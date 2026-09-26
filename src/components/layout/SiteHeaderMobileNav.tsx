@@ -9,12 +9,13 @@ import { ROUTES } from "@/lib/routes";
 import { useAuthStore } from "@/store/authStore";
 import { useShallow } from "zustand/react/shallow";
 
+const MOBILE_BRANDS_LINK = {
+  key: "brands",
+  label: "Brands",
+  href: ROUTES.brands,
+} as const;
+
 const MOBILE_EXTRA_LINKS = [
-  {
-    key: "brands",
-    label: "Brands",
-    href: ROUTES.brands,
-  },
   {
     key: "deals",
     label: "Deals",
@@ -65,6 +66,14 @@ export default function SiteHeaderMobileNav({ onNavigate }: SiteHeaderMobileNavP
   return (
     <div className="site-header__mobile-nav">
       <div className="site-header__mobile-nav-scroll">
+        <Link
+          href={MOBILE_BRANDS_LINK.href}
+          className="site-header__mobile-nav-link site-header__mobile-nav-link--solo"
+          onClick={handleNavigate}
+        >
+          {MOBILE_BRANDS_LINK.label}
+        </Link>
+
         {HEADER_MEGA_MENUS.map((menu) => {
           const expanded = expandedSlug === menu.slug;
           return (

@@ -123,6 +123,7 @@ function SettingsContent({
                 style={{ width: "100%" }}
                 value={form.storePhone}
                 onChange={(e) => updateField("storePhone", e.target.value)}
+                placeholder="8910482950"
               />
             </div>
             <div className="admin-form-group">
@@ -150,7 +151,7 @@ function SettingsContent({
                 onChange={(e) =>
                   updateField(
                     "defaultGstRate",
-                    Number(e.target.value) as StoreSettings["defaultGstRate"]
+                    Number(e.target.value) as StoreSettings["defaultGstRate"],
                   )
                 }
               >
@@ -171,8 +172,17 @@ function SettingsContent({
             </div>
             <div className="admin-form-group">
               <label>Free Shipping Threshold (₹)</label>
-              <p style={{ fontSize: "0.8125rem", color: "var(--admin-muted)", marginBottom: "0.35rem" }}>
-                Checkout currently always quotes free shipping. These fields are stored for future paid-shipping modes and do not change customer quotes today. Cart messaging defaults to free shipping (threshold 0) unless NEXT_PUBLIC_CART_FREE_SHIPPING_THRESHOLD is set.
+              <p
+                style={{
+                  fontSize: "0.8125rem",
+                  color: "var(--admin-muted)",
+                  marginBottom: "0.35rem",
+                }}
+              >
+                Checkout currently always quotes free shipping. These fields are stored for future
+                paid-shipping modes and do not change customer quotes today. Cart messaging defaults
+                to free shipping (threshold 0) unless NEXT_PUBLIC_CART_FREE_SHIPPING_THRESHOLD is
+                set.
               </p>
               <input
                 className="admin-input"
@@ -194,7 +204,10 @@ function SettingsContent({
                 readOnly
                 value={form.standardShippingCharge}
               />
-              <p id="shipping-settings-note" style={{ fontSize: "0.75rem", color: "var(--admin-muted)", marginTop: "0.35rem" }}>
+              <p
+                id="shipping-settings-note"
+                style={{ fontSize: "0.75rem", color: "var(--admin-muted)", marginTop: "0.35rem" }}
+              >
                 Fields locked while free-shipping policy is forced in checkout.
               </p>
             </div>

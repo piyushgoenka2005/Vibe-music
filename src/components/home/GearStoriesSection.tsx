@@ -32,7 +32,7 @@ export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
 
   return (
     <section className="gear-stories" aria-labelledby="gear-stories-heading">
-      <Reveal as="header" className="gear-stories__header">
+      <Reveal as="header" className="gear-stories__header" immediate>
         <h2 id="gear-stories-heading" className="gear-stories__title typo-series">
           {data.title}
         </h2>

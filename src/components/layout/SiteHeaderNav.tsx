@@ -32,6 +32,12 @@ export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: Site
   const navShellRef = useRef<HTMLDivElement>(null);
 
   const navItems: NavGooItem[] = [
+    {
+      key: "brands",
+      label: "Brands",
+      href: ROUTES.brands,
+      active: pathname === ROUTES.brands || pathname.startsWith(`${ROUTES.brands}/`),
+    },
     ...HEADER_MEGA_MENUS.map((menu) => ({
       key: menu.slug,
       label: menu.name,
@@ -39,12 +45,6 @@ export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: Site
       slug: menu.slug,
       active: activeSlug === menu.slug,
     })),
-    {
-      key: "brands",
-      label: "Brands",
-      href: ROUTES.brands,
-      active: pathname === ROUTES.brands || pathname.startsWith(`${ROUTES.brands}/`),
-    },
     {
       key: "deals",
       label: "Deals",

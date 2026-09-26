@@ -364,44 +364,6 @@
     flex: 0 0 96px;
   }
 
-  /* Content pages (CMS) */
-  .cms-page__article {
-    max-width: 48rem;
-    margin: 0 auto;
-  }
-
-  .cms-page__content {
-    overflow-wrap: anywhere;
-    line-height: 1.7;
-    margin-top: 1.5rem;
-  }
-
-  .cms-page__section + .cms-page__section {
-    margin-top: 1.75rem;
-  }
-
-  .cms-page__section-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    margin: 0 0 0.5rem;
-  }
-
-  .cms-page__paragraph {
-    margin: 0 0 0.75rem;
-    color: var(--text-secondary);
-  }
-
-  .cms-page__back {
-    margin-top: 2rem;
-  }
-
-  .cms-page__content table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    max-width: 100%;
-  }
-
   /* Blog */
   .blog-article__content img {
     max-width: 100%;

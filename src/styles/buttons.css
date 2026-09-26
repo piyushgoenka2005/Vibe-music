@@ -66,6 +66,12 @@ input[type="reset"],
   border-radius: 10px !important;
 }
 
+/* Help widget — sharp-edge contact actions (override global button radius) */
+.help-widget__action-btn,
+.help-widget__ticket-form button {
+  border-radius: 0 !important;
+}
+
 /*
  * Product-card Add to cart — canonical dark pill.
  * Applies only to card / mini-card quick-add actions (not PDP buy box / sticky bar).
