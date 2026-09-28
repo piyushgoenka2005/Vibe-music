@@ -17,6 +17,8 @@ export default mergeConfig(
           "src/lib/security/rate-limit-core.ts",
           "src/lib/security/backpressure.ts",
           "src/lib/server/razorpayWebhookService.ts",
+          "src/lib/server/orderPaymentService.ts",
+          "src/lib/server/jobQueue.ts",
           "src/lib/server/productionSecurityGuards.ts",
           "src/lib/server/metricsAuth.ts",
           "src/lib/cart/**",

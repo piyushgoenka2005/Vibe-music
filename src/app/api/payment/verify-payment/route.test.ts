@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/server/orderService", () => ({
@@ -13,6 +14,7 @@ vi.mock("@/lib/api/route-utils", async (importOriginal) => {
   const orig = await importOriginal<typeof import("@/lib/api/route-utils")>();
   return {
     ...orig,
+    withApiGuards: vi.fn(orig.withApiGuards),
     enforceRateLimit: vi.fn().mockResolvedValue(null),
     enforceMutationSecurity: vi.fn().mockReturnValue(null),
   };
@@ -25,12 +27,9 @@ vi.mock("@/lib/security/mutation-origin", () => ({
 }));
 
 import { POST } from "./route";
-import {
-  verifyAndCompletePayment,
-  attachPaidOrderToUser,
-} from "@/lib/server/orderService";
+import { verifyAndCompletePayment, attachPaidOrderToUser } from "@/lib/server/orderService";
 import { getSessionUser } from "@/lib/auth/server-session";
-import { enforceRateLimit } from "@/lib/api/route-utils";
+import { withApiGuards } from "@/lib/api/route-utils";
 
 const VALID_PAYMENT_BODY = {
   orderId: "order_123",
@@ -51,9 +50,11 @@ function makePostRequest(body: Record<string, unknown>): Request {
 }
 
 describe("POST /api/payment/verify-payment", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    vi.mocked(enforceRateLimit).mockResolvedValue(null);
+    const actual =
+      await vi.importActual<typeof import("@/lib/api/route-utils")>("@/lib/api/route-utils");
+    vi.mocked(withApiGuards).mockImplementation(actual.withApiGuards);
     (getSessionUser as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: "user1",
       email: "test@example.com",
@@ -80,8 +81,8 @@ describe("POST /api/payment/verify-payment", () => {
   });
 
   it("returns 429 when rate limited", async () => {
-    (enforceRateLimit as ReturnType<typeof vi.fn>).mockResolvedValue(
-      new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 })
+    vi.mocked(withApiGuards).mockResolvedValueOnce(
+      NextResponse.json({ error: "Too many requests" }, { status: 429 }),
     );
 
     const res = await POST(makePostRequest(VALID_PAYMENT_BODY));
@@ -94,15 +95,13 @@ describe("POST /api/payment/verify-payment", () => {
   });
 
   it("returns 400 for missing fields", async () => {
-    const res = await POST(
-      makePostRequest({ orderId: "order_123" })
-    );
+    const res = await POST(makePostRequest({ orderId: "order_123" }));
     expect(res.status).toBe(400);
   });
 
   it("handles service errors gracefully", async () => {
     (verifyAndCompletePayment as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("Payment verification failed")
+      new Error("Payment verification failed"),
     );
 
     const res = await POST(makePostRequest(VALID_PAYMENT_BODY));

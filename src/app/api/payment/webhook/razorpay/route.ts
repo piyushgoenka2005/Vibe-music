@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { traceRouteHandler } from "@/lib/api/traceRoute";
+import { withApiGuards } from "@/lib/api/route-utils";
 import { getRazorpayWebhookSecret, verifyRazorpayWebhookSignature } from "@/lib/razorpay/signature";
 import { enqueueRazorpayWebhook } from "@/lib/server/jobQueue";
-import { enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
@@ -15,89 +16,99 @@ function isRetryableError(error: unknown): boolean {
   return true;
 }
 
-export async function POST(request: Request) {
-  const rateLimited = await enforceRateLimit(request, "webhook-razorpay", RATE_LIMITS.auth);
-  if (rateLimited) return rateLimited;
+async function postHandler(request: Request) {
+  return withApiGuards(
+    request,
+    {
+      context: "api/payment/webhook/razorpay",
+      scope: "webhook-razorpay",
+      rateLimit: RATE_LIMITS.auth,
+      requireCsrf: false,
+    },
+    async () => {
+      const signature = request.headers.get("x-razorpay-signature");
+      const eventId = request.headers.get("x-razorpay-event-id");
 
-  const signature = request.headers.get("x-razorpay-signature");
-  const eventId = request.headers.get("x-razorpay-event-id");
+      if (!signature) {
+        return NextResponse.json({ error: "Missing X-Razorpay-Signature header" }, { status: 400 });
+      }
 
-  if (!signature) {
-    return NextResponse.json({ error: "Missing X-Razorpay-Signature header" }, { status: 400 });
-  }
+      if (!eventId) {
+        return NextResponse.json({ error: "Missing X-Razorpay-Event-Id header" }, { status: 400 });
+      }
 
-  if (!eventId) {
-    return NextResponse.json({ error: "Missing X-Razorpay-Event-Id header" }, { status: 400 });
-  }
+      let rawBody: string;
+      try {
+        rawBody = await request.text();
+      } catch {
+        return NextResponse.json({ error: "Unable to read request body" }, { status: 400 });
+      }
 
-  let rawBody: string;
-  try {
-    rawBody = await request.text();
-  } catch {
-    return NextResponse.json({ error: "Unable to read request body" }, { status: 400 });
-  }
+      let webhookSecret: string;
+      try {
+        webhookSecret = getRazorpayWebhookSecret();
+      } catch (error) {
+        console.error("[razorpay-webhook] Configuration error:", error);
+        return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
+      }
 
-  let webhookSecret: string;
-  try {
-    webhookSecret = getRazorpayWebhookSecret();
-  } catch (error) {
-    console.error("[razorpay-webhook] Configuration error:", error);
-    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
-  }
+      const isValid = verifyRazorpayWebhookSignature(rawBody, signature, webhookSecret);
+      if (!isValid) {
+        return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
+      }
 
-  const isValid = verifyRazorpayWebhookSignature(rawBody, signature, webhookSecret);
-  if (!isValid) {
-    return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
-  }
+      let body: { event?: string; payload?: Record<string, unknown> };
+      try {
+        body = JSON.parse(rawBody) as { event?: string; payload?: Record<string, unknown> };
+      } catch {
+        return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+      }
 
-  let body: { event?: string; payload?: Record<string, unknown> };
-  try {
-    body = JSON.parse(rawBody) as { event?: string; payload?: Record<string, unknown> };
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
-  }
+      const eventType = body.event;
+      if (!eventType) {
+        return NextResponse.json({ error: "Missing event type" }, { status: 400 });
+      }
 
-  const eventType = body.event;
-  if (!eventType) {
-    return NextResponse.json({ error: "Missing event type" }, { status: 400 });
-  }
+      const payload = body.payload ?? {};
 
-  const payload = body.payload ?? {};
+      try {
+        const outcome = await enqueueRazorpayWebhook({
+          eventId,
+          eventType,
+          payload,
+        });
 
-  try {
-    const outcome = await enqueueRazorpayWebhook({
-      eventId,
-      eventType,
-      payload,
-    });
+        if (outcome.mode === "queued") {
+          return NextResponse.json({
+            ok: true,
+            queued: true,
+            eventId: outcome.eventId,
+            eventType: outcome.eventType,
+          });
+        }
 
-    if (outcome.mode === "queued") {
-      return NextResponse.json({
-        ok: true,
-        queued: true,
-        eventId: outcome.eventId,
-        eventType: outcome.eventType,
-      });
-    }
+        const result = outcome.result;
+        return NextResponse.json({
+          ok: true,
+          queued: false,
+          eventId: result.eventId,
+          eventType: result.eventType,
+          orderId: result.orderId,
+          skipped: result.skipped,
+          message: result.message,
+        });
+      } catch (error) {
+        console.error("[razorpay-webhook] Processing error:", {
+          eventId,
+          eventType,
+          error,
+        });
 
-    const result = outcome.result;
-    return NextResponse.json({
-      ok: true,
-      queued: false,
-      eventId: result.eventId,
-      eventType: result.eventType,
-      orderId: result.orderId,
-      skipped: result.skipped,
-      message: result.message,
-    });
-  } catch (error) {
-    console.error("[razorpay-webhook] Processing error:", {
-      eventId,
-      eventType,
-      error,
-    });
-
-    const status = isRetryableError(error) ? 500 : 422;
-    return NextResponse.json({ error: "Webhook processing failed", eventId }, { status });
-  }
+        const status = isRetryableError(error) ? 500 : 422;
+        return NextResponse.json({ error: "Webhook processing failed", eventId }, { status });
+      }
+    },
+  );
 }
+
+export const POST = traceRouteHandler("POST /api/payment/webhook/razorpay", postHandler);

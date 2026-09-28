@@ -36,6 +36,11 @@ const steps: Array<{ label: string; code: number; blocking: boolean }> = [
     blocking: true,
   },
   {
+    label: "Critical-path coverage gate",
+    code: run("Coverage gate", "npm", ["run", "test:coverage:gate"]),
+    blocking: true,
+  },
+  {
     label: "Configuration status",
     code: run("Configuration status", "npm", ["run", "ops:configuration-status"]),
     blocking: false,

@@ -1,57 +1,51 @@
 import { NextResponse } from "next/server";
+import { traceRouteHandler } from "@/lib/api/traceRoute";
+import { parseJsonBody, withApiGuards } from "@/lib/api/route-utils";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { canAccessOrder } from "@/lib/server/orderAccess";
 import { getOrderById, releaseOrderReservation } from "@/lib/server/orderService";
-import {
-  enforceMutationSecurity,
-  enforceRateLimit,
-  handleRouteError,
-  parseJsonBody,
-} from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { releaseReservationSchema } from "@/lib/validations/checkout";
 
-export async function POST(request: Request) {
-  try {
-    const rateLimited = await enforceRateLimit(
-      request,
-      "checkout-release-reservation",
-      RATE_LIMITS.checkout
-    );
-    if (rateLimited) return rateLimited;
+async function postHandler(request: Request) {
+  return withApiGuards(
+    request,
+    {
+      context: "api/payment/release-reservation",
+      scope: "checkout-release-reservation",
+      rateLimit: RATE_LIMITS.checkout,
+    },
+    async () => {
+      const parsed = await parseJsonBody(request, releaseReservationSchema);
+      if ("error" in parsed) return parsed.error;
 
-    const csrfError = enforceMutationSecurity(request);
-    if (csrfError) return csrfError;
+      const orderId = parsed.data.orderId;
+      const order = await getOrderById(orderId);
+      if (!order) {
+        return NextResponse.json({ error: "Order not found" }, { status: 404 });
+      }
 
-    const parsed = await parseJsonBody(request, releaseReservationSchema);
-    if ("error" in parsed) return parsed.error;
+      const sessionUser = await getSessionUser();
+      const trackingToken = parsed.data.trackingToken;
 
-    const orderId = parsed.data.orderId;
-    const order = await getOrderById(orderId);
-    if (!order) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
-    }
+      if (
+        !canAccessOrder(order, {
+          userId: sessionUser?.uid,
+          email: sessionUser?.email ?? undefined,
+          trackingToken,
+        })
+      ) {
+        return NextResponse.json(
+          { error: "Authentication required to release reservation" },
+          { status: 401 },
+        );
+      }
 
-    const sessionUser = await getSessionUser();
-    const trackingToken = parsed.data.trackingToken;
+      await releaseOrderReservation(orderId);
 
-    if (
-      !canAccessOrder(order, {
-        userId: sessionUser?.uid,
-        email: sessionUser?.email ?? undefined,
-        trackingToken,
-      })
-    ) {
-      return NextResponse.json(
-        { error: "Authentication required to release reservation" },
-        { status: 401 }
-      );
-    }
-
-    await releaseOrderReservation(orderId);
-
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    return handleRouteError(error, "api/payment/release-reservation", request);
-  }
+      return NextResponse.json({ ok: true });
+    },
+  );
 }
+
+export const POST = traceRouteHandler("POST /api/payment/release-reservation", postHandler);
