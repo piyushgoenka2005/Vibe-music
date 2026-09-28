@@ -9,10 +9,13 @@ Companion: [DEPLOYMENT.md](./DEPLOYMENT.md) · [GO_LIVE.md](./GO_LIVE.md) · [GO
 ## 0. Preflight (local or CI)
 
 ```bash
-npm run release:ready      # type-check + lint + test + build (+ prod sign-off if VERIFY_BASE_URL is set)
+npm run verify:complete    # master repo gate (copy + audit + optional live probes)
+npm run release:ready      # verify:complete + production build
 npm run check:env          # against VPS .env values, not localhost AUTH_URL
 # full CI parity: npm run validate:ci
 ```
+
+See **[PRODUCTION_COMPLETE.md](./PRODUCTION_COMPLETE.md)** for the final checklist.
 
 Ensure the commit you want live is on **`origin/main`** (`deploy/update.sh` pulls `main` only).
 
@@ -24,10 +27,13 @@ Ensure the commit you want live is on **`origin/main`** (`deploy/update.sh` pull
 cd /root/Vibe-music   # or your APP_DIR
 git fetch origin main && git pull --ff-only origin main
 
-# Fastest path to live 100%:
+# Fastest path to live 10/10:
+bash deploy/certify-production.sh
+
+# Or step-by-step:
 bash deploy/finish-production.sh
 
-# Or full ops secrets merge first:
+# Ops secrets + gap checklist:
 cp -n deploy/ops-secrets.env.example deploy/ops-secrets.env
 # edit deploy/ops-secrets.env → then:
 bash deploy/complete-ops-gaps.sh

@@ -16,7 +16,10 @@ const BANNED = [
   { pattern: /10K\+?\s*products/i, reason: "Stale catalogue claim" },
   { pattern: /24\/7|24×7/i, reason: "Support is Mon–Sat per businessIdentity" },
   { pattern: /Room 310|Room 311/i, reason: "Use CANONICAL_BUSINESS_ADDRESS (Room 303)" },
-  { pattern: /Maharashtra warehouse/i, reason: "Dispatch from CANONICAL_BUSINESS_ADDRESS (Kolkata)" },
+  {
+    pattern: /from our Maharashtra warehouse|dispatched from our Maharashtra/i,
+    reason: "Dispatch from CANONICAL_BUSINESS_ADDRESS (Kolkata)",
+  },
   {
     pattern: /Fender Stratocaster|QSC live sound/i,
     reason: "Use catalogue-aligned alt text — no brands we do not sell",

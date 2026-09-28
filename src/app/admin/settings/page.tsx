@@ -179,10 +179,9 @@ function SettingsContent({
                   marginBottom: "0.35rem",
                 }}
               >
-                Checkout currently always quotes free shipping. These fields are stored for future
-                paid-shipping modes and do not change customer quotes today. Cart messaging defaults
-                to free shipping (threshold 0) unless NEXT_PUBLIC_CART_FREE_SHIPPING_THRESHOLD is
-                set.
+                Checkout always quotes free shipping on every order (storefront policy threshold 0).
+                These fields are stored for a future paid-shipping mode and do not change customer
+                quotes today.
               </p>
               <input
                 className="admin-input"

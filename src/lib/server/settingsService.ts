@@ -1,4 +1,7 @@
-import { CANONICAL_BUSINESS_ADDRESS } from "@/lib/brand/businessIdentity";
+import {
+  CANONICAL_BUSINESS_ADDRESS,
+  REGISTERED_BUSINESS_STATE,
+} from "@/lib/brand/businessIdentity";
 import { SELLER_STATE, DEFAULT_GST_RATE } from "@/lib/gstCalculator";
 import * as pgContent from "@/lib/server/prisma/contentRepository";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
@@ -29,9 +32,21 @@ export async function getStoreSettings(): Promise<StoreSettings> {
     SETTINGS_CACHE_KEY,
     async () => {
       const settings = await pgContent.getStoreSettings();
+      const rawAddress = settings?.storeAddress?.trim() ?? "";
+      const storeAddress =
+        !rawAddress || /Maharashtra warehouse/i.test(rawAddress)
+          ? CANONICAL_BUSINESS_ADDRESS
+          : rawAddress;
+      const sellerState =
+        !settings?.sellerState?.trim() || settings.sellerState === "Maharashtra"
+          ? REGISTERED_BUSINESS_STATE
+          : settings.sellerState;
+
       return {
         ...DEFAULT_SETTINGS,
         ...(settings ?? {}),
+        storeAddress,
+        sellerState,
         // Storefront shipping is free — ignore any legacy paid charges in DB.
         freeShippingThreshold: 0,
         standardShippingCharge: 0,

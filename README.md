@@ -85,14 +85,15 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Quality gates
 
 ```bash
-npm run check:env         # env readiness (secret values hidden)
+npm run verify:complete   # master gate — copy + audit remediation (run before deploy)
+npm run release:ready     # verify:complete + production build
 npm run validate          # type-check + lint + unit tests + production build
 npm run test:e2e          # Playwright (Postgres required for admin DB flows)
-npm run test:e2e:prep     # Docker Postgres + migrate + seed + E2E (local)
 npm run validate:ci       # validate + E2E (matches GitHub Actions)
-npm run verify:audit      # full repo remediation gate (30 loopholes)
 VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 ```
+
+**Final checklist:** [`docs/ops/PRODUCTION_COMPLETE.md`](docs/ops/PRODUCTION_COMPLETE.md)
 
 CI workflow: `.github/workflows/validate.yml` (blocks merge on any test failure).
 
@@ -104,18 +105,20 @@ CI workflow: `.github/workflows/validate.yml` (blocks merge on any test failure)
 
 ## Production deployment (VPS)
 
-| Step                    | Command / doc                                                              |
-| ----------------------- | -------------------------------------------------------------------------- |
-| Ops index               | [`docs/ops/`](docs/ops/)                                                   |
-| Go-live short list      | [`docs/ops/GO_LIVE.md`](docs/ops/GO_LIVE.md)                               |
-| VPS + PostgreSQL setup  | [`docs/ops/VPS-SETUP.md`](docs/ops/VPS-SETUP.md)                           |
-| PostgreSQL guide        | [`docs/ops/POSTGRESQL.md`](docs/ops/POSTGRESQL.md)                         |
-| Deploy checklist        | [`docs/ops/DEPLOYMENT.md`](docs/ops/DEPLOYMENT.md)                         |
-| Production env template | [`.env.production.example`](.env.production.example)                       |
-| CDN nginx               | [`deploy/nginx/cdn.vibemusic.in.conf`](deploy/nginx/cdn.vibemusic.in.conf) |
-| Apply migrations        | `npm run db:migrate`                                                       |
-| Seed admin              | `npm run seed:admin`                                                       |
-| Build & reload          | `deploy/update.sh` (or `npm run build && npm run start`)                   |
+| Step                      | Command / doc                                                              |
+| ------------------------- | -------------------------------------------------------------------------- |
+| **Final 10/10 checklist** | [`docs/ops/PRODUCTION_COMPLETE.md`](docs/ops/PRODUCTION_COMPLETE.md)       |
+| One-shot VPS certify      | `bash deploy/certify-production.sh`                                        |
+| Ops index                 | [`docs/ops/`](docs/ops/)                                                   |
+| Go-live short list        | [`docs/ops/GO_LIVE.md`](docs/ops/GO_LIVE.md)                               |
+| VPS + PostgreSQL setup    | [`docs/ops/VPS-SETUP.md`](docs/ops/VPS-SETUP.md)                           |
+| PostgreSQL guide          | [`docs/ops/POSTGRESQL.md`](docs/ops/POSTGRESQL.md)                         |
+| Deploy checklist          | [`docs/ops/DEPLOYMENT.md`](docs/ops/DEPLOYMENT.md)                         |
+| Production env template   | [`.env.production.example`](.env.production.example)                       |
+| CDN nginx                 | [`deploy/nginx/cdn.vibemusic.in.conf`](deploy/nginx/cdn.vibemusic.in.conf) |
+| Apply migrations          | `npm run db:migrate`                                                       |
+| Seed admin                | `npm run seed:admin`                                                       |
+| Build & reload            | `deploy/update.sh` (or `npm run build && npm run start`)                   |
 
 ### CDN (required for admin image uploads)
 

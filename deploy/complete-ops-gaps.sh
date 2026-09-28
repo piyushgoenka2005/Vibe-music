@@ -155,10 +155,11 @@ fi
 
 echo ""
 if [[ $MISSING -eq 0 ]]; then
-  echo "✅ All ops gaps addressed. Platform deploy-ready at 100%."
+  echo "✅ All ops gaps addressed. Run full certification:"
+  echo "   bash deploy/certify-production.sh"
 else
   echo "⚠️  $MISSING item(s) still need attention (see above)."
-  echo "   Edit deploy/ops-secrets.env → bash deploy/complete-audit-go-live.sh"
-  echo "   Runbook: docs/ops/DEPLOY_READY.md"
+  echo "   bash deploy/certify-production.sh"
+  echo "   Runbook: docs/ops/PRODUCTION_COMPLETE.md"
 fi
 echo ""

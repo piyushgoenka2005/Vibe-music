@@ -59,7 +59,7 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
       {
         heading: "How to start a return",
         paragraphs: [
-          "Email orders@vibemusic.in with your order ID, product name, and reason for return. Our team will share pickup or drop-off instructions and a return authorization.",
+          `Email ${BRAND.email} with your order ID, product name, and reason for return. Our team will share pickup or drop-off instructions and a return authorization.`,
         ],
       },
       {
@@ -172,7 +172,7 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
       {
         heading: "More information",
         paragraphs: [
-          "See our Privacy Policy for how personal data is handled, or email support@vibemusic.in with cookie-related requests.",
+          `See our Privacy Policy for how personal data is handled, or email ${BRAND.email} with cookie-related requests.`,
         ],
       },
     ],

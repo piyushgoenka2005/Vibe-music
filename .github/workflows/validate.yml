@@ -63,6 +63,9 @@ jobs:
       - name: Storefront copy consistency
         run: npm run verify:storefront-copy
 
+      - name: Content pages integrity
+        run: npm test -- src/data/contentPages.test.ts
+
       - name: Apply database migrations
         run: npm run db:migrate
 

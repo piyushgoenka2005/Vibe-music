@@ -75,6 +75,7 @@
     "ops:reconcile-reviews": "npx tsx --env-file=.env scripts/ops/reconcile-product-review-aggregates.mts",
     "ops:configuration-status": "npx tsx scripts/ops/configuration-status.mts",
     "verify:storefront-copy": "node scripts/ops/verify-storefront-copy.mjs",
+    "verify:complete": "npx tsx scripts/ops/verify-complete.mts",
     "check:env": "node scripts/ops/check-env.mjs",
     "check:edge": "node scripts/ops/check-edge-headers.mjs",
     "check:cwv": "node scripts/ops/check-cwv.mjs",
