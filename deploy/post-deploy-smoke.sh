@@ -75,8 +75,11 @@ else
   fail "security headers missing or incomplete on GET /"
 fi
 
+check_http "/api/healthz" "200" "GET /api/healthz (liveness)" "$API_BASE_URL"
+check_http "/api/readyz" "200" "GET /api/readyz (readiness)" "$API_BASE_URL"
 check_http "/api/health" "200" "GET /api/health" "$API_BASE_URL"
 check_json "/api/health" "(d.status === 'healthy' || d.status === 'degraded') && d.checks && d.checks.database === 'ok'" "health: database ok"
+check_json "/api/readyz" "d.ready === true" "readyz: database reachable"
 
 check_http "/api/coupons/active" "200" "GET /api/coupons/active" "$API_BASE_URL"
 check_json "/api/coupons/active" "Array.isArray(d.coupons)" "coupons/active returns {coupons:[]}"

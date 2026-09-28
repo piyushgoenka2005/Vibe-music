@@ -49,23 +49,10 @@ echo "==> Restarting PM2"
 pm2 restart vibe --update-env 2>/dev/null || pm2 start deploy/ecosystem.config.cjs --update-env
 pm2 save
 
-echo "==> Health gate"
-HEALTH_OK=0
-for attempt in $(seq 1 20); do
-  sleep 3
-  HTTP_CODE="$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/api/health || echo 000)"
-  if [[ "$HTTP_CODE" == "200" ]]; then
-    HEALTH_OK=1
-    echo "    attempt $attempt: /api/health → 200 OK"
-    break
-  fi
-  echo "    attempt $attempt: → $HTTP_CODE"
-done
-
-if [[ "$HEALTH_OK" != "1" ]]; then
-  echo "ROLLBACK FAILED THE HEALTH GATE — inspect pm2 logs vibe" >&2
+bash deploy/wait-for-ready.sh "http://127.0.0.1:3000" 20 || {
+  echo "ROLLBACK FAILED THE READINESS GATE — inspect pm2 logs vibe" >&2
   exit 1
-fi
+}
 
 echo ""
 echo "Rollback complete. Running commit: $(git rev-parse --short HEAD)"

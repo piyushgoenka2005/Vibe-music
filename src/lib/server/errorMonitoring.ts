@@ -22,10 +22,13 @@ function trackErrorKey(key: string): void {
   }
 }
 
-async function notifyWebhook(
-  error: Error,
-  context: ServerErrorContext
-): Promise<void> {
+export function isErrorMonitoringConfigured(): boolean {
+  return Boolean(
+    process.env.ERROR_MONITORING_WEBHOOK_URL?.trim() || process.env.SENTRY_DSN?.trim(),
+  );
+}
+
+async function notifyWebhook(error: Error, context: ServerErrorContext): Promise<void> {
   const webhookUrl = process.env.ERROR_MONITORING_WEBHOOK_URL?.trim();
   if (!webhookUrl) return;
 
@@ -34,6 +37,8 @@ async function notifyWebhook(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        service: "vibe-music",
+        environment: process.env.NODE_ENV ?? "development",
         text: `[${context.source}] ${error.message}`,
         error: {
           message: error.message,
@@ -42,6 +47,13 @@ async function notifyWebhook(
           requestId: context.requestId,
           meta: context.meta,
         },
+        context: {
+          source: context.source,
+          routePath: context.routePath,
+          requestId: context.requestId,
+          meta: context.meta,
+        },
+        timestamp: new Date().toISOString(),
       }),
       signal: AbortSignal.timeout(5000),
     });
@@ -50,21 +62,27 @@ async function notifyWebhook(
   }
 }
 
+/** Operator smoke test — throws when webhook is unset or delivery fails. */
+export async function pingErrorMonitoringWebhook(): Promise<void> {
+  const webhookUrl = process.env.ERROR_MONITORING_WEBHOOK_URL?.trim();
+  if (!webhookUrl) {
+    throw new Error("ERROR_MONITORING_WEBHOOK_URL is not configured");
+  }
+
+  const probe = new Error("error monitoring ping");
+  await notifyWebhook(probe, { source: "ops/error-monitoring-ping" });
+}
+
 /**
  * Central server error reporter for instrumentation hooks and API routes.
  */
 export function reportServerError(
   error: unknown | Error,
-  context: ServerErrorContext | ErrorMonitoringContext
+  context: ServerErrorContext | ErrorMonitoringContext,
 ): void {
-  const normalized =
-    error instanceof Error ? error : new Error(String(error ?? "Unknown error"));
+  const normalized = error instanceof Error ? error : new Error(String(error ?? "Unknown error"));
 
-  const dedupeKey = [
-    context.source,
-    context.routePath ?? "",
-    normalized.message,
-  ].join("|");
+  const dedupeKey = [context.source, context.routePath ?? "", normalized.message].join("|");
 
   if (reportedErrors.has(dedupeKey)) return;
   trackErrorKey(dedupeKey);
@@ -77,7 +95,7 @@ export function reportServerError(
       routePath: context.routePath,
       requestId: context.requestId,
       ...context.meta,
-    }
+    },
   );
 
   void notifyWebhook(normalized, context);

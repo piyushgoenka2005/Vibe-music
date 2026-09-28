@@ -87,6 +87,7 @@
     "audit:deps:report": "node scripts/ops/audit-deps.mjs --report",
     "load:k6": "k6 run scripts/k6/smoke.js",
     "worker:start": "npx tsx scripts/workers/job-worker.mts",
+    "ops:error-monitoring-ping": "npx tsx --env-file=.env scripts/ops/error-monitoring-ping.mts",
     "setup:local": "node scripts/db/setup-local-config.mjs",
     "db:probe": "node scripts/db/probe-db.mjs",
     "validate": "npm run type-check && npm run lint && npm run test && npm run build",

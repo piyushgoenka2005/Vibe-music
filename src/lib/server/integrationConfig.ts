@@ -37,6 +37,7 @@ export interface IntegrationChecks {
   cdn: IntegrationStatus;
   upstash: IntegrationStatus;
   jobQueue: IntegrationStatus;
+  errorMonitoring: IntegrationStatus;
   googleOAuth: IntegrationStatus;
   places: IntegrationStatus;
   invoicePdf: IntegrationStatus;
@@ -85,6 +86,10 @@ export function getIntegrationChecks(): IntegrationChecks {
     cdn: configured(process.env.CDN_STORAGE_ROOT, process.env.CDN_PUBLIC_BASE_URL),
     upstash: configured(process.env.UPSTASH_REDIS_REST_URL, process.env.UPSTASH_REDIS_REST_TOKEN),
     jobQueue: configured(process.env.REDIS_URL),
+    errorMonitoring:
+      process.env.ERROR_MONITORING_WEBHOOK_URL?.trim() || process.env.SENTRY_DSN?.trim()
+        ? "ok"
+        : "missing",
     googleOAuth: isGoogleAuthConfigured() ? "ok" : "missing",
     places: isAddressAutocompleteConfigured() ? "ok" : "missing",
     invoicePdf: invoicePdfStatus(),
@@ -176,6 +181,13 @@ export function getOpsStatusReport(): {
       status: checks.jobQueue,
       tier: "recommended",
       detail: "REDIS_URL (Redis protocol) — async Razorpay webhooks via vibe-worker",
+    },
+    {
+      key: "errorMonitoring",
+      label: "Error monitoring",
+      status: checks.errorMonitoring,
+      tier: "recommended",
+      detail: "ERROR_MONITORING_WEBHOOK_URL (Slack/Discord) or SENTRY_DSN",
     },
     {
       key: "googleOAuth",

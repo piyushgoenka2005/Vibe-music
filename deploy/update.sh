@@ -126,24 +126,10 @@ if command -v nginx >/dev/null 2>&1 && [[ -f /etc/nginx/sites-available/vibemusi
   fi
 fi
 
-echo "==> Health gate (up to 60s for cold start + first DB probe)"
-HEALTH_OK=0
-for attempt in $(seq 1 20); do
-  sleep 3
-  HTTP_CODE="$(curl -sS -o /tmp/vibe-health.json -w '%{http_code}' http://127.0.0.1:3000/api/health || echo 000)"
-  if [[ "$HTTP_CODE" == "200" ]]; then
-    HEALTH_OK=1
-    echo "    attempt $attempt: /api/health → 200 OK"
-    break
-  fi
-  echo "    attempt $attempt: /api/health → $HTTP_CODE (waiting…)"
-done
-
-if [[ "$HEALTH_OK" != "1" ]]; then
+if ! bash deploy/wait-for-ready.sh "http://127.0.0.1:3000" 20; then
   echo "" >&2
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
-  echo "DEPLOY FAILED HEALTH GATE after restart." >&2
-  echo "Last response: $(cat /tmp/vibe-health.json 2>/dev/null || echo 'no body')" >&2
+  echo "DEPLOY FAILED READINESS GATE after restart." >&2
   echo "Roll back with:  bash deploy/rollback.sh" >&2
   echo "PM2 logs:        pm2 logs vibe --lines 100" >&2
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
