@@ -7,6 +7,7 @@ import { randomUUID } from "node:crypto";
 import { DEFAULT_STORE_PHONE } from "../../src/lib/brand";
 import {
   CANONICAL_BUSINESS_ADDRESS,
+  CANONICAL_LEGAL_ENTITY_NAME,
   REGISTERED_BUSINESS_STATE,
 } from "../../src/lib/brand/businessIdentity";
 
@@ -72,7 +73,7 @@ function resolveStorePhone(): string {
 }
 
 function resolveLegalName(): string {
-  return process.env.NEXT_PUBLIC_LEGAL_ENTITY_NAME?.trim() || "Vibe Music";
+  return process.env.NEXT_PUBLIC_LEGAL_ENTITY_NAME?.trim() || CANONICAL_LEGAL_ENTITY_NAME;
 }
 
 function resolveGstin(): string {
@@ -99,10 +100,15 @@ async function seedStoreSettings(): Promise<void> {
   if (shouldSyncPhone) {
     updateData.storePhone = phone;
   }
-  if (legalName && (!existing?.storeName?.trim() || existing.storeName === "Vibe Music")) {
+  if (
+    legalName &&
+    (!existing?.storeName?.trim() ||
+      existing.storeName === "Vibe Music" ||
+      existing.storeName !== legalName)
+  ) {
     updateData.storeName = legalName;
   }
-  if (gstin && !existing?.gstNumber?.trim()) {
+  if (gstin && (!existing?.gstNumber?.trim() || existing.gstNumber !== gstin)) {
     updateData.gstNumber = gstin;
   }
   if (

@@ -1,6 +1,8 @@
 /**
  * Canonical registered business identity — use everywhere (footer, invoices, JSON-LD, legal pages).
  */
+export const CANONICAL_LEGAL_ENTITY_NAME = "Sikkim Commerce House Pvt Ltd";
+
 export const CANONICAL_BUSINESS_ADDRESS =
   "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071, West Bengal, India";
 

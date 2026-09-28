@@ -24,16 +24,13 @@ echo "  Vibe Music — Production certification (target 20/20)"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-echo "▶ Phase 1 — Finish production (deploy + smoke + config report)"
+echo "▶ Phase 1 — Ops secrets + finish production"
+bash deploy/ensure-ops-secrets.sh
 bash deploy/finish-production.sh
 echo ""
 
-if [[ -n "${NEXT_PUBLIC_GSTIN:-}" ]] || grep -q "^NEXT_PUBLIC_GSTIN=.\+" deploy/ops-secrets.env 2>/dev/null; then
-  echo "▶ Phase 2 — L-30 compliance (GSTIN + legal entity)"
-  bash deploy/apply-compliance.sh
-else
-  echo "▶ Phase 2 — SKIP compliance (set NEXT_PUBLIC_GSTIN in deploy/ops-secrets.env)"
-fi
+echo "▶ Phase 2 — L-30 compliance (GSTIN + legal entity)"
+bash deploy/apply-compliance.sh
 echo ""
 
 echo "▶ Phase 3 — Audit go-live (CDN edge + optional UFW)"

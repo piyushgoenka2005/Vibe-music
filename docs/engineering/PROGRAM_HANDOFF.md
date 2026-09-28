@@ -36,9 +36,11 @@
 
 ```bash
 cd ~/Vibe-music && git pull origin main
-bash deploy/certify-production.sh
+bash deploy/go-live-e2e.sh
+# Or with GSTIN preset:
+NEXT_PUBLIC_GSTIN=19XXXXXXXXXXXXX bash deploy/go-live-e2e.sh
 # After Cloudflare orange-cloud:
-CLOUDFLARE_ONLY=1 bash deploy/certify-production.sh
+CLOUDFLARE_ONLY=1 bash deploy/go-live-e2e.sh
 ```
 
 From dev machine:
