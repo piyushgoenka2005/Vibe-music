@@ -1,3 +1,4 @@
+import { catalogBrandsForCategory } from "@/data/categoryBentoBrands";
 import { POPULAR_CATEGORY_ITEMS } from "@/data/popularCategories";
 import { categoryPath } from "@/lib/routes";
 
@@ -93,7 +94,7 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageAlt: "Premium electric guitar with sunburst finish",
     imagePosition: "center 72%",
     productCount: "14 products",
-    brands: "Fender • Gibson • Ibanez",
+    brands: catalogBrandsForCategory("guitars"),
     badge: "BESTSELLER",
   },
   {
@@ -108,7 +109,7 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageAlt: "Studio recording interface and monitors",
     imagePosition: "center 38%",
     productCount: "5 products",
-    brands: "Universal Audio • Focusrite • Neumann",
+    brands: catalogBrandsForCategory("studio-recording"),
     badge: "TRENDING",
   },
   {
@@ -123,7 +124,7 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageAlt: "Premium drum kit",
     imagePosition: "center center",
     productCount: "14 products",
-    brands: "Pearl • Zildjian • Roland",
+    brands: catalogBrandsForCategory("drums-percussion"),
   },
   {
     slug: "keyboards-synthesizers",
@@ -137,7 +138,7 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageAlt: "Synthesizer keyboard",
     imagePosition: "center 32%",
     productCount: "In stock",
-    brands: "Moog • Roland • Nord",
+    brands: catalogBrandsForCategory("keyboards-synthesizers"),
     badge: "NEW",
   },
   {
@@ -152,7 +153,7 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageAlt: "Live sound PA speaker",
     imagePosition: "center 28%",
     productCount: "2 products",
-    brands: "QSC • Yamaha • Chauvet",
+    brands: catalogBrandsForCategory("live-sound-lighting"),
   },
   {
     slug: "microphones-wireless",
@@ -166,7 +167,7 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageAlt: "Studio and stage microphones",
     imagePosition: "center 42%",
     productCount: "In stock",
-    brands: "Shure • Sennheiser • Adeon",
+    brands: catalogBrandsForCategory("microphones-wireless"),
     badge: "TRENDING",
   },
   {
@@ -181,7 +182,7 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageAlt: "DJ turntable and controller gear",
     imagePosition: "center 40%",
     productCount: "8 products",
-    brands: "Pioneer DJ • Denon • Rane",
+    brands: catalogBrandsForCategory("dj-equipment"),
   },
   {
     slug: "cables-cases-accessories",
@@ -195,7 +196,7 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageAlt: "Cables, cases, and stands for musicians",
     imagePosition: "center 45%",
     productCount: "3 products",
-    brands: "Hosa • Gator • On-Stage",
+    brands: catalogBrandsForCategory("cables-cases-accessories"),
   },
 ];
 

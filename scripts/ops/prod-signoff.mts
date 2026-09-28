@@ -215,6 +215,41 @@ const checks: Check[] = [];
     blocking: requireCompliance,
   });
 
+  const hasCanonicalAddress = homeHtml.includes("Room 303");
+  checks.push({
+    name: "compliance-address",
+    ok: hasCanonicalAddress,
+    detail: hasCanonicalAddress
+      ? "canonical Room 303 address visible"
+      : "footer missing Room 303 — update businessIdentity",
+    blocking: false,
+  });
+
+  const staleShipping =
+    /free shipping on orders (above|over)/i.test(homeHtml) ||
+    /free shipping on qualifying orders/i.test(homeHtml);
+  const hasFreeShippingEveryOrder = /free shipping on every order/i.test(homeHtml);
+  checks.push({
+    name: "shipping-copy",
+    ok: !staleShipping && hasFreeShippingEveryOrder,
+    detail: staleShipping
+      ? "stale threshold shipping copy detected — use SHIPPING_POLICY"
+      : hasFreeShippingEveryOrder
+        ? "free shipping on every order present"
+        : "missing canonical free-shipping copy",
+    blocking: true,
+  });
+
+  const legacyPhone = /977[\s-]?365[\s-]?1006|919773651006/i.test(homeHtml);
+  checks.push({
+    name: "store-phone",
+    ok: !legacyPhone,
+    detail: legacyPhone
+      ? "legacy phone number still in HTML — run normalize-production-env"
+      : "no legacy phone in homepage HTML",
+    blocking: true,
+  });
+
   const edgeMarkers = ["cf-ray", "x-vercel-id", "x-amz-cf-id", "cf-cache-status"];
   const edgeHit = edgeMarkers.some((name) => response.headers.get(name));
   const requireCdn = process.env.REQUIRE_CDN_EDGE === "true";

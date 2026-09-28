@@ -7,6 +7,7 @@ import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import { trackGenerateLead } from "@/lib/analytics/events";
 import { NavArrowIcon } from "@/gp9/components/ui/nav-arrow-icon";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
+import { SUPPORT_HOURS_DETAIL, SUPPORT_HOURS_LABEL } from "@/lib/brand/businessIdentity";
 import { BRAND } from "@/lib/brand";
 
 export default function ContactPageContent() {
@@ -90,8 +91,18 @@ export default function ContactPageContent() {
               <MapPin size={18} aria-hidden />
               <span>{BRAND.address}</span>
             </li>
+            {BRAND.gstin ? (
+              <li>
+                <span className="contact-page__gstin" aria-label="GSTIN">
+                  GSTIN: {BRAND.gstin}
+                </span>
+              </li>
+            ) : null}
           </ul>
-          <p className="contact-page__hint">Typical response time: 1–2 business days (Mon–Sat).</p>
+          <p className="contact-page__hint">
+            Support hours: {SUPPORT_HOURS_LABEL}. Typical response time: 1–2 business days.
+          </p>
+          <p className="contact-page__hint">{SUPPORT_HOURS_DETAIL}</p>
         </section>
 
         <section className="contact-page__card">

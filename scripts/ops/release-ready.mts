@@ -31,6 +31,8 @@ console.log("══════════════════════�
 
 const steps: Array<[string, string, string[], Record<string, string>?]> = [
   ["Dependency audit (L-20)", "npm", ["run", "audit:deps"]],
+  ["Storefront copy gate", "npm", ["run", "verify:storefront-copy"]],
+  ["Audit remediation gate", "npm", ["run", "verify:audit"]],
   ["TypeScript", "npm", ["run", "type-check"]],
   ["ESLint", "npm", ["run", "lint"]],
   ["Unit tests", "npm", ["test"]],

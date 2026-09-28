@@ -1,5 +1,4 @@
 import { BRAND } from "@/lib/brand";
-import { SUPPORT_HOURS_DETAIL } from "@/lib/brand/businessIdentity";
 import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 
 export interface ContentPage {
