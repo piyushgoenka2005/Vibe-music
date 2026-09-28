@@ -71,6 +71,8 @@
     "verify:phase8": "npx tsx scripts/ops/verify-phase8-deploy.mts",
     "verify:phase9": "npx tsx scripts/ops/verify-phase9-compliance.mts",
     "verify:phase10": "npx tsx scripts/ops/verify-phase10-edge.mts",
+    "verify:phase11": "npx tsx scripts/ops/verify-production-20.mts",
+    "verify:production-20": "npx tsx scripts/ops/verify-production-20.mts",
     "audit:generate-catalog": "npx tsx scripts/ops/generate-vibemusic-audit-json.mts",
     "verify:audit": "npx tsx scripts/ops/verify-audit-remediation.mts",
     "monitor:checkout": "npx tsx scripts/ops/synthetic-checkout-monitor.mts",

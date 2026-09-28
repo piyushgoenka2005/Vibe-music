@@ -79,7 +79,16 @@ export async function getCachedProducts(includeInactive = false): Promise<Catalo
 }
 
 export async function revalidateCatalogSnapshot(): Promise<void> {
-  const { revalidateTag } = await import("next/cache");
-  revalidateTag("catalog", "max");
-  revalidateTag("categories", "max");
+  try {
+    const { revalidateTag } = await import("next/cache");
+    revalidateTag("catalog", "max");
+    revalidateTag("categories", "max");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // Admin/catalog writes invoked outside an App Router request (CLI, workers).
+    if (message.includes("static generation store missing")) {
+      return;
+    }
+    throw error;
+  }
 }

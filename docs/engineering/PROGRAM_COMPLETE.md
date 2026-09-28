@@ -1,8 +1,8 @@
 # Engineering program — complete
 
-**Status:** Phases 0–7 + **10 automation code-complete** · Live ops **8–10** (operator)  
+**Status:** Phases **0–11 automation complete** · Live **20/20** when `verify:production-20` passes  
 **Last updated:** 28 Sep 2026  
-**Latest commit on `main`:** push after `git pull` — run `npm run verify:go-live`
+**Latest commit on `main`:** `git pull` on VPS → `bash deploy/certify-production.sh`
 
 ---
 
@@ -21,6 +21,7 @@
 | 8     | Deploy sync (ops)          | `verify-deploy-sync.sh`, `deploy-drift.yml`, `npm run verify:phase8`        |
 | 9     | L-30 compliance (ops)      | `verify-compliance-live.sh`, `npm run verify:phase9`, `apply-compliance.sh` |
 | 10    | Edge security (ops)        | `verify-edge-security.sh`, `npm run verify:phase10`, Cloudflare + UFW       |
+| 11    | Production 20/20 (ops)     | `npm run verify:production-20`, `production-cert.yml`                         |
 
 ---
 
@@ -32,6 +33,7 @@ npm run verify:go-live        # Engineering + deploy sync + live probes (17 → 
 npm run verify:phase8         # Live /api/health version vs local main
 npm run verify:phase9         # L-30 GSTIN + legal entity in homepage HTML
 npm run verify:phase10        # L-22 CDN edge + L-23 UFW probe
+npm run verify:production-20  # Final 20/20 gate (Phases 8–11)
 npm run verify:complete       # Storefront + audit + coverage
 npm run test:integration      # After db:migrate (CI runs automatically)
 ```
