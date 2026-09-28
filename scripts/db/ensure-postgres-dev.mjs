@@ -61,18 +61,19 @@ if (await probePort(port)) {
   process.exit(0);
 }
 
-console.warn(
-  `\n[vibe] PostgreSQL is not reachable at localhost:${port} (DATABASE_URL).\n` +
-    `[vibe] Google sign-in and catalog need the database online.\n`,
-);
-
-if (process.platform === "win32") {
-  console.warn("[vibe] Starting local PostgreSQL (npm run db:start)…\n");
-  const result = spawnSync("npm", ["run", "db:start"], {
+function runDbStart() {
+  const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+  return spawnSync(npm, ["run", "db:start"], {
     stdio: "inherit",
-    shell: true,
     cwd: root,
   });
+}
+
+if (process.platform === "win32") {
+  console.warn(
+    `[vibe] PostgreSQL is offline on port ${port} — starting local instance (npm run db:start)…\n`,
+  );
+  const result = runDbStart();
   if (result.status !== 0) {
     console.error("[vibe] Could not start PostgreSQL. Fix DATABASE_URL or run npm run db:start manually.\n");
     process.exit(result.status ?? 1);
@@ -86,6 +87,8 @@ if (process.platform === "win32") {
 }
 
 console.warn(
-  "[vibe] Start Postgres manually (e.g. docker compose up -d postgres), then re-run npm run dev.\n",
+  `\n[vibe] PostgreSQL is not reachable at localhost:${port} (DATABASE_URL).\n` +
+    `[vibe] Google sign-in and catalog need the database online.\n` +
+    "[vibe] Start Postgres manually (e.g. docker compose up -d postgres), then re-run npm run dev.\n",
 );
 process.exit(0);

@@ -28,10 +28,14 @@ console.log("══════════════════════�
 console.log("  Vibe Music — go-live verification (Phases 8–10)");
 console.log("═══════════════════════════════════════════════════════════");
 
-const repoCode = run("Engineering program", "npm", ["run", "verify:engineering"]);
+// Go-live is an operator gate — use audit remediation, not full engineering CI
+// (coverage + integration tests belong on dev/CI, not on the production VPS).
+const repoCode = run("Repository audit gate", "npm", ["run", "verify:audit"]);
 const deployCode = run("Deploy sync (Phase 8)", "npm", ["run", "verify:phase8"]);
 
 let liveCode = 0;
+let edgeCode = 0;
+let complianceCode = 0;
 if (VERIFY_BASE_URL) {
   const signoffEnv = { ...process.env, VERIFY_BASE_URL };
   console.log("\n▶ Production sign-off");
@@ -43,11 +47,11 @@ if (VERIFY_BASE_URL) {
   liveCode = signoff.status ?? 1;
   console.log(liveCode === 0 ? "✓ Production sign-off" : `✗ Production sign-off (exit ${liveCode})`);
 
-  const edgeCode = run("Edge security (Phase 10)", "npm", ["run", "verify:phase10"]);
+  edgeCode = run("Edge security (Phase 10)", "npm", ["run", "verify:phase10"]);
   if (edgeCode !== 0) {
     console.log("\nℹ L-22/L-23: Cloudflare + UFW — see docs/ops/PHASE10_EDGE_SECURITY.md");
   }
-  const complianceCode = run("Compliance live (Phase 9)", "npm", ["run", "verify:phase9"]);
+  complianceCode = run("Compliance live (Phase 9)", "npm", ["run", "verify:phase9"]);
   if (complianceCode !== 0) {
     console.log("\nℹ L-30: Set GSTIN on VPS — bash deploy/apply-compliance.sh");
   }
@@ -67,7 +71,9 @@ console.log("  bash deploy/certify-production.sh");
 console.log("  CLOUDFLARE_ONLY=1 bash deploy/certify-production.sh");
 console.log("───────────────────────────────────────────────────────────\n");
 
-const failed = [repoCode, deployCode, liveCode].filter((code) => code !== 0);
+const failed = [repoCode, deployCode, liveCode, edgeCode, complianceCode].filter(
+  (code) => code !== 0,
+);
 if (failed.length === 0) {
   console.log("✅ Go-live verification PASSED — target 20/20 when edge + compliance green.");
 } else {

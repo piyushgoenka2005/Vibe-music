@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import ContactPageContent from "@/components/contact/ContactPageContent";
+import { resolvePublicLegal } from "@/lib/brand/resolvePublicLegal";
 import "@/styles/contact-page.css";
 
 export const revalidate = 300;
@@ -9,7 +10,9 @@ export const metadata = {
   description: "Get in touch with Vibe Music for orders, product advice, and support.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const legal = await resolvePublicLegal();
+
   return (
     <main className="storefront-page storefront-page--subtle">
       <Suspense
@@ -19,7 +22,7 @@ export default function ContactPage() {
           </div>
         }
       >
-        <ContactPageContent />
+        <ContactPageContent legal={legal} />
       </Suspense>
     </main>
   );

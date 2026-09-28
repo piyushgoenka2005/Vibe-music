@@ -17,10 +17,7 @@ export const GOOGLE_PLACES_ENV_KEYS = [
 
 export type GooglePlacesEnvKey = (typeof GOOGLE_PLACES_ENV_KEYS)[number];
 
-export type GooglePlacesInvalidReason =
-  | "placeholder"
-  | "too_short"
-  | "whitespace_only";
+export type GooglePlacesInvalidReason = "placeholder" | "too_short" | "whitespace_only";
 
 export type GooglePlacesConfigInspection =
   | { status: "configured"; source: GooglePlacesEnvKey; keyLength: number }
@@ -43,7 +40,7 @@ let loggedConfigured = false;
 const loggedApiFailures = new Set<string>();
 
 function classifyRawKey(
-  raw: string | undefined
+  raw: string | undefined,
 ):
   | { kind: "empty" }
   | { kind: "usable"; value: string }
@@ -112,16 +109,12 @@ export function warnIfGooglePlacesMisconfigured(context = "googlePlaces"): void 
   if (inspection.status === "configured") {
     if (loggedConfigured) return;
     loggedConfigured = true;
-    logInfo(
-      "Google Places is configured; checkout address autocomplete can initialize",
-      context,
-      {
-        status: inspection.status,
-        source: inspection.source,
-        keyLength: inspection.keyLength,
-        preferredEnvKey: "GOOGLE_PLACES_API_KEY",
-      }
-    );
+    logInfo("Google Places is configured; checkout address autocomplete can initialize", context, {
+      status: inspection.status,
+      source: inspection.source,
+      keyLength: inspection.keyLength,
+      preferredEnvKey: "GOOGLE_PLACES_API_KEY",
+    });
     return;
   }
 
@@ -138,29 +131,32 @@ export function warnIfGooglePlacesMisconfigured(context = "googlePlaces"): void 
         acceptedEnvKeys: [...GOOGLE_PLACES_ENV_KEYS],
         preferredEnvKey: "GOOGLE_PLACES_API_KEY",
         minKeyLength: MIN_USABLE_KEY_LENGTH,
-      }
+      },
     );
     return;
   }
 
   if (loggedMissingConfig) return;
   loggedMissingConfig = true;
-  logWarn(
-    "Google Places is not configured; checkout address autocomplete falls back to manual entry",
-    context,
-    {
-      status: "missing",
-      acceptedEnvKeys: [...GOOGLE_PLACES_ENV_KEYS],
-      preferredEnvKey: "GOOGLE_PLACES_API_KEY",
-    }
-  );
+  const message =
+    "Google Places is not configured; checkout address autocomplete falls back to manual entry";
+  const meta = {
+    status: "missing",
+    acceptedEnvKeys: [...GOOGLE_PLACES_ENV_KEYS],
+    preferredEnvKey: "GOOGLE_PLACES_API_KEY",
+  };
+  if (process.env.NODE_ENV === "production") {
+    logWarn(message, context, meta);
+  } else {
+    logInfo(message, context, meta);
+  }
 }
 
 /** Log Google Places API failures without leaking the key (once per distinct issue). */
 export function warnGooglePlacesApiFailure(
   message: string,
   meta?: Record<string, unknown>,
-  context = "googlePlaces"
+  context = "googlePlaces",
 ): void {
   const fingerprint = `${message}:${String(meta?.placesStatus ?? meta?.httpStatus ?? meta?.error ?? "")}`;
   if (loggedApiFailures.has(fingerprint)) {

@@ -33,7 +33,10 @@ const steps: Array<{ label: string; code: number }> = [
   },
 ];
 
-if (process.env.DATABASE_URL?.trim()) {
+const skipIntegration =
+  process.env.VERIFY_SKIP_INTEGRATION === "1" || process.env.VERIFY_ON_VPS === "1";
+
+if (process.env.DATABASE_URL?.trim() && !skipIntegration) {
   steps.push({
     label: "Database migrations",
     code: run("DB migrate", "npm", ["run", "db:migrate"]),
@@ -42,6 +45,8 @@ if (process.env.DATABASE_URL?.trim()) {
     label: "Integration tests",
     code: run("Integration tests", "npm", ["run", "test:integration"]),
   });
+} else if (skipIntegration) {
+  console.log("\nℹ VERIFY_SKIP_INTEGRATION — skipping integration tests");
 } else {
   console.log("\nℹ DATABASE_URL unset — skipping integration tests");
 }

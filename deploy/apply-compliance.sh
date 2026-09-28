@@ -28,6 +28,14 @@ if [[ -z "$GSTIN" ]] && grep -qE '^NEXT_PUBLIC_GSTIN=.{15}' "$SECRETS_FILE" 2>/d
   GSTIN="$(grep '^NEXT_PUBLIC_GSTIN=' "$SECRETS_FILE" | cut -d= -f2-)"
 fi
 
+if [[ -z "$GSTIN" ]] && [[ -f .env ]] && grep -qE '^NEXT_PUBLIC_GSTIN=.{15}' .env 2>/dev/null; then
+  GSTIN="$(grep '^NEXT_PUBLIC_GSTIN=' .env | cut -d= -f2- | tr -d '"' | tr -d "'")"
+fi
+
+if [[ -z "$GSTIN" ]] && [[ -f .env ]]; then
+  GSTIN="$(npx tsx --env-file=.env scripts/ops/read-store-gstin.mts 2>/dev/null || true)"
+fi
+
 if [[ -z "$GSTIN" ]]; then
   read -r -p "GSTIN (15 characters, required for L-30): " GSTIN
 fi
@@ -67,7 +75,7 @@ SKIP_PULL=1 bash deploy/update.sh
 
 echo ""
 echo "==> Verify L-30"
-VERIFY_BASE_URL="${VERIFY_BASE_URL:-https://vibemusic.in}" npm run verify:prod-signoff
+VERIFY_BASE_URL="${VERIFY_BASE_URL:-https://vibemusic.in}" npm run verify:phase9
 REQUIRE_COMPLIANCE=true VERIFY_BASE_URL="${VERIFY_BASE_URL:-https://vibemusic.in}" npm run verify:prod-signoff
 
 echo ""

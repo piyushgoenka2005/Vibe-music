@@ -32,33 +32,5 @@ if [[ ! -f deploy/ops-secrets.env ]]; then
   cp deploy/ops-secrets.env.example deploy/ops-secrets.env
 fi
 
-GSTIN="${NEXT_PUBLIC_GSTIN:-}"
-LEGAL="${NEXT_PUBLIC_LEGAL_ENTITY_NAME:-}"
-if [[ -z "$GSTIN" ]]; then
-  read -r -p "GSTIN (15 chars, required for L-30): " GSTIN || true
-fi
-if [[ -n "$GSTIN" ]]; then
-  if grep -q '^NEXT_PUBLIC_GSTIN=' deploy/ops-secrets.env; then
-    sed -i "s|^NEXT_PUBLIC_GSTIN=.*|NEXT_PUBLIC_GSTIN=${GSTIN}|" deploy/ops-secrets.env
-  else
-    echo "NEXT_PUBLIC_GSTIN=${GSTIN}" >> deploy/ops-secrets.env
-  fi
-fi
-if [[ -z "$LEGAL" ]]; then
-  LEGAL="Vibe Music"
-fi
-if grep -q '^NEXT_PUBLIC_LEGAL_ENTITY_NAME=' deploy/ops-secrets.env; then
-  sed -i "s|^NEXT_PUBLIC_LEGAL_ENTITY_NAME=.*|NEXT_PUBLIC_LEGAL_ENTITY_NAME=${LEGAL}|" deploy/ops-secrets.env
-else
-  echo "NEXT_PUBLIC_LEGAL_ENTITY_NAME=${LEGAL}" >> deploy/ops-secrets.env
-fi
-
-node scripts/ops/merge-ops-secrets.mjs
-bash deploy/update.sh
-
-echo ""
-echo "▶ Phase 8 deploy complete. Verify from dev machine:"
-echo "   VERIFY_BASE_URL=https://vibemusic.in npm run phase8:status"
-echo ""
-echo "▶ Phase 10 (after Cloudflare orange-cloud DNS):"
-echo "   sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh"
+echo "▶ Full production go-live (compliance + deploy + edge)"
+bash deploy/production-100.sh

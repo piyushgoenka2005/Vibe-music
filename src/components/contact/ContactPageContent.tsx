@@ -9,8 +9,9 @@ import { NavArrowIcon } from "@/gp9/components/ui/nav-arrow-icon";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { SUPPORT_HOURS_DETAIL, SUPPORT_HOURS_LABEL } from "@/lib/brand/businessIdentity";
 import { BRAND } from "@/lib/brand";
+import type { PublicLegalInfo } from "@/types/publicLegal";
 
-export default function ContactPageContent() {
+export default function ContactPageContent({ legal }: { legal: PublicLegalInfo }) {
   const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -89,12 +90,12 @@ export default function ContactPageContent() {
             ) : null}
             <li>
               <MapPin size={18} aria-hidden />
-              <span>{BRAND.address}</span>
+              <span>{legal.address || BRAND.address}</span>
             </li>
-            {BRAND.gstin ? (
+            {legal.gstin ? (
               <li>
                 <span className="contact-page__gstin" aria-label="GSTIN">
-                  GSTIN: {BRAND.gstin}
+                  GSTIN: {legal.gstin}
                 </span>
               </li>
             ) : null}

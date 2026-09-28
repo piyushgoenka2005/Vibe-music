@@ -37,6 +37,10 @@ jobs:
             # update.sh already gates on /api/health internally; the final
             # smoke below runs once against the PUBLIC url (nginx + TLS path).
             SKIP_SMOKE=1 bash deploy/update.sh
+            if grep -qE '^NEXT_PUBLIC_GSTIN=.{15}' deploy/ops-secrets.env 2>/dev/null; then
+              echo "==> L-30 compliance redeploy (GSTIN in ops-secrets)"
+              SKIP_PULL=1 bash deploy/apply-compliance.sh
+            fi
             npm run publish:independence-banner || true
             BASE_URL=https://vibemusic.in bash deploy/post-deploy-smoke.sh
 

@@ -42,7 +42,10 @@ const steps: Array<{ label: string; code: number; blocking: boolean }> = [
   },
 ];
 
-if (process.env.DATABASE_URL?.trim()) {
+const skipIntegration =
+  process.env.VERIFY_SKIP_INTEGRATION === "1" || process.env.VERIFY_ON_VPS === "1";
+
+if (process.env.DATABASE_URL?.trim() && !skipIntegration) {
   steps.push({
     label: "Integration tests (Postgres)",
     code: run("Integration tests", "npm", ["run", "test:integration"]),

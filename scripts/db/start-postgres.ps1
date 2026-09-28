@@ -4,8 +4,24 @@
 $ErrorActionPreference = "Stop"
 
 $port = 5432
-$tcp = Test-NetConnection -ComputerName localhost -Port $port -WarningAction SilentlyContinue
-if ($tcp.TcpTestSucceeded) {
+
+function Test-PostgresPort([int]$TargetPort) {
+    $client = New-Object System.Net.Sockets.TcpClient
+    try {
+        $async = $client.BeginConnect("127.0.0.1", $TargetPort, $null, $null)
+        $ready = $async.AsyncWaitHandle.WaitOne(2000, $false)
+        if ($ready -and $client.Connected) {
+            return $true
+        }
+    } catch {
+        return $false
+    } finally {
+        if ($client.Connected) { $client.Close() }
+    }
+    return $false
+}
+
+if (Test-PostgresPort $port) {
     Write-Host "PostgreSQL is already running on port $port." -ForegroundColor Green
     exit 0
 }
@@ -73,8 +89,7 @@ if ($LASTEXITCODE -ne 0) {
 
 Start-Sleep -Seconds 2
 
-$verify = Test-NetConnection -ComputerName localhost -Port $port -WarningAction SilentlyContinue
-if (-not $verify.TcpTestSucceeded) {
+if (-not (Test-PostgresPort $port)) {
     Write-Warning "Could not verify connection on port $port. Check log at $logFile"
     exit 1
 }

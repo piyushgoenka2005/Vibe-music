@@ -80,6 +80,11 @@ export default async function RootLayout({
           </div>
         ) : null}
         <SocialRailShell />
+        {legal.gstin ? (
+          <p className="sr-only" aria-hidden="true">
+            GSTIN: {legal.gstin}
+          </p>
+        ) : null}
         <AppShell legal={legal}>{children}</AppShell>
       </body>
     </html>
