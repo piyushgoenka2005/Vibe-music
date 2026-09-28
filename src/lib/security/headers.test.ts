@@ -17,6 +17,8 @@ describe("SECURITY_HEADERS", () => {
     const csp = headerValue("Content-Security-Policy");
     expect(csp).toContain("default-src 'self'");
     expect(csp).toContain("https://checkout.razorpay.com");
+    expect(csp).toContain("https://fonts.gstatic.com");
+    expect(csp).toContain("media-src 'self' data: blob:");
     expect(csp).toContain("form-action 'self' https://api.razorpay.com");
     expect(headerValue("X-Frame-Options")).toBe("SAMEORIGIN");
     expect(headerValue("X-Content-Type-Options")).toBe("nosniff");
