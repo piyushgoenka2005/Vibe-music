@@ -44,7 +44,7 @@ export async function register() {
       }
     }
 
-    {
+    if (process.env.NODE_ENV === "production") {
       const { warnIfGooglePlacesMisconfigured } = await import("@/lib/server/googlePlaces");
       warnIfGooglePlacesMisconfigured("instrumentation");
     }
@@ -62,13 +62,23 @@ export async function register() {
     }
 
     try {
-      const { verifyPostgresConnection } = await import("@/lib/server/postgresHealth");
-      const databaseHealth = await verifyPostgresConnection();
-      if (!databaseHealth.ok && process.env.NODE_ENV === "production") {
-        logWarn(
-          `PostgreSQL initialization failed at startup: ${databaseHealth.error ?? "unknown"}`,
-          "instrumentation",
-        );
+      const skipStartupProbe =
+        process.env.NODE_ENV !== "production" || process.env.SKIP_INSTRUMENTATION_CHECKS === "true";
+
+      if (skipStartupProbe) {
+        // Don't block dev server boot on a 3s Postgres probe.
+        void import("@/lib/server/postgresHealth")
+          .then(({ verifyPostgresConnection }) => verifyPostgresConnection())
+          .catch(() => {});
+      } else {
+        const { verifyPostgresConnection } = await import("@/lib/server/postgresHealth");
+        const databaseHealth = await verifyPostgresConnection();
+        if (!databaseHealth.ok) {
+          logWarn(
+            `PostgreSQL initialization failed at startup: ${databaseHealth.error ?? "unknown"}`,
+            "instrumentation",
+          );
+        }
       }
     } catch (error) {
       logWarn(

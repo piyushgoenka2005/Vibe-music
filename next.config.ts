@@ -5,7 +5,8 @@ const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  compress: true,
+  // Dev: compress spawns many Gzip streams → MaxListenersExceededWarning on concurrent RSC requests.
+  compress: isProd,
   experimental: {
     // CDN PNG masters often exceed the default 7s optimizer fetch window in local/dev.
     imgOptTimeoutInSeconds: 30,

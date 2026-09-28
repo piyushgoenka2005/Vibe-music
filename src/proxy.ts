@@ -77,8 +77,22 @@ function jsonApiError(
   return withSecurityHeaders(response);
 }
 
+function isDevAuthReadFastPath(request: NextRequest, pathname: string): boolean {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    process.env.DISABLE_RATE_LIMIT === "true" &&
+    request.method === "GET" &&
+    pathname.startsWith("/api/auth/")
+  );
+}
+
 async function handleApiRequest(request: NextRequest): Promise<NextResponse | null> {
   const pathname = request.nextUrl.pathname;
+
+  if (isDevAuthReadFastPath(request, pathname)) {
+    return NextResponse.next();
+  }
+
   const requestId = request.headers.get(REQUEST_ID_HEADER) ?? createRequestId();
   const ip = getClientIp(request);
   const startedAt = Date.now();

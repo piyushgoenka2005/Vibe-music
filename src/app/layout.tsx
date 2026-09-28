@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Bebas_Neue } from "next/font/google";
 import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
@@ -81,7 +82,9 @@ export default async function RootLayout({
             </div>
           </div>
         ) : null}
-        <SocialRailShell />
+        <Suspense fallback={null}>
+          <SocialRailShell />
+        </Suspense>
         {legal.gstin ? (
           <p className="sr-only" aria-hidden="true">
             GSTIN: {legal.gstin}

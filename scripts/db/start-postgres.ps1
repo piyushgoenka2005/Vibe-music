@@ -84,7 +84,7 @@ $pgCtl = Join-Path $selected.Bin "pg_ctl.exe"
 $logFile = Join-Path $selected.Data "server.log"
 
 Write-Host "Starting PostgreSQL from $($selected.Data) ..." -ForegroundColor Cyan
-& $pgCtl start -D $selected.Data -l $logFile
+& $pgCtl start -D $selected.Data -l $logFile -w -t 90
 if ($LASTEXITCODE -ne 0) {
     # Already running is fine
     $running = & $pgCtl status -D $selected.Data 2>&1
@@ -94,7 +94,17 @@ if ($LASTEXITCODE -ne 0) {
     }
 }
 
-Start-Sleep -Seconds 2
+Start-Sleep -Milliseconds 300
+
+$pgIsReady = Join-Path $selected.Bin "pg_isready.exe"
+if (Test-Path $pgIsReady) {
+  $deadline = (Get-Date).AddSeconds(20)
+  while ((Get-Date) -lt $deadline) {
+    & $pgIsReady -h 127.0.0.1 -p $port -U postgres -d postgres 2>$null | Out-Null
+    if ($LASTEXITCODE -eq 0) { break }
+    Start-Sleep -Milliseconds 250
+  }
+}
 
 if (-not (Test-PostgresPort $port)) {
     Write-Warning "Could not verify connection on port $port. Check log at $logFile"
