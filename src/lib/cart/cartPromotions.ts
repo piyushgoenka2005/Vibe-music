@@ -1,3 +1,8 @@
+import {
+  STOREFRONT_FREE_SHIPPING_THRESHOLD,
+  storefrontShippingBannerText,
+} from "@/lib/storefront/shippingPolicy";
+
 export interface CartPromotionsConfig {
   freeShippingThreshold: number;
   freeGiftThreshold: number;
@@ -29,24 +34,14 @@ function parseThreshold(value: string | undefined, fallback: number): number {
 }
 
 export function getCartPromotionsConfig(): CartPromotionsConfig {
-  // Default 0 — checkout currently always quotes free shipping.
-  // Set NEXT_PUBLIC_CART_FREE_SHIPPING_THRESHOLD to re-enable cart milestone messaging.
-  const freeShippingThreshold = parseThreshold(
-    process.env.NEXT_PUBLIC_CART_FREE_SHIPPING_THRESHOLD,
-    0
-  );
-  const freeGiftThreshold = parseThreshold(
-    process.env.NEXT_PUBLIC_CART_FREE_GIFT_THRESHOLD,
-    799
-  );
-  const giftProductId =
-    process.env.NEXT_PUBLIC_CART_GIFT_PRODUCT_ID?.trim() || null;
+  // Locked to storefront policy — checkout always quotes free shipping (threshold 0).
+  const freeShippingThreshold = STOREFRONT_FREE_SHIPPING_THRESHOLD;
+  const freeGiftThreshold = parseThreshold(process.env.NEXT_PUBLIC_CART_FREE_GIFT_THRESHOLD, 799);
+  const giftProductId = process.env.NEXT_PUBLIC_CART_GIFT_PRODUCT_ID?.trim() || null;
 
   const bannerText = giftProductId
     ? `Free gift on orders above ₹${freeGiftThreshold.toLocaleString("en-IN")}`
-    : freeShippingThreshold > 0
-      ? `Free shipping on orders above ₹${freeShippingThreshold.toLocaleString("en-IN")}`
-      : "Free standard shipping on every order";
+    : storefrontShippingBannerText();
 
   return {
     freeShippingThreshold,
@@ -60,8 +55,5 @@ export function formatCartPromoBanner(config: CartPromotionsConfig): string {
   if (config.giftProductId) {
     return `Free gift on orders above ₹${config.freeGiftThreshold.toLocaleString("en-IN")}`;
   }
-  if (config.freeShippingThreshold <= 0) {
-    return "Free standard shipping on every order";
-  }
-  return `Free shipping on orders above ₹${config.freeShippingThreshold.toLocaleString("en-IN")}`;
+  return storefrontShippingBannerText();
 }

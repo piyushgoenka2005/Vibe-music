@@ -1,6 +1,8 @@
 import { WHY_SHOP_SECURE_PAYMENTS_SUBTITLE } from "@/data/trustSignals";
 import { ROUTES } from "@/lib/routes";
 import { BRAND } from "@/lib/brand";
+import { SUPPORT_HOURS_DETAIL } from "@/lib/brand/businessIdentity";
+import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 
 export type WhyShopIconId =
   | "shipping"
@@ -27,7 +29,7 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
     id: "free-shipping",
     iconId: "shipping",
     title: "Fast, FREE Shipping",
-    subtitle: "Free shipping on every order.",
+    subtitle: SHIPPING_POLICY.whyShop,
     href: ROUTES.page("shipping"),
   },
   {
@@ -69,7 +71,7 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
     id: "expert-gear-support",
     iconId: "support",
     title: "FREE Product Support",
-    subtitle: "Got a question? We're here to help.",
+    subtitle: SUPPORT_HOURS_DETAIL,
     href: ROUTES.contact,
   },
   {

@@ -67,9 +67,7 @@ export default function SearchAutocomplete({
   const offsets = groupOffsets(groups);
   const suggestionsAvailable = hasSuggestions(groups);
   const showDiscoveryLead = isDiscoveryState(groups, query);
-  const isFallbackDiscovery = groups.keywords.some((item) =>
-    item.id.startsWith("empty-")
-  );
+  const isFallbackDiscovery = groups.keywords.some((item) => item.id.startsWith("empty-"));
   const useChipVariant = showDiscoveryLead || isFallbackDiscovery;
   const showViewAll = query.length >= MIN_QUERY_LENGTH && Boolean(onSubmit);
   const isLoadingMore = status === "loading" && query.length >= MIN_QUERY_LENGTH;
@@ -109,16 +107,18 @@ export default function SearchAutocomplete({
         aria-busy={isLoadingMore}
       >
         {showDiscoveryLead ? (
-          <p className="sw-search-discovery__lead">
-            Discover gear by category, brand, or trend.
-          </p>
+          <p className="sw-search-discovery__lead">Discover gear by category, brand, or trend.</p>
         ) : isFallbackDiscovery ? (
           <p className="sw-search-discovery__lead">
             No matches for &ldquo;{query}&rdquo;. Try these instead.
           </p>
         ) : null}
         {isLoadingMore ? (
-          <div className="sw-search-status sw-search-status--inline" role="status" aria-live="polite">
+          <div
+            className="sw-search-status sw-search-status--inline"
+            role="status"
+            aria-live="polite"
+          >
             <div className="sw-search-spinner" aria-hidden="true" />
             Finding more matches...
           </div>
@@ -144,7 +144,7 @@ export default function SearchAutocomplete({
           variant={useChipVariant ? "chip" : "default"}
         />
         <SearchSuggestionGroup
-          title={useChipVariant ? "Popular brands" : "Brands"}
+          title={useChipVariant ? "Shop by brand" : "Brands"}
           items={groups.brands}
           query={query}
           activeIndexOffset={offsets.brands}

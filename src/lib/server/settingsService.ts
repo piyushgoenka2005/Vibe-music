@@ -1,3 +1,4 @@
+import { CANONICAL_BUSINESS_ADDRESS } from "@/lib/brand/businessIdentity";
 import { SELLER_STATE, DEFAULT_GST_RATE } from "@/lib/gstCalculator";
 import * as pgContent from "@/lib/server/prisma/contentRepository";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
@@ -10,8 +11,7 @@ const DEFAULT_SETTINGS: StoreSettings = {
   storeName: "Vibe Music",
   storeEmail: "support@vibemusic.in",
   storePhone: "8910482950",
-  storeAddress:
-    "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071",
+  storeAddress: CANONICAL_BUSINESS_ADDRESS,
   gstNumber: "",
   defaultGstRate: DEFAULT_GST_RATE,
   sellerState: SELLER_STATE,

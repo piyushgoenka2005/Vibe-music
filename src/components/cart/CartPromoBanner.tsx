@@ -1,11 +1,10 @@
 "use client";
 
+import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 import { useCartStore } from "@/store/cartStore";
 
 export default function CartPromoBanner() {
-  const bannerText = useCartStore(
-    (s) => s.promoConfig?.bannerText ?? "Free shipping on qualifying orders"
-  );
+  const bannerText = useCartStore((s) => s.promoConfig?.bannerText ?? SHIPPING_POLICY.cartBanner);
 
   return (
     <div className="cart-promo-banner" role="note">

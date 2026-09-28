@@ -76,6 +76,9 @@ npm run db:migrate
 echo "==> Production ops banner sync"
 npx tsx --env-file=.env scripts/ops/seed-production-ops.mts || true
 
+echo "==> Reconcile product review aggregates (fix stale counts)"
+npx tsx --env-file=.env scripts/ops/reconcile-product-review-aggregates.mts || true
+
 if [[ "${SEED_CATALOG:-0}" == "1" ]]; then
   echo "==> Seeding catalog from JSON"
   npm run seed:catalog

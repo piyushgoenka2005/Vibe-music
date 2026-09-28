@@ -17,12 +17,11 @@ export function buildOrganizationWebsiteJsonLd() {
           url: logoUrl,
         },
         email: BRAND.email,
-        ...(BRAND.phoneTel
-          ? { telephone: BRAND.phoneTel }
-          : {}),
+        ...(BRAND.phoneTel ? { telephone: BRAND.phoneTel } : {}),
         address: {
           "@type": "PostalAddress",
-          streetAddress: "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303",
+          streetAddress:
+            "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071",
           addressLocality: "Kolkata",
           postalCode: "700071",
           addressRegion: "WB",

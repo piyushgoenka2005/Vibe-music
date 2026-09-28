@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 
 interface AssuranceItem {
   icon: LucideIcon;
@@ -22,7 +23,7 @@ const ASSURANCES: AssuranceItem[] = [
   {
     icon: Truck,
     label: "Free Shipping",
-    detail: "Free delivery on every order",
+    detail: SHIPPING_POLICY.pdpDetail,
   },
   {
     icon: CreditCard,
@@ -68,9 +69,7 @@ export default function ProductPurchaseAssurances() {
   const updateScrollState = useCallback(() => {
     const track = trackRef.current;
     if (!track) return;
-    setCanScrollNext(
-      track.scrollLeft + track.clientWidth < track.scrollWidth - 4
-    );
+    setCanScrollNext(track.scrollLeft + track.clientWidth < track.scrollWidth - 4);
   }, []);
 
   const pauseAutoScroll = useCallback(() => {
@@ -139,10 +138,7 @@ export default function ProductPurchaseAssurances() {
       <div className="pdp-assurances__viewport">
         <ul
           ref={trackRef}
-          className={[
-            "pdp-assurances__list",
-            enableAuto ? "pdp-assurances__list--auto" : "",
-          ]
+          className={["pdp-assurances__list", enableAuto ? "pdp-assurances__list--auto" : ""]
             .filter(Boolean)
             .join(" ")}
           onScroll={updateScrollState}

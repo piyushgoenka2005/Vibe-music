@@ -1,7 +1,5 @@
-import {
-  SEARCH_LANDING_QUICK_CHIPS,
-  SEARCH_LANDING_TRENDING,
-} from "@/data/searchLandingHints";
+import { SEARCH_LANDING_QUICK_CHIPS, SEARCH_LANDING_TRENDING } from "@/data/searchLandingHints";
+import { STOREFRONT_CATALOG_BRANDS } from "@/data/storefrontBrands";
 import { categoryPath, ROUTES } from "@/lib/routes";
 import type { SearchSuggestion } from "@/types/search";
 
@@ -42,23 +40,17 @@ export const SEARCH_KEYWORD_CATALOG = [
   ...SEARCH_LANDING_QUICK_CHIPS.map((chip) => chip.label),
 ] as const;
 
-export const SEARCH_POPULAR_BRANDS = [
-  "Yamaha",
-  "Roland",
-  "Zoom",
-  "Casio",
-  "Hertz",
-  "ADEON",
-  "Avus",
-  "Shure",
-  "Focusrite",
-  "Behringer",
-] as const;
+/** In-stock catalogue brands only — avoids suggesting Yamaha/Casio when not sold. */
+export const SEARCH_POPULAR_BRANDS = STOREFRONT_CATALOG_BRANDS;
 
 export const SEARCH_POPULAR_CATEGORIES = SEARCH_LANDING_QUICK_CHIPS;
 
 function normalizeToken(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function singularize(token: string): string {
@@ -84,7 +76,7 @@ function levenshtein(a: string, b: string): number {
       matrix[i][j] = Math.min(
         matrix[i - 1][j] + 1,
         matrix[i][j - 1] + 1,
-        matrix[i - 1][j - 1] + cost
+        matrix[i - 1][j - 1] + cost,
       );
     }
   }
@@ -131,7 +123,7 @@ export function matchesSearchQuery(label: string, query: string): boolean {
   const labelTokens = normalizedLabel.split(" ").filter(Boolean);
 
   return queryTokens.every((queryToken) =>
-    labelTokens.some((labelToken) => tokensMatch(queryToken, labelToken))
+    labelTokens.some((labelToken) => tokensMatch(queryToken, labelToken)),
   );
 }
 
@@ -142,7 +134,8 @@ export function scoreSearchMatch(label: string, query: string): number {
 
   if (normalizedLabel === normalizedQuery) return 1000;
   if (normalizedLabel.startsWith(normalizedQuery)) return 900 - normalizedLabel.length;
-  if (normalizedLabel.includes(normalizedQuery)) return 800 - normalizedLabel.indexOf(normalizedQuery);
+  if (normalizedLabel.includes(normalizedQuery))
+    return 800 - normalizedLabel.indexOf(normalizedQuery);
 
   const queryTokens = normalizedQuery.split(" ").filter(Boolean);
   const labelTokens = normalizedLabel.split(" ").filter(Boolean);
@@ -163,7 +156,7 @@ export function enrichKeywordSuggestions(
   keywords: SearchSuggestion[],
   labels: string[],
   query: string,
-  limit = 8
+  limit = 8,
 ): SearchSuggestion[] {
   const seen = new Set(keywords.map((item) => item.label.toLowerCase()));
   const merged = [...keywords];
@@ -241,7 +234,7 @@ export function categorySuggestionHref(slug: string): string {
 
 export function getPopularQueriesFromAnalytics(
   events: Array<{ query: string }>,
-  limit = 6
+  limit = 6,
 ): string[] {
   const counts = new Map<string, { label: string; count: number }>();
 
@@ -266,13 +259,13 @@ export function getPopularQueriesFromAnalytics(
 export function buildKeywordSuggestions(
   query: string,
   limit = 8,
-  popularQueries: string[] = []
+  popularQueries: string[] = [],
 ): SearchSuggestion[] {
   const trimmed = query.trim();
   if (!trimmed) return [];
 
   const popularBoost = new Map(
-    popularQueries.map((term, index) => [term.toLowerCase(), popularQueries.length - index])
+    popularQueries.map((term, index) => [term.toLowerCase(), popularQueries.length - index]),
   );
 
   const ranked = Array.from(new Set(SEARCH_KEYWORD_CATALOG))
@@ -297,7 +290,7 @@ export function buildKeywordSuggestions(
 function wordHighlightRange(
   word: string,
   position: number,
-  query: string
+  query: string,
 ): { start: number; end: number } | null {
   const trimmed = query.trim();
   if (!trimmed || !word.trim()) return null;
@@ -335,7 +328,7 @@ function wordHighlightRange(
 
 export function findHighlightRange(
   label: string,
-  query: string
+  query: string,
 ): { start: number; end: number } | null {
   const trimmed = query.trim();
   if (!trimmed) return null;

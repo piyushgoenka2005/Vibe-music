@@ -8,6 +8,8 @@ import {
   resolveRelatedProductsForProduct,
   resolveSimilarProductsForProduct,
 } from "@/lib/server/relatedProductsService";
+import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
+import { getProductReviewStats } from "@/lib/server/reviewStatsService";
 import { getProductDetailBySlug } from "@/services/catalogService";
 import type { ProductDetailResult } from "@/services/product.service";
 import type { ProductDetail } from "@/types/product";
@@ -34,7 +36,21 @@ export const loadProductCorePage = cache(async function loadProductCorePage(
   if (!normalizedSlug) return null;
 
   try {
-    return (await getProductDetailBySlug(normalizedSlug)) ?? null;
+    const product = await getProductDetailBySlug(normalizedSlug);
+    if (!product) return null;
+
+    const stats = await getProductReviewStats(product.id);
+    const metrics = ensureProductReviewMetrics({
+      id: product.id,
+      rating: stats.averageRating,
+      reviewCount: stats.totalReviews,
+    });
+
+    return {
+      ...product,
+      rating: metrics.rating,
+      reviewCount: metrics.reviewCount,
+    };
   } catch {
     return null;
   }

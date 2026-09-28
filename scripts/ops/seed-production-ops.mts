@@ -5,6 +5,7 @@
 import { PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { DEFAULT_STORE_PHONE } from "../../src/lib/brand";
+import { CANONICAL_BUSINESS_ADDRESS } from "../../src/lib/brand/businessIdentity";
 
 const prisma = new PrismaClient();
 
@@ -126,8 +127,7 @@ async function seedStoreSettings(): Promise<void> {
       storeName: legalName,
       storeEmail: "support@vibemusic.in",
       storePhone: phone,
-      storeAddress:
-        "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071",
+      storeAddress: CANONICAL_BUSINESS_ADDRESS,
       gstNumber: gstin,
       defaultGstRate: 18,
       sellerState: "West Bengal",

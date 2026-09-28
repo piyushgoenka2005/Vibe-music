@@ -60,6 +60,9 @@ jobs:
       - name: Audit remediation gate (L-01 → L-30)
         run: npm run verify:audit
 
+      - name: Storefront copy consistency
+        run: npm run verify:storefront-copy
+
       - name: Apply database migrations
         run: npm run db:migrate
 

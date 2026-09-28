@@ -1,4 +1,6 @@
-const ANNOUNCEMENT_MESSAGE = "Free shipping on all orders · Authorized brands · Secure checkout";
+import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
+
+const ANNOUNCEMENT_MESSAGE = `${SHIPPING_POLICY.announcement} · Authorized brands · Secure checkout`;
 
 export default function AnnouncementBar() {
   const items = Array.from({ length: 4 }, (_, index) => ({

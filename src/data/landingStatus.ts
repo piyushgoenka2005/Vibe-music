@@ -12,7 +12,7 @@ export const LANDING_STATS = [
   {
     value: "Fast",
     label: "Dispatch on in-stock",
-    status: "Warehouses across India",
+    status: "Pan-India fulfillment",
     tone: "success" as StatusTone,
   },
   {
@@ -31,7 +31,7 @@ export const LANDING_STATS = [
 
 export const LANDING_LIVE_TICKER = [
   "Store open — dispatching orders across India",
-  "Free shipping on all orders",
+  "Free shipping on every order",
   "Secure checkout via Razorpay · UPI · Cards",
   "Gear advisors reply by email Mon–Sat",
   "Track orders from your account after dispatch",

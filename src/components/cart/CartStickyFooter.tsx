@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { buildCartShippingState } from "@/lib/cart/cartShipping";
+import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 import { computeMrpTotal } from "@/lib/cart/promoGift";
 import { ROUTES } from "@/lib/routes";
 import { useCartStore } from "@/store/cartStore";
@@ -48,9 +49,7 @@ export default function CartStickyFooter({
   return (
     <footer className="cart-sticky-footer">
       {totalSavings > 0 ? (
-        <p className="cart-sticky-footer__savings">
-          Saving {formatCurrency(totalSavings)}
-        </p>
+        <p className="cart-sticky-footer__savings">Saving {formatCurrency(totalSavings)}</p>
       ) : null}
 
       <div className="cart-sticky-footer__panel">
@@ -61,9 +60,7 @@ export default function CartStickyFooter({
             onClick={() => setExpanded((open) => !open)}
             aria-expanded={expanded}
             aria-controls="cart-sticky-footer-breakdown"
-            aria-label={
-              expanded ? "Hide price breakdown" : "Show price breakdown"
-            }
+            aria-label={expanded ? "Hide price breakdown" : "Show price breakdown"}
           >
             <span className="cart-sticky-footer__total-label">
               Order total
@@ -73,27 +70,20 @@ export default function CartStickyFooter({
             </span>
             <span className="cart-sticky-footer__total-values">
               {showMrpStrike ? (
-                <span className="cart-sticky-footer__total-mrp">
-                  {formatCurrency(mrpTotal)}
-                </span>
+                <span className="cart-sticky-footer__total-mrp">{formatCurrency(mrpTotal)}</span>
               ) : null}
-              <span className="cart-sticky-footer__total-amount">
-                {formatCurrency(total)}
-              </span>
+              <span className="cart-sticky-footer__total-amount">{formatCurrency(total)}</span>
             </span>
           </button>
 
           <p className="cart-sticky-footer__meta">
             {shipping.unlocked
-              ? "Free shipping · Taxes included"
+              ? SHIPPING_POLICY.cartFooter
               : `${shipping.amountLabel} shipping · Taxes included`}
           </p>
 
           {expanded ? (
-            <div
-              id="cart-sticky-footer-breakdown"
-              className="cart-sticky-footer__breakdown"
-            >
+            <div id="cart-sticky-footer-breakdown" className="cart-sticky-footer__breakdown">
               <div className="cart-sticky-footer__row">
                 <span>Subtotal</span>
                 <span>{formatCurrency(subtotal)}</span>

@@ -1,3 +1,7 @@
+import { BRAND } from "@/lib/brand";
+import { SUPPORT_HOURS_DETAIL } from "@/lib/brand/businessIdentity";
+import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
+
 export interface ContentPage {
   slug: string;
   title: string;
@@ -25,9 +29,7 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
       },
       {
         heading: "Free shipping",
-        paragraphs: [
-          "Shipping is free on every order. Delivery timelines still vary by pin code — you can estimate ETA on the product page.",
-        ],
+        paragraphs: [SHIPPING_POLICY.shippingPage],
       },
       {
         heading: "Tracking",
@@ -75,6 +77,15 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
       {
         paragraphs: [
           "By using vibemusic.in you agree to these terms. Please read them carefully before placing an order.",
+        ],
+      },
+      {
+        heading: "Registered business",
+        paragraphs: [
+          `${BRAND.legalName} operates vibemusic.in from ${BRAND.address}.`,
+          BRAND.gstin
+            ? `GSTIN: ${BRAND.gstin}`
+            : "GSTIN is published in the site footer when configured.",
         ],
       },
       {

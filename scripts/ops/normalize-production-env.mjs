@@ -69,6 +69,9 @@ if (!hasTrustProxy) {
   lines.push("TRUST_PROXY_HOPS=1");
 }
 
+// Storefront policy: free shipping on every order — remove legacy threshold env.
+lines = lines.filter((line) => !line.startsWith("NEXT_PUBLIC_CART_FREE_SHIPPING_THRESHOLD="));
+
 const normalized = `${lines.join("\n").replace(/\n*$/, "\n")}`;
 if (normalized !== original) {
   fs.writeFileSync(envPath, normalized);

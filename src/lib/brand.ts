@@ -1,3 +1,5 @@
+import { CANONICAL_BUSINESS_ADDRESS } from "@/lib/brand/businessIdentity";
+
 /** Canonical storefront support number (10-digit Indian mobile). */
 export const DEFAULT_STORE_PHONE = "8910482950";
 
@@ -65,7 +67,7 @@ export const BRAND = {
   email: "support@vibemusic.in",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic.in",
   domain: "vibemusic.in",
-  address: "Sikkim Commerce House, 4/1 Middleton Street, 3rd Floor, Room 303, Kolkata – 700071",
+  address: CANONICAL_BUSINESS_ADDRESS,
   logoPath: "/brand/vibemusic-logo.svg",
   headerLogoPath: "/brand/header-logo.webp",
   iconPath: "/icon-48.png",
