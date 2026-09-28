@@ -57,6 +57,19 @@ If deploy fails:
 3. Local check: `npm run verify:phase8`
 4. Check `pm2 logs vibe --lines 100`
 
+## L-30 compliance (Phase 9)
+
+After deploy sync, set GSTIN on VPS:
+
+```bash
+bash deploy/apply-compliance.sh
+# verify:
+npm run verify:phase9
+REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
+```
+
+Admin → Settings → GST number also works without rebuild (SSR from store settings).
+
 ## Optional services
 
 ```bash

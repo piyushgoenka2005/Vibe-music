@@ -1,15 +1,17 @@
 # Phase 9 — L-30 compliance live
 
-Last updated: 2026-09-25.
+Last updated: 2026-09-28.
 
 ## Deliverables
 
-| Item                                      | Location                                       |
-| ----------------------------------------- | ---------------------------------------------- |
-| SSR legal block from store settings + env | `src/lib/brand/resolvePublicLegal.ts`          |
-| Footer wired to live legal props          | `SiteFooter.tsx` via `layout.tsx` → `AppShell` |
-| Unit tests                                | `resolvePublicLegal.test.ts`                   |
-| Live probe                                | `npm run verify:readiness`                     |
+| Item                                      | Location                                        |
+| ----------------------------------------- | ----------------------------------------------- |
+| SSR legal block from store settings + env | `src/lib/brand/resolvePublicLegal.ts`           |
+| Footer wired to live legal props          | `SiteFooter.tsx` via `layout.tsx` → `AppShell`  |
+| Unit tests                                | `resolvePublicLegal.test.ts`                    |
+| Live probe                                | `npm run verify:phase9`                         |
+| Shell probe                               | `deploy/verify-compliance-live.sh`              |
+| Maintenance CI                            | `.github/workflows/maintenance.yml` (L-30 step) |
 
 ## How L-30 works now
 
@@ -36,9 +38,17 @@ npm run verify:readiness
 
 Homepage HTML must contain `GSTIN: 19XXXXXXXXXXXXX` (15-character GSTIN).
 
+## Phase 9 automation (repo complete)
+
+| Command                                         | Purpose                             |
+| ----------------------------------------------- | ----------------------------------- |
+| `npm run verify:phase9`                         | Homepage GSTIN + legal entity probe |
+| `REQUIRE_COMPLIANCE=true npm run verify:phase9` | Strict mode + prod-signoff          |
+| `bash deploy/verify-compliance-live.sh`         | VPS/shell equivalent                |
+
 ## Phase 9 score
 
-- **Code:** complete (pending deploy from Phase 8)
-- **Live:** 0/1 until GSTIN value is set and Phase 8 deploy lands
+- **Code:** ✅ complete
+- **Live:** 🟡 pending — run `bash deploy/apply-compliance.sh` on VPS after Phase 8 deploy
 
 Proceed to **Phase 10 — Edge security (L-22 / L-23)**.

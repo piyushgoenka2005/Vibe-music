@@ -47,22 +47,7 @@ if (VERIFY_BASE_URL) {
   if (edgeCode !== 0) {
     console.log("\nℹ L-22: Cloudflare proxied DNS required — see docs/ops/PHASE10_EDGE_SECURITY.md");
   }
-  const complianceEnv = {
-    ...process.env,
-    VERIFY_BASE_URL,
-    REQUIRE_COMPLIANCE: "true",
-  };
-  const compliance = spawnSync("npx", ["tsx", "scripts/ops/prod-signoff.mts"], {
-    stdio: "inherit",
-    shell: process.platform === "win32",
-    env: complianceEnv,
-  });
-  const complianceCode = compliance.status ?? 1;
-  console.log(
-    complianceCode === 0
-      ? "✓ Compliance strict (L-30)"
-      : `✗ Compliance strict (L-30) (exit ${complianceCode})`,
-  );
+  const complianceCode = run("Compliance live (Phase 9)", "npm", ["run", "verify:phase9"]);
   if (complianceCode !== 0) {
     console.log("\nℹ L-30: Set GSTIN on VPS — bash deploy/apply-compliance.sh");
   }

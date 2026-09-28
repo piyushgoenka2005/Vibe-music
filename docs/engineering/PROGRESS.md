@@ -2,32 +2,33 @@
 
 Living checklist for the master engineering program (Phase 0 → production platform).
 
-| Module                                | Status  | Coverage / evidence                                                        |
-| ------------------------------------- | ------- | -------------------------------------------------------------------------- |
-| Phase 0 — Full audit                  | ✅ Done | `docs/engineering/BASELINE.md`                                             |
-| Storefront / compliance program       | ✅ Done | `verify:complete`, `deploy/certify-production.sh`                          |
-| **P0 — Metrics auth**                 | ✅ Done | `METRICS_SCRAPE_TOKEN`, `metricsAuth.ts`                                   |
-| **P0 — Request observation**          | ✅ Done | `route-observation.ts`, proxy `x-request-start`                            |
-| **P0 — Critical coverage CI**         | ✅ Done | `npm run test:coverage:gate`                                               |
-| **P1 — OTEL spans in hot paths**      | ✅ Done | `traceRoute.ts`, search + create-order, Prisma query spans                 |
-| **P1 — Graceful shutdown**            | ✅ Done | `gracefulShutdown.ts`, `/api/healthz`, `/api/readyz`                       |
-| **P1 — Integration tests (Postgres)** | ✅ Done | `paymentLogRepository.integration.test.ts`                                 |
-| **P2 — Job queue (BullMQ)**           | ✅ Done | `jobQueue.ts`, webhook enqueue, `npm run worker:start`                     |
-| **P2 — k6 in nightly CI**             | ✅ Done | `.github/workflows/load-test.yml`                                          |
-| **P3 — Horizontal scale (PM2)**       | ✅ Done | `PM2_CLUSTER=1`, `ecosystem.config.cjs`                                    |
-| **P4 — Payment route guards**         | ✅ Done | `withApiGuards` + `traceRouteHandler` on all `/api/payment/*` mutations    |
-| **P4 — Payment service coverage**     | ✅ Done | `orderPaymentService.test.ts`, gate includes money-path modules            |
-| **P4 — Verify complete gate**         | ✅ Done | `verify:complete` runs coverage gate                                       |
-| **P5 — Error monitoring**             | ✅ Done | `errorMonitoring.ts`, webhook ping, `integrationConfig`                    |
-| **P5 — Staging track**                | ✅ Done | `deploy/staging.env.example`, `docs/engineering/STAGING.md`, `staging.yml` |
-| **P5 — Deploy readiness probes**      | ✅ Done | `deploy/wait-for-ready.sh`, smoke + update + rollback                      |
-| **P6 — Deploy preflight**             | ✅ Done | `deploy/preflight.sh` (wired into `update.sh`)                             |
-| **P6 — Engineering program gate**     | ✅ Done | `npm run verify:engineering`, `PROGRAM_COMPLETE.md`                        |
-| **P6 — Operator runbook**             | ✅ Done | `docs/engineering/DEPLOY_RUNBOOK.md`                                       |
-| **P7 — Go-live verification gate**    | ✅ Done | `npm run verify:go-live`                                                   |
-| **P8 — Deploy sync automation**       | 🟡 Ops  | `verify-deploy-sync.sh`, `deploy-drift.yml`, `npm run verify:phase8`       |
+| Module                                | Status  | Coverage / evidence                                                         |
+| ------------------------------------- | ------- | --------------------------------------------------------------------------- |
+| Phase 0 — Full audit                  | ✅ Done | `docs/engineering/BASELINE.md`                                              |
+| Storefront / compliance program       | ✅ Done | `verify:complete`, `deploy/certify-production.sh`                           |
+| **P0 — Metrics auth**                 | ✅ Done | `METRICS_SCRAPE_TOKEN`, `metricsAuth.ts`                                    |
+| **P0 — Request observation**          | ✅ Done | `route-observation.ts`, proxy `x-request-start`                             |
+| **P0 — Critical coverage CI**         | ✅ Done | `npm run test:coverage:gate`                                                |
+| **P1 — OTEL spans in hot paths**      | ✅ Done | `traceRoute.ts`, search + create-order, Prisma query spans                  |
+| **P1 — Graceful shutdown**            | ✅ Done | `gracefulShutdown.ts`, `/api/healthz`, `/api/readyz`                        |
+| **P1 — Integration tests (Postgres)** | ✅ Done | `paymentLogRepository.integration.test.ts`                                  |
+| **P2 — Job queue (BullMQ)**           | ✅ Done | `jobQueue.ts`, webhook enqueue, `npm run worker:start`                      |
+| **P2 — k6 in nightly CI**             | ✅ Done | `.github/workflows/load-test.yml`                                           |
+| **P3 — Horizontal scale (PM2)**       | ✅ Done | `PM2_CLUSTER=1`, `ecosystem.config.cjs`                                     |
+| **P4 — Payment route guards**         | ✅ Done | `withApiGuards` + `traceRouteHandler` on all `/api/payment/*` mutations     |
+| **P4 — Payment service coverage**     | ✅ Done | `orderPaymentService.test.ts`, gate includes money-path modules             |
+| **P4 — Verify complete gate**         | ✅ Done | `verify:complete` runs coverage gate                                        |
+| **P5 — Error monitoring**             | ✅ Done | `errorMonitoring.ts`, webhook ping, `integrationConfig`                     |
+| **P5 — Staging track**                | ✅ Done | `deploy/staging.env.example`, `docs/engineering/STAGING.md`, `staging.yml`  |
+| **P5 — Deploy readiness probes**      | ✅ Done | `deploy/wait-for-ready.sh`, smoke + update + rollback                       |
+| **P6 — Deploy preflight**             | ✅ Done | `deploy/preflight.sh` (wired into `update.sh`)                              |
+| **P6 — Engineering program gate**     | ✅ Done | `npm run verify:engineering`, `PROGRAM_COMPLETE.md`                         |
+| **P6 — Operator runbook**             | ✅ Done | `docs/engineering/DEPLOY_RUNBOOK.md`                                        |
+| **P7 — Go-live verification gate**    | ✅ Done | `npm run verify:go-live`                                                    |
+| **P8 — Deploy sync automation**       | 🟡 Ops  | `verify-deploy-sync.sh`, `deploy-drift.yml`, `npm run verify:phase8`        |
+| **P9 — L-30 compliance live**         | 🟡 Ops  | `verify-compliance-live.sh`, `npm run verify:phase9`, `apply-compliance.sh` |
 
-**Program status:** ✅ **Code-complete (0–7)** · 🟡 **Deploy sync (8)** — VPS console for 20/20
+**Program status:** ✅ **Code-complete (0–7, 9)** · 🟡 **Live ops (8–9)** — VPS console for 20/20
 
 ## Commands
 
@@ -35,6 +36,7 @@ Living checklist for the master engineering program (Phase 0 → production plat
 npm run verify:engineering      # Full program gate (type-check → test → complete)
 npm run verify:go-live            # Engineering + deploy sync + live probes
 npm run verify:phase8             # Phase 8 deploy sync gate
+npm run verify:phase9             # Phase 9 L-30 GSTIN in homepage
 npm run phase8:status             # Local vs VPS commit + SSH probe
 npm run verify:complete         # Repo completeness (incl. coverage)
 npm run test:coverage:gate      # Money/security module coverage (CI)

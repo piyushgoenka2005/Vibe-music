@@ -44,6 +44,18 @@ jobs:
       - name: Production sign-off
         run: npm run verify:prod-signoff
 
+      - name: L-30 compliance (GSTIN in homepage)
+        id: compliance
+        continue-on-error: true
+        run: npm run verify:phase9
+
+      - name: Strict compliance sign-off
+        id: compliance_strict
+        continue-on-error: true
+        env:
+          REQUIRE_COMPLIANCE: "true"
+        run: npm run verify:prod-signoff
+
       - name: Dependency audit report (L-20)
         continue-on-error: true
         run: npm run audit:deps:report
@@ -54,5 +66,7 @@ jobs:
           echo "## Maintenance probe — $(date -u +%Y-%m-%dT%H:%MZ)" >> "$GITHUB_STEP_SUMMARY"
           echo "- Base URL: $VERIFY_BASE_URL" >> "$GITHUB_STEP_SUMMARY"
           echo "- Edge check (L-22): ${{ steps.edge.outcome }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- L-30 compliance: ${{ steps.compliance.outcome }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Strict compliance: ${{ steps.compliance_strict.outcome }}" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "See [PRODUCTION_READINESS_SCORECARD.md](docs/ops/PRODUCTION_READINESS_SCORECARD.md) for 20-point grading." >> "$GITHUB_STEP_SUMMARY"
