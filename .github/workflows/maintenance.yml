@@ -33,6 +33,11 @@ jobs:
         continue-on-error: ${{ env.REQUIRE_CDN_EDGE != 'true' }}
         run: npm run check:edge
 
+      - name: Liveness + readiness probes
+        run: |
+          curl -sf "${VERIFY_BASE_URL}/api/healthz"
+          curl -sf "${VERIFY_BASE_URL}/api/readyz"
+
       - name: Synthetic checkout monitor
         run: npm run monitor:checkout
 

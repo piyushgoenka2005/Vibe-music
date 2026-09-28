@@ -79,6 +79,7 @@
     "ops:configuration-status": "npx tsx scripts/ops/configuration-status.mts",
     "verify:storefront-copy": "node scripts/ops/verify-storefront-copy.mjs",
     "verify:complete": "npx tsx scripts/ops/verify-complete.mts",
+    "verify:engineering": "npx tsx scripts/ops/verify-engineering-program.mts",
     "check:env": "node scripts/ops/check-env.mjs",
     "check:edge": "node scripts/ops/check-edge-headers.mjs",
     "check:cwv": "node scripts/ops/check-cwv.mjs",

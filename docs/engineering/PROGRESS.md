@@ -21,33 +21,30 @@ Living checklist for the master engineering program (Phase 0 → production plat
 | **P5 — Error monitoring**             | ✅ Done | `errorMonitoring.ts`, webhook ping, `integrationConfig`                    |
 | **P5 — Staging track**                | ✅ Done | `deploy/staging.env.example`, `docs/engineering/STAGING.md`, `staging.yml` |
 | **P5 — Deploy readiness probes**      | ✅ Done | `deploy/wait-for-ready.sh`, smoke + update + rollback                      |
+| **P6 — Deploy preflight**             | ✅ Done | `deploy/preflight.sh` (wired into `update.sh`)                             |
+| **P6 — Engineering program gate**     | ✅ Done | `npm run verify:engineering`, `PROGRAM_COMPLETE.md`                        |
+| **P6 — Operator runbook**             | ✅ Done | `docs/engineering/DEPLOY_RUNBOOK.md`                                       |
+
+**Program status:** ✅ **Code-complete** — see [PROGRAM_COMPLETE.md](./PROGRAM_COMPLETE.md)
 
 ## Commands
 
 ```bash
-npm run verify:complete           # Repo completeness gate (incl. coverage)
-npm run test:coverage:gate        # Money/security module coverage (CI)
-npm run test:integration          # Postgres-backed tests (after db:migrate)
-npm run worker:start              # BullMQ worker (requires REDIS_URL)
-npm run load:k6                   # Local k6 smoke (server must be running)
-npm run ops:error-monitoring-ping # Test ERROR_MONITORING_WEBHOOK_URL
+npm run verify:engineering      # Full program gate (type-check → test → complete)
+npm run verify:complete         # Repo completeness (incl. coverage)
+npm run test:coverage:gate      # Money/security module coverage (CI)
+npm run test:integration        # Postgres-backed tests (after db:migrate)
+npm run worker:start            # BullMQ worker (requires REDIS_URL)
+npm run load:k6                 # Local k6 smoke (server must be running)
+npm run ops:error-monitoring-ping
 ```
 
-## VPS (Track A — go-live)
+## VPS (go-live — operator)
 
 ```bash
+bash deploy/preflight.sh
 bash deploy/certify-production.sh
 CLOUDFLARE_ONLY=1 bash deploy/certify-production.sh
 ```
 
-Optional:
-
-```bash
-# deploy/ops-secrets.env → REDIS_URL, ERROR_MONITORING_WEBHOOK_URL
-pm2 start deploy/ecosystem.config.cjs --only vibe-worker
-npm run ops:error-monitoring-ping
-```
-
-## Staging
-
-See `docs/engineering/STAGING.md` — GitHub Actions **Staging probe** workflow for manual validation against a staging URL.
+See [DEPLOY_RUNBOOK.md](./DEPLOY_RUNBOOK.md) and [PRODUCTION_COMPLETE.md](../ops/PRODUCTION_COMPLETE.md).

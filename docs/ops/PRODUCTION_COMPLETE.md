@@ -7,13 +7,15 @@
 
 ## A. Repository (done — no action)
 
-| Gate                | Command                          | Expected                         |
-| ------------------- | -------------------------------- | -------------------------------- |
-| Master completeness | `npm run verify:complete`        | All blocking steps pass          |
-| Audit remediation   | `npm run verify:audit`           | L-01 → L-30                      |
-| Storefront copy     | `npm run verify:storefront-copy` | No stale shipping/address/brands |
-| Unit tests          | `npm test`                       | 638 green                        |
-| CI                  | GitHub `Validate` workflow       | Green on `main`                  |
+| Gate                | Command                          | Expected                                   |
+| ------------------- | -------------------------------- | ------------------------------------------ |
+| Engineering program | `npm run verify:engineering`     | Type-check, lint, test, coverage, complete |
+| Master completeness | `npm run verify:complete`        | All blocking steps pass                    |
+| Audit remediation   | `npm run verify:audit`           | L-01 → L-30                                |
+| Storefront copy     | `npm run verify:storefront-copy` | No stale shipping/address/brands           |
+| Unit tests          | `npm test`                       | 656+ green                                 |
+| Integration tests   | `npm run test:integration`       | Postgres (CI + local)                      |
+| CI                  | GitHub `Validate` workflow       | Green on `main`                            |
 
 **Public surface grades (code):**
 
@@ -30,6 +32,7 @@
 ```bash
 cd ~/Vibe-music
 git pull origin main
+bash deploy/preflight.sh
 
 # 1. Secrets (once)
 cp -n deploy/ops-secrets.env.example deploy/ops-secrets.env
@@ -55,16 +58,17 @@ VERIFY_BASE_URL=https://vibemusic.in npm run verify:readiness
 VERIFY_BASE_URL=https://vibemusic.in npm run check:edge
 ```
 
-| Check          | Pass criteria                                      |
-| -------------- | -------------------------------------------------- |
-| **L-22 CDN**   | `cf-ray` header on homepage                        |
-| **L-23 UFW**   | `sudo ufw status` — Cloudflare IPs only on 80/443  |
-| **L-30 GSTIN** | `GSTIN: 19…` in homepage HTML footer               |
-| **Shipping**   | “Free shipping on every order” (no threshold copy) |
-| **Address**    | Room 303, Kolkata in footer + contact              |
-| **Phone**      | +91 891 048 2950 (not legacy 9773651006)           |
-| **Payments**   | Razorpay live, demo=false                          |
-| **Health**     | `/api/health` → 200, database ok                   |
+| Check          | Pass criteria                                                   |
+| -------------- | --------------------------------------------------------------- |
+| **L-22 CDN**   | `cf-ray` header on homepage                                     |
+| **L-23 UFW**   | `sudo ufw status` — Cloudflare IPs only on 80/443               |
+| **L-30 GSTIN** | `GSTIN: 19…` in homepage HTML footer                            |
+| **Shipping**   | “Free shipping on every order” (no threshold copy)              |
+| **Address**    | Room 303, Kolkata in footer + contact                           |
+| **Phone**      | +91 891 048 2950 (not legacy 9773651006)                        |
+| **Payments**   | Razorpay live, demo=false                                       |
+| **Health**     | `/api/healthz` + `/api/readyz` → 200; `/api/health` database ok |
+| **Metrics**    | `METRICS_SCRAPE_TOKEN` set; `/api/metrics` requires Bearer      |
 
 ---
 

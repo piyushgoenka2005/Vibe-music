@@ -40,12 +40,23 @@ const steps: Array<{ label: string; code: number; blocking: boolean }> = [
     code: run("Coverage gate", "npm", ["run", "test:coverage:gate"]),
     blocking: true,
   },
+];
+
+if (process.env.DATABASE_URL?.trim()) {
+  steps.push({
+    label: "Integration tests (Postgres)",
+    code: run("Integration tests", "npm", ["run", "test:integration"]),
+    blocking: true,
+  });
+}
+
+steps.push(
   {
     label: "Configuration status",
     code: run("Configuration status", "npm", ["run", "ops:configuration-status"]),
     blocking: false,
   },
-];
+);
 
 const VERIFY_BASE_URL = (process.env.VERIFY_BASE_URL ?? "").replace(/\/$/, "");
 if (VERIFY_BASE_URL) {

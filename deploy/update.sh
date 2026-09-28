@@ -15,6 +15,10 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 cd "$APP_DIR"
 
+if [[ "${SKIP_PREFLIGHT:-0}" != "1" ]]; then
+  bash deploy/preflight.sh
+fi
+
 echo "==> Recording current release for rollback"
 git rev-parse HEAD > .deploy-previous.sha
 echo "    previous=$(cat .deploy-previous.sha)"
