@@ -1,16 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
 import { useProduct } from "@/hooks/useProduct";
 import { useCartStore } from "@/store/cartStore";
-import {
-  BUY_NOW_CHECKOUT_HREF,
-  useBuyNowStore,
-} from "@/store/buyNowStore";
+import { BUY_NOW_CHECKOUT_HREF, useBuyNowStore } from "@/store/buyNowStore";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import {
@@ -32,13 +29,14 @@ import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import { isNonInstrumentGuitarProduct } from "@/lib/product/productRelevance";
 import "./product-detail.css";
 
-const FrequentlyBoughtTogether = dynamic(() => import("./FrequentlyBoughtTogether"), { ssr: false });
+const FrequentlyBoughtTogether = dynamic(() => import("./FrequentlyBoughtTogether"), {
+  ssr: false,
+});
 const GuitarSpecShowcase = dynamic(() => import("./GuitarSpecShowcase"), { ssr: false });
 const GuitarTonesInMotion = dynamic(() => import("./GuitarTonesInMotion"), { ssr: false });
 const GuitarStorySections = dynamic(() => import("./GuitarStorySections"), { ssr: false });
 const ProductTabs = dynamic(() => import("./ProductTabs"));
 const ProductCrossSell = dynamic(() => import("./ProductCrossSell"), { ssr: false });
-const ProductStickyBar = dynamic(() => import("./ProductStickyBar"), { ssr: false });
 
 interface ProductDetailPageProps {
   slug: string;
@@ -57,7 +55,7 @@ function buildGalleryImages(
   productImages: ProductImage[],
   variant: ProductVariant,
   productName: string,
-  imageColor: string
+  imageColor: string,
 ): ProductImage[] {
   const extractSrc = (item: unknown): string => {
     if (!item) return "";
@@ -87,15 +85,20 @@ function buildGalleryImages(
     })
     .filter((img) => Boolean(img.src));
 
-  const normalizedProductImages: ProductImage[] = (Array.isArray(productImages) ? productImages : [])
+  const normalizedProductImages: ProductImage[] = (
+    Array.isArray(productImages) ? productImages : []
+  )
     .map((img, index) => {
       const candidate = img as unknown;
       const src = extractSrc(
         typeof candidate === "string"
           ? candidate
-          : (candidate as { src?: unknown })?.src ?? candidate
+          : ((candidate as { src?: unknown })?.src ?? candidate),
       );
-      const imgObj = typeof candidate === "object" && candidate !== null ? (candidate as Record<string, unknown>) : null;
+      const imgObj =
+        typeof candidate === "object" && candidate !== null
+          ? (candidate as Record<string, unknown>)
+          : null;
       return {
         id: (typeof imgObj?.id === "string" && imgObj.id) || `img-${index}`,
         alt: (typeof imgObj?.alt === "string" && imgObj.alt) || `${productName} view ${index + 1}`,
@@ -115,16 +118,13 @@ function buildGalleryImages(
 export default function ProductDetailPage({ slug, initialData }: ProductDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const atcSentinelRef = useRef<HTMLDivElement>(null);
   const { data, isLoading, isError } = useProduct(slug, initialData);
   const showSkeleton = isLoading && !data;
   const addItem = useCartStore((s) => s.addItem);
   const openCartDrawer = useCartStore((s) => s.openDrawer);
   const trackRecentlyViewed = useRecentlyViewedStore((s) => s.add);
   const toggleWishlist = useWishlistStore((s) => s.toggle);
-  const isWishlisted = useWishlistStore((s) =>
-    data ? s.has(data.product.id) : false
-  );
+  const isWishlisted = useWishlistStore((s) => (data ? s.has(data.product.id) : false));
 
   const catalogProduct = data?.product;
 
@@ -139,20 +139,14 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   }, [catalogProduct, variantFromQuery]);
 
   const [variantOverride, setVariantOverride] = useState<ProductVariant | null>(null);
-  const [attributeOverride, setAttributeOverride] = useState<Record<string, string> | null>(
-    null
-  );
+  const [attributeOverride, setAttributeOverride] = useState<Record<string, string> | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [dismissedRelatedIds, setDismissedRelatedIds] = useState<Set<string>>(
-    () => new Set()
-  );
+  const [dismissedRelatedIds, setDismissedRelatedIds] = useState<Set<string>>(() => new Set());
 
   const selectedVariant = variantOverride ?? defaultVariant;
   const attributeSelection = useMemo(
-    () =>
-      attributeOverride ??
-      (selectedVariant ? buildInitialSelection(selectedVariant) : {}),
-    [attributeOverride, selectedVariant]
+    () => attributeOverride ?? (selectedVariant ? buildInitialSelection(selectedVariant) : {}),
+    [attributeOverride, selectedVariant],
   );
 
   useEffect(() => {
@@ -179,7 +173,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
       catalogProduct.images,
       selectedVariant,
       catalogProduct.name,
-      catalogProduct.imageColor
+      catalogProduct.imageColor,
     );
   }, [catalogProduct, selectedVariant]);
 
@@ -189,8 +183,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
 
       const nextSelection = { ...attributeSelection, [key]: value };
       const matched =
-        findVariantBySelection(catalogProduct.variants, nextSelection) ??
-        selectedVariant;
+        findVariantBySelection(catalogProduct.variants, nextSelection) ?? selectedVariant;
 
       if (!matched) return;
 
@@ -202,7 +195,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
       params.set("variant", matched.id);
       router.replace(`/product/${slug}?${params.toString()}`, { scroll: false });
     },
-    [attributeSelection, catalogProduct, router, searchParams, selectedVariant, slug]
+    [attributeSelection, catalogProduct, router, searchParams, selectedVariant, slug],
   );
 
   if (showSkeleton) return <ProductDetailSkeleton />;
@@ -217,9 +210,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
   }
 
   const variant =
-    selectedVariant ??
-    getDefaultVariant(data.product.variants) ??
-    data.product.variants[0];
+    selectedVariant ?? getDefaultVariant(data.product.variants) ?? data.product.variants[0];
 
   if (!variant) {
     return (
@@ -236,7 +227,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
       (item, index, items) =>
         item.id !== product.id &&
         items.findIndex((candidate) => candidate.id === item.id) === index &&
-        !dismissedRelatedIds.has(item.id)
+        !dismissedRelatedIds.has(item.id),
     )
     .slice(0, 4);
   const showRelatedRail = railProducts.length > 0;
@@ -263,9 +254,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
 
   function handleBuyNow() {
     if (!isPurchasablePrice(variant.price)) return;
-    const started = useBuyNowStore
-      .getState()
-      .startBuyNow(product, quantity, variant);
+    const started = useBuyNowStore.getState().startBuyNow(product, quantity, variant);
     if (!started) return;
     router.push(BUY_NOW_CHECKOUT_HREF);
   }
@@ -276,68 +265,58 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
         <nav className="pdp-breadcrumb" aria-label="Breadcrumb">
           <Link href="/">Home</Link>
           <span aria-hidden="true">/</span>
-          <Link href={`/category/${product.categorySlug}`}>
-            {product.category}
-          </Link>
+          <Link href={`/category/${product.categorySlug}`}>{product.category}</Link>
           <span aria-hidden="true">/</span>
           <span aria-current="page">{product.name}</span>
         </nav>
 
-      <div className={`pdp-main${showRelatedRail ? " pdp-main--with-rail" : ""}`}>
-        <ProductGallery
-          images={galleryImages}
-          videos={product.videos}
-          productName={product.name}
-          productSlug={product.slug}
-          spin360Images={product.spin360Images}
-        />
-        <div className="pdp-details">
-          <ProductInfo
-            product={product}
-            selectedVariant={variant}
-            attributeSelection={attributeSelection}
-            onAttributeChange={updateVariantSelection}
-            onReviewsClick={scrollToReviews}
-            liveRating={product.rating}
-            liveReviewCount={product.reviewCount}
+        <div className={`pdp-main${showRelatedRail ? " pdp-main--with-rail" : ""}`}>
+          <ProductGallery
+            images={galleryImages}
+            videos={product.videos}
+            productName={product.name}
+            productSlug={product.slug}
+            spin360Images={product.spin360Images}
           />
+          <div className="pdp-details">
+            <ProductInfo
+              product={product}
+              selectedVariant={variant}
+              attributeSelection={attributeSelection}
+              onAttributeChange={updateVariantSelection}
+              onReviewsClick={scrollToReviews}
+              liveRating={product.rating}
+              liveReviewCount={product.reviewCount}
+            />
+          </div>
+          <div className="pdp-buy-cluster">
+            <ProductBuyBox
+              product={product}
+              selectedVariant={variant}
+              quantity={quantity}
+              onQuantityChange={setQuantity}
+              onAddToCart={handleAddToCart}
+              onBuyNow={handleBuyNow}
+              onToggleWishlist={() => toggleWishlist(product)}
+              isWishlisted={isWishlisted}
+            />
+          </div>
+          {showRelatedRail ? (
+            <ProductRelatedRail products={railProducts} onDismiss={dismissRelatedProduct} />
+          ) : null}
         </div>
-        <div className="pdp-buy-cluster">
-          <ProductBuyBox
-            product={product}
-            selectedVariant={variant}
-            quantity={quantity}
-            onQuantityChange={setQuantity}
-            onAddToCart={handleAddToCart}
-            onBuyNow={handleBuyNow}
-            onToggleWishlist={() => toggleWishlist(product)}
-            isWishlisted={isWishlisted}
-            atcSentinelRef={atcSentinelRef}
-          />
-        </div>
-        {showRelatedRail ? (
-          <ProductRelatedRail
-            products={railProducts}
-            onDismiss={dismissRelatedProduct}
+
+        <ProductTabs product={product} productSlug={slug} reviewCount={product.reviewCount} />
+
+        {data.bundle ? (
+          <FrequentlyBoughtTogether
+            mainProduct={product}
+            mainVariant={variant}
+            bundle={data.bundle}
           />
         ) : null}
-      </div>
-
-      <ProductTabs
-        product={product}
-        productSlug={slug}
-        reviewCount={product.reviewCount}
-      />
-
-      {data.bundle ? (
-        <FrequentlyBoughtTogether
-          mainProduct={product}
-          mainVariant={variant}
-          bundle={data.bundle}
-        />
-      ) : null}
-      <ProductCrossSell title="Similar Products" products={similarProducts} />
-      <ProductCrossSell title="Related Products" products={relatedProducts} />
+        <ProductCrossSell title="Similar Products" products={similarProducts} />
+        <ProductCrossSell title="Related Products" products={relatedProducts} />
       </div>
 
       {isGuitarProduct(product.categorySlug, product.category) &&
@@ -352,17 +331,6 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
           <GuitarStorySections />
         </div>
       ) : null}
-
-      <ProductStickyBar
-        inStock={variant.availability !== "out-of-stock"}
-        onAddToCart={handleAddToCart}
-        onBuyNow={handleBuyNow}
-        price={variant.price}
-        productId={product.id}
-        productSlug={product.slug}
-        productName={product.name}
-        sentinelRef={atcSentinelRef}
-      />
     </>
   );
 }

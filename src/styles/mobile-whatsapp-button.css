@@ -1,0 +1,94 @@
+/* Mobile-only floating WhatsApp support shortcut */
+
+.mobile-whatsapp-btn {
+  position: fixed;
+  right: max(0.75rem, env(safe-area-inset-right, 0px));
+  left: auto;
+  bottom: calc(
+    max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--mobile-whatsapp-clearance, 0px) +
+      var(--mobile-whatsapp-stack-offset, 0px)
+  );
+  z-index: 155;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: var(--touch-target-min, 44px);
+  min-height: var(--touch-target-min, 44px);
+  border-radius: 50%;
+  background: #25d366;
+  color: #ffffff;
+  text-decoration: none;
+  box-shadow:
+    0 4px 14px rgba(37, 211, 102, 0.35),
+    0 1px 3px rgba(15, 23, 42, 0.12);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-whatsapp-btn:hover,
+.mobile-whatsapp-btn:focus-visible {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 20px rgba(37, 211, 102, 0.42),
+    0 2px 6px rgba(15, 23, 42, 0.14);
+}
+
+.mobile-whatsapp-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.mobile-whatsapp-btn__icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .mobile-whatsapp-btn {
+    display: inline-flex;
+  }
+
+  body:has(.help-widget) .mobile-whatsapp-btn {
+    --mobile-whatsapp-stack-offset: 3.5rem;
+  }
+
+  body:has(.pdp-mobile-bar) .mobile-whatsapp-btn,
+  body:has(.checkout-mobile-bar) .mobile-whatsapp-btn {
+    --mobile-whatsapp-clearance: 5.25rem;
+  }
+
+  body:has(.acct__mobile-nav) .mobile-whatsapp-btn {
+    --mobile-whatsapp-clearance: 4.5rem;
+  }
+
+  body.is-account-page .mobile-whatsapp-btn {
+    display: none !important;
+  }
+
+  body:has(.checkout-page--payment) .mobile-whatsapp-btn,
+  body:has(.cart-page) .mobile-whatsapp-btn {
+    --mobile-whatsapp-clearance: 5.5rem;
+  }
+
+  body:has(.cart-drawer--open) .mobile-whatsapp-btn,
+  body:has(.sw-search-overlay) .mobile-whatsapp-btn,
+  body.site-nav-open .mobile-whatsapp-btn {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-whatsapp-btn {
+    transition: none;
+  }
+
+  .mobile-whatsapp-btn:hover,
+  .mobile-whatsapp-btn:focus-visible {
+    transform: none;
+  }
+}

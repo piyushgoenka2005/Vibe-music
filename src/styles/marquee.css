@@ -55,13 +55,13 @@
 }
 
 @media (max-width: 767px) {
-  .marquee {
+  .marquee:not(.announcement-bar__marquee) {
     overflow-x: clip;
     overflow-y: visible;
     padding-block: 0.25rem 0.75rem;
   }
 
-  .marquee__track {
+  .marquee:not(.announcement-bar__marquee) .marquee__track {
     padding-bottom: 0.25rem;
   }
 }

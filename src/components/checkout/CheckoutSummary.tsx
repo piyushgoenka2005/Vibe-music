@@ -17,6 +17,8 @@ import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
 import SwipeToPayButton from "@/components/checkout/SwipeToPayButton";
 import CheckoutStaticPayButton from "@/components/checkout/CheckoutStaticPayButton";
+import type { OnlinePaymentChannel } from "@/components/checkout/CheckoutPaymentMethods";
+import { getSwipePayLabel } from "@/components/checkout/checkoutPayLabels";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import type { PaymentMethod } from "@/types/order";
 
@@ -55,6 +57,7 @@ export interface CheckoutSummaryProps {
     preparing?: boolean;
     loadingLabel?: string;
     paymentMethod: PaymentMethod;
+    onlineChannel?: OnlinePaymentChannel;
     error?: string | null;
   };
 }
@@ -254,7 +257,12 @@ export default function CheckoutSummary({
             />
           ) : null}
 
-          <SummaryRow label="Shipping" value="FREE" />
+          <SummaryRow
+            label="Shipping"
+            value={
+              invoice.shippingCharge > 0 ? formatCurrencyPrecise(invoice.shippingCharge) : "FREE"
+            }
+          />
           {invoice.platformFee > 0 ? (
             <SummaryRow label="Platform Fee" value={formatCurrencyPrecise(invoice.platformFee)} />
           ) : null}
@@ -271,6 +279,7 @@ export default function CheckoutSummary({
                 loading={paymentAction.loading}
                 preparing={paymentAction.preparing}
                 loadingLabel={paymentAction.loadingLabel}
+                label={getSwipePayLabel(paymentAction.onlineChannel)}
               />
             ) : (
               <CheckoutStaticPayButton

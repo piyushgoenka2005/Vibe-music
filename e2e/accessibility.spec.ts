@@ -1,9 +1,5 @@
 import { test, expect } from "./fixtures";
-import {
-  fetchTrendingProduct,
-  gotoStorefront,
-  seedGuestCart,
-} from "./helpers/test-utils";
+import { fetchTrendingProduct, gotoStorefront, seedGuestCart } from "./helpers/test-utils";
 
 const PAGES: Array<{
   path: string;
@@ -39,11 +35,7 @@ test.describe("accessibility basics", () => {
     });
   }
 
-  test("checkout form fields have labels", async ({
-    page,
-    request,
-    requiresDatabase,
-  }) => {
+  test("checkout form fields have labels", async ({ page, request, requiresDatabase }) => {
     void requiresDatabase;
     const product = await fetchTrendingProduct(request);
     await seedGuestCart(page, product);
@@ -77,9 +69,7 @@ test.describe("accessibility basics", () => {
     }
   });
 
-  test("narrow phone homepage and search have no horizontal overflow", async ({
-    page,
-  }) => {
+  test("narrow phone homepage and search have no horizontal overflow", async ({ page }) => {
     test.setTimeout(90_000);
     await page.setViewportSize({ width: 360, height: 740 });
     for (const path of ["/", "/search"]) {
@@ -122,7 +112,7 @@ test.describe("accessibility basics", () => {
     expect(box!.height).toBeGreaterThanOrEqual(44);
   });
 
-  test("product sticky bar CTAs meet mobile tap targets", async ({
+  test("product buy box CTAs meet mobile tap targets", async ({
     page,
     request,
     requiresDatabase,
@@ -134,26 +124,14 @@ test.describe("accessibility basics", () => {
       waitUntil: "domcontentloaded",
       timeout: 60_000,
     });
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    const bar = page.locator(".pdp-mobile-bar");
-    await expect(bar).toHaveCount(1);
-    const ctas = bar.locator(".pdp-mobile-bar__cta");
+    const ctas = page.locator(".pdp-buybox__btn");
     await expect(ctas.first()).toBeAttached({ timeout: 15_000 });
-    const metrics = await page.evaluate(() => {
-      const bar = document.querySelector(".pdp-mobile-bar");
-      const ctas = Array.from(document.querySelectorAll(".pdp-mobile-bar__cta"));
-      return {
-        ctaHeights: ctas.map((el) => el.getBoundingClientRect().height),
-        notifyWidth: document.querySelector(".pdp-mobile-bar__cta--notify")?.getBoundingClientRect().width ?? 0,
-        barWidth: bar?.getBoundingClientRect().width ?? 0,
-      };
-    });
-    expect(metrics.ctaHeights.length).toBeGreaterThan(0);
-    for (const [i, height] of metrics.ctaHeights.entries()) {
+    const heights = await ctas.evaluateAll((elements) =>
+      elements.map((el) => el.getBoundingClientRect().height),
+    );
+    expect(heights.length).toBeGreaterThan(0);
+    for (const [i, height] of heights.entries()) {
       expect(height, `cta ${i} height`).toBeGreaterThanOrEqual(44);
-    }
-    if (metrics.notifyWidth > 0 && metrics.barWidth > 0) {
-      expect(metrics.notifyWidth).toBeGreaterThan(metrics.barWidth * 0.7);
     }
   });
 });

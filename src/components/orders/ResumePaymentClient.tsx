@@ -112,10 +112,13 @@ export function ResumePaymentClient({ order, email }: ResumePaymentClientProps) 
           {order.items.length} item{order.items.length === 1 ? "" : "s"} · {order.email}
         </p>
 
-        <p className="checkout-mobile-bar__total" style={{ marginTop: "1.5rem" }}>
-          <span>Amount due</span>
-          <strong>{formatCurrencyPrecise(order.total)}</strong>
-        </p>
+        <div className="checkout-summary__totals" style={{ marginTop: "1.5rem" }}>
+          <p className="checkout-summary__totals-label">Amount due</p>
+          <div className="checkout-summary__row checkout-summary__row--total">
+            <span>Total</span>
+            <span>{formatCurrencyPrecise(order.total)}</span>
+          </div>
+        </div>
 
         {error ? (
           <p className="checkout-panel__alert" role="alert">

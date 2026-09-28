@@ -24,3 +24,19 @@ export const HELP_WIDGET_INTRO = "Musician advisors for gear, orders, and setup.
 
 export const HELP_WIDGET_DISCLAIMER =
   "Support requests may be retained for training, quality, and service improvement.";
+
+/** Storefront paths where the mobile floating WhatsApp shortcut is shown. */
+export const MOBILE_WHATSAPP_PATHS = [
+  ROUTES.home,
+  ROUTES.checkout,
+  ROUTES.trackOrder,
+  ROUTES.page("returns"),
+  ROUTES.page("shipping"),
+  ROUTES.contact,
+  ROUTES.page("privacy"),
+] as const;
+
+export function isMobileWhatsAppPath(pathname: string): boolean {
+  const normalized = pathname.replace(/\/+$/, "") || "/";
+  return MOBILE_WHATSAPP_PATHS.some((path) => normalized === path);
+}

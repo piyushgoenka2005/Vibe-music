@@ -70,6 +70,13 @@ if (-not $selected) {
         Write-Error "initdb failed with exit code $LASTEXITCODE"
         exit $LASTEXITCODE
     }
+    $conf = Join-Path $localDataDir "postgresql.conf"
+    if (Test-Path $conf) {
+        $content = Get-Content $conf -Raw
+        if ($content -notmatch "(?m)^listen_addresses\s*=") {
+            Add-Content -Path $conf -Value "`nlisten_addresses = '127.0.0.1,::1'"
+        }
+    }
     $selected = @{ Bin = $bin; Data = $localDataDir }
 }
 

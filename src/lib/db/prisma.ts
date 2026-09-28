@@ -51,7 +51,10 @@ function createPrismaClient(): PrismaClient {
     query: {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
-          const { traceSpan } = await import("@/lib/server/tracing");
+          const { isTracingEnabled, traceSpan } = await import("@/lib/server/tracing");
+          if (!isTracingEnabled()) {
+            return query(args);
+          }
           return traceSpan(`prisma.${model}.${operation}`, () => query(args), {
             "db.system": "postgresql",
             "db.operation": operation,

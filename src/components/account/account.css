@@ -279,16 +279,24 @@
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
   /* Above site footer / scroll-reveal panel */
   z-index: 1100;
-  padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+  padding-block: 8px calc(8px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
 }
 
 @media (max-width: 767px) {
+  /* Site hamburger drawer takes over — avoid double bottom bars fighting for space */
+  body.site-nav-open .acct__mobile-nav {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .acct__mobile-nav {
     display: flex;
     justify-content: flex-start;
     align-items: stretch;
-    gap: 0.35rem;
+    gap: 0.5rem;
+    padding-inline: max(0.75rem, env(safe-area-inset-left, 0px))
+      max(0.75rem, env(safe-area-inset-right, 0px));
     overflow-x: auto;
     scroll-behavior: smooth;
     scrollbar-width: none;
@@ -704,8 +712,10 @@
 }
 
 .acct__badge--confirmed {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: transparent;
+  color: var(--acct-text);
+  padding: 0;
+  font-weight: 600;
 }
 
 .acct__order-total {

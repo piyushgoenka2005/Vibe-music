@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useSyncExternalStore, useState, type MouseEvent } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { preloadRazorpayCheckout } from "@/hooks/useRazorpay";
-import CheckoutSummary, { computeCheckoutInvoice } from "@/components/checkout/CheckoutSummary";
+import CheckoutSummary from "@/components/checkout/CheckoutSummary";
 import type { OnlinePaymentChannel } from "@/components/checkout/CheckoutPaymentMethods";
-import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { AddressStep, ReviewStep, PaymentStep } from "@/components/checkout/CheckoutSteps";
 import { useCheckoutPayment } from "@/hooks/useCheckoutPayment";
@@ -34,7 +32,6 @@ import {
   useBuyNowStore,
 } from "@/store/buyNowStore";
 import { useToastStore } from "@/store/toastStore";
-import { formatCurrencyPrecise } from "@/utils/currency";
 import {
   trackBeginCheckout,
   trackAddShippingInfo,
@@ -174,34 +171,6 @@ export default function CheckoutPageContent() {
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
   const [addressError, setAddressError] = useState<string | null>(null);
-  const [footerInView, setFooterInView] = useState(false);
-  const mobileBarReady = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-
-  useEffect(() => {
-    const footer = document.querySelector<HTMLElement>(
-      ".site-footer__shell, .site-footer-newsletter, .site-footer",
-    );
-    if (!footer) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setFooterInView(Boolean(entry?.isIntersecting));
-      },
-      {
-        root: null,
-        threshold: 0,
-        // Hide once the footer shell starts covering the bottom of the screen
-        rootMargin: "0px 0px -8% 0px",
-      },
-    );
-
-    observer.observe(footer);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -370,15 +339,6 @@ export default function CheckoutPageContent() {
     cartSubtotal,
     couponDiscount,
   ]);
-
-  const invoice = computeCheckoutInvoice(
-    checkoutItems,
-    couponDiscount,
-    buyerState,
-    0,
-    shippingMethod,
-    activeShippingCharge,
-  );
 
   const payment = useCheckoutPayment({
     items: checkoutItems,
@@ -556,71 +516,12 @@ export default function CheckoutPageContent() {
   }
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
-  const hideMobileBar = footerInView || payment.isProcessing || payment.isLoading;
-
-  const mobileBar =
-    step !== "payment" ? (
-      <div
-        className={`checkout-mobile-bar${hideMobileBar ? " checkout-mobile-bar--hidden" : ""}`}
-        role="region"
-        aria-label="Order total and continue"
-        aria-hidden={hideMobileBar}
-      >
-        <div className="checkout-mobile-bar__total">
-          <span className="checkout-mobile-bar__label">Total</span>
-          <strong className="checkout-mobile-bar__amount">
-            {formatCurrencyPrecise(invoice.grandTotal)}
-          </strong>
-        </div>
-        {step === "address" ? (
-          <CheckoutGlassButton
-            variant="solid"
-            className="checkout-mobile-bar__cta"
-            disabled={!canProceedFromAddress || hideMobileBar}
-            onClick={() => void handleContinueFromAddress()}
-          >
-            Continue
-          </CheckoutGlassButton>
-        ) : (
-          <CheckoutGlassButton
-            variant="solid"
-            className="checkout-mobile-bar__cta"
-            disabled={hideMobileBar}
-            onClick={handleContinueToPayment}
-          >
-            Continue
-          </CheckoutGlassButton>
-        )}
-      </div>
-    ) : resolvedAddress && hasValidContact && onlinePaymentsAvailable ? (
-      <div
-        className={`checkout-mobile-bar checkout-mobile-bar--pay${
-          hideMobileBar ? " checkout-mobile-bar--hidden" : ""
-        }`}
-        role="region"
-        aria-label="Pay securely"
-        aria-hidden={hideMobileBar}
-      >
-        <div className="checkout-mobile-bar__total">
-          <span className="checkout-mobile-bar__label">Total</span>
-          <strong className="checkout-mobile-bar__amount">
-            {formatCurrencyPrecise(invoice.grandTotal)}
-          </strong>
-        </div>
-        <CheckoutGlassButton
-          variant="solid"
-          className="checkout-mobile-bar__cta"
-          disabled={payment.isDisabled || hideMobileBar}
-          onClick={() => void payment.pay()}
-        >
-          {payment.isProcessing || payment.isLoading
-            ? (payment.processingLabel ?? "Opening…")
-            : onlineChannel === "upi"
-              ? "Pay with UPI"
-              : "Pay now"}
-        </CheckoutGlassButton>
-      </div>
-    ) : null;
+  const addressContactHint =
+    isAuthenticated && !hasValidContact
+      ? "Add an email address to your account before continuing checkout."
+      : !isAuthenticated && guestEmail && !isValidEmail(guestEmail)
+        ? "Enter a valid email address to continue."
+        : null;
 
   return (
     <>
@@ -718,6 +619,8 @@ export default function CheckoutPageContent() {
                 guestEmail={guestEmail}
                 setGuestEmailInput={setGuestEmailInput}
                 addressError={addressError}
+                canProceedFromAddress={canProceedFromAddress}
+                contactHint={addressContactHint}
                 placesAutocomplete={placesAutocomplete}
                 onContinue={() => void handleContinueFromAddress()}
                 onSelectAddress={selectSavedAddress}
@@ -729,6 +632,7 @@ export default function CheckoutPageContent() {
               <ReviewStep
                 items={items}
                 resolvedAddress={resolvedAddress}
+                canContinueToPayment={Boolean(resolvedAddress)}
                 onEditAddress={handleEditAddress}
                 onContinueToPayment={handleContinueToPayment}
               />
@@ -762,6 +666,9 @@ export default function CheckoutPageContent() {
             items={checkoutItems}
             shippingMethod={shippingMethod}
             shippingChargeOverride={activeShippingCharge}
+            className={
+              step === "address" || step === "summary" ? "checkout-summary--pre-payment" : ""
+            }
             paymentAction={
               step === "payment" && resolvedAddress && hasValidContact
                 ? {
@@ -772,16 +679,16 @@ export default function CheckoutPageContent() {
                       payment.processingLabel ??
                       (payment.isLoading ? "Opening Razorpay…" : undefined),
                     paymentMethod: effectivePaymentMethod,
+                    onlineChannel,
                     error: payment.error,
                   }
                 : undefined
             }
-            showLineItems
-            showPromo
+            showLineItems={step === "payment"}
+            showPromo={!isBuyNowMode}
           />
         </div>
       </div>
-      {mobileBarReady && mobileBar ? createPortal(mobileBar, document.body) : null}
     </>
   );
 }

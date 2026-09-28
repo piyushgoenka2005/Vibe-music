@@ -46,9 +46,27 @@ export function buildWhatsAppUrl(phoneTelOrDigits: string, message?: string): st
   return `${base}?text=${encodeURIComponent(message)}`;
 }
 
+/** Mobile-friendly deep link (opens WhatsApp app when installed). */
+export function buildWhatsAppApiUrl(phoneDigits: string, message?: string): string {
+  const digits = phoneDigits.replace(/\D/g, "");
+  if (!digits) return "";
+  const normalized = digits.length === 10 ? `91${digits}` : digits;
+  const params = new URLSearchParams({
+    phone: normalized,
+    type: "phone_number",
+    app_absent: "0",
+  });
+  if (message) params.set("text", message);
+  return `https://api.whatsapp.com/send/?${params.toString()}`;
+}
+
 const storePhone = storePhoneFromEnv();
 const formattedPhone = formatIndianPhone(storePhone);
 const whatsappUrl = buildWhatsAppUrl(formattedPhone.whatsappDigits, SUPPORT_WHATSAPP_MESSAGE);
+const whatsappMobileUrl = buildWhatsAppApiUrl(
+  formattedPhone.whatsappDigits,
+  SUPPORT_WHATSAPP_MESSAGE,
+);
 
 export const BRAND = {
   name: "Vibe Music",
@@ -63,6 +81,7 @@ export const BRAND = {
   phoneDisplay: formattedPhone.display || storePhone,
   phoneTel: formattedPhone.tel,
   whatsappUrl,
+  whatsappMobileUrl,
   whatsappDigits: formattedPhone.whatsappDigits,
   email: "support@vibemusic.in",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic.in",

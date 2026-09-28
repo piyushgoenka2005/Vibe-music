@@ -9,6 +9,8 @@ import { Trash2 } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
 import CheckoutPaymentMethods from "@/components/checkout/CheckoutPaymentMethods";
+import CheckoutStepActions from "@/components/checkout/CheckoutStepActions";
+import { getPanelPayLabel } from "@/components/checkout/checkoutPayLabels";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import AddressAutocompleteField from "@/components/checkout/AddressAutocompleteField";
 import { INDIAN_STATES } from "@/lib/address/indianStates";
@@ -36,6 +38,8 @@ interface AddressStepProps {
   guestEmail: string;
   setGuestEmailInput: (v: string) => void;
   addressError: string | null;
+  canProceedFromAddress: boolean;
+  contactHint: string | null;
   placesAutocomplete: boolean;
   onContinue: () => void;
   onSelectAddress: (id: string) => void;
@@ -55,6 +59,8 @@ export function AddressStep({
   guestEmail,
   setGuestEmailInput,
   addressError,
+  canProceedFromAddress,
+  contactHint,
   placesAutocomplete,
   onContinue,
   onSelectAddress,
@@ -250,14 +256,31 @@ export function AddressStep({
         </p>
       ) : null}
 
-      <div className="checkout-actions">
-        <CheckoutGlassButton href={ROUTES.cart} variant="ghost">
-          Back to Cart
-        </CheckoutGlassButton>
-        <CheckoutGlassButton onClick={onContinue} variant="solid">
-          Continue to Review
-        </CheckoutGlassButton>
-      </div>
+      {!addressError && contactHint ? (
+        <p className="checkout-panel__hint" role="status">
+          {contactHint}
+        </p>
+      ) : null}
+
+      {savedAddresses.length > 0 && !useNewAddress ? (
+        <CheckoutStepActions
+          backHref={ROUTES.cart}
+          backLabel="Back to Cart"
+          continueLabel="Continue to Review"
+          onContinue={onContinue}
+          continueDisabled={!canProceedFromAddress}
+          mobileOnly
+        />
+      ) : null}
+
+      <CheckoutStepActions
+        backHref={ROUTES.cart}
+        backLabel="Back to Cart"
+        continueLabel="Continue to Review"
+        onContinue={onContinue}
+        continueDisabled={!canProceedFromAddress}
+        desktopOnly={savedAddresses.length > 0 && !useNewAddress}
+      />
     </>
   );
 }
@@ -276,6 +299,7 @@ interface ReviewStepProps {
     imageColor?: string | null;
   }>;
   resolvedAddress: ShippingAddress | null;
+  canContinueToPayment: boolean;
   onEditAddress: () => void;
   onContinueToPayment: () => void;
 }
@@ -283,6 +307,7 @@ interface ReviewStepProps {
 export function ReviewStep({
   items,
   resolvedAddress,
+  canContinueToPayment,
   onEditAddress,
   onContinueToPayment,
 }: ReviewStepProps) {
@@ -333,14 +358,13 @@ export function ReviewStep({
         </div>
       ) : null}
 
-      <div className="checkout-actions">
-        <CheckoutGlassButton onClick={onEditAddress} variant="ghost">
-          Edit Address
-        </CheckoutGlassButton>
-        <CheckoutGlassButton onClick={onContinueToPayment} variant="solid">
-          Continue to Payment
-        </CheckoutGlassButton>
-      </div>
+      <CheckoutStepActions
+        onBack={onEditAddress}
+        backLabel="Edit Address"
+        continueLabel="Continue to Payment"
+        onContinue={onContinueToPayment}
+        continueDisabled={!canContinueToPayment}
+      />
     </>
   );
 }
@@ -421,7 +445,7 @@ export function PaymentStep({
         </p>
       ) : null}
 
-      <div className="checkout-actions checkout-actions--payment">
+      <div className="checkout-actions checkout-actions--payment checkout-actions--panel-pay">
         <CheckoutGlassButton onClick={onBackToReview} variant="ghost">
           Back to Review
         </CheckoutGlassButton>
@@ -430,15 +454,7 @@ export function PaymentStep({
           disabled={!canPay || payLoading}
           onClick={() => void onPay()}
         >
-          {payLoading
-            ? (payLoadingLabel ?? "Opening Razorpay…")
-            : onlineChannel === "upi"
-              ? "Pay with UPI"
-              : onlineChannel === "card"
-                ? "Pay with Card"
-                : onlineChannel === "netbanking"
-                  ? "Pay with Net Banking"
-                  : "Pay with Razorpay"}
+          {payLoading ? (payLoadingLabel ?? "Opening Razorpay…") : getPanelPayLabel(onlineChannel)}
         </CheckoutGlassButton>
       </div>
     </>

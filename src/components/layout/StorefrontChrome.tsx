@@ -11,10 +11,16 @@ import BackToTop from "@/components/layout/BackToTop";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import DeferredSplashCursor from "@/components/layout/DeferredSplashCursor";
+import { isMobileWhatsAppPath } from "@/data/helpWidget";
 import { ROUTES } from "@/lib/routes";
 import type { PublicLegalInfo } from "@/types/publicLegal";
 
 const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const MobileWhatsAppButton = dynamic(() => import("@/components/layout/MobileWhatsAppButton"), {
   ssr: false,
   loading: () => null,
 });
@@ -72,6 +78,7 @@ export default function StorefrontChrome({
     (isProductPage || isLandingPage || isListingPage || isCheckoutOrCart);
   const showHelpWidget = !hideMobileFloatingUi;
   const showBackToTop = !hideMobileFloatingUi;
+  const showMobileWhatsApp = hasMounted && isMobileViewport && isMobileWhatsAppPath(pathname);
   const splashEnabled =
     hasMounted &&
     SPLASH_CURSOR_ENABLED &&
@@ -133,6 +140,7 @@ export default function StorefrontChrome({
       <SiteFooter legal={legal} />
       {showBackToTop ? <BackToTop /> : null}
       {showHelpWidget ? <HelpWidget /> : null}
+      {showMobileWhatsApp ? <MobileWhatsAppButton /> : null}
       {splashEnabled ? (
         <DeferredSplashCursor
           DYE_RESOLUTION={mobileOrLowEnd ? 256 : 384}

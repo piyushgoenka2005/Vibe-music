@@ -28,7 +28,7 @@
     max-width: 100%;
     margin-inline: 0;
     padding: 0 0 48px;
-    padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
   }
 
   .pdp > .pdp-breadcrumb,
@@ -4416,133 +4416,7 @@
   margin-bottom: 12px;
 }
 
-.pdp-mobile-bar {
-  display: none;
-}
-
 @media (max-width: 767px) {
-  .pdp-mobile-bar {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 180;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-areas:
-      "price price"
-      "cart buy";
-    gap: 0.5rem;
-    width: 100%;
-    max-width: 100dvw;
-    box-sizing: border-box;
-    padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
-    gap: 0;
-    background: rgba(255, 255, 255, 0.98);
-    border-top: 1px solid var(--border-default);
-    box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transform: translateY(110%);
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition:
-      transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-      opacity 0.28s ease,
-      visibility 0.28s ease;
-  }
-
-  .pdp-mobile-bar--visible {
-    transform: translateY(0);
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-  }
-
-  .storefront-page .pdp,
-  .pdp {
-    padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
-  }
-
-  .pdp-mobile-bar__price {
-    grid-area: price;
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem;
-    min-width: 0;
-    max-width: none;
-    width: 100%;
-    padding-inline: max(1rem, env(safe-area-inset-left, 0px))
-      max(1rem, env(safe-area-inset-right, 0px));
-    box-sizing: border-box;
-  }
-
-  .pdp-mobile-bar__label {
-    font-size: 0.625rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    flex-shrink: 0;
-  }
-
-  .pdp-mobile-bar__price strong {
-    font-size: clamp(1rem, 4.2vw, 1.125rem);
-    font-weight: 700;
-    color: var(--text-primary);
-    line-height: 1.15;
-    text-align: right;
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .pdp-mobile-bar__actions {
-    display: contents;
-  }
-
-  .pdp-mobile-bar__cta {
-    min-height: 44px;
-    border: 0;
-    border-radius: 0;
-    font-size: clamp(0.8125rem, 3.4vw, 0.9375rem);
-    font-weight: 600;
-    line-height: 1.15;
-    cursor: pointer;
-    padding: 0.5rem 0.625rem;
-    white-space: normal;
-    text-align: center;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .pdp-mobile-bar__cta--cart {
-    grid-area: cart;
-    background: #0f1115;
-    color: #fff;
-  }
-
-  .pdp-mobile-bar__cta--buy {
-    grid-area: buy;
-    background: var(--brand-primary);
-    color: #fff;
-  }
-
-  /* Coming Soon: single Notify CTA spans full action row */
-  .pdp-mobile-bar__cta--notify,
-  .pdp-mobile-bar__cta--cart:only-child {
-    grid-area: unset;
-    grid-column: 1 / -1;
-    background: var(--brand-primary, #1253ed);
-    color: #fff;
-  }
-
-  .pdp-mobile-bar__cta:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-
   .pdp-cross-sell {
     display: flex;
     flex-wrap: nowrap;
@@ -4871,12 +4745,6 @@
 
   .pdp-buybox__btn {
     min-height: 48px;
-  }
-}
-
-@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
-  .pdp-mobile-bar {
-    transition: none;
   }
 }
 

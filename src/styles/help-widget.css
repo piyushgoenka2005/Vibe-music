@@ -496,6 +496,11 @@
 }
 
 @media (max-width: 767px) {
+  /* Account pages use bottom nav — hide floating trigger; panel still opens via in-page actions */
+  body.is-account-page .help-widget:not(.help-widget--open) {
+    display: none;
+  }
+
   .help-widget {
     right: max(0.75rem, env(safe-area-inset-right, 0px));
     bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
@@ -537,6 +542,14 @@
     cursor: pointer;
     pointer-events: auto;
     animation: help-widget-backdrop-in 0.24s ease;
+  }
+
+  body:has(.acct__mobile-nav) .help-widget--open .help-widget__panel {
+    bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    max-height: min(
+      78dvh,
+      calc(100dvh - env(safe-area-inset-top, 0px) - 5rem - env(safe-area-inset-bottom, 0px))
+    );
   }
 
   .help-widget--open .help-widget__panel {

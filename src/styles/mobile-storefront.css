@@ -161,9 +161,11 @@
   }
 
   .announcement-bar,
-  .announcement-bar__viewport {
+  .announcement-bar__marquee,
+  .announcement-bar .marquee {
+    width: 100%;
     max-width: 100%;
-    overflow-x: clip;
+    overflow: hidden;
   }
 
   .storefront-page

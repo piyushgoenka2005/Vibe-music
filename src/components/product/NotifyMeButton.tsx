@@ -18,7 +18,7 @@ export interface NotifyMeTarget {
 interface NotifyMeButtonProps extends NotifyMeTarget {
   className?: string;
   /** Compact card/carousel CTA vs larger PDP styling. */
-  variant?: "card" | "pdp" | "pdp-primary" | "sticky" | "inline";
+  variant?: "card" | "pdp" | "pdp-primary" | "inline";
 }
 
 export default function NotifyMeButton({
@@ -70,7 +70,7 @@ export default function NotifyMeButton({
       setDone(true);
       showToast(
         data.message ?? "Thanks! We'll email you when this product is available.",
-        "success"
+        "success",
       );
       window.setTimeout(() => {
         setOpen(false);
@@ -88,11 +88,9 @@ export default function NotifyMeButton({
       ? className
       : variant === "card"
         ? `cat-product-card__add ${className}`.trim()
-        : variant === "sticky"
-          ? `pdp-mobile-bar__cta pdp-mobile-bar__cta--cart pdp-mobile-bar__cta--notify ${className}`.trim()
-          : variant === "pdp-primary"
-            ? `pdp-btn pdp-btn--buy pdp-buy-now ${className}`.trim()
-            : `pdp-btn pdp-btn--primary ${className}`.trim();
+        : variant === "pdp-primary"
+          ? `pdp-btn pdp-btn--buy pdp-buy-now ${className}`.trim()
+          : `pdp-btn pdp-btn--primary ${className}`.trim();
 
   const label = "Notify Me";
 
@@ -131,8 +129,7 @@ export default function NotifyMeButton({
                   Notify me
                 </h2>
                 <p className="notify-me-modal__copy">
-                  Get an email when <strong>{productName}</strong> is available
-                  to buy.
+                  Get an email when <strong>{productName}</strong> is available to buy.
                 </p>
                 <form className="notify-me-modal__form" onSubmit={onSubmit}>
                   <label className="visually-hidden" htmlFor={`${formId}-email`}>
@@ -168,7 +165,7 @@ export default function NotifyMeButton({
                 </form>
               </div>
             </div>,
-            document.body
+            document.body,
           )
         : null}
     </>

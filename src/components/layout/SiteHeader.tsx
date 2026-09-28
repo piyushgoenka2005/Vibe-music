@@ -205,86 +205,88 @@ export default function SiteHeader() {
             </button>
           </form>
 
-          <button
-            ref={searchToggleRef}
-            type="button"
-            className="site-header__search-toggle"
-            onClick={handleMobileSearchOpen}
-            aria-label="Open search"
-          >
-            <Search size={22} strokeWidth={1.75} aria-hidden />
-          </button>
+          <div className="site-header__toolbar">
+            <button
+              ref={searchToggleRef}
+              type="button"
+              className="site-header__search-toggle"
+              onClick={handleMobileSearchOpen}
+              aria-label="Open search"
+            >
+              <Search size={22} strokeWidth={1.75} aria-hidden />
+            </button>
 
-          <div className="site-header__actions">
-            <div className="site-header__account-wrap">
+            <div className="site-header__actions">
+              <div className="site-header__account-wrap">
+                <Link
+                  href={accountHref}
+                  className="site-header__action site-header__action--account assets-site-header__menu-account"
+                  aria-label={accountAriaLabel}
+                >
+                  {accountPhotoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- OAuth avatar requires referrerPolicy
+                    <img
+                      src={accountPhotoUrl}
+                      alt=""
+                      className="site-header__avatar"
+                      width={28}
+                      height={28}
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <User size={20} strokeWidth={1.75} aria-hidden />
+                  )}
+                  <span className="site-header__action-label assets-site-header__menu-account-navlink">
+                    Profile
+                  </span>
+                </Link>
+              </div>
+
+              <div className="site-header__action--desktop-only assets-site-header__menu-cart-wrap">
+                <WishlistCounter onClick={openWishlistDrawer} />
+              </div>
+
               <Link
-                href={accountHref}
-                className="site-header__action site-header__action--account assets-site-header__menu-account"
-                aria-label={accountAriaLabel}
+                href={ROUTES.cart}
+                className="site-header__action site-header__cart assets-site-header__menu-cart"
+                aria-label={cartLabel}
+                onClick={handleCartClick}
               >
-                {accountPhotoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- OAuth avatar requires referrerPolicy
-                  <img
-                    src={accountPhotoUrl}
-                    alt=""
-                    className="site-header__avatar"
-                    width={28}
-                    height={28}
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <User size={20} strokeWidth={1.75} aria-hidden />
-                )}
-                <span className="site-header__action-label assets-site-header__menu-account-navlink">
-                  Profile
+                <ShoppingCart size={20} strokeWidth={1.75} aria-hidden />
+                {cartCount > 0 ? (
+                  <span
+                    ref={cartCountRef}
+                    className="site-header__cart-count assets-site-header__menu-cart-count"
+                    data-count={cartDataCount}
+                    aria-hidden="true"
+                  >
+                    {cartCountText}
+                  </span>
+                ) : null}
+                <span className="site-header__action-label" aria-hidden="true">
+                  Cart
                 </span>
               </Link>
             </div>
 
-            <div className="site-header__action--desktop-only assets-site-header__menu-cart-wrap">
-              <WishlistCounter onClick={openWishlistDrawer} />
-            </div>
-
-            <Link
-              href={ROUTES.cart}
-              className="site-header__action site-header__cart assets-site-header__menu-cart"
-              aria-label={cartLabel}
-              onClick={handleCartClick}
+            <button
+              type="button"
+              className={`site-header__menu-btn${mobileOpen ? " is-open" : ""}`}
+              onClick={toggleMobileNav}
+              aria-expanded={mobileOpen}
+              aria-controls="site-header-mobile-nav"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
             >
-              <ShoppingCart size={20} strokeWidth={1.75} aria-hidden />
-              {cartCount > 0 ? (
-                <span
-                  ref={cartCountRef}
-                  className="site-header__cart-count assets-site-header__menu-cart-count"
-                  data-count={cartDataCount}
-                  aria-hidden="true"
-                >
-                  {cartCountText}
-                </span>
-              ) : null}
-              <span className="site-header__action-label" aria-hidden="true">
-                Cart
-              </span>
-            </Link>
+              {mobileOpen ? (
+                <X size={24} strokeWidth={1.75} aria-hidden />
+              ) : (
+                <>
+                  <Menu size={22} strokeWidth={1.75} aria-hidden />
+                  <span className="site-header__menu-label">Menu</span>
+                </>
+              )}
+            </button>
           </div>
-
-          <button
-            type="button"
-            className={`site-header__menu-btn${mobileOpen ? " is-open" : ""}`}
-            onClick={toggleMobileNav}
-            aria-expanded={mobileOpen}
-            aria-controls="site-header-mobile-nav"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          >
-            {mobileOpen ? (
-              <X size={24} strokeWidth={1.75} aria-hidden />
-            ) : (
-              <>
-                <Menu size={22} strokeWidth={1.75} aria-hidden />
-                <span className="site-header__menu-label">Menu</span>
-              </>
-            )}
-          </button>
         </div>
       </div>
 
