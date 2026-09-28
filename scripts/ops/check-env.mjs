@@ -122,10 +122,18 @@ function inspectPlacesEnv() {
   return { status: "missing" };
 }
 
+const optionalChannels = [
+  { key: "MSG91_AUTH_KEY", label: "SMS (MSG91)" },
+  { key: "WHATSAPP_TOKEN", label: "WhatsApp Cloud API" },
+  { key: "NEXT_PUBLIC_VAPID_PUBLIC_KEY", label: "Web push (VAPID public)" },
+  { key: "NEXT_PUBLIC_CRISP_WEBSITE_ID", label: "Crisp live chat (L-04)" },
+];
+
 const optional = [
   "NEXT_PUBLIC_GTM_ID",
   "INVOICE_PDF_ENABLED",
   "NEXT_PUBLIC_INVOICE_PDF_ENABLED",
+  "NEXT_PUBLIC_REEL_VIDEO_BASE_URL",
 ];
 
 console.log("\nVibe Music env check (values hidden)\n");
@@ -154,6 +162,19 @@ if (placesInspection.status === "missing") {
 console.log("\nOptional:");
 for (const key of optional) {
   console.log(`  ${status(key).padEnd(44)} ${key}`);
+}
+console.log("\nOptional notification channels:");
+for (const channel of optionalChannels) {
+  const value = env[channel.key]?.trim();
+  const channelStatus = value ? "SET" : "MISSING (channel inert)";
+  console.log(`  ${channelStatus.padEnd(44)} ${channel.label}`);
+}
+const invoiceServer = env.INVOICE_PDF_ENABLED?.trim() === "true";
+const invoiceClient = env.NEXT_PUBLIC_INVOICE_PDF_ENABLED?.trim() === "true";
+if (invoiceServer !== invoiceClient) {
+  console.log(
+    "  WARN: INVOICE_PDF_ENABLED and NEXT_PUBLIC_INVOICE_PDF_ENABLED must both be true or both unset/false."
+  );
 }
 
 const missingRequired = requiredProd.filter((key) => {
@@ -209,6 +230,17 @@ if (
 }
 if (env.ALLOW_DEMO_PAYMENTS === "true" && /vibemusic\.in/i.test(siteUrl)) {
   console.log("BLOCKING: ALLOW_DEMO_PAYMENTS must be false on the production storefront.");
+  productionMisconfig = true;
+}
+if (env.E2E_TEST_MODE === "true" && /vibemusic\.in/i.test(siteUrl)) {
+  console.log("BLOCKING: E2E_TEST_MODE must be false on the production storefront.");
+  productionMisconfig = true;
+}
+if (
+  (env.ALLOW_JSON_CATALOG_FALLBACK === "true" || env.ALLOW_JSON_CATALOG_FALLBACK === "1") &&
+  /vibemusic\.in/i.test(siteUrl)
+) {
+  console.log("BLOCKING: ALLOW_JSON_CATALOG_FALLBACK must be false on production.");
   productionMisconfig = true;
 }
 const LEGACY_STORE_PHONE_DIGITS = new Set(["919773651006", "9773651006"]);

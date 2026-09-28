@@ -146,6 +146,15 @@ export function validateEnv(): void {
       throw new Error("ALLOW_DEMO_PAYMENTS must not be enabled in production");
     }
 
+    if (envValue(process.env.E2E_TEST_MODE) === "true") {
+      throw new Error("E2E_TEST_MODE must not be enabled in production");
+    }
+
+    const jsonCatalogFlag = envValue(process.env.ALLOW_JSON_CATALOG_FALLBACK)?.toLowerCase();
+    if (jsonCatalogFlag === "true" || jsonCatalogFlag === "1") {
+      throw new Error("ALLOW_JSON_CATALOG_FALLBACK must not be enabled in production");
+    }
+
     const razorpayKeyId = envValue(process.env.RAZORPAY_KEY_ID);
     const razorpayPublicKeyId = envValue(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
     if (razorpayKeyId && razorpayPublicKeyId && razorpayKeyId !== razorpayPublicKeyId) {
@@ -174,4 +183,9 @@ export function validateEnv(): void {
   }
 
   validated = true;
+}
+
+/** @internal Vitest only — allows re-running validateEnv with different process.env. */
+export function resetEnvValidationForTests(): void {
+  validated = false;
 }

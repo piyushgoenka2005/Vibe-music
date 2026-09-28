@@ -9,6 +9,13 @@ import {
 import { isClientAnalyticsConfigured, isServerAnalyticsConfigured } from "@/lib/analytics/config";
 import { isGooglePlacesConfigured } from "@/lib/server/googlePlaces";
 import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
+import {
+  crispChatStatus,
+  gstinComplianceStatus,
+  smsChannelStatus,
+  webPushChannelStatus,
+  whatsappChannelStatus,
+} from "@/lib/server/integrationChannels";
 
 export type IntegrationStatus = "ok" | "missing" | "partial";
 export type IntegrationTier = "required" | "recommended" | "optional";
@@ -35,6 +42,11 @@ export interface IntegrationChecks {
   guestOrderSecret: IntegrationStatus;
   analyticsClient: IntegrationStatus;
   analyticsServer: IntegrationStatus;
+  gstin: IntegrationStatus;
+  sms: IntegrationStatus;
+  whatsapp: IntegrationStatus;
+  webPush: IntegrationStatus;
+  crisp: IntegrationStatus;
 }
 
 function configured(...values: Array<string | undefined>): IntegrationStatus {
@@ -81,6 +93,11 @@ export function getIntegrationChecks(): IntegrationChecks {
       : isClientAnalyticsConfigured()
         ? "partial"
         : "missing",
+    gstin: gstinComplianceStatus(),
+    sms: smsChannelStatus(),
+    whatsapp: whatsappChannelStatus(),
+    webPush: webPushChannelStatus(),
+    crisp: crispChatStatus(),
   };
 }
 
@@ -189,6 +206,41 @@ export function getOpsStatusReport(): {
       tier: "recommended",
       detail:
         "GA_MEASUREMENT_API_SECRET — Measurement Protocol for purchase dedupe when clients block scripts",
+    },
+    {
+      key: "gstin",
+      label: "GSTIN (L-30)",
+      status: checks.gstin,
+      tier: "required",
+      detail: "NEXT_PUBLIC_GSTIN — footer, invoices, and compliance sign-off",
+    },
+    {
+      key: "sms",
+      label: "SMS (MSG91)",
+      status: checks.sms,
+      tier: "optional",
+      detail: "SMS_PROVIDER=msg91 + MSG91_AUTH_KEY + MSG91_SENDER_ID + template IDs",
+    },
+    {
+      key: "whatsapp",
+      label: "WhatsApp Cloud API",
+      status: checks.whatsapp,
+      tier: "optional",
+      detail: "WHATSAPP_TOKEN + WHATSAPP_PHONE_NUMBER_ID",
+    },
+    {
+      key: "webPush",
+      label: "Web push (VAPID)",
+      status: checks.webPush,
+      tier: "optional",
+      detail: "NEXT_PUBLIC_VAPID_PUBLIC_KEY + VAPID_PRIVATE_KEY + VAPID_SUBJECT",
+    },
+    {
+      key: "crisp",
+      label: "Crisp live chat (L-04)",
+      status: checks.crisp,
+      tier: "optional",
+      detail: "NEXT_PUBLIC_CRISP_WEBSITE_ID",
     },
   ];
 

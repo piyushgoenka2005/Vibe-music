@@ -15,6 +15,7 @@ jobs:
 
     env:
       VERIFY_BASE_URL: https://vibemusic.in
+      REQUIRE_CDN_EDGE: ${{ vars.REQUIRE_CDN_EDGE || 'false' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +30,7 @@ jobs:
 
       - name: Edge headers (L-22)
         id: edge
-        continue-on-error: true
+        continue-on-error: ${{ env.REQUIRE_CDN_EDGE != 'true' }}
         run: npm run check:edge
 
       - name: Synthetic checkout monitor

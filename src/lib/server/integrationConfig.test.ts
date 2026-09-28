@@ -1,8 +1,5 @@
 import { describe, expect, it, afterEach } from "vitest";
-import {
-  getIntegrationChecks,
-  getOpsStatusReport,
-} from "@/lib/server/integrationConfig";
+import { getIntegrationChecks, getOpsStatusReport } from "@/lib/server/integrationConfig";
 
 describe("getIntegrationChecks", () => {
   const envBackup = { ...process.env };
@@ -46,5 +43,10 @@ describe("getIntegrationChecks", () => {
     expect(report.items.some((item) => item.key === "places")).toBe(true);
     expect(report.items.some((item) => item.key === "googleOAuth")).toBe(true);
     expect(report.items.some((item) => item.key === "analyticsClient")).toBe(true);
+    expect(report.items.some((item) => item.key === "gstin")).toBe(true);
+    expect(report.items.some((item) => item.key === "sms")).toBe(true);
+    expect(report.items.some((item) => item.key === "whatsapp")).toBe(true);
+    expect(report.items.some((item) => item.key === "webPush")).toBe(true);
+    expect(report.items.some((item) => item.key === "crisp")).toBe(true);
   });
 });

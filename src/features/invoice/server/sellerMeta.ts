@@ -1,5 +1,6 @@
 import "server-only";
 import { BRAND, formatIndianPhone } from "@/lib/brand";
+import { gstStateCodeFromGstin, panFromGstin } from "@/lib/gst/gstin";
 import { getStoreSettings } from "@/lib/server/settingsService";
 import type { InvoiceSellerMeta } from "@/features/invoice/types";
 
@@ -13,6 +14,9 @@ export async function getInvoiceSellerMeta(): Promise<InvoiceSellerMeta> {
 
   const settings = await getStoreSettings();
 
+  const gstin = settings.gstNumber?.trim() || BRAND.gstin || undefined;
+  const stateCode = gstStateCodeFromGstin(gstin) || "";
+
   const meta: InvoiceSellerMeta = {
     storeName: settings.storeName || BRAND.legalName || BRAND.name,
     legalName: BRAND.legalName || settings.storeName || BRAND.name,
@@ -21,10 +25,10 @@ export async function getInvoiceSellerMeta(): Promise<InvoiceSellerMeta> {
     email: settings.storeEmail || BRAND.email,
     phone: formatIndianPhone(settings.storePhone || BRAND.phone).display || BRAND.phoneDisplay,
     website: BRAND.domain,
-    gstin: settings.gstNumber?.trim() || BRAND.gstin || undefined,
-    pan: undefined,
+    gstin,
+    pan: panFromGstin(gstin),
     state: settings.sellerState || "Maharashtra",
-    stateCode: "",
+    stateCode,
   };
 
   cachedSellerMeta = {
