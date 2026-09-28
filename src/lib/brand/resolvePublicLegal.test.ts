@@ -48,7 +48,7 @@ describe("resolvePublicLegal (L-30)", () => {
     });
 
     const legal = await resolvePublicLegal();
-    expect(legal.legalName).toBe("Vibe Music");
+    expect(legal.legalName).toBe("Sikkim Commerce House Pvt Ltd");
     expect(legal.address).toContain("Kolkata");
   });
 });

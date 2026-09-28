@@ -1,4 +1,7 @@
-import { CANONICAL_BUSINESS_ADDRESS } from "@/lib/brand/businessIdentity";
+import {
+  CANONICAL_BUSINESS_ADDRESS,
+  CANONICAL_LEGAL_ENTITY_NAME,
+} from "@/lib/brand/businessIdentity";
 
 /** Canonical storefront support number (10-digit Indian mobile). */
 export const DEFAULT_STORE_PHONE = "8910482950";
@@ -70,7 +73,7 @@ const whatsappMobileUrl = buildWhatsAppApiUrl(
 
 export const BRAND = {
   name: "Vibe Music",
-  legalName: process.env.NEXT_PUBLIC_LEGAL_ENTITY_NAME?.trim() || "Vibe Music",
+  legalName: process.env.NEXT_PUBLIC_LEGAL_ENTITY_NAME?.trim() || CANONICAL_LEGAL_ENTITY_NAME,
   gstin: process.env.NEXT_PUBLIC_GSTIN?.trim() || "",
   shortName: "VibeMusic",
   tagline: "Your Sound, Delivered",

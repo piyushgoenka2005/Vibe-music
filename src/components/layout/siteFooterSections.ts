@@ -1,4 +1,5 @@
 import { BRAND } from "@/lib/brand";
+import { CANONICAL_BUSINESS_ADDRESS } from "@/lib/brand/businessIdentity";
 import { ROUTES } from "@/lib/routes";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
 import type { FooterAccordionSection } from "@/components/layout/FooterAccordion";
@@ -6,8 +7,8 @@ import type { PublicLegalInfo } from "@/types/publicLegal";
 
 export function buildFooterSections(legal: PublicLegalInfo): FooterAccordionSection[] {
   const legalNoteLines = [
-    legal.legalName,
-    legal.address,
+    legal.legalName || BRAND.name,
+    legal.address || CANONICAL_BUSINESS_ADDRESS,
     legal.gstin ? `GSTIN: ${legal.gstin}` : "",
   ].filter(Boolean);
 

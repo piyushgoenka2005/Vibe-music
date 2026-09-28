@@ -156,9 +156,10 @@ body.is-landing-page .premium-home > .tour-ribbon {
     box-shadow: 0 40px 0 0 var(--tour-ribbon-blue);
   }
 
-  /* Clearance so the floating trust card (metrics row) isn’t cropped */
+  /* Stack trust card above ribbon on mobile — no overlap crop */
   body.is-landing-page .premium-home > .social-proof-strip + .tour-ribbon {
-    padding-top: 3.75rem;
+    margin-top: 0;
+    padding-top: 2rem;
   }
 
   .tour-ribbon__stage {
