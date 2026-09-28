@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { traceRouteHandler } from "@/lib/api/traceRoute";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { formatCheckoutError } from "@/lib/server/checkoutErrors";
 import { createOrder } from "@/lib/server/orderService";
@@ -10,7 +11,7 @@ import { logPayment, logPaymentError } from "@/lib/server/paymentDiagnostics";
 import { createOrderSchema } from "@/lib/validations/checkout";
 import type { CreateOrderPayload } from "@/types/order";
 
-export async function POST(request: Request) {
+async function postHandler(request: Request) {
   try {
     logPayment("Starting create order");
 
@@ -89,3 +90,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status });
   }
 }
+
+export const POST = traceRouteHandler("POST /api/payment/create-order", postHandler);

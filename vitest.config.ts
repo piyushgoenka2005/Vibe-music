@@ -9,6 +9,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    exclude: ["**/*.integration.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],

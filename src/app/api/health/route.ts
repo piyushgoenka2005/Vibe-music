@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isShuttingDown } from "@/lib/server/gracefulShutdown";
 import { getIntegrationChecks } from "@/lib/server/integrationConfig";
 import { verifyPostgresConnection } from "@/lib/server/postgresHealth";
 import { logInfo } from "@/lib/server/logger";
@@ -25,6 +26,13 @@ let cached: HealthSnapshot | null = null;
 
 export async function GET() {
   try {
+    if (isShuttingDown()) {
+      return NextResponse.json(
+        { status: "draining", ready: false, timestamp: new Date().toISOString() },
+        { status: 503 },
+      );
+    }
+
     const now = Date.now();
     if (cached && now - cached.at < HEALTH_CACHE_TTL_MS) {
       return NextResponse.json(cached.body, { status: cached.status });

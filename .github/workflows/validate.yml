@@ -72,6 +72,9 @@ jobs:
       - name: Apply database migrations
         run: npm run db:migrate
 
+      - name: Integration tests (Postgres)
+        run: npm run test:integration
+
       - name: Seed catalog and E2E admin
         run: npx tsx scripts/db/seed-e2e-prereqs.mts
 

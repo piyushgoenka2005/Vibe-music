@@ -55,6 +55,7 @@
     "db:studio": "node scripts/db/prisma-with-env.mjs studio",
     "studio": "npm run db:studio",
     "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:coverage": "vitest run --coverage",
     "test:coverage:gate": "vitest run --config vitest.critical-coverage.config.ts --coverage",
     "test:watch": "vitest",

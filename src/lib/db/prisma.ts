@@ -42,10 +42,33 @@ function createPrismaClient(): PrismaClient {
     url.searchParams.set("pool_timeout", String(POOL_TIMEOUT_MS / 1000));
   }
 
-  return new PrismaClient({
+  const client = new PrismaClient({
     datasourceUrl: url.toString(),
     log: isProd ? ["error"] : ["warn", "error"],
   });
+
+  return client.$extends({
+    query: {
+      $allModels: {
+        async $allOperations({ model, operation, args, query }) {
+          const { traceSpan } = await import("@/lib/server/tracing");
+          return traceSpan(`prisma.${model}.${operation}`, () => query(args), {
+            "db.system": "postgresql",
+            "db.operation": operation,
+            "db.model": model,
+          });
+        },
+      },
+    },
+  }) as unknown as PrismaClient;
+}
+
+/** Close the pooled client (graceful shutdown / test teardown). */
+export async function disconnectPrisma(): Promise<void> {
+  const client = globalForPrisma.prisma;
+  if (!client) return;
+  await client.$disconnect();
+  globalForPrisma.prisma = undefined;
 }
 
 function getPrismaClient(): PrismaClient | null {

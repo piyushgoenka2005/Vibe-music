@@ -75,6 +75,9 @@ export async function register() {
         "instrumentation",
       );
     }
+
+    const { registerGracefulShutdown } = await import("@/lib/server/gracefulShutdown");
+    registerGracefulShutdown();
   }
 }
 

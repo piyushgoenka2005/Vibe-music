@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { traceRouteHandler } from "@/lib/api/traceRoute";
 import { enforceRateLimit, handleRouteError } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import {
@@ -19,7 +20,7 @@ function parsePositiveInt(value: string | null, fallback: number): number {
   return Math.floor(parsed);
 }
 
-export async function GET(request: Request) {
+async function getHandler(request: Request) {
   try {
     const rateLimited = await enforceRateLimit(request, "search", RATE_LIMITS.search);
     if (rateLimited) return rateLimited;
@@ -140,3 +141,5 @@ export async function GET(request: Request) {
     return handleRouteError(error, "api/search");
   }
 }
+
+export const GET = traceRouteHandler("GET /api/search", getHandler);
