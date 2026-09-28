@@ -1,6 +1,6 @@
 # Phase 10 — Edge security (L-22 / L-23)
 
-Last verified: 2026-09-25 against https://vibemusic.in.
+Last updated: 2026-09-28.
 
 ## Live status
 
@@ -8,6 +8,8 @@ Last verified: 2026-09-25 against https://vibemusic.in.
 | ---------------- | ---------------------------------------------- | ------------------------------------- |
 | L-22 CDN/WAF     | **FAIL** — `server: nginx/1.24.0`, no `cf-ray` | `npm run check:edge`                  |
 | L-23 origin lock | **Not applied**                                | `deploy/cloudflare-ufw.sh` after L-22 |
+| Phase 10 gate    | `npm run verify:phase10`                       | L-22 + optional SSH UFW probe         |
+| Shell probe      | `deploy/verify-edge-security.sh`               | VPS / CI equivalent                   |
 
 **Cannot be completed from the repository alone** — requires Cloudflare registrar/DNS access and VPS root.
 
@@ -40,10 +42,18 @@ VERIFY_BASE_URL=https://vibemusic.in bash deploy/phase10-edge-handoff.sh
 sudo CLOUDFLARE_ONLY=1 bash deploy/phase10-edge-handoff.sh
 ```
 
+## Phase 10 automation (repo complete)
+
+| Command                                           | Purpose                                         |
+| ------------------------------------------------- | ----------------------------------------------- |
+| `npm run verify:phase10`                          | L-22 homepage probe + optional L-23 UFW via SSH |
+| `REQUIRE_CDN_EDGE=true npm run verify:phase10`    | Strict + prod-signoff                           |
+| `PROBE_UFW=1 bash deploy/verify-edge-security.sh` | Run on VPS to check UFW locally                 |
+
 ## Phase 10 exit criteria
 
-- [ ] `check:edge` reports CDN/WAF indicator present
-- [ ] UFW allows only Cloudflare IPs on 80/443
+- [ ] `npm run verify:phase10` — L-22 PASS (`cf-ray` present)
+- [ ] UFW allows only Cloudflare IPs on 80/443 (L-23)
 - [ ] Scorecard items **15** and **16** = 1 point each
 
 ## Final certification (20/20)

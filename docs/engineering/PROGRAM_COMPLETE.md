@@ -1,8 +1,8 @@
 # Engineering program — complete
 
-**Status:** Phases 0–6 **code-complete** · Phase 7 **go-live track** (operator)  
+**Status:** Phases 0–7 + **10 automation code-complete** · Live ops **8–10** (operator)  
 **Last updated:** 28 Sep 2026  
-**Latest commit on `main`:** `bff4db6` — VPS deploy pending SSH fix
+**Latest commit on `main`:** push after `git pull` — run `npm run verify:go-live`
 
 ---
 
@@ -20,6 +20,7 @@
 | 7     | Go-live verification       | `npm run verify:go-live`                                                    |
 | 8     | Deploy sync (ops)          | `verify-deploy-sync.sh`, `deploy-drift.yml`, `npm run verify:phase8`        |
 | 9     | L-30 compliance (ops)      | `verify-compliance-live.sh`, `npm run verify:phase9`, `apply-compliance.sh` |
+| 10    | Edge security (ops)        | `verify-edge-security.sh`, `npm run verify:phase10`, Cloudflare + UFW       |
 
 ---
 
@@ -30,6 +31,7 @@ npm run verify:engineering    # Full program: type-check, lint, test, coverage, 
 npm run verify:go-live        # Engineering + deploy sync + live probes (17 → 20/20)
 npm run verify:phase8         # Live /api/health version vs local main
 npm run verify:phase9         # L-30 GSTIN + legal entity in homepage HTML
+npm run verify:phase10        # L-22 CDN edge + L-23 UFW probe
 npm run verify:complete       # Storefront + audit + coverage
 npm run test:integration      # After db:migrate (CI runs automatically)
 ```

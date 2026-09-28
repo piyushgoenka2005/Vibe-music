@@ -28,10 +28,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Edge headers (L-22)
+      - name: Edge security (L-22 / L-23)
         id: edge
         continue-on-error: ${{ env.REQUIRE_CDN_EDGE != 'true' }}
-        run: npm run check:edge
+        run: npm run verify:phase10
 
       - name: Liveness + readiness probes
         run: |

@@ -70,6 +70,18 @@ REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod
 
 Admin → Settings → GST number also works without rebuild (SSR from store settings).
 
+## Edge security (Phase 10)
+
+After Cloudflare orange-cloud DNS is active:
+
+```bash
+npm run verify:phase10
+sudo CLOUDFLARE_ONLY=1 bash deploy/phase10-edge-handoff.sh
+REQUIRE_CDN_EDGE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
+```
+
+Guide: `deploy/cloudflare/README.md` · `docs/ops/ORIGIN_IP_PROTECTION.md`
+
 ## Optional services
 
 ```bash

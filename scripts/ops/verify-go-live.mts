@@ -43,9 +43,9 @@ if (VERIFY_BASE_URL) {
   liveCode = signoff.status ?? 1;
   console.log(liveCode === 0 ? "✓ Production sign-off" : `✗ Production sign-off (exit ${liveCode})`);
 
-  const edgeCode = run("Edge probe (L-22)", "npm", ["run", "check:edge"]);
+  const edgeCode = run("Edge security (Phase 10)", "npm", ["run", "verify:phase10"]);
   if (edgeCode !== 0) {
-    console.log("\nℹ L-22: Cloudflare proxied DNS required — see docs/ops/PHASE10_EDGE_SECURITY.md");
+    console.log("\nℹ L-22/L-23: Cloudflare + UFW — see docs/ops/PHASE10_EDGE_SECURITY.md");
   }
   const complianceCode = run("Compliance live (Phase 9)", "npm", ["run", "verify:phase9"]);
   if (complianceCode !== 0) {
