@@ -1,8 +1,8 @@
 # Engineering program — complete
 
-**Status:** Phases **0–11 automation complete** · Live **20/20** when `verify:production-20` passes  
+**Status:** Program **closed (Phases 0–12)** · Live **20/20** when `verify:production-20` passes  
 **Last updated:** 28 Sep 2026  
-**Latest commit on `main`:** `git pull` on VPS → `bash deploy/certify-production.sh`
+**Handoff:** [PROGRAM_HANDOFF.md](./PROGRAM_HANDOFF.md)
 
 ---
 
@@ -21,7 +21,8 @@
 | 8     | Deploy sync (ops)          | `verify-deploy-sync.sh`, `deploy-drift.yml`, `npm run verify:phase8`        |
 | 9     | L-30 compliance (ops)      | `verify-compliance-live.sh`, `npm run verify:phase9`, `apply-compliance.sh` |
 | 10    | Edge security (ops)        | `verify-edge-security.sh`, `npm run verify:phase10`, Cloudflare + UFW       |
-| 11    | Production 20/20 (ops)     | `npm run verify:production-20`, `production-cert.yml`                         |
+| 11    | Production 20/20 (ops)     | `npm run verify:production-20`, `production-cert.yml`                       |
+| 12    | Stability + handoff        | Sweeper fix, `PROGRAM_HANDOFF.md` — **program closed**                      |
 
 ---
 

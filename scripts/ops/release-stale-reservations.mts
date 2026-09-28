@@ -14,7 +14,7 @@ import "./register-cli-stubs-side-effect.mts";
 import fs from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
-import { releaseReservedStockForOrder } from "../../src/lib/server/inventoryRepository";
+import { releaseReservedStockForOrderInTx } from "../../src/lib/server/inventoryRepository";
 
 function readEnvFile(file: string): Record<string, string> {
   const full = path.join(process.cwd(), file);
@@ -80,7 +80,16 @@ async function main() {
   });
 
   let released = 0;
+  let consecutiveFailures = 0;
+  const maxConsecutiveFailures = 5;
+
   for (const order of stale) {
+    if (consecutiveFailures >= maxConsecutiveFailures) {
+      console.warn(
+        `stopping early after ${maxConsecutiveFailures} consecutive failures (DB may be recovering)`,
+      );
+      break;
+    }
     const items = Array.isArray(order.items)
       ? (order.items as Array<{
           productId: string;
@@ -100,7 +109,10 @@ async function main() {
 
     try {
       if (lines.length > 0) {
-        await releaseReservedStockForOrder(order.id, lines);
+        // Use script-local Prisma — bypasses app circuit breaker (deploy/CLI context).
+        await prisma.$transaction((tx) =>
+          releaseReservedStockForOrderInTx(tx, order.id, lines),
+        );
       } else {
         await prisma.order.update({
           where: { id: order.id },
@@ -111,8 +123,10 @@ async function main() {
         });
       }
       released += 1;
+      consecutiveFailures = 0;
       console.log(`released ${order.id} (updatedAt=${order.updatedAt})`);
     } catch (error) {
+      consecutiveFailures += 1;
       console.error(`failed ${order.id}`, error);
     }
   }

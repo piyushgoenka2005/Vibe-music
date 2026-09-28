@@ -150,6 +150,8 @@ if [[ "${SKIP_SMOKE:-0}" != "1" ]]; then
 fi
 
 echo "==> Reservation sweeper (release stale holds)"
+# Brief pause so Postgres is warm after PM2 reload before batch sweeper runs.
+sleep 3
 npm run ops:release-stale-reservations || echo "    WARN: sweeper failed — check PM2 logs" >&2
 
 echo "Update complete."

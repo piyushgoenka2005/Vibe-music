@@ -28,9 +28,10 @@ Living checklist for the master engineering program (Phase 0 → production plat
 | **P8 — Deploy sync automation**       | 🟡 Ops  | `verify-deploy-sync.sh`, `deploy-drift.yml`, `npm run verify:phase8`              |
 | **P9 — L-30 compliance live**         | 🟡 Ops  | `verify-compliance-live.sh`, `npm run verify:phase9`, `apply-compliance.sh`       |
 | **P10 — Edge security (L-22/L-23)**   | 🟡 Ops  | `verify-edge-security.sh`, `npm run verify:phase10`, `phase10-edge-handoff.sh`    |
-| **P11 — Production 20/20 cert**       | 🟡 Ops  | `npm run verify:production-20`, `production-cert.yml`, `PHASE11_PRODUCTION_20.md` |
+| **P11 — Production 20/20 cert**       | ✅ Done | `npm run verify:production-20`, `production-cert.yml`, `PHASE11_PRODUCTION_20.md` |
+| **P12 — Stability + handoff**         | ✅ Done | Sweeper circuit-breaker fix, `PROGRAM_HANDOFF.md`                                 |
 
-**Program status:** ✅ **Automation complete (0–11)** · 🟡 **Live 20/20** — run `certify-production.sh` on VPS
+**Program status:** ✅ **CLOSED (0–12)** · 🟡 **Live 20/20** — `certify-production.sh` + Cloudflare on VPS
 
 ## Commands
 
