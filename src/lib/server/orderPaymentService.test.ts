@@ -115,23 +115,7 @@ describe("orderPaymentService transitions", () => {
   it("completeOrderPayment skips when already paid with invoice", async () => {
     const paid = makeOrder("ord_paid", {
       paymentStatus: "paid",
-      invoice: {
-        invoiceNumber: "INV-1001",
-        invoiceDate: "2026-01-01",
-        sellerGstin: "GSTIN",
-        buyerGstin: null,
-        placeOfSupply: "West Bengal",
-        items: [],
-        subtotal: 100,
-        totalGst: 0,
-        cgst: 0,
-        sgst: 0,
-        igst: 0,
-        shippingCharge: 0,
-        platformFee: 0,
-        couponDiscount: 0,
-        grandTotal: 100,
-      },
+      invoice: { invoiceNumber: "INV-1001" } as Order["invoice"],
     });
     vi.mocked(orderRepository.lockOrderInTx).mockResolvedValue(paid);
 

@@ -1,8 +1,8 @@
 # Engineering program — complete
 
-**Status:** Phases 0–6 **code-complete** in repository  
+**Status:** Phases 0–6 **code-complete** · Phase 7 **go-live track** (operator)  
 **Last updated:** 28 Sep 2026  
-**Latest commit on `main`:** deploy after `git pull`
+**Latest commit on `main`:** `bff4db6` — VPS deploy pending SSH fix
 
 ---
 
@@ -17,6 +17,7 @@
 | 4     | Money-path hardening       | `withApiGuards` on payment routes, `orderPaymentService` tests             |
 | 5     | Ops + staging              | Error monitoring webhook, staging workflow, deploy readiness probes        |
 | 6     | Operator closure           | `deploy/preflight.sh`, `verify:engineering`, runbook                       |
+| 7     | Go-live track (8–10)       | `npm run verify:go-live`, `phase8:status`, VPS certify script              |
 
 ---
 
@@ -24,6 +25,7 @@
 
 ```bash
 npm run verify:engineering    # Full program: type-check, lint, test, coverage, complete
+npm run verify:go-live        # Engineering + deploy sync + live probes (17 → 20/20)
 npm run verify:complete       # Storefront + audit + coverage
 npm run test:integration      # After db:migrate (CI runs automatically)
 ```

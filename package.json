@@ -67,6 +67,7 @@
     "verify:prod-signoff": "npx tsx scripts/ops/prod-signoff.mts",
     "verify:readiness": "npx tsx scripts/ops/verify-readiness-scorecard.mts",
     "phase8:status": "npx tsx scripts/ops/phase8-deploy-status.mts",
+    "verify:go-live": "npx tsx scripts/ops/verify-go-live.mts",
     "audit:generate-catalog": "npx tsx scripts/ops/generate-vibemusic-audit-json.mts",
     "verify:audit": "npx tsx scripts/ops/verify-audit-remediation.mts",
     "monitor:checkout": "npx tsx scripts/ops/synthetic-checkout-monitor.mts",

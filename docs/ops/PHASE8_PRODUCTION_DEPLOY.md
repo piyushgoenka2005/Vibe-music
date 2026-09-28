@@ -1,22 +1,25 @@
 # Phase 8 — Production deploy sync
 
-Last verified: 2026-09-25.
+Last verified: 2026-09-28.
 
 ## Goal
 
-Ship Phases 1–7 remediation commits to `origin/main` and the live VPS.
+Ship engineering program commits (Phases 0–6) to the live VPS and unblock GitHub Actions deploy.
 
 ## Status
 
-| Step                       | Status      | Notes                                                         |
-| -------------------------- | ----------- | ------------------------------------------------------------- |
-| `origin/main`              | **Synced**  | All remediation commits pushed                                |
-| GitHub Actions deploy      | **Blocked** | VPS SSH key not on server (`Permission denied`)               |
-| `deploy/deploy_key.pub`    | **Fixed**   | Now matches local `~/.ssh/vibe_vps_deploy.pub`                |
-| Live `/api/health` version | **`local`** | Phase 8 code not on VPS yet — run install key + deploy        |
-| Live sign-off              | **PASS**    | Health, payments, catalog green on current build              |
-| L-22 edge                  | **FAIL**    | No `cf-ray` on vibemusic.in                                   |
-| L-30 GSTIN HTML            | **FAIL**    | Phase 9 code pending deploy + GSTIN via `apply-compliance.sh` |
+| Step                       | Status        | Notes                                                    |
+| -------------------------- | ------------- | -------------------------------------------------------- |
+| `origin/main`              | **Synced**    | Latest: `bff4db6` (Phase 6 preflight + engineering gate) |
+| GitHub Actions deploy      | **Blocked**   | VPS SSH key not on server (`Permission denied`)          |
+| `deploy/deploy_key.pub`    | **OK**        | Matches local `~/.ssh/vibe_vps_deploy.pub`               |
+| Live `/api/health` version | **`6af7df5`** | Behind local `bff4db6` — run install key + deploy        |
+| Engineering gate           | **PASS**      | `npm run verify:engineering`                             |
+| Live sign-off              | **PASS**      | Health, payments, catalog green on current VPS build     |
+| L-22 edge                  | **FAIL**      | No `cf-ray` on vibemusic.in (Phase 10)                   |
+| L-30 GSTIN HTML            | **FAIL**      | Pending deploy + `deploy/apply-compliance.sh` (Phase 9)  |
+
+Check anytime: `npm run phase8:status` or `npm run verify:go-live`
 
 ## Operator actions
 
