@@ -17,7 +17,8 @@
 | 4     | Money-path hardening       | `withApiGuards` on payment routes, `orderPaymentService` tests             |
 | 5     | Ops + staging              | Error monitoring webhook, staging workflow, deploy readiness probes        |
 | 6     | Operator closure           | `deploy/preflight.sh`, `verify:engineering`, runbook                       |
-| 7     | Go-live track (8–10)       | `npm run verify:go-live`, `phase8:status`, VPS certify script              |
+| 7     | Go-live verification       | `npm run verify:go-live`                                                   |
+| 8     | Deploy sync (ops)          | `verify-deploy-sync.sh`, `deploy-drift.yml`, `npm run verify:phase8`       |
 
 ---
 
@@ -26,6 +27,7 @@
 ```bash
 npm run verify:engineering    # Full program: type-check, lint, test, coverage, complete
 npm run verify:go-live        # Engineering + deploy sync + live probes (17 → 20/20)
+npm run verify:phase8         # Live /api/health version vs local main
 npm run verify:complete       # Storefront + audit + coverage
 npm run test:integration      # After db:migrate (CI runs automatically)
 ```

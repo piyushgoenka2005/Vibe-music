@@ -24,15 +24,17 @@ Living checklist for the master engineering program (Phase 0 → production plat
 | **P6 — Deploy preflight**             | ✅ Done | `deploy/preflight.sh` (wired into `update.sh`)                             |
 | **P6 — Engineering program gate**     | ✅ Done | `npm run verify:engineering`, `PROGRAM_COMPLETE.md`                        |
 | **P6 — Operator runbook**             | ✅ Done | `docs/engineering/DEPLOY_RUNBOOK.md`                                       |
-| **P7 — Go-live track (8–10)**         | 🟡 Ops  | `npm run verify:go-live`, `docs/ops/PHASE8_PRODUCTION_DEPLOY.md`           |
+| **P7 — Go-live verification gate**    | ✅ Done | `npm run verify:go-live`                                                   |
+| **P8 — Deploy sync automation**       | 🟡 Ops  | `verify-deploy-sync.sh`, `deploy-drift.yml`, `npm run verify:phase8`       |
 
-**Program status:** ✅ **Code-complete (0–6)** · 🟡 **Go-live (7)** — VPS SSH + certify for 20/20
+**Program status:** ✅ **Code-complete (0–7)** · 🟡 **Deploy sync (8)** — VPS console for 20/20
 
 ## Commands
 
 ```bash
 npm run verify:engineering      # Full program gate (type-check → test → complete)
 npm run verify:go-live            # Engineering + deploy sync + live probes
+npm run verify:phase8             # Phase 8 deploy sync gate
 npm run phase8:status             # Local vs VPS commit + SSH probe
 npm run verify:complete         # Repo completeness (incl. coverage)
 npm run test:coverage:gate      # Money/security module coverage (CI)

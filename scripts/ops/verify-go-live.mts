@@ -29,7 +29,7 @@ console.log("  Vibe Music — go-live verification (Phases 8–10)");
 console.log("═══════════════════════════════════════════════════════════");
 
 const repoCode = run("Engineering program", "npm", ["run", "verify:engineering"]);
-const deployCode = run("Deploy sync status", "npm", ["run", "phase8:status"]);
+const deployCode = run("Deploy sync (Phase 8)", "npm", ["run", "verify:phase8"]);
 
 let liveCode = 0;
 if (VERIFY_BASE_URL) {

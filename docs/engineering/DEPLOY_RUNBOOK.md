@@ -46,11 +46,16 @@ bash deploy/rollback.sh <known-good-commit>
 
 ## GitHub deploy workflow
 
-Push to `main` triggers **Deploy production** (SSH to VPS). If deploy fails:
+Push to `main` triggers **Deploy production** (SSH to VPS). After deploy, CI runs `deploy/verify-deploy-sync.sh` against `https://vibemusic.in`.
+
+**Deploy drift monitor** runs every 6 hours and on every push — fails when live `/api/health` version ≠ `main`.
+
+If deploy fails:
 
 1. Verify GitHub secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_PORT`
-2. On VPS: `bash deploy/preflight.sh` then `bash deploy/update.sh` manually
-3. Check `pm2 logs vibe --lines 100`
+2. VPS console (root): `curl -fsSL …/deploy/vps-console-go-live.sh | bash`
+3. Local check: `npm run verify:phase8`
+4. Check `pm2 logs vibe --lines 100`
 
 ## Optional services
 

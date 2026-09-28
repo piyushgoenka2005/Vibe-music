@@ -19,7 +19,16 @@ Ship engineering program commits (Phases 0–6) to the live VPS and unblock GitH
 | L-22 edge                  | **FAIL**      | No `cf-ray` on vibemusic.in (Phase 10)                   |
 | L-30 GSTIN HTML            | **FAIL**      | Pending deploy + `deploy/apply-compliance.sh` (Phase 9)  |
 
-Check anytime: `npm run phase8:status` or `npm run verify:go-live`
+Check anytime: `npm run verify:phase8` · CI: **Deploy drift monitor** (every 6h)
+
+### Repo automation (Phase 8 complete)
+
+| Artifact                                  | Purpose                                              |
+| ----------------------------------------- | ---------------------------------------------------- |
+| `deploy/verify-deploy-sync.sh`            | Compare live `/api/health` version to `EXPECTED_SHA` |
+| `.github/workflows/deploy-drift.yml`      | Fail when production drifts from `main`              |
+| `.github/workflows/deploy-production.yml` | Post-deploy SHA verification step                    |
+| `deploy/vps-console-go-live.sh`           | One-paste VPS console bootstrap (Phases 8–10)        |
 
 ## Operator actions
 

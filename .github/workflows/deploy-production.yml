@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -36,3 +39,9 @@ jobs:
             SKIP_SMOKE=1 bash deploy/update.sh
             npm run publish:independence-banner || true
             BASE_URL=https://vibemusic.in bash deploy/post-deploy-smoke.sh
+
+      - name: Verify live commit matches main
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+          VERIFY_BASE_URL: https://vibemusic.in
+        run: bash deploy/verify-deploy-sync.sh

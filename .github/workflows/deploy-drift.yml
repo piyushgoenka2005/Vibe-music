@@ -1,0 +1,28 @@
+# Phase 8 — detect when production /api/health version drifts from main.
+name: Deploy drift monitor
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-drift-monitor
+  cancel-in-progress: true
+
+jobs:
+  drift:
+    if: github.repository == 'piyushgoenka2005/Vibe-music'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compare live health version to main
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+          VERIFY_BASE_URL: https://vibemusic.in
+        run: bash deploy/verify-deploy-sync.sh
