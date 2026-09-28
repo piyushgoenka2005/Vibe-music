@@ -1,6 +1,7 @@
 import "server-only";
 
 import { disconnectPrisma } from "@/lib/db/prisma";
+import { closeJobQueue } from "@/lib/server/jobQueue";
 import { logInfo, logWarn } from "@/lib/server/logger";
 
 const SHUTDOWN_TIMEOUT_MS = 30_000;
@@ -24,6 +25,7 @@ export async function runGracefulShutdown(signal: string): Promise<void> {
   }, SHUTDOWN_TIMEOUT_MS);
 
   try {
+    await closeJobQueue();
     await disconnectPrisma();
     logInfo("Database pool closed", "graceful-shutdown");
   } catch (error) {

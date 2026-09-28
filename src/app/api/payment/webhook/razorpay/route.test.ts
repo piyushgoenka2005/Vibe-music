@@ -14,19 +14,22 @@ vi.mock("@/lib/razorpay/signature", () => ({
   verifyRazorpayWebhookSignature: vi.fn(),
 }));
 
-vi.mock("@/lib/server/razorpayWebhookService", () => ({
-  processRazorpayWebhook: vi.fn(async () => ({
-    eventId: "evt_1",
-    eventType: "payment.captured",
-    orderId: "ord_1",
-    skipped: false,
-    message: "processed",
+vi.mock("@/lib/server/jobQueue", () => ({
+  enqueueRazorpayWebhook: vi.fn(async () => ({
+    mode: "sync",
+    result: {
+      eventId: "evt_1",
+      eventType: "payment.captured",
+      orderId: "ord_1",
+      skipped: false,
+      message: "processed",
+    },
   })),
 }));
 
 import { POST } from "@/app/api/payment/webhook/razorpay/route";
 import { verifyRazorpayWebhookSignature } from "@/lib/razorpay/signature";
-import { processRazorpayWebhook } from "@/lib/server/razorpayWebhookService";
+import { enqueueRazorpayWebhook } from "@/lib/server/jobQueue";
 
 const SECRET = "test_webhook_secret";
 
@@ -49,7 +52,7 @@ function webhookRequest(body: string, headers: Record<string, string> = {}): Req
 describe("POST /api/payment/webhook/razorpay (L-21)", () => {
   beforeEach(() => {
     vi.mocked(verifyRazorpayWebhookSignature).mockReset();
-    vi.mocked(processRazorpayWebhook).mockClear();
+    vi.mocked(enqueueRazorpayWebhook).mockClear();
   });
 
   it("returns 400 when signature header is missing", async () => {
@@ -67,7 +70,7 @@ describe("POST /api/payment/webhook/razorpay (L-21)", () => {
     expect(res.status).toBe(400);
     const json = (await res.json()) as { error?: string };
     expect(json.error).toMatch(/invalid webhook signature/i);
-    expect(processRazorpayWebhook).not.toHaveBeenCalled();
+    expect(enqueueRazorpayWebhook).not.toHaveBeenCalled();
   });
 
   it("processes a valid signed webhook", async () => {
@@ -83,7 +86,7 @@ describe("POST /api/payment/webhook/razorpay (L-21)", () => {
     const json = (await res.json()) as { ok?: boolean; eventId?: string };
     expect(json.ok).toBe(true);
     expect(json.eventId).toBe("evt_1");
-    expect(processRazorpayWebhook).toHaveBeenCalledWith({
+    expect(enqueueRazorpayWebhook).toHaveBeenCalledWith({
       eventId: "evt_test_1",
       eventType: "payment.captured",
       payload: { payment: { entity: { id: "pay_1" } } },

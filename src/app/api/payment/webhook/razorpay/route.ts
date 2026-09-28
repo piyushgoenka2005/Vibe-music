@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRazorpayWebhookSecret, verifyRazorpayWebhookSignature } from "@/lib/razorpay/signature";
-import { processRazorpayWebhook } from "@/lib/server/razorpayWebhookService";
+import { enqueueRazorpayWebhook } from "@/lib/server/jobQueue";
 import { enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 
@@ -65,14 +65,25 @@ export async function POST(request: Request) {
   const payload = body.payload ?? {};
 
   try {
-    const result = await processRazorpayWebhook({
+    const outcome = await enqueueRazorpayWebhook({
       eventId,
       eventType,
       payload,
     });
 
+    if (outcome.mode === "queued") {
+      return NextResponse.json({
+        ok: true,
+        queued: true,
+        eventId: outcome.eventId,
+        eventType: outcome.eventType,
+      });
+    }
+
+    const result = outcome.result;
     return NextResponse.json({
       ok: true,
+      queued: false,
       eventId: result.eventId,
       eventType: result.eventType,
       orderId: result.orderId,

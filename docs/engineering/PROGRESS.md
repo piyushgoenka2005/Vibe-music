@@ -12,9 +12,9 @@ Living checklist for the master engineering program (Phase 0 → production plat
 | **P1 — OTEL spans in hot paths**      | ✅ Done | `traceRoute.ts`, search + create-order, Prisma `$extends` query spans       |
 | **P1 — Graceful shutdown**            | ✅ Done | `gracefulShutdown.ts`, `/api/healthz`, `/api/readyz`, PM2 `kill_timeout`    |
 | **P1 — Integration tests (Postgres)** | ✅ Done | `paymentLogRepository.integration.test.ts`, `npm run test:integration`      |
-| P2 — Job queue (BullMQ)               | ⬜ Todo |                                                                             |
-| P2 — k6 in nightly CI                 | ⬜ Todo |                                                                             |
-| P3 — Horizontal scale (PM2 cluster)   | ⬜ Todo |                                                                             |
+| **P2 — Job queue (BullMQ)**           | ✅ Done | `jobQueue.ts`, webhook enqueue, `npm run worker:start`                      |
+| **P2 — k6 in nightly CI**             | ✅ Done | `.github/workflows/load-test.yml`, `scripts/k6/smoke.js`                    |
+| **P3 — Horizontal scale (PM2)**       | ✅ Done | `PM2_CLUSTER=1`, `ecosystem.config.cjs` cluster + `vibe-worker`             |
 
 ## Commands
 
@@ -22,6 +22,8 @@ Living checklist for the master engineering program (Phase 0 → production plat
 npm run verify:complete      # Repo completeness gate
 npm run test:coverage:gate   # Money/security module coverage (CI)
 npm run test:integration     # Postgres-backed tests (after db:migrate)
+npm run worker:start         # BullMQ worker (requires REDIS_URL)
+npm run load:k6              # Local k6 smoke (server must be running)
 ```
 
 ## VPS (Track A — go-live)

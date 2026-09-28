@@ -9,10 +9,12 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 
 const BASE_URL = (__ENV.BASE_URL || "http://127.0.0.1:3000").replace(/\/$/, "");
+const VUS = Number(__ENV.VUS || "10");
+const DURATION = __ENV.DURATION || "30s";
 
 export const options = {
-  vus: 10,
-  duration: "30s",
+  vus: VUS,
+  duration: DURATION,
   thresholds: {
     http_req_failed: ["rate<0.05"],
     http_req_duration: ["p(95)<3000"],
@@ -22,7 +24,8 @@ export const options = {
 const paths = [
   "/",
   "/deals",
-  "/api/health",
+  "/api/healthz",
+  "/api/readyz",
   "/api/search?q=guitar&mode=suggest",
   "/api/catalog/categories",
 ];

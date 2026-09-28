@@ -36,6 +36,7 @@ export interface IntegrationChecks {
   razorpayWebhook: IntegrationStatus;
   cdn: IntegrationStatus;
   upstash: IntegrationStatus;
+  jobQueue: IntegrationStatus;
   googleOAuth: IntegrationStatus;
   places: IntegrationStatus;
   invoicePdf: IntegrationStatus;
@@ -83,6 +84,7 @@ export function getIntegrationChecks(): IntegrationChecks {
     razorpayWebhook: configured(process.env.RAZORPAY_WEBHOOK_SECRET),
     cdn: configured(process.env.CDN_STORAGE_ROOT, process.env.CDN_PUBLIC_BASE_URL),
     upstash: configured(process.env.UPSTASH_REDIS_REST_URL, process.env.UPSTASH_REDIS_REST_TOKEN),
+    jobQueue: configured(process.env.REDIS_URL),
     googleOAuth: isGoogleAuthConfigured() ? "ok" : "missing",
     places: isAddressAutocompleteConfigured() ? "ok" : "missing",
     invoicePdf: invoicePdfStatus(),
@@ -167,6 +169,13 @@ export function getOpsStatusReport(): {
       status: checks.upstash,
       tier: "recommended",
       detail: "Distributed rate limits across PM2 workers",
+    },
+    {
+      key: "jobQueue",
+      label: "BullMQ job queue",
+      status: checks.jobQueue,
+      tier: "recommended",
+      detail: "REDIS_URL (Redis protocol) — async Razorpay webhooks via vibe-worker",
     },
     {
       key: "googleOAuth",

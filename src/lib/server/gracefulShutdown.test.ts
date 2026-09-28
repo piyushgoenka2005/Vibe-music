@@ -4,6 +4,10 @@ vi.mock("@/lib/db/prisma", () => ({
   disconnectPrisma: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("@/lib/server/jobQueue", () => ({
+  closeJobQueue: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { disconnectPrisma } from "@/lib/db/prisma";
 import { isShuttingDown, runGracefulShutdown } from "@/lib/server/gracefulShutdown";
 

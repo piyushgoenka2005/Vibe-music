@@ -2,8 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { isMetricsScrapeAuthorized } from "@/lib/server/metricsAuth";
 
 function authRequest(token?: string): Request {
-  const headers = token ? { authorization: `Bearer ${token}` } : {};
-  return new Request("https://vibemusic.in/api/metrics", { headers });
+  return new Request("https://vibemusic.in/api/metrics", {
+    headers: token ? { authorization: `Bearer ${token}` } : undefined,
+  });
 }
 
 describe("isMetricsScrapeAuthorized", () => {
