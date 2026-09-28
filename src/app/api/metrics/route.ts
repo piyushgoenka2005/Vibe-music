@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isMetricsScrapeAuthorized } from "@/lib/server/metricsAuth";
 import { verifyPostgresConnection } from "@/lib/server/postgresHealth";
 import { getRawPrisma } from "@/lib/db/prisma";
 import { dbCircuitBreaker, redisCircuitBreaker } from "@/lib/security/circuit-breaker";
@@ -15,7 +16,18 @@ function prometheusLine(name: string, help: string, type: string, lines: string[
   return `# HELP ${name} ${help}\n# TYPE ${name} ${type}\n${lines.join("\n")}\n`;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!isMetricsScrapeAuthorized(request)) {
+    return new NextResponse("# metrics scrape unauthorized\n", {
+      status: 401,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "WWW-Authenticate": 'Bearer realm="metrics"',
+      },
+    });
+  }
+
   try {
     const now = Date.now();
     const metrics = getRequestMetrics();

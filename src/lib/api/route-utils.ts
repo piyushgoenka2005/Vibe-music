@@ -7,6 +7,7 @@ import {
   isWebhookPath,
   verifyMutationOrigin,
 } from "@/lib/security/mutation-origin";
+import { finalizeRouteObservation } from "@/lib/api/route-observation";
 import { getRequestId } from "@/lib/security/request-log";
 import { reportServerError } from "@/lib/server/errorMonitoring";
 import { logInfo } from "@/lib/server/logger";
@@ -36,6 +37,7 @@ export function applyRateLimitHeaders(
 
 export function applyRequestIdHeader(response: NextResponse, request: Request): NextResponse {
   response.headers.set("x-request-id", getRequestId(request));
+  finalizeRouteObservation(request, response);
   return response;
 }
 
@@ -126,11 +128,6 @@ export function handleRouteError(
   });
   // Record metrics (fire-and-forget, never blocks response)
   const metricsStatus = statusCode ?? 500;
-  try {
-    recordRequest(metricsStatus, 0);
-  } catch {
-    /* non-fatal */
-  }
   const message = error instanceof Error ? error.message : "Internal server error";
   const status = message.toLowerCase().includes("not found")
     ? 404
@@ -138,7 +135,15 @@ export function handleRouteError(
       ? 403
       : 500;
   const response = jsonError(status === 500 ? "Internal server error" : message, status);
-  return request ? applyRequestIdHeader(response, request) : response;
+  if (request) {
+    return applyRequestIdHeader(response, request);
+  }
+  try {
+    recordRequest(metricsStatus, 0);
+  } catch {
+    /* non-fatal */
+  }
+  return response;
 }
 
 export async function withApiGuards(
@@ -196,13 +201,7 @@ export async function withApiGuards(
   const bpScope = getBackpressureScope(reqPath);
 
   try {
-    const start = Date.now();
     const response = await handler();
-    try {
-      recordRequest(response.status, Date.now() - start);
-    } catch {
-      /* non-fatal */
-    }
     releaseBackpressure(bpScope);
     return applyRequestIdHeader(response, request);
   } catch (error) {

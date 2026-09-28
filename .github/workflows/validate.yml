@@ -57,6 +57,9 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      - name: Critical-path coverage gate (money + security)
+        run: npm run test:coverage:gate
+
       - name: Audit remediation gate (L-01 → L-30)
         run: npm run verify:audit
 

@@ -36,6 +36,12 @@ export async function register() {
       if (integrations.database !== "ok") {
         logWarn("DATABASE_URL is missing; the application cannot persist data", "instrumentation");
       }
+      if (!process.env.METRICS_SCRAPE_TOKEN?.trim()) {
+        logWarn(
+          "METRICS_SCRAPE_TOKEN is unset — /api/metrics is blocked in production until configured",
+          "instrumentation",
+        );
+      }
     }
 
     {

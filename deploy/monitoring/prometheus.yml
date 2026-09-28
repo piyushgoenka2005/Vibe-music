@@ -15,6 +15,8 @@ scrape_configs:
   - job_name: "vibe-app"
     metrics_path: "/api/metrics"
     scheme: "http"
+    # Set bearer_token in deploy/monitoring/prometheus.local.yml (gitignored) or via envsubst.
+    # bearer_token: "${METRICS_SCRAPE_TOKEN}"
     static_configs:
       - targets: ["host.docker.internal:3000"]
         labels:

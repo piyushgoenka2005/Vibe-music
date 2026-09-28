@@ -12,6 +12,10 @@ import {
 } from "@/lib/security/mutation-origin";
 import { getClientIp, RATE_LIMITS, type RateLimitResult } from "@/lib/security/rate-limit-core";
 import {
+  finalizeRouteObservationFromStatus,
+  REQUEST_START_HEADER,
+} from "@/lib/api/route-observation";
+import {
   createRequestId,
   logRequestStart,
   logSecurityEvent,
@@ -22,7 +26,7 @@ function resolveRateLimitScope(pathname: string): {
   scope: string;
   options: (typeof RATE_LIMITS)[keyof typeof RATE_LIMITS];
 } {
-  if (pathname === "/api/health") {
+  if (pathname === "/api/health" || pathname === "/api/metrics") {
     return { scope: "health", options: RATE_LIMITS.health };
   }
   if (pathname.startsWith("/api/admin")) {
@@ -77,6 +81,7 @@ async function handleApiRequest(request: NextRequest): Promise<NextResponse | nu
   const pathname = request.nextUrl.pathname;
   const requestId = request.headers.get(REQUEST_ID_HEADER) ?? createRequestId();
   const ip = getClientIp(request);
+  const startedAt = Date.now();
 
   logRequestStart({
     requestId,
@@ -99,21 +104,32 @@ async function handleApiRequest(request: NextRequest): Promise<NextResponse | nu
     rateLimit = await edgeCheckRateLimit(`${scope}:${ip}`, options);
     if (!rateLimit.allowed) {
       logSecurityEvent("rate_limit_exceeded", { requestId, path: pathname, ip, scope });
-      return jsonApiError(requestId, "Too many requests. Please try again later.", 429, {
+      const blocked = jsonApiError(requestId, "Too many requests. Please try again later.", 429, {
         "X-RateLimit-Remaining": "0",
         "X-RateLimit-Reset": String(rateLimit.resetAt),
       });
+      finalizeRouteObservationFromStatus(request, 429, startedAt);
+      return blocked;
     }
   }
 
   if (isMutationMethod(request.method) && !isWebhookPath(pathname)) {
     if (!verifyMutationOrigin(request)) {
       logSecurityEvent("csrf_blocked", { requestId, path: pathname, ip });
-      return jsonApiError(requestId, "Invalid request origin", 403);
+      const blocked = jsonApiError(requestId, "Invalid request origin", 403);
+      finalizeRouteObservationFromStatus(request, 403, startedAt);
+      return blocked;
     }
   }
 
-  const response = withSecurityHeaders(NextResponse.next(), pathname);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(REQUEST_ID_HEADER, requestId);
+  requestHeaders.set(REQUEST_START_HEADER, String(startedAt));
+
+  const response = withSecurityHeaders(
+    NextResponse.next({ request: { headers: requestHeaders } }),
+    pathname,
+  );
   response.headers.set(REQUEST_ID_HEADER, requestId);
   response.headers.set("X-RateLimit-Remaining", String(rateLimit.remaining));
   response.headers.set("X-RateLimit-Reset", String(rateLimit.resetAt));
