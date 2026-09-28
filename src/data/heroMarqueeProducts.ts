@@ -113,7 +113,7 @@ export const HERO_MARQUEE_TRACKS: HeroMarqueeProduct[][] = [
       revenue: "₹72,614",
       growth: "6.8%",
       image: CAT("k12_2"),
-      imageAlt: "QSC live sound speaker",
+      imageAlt: "Live sound PA speaker",
     },
     {
       id: "t1-3",

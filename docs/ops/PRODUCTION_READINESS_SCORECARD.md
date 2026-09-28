@@ -15,7 +15,7 @@ Each criterion scores **1 point** when fully met in production (or verified in C
 | 6   | Security    | Dependency audit gate (L-20)                        | `npm run audit:deps` in CI + `release:ready`                | **1** |
 | 7   | Payments    | Live Razorpay + no demo payments                    | `verify:prod-signoff` → `payments`                          | **1** |
 | 8   | Reliability | Inventory `FOR UPDATE` locks (L-24)                 | `inventoryRepository.reserve.test.ts`                       | **1** |
-| 9   | Testing     | Unit test suite green                               | `npm test` — **633** tests                                  | **1** |
+| 9   | Testing     | Unit test suite green                               | `npm test` — **635+** tests                                 | **1** |
 | 10  | Testing     | E2E merge gate (L-26)                               | `verify:e2e-catalog` + Playwright in CI                     | **1** |
 | 11  | Performance | Homepage section caps (L-11)                        | `clampHomepageMaxItems` + unit tests                        | **1** |
 | 12  | Performance | CWV / Lighthouse gates (L-14)                       | `check:cwv` + weekly `lighthouse.yml`                       | **1** |
@@ -45,20 +45,18 @@ Each criterion scores **1 point** when fully met in production (or verified in C
 |   15–17 | **8/10**  | Code certified; infra handoff blocking full score |
 | &lt; 15 | —         | Do not accept live payments                       |
 
-**Current verdict:** **10/10 repository** (`npm run verify:audit`) · **17/20 live** — **NOT end-to-end certified** until VPS go-live + Cloudflare (see [FINAL_AUDIT_CERTIFICATION.md](../audit/FINAL_AUDIT_CERTIFICATION.md)).
+**Current verdict:** **10/10 repository** (`npm run verify:audit`) · **17/20 live** — run `bash deploy/certify-production.sh` on VPS for **20/20** (see [PUBLIC_SURFACE_SCORECARD.md](./PUBLIC_SURFACE_SCORECARD.md)).
 
 ## Operator actions to reach 20/20
 
 ```bash
-# 1. Cloudflare proxied DNS (L-22)
+# One-shot (recommended)
+cd ~/Vibe-music && bash deploy/certify-production.sh
+CLOUDFLARE_ONLY=1 bash deploy/certify-production.sh   # after cf-ray is live
+
+# Or step-by-step:
 VERIFY_BASE_URL=https://vibemusic.in npm run check:edge
-
-# 2. Origin lockdown (L-23) — after cf-ray is present
 sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh
-
-# 3. Compliance env (L-30) — in deploy/ops-secrets.env, then redeploy
-NEXT_PUBLIC_LEGAL_ENTITY_NAME="…"
-NEXT_PUBLIC_GSTIN="22AAAAA0000A1Z5"
 REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 ```
 

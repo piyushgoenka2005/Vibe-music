@@ -1,5 +1,6 @@
 import "server-only";
 import { BRAND, formatIndianPhone } from "@/lib/brand";
+import { REGISTERED_BUSINESS_STATE } from "@/lib/brand/businessIdentity";
 import { gstStateCodeFromGstin, panFromGstin } from "@/lib/gst/gstin";
 import { getStoreSettings } from "@/lib/server/settingsService";
 import type { InvoiceSellerMeta } from "@/features/invoice/types";
@@ -27,7 +28,7 @@ export async function getInvoiceSellerMeta(): Promise<InvoiceSellerMeta> {
     website: BRAND.domain,
     gstin,
     pan: panFromGstin(gstin),
-    state: settings.sellerState || "Maharashtra",
+    state: settings.sellerState || REGISTERED_BUSINESS_STATE,
     stateCode,
   };
 

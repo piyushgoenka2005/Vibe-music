@@ -57,6 +57,7 @@ console.log("  • UFW Cloudflare-only origin lockdown (L-23)");
 console.log("  • NEXT_PUBLIC_GSTIN on production VPS + rebuild (L-30)");
 console.log("  • Optional channels: MSG91, WhatsApp Cloud, VAPID, Crisp, Upstash");
 console.log("  • Upload gear-story MP4s to CDN or public/videos/style-story/");
+console.log("  • Full 10/10 path: bash deploy/certify-production.sh");
 console.log("───────────────────────────────────────────────────────────\n");
 
 if (failedBlocking.length) {

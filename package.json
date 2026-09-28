@@ -42,6 +42,7 @@
     "deploy:razorpay-preflight": "bash deploy/razorpay-preflight.sh",
     "deploy:update": "bash deploy/update.sh",
     "deploy:finish": "bash deploy/finish-production.sh",
+    "deploy:certify": "bash deploy/certify-production.sh",
     "ops:install-sweeper": "bash deploy/install-reservation-sweeper.sh",
     "migrate:brand": "node scripts/legacy/migrate-brand.mjs && node scripts/legacy/migrate-content-brand.mjs",
     "sync:cdn-vps": "powershell -ExecutionPolicy Bypass -File scripts/ops/sync-cdn-to-vps.ps1",

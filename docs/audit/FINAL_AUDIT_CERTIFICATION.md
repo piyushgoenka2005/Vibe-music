@@ -9,11 +9,11 @@
 
 ## Certification tiers
 
-| Tier                               |       Score | Verdict                                                      |
-| ---------------------------------- | ----------: | ------------------------------------------------------------ |
-| **Repository (code + CI)**         | **10 / 10** | ✅ **CERTIFIED** — all L items fixed, verified, or automated |
-| **Production live (vibemusic.in)** | **~8 / 10** | ❌ **NOT CERTIFIED** — CDN + GSTIN operator steps remain     |
-| **Overall honest rating**          |  **9 / 10** | Becomes **10/10** after Cloudflare + GSTIN on live site      |
+| Tier                               |           Score | Verdict                                                      |
+| ---------------------------------- | --------------: | ------------------------------------------------------------ |
+| **Repository (code + CI)**         |     **10 / 10** | ✅ **CERTIFIED** — all L items fixed, verified, or automated |
+| **Production live (vibemusic.in)** | **~8.5–9 / 10** | ❌ **NOT CERTIFIED** until CDN + GSTIN on live               |
+| **Overall honest rating**          |      **9 / 10** | **10/10** after `bash deploy/certify-production.sh` on VPS   |
 
 ---
 
@@ -21,7 +21,7 @@
 
 | Gate                                | Status                                    |
 | ----------------------------------- | ----------------------------------------- |
-| `npm test`                          | ✅ 620+ unit tests (security + services)  |
+| `npm test`                          | ✅ 635+ unit tests (security + services)  |
 | `npm run type-check`                | ✅ Pass                                   |
 | `npm run lint`                      | ✅ 0 errors                               |
 | `npm run audit:deps` (L-20)         | ✅ Pass                                   |

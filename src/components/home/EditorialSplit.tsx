@@ -33,7 +33,7 @@ export default function EditorialSplit() {
             <div className="editorial-split__orb" />
             <Image
               src={MARKETING_EDITORIAL_IMAGE}
-              alt="Fender Stratocaster electric guitar — expert gear advice for every player"
+              alt="Professional electric guitar — expert gear advice for every player"
               className="editorial-split__image"
               fill
               loading="lazy"

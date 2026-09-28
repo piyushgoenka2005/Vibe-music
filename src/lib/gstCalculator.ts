@@ -1,3 +1,5 @@
+import { REGISTERED_BUSINESS_STATE } from "@/lib/brand/businessIdentity";
+
 /** Supported GST slab rates (percent). */
 export type GSTRate = 5 | 12 | 18 | 28;
 
@@ -5,7 +7,7 @@ export const GST_RATES: readonly GSTRate[] = [5, 12, 18, 28] as const;
 
 export const DEFAULT_GST_RATE: GSTRate = 18;
 
-export const SELLER_STATE = "Maharashtra";
+export const SELLER_STATE = REGISTERED_BUSINESS_STATE;
 
 export interface GSTLineItem {
   productId: string;
@@ -71,9 +73,7 @@ function round2(value: number): number {
 }
 
 function isInterStateOrder(sellerState: string, buyerState: string): boolean {
-  return (
-    sellerState.trim().toLowerCase() !== buyerState.trim().toLowerCase()
-  );
+  return sellerState.trim().toLowerCase() !== buyerState.trim().toLowerCase();
 }
 
 function generateInvoiceNumber(): string {
@@ -90,27 +90,15 @@ function generateInvoiceNumber(): string {
  * Discount is allocated proportionally across line items.
  */
 export function calculateGST(input: GSTCalculationInput): GSTInvoiceData {
-  const {
-    items,
-    couponDiscount,
-    shippingCharge,
-    platformFee = 0,
-    sellerState,
-    buyerState,
-  } = input;
+  const { items, couponDiscount, shippingCharge, platformFee = 0, sellerState, buyerState } = input;
 
   const interState = isInterStateOrder(sellerState, buyerState);
-  const subtotal = round2(
-    items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
-  );
+  const subtotal = round2(items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0));
   const cappedDiscount = Math.min(Math.max(couponDiscount, 0), subtotal);
 
   const lineBreakdown: GSTLineBreakdown[] = items.map((item) => {
     const lineSubtotal = round2(item.unitPrice * item.quantity);
-    const discountShare =
-      subtotal > 0
-        ? round2((lineSubtotal / subtotal) * cappedDiscount)
-        : 0;
+    const discountShare = subtotal > 0 ? round2((lineSubtotal / subtotal) * cappedDiscount) : 0;
     const lineTotal = round2(lineSubtotal - discountShare);
     const rateFactor = 1 + item.gstRate / 100;
     const taxableAmount = round2(lineTotal / rateFactor);
@@ -144,21 +132,15 @@ export function calculateGST(input: GSTCalculationInput): GSTInvoiceData {
     };
   });
 
-  const itemsGross = round2(
-    lineBreakdown.reduce((sum, line) => sum + line.lineTotal, 0)
-  );
+  const itemsGross = round2(lineBreakdown.reduce((sum, line) => sum + line.lineTotal, 0));
 
-  const itemsTaxable = round2(
-    lineBreakdown.reduce((sum, line) => sum + line.taxableAmount, 0)
-  );
+  const itemsTaxable = round2(lineBreakdown.reduce((sum, line) => sum + line.taxableAmount, 0));
 
   const weightedGstRate =
     itemsTaxable > 0
       ? round2(
-          lineBreakdown.reduce(
-            (sum, line) => sum + line.taxableAmount * line.gstRate,
-            0
-          ) / itemsTaxable
+          lineBreakdown.reduce((sum, line) => sum + line.taxableAmount * line.gstRate, 0) /
+            itemsTaxable,
         )
       : DEFAULT_GST_RATE;
 
@@ -191,31 +173,25 @@ export function calculateGST(input: GSTCalculationInput): GSTInvoiceData {
   const totalCgst = round2(
     lineBreakdown.reduce((sum, line) => sum + line.cgst, 0) +
       shippingParts.cgst +
-      platformParts.cgst
+      platformParts.cgst,
   );
   const totalSgst = round2(
     lineBreakdown.reduce((sum, line) => sum + line.sgst, 0) +
       shippingParts.sgst +
-      platformParts.sgst
+      platformParts.sgst,
   );
   const totalIgst = round2(
     lineBreakdown.reduce((sum, line) => sum + line.igst, 0) +
       shippingParts.igst +
-      platformParts.igst
+      platformParts.igst,
   );
   const totalGst = round2(totalCgst + totalSgst + totalIgst);
 
-  const taxableAmount = round2(
-    itemsTaxable + shippingParts.taxable + platformParts.taxable
-  );
+  const taxableAmount = round2(itemsTaxable + shippingParts.taxable + platformParts.taxable);
   const grandTotal = round2(itemsGross + round2(shippingCharge) + round2(platformFee));
 
-  const cgstDisplayRate = interState
-    ? 0
-    : round2(weightedGstRate / 2);
-  const sgstDisplayRate = interState
-    ? 0
-    : round2(weightedGstRate / 2);
+  const cgstDisplayRate = interState ? 0 : round2(weightedGstRate / 2);
+  const sgstDisplayRate = interState ? 0 : round2(weightedGstRate / 2);
   const igstDisplayRate = interState ? weightedGstRate : 0;
 
   return {
@@ -253,10 +229,7 @@ export function toPaise(amountInr: number): number {
 export const FREE_SHIPPING_THRESHOLD = 0;
 export const STANDARD_SHIPPING_CHARGE = 0;
 
-export function getShippingCharge(
-  _subtotal: number,
-  _discount: number
-): number {
+export function getShippingCharge(_subtotal: number, _discount: number): number {
   return 0;
 }
 

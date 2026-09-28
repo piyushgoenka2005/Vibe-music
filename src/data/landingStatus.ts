@@ -94,7 +94,7 @@ export const LANDING_SERVICE_STATUS = [
   {
     icon: "clock" as const,
     title: "In-stock dispatch",
-    desc: "Priced, in-stock gear ships from our warehouses",
+    desc: "In-stock gear dispatches within 1–2 business days",
     status: "On schedule",
     tone: "info" as StatusTone,
     href: ROUTES.search,

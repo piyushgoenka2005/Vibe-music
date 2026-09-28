@@ -1,4 +1,5 @@
 import { BRAND } from "@/lib/brand";
+import { DISPATCH_COPY, SUPPORT_HOURS_DETAIL } from "@/lib/brand/businessIdentity";
 import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 
 export interface ContentPage {
@@ -16,7 +17,8 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
     sections: [
       {
         paragraphs: [
-          "Vibe Music ships across India through trusted courier partners. Orders are packed securely and dispatched from our Maharashtra warehouse within 1–2 business days after payment confirmation.",
+          `Vibe Music ships across India through trusted courier partners from ${BRAND.address}. ${DISPATCH_COPY}`,
+          SUPPORT_HOURS_DETAIL,
         ],
       },
       {
@@ -115,6 +117,7 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
       {
         paragraphs: [
           "We respect your privacy and handle personal data in line with applicable Indian law and industry best practices.",
+          `${BRAND.legalName} operates vibemusic.in from ${BRAND.address}.`,
         ],
       },
       {

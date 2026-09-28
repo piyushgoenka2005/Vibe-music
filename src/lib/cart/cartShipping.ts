@@ -1,5 +1,6 @@
 import type { CartPromotionsPublic } from "@/lib/cart/cartPromotions";
 import { isFreeShippingUnlocked } from "@/lib/cart/promoGift";
+import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 import { formatDisplayPrice } from "@/utils/currency";
 
 export interface CartShippingState {
@@ -11,16 +12,16 @@ export interface CartShippingState {
 
 export function buildCartShippingState(
   paidSubtotal: number,
-  config: CartPromotionsPublic | null
+  config: CartPromotionsPublic | null,
 ): CartShippingState {
   // Match checkout: free shipping is the default storefront policy.
   const threshold = config?.freeShippingThreshold ?? 0;
   const unlocked = isFreeShippingUnlocked(paidSubtotal, threshold);
 
-  if (unlocked) {
+  if (unlocked || threshold <= 0) {
     return {
       unlocked: true,
-      label: "Free shipping unlocked",
+      label: SHIPPING_POLICY.cartBanner,
       detail: "Standard delivery · Dispatches in 1–2 business days",
       amountLabel: "FREE",
     };

@@ -5,7 +5,10 @@
 import { PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { DEFAULT_STORE_PHONE } from "../../src/lib/brand";
-import { CANONICAL_BUSINESS_ADDRESS } from "../../src/lib/brand/businessIdentity";
+import {
+  CANONICAL_BUSINESS_ADDRESS,
+  REGISTERED_BUSINESS_STATE,
+} from "../../src/lib/brand/businessIdentity";
 
 const prisma = new PrismaClient();
 
@@ -102,6 +105,22 @@ async function seedStoreSettings(): Promise<void> {
   if (gstin && !existing?.gstNumber?.trim()) {
     updateData.gstNumber = gstin;
   }
+  if (
+    !existing?.storeAddress?.trim() ||
+    /Maharashtra warehouse/i.test(existing.storeAddress) ||
+    existing.storeAddress !== CANONICAL_BUSINESS_ADDRESS
+  ) {
+    updateData.storeAddress = CANONICAL_BUSINESS_ADDRESS;
+  }
+  if (
+    !existing?.sellerState?.trim() ||
+    existing.sellerState === "Maharashtra"
+  ) {
+    updateData.sellerState = REGISTERED_BUSINESS_STATE;
+  }
+  if (existing?.freeShippingThreshold && existing.freeShippingThreshold > 0) {
+    updateData.freeShippingThreshold = 0;
+  }
 
   if (existing) {
     if (Object.keys(updateData).length > 1) {
@@ -130,7 +149,7 @@ async function seedStoreSettings(): Promise<void> {
       storeAddress: CANONICAL_BUSINESS_ADDRESS,
       gstNumber: gstin,
       defaultGstRate: 18,
-      sellerState: "West Bengal",
+      sellerState: REGISTERED_BUSINESS_STATE,
       freeShippingThreshold: 0,
       standardShippingCharge: 0,
       razorpayEnabled: true,

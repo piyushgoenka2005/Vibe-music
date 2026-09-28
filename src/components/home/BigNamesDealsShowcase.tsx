@@ -11,11 +11,11 @@ import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
 import { storefrontImageCandidates } from "@/lib/storefrontImages";
 
 const SHOWCASE_FALLBACKS = [
-  "/images/big-names-deals/gibson-product.webp",
-  "/images/big-names-deals/epiphone-product.webp",
-  "/images/big-names-deals/prs-product.webp",
-  "/images/big-names-deals/ibanez-product.webp",
-  "/images/big-names-deals/fender-product.webp",
+  "/images/Electric Orange Guitar.png",
+  "/images/m/home/cats/LPR59VOWCSNH.png",
+  "/images/m/home/cats/Matriarch.png",
+  "/images/m/home/cats/SM58-cat.png",
+  "/images/m/home/cats/ATLP120XUSBSV.png",
 ];
 /** Slightly snappier than a typical 3–4s carousel. */
 const AUTO_ADVANCE_MS = 2200;
@@ -61,9 +61,7 @@ function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: numb
   const candidates = useMemo(
     () =>
       Array.from(
-        new Set(
-          [...storefrontImageCandidates(item.product, 640), fallback].filter(Boolean),
-        ),
+        new Set([...storefrontImageCandidates(item.product, 640), fallback].filter(Boolean)),
       ),
     [item.product, fallback],
   );
