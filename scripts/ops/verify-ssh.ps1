@@ -6,7 +6,7 @@
 
 param(
     [string]$User = "root",
-    [string]$VpsHost = "87.232.72.14",
+    [string]$VpsHost = "31.42.125.219",
     [int]$Port = 22
 )
 

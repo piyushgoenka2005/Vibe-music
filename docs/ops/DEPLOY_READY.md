@@ -6,6 +6,40 @@ Companion: [DEPLOYMENT.md](./DEPLOYMENT.md) · [GO_LIVE.md](./GO_LIVE.md) · [GO
 
 ---
 
+## EMERGENCY — site down / images missing (VPS IP changed)
+
+**Current VPS IP:** `31.42.125.219` (hostname `mail.vibemusic.in`). The old IP `87.232.72.14` is dead.
+
+### 1. Update DNS (required — site will not load until this propagates)
+
+At your DNS provider (Bittel / CloudOnFire DNS), set **A records** → `31.42.125.219`:
+
+| Host                 | Type       | Value                             |
+| -------------------- | ---------- | --------------------------------- |
+| `@` (`vibemusic.in`) | A          | `31.42.125.219`                   |
+| `www`                | A or CNAME | `31.42.125.219` or `vibemusic.in` |
+| `cdn`                | A          | `31.42.125.219`                   |
+
+Verify: `nslookup vibemusic.in` and `nslookup cdn.vibemusic.in` should return `31.42.125.219`.
+
+### 2. Deploy on the VPS (SSH or Serial Console as root)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/piyushgoenka2005/Vibe-music/main/deploy/now.sh | bash
+```
+
+First deploy on a fresh VPS may take 10–20 minutes (npm ci + `next build`). Keep the session open.
+
+### 3. GitHub Actions secret
+
+Repo → Settings → Secrets → `VPS_HOST` = `31.42.125.219`.
+
+### 4. CDN files
+
+Product images live under `/var/www/cdn` on the VPS. If missing after migrate, restore from backup or run `npm run sync:cdn-vps` from a machine that has `.data/cdn/products`.
+
+---
+
 ## 0. Preflight (local or CI)
 
 ```bash

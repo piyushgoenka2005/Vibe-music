@@ -1,6 +1,6 @@
 # VPS setup (vibemusic.in)
 
-Server: `root@87.232.72.14`  
+Server: `root@31.42.125.219`  
 App path: `~/Vibe-music`  
 PM2 app: `vibe`
 
@@ -95,7 +95,7 @@ Add to `%USERPROFILE%\.ssh\config`:
 
 ```
 Host vibe-vps
-  HostName 87.232.72.14
+  HostName 31.42.125.219
   User root
   IdentityFile ~/.ssh/id_ed25519_vibe
   IdentitiesOnly yes
@@ -105,13 +105,13 @@ Then: `ssh vibe-vps`
 
 ## What hardening enables
 
-| Item | Config |
-|------|--------|
-| Firewall | UFW: allow 22, 80, 443 only |
-| SSH | Key auth; optional password disable |
-| fail2ban | 5 tries / 10 min → 1 h ban |
-| PM2 | Survives reboot |
-| Updates | Unattended security upgrades |
+| Item       | Config                                |
+| ---------- | ------------------------------------- |
+| Firewall   | UFW: allow 22, 80, 443 only           |
+| SSH        | Key auth; optional password disable   |
+| fail2ban   | 5 tries / 10 min → 1 h ban            |
+| PM2        | Survives reboot                       |
+| Updates    | Unattended security upgrades          |
 | PostgreSQL | localhost only — not exposed publicly |
 
 Never commit `.env`, passwords, or private keys to git.

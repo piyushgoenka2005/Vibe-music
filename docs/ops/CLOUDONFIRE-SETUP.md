@@ -81,12 +81,12 @@ cd ~/Vibe-music && node scripts/ops/merge-ops-secrets.mjs && bash deploy/update.
 
 ## Step 5 — DNS
 
-Point **vibemusic.in** to the VPS IPv4:
+Point **vibemusic.in**, **www**, and **cdn** to the VPS IPv4 (`31.42.125.219` as of Sep 2026):
 
-| Where DNS lives                  | Action                                                 |
-| -------------------------------- | ------------------------------------------------------ |
-| CloudOnFire → **DNS Management** | Add zone `vibemusic.in`, A record `@` → VPS IP         |
-| External registrar               | Set nameservers to Cloudflare **or** A record → VPS IP |
+| Where DNS lives                  | Action                                         |
+| -------------------------------- | ---------------------------------------------- |
+| CloudOnFire → **DNS Management** | A records: `@`, `www`, `cdn` → VPS IP          |
+| External registrar (e.g. Bittel) | A records: `@`, `www`, `cdn` → `31.42.125.219` |
 
 **For L-22 (WAF/CDN):** use **Cloudflare** orange-cloud proxy in front of the VPS IP (see [`deploy/cloudflare/README.md`](../../deploy/cloudflare/README.md)).
 

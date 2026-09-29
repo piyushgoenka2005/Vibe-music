@@ -1,11 +1,11 @@
 # Sync locally staged CDN files to the VPS static root.
 # Usage (PowerShell, from project root):
 #   .\scripts\ops\sync-cdn-to-vps.ps1
-#   $env:VPS_HOST = "root@87.232.72.14"; .\scripts\ops\sync-cdn-to-vps.ps1
+#   $env:VPS_HOST = "root@31.42.125.219"; .\scripts\ops\sync-cdn-to-vps.ps1
 param(
   [string]$Source = (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) ".data\cdn"),
   [string]$Target = "/var/www/cdn",
-  [string]$VpsHost = $(if ($env:VPS_HOST) { $env:VPS_HOST } else { "root@87.232.72.14" })
+  [string]$VpsHost = $(if ($env:VPS_HOST) { $env:VPS_HOST } else { "root@31.42.125.219" })
 )
 
 $Source = (Resolve-Path $Source -ErrorAction Stop).Path
