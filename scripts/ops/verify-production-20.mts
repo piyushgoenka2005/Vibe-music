@@ -76,6 +76,6 @@ console.error(`✗ ${failed.length} gate(s) failed — certification incomplete.
 console.log(`
 VPS one-shot:
   cd ~/Vibe-music && git pull origin main && bash deploy/certify-production.sh
-  CLOUDFLARE_ONLY=1 bash deploy/certify-production.sh
+  LOCKDOWN_UFW=1 bash deploy/certify-production.sh
 `);
 process.exit(1);

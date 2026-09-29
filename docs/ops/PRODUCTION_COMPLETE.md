@@ -44,8 +44,8 @@ nano deploy/ops-secrets.env
 # 2. Full certification
 bash deploy/certify-production.sh
 
-# 3. After Cloudflare proxied (orange cloud) + cf-ray visible:
-CLOUDFLARE_ONLY=1 bash deploy/certify-production.sh
+# 3. After DNS points to CloudOnFire VPS:
+LOCKDOWN_UFW=1 bash deploy/certify-production.sh
 ```
 
 ---
@@ -60,8 +60,8 @@ VERIFY_BASE_URL=https://vibemusic.in npm run check:edge
 
 | Check          | Pass criteria                                                   |
 | -------------- | --------------------------------------------------------------- |
-| **L-22 CDN**   | `cf-ray` header on homepage                                     |
-| **L-23 UFW**   | `sudo ufw status` — Cloudflare IPs only on 80/443               |
+| **L-22 edge**  | `npm run check:edge` — HSTS + CSP on homepage                   |
+| **L-23 UFW**   | `sudo ufw status` — SSH + nginx on 80/443                       |
 | **L-30 GSTIN** | `GSTIN: 19…` in homepage HTML footer                            |
 | **Shipping**   | “Free shipping on every order” (no threshold copy)              |
 | **Address**    | Room 303, Kolkata in footer + contact                           |

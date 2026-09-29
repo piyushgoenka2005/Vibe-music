@@ -21,8 +21,8 @@ Each criterion scores **1 point** when fully met in production (or verified in C
 | 12  | Performance | CWV / Lighthouse gates (L-14)                       | `check:cwv` + weekly `lighthouse.yml`                       | **1** |
 | 13  | UX / A11y   | Accessible marquee + product cards (L-01/L-12)      | `Marquee.test.tsx`, `DealProductCard.test.tsx`              | **1** |
 | 14  | SEO         | robots + sitemap + product JSON-LD (L-09/L-10)      | `robots.ts`, `sitemap.ts`, `productJsonLd.test.ts`          | **1** |
-| 15  | Infra       | CDN/WAF in front of origin (L-22)                   | `npm run check:edge` → **cf-ray** on live site              | **0** |
-| 16  | Infra       | Origin firewall Cloudflare-only (L-23)              | `deploy/cloudflare-ufw.sh` after L-22                       | **0** |
+| 15  | Infra       | nginx TLS + security headers on CloudOnFire (L-22)  | `npm run check:edge` → HSTS + CSP on live site              | **0** |
+| 16  | Infra       | Origin firewall SSH + nginx (L-23)                  | `deploy/vps-firewall.sh` after L-22                         | **0** |
 | 17  | Ops         | Health + synthetic checkout monitor                 | `monitor:checkout` + `.github/workflows/maintenance.yml`    | **1** |
 | 18  | Ops         | Backups + DR runbook (L-28)                         | `deploy/crontab.backups.example` + `DISASTER_RECOVERY.md`   | **1** |
 | 19  | Compliance  | Analytics consent before GA4 funnel (L-29)          | `gtag.test.ts`; no events without consent                   | **1** |
@@ -52,11 +52,11 @@ Each criterion scores **1 point** when fully met in production (or verified in C
 ```bash
 # One-shot (recommended)
 cd ~/Vibe-music && bash deploy/certify-production.sh
-CLOUDFLARE_ONLY=1 bash deploy/certify-production.sh   # after cf-ray is live
+LOCKDOWN_UFW=1 bash deploy/certify-production.sh
 
 # Or step-by-step:
 VERIFY_BASE_URL=https://vibemusic.in npm run check:edge
-sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh
+sudo LOCKDOWN_UFW=1 bash deploy/complete-audit-go-live.sh
 REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 ```
 

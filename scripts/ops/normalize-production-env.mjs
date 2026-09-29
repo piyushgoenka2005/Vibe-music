@@ -2,7 +2,7 @@
 /**
  * Normalize production .env on the VPS (safe, idempotent).
  * - Replaces legacy store phone with canonical 8910482950
- * - Ensures TRUST_PROXY_HOPS=1 behind nginx/Cloudflare
+ * - Ensures TRUST_PROXY_HOPS=1 behind nginx on CloudOnFire VPS
  *
  * Usage: node scripts/ops/normalize-production-env.mjs
  */

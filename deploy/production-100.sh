@@ -6,8 +6,8 @@
 # Non-interactive (set your real 15-char West Bengal GSTIN for Sikkim Commerce House):
 #   NEXT_PUBLIC_GSTIN=19XXXXXXXXXXXXX bash deploy/production-100.sh
 #
-# After Cloudflare orange-cloud DNS:
-#   CLOUDFLARE_ONLY=1 NEXT_PUBLIC_GSTIN=19XXXXXXXXXXXXX bash deploy/production-100.sh
+# With UFW lockdown:
+#   LOCKDOWN_UFW=1 NEXT_PUBLIC_GSTIN=19XXXXXXXXXXXXX bash deploy/production-100.sh
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
@@ -50,8 +50,8 @@ echo ""
 echo "▶ Final certification (from VPS)"
 VERIFY_BASE_URL="${VERIFY_BASE_URL:-https://vibemusic.in}" npm run verify:production-20 || {
   echo ""
-  echo "If Phase 10 failed: enable Cloudflare orange-cloud, then:"
-  echo "  CLOUDFLARE_ONLY=1 bash deploy/production-100.sh"
+  echo "If Phase 10 failed: verify CloudOnFire DNS + nginx, then:"
+  echo "  LOCKDOWN_UFW=1 bash deploy/production-100.sh"
   exit 1
 }
 

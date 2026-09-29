@@ -133,11 +133,8 @@ if command -v nginx >/dev/null 2>&1; then
     cp deploy/nginx/cdn.vibemusic.in.conf /etc/nginx/sites-available/cdn.vibemusic.in
     ln -sf /etc/nginx/sites-available/cdn.vibemusic.in /etc/nginx/sites-enabled/cdn.vibemusic.in 2>/dev/null || true
   fi
-  if [[ -f deploy/nginx/cloudflare-real-ip.conf ]]; then
-    install -d /etc/nginx/conf.d
-    cp deploy/nginx/cloudflare-real-ip.conf /etc/nginx/conf.d/cloudflare-real-ip.conf
-    echo "    synced cloudflare-real-ip.conf (L-22)"
-  fi
+  # Remove legacy Cloudflare real-IP config if present (stack is CloudOnFire direct).
+  rm -f /etc/nginx/conf.d/cloudflare-real-ip.conf 2>/dev/null || true
   if [[ -f /etc/nginx/sites-available/vibemusic.in ]] || [[ -f /etc/nginx/sites-available/cdn.vibemusic.in ]]; then
     nginx -t
     if command -v systemctl >/dev/null 2>&1; then

@@ -52,8 +52,8 @@ const failedOptional = results.filter((row) => !row.blocking && row.code !== 0);
 
 console.log("\n───────────────────────────────────────────────────────────");
 console.log("Operator-only (not verifiable from repo):");
-console.log("  • Cloudflare proxied DNS + cf-ray (L-22)");
-console.log("  • UFW Cloudflare-only origin lockdown (L-23)");
+console.log("  • CloudOnFire DNS → VPS IP + nginx TLS (L-22)");
+console.log("  • UFW SSH + nginx lockdown (L-23) — deploy/vps-firewall.sh");
 console.log("  • NEXT_PUBLIC_GSTIN on production VPS + rebuild (L-30)");
 console.log("  • Optional channels: MSG91, WhatsApp Cloud, VAPID, Crisp, Upstash");
 console.log("  • Upload gear-story MP4s to CDN or public/videos/style-story/");

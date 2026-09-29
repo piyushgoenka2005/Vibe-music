@@ -72,15 +72,16 @@ Admin → Settings → GST number also works without rebuild (SSR from store set
 
 ## Edge security (Phase 10)
 
-After Cloudflare orange-cloud DNS is active:
+After CloudOnFire DNS points to the VPS:
 
 ```bash
 npm run verify:phase10
-sudo CLOUDFLARE_ONLY=1 bash deploy/phase10-edge-handoff.sh
+sudo bash deploy/vps-firewall.sh
+LOCKDOWN_UFW=1 bash deploy/phase10-edge-handoff.sh
 REQUIRE_CDN_EDGE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 ```
 
-Guide: `deploy/cloudflare/README.md` · `docs/ops/ORIGIN_IP_PROTECTION.md`
+Guide: `docs/ops/CLOUDONFIRE-SETUP.md` · `docs/ops/ORIGIN_IP_PROTECTION.md`
 
 ## Optional services
 

@@ -2,7 +2,7 @@
 # One-shot audit go-live: L-22, L-23, L-30 + full deploy (run on VPS as root).
 #
 # Prerequisites:
-#   1. Cloudflare: vibemusic.in proxied (orange cloud) — see deploy/cloudflare/README.md
+#   1. CloudOnFire VPS online — see docs/ops/CLOUDONFIRE-SETUP.md
 #   2. deploy/ops-secrets.env filled (legal name, GSTIN, GA4, phone)
 #
 # Usage:
@@ -10,8 +10,8 @@
 #   nano deploy/ops-secrets.env
 #   sudo bash deploy/complete-audit-go-live.sh
 #
-# After Cloudflare is live:
-#   sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh
+# Optional UFW lockdown:
+#   sudo LOCKDOWN_UFW=1 bash deploy/complete-audit-go-live.sh
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
@@ -38,7 +38,7 @@ ensure_env() {
   echo "   + appended ${key}"
 }
 
-# L-30 + L-22 proxy trust (safe defaults when behind nginx/Cloudflare)
+# L-30 + nginx reverse proxy trust
 ensure_env "TRUST_PROXY_HOPS" "1"
 
 if ! grep -q "^NEXT_PUBLIC_LEGAL_ENTITY_NAME=.\+" .env 2>/dev/null; then
@@ -56,19 +56,19 @@ echo ""
 echo "▶ Seed store settings (phone, GSTIN from env)"
 npx tsx --env-file=.env scripts/ops/seed-production-ops.mts || true
 
-if [ "${CLOUDFLARE_ONLY:-0}" = "1" ]; then
+if [ "${LOCKDOWN_UFW:-0}" = "1" ]; then
   echo ""
-  echo "▶ L-23 — Lock origin firewall to Cloudflare IPs"
-  bash deploy/cloudflare-ufw.sh
+  echo "▶ L-23 — CloudOnFire VPS firewall (UFW)"
+  bash deploy/vps-firewall.sh
 fi
 
 echo ""
-echo "▶ L-22 — Edge header check"
+echo "▶ L-22 — Production edge check"
 if VERIFY_BASE_URL=https://vibemusic.in npm run check:edge; then
-  echo "   ✅ CDN/WAF edge detected"
+  echo "   ✅ nginx TLS + CDN host reachable"
 else
-  echo "   ⚠️  No cf-ray yet — complete Cloudflare setup (deploy/cloudflare/README.md)"
-  echo "   Then re-run: sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh"
+  echo "   ⚠️  Edge check failed — verify DNS and docs/ops/CLOUDONFIRE-SETUP.md"
+  echo "   Then re-run: sudo bash deploy/complete-audit-go-live.sh"
 fi
 
 echo ""
@@ -82,11 +82,11 @@ fi
 
 if [ "${REQUIRE_CDN_EDGE:-0}" = "1" ]; then
   echo ""
-  echo "▶ Strict CDN gate (REQUIRE_CDN_EDGE=true)"
+  echo "▶ Strict production edge gate (REQUIRE_CDN_EDGE=true)"
   REQUIRE_CDN_EDGE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 fi
 
 echo ""
 echo "✅ Audit go-live script complete."
-echo "   Optional: REQUIRE_CDN_EDGE=1 sudo bash deploy/complete-audit-go-live.sh"
+echo "   Optional: LOCKDOWN_UFW=1 sudo bash deploy/complete-audit-go-live.sh"
 echo ""

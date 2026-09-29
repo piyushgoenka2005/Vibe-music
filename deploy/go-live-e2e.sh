@@ -6,8 +6,8 @@
 # Non-interactive (set your real 15-char GSTIN):
 #   NEXT_PUBLIC_GSTIN=19XXXXXXXXXXXXX bash deploy/go-live-e2e.sh
 #
-# After Cloudflare orange-cloud DNS:
-#   CLOUDFLARE_ONLY=1 bash deploy/go-live-e2e.sh
+# Optional UFW lockdown:
+#   LOCKDOWN_UFW=1 bash deploy/go-live-e2e.sh
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
@@ -40,13 +40,13 @@ bash deploy/install-deploy-key.sh 2>/dev/null || {
 echo ""
 
 echo "▶ 5/6 — Edge security (L-22 / L-23)"
-if [[ "${CLOUDFLARE_ONLY:-0}" == "1" ]]; then
-  sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh
+if [[ "${LOCKDOWN_UFW:-0}" == "1" ]]; then
+  sudo LOCKDOWN_UFW=1 bash deploy/complete-audit-go-live.sh
 else
   bash deploy/complete-audit-go-live.sh || {
     echo ""
-    echo "   ℹ Cloudflare not live yet — site works at 17–18/20 without edge."
-    echo "   After orange-cloud DNS: CLOUDFLARE_ONLY=1 bash deploy/go-live-e2e.sh"
+    echo "   ℹ Edge checks failed — verify DNS + nginx per docs/ops/CLOUDONFIRE-SETUP.md"
+    echo "   Optional: LOCKDOWN_UFW=1 bash deploy/go-live-e2e.sh"
   }
 fi
 echo ""
@@ -59,5 +59,5 @@ VERIFY_BASE_URL="$BASE" npm run verify:production-20 || true
 echo ""
 echo "═══════════════════════════════════════════════════════════"
 echo "  Go-live complete — check verify:production-20 above."
-echo "  Target 20/20: GSTIN live + Cloudflare proxied + UFW lockdown."
+echo "  Target 20/20: GSTIN live + CloudOnFire DNS + nginx edge."
 echo "═══════════════════════════════════════════════════════════"

@@ -1,77 +1,72 @@
 # CloudOnFire VPS setup (vibemusic.in)
 
 **Panel:** [cp.cloudonfire.com](https://cp.cloudonfire.com) (Virtualizor)  
-**App:** Next.js + PostgreSQL + PM2 — same as [`VPS-SETUP.md`](./VPS-SETUP.md), steps below are CloudOnFire-specific.
+**Stack:** Ubuntu VPS + nginx + PM2 + PostgreSQL + static CDN on the same host — no third-party CDN/WAF proxy.
+
+Companion: [`VPS-SETUP.md`](./VPS-SETUP.md) · [`DEPLOY_READY.md`](./DEPLOY_READY.md)
 
 ---
 
-## Current blocker
+## Current VPS
 
-If the dashboard shows **"Your VPS is still pending setup"** or **0 Running VPS**, the server is not online yet. Nothing in GitHub or the repo can deploy until this is finished.
+| Item          | Value               |
+| ------------- | ------------------- |
+| Provider      | CloudOnFire         |
+| IP (Sep 2026) | `31.42.125.219`     |
+| Hostname      | `mail.vibemusic.in` |
 
 ---
 
 ## Step 1 — Finish VPS provisioning
 
-1. Log in to **CloudOnFire** → **Compute** → **List VPS** (or **Launch VPS**).
-2. Complete **Awaiting Setup** / **Complete Setup** for your VPS.
+1. Log in to **CloudOnFire** → **Compute** → **List VPS**.
+2. Complete setup if status is **Awaiting Setup**.
 3. Recommended settings:
 
-| Setting  | Value                                                   |
-| -------- | ------------------------------------------------------- |
-| OS       | **Ubuntu 22.04 LTS** or **24.04 LTS**                   |
-| Hostname | `vibemusic` (or your choice)                            |
-| Auth     | **SSH Keys** — upload `vibe_vps_deploy.pub` (see below) |
-| RAM      | ≥ 2 GB (4 GB+ recommended for build + Postgres)         |
-| Disk     | ≥ 40 GB                                                 |
+| Setting  | Value                                       |
+| -------- | ------------------------------------------- |
+| OS       | **Ubuntu 22.04 LTS** or **24.04 LTS**       |
+| Hostname | `vibemusic`                                 |
+| Auth     | **SSH Keys** — upload `vibe_vps_deploy.pub` |
+| RAM      | ≥ 4 GB (for `next build` + Postgres)        |
+| Disk     | ≥ 40 GB                                     |
 
-4. Wait until status is **Online** and you have a **public IPv4** (note it for DNS).
-
-**Generate/upload SSH key (local machine):**
+4. Wait until status is **Online** and note the **public IPv4**.
 
 ```powershell
-# If you already have the deploy key from Phase 8:
 Get-Content $env:USERPROFILE\.ssh\vibe_vps_deploy.pub
 ```
-
-Paste the public key in CloudOnFire → **SSH Keys** → **Add SSH Key**, then attach it when launching/completing the VPS.
 
 ---
 
 ## Step 2 — First login
 
-Use one of:
-
-- **SSH** (once online): `ssh root@<VPS_IP>`
-- **Serial Console** or **VNC** in the panel (if SSH not ready yet)
+- **SSH:** `ssh root@<VPS_IP>`
+- **Serial Console / VNC** in the CloudOnFire panel if SSH is not ready
 
 ---
 
-## Step 3 — Bootstrap the app (one paste)
+## Step 3 — Bootstrap (one paste)
 
-In the **web console as root** (Serial Console works):
+```bash
+curl -fsSL https://raw.githubusercontent.com/piyushgoenka2005/Vibe-music/main/deploy/now.sh | bash
+```
+
+Or full go-live:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/piyushgoenka2005/Vibe-music/main/deploy/vps-console-go-live.sh | bash
 ```
 
-When prompted, enter your **real 15-character GSTIN** (L-30).
-
-This installs the GitHub deploy key, clones `Vibe-music`, merges secrets, runs migrations, builds, and starts PM2.
-
 ---
 
 ## Step 4 — Secrets
-
-Edit on the VPS (never commit):
 
 ```bash
 nano ~/Vibe-music/deploy/ops-secrets.env
 ```
 
-Required: `DATABASE_URL`, `AUTH_SECRET`, Razorpay live keys, `GUEST_ORDER_ACCESS_SECRET`, SMTP, `UPSTASH_REDIS_*`.
-
-Then:
+Required: `DATABASE_URL`, `AUTH_SECRET`, Razorpay live keys, `GUEST_ORDER_ACCESS_SECRET`, SMTP, `UPSTASH_REDIS_*`, `CDN_STORAGE_ROOT`, `CDN_PUBLIC_BASE_URL`.
 
 ```bash
 cd ~/Vibe-music && node scripts/ops/merge-ops-secrets.mjs && bash deploy/update.sh
@@ -79,79 +74,91 @@ cd ~/Vibe-music && node scripts/ops/merge-ops-secrets.mjs && bash deploy/update.
 
 ---
 
-## Step 5 — DNS
+## Step 5 — DNS (direct to VPS — no Cloudflare)
 
-Point **vibemusic.in**, **www**, and **cdn** to the VPS IPv4 (`31.42.125.219` as of Sep 2026):
+Point **vibemusic.in**, **www**, and **cdn** A records to the CloudOnFire VPS IP:
 
-| Where DNS lives                  | Action                                         |
-| -------------------------------- | ---------------------------------------------- |
-| CloudOnFire → **DNS Management** | A records: `@`, `www`, `cdn` → VPS IP          |
-| External registrar (e.g. Bittel) | A records: `@`, `www`, `cdn` → `31.42.125.219` |
+| Host  | Type | Value      |
+| ----- | ---- | ---------- |
+| `@`   | A    | `<VPS_IP>` |
+| `www` | A    | `<VPS_IP>` |
+| `cdn` | A    | `<VPS_IP>` |
 
-**For L-22 (WAF/CDN):** use **Cloudflare** orange-cloud proxy in front of the VPS IP (see [`deploy/cloudflare/README.md`](../../deploy/cloudflare/README.md)).
+Verify:
+
+```bash
+nslookup vibemusic.in
+nslookup cdn.vibemusic.in
+```
 
 ---
 
-## Step 6 — CloudOnFire firewall (optional pre-Cloudflare)
+## Step 6 — Firewall
 
-Panel → **Firewall** → create a plan:
+**CloudOnFire panel** → **Firewall** (optional layer):
 
-- **IN** TCP 22 (SSH) — your IP only if possible
+- **IN** TCP 22 — your IP if possible
 - **IN** TCP 80, 443 — `0.0.0.0/0`
-- Default policy **DROP**
+- Default **DROP**
 
-After Cloudflare is live, run on the VPS for L-23:
+**On the VPS** (recommended):
 
 ```bash
-sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh
+sudo bash deploy/vps-firewall.sh
+# Restrict SSH to your IP:
+sudo ADMIN_SSH_IP=203.0.113.10 bash deploy/vps-firewall.sh
 ```
+
+Node listens on `127.0.0.1:3000` only — never expose port 3000 publicly.
 
 ---
 
-## Razorpay checkout stuck loading?
-
-If the Razorpay modal spins forever, the VPS likely has **duplicate CSP headers** (nginx + Next.js). After `git pull`:
+## Step 7 — Verify
 
 ```bash
-sudo cp ~/Vibe-music/deploy/nginx/vibemusic.in.conf /etc/nginx/sites-available/vibemusic.in
-sudo nginx -t && sudo systemctl reload nginx
-cd ~/Vibe-music && bash deploy/update.sh
-```
-
-Also confirm **vibemusic.in** is whitelisted in the [Razorpay Dashboard](https://dashboard.razorpay.com) → Settings → Website / App details (Live mode).
-
----
-
-## Step 7 — Verify (from your PC)
-
-```bash
-VERIFY_BASE_URL=https://vibemusic.in npm run phase8:status
+VERIFY_BASE_URL=https://vibemusic.in npm run check:edge
 VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
-REQUIRE_COMPLIANCE=true REQUIRE_CDN_EDGE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
+```
+
+On the VPS:
+
+```bash
+bash deploy/post-deploy-smoke.sh
+BASE_URL=https://vibemusic.in bash deploy/post-deploy-smoke.sh
 ```
 
 ---
 
-## GitHub Actions deploy (optional)
+## GitHub Actions deploy
 
-After Step 3, add GitHub repo secret:
-
-- **Name:** `VPS_SSH_KEY`
-- **Value:** contents of `~/.ssh/vibe_vps_deploy` (private key)
-
+Repo secret `VPS_HOST` = CloudOnFire VPS IP.  
 Workflow: `.github/workflows/deploy-production.yml`
 
 ---
 
-## Do not use (for this app)
+## Product images (CDN)
 
-- **Docker** tab in CloudOnFire — app is designed for PM2 + native Node on Ubuntu
-- **LAMP/cPanel/Webuzo** one-click stacks — wrong stack for Next.js 16
-- **Development License** Virtualizor banner — contact CloudOnFire support if production panel shows dev license warnings
+Images are served from `https://cdn.vibemusic.in` (nginx static root `/var/www/cdn`).
+
+`deploy/update.sh` syncs both `vibemusic.in` and `cdn.vibemusic.in` nginx configs.
+
+If images are missing after migration, restore from backup:
+
+```bash
+ls /var/backups/vibe/cdn-backup-*.tar.gz
+```
 
 ---
 
-## Support contacts
+## Do not use
 
-- **CloudOnFire / VPS:** panel → Support
-- **App deploy issues:** [`PHASE8_PRODUCTION_DEPLOY.md`](./PHASE8_PRODUCTION_DEPLOY.md)
+- **Docker** tab — app uses PM2 + native Node
+- **LAMP/cPanel stacks** — wrong stack for Next.js
+- **Cloudflare proxy** — not part of this deployment; DNS points directly to CloudOnFire
+
+---
+
+## Support
+
+- **CloudOnFire VPS:** panel → Support
+- **App deploy:** [`PHASE8_PRODUCTION_DEPLOY.md`](./PHASE8_PRODUCTION_DEPLOY.md)

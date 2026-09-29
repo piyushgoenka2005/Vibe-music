@@ -288,7 +288,7 @@ if (
   productionMisconfig = true;
 }
 if (/vibemusic\.in/i.test(siteUrl) && env.TRUST_PROXY_HOPS?.trim() !== "1") {
-  const msg = "TRUST_PROXY_HOPS should be 1 behind nginx/Cloudflare on production.";
+  const msg = "TRUST_PROXY_HOPS should be 1 behind nginx on the CloudOnFire VPS.";
   if (strictCompliance) {
     console.log(`BLOCKING (L-22): ${msg}`);
     productionMisconfig = true;

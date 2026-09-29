@@ -1,23 +1,25 @@
-# Origin IP protection (L-23)
+# Origin IP protection (L-23) — CloudOnFire
 
-CDN/WAF (L-22) only protects traffic that actually goes through the edge. If the VPS origin IP is discoverable, attackers can bypass Cloudflare.
+Traffic goes **directly** from the internet to the CloudOnFire VPS (no Cloudflare proxy). Protect the origin with:
 
-## Verify exposure
+1. **CloudOnFire panel firewall** — allow 22 (SSH, your IP), 80, 443; drop everything else.
+2. **UFW on the VPS** — `sudo bash deploy/vps-firewall.sh`
+3. **Node not exposed** — PM2 binds `127.0.0.1:3000`; only nginx is public on 80/443.
+4. **fail2ban** — installed by `deploy/vps-hardening.sh` for SSH brute-force protection.
 
-1. Check current DNS: `dig +short vibemusic.in A`
-2. Review historical DNS (SecurityTrails, ViewDNS) for bare VPS IPs.
-3. Compare with Cloudflare proxy IPs — if they match your VPS, DNS is not proxied.
+## Verify
 
-## Remediation
+```bash
+# From your PC
+VERIFY_BASE_URL=https://vibemusic.in npm run verify:phase10
 
-1. Enable **orange-cloud (proxied)** DNS for `vibemusic.in` and `www`.
-2. **Rotate** the VPS public IP if it was ever exposed directly.
-3. **Firewall** the origin (UFW / cloud security group):
-   - Allow `80`/`443` only from [Cloudflare IP ranges](https://www.cloudflare.com/ips/).
-   - Allow SSH only from your admin IP.
-4. Re-run `npm run check:edge` — expect `cf-ray` on responses.
+# On VPS
+sudo ufw status verbose
+```
 
-## Ongoing
+## DNS hygiene
 
-- Never publish the origin IP in docs, emails, or MX records pointing at the app server.
-- Use a separate mail host or transactional provider (Resend/SMTP) — not the storefront VPS.
+- Do not publish alternate A records to old/dead VPS IPs.
+- After IP changes, update `@`, `www`, and `cdn` together.
+
+See [`CLOUDONFIRE-SETUP.md`](./CLOUDONFIRE-SETUP.md).

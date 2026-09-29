@@ -145,12 +145,12 @@ fi
 
 echo ""
 echo ""
-echo "▶ Audit edge (L-22) — optional until Cloudflare is proxied"
+echo "▶ Production edge (L-22) — CloudOnFire VPS + nginx"
 if VERIFY_BASE_URL=https://vibemusic.in npm run check:edge 2>/dev/null; then
-  echo "   ✅ CDN edge active"
+  echo "   ✅ nginx TLS + security headers OK"
 else
-  echo "   ⚠️  No cf-ray — complete deploy/cloudflare/README.md then:"
-  echo "      sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh"
+  echo "   ⚠️  Edge check failed — see docs/ops/CLOUDONFIRE-SETUP.md"
+  echo "      sudo bash deploy/complete-audit-go-live.sh"
 fi
 
 echo ""

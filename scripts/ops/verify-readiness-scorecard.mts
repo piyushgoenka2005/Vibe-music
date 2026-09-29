@@ -28,13 +28,20 @@ async function fetchHome(): Promise<{ status: number; html: string; headers: Hea
     points: 1,
   });
 
-  const edgeHeader = ["cf-ray", "x-vercel-id", "x-amz-cf-id", "cf-cache-status"].find((h) =>
-    home.headers.get(h),
-  );
+  const hsts = home.headers.get("strict-transport-security") ?? "";
+  const csp = home.headers.get("content-security-policy") ?? "";
+  const nosniff = home.headers.get("x-content-type-options") ?? "";
+  const edgeOk =
+    home.status === 200 &&
+    hsts.includes("max-age=") &&
+    csp.includes("default-src") &&
+    nosniff.toLowerCase() === "nosniff";
   probes.push({
-    name: "L-22 CDN edge marker",
-    ok: Boolean(edgeHeader),
-    detail: edgeHeader ? `${edgeHeader}=${home.headers.get(edgeHeader)}` : "no cf-ray",
+    name: "L-22 production edge (nginx TLS)",
+    ok: edgeOk,
+    detail: edgeOk
+      ? `server=${home.headers.get("server") ?? "nginx"}`
+      : "missing HSTS/CSP/nosniff",
     points: 1,
   });
 }

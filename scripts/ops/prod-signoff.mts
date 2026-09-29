@@ -250,15 +250,22 @@ const checks: Check[] = [];
     blocking: true,
   });
 
-  const edgeMarkers = ["cf-ray", "x-vercel-id", "x-amz-cf-id", "cf-cache-status"];
-  const edgeHit = edgeMarkers.some((name) => response.headers.get(name));
+  const hsts = response.headers.get("strict-transport-security") ?? "";
+  const csp = response.headers.get("content-security-policy") ?? "";
+  const nosniff = response.headers.get("x-content-type-options") ?? "";
+  const server = response.headers.get("server") ?? "unknown";
+  const productionEdgeOk =
+    response.status === 200 &&
+    hsts.includes("max-age=") &&
+    csp.includes("default-src") &&
+    nosniff.toLowerCase() === "nosniff";
   const requireCdn = process.env.REQUIRE_CDN_EDGE === "true";
   checks.push({
-    name: "cdn-edge",
-    ok: edgeHit,
-    detail: edgeHit
-      ? `edge marker present (${edgeMarkers.find((name) => response.headers.get(name)) ?? "ok"})`
-      : "no cf-ray / x-vercel-id — origin may be exposed (see docs/ops/CDN_WAF_EDGE_CHECKLIST.md)",
+    name: "production-edge",
+    ok: productionEdgeOk,
+    detail: productionEdgeOk
+      ? `nginx TLS + security headers (server=${server})`
+      : "missing HSTS/CSP/nosniff or non-200 homepage (see docs/ops/CLOUDONFIRE-SETUP.md)",
     blocking: requireCdn,
   });
 }

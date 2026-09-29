@@ -49,7 +49,7 @@ if (VERIFY_BASE_URL) {
 
   edgeCode = run("Edge security (Phase 10)", "npm", ["run", "verify:phase10"]);
   if (edgeCode !== 0) {
-    console.log("\nℹ L-22/L-23: Cloudflare + UFW — see docs/ops/PHASE10_EDGE_SECURITY.md");
+    console.log("\nℹ L-22/L-23: CloudOnFire nginx + UFW — see docs/ops/PHASE10_EDGE_SECURITY.md");
   }
   complianceCode = run("Compliance live (Phase 9)", "npm", ["run", "verify:phase9"]);
   if (complianceCode !== 0) {
@@ -68,7 +68,7 @@ console.log("Then GitHub secret VPS_SSH_KEY → Actions → Deploy production");
 console.log("Or on VPS:");
 console.log("  cd ~/Vibe-music && git pull origin main && bash deploy/update.sh");
 console.log("  bash deploy/certify-production.sh");
-console.log("  CLOUDFLARE_ONLY=1 bash deploy/certify-production.sh");
+console.log("  LOCKDOWN_UFW=1 bash deploy/certify-production.sh");
 console.log("───────────────────────────────────────────────────────────\n");
 
 const failed = [repoCode, deployCode, liveCode, edgeCode, complianceCode].filter(
