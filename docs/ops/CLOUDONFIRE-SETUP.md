@@ -74,9 +74,9 @@ cd ~/Vibe-music && node scripts/ops/merge-ops-secrets.mjs && bash deploy/update.
 
 ---
 
-## Step 5 — DNS (direct to VPS — no Cloudflare)
+## Step 5 — DNS at GoDaddy (direct to VPS — no Cloudflare)
 
-Point **vibemusic.in**, **www**, and **cdn** A records to the CloudOnFire VPS IP:
+Point **vibemusic.in**, **www**, **cdn**, and **mail** A records to the CloudOnFire VPS IP. See **[IP-MIGRATION-GODADDY.md](./IP-MIGRATION-GODADDY.md)** for SPF/MX/DMARC.
 
 | Host  | Type | Value      |
 | ----- | ---- | ---------- |

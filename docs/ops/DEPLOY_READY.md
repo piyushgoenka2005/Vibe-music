@@ -12,15 +12,20 @@ Companion: [DEPLOYMENT.md](./DEPLOYMENT.md) · [GO_LIVE.md](./GO_LIVE.md) · [GO
 
 ### 1. Update DNS (required — site will not load until this propagates)
 
-At your DNS provider (Bittel / CloudOnFire DNS), set **A records** → `31.42.125.219`:
+At **GoDaddy DNS** (nameservers `ns39.domaincontrol.com` / `ns40.domaincontrol.com`), set **A records** → `31.42.125.219`:
 
 | Host                 | Type       | Value                             |
 | -------------------- | ---------- | --------------------------------- |
 | `@` (`vibemusic.in`) | A          | `31.42.125.219`                   |
 | `www`                | A or CNAME | `31.42.125.219` or `vibemusic.in` |
 | `cdn`                | A          | `31.42.125.219`                   |
+| `mail`               | A          | `31.42.125.219`                   |
 
-Verify: `nslookup vibemusic.in` and `nslookup cdn.vibemusic.in` should return `31.42.125.219`.
+Update SPF TXT: replace `ip4:87.232.72.14` with `a:mail.vibemusic.in` (or `ip4:31.42.125.219`).
+
+Full runbook: **[IP-MIGRATION-GODADDY.md](./IP-MIGRATION-GODADDY.md)**
+
+Verify: `nslookup vibemusic.in`, `cdn.vibemusic.in`, and `mail.vibemusic.in` should return `31.42.125.219`.
 
 ### 2. Deploy on the VPS (SSH or Serial Console as root)
 
