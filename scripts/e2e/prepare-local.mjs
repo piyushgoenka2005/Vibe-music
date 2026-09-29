@@ -14,6 +14,28 @@ const root = process.cwd();
 const defaultDbUrl =
   "postgresql://vibe:vibe@localhost:5432/vibe?schema=public";
 
+function loadLocalEnvFiles() {
+  for (const file of [".env", ".env.local"]) {
+    const full = path.join(root, file);
+    if (!fs.existsSync(full)) continue;
+    for (const line of fs.readFileSync(full, "utf8").split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq <= 0) continue;
+      const key = trimmed.slice(0, eq).trim();
+      let value = trimmed.slice(eq + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      if (!process.env[key]) process.env[key] = value;
+    }
+  }
+}
+
 function run(command, options = {}) {
   execSync(command, { stdio: "inherit", cwd: root, ...options });
 }
@@ -29,6 +51,7 @@ function waitForPostgres(url) {
 }
 
 async function main() {
+  loadLocalEnvFiles();
   let databaseUrl = process.env.DATABASE_URL?.trim() || "";
 
   if (databaseUrl) {

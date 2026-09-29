@@ -12,12 +12,25 @@ export const BULK_IMPORT_FIXTURE_CSV = path.join(
   "bulk-import-e2e.csv",
 );
 
-export function buildBulkImportCsvForSku(sku: string, productName: string): string {
+/** Admin product SKU field allows max 20 characters. */
+export function generateE2EBulkImportSku(prefix = "E2E"): string {
+  const suffix = Date.now().toString(36).slice(-8).toUpperCase();
+  return `${prefix}${suffix}`.slice(0, 20);
+}
+
+export function buildBulkImportCsvForSku(
+  sku: string,
+  productName: string,
+  options?: { category?: string },
+): string {
   const raw = fs.readFileSync(BULK_IMPORT_FIXTURE_CSV, "utf8").trim();
   const [header, templateRow] = raw.split("\n");
   const columns = templateRow.split(",");
   columns[1] = sku;
   columns[3] = productName;
+  if (options?.category) {
+    columns[6] = options.category;
+  }
   return `${header}\n${columns.join(",")}\n`;
 }
 
@@ -32,6 +45,7 @@ export function buildSkuImageZip(sku: string, imageCount = 7): AdmZip {
 export type BulkImportWizardOptions = {
   sku: string;
   productName: string;
+  category?: string;
   publishStatus?: "active" | "draft";
   duplicateStrategy?: "update" | "fail" | "skip";
 };
@@ -40,8 +54,14 @@ export async function runBulkImportWizardConfirm(
   page: Page,
   options: BulkImportWizardOptions,
 ): Promise<void> {
-  const { sku, productName, publishStatus = "draft", duplicateStrategy = "update" } = options;
-  const csv = buildBulkImportCsvForSku(sku, productName);
+  const {
+    sku,
+    productName,
+    category,
+    publishStatus = "draft",
+    duplicateStrategy = "update",
+  } = options;
+  const csv = buildBulkImportCsvForSku(sku, productName, { category });
   const zip = buildSkuImageZip(sku);
 
   await page.goto("/admin/products", { waitUntil: "domcontentloaded" });
@@ -112,11 +132,12 @@ export async function confirmBulkImportViaApi(
   const {
     sku,
     productName,
+    category,
     publishStatus = "draft",
     duplicateStrategy = "update",
     imageCount = 7,
   } = options;
-  const csv = buildBulkImportCsvForSku(sku, productName);
+  const csv = buildBulkImportCsvForSku(sku, productName, { category });
   const zip = buildSkuImageZip(sku, imageCount);
 
   const response = await request.post("/api/admin/products/import", {

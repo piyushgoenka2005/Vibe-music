@@ -126,6 +126,18 @@ check_http "/api/admin/me" "401" "GET /api/admin/me (auth enforced)" "$API_BASE_
 check_http "/api/admin/products/import/template?format=csv" "401" "GET bulk import template (auth enforced)" "$API_BASE_URL"
 check_http "/api/admin/products/import/template?format=xlsx" "401" "GET bulk import template XLSX (auth enforced)" "$API_BASE_URL"
 
+if [[ -f docs/templates/vibemusic-bulk.csv ]]; then
+  bulk_header=$(head -1 docs/templates/vibemusic-bulk.csv)
+  bulk_cols=$(echo "$bulk_header" | awk -F',' '{print NF}')
+  if [[ "$bulk_cols" -ge 81 ]] && echo "$bulk_header" | grep -q 'image12'; then
+    pass "bulk template CSV has ${bulk_cols} columns incl. image12"
+  else
+    fail "bulk template CSV columns=${bulk_cols} (expected >=81 with image12)"
+  fi
+else
+  fail "docs/templates/vibemusic-bulk.csv missing from deploy tree"
+fi
+
 check_http "/giveaway" "200" "GET /giveaway"
 check_http "/rentals" "200" "GET /rentals"
 check_http "/blog" "200" "GET /blog"

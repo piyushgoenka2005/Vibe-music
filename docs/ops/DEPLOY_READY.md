@@ -104,6 +104,7 @@ After changing `NEXT_PUBLIC_*`, rebuild or restart with a fresh build (`update.s
 | `GET /api/coupons/active`              | **200** `{ coupons: [...] }` |
 | `GET /api/checkout/capabilities`       | razorpay on, demo off        |
 | `GET /api/admin/me`                    | 401                          |
+| Bulk template CSV in repo              | ≥81 columns incl. `image12`  |
 | `GET /robots.txt` + `/sitemap.xml`     | 200                          |
 | `GET /` `/giveaway` `/rentals` `/blog` | 200                          |
 

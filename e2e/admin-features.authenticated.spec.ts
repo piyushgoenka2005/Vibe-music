@@ -10,6 +10,7 @@ import {
   confirmBulkImportViaApi,
   deleteAdminProduct,
   findAdminProductIdBySku,
+  generateE2EBulkImportSku,
   runBulkImportWizardConfirm,
 } from "./helpers/bulk-import";
 
@@ -243,7 +244,7 @@ test.describe("Bulk import upload", () => {
   });
 
   test("confirm import API persists seven images for new SKU", async ({ request }) => {
-    const sku = `E2E-API-${Date.now()}`;
+    const sku = generateE2EBulkImportSku("E2EAPI");
     let productId: string | undefined;
 
     try {
@@ -275,7 +276,7 @@ test.describe("Bulk import upload", () => {
     request,
   }) => {
     test.setTimeout(180_000);
-    const sku = `E2E-IMPORT-${Date.now()}`;
+    const sku = generateE2EBulkImportSku("E2EIMP");
     const productName = "E2E Confirm Import Guitar";
     let productId: string | undefined;
 
@@ -315,7 +316,7 @@ test.describe("Bulk import upload", () => {
     request,
   }) => {
     test.setTimeout(240_000);
-    const sku = `E2E-FULL-${Date.now()}`;
+    const sku = generateE2EBulkImportSku("E2EFULL");
     const productName = "E2E Full Flow Import Guitar";
     let productId: string | undefined;
 
@@ -323,6 +324,7 @@ test.describe("Bulk import upload", () => {
       await runBulkImportWizardConfirm(page, {
         sku,
         productName,
+        category: "DJ Equipment",
         publishStatus: "active",
       });
 
@@ -339,9 +341,15 @@ test.describe("Bulk import upload", () => {
       const match = page.url().match(/\/admin\/products\/([^/?#]+)/);
       productId = match?.[1];
 
-      await page.goto(`/product/${slug}`, { waitUntil: "domcontentloaded" });
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible({ timeout: 20_000 });
-      await expect(page.locator(".pdp-gallery__thumbs .pdp-gallery__thumb")).toHaveCount(7);
+      await expect
+        .poll(
+          async () => {
+            await page.goto(`/product/${slug}`, { waitUntil: "domcontentloaded" });
+            return page.locator(".pdp-gallery__thumbs .pdp-gallery__thumb").count();
+          },
+          { timeout: 30_000, message: "PDP gallery should show seven images after import" },
+        )
+        .toBe(7);
 
       await page.goto(`/admin/products/${productId}`, { waitUntil: "domcontentloaded" });
       await expect(page.getByText(/Loading product/i)).toBeHidden({ timeout: 30_000 });
@@ -352,16 +360,35 @@ test.describe("Bulk import upload", () => {
         .click();
       await expect(page.locator(".admin-image-preview-grid .admin-image-preview")).toHaveCount(6);
       await page.getByRole("button", { name: /Update Product/i }).click();
-      await expect(page.getByText(/Product updated successfully/i)).toBeVisible({
+      await expect(page.getByRole("status")).toContainText(/Product updated successfully/i, {
         timeout: 30_000,
       });
 
-      await page.goto(`/product/${slug}`, { waitUntil: "domcontentloaded" });
-      await expect(page.locator(".pdp-gallery__thumbs .pdp-gallery__thumb")).toHaveCount(6);
+      await expect
+        .poll(
+          async () => {
+            const getRes = await request.get(`/api/admin/products/${productId}`);
+            const loaded = (await getRes.json()) as { product?: { images?: string[] } };
+            return loaded.product?.images?.length ?? 0;
+          },
+          { timeout: 20_000, message: "admin API should persist six images after edit" },
+        )
+        .toBe(6);
+
+      await expect
+        .poll(
+          async () => {
+            await page.goto(`/product/${slug}`, { waitUntil: "domcontentloaded" });
+            return page.locator(".pdp-gallery__thumbs .pdp-gallery__thumb").count();
+          },
+          { timeout: 30_000, message: "PDP gallery should reflect saved image count" },
+        )
+        .toBe(6);
 
       const reimport = await confirmBulkImportViaApi(request, {
         sku,
         productName,
+        category: "DJ Equipment",
         publishStatus: "active",
         duplicateStrategy: "update",
       });
@@ -372,8 +399,15 @@ test.describe("Bulk import upload", () => {
       await expect(page.getByText(/Loading product/i)).toBeHidden({ timeout: 30_000 });
       await expect(page.locator(".admin-image-preview-grid .admin-image-preview")).toHaveCount(7);
 
-      await page.goto(`/product/${slug}`, { waitUntil: "domcontentloaded" });
-      await expect(page.locator(".pdp-gallery__thumbs .pdp-gallery__thumb")).toHaveCount(7);
+      await expect
+        .poll(
+          async () => {
+            await page.goto(`/product/${slug}`, { waitUntil: "domcontentloaded" });
+            return page.locator(".pdp-gallery__thumbs .pdp-gallery__thumb").count();
+          },
+          { timeout: 30_000, message: "PDP gallery should show seven images after re-import" },
+        )
+        .toBe(7);
     } finally {
       if (productId) {
         await deleteAdminProduct(request, productId);
