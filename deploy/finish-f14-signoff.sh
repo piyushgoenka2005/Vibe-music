@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One-shot F-14 production close-out on the VPS.
 # Run after SSH:
-#   ssh root@87.232.72.14
+#   ssh root@31.42.125.219
 #   bash ~/Vibe-music/deploy/finish-f14-signoff.sh
 set -euo pipefail
 

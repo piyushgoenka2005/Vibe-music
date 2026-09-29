@@ -12,7 +12,7 @@ $Source = (Resolve-Path $Source -ErrorAction Stop).Path
 $productsPath = Join-Path $Source "products"
 
 if (-not (Test-Path $productsPath)) {
-  Write-Error "Missing staged CDN files at $productsPath. Run upload first:`n  `$env:CDN_STORAGE_ROOT='.data/cdn'; npm run upload:product-images-cdn -- --upload --apply-catalog"
+  Write-Error "Missing staged CDN files at $productsPath. Run first:`n  npm run generate:cdn-derivatives`n  (after staging masters in .data/cdn/products)"
 }
 
 Write-Host "Creating remote directory $VpsHost`:$Target/products ..."

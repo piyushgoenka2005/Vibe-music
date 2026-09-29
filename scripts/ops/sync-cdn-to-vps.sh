@@ -12,7 +12,7 @@ VPS_HOST="${VPS_HOST:-root@31.42.125.219}"
 
 if [[ ! -d "$SOURCE/products" ]]; then
   echo "Missing staged CDN files at $SOURCE/products"
-  echo "Run first: CDN_STORAGE_ROOT=.data/cdn npm run upload:product-images-cdn -- --upload"
+  echo "Run first: npm run generate:cdn-derivatives  (after staging masters in .data/cdn)"
   exit 1
 fi
 

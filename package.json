@@ -46,6 +46,8 @@
     "deploy:certify": "bash deploy/certify-production.sh",
     "ops:install-sweeper": "bash deploy/install-reservation-sweeper.sh",
     "migrate:brand": "node scripts/legacy/migrate-brand.mjs && node scripts/legacy/migrate-content-brand.mjs",
+    "generate:cdn-derivatives": "node scripts/assets/generate-cdn-derivatives.mjs",
+    "upload:product-images-cdn": "node scripts/assets/generate-cdn-derivatives.mjs",
     "sync:cdn-vps": "powershell -ExecutionPolicy Bypass -File scripts/ops/sync-cdn-to-vps.ps1",
     "db:start": "powershell -ExecutionPolicy Bypass -File scripts/db/start-postgres.ps1",
     "postinstall": "node scripts/db/prisma-generate.mjs",

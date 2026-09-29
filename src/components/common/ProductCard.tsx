@@ -15,6 +15,7 @@ import CompareButton from "@/components/compare/CompareButton";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
 import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import { shouldBypassNextImageOptimization } from "@/lib/cdnConfig";
 import { optimizeImageUrl } from "@/lib/storefrontImages";
 import { trackSelectItem, type ItemListContext } from "@/lib/analytics/events";
 import type { Product } from "@/types/product";
@@ -171,7 +172,7 @@ const ProductCard = memo(function ProductCard({
               width={480}
               height={480}
               priority={eager}
-              unoptimized={imageSrc.includes("cdn.vibemusic.in")}
+              unoptimized={shouldBypassNextImageOptimization(imageSrc)}
               sizes="(max-width: 767px) 50vw, (max-width: 1024px) 33vw, 360px"
               className="cat-product-card__image-photo"
               onError={() => {

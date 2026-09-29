@@ -117,17 +117,32 @@ else
 fi
 pm2 save
 
-if command -v nginx >/dev/null 2>&1 && [[ -f /etc/nginx/sites-available/vibemusic.in ]]; then
-  echo "==> Syncing Nginx site config from repo"
-  cp deploy/nginx/vibemusic.in.conf /etc/nginx/sites-available/vibemusic.in
+if command -v nginx >/dev/null 2>&1; then
+  CDN_ROOT="${CDN_STORAGE_ROOT:-/var/www/cdn}"
+  mkdir -p "$CDN_ROOT"
+  echo "==> Ensuring CDN static root at $CDN_ROOT"
+
+  if [[ -f deploy/nginx/vibemusic.in.conf ]]; then
+    echo "==> Syncing Nginx site config from repo"
+    install -d /etc/nginx/sites-available /etc/nginx/sites-enabled
+    cp deploy/nginx/vibemusic.in.conf /etc/nginx/sites-available/vibemusic.in
+    ln -sf /etc/nginx/sites-available/vibemusic.in /etc/nginx/sites-enabled/vibemusic.in 2>/dev/null || true
+  fi
+  if [[ -f deploy/nginx/cdn.vibemusic.in.conf ]]; then
+    echo "==> Syncing CDN Nginx site config from repo"
+    cp deploy/nginx/cdn.vibemusic.in.conf /etc/nginx/sites-available/cdn.vibemusic.in
+    ln -sf /etc/nginx/sites-available/cdn.vibemusic.in /etc/nginx/sites-enabled/cdn.vibemusic.in 2>/dev/null || true
+  fi
   if [[ -f deploy/nginx/cloudflare-real-ip.conf ]]; then
     install -d /etc/nginx/conf.d
     cp deploy/nginx/cloudflare-real-ip.conf /etc/nginx/conf.d/cloudflare-real-ip.conf
     echo "    synced cloudflare-real-ip.conf (L-22)"
   fi
-  nginx -t
-  if command -v systemctl >/dev/null 2>&1; then
-    sudo systemctl reload nginx 2>/dev/null || systemctl reload nginx
+  if [[ -f /etc/nginx/sites-available/vibemusic.in ]] || [[ -f /etc/nginx/sites-available/cdn.vibemusic.in ]]; then
+    nginx -t
+    if command -v systemctl >/dev/null 2>&1; then
+      sudo systemctl reload nginx 2>/dev/null || systemctl reload nginx
+    fi
   fi
 fi
 

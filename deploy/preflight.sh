@@ -66,6 +66,20 @@ else
 fi
 
 echo ""
+echo "▶ CDN static root"
+CDN_ROOT="${CDN_STORAGE_ROOT:-/var/www/cdn}"
+if [[ -d "$CDN_ROOT/products" ]]; then
+  pass "CDN products directory present ($CDN_ROOT/products)"
+else
+  warn "CDN products missing at $CDN_ROOT/products — images will 404 until restored or synced"
+fi
+if command -v nginx >/dev/null 2>&1 && [[ -f /etc/nginx/sites-available/cdn.vibemusic.in ]]; then
+  pass "nginx cdn.vibemusic.in site configured"
+else
+  warn "nginx cdn.vibemusic.in not configured — deploy/update.sh will sync it"
+fi
+
+echo ""
 echo "▶ Runtime probes (when app is already running)"
 if curl -sf --max-time 5 "http://127.0.0.1:3000/api/healthz" >/dev/null 2>&1; then
   pass "pre-deploy /api/healthz reachable"

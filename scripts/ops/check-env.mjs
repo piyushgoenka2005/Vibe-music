@@ -278,6 +278,15 @@ if (/vibemusic\.in/i.test(siteUrl) && !env.NEXT_PUBLIC_GSTIN?.trim()) {
     console.log(`WARN (L-30): ${msg}`);
   }
 }
+if (
+  /vibemusic\.in/i.test(siteUrl) &&
+  (!env.CDN_STORAGE_ROOT?.trim() || !env.CDN_PUBLIC_BASE_URL?.trim())
+) {
+  console.log(
+    "BLOCKING: CDN_STORAGE_ROOT and CDN_PUBLIC_BASE_URL are required on production (product images)."
+  );
+  productionMisconfig = true;
+}
 if (/vibemusic\.in/i.test(siteUrl) && env.TRUST_PROXY_HOPS?.trim() !== "1") {
   const msg = "TRUST_PROXY_HOPS should be 1 behind nginx/Cloudflare on production.";
   if (strictCompliance) {

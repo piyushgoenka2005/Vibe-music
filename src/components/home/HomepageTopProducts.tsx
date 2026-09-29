@@ -7,6 +7,7 @@ import {
   type HomepageTopProduct,
 } from "@/data/homepageTopProducts";
 import { getProductBySlug } from "@/lib/server/productRepository";
+import { shouldBypassNextImageOptimization } from "@/lib/cdnConfig";
 import { optimizeImageUrl } from "@/lib/images";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import Reveal from "@/components/layout/Reveal";
@@ -27,12 +28,7 @@ export function TopProductCard({ product }: { product: HomepageTopProduct }) {
 
   return (
     <article className="blog-teaser__card">
-      <ProductShareButton
-        overlay
-        position="top-left"
-        title={product.title}
-        url={product.href}
-      />
+      <ProductShareButton overlay position="top-left" title={product.title} url={product.href} />
       <Link className="blog-teaser__link" href={product.href}>
         <div
           className={[
@@ -49,7 +45,7 @@ export function TopProductCard({ product }: { product: HomepageTopProduct }) {
               className={imageClassName}
               fill
               loading="lazy"
-              unoptimized={imageSrc.includes("cdn.vibemusic.in")}
+              unoptimized={shouldBypassNextImageOptimization(imageSrc)}
               sizes="(max-width: 767px) 92vw, 360px"
               src={imageSrc}
               style={{
@@ -64,9 +60,7 @@ export function TopProductCard({ product }: { product: HomepageTopProduct }) {
           )}
           {product.tags.length > 0 ? (
             <div aria-label="Product categories" className="blog-teaser__tags">
-              <span className="blog-teaser__tag blog-teaser__tag--primary">
-                {product.tags[0]}
-              </span>
+              <span className="blog-teaser__tag blog-teaser__tag--primary">{product.tags[0]}</span>
               {product.tags[1] ? (
                 <>
                   <span aria-hidden="true" className="blog-teaser__tag-sep" />
@@ -80,9 +74,7 @@ export function TopProductCard({ product }: { product: HomepageTopProduct }) {
         </div>
         <div className="blog-teaser__body">
           <h3 className="blog-teaser__post-title">{product.title}</h3>
-          {product.excerpt ? (
-            <p className="blog-teaser__excerpt">{product.excerpt}</p>
-          ) : null}
+          {product.excerpt ? <p className="blog-teaser__excerpt">{product.excerpt}</p> : null}
           <div className="blog-teaser__footer">
             <p className="blog-teaser__meta">{product.brandLabel}</p>
             <span className="blog-teaser__read">
@@ -100,7 +92,7 @@ async function resolveTopProducts(): Promise<HomepageTopProduct[]> {
   // Curated pinImage cards (and non-catalog surfaces like GP-9) render
   // immediately — skip per-slug catalog round-trips that blocked Suspense.
   const needsCatalogLookup = HOMEPAGE_TOP_PRODUCTS.some(
-    (product) => Boolean(product.productSlug) && !product.pinImage
+    (product) => Boolean(product.productSlug) && !product.pinImage,
   );
 
   if (!needsCatalogLookup) {
@@ -123,7 +115,7 @@ async function resolveTopProducts(): Promise<HomepageTopProduct[]> {
       } catch {
         return null;
       }
-    })
+    }),
   );
 
   return resolved.filter((product): product is HomepageTopProduct => Boolean(product));
@@ -142,8 +134,7 @@ export default async function HomepageTopProducts() {
               Shop the highlights
             </h2>
             <p className="blog-teaser__subtitle">
-              Grand pianos, guitars, and live sound — hand-picked in-stock gear
-              from our catalog.
+              Grand pianos, guitars, and live sound — hand-picked in-stock gear from our catalog.
             </p>
           </div>
           <Link
@@ -163,11 +154,7 @@ export default async function HomepageTopProducts() {
         ) : (
           <div className="blog-teaser__grid blog-teaser__grid--three">
             {products.map((product, index) => (
-              <Reveal
-                key={product.id}
-                className="blog-teaser__card-wrap"
-                delay={index * 80}
-              >
+              <Reveal key={product.id} className="blog-teaser__card-wrap" delay={index * 80}>
                 <TopProductCard product={product} />
               </Reveal>
             ))}

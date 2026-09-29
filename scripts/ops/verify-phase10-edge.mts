@@ -12,7 +12,7 @@ import path from "node:path";
 
 const BASE_URL = (process.env.VERIFY_BASE_URL ?? "https://vibemusic.in").replace(/\/$/, "");
 const STRICT = process.env.REQUIRE_CDN_EDGE === "true";
-const VPS_HOST = process.env.VPS_HOST ?? "87.232.72.14";
+const VPS_HOST = process.env.VPS_HOST ?? "31.42.125.219";
 const VPS_USER = process.env.VPS_USER ?? "root";
 
 const EDGE_MARKERS = ["cf-ray", "cf-cache-status", "x-vercel-id", "x-amz-cf-id"];

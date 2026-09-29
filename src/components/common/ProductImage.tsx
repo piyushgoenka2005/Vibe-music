@@ -2,6 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 
+import { isCdnUrl } from "@/lib/cdnConfig";
 import { cdnMasterUrl } from "@/lib/storefrontImages";
 
 export type ProductImageVariant = "card" | "pdp" | "thumb";
@@ -48,7 +49,7 @@ function productImageInlineStyle(options: {
 const THUMB_WIDTHS = [480, 960, 1600] as const;
 
 function isCdnSizedDerivative(src: string): boolean {
-  return src.includes("cdn.vibemusic.in") && /-w\d+\.webp(?:\?|$)/i.test(src);
+  return isCdnUrl(src) && /-w\d+\.webp(?:\?|$)/i.test(src);
 }
 
 export function generateCdnSrcSet(
@@ -56,7 +57,7 @@ export function generateCdnSrcSet(
   variant: ProductImageVariant = "card",
 ): string | undefined {
   if (!src) return undefined;
-  if (!src.includes("cdn.vibemusic.in") || !src.endsWith(".webp")) return undefined;
+  if (!isCdnUrl(src) || !src.endsWith(".webp")) return undefined;
   if (isCdnSizedDerivative(src)) return undefined;
 
   const master = cdnMasterUrl(src);

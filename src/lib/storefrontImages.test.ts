@@ -27,8 +27,16 @@ describe("storefrontImageUrl", () => {
     expect(card.src).toContain("-w960.webp");
   });
 
-  it("serves zoom panes via 1600w static CDN derivative, not runtime Sharp proxy", () => {
+  it("serves zoom panes via thumb proxy for legacy PNG masters", () => {
     const zoom = storefrontZoomImageUrl(master);
+    expect(zoom).toContain("/api/media/thumb?url=");
+    expect(zoom).toContain("w=1600");
+  });
+
+  it("serves zoom panes via 1600w static CDN derivative for webp masters", () => {
+    const webpMaster =
+      "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp";
+    const zoom = storefrontZoomImageUrl(webpMaster);
     expect(zoom).toContain("-w1600.webp");
     expect(zoom).not.toContain("/api/media/thumb?url=");
   });

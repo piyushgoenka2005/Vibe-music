@@ -14,6 +14,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import { shouldBypassNextImageOptimization } from "@/lib/cdnConfig";
 import { storefrontImageCandidates, storefrontZoomImageUrl } from "@/lib/storefrontImages";
 import type { ProductImage, ProductVideo } from "@/types/product";
 import Product360Viewer from "@/components/product/Product360Viewer";
@@ -647,7 +648,7 @@ export default function ProductGallery({
                 priority={true}
                 width={1000}
                 height={1000}
-                unoptimized={activeDisplaySrc.includes("cdn.vibemusic.in")}
+                unoptimized={shouldBypassNextImageOptimization(activeDisplaySrc)}
                 onLoad={(event) => {
                   const image = event.currentTarget;
                   setImageMetrics({

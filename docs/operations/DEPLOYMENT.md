@@ -35,12 +35,12 @@ A failed health gate or smoke marks the workflow run red **and prints rollback i
    - then from the dev machine verify: `powershell -File scripts\ops\verify-ssh.ps1 -User root`
 3. GitHub repo secrets (`Settings → Secrets and variables → Actions`):
 
-| Secret | Value |
-|---|---|
-| `VPS_HOST` | `87.232.72.14` |
-| `VPS_USER` | user verified by verify-ssh.ps1 (typically `root`) |
-| `VPS_PORT` | `22` |
-| `VPS_SSH_KEY` | full contents of the **private** key file |
+| Secret        | Value                                              |
+| ------------- | -------------------------------------------------- |
+| `VPS_HOST`    | `31.42.125.219`                                    |
+| `VPS_USER`    | user verified by verify-ssh.ps1 (typically `root`) |
+| `VPS_PORT`    | `22`                                               |
+| `VPS_SSH_KEY` | full contents of the **private** key file          |
 
 4. Server prerequisites: Node 20+, PM2 (`pm2 save` executed once), nginx serving `deploy/nginx/*.conf`, `/var/log/vibe` writable, Postgres reachable, `pg_dump` installed for pre-deploy backups (optional but recommended).
 
@@ -57,15 +57,16 @@ SKIP_SMOKE=1 bash deploy/update.sh                  # emergency, discouraged
 ```
 
 ### Downtime reality (documented limitation)
+
 PM2 runs fork mode with a single instance; `pm2 restart` has a seconds-level gap while the new build boots. True zero-downtime requires cluster mode (`instances: 2`, `exec_mode: cluster`) plus socket handoff — evaluate in Phase 38; do not improvise during incidents.
 
 ## 4. Health checks
 
-| Check | Where | Pass condition |
-|---|---|---|
-| App boot | `http://127.0.0.1:3000/api/health` (inside VPS) | HTTP 200 within 60s of restart |
-| Route smoke | `deploy/post-deploy-smoke.sh` | all expected routes return expected codes |
-| External view | `https://vibemusic.in/api/health` | `{"status":"healthy",...}` |
+| Check         | Where                                           | Pass condition                            |
+| ------------- | ----------------------------------------------- | ----------------------------------------- |
+| App boot      | `http://127.0.0.1:3000/api/health` (inside VPS) | HTTP 200 within 60s of restart            |
+| Route smoke   | `deploy/post-deploy-smoke.sh`                   | all expected routes return expected codes |
+| External view | `https://vibemusic.in/api/health`               | `{"status":"healthy",...}`                |
 
 The health endpoint validates app + database (10s result cache). A red workflow means one of these failed — do not re-run blindly before reading logs.
 
@@ -78,6 +79,7 @@ bash deploy/rollback.sh <good-sha>   # explicit known-good commit
 ```
 
 Rollback rebuilds and hard-gates health before declaring success. Afterwards the server sits detached at the older commit; return to latest with:
+
 ```bash
 git checkout main && git reset --hard origin/main && bash deploy/update.sh
 ```
@@ -86,13 +88,13 @@ git checkout main && git reset --hard origin/main && bash deploy/update.sh
 
 ## 6. Failure recovery playbook
 
-| Symptom | First response |
-|---|---|
-| Workflow fails at `Deploy over SSH` (`Permission denied`) | Key not installed/rotated → §2 step 2, then verify-ssh.ps1 |
-| Fails at health gate after restart | `pm2 logs vibe --lines 100` → usually env var validation (`Missing production environment: …`) or DB unreachable → fix `.env`, `bash deploy/rollback.sh` if not quick |
-| Smoke fails but health OK | Read which route failed in the log; check recent commits touching it; rollback if customer-facing |
-| Build/type-check failure on VPS | Fix-forward preferred; rollback if urgent |
-| Disk full (`npm ci`/build errors ENOSPC) | `npm cache clean --force`, prune old `~/backups`, `df -h` audit |
+| Symptom                                                   | First response                                                                                                                                                        |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workflow fails at `Deploy over SSH` (`Permission denied`) | Key not installed/rotated → §2 step 2, then verify-ssh.ps1                                                                                                            |
+| Fails at health gate after restart                        | `pm2 logs vibe --lines 100` → usually env var validation (`Missing production environment: …`) or DB unreachable → fix `.env`, `bash deploy/rollback.sh` if not quick |
+| Smoke fails but health OK                                 | Read which route failed in the log; check recent commits touching it; rollback if customer-facing                                                                     |
+| Build/type-check failure on VPS                           | Fix-forward preferred; rollback if urgent                                                                                                                             |
+| Disk full (`npm ci`/build errors ENOSPC)                  | `npm cache clean --force`, prune old `~/backups`, `df -h` audit                                                                                                       |
 
 ## 7. Key rotation
 

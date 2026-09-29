@@ -12,7 +12,7 @@ import os from "node:os";
 import path from "node:path";
 
 const BASE_URL = (process.env.VERIFY_BASE_URL ?? "https://vibemusic.in").replace(/\/$/, "");
-const VPS_HOST = process.env.VPS_HOST ?? "87.232.72.14";
+const VPS_HOST = process.env.VPS_HOST ?? "31.42.125.219";
 const VPS_USER = process.env.VPS_USER ?? "root";
 
 function run(cmd: string, args: string[]): { ok: boolean; out: string } {

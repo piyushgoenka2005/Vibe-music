@@ -144,6 +144,45 @@ check_http "/blog" "200" "GET /blog"
 check_http "/login" "200" "GET /login"
 
 echo ""
+echo "▶ Product images + CDN"
+SAMPLE_IMAGE=$(curl -sS --max-time 30 "${API_BASE_URL}/api/products?limit=1" | node -e "
+let d;
+try { d = JSON.parse(require('fs').readFileSync(0, 'utf8')); } catch { process.exit(0); }
+const img = d.products?.[0]?.image?.trim();
+if (img) process.stdout.write(img);
+" 2>/dev/null || true)
+
+if [[ -z "$SAMPLE_IMAGE" ]]; then
+  fail "sample product image URL missing from catalog"
+else
+  pass "sample product image URL present"
+  img_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 -L -I "$SAMPLE_IMAGE" 2>/dev/null || echo "000")
+  if [[ "$img_code" == "200" || "$img_code" == "301" || "$img_code" == "302" ]]; then
+    pass "public product image reachable (HTTP $img_code)"
+  else
+    fail "public product image HTTP $img_code → $SAMPLE_IMAGE"
+  fi
+
+  cdn_path=$(node -e "try { console.log(new URL(process.argv[1]).pathname); } catch {}" "$SAMPLE_IMAGE" 2>/dev/null || true)
+  if [[ -n "$cdn_path" ]]; then
+    local_cdn_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 15 -H "Host: cdn.vibemusic.in" "http://127.0.0.1${cdn_path}" 2>/dev/null || echo "000")
+    if [[ "$local_cdn_code" == "200" ]]; then
+      pass "local nginx CDN static file (HTTP 200)"
+    else
+      fail "local nginx CDN static HTTP $local_cdn_code (check /var/www/cdn)"
+    fi
+  fi
+
+  thumb_url="${API_BASE_URL}/api/media/thumb?url=$(node -p "encodeURIComponent(process.argv[1])" "$SAMPLE_IMAGE")&w=480"
+  thumb_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 -L "$thumb_url" 2>/dev/null || echo "000")
+  if [[ "$thumb_code" == "200" || "$thumb_code" == "302" ]]; then
+    pass "thumb proxy reachable (HTTP $thumb_code)"
+  else
+    fail "thumb proxy HTTP $thumb_code"
+  fi
+fi
+
+echo ""
 if [[ "$FAILS" -eq 0 ]]; then
   echo "✅ Smoke PASS ($BASE_URL)"
   echo ""

@@ -124,6 +124,6 @@ fi
 log "Hardening complete."
 echo ""
 echo "Next steps:"
-echo "  1. Open a NEW terminal and test: ssh -i ~/.ssh/id_ed25519_vibe root@87.232.72.14"
+echo "  1. Open a NEW terminal and test: ssh -i ~/.ssh/id_ed25519_vibe root@31.42.125.219"
 echo "  2. If key login works, re-run with DISABLE_PASSWORD_AUTH=1 to turn off passwords."
 echo "  3. Change the root password: passwd"
