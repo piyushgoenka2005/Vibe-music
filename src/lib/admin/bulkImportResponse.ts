@@ -1,10 +1,21 @@
 import type { BulkImportPreviewRow } from "@/types/catalog";
+import {
+  bulkImportImagePreviewFilenames,
+  countBulkImportImages,
+  getMaxBulkImportImages,
+} from "@/lib/admin/bulkImportImages";
 
 /** Max rows rendered in the admin preview table (full counts stay in summary). */
 export const BULK_IMPORT_PREVIEW_TABLE_LIMIT = 250;
 
 /** Strip heavy fields before sending large previews to the browser. */
 export function slimBulkImportPreviewRow(row: BulkImportPreviewRow): BulkImportPreviewRow {
+  const imageCount = countBulkImportImages(row);
+  const zipImageMatchPreview = bulkImportImagePreviewFilenames(row).slice(
+    0,
+    getMaxBulkImportImages(),
+  );
+
   return {
     rowNumber: row.rowNumber,
     name: row.name,
@@ -24,12 +35,10 @@ export function slimBulkImportPreviewRow(row: BulkImportPreviewRow): BulkImportP
     existingProductId: row.existingProductId,
     resolvedCategorySlug: row.resolvedCategorySlug,
     generatedSlug: row.generatedSlug,
-    zipImageMatches: row.zipImageMatches?.length
-      ? [`${row.zipImageMatches.length} ZIP match(es)`]
-      : undefined,
-    resolvedImages: row.resolvedImages?.length
-      ? [`${row.resolvedImages.length} image(s)`]
-      : undefined,
+    imageCount,
+    zipImageMatchPreview: zipImageMatchPreview.length > 0 ? zipImageMatchPreview : undefined,
+    zipImageMatches: undefined,
+    resolvedImages: undefined,
   };
 }
 

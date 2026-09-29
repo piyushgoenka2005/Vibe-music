@@ -61,6 +61,7 @@ export default defineConfig({
       testMatch: [
         /admin\.(authenticated|crud-smoke|security)\.spec\.ts/,
         /admin-features\.authenticated\.spec\.ts/,
+        /admin-product-edit\.authenticated\.spec\.ts/,
       ],
       dependencies: ["admin-setup"],
       use: {

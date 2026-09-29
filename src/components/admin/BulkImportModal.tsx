@@ -3,10 +3,18 @@
 import { useCallback, useMemo, useRef, useState, type DragEvent, type RefObject } from "react";
 import type { BulkImportPreviewRow, BulkImportResult } from "@/types/catalog";
 import {
+  DEFAULT_MAX_BULK_IMPORT_IMAGES,
+  formatBulkImportPreviewImageSummary,
+} from "@/lib/admin/bulkImportImages";
+import {
+  buildBulkImportIntroCopy,
+  buildBulkImportSheetHintCopy,
+  buildBulkImportTemplateHintCopy,
+  buildBulkImportZipHintCopy,
   VIBEMUSIC_BULK_COLUMN_COUNT,
+  VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
   VIBEMUSIC_BULK_FAILED_ROWS_FILENAME,
   VIBEMUSIC_BULK_IMPORT_TITLE,
-  VIBEMUSIC_BULK_REQUIRED_COLUMNS,
   VIBEMUSIC_BULK_TEMPLATE_CSV_FILE,
   VIBEMUSIC_BULK_TEMPLATE_CSV_URL,
   VIBEMUSIC_BULK_TEMPLATE_XLSX_FILE,
@@ -168,6 +176,54 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
 
   const previewTableTruncated = filteredPreview.length > BULK_IMPORT_PREVIEW_TABLE_LIMIT;
 
+  const stepIndex = STEPS.findIndex(
+    (item) => item.id === (step === "importing" ? "preview" : step),
+  );
+
+  const introCopy = useMemo(
+    () =>
+      buildBulkImportIntroCopy(
+        MAX_IMPORT_ROWS,
+        VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
+        VIBEMUSIC_BULK_COLUMN_COUNT,
+        DEFAULT_MAX_BULK_IMPORT_IMAGES,
+      ),
+    [],
+  );
+  const templateHintCopy = useMemo(
+    () =>
+      buildBulkImportTemplateHintCopy(
+        VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
+        DEFAULT_MAX_BULK_IMPORT_IMAGES,
+        MAX_IMPORT_ROWS,
+      ),
+    [],
+  );
+  const sheetHintCopy = useMemo(
+    () =>
+      buildBulkImportSheetHintCopy(
+        MAX_SHEET_MB,
+        MAX_IMPORT_ROWS,
+        VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
+        VIBEMUSIC_BULK_COLUMN_COUNT,
+      ),
+    [],
+  );
+  const zipHintCopy = useMemo(
+    () => buildBulkImportZipHintCopy(MAX_ZIP_MB, DEFAULT_MAX_BULK_IMPORT_IMAGES),
+    [],
+  );
+
+  const confirmDescription = [
+    summary
+      ? `${summary.creates} create${summary.creates === 1 ? "" : "s"}, ${summary.updates} update${summary.updates === 1 ? "" : "s"}, ${summary.skips} skip${summary.skips === 1 ? "" : "s"}.`
+      : `${importableCount} row${importableCount === 1 ? "" : "s"} ready.`,
+    `Products publish as ${options.publishStatus}.`,
+    zipFile ? "Images from the ZIP will upload during import." : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   if (!open) return null;
 
   function buildFormData(confirm = false): FormData {
@@ -303,20 +359,6 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
     assignZip(event.dataTransfer.files?.[0] ?? null);
   }
 
-  const confirmDescription = [
-    summary
-      ? `${summary.creates} create${summary.creates === 1 ? "" : "s"}, ${summary.updates} update${summary.updates === 1 ? "" : "s"}, ${summary.skips} skip${summary.skips === 1 ? "" : "s"}.`
-      : `${importableCount} row${importableCount === 1 ? "" : "s"} ready.`,
-    `Products publish as ${options.publishStatus}.`,
-    zipFile ? "Images from the ZIP will upload during import." : null,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const stepIndex = STEPS.findIndex(
-    (item) => item.id === (step === "importing" ? "preview" : step),
-  );
-
   return (
     <>
       <div
@@ -334,10 +376,7 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
             <div>
               <h2 id="bulk-import-title">{VIBEMUSIC_BULK_IMPORT_TITLE}</h2>
               <p className="bulk-import-help" style={{ marginTop: "0.35rem" }}>
-                Upload products using the official <strong>vibemusic bulk</strong> spreadsheet —{" "}
-                <strong>up to {MAX_IMPORT_ROWS.toLocaleString()} products per upload</strong>,{" "}
-                {VIBEMUSIC_BULK_COLUMN_COUNT} columns in exact order (
-                {VIBEMUSIC_BULK_REQUIRED_COLUMNS}).
+                {introCopy}
               </p>
             </div>
             <button
@@ -378,10 +417,7 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
                 <div className="bulk-import-template-panel">
                   <div className="bulk-import-template-panel__intro">
                     <p className="bulk-import-template-panel__title">Download blank template</p>
-                    <p className="bulk-import-template-panel__hint">
-                      {VIBEMUSIC_BULK_COLUMN_COUNT} columns in exact order · up to{" "}
-                      {MAX_IMPORT_ROWS.toLocaleString()} products per file
-                    </p>
+                    <p className="bulk-import-template-panel__hint">{templateHintCopy}</p>
                   </div>
                   <div className="bulk-import-template-cards">
                     <a
@@ -411,6 +447,12 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
                       </span>
                     </a>
                   </div>
+                  <p className="bulk-import-help bulk-import-images-guide">
+                    <strong>Product images:</strong> add up to {DEFAULT_MAX_BULK_IMPORT_IMAGES}{" "}
+                    images per SKU using the <code>image1</code>–<code>image12</code> columns, or
+                    upload a ZIP named <code>SKU_1.jpg</code> … <code>SKU_12.jpg</code>. Re-import
+                    with <strong>Update existing SKUs</strong> to refresh images on live products.
+                  </p>
                 </div>
 
                 <div className="bulk-import-grid">
@@ -426,10 +468,7 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
                     <p className="bulk-import-dropzone__title">
                       Listing file — vibemusic bulk (required)
                     </p>
-                    <p className="bulk-import-dropzone__hint">
-                      Drag & drop .xlsx / .csv here, or browse. Max {MAX_SHEET_MB} MB · up to{" "}
-                      {MAX_IMPORT_ROWS.toLocaleString()} product rows per file.
-                    </p>
+                    <p className="bulk-import-dropzone__hint">{sheetHintCopy}</p>
                     <input
                       ref={sheetRef}
                       id="bulk-import-sheet"
@@ -471,10 +510,7 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
                     onDrop={onZipDrop}
                   >
                     <p className="bulk-import-dropzone__title">Images ZIP (optional)</p>
-                    <p className="bulk-import-dropzone__hint">
-                      Name files by SKU (<code>SKU.jpg</code>, <code>SKU_1.jpg</code>). Max{" "}
-                      {MAX_ZIP_MB} MB.
-                    </p>
+                    <p className="bulk-import-dropzone__hint">{zipHintCopy}</p>
                     <input
                       ref={zipRef}
                       id="bulk-import-zip"
@@ -513,6 +549,26 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
               <div className="bulk-import-options">
                 <div className="bulk-import-option-card">
                   <p className="bulk-import-option-card__title">Duplicate SKU strategy</p>
+                  <p className="bulk-import-option-card__hint">
+                    Re-uploading the same spreadsheet updates live catalog data in Postgres (not{" "}
+                    <code>products.json</code>). Include a stable SKU column so rows match existing
+                    products.
+                  </p>
+                  <label>
+                    <input
+                      type="radio"
+                      name="duplicateStrategy"
+                      checked={options.duplicateStrategy === "update"}
+                      onChange={() =>
+                        setOptions((prev) => ({ ...prev, duplicateStrategy: "update" }))
+                      }
+                    />
+                    <span>
+                      <strong>Update existing (recommended)</strong> — refresh price, copy, specs,
+                      and up to {DEFAULT_MAX_BULK_IMPORT_IMAGES} images for matching SKUs when you
+                      re-import a sheet or ZIP.
+                    </span>
+                  </label>
                   <label>
                     <input
                       type="radio"
@@ -524,7 +580,7 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
                     />
                     <span>
                       <strong>Reject duplicates</strong> — fail rows when SKU already exists (safest
-                      for new catalog uploads).
+                      for first-time catalog uploads).
                     </span>
                   </label>
                   <label>
@@ -538,20 +594,6 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
                     />
                     <span>
                       <strong>Skip existing</strong> — leave current catalog products untouched.
-                    </span>
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name="duplicateStrategy"
-                      checked={options.duplicateStrategy === "update"}
-                      onChange={() =>
-                        setOptions((prev) => ({ ...prev, duplicateStrategy: "update" }))
-                      }
-                    />
-                    <span>
-                      <strong>Update existing</strong> — refresh price, copy, specs, and images for
-                      matching SKUs.
                     </span>
                   </label>
                 </div>
@@ -688,6 +730,7 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
                         <th scope="col">SKU</th>
                         <th scope="col">Category</th>
                         <th scope="col">Price</th>
+                        <th scope="col">Images</th>
                         <th scope="col">Status</th>
                       </tr>
                     </thead>
@@ -702,6 +745,9 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
                           <td>{row.sku || row.generatedSku}</td>
                           <td>{row.category}</td>
                           <td>{row.price}</td>
+                          <td title={row.zipImageMatchPreview?.join(", ") ?? undefined}>
+                            {formatBulkImportPreviewImageSummary(row)}
+                          </td>
                           <td>
                             {row.valid ? (
                               <span style={{ color: "var(--admin-success)" }}>

@@ -83,6 +83,7 @@ export async function revalidateCatalogSnapshot(): Promise<void> {
     const { revalidateTag } = await import("next/cache");
     revalidateTag("catalog", "max");
     revalidateTag("categories", "max");
+    revalidateTag("footer-trending", "max");
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     // Admin/catalog writes invoked outside an App Router request (CLI, workers).

@@ -1,12 +1,33 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-// Mock the dependencies
 vi.mock("@/lib/server/integrationConfig", () => ({
   getIntegrationChecks: () => ({ database: "ok", upstash: "ok" }),
 }));
 
 vi.mock("@/lib/server/postgresHealth", () => ({
   verifyPostgresConnection: async () => ({ ok: true }),
+}));
+
+vi.mock("@/lib/server/gracefulShutdown", () => ({
+  isShuttingDown: () => false,
+}));
+
+vi.mock("@/lib/security/circuit-breaker", () => ({
+  dbCircuitBreaker: {
+    getMetrics: () => ({ state: "closed", failureCount: 0, lastStateChange: Date.now() }),
+  },
+  redisCircuitBreaker: {
+    getMetrics: () => ({ state: "closed", failureCount: 0, lastStateChange: Date.now() }),
+  },
+}));
+
+vi.mock("@/lib/security/backpressure", () => ({
+  getBackpressureStats: () => ({}),
+  isSystemUnderPressure: () => false,
+}));
+
+vi.mock("@/lib/server/redisCache", () => ({
+  getCacheStats: () => ({ memoryEntries: 0, staleEntries: 0, inflightRequests: 0 }),
 }));
 
 vi.mock("@/lib/server/logger", () => ({

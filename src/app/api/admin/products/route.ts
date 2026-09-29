@@ -7,6 +7,7 @@ import {
   bulkUpdateProductStatus,
   buildAdminProductsExportCsv,
 } from "@/lib/server/adminProductService";
+import { slugify } from "@/lib/slug";
 import { adminProductSchema } from "@/lib/validations/admin";
 
 export async function GET(request: Request) {
@@ -71,8 +72,8 @@ export async function POST(request: Request) {
       ...parsed,
       availability: parsed.availability ?? "in-stock",
       condition: parsed.condition ?? "new",
-      brandSlug: parsed.brandSlug ?? parsed.slug,
-      categorySlug: parsed.categorySlug ?? parsed.slug,
+      brandSlug: parsed.brandSlug ?? slugify(parsed.brand),
+      categorySlug: parsed.categorySlug ?? slugify(parsed.category),
       rating: parsed.rating ?? 0,
       reviewCount: parsed.reviewCount ?? 0,
       imageColor: parsed.imageColor ?? "#e8e8e8",

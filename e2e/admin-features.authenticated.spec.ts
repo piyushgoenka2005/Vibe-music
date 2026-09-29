@@ -1,15 +1,22 @@
 import { test, expect } from "./fixtures";
 import fs from "node:fs";
-import path from "node:path";
 import { E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD } from "./helpers/e2e-credentials";
 import { isE2EAdminReady } from "./helpers/admin-ready";
-import { e2eMutationHeaders } from "./helpers/e2e-origin";
 import { loginAsE2EAdmin } from "./helpers/admin-auth";
 import { isE2EServerMode } from "./helpers/e2e-server";
+import {
+  BULK_IMPORT_FIXTURE_CSV,
+  buildSkuImageZip,
+  confirmBulkImportViaApi,
+  deleteAdminProduct,
+  findAdminProductIdBySku,
+  runBulkImportWizardConfirm,
+} from "./helpers/bulk-import";
 
 const adminReady = isE2EAdminReady();
 
-const FIXTURE_CSV = path.join(__dirname, "fixtures", "bulk-import-e2e.csv");
+const FIXTURE_CSV = BULK_IMPORT_FIXTURE_CSV;
+
 const ORIGINAL_PASSWORD = E2E_ADMIN_PASSWORD;
 const RESET_PASSWORD = "E2eResetPass!999";
 
@@ -122,7 +129,7 @@ test.describe("Bulk import upload", () => {
     expect(csvRes.headers()["content-type"]).toContain("text/csv");
     expect(csvRes.headers()["content-disposition"]).toMatch(/vibemusic bulk\.csv/i);
     const csvBody = await csvRes.text();
-    expect(csvBody.split(",").length).toBeGreaterThanOrEqual(69);
+    expect(csvBody.split(",").length).toBeGreaterThanOrEqual(81);
 
     const xlsxRes = await request.get("/api/admin/products/import/template?format=xlsx");
     expect(xlsxRes.ok()).toBeTruthy();
@@ -135,7 +142,7 @@ test.describe("Bulk import upload", () => {
     test.setTimeout(120_000);
     await page.goto("/admin/products", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /Import products/i }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.locator("#bulk-import-title")).toBeVisible();
 
     await expect(page.getByRole("link", { name: /vibemusic bulk\.xlsx/i })).toHaveAttribute(
       "href",
@@ -157,7 +164,224 @@ test.describe("Bulk import upload", () => {
     await page.getByRole("button", { name: /Continue to options/i }).click();
     await page.getByRole("button", { name: /Run validation preview/i }).click();
     await expect(page.getByText(/Creates/i)).toBeVisible({ timeout: 30_000 });
-    await expect(page.locator(".admin-table tbody tr").first()).toBeVisible();
+    const previewTable = page.locator('table[aria-label="Import preview"]');
+    await expect(previewTable.locator("tbody tr").first()).toBeVisible();
+  });
+
+  test("preview resolves seven SKU-matched ZIP images for bulk import", async ({ request }) => {
+    const sku = "E2E-IMPORT-001";
+    const zip = buildSkuImageZip(sku);
+
+    const response = await request.post("/api/admin/products/import", {
+      multipart: {
+        file: {
+          name: "bulk-import-e2e.csv",
+          mimeType: "text/csv",
+          buffer: fs.readFileSync(FIXTURE_CSV),
+        },
+        zip: {
+          name: "product-images.zip",
+          mimeType: "application/zip",
+          buffer: zip.toBuffer(),
+        },
+        options: JSON.stringify({
+          duplicateStrategy: "update",
+          publishStatus: "draft",
+        }),
+        confirm: "false",
+      },
+    });
+
+    expect(response.ok()).toBeTruthy();
+    const payload = (await response.json()) as {
+      preview?: Array<{
+        sku?: string;
+        generatedSku?: string;
+        imageCount?: number;
+        zipImageMatchPreview?: string[];
+      }>;
+    };
+
+    const row = payload.preview?.find((entry) => entry.sku === sku || entry.generatedSku === sku);
+    expect(row?.imageCount).toBe(7);
+    expect(row?.zipImageMatchPreview).toHaveLength(7);
+    expect(row?.zipImageMatchPreview?.[0]).toMatch(/e2e-import-001_1\.jpg/i);
+    expect(row?.zipImageMatchPreview?.[6]).toMatch(/e2e-import-001_7\.jpg/i);
+  });
+
+  test("bulk import wizard shows updated copy and seven-image preview", async ({ page }) => {
+    test.setTimeout(120_000);
+    const sku = "E2E-IMPORT-001";
+    const zip = buildSkuImageZip(sku);
+
+    await page.goto("/admin/products", { waitUntil: "domcontentloaded" });
+    await page.getByRole("button", { name: /Import products/i }).click();
+    await expect(page.locator("#bulk-import-title")).toBeVisible();
+    await expect(page.locator(".bulk-import-images-guide")).toContainText(/image12/i);
+    await expect(page.locator(".bulk-import-template-panel__hint")).toContainText(
+      /image1–image12/i,
+    );
+
+    await page.locator("#bulk-import-sheet").setInputFiles(FIXTURE_CSV);
+    await page.locator("#bulk-import-zip").setInputFiles({
+      name: "product-images.zip",
+      mimeType: "application/zip",
+      buffer: zip.toBuffer(),
+    });
+
+    await page.getByRole("button", { name: /Continue to options/i }).click();
+    await expect(page.getByText(/Update existing \(recommended\)/i)).toBeVisible();
+    await page.getByRole("button", { name: /Run validation preview/i }).click();
+
+    const previewTable = page.locator('table[aria-label="Import preview"]');
+    await expect(previewTable.getByRole("columnheader", { name: "Images" })).toBeVisible({
+      timeout: 30_000,
+    });
+    const previewRow = previewTable.locator("tbody tr").first();
+    await expect(previewRow).toContainText(/7:/i);
+    await expect(previewRow.locator("td[title*='e2e-import-001_7']")).toBeVisible();
+  });
+
+  test("confirm import API persists seven images for new SKU", async ({ request }) => {
+    const sku = `E2E-API-${Date.now()}`;
+    let productId: string | undefined;
+
+    try {
+      const result = await confirmBulkImportViaApi(request, {
+        sku,
+        productName: "E2E API Confirm Guitar",
+        publishStatus: "draft",
+      });
+
+      expect(result.imported).toBe(1);
+      expect(result.updated).toBe(0);
+      expect(result.images).toHaveLength(7);
+      productId = result.productId;
+      expect(productId).toBeTruthy();
+
+      const getRes = await request.get(`/api/admin/products/${productId}`);
+      expect(getRes.ok()).toBeTruthy();
+      const loaded = (await getRes.json()) as { product?: { images?: string[] } };
+      expect(loaded.product?.images).toHaveLength(7);
+    } finally {
+      if (productId) {
+        await deleteAdminProduct(request, productId);
+      }
+    }
+  });
+
+  test("confirm import creates product with seven images on admin edit page", async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(180_000);
+    const sku = `E2E-IMPORT-${Date.now()}`;
+    const productName = "E2E Confirm Import Guitar";
+    let productId: string | undefined;
+
+    try {
+      await runBulkImportWizardConfirm(page, { sku, productName, publishStatus: "draft" });
+
+      await page.getByRole("textbox", { name: /Search products/i }).fill(sku);
+      const productRow = page.locator(".admin-table tbody tr").filter({ hasText: sku });
+      await expect(productRow).toBeVisible({ timeout: 30_000 });
+      await productRow.getByRole("link", { name: "Edit" }).click();
+
+      await expect(page).toHaveURL(/\/admin\/products\/[^/]+$/);
+      await expect(page.getByText(/Loading product/i)).toBeHidden({ timeout: 30_000 });
+      await expect(page.locator("#product-form-sku")).toHaveValue(sku);
+      await expect(page.locator(".admin-image-preview-grid .admin-image-preview")).toHaveCount(7);
+      await expect(page.locator(".admin-image-preview-grid img")).toHaveCount(7);
+
+      const match = page.url().match(/\/admin\/products\/([^/?#]+)/);
+      productId = match?.[1];
+
+      const getRes = await request.get(`/api/admin/products/${productId}`);
+      expect(getRes.ok()).toBeTruthy();
+      const loaded = (await getRes.json()) as { product?: { images?: string[] } };
+      expect(loaded.product?.images).toHaveLength(7);
+    } finally {
+      if (productId) {
+        await deleteAdminProduct(request, productId);
+      } else {
+        const fallbackId = await findAdminProductIdBySku(request, sku);
+        if (fallbackId) await deleteAdminProduct(request, fallbackId);
+      }
+    }
+  });
+
+  test("bulk import full flow: PDP gallery, editable images, and SKU re-import update", async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(240_000);
+    const sku = `E2E-FULL-${Date.now()}`;
+    const productName = "E2E Full Flow Import Guitar";
+    let productId: string | undefined;
+
+    try {
+      await runBulkImportWizardConfirm(page, {
+        sku,
+        productName,
+        publishStatus: "active",
+      });
+
+      await page.getByRole("textbox", { name: /Search products/i }).fill(sku);
+      const productRow = page.locator(".admin-table tbody tr").filter({ hasText: sku });
+      await expect(productRow).toBeVisible({ timeout: 30_000 });
+      await productRow.getByRole("link", { name: "Edit" }).click();
+      await expect(page.getByText(/Loading product/i)).toBeHidden({ timeout: 30_000 });
+
+      await expect(page.locator(".admin-image-preview-grid .admin-image-preview")).toHaveCount(7);
+      const slug = await page.locator("#product-form-slug").inputValue();
+      expect(slug.length).toBeGreaterThan(0);
+
+      const match = page.url().match(/\/admin\/products\/([^/?#]+)/);
+      productId = match?.[1];
+
+      await page.goto(`/product/${slug}`, { waitUntil: "domcontentloaded" });
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible({ timeout: 20_000 });
+      await expect(page.locator(".pdp-gallery__thumbs .pdp-gallery__thumb")).toHaveCount(7);
+
+      await page.goto(`/admin/products/${productId}`, { waitUntil: "domcontentloaded" });
+      await expect(page.getByText(/Loading product/i)).toBeHidden({ timeout: 30_000 });
+      await page
+        .locator(".admin-image-preview-grid .admin-image-preview")
+        .first()
+        .getByRole("button", { name: /Remove/i })
+        .click();
+      await expect(page.locator(".admin-image-preview-grid .admin-image-preview")).toHaveCount(6);
+      await page.getByRole("button", { name: /Update Product/i }).click();
+      await expect(page.getByText(/Product updated successfully/i)).toBeVisible({
+        timeout: 30_000,
+      });
+
+      await page.goto(`/product/${slug}`, { waitUntil: "domcontentloaded" });
+      await expect(page.locator(".pdp-gallery__thumbs .pdp-gallery__thumb")).toHaveCount(6);
+
+      const reimport = await confirmBulkImportViaApi(request, {
+        sku,
+        productName,
+        publishStatus: "active",
+        duplicateStrategy: "update",
+      });
+      expect(reimport.updated).toBe(1);
+      expect(reimport.images).toHaveLength(7);
+
+      await page.goto(`/admin/products/${productId}`, { waitUntil: "domcontentloaded" });
+      await expect(page.getByText(/Loading product/i)).toBeHidden({ timeout: 30_000 });
+      await expect(page.locator(".admin-image-preview-grid .admin-image-preview")).toHaveCount(7);
+
+      await page.goto(`/product/${slug}`, { waitUntil: "domcontentloaded" });
+      await expect(page.locator(".pdp-gallery__thumbs .pdp-gallery__thumb")).toHaveCount(7);
+    } finally {
+      if (productId) {
+        await deleteAdminProduct(request, productId);
+      } else {
+        const fallbackId = await findAdminProductIdBySku(request, sku);
+        if (fallbackId) await deleteAdminProduct(request, fallbackId);
+      }
+    }
   });
 
   test("legacy CSV headers are rejected at preview", async ({ page }) => {

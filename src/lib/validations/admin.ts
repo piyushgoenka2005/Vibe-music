@@ -3,8 +3,28 @@ import { z } from "zod";
 const variantAttributeSchema = z.object({
   type: z.enum(["color", "size", "finish", "custom"]),
   name: z.string().min(1).max(50),
-  value: z.string().min(1).max(100),
+  value: z.string().max(100),
 });
+
+const productSpecSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+});
+
+const productVideoSchema = z
+  .object({
+    id: z.string().optional(),
+    title: z.string(),
+    duration: z.string().optional(),
+    thumbnailColor: z.string().optional(),
+    embedUrl: z.string(),
+  })
+  .transform((video) => ({
+    id: video.id?.trim() || `video-${Math.random().toString(36).slice(2, 10)}`,
+    title: video.title,
+    thumbnailColor: video.thumbnailColor?.trim() || "#1a1a1a",
+    embedUrl: video.embedUrl,
+  }));
 
 const productVariantSchema = z.object({
   id: z.string().optional(),
@@ -14,7 +34,7 @@ const productVariantSchema = z.object({
   price: z.number().min(0),
   stock: z.number().min(0),
   attributes: z.array(variantAttributeSchema).default([]),
-  images: z.array(z.string().url().or(z.literal(""))).default([]),
+  images: z.array(z.string()).default([]),
   isDefault: z.boolean().optional(),
 });
 
@@ -71,6 +91,9 @@ export const adminProductSchema = z.object({
   images: z.array(z.string()).optional(),
   /** Ordered frame URLs for PDP 360° view. */
   spin360Images: z.array(z.string()).optional(),
+  inTheBox: z.array(z.string()).optional(),
+  videos: z.array(productVideoSchema).optional(),
+  detailSpecs: z.array(productSpecSchema).optional(),
   specifications: z.record(z.string(), z.string()).optional(),
   metaTitle: z.string().max(255).optional(),
   metaDescription: z.string().max(500).optional(),

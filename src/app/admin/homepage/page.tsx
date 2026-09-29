@@ -661,7 +661,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                       className="admin-input"
                       style={{ width: "100%" }}
                       value={itemForm.customHref}
-                      placeholder="https://www.instagram.com/vibemusic"
+                      placeholder="https://www.instagram.com/vibemusicindia"
                       onChange={(event) =>
                         setItemForm((prev) => ({ ...prev, customHref: event.target.value }))
                       }

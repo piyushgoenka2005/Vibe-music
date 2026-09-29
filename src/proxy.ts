@@ -10,7 +10,8 @@ import {
   isWebhookPath,
   verifyMutationOrigin,
 } from "@/lib/security/mutation-origin";
-import { getClientIp, RATE_LIMITS, type RateLimitResult } from "@/lib/security/rate-limit-core";
+import { getClientIp, type RateLimitResult } from "@/lib/security/rate-limit-core";
+import { resolveRateLimitScope } from "@/lib/security/rate-limit-scopes";
 import {
   finalizeRouteObservationFromStatus,
   REQUEST_START_HEADER,
@@ -21,35 +22,6 @@ import {
   logSecurityEvent,
   REQUEST_ID_HEADER,
 } from "@/lib/security/request-log";
-
-function resolveRateLimitScope(pathname: string): {
-  scope: string;
-  options: (typeof RATE_LIMITS)[keyof typeof RATE_LIMITS];
-} {
-  if (pathname === "/api/health" || pathname === "/api/metrics") {
-    return { scope: "health", options: RATE_LIMITS.health };
-  }
-  if (pathname.startsWith("/api/admin")) {
-    // Unauthenticated login must use the stricter auth bucket, not admin-api.
-    if (pathname === "/api/admin/login") {
-      return { scope: "auth-api", options: RATE_LIMITS.auth };
-    }
-    return { scope: "admin-api", options: RATE_LIMITS.admin };
-  }
-  if (pathname.startsWith("/api/auth") || pathname === "/api/contact") {
-    return { scope: "auth-api", options: RATE_LIMITS.auth };
-  }
-  if (pathname.startsWith("/api/payment") || pathname.startsWith("/api/orders")) {
-    return { scope: "checkout-api", options: RATE_LIMITS.checkout };
-  }
-  if (pathname.startsWith("/api/search")) {
-    return { scope: "search-api", options: RATE_LIMITS.search };
-  }
-  if (pathname.startsWith("/api/media/thumb")) {
-    return { scope: "media-thumb", options: RATE_LIMITS.mediaThumb };
-  }
-  return { scope: "public-api", options: RATE_LIMITS.publicApi };
-}
 
 function withSecurityHeaders(response: NextResponse, pathname?: string): NextResponse {
   for (const header of API_SECURITY_HEADERS) {
@@ -82,7 +54,7 @@ function isDevAuthReadFastPath(request: NextRequest, pathname: string): boolean 
     process.env.NODE_ENV !== "production" &&
     process.env.DISABLE_RATE_LIMIT === "true" &&
     request.method === "GET" &&
-    pathname.startsWith("/api/auth/")
+    (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/admin/"))
   );
 }
 
@@ -119,6 +91,7 @@ async function handleApiRequest(request: NextRequest): Promise<NextResponse | nu
     if (!rateLimit.allowed) {
       logSecurityEvent("rate_limit_exceeded", { requestId, path: pathname, ip, scope });
       const blocked = jsonApiError(requestId, "Too many requests. Please try again later.", 429, {
+        "X-RateLimit-Limit": String(options.limit),
         "X-RateLimit-Remaining": "0",
         "X-RateLimit-Reset": String(rateLimit.resetAt),
       });
@@ -145,6 +118,7 @@ async function handleApiRequest(request: NextRequest): Promise<NextResponse | nu
     pathname,
   );
   response.headers.set(REQUEST_ID_HEADER, requestId);
+  response.headers.set("X-RateLimit-Limit", String(options.limit));
   response.headers.set("X-RateLimit-Remaining", String(rateLimit.remaining));
   response.headers.set("X-RateLimit-Reset", String(rateLimit.resetAt));
   return response;

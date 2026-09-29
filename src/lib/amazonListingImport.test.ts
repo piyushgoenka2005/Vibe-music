@@ -4,6 +4,8 @@ import path from "node:path";
 import * as XLSX from "xlsx";
 import {
   VIBEMUSIC_BULK_COLUMN_COUNT,
+  VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
+  VIBEMUSIC_BULK_CORE_HEADERS,
   VIBEMUSIC_BULK_HEADERS,
   buildVibemusicBulkTemplateCsv,
   buildVibemusicBulkTemplateXlsx,
@@ -27,7 +29,10 @@ describe("vibemusic bulk import", () => {
     expect(VIBEMUSIC_BULK_HEADERS).toContain("Bullet Point.4");
     expect(VIBEMUSIC_BULK_HEADERS[47]).toBe("Item  Depth Front to Back");
     expect(VIBEMUSIC_BULK_HEADERS[68]).toBe("Item Weight Unit");
-    expect(VIBEMUSIC_BULK_COLUMN_COUNT).toBe(69);
+    expect(VIBEMUSIC_BULK_HEADERS[69]).toBe("image1");
+    expect(VIBEMUSIC_BULK_HEADERS[80]).toBe("image12");
+    expect(VIBEMUSIC_BULK_CORE_COLUMN_COUNT).toBe(69);
+    expect(VIBEMUSIC_BULK_COLUMN_COUNT).toBe(81);
   });
 
   it("detects vibemusic bulk vs legacy headers", () => {
@@ -159,11 +164,12 @@ describe("vibemusic bulk import", () => {
     expect(parsed.rows[0]!.originalPrice).toBe(81454);
   });
 
-  it("requires all 69 headers in exact order", () => {
+  it("accepts 69 core headers or the full 81-column template with image1–image12", () => {
+    expect(validateVibemusicBulkHeaders([...VIBEMUSIC_BULK_CORE_HEADERS])).toBeNull();
     expect(validateVibemusicBulkHeaders([...VIBEMUSIC_BULK_HEADERS])).toBeNull();
 
     expect(validateVibemusicBulkHeaders(["Brand", "SKU", "ITEM TITLE", "Selling Price"])).toMatch(
-      /requires exactly 69 columns/,
+      /requires exactly 69 core columns/,
     );
 
     const reordered = [...VIBEMUSIC_BULK_HEADERS];

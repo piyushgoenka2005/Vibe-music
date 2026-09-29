@@ -2,7 +2,7 @@ import { z } from "zod";
 import { DEFAULT_BULK_IMPORT_OPTIONS, type BulkImportOptions } from "@/lib/admin/bulkImportTypes";
 
 export const bulkImportOptionsSchema = z.object({
-  duplicateStrategy: z.enum(["fail", "skip", "update"]).default("fail"),
+  duplicateStrategy: z.enum(["fail", "skip", "update"]).default("update"),
   publishStatus: z.enum(["active", "draft"]).default("active"),
 });
 
@@ -23,6 +23,11 @@ export const MAX_CSV_BYTES = MAX_SHEET_BYTES;
 export const MAX_ZIP_BYTES = 100 * 1024 * 1024;
 /** Maximum product rows per bulk upload (vibemusic bulk template). */
 export const MAX_IMPORT_ROWS = 2000;
+/** @deprecated Prefer getMaxBulkImportImages() from bulkImportImages.ts */
+export {
+  DEFAULT_MAX_BULK_IMPORT_IMAGES as MAX_BULK_IMPORT_IMAGES,
+  getMaxBulkImportImages,
+} from "@/lib/admin/bulkImportImages";
 /** PostgreSQL upsert batch size during confirmed bulk import. */
 export const BULK_IMPORT_WRITE_BATCH_SIZE = 50;
 

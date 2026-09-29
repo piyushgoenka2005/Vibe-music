@@ -81,8 +81,18 @@ describe("previewBulkImport", () => {
     expect(preview[0]?.action).toBe("create");
   });
 
-  it("rejects duplicate SKUs by default", async () => {
+  it("updates duplicate SKUs by default", async () => {
     const preview = await previewBulkImport([amazonRow({ sku: "EXISTING-SKU" })]);
+    expect(preview[0]?.valid).toBe(true);
+    expect(preview[0]?.action).toBe("update");
+    expect(preview[0]?.existingProductId).toBe("prod-existing");
+  });
+
+  it("rejects duplicate SKUs when configured to fail", async () => {
+    const preview = await previewBulkImport([amazonRow({ sku: "EXISTING-SKU" })], {
+      duplicateStrategy: "fail",
+      publishStatus: "active",
+    });
     expect(preview[0]?.valid).toBe(false);
     expect(preview[0]?.errors.join(" ")).toMatch(/already exists in catalog/i);
   });

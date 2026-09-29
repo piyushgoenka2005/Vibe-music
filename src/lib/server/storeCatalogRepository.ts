@@ -28,8 +28,21 @@ export {
 
 export async function invalidateCatalogCache(): Promise<void> {
   try {
-    const { revalidateCatalogSnapshot } = await import("@/lib/server/catalogSnapshotCache");
-    await revalidateCatalogSnapshot();
+    const [
+      { revalidateCatalogSnapshot },
+      { revalidateHomepageSnapshot },
+      { invalidateCacheByPrefix },
+    ] = await Promise.all([
+      import("@/lib/server/catalogSnapshotCache"),
+      import("@/lib/server/homepageSnapshotCache"),
+      import("@/lib/server/redisCache"),
+    ]);
+
+    await Promise.all([
+      revalidateCatalogSnapshot(),
+      revalidateHomepageSnapshot(),
+      invalidateCacheByPrefix("products"),
+    ]);
   } catch (error) {
     // Never fail a catalog write/delete because cache busting threw.
     console.error("[catalog] invalidateCatalogCache failed", error);

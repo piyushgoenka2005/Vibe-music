@@ -7,6 +7,7 @@ import {
   createProduct,
   deleteProduct,
   getProductById,
+  resolveCatalogImageUrls,
   toProduct,
   toProductDetail,
   updateProduct,
@@ -87,7 +88,7 @@ function toAdminProduct(catalog: CatalogProduct): AdminProduct {
     updatedAt: catalog.updatedAt,
     variants: detail.variants,
     specifications: catalog.specifications,
-    images: catalog.images,
+    images: resolveCatalogImageUrls(catalog),
     spin360Images: catalog.detail?.spin360Images ?? [],
     inTheBox: detail.inTheBox,
     videos: detail.videos,
@@ -366,6 +367,7 @@ export async function buildAdminProductsExportCsv(
       description: product.description,
       specifications: product.specifications,
       inTheBox: Array.isArray(product.detail?.inTheBox) ? product.detail.inTheBox : [],
+      images: product.images,
     });
     const row: ParsedCsvRow = {};
     for (const header of headers) {

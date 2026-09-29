@@ -28,8 +28,11 @@ export function notFoundResponse(resource = "Resource"): NextResponse {
 
 export function applyRateLimitHeaders(
   response: NextResponse,
-  result: { remaining: number; resetAt: number },
+  result: { remaining: number; resetAt: number; limit?: number },
 ): NextResponse {
+  if (result.limit != null) {
+    response.headers.set("X-RateLimit-Limit", String(result.limit));
+  }
   response.headers.set("X-RateLimit-Remaining", String(result.remaining));
   response.headers.set("X-RateLimit-Reset", String(result.resetAt));
   return response;
@@ -56,7 +59,10 @@ export async function enforceRateLimit(
   const result = await distributedCheckRateLimit(`${scope}:${ip}`, options);
   if (!result.allowed) {
     const response = jsonError("Too many requests. Please try again later.", 429);
-    return applyRateLimitHeaders(applyRequestIdHeader(response, request), result);
+    return applyRateLimitHeaders(applyRequestIdHeader(response, request), {
+      ...result,
+      limit: options.limit,
+    });
   }
   return null;
 }

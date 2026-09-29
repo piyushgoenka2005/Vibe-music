@@ -220,6 +220,13 @@
   font-weight: 600;
 }
 
+.bulk-import-option-card__hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--admin-muted);
+}
+
 .bulk-import-option-card label {
   display: flex;
   gap: 0.5rem;
@@ -430,4 +437,12 @@
   top: 0;
   z-index: 1;
   background: var(--admin-surface-2);
+}
+
+.bulk-import-images-guide {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--admin-accent) 25%, var(--admin-border));
+  background: color-mix(in srgb, var(--admin-accent-soft) 65%, transparent);
 }

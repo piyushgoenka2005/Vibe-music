@@ -9,6 +9,7 @@ import {
 } from "@/lib/admin/bulkImportTypes";
 import { BULK_IMPORT_WRITE_BATCH_SIZE } from "@/lib/admin/bulkImportValidation";
 import { buildBulkImportPreviewSummary } from "@/lib/admin/bulkImportSummary";
+import { collectBulkImportImageNames } from "@/lib/server/bulkImportImageResolver";
 import {
   collectBulkImportCategoryCandidates,
   formatBulkImportCategoryHint,
@@ -46,13 +47,16 @@ import {
   fetchProductsByCategory,
   fetchProductsByBrandSlug,
   fetchProductsByIds,
+  invalidateCatalogCache,
   isCatalogUnavailable,
   removeProduct,
   skuExists,
   slugExists,
   writeProduct,
 } from "@/lib/server/storeCatalogRepository";
+import { isPostgresConfigured } from "@/lib/db/postgresConfig";
 import { getCachedCategories, getCachedProducts } from "@/lib/server/catalogSnapshotCache";
+import { isJsonCatalogFallbackAllowed } from "@/lib/server/prisma/catalogRepository";
 import {
   recordInventoryLogEntries,
   recordInventoryLogEntry,
@@ -135,6 +139,14 @@ function stockToAvailability(stock: number): Product["availability"] {
   return "in-stock";
 }
 
+function stripGuitarShowcaseSpecifications(
+  specifications: Record<string, string>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(specifications).filter(([key]) => !GUITAR_SHOWCASE_FIELD_LABELS.includes(key)),
+  );
+}
+
 function applyGuitarSpecifications(
   name: string,
   brand: string,
@@ -143,20 +155,49 @@ function applyGuitarSpecifications(
   specifications: Record<string, string>,
   guitarSpecs?: Record<string, string>,
 ): Record<string, string> {
+  const withoutGuitarLabels = stripGuitarShowcaseSpecifications(specifications);
+
   if (!isGuitarProduct(categorySlug, categoryName)) {
-    return specifications;
+    return withoutGuitarLabels;
   }
   // Pedals / amps miscategorized under guitars must not get invented guitar specs.
   if (isNonInstrumentGuitarProduct({ name })) {
-    return specifications;
+    return withoutGuitarLabels;
   }
 
-  const merged = {
-    ...specifications,
-    ...Object.fromEntries(Object.entries(guitarSpecs ?? {}).filter(([, value]) => value.trim())),
-  };
+  const next = { ...withoutGuitarLabels };
+  if (guitarSpecs !== undefined) {
+    for (const label of GUITAR_SHOWCASE_FIELD_LABELS) {
+      const value = guitarSpecs[label]?.trim();
+      if (value) next[label] = value;
+    }
+  } else {
+    for (const label of GUITAR_SHOWCASE_FIELD_LABELS) {
+      const value = specifications[label]?.trim();
+      if (value) next[label] = value;
+    }
+  }
 
-  return enrichGuitarSpecifications(name, brand, merged);
+  return enrichGuitarSpecifications(name, brand, next);
+}
+
+/** When a product has one default variant, keep it aligned with top-level price/stock edits. */
+export function syncDefaultVariantPatch(
+  variants: NonNullable<CreateProductInput["variants"]>,
+  price: number,
+  stock: number,
+): NonNullable<CreateProductInput["variants"]> {
+  if (variants.length !== 1) return variants;
+  const only = variants[0];
+  if (!only) return variants;
+  return [
+    {
+      ...only,
+      price,
+      stock,
+      isDefault: only.isDefault ?? true,
+    },
+  ];
 }
 
 function syncDetailSpecsFromSpecifications(
@@ -175,6 +216,51 @@ function syncDetailSpecsFromSpecifications(
     ...detail,
     specs: [...baseSpecs, ...guitarSpecs],
   };
+}
+
+export function buildGalleryFromImageUrls(
+  product: Pick<CatalogProduct, "name" | "imageColor" | "images" | "image">,
+): ProductImage[] {
+  const urls =
+    product.images && product.images.length > 0
+      ? product.images
+      : product.image
+        ? [product.image]
+        : [];
+
+  return urls
+    .filter(
+      (src): src is string =>
+        typeof src === "string" && src.length > 0 && src !== "[object Object]",
+    )
+    .map((src, index) => ({
+      id: `img-${index}`,
+      alt: `${product.name} view ${index + 1}`,
+      color: product.imageColor,
+      src,
+    }));
+}
+
+/** Prefer top-level images; fall back to detail.gallery when they diverge (legacy bulk imports). */
+export function resolveCatalogImageUrls(catalog: CatalogProduct): string[] {
+  const topLevel = (catalog.images ?? []).filter(
+    (src) => typeof src === "string" && src.length > 0 && src !== "[object Object]",
+  );
+  if (topLevel.length > 0) return topLevel;
+
+  const gallery = catalog.detail?.gallery;
+  if (!Array.isArray(gallery)) return catalog.image ? [catalog.image] : [];
+
+  return gallery
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object") {
+        const record = item as { src?: string; url?: string };
+        return record.src ?? record.url ?? "";
+      }
+      return "";
+    })
+    .filter((src) => src.length > 0 && src !== "[object Object]");
 }
 
 function buildDefaultDetail(
@@ -196,12 +282,7 @@ function buildDefaultDetail(
       value,
     })),
     inTheBox: [],
-    gallery: product.images.map((src, i) => ({
-      id: `img-${i}`,
-      alt: `${product.name} view ${i + 1}`,
-      color: product.imageColor,
-      ...(src ? { src } : {}),
-    })),
+    gallery: buildGalleryFromImageUrls(product),
     videos: [],
     variants: normalizeVariants(
       [
@@ -407,16 +488,28 @@ async function fetchCatalogSnapshot(includeInactive = false): Promise<CatalogPro
     return loadLocalCatalogSnapshot(includeInactive);
   }
 
+  const postgresConfigured = isPostgresConfigured();
+  const allowJsonFallback = isJsonCatalogFallbackAllowed();
+
   try {
     const products = await getCachedProducts(includeInactive);
-    // Unseeded / emptied Postgres can be cached as []. Prefer local JSON until DB has data.
-    if (products.length === 0) {
+    // When Postgres is configured, trust DB results (including empty after import edits).
+    if (postgresConfigured || products.length > 0) {
+      return products;
+    }
+    if (allowJsonFallback) {
       const local = await loadLocalCatalogSnapshot(includeInactive);
       if (local.length > 0) return local;
     }
     return products;
-  } catch {
-    return loadLocalCatalogSnapshot(includeInactive);
+  } catch (error) {
+    if (postgresConfigured) {
+      return fetchAllProductsFromDb(includeInactive);
+    }
+    if (allowJsonFallback) {
+      return loadLocalCatalogSnapshot(includeInactive);
+    }
+    throw error;
   }
 }
 
@@ -1060,9 +1153,9 @@ export async function updateProduct(
     };
   }
 
-  if (patch.images?.length) {
-    updated.image = patch.images[0];
+  if (patch.images !== undefined) {
     updated.images = patch.images;
+    updated.image = patch.images[0] ?? "";
   }
 
   const all = await fetchAllProductsFromDb(true);
@@ -1071,19 +1164,24 @@ export async function updateProduct(
     nextSpecifications,
   );
 
-  if (patch.variants) {
+  if (patch.variants !== undefined) {
     const existingSkus = await fetchAllVariantSkus(id);
-    updated.detail = applyVariantsToProduct(
-      { ...updated, detail: preservedDetail },
-      patch.variants,
+    const variantsForWrite = syncDefaultVariantPatch(patch.variants, price, stock);
+    const withVariants = applyVariantsToProduct(
+      { ...updated, detail: preservedDetail, price, stock },
+      variantsForWrite,
       existingSkus,
-    ).detail;
-    const aggregates = syncProductAggregatesFromVariants(
-      getVariantsFromProduct({ ...updated, detail: updated.detail }),
     );
-    updated.price = aggregates.price;
-    updated.stock = aggregates.stock;
-    updated.availability = aggregates.availability;
+    updated.detail = {
+      ...preservedDetail,
+      ...withVariants.detail,
+      specs: withVariants.detail?.specs ?? preservedDetail.specs,
+      msrp: originalPrice > withVariants.price ? originalPrice : null,
+      salePrice: originalPrice > withVariants.price ? withVariants.price : null,
+    };
+    updated.price = withVariants.price;
+    updated.stock = withVariants.stock;
+    updated.availability = withVariants.availability;
   } else if (
     stock !== current.stock ||
     price !== current.price ||
@@ -1160,6 +1258,13 @@ export async function updateProduct(
     };
   }
 
+  if (patch.images !== undefined) {
+    updated.detail = {
+      ...(updated.detail ?? preservedDetail),
+      gallery: buildGalleryFromImageUrls(updated),
+    };
+  }
+
   return writeProduct({ ...updated, id });
 }
 
@@ -1206,6 +1311,28 @@ export async function bulkUpdateCategory(updates: BulkCategoryUpdate[]): Promise
 function parseBool(value: string | undefined): boolean {
   if (!value) return false;
   return ["true", "1", "yes", "y"].includes(value.trim().toLowerCase());
+}
+
+/** Resolve category slugs and product slugs before CDN image uploads during import. */
+export async function enrichBulkImportRowSlugs(rows: BulkImportRow[]): Promise<BulkImportRow[]> {
+  const [{ slugs }, categories] = await Promise.all([
+    fetchExistingSlugsAndSkus(),
+    fetchCategories(),
+  ]);
+  const previewSlugs = new Set<string>();
+
+  return rows.map((row) => {
+    const category = resolveBulkImportCategory(categories, row).category;
+    const generatedSlug = row.name
+      ? uniqueSlug(buildProductSlug(row.brand, row.name), new Set([...slugs, ...previewSlugs]))
+      : "";
+    previewSlugs.add(generatedSlug);
+    return {
+      ...row,
+      resolvedCategorySlug: category?.slug ?? row.resolvedCategorySlug,
+      generatedSlug,
+    };
+  });
 }
 
 export async function previewBulkImport(
@@ -1296,9 +1423,7 @@ export async function previewBulkImport(
     }
     previewSkus.add(generatedSku);
 
-    const imageRefs = [row.image1, row.image2, row.image3, row.image4, row.image5].filter(
-      Boolean,
-    ) as string[];
+    const imageRefs = collectBulkImportImageNames(row);
 
     const isUrl = (v: string) =>
       v.startsWith("http://") || v.startsWith("https://") || v.startsWith("/");
@@ -1348,10 +1473,7 @@ function buildBulkImportCatalogProduct(
   const sku = row.generatedSku ?? row.sku ?? uniqueSku(new Set());
   const brandSlug = slugify(row.brand);
   const images =
-    row.resolvedImages ??
-    [row.image1, row.image2, row.image3, row.image4, row.image5].filter((img): img is string =>
-      Boolean(img?.trim()),
-    );
+    row.resolvedImages ?? collectBulkImportImageNames(row).filter((img) => Boolean(img.trim()));
   const primaryImage = images[0] ?? getProductImage(slug, category.name);
 
   const baseSpecifications = {
@@ -1409,12 +1531,7 @@ function buildBulkImportCatalogProduct(
     specs:
       row.detailSpecs ?? Object.entries(specifications).map(([label, value]) => ({ label, value })),
     inTheBox: row.inTheBox ?? [],
-    gallery: product.images.map((src, index) => ({
-      id: `img-${index}`,
-      alt: `${product.name} view ${index + 1}`,
-      color: product.imageColor,
-      ...(src ? { src } : {}),
-    })),
+    gallery: buildGalleryFromImageUrls(product),
     videos: [],
     variants: normalizeVariants(
       [
@@ -1545,10 +1662,7 @@ export async function bulkImportProducts(
   for (const row of updateRows) {
     try {
       const images =
-        row.resolvedImages ??
-        [row.image1, row.image2, row.image3, row.image4, row.image5].filter((img): img is string =>
-          Boolean(img?.trim()),
-        );
+        row.resolvedImages ?? collectBulkImportImageNames(row).filter((img) => Boolean(img.trim()));
       const stockDefault = row.sourceFormat === "vibemusic-bulk" ? 0 : undefined;
       const product = await updateProduct(row.existingProductId!, {
         name: row.name.trim(),
@@ -1578,6 +1692,8 @@ export async function bulkImportProducts(
       });
     }
   }
+
+  await invalidateCatalogCache();
 
   return {
     imported: importedProducts.length - updatedCount,

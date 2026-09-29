@@ -1,16 +1,21 @@
 /**
- * Canonical Vibe Music bulk product import format (69 columns, fixed order).
+ * Canonical Vibe Music bulk product import format.
+ * Core sheet: 69 columns in fixed order, plus optional image1–image12 columns.
  * Prefer importing from `@/lib/admin/bulkImportTemplate` in app/UI code.
  * Amazon-prefixed exports below are deprecated aliases only.
  */
 import * as XLSX from "xlsx";
 import { rowsToCsv } from "@/lib/csv";
+import {
+  assignBulkImportImageFields,
+  BULK_IMPORT_IMAGE_FIELDS,
+} from "@/lib/admin/bulkImportImages";
 import type { BulkImportRow } from "@/types/catalog";
 import type { ProductSpec } from "@/types/product";
 import { isGenericBulkCategoryValue } from "@/lib/admin/bulkImportCategoryResolver";
 
-/** Exact header order for the vibemusic bulk import template. */
-export const VIBEMUSIC_BULK_HEADERS = [
+/** Exact header order for the vibemusic bulk import template (spec columns). */
+export const VIBEMUSIC_BULK_CORE_HEADERS = [
   "Brand",
   "SKU",
   "MODEL NO.",
@@ -82,9 +87,19 @@ export const VIBEMUSIC_BULK_HEADERS = [
   "Item Weight Unit",
 ] as const;
 
+/** Optional trailing image filename / URL columns (editable in spreadsheet). */
+export const VIBEMUSIC_BULK_IMAGE_HEADERS = [...BULK_IMPORT_IMAGE_FIELDS] as const;
+
+/** Full downloadable template includes editable image columns. */
+export const VIBEMUSIC_BULK_HEADERS = [
+  ...VIBEMUSIC_BULK_CORE_HEADERS,
+  ...VIBEMUSIC_BULK_IMAGE_HEADERS,
+] as const;
+
 export type VibemusicBulkHeader = (typeof VIBEMUSIC_BULK_HEADERS)[number];
 
 export const VIBEMUSIC_BULK_COLUMN_COUNT = VIBEMUSIC_BULK_HEADERS.length;
+export const VIBEMUSIC_BULK_CORE_COLUMN_COUNT = VIBEMUSIC_BULK_CORE_HEADERS.length;
 
 export const VIBEMUSIC_BULK_SIGNATURE_HEADERS = [
   "ITEM TITLE",
@@ -278,6 +293,13 @@ const IMPORT_SPEC_SKIP_HEADERS = new Set(
     "image3",
     "image4",
     "image5",
+    "image6",
+    "image7",
+    "image8",
+    "image9",
+    "image10",
+    "image11",
+    "image12",
     "mainimage",
     "bulletpoint",
     "generickeyword",
@@ -432,11 +454,13 @@ export function vibemusicBulkRowToImportRow(
   const specifications = buildSpecifications(row, headerMap, brand, sku);
   const description = buildDescription({ productDescription, bullets });
 
-  const image1 = getCell(row, headerMap, "image1", "Image 1", "Main Image");
-  const image2 = getCell(row, headerMap, "image2", "Image 2");
-  const image3 = getCell(row, headerMap, "image3", "Image 3");
-  const image4 = getCell(row, headerMap, "image4", "Image 4");
-  const image5 = getCell(row, headerMap, "image5", "Image 5");
+  const imageFields = Object.fromEntries(
+    BULK_IMPORT_IMAGE_FIELDS.map((field) => {
+      const aliases =
+        field === "image1" ? [field, "Image 1", "Main Image"] : [field, `Image ${field.slice(5)}`];
+      return [field, getCell(row, headerMap, ...aliases) || undefined];
+    }),
+  ) as Pick<BulkImportRow, (typeof BULK_IMPORT_IMAGE_FIELDS)[number]>;
 
   return {
     name,
@@ -452,11 +476,7 @@ export function vibemusicBulkRowToImportRow(
     featured: false,
     trending: false,
     newArrival: false,
-    image1: image1 || undefined,
-    image2: image2 || undefined,
-    image3: image3 || undefined,
-    image4: image4 || undefined,
-    image5: image5 || undefined,
+    ...imageFields,
     specifications,
     detailSpecs: specsToDetailSpecs(specifications),
     inTheBox: specialFeatures.length ? specialFeatures : bullets.slice(0, 8),
@@ -501,6 +521,13 @@ function legacyRowToImportRow(
     image3: getCell(row, headerMap, "image3") || undefined,
     image4: getCell(row, headerMap, "image4") || undefined,
     image5: getCell(row, headerMap, "image5") || undefined,
+    image6: getCell(row, headerMap, "image6") || undefined,
+    image7: getCell(row, headerMap, "image7") || undefined,
+    image8: getCell(row, headerMap, "image8") || undefined,
+    image9: getCell(row, headerMap, "image9") || undefined,
+    image10: getCell(row, headerMap, "image10") || undefined,
+    image11: getCell(row, headerMap, "image11") || undefined,
+    image12: getCell(row, headerMap, "image12") || undefined,
     sourceFormat: "legacy",
   };
 }
@@ -599,22 +626,36 @@ export function parseProductImportBuffer(
 }
 
 /**
- * Validate uploaded headers match the vibemusic bulk template exactly:
- * all 69 columns, canonical spelling, canonical order.
+ * Validate uploaded headers match the vibemusic bulk template:
+ * - 69 core columns in canonical order, or
+ * - 81 columns when the optional image1–image12 block is included.
  */
 export function validateVibemusicBulkHeaders(headers: string[]): string | null {
   const trimmed = headers.map((header) => header.trim()).filter(Boolean);
 
-  if (trimmed.length !== VIBEMUSIC_BULK_COLUMN_COUNT) {
-    return `Vibe Music bulk template requires exactly ${VIBEMUSIC_BULK_COLUMN_COUNT} columns in the official order (found ${trimmed.length}). Download the template from the Import dialog (Excel or CSV).`;
+  if (
+    trimmed.length !== VIBEMUSIC_BULK_CORE_COLUMN_COUNT &&
+    trimmed.length !== VIBEMUSIC_BULK_COLUMN_COUNT
+  ) {
+    return `Vibe Music bulk template requires exactly ${VIBEMUSIC_BULK_CORE_COLUMN_COUNT} core columns, or ${VIBEMUSIC_BULK_COLUMN_COUNT} with image1–image12 appended (found ${trimmed.length}). Download the template from the Import dialog (Excel or CSV).`;
   }
 
   const mismatches: string[] = [];
-  for (let index = 0; index < VIBEMUSIC_BULK_HEADERS.length; index += 1) {
-    const expected = VIBEMUSIC_BULK_HEADERS[index]!;
+  for (let index = 0; index < VIBEMUSIC_BULK_CORE_HEADERS.length; index += 1) {
+    const expected = VIBEMUSIC_BULK_CORE_HEADERS[index]!;
     const actual = trimmed[index]!;
     if (normalizeHeaderKey(actual) !== normalizeHeaderKey(expected)) {
       mismatches.push(`column ${index + 1}: expected "${expected}", got "${actual}"`);
+    }
+  }
+
+  if (trimmed.length === VIBEMUSIC_BULK_COLUMN_COUNT) {
+    for (let index = 0; index < VIBEMUSIC_BULK_IMAGE_HEADERS.length; index += 1) {
+      const expected = VIBEMUSIC_BULK_IMAGE_HEADERS[index]!;
+      const actual = trimmed[VIBEMUSIC_BULK_CORE_COLUMN_COUNT + index]!;
+      if (normalizeHeaderKey(actual) !== normalizeHeaderKey(expected)) {
+        mismatches.push(`image column ${index + 1}: expected "${expected}", got "${actual ?? ""}"`);
+      }
     }
   }
 
@@ -745,6 +786,7 @@ export function catalogProductToBulkRow(product: {
   description?: string;
   specifications?: Record<string, string>;
   inTheBox?: string[];
+  images?: string[];
 }): Record<VibemusicBulkHeader, string> {
   const specs = product.specifications ?? {};
   const { intro, bullets } = splitDescriptionBullets(product.description ?? "");
@@ -851,6 +893,7 @@ export function catalogProductToBulkRow(product: {
   row["Number of Boxes"] = specValue(specs, "Number of Boxes");
   row["Item Weight"] = weightValue ?? "";
   row["Item Weight Unit"] = weightUnit;
+  assignBulkImportImageFields(row, product.images ?? []);
 
   return row;
 }

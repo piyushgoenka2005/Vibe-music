@@ -35,10 +35,10 @@ export function ensureTracingInitialized(): void {
     const { BatchSpanProcessor, ConsoleSpanExporter } = require("@opentelemetry/sdk-trace-base");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { Resource } = require("@opentelemetry/resources");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const {
       ATTR_SERVICE_NAME,
       ATTR_SERVICE_VERSION,
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
     } = require("@opentelemetry/semantic-conventions");
 
     const resource = new Resource({

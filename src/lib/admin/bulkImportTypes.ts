@@ -14,7 +14,7 @@ export interface BulkImportOptions {
 }
 
 export const DEFAULT_BULK_IMPORT_OPTIONS: BulkImportOptions = {
-  duplicateStrategy: "fail",
+  duplicateStrategy: "update",
   publishStatus: "active",
 };
 

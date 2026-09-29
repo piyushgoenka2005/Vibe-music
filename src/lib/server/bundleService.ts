@@ -1,6 +1,7 @@
 import "server-only";
 
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
+import { invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import { getProductById, getProductSummaries } from "@/services/catalogService";
 import { toProduct } from "@/services/catalogService";
@@ -57,9 +58,7 @@ function mapBundle(row: {
   };
 }
 
-export async function getBundleByProductId(
-  productId: string
-): Promise<ProductBundle | null> {
+export async function getBundleByProductId(productId: string): Promise<ProductBundle | null> {
   if (!isPostgresConfigured()) return null;
 
   if (bundleCache && isFresh(bundleCacheAt) && bundleCache.has(productId)) {
@@ -87,14 +86,12 @@ export async function getBundleByProductId(
 export async function listAllBundles(): Promise<ProductBundle[]> {
   if (!isPostgresConfigured()) return [];
   const rows = await prisma.productBundle.findMany();
-  return rows
-    .map(mapBundle)
-    .sort((a, b) => a.productName?.localeCompare(b.productName ?? "") ?? 0);
+  return rows.map(mapBundle).sort((a, b) => a.productName?.localeCompare(b.productName ?? "") ?? 0);
 }
 
 export async function upsertProductBundle(
   productId: string,
-  input: UpsertProductBundleInput
+  input: UpsertProductBundleInput,
 ): Promise<ProductBundle> {
   if (!isPostgresConfigured()) {
     throw new Error("DATABASE_URL is required to save product bundles");
@@ -138,16 +135,18 @@ export async function upsertProductBundle(
   });
 
   invalidateBundleCache();
+  void invalidateCatalogCache();
   return bundle;
 }
 
 export async function deleteProductBundle(productId: string): Promise<void> {
   await prisma.productBundle.deleteMany({ where: { productId } });
   invalidateBundleCache();
+  void invalidateCatalogCache();
 }
 
 function bundleFromProductDetail(
-  product: NonNullable<Awaited<ReturnType<typeof getProductById>>>
+  product: NonNullable<Awaited<ReturnType<typeof getProductById>>>,
 ): ProductBundle | null {
   const relatedIds = product.detail?.frequentlyBoughtTogether ?? [];
   if (relatedIds.length === 0) return null;
@@ -165,9 +164,7 @@ function bundleFromProductDetail(
   };
 }
 
-async function seedBundleFromProductDetail(
-  productId: string
-): Promise<ProductBundle | null> {
+async function seedBundleFromProductDetail(productId: string): Promise<ProductBundle | null> {
   const product = await getProductById(productId);
   if (!product) return null;
 
@@ -185,7 +182,7 @@ async function seedBundleFromProductDetail(
 
 export async function resolveBundleForProduct(
   productId: string,
-  mainUnitPrice?: number
+  mainUnitPrice?: number,
 ): Promise<ResolvedProductBundle | null> {
   try {
     let bundle = await getBundleByProductId(productId);
@@ -207,11 +204,8 @@ export async function resolveBundleForProduct(
     if (relatedProducts.length === 0) return null;
 
     const mainProduct = await getProductById(productId);
-    const mainPrice =
-      mainUnitPrice ?? (mainProduct ? toProduct(mainProduct).price : 0);
-    const subtotal =
-      mainPrice +
-      relatedProducts.reduce((sum, product) => sum + product.price, 0);
+    const mainPrice = mainUnitPrice ?? (mainProduct ? toProduct(mainProduct).price : 0);
+    const subtotal = mainPrice + relatedProducts.reduce((sum, product) => sum + product.price, 0);
     const discountMultiplier = 1 - bundle.discountPercent / 100;
     const bundlePrice = Math.round(subtotal * discountMultiplier * 100) / 100;
     const savings = Math.round((subtotal - bundlePrice) * 100) / 100;
@@ -231,7 +225,7 @@ export async function resolveBundleForProduct(
 
 export async function resolveBundleBySlug(
   slug: string,
-  mainUnitPrice?: number
+  mainUnitPrice?: number,
 ): Promise<ResolvedProductBundle | null> {
   const { getCatalogProductBySlug } = await import("@/services/catalogService");
   const product = await getCatalogProductBySlug(slug);

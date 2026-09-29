@@ -6,6 +6,7 @@ vi.mock("@/lib/security/edge-rate-limit", () => ({
 }));
 
 import { edgeCheckRateLimit } from "@/lib/security/edge-rate-limit";
+import { DEFAULT_RATE_LIMITS } from "@/lib/security/rate-limit-config";
 import { proxy } from "@/proxy";
 
 function apiRequest(
@@ -89,7 +90,7 @@ describe("proxy API security (L-17)", () => {
     );
     expect(edgeCheckRateLimit).toHaveBeenCalledWith(
       expect.stringMatching(/^auth-api:/),
-      expect.objectContaining({ limit: 20 }),
+      expect.objectContaining({ limit: DEFAULT_RATE_LIMITS.auth.limit }),
     );
   });
 
@@ -102,7 +103,15 @@ describe("proxy API security (L-17)", () => {
     );
     expect(edgeCheckRateLimit).toHaveBeenCalledWith(
       expect.stringMatching(/^checkout-api:/),
-      expect.objectContaining({ limit: 10 }),
+      expect.objectContaining({ limit: DEFAULT_RATE_LIMITS.checkout.limit }),
+    );
+  });
+
+  it("uses bulk import bucket for admin catalog import", async () => {
+    await proxy(apiRequest("/api/admin/products/import"));
+    expect(edgeCheckRateLimit).toHaveBeenCalledWith(
+      expect.stringMatching(/^admin-bulk-import:/),
+      expect.objectContaining({ limit: DEFAULT_RATE_LIMITS.adminBulkImport.limit }),
     );
   });
 });

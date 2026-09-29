@@ -1,4 +1,5 @@
 import { BRAND } from "@/lib/brand";
+import { SOCIAL_LINKS } from "@/lib/socialLinks";
 
 /** Organization + WebSite JSON-LD for Google Search Console / rich results. */
 export function buildOrganizationWebsiteJsonLd() {
@@ -28,10 +29,10 @@ export function buildOrganizationWebsiteJsonLd() {
           addressCountry: "IN",
         },
         sameAs: [
-          "https://www.facebook.com/vibemusic",
-          "https://x.com/vibemusic",
-          "https://www.instagram.com/vibemusic",
-          "https://www.linkedin.com/company/vibemusic",
+          SOCIAL_LINKS.facebook,
+          SOCIAL_LINKS.twitter,
+          SOCIAL_LINKS.instagram,
+          SOCIAL_LINKS.linkedin,
         ],
       },
       {

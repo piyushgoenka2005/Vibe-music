@@ -1,3 +1,4 @@
+import { buildCategoryBentoCatalogMeta } from "@/lib/server/categoryBentoCatalog";
 import { getCategoryBentoPublicData } from "@/lib/server/homepageService";
 import CategoryBentoShowcase from "@/components/home/CategoryBentoShowcase";
 import {
@@ -8,13 +9,17 @@ import {
 import { resolveLinkHref } from "@/lib/routes";
 
 export default async function CategoryBento() {
-  const data = await getCategoryBentoPublicData();
+  const [data, catalogMeta] = await Promise.all([
+    getCategoryBentoPublicData(),
+    buildCategoryBentoCatalogMeta(),
+  ]);
   if (!data.isActive || data.items.length === 0) return null;
 
   const staticBySlug = new Map(CATEGORY_BENTO_ITEMS.map((item) => [item.slug, item]));
 
   const items: CategoryBentoItem[] = data.items.map((item) => {
     const fallback = staticBySlug.get(item.slug);
+    const live = catalogMeta.get(item.slug);
     return {
       slug: item.slug,
       title: item.title,
@@ -27,8 +32,8 @@ export default async function CategoryBento() {
       imageAlt: fallback?.imageAlt || item.title,
       imagePosition: fallback?.imagePosition ?? "center center",
       wide: fallback?.wide,
-      productCount: fallback?.productCount,
-      brands: item.brands || fallback?.brands,
+      productCount: live?.productCount,
+      brands: item.brands || live?.brands,
       badge: (item.badge as CategoryBentoItem["badge"]) || fallback?.badge,
       href: resolveLinkHref(item.href),
     };

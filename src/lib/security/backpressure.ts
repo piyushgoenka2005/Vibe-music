@@ -1,55 +1,53 @@
 /**
  * Backpressure — prevents Node.js event loop saturation under 2K+ concurrent load.
  *
- * Problem at 2K concurrent:
- *   Without backpressure, every incoming request is accepted into the event loop.
- *   If DB/Redis is slow, the event loop queue grows, response times spike to 10-30s,
- *   and eventually Node.js runs out of memory or crashes.
- *
- * Solution:
- *   Track in-flight requests per scope. When a scope exceeds its max concurrent
- *   limit, reject new requests immediately with 429 — this is a feature, not a bug.
- *   It tells Nginx to retry on the next PM2 worker, distributing load evenly.
- *
- * Math for 2K concurrent on 4-core VPS:
- *   - PM2 cluster: 4 workers × 500 max concurrent = 2000 total
- *   - Each worker: ~125 max concurrent (well within Node.js capacity)
- *   - DB: 20 conns/worker × 4 = 80 total connections
+ * Limits are configurable via BACKPRESSURE_<SCOPE>_MAX env vars.
  */
-
-// ─── Per-scope counters ──────────────────────────────────────────────────
 
 interface ScopeCounter {
   inFlight: number;
   maxConcurrent: number;
-  rejected: number; // total rejected since start
+  rejected: number;
 }
 
 const counters = new Map<string, ScopeCounter>();
 
-// ─── Default limits ───────────────────────────────────────────────────────
-
-export const BACKPRESSURE_LIMITS: Record<string, number> = {
-  /** API routes: max 300 concurrent per worker (total: 1200 across 4 cores) */
+export const DEFAULT_BACKPRESSURE_LIMITS: Record<string, number> = {
   api: 300,
-  /** Page routes: max 150 concurrent per worker (SSR is expensive) */
   page: 150,
-  /** Auth: max 50 concurrent per worker (password hashing is CPU-heavy) */
   auth: 50,
-  /** Checkout: max 80 concurrent per worker (stock checks, payment) */
   checkout: 80,
-  /** Admin: max 100 concurrent per worker */
-  admin: 100,
-  /** Search: max 100 concurrent per worker */
+  admin: 150,
   search: 100,
 };
+
+function parsePositiveInt(raw: string | undefined, fallback: number): number {
+  if (!raw?.trim()) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function scopeEnvKey(scope: string): string {
+  return scope.replace(/[^a-z0-9]+/gi, "_").toUpperCase();
+}
+
+export function buildBackpressureLimits(
+  env: NodeJS.ProcessEnv = process.env,
+): Record<string, number> {
+  const built: Record<string, number> = {};
+  for (const [scope, fallback] of Object.entries(DEFAULT_BACKPRESSURE_LIMITS)) {
+    built[scope] = parsePositiveInt(env[`BACKPRESSURE_${scopeEnvKey(scope)}_MAX`], fallback);
+  }
+  return built;
+}
 
 function getScopeCounter(scope: string): ScopeCounter {
   let counter = counters.get(scope);
   if (!counter) {
+    const limits = buildBackpressureLimits();
     counter = {
       inFlight: 0,
-      maxConcurrent: BACKPRESSURE_LIMITS[scope] ?? 300,
+      maxConcurrent: limits[scope] ?? limits.api ?? DEFAULT_BACKPRESSURE_LIMITS.api,
       rejected: 0,
     };
     counters.set(scope, counter);
@@ -57,13 +55,9 @@ function getScopeCounter(scope: string): ScopeCounter {
   return counter;
 }
 
-/**
- * Check if a request is allowed for the given scope.
- * Returns null if allowed, or a response to return (429).
- */
 export function checkBackpressure(
   scope: string,
-  _path: string
+  _path: string,
 ): { allowed: true } | { allowed: false; response: Response } {
   const counter = getScopeCounter(scope);
 
@@ -83,7 +77,7 @@ export function checkBackpressure(
             "X-Backpressure-Scope": scope,
             "X-Backpressure-Limit": String(counter.maxConcurrent),
           },
-        }
+        },
       ),
     };
   }
@@ -92,7 +86,6 @@ export function checkBackpressure(
   return { allowed: true };
 }
 
-/** Release a slot after request completes. */
 export function releaseBackpressure(scope: string): void {
   const counter = counters.get(scope);
   if (counter && counter.inFlight > 0) {
@@ -100,9 +93,6 @@ export function releaseBackpressure(scope: string): void {
   }
 }
 
-/**
- * Determine the backpressure scope from a request path.
- */
 export function getBackpressureScope(pathname: string): string {
   if (pathname.startsWith("/api/auth/")) return "auth";
   if (pathname.startsWith("/api/admin/")) return "admin";
@@ -118,7 +108,6 @@ export function getBackpressureScope(pathname: string): string {
   return "page";
 }
 
-/** Get all scope metrics for the monitoring endpoint */
 export function getBackpressureStats(): Array<{
   scope: string;
   inFlight: number;
@@ -147,7 +136,6 @@ export function getBackpressureStats(): Array<{
   return result;
 }
 
-/** Check if any scope is under pressure (>80% utilization) */
 export function isSystemUnderPressure(): boolean {
   for (const [, counter] of counters) {
     if (counter.inFlight / counter.maxConcurrent > 0.8) {
@@ -156,3 +144,6 @@ export function isSystemUnderPressure(): boolean {
   }
   return false;
 }
+
+/** @deprecated Use DEFAULT_BACKPRESSURE_LIMITS */
+export const BACKPRESSURE_LIMITS = DEFAULT_BACKPRESSURE_LIMITS;

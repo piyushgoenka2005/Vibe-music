@@ -1,7 +1,6 @@
-export interface RateLimitOptions {
-  limit: number;
-  windowMs: number;
-}
+import { buildRateLimits, type RateLimitOptions } from "@/lib/security/rate-limit-config";
+
+export type { RateLimitOptions } from "@/lib/security/rate-limit-config";
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -16,10 +15,7 @@ interface RateLimitEntry {
 
 const buckets = new Map<string, RateLimitEntry>();
 
-export function checkRateLimit(
-  key: string,
-  options: RateLimitOptions
-): RateLimitResult {
+export function checkRateLimit(key: string, options: RateLimitOptions): RateLimitResult {
   const now = Date.now();
   const existing = buckets.get(key);
 
@@ -76,15 +72,4 @@ export function getClientIp(request: Request): string {
   return "unknown";
 }
 
-export const RATE_LIMITS = {
-  publicApi: { limit: 120, windowMs: 60_000 },
-  /** Dedicated bucket so homepage thumbs do not exhaust publicApi (120/min). */
-  mediaThumb: { limit: 600, windowMs: 60_000 },
-  search: { limit: 60, windowMs: 60_000 },
-  analytics: { limit: 30, windowMs: 60_000 },
-  auth: { limit: 20, windowMs: 60_000 },
-  checkout: { limit: 10, windowMs: 60_000 },
-  admin: { limit: 200, windowMs: 60_000 },
-  sensitiveAccess: { limit: 30, windowMs: 60_000 },
-  health: { limit: 300, windowMs: 60_000 },
-} as const;
+export const RATE_LIMITS = buildRateLimits();

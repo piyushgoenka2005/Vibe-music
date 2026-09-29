@@ -38,6 +38,9 @@ export async function revalidateHomepageSnapshot(): Promise<void> {
     revalidateTag("catalog", "max");
     // Bust the storefront shell so admin edits show on the next request.
     revalidatePath("/");
+    revalidatePath("/category", "layout");
+    revalidatePath("/product", "layout");
+    revalidatePath("/search", "layout");
     revalidatePath("/admin/homepage");
   } catch {
     /* ignore outside request context (scripts / tests) */

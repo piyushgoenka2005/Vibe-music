@@ -2,9 +2,7 @@ import "server-only";
 
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
-import {
-  fetchProductsByIds,
-} from "@/lib/server/storeCatalogRepository";
+import { fetchProductsByIds, invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
 import {
   getAllProducts,
   getCatalogProductBySlug,
@@ -69,15 +67,11 @@ function mapRelation(row: {
 }
 
 export async function getRelatedListByProductId(
-  productId: string
+  productId: string,
 ): Promise<ProductRelatedList | null> {
   if (!isPostgresConfigured()) return null;
 
-  if (
-    relationsCache &&
-    isFresh(relationsCacheAt) &&
-    relationsCache.has(productId)
-  ) {
+  if (relationsCache && isFresh(relationsCacheAt) && relationsCache.has(productId)) {
     return relationsCache.get(productId) ?? null;
   }
 
@@ -103,8 +97,11 @@ export async function getRelatedListByProductId(
 
 export async function upsertProductRelatedList(
   productId: string,
-  input: UpsertProductRelatedListInput
+  input: UpsertProductRelatedListInput,
 ): Promise<ProductRelatedList> {
+  if (!isPostgresConfigured()) {
+    throw new Error("DATABASE_URL is required to save related products");
+  }
   const existing = await prisma.productRelation.findUnique({ where: { productId } });
   const timestamp = now();
 
@@ -113,9 +110,7 @@ export async function upsertProductRelatedList(
     productId,
     productName: input.productName,
     productSlug: input.productSlug,
-    relatedProductIds: input.relatedProductIds
-      .filter(Boolean)
-      .slice(0, MAX_RELATED_PRODUCTS),
+    relatedProductIds: input.relatedProductIds.filter(Boolean).slice(0, MAX_RELATED_PRODUCTS),
     isActive: input.isActive ?? true,
     createdAt: existing?.createdAt ?? timestamp,
     updatedAt: timestamp,
@@ -143,18 +138,18 @@ export async function upsertProductRelatedList(
   });
 
   invalidateRelatedProductsCache();
+  void invalidateCatalogCache();
   return relation;
 }
 
-export async function deleteProductRelatedList(
-  productId: string
-): Promise<void> {
+export async function deleteProductRelatedList(productId: string): Promise<void> {
   await prisma.productRelation.deleteMany({ where: { productId } });
   invalidateRelatedProductsCache();
+  void invalidateCatalogCache();
 }
 
 function relationFromProductDetail(
-  product: NonNullable<Awaited<ReturnType<typeof getProductById>>>
+  product: NonNullable<Awaited<ReturnType<typeof getProductById>>>,
 ): ProductRelatedList | null {
   const relatedIds = product.detail?.relatedProductIds ?? [];
   if (relatedIds.length === 0) return null;
@@ -172,7 +167,7 @@ function relationFromProductDetail(
 }
 
 async function seedRelationFromProductDetail(
-  productId: string
+  productId: string,
 ): Promise<ProductRelatedList | null> {
   const product = await getProductById(productId);
   if (!product) return null;
@@ -192,7 +187,7 @@ function appendUniqueProducts(
   current: Product[],
   candidates: Product[],
   seenIds: Set<string>,
-  limit: number
+  limit: number,
 ): Product[] {
   const next = [...current];
   for (const product of candidates) {
@@ -204,9 +199,7 @@ function appendUniqueProducts(
   return next;
 }
 
-async function loadMerchandisingCandidatePool(
-  product: CatalogProduct
-): Promise<CatalogProduct[]> {
+async function loadMerchandisingCandidatePool(product: CatalogProduct): Promise<CatalogProduct[]> {
   const snapshot = await getAllProducts(false);
   return snapshot.filter(
     (candidate) =>
@@ -214,7 +207,7 @@ async function loadMerchandisingCandidatePool(
       candidate.status === "active" &&
       candidate.price > 0 &&
       (candidate.categorySlug === product.categorySlug ||
-        candidate.brandSlug === product.brandSlug)
+        candidate.brandSlug === product.brandSlug),
   );
 }
 
@@ -223,22 +216,16 @@ function resolveRankedFallbackProducts(
   candidates: CatalogProduct[],
   limit: number,
   mode: "similar" | "related",
-  seenIds: Set<string>
+  seenIds: Set<string>,
 ): Product[] {
-  const ranked = rankMerchandisingPeers(
-    product,
-    candidates,
-    limit,
-    mode,
-    seenIds
-  );
+  const ranked = rankMerchandisingPeers(product, candidates, limit, mode, seenIds);
   return ranked.map(toProduct);
 }
 
 export async function resolveSimilarProductsForProduct(
   productId: string,
   configuredIds: string[] = [],
-  limit = MAX_RELATED_PRODUCTS
+  limit = MAX_RELATED_PRODUCTS,
 ): Promise<Product[]> {
   const product = await getProductById(productId);
   if (!product) return [];
@@ -249,14 +236,9 @@ export async function resolveSimilarProductsForProduct(
   if (configuredIds.length > 0) {
     const manualProducts = await fetchProductsByIds(configuredIds);
     const compatibleManual = manualProducts.filter((candidate) =>
-      areMerchandisingPeersCompatible(product, candidate)
+      areMerchandisingPeersCompatible(product, candidate),
     );
-    resolved = appendUniqueProducts(
-      resolved,
-      compatibleManual.map(toProduct),
-      seenIds,
-      limit
-    );
+    resolved = appendUniqueProducts(resolved, compatibleManual.map(toProduct), seenIds, limit);
   }
 
   if (resolved.length < limit) {
@@ -266,7 +248,7 @@ export async function resolveSimilarProductsForProduct(
       candidates,
       limit - resolved.length,
       "similar",
-      seenIds
+      seenIds,
     );
     resolved = appendUniqueProducts(resolved, fallback, seenIds, limit);
   }
@@ -277,7 +259,7 @@ export async function resolveSimilarProductsForProduct(
 export async function resolveRelatedProductsForProduct(
   productId: string,
   limit = MAX_RELATED_PRODUCTS,
-  excludeIds: string[] = []
+  excludeIds: string[] = [],
 ): Promise<ResolvedRelatedProducts> {
   try {
     const product = await getProductById(productId);
@@ -295,8 +277,7 @@ export async function resolveRelatedProductsForProduct(
       }
     }
 
-    const manualIds =
-      relation && relation.isActive ? relation.relatedProductIds : [];
+    const manualIds = relation && relation.isActive ? relation.relatedProductIds : [];
     const seenIds = new Set<string>([productId, ...excludeIds]);
 
     let resolved: Product[] = [];
@@ -305,14 +286,9 @@ export async function resolveRelatedProductsForProduct(
     if (manualIds.length > 0) {
       const manualProducts = await fetchProductsByIds(manualIds);
       const compatibleManual = manualProducts.filter((candidate) =>
-        areMerchandisingPeersCompatible(product, candidate)
+        areMerchandisingPeersCompatible(product, candidate),
       );
-      resolved = appendUniqueProducts(
-        resolved,
-        compatibleManual.map(toProduct),
-        seenIds,
-        limit
-      );
+      resolved = appendUniqueProducts(resolved, compatibleManual.map(toProduct), seenIds, limit);
       manualCount = resolved.length;
     }
 
@@ -323,17 +299,13 @@ export async function resolveRelatedProductsForProduct(
         candidates,
         limit - resolved.length,
         "related",
-        seenIds
+        seenIds,
       );
       resolved = appendUniqueProducts(resolved, fallback, seenIds, limit);
     }
 
     const source: ResolvedRelatedProducts["source"] =
-      manualCount === 0
-        ? "fallback"
-        : manualCount >= resolved.length
-          ? "manual"
-          : "mixed";
+      manualCount === 0 ? "fallback" : manualCount >= resolved.length ? "manual" : "mixed";
 
     return { products: resolved.slice(0, limit), source };
   } catch (error) {
@@ -344,7 +316,7 @@ export async function resolveRelatedProductsForProduct(
 
 export async function resolveRelatedProductsBySlug(
   slug: string,
-  limit = MAX_RELATED_PRODUCTS
+  limit = MAX_RELATED_PRODUCTS,
 ): Promise<ResolvedRelatedProducts> {
   const product = await getCatalogProductBySlug(slug);
   if (!product) {

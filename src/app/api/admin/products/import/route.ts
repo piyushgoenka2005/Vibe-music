@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import AdmZip from "adm-zip";
 import { z } from "zod";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
@@ -8,16 +7,20 @@ import {
   parseBulkImportOptions,
   validateZipFile,
 } from "@/lib/admin/bulkImportValidation";
+import { readBulkImportZipImageMap } from "@/lib/admin/bulkImportZipImages";
 import { slimBulkImportPreviewRows } from "@/lib/admin/bulkImportResponse";
 import {
   isSpreadsheetUpload,
   parseProductImportBuffer,
   validateVibemusicBulkHeaders,
+  VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
+  VIBEMUSIC_BULK_COLUMN_COUNT,
 } from "@/lib/amazonListingImport";
 import { resolveBulkImportImages } from "@/lib/server/bulkImportImageResolver";
 import {
   buildBulkImportPreviewSummary,
   bulkImportProducts,
+  enrichBulkImportRowSlugs,
   previewBulkImport,
 } from "@/services/catalogService";
 
@@ -29,18 +32,6 @@ const MAX_SHEET_MB = Math.round(MAX_SHEET_BYTES / (1024 * 1024));
 const importFlagsSchema = z.object({
   confirm: z.boolean(),
 });
-
-function readZipImageMap(zipBuffer: Buffer): Map<string, Buffer> {
-  const zipMap = new Map<string, Buffer>();
-  const zip = new AdmZip(zipBuffer);
-  zip.getEntries().forEach((entry) => {
-    if (!entry.isDirectory && /\.(jpe?g|png|webp|gif)$/i.test(entry.entryName)) {
-      const name = entry.entryName.split("/").pop() ?? entry.entryName;
-      zipMap.set(name.toLowerCase(), entry.getData());
-    }
-  });
-  return zipMap;
-}
 
 export async function POST(request: Request) {
   try {
@@ -112,8 +103,7 @@ export async function POST(request: Request) {
     } else {
       return NextResponse.json(
         {
-          error:
-            "Upload must use vibemusic bulk.csv or vibemusic bulk.xlsx with all 69 columns in the exact template order. Download the template from the Import dialog.",
+          error: `Upload must use vibemusic bulk.csv or vibemusic bulk.xlsx with ${VIBEMUSIC_BULK_CORE_COLUMN_COUNT} core columns (or ${VIBEMUSIC_BULK_COLUMN_COUNT} including image1–image12) in the official template order. Download the template from the Import dialog.`,
         },
         { status: 400 },
       );
@@ -131,7 +121,7 @@ export async function POST(request: Request) {
     const zipMap = new Map<string, Buffer>();
     if (zipFile instanceof File && zipFile.size > 0) {
       try {
-        const extracted = readZipImageMap(Buffer.from(await zipFile.arrayBuffer()));
+        const extracted = readBulkImportZipImageMap(Buffer.from(await zipFile.arrayBuffer()));
         extracted.forEach((value, key) => zipMap.set(key, value));
       } catch {
         return NextResponse.json(
@@ -141,6 +131,7 @@ export async function POST(request: Request) {
       }
     }
 
+    rows = await enrichBulkImportRowSlugs(rows);
     rows = await resolveBulkImportImages(rows, zipMap, confirm);
 
     if (!confirm) {

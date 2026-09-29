@@ -1,4 +1,3 @@
-import { catalogBrandsForCategory } from "@/data/categoryBentoBrands";
 import { POPULAR_CATEGORY_ITEMS } from "@/data/popularCategories";
 import { categoryPath } from "@/lib/routes";
 
@@ -93,8 +92,6 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageSizes: resolveBentoSizes(),
     imageAlt: "Premium electric guitar with sunburst finish",
     imagePosition: "center 72%",
-    productCount: "14 products",
-    brands: catalogBrandsForCategory("guitars"),
     badge: "BESTSELLER",
   },
   {
@@ -108,8 +105,6 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageSizes: resolveBentoSizes(),
     imageAlt: "Studio recording interface and monitors",
     imagePosition: "center 38%",
-    productCount: "5 products",
-    brands: catalogBrandsForCategory("studio-recording"),
     badge: "TRENDING",
   },
   {
@@ -123,8 +118,6 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageSizes: resolveBentoSizes(),
     imageAlt: "Premium drum kit",
     imagePosition: "center center",
-    productCount: "14 products",
-    brands: catalogBrandsForCategory("drums-percussion"),
   },
   {
     slug: "keyboards-synthesizers",
@@ -137,8 +130,6 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageSizes: resolveBentoSizes(),
     imageAlt: "Synthesizer keyboard",
     imagePosition: "center 32%",
-    productCount: "In stock",
-    brands: catalogBrandsForCategory("keyboards-synthesizers"),
     badge: "NEW",
   },
   {
@@ -152,8 +143,6 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageSizes: resolveBentoSizes(),
     imageAlt: "Live sound PA speaker",
     imagePosition: "center 28%",
-    productCount: "2 products",
-    brands: catalogBrandsForCategory("live-sound-lighting"),
   },
   {
     slug: "microphones-wireless",
@@ -166,8 +155,6 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageSizes: resolveBentoSizes(),
     imageAlt: "Studio and stage microphones",
     imagePosition: "center 42%",
-    productCount: "In stock",
-    brands: catalogBrandsForCategory("microphones-wireless"),
     badge: "TRENDING",
   },
   {
@@ -181,8 +168,6 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageSizes: resolveBentoSizes(),
     imageAlt: "DJ turntable and controller gear",
     imagePosition: "center 40%",
-    productCount: "8 products",
-    brands: catalogBrandsForCategory("dj-equipment"),
   },
   {
     slug: "cables-cases-accessories",
@@ -195,8 +180,6 @@ export const CATEGORY_BENTO_ITEMS: CategoryBentoItem[] = [
     imageSizes: resolveBentoSizes(),
     imageAlt: "Cables, cases, and stands for musicians",
     imagePosition: "center 45%",
-    productCount: "3 products",
-    brands: catalogBrandsForCategory("cables-cases-accessories"),
   },
 ];
 

@@ -137,6 +137,13 @@ export interface BulkImportRow {
   image3?: string;
   image4?: string;
   image5?: string;
+  image6?: string;
+  image7?: string;
+  image8?: string;
+  image9?: string;
+  image10?: string;
+  image11?: string;
+  image12?: string;
   /** Cloudinary URLs resolved from ZIP import */
   resolvedImages?: string[];
   /** Vibemusic bulk sheet → catalog specifications (ASIN, Color, Warranty, …). */
@@ -151,8 +158,16 @@ export interface BulkImportRow {
   sourceFormat?: "vibemusic-bulk" | "legacy";
   /** ZIP image filenames matched during preview (no CDN upload yet). */
   zipImageMatches?: string[];
+  /** Preview-only count when heavy URL arrays are stripped for the browser. */
+  imageCount?: number;
+  /** Preview-only filenames (up to 12) when matches are stripped for the browser. */
+  zipImageMatchPreview?: string[];
   /** Selling Price was blank; MRP was used as the list price. */
   priceFromMrpFallback?: boolean;
+  /** Resolved Vibe category slug (set before image upload / preview). */
+  resolvedCategorySlug?: string;
+  /** Unique product slug for CDN paths and catalog writes. */
+  generatedSlug?: string;
 }
 
 export interface BulkImportPreviewRow extends BulkImportRow {
@@ -162,8 +177,6 @@ export interface BulkImportPreviewRow extends BulkImportRow {
   valid: boolean;
   action?: "create" | "update" | "skip";
   existingProductId?: string;
-  resolvedCategorySlug?: string;
-  generatedSlug?: string;
   generatedSku?: string;
 }
 

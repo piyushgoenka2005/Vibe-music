@@ -5,7 +5,7 @@ vi.mock("@/lib/security/upstashRedis", () => ({
   getUpstashConfig: () => null,
 }));
 
-import { getCached, invalidateCache } from "./redisCache";
+import { getCached, invalidateCache, invalidateCacheByPrefix } from "./redisCache";
 
 describe("redisCache (memory fallback)", () => {
   beforeEach(() => {
@@ -18,15 +18,23 @@ describe("redisCache (memory fallback)", () => {
 
   it("returns cached value on second call", async () => {
     let callCount = 0;
-    const result1 = await getCached("test-key", async () => {
-      callCount++;
-      return { data: "hello" };
-    }, 60);
+    const result1 = await getCached(
+      "test-key",
+      async () => {
+        callCount++;
+        return { data: "hello" };
+      },
+      60,
+    );
 
-    const result2 = await getCached("test-key", async () => {
-      callCount++;
-      return { data: "world" };
-    }, 60);
+    const result2 = await getCached(
+      "test-key",
+      async () => {
+        callCount++;
+        return { data: "world" };
+      },
+      60,
+    );
 
     expect(result1.data).toBe("hello");
     expect(result2.data).toBe("hello"); // Should be cached
@@ -35,17 +43,25 @@ describe("redisCache (memory fallback)", () => {
 
   it("returns fresh value after TTL expires", async () => {
     let callCount = 0;
-    await getCached("ttl-test", async () => {
-      callCount++;
-      return callCount;
-    }, 10);
+    await getCached(
+      "ttl-test",
+      async () => {
+        callCount++;
+        return callCount;
+      },
+      10,
+    );
 
     vi.advanceTimersByTime(11_000);
 
-    const result = await getCached("ttl-test", async () => {
-      callCount++;
-      return callCount;
-    }, 10);
+    const result = await getCached(
+      "ttl-test",
+      async () => {
+        callCount++;
+        return callCount;
+      },
+      10,
+    );
 
     expect(result).toBe(2);
     expect(callCount).toBe(2);
@@ -53,20 +69,70 @@ describe("redisCache (memory fallback)", () => {
 
   it("invalidateCache removes cached value", async () => {
     let callCount = 0;
-    await getCached("invalidate-test", async () => {
-      callCount++;
-      return "original";
-    }, 60);
+    await getCached(
+      "invalidate-test",
+      async () => {
+        callCount++;
+        return "original";
+      },
+      60,
+    );
 
     await invalidateCache("invalidate-test");
 
-    const result = await getCached("invalidate-test", async () => {
-      callCount++;
-      return "updated";
-    }, 60);
+    const result = await getCached(
+      "invalidate-test",
+      async () => {
+        callCount++;
+        return "updated";
+      },
+      60,
+    );
 
     expect(result).toBe("updated");
     expect(callCount).toBe(2);
+  });
+
+  it("invalidateCacheByPrefix clears matching keys only", async () => {
+    await getCached("products:q:guitar", async () => "guitar-results", 60);
+    await getCached("products:q:drums", async () => "drum-results", 60);
+    await getCached("settings:site", async () => "site-settings", 60);
+
+    await invalidateCacheByPrefix("products:");
+
+    let productsCalls = 0;
+    const guitar = await getCached(
+      "products:q:guitar",
+      async () => {
+        productsCalls++;
+        return "guitar-refreshed";
+      },
+      60,
+    );
+    const drums = await getCached(
+      "products:q:drums",
+      async () => {
+        productsCalls++;
+        return "drum-refreshed";
+      },
+      60,
+    );
+
+    let settingsCalls = 0;
+    const settings = await getCached(
+      "settings:site",
+      async () => {
+        settingsCalls++;
+        return "site-settings";
+      },
+      60,
+    );
+
+    expect(guitar).toBe("guitar-refreshed");
+    expect(drums).toBe("drum-refreshed");
+    expect(settings).toBe("site-settings");
+    expect(productsCalls).toBe(2);
+    expect(settingsCalls).toBe(0);
   });
 
   it("different keys are tracked independently", async () => {

@@ -58,6 +58,53 @@ const EMPTY = {
   detailSpecs: [] as ProductSpec[],
 };
 
+type AdminProductFormState = typeof EMPTY;
+
+function prepareVariantsForSave(
+  variants: ProductVariant[],
+  price: number,
+  stockQuantity: number,
+): ProductVariant[] {
+  const sanitized = variants.map((variant) => ({
+    ...variant,
+    attributes: (variant.attributes ?? []).filter((attr) => attr.value.trim()),
+    images: (variant.images ?? []).filter(Boolean),
+  }));
+  if (sanitized.length !== 1) return sanitized;
+  const only = sanitized[0];
+  if (!only) return sanitized;
+  return [
+    {
+      ...only,
+      price,
+      stock: stockQuantity,
+      isDefault: only.isDefault ?? true,
+    },
+  ];
+}
+
+function mapAdminProductToForm(product: Record<string, unknown>): AdminProductFormState {
+  return {
+    ...EMPTY,
+    ...product,
+    subcategory: (product.subcategory as string) ?? "",
+    featured: (product.featured as boolean) ?? false,
+    trending: (product.trending as boolean) ?? false,
+    newArrival: (product.newArrival as boolean) ?? false,
+    images: (product.images as string[]) ?? (product.image ? [product.image as string] : []),
+    spin360Images: (product.spin360Images as string[]) ?? [],
+    variants: (product.variants as ProductVariant[]) ?? [],
+    bundle: createEmptyBundleState(),
+    related: createEmptyRelatedState(),
+    guitarSpecs: extractGuitarSpecsFromRecord(
+      product.specifications as Record<string, string> | undefined,
+    ),
+    inTheBox: (product.inTheBox as string[]) ?? [],
+    videos: (product.videos as ProductVideo[]) ?? [],
+    detailSpecs: (product.detailSpecs as ProductSpec[]) ?? [],
+  };
+}
+
 export default function ProductFormPage({
   productId,
   readOnly = false,
@@ -73,6 +120,8 @@ export default function ProductFormPage({
   const [subcategoryOptions, setSubcategoryOptions] = useState<string[]>([]);
   const [isCustomSubcategory, setIsCustomSubcategory] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
   const [loaded, setLoaded] = useState(!productId);
 
   useEffect(() => {
@@ -122,23 +171,7 @@ export default function ProductFormPage({
       .then((r) => r.json())
       .then((d) => {
         if (d.product) {
-          setForm({
-            ...EMPTY,
-            ...d.product,
-            subcategory: d.product.subcategory ?? "",
-            featured: d.product.featured ?? false,
-            trending: d.product.trending ?? false,
-            newArrival: d.product.newArrival ?? false,
-            images: d.product.images ?? (d.product.image ? [d.product.image] : []),
-            spin360Images: d.product.spin360Images ?? [],
-            variants: d.product.variants ?? [],
-            bundle: createEmptyBundleState(),
-            related: createEmptyRelatedState(),
-            guitarSpecs: extractGuitarSpecsFromRecord(d.product.specifications),
-            inTheBox: d.product.inTheBox ?? [],
-            videos: d.product.videos ?? [],
-            detailSpecs: d.product.detailSpecs ?? [],
-          });
+          setForm(mapAdminProductToForm(d.product));
         }
         setLoaded(true);
       })
@@ -187,16 +220,19 @@ export default function ProductFormPage({
       const guitarSpecs = isGuitarProduct(categorySlug, categoryName)
         ? Object.fromEntries(Object.entries(form.guitarSpecs).filter(([, value]) => value.trim()))
         : {};
+      const { bundle: _bundle, related: _related, guitarSpecs: _guitarSpecs, ...formFields } = form;
       const payload = {
-        ...form,
-        subcategory: form.subcategory?.trim() || undefined,
+        ...formFields,
+        subcategory: form.subcategory.trim(),
         slug,
         category: categoryName,
         categorySlug,
         brandSlug: slugify(form.brand),
+        stockQuantity: form.stockQuantity,
         image: form.images[0] ?? "",
         images: form.images,
-        variants: form.variants,
+        spin360Images: form.spin360Images,
+        variants: prepareVariantsForSave(form.variants, form.price, form.stockQuantity),
         guitarSpecs,
         inTheBox: form.inTheBox.map((item) => item.trim()).filter(Boolean),
         videos: form.videos.filter((v) => v.title.trim() && v.embedUrl.trim()),
@@ -215,6 +251,11 @@ export default function ProductFormPage({
       }
       const saved = await res.json();
       const savedId = productId ?? saved.product?.id;
+      let bundlePayload: {
+        bundle?: { relatedProductIds?: string[]; discountPercent?: number; isActive?: boolean };
+      } = {};
+      let relatedPayload: { related?: { relatedProductIds?: string[]; isActive?: boolean } } = {};
+
       if (savedId) {
         const bundleRes = await fetch(`/api/admin/products/${savedId}/bundle`, {
           method: "PUT",
@@ -231,6 +272,7 @@ export default function ProductFormPage({
           const bundleData = await bundleRes.json();
           throw new Error(bundleData.error ?? "Bundle save failed");
         }
+        bundlePayload = await bundleRes.json();
 
         const relatedRes = await fetch(`/api/admin/products/${savedId}/related`, {
           method: "PUT",
@@ -246,17 +288,57 @@ export default function ProductFormPage({
           const relatedData = await relatedRes.json();
           throw new Error(relatedData.error ?? "Related products save failed");
         }
+        relatedPayload = await relatedRes.json();
       }
-      return saved;
+      return { ...saved, ...bundlePayload, ...relatedPayload };
     },
-    onSuccess: async () => {
+    onSuccess: async (saved) => {
       // Drop cached list so the products page always refetches after create/edit.
       await queryClient.cancelQueries({ queryKey: ["admin-products"] });
       queryClient.removeQueries({ queryKey: ["admin-products"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["admin-homepage-product-count"],
+        refetchType: "active",
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["admin-categories"],
+        refetchType: "active",
+      });
+      setError(null);
+      setSaveSuccess(productId ? "Product updated successfully." : "Product created successfully.");
+      if (productId && saved?.product) {
+        setForm({
+          ...mapAdminProductToForm(saved.product),
+          bundle: saved.bundle
+            ? {
+                relatedProductIds: saved.bundle.relatedProductIds ?? [],
+                discountPercent: saved.bundle.discountPercent ?? 8,
+                isActive: saved.bundle.isActive !== false,
+              }
+            : createEmptyBundleState(),
+          related: saved.related
+            ? {
+                relatedProductIds: saved.related.relatedProductIds ?? [],
+                isActive: saved.related.isActive !== false,
+              }
+            : createEmptyRelatedState(),
+        });
+        setDescriptionEditorKey((key) => key + 1);
+        router.refresh();
+        return;
+      }
+      if (saved?.product?.id) {
+        router.push(`${ROUTES.adminProducts}/${saved.product.id}`);
+        router.refresh();
+        return;
+      }
       router.push(ROUTES.adminProducts);
       router.refresh();
     },
-    onError: (err) => setError(err instanceof Error ? err.message : "Save failed"),
+    onError: (err) => {
+      setSaveSuccess(null);
+      setError(err instanceof Error ? err.message : "Save failed");
+    },
   });
 
   if (!loaded) return <div className="admin-loading">Loading product…</div>;
@@ -641,7 +723,7 @@ export default function ProductFormPage({
             </div>
           ) : null}
           <ProductDescriptionBulletsEditor
-            key={productId ?? "new"}
+            key={`${productId ?? "new"}-${descriptionEditorKey}`}
             value={form.description}
             onChange={(description) => setForm({ ...form, description })}
           />
@@ -664,6 +746,11 @@ export default function ProductFormPage({
             />
           ) : null}
         </fieldset>
+        {saveSuccess ? (
+          <p className="admin-form-success" role="status">
+            {saveSuccess}
+          </p>
+        ) : null}
         {error ? <p className="admin-form-error">{error}</p> : null}
         <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>
           {!readOnly ? (

@@ -34,6 +34,7 @@ import { clampHomepageMaxItems } from "@/lib/homepage/homepageLimits";
 import { unpackCategoryOfferText } from "@/lib/homepage/categoryOfferText";
 import { BROWSE_CATEGORY_CARDS, BROWSE_CATEGORY_CARDS_CTA } from "@/data/browseCategoryCards";
 import { CATEGORY_BENTO_ITEMS } from "@/data/categoryBento";
+import { buildCategoryBentoCatalogMeta } from "@/lib/server/categoryBentoCatalog";
 import type {
   HomepageBrandItem,
   HomepageCategoryItem,
@@ -607,23 +608,39 @@ export async function getBrowseByCategoriesPublicData(
   }
 }
 
+function withLiveCategoryBentoMeta<T extends { slug: string; brands?: string }>(
+  items: T[],
+  catalogMeta: Map<string, { brands?: string }>,
+): T[] {
+  return items.map((item) => {
+    const live = catalogMeta.get(item.slug);
+    return {
+      ...item,
+      brands: item.brands || live?.brands,
+    };
+  });
+}
+
 export async function getCategoryBentoPublicData(
   at = new Date(),
 ): Promise<PublicCategorySectionData> {
   const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
     (section) => section.sectionKey === "category_bento",
   );
+  const catalogMeta = await buildCategoryBentoCatalogMeta();
 
-  const fallbackItems: HomepageCategoryItem[] = CATEGORY_BENTO_ITEMS.map((item) => ({
-    id: item.slug,
-    slug: item.slug,
-    title: item.title,
-    href: categoryPath(item.slug),
-    imageSrc: item.image,
-    badge: item.badge,
-    desc: item.desc,
-    brands: item.brands,
-  }));
+  const fallbackItems: HomepageCategoryItem[] = withLiveCategoryBentoMeta(
+    CATEGORY_BENTO_ITEMS.map((item) => ({
+      id: item.slug,
+      slug: item.slug,
+      title: item.title,
+      href: categoryPath(item.slug),
+      imageSrc: item.image,
+      badge: item.badge,
+      desc: item.desc,
+    })),
+    catalogMeta,
+  );
 
   try {
     const [section, allItems] = await Promise.all([
@@ -672,7 +689,7 @@ export async function getCategoryBentoPublicData(
 
     // Merge CMS fields with static presentation defaults (size/variant/images).
     const staticBySlug = new Map(CATEGORY_BENTO_ITEMS.map((item) => [item.slug, item]));
-    const merged =
+    const merged = withLiveCategoryBentoMeta(
       resolved.length > 0
         ? resolved.map((item) => {
             const fallback = staticBySlug.get(item.slug);
@@ -684,7 +701,9 @@ export async function getCategoryBentoPublicData(
               badge: item.badge || fallback?.badge,
             };
           })
-        : fallbackItems;
+        : fallbackItems,
+      catalogMeta,
+    );
 
     return {
       isActive: true,

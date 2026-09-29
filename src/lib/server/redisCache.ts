@@ -211,6 +211,37 @@ async function getCachedMemory<T>(
   });
 }
 
+function clearStoresByPrefix(prefix: string): void {
+  for (const key of memoryStore.keys()) {
+    if (key.startsWith(prefix)) memoryStore.delete(key);
+  }
+  for (const key of staleStore.keys()) {
+    if (key.startsWith(prefix)) staleStore.delete(key);
+  }
+}
+
+/**
+ * Invalidate all cached keys that start with `prefix` (memory, stale, and Redis).
+ */
+export async function invalidateCacheByPrefix(prefix: string): Promise<void> {
+  clearStoresByPrefix(prefix);
+
+  const config = getUpstashConfig();
+  if (!config || !redisCircuitBreaker.isHealthy()) return;
+
+  try {
+    const pattern = `${buildRedisKey(prefix)}*`;
+    const results = await upstashPipeline([["KEYS", pattern]]);
+    const keys = results[0]?.result as string[] | undefined;
+    if (keys?.length) {
+      await upstashPipeline(keys.map((key) => ["DEL", key]));
+    }
+    redisCircuitBreaker.recordSuccess();
+  } catch {
+    redisCircuitBreaker.recordFailure();
+  }
+}
+
 /**
  * Invalidate a cached key (works for both Redis and memory).
  */
