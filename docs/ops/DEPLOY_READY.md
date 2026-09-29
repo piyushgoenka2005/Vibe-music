@@ -19,6 +19,14 @@ See **[PRODUCTION_COMPLETE.md](./PRODUCTION_COMPLETE.md)** for the final checkli
 
 Ensure the commit you want live is on **`origin/main`** (`deploy/update.sh` pulls `main` only).
 
+**Production env (VPS `.env`):**
+
+```bash
+NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH=false
+CDN_PUBLIC_BASE_URL=https://cdn.vibemusic.in
+CDN_STORAGE_ROOT=/var/www/cdn
+```
+
 ---
 
 ## 1. One-shot on VPS (recommended)

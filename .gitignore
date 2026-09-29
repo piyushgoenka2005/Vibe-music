@@ -84,3 +84,6 @@ cdn-upload-manifest.json
 # deploy release anchors (runtime state)
 .deploy-previous.sha
 .deploy-history.log
+
+# internal audit exports (not for the repo)
+docs/Vibemusic_*.docx

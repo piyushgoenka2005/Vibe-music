@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { Bebas_Neue } from "next/font/google";
 import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
 import { resolvePublicLegal } from "@/lib/brand/resolvePublicLegal";
@@ -22,12 +21,6 @@ import "@/styles/mobile-site-wide.css";
 import "@/styles/buttons.css";
 import "@/styles/notify-me.css";
 import "@/styles/page-load-splash.css";
-
-const splashBootFont = Bebas_Neue({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-});
 
 export const metadata: Metadata = DEFAULT_METADATA;
 
@@ -53,10 +46,6 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://cdn.vibemusic.in" />
         <link rel="preconnect" href="https://checkout.razorpay.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
         <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         {splashEnabled ? (
@@ -74,9 +63,7 @@ export default async function RootLayout({
           /* Instant framed brand cover — CSS hides unless html.vibe-splash-pending. */
           <div id="vibe-boot-splash" className="vibe-boot-splash" aria-hidden="true">
             <div className="page-load-splash__frame page-load-splash__frame--settled">
-              <span
-                className={`page-load-splash__text page-load-splash__text--settled ${splashBootFont.className}`}
-              >
+              <span className="page-load-splash__text page-load-splash__text--settled">
                 VIBE MUSIC
               </span>
             </div>
