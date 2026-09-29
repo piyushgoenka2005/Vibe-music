@@ -100,6 +100,7 @@ npm run type-check
 echo "==> Building"
 export NODE_ENV=production
 export ALLOW_POSTGRES_DURING_BUILD="${ALLOW_POSTGRES_DURING_BUILD:-true}"
+export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=4096}"
 npm run build
 
 echo "==> Gear story videos (optional)"

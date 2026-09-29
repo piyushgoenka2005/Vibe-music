@@ -7,6 +7,7 @@ import {
 } from "@/lib/server/catalogSnapshotCache";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { buildTopBrandStripItems } from "@/data/topBrandStrip";
+import { getProductImage } from "@/data/productImages";
 import { getCategoryGridImage, hasCuratedCategoryImage } from "@/lib/categoryImages";
 import { categoryPath, productPath, ROUTES } from "@/lib/routes";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
@@ -93,7 +94,8 @@ function toProductItem(
     name: product.name,
     price: hasDiscount ? product.originalPrice : product.price,
     salePrice,
-    image: product.image || product.images[0] || "",
+    image:
+      product.image || product.images[0] || getProductImage(product.slug, product.category) || "",
     imageAlt: product.name,
     rating,
     reviewCount,

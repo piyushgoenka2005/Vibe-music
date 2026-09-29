@@ -10,11 +10,11 @@ const master =
   "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.png";
 
 describe("storefrontImageUrl", () => {
-  it("routes legacy PNG masters directly to static CDN derivatives", () => {
+  it("routes legacy PNG masters through the cached thumb proxy", () => {
     const result = storefrontImageUrl(master, 480);
-    expect(result.kind).toBe("derivative");
-    expect(result.src).toContain("-w480.webp");
-    expect(result.src).not.toContain("/api/media/thumb?url=");
+    expect(result.kind).toBe("thumb");
+    expect(result.src).toContain("/api/media/thumb?url=");
+    expect(result.src).toContain("w=480");
   });
 
   it("snaps thumb widths to shared buckets including zoom sizes for webp", () => {
@@ -28,16 +28,15 @@ describe("storefrontImageUrl", () => {
   });
 
   it("serves zoom panes via 1600w static CDN derivative, not runtime Sharp proxy", () => {
-    const thumb = storefrontImageUrl(master, 1200).src;
-    const zoom = storefrontZoomImageUrl(thumb);
+    const zoom = storefrontZoomImageUrl(master);
     expect(zoom).toContain("-w1600.webp");
     expect(zoom).not.toContain("/api/media/thumb?url=");
   });
 
-  it("keeps the original CDN image as the fallback candidate", () => {
+  it("keeps thumb + original fallbacks for legacy PNG masters", () => {
     const candidates = storefrontImageCandidates(master, 480);
-    expect(candidates[0]).toContain("-w480.webp");
-    expect(candidates).toEqual(expect.arrayContaining([master]));
+    expect(candidates[0]).toContain("/api/media/thumb?url=");
+    expect(candidates[1]).toBe(master);
   });
 
   it("steps down CDN derivative buckets when larger sizes are missing", () => {
@@ -45,17 +44,17 @@ describe("storefrontImageUrl", () => {
       "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp";
     const candidates = storefrontImageCandidates(webpMaster, 1200);
     expect(candidates).toEqual([
-      `${webpMaster.replace(".webp", "")}-w1600.webp`,
-      `${webpMaster.replace(".webp", "")}-w960.webp`,
       `${webpMaster.replace(".webp", "")}-w480.webp`,
+      `${webpMaster.replace(".webp", "")}-w960.webp`,
+      `${webpMaster.replace(".webp", "")}-w1600.webp`,
       webpMaster,
     ]);
   });
 
   it("exposes absolute CDN URLs for SEO surfaces", () => {
-    expect(cdnSeoImageUrl(storefrontImageUrl(master, 480).src)).toBe(
-      "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp",
-    );
+    const webpMaster =
+      "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp";
+    expect(cdnSeoImageUrl(storefrontImageUrl(webpMaster, 480).src)).toBe(webpMaster);
     expect(cdnSeoImageUrl(master)).toBe(master);
     expect(cdnSeoImageUrl("")).toBe("");
   });

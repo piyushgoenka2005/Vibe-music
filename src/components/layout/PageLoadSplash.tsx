@@ -1,13 +1,7 @@
 "use client";
 
 import { Bebas_Neue } from "next/font/google";
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import "@/styles/page-load-splash.css";
 import SplashMusicalItems from "@/components/layout/SplashMusicalItems";
 import SplashCornerAccents from "@/components/layout/SplashCornerAccents";
@@ -31,8 +25,7 @@ export const SPLASH_SEEN_KEY = "vibe-splash-seen";
 export const SPLASH_ACTIVE_CLASS = "vibe-splash-active";
 export const SPLASH_PENDING_CLASS = "vibe-splash-pending";
 
-const SPLASH_ENABLED =
-  process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH !== "false";
+const SPLASH_ENABLED = process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH === "true";
 
 export function isPageLoadSplashEnabled(): boolean {
   return SPLASH_ENABLED;
@@ -86,13 +79,7 @@ function SplashWaveText({ settled }: { settled: boolean }) {
     >
       {chars.map((char, index) => {
         if (char === " ") {
-          return (
-            <span
-              key={`space-${index}`}
-              className="page-load-splash__space"
-              aria-hidden
-            />
-          );
+          return <span key={`space-${index}`} className="page-load-splash__space" aria-hidden />;
         }
 
         const waveBase = Math.sin(index * 0.72) * 0.22;
@@ -116,13 +103,7 @@ function SplashWaveText({ settled }: { settled: boolean }) {
   );
 }
 
-function SplashMarkup({
-  settled,
-  brandExiting,
-}: {
-  settled: boolean;
-  brandExiting: boolean;
-}) {
+function SplashMarkup({ settled, brandExiting }: { settled: boolean; brandExiting: boolean }) {
   return (
     <div
       className={[
@@ -164,12 +145,7 @@ export function PageLoadSplashScreen({
     .join(" ");
 
   return (
-    <div
-      className={className}
-      role="status"
-      aria-live="polite"
-      aria-label="Loading Vibe Music"
-    >
+    <div className={className} role="status" aria-live="polite" aria-label="Loading Vibe Music">
       {showItems ? (
         <>
           <SplashCornerAccents />
@@ -183,10 +159,7 @@ export function PageLoadSplashScreen({
   );
 }
 
-export default function PageLoadSplash({
-  variant = "initial",
-  onComplete,
-}: PageLoadSplashProps) {
+export default function PageLoadSplash({ variant = "initial", onComplete }: PageLoadSplashProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const onCompleteRef = useRef(onComplete);
   const finishedRef = useRef(false);
@@ -235,10 +208,7 @@ export default function PageLoadSplash({
 
   useEffect(() => {
     if (!visible || prefersReducedMotion || finishedRef.current) return;
-    const settleTimer = window.setTimeout(
-      () => setSettled(true),
-      WAVE_SETTLE_MS
-    );
+    const settleTimer = window.setTimeout(() => setSettled(true), WAVE_SETTLE_MS);
     return () => window.clearTimeout(settleTimer);
   }, [prefersReducedMotion, visible]);
 
@@ -293,9 +263,7 @@ export default function PageLoadSplash({
   }, [prefersReducedMotion, variant, visible]);
 
   if (variant === "inline") {
-    return (
-      <PageLoadSplashScreen variant="inline" settled showItems showTeaser />
-    );
+    return <PageLoadSplashScreen variant="inline" settled showItems showTeaser />;
   }
 
   if (!visible) return null;

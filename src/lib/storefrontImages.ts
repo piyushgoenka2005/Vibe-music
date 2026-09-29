@@ -3,6 +3,26 @@ import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
 const CDN_HOST = "cdn.vibemusic.in";
 /** Shared thumb buckets supported across all catalog uploads. */
 const THUMB_WIDTHS = [480, 960, 1600] as const;
+
+function cdnPathExtension(url: string): string {
+  try {
+    const file = new URL(url).pathname.split("/").pop() ?? "";
+    const dot = file.lastIndexOf(".");
+    return dot >= 0 ? file.slice(dot + 1).toLowerCase() : "";
+  } catch {
+    return "";
+  }
+}
+
+function isCdnLegacyRaster(url: string): boolean {
+  const ext = cdnPathExtension(url);
+  return ext === "png" || ext === "jpg" || ext === "jpeg";
+}
+
+function thumbProxyUrl(url: string, width: number): string {
+  const snappedW = snapStorefrontThumbWidth(width);
+  return `/api/media/thumb?url=${encodeURIComponent(url)}&w=${snappedW}`;
+}
 const DERIVATIVE_FILE_RE =
   /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-w(\d+)\.webp$/i;
 
@@ -66,9 +86,12 @@ export function storefrontImageUrl(
     }
 
     if (host === CDN_HOST) {
-      // Implement CDN paths properly: Always rebuild the derivative URL to the requested bucket
       const snappedW = snapStorefrontThumbWidth(width);
       const master = cdnMasterUrl(url);
+      if (isCdnLegacyRaster(master)) {
+        return { src: thumbProxyUrl(master, snappedW), kind: "thumb" };
+      }
+
       const parsed = new URL(master);
       const file = parsed.pathname.split("/").pop() ?? "";
       const match = file.match(/^(.+)\.([a-z0-9]+)$/i);
@@ -145,21 +168,29 @@ export function storefrontImageCandidates(url: string, width = 1200): string[] {
 
   try {
     if (new URL(original).hostname === CDN_HOST) {
-      const targetBucket = snapStorefrontThumbWidth(width) as (typeof THUMB_WIDTHS)[number];
-      const startIdx = THUMB_WIDTHS.indexOf(targetBucket);
-      if (startIdx >= 0) {
-        for (const bucket of THUMB_WIDTHS.slice(0, startIdx + 1).reverse()) {
-          candidates.push(storefrontImageUrl(original, bucket).src);
+      const snappedW = snapStorefrontThumbWidth(width);
+      if (isCdnLegacyRaster(original)) {
+        candidates.push(thumbProxyUrl(original, snappedW));
+        candidates.push(original);
+      } else {
+        const targetBucket = snappedW as (typeof THUMB_WIDTHS)[number];
+        const startIdx = THUMB_WIDTHS.indexOf(targetBucket);
+        if (startIdx >= 0) {
+          for (const bucket of THUMB_WIDTHS.slice(0, startIdx + 1)) {
+            candidates.push(storefrontImageUrl(original, bucket).src);
+          }
         }
+        candidates.push(original);
       }
     } else {
       candidates.push(storefrontImageUrl(original, width).src);
+      candidates.push(original);
     }
   } catch {
     candidates.push(storefrontImageUrl(original, width).src);
+    candidates.push(original);
   }
 
-  candidates.push(original);
   return Array.from(new Set(candidates.filter(Boolean)));
 }
 

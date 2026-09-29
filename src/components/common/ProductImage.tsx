@@ -47,9 +47,17 @@ function productImageInlineStyle(options: {
 /** Universal thumb buckets supported across all CDN uploads. */
 const THUMB_WIDTHS = [480, 960, 1600] as const;
 
-export function generateCdnSrcSet(src: string): string | undefined {
+function isCdnSizedDerivative(src: string): boolean {
+  return src.includes("cdn.vibemusic.in") && /-w\d+\.webp(?:\?|$)/i.test(src);
+}
+
+export function generateCdnSrcSet(
+  src: string,
+  variant: ProductImageVariant = "card",
+): string | undefined {
   if (!src) return undefined;
   if (!src.includes("cdn.vibemusic.in") || !src.endsWith(".webp")) return undefined;
+  if (isCdnSizedDerivative(src)) return undefined;
 
   const master = cdnMasterUrl(src);
   // master is something like https://cdn.vibemusic.in/.../uuid.webp
@@ -61,7 +69,13 @@ export function generateCdnSrcSet(src: string): string | undefined {
   const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
   const name = match[1];
 
-  return THUMB_WIDTHS.map((w) => `${parsed.origin}${dir}${name}-w${w}.webp ${w}w`).join(", ");
+  const widths =
+    variant === "card"
+      ? THUMB_WIDTHS.slice(0, 2)
+      : variant === "thumb"
+        ? [THUMB_WIDTHS[0]]
+        : THUMB_WIDTHS;
+  return widths.map((w) => `${parsed.origin}${dir}${name}-w${w}.webp ${w}w`).join(", ");
 }
 
 /**
@@ -85,7 +99,7 @@ export default function ProductImage({
   onLoad,
 }: ProductImageProps) {
   const [useSrcSet, setUseSrcSet] = useState(true);
-  const srcSet = useSrcSet ? generateCdnSrcSet(src) : undefined;
+  const srcSet = useSrcSet ? generateCdnSrcSet(src, variant) : undefined;
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
