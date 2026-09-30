@@ -141,6 +141,11 @@ if command -v nginx >/dev/null 2>&1; then
     cp deploy/nginx/cdn.vibemusic.in.conf /etc/nginx/sites-available/cdn.vibemusic.in
     ln -sf /etc/nginx/sites-available/cdn.vibemusic.in /etc/nginx/sites-enabled/cdn.vibemusic.in 2>/dev/null || true
   fi
+  if [[ -f deploy/nginx/mail.vibemusic.in.conf ]]; then
+    echo "==> Syncing mail Nginx site config from repo"
+    cp deploy/nginx/mail.vibemusic.in.conf /etc/nginx/sites-available/mail.vibemusic.in
+    ln -sf /etc/nginx/sites-available/mail.vibemusic.in /etc/nginx/sites-enabled/mail.vibemusic.in 2>/dev/null || true
+  fi
   # Remove legacy Cloudflare real-IP config if present (stack is CloudOnFire direct).
   rm -f /etc/nginx/conf.d/cloudflare-real-ip.conf 2>/dev/null || true
   # Long server_name lists (www/cdn/mail) overflow the default 32/64 hash bucket and nginx refuses to start.
