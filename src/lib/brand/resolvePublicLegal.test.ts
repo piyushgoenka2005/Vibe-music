@@ -1,19 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/server/settingsService", () => ({
+vi.mock("next/cache", () => ({
+  unstable_cache: (fn: () => Promise<unknown>) => fn,
+}));
+
+vi.mock("@/lib/server/prisma/contentRepository", () => ({
   getStoreSettings: vi.fn(),
 }));
 
-import { getStoreSettings } from "@/lib/server/settingsService";
+import * as pgContent from "@/lib/server/prisma/contentRepository";
 import { resolvePublicLegal } from "./resolvePublicLegal";
 
 describe("resolvePublicLegal (L-30)", () => {
   beforeEach(() => {
-    vi.mocked(getStoreSettings).mockReset();
+    vi.mocked(pgContent.getStoreSettings).mockReset();
+    process.env.DEV_LAYOUT_DB = "true";
   });
 
   it("prefers store settings over build-time BRAND defaults", async () => {
-    vi.mocked(getStoreSettings).mockResolvedValue({
+    vi.mocked(pgContent.getStoreSettings).mockResolvedValue({
       storeName: "Sikkim Commerce House Pvt Ltd",
       storeAddress: "Kolkata",
       gstNumber: "19AABCU9603R1ZM",
@@ -33,7 +38,7 @@ describe("resolvePublicLegal (L-30)", () => {
   });
 
   it("falls back to BRAND when store settings omit GSTIN", async () => {
-    vi.mocked(getStoreSettings).mockResolvedValue({
+    vi.mocked(pgContent.getStoreSettings).mockResolvedValue({
       storeName: "",
       storeAddress: "",
       gstNumber: "",

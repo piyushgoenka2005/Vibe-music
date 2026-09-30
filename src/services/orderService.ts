@@ -24,15 +24,28 @@ async function parseJson<T>(response: Response): Promise<T> {
   return data;
 }
 
+async function postJson<T>(url: string, payload: unknown): Promise<T> {
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return parseJson<T>(response);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "Could not reach the payment server. Check your connection and reload the page.",
+      );
+    }
+    throw error;
+  }
+}
+
 export async function createPaymentOrder(
   payload: CreateOrderRequest,
 ): Promise<CreateRazorpayOrderResponse> {
-  const response = await fetch("/api/payment/create-order", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  return parseJson<CreateRazorpayOrderResponse>(response);
+  return postJson<CreateRazorpayOrderResponse>("/api/payment/create-order", payload);
 }
 
 export async function verifyPayment(payload: VerifyPaymentPayload): Promise<VerifyPaymentResponse> {
