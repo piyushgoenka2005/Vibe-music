@@ -48,10 +48,20 @@ function parentFolderName(relativePath: string): string | null {
   return relativePath.slice(0, slash).split("/").pop() ?? null;
 }
 
-function openZip(zipBuffer: Buffer) {
-  // Dynamic import at runtime keeps adm-zip (Node fs) out of the Next.js turbopack graph.
+type ZipEntry = {
+  isDirectory: boolean;
+  entryName: string;
+  getData(): Buffer;
+};
+
+type ZipArchive = {
+  getEntries(): ZipEntry[];
+};
+
+function openZip(zipBuffer: Buffer): ZipArchive {
+  // Dynamic require keeps adm-zip (Node fs) out of the Next.js turbopack graph.
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- Node-only ZIP parser
-  const AdmZip = require("adm-zip") as typeof import("adm-zip").default;
+  const AdmZip = require("adm-zip") as new (buffer: Buffer) => ZipArchive;
   return new AdmZip(zipBuffer);
 }
 
