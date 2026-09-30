@@ -73,7 +73,7 @@
   max-width: 720px;
 }
 
-.cat-page__layout {
+.cat-page__layout:not(.cat-page__layout--rail-external) {
   display: grid;
   grid-template-columns: minmax(220px, 240px) minmax(0, 1fr);
   gap: clamp(0.75rem, 1.25vw, 1rem);
@@ -82,15 +82,30 @@
   align-items: start;
 }
 
+/* When the filter rail is external (ListingFilterShell), content must fill 100% of the main area */
+.cat-page__layout--rail-external,
+.cat-page__layout.cat-page__layout--rail-external {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.cat-page__layout--rail-external > div,
+.cat-page__layout.cat-page__layout--rail-external > div {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
 @media (min-width: 1280px) {
-  .cat-page__layout {
+  .cat-page__layout:not(.cat-page__layout--rail-external) {
     grid-template-columns: minmax(200px, 228px) minmax(0, 1fr);
     gap: 0.85rem;
   }
 }
 
 @media (max-width: 767px) {
-  .cat-page__layout {
+  .cat-page__layout:not(.cat-page__layout--rail-external) {
     grid-template-columns: 1fr;
     gap: 0.75rem;
   }

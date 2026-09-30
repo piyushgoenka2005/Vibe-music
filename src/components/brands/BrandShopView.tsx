@@ -191,7 +191,7 @@ function BrandShopViewContent({ brand }: BrandShopViewProps) {
             ) : (
               <>
                 <div
-                  className={`cat-product-grid cat-product-grid--${filters.view} cat-product-grid--sparse`}
+                  className={`cat-product-grid cat-product-grid--${filters.view}${data.products.length <= 2 ? " cat-product-grid--sparse" : ""}`}
                   role="list"
                 >
                   {data.products.map((product, index) => (

@@ -114,7 +114,7 @@ function BrandProductGrid({
       {shouldMount ? (
         <>
           <div
-            className="cat-product-grid cat-product-grid--grid cat-product-grid--sparse brands-directory__products"
+            className={`cat-product-grid cat-product-grid--grid${rendered.length <= 2 ? " cat-product-grid--sparse" : ""} brands-directory__products`}
             role="list"
           >
             {rendered.map((product, index) => (
@@ -393,7 +393,7 @@ function BrandsPageContent({ brands }: BrandsPageProps) {
                       </Link>
                     </header>
                     <div
-                      className={`cat-product-grid cat-product-grid--${filters.view} cat-product-grid--sparse`}
+                      className={`cat-product-grid cat-product-grid--${filters.view}${data.products.length <= 2 ? " cat-product-grid--sparse" : ""}`}
                       role="list"
                     >
                       {data.products.map((product, index) => (

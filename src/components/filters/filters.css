@@ -83,9 +83,18 @@
     scrollbar-width: thin;
   }
 
-  .cat-page__layout--rail-external {
+  .cat-page__layout--rail-external,
+  .cat-page__layout.cat-page__layout--rail-external {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .cat-page__layout--rail-external > div,
+  .cat-page__layout.cat-page__layout--rail-external > div {
     display: block;
-    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
   }
 
   .cat-page__layout--rail-external > .cat-filter-sidebar--desktop {
