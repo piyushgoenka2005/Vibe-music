@@ -63,6 +63,8 @@ const requiredProd = [
   "SMTP_HOST",
   "SMTP_USER",
   "SMTP_PASS",
+  "UPSTASH_REDIS_REST_URL",
+  "UPSTASH_REDIS_REST_TOKEN",
 ];
 
 const recommended = [
@@ -73,8 +75,6 @@ const recommended = [
   "GA_MEASUREMENT_API_SECRET",
   "NEXT_PUBLIC_STORE_PHONE",
   "NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION",
-  "UPSTASH_REDIS_REST_URL",
-  "UPSTASH_REDIS_REST_TOKEN",
   "CDN_STORAGE_ROOT",
   "CDN_PUBLIC_BASE_URL",
   "SMTP_ADMIN_TO",
@@ -284,6 +284,15 @@ if (
 ) {
   console.log(
     "BLOCKING: CDN_STORAGE_ROOT and CDN_PUBLIC_BASE_URL are required on production (product images)."
+  );
+  productionMisconfig = true;
+}
+if (
+  /vibemusic\.in/i.test(siteUrl) &&
+  (!env.UPSTASH_REDIS_REST_URL?.trim() || !env.UPSTASH_REDIS_REST_TOKEN?.trim())
+) {
+  console.log(
+    "BLOCKING: UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required on production (rate limits)."
   );
   productionMisconfig = true;
 }

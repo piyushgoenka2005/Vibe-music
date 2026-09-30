@@ -11,7 +11,8 @@
 #   SKIP_SMOKE=1            Skip post-deploy smoke tests
 #   SKIP_BUILD=0            Set to 1 to reload PM2 without rebuild (hotfix env-only)
 #   SYNC_SSL=1              Run deploy/fix-ssl-certificates.sh after nginx sync
-#   VERIFY_PUBLIC_SMOKE=1   Also smoke-test https://vibemusic.in via nginx
+#   VERIFY_PUBLIC_SMOKE=1   Also smoke-test https://vibemusic.in via nginx (default: 1)
+#   SKIP_NGINX_VERIFY=1     Skip public nginx routing gate (not recommended)
 #
 # Safety:
 #   - Records .deploy-previous.sha before pull (deploy/rollback.sh)
@@ -25,9 +26,11 @@ cd "$APP_DIR"
 VPS_IP="${VPS_IP:-31.42.125.219}"
 PUBLIC_BASE="${PUBLIC_BASE_URL:-https://vibemusic.in}"
 LOOPBACK="http://127.0.0.1:3000"
+VERIFY_PUBLIC_SMOKE="${VERIFY_PUBLIC_SMOKE:-1}"
 
 log()  { echo "==> $*"; }
 step() { echo ""; echo "── $* ──"; }
+warn() { echo "    WARN: $*" >&2; }
 
 die() {
   echo "" >&2
@@ -127,6 +130,49 @@ purge_nginx_page_cache() {
   rm -rf /var/cache/nginx/vibe-pages/* 2>/dev/null || true
 }
 
+ensure_cdn_storage() {
+  local cdn_root="${CDN_STORAGE_ROOT:-/var/www/cdn}"
+  log "Ensuring CDN storage at $cdn_root"
+  mkdir -p "$cdn_root/products" "$cdn_root/banners" "$cdn_root/blog" "$cdn_root/reviews"
+  chmod -R u+rwX,g+rwX "$cdn_root" 2>/dev/null || true
+}
+
+validate_production_env() {
+  log "Production env validation (check:env)"
+  if ! npm run check:env >/tmp/vibe-check-env-deploy.txt 2>&1; then
+    cat /tmp/vibe-check-env-deploy.txt >&2
+    die "check:env failed — fix .env and deploy/ops-secrets.env before deploy"
+  fi
+}
+
+verify_nginx_routes_vibe() {
+  if [[ "${SKIP_NGINX_VERIFY:-0}" == "1" ]]; then
+    log "Public nginx verify skipped (SKIP_NGINX_VERIFY=1)"
+    return 0
+  fi
+  if ! command -v curl >/dev/null 2>&1; then
+    warn "curl missing — skipping nginx routing verify"
+    return 0
+  fi
+
+  log "Verifying nginx routes vibemusic.in → Next.js (not Gitea/panel)"
+  local headers health_body
+  headers="$(curl -skI --max-time 12 -H "Host: vibemusic.in" "https://127.0.0.1/api/health" 2>/dev/null || true)"
+
+  if echo "$headers" | grep -qiE 'location:.*/user/login|i_like_gitea='; then
+    echo "$headers" >&2
+    die "nginx still routes vibemusic.in to Gitea — run: bash deploy/sync-nginx.sh"
+  fi
+
+  health_body="$(curl -sk --max-time 12 -H "Host: vibemusic.in" "https://127.0.0.1/api/health" 2>/dev/null || true)"
+  if ! echo "$health_body" | grep -q '"status"'; then
+    echo "    Response: $(echo "$health_body" | head -c 200)" >&2
+    die "nginx /api/health did not return Vibe JSON — check PM2 and deploy/nginx/vibemusic.in.conf"
+  fi
+
+  log "nginx public routing OK (vibemusic.in → app)"
+}
+
 run_smoke_tests() {
   if [[ "${SKIP_SMOKE:-0}" == "1" ]]; then
     log "Smoke tests skipped (SKIP_SMOKE=1)"
@@ -168,6 +214,8 @@ print_summary() {
   echo "  Health:     $(echo "$health_body" | head -c 120)"
   echo ""
   echo "  Verify live:  VERIFY_BASE_URL=${PUBLIC_BASE} npm run verify:prod-signoff"
+  echo "  Nginx sync:   bash deploy/sync-nginx.sh"
+  echo "  SSL expand:   SYNC_SSL=1 bash deploy/update.sh"
   echo "  Rollback:     bash deploy/rollback.sh"
   if [[ "${SEED_CATALOG:-0}" != "1" ]]; then
     echo "  Catalog:      SEED_CATALOG=1 bash deploy/update.sh"
@@ -225,6 +273,14 @@ if [[ -f deploy/ops-secrets.env ]]; then
   node scripts/ops/merge-ops-secrets.mjs
 fi
 
+if [[ -f deploy/ensure-ops-secrets.sh ]]; then
+  log "Ensure ops secrets (GSTIN, Upstash, GA4 placeholders)"
+  bash deploy/ensure-ops-secrets.sh || warn "ensure-ops-secrets.sh had warnings"
+fi
+
+ensure_cdn_storage
+validate_production_env
+
 # ── 3. Database + ops data ───────────────────────────────────────────────────
 
 step "3/10 — Database"
@@ -264,12 +320,15 @@ restart_pm2
 
 step "6/10 — Nginx and CDN"
 
+ensure_cdn_storage
+
 if command -v nginx >/dev/null 2>&1; then
   bash deploy/sync-nginx.sh
   if [[ "${SYNC_SSL:-0}" == "1" && -f deploy/fix-ssl-certificates.sh ]]; then
     log "SSL certificate sync (SYNC_SSL=1)"
     bash deploy/fix-ssl-certificates.sh
   fi
+  verify_nginx_routes_vibe
 else
   log "nginx not installed — skipping vhost sync"
 fi
