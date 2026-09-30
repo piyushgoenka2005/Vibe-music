@@ -303,6 +303,7 @@ case "$cmd" in
   -h|--help|help) usage ;;
   *) die "unknown command: $cmd" ;;
 esac
+exit 0
 
 # --- NGINX:vibemusic.in:START ---
 # ─── Nginx reverse proxy for Vibe Music ───────────────────────────────────
