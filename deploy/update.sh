@@ -173,7 +173,7 @@ sync_storefront_images() {
     die "download:images failed — homepage/category images will be broken"
   fi
   if ! npm run generate:category-thumbs; then
-    die "generate:category-thumbs failed — category grid thumbs will be broken"
+    warn "generate:category-thumbs failed — category grid may use full-size PNGs"
   fi
   if ! npm run verify:images; then
     die "essential image verify failed — run: npm run download:images"
