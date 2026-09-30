@@ -332,21 +332,20 @@ install_dependencies() {
   # Guard against partial installs leaving a drifted lockfile on the VPS.
   git checkout -- package-lock.json package.json 2>/dev/null || true
 
-  if npm ci --no-audit --ignore-scripts; then
+  if npm ci --no-audit; then
     rebuild_native_modules
     return 0
   fi
 
   warn "npm ci failed — cleaning node_modules and running npm install"
   rm -rf node_modules
-  npm install --no-audit --ignore-scripts
+  npm install --no-audit
   rebuild_native_modules
 }
 
 rebuild_native_modules() {
-  log "Rebuilding native modules (sharp, prisma)"
+  log "Rebuilding native modules (sharp)"
   npm rebuild sharp --foreground-scripts 2>/dev/null || npm install sharp --no-save --foreground-scripts 2>/dev/null || true
-  npm run db:generate >/dev/null 2>&1 || true
 }
 
 install_dependencies
