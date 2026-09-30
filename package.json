@@ -195,6 +195,10 @@
     "typescript": "^5",
     "vitest": "^3.2.6"
   },
+  "overrides": {
+    "@opentelemetry/instrumentation": "0.220.0",
+    "@opentelemetry/api-logs": "0.220.0"
+  },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix",

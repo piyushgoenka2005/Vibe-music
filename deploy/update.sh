@@ -259,8 +259,21 @@ step "2/10 — Dependencies and environment"
 
 backup_database
 
-log "Installing npm dependencies"
-npm ci || npm install --no-audit
+install_dependencies() {
+  log "Installing npm dependencies (node $(node -v), npm $(npm -v))"
+  # Guard against partial installs leaving a drifted lockfile on the VPS.
+  git checkout -- package-lock.json package.json 2>/dev/null || true
+
+  if npm ci --no-audit --ignore-scripts; then
+    return 0
+  fi
+
+  warn "npm ci failed — cleaning node_modules and running npm install"
+  rm -rf node_modules
+  npm install --no-audit --ignore-scripts
+}
+
+install_dependencies
 
 log "Prisma client"
 npm run db:generate
