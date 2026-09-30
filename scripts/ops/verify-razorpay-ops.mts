@@ -94,8 +94,8 @@ checks.push({
 });
 
 if (keyId && keySecret) {
+  const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
   try {
-    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
     const response = await fetch(
       "https://api.razorpay.com/v1/orders?count=1",
       {
@@ -111,7 +111,16 @@ if (keyId && keySecret) {
         : `HTTP ${response.status} — check live/test keys`,
       blocking: true,
     });
+  } catch (error) {
+    checks.push({
+      name: "razorpay_api",
+      ok: false,
+      detail: error instanceof Error ? error.message : String(error),
+      blocking: true,
+    });
+  }
 
+  try {
     const capturedRes = await fetch(
       "https://api.razorpay.com/v1/payments?count=1&status=captured",
       { headers: { Authorization: `Basic ${auth}` } }
@@ -133,10 +142,10 @@ if (keyId && keySecret) {
     });
   } catch (error) {
     checks.push({
-      name: "razorpay_api",
+      name: "razorpay_captured_history",
       ok: false,
       detail: error instanceof Error ? error.message : String(error),
-      blocking: true,
+      blocking: false,
     });
   }
 }

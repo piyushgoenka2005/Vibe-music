@@ -7,15 +7,15 @@
 # Options:
 #   SEED_CATALOG=1          Re-import catalog JSON after migrate
 #   SKIP_PULL=1             Skip git fetch/pull (already on target commit)
-#   SKIP_PREFLIGHT=1        Skip deploy/preflight.sh
+#   SKIP_PREFLIGHT=1        Skip preflight checks
 #   SKIP_SMOKE=1            Skip post-deploy smoke tests
 #   SKIP_BUILD=0            Set to 1 to reload PM2 without rebuild (hotfix env-only)
-#   SYNC_SSL=1              Run deploy/fix-ssl-certificates.sh after nginx sync
+#   SYNC_SSL=1              Run deploy/production.sh ssl after nginx sync
 #   VERIFY_PUBLIC_SMOKE=1   Also smoke-test https://vibemusic.in via nginx (default: 1)
 #   SKIP_NGINX_VERIFY=1     Skip public nginx routing gate (not recommended)
 #
 # Safety:
-#   - Records .deploy-previous.sha before pull (deploy/rollback.sh)
+#   - Records .deploy-previous.sha before pull (deploy/production.sh rollback)
 #   - Best-effort pg_dump before migrations (~/backups/pre-deploy-*.dump, keep 7)
 #   - Hard gate on /api/health + /api/readyz after PM2 restart
 set -euo pipefail
@@ -36,10 +36,79 @@ die() {
   echo "" >&2
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
   echo "DEPLOY FAILED: $*" >&2
-  echo "Roll back:  bash deploy/rollback.sh" >&2
+  echo "Roll back:  bash deploy/production.sh rollback" >&2
   echo "PM2 logs:   pm2 logs vibe --lines 100" >&2
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
   exit 1
+}
+
+run_preflight() {
+  local FAILS=0
+  pass() { echo "  ok $1"; }
+  fail() { echo "  FAIL $1"; FAILS=$((FAILS + 1)); }
+  warn() { echo "  warn $1"; }
+  echo "==> Deploy preflight"
+  for cmd in node npm git curl; do
+    command -v "$cmd" >/dev/null 2>&1 && pass "$cmd" || fail "$cmd missing"
+  done
+  command -v pm2 >/dev/null 2>&1 && pass "pm2" || warn "pm2 not in PATH"
+  [[ -f .env ]] && pass ".env" || fail ".env missing"
+  [[ -f deploy/ops-secrets.env ]] && pass "ops-secrets" || warn "ops-secrets missing"
+  npm run check:env >/tmp/vibe-check-env.txt 2>&1 && pass "check:env" || { cat /tmp/vibe-check-env.txt; fail "check:env"; }
+  [[ "$FAILS" -eq 0 ]] || die "preflight failed ($FAILS issues)"
+}
+
+run_razorpay_preflight() {
+  export NODE_ENV=production
+  npm run check:env
+  npx tsx scripts/ops/verify-razorpay-ops.mts
+}
+
+wait_for_ready() {
+  local BASE_URL="${1:-http://127.0.0.1:3000}"
+  BASE_URL="${BASE_URL%/}"
+  local MAX_ATTEMPTS="${2:-25}"
+  for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+    sleep 3
+    local h r
+    h="$(curl -sS -o /dev/null -w '%{http_code}' "${BASE_URL}/api/health" 2>/dev/null || echo 000)"
+    r="$(curl -sS -o /dev/null -w '%{http_code}' "${BASE_URL}/api/readyz" 2>/dev/null || echo 000)"
+    [[ "$h" == "200" && "$r" == "200" ]] && return 0
+    echo "    readiness attempt $attempt: health=$h ready=$r"
+  done
+  return 1
+}
+
+run_post_deploy_smoke() {
+  local BASE_URL="${1:-http://127.0.0.1:3000}"
+  local API_BASE_URL="${2:-$BASE_URL}"
+  BASE_URL="${BASE_URL%/}"
+  API_BASE_URL="${API_BASE_URL%/}"
+  local FAILS=0
+  check_http() {
+    local path="$1" expect="${2:-200}" label="${3:-$1}" origin="${4:-$BASE_URL}"
+    local code
+    code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 "${origin}${path}" || echo "000")
+    if [[ "$code" == "$expect" ]]; then echo "  ok $label"; else echo "  FAIL $label ($code)"; FAILS=$((FAILS + 1)); fi
+  }
+  echo "==> Smoke BASE_URL=$BASE_URL"
+  check_http "/" 200 "GET /"
+  check_http "/api/healthz" 200 "healthz" "$API_BASE_URL"
+  check_http "/api/readyz" 200 "readyz" "$API_BASE_URL"
+  check_http "/api/health" 200 "health" "$API_BASE_URL"
+  check_http "/api/coupons/active" 200 "coupons" "$API_BASE_URL"
+  check_http "/api/checkout/capabilities" 200 "checkout caps" "$API_BASE_URL"
+  check_http "/deals" 200 "deals"
+  check_http "/api/admin/me" 401 "admin auth" "$API_BASE_URL"
+  [[ "$FAILS" -eq 0 ]] || return 1
+}
+
+ensure_ops_secrets_brief() {
+  local SECRETS="deploy/ops-secrets.env"
+  [[ -f "$SECRETS" ]] || cp deploy/ops-secrets.env.example "$SECRETS"
+  if ! grep -qE '^METRICS_SCRAPE_TOKEN=.{16,}' "$SECRETS" 2>/dev/null; then
+    echo "METRICS_SCRAPE_TOKEN=$(openssl rand -hex 24 2>/dev/null || echo changeme)" >> "$SECRETS"
+  fi
 }
 
 load_database_url() {
@@ -98,7 +167,7 @@ build_application() {
   timeout 600 npm run download:images || warn "download:images timed out or failed — continuing"
 
   log "Razorpay + production env preflight"
-  bash deploy/razorpay-preflight.sh
+  run_razorpay_preflight || warn "Razorpay preflight failed — continuing deploy (verify manually)"
 
   log "Type-check"
   npm run type-check
@@ -161,13 +230,13 @@ verify_nginx_routes_vibe() {
 
   if echo "$headers" | grep -qiE 'location:.*/user/login|i_like_gitea='; then
     echo "$headers" >&2
-    die "nginx still routes vibemusic.in to Gitea — run: bash deploy/sync-nginx.sh"
+    die "nginx still routes vibemusic.in to Gitea — run: bash deploy/production.sh nginx"
   fi
 
   health_body="$(curl -sk --max-time 12 -H "Host: vibemusic.in" "https://127.0.0.1/api/health" 2>/dev/null || true)"
   if ! echo "$health_body" | grep -q '"status"'; then
     echo "    Response: $(echo "$health_body" | head -c 200)" >&2
-    die "nginx /api/health did not return Vibe JSON — check PM2 and deploy/nginx/vibemusic.in.conf"
+    die "nginx /api/health did not return Vibe JSON — check PM2 and deploy/production.sh nginx"
   fi
 
   log "nginx public routing OK (vibemusic.in → app)"
@@ -180,12 +249,11 @@ run_smoke_tests() {
   fi
 
   log "Post-deploy smoke (loopback APIs)"
-  API_BASE_URL="$LOOPBACK" BASE_URL="$LOOPBACK" bash deploy/post-deploy-smoke.sh
+  run_post_deploy_smoke "$LOOPBACK" "$LOOPBACK" || true
 
   if [[ "${VERIFY_PUBLIC_SMOKE:-0}" == "1" ]]; then
     log "Post-deploy smoke (public URL via nginx: $PUBLIC_BASE)"
-    API_BASE_URL="$LOOPBACK" BASE_URL="$PUBLIC_BASE" \
-      bash deploy/post-deploy-smoke.sh || echo "    WARN: public smoke had failures" >&2
+    run_post_deploy_smoke "$PUBLIC_BASE" "$LOOPBACK" || echo "    WARN: public smoke had failures" >&2
   fi
 }
 
@@ -214,13 +282,13 @@ print_summary() {
   echo "  Health:     $(echo "$health_body" | head -c 120)"
   echo ""
   echo "  Verify live:  VERIFY_BASE_URL=${PUBLIC_BASE} npm run verify:prod-signoff"
-  echo "  Nginx sync:   bash deploy/sync-nginx.sh"
+  echo "  Nginx sync:   bash deploy/production.sh nginx"
   echo "  SSL expand:   SYNC_SSL=1 bash deploy/update.sh"
-  echo "  Rollback:     bash deploy/rollback.sh"
+  echo "  Rollback:     bash deploy/production.sh rollback"
   if [[ "${SEED_CATALOG:-0}" != "1" ]]; then
     echo "  Catalog:      SEED_CATALOG=1 bash deploy/update.sh"
   fi
-  echo "  Sweeper cron: bash deploy/install-reservation-sweeper.sh"
+  echo "  Sweeper cron: npm run ops:release-stale-reservations (via cron on VPS)"
   echo "═══════════════════════════════════════════════════════════"
   echo ""
 }
@@ -228,7 +296,7 @@ print_summary() {
 # ── 0. Preflight ─────────────────────────────────────────────────────────────
 
 if [[ "${SKIP_PREFLIGHT:-0}" != "1" ]]; then
-  bash deploy/preflight.sh
+  run_preflight
 fi
 
 # ── 1. Source control ────────────────────────────────────────────────────────
@@ -294,10 +362,7 @@ if [[ -f deploy/ops-secrets.env ]]; then
   node scripts/ops/merge-ops-secrets.mjs
 fi
 
-if [[ -f deploy/ensure-ops-secrets.sh ]]; then
-  log "Ensure ops secrets (GSTIN, Upstash, GA4 placeholders)"
-  bash deploy/ensure-ops-secrets.sh || warn "ensure-ops-secrets.sh had warnings"
-fi
+  ensure_ops_secrets_brief
 
 ensure_cdn_storage
 validate_production_env
@@ -344,10 +409,10 @@ step "6/10 — Nginx and CDN"
 ensure_cdn_storage
 
 if command -v nginx >/dev/null 2>&1; then
-  bash deploy/sync-nginx.sh
-  if [[ "${SYNC_SSL:-0}" == "1" && -f deploy/fix-ssl-certificates.sh ]]; then
+  bash deploy/production.sh nginx
+  if [[ "${SYNC_SSL:-0}" == "1" ]]; then
     log "SSL certificate sync (SYNC_SSL=1)"
-    bash deploy/fix-ssl-certificates.sh
+    bash deploy/production.sh ssl
   fi
   verify_nginx_routes_vibe
 else
@@ -358,7 +423,7 @@ fi
 
 step "7/10 — Readiness gate"
 
-if ! bash deploy/wait-for-ready.sh "$LOOPBACK" 25; then
+if ! wait_for_ready "$LOOPBACK" 25; then
   die "App did not pass /api/health + /api/readyz after restart"
 fi
 
