@@ -102,11 +102,11 @@ export function startJobWorker(): Worker {
     concurrency: 5,
   });
 
-  worker.on("completed", (job) => {
+  worker.on("completed", (job: Job) => {
     logInfo(`Job completed: ${job.name} (${job.id})`, "job-worker");
   });
 
-  worker.on("failed", (job, error) => {
+  worker.on("failed", (job: Job | undefined, error: Error) => {
     logWarn(
       `Job failed: ${job?.name ?? "unknown"} (${job?.id ?? "n/a"}): ${error.message}`,
       "job-worker",
