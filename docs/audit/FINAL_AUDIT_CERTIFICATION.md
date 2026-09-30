@@ -1,36 +1,39 @@
 # Final audit certification — Vibe Music (L-01 → L-30)
 
-**Date:** 28 Sep 2026  
+**Date:** 30 Sep 2026 (updated after deep audit + P0/P1 hardening)  
 **Repo:** `main` (run `git rev-parse --short HEAD` for exact SHA)  
 **Machine-readable catalog:** `docs/audit/vibemusic_audit.json`  
+**Deep audit:** `docs/audit/PRODUCTION_AUDIT_2026-09-30.md`  
 **Verification:** `npm run verify:audit`
 
 ---
 
 ## Certification tiers
 
-| Tier                               |           Score | Verdict                                                      |
-| ---------------------------------- | --------------: | ------------------------------------------------------------ |
-| **Repository (code + CI)**         |     **10 / 10** | ✅ **CERTIFIED** — all L items fixed, verified, or automated |
-| **Production live (vibemusic.in)** | **~8.5–9 / 10** | ❌ **NOT CERTIFIED** until CDN + GSTIN on live               |
-| **Overall honest rating**          |      **9 / 10** | **10/10** after `bash deploy/certify-production.sh` on VPS   |
+| Tier                               |         Score | Verdict                                                    |
+| ---------------------------------- | ------------: | ---------------------------------------------------------- |
+| **Repository (code + CI)**         |   **10 / 10** | ✅ **CERTIFIED** — L-01–L-30 gates pass in CI              |
+| **Engineering depth (honest)**     |  **7.8 / 10** | See `PRODUCTION_AUDIT_2026-09-30.md` — API/search/obs gaps |
+| **Production live (vibemusic.in)** | **~8.5 / 10** | ❌ **NOT CERTIFIED** until CDN + GSTIN + latest deploy     |
+| **Overall honest rating**          |  **7.8 / 10** | **10/10 platform** needs P2–P3 roadmap on audit doc        |
 
 ---
 
 ## Repository gates (all ✅ today)
 
-| Gate                                | Status                                    |
-| ----------------------------------- | ----------------------------------------- |
-| `npm test`                          | ✅ 635+ unit tests (security + services)  |
-| `npm run type-check`                | ✅ Pass                                   |
-| `npm run lint`                      | ✅ 0 errors                               |
-| `npm run audit:deps` (L-20)         | ✅ Pass                                   |
-| `npm run verify:e2e-catalog` (L-26) | ✅ 20/20 merge gate, 163 Playwright tests |
-| `npm run verify:audit`              | ✅ Pass (also in PR CI `validate.yml`)    |
-| Production security guards          | ✅ Demo/E2E/JSON-catalog blocked in prod  |
-| Invoice `stateCode` from GSTIN      | ✅ `sellerMeta` + `gstin.ts`              |
-| Admin ops integration panel         | ✅ GSTIN, SMS, WhatsApp, push, Crisp      |
-| `docs/audit/vibemusic_audit.json`   | ✅ 30 findings mapped                     |
+| Gate                                | Status                                   |
+| ----------------------------------- | ---------------------------------------- |
+| `npm test`                          | ✅ 697 unit tests (security + services)  |
+| `npm run test:e2e`                  | ✅ 173+ Playwright tests                 |
+| `npm run type-check`                | ✅ Pass                                  |
+| `npm run lint`                      | ✅ 0 errors                              |
+| `npm run audit:deps` (L-20)         | ✅ Pass                                  |
+| `npm run verify:e2e-catalog` (L-26) | ✅ 20/20 merge gate                      |
+| `npm run verify:audit`              | ✅ Pass (also in PR CI `validate.yml`)   |
+| Production security guards          | ✅ Demo/E2E/JSON-catalog/Upstash in prod |
+| Invoice `stateCode` from GSTIN      | ✅ `sellerMeta` + `gstin.ts`             |
+| Admin ops integration panel         | ✅ GSTIN, SMS, WhatsApp, push, Crisp     |
+| `docs/audit/vibemusic_audit.json`   | ✅ 30 findings mapped                    |
 
 ---
 

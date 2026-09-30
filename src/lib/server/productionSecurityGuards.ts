@@ -4,10 +4,17 @@ import { isE2ETestMode } from "@/lib/server/e2eResetCapture";
 import { isDemoPaymentsAllowed } from "@/lib/server/env";
 import { isJsonCatalogFallbackAllowed } from "@/lib/server/prisma/catalogRepository";
 
+function isUpstashConfigured(): boolean {
+  return Boolean(
+    process.env.UPSTASH_REDIS_REST_URL?.trim() && process.env.UPSTASH_REDIS_REST_TOKEN?.trim(),
+  );
+}
+
 export interface ProductionSecurityAudit {
   demoPaymentsBlocked: boolean;
   e2eResetCaptureDisabled: boolean;
   jsonCatalogFallbackBlocked: boolean;
+  distributedRateLimitConfigured: boolean;
   guestOrderBulkLinkDisabled: boolean;
   issues: string[];
 }
@@ -34,10 +41,18 @@ export function auditProductionSecurityControls(): ProductionSecurityAudit {
     issues.push("ALLOW_JSON_CATALOG_FALLBACK must not be enabled in production");
   }
 
+  const distributedRateLimitConfigured = isUpstashConfigured();
+  if (isProd && !distributedRateLimitConfigured) {
+    issues.push(
+      "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production for distributed rate limiting",
+    );
+  }
+
   return {
     demoPaymentsBlocked,
     e2eResetCaptureDisabled,
     jsonCatalogFallbackBlocked,
+    distributedRateLimitConfigured,
     guestOrderBulkLinkDisabled: true,
     issues,
   };

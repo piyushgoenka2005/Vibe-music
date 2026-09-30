@@ -135,10 +135,14 @@ if command -v nginx >/dev/null 2>&1; then
   fi
   # Remove legacy Cloudflare real-IP config if present (stack is CloudOnFire direct).
   rm -f /etc/nginx/conf.d/cloudflare-real-ip.conf 2>/dev/null || true
+  # Long server_name lists (www/cdn/mail) overflow the default 32/64 hash bucket and nginx refuses to start.
+  if ! grep -rqsE '^\s*server_names_hash_bucket_size' /etc/nginx/nginx.conf /etc/nginx/conf.d/; then
+    echo 'server_names_hash_bucket_size 128;' > /etc/nginx/conf.d/00-hash.conf
+  fi
   if [[ -f /etc/nginx/sites-available/vibemusic.in ]] || [[ -f /etc/nginx/sites-available/cdn.vibemusic.in ]]; then
     nginx -t
     if command -v systemctl >/dev/null 2>&1; then
-      sudo systemctl reload nginx 2>/dev/null || systemctl reload nginx
+      sudo systemctl reload-or-restart nginx 2>/dev/null || systemctl reload-or-restart nginx
     fi
   fi
 fi

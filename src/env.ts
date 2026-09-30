@@ -49,6 +49,8 @@ const productionRequiredSchema = z.object({
   SMTP_HOST: z.string().min(1),
   SMTP_USER: z.string().min(1),
   SMTP_PASS: z.string().min(1),
+  UPSTASH_REDIS_REST_URL: z.string().url(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
@@ -142,6 +144,8 @@ export function validateEnv(): void {
         envValue(process.env.SMTP_USER) ??
         (envValue(process.env.RESEND_API_KEY) ? "resend" : undefined),
       SMTP_PASS: envValue(process.env.SMTP_PASS) ?? envValue(process.env.RESEND_API_KEY),
+      UPSTASH_REDIS_REST_URL: envValue(process.env.UPSTASH_REDIS_REST_URL),
+      UPSTASH_REDIS_REST_TOKEN: envValue(process.env.UPSTASH_REDIS_REST_TOKEN),
     });
 
     if (!productionResult.success) {

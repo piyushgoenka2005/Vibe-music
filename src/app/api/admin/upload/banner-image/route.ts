@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { bannerUploadFolder } from "@/lib/server/cdnStorage";
 import { uploadOptimizedImageToCdn } from "@/lib/server/cdnImageOptimize";
-import { adminImageMimeTypeSchema } from "@/lib/validations/admin";
+import {
+  ADMIN_IMAGE_MAX_BYTES,
+  readAndValidateImageFile,
+} from "@/lib/security/imageUploadValidation";
 
 export async function POST(request: Request) {
   try {
@@ -14,10 +17,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
     }
 
-    adminImageMimeTypeSchema.parse({ mimeType: file.type });
+    const validated = await readAndValidateImageFile(file, ADMIN_IMAGE_MAX_BYTES);
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
+    }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const uploaded = await uploadOptimizedImageToCdn(buffer, {
+    const uploaded = await uploadOptimizedImageToCdn(validated.buffer, {
       folder: bannerUploadFolder(),
       filenameHint: file.name,
     });

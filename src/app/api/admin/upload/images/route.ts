@@ -3,9 +3,10 @@ import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { productUploadFolder } from "@/lib/server/cdnStorage";
 import { uploadOptimizedImageToCdn } from "@/lib/server/cdnImageOptimize";
 import {
-  adminProductUploadMetaSchema,
-  adminImageMimeTypeSchema,
-} from "@/lib/validations/admin";
+  ADMIN_IMAGE_MAX_BYTES,
+  readAndValidateImageFile,
+} from "@/lib/security/imageUploadValidation";
+import { adminProductUploadMetaSchema } from "@/lib/validations/admin";
 
 const MAX_UPLOAD_FILES = 20;
 
@@ -26,20 +27,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Too many images" }, { status: 400 });
     }
 
-    for (const file of files) {
-      adminImageMimeTypeSchema.parse({ mimeType: file.type });
-    }
-
     const folder = productUploadFolder(meta.categorySlug, meta.productSlug);
-    const uploadResults = await Promise.all(
-      files.map(async (file) => {
-        const buffer = Buffer.from(await file.arrayBuffer());
-        return uploadOptimizedImageToCdn(buffer, {
+    const uploadResults = [];
+
+    for (const file of files) {
+      const validated = await readAndValidateImageFile(file, ADMIN_IMAGE_MAX_BYTES);
+      if (!validated.ok) {
+        return NextResponse.json({ error: validated.error }, { status: 400 });
+      }
+
+      uploadResults.push(
+        await uploadOptimizedImageToCdn(validated.buffer, {
           folder,
           filenameHint: file.name,
-        });
-      })
-    );
+        }),
+      );
+    }
 
     const urls = uploadResults.map((r) => r.url);
     const masters = uploadResults.map((r) => r.masterUrl);

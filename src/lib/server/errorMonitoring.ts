@@ -13,6 +13,7 @@ export type ErrorMonitoringContext = ServerErrorContext;
 
 const reportedErrors = new Set<string>();
 const MAX_TRACKED_ERRORS = 200;
+let sentryInitialized = false;
 
 function trackErrorKey(key: string): void {
   reportedErrors.add(key);
@@ -26,6 +27,38 @@ export function isErrorMonitoringConfigured(): boolean {
   return Boolean(
     process.env.ERROR_MONITORING_WEBHOOK_URL?.trim() || process.env.SENTRY_DSN?.trim(),
   );
+}
+
+function captureSentry(error: Error, context: ServerErrorContext): void {
+  const dsn = process.env.SENTRY_DSN?.trim();
+  if (!dsn) return;
+
+  void import("@sentry/node")
+    .then((Sentry) => {
+      if (!sentryInitialized) {
+        Sentry.init({
+          dsn,
+          environment: process.env.NODE_ENV ?? "development",
+          release:
+            process.env.GIT_COMMIT_SHA?.trim() ||
+            process.env.VERCEL_GIT_COMMIT_SHA?.trim() ||
+            undefined,
+          tracesSampleRate: 0,
+        });
+        sentryInitialized = true;
+      }
+
+      Sentry.withScope((scope) => {
+        scope.setTag("source", context.source);
+        if (context.routePath) scope.setTag("routePath", context.routePath);
+        if (context.requestId) scope.setTag("requestId", context.requestId);
+        if (context.meta) scope.setContext("meta", context.meta);
+        Sentry.captureException(error);
+      });
+    })
+    .catch(() => {
+      /* capture must not throw */
+    });
 }
 
 async function notifyWebhook(error: Error, context: ServerErrorContext): Promise<void> {
@@ -98,5 +131,12 @@ export function reportServerError(
     },
   );
 
+  captureSentry(normalized, context);
   void notifyWebhook(normalized, context);
+}
+
+/** @internal Vitest only — reset dedupe + Sentry init flag between tests. */
+export function resetErrorMonitoringForTests(): void {
+  reportedErrors.clear();
+  sentryInitialized = false;
 }

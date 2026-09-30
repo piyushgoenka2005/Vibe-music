@@ -120,6 +120,30 @@ check_json_post() {
 check_json_post "/api/auth/forgot-password" "d.ok === true" "POST /api/auth/forgot-password (SMTP+DB)"
 check_http "/api/e2e/password-reset" "404" "GET /api/e2e/password-reset disabled in prod" "$API_BASE_URL"
 
+# CSRF + webhook hardening (P1 audit)
+csrf_body=$(curl -sS --max-time 30 -X POST "${API_BASE_URL}/api/cart/reprice" \
+  -H "Content-Type: application/json" \
+  -d '{"items":[]}' || echo "")
+csrf_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 -X POST "${API_BASE_URL}/api/cart/reprice" \
+  -H "Content-Type: application/json" \
+  -d '{"items":[]}' || echo "000")
+if [[ "$csrf_code" == "403" ]]; then
+  pass "POST /api/cart/reprice without Origin → HTTP 403 (CSRF)"
+else
+  fail "POST /api/cart/reprice without Origin → HTTP $csrf_code (expected 403)"
+fi
+
+webhook_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 -X POST "${API_BASE_URL}/api/payment/webhook/razorpay" \
+  -H "Content-Type: application/json" \
+  -H "X-Razorpay-Event-Id: smoke-$(date +%s)" \
+  -d '{"event":"payment.captured","payload":{}}' || echo "000")
+if [[ "$webhook_code" == "400" ]]; then
+  pass "POST /api/payment/webhook/razorpay without signature → HTTP 400"
+else
+  fail "POST /api/payment/webhook/razorpay without signature → HTTP $webhook_code (expected 400)"
+fi
+unset csrf_body
+
 check_http "/robots.txt" "200" "GET /robots.txt"
 check_http "/sitemap.xml" "200" "GET /sitemap.xml"
 check_http "/api/admin/me" "401" "GET /api/admin/me (auth enforced)" "$API_BASE_URL"

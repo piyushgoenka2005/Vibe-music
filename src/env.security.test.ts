@@ -31,6 +31,8 @@ describe("validateEnv production security", () => {
     process.env.SMTP_HOST = "smtp.example.com";
     process.env.SMTP_USER = "user";
     process.env.SMTP_PASS = "pass";
+    process.env.UPSTASH_REDIS_REST_URL = "https://example.upstash.io";
+    process.env.UPSTASH_REDIS_REST_TOKEN = "token";
     delete process.env.ALLOW_DEMO_PAYMENTS;
     delete process.env.E2E_TEST_MODE;
     delete process.env.ALLOW_JSON_CATALOG_FALLBACK;
@@ -48,5 +50,13 @@ describe("validateEnv production security", () => {
     process.env.ALLOW_JSON_CATALOG_FALLBACK = "true";
     const validateEnv = await loadValidateEnv();
     expect(() => validateEnv()).toThrow(/ALLOW_JSON_CATALOG_FALLBACK/);
+  });
+
+  it("rejects missing Upstash credentials in production", async () => {
+    setMinimalProductionEnv();
+    delete process.env.UPSTASH_REDIS_REST_URL;
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
+    const validateEnv = await loadValidateEnv();
+    expect(() => validateEnv()).toThrow(/UPSTASH_REDIS_REST_URL/);
   });
 });

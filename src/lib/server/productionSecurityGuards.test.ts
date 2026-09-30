@@ -17,11 +17,14 @@ describe("productionSecurityGuards", () => {
     delete process.env.ALLOW_DEMO_PAYMENTS;
     delete process.env.E2E_TEST_MODE;
     delete process.env.ALLOW_JSON_CATALOG_FALLBACK;
+    process.env.UPSTASH_REDIS_REST_URL = "https://example.upstash.io";
+    process.env.UPSTASH_REDIS_REST_TOKEN = "token";
 
     const audit = auditProductionSecurityControls();
     expect(audit.demoPaymentsBlocked).toBe(true);
     expect(audit.e2eResetCaptureDisabled).toBe(true);
     expect(audit.jsonCatalogFallbackBlocked).toBe(true);
+    expect(audit.distributedRateLimitConfigured).toBe(true);
     expect(audit.guestOrderBulkLinkDisabled).toBe(true);
     expect(audit.issues).toEqual([]);
   });
@@ -49,8 +52,25 @@ describe("productionSecurityGuards", () => {
     delete process.env.ALLOW_DEMO_PAYMENTS;
     delete process.env.E2E_TEST_MODE;
     process.env.ALLOW_JSON_CATALOG_FALLBACK = "true";
+    process.env.UPSTASH_REDIS_REST_URL = "https://example.upstash.io";
+    process.env.UPSTASH_REDIS_REST_TOKEN = "token";
 
     const audit = auditProductionSecurityControls();
     expect(audit.issues).toContain("ALLOW_JSON_CATALOG_FALLBACK must not be enabled in production");
+  });
+
+  it("flags missing Upstash credentials in production", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    delete process.env.ALLOW_DEMO_PAYMENTS;
+    delete process.env.E2E_TEST_MODE;
+    delete process.env.ALLOW_JSON_CATALOG_FALLBACK;
+    delete process.env.UPSTASH_REDIS_REST_URL;
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
+
+    const audit = auditProductionSecurityControls();
+    expect(audit.issues).toContain(
+      "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production for distributed rate limiting",
+    );
+    expect(() => assertProductionSecurityControls()).toThrow(/UPSTASH_REDIS_REST_URL/);
   });
 });

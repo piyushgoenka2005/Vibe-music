@@ -3,6 +3,12 @@ export async function register() {
     const { validateEnv } = await import("@/env");
     validateEnv();
 
+    if (process.env.NODE_ENV === "production") {
+      const { assertProductionSecurityControls } =
+        await import("@/lib/server/productionSecurityGuards");
+      assertProductionSecurityControls();
+    }
+
     const { getIntegrationChecks } = await import("@/lib/server/integrationConfig");
     const { logWarn } = await import("@/lib/server/logger");
     const integrations = getIntegrationChecks();

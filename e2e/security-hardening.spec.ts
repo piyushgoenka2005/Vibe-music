@@ -42,4 +42,29 @@ test.describe("Phase 2 security hardening (L-16/L-17/L-18)", () => {
       expect(response.status()).toBe(404);
     }
   });
+
+  test("mutations without Origin/Referer are rejected with 403 (L-16 CSRF)", async ({
+    request,
+  }) => {
+    const response = await request.post("/api/cart/reprice", {
+      headers: { "Content-Type": "application/json" },
+      data: { items: [] },
+    });
+    expect(response.status()).toBe(403);
+    const body = (await response.json()) as { error?: string };
+    expect(body.error).toMatch(/origin|csrf|forbidden/i);
+  });
+
+  test("Razorpay webhook rejects missing signature (L-21)", async ({ request }) => {
+    const response = await request.post("/api/payment/webhook/razorpay", {
+      headers: {
+        "Content-Type": "application/json",
+        "X-Razorpay-Event-Id": `evt_e2e_${Date.now()}`,
+      },
+      data: { event: "payment.captured", payload: {} },
+    });
+    expect(response.status()).toBe(400);
+    const body = (await response.json()) as { error?: string };
+    expect(body.error).toMatch(/signature/i);
+  });
 });

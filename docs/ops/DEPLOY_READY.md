@@ -64,7 +64,13 @@ Ensure the commit you want live is on **`origin/main`** (`deploy/update.sh` pull
 NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH=false
 CDN_PUBLIC_BASE_URL=https://cdn.vibemusic.in
 CDN_STORAGE_ROOT=/var/www/cdn
+UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
+UPSTASH_REDIS_REST_TOKEN=...
+# Optional but recommended:
+SENTRY_DSN=https://...@....ingest.sentry.io/...
 ```
+
+Startup **fails in production** without Upstash REST credentials (distributed rate limiting). See `docs/audit/PRODUCTION_AUDIT_2026-09-30.md`.
 
 ---
 

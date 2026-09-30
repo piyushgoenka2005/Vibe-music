@@ -1,13 +1,32 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { isErrorMonitoringConfigured, reportServerError } from "@/lib/server/errorMonitoring";
+import {
+  isErrorMonitoringConfigured,
+  reportServerError,
+  resetErrorMonitoringForTests,
+} from "@/lib/server/errorMonitoring";
+
+const sentryCaptureException = vi.fn();
+
+vi.mock("@sentry/node", () => ({
+  init: vi.fn(),
+  withScope: (callback: (scope: { setTag: typeof vi.fn; setContext: typeof vi.fn }) => void) => {
+    callback({
+      setTag: vi.fn(),
+      setContext: vi.fn(),
+    });
+  },
+  captureException: (...args: unknown[]) => sentryCaptureException(...args),
+}));
 
 describe("errorMonitoring", () => {
   const fetchMock = vi.fn().mockResolvedValue({ ok: true });
 
   beforeEach(() => {
+    resetErrorMonitoringForTests();
     vi.stubGlobal("fetch", fetchMock);
     fetchMock.mockClear();
+    sentryCaptureException.mockClear();
     delete process.env.ERROR_MONITORING_WEBHOOK_URL;
     delete process.env.SENTRY_DSN;
   });
@@ -18,6 +37,11 @@ describe("errorMonitoring", () => {
 
   it("reports configured when webhook URL is set", () => {
     process.env.ERROR_MONITORING_WEBHOOK_URL = "https://hooks.example.com/errors";
+    expect(isErrorMonitoringConfigured()).toBe(true);
+  });
+
+  it("reports configured when Sentry DSN is set", () => {
+    process.env.SENTRY_DSN = "https://examplePublicKey@o0.ingest.sentry.io/0";
     expect(isErrorMonitoringConfigured()).toBe(true);
   });
 
@@ -46,5 +70,17 @@ describe("errorMonitoring", () => {
     expect(body.service).toBe("vibe-music");
     expect(body.error.message).toBe("payment failed");
     expect(body.context.requestId).toBe("req-1");
+  });
+
+  it("captures exceptions in Sentry when DSN is configured", async () => {
+    process.env.SENTRY_DSN = "https://examplePublicKey@o0.ingest.sentry.io/0";
+    reportServerError(new Error("sentry test"), {
+      source: "api/test",
+      routePath: "/api/test",
+    });
+
+    await vi.waitFor(() => {
+      expect(sentryCaptureException).toHaveBeenCalledTimes(1);
+    });
   });
 });
