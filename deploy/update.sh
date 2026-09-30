@@ -95,7 +95,7 @@ build_application() {
   rm -rf .next
 
   log "Storefront static images (public/images + location landmarks)"
-  npm run download:images
+  timeout 600 npm run download:images || warn "download:images timed out or failed — continuing"
 
   log "Razorpay + production env preflight"
   bash deploy/razorpay-preflight.sh
@@ -265,12 +265,20 @@ install_dependencies() {
   git checkout -- package-lock.json package.json 2>/dev/null || true
 
   if npm ci --no-audit --ignore-scripts; then
+    rebuild_native_modules
     return 0
   fi
 
   warn "npm ci failed — cleaning node_modules and running npm install"
   rm -rf node_modules
   npm install --no-audit --ignore-scripts
+  rebuild_native_modules
+}
+
+rebuild_native_modules() {
+  log "Rebuilding native modules (sharp, prisma)"
+  npm rebuild sharp --foreground-scripts 2>/dev/null || npm install sharp --no-save --foreground-scripts 2>/dev/null || true
+  npm run db:generate >/dev/null 2>&1 || true
 }
 
 install_dependencies

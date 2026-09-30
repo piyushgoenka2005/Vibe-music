@@ -168,6 +168,9 @@ async function main() {
       console.warn("WARN: favicon generation skipped (non-fatal for deploy)");
     }
   }
+
+  // https downloads can leave sockets open; npm would wait forever otherwise.
+  process.exit(0);
 }
 
 main().catch((error) => {
