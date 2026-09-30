@@ -31,6 +31,7 @@ function collectLocalPaths() {
     // CDN product masters live on cdn.vibemusic.in — not Sweetwater mirrors.
     if (clean.includes("/products/")) return;
     if (clean.includes("uuid") || clean.includes("...")) return;
+    if (clean.endsWith(".svg")) return;
     if (clean.endsWith("/test.jpg") || clean === "/test.jpg") return;
     paths.add(`/images${clean}`);
   }
@@ -148,7 +149,7 @@ async function main() {
       stdio: "inherit",
     });
     if (result.status !== 0) {
-      process.exit(result.status ?? 1);
+      console.warn("WARN: favicon generation skipped (non-fatal for deploy)");
     }
   }
 }
