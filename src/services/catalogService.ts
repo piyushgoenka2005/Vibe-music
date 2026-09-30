@@ -9,7 +9,7 @@ import {
 } from "@/lib/admin/bulkImportTypes";
 import { BULK_IMPORT_WRITE_BATCH_SIZE } from "@/lib/admin/bulkImportValidation";
 import { buildBulkImportPreviewSummary } from "@/lib/admin/bulkImportSummary";
-import { collectBulkImportImageNames } from "@/lib/server/bulkImportImageResolver";
+import { collectBulkImportImageNames } from "@/lib/admin/bulkImportImages";
 import {
   collectBulkImportCategoryCandidates,
   formatBulkImportCategoryHint,

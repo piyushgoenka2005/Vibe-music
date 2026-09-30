@@ -1,4 +1,4 @@
-import AdmZip from "adm-zip";
+import "server-only";
 
 const IMAGE_EXTENSION = /\.(jpe?g|png|webp|gif|bmp|tif?f|avif)$/i;
 
@@ -48,12 +48,19 @@ function parentFolderName(relativePath: string): string | null {
   return relativePath.slice(0, slash).split("/").pop() ?? null;
 }
 
+function openZip(zipBuffer: Buffer) {
+  // Dynamic import at runtime keeps adm-zip (Node fs) out of the Next.js turbopack graph.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Node-only ZIP parser
+  const AdmZip = require("adm-zip") as typeof import("adm-zip").default;
+  return new AdmZip(zipBuffer);
+}
+
 /** Extract image files from a bulk-import ZIP with folder + path aware indexing. */
 export function readBulkImportZipImageIndex(zipBuffer: Buffer): BulkImportZipImageIndex {
   const byBasename = new Map<string, Buffer>();
   const byRelativePath = new Map<string, Buffer>();
   const entries: BulkImportZipImageEntry[] = [];
-  const zip = new AdmZip(zipBuffer);
+  const zip = openZip(zipBuffer);
 
   zip.getEntries().forEach((entry) => {
     if (entry.isDirectory) return;
