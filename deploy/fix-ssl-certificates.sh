@@ -45,7 +45,7 @@ verify_local_cert_files() {
   [[ -f "${CERT_DIR}/privkey.pem" ]] || die "missing ${CERT_DIR}/privkey.pem"
 
   local cn not_after
-  cn="$(openssl x509 -in "${CERT_DIR}/fullchain.pem" -noout -subject 2>/dev/null | sed -n 's/.*CN=\([^,/]*\).*/\1/p')"
+  cn="$(openssl x509 -in "${CERT_DIR}/fullchain.pem" -noout -subject -nameopt RFC2253 2>/dev/null | sed -n 's/.*CN=\([^,/]*\).*/\1/p')"
   not_after="$(openssl x509 -in "${CERT_DIR}/fullchain.pem" -noout -enddate 2>/dev/null | cut -d= -f2-)"
 
   log "  CN=${cn:-unknown} expires=${not_after:-unknown}"
@@ -66,7 +66,7 @@ verify_loopback_tls() {
   log "Loopback TLS via nginx (127.0.0.1 + SNI ${PRIMARY_DOMAIN})"
   local out cn
   out="$(echo | openssl s_client -connect 127.0.0.1:443 -servername "${PRIMARY_DOMAIN}" 2>/dev/null \
-    | openssl x509 -noout -subject 2>/dev/null || true)"
+    | openssl x509 -noout -subject -nameopt RFC2253 2>/dev/null || true)"
   cn="$(echo "$out" | sed -n 's/.*CN=\([^,/]*\).*/\1/p')"
   if [[ "${cn}" != "${PRIMARY_DOMAIN}" ]]; then
     die "nginx loopback presents CN=${cn:-none}, expected ${PRIMARY_DOMAIN}"

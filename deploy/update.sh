@@ -246,7 +246,7 @@ verify_local_tls_cert() {
 
   log "Verifying local Let's Encrypt cert ($cert)"
   local cn
-  cn="$(openssl x509 -in "$cert" -noout -subject 2>/dev/null | sed -n 's/.*CN=\([^,/]*\).*/\1/p')"
+  cn="$(openssl x509 -in "$cert" -noout -subject -nameopt RFC2253 2>/dev/null | sed -n 's/.*CN=\([^,/]*\).*/\1/p')"
   if [[ "$cn" != "vibemusic.in" ]]; then
     die "local cert CN=${cn:-none} — run: bash deploy/fix-ssl-certificates.sh"
   fi
@@ -256,7 +256,7 @@ verify_local_tls_cert() {
 
   local loopback_cn
   loopback_cn="$(echo | openssl s_client -connect 127.0.0.1:443 -servername vibemusic.in 2>/dev/null \
-    | openssl x509 -noout -subject 2>/dev/null | sed -n 's/.*CN=\([^,/]*\).*/\1/p' || true)"
+    | openssl x509 -noout -subject -nameopt RFC2253 2>/dev/null | sed -n 's/.*CN=\([^,/]*\).*/\1/p' || true)"
   if [[ -n "$loopback_cn" && "$loopback_cn" != "vibemusic.in" ]]; then
     die "nginx loopback presents CN=${loopback_cn} — run: bash deploy/fix-ssl-certificates.sh"
   fi
