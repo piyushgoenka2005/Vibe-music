@@ -33,7 +33,7 @@ function canonicalizeCategorySlug(slug: string): string {
 }
 
 const FALLBACK_IMAGE = "/images/m/home/cats/LPR59VOWCSNH.png";
-const THUMB_DIR = "/images/m/home/cats/thumbs";
+const THUMB_DIR = "/images/m/home/cats";
 
 const GUITAR_MEGA_ELECTRIC_IMAGE =
   "https://res.cloudinary.com/piyushgoenka/image/upload/c_fill,w_800,h_600,g_center,q_82,f_auto/v1782292639/products/guitars/hertz-hzr-4002e-hzr-4002e/03-hza-4001-e-na-amazonfnt.png";
@@ -54,8 +54,7 @@ const MEGA_MENU_VARIANT_OVERRIDES: Record<string, string> = {
     "https://res.cloudinary.com/piyushgoenka/image/upload/a_45,c_fit,w_800,h_600,g_center,q_82,f_auto/v1782289280/products/live-sound-lighting/adeon-acon-acon/01-artboard-3.png",
   "software-plug-ins:plugin":
     "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
-  "dj-equipment:turntable":
-    "/images/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg",
+  "dj-equipment:turntable": "/images/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg",
   "cables-cases-accessories:cables":
     "/images/m/products/image/6a29cdc6e653NWv2mMN2IAdpJxfo9MiePtgYNx2u.jpg",
   "cables-cases-accessories:cases":
@@ -105,20 +104,20 @@ const HERO_IMAGE_BY_SLUG: Record<string, string> = {
 
 /** Explicit grid thumbs — never fall back to the Guitars Les Paul for these. */
 const GRID_THUMB_BY_SLUG: Record<string, string> = {
-  guitars: `${THUMB_DIR}/LPR59VOWCSNH.webp`,
-  bass: `${THUMB_DIR}/PBassAPR3SB.webp`,
-  "studio-recording": `${THUMB_DIR}/Arrow-small.webp`,
-  "drums-percussion": `${THUMB_DIR}/LM402.webp`,
-  "keyboards-synthesizers": `${THUMB_DIR}/Matriarch.webp`,
-  "live-sound-lighting": `${THUMB_DIR}/k12_2.webp`,
-  "software-plug-ins": `${THUMB_DIR}/ptstudioann.webp`,
-  "dj-equipment": `${THUMB_DIR}/ATLP120XUSBSV.webp`,
-  "microphones-wireless": `${THUMB_DIR}/SM58-cat.webp`,
-  "band-orchestra": `${THUMB_DIR}/KingSlvFlTr.webp`,
-  "home-audio-electronics": `${THUMB_DIR}/TourOneM2Bk.webp`,
-  "commercial-audio-installation": `${THUMB_DIR}/Control28.webp`,
-  "cables-cases-accessories": `${THUMB_DIR}/M4WP006.webp`,
-  "video-cameras": `${THUMB_DIR}/EOSR82450Kit.webp`,
+  guitars: `${THUMB_DIR}/LPR59VOWCSNH.png`,
+  bass: `${THUMB_DIR}/PBassAPR3SB.png`,
+  "studio-recording": `${THUMB_DIR}/Arrow-small.png`,
+  "drums-percussion": `${THUMB_DIR}/LM402.png`,
+  "keyboards-synthesizers": `${THUMB_DIR}/Matriarch.png`,
+  "live-sound-lighting": `${THUMB_DIR}/k12_2.png`,
+  "software-plug-ins": `${THUMB_DIR}/ptstudioann.jpg`,
+  "dj-equipment": `${THUMB_DIR}/ATLP120XUSBSV.png`,
+  "microphones-wireless": `${THUMB_DIR}/SM58-cat.png`,
+  "band-orchestra": `${THUMB_DIR}/KingSlvFlTr.png`,
+  "home-audio-electronics": `${THUMB_DIR}/TourOneM2Bk.png`,
+  "commercial-audio-installation": `${THUMB_DIR}/Control28.png`,
+  "cables-cases-accessories": `${THUMB_DIR}/M4WP006.png`,
+  "video-cameras": `${THUMB_DIR}/EOSR82450Kit.png`,
 };
 
 /** True when we ship dedicated local art for this department slug. */

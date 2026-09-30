@@ -1,3 +1,4 @@
+import { getCategoryHeroImage } from "@/lib/categoryImages";
 import { categoryPath, ROUTES } from "@/lib/routes";
 
 export interface BrowseCategoryCard {
@@ -19,11 +20,7 @@ function browseCategory(slug: string): string {
  * Scoped search for subcategory-style tiles (e.g. acoustic guitars inside
  * `guitars`). Prefer `category` + `subcategory` so results stay exact.
  */
-function browseSearch(options: {
-  category?: string;
-  subcategory?: string;
-  q?: string;
-}): string {
+function browseSearch(options: { category?: string; subcategory?: string; q?: string }): string {
   const params = new URLSearchParams();
   if (options.category) params.set("category", options.category);
   if (options.subcategory) params.set("subcategory", options.subcategory);
@@ -31,71 +28,71 @@ function browseSearch(options: {
   return `${ROUTES.searchResults}?${params.toString()}`;
 }
 
-function localImage(
-  src: string,
+function heroImage(
+  slug: string,
   width: number,
-  height: number
+  height: number,
 ): Pick<BrowseCategoryCard, "image" | "srcSet" | "width" | "height"> {
+  const image = getCategoryHeroImage(slug);
   return {
-    image: src,
-    srcSet: `${src} ${width}w`,
+    image,
+    srcSet: `${image} ${width}w`,
     width,
     height,
   };
 }
 
 /**
- * Browse tiles — local lifestyle group photos (full-bleed cover + centered title).
- * Assets live under `/public/images/browse-categories/`.
+ * Browse tiles — reuse curated category hero art from public/images.
  */
 export const BROWSE_CATEGORY_CARDS: BrowseCategoryCard[] = [
   {
     id: "guitars",
     title: "Guitars",
     href: browseCategory("guitars"),
-    ...localImage("/images/browse-categories/guitars.jpg", 800, 534),
+    ...heroImage("guitars", 800, 534),
   },
   {
     id: "acoustic-guitars",
     title: "Acoustic Guitars",
     href: browseSearch({ category: "guitars", subcategory: "Acoustic" }),
-    ...localImage("/images/browse-categories/acoustic.jpg", 800, 533),
+    ...heroImage("guitars", 800, 533),
   },
   {
     id: "amplifiers",
     title: "Amplifiers",
     href: browseSearch({ category: "guitars", subcategory: "AMPLIFIER" }),
-    ...localImage("/images/browse-categories/amplifiers.jpg", 800, 571),
+    ...heroImage("guitars", 800, 571),
   },
   {
     id: "drums-percussion",
     title: "Drums & Percussion",
     href: browseCategory("drums-percussion"),
-    ...localImage("/images/browse-categories/drums.jpg", 800, 1000),
+    ...heroImage("drums-percussion", 800, 1000),
   },
   {
     id: "live-sound-lighting",
     title: "Live Sound",
     href: browseCategory("live-sound-lighting"),
-    ...localImage("/images/browse-categories/live-sound.jpg", 800, 575),
+    ...heroImage("live-sound-lighting", 800, 575),
   },
   {
     id: "microphones-wireless",
     title: "Microphones",
     href: browseCategory("microphones-wireless"),
-    ...localImage("/images/browse-categories/microphones.jpg", 800, 1000),
+    ...heroImage("microphones-wireless", 800, 1000),
   },
   {
     id: "home-audio-electronics",
     title: "Home Audio",
     href: browseCategory("home-audio-electronics"),
-    ...localImage("/images/browse-categories/home-audio.jpg", 800, 800),
+    ...heroImage("home-audio-electronics", 800, 800),
   },
   {
     id: "used",
     title: "Used & Open-Box",
     href: ROUTES.used,
-    ...localImage("/images/browse-categories/used.jpg", 800, 640),
+    ...heroImage("guitars", 800, 640),
   },
 ];
 

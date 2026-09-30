@@ -189,7 +189,7 @@ else
 
   cdn_path=$(node -e "try { console.log(new URL(process.argv[1]).pathname); } catch {}" "$SAMPLE_IMAGE" 2>/dev/null || true)
   if [[ -n "$cdn_path" ]]; then
-    local_cdn_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 15 -H "Host: cdn.vibemusic.in" "http://127.0.0.1${cdn_path}" 2>/dev/null || echo "000")
+    local_cdn_code=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 15 -H "Host: cdn.vibemusic.in" "https://127.0.0.1${cdn_path}" 2>/dev/null || echo "000")
     if [[ "$local_cdn_code" == "200" ]]; then
       pass "local nginx CDN static file (HTTP 200)"
     else

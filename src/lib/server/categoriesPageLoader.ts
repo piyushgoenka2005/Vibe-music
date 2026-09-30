@@ -81,7 +81,7 @@ export const loadCategoriesForIndex = cache(async function loadCategoriesForInde
       slug: "amplifier",
       description: "Guitar and instrument amplifiers for practice, studio, and stage.",
       productCount: amplifierCount,
-      imageSrc: "/images/browse-categories/amplifiers.jpg",
+      imageSrc: getCategoryGridImage("guitars"),
       href: `${ROUTES.searchResults}?cat=amplifier`,
       sortOrder: 2,
     };

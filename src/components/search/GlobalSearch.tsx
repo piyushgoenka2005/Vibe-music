@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useSearch } from "@/hooks/useSearch";
+import { ROUTES } from "@/lib/routes";
 import { resolveHeaderSearchQuery } from "@/lib/search/headerSearchQuery";
 import { searchStore } from "@/store/searchStore";
 import SearchOverlay from "./SearchOverlay";
@@ -125,7 +126,11 @@ export default function GlobalSearch() {
 
     syncNativeInputs(nextQuery);
 
-    if (!nextQuery) {
+    const normalizedPath = pathname.replace(/\/+$/, "") || "/";
+    const onSearchResults =
+      normalizedPath === ROUTES.search || normalizedPath.startsWith(ROUTES.searchResults);
+
+    if (!nextQuery || onSearchResults) {
       searchStore.closeOverlay();
     }
   }, [pathname, syncNativeInputs]);

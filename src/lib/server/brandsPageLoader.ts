@@ -15,7 +15,7 @@ export const loadBrandDirectory = cache(async function loadBrandDirectory(): Pro
   const [brands, catalog] = await Promise.all([getCachedBrands(), getCachedHomepageProducts()]);
 
   return groupCatalogByBrand(catalog, brands).map((group) => {
-    const logoUrl = getBrandLogoUrl(group.slug);
+    const logoUrl = getBrandLogoUrl(group.slug) ?? group.products[0]?.image;
     return {
       id: group.id,
       name: group.name,

@@ -7,7 +7,9 @@ import path from "path";
 import https from "https";
 import { fileURLToPath } from "url";
 
-const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+import { ESSENTIAL_STATIC_IMAGE_PATHS } from "./essential-static-paths.mjs";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const PUBLIC = path.join(ROOT, "public");
 
 const DOMAIN_MAP = {
@@ -26,6 +28,10 @@ function collectLocalPaths() {
     if (clean.length > 220) return;
     if (!IMAGE_PATH.test(clean)) return;
     if (clean.includes(".css") || clean.includes(".map")) return;
+    // CDN product masters live on cdn.vibemusic.in — not Sweetwater mirrors.
+    if (clean.includes("/products/")) return;
+    if (clean.includes("uuid") || clean.includes("...")) return;
+    if (clean.endsWith("/test.jpg") || clean === "/test.jpg") return;
     paths.add(`/images${clean}`);
   }
 
@@ -51,6 +57,9 @@ function collectLocalPaths() {
   }
 
   walk(path.join(ROOT, "src"));
+  for (const staticPath of ESSENTIAL_STATIC_IMAGE_PATHS) {
+    paths.add(staticPath);
+  }
   return [...paths];
 }
 

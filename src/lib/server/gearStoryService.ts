@@ -12,7 +12,9 @@ import type { GearStoriesSectionData, GearStory, GearStorySeed } from "@/types/g
 function enrichStory(seed: GearStorySeed, product: CatalogProduct, index: number): GearStory {
   const reel = STYLE_STORY_REELS[index];
   const posterUrl =
-    reel?.thumbnailSrc?.trim() || product.image || getProductImage(product.slug, product.category);
+    product.image?.trim() ||
+    reel?.thumbnailSrc?.trim() ||
+    getProductImage(product.slug, product.category);
   const images = product.images.length > 0 ? product.images : [posterUrl];
   const salePrice =
     product.detail?.salePrice ?? (product.price < product.originalPrice ? product.price : null);

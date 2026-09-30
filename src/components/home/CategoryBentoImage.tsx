@@ -38,6 +38,7 @@ export default function CategoryBentoImage({
 }: CategoryBentoImageProps) {
   const [loaded, setLoaded] = useState(priority);
   const [imageSrc, setImageSrc] = useState(src);
+  const useUnoptimized = isLocalAsset(imageSrc);
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
@@ -82,10 +83,12 @@ export default function CategoryBentoImage({
       fill
       onError={handleError}
       onLoad={markLoaded}
+      onLoadingComplete={markLoaded}
       priority={priority}
       sizes={sizes ?? (variant === "hero" ? "(min-width: 1024px) 50vw, 92vw" : "25vw")}
       src={isLocalAsset(imageSrc) ? localImagePath(imageSrc) : imageSrc}
       style={imageStyle}
+      unoptimized={useUnoptimized}
     />
   );
 }

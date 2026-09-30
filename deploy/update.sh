@@ -91,6 +91,9 @@ fi
 echo "==> Clearing stale Next.js build cache"
 rm -rf .next
 
+echo "==> Ensuring storefront static images (public/images)"
+npm run download:images
+
 echo "==> Production env + Razorpay preflight"
 bash deploy/razorpay-preflight.sh
 

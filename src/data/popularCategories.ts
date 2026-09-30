@@ -13,11 +13,11 @@ export interface PopularCategoryItem {
 export const HOMEPAGE_POPULAR_CATEGORY_COUNT = 8;
 
 const SIZES = "(max-width:768px) 101px, (max-width:1000px) 10vw, 101px";
-const THUMB = "/images/m/home/cats/thumbs";
+const CAT = "/images/m/home/cats";
 
-/** Pre-generated 200px WebP thumbs (static hosting ignores ?width= query params). */
+/** Category art shipped as PNG from public/images (WebP thumbs optional). */
 function thumb(name: string): string {
-  return `${THUMB}/${name}.webp`;
+  return `${CAT}/${name}.png`;
 }
 
 function thumbSrcSet(name: string): string {
@@ -95,9 +95,7 @@ export const POPULAR_CATEGORY_ITEMS: PopularCategoryItem[] = [
 export const POPULAR_CATEGORY_IMAGE_SIZES = SIZES;
 
 /** Static strip used when CMS/catalog featured categories are unavailable. */
-export function getHomepagePopularCategoryItems(
-  limit = HOMEPAGE_POPULAR_CATEGORY_COUNT
-): Array<{
+export function getHomepagePopularCategoryItems(limit = HOMEPAGE_POPULAR_CATEGORY_COUNT): Array<{
   id: string;
   slug: string;
   title: string;
@@ -106,8 +104,7 @@ export function getHomepagePopularCategoryItems(
   badge?: string;
 }> {
   return POPULAR_CATEGORY_ITEMS.slice(0, limit).map((item) => {
-    const slug =
-      item.href.split("/").filter(Boolean).pop() ?? `category-${item.slot}`;
+    const slug = item.href.split("/").filter(Boolean).pop() ?? `category-${item.slot}`;
     return {
       id: `popular-cat-${item.slot}`,
       slug,
