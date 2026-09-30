@@ -88,6 +88,11 @@ if [[ "${SEED_CATALOG:-0}" == "1" ]]; then
   npm run seed:catalog
 fi
 
+echo "==> Stopping app before rebuild (avoid serving partial .next)"
+if pm2 describe vibe >/dev/null 2>&1; then
+  pm2 stop vibe || true
+fi
+
 echo "==> Clearing stale Next.js build cache"
 rm -rf .next
 
