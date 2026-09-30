@@ -22,12 +22,16 @@ for ($i = 1; $i -le $Attempts; $i++) {
             $ok++
         } else {
             $bad++
-            $errors[$subject] = ($errors[$subject] ?? 0) + 1
+            $prev = 0
+            if ($errors.ContainsKey($subject)) { $prev = $errors[$subject] }
+            $errors[$subject] = $prev + 1
         }
     } catch {
         $bad++
         $msg = $_.Exception.Message
-        $errors[$msg] = ($errors[$msg] ?? 0) + 1
+        $prev = 0
+        if ($errors.ContainsKey($msg)) { $prev = $errors[$msg] }
+        $errors[$msg] = $prev + 1
     }
     Start-Sleep -Milliseconds 300
 }
@@ -42,8 +46,9 @@ if ($bad -gt 0) {
     Write-Host "Failures:" -ForegroundColor Yellow
     $errors.GetEnumerator() | ForEach-Object { Write-Host "  $($_.Value)x $($_.Key)" }
     Write-Host ""
-    Write-Host "If failures mention wrong CN or trust errors, CloudOnFire has two VMs on $Ip." -ForegroundColor Red
-    Write-Host "Open a support ticket (see docs/ops/IP-MIGRATION-GODADDY.md section I)." -ForegroundColor Red
+    Write-Host "Wrong certificate = CloudOnFire routes ~30% of traffic to another VM (often CN=git.k12hunar.com)." -ForegroundColor Red
+    Write-Host "Permanent fix: Cloudflare Tunnel — docs/ops/CLOUDFLARE-TUNNEL-SSL.md" -ForegroundColor Yellow
+    Write-Host "Or CloudOnFire ticket: docs/ops/IP-MIGRATION-GODADDY.md section I" -ForegroundColor Yellow
     exit 1
 }
 

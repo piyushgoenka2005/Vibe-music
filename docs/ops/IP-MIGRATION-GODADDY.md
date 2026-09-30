@@ -194,3 +194,39 @@ Manual:
 ## H. Old IP restoration
 
 **Not recommended** — `87.232.72.14` does not respond. CloudOnFire support can confirm if it was released. Proceed with `31.42.125.219`.
+
+---
+
+## I. Duplicate IP on `31.42.125.219` (critical)
+
+**Symptom:** `https://vibemusic.in` shows **`NET::ERR_CERT_COMMON_NAME_INVALID`** (wrong cert **`git.k12hunar.com`** on ~30% of connections), **Forgejo/Gitea** instead of Vibe Music, CDN **404**, SSH alternates between two host keys.
+
+**Cause:** Two different VMs answer on the same public IP. Only **VPS 1055** (`1-YEAR-VPS-ULTRA`) is yours.
+
+| Host key fingerprint (ED25519)                       | Server                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------ |
+| `SHA256:l0hpirMy/wrm0gRH4SNxl4PdMmpzKXtSFOjfMESvX7I` | **Your VPS** — nginx, PM2 `vibe`, PostgreSQL, `/var/www/cdn` |
+| `SHA256:vjfQl9pdbsCqLuAEOVL451bbtscQSyiC0APZ0iIwv2k` | **Another customer** — Forgejo/Gitea                         |
+
+**Your VPS is healthy** when reached (local smoke passes, images 200 via `--resolve`). Public breakage is **infrastructure**, not app config.
+
+### Fix (CloudOnFire only)
+
+1. **WhatsApp:** +91 95606 14171
+2. **Panel:** [cp.cloudonfire.com](https://cp.cloudonfire.com) → **Support**
+3. **Paste this ticket:**
+
+```
+Subject: URGENT — Duplicate IP 31.42.125.219 — VPS ID 1055
+
+IP 31.42.125.219 is shared by two VMs. Intermittent traffic hits a Forgejo/Gitea
+instance (SSH host key SHA256:vjfQl9pdbsCqLuAEOVL451bbtscQSyiC0APZ0iIwv2k) instead
+of my VPS 1055 (1-YEAR-VPS-ULTRA, hostname mail, key SHA256:l0hpirMy/wrm0gRH4SNxl4PdMmpzKXtSFOjfMESvX7I).
+
+Domains affected: vibemusic.in, www, cdn, mail.
+Please remove the other VM from this IP or assign VPS 1055 a dedicated IP.
+```
+
+4. After fix: `powershell -ExecutionPolicy Bypass -File scripts\ops\verify-ssh.ps1` should show **one** fingerprint only.
+
+**Until fixed:** use `scripts/ops/ssh-vps.ps1` (retries until correct host) or panel **VNC console**.
