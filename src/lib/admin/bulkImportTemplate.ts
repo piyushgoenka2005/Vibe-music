@@ -16,7 +16,6 @@ export {
   catalogProductToBulkRow,
   detectProductImportFormat,
   failedImportRowsToBulkCsv,
-  findSkuImagesInZip,
   isSpreadsheetUpload,
   parseListingPrice,
   parseProductImportBuffer,

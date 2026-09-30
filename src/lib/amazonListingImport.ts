@@ -690,9 +690,6 @@ export function buildVibemusicBulkTemplateXlsx(): Buffer {
 /** @deprecated Use buildVibemusicBulkTemplateXlsx */
 export const buildAmazonListingTemplateXlsx = buildVibemusicBulkTemplateXlsx;
 
-/** Re-export — folder-aware implementation lives in bulkImportZipImages.ts */
-export { findSkuImagesInZip } from "@/lib/admin/bulkImportZipImages";
-
 export function isSpreadsheetUpload(filename: string, mimeType = ""): boolean {
   const lower = filename.toLowerCase();
   return (

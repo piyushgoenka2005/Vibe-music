@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import AdmZip from "adm-zip";
 import * as XLSX from "xlsx";
-import { readBulkImportZipImageIndex } from "@/lib/admin/bulkImportZipImages";
+import { findSkuImagesInZip, readBulkImportZipImageIndex } from "@/lib/admin/bulkImportZipImages";
 import {
   VIBEMUSIC_BULK_COLUMN_COUNT,
   VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
@@ -14,7 +14,6 @@ import {
   catalogProductToBulkRow,
   detectProductImportFormat,
   failedImportRowsToBulkCsv,
-  findSkuImagesInZip,
   parseListingPrice,
   parseProductImportBuffer,
   validateVibemusicBulkHeaders,
