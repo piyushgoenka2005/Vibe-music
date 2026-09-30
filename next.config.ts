@@ -25,6 +25,8 @@ const nextConfig: NextConfig = {
     ],
   },
   images: {
+    // CDN is served by nginx on the same VPS (cdn.vibemusic.in → 127.0.0.1 in /etc/hosts).
+    dangerouslyAllowLocalIP: isProd,
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
       { protocol: "https", hostname: "cdn.vibemusic.in", pathname: "/**" },

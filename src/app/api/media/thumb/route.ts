@@ -17,6 +17,22 @@ const DEFAULT_WIDTH = 800;
 const MAX_UPSTREAM_BYTES = 24_000_000;
 const MEMORY_CACHE_MAX = 256;
 const DISK_CACHE_DIR = path.join(process.cwd(), ".cache", "media-thumbs");
+const CDN_STORAGE_ROOT = process.env.CDN_STORAGE_ROOT ?? "/var/www/cdn";
+
+function resolveLocalCdnFile(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== "cdn.vibemusic.in") return null;
+    const relative = parsed.pathname.replace(/^\/+/, "");
+    if (!relative || relative.includes("..")) return null;
+    const filePath = path.resolve(CDN_STORAGE_ROOT, relative);
+    const root = path.resolve(CDN_STORAGE_ROOT);
+    if (!filePath.startsWith(root + path.sep)) return null;
+    return filePath;
+  } catch {
+    return null;
+  }
+}
 const CACHE_CONTROL = "public, max-age=31536000, immutable";
 /** Allow time to pull large PNG masters once; cached WebP thereafter. */
 const UPSTREAM_TIMEOUT_MS = 20_000;
@@ -117,6 +133,29 @@ async function readUpstreamBody(response: Response): Promise<Buffer | null> {
 
 async function buildThumb(url: string, width: number): Promise<CachedThumb | null> {
   try {
+    const localCdnPath = resolveLocalCdnFile(url);
+    if (localCdnPath) {
+      try {
+        const input = await readFile(localCdnPath);
+        if (input.byteLength > 0 && input.byteLength <= MAX_UPSTREAM_BYTES) {
+          const sharp = (await import("sharp")).default;
+          const body = await sharp(input, { failOn: "none" })
+            .rotate()
+            .resize(width, width, {
+              fit: "inside",
+              withoutEnlargement: true,
+            })
+            .webp({ quality: 92, effort: 4 })
+            .toBuffer();
+          if (!isThumbPlaceholderBody(body)) {
+            return { body, contentType: "image/webp" };
+          }
+        }
+      } catch {
+        // Fall through to HTTPS fetch (e.g. derivative not on disk yet).
+      }
+    }
+
     const upstream = await fetch(url, {
       headers: { Accept: "image/*" },
       cache: "no-store",
