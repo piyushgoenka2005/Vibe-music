@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
+import { productImageLocalFallback } from "@/lib/product/resolveProductCardImage";
 import { formatDisplayPrice } from "@/utils/currency";
 import type { Product } from "@/types/product";
 
@@ -9,10 +10,7 @@ interface ProductCrossSellProps {
   products: Product[];
 }
 
-export default function ProductCrossSell({
-  title,
-  products,
-}: ProductCrossSellProps) {
+export default function ProductCrossSell({ title, products }: ProductCrossSellProps) {
   if (products.length === 0) return null;
 
   return (
@@ -27,20 +25,17 @@ export default function ProductCrossSell({
               title={`${product.brand} ${product.name}`}
               url={`/product/${product.slug}`}
             />
-            <Link
-              href={`/product/${product.slug}`}
-              className="pdp-cross-sell__card"
-            >
+            <Link href={`/product/${product.slug}`} className="pdp-cross-sell__card">
               <div className="pdp-cross-sell__media">
                 {product.image ? (
                   <StorefrontThumbImage
                     src={product.image}
                     alt={product.name}
                     className="pdp-cross-sell__image"
+                    fallbackSrc={productImageLocalFallback(product.slug, product.category)}
                     width={240}
                     height={240}
                     fill
-                    preferOriginal
                   />
                 ) : (
                   <div
@@ -55,9 +50,7 @@ export default function ProductCrossSell({
                 <div className="pdp-cross-sell__name" title={product.name}>
                   {product.name}
                 </div>
-                <div className="pdp-cross-sell__price">
-                  {formatDisplayPrice(product.price)}
-                </div>
+                <div className="pdp-cross-sell__price">{formatDisplayPrice(product.price)}</div>
               </div>
             </Link>
           </div>

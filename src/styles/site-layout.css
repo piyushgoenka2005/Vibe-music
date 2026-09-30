@@ -531,7 +531,7 @@ body.site-nav-open .site-header--scroll-hidden {
 .site-header__logo img,
 .site-header__logo .assets-site-header__menu-logo {
   display: block;
-  height: 58px;
+  height: auto;
   width: auto;
   max-height: 58px;
   max-width: min(240px, 42vw);

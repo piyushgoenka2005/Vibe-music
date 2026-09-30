@@ -153,6 +153,11 @@ sync_nginx() {
 
 sync_ssl() {
   sync_nginx
+  verify_local_cert_files() {
+    local cert="/etc/letsencrypt/live/vibemusic.in/fullchain.pem"
+    [[ -f "$cert" ]] || return 1
+    openssl x509 -in "$cert" -noout -text 2>/dev/null | grep -q "DNS:vibemusic.in"
+  }
   if command -v certbot >/dev/null 2>&1; then
     certbot certonly --nginx \
       -d vibemusic.in -d www.vibemusic.in -d mail.vibemusic.in \
@@ -160,11 +165,19 @@ sync_ssl() {
       || certbot certonly --nginx \
       -d vibemusic.in -d www.vibemusic.in -d mail.vibemusic.in \
       --expand --non-interactive --agree-tos
+    certbot certonly --nginx -d cdn.vibemusic.in \
+      --non-interactive --agree-tos --keep-until-expiring \
+      || certbot certonly --nginx -d cdn.vibemusic.in --non-interactive --agree-tos \
+      || echo "WARN: cdn.vibemusic.in certbot failed" >&2
   else
     echo "WARN: certbot not installed" >&2
   fi
   nginx -t
   systemctl reload-or-restart nginx 2>/dev/null || true
+  if ! verify_local_cert_files; then
+    echo "ERROR: vibemusic.in certificate files invalid after certbot" >&2
+    return 1
+  fi
   echo "SSL sync complete."
 }
 

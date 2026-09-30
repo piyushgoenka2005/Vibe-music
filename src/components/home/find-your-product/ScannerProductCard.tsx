@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import ProductImage from "@/components/common/ProductImage";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import { heroMarqueeProductHref } from "@/data/heroMarqueeProducts";
 import type { ScannerProduct } from "@/components/home/find-your-product/types";
@@ -31,7 +31,7 @@ export default function ScannerProductCard({
         aria-label={ariaHidden ? undefined : `View ${product.name}`}
         tabIndex={ariaHidden ? -1 : undefined}
       >
-        <Image
+        <ProductImage
           className="scanner-card__img"
           src={imageSrc}
           alt={product.imageAlt}
@@ -39,6 +39,7 @@ export default function ScannerProductCard({
           width={44}
           height={44}
           sizes="44px"
+          variant="thumb"
           onError={() => setFailed(true)}
         />
         <div className="scanner-card__body">

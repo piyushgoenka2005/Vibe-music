@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
@@ -165,15 +164,16 @@ export default function SiteHeader() {
             aria-label={BRAND.name}
             scroll={false}
           >
-            <Image
-              src={BRAND.headerLogoPath}
+            {/* Plain img — CSS controls max dimensions; avoids Next/Image aspect-ratio dev warnings. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               alt={BRAND.name}
-              width={240}
-              height={58}
-              priority
-              unoptimized
               className="assets-site-header__menu-logo"
-              style={{ width: "auto", height: "auto" }}
+              decoding="async"
+              fetchPriority="high"
+              height={58}
+              src={BRAND.headerLogoPath}
+              width={240}
             />
           </Link>
 

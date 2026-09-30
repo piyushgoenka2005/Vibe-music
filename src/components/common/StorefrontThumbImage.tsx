@@ -9,8 +9,12 @@ interface StorefrontThumbImageProps {
   className?: string;
   width?: number;
   height?: number;
+  /** Self-hosted art when CDN/thumb candidates fail. */
+  fallbackSrc?: string;
   /** Fill positioned parent (PDP cross-sell / card media wells). */
   fill?: boolean;
+  loading?: "lazy" | "eager";
+  fetchPriority?: "high" | "auto" | "low";
   /**
    * Prefer the CDN/original URL first (useful when many thumbs load at once
    * and the thumb API can rate-limit or time out).
@@ -28,16 +32,20 @@ export default function StorefrontThumbImage({
   className,
   width = 72,
   height = 72,
+  fallbackSrc,
   fill = false,
+  loading = "lazy",
+  fetchPriority = "auto",
   preferOriginal = false,
 }: StorefrontThumbImageProps) {
   const candidates = useMemo(() => {
-    const list = storefrontImageCandidates(src, Math.max(width, height));
+    const extras = fallbackSrc ? [fallbackSrc] : [];
+    const list = storefrontImageCandidates(src, Math.max(width, height), extras);
     if (!preferOriginal || list.length < 2) return list;
     const [preferred, ...rest] = list;
     const original = rest[rest.length - 1] ?? preferred;
-    return Array.from(new Set([original, preferred, ...rest].filter(Boolean)));
-  }, [src, width, height, preferOriginal]);
+    return Array.from(new Set([original, preferred, ...rest, ...extras].filter(Boolean)));
+  }, [src, width, height, preferOriginal, fallbackSrc]);
 
   const [attempt, setAttempt] = useState(0);
   const [srcKey, setSrcKey] = useState(src);
@@ -47,8 +55,7 @@ export default function StorefrontThumbImage({
   }
 
   const safeAttempt = src === srcKey ? attempt : 0;
-  const displaySrc =
-    candidates[Math.min(safeAttempt, candidates.length - 1)] ?? "";
+  const displaySrc = candidates[Math.min(safeAttempt, candidates.length - 1)] ?? "";
 
   if (!displaySrc || safeAttempt >= candidates.length) {
     return (
@@ -70,7 +77,8 @@ export default function StorefrontThumbImage({
       height={fill ? undefined : height}
       className={className}
       decoding="async"
-      loading="lazy"
+      fetchPriority={fetchPriority}
+      loading={loading}
       onError={() => setAttempt((current) => current + 1)}
       style={
         fill

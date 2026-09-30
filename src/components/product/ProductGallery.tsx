@@ -10,11 +10,10 @@ import {
   useSyncExternalStore,
   type RefObject,
 } from "react";
-import Image from "next/image";
 import { createPortal } from "react-dom";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
-import { shouldBypassNextImageOptimization } from "@/lib/cdnConfig";
+import { productImageLocalFallback } from "@/lib/product/resolveProductCardImage";
 import { storefrontImageCandidates, storefrontZoomImageUrl } from "@/lib/storefrontImages";
 import type { ProductImage, ProductVideo } from "@/types/product";
 import Product360Viewer from "@/components/product/Product360Viewer";
@@ -38,6 +37,7 @@ interface ProductGalleryProps {
   videos: ProductVideo[];
   productName: string;
   productSlug: string;
+  productCategory?: string;
   spin360Images?: string[];
 }
 
@@ -46,17 +46,20 @@ interface LensPosition {
   y: number;
 }
 
-function GalleryThumb({ src }: { src: string }) {
+function GalleryThumb({ src, fallbackSrc }: { src: string; fallbackSrc?: string }) {
   const isInvalid =
     !src || src === "[object Object]" || (!src.startsWith("http") && !src.startsWith("/"));
   const candidates = useMemo(() => {
     if (isInvalid) return [];
-    const list = storefrontImageCandidates(src, 160);
-    const medium = storefrontImageCandidates(src, 320);
+    const extras = fallbackSrc ? [fallbackSrc] : [];
+    const list = storefrontImageCandidates(src, 160, extras);
+    const medium = storefrontImageCandidates(src, 320, extras);
     return Array.from(
-      new Set([...list, ...medium, src].filter((u) => Boolean(u && u !== "[object Object]"))),
+      new Set(
+        [...list, ...medium, src, ...extras].filter((u) => Boolean(u && u !== "[object Object]")),
+      ),
     );
-  }, [src, isInvalid]);
+  }, [src, isInvalid, fallbackSrc]);
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
   const activeSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? "";
@@ -109,6 +112,7 @@ export default function ProductGallery({
   videos,
   productName,
   productSlug,
+  productCategory,
   spin360Images = [],
 }: ProductGalleryProps) {
   const isMobileGallery = useSyncExternalStore(
@@ -151,19 +155,45 @@ export default function ProductGallery({
   const canZoom = zoomEligible && zoomSpaceOk;
   const has360 = spin360Images.length >= 2;
   const activeSrc = activeImage?.src ?? "";
-  const displayCandidates = useMemo(() => storefrontImageCandidates(activeSrc, 1200), [activeSrc]);
+  const imageFallback = useMemo(
+    () => productImageLocalFallback(productSlug, productCategory),
+    [productSlug, productCategory],
+  );
+  const displayCandidates = useMemo(
+    () => storefrontImageCandidates(activeSrc, 1200, imageFallback ? [imageFallback] : []),
+    [activeSrc, imageFallback],
+  );
+  const lightboxCandidates = useMemo(
+    () => storefrontImageCandidates(activeSrc, 1600, imageFallback ? [imageFallback] : []),
+    [activeSrc, imageFallback],
+  );
   const [displayAttempt, setDisplayAttempt] = useState(0);
+  const [lightboxAttempt, setLightboxAttempt] = useState(0);
+  const [zoomAttempt, setZoomAttempt] = useState(0);
   const [allFailed, setAllFailed] = useState(false);
   const [activeSrcKey, setActiveSrcKey] = useState(activeSrc);
   if (activeSrc !== activeSrcKey) {
     setActiveSrcKey(activeSrc);
     setDisplayAttempt(0);
+    setLightboxAttempt(0);
+    setZoomAttempt(0);
     setAllFailed(false);
   }
   const safeDisplayAttempt = activeSrc === activeSrcKey ? displayAttempt : 0;
   const activeDisplaySrc =
     displayCandidates[Math.min(safeDisplayAttempt, displayCandidates.length - 1)] ?? "";
   const activeZoomSrc = activeSrc ? storefrontZoomImageUrl(activeSrc) : "";
+  const zoomCandidates = useMemo(() => {
+    if (!activeSrc) return [];
+    const zoom = storefrontZoomImageUrl(activeSrc);
+    return Array.from(new Set([zoom, ...lightboxCandidates].filter(Boolean)));
+  }, [activeSrc, lightboxCandidates]);
+  const safeZoomAttempt = activeSrc === activeSrcKey ? zoomAttempt : 0;
+  const activeZoomDisplaySrc =
+    zoomCandidates[Math.min(safeZoomAttempt, zoomCandidates.length - 1)] ?? activeZoomSrc;
+  const safeLightboxAttempt = activeSrc === activeSrcKey ? lightboxAttempt : 0;
+  const activeLightboxSrc =
+    lightboxCandidates[Math.min(safeLightboxAttempt, lightboxCandidates.length - 1)] ?? "";
 
   const measureImageRect = useCallback(() => {
     const main = mainRef.current;
@@ -433,6 +463,7 @@ export default function ProductGallery({
 
   const openLightbox = useCallback(() => {
     setZoomActive(false);
+    setLightboxAttempt(0);
     setLightboxOpen(true);
   }, []);
 
@@ -507,7 +538,7 @@ export default function ProductGallery({
             aria-current={index === activeIndex && !showVideo && !show360}
           >
             {image.src ? (
-              <GalleryThumb src={image.src} />
+              <GalleryThumb src={image.src} fallbackSrc={imageFallback} />
             ) : (
               <div className="pdp-gallery__thumb-swatch" style={{ backgroundColor: image.color }} />
             )}
@@ -638,17 +669,17 @@ export default function ProductGallery({
                 />
               </div>
             ) : activeDisplaySrc && activeDisplaySrc !== "[object Object]" && !allFailed ? (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 key={activeDisplaySrc}
                 ref={photoRef}
                 src={activeDisplaySrc}
                 alt={activeImage.alt}
                 className="pdp-gallery__photo"
                 draggable={false}
-                priority={true}
-                width={1000}
-                height={1000}
-                unoptimized={shouldBypassNextImageOptimization(activeDisplaySrc)}
+                decoding="async"
+                fetchPriority="high"
+                loading="eager"
                 onLoad={(event) => {
                   const image = event.currentTarget;
                   setImageMetrics({
@@ -734,15 +765,14 @@ export default function ProductGallery({
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- zoom lens needs raw img + onError swap */}
             <img
-              src={activeZoomSrc || activeDisplaySrc}
+              src={activeZoomDisplaySrc || activeDisplaySrc}
               alt=""
               className="pdp-gallery__zoom-image"
               draggable={false}
-              onError={(event) => {
-                const target = event.currentTarget;
-                if (activeSrc && target.src !== activeSrc) {
-                  target.src = activeSrc;
-                }
+              onError={() => {
+                setZoomAttempt((current) =>
+                  current + 1 < zoomCandidates.length ? current + 1 : current,
+                );
               }}
               style={{
                 width:
@@ -869,17 +899,17 @@ export default function ProductGallery({
                 role="img"
                 aria-label={activeImage.alt}
               >
-                {activeZoomSrc || activeDisplaySrc ? (
+                {activeLightboxSrc ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={activeZoomSrc || activeDisplaySrc}
+                    key={activeLightboxSrc}
+                    src={activeLightboxSrc}
                     alt={activeImage.alt}
                     className="pdp-lightbox__photo"
-                    onError={(event) => {
-                      const target = event.currentTarget;
-                      if (activeSrc && target.src !== activeSrc) {
-                        target.src = activeSrc;
-                      }
+                    onError={() => {
+                      setLightboxAttempt((current) =>
+                        current + 1 < lightboxCandidates.length ? current + 1 : current,
+                      );
                     }}
                   />
                 ) : (

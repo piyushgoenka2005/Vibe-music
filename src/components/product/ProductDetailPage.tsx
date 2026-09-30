@@ -276,6 +276,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
             videos={product.videos}
             productName={product.name}
             productSlug={product.slug}
+            productCategory={product.category}
             spin360Images={product.spin360Images}
           />
           <div className="pdp-details">

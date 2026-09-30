@@ -6,6 +6,7 @@ import {
 import type { HomepageTopProduct } from "@/data/homepageTopProducts";
 import { productPath } from "@/lib/routes";
 import { getTrendingProducts } from "@/lib/server/productRepository";
+import { resolveProductCardImage } from "@/lib/product/resolveProductCardImage";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import Reveal from "@/components/layout/Reveal";
 import { TopProductCard } from "@/components/home/HomepageTopProducts";
@@ -17,13 +18,20 @@ const DISPLAY_LIMIT = 3;
 const TRENDING_BUDGET_MS = 450;
 
 function catalogProductToTeaser(product: Product): HomepageTopProduct {
+  const resolved = resolveProductCardImage({
+    slug: product.slug,
+    category: product.category,
+    image: product.image,
+  });
+
   return {
     id: product.id,
     title: product.name,
     excerpt: `${product.brand} · ${product.category}`,
     tags: [product.category, "Trending"],
     href: productPath(product.slug),
-    image: product.image,
+    image: resolved.src,
+    fallbackImage: resolved.fallbackSrc,
     brandLabel: product.brand,
     productSlug: product.slug,
     imageFit: "contain",
@@ -33,9 +41,7 @@ function catalogProductToTeaser(product: Product): HomepageTopProduct {
 async function resolveTrendingProducts(): Promise<HomepageTopProduct[]> {
   try {
     const trending = await Promise.race([
-      getTrendingProducts().then((list) =>
-        list.filter((product) => product.price > 0)
-      ),
+      getTrendingProducts().then((list) => list.filter((product) => product.price > 0)),
       new Promise<null>((resolve) => {
         setTimeout(() => resolve(null), TRENDING_BUDGET_MS);
       }),
@@ -54,8 +60,7 @@ async function resolveTrendingProducts(): Promise<HomepageTopProduct[]> {
 export default async function HomepageBlogTeaser() {
   const products = await resolveTrendingProducts();
 
-  const gridModifier =
-    products.length === 1 ? "one" : products.length === 2 ? "two" : "three";
+  const gridModifier = products.length === 1 ? "one" : products.length === 2 ? "two" : "three";
 
   return (
     <Reveal as="section" className="blog-teaser" aria-labelledby={HEADLINE_ID}>
@@ -67,14 +72,11 @@ export default async function HomepageBlogTeaser() {
               Buy what&apos;s trending
             </h2>
             <p className="blog-teaser__subtitle">
-              In-stock gear other musicians are shopping right now — products
-              only, ready to add to cart.
+              In-stock gear other musicians are shopping right now — products only, ready to add to
+              cart.
             </p>
           </div>
-          <Link
-            className="homepage-section__cta-btn blog-teaser__all"
-            href={HOMEPAGE_TRENDING_CTA}
-          >
+          <Link className="homepage-section__cta-btn blog-teaser__all" href={HOMEPAGE_TRENDING_CTA}>
             Shop all trending
             {SECTION_CTA_ARROW}
           </Link>
@@ -88,11 +90,7 @@ export default async function HomepageBlogTeaser() {
         ) : (
           <div className={`blog-teaser__grid blog-teaser__grid--${gridModifier}`}>
             {products.map((product, index) => (
-              <Reveal
-                key={product.id}
-                className="blog-teaser__card-wrap"
-                delay={index * 80}
-              >
+              <Reveal key={product.id} className="blog-teaser__card-wrap" delay={index * 80}>
                 <TopProductCard product={product} />
               </Reveal>
             ))}

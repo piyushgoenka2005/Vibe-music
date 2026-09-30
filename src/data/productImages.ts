@@ -6,22 +6,32 @@ const IMAGES = {
   acoustic: "/images/m/products/image/00bd892379Sq23f6EBR8T8HvBcYs9YAESicgOubo.png",
   hollowbody: "/images/m/products/image/b26fe96b93ir7YHzi8IW3B2sVDCy1V9ynJFdMPr2.jpg",
   amp: "/images/m/products/image/bfc31b3826CWeDbC6X6IuFyWAjODXQOkmAEnHPW7.jpg",
-  drums: "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg",
-  cymbals: "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-2.jpg",
-  eDrums: "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
-  drumAccessories: "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
+  drums:
+    "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg",
+  cymbals:
+    "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-2.jpg",
+  eDrums:
+    "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
+  drumAccessories:
+    "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
   microphone: "/images/m/home/cats/SM58-cat.png",
   audioInterface: "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
   software: "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
-  keyboard:
-    "https://cdn.vibemusic.in/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/55821996-5863-4175-8d9c-5d19966fd4c3.png",
+  keyboard: "/images/m/home/cats/Matriarch.png",
   speaker: "/images/m/products/image/6c9d9ecdf8KxbYZ66Y2FbzDnGWRM90iaN4Xlc84X.jpg",
   pa: "/images/m/home/cats/k12_2.png",
   dj: "/images/m/home/cats/ATLP120XUSBSV.png",
-  headphones: "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+  headphones:
+    "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
   pedal: "/images/m/products/image/2f51071997sqxE3R3gW9W0nTbFJsJVxfRgVdqWBU.jpg",
   mixer: "/images/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg",
 } as const;
+
+const GENERIC_PLACEHOLDER_PATHS = new Set<string>(Object.values(IMAGES));
+
+export function isGenericProductPlaceholder(src: string): boolean {
+  return GENERIC_PLACEHOLDER_PATHS.has(src);
+}
 
 const SLUG_OVERRIDES: Record<string, string> = {
   "fender-player-stratocaster-polar-white": IMAGES.electricGuitar,
@@ -75,10 +85,35 @@ const CATEGORY_DEFAULTS: Record<string, string> = {
   "Live Sound & Lighting": IMAGES.speaker,
   "DJ Equipment": IMAGES.dj,
   "Home Audio & Electronics": IMAGES.headphones,
+  Accessories: IMAGES.pedal,
+  "Band & Orchestra": IMAGES.acoustic,
 };
+
+const SLUG_PREFIX_DEFAULTS: Array<{ test: RegExp; image: string }> = [
+  { test: /^nord-|^roland-|^korg-|^moog-/, image: IMAGES.keyboard },
+  { test: /^adeon-.*(mixer|adm|ams|acon)/, image: IMAGES.mixer },
+  { test: /^adeon-.*(ad\d|dsp|pa|speaker)/, image: IMAGES.speaker },
+  { test: /^adeon-/, image: IMAGES.mixer },
+  { test: /^hertz-.*(acoustic|hza)/, image: IMAGES.acoustic },
+  { test: /^hertz-/, image: IMAGES.electricGuitar },
+  { test: /^avus-.*(crystone|cymbal|zapcrash|orlin|theo|dazyan)/, image: IMAGES.cymbals },
+  { test: /(cymbal|percussion|drum)/, image: IMAGES.cymbals },
+  { test: /(microphone|mic-)/, image: IMAGES.microphone },
+  { test: /(mixer|console)/, image: IMAGES.mixer },
+  { test: /(speaker|pa-|dsp)/, image: IMAGES.speaker },
+  { test: /(keyboard|synth|piano|stage)/, image: IMAGES.keyboard },
+];
+
+function avusFallbackImage(_slug: string): string {
+  return IMAGES.cymbals;
+}
 
 export function getProductImage(slug: string, category?: string): string {
   if (SLUG_OVERRIDES[slug]) return SLUG_OVERRIDES[slug];
+  if (/^avus-/.test(slug)) return avusFallbackImage(slug);
+  for (const rule of SLUG_PREFIX_DEFAULTS) {
+    if (rule.test.test(slug)) return rule.image;
+  }
   if (category && CATEGORY_DEFAULTS[category]) return CATEGORY_DEFAULTS[category];
   return IMAGES.electricGuitar;
 }

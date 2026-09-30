@@ -11,7 +11,7 @@ export const HOMEPAGE_TRENDING_FALLBACK_PRODUCTS: HomepageTopProduct[] = [
     tags: ["Drums", "Trending"],
     href: productPath("avus-genext-genext"),
     image:
-      "https://cdn.vibemusic.in/products/drums-percussion/avus-genext-genext/e5cbfc73-4ff2-4822-a93c-320d6607cd06.png",
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-2.jpg",
     brandLabel: "AVUS",
     productSlug: "avus-genext-genext",
     imageFit: "contain",
@@ -32,12 +32,10 @@ export const HOMEPAGE_TRENDING_FALLBACK_PRODUCTS: HomepageTopProduct[] = [
   {
     id: "trending-mixer",
     title: "ADEON AMS84F Professional Audio Mixer Console",
-    excerpt:
-      "USB and Bluetooth mixing for DJs, karaoke, live sound, and home recording setups.",
+    excerpt: "USB and Bluetooth mixing for DJs, karaoke, live sound, and home recording setups.",
     tags: ["Live Sound", "Trending"],
     href: productPath("adeon-ams84f-ams84f"),
-    image:
-      "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-ams84f-ams84f/e5cbfc73-4ff2-4822-a93c-320d6607cd06.png",
+    image: "/images/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg",
     brandLabel: "ADEON",
     productSlug: "adeon-ams84f-ams84f",
     imageFit: "contain",

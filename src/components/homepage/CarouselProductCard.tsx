@@ -16,10 +16,7 @@ import {
   listingQuickAddAriaLabel,
   shouldNavigateForVariants,
 } from "@/lib/product/listingQuickAdd";
-import {
-  BUY_NOW_CHECKOUT_HREF,
-  useBuyNowStore,
-} from "@/store/buyNowStore";
+import { BUY_NOW_CHECKOUT_HREF, useBuyNowStore } from "@/store/buyNowStore";
 import type { HomepageProductItem } from "@/types/homepage";
 import type { Product } from "@/types/product";
 import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
@@ -30,7 +27,6 @@ interface CarouselProductCardProps {
   sectionKey: string;
   imagePriority?: boolean;
 }
-
 
 function toCartProduct(item: HomepageProductItem): Product {
   const price = item.salePrice != null && item.salePrice > 0 ? item.salePrice : item.price;
@@ -70,19 +66,15 @@ export default function CarouselProductCard({
   const displayPrice = item.salePrice ?? item.price;
   const hasPrice = isPurchasablePrice(displayPrice);
   const hasRealDiscount =
-    item.salePrice != null &&
-    item.salePrice > 0 &&
-    item.price > item.salePrice &&
-    displayPrice > 0;
+    item.salePrice != null && item.salePrice > 0 && item.price > item.salePrice && displayPrice > 0;
   const discountPct = hasRealDiscount
     ? Math.round(((item.price - item.salePrice!) / item.price) * 100)
     : null;
-  const { rating: displayRating, reviewCount: displayReviewCount } =
-    ensureProductReviewMetrics({
-      id: item.id,
-      rating: item.rating,
-      reviewCount: item.reviewCount,
-    });
+  const { rating: displayRating, reviewCount: displayReviewCount } = ensureProductReviewMetrics({
+    id: item.id,
+    rating: item.rating,
+    reviewCount: item.reviewCount,
+  });
   const ratingPillLabel = formatRatingPillLabel(displayRating, displayReviewCount);
   const showRating = displayReviewCount > 0;
   const badgeLabel = item.badgeLabel?.trim() || undefined;
@@ -116,9 +108,7 @@ export default function CarouselProductCard({
           {badgeLabel ? (
             <span
               className={
-                isTrendingRibbon
-                  ? "product-suggest__item-ribbon"
-                  : "product-suggest__item-badge"
+                isTrendingRibbon ? "product-suggest__item-ribbon" : "product-suggest__item-badge"
               }
             >
               {badgeLabel}
@@ -130,6 +120,7 @@ export default function CarouselProductCard({
               <span className="product-suggest__item-photo-pop">
                 <HomepageProductImage
                   className="product-suggest__item-photo"
+                  fallbackSrc={item.imageFallback}
                   fill
                   height={480}
                   priority={imagePriority}

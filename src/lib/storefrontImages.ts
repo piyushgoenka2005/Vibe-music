@@ -164,8 +164,13 @@ export function storefrontZoomImageUrl(url: string): string {
  * Display candidates for a product image: largest snapped bucket first, then smaller
  * CDN derivatives (many uploads only have -w480), then the stored URL.
  */
-export function storefrontImageCandidates(url: string, width = 1200): string[] {
-  if (!url) return [];
+export function storefrontImageCandidates(
+  url: string,
+  width = 1200,
+  extraFallbacks: string[] = [],
+): string[] {
+  if (!url) return Array.from(new Set(extraFallbacks.filter(Boolean)));
+
   const original = unwrapStorefrontSrc(url);
   const candidates: string[] = [];
 
@@ -194,7 +199,7 @@ export function storefrontImageCandidates(url: string, width = 1200): string[] {
     candidates.push(original);
   }
 
-  return Array.from(new Set(candidates.filter(Boolean)));
+  return Array.from(new Set([...candidates, ...extraFallbacks].filter(Boolean)));
 }
 
 /** Resize CDN masters via derivative rewrite or local Sharp proxy. */

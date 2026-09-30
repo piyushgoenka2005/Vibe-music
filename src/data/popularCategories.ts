@@ -15,9 +15,10 @@ export const HOMEPAGE_POPULAR_CATEGORY_COUNT = 8;
 const SIZES = "(max-width:768px) 101px, (max-width:1000px) 10vw, 101px";
 const CAT = "/images/m/home/cats";
 
-/** Category art shipped as PNG from public/images (WebP thumbs optional). */
+/** Category art — WebP thumbs for homepage tiles (PNG/JPG fallbacks handled in UI). */
 function thumb(name: string): string {
-  return `${CAT}/${name}.png`;
+  const base = name.replace(/\.(png|jpe?g)$/i, "");
+  return `${CAT}/thumbs/${base}.webp`;
 }
 
 function thumbSrcSet(name: string): string {

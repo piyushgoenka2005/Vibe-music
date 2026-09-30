@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Star, X } from "lucide-react";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
+import { productImageLocalFallback } from "@/lib/product/resolveProductCardImage";
 import type { Product } from "@/types/product";
 import { formatDisplayPrice } from "@/utils/currency";
 
@@ -11,10 +12,7 @@ interface ProductRelatedRailProps {
   onDismiss: (productId: string) => void;
 }
 
-export default function ProductRelatedRail({
-  products,
-  onDismiss,
-}: ProductRelatedRailProps) {
+export default function ProductRelatedRail({ products, onDismiss }: ProductRelatedRailProps) {
   if (products.length === 0) return null;
 
   return (
@@ -37,19 +35,16 @@ export default function ProductRelatedRail({
                 <X size={12} strokeWidth={2.5} aria-hidden="true" />
               </button>
 
-              <Link
-                href={`/product/${item.slug}`}
-                className="pdp-related-rail__link"
-              >
+              <Link href={`/product/${item.slug}`} className="pdp-related-rail__link">
                 <span className="pdp-related-rail__media">
                   {item.image ? (
                     <StorefrontThumbImage
                       src={item.image}
                       alt={item.name}
                       className="pdp-related-rail__image"
+                      fallbackSrc={productImageLocalFallback(item.slug, item.category)}
                       width={220}
                       height={220}
-                      preferOriginal
                     />
                   ) : (
                     <span

@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { resolveLinkHref } from "@/lib/routes";
+import CategoryGridImage from "@/components/homepage/CategoryGridImage";
 import HomepageSectionHeader from "@/components/homepage/HomepageSectionHeader";
 import type { ResolvedHomepageSection } from "@/types/homepage";
 
@@ -8,18 +8,12 @@ interface HomepageCategoryGridSectionProps {
   section: ResolvedHomepageSection;
 }
 
-export default function HomepageCategoryGridSection({
-  section,
-}: HomepageCategoryGridSectionProps) {
+export default function HomepageCategoryGridSection({ section }: HomepageCategoryGridSectionProps) {
   const categories = section.categories ?? [];
   const titleId = `${section.sectionId}-title`;
 
   return (
-    <section
-      aria-labelledby={titleId}
-      className="popular-categories"
-      id={section.sectionId}
-    >
+    <section aria-labelledby={titleId} className="popular-categories" id={section.sectionId}>
       <div className="popular-categories__inner">
         <HomepageSectionHeader
           ctaLink={section.ctaLink}
@@ -39,17 +33,12 @@ export default function HomepageCategoryGridSection({
               href={resolveLinkHref(item.href)}
               role="listitem"
             >
-              {item.badge ? (
-                <span className="popcat-badge">{item.badge}</span>
-              ) : null}
+              {item.badge ? <span className="popcat-badge">{item.badge}</span> : null}
               <div className="popcat-image">
-                <Image
-                  alt=""
-                  height={120}
-                  loading="lazy"
-                  src={item.imageSrc.split("?")[0]}
-                  width={120}
-                  sizes="120px"
+                <CategoryGridImage
+                  className="popcat-image__img"
+                  imageSrc={item.imageSrc.split("?")[0]}
+                  slug={item.slug}
                 />
               </div>
               <div className="popcat-name">

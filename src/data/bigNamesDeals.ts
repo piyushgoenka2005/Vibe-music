@@ -17,7 +17,7 @@ export const BIG_NAMES_DEALS_CTA = ROUTES.deals;
 
 /**
  * Featured guitar showcase — brand labels match the live catalog brand (Hertz).
- * Visuals use product photography so we never mislabel another brand's gear.
+ * Visuals use curated white-background guitar art so cards always render offline.
  */
 export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
   {
@@ -25,8 +25,8 @@ export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
     brand: "Hertz",
     productSlug: "hertz-hertz-hza-uk-24-hertz-hza-uk-24",
     href: productPath("hertz-hertz-hza-uk-24-hertz-hza-uk-24"),
-    logo: "/images/Electric Orange Guitar.png",
-    product: "/images/Electric Orange Guitar.png",
+    logo: "/images/big-names-deals/gibson-logo.svg",
+    product: "/images/big-names-deals/gibson-product.webp",
     productAlt: "Hertz HZA-UK(24) professional guitar",
   },
   {
@@ -34,8 +34,8 @@ export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
     brand: "Hertz",
     productSlug: "hertz-hza-3900-hza-3900",
     href: productPath("hertz-hza-3900-hza-3900"),
-    logo: "/images/m/home/cats/LPR59VOWCSNH.png",
-    product: "/images/m/home/cats/LPR59VOWCSNH.png",
+    logo: "/images/big-names-deals/epiphone-logo.svg",
+    product: "/images/big-names-deals/epiphone-product.webp",
     productAlt: "Hertz HZA-3900 acoustic guitar",
   },
   {
@@ -43,8 +43,8 @@ export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
     brand: "Hertz",
     productSlug: "hertz-hza-3600-hza-3600",
     href: productPath("hertz-hza-3600-hza-3600"),
-    logo: "/images/m/home/cats/Matriarch.png",
-    product: "/images/m/home/cats/Matriarch.png",
+    logo: "/images/big-names-deals/prs-logo.svg",
+    product: "/images/big-names-deals/prs-product.webp",
     productAlt: "Hertz HZA-3600 natural finish acoustic",
   },
   {
@@ -52,8 +52,8 @@ export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
     brand: "Hertz",
     productSlug: "hertz-hza3900eq-hza3900eq",
     href: productPath("hertz-hza3900eq-hza3900eq"),
-    logo: "/images/m/home/cats/SM58-cat.png",
-    product: "/images/m/home/cats/SM58-cat.png",
+    logo: "/images/big-names-deals/ibanez-logo.svg",
+    product: "/images/big-names-deals/ibanez-product.webp",
     productAlt: "Hertz HZA3900EQ electro acoustic guitar",
   },
   {
@@ -61,8 +61,8 @@ export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
     brand: "Hertz",
     productSlug: "hertz-hza-6000-hza-6000",
     href: productPath("hertz-hza-6000-hza-6000"),
-    logo: "/images/m/home/cats/ATLP120XUSBSV.png",
-    product: "/images/m/home/cats/ATLP120XUSBSV.png",
+    logo: "/images/big-names-deals/fender-logo.svg",
+    product: "/images/big-names-deals/fender-product.webp",
     productAlt: "Hertz HZA-6000 acoustic guitar",
   },
 ];

@@ -1,24 +1,25 @@
 import Link from "next/link";
-import Image from "next/image";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import HomepageProductImage from "@/components/homepage/HomepageProductImage";
 import {
   HOMEPAGE_TOP_PRODUCTS,
   HOMEPAGE_TOP_PRODUCTS_CTA,
   type HomepageTopProduct,
 } from "@/data/homepageTopProducts";
 import { getProductBySlug } from "@/lib/server/productRepository";
-import { shouldBypassNextImageOptimization } from "@/lib/cdnConfig";
-import { optimizeImageUrl } from "@/lib/images";
+import { productImageLocalFallback } from "@/lib/product/resolveProductCardImage";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import Reveal from "@/components/layout/Reveal";
 
 const HEADLINE_ID = "top-products-title";
 
 export function TopProductCard({ product }: { product: HomepageTopProduct }) {
-  const imagePreset = product.imageFit === "contain" ? "productDetail" : "blogCover";
-  // Always use sized thumbs/derivatives — full CDN PNG masters can be multi‑MB.
-  const imageSrc = optimizeImageUrl(product.image, imagePreset);
   const imageFit = product.imageFit ?? "cover";
+  const fallbackSrc =
+    product.fallbackImage ??
+    (product.productSlug
+      ? productImageLocalFallback(product.productSlug, product.tags[0])
+      : undefined);
   const imageClassName = [
     "blog-teaser__image",
     imageFit === "contain" ? "blog-teaser__image--contain" : "",
@@ -40,20 +41,13 @@ export function TopProductCard({ product }: { product: HomepageTopProduct }) {
             .join(" ")}
         >
           {product.image ? (
-            <Image
-              alt=""
+            <HomepageProductImage
               className={imageClassName}
-              fill
-              loading="lazy"
-              unoptimized={shouldBypassNextImageOptimization(imageSrc)}
+              fallbackSrc={fallbackSrc}
+              height={360}
               sizes="(max-width: 767px) 92vw, 360px"
-              src={imageSrc}
-              style={{
-                objectFit: imageFit,
-                ...(product.imageObjectPosition
-                  ? { objectPosition: product.imageObjectPosition }
-                  : null),
-              }}
+              src={product.image}
+              width={480}
             />
           ) : (
             <div className="blog-teaser__image blog-teaser__image--placeholder" />

@@ -27,6 +27,10 @@ import { cleanProductName } from "@/lib/product/cleanProductName";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import { mergeProductSpecs } from "@/lib/product/productSpecs";
 import {
+  resolveProductCardImage,
+  resolveProductGalleryUrls,
+} from "@/lib/product/resolveProductCardImage";
+import {
   detectSearchInstrumentIntent,
   isNonInstrumentGuitarProduct,
   productMatchesSearchIntent,
@@ -219,26 +223,20 @@ function syncDetailSpecsFromSpecifications(
 }
 
 export function buildGalleryFromImageUrls(
-  product: Pick<CatalogProduct, "name" | "imageColor" | "images" | "image">,
+  product: Pick<CatalogProduct, "name" | "imageColor" | "images" | "image" | "slug">,
 ): ProductImage[] {
-  const urls =
-    product.images && product.images.length > 0
-      ? product.images
-      : product.image
-        ? [product.image]
-        : [];
+  const urls = resolveProductGalleryUrls({
+    slug: product.slug,
+    image: product.image,
+    images: product.images,
+  });
 
-  return urls
-    .filter(
-      (src): src is string =>
-        typeof src === "string" && src.length > 0 && src !== "[object Object]",
-    )
-    .map((src, index) => ({
-      id: `img-${index}`,
-      alt: `${product.name} view ${index + 1}`,
-      color: product.imageColor,
-      src,
-    }));
+  return urls.map((src, index) => ({
+    id: `img-${index}`,
+    alt: `${product.name} view ${index + 1}`,
+    color: product.imageColor,
+    src,
+  }));
 }
 
 /** Prefer top-level images; fall back to detail.gallery when they diverge (legacy bulk imports). */
@@ -246,12 +244,24 @@ export function resolveCatalogImageUrls(catalog: CatalogProduct): string[] {
   const topLevel = (catalog.images ?? []).filter(
     (src) => typeof src === "string" && src.length > 0 && src !== "[object Object]",
   );
-  if (topLevel.length > 0) return topLevel;
+  if (topLevel.length > 0) {
+    return resolveProductGalleryUrls({
+      slug: catalog.slug,
+      image: catalog.image,
+      images: topLevel,
+    });
+  }
 
   const gallery = catalog.detail?.gallery;
-  if (!Array.isArray(gallery)) return catalog.image ? [catalog.image] : [];
+  if (!Array.isArray(gallery)) {
+    return resolveProductGalleryUrls({
+      slug: catalog.slug,
+      image: catalog.image,
+      images: catalog.image ? [catalog.image] : [],
+    });
+  }
 
-  return gallery
+  const galleryUrls = gallery
     .map((item) => {
       if (typeof item === "string") return item;
       if (item && typeof item === "object") {
@@ -261,6 +271,12 @@ export function resolveCatalogImageUrls(catalog: CatalogProduct): string[] {
       return "";
     })
     .filter((src) => src.length > 0 && src !== "[object Object]");
+
+  return resolveProductGalleryUrls({
+    slug: catalog.slug,
+    image: catalog.image,
+    images: galleryUrls,
+  });
 }
 
 function buildDefaultDetail(
@@ -353,6 +369,12 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
   });
 
   const variantCount = catalogProduct.detail?.variants?.length ?? 0;
+  const resolvedImage = resolveProductCardImage({
+    slug: catalogProduct.slug,
+    category: catalogProduct.category,
+    image: catalogProduct.image,
+    images: catalogProduct.images,
+  });
 
   return {
     id: catalogProduct.id,
@@ -374,7 +396,7 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
     availability: catalogProduct.availability,
     condition: catalogProduct.condition,
     imageColor: catalogProduct.imageColor,
-    image: catalogProduct.image,
+    image: resolvedImage.src,
     requiresVariantSelection: variantCount > 1,
     filterSpecs: extractListingFilterSpecs(catalogProduct.specifications),
   };
@@ -405,6 +427,15 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
           ...(src ? { src } : {}),
         }));
 
+  const allowedGalleryUrls = new Set(
+    resolveProductGalleryUrls({
+      slug: catalogProduct.slug,
+      category: catalogProduct.category,
+      image: catalogProduct.image,
+      images: catalogProduct.images,
+    }),
+  );
+
   const gallery: ProductImage[] = rawGallery
     .map((img: unknown, index: number) => {
       const candidate = img as {
@@ -430,15 +461,17 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
         ...(cleanSrc ? { src: cleanSrc } : {}),
       };
     })
-    .filter((img) => Boolean(img.src));
+    .filter((img) => Boolean(img.src && allowedGalleryUrls.has(img.src)));
 
-  if (gallery.length === 0 && catalogProduct.image && catalogProduct.image !== "[object Object]") {
-    gallery.push({
-      id: "img-0",
-      alt: catalogProduct.name,
-      color: catalogProduct.imageColor,
-      src: catalogProduct.image,
-    });
+  if (gallery.length === 0) {
+    for (const src of allowedGalleryUrls) {
+      gallery.push({
+        id: `img-${gallery.length}`,
+        alt: `${catalogProduct.name} view ${gallery.length + 1}`,
+        color: catalogProduct.imageColor,
+        src,
+      });
+    }
   }
 
   return {

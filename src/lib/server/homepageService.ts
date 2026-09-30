@@ -7,7 +7,7 @@ import {
 } from "@/lib/server/catalogSnapshotCache";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { buildTopBrandStripItems } from "@/data/topBrandStrip";
-import { getProductImage } from "@/data/productImages";
+import { resolveProductCardImage } from "@/lib/product/resolveProductCardImage";
 import { getCategoryGridImage, hasCuratedCategoryImage } from "@/lib/categoryImages";
 import { categoryPath, productPath, ROUTES } from "@/lib/routes";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
@@ -23,7 +23,7 @@ import {
   HOMEPAGE_POPULAR_CATEGORY_COUNT,
 } from "@/data/popularCategories";
 import { DEFAULT_HOMEPAGE_SECTIONS } from "@/types/homepage";
-import { BIG_NAMES_DEALS_CTA } from "@/data/bigNamesDeals";
+import { BIG_NAMES_DEALS, BIG_NAMES_DEALS_CTA } from "@/data/bigNamesDeals";
 import {
   BIG_NAMES_DEALS_MAX_ITEMS,
   isBigNamesDealsGuitarProduct,
@@ -87,6 +87,12 @@ function toProductItem(
     rating: product.rating,
     reviewCount: product.reviewCount,
   });
+  const resolvedImage = resolveProductCardImage({
+    slug: product.slug,
+    category: product.category,
+    image: overrides?.customImage || product.image,
+    images: product.images,
+  });
   return {
     id: product.id,
     slug: product.slug,
@@ -94,9 +100,9 @@ function toProductItem(
     name: product.name,
     price: hasDiscount ? product.originalPrice : product.price,
     salePrice,
-    image:
-      product.image || product.images[0] || getProductImage(product.slug, product.category) || "",
-    imageAlt: product.name,
+    image: resolvedImage.src,
+    imageFallback: resolvedImage.fallbackSrc,
+    imageAlt: overrides?.customTitle || product.name,
     rating,
     reviewCount,
     href: productPath(product.slug),
@@ -493,13 +499,15 @@ export async function getBigNamesDealsPublicData(
       .slice(0, BIG_NAMES_DEALS_MAX_ITEMS);
 
     const curated = items
-      .map((item) => {
+      .map((item, index) => {
         const product = productMap.get(item.productId!);
         if (!product || !isBigNamesDealsGuitarProduct(product)) return null;
+        const dealKey = BIG_NAMES_DEALS.find((deal) => deal.productSlug === product.slug)?.key;
         return mapCatalogProductToBigNamesDeal(product, {
           href: item.customHref || undefined,
-          image: item.customImage || undefined,
           title: item.customTitle || undefined,
+          dealKey,
+          slotIndex: index,
         });
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);

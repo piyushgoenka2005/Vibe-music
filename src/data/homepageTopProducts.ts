@@ -1,10 +1,10 @@
 import { productPath, ROUTES } from "@/lib/routes";
 
-const ROLAND_GP9_PRODUCT = "/images/products/roland-gp9-front.webp";
+const ROLAND_GP9_PRODUCT = "/images/grand-piano-9.png";
 
-const HERTZ_GUITAR_FRONT = "/images/guitar.png";
+const HERTZ_GUITAR_FRONT = "/images/New Guitar.png";
 
-const ADEON_PA_FRONT = "/images/PA-Speaker.png";
+const ADEON_PA_FRONT = "/images/m/home/cats/k12_2.png";
 
 export interface HomepageTopProduct {
   id: string;
@@ -18,6 +18,8 @@ export interface HomepageTopProduct {
   productSlug?: string;
   /** Keep the curated `image` instead of replacing it from catalog. */
   pinImage?: boolean;
+  /** Self-hosted fallback when the primary image is on CDN. */
+  fallbackImage?: string;
   imageFit?: "cover" | "contain";
   imageObjectPosition?: string;
   imageMediaClass?: string;

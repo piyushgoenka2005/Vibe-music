@@ -30,6 +30,7 @@ export interface NewArrivalsProductCardProps {
   price: number;
   salePrice?: number | null;
   image: string;
+  imageFallback?: string;
   imageAlt: string;
   sectionKey: string;
   rank?: number;
@@ -68,6 +69,7 @@ export default function NewArrivalsProductCard({
   price,
   salePrice,
   image,
+  imageFallback,
   imageAlt,
   sectionKey,
   rating,
@@ -169,6 +171,7 @@ export default function NewArrivalsProductCard({
               <HomepageProductImage
                 className="new-arrivals-card__image"
                 decorative={ariaHidden}
+                fallbackSrc={imageFallback}
                 fill
                 height={480}
                 priority={!ariaHidden && imagePriority}

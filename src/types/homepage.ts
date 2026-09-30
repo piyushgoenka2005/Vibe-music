@@ -75,6 +75,7 @@ export interface HomepageProductItem {
   price: number;
   salePrice?: number | null;
   image: string;
+  imageFallback?: string;
   imageAlt: string;
   rating: number;
   reviewCount: number;

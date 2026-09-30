@@ -86,8 +86,8 @@ export function heroMarqueeProductHref(product: {
   return productPath("adeon-acm18-acm18");
 }
 
-/** Pre-generated 96px WebP thumbs — avoid multi‑MB masters for 44px cards. */
-const THUMB = "/images/m/products/thumbs";
+/** Pre-generated WebP thumbs — avoid multi‑MB masters for 44px cards. */
+const THUMB = "/images/m/home/cats/thumbs";
 const IMG = (filename: string) => {
   const base = filename.replace(/\.(png|jpe?g|webp)$/i, "");
   return `${THUMB}/${base}.webp`;

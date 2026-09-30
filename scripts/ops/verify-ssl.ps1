@@ -13,7 +13,14 @@ $errors = @{}
 for ($i = 1; $i -le $Attempts; $i++) {
     try {
         $tcp = New-Object System.Net.Sockets.TcpClient($Ip, $Port)
-        $ssl = New-Object System.Net.Security.SslStream($tcp.GetStream(), $false, ({ $true }))
+        $ssl = New-Object System.Net.Security.SslStream(
+            $tcp.GetStream(),
+            $false,
+            {
+                param($sender, $cert, $chain, $errors)
+                return $errors -eq [System.Net.Security.SslPolicyErrors]::None
+            }
+        )
         $ssl.AuthenticateAsClient($HostName)
         $subject = $ssl.RemoteCertificate.Subject
         $ssl.Close()
@@ -22,16 +29,14 @@ for ($i = 1; $i -le $Attempts; $i++) {
             $ok++
         } else {
             $bad++
-            $prev = 0
-            if ($errors.ContainsKey($subject)) { $prev = $errors[$subject] }
-            $errors[$subject] = $prev + 1
+            if (-not $errors.ContainsKey($subject)) { $errors[$subject] = 0 }
+            $errors[$subject]++
         }
     } catch {
         $bad++
         $msg = $_.Exception.Message
-        $prev = 0
-        if ($errors.ContainsKey($msg)) { $prev = $errors[$msg] }
-        $errors[$msg] = $prev + 1
+        if (-not $errors.ContainsKey($msg)) { $errors[$msg] = 0 }
+        $errors[$msg]++
     }
     Start-Sleep -Milliseconds 300
 }
@@ -44,10 +49,12 @@ Write-Host "  FAIL: $bad"
 if ($bad -gt 0) {
     Write-Host ""
     Write-Host "Failures:" -ForegroundColor Yellow
-    $errors.GetEnumerator() | ForEach-Object { Write-Host "  $($_.Value)x $($_.Key)" }
+    foreach ($entry in $errors.GetEnumerator()) {
+        Write-Host "  $($entry.Value)x $($entry.Key)"
+    }
     Write-Host ""
     Write-Host "Wrong certificate = CloudOnFire routes traffic to another VM (often CN=git.k12hunar.com)." -ForegroundColor Red
-    Write-Host "Fix: CloudOnFire support ticket — docs/ops/cloudonfire-duplicate-ip-ticket.txt" -ForegroundColor Yellow
+    Write-Host "Fix: CloudOnFire support ticket - docs/ops/cloudonfire-duplicate-ip-ticket.txt" -ForegroundColor Yellow
     Write-Host "Then update GoDaddy A records to the new dedicated IP they assign." -ForegroundColor Yellow
     exit 1
 }

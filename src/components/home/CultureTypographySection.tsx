@@ -43,7 +43,7 @@ const MAX_SCROLL_RUNWAY_VIEWPORTS_MOBILE = 0.42;
 
 /** Mobile sticky sits below the header — section height must be viewport + runway, not pin + runway. */
 function resolveCultureSectionHeight(pinPx: number, shiftPx: number, mobile: boolean): number {
-  if (mobile && typeof window !== "undefined") {
+  if (mobile) {
     return Math.round(window.innerHeight + shiftPx);
   }
   return Math.round(pinPx + shiftPx);

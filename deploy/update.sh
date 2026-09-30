@@ -10,9 +10,11 @@
 #   SKIP_PREFLIGHT=1        Skip preflight checks
 #   SKIP_SMOKE=1            Skip post-deploy smoke tests
 #   SKIP_BUILD=0            Set to 1 to reload PM2 without rebuild (hotfix env-only)
-#   SYNC_SSL=1              Run deploy/production.sh ssl after nginx sync
+#   SYNC_SSL=1              Run deploy/production.sh ssl after nginx sync (recommended)
+#   AUTO_FIX_SSL=1          Run deploy/fix-ssl-certificates.sh when local cert checks fail
 #   VERIFY_PUBLIC_SMOKE=1   Also smoke-test https://vibemusic.in via nginx (default: 1)
-#   SKIP_NGINX_VERIFY=1     Skip public nginx routing gate (not recommended)
+#   SKIP_NGINX_VERIFY=1     Skip loopback nginx routing gate (not recommended)
+#   SKIP_PUBLIC_TLS_VERIFY=1  Skip external duplicate-IP diagnostic (not recommended)
 #
 # Safety:
 #   - Records .deploy-previous.sha before pull (deploy/production.sh rollback)
@@ -100,6 +102,12 @@ run_post_deploy_smoke() {
   check_http "/api/checkout/capabilities" 200 "checkout caps" "$API_BASE_URL"
   check_http "/deals" 200 "deals"
   check_http "/api/admin/me" 401 "admin auth" "$API_BASE_URL"
+  if ! HOMEPAGE_VERIFY_URL="$API_BASE_URL" npm run verify:homepage-images; then
+    echo "  FAIL homepage product images"
+    FAILS=$((FAILS + 1))
+  else
+    echo "  ok homepage product images"
+  fi
   [[ "$FAILS" -eq 0 ]] || return 1
 }
 
@@ -159,12 +167,22 @@ stop_app_for_build() {
   fi
 }
 
+sync_storefront_images() {
+  log "Storefront static images (public/images + WebP thumbs)"
+  if ! timeout 600 npm run download:images; then
+    die "download:images failed — homepage/category images will be broken"
+  fi
+  if ! npm run generate:category-thumbs; then
+    die "generate:category-thumbs failed — category grid thumbs will be broken"
+  fi
+  if ! npm run verify:images; then
+    die "essential image verify failed — run: npm run download:images"
+  fi
+}
+
 build_application() {
   log "Clearing stale Next.js build cache"
   rm -rf .next
-
-  log "Storefront static images (public/images + location landmarks)"
-  timeout 600 npm run download:images || warn "download:images timed out or failed — continuing"
 
   log "Razorpay + production env preflight"
   run_razorpay_preflight || warn "Razorpay preflight failed — continuing deploy (verify manually)"
@@ -214,6 +232,37 @@ validate_production_env() {
   fi
 }
 
+verify_local_tls_cert() {
+  if ! command -v openssl >/dev/null 2>&1; then
+    warn "openssl missing — skipping local TLS cert verify"
+    return 0
+  fi
+
+  local cert="${PRIMARY_TLS_CERT:-/etc/letsencrypt/live/vibemusic.in/fullchain.pem}"
+  if [[ ! -f "$cert" ]]; then
+    warn "Local cert missing at $cert — run: bash deploy/fix-ssl-certificates.sh"
+    return 0
+  fi
+
+  log "Verifying local Let's Encrypt cert ($cert)"
+  local cn
+  cn="$(openssl x509 -in "$cert" -noout -subject 2>/dev/null | sed -n 's/.*CN=\([^,/]*\).*/\1/p')"
+  if [[ "$cn" != "vibemusic.in" ]]; then
+    die "local cert CN=${cn:-none} — run: bash deploy/fix-ssl-certificates.sh"
+  fi
+  if ! openssl x509 -in "$cert" -noout -text 2>/dev/null | grep -q "DNS:vibemusic.in"; then
+    die "local cert missing SAN DNS:vibemusic.in — run: SYNC_SSL=1 bash deploy/update.sh"
+  fi
+
+  local loopback_cn
+  loopback_cn="$(echo | openssl s_client -connect 127.0.0.1:443 -servername vibemusic.in 2>/dev/null \
+    | openssl x509 -noout -subject 2>/dev/null | sed -n 's/.*CN=\([^,/]*\).*/\1/p' || true)"
+  if [[ -n "$loopback_cn" && "$loopback_cn" != "vibemusic.in" ]]; then
+    die "nginx loopback presents CN=${loopback_cn} — run: bash deploy/fix-ssl-certificates.sh"
+  fi
+  log "local TLS cert OK (CN=vibemusic.in)"
+}
+
 verify_nginx_routes_vibe() {
   if [[ "${SKIP_NGINX_VERIFY:-0}" == "1" ]]; then
     log "Public nginx verify skipped (SKIP_NGINX_VERIFY=1)"
@@ -239,7 +288,33 @@ verify_nginx_routes_vibe() {
     die "nginx /api/health did not return Vibe JSON — check PM2 and deploy/production.sh nginx"
   fi
 
-  log "nginx public routing OK (vibemusic.in → app)"
+  log "nginx loopback routing OK (127.0.0.1 → app)"
+}
+
+verify_public_tls_hint() {
+  if [[ "${SKIP_PUBLIC_TLS_VERIFY:-0}" == "1" ]]; then
+    log "Public TLS hint skipped (SKIP_PUBLIC_TLS_VERIFY=1)"
+    return 0
+  fi
+
+  log "Public duplicate-IP diagnostic (${VPS_IP} external routing)"
+  local body headers
+  body="$(curl -sk --max-time 12 -H "Host: vibemusic.in" "https://${VPS_IP}/api/health" 2>/dev/null || true)"
+  if echo "$body" | grep -qiE 'i_like_gitea|/user/login'; then
+    echo "$body" | head -c 200 >&2
+    die "CloudOnFire duplicate IP active on ${VPS_IP} (Gitea cert/backend). See docs/ops/cloudonfire-duplicate-ip-ticket.txt"
+  fi
+  if echo "$body" | grep -q '"status"'; then
+    log "external IP probe returned Vibe /api/health (good for this attempt)"
+    return 0
+  fi
+
+  headers="$(curl -skI --max-time 12 -H "Host: vibemusic.in" "https://${VPS_IP}/" 2>/dev/null || true)"
+  if echo "$headers" | grep -qiE 'i_like_gitea|location:.*/user/login'; then
+    die "CloudOnFire duplicate IP active on ${VPS_IP}. See docs/ops/cloudonfire-duplicate-ip-ticket.txt"
+  fi
+
+  warn "Could not confirm external TLS routing from VPS — run: npm run verify:ssl from your PC/CI"
 }
 
 run_smoke_tests() {
@@ -282,7 +357,10 @@ print_summary() {
   echo "  Health:     $(echo "$health_body" | head -c 120)"
   echo ""
   echo "  Verify live:  VERIFY_BASE_URL=${PUBLIC_BASE} npm run verify:prod-signoff"
+  echo "  Verify TLS:   npm run verify:ssl"
+  echo "  Verify imgs:  npm run verify:images && npm run verify:homepage-images"
   echo "  Nginx sync:   bash deploy/production.sh nginx"
+  echo "  SSL repair:   bash deploy/fix-ssl-certificates.sh"
   echo "  SSL expand:   SYNC_SSL=1 bash deploy/update.sh"
   echo "  Rollback:     bash deploy/production.sh rollback"
   if [[ "${SEED_CATALOG:-0}" != "1" ]]; then
@@ -366,6 +444,8 @@ fi
 ensure_cdn_storage
 validate_production_env
 
+sync_storefront_images
+
 # ── 3. Database + ops data ───────────────────────────────────────────────────
 
 step "3/10 — Database"
@@ -409,11 +489,28 @@ ensure_cdn_storage
 
 if command -v nginx >/dev/null 2>&1; then
   bash deploy/production.sh nginx
-  if [[ "${SYNC_SSL:-0}" == "1" ]]; then
-    log "SSL certificate sync (SYNC_SSL=1)"
-    bash deploy/production.sh ssl
+  if [[ "${SYNC_SSL:-1}" == "1" ]]; then
+    log "SSL certificate sync (SYNC_SSL=${SYNC_SSL:-1})"
+    bash deploy/production.sh ssl || {
+      if [[ "${AUTO_FIX_SSL:-1}" == "1" ]]; then
+        warn "SSL sync failed — running deploy/fix-ssl-certificates.sh"
+        bash deploy/fix-ssl-certificates.sh || die "SSL repair failed — see docs/ops/cloudonfire-duplicate-ip-ticket.txt"
+      else
+        die "SSL sync failed — run: bash deploy/fix-ssl-certificates.sh"
+      fi
+    }
   fi
+  verify_local_tls_cert || {
+    if [[ "${AUTO_FIX_SSL:-1}" == "1" ]]; then
+      warn "Local TLS verify failed — running deploy/fix-ssl-certificates.sh"
+      bash deploy/fix-ssl-certificates.sh || die "SSL repair failed"
+      verify_local_tls_cert || die "Local TLS still invalid after repair"
+    else
+      die "Local TLS verify failed — run: bash deploy/fix-ssl-certificates.sh"
+    fi
+  }
   verify_nginx_routes_vibe
+  verify_public_tls_hint
 else
   log "nginx not installed — skipping vhost sync"
 fi

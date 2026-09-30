@@ -158,6 +158,26 @@ async function main() {
 
   console.log(`\nDone. OK: ${ok}, failed: ${failed}`);
 
+  console.log("Generating category + marquee WebP thumbs...");
+  const { spawnSync } = await import("node:child_process");
+  const thumbs = spawnSync("node", ["scripts/assets/generate-category-thumbs.mjs"], {
+    cwd: ROOT,
+    stdio: "inherit",
+  });
+  if (thumbs.status !== 0) {
+    console.error("ERROR: generate-category-thumbs failed");
+    process.exit(1);
+  }
+
+  const verify = spawnSync("node", ["scripts/ops/verify-essential-images.mjs"], {
+    cwd: ROOT,
+    stdio: "inherit",
+  });
+  if (verify.status !== 0) {
+    console.error("ERROR: essential image verify failed after download");
+    process.exit(1);
+  }
+
   if (fs.existsSync(path.join(PUBLIC, "logo.jpeg"))) {
     const { spawnSync } = await import("node:child_process");
     const result = spawnSync("node", ["scripts/assets/generate-favicons.mjs"], {

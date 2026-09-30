@@ -55,15 +55,16 @@ bash deploy/update.sh
 
 **Options:**
 
-| Variable                               | Effect                                 |
-| -------------------------------------- | -------------------------------------- |
-| `SKIP_PULL=1`                          | Skip git pull                          |
-| `SKIP_SMOKE=1`                         | Skip smoke tests                       |
-| `SKIP_BUILD=1`                         | Reload PM2 only (env hotfix)           |
-| `SYNC_SSL=1`                           | Expand Let's Encrypt certs             |
-| `VERIFY_PUBLIC_SMOKE=1`                | Smoke `https://vibemusic.in` via nginx |
-| `VERIFY_BASE_URL=https://vibemusic.in` | Run edge header check                  |
-| `SEED_CATALOG=1`                       | Re-import catalog JSON                 |
+| Variable                               | Effect                                   |
+| -------------------------------------- | ---------------------------------------- |
+| `SKIP_PULL=1`                          | Skip git pull                            |
+| `SKIP_SMOKE=1`                         | Skip smoke tests                         |
+| `SKIP_BUILD=1`                         | Reload PM2 only (env hotfix)             |
+| `SYNC_SSL=1`                           | Expand Let's Encrypt certs (default: on) |
+| `AUTO_FIX_SSL=0`                       | Skip auto SSL repair on cert failure     |
+| `VERIFY_PUBLIC_SMOKE=1`                | Smoke `https://vibemusic.in` via nginx   |
+| `VERIFY_BASE_URL=https://vibemusic.in` | Run edge header check                    |
+| `SEED_CATALOG=1`                       | Re-import catalog JSON                   |
 
 Full production pass:
 
@@ -216,11 +217,16 @@ Opens SSH (22) and nginx (80/443). Node stays on `127.0.0.1:3000`.
 
 ```bash
 SYNC_SSL=1 bash deploy/update.sh
-# or:
+# or repair on VPS:
 bash deploy/fix-ssl-certificates.sh
+# verify from your PC / CI (detects CloudOnFire duplicate IP):
+npm run verify:ssl
 ```
 
 Certs cover `vibemusic.in`, `www.vibemusic.in`, `mail.vibemusic.in`.
+
+If browsers show `NET::ERR_CERT_COMMON_NAME_INVALID`, the public IP may be routing to another
+tenant (Gitea `git.k12hunar.com`). See [`docs/ops/cloudonfire-duplicate-ip-ticket.txt`](docs/ops/cloudonfire-duplicate-ip-ticket.txt).
 
 ---
 

@@ -7,6 +7,7 @@ import {
 } from "@/lib/server/storeCatalogRepository";
 import { categoryPath, productPath } from "@/lib/routes";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
+import { resolveProductCardImage } from "@/lib/product/resolveProductCardImage";
 import { getCategoryGridImage } from "@/lib/categoryImages";
 import { buildTopBrandStripItems } from "@/data/topBrandStrip";
 import {
@@ -24,10 +25,7 @@ function activeProducts(products: CatalogProduct[]): CatalogProduct[] {
   return products.filter((product) => product.status === "active");
 }
 
-function toProductItem(
-  product: CatalogProduct,
-  rank?: number
-): HomepageProductItem {
+function toProductItem(product: CatalogProduct, rank?: number): HomepageProductItem {
   const originalPrice = product.originalPrice > 0 ? product.originalPrice : product.price;
   const salePrice =
     product.detail?.salePrice != null && product.detail.salePrice > 0
@@ -40,6 +38,12 @@ function toProductItem(
     rating: product.rating,
     reviewCount: product.reviewCount,
   });
+  const resolvedImage = resolveProductCardImage({
+    slug: product.slug,
+    category: product.category,
+    image: product.image,
+    images: product.images,
+  });
   return {
     id: product.id,
     slug: product.slug,
@@ -47,7 +51,8 @@ function toProductItem(
     name: product.name,
     price: salePrice != null ? originalPrice : product.price,
     salePrice,
-    image: product.image || product.images[0] || "",
+    image: resolvedImage.src,
+    imageFallback: resolvedImage.fallbackSrc,
     imageAlt: product.name,
     rating,
     reviewCount,
@@ -62,10 +67,7 @@ function productSection(
   title: string,
   products: HomepageProductItem[],
   layout: ResolvedHomepageSection["layout"] = "product_carousel",
-  extras?: Pick<
-    ResolvedHomepageSection,
-    "subtitle" | "ctaText" | "ctaLink" | "accentLabel"
-  >
+  extras?: Pick<ResolvedHomepageSection, "subtitle" | "ctaText" | "ctaLink" | "accentLabel">,
 ): ResolvedHomepageSection | null {
   if (products.length === 0) return null;
   return {
@@ -78,9 +80,7 @@ function productSection(
   };
 }
 
-export async function getHomepageStaticFallbacks(
-  at: Date
-): Promise<PublicHomepageData> {
+export async function getHomepageStaticFallbacks(at: Date): Promise<PublicHomepageData> {
   const [allProducts, categories, brands] = await Promise.all([
     fetchAllProducts(),
     fetchCategories(),
@@ -92,10 +92,7 @@ export async function getHomepageStaticFallbacks(
 
   const newArrivals = products
     .filter((product) => product.newArrival)
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 12)
     .map((product, index) => toProductItem(product, index + 1));
 
@@ -106,10 +103,7 @@ export async function getHomepageStaticFallbacks(
 
   const trending = products
     .filter((product) => product.trending)
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 12)
     .map((product) => toProductItem(product));
 
@@ -122,17 +116,14 @@ export async function getHomepageStaticFallbacks(
             (a, b) =>
               b.reviewCount - a.reviewCount ||
               b.rating - a.rating ||
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
           )
           .slice(0, 12)
           .map((product) => toProductItem(product));
 
   const staffPicks = products
     .filter((product) => product.featured)
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 12)
     .map((product) => toProductItem(product));
 
@@ -145,7 +136,7 @@ export async function getHomepageStaticFallbacks(
             (a, b) =>
               b.reviewCount - a.reviewCount ||
               b.rating - a.rating ||
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
           )
           .slice(0, 12)
           .map((product) => toProductItem(product));
@@ -154,8 +145,7 @@ export async function getHomepageStaticFallbacks(
     .filter(
       (product) =>
         product.discountPercentage > 0 ||
-        (product.detail?.salePrice != null &&
-          product.detail.salePrice < product.price)
+        (product.detail?.salePrice != null && product.detail.salePrice < product.price),
     )
     .sort((a, b) => b.discountPercentage - a.discountPercentage)
     .slice(0, 12)
@@ -196,9 +186,7 @@ export async function getHomepageStaticFallbacks(
     }));
 
   const popularCategories =
-    featuredCategories.length > 0
-      ? featuredCategories
-      : getHomepagePopularCategoryItems();
+    featuredCategories.length > 0 ? featuredCategories : getHomepagePopularCategoryItems();
 
   for (const section of [
     productSection(
@@ -209,22 +197,35 @@ export async function getHomepageStaticFallbacks(
       "product_grid",
       {
         accentLabel: "New arrivals",
-        subtitle:
-          "Fresh releases and just-landed gear from the brands you trust.",
+        subtitle: "Fresh releases and just-landed gear from the brands you trust.",
         ctaText: "Shop All New Gear",
         ctaLink: "/search/results?q=new",
-      }
+      },
     ),
-    productSection("best_sellers", "best-sellers", "Best Sellers", bestSellers, "product_carousel", {
-      subtitle: "Top-rated gear musicians keep coming back for.",
-      ctaText: "View all best sellers",
-      ctaLink: "/search/results?q=best+sellers",
-    }),
-    productSection("trending", "trending-products", "Trending Now", trendingResolved, "product_carousel", {
-      subtitle: "Popular right now across guitars, PA, and studio gear.",
-      ctaText: "Explore trending",
-      ctaLink: "/search/results?q=trending",
-    }),
+    productSection(
+      "best_sellers",
+      "best-sellers",
+      "Best Sellers",
+      bestSellers,
+      "product_carousel",
+      {
+        subtitle: "Top-rated gear musicians keep coming back for.",
+        ctaText: "View all best sellers",
+        ctaLink: "/search/results?q=best+sellers",
+      },
+    ),
+    productSection(
+      "trending",
+      "trending-products",
+      "Trending Now",
+      trendingResolved,
+      "product_carousel",
+      {
+        subtitle: "Popular right now across guitars, PA, and studio gear.",
+        ctaText: "Explore trending",
+        ctaLink: "/search/results?q=trending",
+      },
+    ),
     productSection(
       "staff_picks",
       "suggested-products",
@@ -235,7 +236,7 @@ export async function getHomepageStaticFallbacks(
         subtitle: "Hand-picked by our team for practice rooms, stages, and studios.",
         ctaText: "Shop all products",
         ctaLink: "/search",
-      }
+      },
     ),
     productSection(
       "deals_of_the_day",
@@ -247,7 +248,7 @@ export async function getHomepageStaticFallbacks(
         accentLabel: "Limited Time",
         ctaText: "Shop All Deals",
         ctaLink: "/deals",
-      }
+      },
     ),
   ]) {
     if (section) sections.push(section);

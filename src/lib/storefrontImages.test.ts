@@ -47,6 +47,12 @@ describe("storefrontImageUrl", () => {
     expect(candidates[1]).toBe(master);
   });
 
+  it("appends optional self-hosted fallbacks after CDN candidates", () => {
+    const fallback = "/images/PA-Speaker.png";
+    const candidates = storefrontImageCandidates(master, 480, [fallback]);
+    expect(candidates.at(-1)).toBe(fallback);
+  });
+
   it("steps down CDN derivative buckets when larger sizes are missing", () => {
     const webpMaster =
       "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp";

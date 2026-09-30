@@ -33,7 +33,12 @@ function canonicalizeCategorySlug(slug: string): string {
 }
 
 const FALLBACK_IMAGE = "/images/m/home/cats/LPR59VOWCSNH.png";
-const THUMB_DIR = "/images/m/home/cats";
+const THUMB_DIR = "/images/m/home/cats/thumbs";
+
+function categoryThumbWebp(name: string): string {
+  const base = name.replace(/\.(png|jpe?g)$/i, "");
+  return `${THUMB_DIR}/${base}.webp`;
+}
 
 const GUITAR_MEGA_ELECTRIC_IMAGE =
   "https://res.cloudinary.com/piyushgoenka/image/upload/c_fill,w_800,h_600,g_center,q_82,f_auto/v1782292639/products/guitars/hertz-hzr-4002e-hzr-4002e/03-hza-4001-e-na-amazonfnt.png";
@@ -102,22 +107,39 @@ const HERO_IMAGE_BY_SLUG: Record<string, string> = {
   "video-cameras": "/images/m/home/cats/EOSR82450Kit.png",
 };
 
-/** Explicit grid thumbs — never fall back to the Guitars Les Paul for these. */
+/** Explicit grid thumbs — WebP first for homepage tiles; PNG/JPG fallback on error. */
 const GRID_THUMB_BY_SLUG: Record<string, string> = {
-  guitars: `${THUMB_DIR}/LPR59VOWCSNH.png`,
-  bass: `${THUMB_DIR}/PBassAPR3SB.png`,
-  "studio-recording": `${THUMB_DIR}/Arrow-small.png`,
-  "drums-percussion": `${THUMB_DIR}/LM402.png`,
-  "keyboards-synthesizers": `${THUMB_DIR}/Matriarch.png`,
-  "live-sound-lighting": `${THUMB_DIR}/k12_2.png`,
-  "software-plug-ins": `${THUMB_DIR}/ptstudioann.jpg`,
-  "dj-equipment": `${THUMB_DIR}/ATLP120XUSBSV.png`,
-  "microphones-wireless": `${THUMB_DIR}/SM58-cat.png`,
-  "band-orchestra": `${THUMB_DIR}/KingSlvFlTr.png`,
-  "home-audio-electronics": `${THUMB_DIR}/TourOneM2Bk.png`,
-  "commercial-audio-installation": `${THUMB_DIR}/Control28.png`,
-  "cables-cases-accessories": `${THUMB_DIR}/M4WP006.png`,
-  "video-cameras": `${THUMB_DIR}/EOSR82450Kit.png`,
+  guitars: categoryThumbWebp("LPR59VOWCSNH.png"),
+  bass: categoryThumbWebp("PBassAPR3SB.png"),
+  "studio-recording": categoryThumbWebp("Arrow-small.png"),
+  "drums-percussion": categoryThumbWebp("LM402.png"),
+  "keyboards-synthesizers": categoryThumbWebp("Matriarch.png"),
+  "live-sound-lighting": categoryThumbWebp("k12_2.png"),
+  "software-plug-ins": categoryThumbWebp("ptstudioann.jpg"),
+  "dj-equipment": categoryThumbWebp("ATLP120XUSBSV.png"),
+  "microphones-wireless": categoryThumbWebp("SM58-cat.png"),
+  "band-orchestra": categoryThumbWebp("KingSlvFlTr.png"),
+  "home-audio-electronics": categoryThumbWebp("TourOneM2Bk.png"),
+  "commercial-audio-installation": categoryThumbWebp("Control28.png"),
+  "cables-cases-accessories": categoryThumbWebp("M4WP006.png"),
+  "video-cameras": categoryThumbWebp("EOSR82450Kit.png"),
+};
+
+const GRID_FALLBACK_BY_SLUG: Record<string, string> = {
+  guitars: "/images/m/home/cats/LPR59VOWCSNH.png",
+  bass: "/images/m/home/cats/PBassAPR3SB.png",
+  "studio-recording": "/images/m/home/cats/Arrow-small.png",
+  "drums-percussion": "/images/m/home/cats/LM402.png",
+  "keyboards-synthesizers": "/images/m/home/cats/Matriarch.png",
+  "live-sound-lighting": "/images/m/home/cats/k12_2.png",
+  "software-plug-ins": "/images/m/home/cats/ptstudioann.jpg",
+  "dj-equipment": "/images/m/home/cats/ATLP120XUSBSV.png",
+  "microphones-wireless": "/images/m/home/cats/SM58-cat.png",
+  "band-orchestra": "/images/m/home/cats/KingSlvFlTr.png",
+  "home-audio-electronics": "/images/m/home/cats/TourOneM2Bk.png",
+  "commercial-audio-installation": "/images/m/home/cats/Control28.png",
+  "cables-cases-accessories": "/images/m/home/cats/M4WP006.png",
+  "video-cameras": "/images/m/home/cats/EOSR82450Kit.png",
 };
 
 /** True when we ship dedicated local art for this department slug. */
@@ -132,7 +154,23 @@ export function getCategoryGridImage(slug: string): string {
   if (GRID_THUMB_BY_SLUG[key]) return GRID_THUMB_BY_SLUG[key];
 
   const href = hrefForCategorySlug(key);
-  return imageFromPopularCategories(href) ?? FALLBACK_IMAGE;
+  const popular = imageFromPopularCategories(href);
+  if (popular) {
+    const base = pathBasename(popular);
+    if (base) return categoryThumbWebp(base);
+  }
+  return categoryThumbWebp("LPR59VOWCSNH.png");
+}
+
+/** Lossless fallback when WebP thumb is missing on disk. */
+export function getCategoryGridImageFallback(slug: string): string {
+  const key = canonicalizeCategorySlug(slug);
+  return GRID_FALLBACK_BY_SLUG[key] ?? FALLBACK_IMAGE;
+}
+
+function pathBasename(pathValue: string): string {
+  const clean = pathValue.split("?")[0];
+  return clean.slice(clean.lastIndexOf("/") + 1);
 }
 
 /** Hero-sized category image for bento tiles and marketing blocks. */

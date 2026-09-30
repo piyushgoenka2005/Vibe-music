@@ -1,0 +1,39 @@
+Subject: URGENT — Duplicate public IP on VPS 1055 (vibemusic.in / 31.42.125.219)
+
+Hello CloudOnFire Support,
+
+Our production site https://vibemusic.in is intermittently unreachable with browser error
+NET::ERR_CERT_COMMON_NAME_INVALID / SEC_E_WRONG_PRINCIPAL.
+
+Diagnosis (reproducible from external networks):
+- DNS A record for vibemusic.in points to 31.42.125.219 (correct).
+- TLS connections to 31.42.125.219:443 with SNI vibemusic.in sometimes receive a certificate
+  for CN=git.k12hunar.com (another customer's Forgejo/Gitea instance), not vibemusic.in.
+- When the wrong backend answers, HTTP responses include Gitea cookies (i_like_gitea) and
+  redirects to /user/login.
+- SSH to root@31.42.125.219 sometimes presents host key SHA256:vjfQl9pdbsCqLuAEOVL451bbtscQSyiC0APZ0iIwv2k
+  (wrong host) instead of our VPS 1055 key SHA256:l0hpirMy/wrm0gRH4SNxl4PdMmpzKXtSFOjfMESvX7I.
+
+Expected:
+- Public IP 31.42.125.219 must route ONLY to our VPS 1055 (vibemusic.in / CloudOnFire panel).
+- Remove duplicate IP assignment to any other tenant on this address.
+
+Our details:
+- Customer / panel: [your CloudOnFire account email]
+- VPS name/ID: VPS 1055
+- Domain: vibemusic.in
+- Current A record IP: 31.42.125.219
+- App stack: nginx + Let's Encrypt + PM2 (Next.js) on Ubuntu
+
+Requested action:
+1. Confirm whether 31.42.125.219 is shared with another VM (git.k12hunar.com tenant).
+2. Assign a dedicated public IPv4 to VPS 1055 OR remove the conflicting assignment immediately.
+3. Provide the final dedicated IP so we can update GoDaddy DNS A records (@, www, cdn, mail).
+
+Verification after fix (we will run):
+  npm run verify:ssl
+  npm run ops:verify-ssh
+
+Contact: [your name / phone / WhatsApp]
+
+Thank you.

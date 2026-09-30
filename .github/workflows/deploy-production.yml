@@ -47,3 +47,26 @@ jobs:
           EXPECTED_SHA: ${{ github.sha }}
           VERIFY_BASE_URL: https://vibemusic.in
         run: bash deploy/production.sh verify-sync
+
+      - name: Verify public TLS certificate
+        env:
+          VERIFY_HOST: vibemusic.in
+          VERIFY_IP: 31.42.125.219
+          VERIFY_SSL_ATTEMPTS: 15
+          VERIFY_SSL_MIN_OK_RATIO: 0.9
+        run: npx tsx scripts/ops/verify-ssl-cert.mts
+
+      - name: Verify essential storefront images on VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
+          command_timeout: 5m
+          script: |
+            set -euo pipefail
+            cd ~/Vibe-music
+            npm run verify:images
+            HOMEPAGE_VERIFY_URL=http://127.0.0.1:3000 npm run verify:homepage-images

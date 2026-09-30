@@ -2,21 +2,13 @@
 
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ProductImage from "@/components/common/ProductImage";
 import RevealGroup from "@/components/layout/RevealGroup";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
-import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
-import { storefrontImageCandidates } from "@/lib/storefrontImages";
-
-const SHOWCASE_FALLBACKS = [
-  "/images/Electric Orange Guitar.png",
-  "/images/m/home/cats/LPR59VOWCSNH.png",
-  "/images/m/home/cats/Matriarch.png",
-  "/images/m/home/cats/SM58-cat.png",
-  "/images/m/home/cats/ATLP120XUSBSV.png",
-];
+import { bigNamesShowcaseArtForSlot, type BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
+import { BIG_NAMES_DEALS } from "@/data/bigNamesDeals";
 /** Slightly snappier than a typical 3–4s carousel. */
 const AUTO_ADVANCE_MS = 2200;
 /** Brief pause after swipe / dot tap — auto keeps running alongside manual control. */
@@ -57,16 +49,20 @@ function nearestSlideIndex(track: HTMLElement): number {
 }
 
 function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: number }) {
-  const fallback = SHOWCASE_FALLBACKS[index % SHOWCASE_FALLBACKS.length]!;
+  const slotArt = bigNamesShowcaseArtForSlot(index);
   const candidates = useMemo(
     () =>
       Array.from(
-        new Set([...storefrontImageCandidates(item.product, 640), fallback].filter(Boolean)),
+        new Set(
+          [slotArt, item.product, ...BIG_NAMES_DEALS.map((deal) => deal.product)].filter((src) =>
+            src.startsWith("/images/"),
+          ),
+        ),
       ),
-    [item.product, fallback],
+    [slotArt, item.product],
   );
   const [attempt, setAttempt] = useState(0);
-  const productSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? fallback;
+  const productSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? slotArt;
 
   return (
     <div
@@ -83,16 +79,18 @@ function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: numb
       >
         <div className="big-names-deals__hang-wrap">
           <div className="big-names-deals__product-stage">
-            <Image
+            <ProductImage
               alt={item.productAlt}
               className="big-names-deals__product"
+              decoding="async"
+              draggable={false}
+              fetchPriority={index < 2 ? "high" : "auto"}
               height={480}
-              priority={index < 2}
-              unoptimized
+              loading={index < 2 ? "eager" : "lazy"}
               sizes="(max-width: 767px) 80vw, (max-width: 1024px) 33vw, 260px"
               src={productSrc}
+              variant="card"
               width={480}
-              draggable={false}
               onError={() => {
                 if (attempt < candidates.length - 1) {
                   setAttempt((current) => current + 1);

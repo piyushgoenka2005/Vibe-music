@@ -72,6 +72,42 @@ sudo systemctl restart postgresql
 
 **Escalation**: If restart doesn't fix within 5 minutes, check database connectivity (Section 2.3).
 
+### 2.1a Browser TLS Error — `NET::ERR_CERT_COMMON_NAME_INVALID` (P0)
+
+**Symptoms**: Chrome/Edge shows "Your connection is not private" on `https://vibemusic.in` (often `/admin`).
+HSTS may block bypass. Deploy smoke on VPS can still pass because loopback checks hit local nginx only.
+
+**Diagnosis**:
+
+```bash
+# From your PC or CI (external probe — required)
+npm run verify:ssl
+npm run ops:verify-ssh
+
+# On VPS via CloudOnFire VNC console (local cert + nginx)
+bash deploy/fix-ssl-certificates.sh --check-only
+echo | openssl s_client -connect 127.0.0.1:443 -servername vibemusic.in 2>/dev/null | openssl x509 -noout -subject
+curl -skI -H "Host: vibemusic.in" https://31.42.125.219/ | head
+```
+
+**Root cause (most common)**: CloudOnFire **duplicate public IP** — `31.42.125.219` intermittently routes
+to another tenant's Forgejo/Gitea (`CN=git.k12hunar.com`) instead of VPS 1055 (`vibemusic.in`).
+
+**Resolution**:
+
+1. Open CloudOnFire support ticket — [`docs/ops/cloudonfire-duplicate-ip-ticket.txt`](ops/cloudonfire-duplicate-ip-ticket.txt)
+2. WhatsApp CloudOnFire: +91 95606 14171 (reference VPS 1055 + duplicate IP)
+3. Use CloudOnFire panel → VPS 1055 → **VNC console** until fixed (do not rely on password SSH to the IP)
+4. After CloudOnFire assigns a dedicated IP, update GoDaddy A records (`@`, `www`, `cdn`, `mail`)
+5. Verify: `npm run verify:ssl` and `VERIFY_BASE_URL=https://vibemusic.in npm run check:edge`
+
+**If local nginx cert is wrong (rare — only when loopback also fails)**:
+
+```bash
+sudo bash deploy/fix-ssl-certificates.sh
+SYNC_SSL=1 bash deploy/update.sh
+```
+
 ### 2.2 High Error Rate (>5% 5xx errors) (P1)
 
 **Symptoms**: Grafana "Error Rate" panel spikes, Uptime Kuma partial outage

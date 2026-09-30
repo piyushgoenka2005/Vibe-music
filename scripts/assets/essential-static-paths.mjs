@@ -4,10 +4,16 @@
  */
 export const ESSENTIAL_STATIC_IMAGE_PATHS = [
   "/logo.jpeg",
+  "/images/big-names-deals/gibson-product.webp",
+  "/images/big-names-deals/epiphone-product.webp",
+  "/images/big-names-deals/prs-product.webp",
+  "/images/big-names-deals/ibanez-product.webp",
+  "/images/big-names-deals/fender-product.webp",
   "/images/Electric Orange Guitar.png",
   "/images/Electric Blue Guitar.png",
   "/images/New Guitar.png",
-  "/images/guitar.png",
+  "/images/New Guitar.png",
+  "/images/grand-piano-9.png",
   "/images/PA-Speaker.png",
   "/images/banner-5.jpeg",
   "/images/banner-6.jpeg",

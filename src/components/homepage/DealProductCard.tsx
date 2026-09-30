@@ -45,6 +45,7 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
                 {item.image ? (
                   <HomepageProductImage
                     src={item.image}
+                    fallbackSrc={item.imageFallback}
                     className="homepage-deals-card__img"
                     width={480}
                     height={480}

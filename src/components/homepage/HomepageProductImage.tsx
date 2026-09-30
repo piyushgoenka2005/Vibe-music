@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import ProductImage from "@/components/common/ProductImage";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { storefrontImageCandidates } from "@/lib/storefrontImages";
 
 type HomepageProductImageProps = {
   src: string;
+  /** Self-hosted art used when CDN derivatives fail (local dev / missing CDN files). */
+  fallbackSrc?: string;
   className?: string;
   sizes?: string;
   /** Use fill (parent must be positioned). */
@@ -20,8 +21,14 @@ type HomepageProductImageProps = {
   decorative?: boolean;
 };
 
+const THUMB_SLOW_MS = 5000;
+
 function placeholderClass(className?: string) {
   return `${className ?? ""} homepage-product-image--placeholder`.trim();
+}
+
+function isThumbProxy(src: string): boolean {
+  return src.includes("/api/media/thumb?");
 }
 
 /** Global registry of image assets loaded by the primary sequence in this session. */
@@ -37,29 +44,56 @@ function markSourceLoaded(src: string) {
 
 /**
  * Product images for homepage carousels/grids.
- * Prefer sized thumbs; if thumb fails (timeout/404), fall back to the CDN source.
+ * Plain <img> so thumb-proxy redirects and CDN fallbacks swap reliably.
  */
 export default function HomepageProductImage({
   src,
+  fallbackSrc,
   className,
-  sizes,
+  sizes: _sizes,
   fill = false,
   width = 480,
   height = 480,
   priority = false,
   decorative = false,
 }: HomepageProductImageProps) {
-  // The thumb endpoint can be temporarily unavailable during a cache miss or
-  // upstream CDN slowdown. Keep the original CDN URL as an immediate fallback
-  // so a failed derivative never leaves a homepage product tile blank.
-  const candidates = useMemo(() => storefrontImageCandidates(src, width), [src, width]);
+  const candidates = useMemo(() => {
+    const extras = fallbackSrc ? [fallbackSrc] : [];
+    return storefrontImageCandidates(src, width, extras);
+  }, [src, fallbackSrc, width]);
+
   const [attempt, setAttempt] = useState(0);
+  const loadedRef = useRef(false);
+
   const activeSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? src;
 
   const [canRenderClone, setCanRenderClone] = useState(() => {
     if (typeof window === "undefined" || decorative) return false;
     return true;
   });
+
+  const advanceCandidate = () => {
+    loadedRef.current = false;
+    setAttempt((current) => (current < candidates.length - 1 ? current + 1 : current));
+  };
+
+  useEffect(() => {
+    setAttempt(0);
+    loadedRef.current = false;
+  }, [src, fallbackSrc, width]);
+
+  useEffect(() => {
+    if (decorative || !isThumbProxy(activeSrc)) return undefined;
+    loadedRef.current = false;
+
+    const timeout = window.setTimeout(() => {
+      if (!loadedRef.current) {
+        advanceCandidate();
+      }
+    }, THUMB_SLOW_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [activeSrc, decorative, attempt, candidates.length]);
 
   useEffect(() => {
     if (!decorative) return;
@@ -76,8 +110,6 @@ export default function HomepageProductImage({
     };
 
     window.addEventListener("vibe:img-ready", onReady);
-    // Defer clone rendering until primary sequence has time to fetch,
-    // ensuring the clone pulls from browser cache without initiating network load.
     const timer = window.setTimeout(() => {
       setCanRenderClone(true);
     }, 2500);
@@ -93,25 +125,35 @@ export default function HomepageProductImage({
   }
 
   return (
-    <ProductImage
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
       key={activeSrc}
       alt=""
       className={className}
       decoding="async"
       fetchPriority={decorative ? "low" : priority ? "high" : "auto"}
-      fill={fill}
-      height={height}
+      height={fill ? undefined : height}
       loading={decorative ? "lazy" : priority ? "eager" : "lazy"}
-      sizes={sizes}
       src={activeSrc}
-      variant="card"
-      width={width}
-      onError={() => setAttempt((current) => current + 1)}
+      width={fill ? undefined : width}
+      onError={advanceCandidate}
       onLoad={() => {
+        loadedRef.current = true;
         if (!decorative) {
           markSourceLoaded(activeSrc);
         }
       }}
+      style={
+        fill
+          ? {
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+            }
+          : undefined
+      }
     />
   );
 }

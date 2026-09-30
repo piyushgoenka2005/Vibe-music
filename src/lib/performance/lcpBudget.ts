@@ -2,20 +2,26 @@
  * Cap concurrent high-priority image fetches on the homepage so LCP
  * (banner + hero mosaic) is not starved by carousel/grid cards.
  */
+const VISIBLE_CAROUSEL_CARD_COUNT = 8;
+
 export function shouldPrioritizeHomepageProductImage(
   sectionKey: string,
   index: number,
-  options?: { decorative?: boolean }
+  options?: { decorative?: boolean },
 ): boolean {
-  if (options?.decorative || index !== 0) return false;
+  if (options?.decorative) return false;
 
-  // Only the first card of the first product carousel below the hero.
-  return sectionKey === "trending";
+  if (sectionKey !== "trending" && sectionKey !== "best_sellers" && sectionKey !== "staff_picks") {
+    return false;
+  }
+
+  // Eager-load the first visible row so horizontal carousels do not stall on lazy images.
+  return index < VISIBLE_CAROUSEL_CARD_COUNT;
 }
 
 export function shouldPrioritizeNewArrivalImage(
   index: number,
-  options?: { decorative?: boolean }
+  options?: { decorative?: boolean },
 ): boolean {
   if (options?.decorative) return false;
   // One eager card in the new-arrivals marquee (first visible sequence only).

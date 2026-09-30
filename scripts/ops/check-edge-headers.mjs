@@ -22,7 +22,25 @@ function securityHeadersOk(headers) {
 }
 
 async function main() {
-  const response = await fetch(`${baseUrl}/`, { redirect: "follow", cache: "no-store" });
+  let response;
+  try {
+    response = await fetch(`${baseUrl}/`, { redirect: "follow", cache: "no-store" });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.log(`Production edge check — ${baseUrl}\n`);
+    console.log(`  HTTP status            unreachable (${message})`);
+    if (/certificate|altnames|TLS|SSL|UNABLE_TO_VERIFY/i.test(message)) {
+      console.log(`
+BLOCKING: Public TLS certificate failed for ${baseUrl}.
+This is often CloudOnFire duplicate IP routing (CN=git.k12hunar.com on 31.42.125.219).
+Run: npm run verify:ssl
+See: docs/ops/cloudonfire-duplicate-ip-ticket.txt
+`);
+    } else {
+      console.log("\nBLOCKING: homepage unreachable from this network.");
+    }
+    process.exit(1);
+  }
   const headers = response.headers;
   const securityOk = securityHeadersOk(headers);
   const server = headers.get("server") ?? "(none)";
