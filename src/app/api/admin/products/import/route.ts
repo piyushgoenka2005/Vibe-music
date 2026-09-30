@@ -7,7 +7,10 @@ import {
   parseBulkImportOptions,
   validateZipFile,
 } from "@/lib/admin/bulkImportValidation";
-import { readBulkImportZipImageMap } from "@/lib/admin/bulkImportZipImages";
+import {
+  createEmptyBulkImportZipImageIndex,
+  readBulkImportZipImageIndex,
+} from "@/lib/admin/bulkImportZipImages";
 import { slimBulkImportPreviewRows } from "@/lib/admin/bulkImportResponse";
 import {
   isSpreadsheetUpload,
@@ -20,6 +23,7 @@ import { resolveBulkImportImages } from "@/lib/server/bulkImportImageResolver";
 import {
   buildBulkImportPreviewSummary,
   bulkImportProducts,
+  enrichBulkImportRowSkus,
   enrichBulkImportRowSlugs,
   previewBulkImport,
 } from "@/services/catalogService";
@@ -118,11 +122,13 @@ export async function POST(request: Request) {
 
     let rows = parsed.rows;
 
-    const zipMap = new Map<string, Buffer>();
+    const zipIndex = createEmptyBulkImportZipImageIndex();
     if (zipFile instanceof File && zipFile.size > 0) {
       try {
-        const extracted = readBulkImportZipImageMap(Buffer.from(await zipFile.arrayBuffer()));
-        extracted.forEach((value, key) => zipMap.set(key, value));
+        Object.assign(
+          zipIndex,
+          readBulkImportZipImageIndex(Buffer.from(await zipFile.arrayBuffer())),
+        );
       } catch {
         return NextResponse.json(
           { error: "Could not read the images ZIP. Upload a valid .zip archive." },
@@ -132,7 +138,20 @@ export async function POST(request: Request) {
     }
 
     rows = await enrichBulkImportRowSlugs(rows);
-    rows = await resolveBulkImportImages(rows, zipMap, confirm);
+    rows = await enrichBulkImportRowSkus(rows);
+    try {
+      rows = await resolveBulkImportImages(rows, zipIndex, confirm);
+    } catch (err) {
+      return NextResponse.json(
+        {
+          error:
+            err instanceof Error
+              ? err.message
+              : "Failed to process import images. Check the ZIP and try again.",
+        },
+        { status: 400 },
+      );
+    }
 
     if (!confirm) {
       const preview = await previewBulkImport(rows, importOptions);

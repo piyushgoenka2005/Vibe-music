@@ -34,7 +34,7 @@ function parseArgs(): { limit: number; baseUrl: string | null; outPath: string }
   const args = process.argv.slice(2);
   let limit = DEFAULT_LIMIT;
   let baseUrl: string | null = process.env.BASE_URL?.trim() || null;
-  let outPath = resolve(process.cwd(), "docs/ops/product-image-framing-report.csv");
+  let outPath = resolve(process.cwd(), "docs/templates/product-image-framing-report.csv");
 
   for (let i = 0; i < args.length; i += 1) {
     if (args[i] === "--limit" && args[i + 1]) {

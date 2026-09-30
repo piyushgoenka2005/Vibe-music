@@ -68,7 +68,7 @@ console.log("──────────────────────�
 
 if (failed.length === 0 && overall >= 20) {
   console.log("✅ PRODUCTION 20/20 CERTIFIED.");
-  console.log("   Update scorecard if needed: docs/ops/PRODUCTION_READINESS_SCORECARD.md");
+  console.log("   See README.md for production verification commands");
   process.exit(0);
 }
 

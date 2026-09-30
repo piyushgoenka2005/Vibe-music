@@ -159,7 +159,7 @@ export function getOpsStatusReport(): {
       label: "Transactional email",
       status: checks.smtp,
       tier: "required",
-      detail: "SMTP_* or RESEND_API_KEY — see docs/ops/SMTP.md",
+      detail: "SMTP_* or RESEND_API_KEY — see README.md (Email section)",
     },
     {
       key: "cdn",

@@ -47,7 +47,7 @@ if ($bad -gt 0) {
     $errors.GetEnumerator() | ForEach-Object { Write-Host "  $($_.Value)x $($_.Key)" }
     Write-Host ""
     Write-Host "Wrong certificate = CloudOnFire routes traffic to another VM (often CN=git.k12hunar.com)." -ForegroundColor Red
-    Write-Host "Fix: CloudOnFire support ticket — docs/ops/IP-MIGRATION-GODADDY.md section I" -ForegroundColor Yellow
+    Write-Host "Fix: CloudOnFire support ticket — docs/ops/cloudonfire-duplicate-ip-ticket.txt" -ForegroundColor Yellow
     Write-Host "Then update GoDaddy A records to the new dedicated IP they assign." -ForegroundColor Yellow
     exit 1
 }

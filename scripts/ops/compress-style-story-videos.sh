@@ -129,6 +129,6 @@ fi
 echo ""
 echo "Next steps:"
 echo "  1. Update video src attributes to use ${filename}-opt.mp4 variants"
-echo "  2. Or deploy originals to CDN (Bunny.net/Cloudflare Stream)"
-echo "     which handles transcoding automatically"
+echo "  2. Or deploy -opt.mp4 files to cdn.vibemusic.in (/var/www/cdn on VPS)"
+echo "     and point STYLE_STORY_REELS src at https://cdn.vibemusic.in/..."
 echo "  3. Originals preserved in: $BACKUP_DIR"

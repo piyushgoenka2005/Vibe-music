@@ -68,7 +68,7 @@ export function buildBulkImportTemplateHintCopy(
 }
 
 export function buildBulkImportZipHintCopy(maxZipMb = 100, maxImages = 12): string {
-  return `Name files by SKU (SKU.jpg, SKU_1.jpg … SKU_${maxImages}.jpg), or list filenames in image1–image${maxImages} on the sheet. Max ${maxZipMb} MB.`;
+  return `Flat files (SKU.jpg, SKU_1.jpg …), SKU folders (SKU/photo.jpg), or paths in image1–image${maxImages}. All images inside a folder named after the SKU are imported. Max ${maxZipMb} MB.`;
 }
 
 export function buildBulkImportSheetHintCopy(

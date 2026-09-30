@@ -1,15 +1,25 @@
 import "server-only";
 
 import { collectBulkImportImageNames, getMaxBulkImportImages } from "@/lib/admin/bulkImportImages";
-import { findSkuImagesInZip } from "@/lib/amazonListingImport";
+import {
+  createEmptyBulkImportZipImageIndex,
+  findSkuImagesInZip,
+  lookupZipImageRef,
+  type BulkImportZipImageIndex,
+} from "@/lib/admin/bulkImportZipImages";
 import { productUploadFolder } from "@/lib/server/cdnStorage";
 import { uploadOptimizedImageToCdn } from "@/lib/server/cdnImageOptimize";
+import {
+  ADMIN_IMAGE_MAX_BYTES,
+  validateImageUploadBuffer,
+} from "@/lib/security/imageUploadValidation";
 import { buildProductSlug, slugify } from "@/lib/slug";
 import type { BulkImportRow } from "@/types/catalog";
 
 export const BULK_IMPORT_IMAGE_CONCURRENCY = 8;
 
 export { collectBulkImportImageNames } from "@/lib/admin/bulkImportImages";
+export type { BulkImportZipImageIndex } from "@/lib/admin/bulkImportZipImages";
 
 function isUrl(value: string): boolean {
   return value.startsWith("http://") || value.startsWith("https://") || value.startsWith("/");
@@ -56,11 +66,23 @@ function resolveBulkImportProductSlug(row: BulkImportRow): string {
   return slugify(row.name);
 }
 
+function resolveBulkImportSku(row: BulkImportRow): string {
+  return row.sku?.trim() || row.generatedSku?.trim() || "";
+}
+
+function isValidBulkImportImageBuffer(buffer: Buffer): boolean {
+  return validateImageUploadBuffer(buffer, { maxBytes: ADMIN_IMAGE_MAX_BYTES }).ok;
+}
+
 async function uploadZipImage(
   buffer: Buffer,
   row: BulkImportRow,
   filenameHint: string,
-): Promise<string> {
+): Promise<string | null> {
+  if (!isValidBulkImportImageBuffer(buffer)) {
+    return null;
+  }
+
   const uploaded = await uploadOptimizedImageToCdn(buffer, {
     folder: productUploadFolder(
       resolveBulkImportCategorySlug(row),
@@ -72,18 +94,18 @@ async function uploadZipImage(
 }
 
 /**
- * Resolve listing images from URLs and/or a ZIP map.
+ * Resolve listing images from URLs and/or a ZIP index.
  * Preview mode only checks ZIP matches — no CDN uploads.
  */
 export async function resolveBulkImportRowImages(
   row: BulkImportRow,
-  zipMap: Map<string, Buffer>,
+  zipIndex: BulkImportZipImageIndex,
   upload: boolean,
 ): Promise<BulkImportRow> {
   const imageNames = collectBulkImportImageNames(row);
   const resolvedImages: string[] = [];
   const zipImageMatches: string[] = [];
-  const usedZipFilenames = new Set<string>();
+  const usedZipKeys = new Set<string>();
 
   for (const ref of imageNames) {
     if (atImageLimit(resolvedImages, zipImageMatches)) break;
@@ -93,31 +115,34 @@ export async function resolveBulkImportRowImages(
       continue;
     }
 
-    const normalizedRef = ref.toLowerCase();
-    if (usedZipFilenames.has(normalizedRef)) continue;
+    const zipEntry = lookupZipImageRef(zipIndex, ref);
+    if (!zipEntry) continue;
 
-    const bufferFromZip = zipMap.get(normalizedRef);
-    if (!bufferFromZip) continue;
+    const dedupeKey = zipEntry.relativePath;
+    if (usedZipKeys.has(dedupeKey)) continue;
 
-    usedZipFilenames.add(normalizedRef);
+    usedZipKeys.add(dedupeKey);
     if (upload) {
-      resolvedImages.push(await uploadZipImage(bufferFromZip, row, ref));
+      const uploadedUrl = await uploadZipImage(zipEntry.buffer, row, ref);
+      if (uploadedUrl) resolvedImages.push(uploadedUrl);
     } else {
-      zipImageMatches.push(ref);
+      zipImageMatches.push(zipEntry.relativePath);
     }
   }
 
-  if (zipMap.size > 0 && row.sku?.trim()) {
-    const skuMatches = findSkuImagesInZip(zipMap, row.sku);
+  const sku = resolveBulkImportSku(row);
+  if (zipIndex.entries.length > 0 && sku) {
+    const skuMatches = findSkuImagesInZip(zipIndex, sku);
     for (const match of skuMatches) {
       if (atImageLimit(resolvedImages, zipImageMatches)) break;
 
-      const normalizedFilename = match.filename.toLowerCase();
-      if (usedZipFilenames.has(normalizedFilename)) continue;
+      const dedupeKey = match.filename.toLowerCase();
+      if (usedZipKeys.has(dedupeKey)) continue;
 
-      usedZipFilenames.add(normalizedFilename);
+      usedZipKeys.add(dedupeKey);
       if (upload) {
-        resolvedImages.push(await uploadZipImage(match.buffer, row, match.filename));
+        const uploadedUrl = await uploadZipImage(match.buffer, row, match.filename);
+        if (uploadedUrl) resolvedImages.push(uploadedUrl);
       } else {
         zipImageMatches.push(match.filename);
       }
@@ -133,20 +158,25 @@ export async function resolveBulkImportRowImages(
 
 export async function resolveBulkImportImages(
   rows: BulkImportRow[],
-  zipMap: Map<string, Buffer>,
+  zipIndex: BulkImportZipImageIndex,
   upload: boolean,
 ): Promise<BulkImportRow[]> {
-  if (zipMap.size === 0 && !rows.some((row) => collectBulkImportImageNames(row).some(isUrl))) {
+  if (
+    zipIndex.entries.length === 0 &&
+    !rows.some((row) => collectBulkImportImageNames(row).some(isUrl))
+  ) {
     return rows;
   }
 
   if (upload) {
     return mapWithConcurrency(
       rows,
-      (row) => resolveBulkImportRowImages(row, zipMap, true),
+      (row) => resolveBulkImportRowImages(row, zipIndex, true),
       BULK_IMPORT_IMAGE_CONCURRENCY,
     );
   }
 
-  return Promise.all(rows.map((row) => resolveBulkImportRowImages(row, zipMap, false)));
+  return Promise.all(rows.map((row) => resolveBulkImportRowImages(row, zipIndex, false)));
 }
+
+export { createEmptyBulkImportZipImageIndex };

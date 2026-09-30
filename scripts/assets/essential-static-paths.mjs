@@ -42,4 +42,9 @@ export const ESSENTIAL_STATIC_IMAGE_PATHS = [
   "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
   "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
   "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
+  "/images/locations/delhi.jpg",
+  "/images/locations/kolkata.jpg",
+  "/images/locations/nagpur.jpg",
+  "/images/locations/north-east.jpg",
+  "/images/locations/mumbai.jpg",
 ];

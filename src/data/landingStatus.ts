@@ -1,4 +1,4 @@
-import { getCategoryHeroImage } from "@/lib/categoryImages";
+import { getLocationImage } from "@/lib/locationImages";
 import { ROUTES } from "@/lib/routes";
 
 export type StatusTone = "live" | "success" | "info" | "neutral";
@@ -127,34 +127,34 @@ export const LANDING_LOCATIONS = [
     status: "Visit us",
     tone: "info" as StatusTone,
     accent: "#1e3a8a",
-    image: getCategoryHeroImage("home-audio-electronics"),
+    image: getLocationImage("Delhi"),
   },
   {
     city: "Kolkata",
     status: "Visit us",
     tone: "info" as StatusTone,
     accent: "#0f766e",
-    image: getCategoryHeroImage("keyboards-synthesizers"),
+    image: getLocationImage("Kolkata"),
   },
   {
     city: "Nagpur",
     status: "Visit us",
     tone: "info" as StatusTone,
     accent: "#9a3412",
-    image: getCategoryHeroImage("guitars"),
+    image: getLocationImage("Nagpur"),
   },
   {
     city: "North East",
     status: "Partner hub",
     tone: "info" as StatusTone,
     accent: "#5b21b6",
-    image: getCategoryHeroImage("live-sound-lighting"),
+    image: getLocationImage("North East"),
   },
   {
     city: "Mumbai",
     status: "Flagship",
     tone: "success" as StatusTone,
     accent: "#1253ed",
-    image: getCategoryHeroImage("studio-recording"),
+    image: getLocationImage("Mumbai"),
   },
 ] as const;

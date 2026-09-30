@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cdn.vibemusic.in", pathname: "/**" },
       { protocol: "https", hostname: "static.roland.com", pathname: "/**" },
       { protocol: "https", hostname: "framerusercontent.com", pathname: "/**" },
+      ...(!isProd
+        ? ([
+            { protocol: "http", hostname: "localhost", pathname: "/cdn-local/**" },
+            { protocol: "http", hostname: "127.0.0.1", pathname: "/cdn-local/**" },
+          ] as const)
+        : []),
     ],
     // Next 16 requires explicit allowlists for local optimizer sources.
     // - /api/media/thumb takes ?url=&w= queries (host/width validated in-route)

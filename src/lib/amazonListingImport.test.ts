@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import AdmZip from "adm-zip";
 import * as XLSX from "xlsx";
+import { readBulkImportZipImageIndex } from "@/lib/admin/bulkImportZipImages";
 import {
   VIBEMUSIC_BULK_COLUMN_COUNT,
   VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
@@ -259,12 +261,12 @@ describe("vibemusic bulk import", () => {
   });
 
   it("matches SKU-named images inside a ZIP map", () => {
-    const zipMap = new Map<string, Buffer>([
-      ["ym-psr-e373.jpg", Buffer.from("a")],
-      ["ym-psr-e373_2.png", Buffer.from("b")],
-      ["other.jpg", Buffer.from("c")],
-    ]);
-    const matches = findSkuImagesInZip(zipMap, "YM-PSR-E373");
+    const zip = new AdmZip();
+    zip.addFile("ym-psr-e373.jpg", Buffer.from("a"));
+    zip.addFile("ym-psr-e373_2.png", Buffer.from("b"));
+    zip.addFile("other.jpg", Buffer.from("c"));
+    const index = readBulkImportZipImageIndex(zip.toBuffer());
+    const matches = findSkuImagesInZip(index, "YM-PSR-E373");
     expect(matches.map((m) => m.filename)).toEqual(["ym-psr-e373.jpg", "ym-psr-e373_2.png"]);
   });
 });

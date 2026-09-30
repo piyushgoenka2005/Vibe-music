@@ -69,4 +69,4 @@ jobs:
           echo "- L-30 compliance: ${{ steps.compliance.outcome }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Strict compliance: ${{ steps.compliance_strict.outcome }}" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "See [PRODUCTION_READINESS_SCORECARD.md](docs/ops/PRODUCTION_READINESS_SCORECARD.md) for 20-point grading." >> "$GITHUB_STEP_SUMMARY"
+          echo "See [README.md](README.md) for production verification commands." >> "$GITHUB_STEP_SUMMARY"

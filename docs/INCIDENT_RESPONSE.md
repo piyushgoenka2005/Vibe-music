@@ -5,11 +5,13 @@
 This runbook covers procedures for handling production incidents, scaling events, and rollback scenarios for the Vibe Music storefront running on a 4-core VPS with PM2 cluster mode.
 
 **Architecture**:
+
 ```
-Cloudflare CDN → Nginx (SSL + cache + rate limit) → PM2 (4 workers) → PostgreSQL + Redis
+GoDaddy DNS → CloudOnFire VPS → Nginx (SSL + cache + rate limit) → PM2 (4 workers) → PostgreSQL + Redis
 ```
 
 **Monitoring**:
+
 - Grafana: `https://vibemusic.in/grafana` (admin/vibe-admin-2024)
 - Uptime Kuma: `https://vibemusic.in/uptime`
 - Prometheus: `http://localhost:9090`
@@ -20,12 +22,12 @@ Cloudflare CDN → Nginx (SSL + cache + rate limit) → PM2 (4 workers) → Post
 
 ## 1. Incident Severity Levels
 
-| Level | Description | Response Time | Example |
-|---|---|---|---|
-| **P0 — Critical** | Site completely down, payments failing | 5 minutes | PostgreSQL unreachable, all workers crashed |
-| **P1 — Major** | Major feature broken, >50% users affected | 15 minutes | Checkout failing, search broken |
-| **P2 — Minor** | Feature degraded, <50% users affected | 1 hour | Slow product pages, admin UI issues |
-| **P3 — Low** | Cosmetic or non-critical | Next business day | Typo, minor UI glitch |
+| Level             | Description                               | Response Time     | Example                                     |
+| ----------------- | ----------------------------------------- | ----------------- | ------------------------------------------- |
+| **P0 — Critical** | Site completely down, payments failing    | 5 minutes         | PostgreSQL unreachable, all workers crashed |
+| **P1 — Major**    | Major feature broken, >50% users affected | 15 minutes        | Checkout failing, search broken             |
+| **P2 — Minor**    | Feature degraded, <50% users affected     | 1 hour            | Slow product pages, admin UI issues         |
+| **P3 — Low**      | Cosmetic or non-critical                  | Next business day | Typo, minor UI glitch                       |
 
 ---
 
@@ -36,6 +38,7 @@ Cloudflare CDN → Nginx (SSL + cache + rate limit) → PM2 (4 workers) → Post
 **Symptoms**: All requests return 502/503, Uptime Kuma alerts
 
 **Diagnosis**:
+
 ```bash
 # Check PM2 status
 pm2 status
@@ -52,6 +55,7 @@ tail -50 /var/log/nginx/error.log
 ```
 
 **Resolution**:
+
 ```bash
 # Restart PM2 cluster
 pm2 restart ecosystem.config.cjs
@@ -73,6 +77,7 @@ sudo systemctl restart postgresql
 **Symptoms**: Grafana "Error Rate" panel spikes, Uptime Kuma partial outage
 
 **Diagnosis**:
+
 ```bash
 # Check recent errors
 pm2 logs --err --lines 100
@@ -88,6 +93,7 @@ pm2 monit
 ```
 
 **Resolution**:
+
 ```bash
 # If memory is high (>700MB per worker)
 pm2 restart ecosystem.config.cjs
@@ -105,6 +111,7 @@ pm2 restart ecosystem.config.cjs
 **Symptoms**: Circuit breaker OPEN, "Database connection failed" in logs
 
 **Diagnosis**:
+
 ```bash
 # Check PostgreSQL status
 sudo systemctl status postgresql
@@ -120,6 +127,7 @@ df -h /var/lib/postgresql
 ```
 
 **Resolution**:
+
 ```bash
 # Restart PostgreSQL
 sudo systemctl restart postgresql
@@ -138,6 +146,7 @@ psql -U vibe -d vibe_music -c "SELECT pg_terminate_backend(pid) FROM pg_stat_act
 **Symptoms**: Redis circuit breaker OPEN, cache misses, slightly slower responses
 
 **Diagnosis**:
+
 ```bash
 # Check Redis status
 redis-cli ping
@@ -150,6 +159,7 @@ redis-cli info clients
 ```
 
 **Resolution**:
+
 ```bash
 # Redis outage is DEGRADED, not DOWN
 # The app falls back to in-memory LRU cache automatically
@@ -167,6 +177,7 @@ redis-cli FLUSHALL
 **Symptoms**: Grafana latency panels spike, users complain about slow pages
 
 **Diagnosis**:
+
 ```bash
 # Check which scope is under pressure
 curl -s http://localhost:3000/api/health | jq '.backpressure'
@@ -183,6 +194,7 @@ pm2 monit
 ```
 
 **Resolution**:
+
 ```bash
 # If Nginx cache is MISS for homepage
 sudo rm -rf /var/cache/nginx/vibe-pages/*
@@ -201,6 +213,7 @@ psql -U vibe -d vibe_music -c "SELECT pid, now() - pg_stat_activity.query_start 
 **Symptoms**: Legitimate users getting 429 errors
 
 **Diagnosis**:
+
 ```bash
 # Check rate limit hits
 curl -s http://localhost:3000/api/metrics | grep rate_limit
@@ -210,6 +223,7 @@ curl -s http://localhost:3000/api/health | jq '.backpressure.scopes'
 ```
 
 **Resolution**:
+
 ```bash
 # Adjust Nginx rate limits (edit deploy/nginx/vibemusic.in.conf)
 # auth_limit: 10r/s → 20r/s (if login is too strict)
@@ -224,6 +238,7 @@ sudo nginx -t && sudo systemctl reload nginx
 **Symptoms**: PM2 keeps restarting workers, "JavaScript heap out of memory" in logs
 
 **Diagnosis**:
+
 ```bash
 # Check PM2 status
 pm2 status
@@ -236,6 +251,7 @@ free -h
 ```
 
 **Resolution**:
+
 ```bash
 # Immediate: restart with memory cap
 pm2 restart ecosystem.config.cjs
@@ -342,16 +358,16 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ### Grafana Alert Rules (deploy/monitoring/alert-rules.yml)
 
-| Alert | Condition | Severity | Action |
-|---|---|---|---|
-| App Down | Health check fails 3x | Critical | Restart PM2 |
-| Database Unreachable | Circuit breaker OPEN | Critical | Check PostgreSQL |
-| High Error Rate | >5% 5xx for 5min | Warning | Check logs |
-| High Memory | >700MB per worker | Warning | Restart PM2 |
-| Slow Responses | P95 >3s for 5min | Warning | Check cache/DB |
-| Frequent Restarts | >3 restarts in 10min | Warning | Check OOM |
-| Rate Limit Spike | >100 429s/min | Info | Check for abuse |
-| Disk Space | >85% usage | Warning | Clean logs/cache |
+| Alert                | Condition             | Severity | Action           |
+| -------------------- | --------------------- | -------- | ---------------- |
+| App Down             | Health check fails 3x | Critical | Restart PM2      |
+| Database Unreachable | Circuit breaker OPEN  | Critical | Check PostgreSQL |
+| High Error Rate      | >5% 5xx for 5min      | Warning  | Check logs       |
+| High Memory          | >700MB per worker     | Warning  | Restart PM2      |
+| Slow Responses       | P95 >3s for 5min      | Warning  | Check cache/DB   |
+| Frequent Restarts    | >3 restarts in 10min  | Warning  | Check OOM        |
+| Rate Limit Spike     | >100 429s/min         | Info     | Check for abuse  |
+| Disk Space           | >85% usage            | Warning  | Clean logs/cache |
 
 ### Health Check Response
 
@@ -391,12 +407,12 @@ After every P0/P1 incident:
 
 ## 7. Emergency Contacts
 
-| Role | Contact | When |
-|---|---|---|
-| VPS Provider | [Hosting dashboard] | Server issues |
-| PostgreSQL | Check logs first, then provider | Database issues |
-| Cloudflare | Dashboard or support ticket | CDN/DDoS issues |
-| Razorpay | support@razorpay.com | Payment gateway issues |
+| Role         | Contact                                                  | When                               |
+| ------------ | -------------------------------------------------------- | ---------------------------------- |
+| VPS Provider | [Hosting dashboard]                                      | Server issues                      |
+| PostgreSQL   | Check logs first, then provider                          | Database issues                    |
+| CloudOnFire  | [cp.cloudonfire.com](https://cp.cloudonfire.com) support | VPS, nginx, DNS to `31.42.125.219` |
+| Razorpay     | support@razorpay.com                                     | Payment gateway issues             |
 
 ---
 

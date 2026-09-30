@@ -3,7 +3,7 @@
  *
  * Fails only when a fixable high/critical advisory exists in direct production
  * dependencies. Transitive issues without fixes (xlsx, nested OTEL) are reported
- * but do not block — see docs/ops/DEPENDENCY_AUDIT.md.
+ * but do not block — see README.md quality gates.
  *
  * Usage:
  *   npm run audit:deps
@@ -101,7 +101,7 @@ function main() {
     console.error("\nBLOCKING direct dependency advisories with fixes available:");
     for (const line of blocking) console.log(`  ✗ ${line}`);
     console.error("\nRun: npm audit fix   then re-run npm run audit:deps");
-    console.error("See docs/ops/DEPENDENCY_AUDIT.md for accepted-risk policy.");
+    console.error("See README.md for dependency audit policy.");
     if (!reportOnly) process.exit(1);
   }
 

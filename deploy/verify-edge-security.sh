@@ -17,7 +17,7 @@ if ! VERIFY_BASE_URL="$VERIFY_BASE_URL" npm run check:edge; then
   echo "  1. Point DNS A records (@, www, cdn) to the CloudOnFire VPS IP" >&2
   echo "  2. Run: bash deploy/update.sh  (syncs nginx + CDN site)" >&2
   echo "  3. Re-run this script" >&2
-  echo "  Guide: docs/ops/CLOUDONFIRE-SETUP.md" >&2
+  echo "  Guide: README.md" >&2
   exit 1
 fi
 

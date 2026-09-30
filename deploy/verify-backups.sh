@@ -84,7 +84,7 @@ check_recent "cdn tarball" "$CDN_BACKUP_DIR" "cdn-backup-*.tar.gz" "cdn-*.tar.gz
 
 echo
 if (( FAIL > 0 )); then
-  echo "Backup verification FAILED. See docs/ops/DEPLOYMENT.md#backup-checklist"
+  echo "Backup verification FAILED. See README.md (Database section)"
   exit 1
 fi
 

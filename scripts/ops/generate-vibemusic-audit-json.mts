@@ -267,8 +267,8 @@ const L_REGISTER: Array<{
     category: "ops",
     title: "Disaster recovery runbook",
     repoStatus: "fixed",
-    verifyCommand: "test -f docs/ops/DISASTER_RECOVERY.md",
-    testRefs: ["DISASTER_RECOVERY.md"],
+    verifyCommand: "test -f docs/INCIDENT_RESPONSE.md",
+    testRefs: ["docs/INCIDENT_RESPONSE.md"],
   },
   {
     id: "L-29",

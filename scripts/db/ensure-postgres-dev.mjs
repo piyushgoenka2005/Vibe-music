@@ -1,6 +1,7 @@
 /**
  * Before `npm run dev`, ensure local Postgres matches DATABASE_URL.
  * On Windows, runs start-postgres.ps1 when offline and waits until connections work.
+ * Also ensures local CDN paths exist for admin image uploads.
  *
  * Flags:
  *   --nowait  Skip DB wait (npm run dev:nowait — may cause Prisma errors on first load)
@@ -14,6 +15,20 @@ const root = process.cwd();
 const noWait = process.argv.includes("--nowait");
 const MAX_WAIT_MS = 45_000;
 const POLL_MS = 250;
+
+function ensureLocalCdn() {
+  if (process.env.NODE_ENV === "production") return;
+  try {
+    const script = path.join(root, "scripts", "db", "ensure-local-cdn.mjs");
+    if (fs.existsSync(script)) {
+      spawnSync(process.execPath, [script], { stdio: "inherit", cwd: root, windowsHide: true });
+    }
+  } catch {
+    // Non-fatal — runtime CDN fallbacks still apply in cdnStorage.ts.
+  }
+}
+
+ensureLocalCdn();
 
 function loadEnvFile(file) {
   const full = path.join(root, file);

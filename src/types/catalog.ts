@@ -168,6 +168,8 @@ export interface BulkImportRow {
   resolvedCategorySlug?: string;
   /** Unique product slug for CDN paths and catalog writes. */
   generatedSlug?: string;
+  /** SKU assigned before image resolution (sheet value or auto-generated). */
+  generatedSku?: string;
 }
 
 export interface BulkImportPreviewRow extends BulkImportRow {

@@ -24,7 +24,7 @@ const REPO_STEPS: Step[] = [
 
 const ARTIFACTS = [
   "docs/audit/vibemusic_audit.json",
-  "docs/ops/PRODUCTION_READINESS_SCORECARD.md",
+  "README.md",
   "docs/ops/e2e-audit-catalog.json",
   "deploy/complete-audit-go-live.sh",
   "deploy/apply-compliance.sh",

@@ -3,7 +3,7 @@ import base from "./vitest.config";
 
 /**
  * Coverage gate for money-handling + security-critical modules (Phase 1 P0).
- * Thresholds rise as tests are added — see docs/engineering/PROGRESS.md.
+ * Thresholds rise as tests are added — see README.md quality gates.
  */
 export default mergeConfig(
   base,

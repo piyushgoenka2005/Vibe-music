@@ -27,7 +27,7 @@ describe("bulk import copy", () => {
     expect(templateHint).toMatch(/image1–image12/i);
 
     const zipHint = buildBulkImportZipHintCopy(100, 12);
-    expect(zipHint).toMatch(/SKU_12\.jpg/i);
+    expect(zipHint).toMatch(/SKU_1\.jpg/i);
     expect(zipHint).toMatch(/image1–image12/i);
   });
 });

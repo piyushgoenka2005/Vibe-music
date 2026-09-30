@@ -35,13 +35,14 @@ function LocationCard({
       }
     >
       <Image
-        alt=""
+        alt={`Vibe Music — ${location.city}`}
         className="locations-strip__image"
         fill
         loading="lazy"
         src={location.image}
         sizes="(max-width: 767px) 70vw, 280px"
         style={{ objectFit: "cover" }}
+        unoptimized
       />
       <div className="locations-strip__overlay" />
       <div className="locations-strip__meta">

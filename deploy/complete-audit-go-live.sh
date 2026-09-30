@@ -2,7 +2,7 @@
 # One-shot audit go-live: L-22, L-23, L-30 + full deploy (run on VPS as root).
 #
 # Prerequisites:
-#   1. CloudOnFire VPS online — see docs/ops/CLOUDONFIRE-SETUP.md
+#   1. CloudOnFire VPS online — see README.md
 #   2. deploy/ops-secrets.env filled (legal name, GSTIN, GA4, phone)
 #
 # Usage:
@@ -67,7 +67,7 @@ echo "▶ L-22 — Production edge check"
 if VERIFY_BASE_URL=https://vibemusic.in npm run check:edge; then
   echo "   ✅ nginx TLS + CDN host reachable"
 else
-  echo "   ⚠️  Edge check failed — verify DNS and docs/ops/CLOUDONFIRE-SETUP.md"
+  echo "   ⚠️  Edge check failed — verify DNS and README.md"
   echo "   Then re-run: sudo bash deploy/complete-audit-go-live.sh"
 fi
 

@@ -394,17 +394,20 @@ body.is-landing-page .storefront-main + .site-footer.site-footer--layered .site-
   white-space: nowrap;
 }
 
-.footer-roll-text__line::after {
-  content: attr(data-text);
-  display: block;
-  height: 1.2em;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
 .site-footer-accordion__link:hover .footer-roll-text__track,
 .site-footer-accordion__link:focus-visible .footer-roll-text__track {
   transform: translate3d(0, -50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-roll-text__track {
+    transition: none;
+  }
+
+  .site-footer-accordion__link:hover .footer-roll-text__track,
+  .site-footer-accordion__link:focus-visible .footer-roll-text__track {
+    transform: none;
+  }
 }
 
 .site-footer-base {

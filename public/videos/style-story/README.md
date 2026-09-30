@@ -27,6 +27,7 @@ bash scripts/ops/compress-style-story-videos.sh
 ```
 
 Options:
+
 - `--dry-run` — Preview what would happen without modifying files
 - `--force` — Re-compress even if `-opt.mp4` already exists
 
@@ -37,21 +38,19 @@ any compression runs.
 
 For production, these videos should be served from CDN (not origin):
 
-1. **Bunny.net** (recommended for India): Upload to a Storage Zone, create
-   a Pull Zone, and update video `src` attributes in `STYLE_STORY_REELS`.
+1. **VPS CDN** (production): Copy `-opt.mp4` files to `/var/www/cdn/videos/style-story/`
+   on the CloudOnFire VPS and set `src` to `https://cdn.vibemusic.in/videos/style-story/...`.
 
-2. **Cloudflare Stream**: Upload via dashboard; videos are auto-transcoded.
-
-3. **Origin serving** (current fallback): The `-opt.mp4` variants with
+2. **Origin serving** (current fallback): The `-opt.mp4` variants with
    `preload="metadata"` and visibility-gated playback minimize impact.
 
 ## Video Specs
 
-| Property | Original | Compressed |
-|----------|----------|------------|
-| Codec    | varies   | H.264      |
-| CRF      | —        | 28         |
-| Resolution | varies | 720p max   |
-| Audio    | varies   | AAC 96kbps (stripped for autoplay) |
-| Faststart| no       | yes        |
-| Size     | ~17 MB   | ~2-4 MB    |
+| Property   | Original | Compressed                         |
+| ---------- | -------- | ---------------------------------- |
+| Codec      | varies   | H.264                              |
+| CRF        | —        | 28                                 |
+| Resolution | varies   | 720p max                           |
+| Audio      | varies   | AAC 96kbps (stripped for autoplay) |
+| Faststart  | no       | yes                                |
+| Size       | ~17 MB   | ~2-4 MB                            |

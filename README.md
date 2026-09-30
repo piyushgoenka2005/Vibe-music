@@ -1,80 +1,273 @@
 # ViBE Music
 
-Enterprise ecommerce platform for musical instruments and pro audio.
+Production ecommerce for musical instruments and pro audio — **vibemusic.in**
 
-**Stack:** Next.js 16 (App Router) · React 19 · PostgreSQL (VPS) · Auth.js · Prisma · **Razorpay** (sole payment gateway) · TypeScript
+| Layer    | Technology                                      |
+| -------- | ----------------------------------------------- |
+| App      | Next.js 16 (App Router) · React 19 · TypeScript |
+| Database | PostgreSQL on VPS (Prisma)                      |
+| Auth     | Auth.js (credentials + Google OAuth)            |
+| Payments | **Razorpay only** (live mode in production)     |
+| Hosting  | **CloudOnFire VPS** — nginx → PM2 → PostgreSQL  |
+| CDN      | `cdn.vibemusic.in` (nginx static on same VPS)   |
+| DNS      | GoDaddy A records → `31.42.125.219`             |
 
 ---
 
-## Architecture notes (current)
+## Production infrastructure
 
-| Area         | Implementation                                                                                                                                                                 |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Payments** | **Razorpay only** (UPI, cards, net banking via Razorpay Checkout). Stripe and Cash on Delivery are **not** implemented.                                                        |
-| **Search**   | PostgreSQL / Prisma faceted search (`/api/search`). **Not** Elasticsearch.                                                                                                     |
-| **Database** | Self-hosted PostgreSQL on the VPS via Prisma. Firestore is fully decommissioned.                                                                                               |
-| **CDN**      | Product/media assets on `cdn.vibemusic.in` (`CDN_STORAGE_ROOT` + `CDN_PUBLIC_BASE_URL`). Sync with `npm run sync:cdn-vps`. nginx config: `deploy/nginx/cdn.vibemusic.in.conf`. |
-| **Email**    | Self-hosted SMTP or Resend relay — see [`docs/ops/SMTP.md`](docs/ops/SMTP.md).                                                                                                 |
-| **Auth**     | Auth.js (credentials + optional Google OAuth).                                                                                                                                 |
+```
+GoDaddy DNS → CloudOnFire VPS (31.42.125.219)
+                ├── nginx :80 / :443  (vibemusic.in, www, cdn, mail)
+                ├── PM2 vibe          → Next.js :3000 (127.0.0.1)
+                ├── PM2 vibe-worker   → background jobs (Redis)
+                ├── PostgreSQL        → localhost:5432
+                └── /var/www/cdn      → product & media files
+```
 
-### Extra features (beyond the April 2026 WRD)
+| Item         | Value                                                |
+| ------------ | ---------------------------------------------------- |
+| VPS provider | [CloudOnFire](https://cp.cloudonfire.com)            |
+| IP           | `31.42.125.219`                                      |
+| SSH user     | `root`                                               |
+| App path     | `~/Vibe-music`                                       |
+| Host key     | `SHA256:l0hpirMy/wrm0gRH4SNxl4PdMmpzKXtSFOjfMESvX7I` |
 
-Instrument rentals · Giveaways · Product compare · GP-9 3D experience · Used gear hub · Support tickets · Wishlist share · Notify Me / restock alerts · Admin RBAC + audit logs · PWA (`public/sw.js`)
+**Do not** use bare `ssh root@31.42.125.219` — the IP is sometimes routed to another host. Use the deploy-key helper:
+
+```powershell
+npm run ops:ssh
+npm run ops:verify-ssh
+```
+
+---
+
+## Deploy to production
+
+### Routine deploy (on VPS)
+
+```bash
+cd ~/Vibe-music
+bash deploy/update.sh
+```
+
+`deploy/update.sh` runs: preflight → git pull → DB backup → `npm ci` → migrate → build → PM2 reload → nginx sync → health gate → smoke tests.
+
+**Options:**
+
+| Variable                               | Effect                                 |
+| -------------------------------------- | -------------------------------------- |
+| `SKIP_PULL=1`                          | Skip git pull                          |
+| `SKIP_SMOKE=1`                         | Skip smoke tests                       |
+| `SKIP_BUILD=1`                         | Reload PM2 only (env hotfix)           |
+| `SYNC_SSL=1`                           | Expand Let's Encrypt certs             |
+| `VERIFY_PUBLIC_SMOKE=1`                | Smoke `https://vibemusic.in` via nginx |
+| `VERIFY_BASE_URL=https://vibemusic.in` | Run edge header check                  |
+| `SEED_CATALOG=1`                       | Re-import catalog JSON                 |
+
+Full production pass:
+
+```bash
+VERIFY_PUBLIC_SMOKE=1 SYNC_SSL=1 VERIFY_BASE_URL=https://vibemusic.in bash deploy/update.sh
+```
+
+### One-shot certification
+
+```bash
+bash deploy/certify-production.sh
+# With UFW lockdown:
+LOCKDOWN_UFW=1 bash deploy/certify-production.sh
+```
+
+### First-time VPS bootstrap
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/piyushgoenka2005/Vibe-music/main/deploy/now.sh | bash
+```
+
+Or from an existing clone:
+
+```bash
+cp deploy/ops-secrets.env.example deploy/ops-secrets.env
+nano deploy/ops-secrets.env
+bash deploy/update.sh
+```
+
+### GitHub Actions deploy
+
+Push to `main` triggers `.github/workflows/deploy-production.yml`.
+
+**Secrets:** `VPS_HOST=31.42.125.219`, `VPS_USER=root`, `VPS_PORT=22`, `VPS_SSH_KEY` (private key from `%USERPROFILE%\.ssh\vibe_vps_deploy`).
+
+Generate key: `powershell -ExecutionPolicy Bypass -File scripts/ops/setup-deploy-access.ps1`
+
+### Rollback
+
+```bash
+bash deploy/rollback.sh
+# or explicit SHA:
+bash deploy/rollback.sh <known-good-commit>
+```
+
+---
+
+## DNS (GoDaddy)
+
+Point these **A records** to `31.42.125.219`:
+
+| Host   | Purpose           |
+| ------ | ----------------- |
+| `@`    | vibemusic.in      |
+| `www`  | www.vibemusic.in  |
+| `cdn`  | cdn.vibemusic.in  |
+| `mail` | mail.vibemusic.in |
+
+Verify: `nslookup vibemusic.in` and `nslookup cdn.vibemusic.in`
+
+Update SPF TXT when IP changes: use `a:mail.vibemusic.in` or `ip4:31.42.125.219`.
+
+---
+
+## Environment variables
+
+Copy [`.env.production.example`](.env.production.example) to the VPS `.env`. Merge secrets from `deploy/ops-secrets.env`:
+
+```bash
+node scripts/ops/merge-ops-secrets.mjs
+```
+
+### Required in production
+
+| Variable                                              | Purpose                                        |
+| ----------------------------------------------------- | ---------------------------------------------- |
+| `DATABASE_URL`                                        | `postgresql://vibe:<pass>@localhost:5432/vibe` |
+| `AUTH_SECRET`                                         | Session signing (≥ 32 chars)                   |
+| `NEXT_PUBLIC_SITE_URL`                                | `https://vibemusic.in`                         |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET`             | Live payment keys                              |
+| `RAZORPAY_WEBHOOK_SECRET`                             | Webhook HMAC                                   |
+| `NEXT_PUBLIC_RAZORPAY_KEY_ID`                         | Client Razorpay key                            |
+| `GUEST_ORDER_ACCESS_SECRET`                           | Guest order tokens                             |
+| `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` | Rate limiting                                  |
+| `CDN_STORAGE_ROOT`                                    | `/var/www/cdn`                                 |
+| `CDN_PUBLIC_BASE_URL`                                 | `https://cdn.vibemusic.in`                     |
+| `TRUST_PROXY_HOPS`                                    | `1` (behind nginx)                             |
+
+### Compliance (L-30)
+
+| Variable                        | Purpose                  |
+| ------------------------------- | ------------------------ |
+| `NEXT_PUBLIC_GSTIN`             | 15-char GSTIN in footer  |
+| `NEXT_PUBLIC_LEGAL_ENTITY_NAME` | Registered business name |
+
+### Email
+
+`SMTP_HOST` + `SMTP_USER` + `SMTP_PASS`, **or** `RESEND_API_KEY`.
+
+Mailboxes: `orders@`, `support@`, `info@`, `contact@`, `billing@vibemusic.in`
+
+### Optional
+
+`AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`, `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `SENTRY_DSN`, `NEXT_PUBLIC_CRISP_WEBSITE_ID`
+
+**Never** set `AUTH_URL=http://localhost:3000` in production.
 
 ---
 
 ## Database
 
-Production uses **self-hosted PostgreSQL on the VPS** — not a third-party DB host. The Next.js app and Postgres run on the same server; `DATABASE_URL` uses `localhost:5432`.
+PostgreSQL runs on the same VPS as the app.
 
-See **[docs/ops/POSTGRESQL.md](docs/ops/POSTGRESQL.md)** for install, migrations, and backup.  
-VPS deploy steps: **[docs/ops/VPS-SETUP.md](docs/ops/VPS-SETUP.md)**.
+```bash
+npm run db:migrate          # apply migrations
+npm run seed:admin          # first super-admin
+npm run db:studio           # Prisma Studio (dev)
+```
+
+Pre-deploy backup (automatic in `update.sh`): `~/backups/pre-deploy-*.dump`
+
+Install daily backup cron:
+
+```bash
+bash deploy/install-backups.sh
+bash deploy/verify-backups.sh
+```
+
+---
+
+## CDN & images
 
 ```env
-DATABASE_URL=postgresql://vibe:<password>@localhost:5432/vibe?schema=public
+CDN_STORAGE_ROOT=/var/www/cdn
+CDN_PUBLIC_BASE_URL=https://cdn.vibemusic.in
 ```
 
-### Backups
+Sync local assets to VPS:
 
-Daily `pg_dump` off-server is required for production. Full checklist (Postgres + CDN + config): **[docs/ops/DEPLOYMENT.md#backup-checklist](docs/ops/DEPLOYMENT.md#backup-checklist)**.
+```powershell
+npm run sync:cdn-vps
+```
+
+Download storefront images on deploy: `npm run download:images` (runs inside `update.sh`).
+
+nginx config: `deploy/nginx/cdn.vibemusic.in.conf`
 
 ---
 
-## Project structure
+## Firewall & SSL
 
-```
-src/                 Application source (App Router, components, API, server)
-prisma/              Schema + migrations (PostgreSQL)
-public/              Static assets
-docs/
-  ops/               Living production runbooks (deploy, DB, SMTP, VPS)
-  release/           Historical RC reports (may mention retired Firestore stack)
-  reference/         Briefs & sample exports
-deploy/              Executable VPS scripts + nginx (see deploy/README.md)
-scripts/
-  db/                Prisma / seed / local DB bootstrap
-  catalog/           Catalog tooling
-  assets/            Image & favicon tooling
-  ops/               Env check, verify, CDN sync, audits
-  legacy/            One-off migration helpers
-e2e/                 Playwright smoke tests
-.github/             CI workflows
+**UFW on VPS:**
+
+```bash
+sudo bash deploy/vps-firewall.sh
 ```
 
-**Root configs (stay at root by Next.js convention):** `package.json`, `next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, `docker-compose.yml`, `.env.example`, `.env.production.example`
+Opens SSH (22) and nginx (80/443). Node stays on `127.0.0.1:3000`.
 
-**Generated locally (gitignored):** `node_modules/`, `.next/`, `.env`, `.env.local`, `.data/`
+**SSL (Let's Encrypt):**
+
+```bash
+SYNC_SSL=1 bash deploy/update.sh
+# or:
+bash deploy/fix-ssl-certificates.sh
+```
+
+Certs cover `vibemusic.in`, `www.vibemusic.in`, `mail.vibemusic.in`.
 
 ---
 
-## Quick start
+## Quality gates
+
+Run before merging or deploying:
+
+```bash
+npm run validate            # type-check + lint + unit tests + build
+npm run test:e2e            # Playwright (needs local Postgres)
+npm run validate:ci         # validate + E2E (matches CI)
+npm run verify:complete       # copy + audit remediation
+npm run release:ready         # verify:complete + build
+npm run check:env             # production env keys
+```
+
+**After deploy (from dev machine or VPS):**
+
+```bash
+VERIFY_BASE_URL=https://vibemusic.in npm run check:edge
+VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
+REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
+```
+
+CI: `.github/workflows/validate.yml` blocks merge on test failure.
+
+---
+
+## Local development
 
 ```bash
 npm install
-cp .env.example .env.local   # configure DATABASE_URL, Auth, Razorpay, SMTP/Resend
+cp .env.example .env.local
 docker compose up -d postgres
-npm run setup:local          # ensure DB + secrets + migrations
-npm run seed:catalog         # optional — seed catalog from products.json
+npm run setup:local
+npm run seed:catalog          # optional
 npm run dev
 ```
 
@@ -82,68 +275,57 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Quality gates
+## Project structure
 
-```bash
-npm run verify:complete   # master gate — copy + audit remediation (run before deploy)
-npm run release:ready     # verify:complete + production build
-npm run validate          # type-check + lint + unit tests + production build
-npm run test:e2e          # Playwright (Postgres required for admin DB flows)
-npm run validate:ci       # validate + E2E (matches GitHub Actions)
-VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 ```
-
-**Final checklist:** [`docs/ops/PRODUCTION_COMPLETE.md`](docs/ops/PRODUCTION_COMPLETE.md)
-
-CI workflow: `.github/workflows/validate.yml` (blocks merge on any test failure).
-
-**Secrets:** never commit `.env` / `.env.local`. Production values live in VPS `deploy/ops-secrets.env` and GitHub Actions secrets (`VPS_SSH_KEY`). See [`.env.example`](.env.example) and [`.env.production.example`](.env.production.example).
-
-**Architecture decisions:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · **Pre-production report:** [docs/ops/PRE_PRODUCTION_PASS.md](docs/ops/PRE_PRODUCTION_PASS.md)
-
----
-
-## Production deployment (VPS)
-
-| Step                      | Command / doc                                                              |
-| ------------------------- | -------------------------------------------------------------------------- |
-| **Final 10/10 checklist** | [`docs/ops/PRODUCTION_COMPLETE.md`](docs/ops/PRODUCTION_COMPLETE.md)       |
-| One-shot VPS certify      | `bash deploy/certify-production.sh`                                        |
-| Ops index                 | [`docs/ops/`](docs/ops/)                                                   |
-| Go-live short list        | [`docs/ops/GO_LIVE.md`](docs/ops/GO_LIVE.md)                               |
-| VPS + PostgreSQL setup    | [`docs/ops/VPS-SETUP.md`](docs/ops/VPS-SETUP.md)                           |
-| PostgreSQL guide          | [`docs/ops/POSTGRESQL.md`](docs/ops/POSTGRESQL.md)                         |
-| Deploy checklist          | [`docs/ops/DEPLOYMENT.md`](docs/ops/DEPLOYMENT.md)                         |
-| Production env template   | [`.env.production.example`](.env.production.example)                       |
-| CDN nginx                 | [`deploy/nginx/cdn.vibemusic.in.conf`](deploy/nginx/cdn.vibemusic.in.conf) |
-| Apply migrations          | `npm run db:migrate`                                                       |
-| Seed admin                | `npm run seed:admin`                                                       |
-| Build & reload            | `deploy/update.sh` (or `npm run build && npm run start`)                   |
-
-### CDN (required for admin image uploads)
-
-```env
-CDN_STORAGE_ROOT=/var/www/cdn
-CDN_PUBLIC_BASE_URL=https://cdn.vibemusic.in
+src/                 App Router, components, API routes, server libs
+prisma/              Schema + migrations
+public/              Static assets
+deploy/              VPS scripts, PM2 config, nginx templates
+scripts/
+  db/                Prisma, seeds, local Postgres bootstrap
+  ops/               Env check, SSH helpers, verification
+  assets/            Image download, favicons
+e2e/                 Playwright tests
+.github/workflows/   CI + production deploy
+docs/
+  ARCHITECTURE.md    System design reference
+  INCIDENT_RESPONSE.md  Production incident runbook
 ```
-
-Then restart PM2. Push local staging assets with `npm run sync:cdn-vps` when needed.
 
 ---
 
 ## Key npm scripts
 
-| Script                        | Purpose                                 |
-| ----------------------------- | --------------------------------------- |
-| `npm run setup:local`         | Local DB bootstrap + env sync + migrate |
-| `npm run check:env`           | Report missing production env keys      |
-| `npm run db:migrate`          | Apply Prisma migrations                 |
-| `npm run seed:catalog`        | Seed products/brands/categories         |
-| `npm run verify:integrations` | Smoke-test public APIs + env            |
-| `npm run sync:cdn-vps`        | Sync CDN assets to the VPS              |
+| Script                        | Purpose                        |
+| ----------------------------- | ------------------------------ |
+| `npm run deploy:update`       | Run `deploy/update.sh` on VPS  |
+| `npm run ops:ssh`             | SSH to CloudOnFire VPS         |
+| `npm run ops:verify-ssh`      | Test deploy key                |
+| `npm run sync:cdn-vps`        | Push CDN files to VPS          |
+| `npm run download:images`     | Fetch storefront static images |
+| `npm run verify:integrations` | Smoke public APIs              |
+| `npm run monitor:checkout`    | Synthetic checkout probe       |
 
 ---
 
-## Email
+## Incident response
 
-Self-hosted SMTP (`docs/ops/SMTP.md`) **or** `RESEND_API_KEY` (automatic SMTP relay fallback).
+Production incidents: see **[docs/INCIDENT_RESPONSE.md](docs/INCIDENT_RESPONSE.md)**.
+
+Quick checks on VPS:
+
+```bash
+pm2 status
+pm2 logs vibe --lines 100
+curl -s http://127.0.0.1:3000/api/health | jq
+sudo nginx -t && sudo systemctl status nginx
+```
+
+---
+
+## Architecture
+
+Detailed system design: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
+
+**Not in this stack:** Stripe, Elasticsearch, Firestore, Cloudinary SDK, third-party CDN/WAF proxies.

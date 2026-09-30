@@ -4,12 +4,14 @@ import { useCallback, useRef, useState } from "react";
 
 interface ProductImageUploadProps {
   categorySlug: string;
+  productSlug?: string;
   images: string[];
   onChange: (images: string[]) => void;
 }
 
 export default function ProductImageUpload({
   categorySlug,
+  productSlug,
   images,
   onChange,
 }: ProductImageUploadProps) {
@@ -27,6 +29,9 @@ export default function ProductImageUpload({
       setError(null);
       const formData = new FormData();
       formData.append("categorySlug", categorySlug || "general");
+      if (productSlug?.trim()) {
+        formData.append("productSlug", productSlug.trim());
+      }
       list.forEach((file) => formData.append("files", file));
 
       try {
@@ -43,7 +48,7 @@ export default function ProductImageUpload({
         setUploading(false);
       }
     },
-    [categorySlug, images, onChange]
+    [categorySlug, productSlug, images, onChange],
   );
 
   function handleDrop(e: React.DragEvent) {
@@ -77,7 +82,10 @@ export default function ProductImageUpload({
       <label>Product Images</label>
       <div
         className={`admin-upload-zone${dragOver ? " admin-upload-zone--active" : ""}`}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}

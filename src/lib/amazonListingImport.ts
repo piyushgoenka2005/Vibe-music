@@ -690,39 +690,8 @@ export function buildVibemusicBulkTemplateXlsx(): Buffer {
 /** @deprecated Use buildVibemusicBulkTemplateXlsx */
 export const buildAmazonListingTemplateXlsx = buildVibemusicBulkTemplateXlsx;
 
-/**
- * Resolve product images from a ZIP using SKU naming conventions.
- * Matches: SKU.jpg, SKU_1.jpg, SKU-1.jpg, SKU_2.png, …
- */
-export function findSkuImagesInZip(
-  zipMap: Map<string, Buffer>,
-  sku: string,
-): Array<{ filename: string; buffer: Buffer }> {
-  const cleaned = sku.trim().toLowerCase();
-  if (!cleaned) return [];
-
-  const matches: Array<{ filename: string; buffer: Buffer; order: number }> = [];
-
-  for (const [name, buffer] of zipMap) {
-    const base = name.replace(/\.[^.]+$/, "").toLowerCase();
-    if (base === cleaned) {
-      matches.push({ filename: name, buffer, order: 0 });
-      continue;
-    }
-    const suffix = base.match(new RegExp(`^${escapeRegExp(cleaned)}[_-](\\d+)$`));
-    if (suffix) {
-      matches.push({ filename: name, buffer, order: Number(suffix[1]) });
-    }
-  }
-
-  return matches
-    .sort((a, b) => a.order - b.order)
-    .map(({ filename, buffer }) => ({ filename, buffer }));
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\");
-}
+/** Re-export — folder-aware implementation lives in bulkImportZipImages.ts */
+export { findSkuImagesInZip } from "@/lib/admin/bulkImportZipImages";
 
 export function isSpreadsheetUpload(filename: string, mimeType = ""): boolean {
   const lower = filename.toLowerCase();

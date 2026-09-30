@@ -73,7 +73,7 @@ console.log(`
 Live infra/compliance points: ${livePoints} / 3 (L-22, L-23, L-30)
 Estimated overall score: ${overall} / 20 (code baseline ${CODE_BASELINE} + live ${livePoints})
 L-23 origin firewall: verify on VPS after L-22 (not HTTP-probable)
-Matrix: docs/ops/PRODUCTION_READINESS_SCORECARD.md
+Matrix: README.md (quality gates + verify:prod-signoff)
 `);
 
 const blocking = probes.filter((p) => !p.ok && p.name.startsWith("L-"));

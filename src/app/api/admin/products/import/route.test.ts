@@ -33,6 +33,16 @@ vi.mock("@/lib/auth/require-admin", () => {
 });
 
 vi.mock("@/lib/admin/bulkImportZipImages", () => ({
+  createEmptyBulkImportZipImageIndex: vi.fn(() => ({
+    byBasename: new Map(),
+    byRelativePath: new Map(),
+    entries: [],
+  })),
+  readBulkImportZipImageIndex: vi.fn(() => ({
+    byBasename: new Map(),
+    byRelativePath: new Map(),
+    entries: [],
+  })),
   readBulkImportZipImageMap: vi.fn(() => new Map()),
 }));
 
@@ -42,6 +52,7 @@ vi.mock("@/lib/server/bulkImportImageResolver", () => ({
 
 vi.mock("@/services/catalogService", () => ({
   enrichBulkImportRowSlugs: vi.fn(async (rows: unknown[]) => rows),
+  enrichBulkImportRowSkus: vi.fn(async (rows: unknown[]) => rows),
   previewBulkImport: vi.fn(async () => [{ valid: true, sku: "TEST-SKU", name: "Test Product" }]),
   buildBulkImportPreviewSummary: vi.fn(() => ({
     validRows: 1,
@@ -50,10 +61,11 @@ vi.mock("@/services/catalogService", () => ({
     updateCount: 0,
   })),
   bulkImportProducts: vi.fn(async () => ({
-    created: 1,
+    imported: 1,
     updated: 0,
     skipped: 0,
     errors: [],
+    failedRows: [],
   })),
 }));
 
@@ -142,7 +154,7 @@ describe("POST /api/admin/products/import", () => {
       expect.objectContaining({ adminId: adminUser.uid }),
     );
     expect(previewBulkImport).not.toHaveBeenCalled();
-    const body = (await res.json()) as { result?: { created?: number } };
-    expect(body.result?.created).toBe(1);
+    const body = (await res.json()) as { result?: { imported?: number } };
+    expect(body.result?.imported).toBe(1);
   });
 });

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import { existsSync, mkdirSync } from "node:fs";
 import { mkdir, unlink } from "node:fs/promises";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -35,18 +36,94 @@ const ALLOWED_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".
 const OPTIMIZED_CDN_FILE_RE =
   /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:-w\d+)?\.(webp|jpg|jpeg|png)$/i;
 
+function isProductionRuntime(): boolean {
+  return process.env.NODE_ENV === "production";
+}
+
+/** Project-local CDN root used in development when VPS paths are unavailable. */
+export function getProjectLocalCdnRoot(): string {
+  return path.join(process.cwd(), ".data", "cdn");
+}
+
+function ensureDirectoryExists(directory: string): void {
+  if (!existsSync(directory)) {
+    mkdirSync(directory, { recursive: true });
+  }
+}
+
+function resolveDevStorageRoot(configured: string | undefined): string {
+  const localRoot = getProjectLocalCdnRoot();
+  const normalizedConfigured = configured?.replace(/\\/g, "/");
+
+  if (!configured) {
+    ensureDirectoryExists(localRoot);
+    return localRoot;
+  }
+
+  // Common copy-paste from production docs on Windows/macOS dev machines.
+  if (
+    !isProductionRuntime() &&
+    normalizedConfigured === DEFAULT_STORAGE_ROOT &&
+    process.platform !== "linux"
+  ) {
+    ensureDirectoryExists(localRoot);
+    return localRoot;
+  }
+
+  if (!isProductionRuntime() && !existsSync(configured)) {
+    ensureDirectoryExists(localRoot);
+    return localRoot;
+  }
+
+  ensureDirectoryExists(configured);
+  return configured;
+}
+
+function resolveDevPublicBaseUrl(configured: string | undefined, storageRoot: string): string {
+  const localRoot = getProjectLocalCdnRoot();
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000").replace(
+    /\/+$/,
+    "",
+  );
+
+  if (
+    storageRoot === localRoot ||
+    !configured ||
+    configured.replace(/\/+$/, "") === DEFAULT_PUBLIC_BASE_URL
+  ) {
+    return `${siteUrl}/cdn-local`;
+  }
+
+  return configured.replace(/\/+$/, "");
+}
+
 export function getCdnStorageRoot(): string {
-  return process.env.CDN_STORAGE_ROOT?.trim() || DEFAULT_STORAGE_ROOT;
+  const configured = process.env.CDN_STORAGE_ROOT?.trim();
+  if (isProductionRuntime()) {
+    return configured || DEFAULT_STORAGE_ROOT;
+  }
+  return resolveDevStorageRoot(configured);
 }
 
 export function getCdnPublicBaseUrl(): string {
-  const base = process.env.CDN_PUBLIC_BASE_URL?.trim() || DEFAULT_PUBLIC_BASE_URL;
-  return base.replace(/\/+$/, "");
+  const configured = process.env.CDN_PUBLIC_BASE_URL?.trim();
+  if (isProductionRuntime()) {
+    return (configured || DEFAULT_PUBLIC_BASE_URL).replace(/\/+$/, "");
+  }
+  return resolveDevPublicBaseUrl(configured, getCdnStorageRoot());
 }
 
-/** Public bases we may see on stored URLs (env + production default). */
+/** Public bases we may see on stored URLs (env + production default + local dev). */
 function getKnownCdnPublicBases(): string[] {
-  return Array.from(new Set([getCdnPublicBaseUrl(), DEFAULT_PUBLIC_BASE_URL.replace(/\/+$/, "")]));
+  const bases = [getCdnPublicBaseUrl(), DEFAULT_PUBLIC_BASE_URL.replace(/\/+$/, "")];
+  if (!isProductionRuntime()) {
+    bases.push("http://localhost:3000/cdn-local", "http://127.0.0.1:3000/cdn-local");
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim()?.replace(/\/+$/, "");
+    if (siteUrl) {
+      bases.push(`${siteUrl}/cdn-local`);
+    }
+  }
+  return Array.from(new Set(bases));
 }
 
 function sanitizeSegment(value: string, fallback: string): string {

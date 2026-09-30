@@ -45,7 +45,7 @@ if [[ "${LOCKDOWN_UFW:-0}" == "1" ]]; then
 else
   bash deploy/complete-audit-go-live.sh || {
     echo ""
-    echo "   ℹ Edge checks failed — verify DNS + nginx per docs/ops/CLOUDONFIRE-SETUP.md"
+    echo "   ℹ Edge checks failed — verify DNS + nginx per README.md"
     echo "   Optional: LOCKDOWN_UFW=1 bash deploy/go-live-e2e.sh"
   }
 fi

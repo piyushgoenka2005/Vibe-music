@@ -29,7 +29,7 @@ if VERIFY_BASE_URL="$BASE" npm run check:edge; then
   fi
 else
   echo ""
-  echo "   ⚠️  L-22 not complete — follow docs/ops/CLOUDONFIRE-SETUP.md:"
+  echo "   ⚠️  L-22 not complete — follow README.md:"
   echo "   1. DNS A records → CloudOnFire VPS IP"
   echo "   2. bash deploy/update.sh"
   echo "   3. Re-run this script"

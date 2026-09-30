@@ -68,7 +68,7 @@ async function main() {
       exitCode = exitCode || 1;
     } else {
       console.log(msg);
-      console.log("See docs/ops/CLOUDONFIRE-SETUP.md");
+      console.log("See README.md (Production infrastructure + DNS)");
     }
   }
 

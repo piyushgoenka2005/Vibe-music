@@ -8,6 +8,7 @@ import https from "https";
 import { fileURLToPath } from "url";
 
 import { ESSENTIAL_STATIC_IMAGE_PATHS } from "./essential-static-paths.mjs";
+import { LOCATION_IMAGE_SOURCES } from "./location-image-sources.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const PUBLIC = path.join(ROOT, "public");
@@ -132,6 +133,21 @@ async function main() {
 
     try {
       await download(remote, dest);
+      ok++;
+      process.stdout.write(".");
+    } catch (error) {
+      failed++;
+      console.log(`\nFailed ${localPath}: ${error.message}`);
+    }
+  }
+
+  console.log(`\nStorefront assets. OK: ${ok}, failed: ${failed}`);
+
+  console.log(`Downloading ${LOCATION_IMAGE_SOURCES.length} location images...`);
+  for (const { localPath, url } of LOCATION_IMAGE_SOURCES) {
+    const dest = path.join(PUBLIC, localPath.replace(/^\//, "").replace(/\//g, path.sep));
+    try {
+      await download(url, dest);
       ok++;
       process.stdout.write(".");
     } catch (error) {

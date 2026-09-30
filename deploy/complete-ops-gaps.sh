@@ -149,7 +149,7 @@ echo "▶ Production edge (L-22) — CloudOnFire VPS + nginx"
 if VERIFY_BASE_URL=https://vibemusic.in npm run check:edge 2>/dev/null; then
   echo "   ✅ nginx TLS + security headers OK"
 else
-  echo "   ⚠️  Edge check failed — see docs/ops/CLOUDONFIRE-SETUP.md"
+  echo "   ⚠️  Edge check failed — see README.md"
   echo "      sudo bash deploy/complete-audit-go-live.sh"
 fi
 
@@ -160,6 +160,6 @@ if [[ $MISSING -eq 0 ]]; then
 else
   echo "⚠️  $MISSING item(s) still need attention (see above)."
   echo "   bash deploy/certify-production.sh"
-  echo "   Runbook: docs/ops/PRODUCTION_COMPLETE.md"
+  echo "   Runbook: README.md"
 fi
 echo ""

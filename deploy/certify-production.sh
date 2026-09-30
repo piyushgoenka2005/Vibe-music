@@ -3,7 +3,7 @@
 #
 # Prerequisites:
 #   - deploy/ops-secrets.env with NEXT_PUBLIC_GSTIN, legal name, phone, GA4
-#   - DNS pointing to CloudOnFire VPS (see docs/ops/CLOUDONFIRE-SETUP.md)
+#   - DNS pointing to CloudOnFire VPS (see README.md)
 #
 # Usage:
 #   cd ~/Vibe-music && bash deploy/certify-production.sh

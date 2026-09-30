@@ -108,7 +108,7 @@ L-22 operator steps:
   1. CloudOnFire DNS → A records (@, www, cdn) to VPS IP
   2. On VPS: bash deploy/update.sh
   3. npm run check:edge
-  Guide: docs/ops/CLOUDONFIRE-SETUP.md
+  Guide: README.md
 `);
 }
 

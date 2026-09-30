@@ -265,7 +265,7 @@ const checks: Check[] = [];
     ok: productionEdgeOk,
     detail: productionEdgeOk
       ? `nginx TLS + security headers (server=${server})`
-      : "missing HSTS/CSP/nosniff or non-200 homepage (see docs/ops/CLOUDONFIRE-SETUP.md)",
+      : "missing HSTS/CSP/nosniff or non-200 homepage (see README.md)",
     blocking: requireCdn,
   });
 }

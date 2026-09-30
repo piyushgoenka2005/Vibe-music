@@ -18,8 +18,7 @@ function statusLabel(status: OpsItem["status"]): string {
 
 function statusClass(status: OpsItem["status"]): string {
   if (status === "ok") return "admin-ops-status__badge admin-ops-status__badge--ok";
-  if (status === "partial")
-    return "admin-ops-status__badge admin-ops-status__badge--partial";
+  if (status === "partial") return "admin-ops-status__badge admin-ops-status__badge--partial";
   return "admin-ops-status__badge admin-ops-status__badge--missing";
 }
 
@@ -56,7 +55,7 @@ export default function AdminOpsStatusPanel() {
   }
 
   const requiredMissing = data.items.filter(
-    (item) => item.tier === "required" && item.status !== "ok"
+    (item) => item.tier === "required" && item.status !== "ok",
   ).length;
 
   return (
@@ -71,9 +70,7 @@ export default function AdminOpsStatusPanel() {
             : " · Required secrets look set"}
         </p>
         <p className="admin-ops-status__meta">
-          Secrets are never shown here. See{" "}
-          <code>docs/ops/GO_LIVE.md</code> and{" "}
-          <code>docs/ops/DEPLOYMENT.md</code>.
+          Secrets are never shown here. See <code>README.md</code> (production deployment section).
         </p>
       </div>
 
@@ -83,9 +80,7 @@ export default function AdminOpsStatusPanel() {
             <div className="admin-ops-status__row-main">
               <span className="admin-ops-status__label">{item.label}</span>
               <span className="admin-ops-status__tier">{item.tier}</span>
-              <span className={statusClass(item.status)}>
-                {statusLabel(item.status)}
-              </span>
+              <span className={statusClass(item.status)}>{statusLabel(item.status)}</span>
             </div>
             <p className="admin-ops-status__detail">{item.detail}</p>
           </li>

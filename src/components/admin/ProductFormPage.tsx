@@ -677,6 +677,7 @@ export default function ProductFormPage({
           </div>
           <ProductImageUpload
             categorySlug={form.categorySlug}
+            productSlug={form.slug || slugify(`${form.brand}-${form.name}`)}
             images={form.images}
             onChange={(images) => setForm({ ...form, images })}
           />
@@ -692,6 +693,7 @@ export default function ProductFormPage({
             </p>
             <ProductImageUpload
               categorySlug={form.categorySlug}
+              productSlug={form.slug || slugify(`${form.brand}-${form.name}`)}
               images={form.spin360Images}
               onChange={(spin360Images) => setForm({ ...form, spin360Images })}
             />

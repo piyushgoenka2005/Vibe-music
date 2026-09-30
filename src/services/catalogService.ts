@@ -1335,6 +1335,23 @@ export async function enrichBulkImportRowSlugs(rows: BulkImportRow[]): Promise<B
   });
 }
 
+/** Assign SKUs before ZIP image matching (uses sheet SKU or generates VM-xxxxx). */
+export async function enrichBulkImportRowSkus(rows: BulkImportRow[]): Promise<BulkImportRow[]> {
+  const { skus } = await fetchExistingSlugsAndSkus();
+  const batchSkus = new Set<string>();
+
+  return rows.map((row) => {
+    const sheetSku = row.sku?.trim();
+    const generatedSku = sheetSku || uniqueSku(new Set([...skus, ...batchSkus]));
+    batchSkus.add(generatedSku);
+    return {
+      ...row,
+      sku: sheetSku || generatedSku,
+      generatedSku,
+    };
+  });
+}
+
 export async function previewBulkImport(
   rows: BulkImportRow[],
   options: BulkImportOptions = DEFAULT_BULK_IMPORT_OPTIONS,

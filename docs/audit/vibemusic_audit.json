@@ -196,7 +196,7 @@
       "id": "L-22",
       "severity": "critical",
       "category": "infra",
-      "title": "CDN/WAF edge (Cloudflare)",
+      "title": "Production edge (CloudOnFire nginx)",
       "repoStatus": "automated",
       "verifyCommand": "VERIFY_BASE_URL=https://vibemusic.in npm run check:edge",
       "testRefs": ["deploy/complete-audit-go-live.sh"]
@@ -205,10 +205,10 @@
       "id": "L-23",
       "severity": "high",
       "category": "infra",
-      "title": "Origin firewall Cloudflare-only",
+      "title": "Origin firewall (UFW)",
       "repoStatus": "automated",
-      "verifyCommand": "sudo CLOUDFLARE_ONLY=1 bash deploy/complete-audit-go-live.sh",
-      "testRefs": ["deploy/cloudflare-ufw.sh"]
+      "verifyCommand": "sudo LOCKDOWN_UFW=1 bash deploy/complete-audit-go-live.sh",
+      "testRefs": ["deploy/vps-firewall.sh"]
     },
     {
       "id": "L-24",
@@ -252,8 +252,8 @@
       "category": "ops",
       "title": "Disaster recovery runbook",
       "repoStatus": "fixed",
-      "verifyCommand": "test -f docs/ops/DISASTER_RECOVERY.md",
-      "testRefs": ["DISASTER_RECOVERY.md"]
+      "verifyCommand": "test -f docs/INCIDENT_RESPONSE.md",
+      "testRefs": ["docs/INCIDENT_RESPONSE.md"]
     },
     {
       "id": "L-29",
