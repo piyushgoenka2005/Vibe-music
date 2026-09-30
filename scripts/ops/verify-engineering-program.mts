@@ -61,7 +61,7 @@ const failed = steps.filter((row) => row.code !== 0);
 console.log("\n───────────────────────────────────────────────────────────");
 if (failed.length === 0) {
   console.log("✅ Engineering program verification PASSED.");
-  console.log("   VPS go-live: bash deploy/certify-production.sh");
+  console.log("   VPS go-live: bash deploy/production.sh certify");
 } else {
   console.error(`✗ ${failed.length} step(s) failed.`);
 }

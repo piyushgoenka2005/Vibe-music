@@ -74,23 +74,19 @@ VERIFY_PUBLIC_SMOKE=1 SYNC_SSL=1 VERIFY_BASE_URL=https://vibemusic.in bash deplo
 ### One-shot certification
 
 ```bash
-bash deploy/certify-production.sh
+bash deploy/production.sh certify
 # With UFW lockdown:
-LOCKDOWN_UFW=1 bash deploy/certify-production.sh
+LOCKDOWN_UFW=1 bash deploy/production.sh certify
 ```
 
 ### First-time VPS bootstrap
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/piyushgoenka2005/Vibe-music/main/deploy/now.sh | bash
-```
-
-Or from an existing clone:
-
-```bash
+cd ~/Vibe-music
 cp deploy/ops-secrets.env.example deploy/ops-secrets.env
 nano deploy/ops-secrets.env
 bash deploy/update.sh
+bash deploy/production.sh certify
 ```
 
 ### GitHub Actions deploy
@@ -104,9 +100,9 @@ Generate key: `powershell -ExecutionPolicy Bypass -File scripts/ops/setup-deploy
 ### Rollback
 
 ```bash
-bash deploy/rollback.sh
+bash deploy/production.sh rollback
 # or explicit SHA:
-bash deploy/rollback.sh <known-good-commit>
+bash deploy/production.sh rollback <known-good-commit>
 ```
 
 ---
@@ -185,13 +181,6 @@ npm run db:studio           # Prisma Studio (dev)
 
 Pre-deploy backup (automatic in `update.sh`): `~/backups/pre-deploy-*.dump`
 
-Install daily backup cron:
-
-```bash
-bash deploy/install-backups.sh
-bash deploy/verify-backups.sh
-```
-
 ---
 
 ## CDN & images
@@ -209,7 +198,7 @@ npm run sync:cdn-vps
 
 Download storefront images on deploy: `npm run download:images` (runs inside `update.sh`).
 
-nginx config: `deploy/nginx/cdn.vibemusic.in.conf`
+nginx sync: `bash deploy/production.sh nginx` (configs embedded in `deploy/production.sh`)
 
 ---
 
@@ -289,8 +278,12 @@ scripts/
 e2e/                 Playwright tests
 .github/workflows/   CI + production deploy
 docs/
+  README.md          Documentation index
   ARCHITECTURE.md    System design reference
   INCIDENT_RESPONSE.md  Production incident runbook
+  ops/               Ops index (see deploy/ for scripts)
+  audit/             Audit checklist JSON
+  templates/         Bulk import templates
 ```
 
 ---

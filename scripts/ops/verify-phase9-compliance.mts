@@ -56,10 +56,10 @@ if (passed) {
 console.log("\nFAIL — L-30 compliance not live.");
 console.log(`
 Operator fix (VPS):
-  cd ~/Vibe-music && bash deploy/apply-compliance.sh
+  cd ~/Vibe-music && bash deploy/production.sh compliance
 
 Or non-interactive:
-  NEXT_PUBLIC_GSTIN=19XXXXXXXXXXXXX NEXT_PUBLIC_LEGAL_ENTITY_NAME="Entity Name" bash deploy/apply-compliance.sh
+  NEXT_PUBLIC_GSTIN=19XXXXXXXXXXXXX NEXT_PUBLIC_LEGAL_ENTITY_NAME="Entity Name" bash deploy/production.sh compliance
 
 Admin fallback (no rebuild): Admin → Settings → GST number + store name
 `);

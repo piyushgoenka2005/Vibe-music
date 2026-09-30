@@ -225,12 +225,11 @@ curl -s http://localhost:3000/api/health | jq '.backpressure.scopes'
 **Resolution**:
 
 ```bash
-# Adjust Nginx rate limits (edit deploy/nginx/vibemusic.in.conf)
-# auth_limit: 10r/s → 20r/s (if login is too strict)
-# api_limit: 60r/s → 120r/s (if API is too strict)
+# Adjust nginx rate limits (edit the vibemusic.in block in deploy/production.sh)
+# auth_limit: 10r/s -> 20r/s (if login is too strict)
+# api_limit: 60r/s -> 120r/s (if API is too strict)
 
-sudo cp deploy/nginx/vibemusic.in.conf /etc/nginx/sites-available/vibemusic.in.conf
-sudo nginx -t && sudo systemctl reload nginx
+bash deploy/production.sh nginx
 ```
 
 ### 2.7 Out of Memory (P0)
@@ -356,9 +355,16 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ## 5. Monitoring Thresholds & Alerts
 
-### Grafana Alert Rules (deploy/monitoring/alert-rules.yml)
+Use GitHub Actions **Maintenance** workflow (`.github/workflows/maintenance.yml`) plus manual probes:
 
-| Alert                | Condition             | Severity | Action           |
+```bash
+VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
+npm run monitor:checkout
+curl -sf https://vibemusic.in/api/healthz
+curl -sf https://vibemusic.in/api/readyz
+```
+
+| Signal               | Threshold / check     | Severity | Action           |
 | -------------------- | --------------------- | -------- | ---------------- |
 | App Down             | Health check fails 3x | Critical | Restart PM2      |
 | Database Unreachable | Circuit breaker OPEN  | Critical | Check PostgreSQL |

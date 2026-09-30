@@ -142,7 +142,7 @@ const L_REGISTER: Array<{
     title: "CWV / Lighthouse gates",
     repoStatus: "verified",
     verifyCommand: "npm run check:cwv",
-    testRefs: [".github/workflows/lighthouse.yml"],
+    testRefs: ["scripts/ops/check-cwv.mjs", "scripts/ops/lighthouse-audit.mjs"],
   },
   {
     id: "L-15",
@@ -214,7 +214,7 @@ const L_REGISTER: Array<{
     title: "Production edge (CloudOnFire nginx)",
     repoStatus: "automated",
     verifyCommand: "VERIFY_BASE_URL=https://vibemusic.in npm run check:edge",
-    testRefs: ["deploy/complete-audit-go-live.sh"],
+    testRefs: ["deploy/production.sh"],
   },
   {
     id: "L-23",
@@ -222,8 +222,8 @@ const L_REGISTER: Array<{
     category: "infra",
     title: "Origin firewall (UFW SSH + nginx)",
     repoStatus: "automated",
-    verifyCommand: "sudo LOCKDOWN_UFW=1 bash deploy/complete-audit-go-live.sh",
-    testRefs: ["deploy/vps-firewall.sh"],
+    verifyCommand: "LOCKDOWN_UFW=1 bash deploy/production.sh certify",
+    testRefs: ["deploy/production.sh"],
   },
   {
     id: "L-24",
@@ -287,7 +287,7 @@ const L_REGISTER: Array<{
     repoStatus: "verified",
     verifyCommand:
       "REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff",
-    testRefs: ["resolvePublicLegal.ts", "deploy/apply-compliance.sh"],
+    testRefs: ["resolvePublicLegal.ts", "deploy/production.sh"],
   },
 ];
 

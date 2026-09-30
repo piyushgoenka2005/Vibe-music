@@ -53,7 +53,7 @@ if (VERIFY_BASE_URL) {
   }
   complianceCode = run("Compliance live (Phase 9)", "npm", ["run", "verify:phase9"]);
   if (complianceCode !== 0) {
-    console.log("\nℹ L-30: Set GSTIN on VPS — bash deploy/apply-compliance.sh");
+    console.log("\nℹ L-30: Set GSTIN on VPS — bash deploy/production.sh compliance");
   }
 } else {
   console.log("\nℹ Set VERIFY_BASE_URL for live probes.");
@@ -61,14 +61,11 @@ if (VERIFY_BASE_URL) {
 
 console.log("\n───────────────────────────────────────────────────────────");
 console.log("Operator steps (VPS console as root):");
-console.log(
-  "  curl -fsSL https://raw.githubusercontent.com/piyushgoenka2005/Vibe-music/main/deploy/install-deploy-key.sh | bash",
-);
-console.log("Then GitHub secret VPS_SSH_KEY → Actions → Deploy production");
+console.log("  Configure VPS_SSH_KEY in GitHub Actions (see scripts/ops/setup-deploy-access.ps1)");
 console.log("Or on VPS:");
 console.log("  cd ~/Vibe-music && git pull origin main && bash deploy/update.sh");
-console.log("  bash deploy/certify-production.sh");
-console.log("  LOCKDOWN_UFW=1 bash deploy/certify-production.sh");
+console.log("  bash deploy/production.sh certify");
+console.log("  LOCKDOWN_UFW=1 bash deploy/production.sh certify");
 console.log("───────────────────────────────────────────────────────────\n");
 
 const failed = [repoCode, deployCode, liveCode, edgeCode, complianceCode].filter(

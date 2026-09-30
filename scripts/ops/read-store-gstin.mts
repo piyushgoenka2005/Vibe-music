@@ -1,7 +1,7 @@
 #!/usr/bin/env npx tsx
 /**
  * Print configured GSTIN from env or store settings (stdout only, no secrets beyond GSTIN).
- * Used by deploy/apply-compliance.sh before interactive prompt.
+ * Used by deploy/production.sh compliance before interactive prompt.
  */
 import { PrismaClient } from "@prisma/client";
 

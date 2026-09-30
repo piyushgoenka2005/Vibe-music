@@ -93,7 +93,7 @@ if (failedOptional.length) {
 if (!VERIFY_BASE_URL) {
   console.log("ℹ Set VERIFY_BASE_URL=https://vibemusic.in to include live probes.");
 }
-console.log("   VPS final step: bash deploy/certify-production.sh");
+console.log("   VPS final step: bash deploy/production.sh certify");
 console.log("───────────────────────────────────────────────────────────\n");
 
 process.exit(failedBlocking.length ? 1 : 0);

@@ -36,16 +36,14 @@ jobs:
             git pull --ff-only origin main
             # update.sh already gates on /api/health internally; the final
             # smoke below runs once against the PUBLIC url (nginx + TLS path).
-            SKIP_SMOKE=1 bash deploy/update.sh
+            bash deploy/update.sh
             if grep -qE '^NEXT_PUBLIC_GSTIN=.{15}' deploy/ops-secrets.env 2>/dev/null; then
-              echo "==> L-30 compliance redeploy (GSTIN in ops-secrets)"
-              SKIP_PULL=1 bash deploy/apply-compliance.sh
+              SKIP_PULL=1 bash deploy/production.sh compliance
             fi
             npm run publish:independence-banner || true
-            BASE_URL=https://vibemusic.in bash deploy/post-deploy-smoke.sh
 
       - name: Verify live commit matches main
         env:
           EXPECTED_SHA: ${{ github.sha }}
           VERIFY_BASE_URL: https://vibemusic.in
-        run: bash deploy/verify-deploy-sync.sh
+        run: bash deploy/production.sh verify-sync

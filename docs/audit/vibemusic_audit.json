@@ -199,7 +199,7 @@
       "title": "Production edge (CloudOnFire nginx)",
       "repoStatus": "automated",
       "verifyCommand": "VERIFY_BASE_URL=https://vibemusic.in npm run check:edge",
-      "testRefs": ["deploy/complete-audit-go-live.sh"]
+      "testRefs": ["deploy/production.sh"]
     },
     {
       "id": "L-23",
@@ -207,8 +207,8 @@
       "category": "infra",
       "title": "Origin firewall (UFW)",
       "repoStatus": "automated",
-      "verifyCommand": "sudo LOCKDOWN_UFW=1 bash deploy/complete-audit-go-live.sh",
-      "testRefs": ["deploy/vps-firewall.sh"]
+      "verifyCommand": "LOCKDOWN_UFW=1 bash deploy/production.sh certify",
+      "testRefs": ["deploy/production.sh"]
     },
     {
       "id": "L-24",
@@ -271,7 +271,7 @@
       "title": "Legal entity + GSTIN in footer",
       "repoStatus": "verified",
       "verifyCommand": "REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff",
-      "testRefs": ["resolvePublicLegal.ts", "deploy/apply-compliance.sh"]
+      "testRefs": ["resolvePublicLegal.ts", "deploy/production.sh"]
     }
   ],
   "mergeGateE2E": [

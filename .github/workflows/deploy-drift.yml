@@ -25,4 +25,4 @@ jobs:
         env:
           EXPECTED_SHA: ${{ github.sha }}
           VERIFY_BASE_URL: https://vibemusic.in
-        run: bash deploy/verify-deploy-sync.sh
+        run: bash deploy/production.sh verify-sync

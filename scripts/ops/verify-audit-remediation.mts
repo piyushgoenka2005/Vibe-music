@@ -26,8 +26,7 @@ const ARTIFACTS = [
   "docs/audit/vibemusic_audit.json",
   "README.md",
   "docs/ops/e2e-audit-catalog.json",
-  "deploy/complete-audit-go-live.sh",
-  "deploy/apply-compliance.sh",
+  "deploy/production.sh",
   "scripts/ops/synthetic-checkout-monitor.mts",
 ];
 

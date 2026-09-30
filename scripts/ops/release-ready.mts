@@ -61,7 +61,6 @@ if (VERIFY_BASE_URL) {
 After deploy on VPS:
   cd /root/Vibe-music && git pull origin main && bash deploy/update.sh
   VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
-  BASE_URL=https://vibemusic.in bash deploy/post-deploy-smoke.sh
 `);
 }
 

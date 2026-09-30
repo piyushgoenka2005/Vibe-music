@@ -75,7 +75,7 @@ if (failed.length === 0 && overall >= 20) {
 console.error(`✗ ${failed.length} gate(s) failed — certification incomplete.`);
 console.log(`
 VPS one-shot:
-  cd ~/Vibe-music && git pull origin main && bash deploy/certify-production.sh
-  LOCKDOWN_UFW=1 bash deploy/certify-production.sh
+  cd ~/Vibe-music && git pull origin main && bash deploy/production.sh certify
+  LOCKDOWN_UFW=1 bash deploy/production.sh certify
 `);
 process.exit(1);
