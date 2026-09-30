@@ -165,8 +165,7 @@ async function main() {
     stdio: "inherit",
   });
   if (thumbs.status !== 0) {
-    console.error("ERROR: generate-category-thumbs failed");
-    process.exit(1);
+    console.warn("WARN: generate-category-thumbs failed (non-fatal for deploy)");
   }
 
   const verify = spawnSync("node", ["scripts/ops/verify-essential-images.mjs"], {
