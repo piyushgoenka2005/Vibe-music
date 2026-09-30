@@ -210,23 +210,48 @@ Manual:
 
 **Your VPS is healthy** when reached (local smoke passes, images 200 via `--resolve`). Public breakage is **infrastructure**, not app config.
 
-### Fix (CloudOnFire only)
+### Fix (CloudOnFire + GoDaddy only — no Cloudflare)
 
-1. **WhatsApp:** +91 95606 14171
-2. **Panel:** [cp.cloudonfire.com](https://cp.cloudonfire.com) → **Support**
-3. **Paste this ticket:**
+This cannot be fixed in application code. CloudOnFire must stop sharing the IP.
+
+1. **WhatsApp:** +91 95606 14171 (fastest)
+2. **Panel:** [cp.cloudonfire.com](https://cp.cloudonfire.com) → **Support** / **Open Ticket**
+3. **Paste this ticket** (also in `docs/ops/cloudonfire-duplicate-ip-ticket.txt`):
 
 ```
-Subject: URGENT — Duplicate IP 31.42.125.219 — VPS ID 1055
+Subject: URGENT — Duplicate IP 31.42.125.219 — VPS ID 1055 — SSL broken for customers
 
-IP 31.42.125.219 is shared by two VMs. Intermittent traffic hits a Forgejo/Gitea
-instance (SSH host key SHA256:vjfQl9pdbsCqLuAEOVL451bbtscQSyiC0APZ0iIwv2k) instead
-of my VPS 1055 (1-YEAR-VPS-ULTRA, hostname mail, key SHA256:l0hpirMy/wrm0gRH4SNxl4PdMmpzKXtSFOjfMESvX7I).
+My domain vibemusic.in (GoDaddy DNS) points to 31.42.125.219, but ~30% of HTTPS
+connections receive the wrong TLS certificate (CN=git.k12hunar.com) instead of
+vibemusic.in. Browsers show NET::ERR_CERT_COMMON_NAME_INVALID.
 
-Domains affected: vibemusic.in, www, cdn, mail.
-Please remove the other VM from this IP or assign VPS 1055 a dedicated IP.
+Two VMs share this IP:
+- MY VPS 1055 (1-YEAR-VPS-ULTRA, hostname mail) — SSH SHA256:l0hpirMy/wrm0gRH4SNxl4PdMmpzKXtSFOjfMESvX7I
+- ANOTHER customer — Forgejo/Gitea — SSH SHA256:vjfQl9pdbsCqLuAEOVL451bbtscQSyiC0APZ0iIwv2k
+
+Please EITHER remove the other VM from 31.42.125.219 OR assign VPS 1055 a new
+dedicated public IPv4 and tell me the new address.
+
+Domains: vibemusic.in, www, cdn, mail (all on GoDaddy A records).
 ```
 
-4. After fix: `powershell -ExecutionPolicy Bypass -File scripts\ops\verify-ssh.ps1` should show **one** fingerprint only.
+4. **When CloudOnFire gives you a new dedicated IP** (or confirms duplicate removed):
 
-**Until fixed:** use `scripts/ops/ssh-vps.ps1` (retries until correct host) or panel **VNC console**.
+   | GoDaddy DNS | Type             | Set to     |
+   | ----------- | ---------------- | ---------- |
+   | `@`         | A                | **new IP** |
+   | `www`       | A or CNAME → `@` | **new IP** |
+   | `cdn`       | A                | **new IP** |
+   | `mail`      | A                | **new IP** |
+
+   Wait 5–30 min, then verify:
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts\ops\verify-ssl.ps1 -Attempts 50
+   ```
+
+   All 50 probes should pass.
+
+5. **On the VPS** (after IP change): update any firewall allow rules if the panel IP changed; run `bash deploy/fix-ssl-certificates.sh` if nginx was reinstalled.
+
+**Until CloudOnFire fixes it:** use `scripts/ops/ssh-vps.ps1` for deploys (retries until correct host) or panel **VNC console**. Site visitors may need to reload when SSL fails — there is no app-side workaround.

@@ -46,9 +46,9 @@ if ($bad -gt 0) {
     Write-Host "Failures:" -ForegroundColor Yellow
     $errors.GetEnumerator() | ForEach-Object { Write-Host "  $($_.Value)x $($_.Key)" }
     Write-Host ""
-    Write-Host "Wrong certificate = CloudOnFire routes ~30% of traffic to another VM (often CN=git.k12hunar.com)." -ForegroundColor Red
-    Write-Host "Permanent fix: Cloudflare Tunnel — docs/ops/CLOUDFLARE-TUNNEL-SSL.md" -ForegroundColor Yellow
-    Write-Host "Or CloudOnFire ticket: docs/ops/IP-MIGRATION-GODADDY.md section I" -ForegroundColor Yellow
+    Write-Host "Wrong certificate = CloudOnFire routes traffic to another VM (often CN=git.k12hunar.com)." -ForegroundColor Red
+    Write-Host "Fix: CloudOnFire support ticket — docs/ops/IP-MIGRATION-GODADDY.md section I" -ForegroundColor Yellow
+    Write-Host "Then update GoDaddy A records to the new dedicated IP they assign." -ForegroundColor Yellow
     exit 1
 }
 
