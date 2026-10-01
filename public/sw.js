@@ -1,5 +1,5 @@
 /* Vibe Music PWA shell service worker — network-first for pages, cache-first for static assets. */
-const CACHE_NAME = "vibe-shell-v3";
+const CACHE_NAME = "vibe-shell-v4";
 const PRECACHE_URLS = [
   "/site.webmanifest",
   "/icon-48.png",
@@ -17,7 +17,8 @@ function isPrivatePath(pathname) {
     pathname.startsWith("/cart") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
-    pathname.startsWith("/orders/")
+    pathname.startsWith("/orders/") ||
+    pathname.startsWith("/product/")
   );
 }
 
@@ -26,7 +27,7 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -35,13 +36,9 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
-        )
+        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
       )
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -74,8 +71,11 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match("/"))
-        )
+          caches.match(request).then((cached) => {
+            if (cached) return cached;
+            return Response.error();
+          }),
+        ),
     );
     return;
   }
@@ -91,7 +91,7 @@ self.addEventListener("fetch", (event) => {
           }
           return response;
         });
-      })
+      }),
     );
   }
 });
@@ -120,14 +120,13 @@ self.addEventListener("push", (event) => {
       badge: "/icon-48.png",
       tag: payload.tag,
       data: { url: payload.url },
-    })
+    }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target =
-    (event.notification.data && event.notification.data.url) || "/";
+  const target = (event.notification.data && event.notification.data.url) || "/";
   const absolute = new URL(target, self.location.origin).href;
 
   event.waitUntil(
@@ -139,6 +138,6 @@ self.addEventListener("notificationclick", (event) => {
         }
       }
       return self.clients.openWindow(absolute);
-    })
+    }),
   );
 });

@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import ProductShareButton from "@/components/product/ProductShareButton";
+import ProductPageLink from "@/components/navigation/ProductPageLink";
 import HomepageProductImage from "@/components/homepage/HomepageProductImage";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import {
@@ -88,7 +88,7 @@ export default function CarouselProductCard({
     event.stopPropagation();
     if (!canQuickAdd) return;
     if (shouldNavigateForVariants(cartProduct)) {
-      router.push(productHref);
+      window.location.assign(productHref);
       return;
     }
     if (!startBuyNow(cartProduct)) return;
@@ -104,7 +104,7 @@ export default function CarouselProductCard({
         url={productHref}
       />
       <div className="product-suggest__item" data-hp-section={sectionKey} data-id={item.id}>
-        <Link href={productHref} className="product-suggest__item-link">
+        <ProductPageLink href={productHref} className="product-suggest__item-link">
           {badgeLabel ? (
             <span
               className={
@@ -176,7 +176,7 @@ export default function CarouselProductCard({
               </span>
             </div>
           </div>
-        </Link>
+        </ProductPageLink>
         <div className="product-suggest__item-action-row">
           {canQuickAdd ? (
             <button

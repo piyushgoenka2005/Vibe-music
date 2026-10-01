@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent, ReactNode } from "react";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
 import HomepageProductImage from "@/components/homepage/HomepageProductImage";
+import ProductPageLink from "@/components/navigation/ProductPageLink";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import {
   ensureProductReviewMetrics,
@@ -128,7 +128,7 @@ export default function NewArrivalsProductCard({
     event.stopPropagation();
     if (!canBuy) return;
     if (shouldNavigateForVariants(cartProduct)) {
-      router.push(productHref);
+      window.location.assign(productHref);
       return;
     }
     if (!startBuyNow(cartProduct)) return;
@@ -151,7 +151,7 @@ export default function NewArrivalsProductCard({
         data-key={id}
         role="listitem"
       >
-        <Link
+        <ProductPageLink
           aria-hidden={ariaHidden || undefined}
           aria-label={imageAlt || `${brand} ${name}, ${formatDisplayPrice(price, salePrice)}`}
           className="new-arrivals-card__link"
@@ -232,7 +232,7 @@ export default function NewArrivalsProductCard({
               </span>
             </span>
           </div>
-        </Link>
+        </ProductPageLink>
 
         <div className="new-arrivals-card__meta-row new-arrivals-card__meta-row--price">
           {canBuy ? (

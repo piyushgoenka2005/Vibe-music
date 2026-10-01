@@ -1,6 +1,6 @@
-import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import HomepageProductImage from "@/components/homepage/HomepageProductImage";
+import ProductPageLink from "@/components/navigation/ProductPageLink";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import { resolveDealBadgeLabel } from "@/lib/product/resolveDealBadgeLabel";
 import { formatDisplayPrice } from "@/utils/currency";
@@ -27,7 +27,7 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
         title={`${item.brand} ${item.name}`}
         url={productHref}
       />
-      <Link
+      <ProductPageLink
         href={productHref}
         className="tile--link"
         data-hp-section="sale events"
@@ -78,7 +78,7 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
             </div>
           </div>
         </div>
-      </Link>
+      </ProductPageLink>
     </div>
   );
 }
