@@ -94,6 +94,7 @@
     "verify:images": "node scripts/ops/verify-essential-images.mjs",
     "verify:homepage-images": "node scripts/ops/verify-homepage-images.mjs",
     "verify:ssl": "npx tsx scripts/ops/verify-ssl-cert.mts",
+    "verify:dns": "npx tsx scripts/ops/verify-dns.mts",
     "check:cwv": "node scripts/ops/check-cwv.mjs",
     "check:cwv:strict": "node scripts/ops/check-cwv-strict.mjs",
     "audit:deps": "node scripts/ops/audit-deps.mjs",

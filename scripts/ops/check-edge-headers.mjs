@@ -32,7 +32,7 @@ async function main() {
     if (/certificate|altnames|TLS|SSL|UNABLE_TO_VERIFY/i.test(message)) {
       console.log(`
 BLOCKING: Public TLS certificate failed for ${baseUrl}.
-This is often CloudOnFire duplicate IP routing (CN=git.k12hunar.com on 31.42.125.219).
+This often means DNS still points at the legacy shared IP (31.42.125.219). See docs/ops/dedicated-ip-migration.md.
 Run: npm run verify:ssl
 See: docs/ops/cloudonfire-duplicate-ip-ticket.txt
 `);

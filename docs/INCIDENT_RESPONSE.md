@@ -87,10 +87,10 @@ npm run ops:verify-ssh
 # On VPS via CloudOnFire VNC console (local cert + nginx)
 bash deploy/fix-ssl-certificates.sh --check-only
 echo | openssl s_client -connect 127.0.0.1:443 -servername vibemusic.in 2>/dev/null | openssl x509 -noout -subject
-curl -skI -H "Host: vibemusic.in" https://31.42.125.219/ | head
+curl -skI -H "Host: vibemusic.in" https://109.122.56.126/ | head
 ```
 
-**Root cause (most common)**: CloudOnFire **duplicate public IP** — `31.42.125.219` intermittently routes
+**Root cause (most common)**: CloudOnFire **duplicate public IP** — `109.122.56.126` intermittently routes
 to another tenant's Forgejo/Gitea (`CN=git.k12hunar.com`) instead of VPS 1055 (`vibemusic.in`).
 
 **Resolution**:
@@ -449,12 +449,12 @@ After every P0/P1 incident:
 
 ## 7. Emergency Contacts
 
-| Role         | Contact                                                  | When                               |
-| ------------ | -------------------------------------------------------- | ---------------------------------- |
-| VPS Provider | [Hosting dashboard]                                      | Server issues                      |
-| PostgreSQL   | Check logs first, then provider                          | Database issues                    |
-| CloudOnFire  | [cp.cloudonfire.com](https://cp.cloudonfire.com) support | VPS, nginx, DNS to `31.42.125.219` |
-| Razorpay     | support@razorpay.com                                     | Payment gateway issues             |
+| Role         | Contact                                                  | When                                |
+| ------------ | -------------------------------------------------------- | ----------------------------------- |
+| VPS Provider | [Hosting dashboard]                                      | Server issues                       |
+| PostgreSQL   | Check logs first, then provider                          | Database issues                     |
+| CloudOnFire  | [cp.cloudonfire.com](https://cp.cloudonfire.com) support | VPS, nginx, DNS to `109.122.56.126` |
+| Razorpay     | support@razorpay.com                                     | Payment gateway issues              |
 
 ---
 

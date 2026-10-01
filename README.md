@@ -10,14 +10,14 @@ Production ecommerce for musical instruments and pro audio — **vibemusic.in**
 | Payments | **Razorpay only** (live mode in production)     |
 | Hosting  | **CloudOnFire VPS** — nginx → PM2 → PostgreSQL  |
 | CDN      | `cdn.vibemusic.in` (nginx static on same VPS)   |
-| DNS      | GoDaddy A records → `31.42.125.219`             |
+| DNS      | GoDaddy A records → `109.122.56.126`            |
 
 ---
 
 ## Production infrastructure
 
 ```
-GoDaddy DNS → CloudOnFire VPS (31.42.125.219)
+GoDaddy DNS → CloudOnFire VPS (109.122.56.126)
                 ├── nginx :80 / :443  (vibemusic.in, www, cdn, mail)
                 ├── PM2 vibe          → Next.js :3000 (127.0.0.1)
                 ├── PM2 vibe-worker   → background jobs (Redis)
@@ -28,12 +28,12 @@ GoDaddy DNS → CloudOnFire VPS (31.42.125.219)
 | Item         | Value                                                |
 | ------------ | ---------------------------------------------------- |
 | VPS provider | [CloudOnFire](https://cp.cloudonfire.com)            |
-| IP           | `31.42.125.219`                                      |
+| IP           | `109.122.56.126`                                     |
 | SSH user     | `root`                                               |
 | App path     | `~/Vibe-music`                                       |
 | Host key     | `SHA256:l0hpirMy/wrm0gRH4SNxl4PdMmpzKXtSFOjfMESvX7I` |
 
-**Do not** use bare `ssh root@31.42.125.219` — the IP is sometimes routed to another host. Use the deploy-key helper:
+**SSH:** use the deploy key helper (`npm run ops:ssh`) or `ssh -i ~/.ssh/vibe_vps_deploy root@109.122.56.126`.
 
 ```powershell
 npm run ops:ssh
@@ -94,7 +94,7 @@ bash deploy/production.sh certify
 
 Push to `main` triggers `.github/workflows/deploy-production.yml`.
 
-**Secrets:** `VPS_HOST=31.42.125.219`, `VPS_USER=root`, `VPS_PORT=22`, `VPS_SSH_KEY` (private key from `%USERPROFILE%\.ssh\vibe_vps_deploy`).
+**Secrets:** `VPS_HOST=109.122.56.126`, `VPS_USER=root`, `VPS_PORT=22`, `VPS_SSH_KEY` (private key from `%USERPROFILE%\.ssh\vibe_vps_deploy`).
 
 Generate key: `powershell -ExecutionPolicy Bypass -File scripts/ops/setup-deploy-access.ps1`
 
@@ -110,7 +110,7 @@ bash deploy/production.sh rollback <known-good-commit>
 
 ## DNS (GoDaddy)
 
-Point these **A records** to `31.42.125.219`:
+Point these **A records** to `109.122.56.126` (dedicated VPS IP — see [dedicated-ip-migration.md](docs/ops/dedicated-ip-migration.md)):
 
 | Host   | Purpose           |
 | ------ | ----------------- |
@@ -121,7 +121,7 @@ Point these **A records** to `31.42.125.219`:
 
 Verify: `nslookup vibemusic.in` and `nslookup cdn.vibemusic.in`
 
-Update SPF TXT when IP changes: use `a:mail.vibemusic.in` or `ip4:31.42.125.219`.
+Update SPF TXT when IP changes: use `a:mail.vibemusic.in` or `ip4:109.122.56.126`.
 
 ---
 

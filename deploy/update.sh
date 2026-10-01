@@ -25,7 +25,13 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 cd "$APP_DIR"
 
-VPS_IP="${VPS_IP:-31.42.125.219}"
+HOST_ENV="${APP_DIR}/deploy/production-host.env"
+if [[ -f "$HOST_ENV" ]]; then
+  # shellcheck disable=SC1090
+  source "$HOST_ENV"
+fi
+
+VPS_IP="${VPS_IP:-109.122.56.126}"
 PUBLIC_BASE="${PUBLIC_BASE_URL:-https://vibemusic.in}"
 LOOPBACK="http://127.0.0.1:3000"
 VERIFY_PUBLIC_SMOKE="${VERIFY_PUBLIC_SMOKE:-1}"

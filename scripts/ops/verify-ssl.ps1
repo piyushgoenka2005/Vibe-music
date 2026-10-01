@@ -1,7 +1,7 @@
 # Probe vibemusic.in TLS from your PC (detects duplicate-IP / wrong-cert issues).
 param(
     [string]$HostName = "vibemusic.in",
-    [string]$Ip = "31.42.125.219",
+    [string]$Ip = "109.122.56.126",
     [int]$Port = 443,
     [int]$Attempts = 20
 )

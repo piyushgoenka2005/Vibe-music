@@ -1,17 +1,18 @@
-# Connect to Vibe VPS only when the correct host key is seen (avoids Gitea host on same IP).
+# Connect to Vibe VPS (CloudOnFire dedicated IP 109.122.56.126).
 # Usage: powershell -ExecutionPolicy Bypass -File scripts\ops\ssh-vps.ps1
 #        powershell -ExecutionPolicy Bypass -File scripts\ops\ssh-vps.ps1 -Command "pm2 status"
 
 param(
-    [string]$HostIp = "31.42.125.219",
+    [string]$HostIp = "109.122.56.126",
     [string]$User = "root",
     [int]$Port = 22,
-    [int]$MaxAttempts = 25,
+    [int]$MaxAttempts = 5,
     [string]$Command = ""
 )
 
 $key = Join-Path $env:USERPROFILE ".ssh\vibe_vps_deploy"
 $expected = "SHA256:l0hpirMy/wrm0gRH4SNxl4PdMmpzKXtSFOjfMESvX7I"
+$legacyWrongIp = "31.42.125.219"
 $wrong = "SHA256:vjfQl9pdbsCqLuAEOVL451bbtscQSyiC0APZ0iIwv2k"
 
 if (-not (Test-Path $key)) {
@@ -31,8 +32,8 @@ for ($i = 1; $i -le $MaxAttempts; $i++) {
         continue
     }
     $fp = $m.Groups[1].Value
-    if ($fp -eq $wrong) {
-        Write-Host "Attempt $i/$MaxAttempts - wrong host (Gitea), retrying..."
+    if ($fp -eq $wrong -or $HostIp -eq $legacyWrongIp) {
+        Write-Host "Attempt $i/$MaxAttempts - legacy shared IP / wrong host, retrying..."
         Start-Sleep -Seconds 1
         continue
     }
@@ -63,5 +64,5 @@ for ($i = 1; $i -le $MaxAttempts; $i++) {
 
 Write-Host ""
 Write-Host "Could not reach your VPS after $MaxAttempts tries." -ForegroundColor Red
-Write-Host "CloudOnFire still has two servers on $HostIp. Use VNC console or contact support."
+Write-Host "Could not reach VPS at $HostIp. Check CloudOnFire panel or docs/ops/dedicated-ip-migration.md."
 exit 1

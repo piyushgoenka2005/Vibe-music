@@ -1,19 +1,15 @@
 #!/usr/bin/env npx tsx
 /**
- * Public TLS probe for vibemusic.in — detects CloudOnFire duplicate-IP routing.
- *
- * The VPS IP (31.42.125.219) sometimes answers with another tenant's certificate
- * (CN=git.k12hunar.com / Gitea) instead of vibemusic.in. Local nginx checks on
- * 127.0.0.1 cannot detect this; only an external probe can.
+ * Public TLS probe for vibemusic.in on the dedicated VPS IP.
  *
  * Usage:
  *   npm run verify:ssl
- *   VERIFY_HOST=vibemusic.in VERIFY_IP=31.42.125.219 npx tsx scripts/ops/verify-ssl-cert.mts
+ *   VERIFY_HOST=vibemusic.in VERIFY_IP=109.122.56.126 npx tsx scripts/ops/verify-ssl-cert.mts
  */
 import tls from "node:tls";
 
 const HOST = (process.env.VERIFY_HOST ?? "vibemusic.in").trim();
-const IP = (process.env.VERIFY_IP ?? "31.42.125.219").trim();
+const IP = (process.env.VERIFY_IP ?? "109.122.56.126").trim();
 const PORT = Number(process.env.VERIFY_PORT ?? "443");
 const ATTEMPTS = Number(process.env.VERIFY_SSL_ATTEMPTS ?? "12");
 const MIN_OK_RATIO = Number(process.env.VERIFY_SSL_MIN_OK_RATIO ?? "0.9");
@@ -133,16 +129,14 @@ async function main(): Promise<void> {
 
   if (wrongCn || [...failures.keys()].some((k) => k.includes("git.k12hunar.com"))) {
     console.log(`
-Root cause: CloudOnFire duplicate IP routing
-  IP ${IP} intermittently serves another customer's Forgejo/Gitea (CN=git.k12hunar.com)
-  instead of VPS 1055 (vibemusic.in). This is NOT fixable from nginx or certbot alone.
+Root cause: DNS or routing still hitting legacy shared IP (31.42.125.219)
+  Expected dedicated IP: ${IP} (VPS 1055). Another tenant's cert (git.k12hunar.com) means
+  GoDaddy A records or local DNS cache may still point at the old address.
 
 Operator actions:
-  1. Open CloudOnFire support ticket — see docs/ops/cloudonfire-duplicate-ip-ticket.txt
-  2. WhatsApp CloudOnFire: +91 95606 14171 (VPS 1055 / duplicate IP on ${IP})
-  3. Use CloudOnFire panel -> VPS 1055 -> VNC console until resolved
-  4. After CloudOnFire assigns a dedicated IP, update GoDaddy A records and run:
-       VERIFY_BASE_URL=https://vibemusic.in npm run verify:ssl
+  1. Update GoDaddy A records (@, www, cdn, mail) → 109.122.56.126
+  2. See docs/ops/dedicated-ip-migration.md
+  3. Run: npm run verify:dns && npm run verify:ssl
 `);
   } else {
     console.log(`

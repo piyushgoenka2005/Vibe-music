@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-# Repair nginx TLS for vibemusic.in on VPS 1055.
-#
-# Fixes local nginx/certbot issues. Cannot fix CloudOnFire duplicate-IP routing
-# (when ${VPS_IP} serves git.k12hunar.com to external clients) — that requires
-# a CloudOnFire support ticket (docs/ops/cloudonfire-duplicate-ip-ticket.txt).
+# Repair nginx TLS for vibemusic.in on VPS 1055 (dedicated IP 109.122.56.126).
 #
 # Usage (on VPS as root):
 #   bash deploy/fix-ssl-certificates.sh
@@ -13,7 +9,7 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 cd "$APP_DIR"
 
-VPS_IP="${VPS_IP:-31.42.125.219}"
+VPS_IP="${VPS_IP:-109.122.56.126}"
 PRIMARY_DOMAIN="${PRIMARY_DOMAIN:-vibemusic.in}"
 CERT_DIR="/etc/letsencrypt/live/${PRIMARY_DOMAIN}"
 CHECK_ONLY=0
