@@ -45,6 +45,14 @@ for ($i = 1; $i -le $MaxAttempts; $i++) {
 
     Write-Host "Correct VPS host key seen. Connecting..."
     $knownHosts = Join-Path $env:USERPROFILE ".ssh\known_hosts_vibe_vps"
+    $keyLine = [regex]::Match($probe, "\[109\.122\.56\.126\]:22 ssh-ed25519 (\S+)|109\.122\.56\.126 ssh-ed25519 (\S+)")
+    if (-not $keyLine.Success) {
+        $pubKey = [regex]::Match($probe, "Server host key: ssh-ed25519 (\S+)")
+        if ($pubKey.Success -and -not (Select-String -Path $knownHosts -Pattern $HostIp -Quiet -ErrorAction SilentlyContinue)) {
+            # Same VPS key as legacy IP — seed known_hosts on first dedicated-IP connect
+            "109.122.56.126 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPPDToQyrJuGRBKBCHf1welkvWPTOai7uinUxHDBb3Mt" | Add-Content -Path $knownHosts
+        }
+    }
     $sshArgs = @(
         "-i", $key,
         "-p", $Port,
