@@ -16,53 +16,58 @@ export interface BigNamesDealBrand {
 export const BIG_NAMES_DEALS_CTA = ROUTES.deals;
 
 /**
- * Featured guitar showcase — brand labels match the live catalog brand (Hertz).
- * Visuals use curated white-background guitar art so cards always render offline.
+ * Featured guitar showcase — iconic brand logos with curated white-background art.
+ * Each slot deep-links to a real Hertz guitar PDP in catalog.
  */
 export const BIG_NAMES_DEALS: BigNamesDealBrand[] = [
   {
-    key: "hertz-hza-uk-24",
-    brand: "Hertz",
+    key: "gibson",
+    brand: "Gibson",
     productSlug: "hertz-hertz-hza-uk-24-hertz-hza-uk-24",
     href: productPath("hertz-hertz-hza-uk-24-hertz-hza-uk-24"),
     logo: "/images/big-names-deals/gibson-logo.svg",
     product: "/images/big-names-deals/gibson-product.webp",
-    productAlt: "Hertz HZA-UK(24) professional guitar",
+    productAlt: "Gibson-style electric guitar showcase",
+    blendMultiply: true,
   },
   {
-    key: "hertz-hza-3900",
-    brand: "Hertz",
+    key: "epiphone",
+    brand: "Epiphone",
     productSlug: "hertz-hza-3900-hza-3900",
     href: productPath("hertz-hza-3900-hza-3900"),
     logo: "/images/big-names-deals/epiphone-logo.svg",
     product: "/images/big-names-deals/epiphone-product.webp",
-    productAlt: "Hertz HZA-3900 acoustic guitar",
+    productAlt: "Epiphone-style electric guitar showcase",
+    blendMultiply: true,
   },
   {
-    key: "hertz-hza-3600",
-    brand: "Hertz",
+    key: "prs",
+    brand: "PRS",
     productSlug: "hertz-hza-3600-hza-3600",
     href: productPath("hertz-hza-3600-hza-3600"),
     logo: "/images/big-names-deals/prs-logo.svg",
     product: "/images/big-names-deals/prs-product.webp",
-    productAlt: "Hertz HZA-3600 natural finish acoustic",
+    productAlt: "PRS-style electric guitar showcase",
+    blendMultiply: true,
   },
   {
-    key: "hertz-hza3900eq",
-    brand: "Hertz",
+    key: "ibanez",
+    brand: "Ibanez",
     productSlug: "hertz-hza3900eq-hza3900eq",
     href: productPath("hertz-hza3900eq-hza3900eq"),
     logo: "/images/big-names-deals/ibanez-logo.svg",
     product: "/images/big-names-deals/ibanez-product.webp",
-    productAlt: "Hertz HZA3900EQ electro acoustic guitar",
+    productAlt: "Ibanez-style electric guitar showcase",
+    blendMultiply: true,
   },
   {
-    key: "hertz-hza-6000",
-    brand: "Hertz",
+    key: "fender",
+    brand: "Fender",
     productSlug: "hertz-hza-6000-hza-6000",
     href: productPath("hertz-hza-6000-hza-6000"),
     logo: "/images/big-names-deals/fender-logo.svg",
     product: "/images/big-names-deals/fender-product.webp",
-    productAlt: "Hertz HZA-6000 acoustic guitar",
+    productAlt: "Fender-style electric guitar showcase",
+    blendMultiply: true,
   },
 ];

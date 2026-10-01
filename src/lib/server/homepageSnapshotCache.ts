@@ -21,7 +21,7 @@ export const getCachedPublicHomepageData = unstable_cache(
 
 export const getCachedBigNamesDealsPublicData = unstable_cache(
   async (): Promise<PublicBigNamesDealsData> => buildBigNamesDealsPublicData(),
-  ["public-big-names-deals-v3"],
+  ["public-big-names-deals-v4"],
   { revalidate: HOMEPAGE_REVALIDATE_SECONDS, tags: ["homepage", "catalog"] },
 );
 

@@ -12,8 +12,10 @@ export interface BigNamesDealItem {
   key: string;
   brand: string;
   href: string;
+  logo: string;
   product: string;
   productAlt: string;
+  blendMultiply?: boolean;
 }
 
 export function isBigNamesDealsGuitarProduct(product: CatalogProduct): boolean {
@@ -99,10 +101,12 @@ export function mapCatalogProductToBigNamesDeal(
 
   return {
     key: deal?.key ?? product.id,
-    brand: product.brand,
+    brand: deal?.brand ?? product.brand,
     href,
+    logo: deal?.logo ?? "",
     product: productSrc,
     productAlt: overrides?.title ?? product.name,
+    blendMultiply: deal?.blendMultiply,
   };
 }
 
@@ -113,11 +117,12 @@ function toShowcaseItem(
   if (product) {
     return {
       key: deal.key,
-      // Always use the live catalog brand — never a mismatched showcase label.
-      brand: product.brand,
+      brand: deal.brand,
       href: productPath(product.slug),
+      logo: deal.logo,
       product: deal.product,
       productAlt: product.name,
+      blendMultiply: deal.blendMultiply,
     };
   }
 
@@ -125,8 +130,10 @@ function toShowcaseItem(
     key: deal.key,
     brand: deal.brand,
     href: productPath(deal.productSlug),
+    logo: deal.logo,
     product: deal.product,
     productAlt: deal.productAlt,
+    blendMultiply: deal.blendMultiply,
   };
 }
 

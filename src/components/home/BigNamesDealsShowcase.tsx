@@ -1,9 +1,9 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ProductImage from "@/components/common/ProductImage";
+import ProductPageLink from "@/components/navigation/ProductPageLink";
 import RevealGroup from "@/components/layout/RevealGroup";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
@@ -54,15 +54,17 @@ function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: numb
     () =>
       Array.from(
         new Set(
-          [slotArt, item.product, ...BIG_NAMES_DEALS.map((deal) => deal.product)].filter((src) =>
-            src.startsWith("/images/"),
+          [slotArt, item.product, item.logo, ...BIG_NAMES_DEALS.map((deal) => deal.product)].filter(
+            (src) => src.startsWith("/images/"),
           ),
         ),
       ),
-    [slotArt, item.product],
+    [slotArt, item.product, item.logo],
   );
   const [attempt, setAttempt] = useState(0);
+  const [logoFailed, setLogoFailed] = useState(false);
   const productSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? slotArt;
+  const blendMultiply = item.blendMultiply ?? true;
 
   return (
     <div
@@ -70,36 +72,64 @@ function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: numb
       role="listitem"
       style={{ "--big-names-index": String(index) } as CSSProperties}
     >
-      <Link
+      <ProductPageLink
         aria-label={`Shop ${item.brand} — open product`}
         className="big-names-deals__link"
         href={item.href}
-        prefetch
         tabIndex={0}
       >
-        <div className="big-names-deals__hang-wrap">
-          <div className="big-names-deals__product-stage">
-            <ProductImage
-              alt={item.productAlt}
-              className="big-names-deals__product"
-              decoding="async"
-              draggable={false}
-              fetchPriority={index < 2 ? "high" : "auto"}
-              height={480}
-              loading={index < 2 ? "eager" : "lazy"}
-              sizes="(max-width: 767px) 80vw, (max-width: 1024px) 33vw, 260px"
-              src={productSrc}
-              variant="card"
-              width={480}
-              onError={() => {
-                if (attempt < candidates.length - 1) {
-                  setAttempt((current) => current + 1);
-                }
-              }}
+        <div className="big-names-deals__spotlight" aria-hidden />
+        <div className="big-names-deals__logo-wrap">
+          {!logoFailed && item.logo ? (
+            <Image
+              alt=""
+              className="big-names-deals__logo"
+              height={28}
+              onError={() => setLogoFailed(true)}
+              src={item.logo}
+              style={{ width: "auto", height: "auto" }}
+              unoptimized
+              width={120}
             />
+          ) : (
+            <span className="big-names-deals__brand-fallback">{item.brand}</span>
+          )}
+        </div>
+        <div className="big-names-deals__hang-wrap">
+          <span className="big-names-deals__hanger" aria-hidden>
+            <span className="big-names-deals__hanger-hook" />
+            <span className="big-names-deals__hanger-plate" />
+          </span>
+          <div className="big-names-deals__product-stage">
+            <span className="big-names-deals__floor-shadow" aria-hidden />
+            <span
+              className={`big-names-deals__product-shadow${blendMultiply ? " big-names-deals__product-shadow--blend" : ""}`}
+            >
+              <span
+                className={`big-names-deals__product-wrap${blendMultiply ? " big-names-deals__product-wrap--blend" : ""}`}
+              >
+                <img
+                  alt={item.productAlt}
+                  className="big-names-deals__product"
+                  decoding="async"
+                  draggable={false}
+                  fetchPriority={index < 2 ? "high" : "auto"}
+                  height={480}
+                  loading={index < 2 ? "eager" : "lazy"}
+                  sizes="(max-width: 767px) 80vw, (max-width: 1024px) 33vw, 260px"
+                  src={productSrc}
+                  width={480}
+                  onError={() => {
+                    if (attempt < candidates.length - 1) {
+                      setAttempt((current) => current + 1);
+                    }
+                  }}
+                />
+              </span>
+            </span>
           </div>
         </div>
-      </Link>
+      </ProductPageLink>
     </div>
   );
 }
