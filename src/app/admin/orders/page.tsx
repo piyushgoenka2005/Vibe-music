@@ -23,6 +23,7 @@ import {
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import type { AdminCapabilities } from "@/lib/auth/adminCapabilities";
 import type { Order, OrderStatus } from "@/types/order";
+import type { OrderTimelineEvent } from "@/types/order";
 
 async function fetchOrders(params: { search: string; status: string; cursor?: string }) {
   const sp = new URLSearchParams({ limit: "20" });
@@ -36,9 +37,12 @@ async function fetchOrders(params: { search: string; status: string; cursor?: st
   }>(`/api/admin/orders?${sp}`);
 }
 
-async function fetchOrderDetail(orderId: string): Promise<Order> {
-  const data = await adminFetchJson<{ order: Order }>(`/api/admin/orders/${orderId}`);
-  return data.order;
+async function fetchOrderDetail(
+  orderId: string,
+): Promise<{ order: Order; timeline: OrderTimelineEvent[] }> {
+  return adminFetchJson<{ order: Order; timeline: OrderTimelineEvent[] }>(
+    `/api/admin/orders/${orderId}`,
+  );
 }
 
 function OrdersContent({
@@ -74,11 +78,13 @@ function OrdersContent({
     queryFn: () => fetchOrders({ search, status, cursor }),
   });
 
-  const { data: selected, isLoading: detailLoading } = useQuery({
+  const { data: orderDetail, isLoading: detailLoading } = useQuery({
     queryKey: ["admin-order-detail", selectedId],
     queryFn: () => fetchOrderDetail(selectedId!),
     enabled: Boolean(selectedId),
   });
+  const selected = orderDetail?.order ?? null;
+  const timeline = orderDetail?.timeline ?? [];
 
   useEffect(() => {
     if (selected) setNewStatus(selected.status);
@@ -87,15 +93,6 @@ function OrdersContent({
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!selected) return;
-      if (
-        newStatus === "refunded" &&
-        selected.paymentStatus === "paid" &&
-        selected.razorpayPaymentId
-      ) {
-        throw new Error(
-          "This order is still paid on Razorpay. Use Refund via Razorpay below — do not mark status refunded first.",
-        );
-      }
       await adminMutateJson(`/api/admin/orders/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -105,6 +102,21 @@ function OrdersContent({
     onSuccess: () => {
       setNote("");
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-order-detail", selectedId] });
+    },
+  });
+
+  const noteOnlyMutation = useMutation({
+    mutationFn: async () => {
+      if (!selected || !note.trim()) return;
+      await adminMutateJson(`/api/admin/orders/${selected.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note }),
+      });
+    },
+    onSuccess: () => {
+      setNote("");
       queryClient.invalidateQueries({ queryKey: ["admin-order-detail", selectedId] });
     },
   });
@@ -446,10 +458,50 @@ function OrdersContent({
                   </a>
                 </div>
 
+                {timeline.length > 0 ? (
+                  <div style={{ marginBottom: "1rem" }}>
+                    <p>
+                      <strong>Activity</strong>
+                    </p>
+                    <ul
+                      style={{
+                        listStyle: "none",
+                        padding: 0,
+                        margin: "0.5rem 0 0",
+                        fontSize: "0.8125rem",
+                        color: "var(--admin-muted)",
+                      }}
+                    >
+                      {timeline.map((event) => (
+                        <li
+                          key={event.id}
+                          style={{
+                            padding: "0.5rem 0",
+                            borderBottom: "1px solid var(--admin-border)",
+                          }}
+                        >
+                          <div style={{ color: "var(--admin-text)" }}>
+                            {event.action === "order.note"
+                              ? "Note added"
+                              : event.action === "order.refund_initiated"
+                                ? "Refund initiated"
+                                : event.action}
+                            {event.note ? ` — ${event.note}` : ""}
+                          </div>
+                          <div>
+                            {event.actor} · {formatDate(event.createdAt)}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
                 {selected.paymentStatus === "paid" && selected.razorpayPaymentId ? (
-                  <AdminNotice tone="warning" title="Money refunds are separate from status">
-                    Marking an order “Refunded” does not pay the customer back. Use{" "}
-                    <strong>Refund via Razorpay</strong> below for full or partial refunds.
+                  <AdminNotice tone="info" title="Refunded status triggers Razorpay">
+                    Setting status to <strong>Refunded</strong> automatically initiates a full
+                    Razorpay refund for paid orders. Use <strong>Refund via Razorpay</strong> below
+                    for partial refunds without changing status.
                   </AdminNotice>
                 ) : null}
 
@@ -480,15 +532,33 @@ function OrdersContent({
                         onChange={(e) => setNote(e.target.value)}
                       />
                     </div>
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--primary"
-                      disabled={updateMutation.isPending}
-                      onClick={() => updateMutation.mutate()}
-                    >
-                      {updateMutation.isPending ? "Updating…" : "Update Order"}
-                    </button>
-                    <MutationError error={updateMutation.isError ? updateMutation.error : null} />
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--primary"
+                        disabled={updateMutation.isPending}
+                        onClick={() => updateMutation.mutate()}
+                      >
+                        {updateMutation.isPending ? "Updating…" : "Update Order"}
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--secondary"
+                        disabled={noteOnlyMutation.isPending || !note.trim()}
+                        onClick={() => noteOnlyMutation.mutate()}
+                      >
+                        {noteOnlyMutation.isPending ? "Saving…" : "Add note only"}
+                      </button>
+                    </div>
+                    <MutationError
+                      error={
+                        updateMutation.isError
+                          ? updateMutation.error
+                          : noteOnlyMutation.isError
+                            ? noteOnlyMutation.error
+                            : null
+                      }
+                    />
                   </>
                 ) : null}
                 {ordersRefund && selected.paymentStatus === "paid" && selected.razorpayPaymentId ? (

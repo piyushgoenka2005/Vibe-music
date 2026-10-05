@@ -37,9 +37,11 @@ const StorefrontDrawers = dynamic(() => import("@/components/layout/StorefrontDr
 export default function AppShell({
   children,
   legal,
+  shippingAnnouncement,
 }: {
   children: React.ReactNode;
   legal: PublicLegalInfo;
+  shippingAnnouncement?: string;
 }) {
   const pathname = usePathname() ?? "";
   const isAdmin = pathname.startsWith("/admin");
@@ -104,7 +106,7 @@ export default function AppShell({
             <ScrollRestoration />
           </Suspense>
           <div className="storefront-root">
-            <StorefrontChrome legal={legal}>
+            <StorefrontChrome legal={legal} shippingAnnouncement={shippingAnnouncement}>
               <DeferredHtmlLinkInterceptor />
               <DeferredGlobalSearch />
               <StorefrontDrawers />

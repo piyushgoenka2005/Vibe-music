@@ -34,11 +34,20 @@ function WhyShopCard({
   );
 }
 
-export default function WhyShopSection() {
+interface WhyShopSectionProps {
+  shippingSubtitle?: string;
+}
+
+export default function WhyShopSection({ shippingSubtitle }: WhyShopSectionProps) {
   const reduceMotion = useHydrationSafeReducedMotion();
   const isMobileViewport = useIsMobileViewport();
+  const baseItems = shippingSubtitle
+    ? WHY_SHOP_ITEMS.map((item) =>
+        item.id === "free-shipping" ? { ...item, subtitle: shippingSubtitle } : item,
+      )
+    : WHY_SHOP_ITEMS;
   // Always duplicate so the track stays one horizontal line (never wraps to a grid).
-  const items = [...WHY_SHOP_ITEMS, ...WHY_SHOP_ITEMS];
+  const items = [...baseItems, ...baseItems];
 
   const marqueeClass = [
     "why-shop__marquee",
@@ -64,7 +73,7 @@ export default function WhyShopSection() {
             <WhyShopCard
               key={`${item.id}-${index}`}
               item={item}
-              duplicateIndex={index >= WHY_SHOP_ITEMS.length ? 1 : 0}
+              duplicateIndex={index >= baseItems.length ? 1 : 0}
             />
           ))}
         </div>

@@ -8,21 +8,35 @@ import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import type { AdminCategory } from "@/types/admin";
 
+type CategoryForm = {
+  name: string;
+  slug: string;
+  description: string;
+  parentId: string | null;
+  imageUrl: string;
+  isFeatured: boolean;
+  sortOrder: number;
+  metaTitle: string;
+  metaDescription: string;
+};
+
+const EMPTY_FORM: CategoryForm = {
+  name: "",
+  slug: "",
+  description: "",
+  parentId: null,
+  imageUrl: "",
+  isFeatured: false,
+  sortOrder: 0,
+  metaTitle: "",
+  metaDescription: "",
+};
+
 function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: boolean }) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [filterType, setFilterType] = useState<"all" | "main" | "sub">("all");
-  const [form, setForm] = useState<{
-    name: string;
-    slug: string;
-    description: string;
-    parentId: string | null;
-  }>({
-    name: "",
-    slug: "",
-    description: "",
-    parentId: null,
-  });
+  const [form, setForm] = useState<CategoryForm>(EMPTY_FORM);
   const [editId, setEditId] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
@@ -38,13 +52,18 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
       await adminMutateJson(url, {
         method: editId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          imageUrl: form.imageUrl.trim() || undefined,
+          metaTitle: form.metaTitle.trim() || undefined,
+          metaDescription: form.metaDescription.trim() || undefined,
+        }),
       });
     },
     onSuccess: () => {
       setShowForm(false);
       setEditId(null);
-      setForm({ name: "", slug: "", description: "", parentId: null });
+      setForm(EMPTY_FORM);
       queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
     },
   });
@@ -121,7 +140,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
             onClick={() => {
               setShowForm(true);
               setEditId(null);
-              setForm({ name: "", slug: "", description: "", parentId: null });
+              setForm(EMPTY_FORM);
             }}
           >
             Add Category / Subcategory
@@ -175,6 +194,39 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                 </select>
               </div>
 
+              <div className="admin-form-group">
+                <label>Image URL</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.imageUrl}
+                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                  placeholder="https://…"
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label>Sort order</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  type="number"
+                  value={form.sortOrder}
+                  onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) || 0 })}
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={form.isFeatured}
+                    onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
+                  />{" "}
+                  Featured
+                </label>
+              </div>
+
               <div className="admin-form-group admin-form-grid--full">
                 <label>Description</label>
                 <textarea
@@ -182,6 +234,25 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="Optional category description"
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label>Meta title</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.metaTitle}
+                  onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label>Meta description</label>
+                <textarea
+                  className="admin-textarea"
+                  value={form.metaDescription}
+                  onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
                 />
               </div>
             </div>
@@ -217,6 +288,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                   <th>Name</th>
                   <th>Type / Parent</th>
                   <th>Slug</th>
+                  <th>Featured</th>
                   <th>Products</th>
                   <th>Actions</th>
                 </tr>
@@ -241,6 +313,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                       <td>
                         <code style={{ fontSize: "0.8rem" }}>{cat.slug}</code>
                       </td>
+                      <td>{cat.isFeatured ? "Yes" : "—"}</td>
                       <td>{cat.productCount ?? 0}</td>
                       <td>
                         {canWrite ? (
@@ -255,6 +328,11 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                                 slug: cat.slug,
                                 description: cat.description ?? "",
                                 parentId: cat.parentId ?? null,
+                                imageUrl: cat.imageUrl ?? "",
+                                isFeatured: cat.isFeatured ?? false,
+                                sortOrder: cat.sortOrder ?? 0,
+                                metaTitle: cat.metaTitle ?? "",
+                                metaDescription: cat.metaDescription ?? "",
                               });
                               setShowForm(true);
                             }}

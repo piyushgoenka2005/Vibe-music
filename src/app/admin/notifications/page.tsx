@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -14,8 +15,19 @@ import {
 import { normalizeAdminNotificationLink } from "@/lib/routes";
 import type { AdminNotification } from "@/types/notification";
 
+const NOTIFICATION_TYPES: Array<AdminNotification["type"] | "all"> = [
+  "all",
+  "ticket",
+  "return",
+  "contact",
+  "order",
+  "system",
+  "rental",
+];
+
 function NotificationsContent() {
   const queryClient = useQueryClient();
+  const [typeFilter, setTypeFilter] = useState<AdminNotification["type"] | "all">("all");
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-notifications"],
@@ -40,6 +52,17 @@ function NotificationsContent() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await adminMutateJson(`/api/admin/notifications?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+    },
+  });
+
   if (isLoading) return <LoadingState />;
   if (isError) {
     return (
@@ -51,12 +74,26 @@ function NotificationsContent() {
     );
   }
 
-  const notifications = data?.notifications ?? [];
+  const notifications = (data?.notifications ?? []).filter(
+    (item) => typeFilter === "all" || item.type === typeFilter,
+  );
 
   return (
     <div className="admin-panel">
       <div className="admin-toolbar">
         <span>{data?.unreadCount ?? 0} unread</span>
+        <select
+          className="admin-select"
+          style={{ width: "auto" }}
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value as AdminNotification["type"] | "all")}
+        >
+          {NOTIFICATION_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type === "all" ? "All types" : type}
+            </option>
+          ))}
+        </select>
         <button
           type="button"
           className="admin-btn admin-btn--secondary"
@@ -66,6 +103,7 @@ function NotificationsContent() {
           Mark all read
         </button>
         <MutationError error={markReadMutation.isError ? markReadMutation.error : null} />
+        <MutationError error={deleteMutation.isError ? deleteMutation.error : null} />
       </div>
       {notifications.length === 0 ? (
         <EmptyState message="No admin notifications yet." />
@@ -96,15 +134,25 @@ function NotificationsContent() {
                     <td>{formatDate(item.createdAt)}</td>
                     <td>{item.read ? "Read" : "Unread"}</td>
                     <td>
-                      {!item.read ? (
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                        {!item.read ? (
+                          <button
+                            type="button"
+                            className="admin-btn admin-btn--secondary"
+                            onClick={() => markReadMutation.mutate({ id: item.id })}
+                          >
+                            Mark read
+                          </button>
+                        ) : null}
                         <button
                           type="button"
-                          className="admin-btn admin-btn--secondary"
-                          onClick={() => markReadMutation.mutate({ id: item.id })}
+                          className="admin-btn admin-btn--ghost"
+                          disabled={deleteMutation.isPending}
+                          onClick={() => deleteMutation.mutate(item.id)}
                         >
-                          Mark read
+                          Dismiss
                         </button>
-                      ) : null}
+                      </div>
                     </td>
                   </tr>
                 );

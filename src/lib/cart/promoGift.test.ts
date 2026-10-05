@@ -37,10 +37,7 @@ function paidItem(price: number, qty = 1, originalPrice?: number): CartItem {
 
 describe("promoGift", () => {
   it("computes paid subtotal excluding promo gifts", () => {
-    const items = [
-      buildPromoGiftLine(gift),
-      paidItem(500),
-    ];
+    const items = [buildPromoGiftLine(gift), paidItem(500)];
     expect(computePaidSubtotal(items)).toBe(500);
   });
 
@@ -62,11 +59,7 @@ describe("promoGift", () => {
   });
 
   it("removes gift when threshold not met", () => {
-    const synced = syncPromoGiftItems(
-      [buildPromoGiftLine(gift), paidItem(500)],
-      gift,
-      799
-    );
+    const synced = syncPromoGiftItems([buildPromoGiftLine(gift), paidItem(500)], gift, 799);
     expect(synced).toHaveLength(1);
     expect(synced[0].isPromoGift).toBeUndefined();
   });
@@ -77,6 +70,8 @@ describe("promoGift", () => {
 
   it("tracks shipping and gift unlock states", () => {
     expect(isFreeShippingUnlocked(450, 400)).toBe(true);
+    expect(isFreeShippingUnlocked(100, 0)).toBe(true);
+    expect(isFreeShippingUnlocked(0, 2999)).toBe(false);
     expect(isFreeGiftUnlocked(850, 799, true)).toBe(true);
     expect(isFreeGiftUnlocked(850, 799, false)).toBe(false);
   });

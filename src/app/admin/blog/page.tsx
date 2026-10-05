@@ -6,7 +6,13 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { EmptyState, LoadingState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
+import {
+  EmptyState,
+  LoadingState,
+  StatCard,
+  StatusBadge,
+  formatDate,
+} from "@/components/admin/AdminUi";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { ROUTES } from "@/lib/routes";
 import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
@@ -45,31 +51,55 @@ function BlogAnalyticsPanel() {
   const analytics = data?.analytics;
 
   return (
-    <div className="admin-panel">
-      <div className="admin-panel__body">
-        <p>Total views: {analytics?.totalViews ?? 0}</p>
-        <p>Total shares: {analytics?.totalShares ?? 0}</p>
-        <p>Total comments: {analytics?.totalComments ?? 0}</p>
-        <p>Pending comments: {analytics?.pendingComments ?? 0}</p>
-        {analytics?.topPosts?.length ? (
-          <>
-            <h3 style={{ marginTop: "1rem" }}>Top posts</h3>
-            <ul>
-              {analytics.topPosts.map((post: { title: string; slug: string; views: number }) => (
-                <li key={post.slug}>
-                  {post.title} — {post.views} views
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : null}
+    <>
+      <div className="admin-stat-grid">
+        <StatCard label="Total views" value={analytics?.totalViews ?? 0} />
+        <StatCard label="Total shares" value={analytics?.totalShares ?? 0} />
+        <StatCard label="Total comments" value={analytics?.totalComments ?? 0} />
+        <StatCard label="Pending comments" value={analytics?.pendingComments ?? 0} />
       </div>
-    </div>
+      <div className="admin-panel" style={{ marginTop: "1.5rem" }}>
+        <div className="admin-panel__header">
+          <h2 className="admin-panel__title">Top posts</h2>
+        </div>
+        <div className="admin-panel__body">
+          {analytics?.topPosts?.length ? (
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Post</th>
+                    <th>Views</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.topPosts.map(
+                    (post: { title: string; slug: string; views: number }) => (
+                      <tr key={post.slug}>
+                        <td>
+                          <Link href={`${ROUTES.blog}/${post.slug}`}>{post.title}</Link>
+                        </td>
+                        <td>{post.views}</td>
+                      </tr>
+                    ),
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState message="No blog views recorded yet." />
+          )}
+        </div>
+      </div>
+    </>
   );
 }
 
+type CommentStatusFilter = "all" | "pending" | "approved" | "rejected";
+
 function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
   const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState<CommentStatusFilter>("all");
   const { data, isLoading } = useQuery({
     queryKey: ["admin-blog-comments-list"],
     queryFn: async () => {
@@ -94,13 +124,28 @@ function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
   if (isLoading) return <LoadingState message="Loading comments…" />;
 
   const comments = data?.comments ?? [];
-  const pending = comments.filter((comment) => comment.status === "pending");
+  const filtered =
+    statusFilter === "all"
+      ? comments
+      : comments.filter((comment) => comment.status === statusFilter);
 
   return (
     <div className="admin-panel">
+      <div className="admin-toolbar" style={{ padding: "0.75rem 1rem" }}>
+        {(["all", "pending", "approved", "rejected"] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            className={`admin-btn ${statusFilter === value ? "admin-btn--primary" : "admin-btn--secondary"}`}
+            onClick={() => setStatusFilter(value)}
+          >
+            {value === "all" ? "All" : value.charAt(0).toUpperCase() + value.slice(1)}
+          </button>
+        ))}
+      </div>
       <div className="admin-panel__body">
-        {pending.length === 0 ? (
-          <EmptyState message="No comments awaiting moderation." />
+        {filtered.length === 0 ? (
+          <EmptyState message="No comments match this filter." />
         ) : (
           <div className="admin-table-wrap">
             <table className="admin-table">
@@ -113,33 +158,33 @@ function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
                 </tr>
               </thead>
               <tbody>
-                {pending.map((comment) => (
+                {filtered.map((comment) => (
                   <tr key={comment.id}>
                     <td>{comment.authorName}</td>
                     <td>{comment.body}</td>
                     <td>{comment.status}</td>
                     <td>
-                      {blogWrite ? (
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <button
-                            type="button"
-                            className="admin-btn admin-btn--secondary"
-                            onClick={() =>
-                              moderateMutation.mutate({ id: comment.id, status: "approved" })
-                            }
-                          >
-                            Approve
-                          </button>
-                          <button
-                            type="button"
-                            className="admin-btn admin-btn--ghost"
-                            onClick={() =>
-                              moderateMutation.mutate({ id: comment.id, status: "rejected" })
-                            }
-                          >
-                            Reject
-                          </button>
-                        </div>
+                      {blogWrite && comment.status !== "approved" ? (
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--secondary"
+                          onClick={() =>
+                            moderateMutation.mutate({ id: comment.id, status: "approved" })
+                          }
+                        >
+                          Approve
+                        </button>
+                      ) : null}
+                      {blogWrite && comment.status !== "rejected" ? (
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--ghost"
+                          onClick={() =>
+                            moderateMutation.mutate({ id: comment.id, status: "rejected" })
+                          }
+                        >
+                          Reject
+                        </button>
                       ) : null}
                     </td>
                   </tr>

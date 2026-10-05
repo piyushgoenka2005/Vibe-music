@@ -63,6 +63,8 @@ export interface CatalogProductDetail {
   relatedProductIds: string[];
   /** Ordered frame URLs for PDP 360° spinner (optional). */
   spin360Images?: string[];
+  metaTitle?: string;
+  metaDescription?: string;
 }
 
 export interface CreateProductInput {
@@ -113,6 +115,9 @@ export interface CreateProductInput {
   detailSpecs?: ProductSpec[];
   /** When true, reject import if the requested SKU already exists. */
   strictSku?: boolean;
+  metaTitle?: string;
+  metaDescription?: string;
+  similarProductIds?: string[];
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {

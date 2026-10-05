@@ -595,6 +595,27 @@ export async function getGiveawayAnalyticsSummary() {
   });
   const titleById = new Map(campaigns.map((c) => [c.id, c.title]));
 
+  const winnerGroups = await prisma.giveawayWinner.groupBy({
+    by: ["campaignId"],
+    _count: { _all: true },
+  });
+  const winnersByCampaign = new Map(winnerGroups.map((g) => [g.campaignId, g._count._all]));
+
+  const recentCampaigns = await prisma.giveawayCampaign.findMany({
+    orderBy: { updatedAt: "desc" },
+    take: 8,
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      status: true,
+      startsAt: true,
+      endsAt: true,
+      drawAt: true,
+      winnersAnnounced: true,
+    },
+  });
+
   return {
     totalCampaigns: campaigns.length,
     activeCampaigns: campaigns.filter((c) => c.status === "active").length,
@@ -609,6 +630,18 @@ export async function getGiveawayAnalyticsSummary() {
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10),
+    recentCampaigns: recentCampaigns.map((campaign) => ({
+      id: campaign.id,
+      title: campaign.title,
+      slug: campaign.slug,
+      status: campaign.status,
+      startsAt: campaign.startsAt,
+      endsAt: campaign.endsAt,
+      drawAt: campaign.drawAt,
+      winnersAnnounced: campaign.winnersAnnounced,
+      entryCount: entryGroups.find((g) => g.campaignId === campaign.id)?._count._all ?? 0,
+      winnerCount: winnersByCampaign.get(campaign.id) ?? 0,
+    })),
   };
 }
 

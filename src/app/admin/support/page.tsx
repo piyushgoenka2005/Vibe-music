@@ -42,6 +42,16 @@ function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
   const [priority, setPriority] = useState<SupportTicketPriority>("normal");
   const [assignedTo, setAssignedTo] = useState("");
 
+  const { data: adminsData } = useQuery({
+    queryKey: ["admin-admins-list"],
+    queryFn: async () => {
+      return adminFetchJson<{
+        admins: Array<{ email: string; displayName: string }>;
+      }>("/api/admin/admins");
+    },
+    enabled: canWrite,
+  });
+
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-support", statusFilter],
     queryFn: async () => {
@@ -200,13 +210,19 @@ function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
                   </div>
                   <div className="admin-form-group">
                     <label>Assigned to</label>
-                    <input
-                      className="admin-input"
+                    <select
+                      className="admin-select"
                       style={{ width: "100%" }}
                       value={assignedTo}
                       onChange={(e) => setAssignedTo(e.target.value)}
-                      placeholder="Admin email or name"
-                    />
+                    >
+                      <option value="">Unassigned</option>
+                      {(adminsData?.admins ?? []).map((admin) => (
+                        <option key={admin.email} value={admin.email}>
+                          {admin.displayName} ({admin.email})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="admin-form-group">
                     <label>Admin note</label>

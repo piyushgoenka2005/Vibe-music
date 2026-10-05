@@ -31,17 +31,12 @@ export function computeMrpTotal(items: CartItem[]): number {
   return items.reduce((sum, item) => {
     if (isPromoGiftLine(item)) return sum;
     const unit =
-      item.originalPrice && item.originalPrice > item.price
-        ? item.originalPrice
-        : item.price;
+      item.originalPrice && item.originalPrice > item.price ? item.originalPrice : item.price;
     return sum + unit * item.quantity;
   }, 0);
 }
 
-export function buildPromoGiftLine(
-  gift: CartGiftProductSummary,
-  _gstRate?: GSTRate
-): CartItem {
+export function buildPromoGiftLine(gift: CartGiftProductSummary, _gstRate?: GSTRate): CartItem {
   return {
     lineId: getPromoGiftLineId(gift.id),
     productId: gift.id,
@@ -50,9 +45,7 @@ export function buildPromoGiftLine(
     brand: gift.brand,
     price: 0,
     originalPrice: gift.originalPrice > 0 ? gift.originalPrice : gift.price,
-    gstRate:
-      gift.gstRate ??
-      getDefaultGstRateForCategory(gift.categorySlug ?? "accessories"),
+    gstRate: gift.gstRate ?? getDefaultGstRateForCategory(gift.categorySlug ?? "accessories"),
     imageColor: gift.imageColor,
     image: gift.image,
     quantity: 1,
@@ -63,12 +56,10 @@ export function buildPromoGiftLine(
 export function syncPromoGiftItems(
   items: CartItem[],
   gift: CartGiftProductSummary | null,
-  freeGiftThreshold: number
+  freeGiftThreshold: number,
 ): CartItem[] {
   const withoutGifts = items.filter((item) => !isPromoGiftLine(item));
-  const paidItems = gift
-    ? withoutGifts.filter((item) => item.productId !== gift.id)
-    : withoutGifts;
+  const paidItems = gift ? withoutGifts.filter((item) => item.productId !== gift.id) : withoutGifts;
   const paidSubtotal = computePaidSubtotal(paidItems);
 
   if (!gift || paidSubtotal < freeGiftThreshold) {
@@ -81,23 +72,21 @@ export function syncPromoGiftItems(
 
 export function isFreeShippingUnlocked(
   paidSubtotal: number,
-  freeShippingThreshold: number
+  freeShippingThreshold: number,
 ): boolean {
+  if (freeShippingThreshold <= 0) return true;
   return paidSubtotal >= freeShippingThreshold;
 }
 
 export function isFreeGiftUnlocked(
   paidSubtotal: number,
   freeGiftThreshold: number,
-  giftConfigured: boolean
+  giftConfigured: boolean,
 ): boolean {
   return giftConfigured && paidSubtotal >= freeGiftThreshold;
 }
 
-export function cartProgressRatio(
-  paidSubtotal: number,
-  freeGiftThreshold: number
-): number {
+export function cartProgressRatio(paidSubtotal: number, freeGiftThreshold: number): number {
   if (freeGiftThreshold <= 0) return 1;
   return Math.min(1, paidSubtotal / freeGiftThreshold);
 }

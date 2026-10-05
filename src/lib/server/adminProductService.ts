@@ -93,6 +93,9 @@ function toAdminProduct(catalog: CatalogProduct): AdminProduct {
     inTheBox: detail.inTheBox,
     videos: detail.videos,
     detailSpecs: detail.specs,
+    metaTitle: catalog.detail?.metaTitle,
+    metaDescription: catalog.detail?.metaDescription,
+    similarProductIds: catalog.detail?.similarProductIds ?? [],
   };
 }
 
@@ -423,6 +426,9 @@ export async function createAdminProduct(
     inTheBox: input.inTheBox,
     videos: input.videos,
     detailSpecs: input.detailSpecs,
+    metaTitle: input.metaTitle,
+    metaDescription: input.metaDescription,
+    similarProductIds: input.similarProductIds,
   });
   return toAdminProduct(created);
 }
@@ -437,6 +443,7 @@ export async function updateAdminProduct(
     inTheBox?: string[];
     videos?: ProductVideo[];
     detailSpecs?: ProductSpec[];
+    similarProductIds?: string[];
   },
 ): Promise<AdminProduct> {
   const needsSnapshot = patch.stockQuantity !== undefined || patch.price !== undefined;
@@ -475,6 +482,9 @@ export async function updateAdminProduct(
     inTheBox: patch.inTheBox,
     videos: patch.videos,
     detailSpecs: patch.detailSpecs,
+    metaTitle: patch.metaTitle,
+    metaDescription: patch.metaDescription,
+    similarProductIds: patch.similarProductIds,
   });
 
   if (existing && patch.stockQuantity !== undefined) {

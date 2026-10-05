@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/db/prisma";
+import { clampPageLimit, pageFromRows } from "@/lib/server/prisma/pagination";
 import type { ReturnRequest, ReturnRequestStatus } from "@/types/returnRequest";
 
 export const RETURN_REQUESTS_COLLECTION = "returnRequests";
@@ -33,7 +34,7 @@ function mapReturnRequest(row: {
 }
 
 export async function createReturnRequest(
-  input: Omit<ReturnRequest, "id" | "status" | "createdAt" | "updatedAt">
+  input: Omit<ReturnRequest, "id" | "status" | "createdAt" | "updatedAt">,
 ): Promise<ReturnRequest> {
   const now = new Date().toISOString();
   const record: ReturnRequest = {
@@ -62,16 +63,12 @@ export async function createReturnRequest(
   return record;
 }
 
-export async function getReturnRequestById(
-  id: string
-): Promise<ReturnRequest | null> {
+export async function getReturnRequestById(id: string): Promise<ReturnRequest | null> {
   const row = await prisma.returnRequest.findUnique({ where: { id } });
   return row ? mapReturnRequest(row) : null;
 }
 
-export async function listReturnRequestsByOrderId(
-  orderId: string
-): Promise<ReturnRequest[]> {
+export async function listReturnRequestsByOrderId(orderId: string): Promise<ReturnRequest[]> {
   const rows = await prisma.returnRequest.findMany({
     where: { orderId },
     orderBy: { createdAt: "desc" },
@@ -79,22 +76,58 @@ export async function listReturnRequestsByOrderId(
   return rows.map(mapReturnRequest);
 }
 
-export async function listReturnRequests(options: {
-  status?: ReturnRequestStatus;
-  limit?: number;
-} = {}): Promise<ReturnRequest[]> {
-  const limit = Math.min(Math.max(options.limit ?? 50, 1), 100);
-  const rows = await prisma.returnRequest.findMany({
-    where: options.status ? { status: options.status } : undefined,
-    orderBy: { createdAt: "desc" },
-    take: limit,
-  });
-  return rows.map(mapReturnRequest);
+export async function listReturnRequestsPage(
+  options: {
+    status?: ReturnRequestStatus;
+    limit?: number;
+    afterCreatedAt?: string;
+  } = {},
+): Promise<{
+  returns: ReturnRequest[];
+  hasMore: boolean;
+  nextCursor?: string;
+  total: number;
+}> {
+  const limit = clampPageLimit(options.limit);
+  const where = {
+    ...(options.status ? { status: options.status } : {}),
+    ...(options.afterCreatedAt ? { createdAt: { lt: options.afterCreatedAt } } : {}),
+  };
+
+  const [rows, total] = await Promise.all([
+    prisma.returnRequest.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit + 1,
+    }),
+    prisma.returnRequest.count({
+      where: options.status ? { status: options.status } : undefined,
+    }),
+  ]);
+
+  const page = pageFromRows(rows, limit, (row) => row.createdAt);
+  return {
+    returns: page.items.map(mapReturnRequest),
+    hasMore: page.hasMore,
+    nextCursor: page.nextCursor,
+    total,
+  };
+}
+
+export async function listReturnRequests(
+  options: {
+    status?: ReturnRequestStatus;
+    limit?: number;
+    afterCreatedAt?: string;
+  } = {},
+): Promise<ReturnRequest[]> {
+  const page = await listReturnRequestsPage(options);
+  return page.returns;
 }
 
 export async function updateReturnRequest(
   id: string,
-  patch: Partial<Pick<ReturnRequest, "status" | "adminNote">>
+  patch: Partial<Pick<ReturnRequest, "status" | "adminNote">>,
 ): Promise<ReturnRequest> {
   const now = new Date().toISOString();
   await prisma.returnRequest.update({

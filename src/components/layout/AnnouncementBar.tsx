@@ -1,14 +1,21 @@
 import Marquee from "@/components/common/Marquee";
 import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 
-const ANNOUNCEMENT_MESSAGE = `${SHIPPING_POLICY.announcement} · Authorized brands · Secure checkout`;
 /** Enough copies per sequence to cover ultra-wide viewports before the clone takes over. */
 const SEQUENCE_COPIES = 8;
 
-export default function AnnouncementBar() {
+interface AnnouncementBarProps {
+  announcement?: string;
+}
+
+export default function AnnouncementBar({
+  announcement = SHIPPING_POLICY.announcement,
+}: AnnouncementBarProps) {
+  const announcementMessage = `${announcement} · Authorized brands · Secure checkout`;
+
   const sequence = Array.from({ length: SEQUENCE_COPIES }, (_, index) => (
     <span key={index} className="announcement-bar__item">
-      {ANNOUNCEMENT_MESSAGE}
+      {announcementMessage}
     </span>
   ));
 
@@ -16,7 +23,7 @@ export default function AnnouncementBar() {
     <div
       className="announcement-bar"
       role="region"
-      aria-label={`Store announcement: ${ANNOUNCEMENT_MESSAGE}`}
+      aria-label={`Store announcement: ${announcementMessage}`}
     >
       <Marquee
         className="announcement-bar__marquee"

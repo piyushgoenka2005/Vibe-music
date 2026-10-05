@@ -10,7 +10,7 @@ import { ErrorState, adminFetchJson } from "@/components/admin/AdminQueryState";
 import SearchAnalyticsPanel from "@/components/admin/SearchAnalyticsPanel";
 import { downloadFromApi } from "@/lib/client/downloadFromApi";
 import type { AnalyticsReport } from "@/types/admin";
-import type { PaymentWebhookMetrics } from "@/types/payment";
+import type { PaymentLog, PaymentWebhookMetrics } from "@/types/payment";
 
 function AnalyticsContent() {
   const [period, setPeriod] = useState("30d");
@@ -25,7 +25,7 @@ function AnalyticsContent() {
   const { data: webhookData, isLoading: webhooksLoading } = useQuery({
     queryKey: ["admin-payment-webhooks"],
     queryFn: async () => {
-      return adminFetchJson<{ metrics: PaymentWebhookMetrics; logs?: unknown[] }>(
+      return adminFetchJson<{ metrics: PaymentWebhookMetrics; logs?: PaymentLog[] }>(
         "/api/admin/payments/webhooks?logs=true",
       );
     },
@@ -225,6 +225,34 @@ function AnalyticsContent() {
               ) : (
                 <div className="admin-empty">No recent webhook failures.</div>
               )}
+
+              {webhookData.logs && webhookData.logs.length > 0 ? (
+                <div className="admin-table-wrap" style={{ marginTop: "1rem" }}>
+                  <h3 style={{ marginBottom: "0.75rem", fontSize: "0.95rem" }}>
+                    Recent webhook logs
+                  </h3>
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Event</th>
+                        <th>Order</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {webhookData.logs.map((row) => (
+                        <tr key={row.id}>
+                          <td>{row.eventType}</td>
+                          <td>{row.orderId ?? "—"}</td>
+                          <td>{row.status}</td>
+                          <td>{new Date(row.createdAt).toLocaleString("en-IN")}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
             </>
           ) : (
             <div className="admin-empty">Webhook metrics unavailable.</div>

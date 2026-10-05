@@ -6,6 +6,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState } from "@/components/admin/AdminUi";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
+import TipTapEditor from "@/components/admin/TipTapEditor";
 import { slugify } from "@/lib/slug";
 import type { ContentPage } from "@/data/contentPages";
 
@@ -272,20 +273,18 @@ function CmsContent({ canWrite }: { canWrite: boolean }) {
                         setDraft({ ...draft, sections });
                       }}
                     />
-                    <textarea
-                      className="admin-textarea"
-                      value={section.paragraphs.join("\n\n")}
-                      onChange={(e) => {
+                    <TipTapEditor
+                      value={section.paragraphs.join("")}
+                      onChange={(html) => {
                         const sections = [...draft.sections];
                         sections[sectionIndex] = {
                           ...section,
-                          paragraphs: e.target.value
-                            .split(/\n{2,}/)
-                            .map((item) => item.trim())
-                            .filter(Boolean),
+                          paragraphs: html.trim() ? [html] : [],
                         };
                         setDraft({ ...draft, sections });
                       }}
+                      placeholder="Write section content…"
+                      readOnly={!canWrite}
                     />
                   </div>
                 ))}

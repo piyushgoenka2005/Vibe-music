@@ -26,9 +26,7 @@ const HomepageAplusContent = dynamic(() => import("@/components/home/HomepageApl
 const HomepageStats = dynamic(() => import("@/components/home/HomepageStats"), {
   loading: () => null,
 });
-const WhyShopSection = dynamic(() => import("@/components/home/WhyShopSection"), {
-  loading: () => null,
-});
+import WhyShopSectionAsync from "@/components/home/WhyShopSectionAsync";
 const SocialProofStrip = dynamic(() => import("@/components/home/SocialProofStrip"), {
   loading: () => null,
 });
@@ -85,7 +83,9 @@ export default function HomePage() {
         <BigNamesDealsSection />
       </Section>
 
-      <WhyShopSection />
+      <Section name="Why shop" fallback={null}>
+        <WhyShopSectionAsync />
+      </Section>
 
       <Section name="Browse categories" fallback={null}>
         <BrowseCategoryCardsSection />

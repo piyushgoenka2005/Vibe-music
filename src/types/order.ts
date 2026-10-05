@@ -10,6 +10,15 @@ export type PaymentStatus = "pending" | "paid" | "failed" | "cod_pending" | "ref
 
 export type PaymentMethod = "razorpay" | "cod";
 
+export interface OrderTimelineEvent {
+  id: string;
+  status: OrderStatus;
+  note?: string;
+  actor: string;
+  createdAt: string;
+  action?: string;
+}
+
 export interface ShippingAddress {
   name: string;
   line1: string;

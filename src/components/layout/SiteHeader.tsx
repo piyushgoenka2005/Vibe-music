@@ -22,7 +22,11 @@ import { MIN_QUERY_LENGTH } from "@/services/search.service";
 import { searchStore } from "@/store/searchStore";
 import WishlistCounter from "@/components/wishlist/WishlistCounter";
 
-export default function SiteHeader() {
+interface SiteHeaderProps {
+  shippingAnnouncement?: string;
+}
+
+export default function SiteHeader({ shippingAnnouncement }: SiteHeaderProps) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
   const headerRef = useRef<HTMLElement>(null);
@@ -154,7 +158,7 @@ export default function SiteHeader() {
       className={`site-header assets-site-nav--desktop${headerHidden ? " site-header--hidden" : ""}${scrolled ? " site-header--scrolled" : ""}`}
       data-vibe-section="header"
     >
-      <AnnouncementBar />
+      <AnnouncementBar announcement={shippingAnnouncement} />
 
       <div className="site-header__bar">
         <div className="site-header__inner">

@@ -78,7 +78,7 @@ export default function CartStickyFooter({
 
           <p className="cart-sticky-footer__meta">
             {shipping.unlocked
-              ? SHIPPING_POLICY.cartFooter
+              ? (promoConfig?.shippingCopy?.cartFooter ?? SHIPPING_POLICY.cartFooter)
               : `${shipping.amountLabel} shipping · Taxes included`}
           </p>
 

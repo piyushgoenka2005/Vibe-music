@@ -41,6 +41,7 @@ export interface ProductImage {
 export interface ProductVideo {
   id: string;
   title: string;
+  duration?: string;
   thumbnailColor: string;
   embedUrl: string;
 }
@@ -104,4 +105,6 @@ export interface ProductDetail extends Product {
   relatedProductIds: string[];
   /** Ordered frame URLs for 360° product view. */
   spin360Images?: string[];
+  metaTitle?: string;
+  metaDescription?: string;
 }

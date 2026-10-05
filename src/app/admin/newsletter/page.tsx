@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -25,6 +26,13 @@ type Subscriber = {
 function NewsletterContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
   const { cursor, pageIndex, canGoPrev, goNext, goPrev } = useAdminCursorPagination();
+  const [addForm, setAddForm] = useState({
+    email: "",
+    firstName: "",
+    lastName: "",
+    marketing: true,
+  });
+  const [addSuccess, setAddSuccess] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch, isFetching, dataUpdatedAt } = useQuery({
     queryKey: ["admin-newsletter", cursor],
@@ -43,6 +51,25 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
     placeholderData: (previous) => previous,
   });
   const hasMore = data?.hasMore ?? false;
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      return adminMutateJson<{ created: boolean }>("/api/admin/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(addForm),
+      });
+    },
+    onSuccess: (result) => {
+      setAddSuccess(
+        result.created
+          ? "Subscriber added."
+          : "Subscriber already existed — marketing preference updated if needed.",
+      );
+      setAddForm({ email: "", firstName: "", lastName: "", marketing: true });
+      void queryClient.invalidateQueries({ queryKey: ["admin-newsletter"] });
+    },
+  });
 
   const deleteMutation = useMutation({
     // Optimistic: the row disappears the instant you confirm.
@@ -105,6 +132,70 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
           Export CSV
         </button>
       </div>
+      {canWrite ? (
+        <div className="admin-panel" style={{ marginBottom: "1rem" }}>
+          <div className="admin-panel__header">
+            <h2 className="admin-panel__title">Add subscriber</h2>
+          </div>
+          <div className="admin-panel__body">
+            <div className="admin-form-grid">
+              <div className="admin-form-group">
+                <label>Email</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  type="email"
+                  value={addForm.email}
+                  onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>First name</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={addForm.firstName}
+                  onChange={(e) => setAddForm({ ...addForm, firstName: e.target.value })}
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>Last name</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={addForm.lastName}
+                  onChange={(e) => setAddForm({ ...addForm, lastName: e.target.value })}
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={addForm.marketing}
+                    onChange={(e) => setAddForm({ ...addForm, marketing: e.target.checked })}
+                  />
+                  Marketing opt-in
+                </label>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="admin-btn admin-btn--primary"
+              disabled={addMutation.isPending || !addForm.email.trim()}
+              onClick={() => addMutation.mutate()}
+            >
+              {addMutation.isPending ? "Adding…" : "Add subscriber"}
+            </button>
+            {addSuccess ? (
+              <p className="admin-form-success" style={{ marginTop: "0.75rem" }}>
+                {addSuccess}
+              </p>
+            ) : null}
+            <MutationError error={addMutation.isError ? addMutation.error : null} />
+          </div>
+        </div>
+      ) : null}
+
       <div className="admin-panel">
         <MutationError error={deleteMutation.isError ? deleteMutation.error : null} />
         {subscribers.length === 0 ? (

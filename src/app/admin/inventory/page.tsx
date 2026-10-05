@@ -114,6 +114,7 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
           <StatCard label="Low Stock" value={stats.lowStock} />
           <StatCard label="Out of Stock" value={stats.outOfStock} />
           <StatCard label="Total Units" value={stats.totalUnits} />
+          <StatCard label="Available Units" value={stats.totalAvailableUnits} />
         </div>
       ) : null}
 

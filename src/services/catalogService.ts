@@ -358,17 +358,22 @@ function normalizeProductVideos(
   videos: Array<{
     id?: string;
     title?: string;
+    duration?: string;
     thumbnailColor?: string;
     embedUrl?: string;
   }>,
 ): ProductVideo[] {
   return videos
-    .map((video, index) => ({
-      id: String(video.id ?? `video-${index + 1}`).trim() || `video-${index + 1}`,
-      title: String(video.title ?? "").trim(),
-      thumbnailColor: String(video.thumbnailColor ?? "#1a1a1a").trim() || "#1a1a1a",
-      embedUrl: String(video.embedUrl ?? "").trim(),
-    }))
+    .map((video, index) => {
+      const duration = String(video.duration ?? "").trim();
+      return {
+        id: String(video.id ?? `video-${index + 1}`).trim() || `video-${index + 1}`,
+        title: String(video.title ?? "").trim(),
+        ...(duration ? { duration } : {}),
+        thumbnailColor: String(video.thumbnailColor ?? "#1a1a1a").trim() || "#1a1a1a",
+        embedUrl: String(video.embedUrl ?? "").trim(),
+      };
+    })
     .filter((video) => video.title && video.embedUrl);
 }
 
@@ -520,6 +525,8 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
           (src): src is string => typeof src === "string" && src.length > 0,
         )
       : [],
+    metaTitle: detail.metaTitle?.trim() || undefined,
+    metaDescription: detail.metaDescription?.trim() || undefined,
   };
 }
 
@@ -1166,6 +1173,23 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
     };
   }
 
+  if (input.metaTitle !== undefined || input.metaDescription !== undefined) {
+    product.detail = {
+      ...product.detail!,
+      ...(input.metaTitle !== undefined ? { metaTitle: input.metaTitle.trim() || undefined } : {}),
+      ...(input.metaDescription !== undefined
+        ? { metaDescription: input.metaDescription.trim() || undefined }
+        : {}),
+    };
+  }
+
+  if (input.similarProductIds !== undefined) {
+    product.detail = {
+      ...product.detail!,
+      similarProductIds: input.similarProductIds.filter(Boolean),
+    };
+  }
+
   product.subcategory = resolveCatalogSubcategory(
     product,
     await loadSubcategoryCandidates(category, all),
@@ -1452,6 +1476,23 @@ export async function updateProduct(
     updated.detail = {
       ...(updated.detail ?? preservedDetail),
       specs: normalizeDetailSpecs(patch.detailSpecs),
+    };
+  }
+
+  if (patch.metaTitle !== undefined || patch.metaDescription !== undefined) {
+    updated.detail = {
+      ...(updated.detail ?? preservedDetail),
+      ...(patch.metaTitle !== undefined ? { metaTitle: patch.metaTitle.trim() || undefined } : {}),
+      ...(patch.metaDescription !== undefined
+        ? { metaDescription: patch.metaDescription.trim() || undefined }
+        : {}),
+    };
+  }
+
+  if (patch.similarProductIds !== undefined) {
+    updated.detail = {
+      ...(updated.detail ?? preservedDetail),
+      similarProductIds: patch.similarProductIds.filter(Boolean),
     };
   }
 

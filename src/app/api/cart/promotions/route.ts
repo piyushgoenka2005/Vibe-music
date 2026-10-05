@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import {
-  getCartPromotionsConfig,
+  getCartPromotionsConfigFromStore,
   type CartGiftProductSummary,
   type CartPromotionsPublic,
 } from "@/lib/cart/cartPromotions";
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     const rateLimited = await enforceRateLimit(request, "cart-promotions", RATE_LIMITS.publicApi);
     if (rateLimited) return rateLimited;
 
-    const config = getCartPromotionsConfig();
+    const config = await getCartPromotionsConfigFromStore();
     const giftProduct = await resolveGiftProduct(config.giftProductId);
 
     const payload: CartPromotionsPublic = {

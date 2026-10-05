@@ -17,6 +17,7 @@ interface ProductInfoProps {
   onReviewsClick: () => void;
   liveRating?: number;
   liveReviewCount?: number;
+  shippingDetail?: string;
 }
 
 function isHexColor(value: string): boolean {
@@ -31,6 +32,7 @@ export default function ProductInfo({
   onReviewsClick,
   liveRating,
   liveReviewCount,
+  shippingDetail,
 }: ProductInfoProps) {
   const { rating: ratingValue, reviewCount: reviewCountValue } = ensureProductReviewMetrics({
     id: product.id,
@@ -174,7 +176,7 @@ export default function ProductInfo({
         </div>
       ) : null}
 
-      <ProductPurchaseAssurances />
+      <ProductPurchaseAssurances shippingDetail={shippingDetail} />
     </div>
   );
 }

@@ -83,7 +83,7 @@ function resolvePublishFields(
   status: BlogPostStatus,
   scheduledAt: string | null | undefined,
   existingPublishedAt: string | null,
-  timestamp: string
+  timestamp: string,
 ): { publishedAt: string | null; scheduledAt: string | null } {
   if (status === "draft") {
     return { publishedAt: existingPublishedAt, scheduledAt: null };
@@ -106,7 +106,7 @@ export async function listAllBlogPosts(): Promise<BlogPost[]> {
 
 export async function listPublicBlogPosts(
   at = new Date(),
-  options?: { limit?: number; featured?: boolean }
+  options?: { limit?: number; featured?: boolean },
 ): Promise<BlogPostSummary[]> {
   let posts = (await listAllBlogPosts()).filter((post) => isBlogPostPublic(post, at));
   if (options?.featured) {
@@ -120,7 +120,7 @@ export async function listPublicBlogPosts(
 
 export async function listPublicBlogPostsPaginated(
   query: BlogListQuery = {},
-  at = new Date()
+  at = new Date(),
 ): Promise<BlogListResult> {
   const page = Math.max(1, query.page ?? 1);
   const pageSize = Math.min(24, Math.max(1, query.limit ?? BLOG_PAGE_SIZE));
@@ -154,7 +154,7 @@ export async function listPublicBlogPostsPaginated(
 export async function getRelatedPublicPosts(
   post: BlogPost,
   limit = 3,
-  at = new Date()
+  at = new Date(),
 ): Promise<BlogPostSummary[]> {
   const candidates = await listPublicBlogPosts(at);
   return scoreRelatedPosts(post, candidates, limit);
@@ -202,13 +202,13 @@ export async function listApprovedBlogComments(postId: string): Promise<BlogComm
   return pg.listBlogCommentsByPost(postId, "approved");
 }
 
-export async function listBlogCommentsForAdmin(): Promise<BlogComment[]> {
-  return pg.listAllBlogComments();
+export async function listBlogCommentsForAdmin(status?: BlogCommentStatus): Promise<BlogComment[]> {
+  return pg.listAllBlogComments(status);
 }
 
 export async function updateBlogCommentStatus(
   id: string,
-  status: BlogCommentStatus
+  status: BlogCommentStatus,
 ): Promise<BlogComment> {
   return pg.updateBlogCommentStatus(id, status);
 }
@@ -227,25 +227,21 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 
 export async function getPublicBlogPostBySlug(
   slug: string,
-  at = new Date()
+  at = new Date(),
 ): Promise<BlogPost | null> {
   const post = await getBlogPostBySlug(slug);
   if (!post || !isBlogPostPublic(post, at)) return null;
   return post;
 }
 
-export async function listPublicBlogSlugs(): Promise<
-  Array<{ slug: string; updatedAt: string }>
-> {
+export async function listPublicBlogSlugs(): Promise<Array<{ slug: string; updatedAt: string }>> {
   const at = new Date();
   return (await listAllBlogPosts())
     .filter((post) => isBlogPostPublic(post, at))
     .map((post) => ({ slug: post.slug, updatedAt: post.updatedAt }));
 }
 
-export async function createBlogPost(
-  input: CreateBlogPostInput
-): Promise<BlogPost> {
+export async function createBlogPost(input: CreateBlogPostInput): Promise<BlogPost> {
   const slug = slugify(input.slug || input.title);
   if (!slug) throw new Error("Slug is required");
 
@@ -258,16 +254,10 @@ export async function createBlogPost(
   }
 
   const timestamp = now();
-  const publishFields = resolvePublishFields(
-    input.status,
-    input.scheduledAt,
-    null,
-    timestamp
-  );
+  const publishFields = resolvePublishFields(input.status, input.scheduledAt, null, timestamp);
 
   const categorySlug = input.categorySlug?.trim() ?? "";
-  const categoryLabel =
-    input.categoryLabel?.trim() || resolveCategoryLabel(categorySlug);
+  const categoryLabel = input.categoryLabel?.trim() || resolveCategoryLabel(categorySlug);
 
   return pg.createBlogPostRecord({
     id: randomUUID(),
@@ -294,10 +284,7 @@ export async function createBlogPost(
   });
 }
 
-export async function updateBlogPost(
-  id: string,
-  input: UpdateBlogPostInput
-): Promise<BlogPost> {
+export async function updateBlogPost(id: string, input: UpdateBlogPostInput): Promise<BlogPost> {
   const existing = await getBlogPostById(id);
   if (!existing) throw new Error("Blog post not found");
 
@@ -323,13 +310,11 @@ export async function updateBlogPost(
     nextStatus,
     nextScheduledAt,
     existing.publishedAt,
-    timestamp
+    timestamp,
   );
 
   const nextCategorySlug =
-    input.categorySlug !== undefined
-      ? input.categorySlug.trim()
-      : existing.categorySlug;
+    input.categorySlug !== undefined ? input.categorySlug.trim() : existing.categorySlug;
   const nextCategoryLabel =
     input.categoryLabel !== undefined
       ? input.categoryLabel.trim()
@@ -350,13 +335,9 @@ export async function updateBlogPost(
       : {}),
     ...(input.featured !== undefined ? { featured: Boolean(input.featured) } : {}),
     ...(input.authorBio !== undefined ? { authorBio: input.authorBio.trim() } : {}),
-    ...(input.authorAvatar !== undefined
-      ? { authorAvatar: input.authorAvatar.trim() }
-      : {}),
+    ...(input.authorAvatar !== undefined ? { authorAvatar: input.authorAvatar.trim() } : {}),
     ...(input.seoTitle !== undefined ? { seoTitle: input.seoTitle.trim() } : {}),
-    ...(input.seoDescription !== undefined
-      ? { seoDescription: input.seoDescription.trim() }
-      : {}),
+    ...(input.seoDescription !== undefined ? { seoDescription: input.seoDescription.trim() } : {}),
     ...(input.status !== undefined ? { status: normalizeStatus(input.status) } : {}),
     publishedAt: publishFields.publishedAt,
     scheduledAt: publishFields.scheduledAt,

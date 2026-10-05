@@ -34,9 +34,22 @@ export interface AuditLogRecord {
 
 export async function listRecentAuditLogs(
   limit = 100,
-  cursor?: string
+  cursor?: string,
+  filters?: { action?: string; actorEmail?: string },
 ): Promise<{ logs: AuditLogRecord[]; hasMore: boolean; nextCursor?: string }> {
+  const where: {
+    action?: { contains: string; mode: "insensitive" };
+    actorEmail?: { contains: string; mode: "insensitive" };
+  } = {};
+  if (filters?.action?.trim()) {
+    where.action = { contains: filters.action.trim(), mode: "insensitive" };
+  }
+  if (filters?.actorEmail?.trim()) {
+    where.actorEmail = { contains: filters.actorEmail.trim(), mode: "insensitive" };
+  }
+
   const rows = await prisma.auditLog.findMany({
+    where,
     orderBy: { id: "desc" }, // changed to id for stable cursor
     take: limit + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -64,6 +77,35 @@ export async function listRecentAuditLogs(
   }));
 
   return { logs, hasMore, nextCursor };
+}
+
+export async function listAuditLogsForResource(
+  resourceType: string,
+  resourceId: string,
+  limit = 50,
+): Promise<AuditLogRecord[]> {
+  const rows = await prisma.auditLog.findMany({
+    where: { resourceType, resourceId },
+    orderBy: { createdAt: "desc" },
+    take: Math.min(Math.max(limit, 1), 100),
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    action: row.action,
+    actorId: row.actorId || null,
+    actorEmail: row.actorEmail || null,
+    resourceType: row.resourceType || null,
+    resourceId: row.resourceId || null,
+    ip: row.ip || null,
+    userAgent: row.userAgent || null,
+    requestId: row.requestId || null,
+    metadata:
+      row.metadata && typeof row.metadata === "object"
+        ? (row.metadata as Record<string, unknown>)
+        : null,
+    createdAt: row.createdAt,
+  }));
 }
 
 export async function logAuditEvent(input: AuditLogInput): Promise<void> {

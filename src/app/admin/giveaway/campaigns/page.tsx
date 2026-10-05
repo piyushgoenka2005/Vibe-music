@@ -8,6 +8,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
+import BannerImageUpload from "@/components/admin/BannerImageUpload";
 import { slugify } from "@/lib/slug";
 import type { AdminSession } from "@/types/admin";
 import type { GiveawayCampaign, GiveawayCampaignStatus, GiveawayEntry } from "@/types/giveaway";
@@ -443,15 +444,11 @@ function CampaignsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                   onChange={(e) => setForm({ ...form, productSlug: e.target.value })}
                 />
               </div>
-              <div className="admin-form-group">
-                <label>Prize image URL</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={form.prizeImageUrl}
-                  onChange={(e) => setForm({ ...form, prizeImageUrl: e.target.value })}
-                />
-              </div>
+              <BannerImageUpload
+                label="Prize image"
+                value={form.prizeImageUrl}
+                onChange={(url) => setForm({ ...form, prizeImageUrl: url })}
+              />
               <div className="admin-form-group admin-form-grid--full">
                 <label>Subtitle</label>
                 <input

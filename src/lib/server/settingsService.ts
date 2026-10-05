@@ -48,9 +48,10 @@ export async function getStoreSettings(): Promise<StoreSettings> {
         ...(settings ?? {}),
         storeAddress,
         sellerState,
-        // Storefront shipping is free — ignore any legacy paid charges in DB.
-        freeShippingThreshold: 0,
-        standardShippingCharge: 0,
+        freeShippingThreshold:
+          settings?.freeShippingThreshold ?? DEFAULT_SETTINGS.freeShippingThreshold,
+        standardShippingCharge:
+          settings?.standardShippingCharge ?? DEFAULT_SETTINGS.standardShippingCharge,
         // Always reflect live env — do not trust a stale DB copy of this flag.
         razorpayEnabled: isRazorpayConfigured(),
       };

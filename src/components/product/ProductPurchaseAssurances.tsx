@@ -19,33 +19,35 @@ interface AssuranceItem {
   detail: string;
 }
 
-const ASSURANCES: AssuranceItem[] = [
-  {
-    icon: Truck,
-    label: "Free Shipping",
-    detail: SHIPPING_POLICY.pdpDetail,
-  },
-  {
-    icon: CreditCard,
-    label: "Secure Online Pay",
-    detail: "Pay securely online — UPI, cards & wallets",
-  },
-  {
-    icon: RotateCcw,
-    label: "Easy Returns",
-    detail: "7-day easy returns on eligible gear",
-  },
-  {
-    icon: ShieldCheck,
-    label: "Manufacturer Warranty",
-    detail: "Official warranty on all new products",
-  },
-  {
-    icon: Award,
-    label: "Authorized Dealer",
-    detail: "100% genuine gear from authorized brands",
-  },
-];
+function buildAssurances(shippingDetail: string): AssuranceItem[] {
+  return [
+    {
+      icon: Truck,
+      label: "Free Shipping",
+      detail: shippingDetail,
+    },
+    {
+      icon: CreditCard,
+      label: "Secure Online Pay",
+      detail: "Pay securely online — UPI, cards & wallets",
+    },
+    {
+      icon: RotateCcw,
+      label: "Easy Returns",
+      detail: "7-day easy returns on eligible gear",
+    },
+    {
+      icon: ShieldCheck,
+      label: "Manufacturer Warranty",
+      detail: "Official warranty on all new products",
+    },
+    {
+      icon: Award,
+      label: "Authorized Dealer",
+      detail: "100% genuine gear from authorized brands",
+    },
+  ];
+}
 
 const AUTO_SCROLL_MS = 3200;
 const RESUME_AFTER_MS = 4500;
@@ -59,7 +61,14 @@ function getStep(track: HTMLElement): number {
   return item.offsetWidth + gap;
 }
 
-export default function ProductPurchaseAssurances() {
+interface ProductPurchaseAssurancesProps {
+  shippingDetail?: string;
+}
+
+export default function ProductPurchaseAssurances({
+  shippingDetail = SHIPPING_POLICY.pdpDetail,
+}: ProductPurchaseAssurancesProps) {
+  const assurances = buildAssurances(shippingDetail);
   const trackRef = useRef<HTMLUListElement>(null);
   const pausedUntilRef = useRef(0);
   const reduceMotion = usePrefersReducedMotion();
@@ -144,7 +153,7 @@ export default function ProductPurchaseAssurances() {
           onScroll={updateScrollState}
           aria-roledescription={enableAuto ? "carousel" : undefined}
         >
-          {ASSURANCES.map((item) => {
+          {assurances.map((item) => {
             const Icon = item.icon;
             return (
               <li key={item.label} className="pdp-assurances__item">

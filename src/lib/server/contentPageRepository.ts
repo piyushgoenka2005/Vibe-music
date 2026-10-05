@@ -1,11 +1,9 @@
 import "server-only";
 
-import {
-  CONTENT_PAGES,
-  type ContentPage,
-} from "@/data/contentPages";
+import { CONTENT_PAGES, type ContentPage } from "@/data/contentPages";
 import { prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
+import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
 
 export const CONTENT_PAGES_COLLECTION = "contentPages";
 
@@ -24,20 +22,29 @@ function mapContentPage(row: {
           const item = section as { heading?: string; paragraphs?: string[] };
           return {
             heading: item.heading ? String(item.heading) : undefined,
-            paragraphs: Array.isArray(item.paragraphs)
-              ? item.paragraphs.map(String)
-              : [],
+            paragraphs: Array.isArray(item.paragraphs) ? item.paragraphs.map(String) : [],
           };
         })
       : [],
   };
 }
 
-export async function getContentPageFromDb(
-  slug: string
-): Promise<ContentPage | null> {
+export async function getContentPageFromDb(slug: string): Promise<ContentPage | null> {
   const row = await prisma.contentPage.findUnique({ where: { slug } });
   return row ? mapContentPage(row) : null;
+}
+
+function applyShippingPolicyToPage(page: ContentPage, shippingPageCopy: string): ContentPage {
+  return {
+    ...page,
+    sections: page.sections.map((section) => {
+      if (section.heading?.toLowerCase() !== "free shipping") return section;
+      return {
+        ...section,
+        paragraphs: [shippingPageCopy],
+      };
+    }),
+  };
 }
 
 export async function resolveContentPage(slug: string): Promise<ContentPage | undefined> {
@@ -47,7 +54,18 @@ export async function resolveContentPage(slug: string): Promise<ContentPage | un
   } catch {
     // Fall back to static content when PostgreSQL is unavailable.
   }
-  return CONTENT_PAGES[slug];
+
+  const page = CONTENT_PAGES[slug];
+  if (!page) return undefined;
+
+  if (slug !== "shipping") return page;
+
+  try {
+    const shippingPolicy = await resolveStoreShippingPolicy();
+    return applyShippingPolicyToPage(page, shippingPolicy.shippingPage);
+  } catch {
+    return page;
+  }
 }
 
 export async function listContentPages(): Promise<ContentPage[]> {

@@ -19,12 +19,16 @@ const productVideoSchema = z
     thumbnailColor: z.string().optional(),
     embedUrl: z.string(),
   })
-  .transform((video) => ({
-    id: video.id?.trim() || `video-${Math.random().toString(36).slice(2, 10)}`,
-    title: video.title,
-    thumbnailColor: video.thumbnailColor?.trim() || "#1a1a1a",
-    embedUrl: video.embedUrl,
-  }));
+  .transform((video) => {
+    const duration = video.duration?.trim();
+    return {
+      id: video.id?.trim() || `video-${Math.random().toString(36).slice(2, 10)}`,
+      title: video.title,
+      ...(duration ? { duration } : {}),
+      thumbnailColor: video.thumbnailColor?.trim() || "#1a1a1a",
+      embedUrl: video.embedUrl,
+    };
+  });
 
 const productVariantSchema = z.object({
   id: z.string().optional(),
@@ -99,6 +103,7 @@ export const adminProductSchema = z.object({
   metaDescription: z.string().max(500).optional(),
   variants: z.array(productVariantSchema).optional(),
   guitarSpecs: z.record(z.string(), z.string()).optional(),
+  similarProductIds: z.array(z.string().min(1)).max(4).optional(),
 });
 
 export const adminCategorySchema = z.object({
@@ -341,6 +346,13 @@ export const adminNotificationMarkSchema = z
 
 export const adminDeleteImagesSchema = z.object({
   urls: z.array(z.string().trim().min(1).max(2000)).min(1).max(50),
+});
+
+export const adminNewsletterCreateSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
+  marketing: z.boolean().optional(),
 });
 
 export const adminNewsletterDeleteQuerySchema = z.object({

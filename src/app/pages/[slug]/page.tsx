@@ -70,11 +70,19 @@ export default async function ContentPageRoute({ params }: ContentPageRouteProps
                   {section.heading ? (
                     <h2 className="cms-page__section-title">{section.heading}</h2>
                   ) : null}
-                  {section.paragraphs.map((paragraph, pIndex) => (
-                    <p key={pIndex} className="cms-page__paragraph">
-                      {paragraph}
-                    </p>
-                  ))}
+                  {section.paragraphs.map((paragraph, pIndex) =>
+                    /<[a-z][\s\S]*>/i.test(paragraph) ? (
+                      <div
+                        key={pIndex}
+                        className="cms-page__paragraph cms-page__richtext"
+                        dangerouslySetInnerHTML={{ __html: paragraph }}
+                      />
+                    ) : (
+                      <p key={pIndex} className="cms-page__paragraph">
+                        {paragraph}
+                      </p>
+                    ),
+                  )}
                 </section>
               ))}
             </div>

@@ -15,6 +15,7 @@ import {
   type HomepageSection,
   type HomepageSectionItem,
   type HomepageSectionKey,
+  type HomepageSectionLayout,
 } from "@/types/homepage";
 import {
   SOCIAL_RAIL_PLATFORMS,
@@ -26,6 +27,20 @@ import type { AdminProduct } from "@/types/admin";
 
 const QUERY_KEY = ["admin-homepage"] as const;
 
+function toDatetimeLocal(value?: string | null): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
+function fromDatetimeLocal(value: string): string | null {
+  if (!value) return null;
+  return new Date(value).toISOString();
+}
+
 const EMPTY_ITEM = {
   productId: "",
   categorySlug: "",
@@ -35,7 +50,22 @@ const EMPTY_ITEM = {
   customHref: "",
   badgeLabel: "",
   offerText: "",
+  startDate: "",
+  endDate: "",
 };
+
+const HOMEPAGE_LAYOUT_OPTIONS: HomepageSectionLayout[] = [
+  "product_grid",
+  "product_carousel",
+  "category_grid",
+  "browse_category_cards",
+  "category_bento",
+  "deals_slider",
+  "brand_strip",
+  "big_names_deals",
+  "story_banners",
+  "social_rail",
+];
 
 function itemLabel(item: HomepageSectionItem, productNames: Map<string, string>): string {
   if (item.productId) {
@@ -172,6 +202,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
             activeKey === "big_names_deals"
               ? BIG_NAMES_DEALS_MAX_ITEMS
               : (sectionForm.maxItems ?? activeSection.maxItems),
+          layout: sectionForm.layout ?? activeSection.layout,
         }),
       });
     },
@@ -195,6 +226,8 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
         customHref: itemForm.customHref || undefined,
         badgeLabel: itemForm.badgeLabel || undefined,
         offerText: itemForm.offerText || undefined,
+        startDate: fromDatetimeLocal(itemForm.startDate),
+        endDate: fromDatetimeLocal(itemForm.endDate),
       };
       const url = editingItemId
         ? `/api/admin/homepage/items/${editingItemId}`
@@ -274,6 +307,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
         isActive: section.isActive,
         sourceMode: section.sourceMode,
         maxItems: section.maxItems,
+        layout: section.layout,
       });
     }
   }
@@ -308,6 +342,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     isActive: sectionForm.isActive ?? activeSection.isActive,
     sourceMode: sectionForm.sourceMode ?? activeSection.sourceMode,
     maxItems: sectionForm.maxItems ?? activeSection.maxItems,
+    layout: sectionForm.layout ?? activeSection.layout,
   };
 
   const isStorySection = activeKey === "featured_stories";
@@ -489,6 +524,28 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                     }))
                   }
                 />
+              </div>
+            ) : null}
+            {!isSocialRailSection ? (
+              <div className="admin-form-group">
+                <label>Layout</label>
+                <select
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.layout ?? activeSection?.layout ?? "product_carousel"}
+                  onChange={(event) =>
+                    setSectionForm((prev) => ({
+                      ...prev,
+                      layout: event.target.value as HomepageSectionLayout,
+                    }))
+                  }
+                >
+                  {HOMEPAGE_LAYOUT_OPTIONS.map((layout) => (
+                    <option key={layout} value={layout}>
+                      {layout.replaceAll("_", " ")}
+                    </option>
+                  ))}
+                </select>
               </div>
             ) : null}
             {!isBigNamesSection && !isStorySection && !forceManualSource ? (
@@ -730,18 +787,22 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                             ))}
                           </ul>
                         ) : null}
-                        <label style={{ marginTop: 8, display: "block" }}>
-                          Selected Product ID
-                        </label>
-                        <input
-                          className="admin-input"
-                          style={{ width: "100%" }}
-                          value={itemForm.productId}
-                          onChange={(event) =>
-                            setItemForm((prev) => ({ ...prev, productId: event.target.value }))
-                          }
-                          placeholder="Catalog product ID"
-                        />
+                        {!itemForm.productId || !productSearch.trim() ? (
+                          <>
+                            <label style={{ marginTop: 8, display: "block" }}>
+                              Catalog product ID
+                            </label>
+                            <input
+                              className="admin-input"
+                              style={{ width: "100%" }}
+                              value={itemForm.productId}
+                              onChange={(event) =>
+                                setItemForm((prev) => ({ ...prev, productId: event.target.value }))
+                              }
+                              placeholder="Catalog product ID"
+                            />
+                          </>
+                        ) : null}
                       </div>
                     )
                   ) : null}
@@ -890,6 +951,34 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   </div>
                 </>
               )}
+              {!isSocialRailSection ? (
+                <div className="admin-form-grid" style={{ gridColumn: "1 / -1" }}>
+                  <div className="admin-form-group">
+                    <label>Visible from (optional)</label>
+                    <input
+                      className="admin-input"
+                      type="datetime-local"
+                      style={{ width: "100%" }}
+                      value={itemForm.startDate}
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, startDate: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Visible until (optional)</label>
+                    <input
+                      className="admin-input"
+                      type="datetime-local"
+                      style={{ width: "100%" }}
+                      value={itemForm.endDate}
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, endDate: event.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
+              ) : null}
             </div>
             <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               {canWrite ? (
@@ -1044,6 +1133,8 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                                     customHref: item.customHref ?? "",
                                     badgeLabel: item.badgeLabel ?? "",
                                     offerText: item.offerText ?? "",
+                                    startDate: toDatetimeLocal(item.startDate),
+                                    endDate: toDatetimeLocal(item.endDate),
                                   });
                                 }}
                               >

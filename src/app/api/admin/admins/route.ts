@@ -12,6 +12,7 @@ import {
   updateUserDisplayName,
   updateUserPassword,
 } from "@/lib/server/userService";
+import { sendAdminInviteEmail } from "@/lib/server/adminInviteEmailService";
 import { adminInviteSchema } from "@/lib/validations/wrFeatures";
 
 export async function GET() {
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     if (parsed.role === "super_admin" && actor.role !== "super_admin") {
       return NextResponse.json(
         { error: "Only a Super Admin can invite another Super Admin" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
         if (existingAdmin.isActive) {
           return NextResponse.json(
             { error: "This email is already an admin user" },
-            { status: 409 }
+            { status: 409 },
           );
         }
         // Reactivate previously deactivated admin
@@ -59,9 +60,16 @@ export async function POST(request: Request) {
           await updateUserPassword(existingUser.id, parsed.password);
         }
         await updateUserDisplayName(existingUser.id, parsed.displayName);
+        const emailResult = await sendAdminInviteEmail({
+          email,
+          displayName: parsed.displayName,
+          mode: "reactivated",
+        });
         return NextResponse.json({
           admin,
           mode: "reactivated" as const,
+          emailSent: emailResult.sent,
+          emailSkipped: emailResult.skipped ?? false,
         });
       }
 
@@ -77,9 +85,19 @@ export async function POST(request: Request) {
         role: parsed.role,
       });
 
+      const emailResult = await sendAdminInviteEmail({
+        email,
+        displayName: parsed.displayName,
+        mode: "promoted",
+      });
       return NextResponse.json(
-        { admin, mode: "promoted" as const },
-        { status: 201 }
+        {
+          admin,
+          mode: "promoted" as const,
+          emailSent: emailResult.sent,
+          emailSkipped: emailResult.skipped ?? false,
+        },
+        { status: 201 },
       );
     }
 
@@ -89,7 +107,7 @@ export async function POST(request: Request) {
           error:
             "Password is required when creating a new admin account (email is not registered yet)",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -105,9 +123,20 @@ export async function POST(request: Request) {
       role: parsed.role,
     });
 
+    const emailResult = await sendAdminInviteEmail({
+      email,
+      displayName: parsed.displayName,
+      temporaryPassword: parsed.password,
+      mode: "created",
+    });
     return NextResponse.json(
-      { admin, mode: "created" as const },
-      { status: 201 }
+      {
+        admin,
+        mode: "created" as const,
+        emailSent: emailResult.sent,
+        emailSkipped: emailResult.skipped ?? false,
+      },
+      { status: 201 },
     );
   } catch (error) {
     return adminErrorResponse(error);

@@ -18,10 +18,12 @@ export function buildCartShippingState(
   const threshold = config?.freeShippingThreshold ?? 0;
   const unlocked = isFreeShippingUnlocked(paidSubtotal, threshold);
 
+  const shippingCopy = config?.shippingCopy ?? SHIPPING_POLICY;
+
   if (unlocked || threshold <= 0) {
     return {
       unlocked: true,
-      label: SHIPPING_POLICY.cartBanner,
+      label: shippingCopy.cartBanner,
       detail: "Standard delivery · Dispatches in 1–2 business days",
       amountLabel: "FREE",
     };

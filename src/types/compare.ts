@@ -25,6 +25,7 @@ export interface CompareShareRecord {
 }
 
 export interface CompareAnalyticsSummary {
+  period: string;
   totalEvents: number;
   adds: number;
   removes: number;
@@ -32,6 +33,7 @@ export interface CompareAnalyticsSummary {
   exports: number;
   shareViews: number;
   topProducts: Array<{ productId: string; name: string; count: number }>;
+  eventsByDay: Array<{ date: string; count: number }>;
 }
 
 export interface CompareEnrichedProduct extends CompareItemRecord {

@@ -22,6 +22,7 @@ const EMPTY_FORM = {
   ctaLink: "/search",
   startDate: "",
   endDate: "",
+  priority: 0,
   status: "active" as "active" | "inactive",
 };
 
@@ -86,6 +87,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
         ctaLink: form.ctaLink || "/search",
         startDate: fromDatetimeLocal(form.startDate),
         endDate: fromDatetimeLocal(form.endDate),
+        priority: Number(form.priority) || 0,
       };
       const url = editId ? `/api/admin/banners/${editId}` : "/api/admin/banners";
       await adminMutateJson(url, {
@@ -155,6 +157,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
       ctaLink: banner.ctaLink ?? "/search",
       startDate: toDatetimeLocal(banner.startDate),
       endDate: toDatetimeLocal(banner.endDate),
+      priority: banner.priority,
       status: banner.status,
     });
   }
@@ -277,6 +280,20 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                   value={form.endDate}
                   onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                 />
+              </div>
+              <div className="admin-form-group">
+                <label>Priority</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  type="number"
+                  min={0}
+                  value={form.priority}
+                  onChange={(e) => setForm({ ...form, priority: Number(e.target.value) || 0 })}
+                />
+                <p className="admin-form-hint" style={{ marginTop: "0.35rem" }}>
+                  Lower numbers appear first. You can also reorder banners in the table.
+                </p>
               </div>
               <div className="admin-form-group">
                 <label>Status</label>

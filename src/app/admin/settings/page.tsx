@@ -181,17 +181,17 @@ function SettingsContent({
                   marginBottom: "0.35rem",
                 }}
               >
-                Checkout always quotes free shipping on every order (storefront policy threshold 0).
-                These fields are stored for a future paid-shipping mode and do not change customer
-                quotes today.
+                Set to <strong>0</strong> for free shipping on every order. Above zero, orders at or
+                above this subtotal ship free; zone charges apply below it.
               </p>
               <input
                 className="admin-input"
                 style={{ width: "100%" }}
                 type="number"
-                disabled
-                readOnly
+                min={0}
+                disabled={!settingsWrite}
                 value={form.freeShippingThreshold}
+                onChange={(e) => updateField("freeShippingThreshold", Number(e.target.value) || 0)}
                 aria-describedby="shipping-settings-note"
               />
             </div>
@@ -201,15 +201,17 @@ function SettingsContent({
                 className="admin-input"
                 style={{ width: "100%" }}
                 type="number"
-                disabled
-                readOnly
+                min={0}
+                disabled={!settingsWrite}
                 value={form.standardShippingCharge}
+                onChange={(e) => updateField("standardShippingCharge", Number(e.target.value) || 0)}
               />
               <p
                 id="shipping-settings-note"
                 style={{ fontSize: "0.75rem", color: "var(--admin-muted)", marginTop: "0.35rem" }}
               >
-                Fields locked while free-shipping policy is forced in checkout.
+                Fallback charge when no zone rule matches. Zone-specific rates override this on
+                checkout.
               </p>
             </div>
             <div className="admin-form-group">

@@ -13,7 +13,9 @@ import {
   adminFetchJson,
   adminMutateJson,
 } from "@/components/admin/AdminQueryState";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import { adminOrderPath } from "@/lib/routes";
+import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
 import type { ReturnRequest, ReturnRequestStatus } from "@/types/returnRequest";
 
 function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
@@ -22,12 +24,20 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
   const [selected, setSelected] = useState<ReturnRequest | null>(null);
   const [adminNote, setAdminNote] = useState("");
   const [newStatus, setNewStatus] = useState<ReturnRequestStatus>("approved");
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["admin-returns", statusFilter],
+    queryKey: ["admin-returns", statusFilter, cursor],
     queryFn: async () => {
-      const qs = statusFilter ? `?status=${statusFilter}` : "";
-      return adminFetchJson<{ returns: ReturnRequest[] }>(`/api/admin/returns${qs}`);
+      const params = new URLSearchParams({ limit: "20" });
+      if (statusFilter) params.set("status", statusFilter);
+      if (cursor) params.set("cursor", cursor);
+      return adminFetchJson<{
+        returns: ReturnRequest[];
+        hasMore: boolean;
+        nextCursor?: string;
+        total: number;
+      }>(`/api/admin/returns?${params}`);
     },
   });
 
@@ -59,12 +69,13 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
   }
 
   const returns = data?.returns ?? [];
+  const hasMore = data?.hasMore ?? false;
 
   return (
     <>
-      <AdminNotice tone="warning" title="Return “Refunded” does not move money">
-        Updating a return to Refunded only tracks the return workflow. To repay the customer, open
-        the linked order and use <strong>Refund via Razorpay</strong>.
+      <AdminNotice tone="info" title="Refunded status triggers Razorpay">
+        Setting a return to <strong>Refunded</strong> automatically initiates a Razorpay refund for
+        paid orders linked to this return.
       </AdminNotice>
       <div className="admin-grid-2">
         <div className="admin-panel">
@@ -73,7 +84,10 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
               className="admin-select"
               style={{ width: "auto" }}
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                reset();
+              }}
             >
               <option value="">All statuses</option>
               <option value="pending">Pending</option>
@@ -83,6 +97,11 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
               <option value="refunded">Refunded</option>
               <option value="cancelled">Cancelled</option>
             </select>
+            {data?.total != null ? (
+              <span style={{ color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+                {data.total} total
+              </span>
+            ) : null}
           </div>
           {returns.length === 0 ? (
             <EmptyState message="No return requests." />
@@ -127,6 +146,27 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
               </table>
             </div>
           )}
+          <div className="admin-toolbar" style={{ justifyContent: "space-between" }}>
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              disabled={!canGoPrev || isFetching}
+              onClick={goPrev}
+            >
+              Previous
+            </button>
+            <span style={{ color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+              Page {pageIndex + 1}
+            </span>
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              disabled={!hasMore || isFetching}
+              onClick={() => goNext(data?.nextCursor)}
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         <div className="admin-panel">
@@ -197,11 +237,12 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
                           color: "var(--admin-muted)",
                         }}
                       >
-                        After saving,{" "}
+                        Saving will automatically issue the Razorpay refund for the linked paid
+                        order. You can also review payment details on the{" "}
                         <Link href={adminOrderPath(selected.orderId)} className="admin-link">
-                          open the order
-                        </Link>{" "}
-                        to issue the Razorpay refund.
+                          order page
+                        </Link>
+                        .
                       </p>
                     ) : null}
                     <MutationError error={updateMutation.isError ? updateMutation.error : null} />
@@ -215,8 +256,6 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
     </>
   );
 }
-
-import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
 
 export default function AdminReturnsPage() {
   return (

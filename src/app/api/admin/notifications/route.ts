@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
+  deleteAdminNotification,
   listAdminNotifications,
   markAdminNotificationRead,
   markAllAdminNotificationsRead,
@@ -29,6 +30,20 @@ export async function PATCH(request: Request) {
     }
 
     await markAdminNotificationRead(parsed.id!);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return adminErrorResponse(error);
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    await requireAdmin("dashboard:read", request);
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "Notification id required" }, { status: 400 });
+    }
+    await deleteAdminNotification(id);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return adminErrorResponse(error);

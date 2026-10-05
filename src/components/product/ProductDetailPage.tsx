@@ -42,6 +42,7 @@ const ProductCrossSell = dynamic(() => import("./ProductCrossSell"), { ssr: fals
 interface ProductDetailPageProps {
   slug: string;
   initialData?: ProductDetailResult | null;
+  shippingDetail?: string;
 }
 
 function buildInitialSelection(variant: ProductVariant): Record<string, string> {
@@ -116,7 +117,11 @@ function buildGalleryImages(
   return [...variantImages, ...extras];
 }
 
-export default function ProductDetailPage({ slug, initialData }: ProductDetailPageProps) {
+export default function ProductDetailPage({
+  slug,
+  initialData,
+  shippingDetail,
+}: ProductDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data, isLoading, isError } = useProduct(slug, initialData);
@@ -294,6 +299,7 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
               onReviewsClick={scrollToReviews}
               liveRating={product.rating}
               liveReviewCount={product.reviewCount}
+              shippingDetail={shippingDetail}
             />
           </div>
           <div className="pdp-buy-cluster">

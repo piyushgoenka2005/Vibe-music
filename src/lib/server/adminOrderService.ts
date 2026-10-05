@@ -1,4 +1,4 @@
-import { logAuditEvent } from "@/lib/server/auditLog";
+import { listAuditLogsForResource, logAuditEvent } from "@/lib/server/auditLog";
 import { releaseOrderInventory } from "@/lib/server/inventoryService";
 import {
   notifyOrderRefunded,
@@ -8,15 +8,9 @@ import { asJsonValue } from "@/lib/server/prisma/mappers";
 import { prisma } from "@/lib/db/prisma";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import * as pgUsers from "@/lib/server/prisma/usersRepository";
-import type { Order, OrderStatus } from "@/types/order";
+import type { Order, OrderStatus, OrderTimelineEvent } from "@/types/order";
 
-export interface OrderTimelineEvent {
-  id: string;
-  status: OrderStatus;
-  note?: string;
-  actor: string;
-  createdAt: string;
-}
+export type { OrderTimelineEvent };
 
 export interface PaginatedOrdersResult {
   orders: Order[];
@@ -128,6 +122,29 @@ export async function updateOrderStatus(
   }
 
   return order;
+}
+
+export async function getOrderTimeline(orderId: string): Promise<OrderTimelineEvent[]> {
+  const logs = await listAuditLogsForResource("order", orderId, 50);
+  return logs.map((log) => {
+    const metadata = log.metadata ?? {};
+    const note =
+      typeof metadata.note === "string" && metadata.note.trim() ? metadata.note.trim() : undefined;
+    const status =
+      typeof metadata.status === "string"
+        ? (metadata.status as OrderStatus)
+        : log.action === "order.refund_initiated"
+          ? "refunded"
+          : "pending";
+    return {
+      id: log.id,
+      status,
+      note,
+      actor: log.actorEmail ?? log.actorId ?? "system",
+      createdAt: log.createdAt,
+      action: log.action,
+    };
+  });
 }
 
 export async function addOrderNote(orderId: string, note: string, actor: string): Promise<void> {

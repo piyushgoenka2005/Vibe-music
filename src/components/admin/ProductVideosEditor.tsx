@@ -16,17 +16,12 @@ function emptyVideo(index: number): ProductVideo {
   };
 }
 
-export default function ProductVideosEditor({
-  videos,
-  onChange,
-}: ProductVideosEditorProps) {
+export default function ProductVideosEditor({ videos, onChange }: ProductVideosEditorProps) {
   function updateVideo(
     index: number,
-    patch: Partial<Pick<ProductVideo, "title" | "embedUrl">>
+    patch: Partial<Pick<ProductVideo, "title" | "embedUrl" | "duration" | "thumbnailColor">>,
   ) {
-    const next = videos.map((video, i) =>
-      i === index ? { ...video, ...patch } : video
-    );
+    const next = videos.map((video, i) => (i === index ? { ...video, ...patch } : video));
     onChange(next);
   }
 
@@ -71,6 +66,22 @@ export default function ProductVideosEditor({
             placeholder="https://www.youtube.com/embed/…"
             onChange={(e) => updateVideo(index, { embedUrl: e.target.value })}
           />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+            <input
+              type="text"
+              className="admin-input"
+              value={video.duration ?? ""}
+              placeholder="Duration (e.g. 3:42)"
+              onChange={(e) => updateVideo(index, { duration: e.target.value })}
+            />
+            <input
+              type="text"
+              className="admin-input"
+              value={video.thumbnailColor ?? ""}
+              placeholder="Thumbnail color (#1a1a1a)"
+              onChange={(e) => updateVideo(index, { thumbnailColor: e.target.value })}
+            />
+          </div>
           <button
             type="button"
             className="admin-btn admin-btn--ghost"

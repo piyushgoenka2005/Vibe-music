@@ -47,9 +47,11 @@ function useHasMounted() {
 export default function StorefrontChrome({
   children,
   legal,
+  shippingAnnouncement,
 }: {
   children: React.ReactNode;
   legal: PublicLegalInfo;
+  shippingAnnouncement?: string;
 }) {
   const pathname = usePathname() ?? "";
   const hideChrome = pathname.startsWith("/admin") || pathname.startsWith("/gp9");
@@ -133,7 +135,7 @@ export default function StorefrontChrome({
     <div className={shellClassName}>
       <GlassFilter />
       <SkipToContent />
-      <SiteHeader />
+      <SiteHeader shippingAnnouncement={shippingAnnouncement} />
       <div className="storefront-main" id="main-content" tabIndex={-1}>
         {children}
       </div>

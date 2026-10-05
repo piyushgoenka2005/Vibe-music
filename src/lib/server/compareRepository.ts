@@ -4,7 +4,11 @@ import { randomUUID, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import { normalizeCompareItems } from "@/lib/compare/compareEngine";
-import type { CompareAnalyticsSummary, CompareItemRecord, CompareShareRecord } from "@/types/compare";
+import type {
+  CompareAnalyticsSummary,
+  CompareItemRecord,
+  CompareShareRecord,
+} from "@/types/compare";
 
 function now(): string {
   return new Date().toISOString();
@@ -18,7 +22,7 @@ export async function getCompareListItems(userId: string): Promise<CompareItemRe
 
 export async function upsertCompareListItems(
   userId: string,
-  items: CompareItemRecord[]
+  items: CompareItemRecord[],
 ): Promise<CompareItemRecord[]> {
   const normalized = normalizeCompareItems(items);
   const updatedAt = now();
@@ -114,11 +118,20 @@ export async function recordCompareEvent(input: {
   });
 }
 
-export async function getCompareAnalyticsSummary(): Promise<CompareAnalyticsSummary> {
+function comparePeriodSince(period = "30d"): string {
+  const days = period === "7d" ? 7 : period === "90d" ? 90 : 30;
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  return since.toISOString();
+}
+
+export async function getCompareAnalyticsSummary(period = "30d"): Promise<CompareAnalyticsSummary> {
+  const since = comparePeriodSince(period);
   const events = await prisma.productCompareEvent.findMany({
-    select: { eventType: true, productId: true, metadata: true },
+    where: { createdAt: { gte: since } },
+    select: { eventType: true, productId: true, metadata: true, createdAt: true },
     orderBy: { createdAt: "desc" },
-    take: 5000,
+    take: 10000,
   });
 
   let adds = 0;
@@ -149,7 +162,17 @@ export async function getCompareAnalyticsSummary(): Promise<CompareAnalyticsSumm
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
+  const dayCounts = new Map<string, number>();
+  for (const event of events) {
+    const day = event.createdAt.slice(0, 10);
+    dayCounts.set(day, (dayCounts.get(day) ?? 0) + 1);
+  }
+  const eventsByDay = [...dayCounts.entries()]
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
   return {
+    period,
     totalEvents: events.length,
     adds,
     removes,
@@ -157,5 +180,6 @@ export async function getCompareAnalyticsSummary(): Promise<CompareAnalyticsSumm
     exports,
     shareViews,
     topProducts,
+    eventsByDay,
   };
 }

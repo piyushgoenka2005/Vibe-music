@@ -1,8 +1,4 @@
-export type AdminRole =
-  | "super_admin"
-  | "admin"
-  | "inventory_manager"
-  | "customer_support";
+export type AdminRole = "super_admin" | "admin" | "inventory_manager" | "customer_support";
 
 export type Permission =
   | "dashboard:read"
@@ -115,6 +111,8 @@ export interface AdminProduct extends Product {
   videos?: ProductVideo[];
   /** Spec rows shown on the PDP Specs tab (beyond guitarSpecs map). */
   detailSpecs?: ProductSpec[];
+  /** Manual similar-product picks for the PDP carousel. */
+  similarProductIds?: string[];
 }
 
 export interface AdminCategory {

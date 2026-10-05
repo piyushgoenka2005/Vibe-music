@@ -11,10 +11,7 @@ const AUDIT_LOGS_RATE_LIMIT = { limit: 60, windowMs: 60_000 } as const;
 export async function GET(request: Request) {
   try {
     const ip = getClientIp(request);
-    const rl = checkRateLimit(
-      `audit-logs-get:${ip}`,
-      AUDIT_LOGS_RATE_LIMIT
-    );
+    const rl = checkRateLimit(`audit-logs-get:${ip}`, AUDIT_LOGS_RATE_LIMIT);
 
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
@@ -22,13 +19,12 @@ export async function GET(request: Request) {
 
     await requireAdmin("audit:read", request);
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(
-      200,
-      Math.max(10, Number(searchParams.get("limit") ?? "100") || 100)
-    );
+    const limit = Math.min(200, Math.max(10, Number(searchParams.get("limit") ?? "100") || 100));
     const cursor = searchParams.get("cursor") ?? undefined;
+    const action = searchParams.get("action") ?? undefined;
+    const actorEmail = searchParams.get("actorEmail") ?? undefined;
 
-    const result = await listRecentAuditLogs(limit, cursor);
+    const result = await listRecentAuditLogs(limit, cursor, { action, actorEmail });
     return NextResponse.json(result);
   } catch (error) {
     return adminErrorResponse(error);

@@ -18,6 +18,10 @@ import ProductVariantsEditor from "@/components/admin/ProductVariantsEditor";
 import GuitarSpecsEditor, {
   extractGuitarSpecsFromRecord,
 } from "@/components/admin/GuitarSpecsEditor";
+import ProductFilterSpecsEditor, {
+  extractFilterSpecsFromRecord,
+} from "@/components/admin/ProductFilterSpecsEditor";
+import ProductSimilarEditor from "@/components/admin/ProductSimilarEditor";
 import ProductDescriptionBulletsEditor from "@/components/admin/ProductDescriptionBulletsEditor";
 import ProductInTheBoxEditor from "@/components/admin/ProductInTheBoxEditor";
 import ProductSpecsEditor from "@/components/admin/ProductSpecsEditor";
@@ -54,9 +58,13 @@ const EMPTY = {
   bundle: createEmptyBundleState(),
   related: createEmptyRelatedState(),
   guitarSpecs: {} as Record<string, string>,
+  filterSpecs: {} as Record<string, string>,
+  similarProductIds: [] as string[],
   inTheBox: [] as string[],
   videos: [] as ProductVideo[],
   detailSpecs: [] as ProductSpec[],
+  metaTitle: "",
+  metaDescription: "",
 };
 
 type AdminProductFormState = typeof EMPTY;
@@ -100,6 +108,12 @@ function mapAdminProductToForm(product: Record<string, unknown>): AdminProductFo
     guitarSpecs: extractGuitarSpecsFromRecord(
       product.specifications as Record<string, string> | undefined,
     ),
+    filterSpecs: extractFilterSpecsFromRecord(
+      product.specifications as Record<string, string> | undefined,
+    ),
+    similarProductIds: Array.isArray(product.similarProductIds)
+      ? (product.similarProductIds as string[])
+      : [],
     inTheBox: (product.inTheBox as string[]) ?? [],
     videos: (product.videos as ProductVideo[]) ?? [],
     detailSpecs: (product.detailSpecs as ProductSpec[]) ?? [],
@@ -227,10 +241,17 @@ export default function ProductFormPage({
       );
       const categoryName = selectedCategory?.name ?? form.category;
       const categorySlug = selectedCategory?.slug ?? form.categorySlug ?? slugify(form.category);
-      const guitarSpecs = isGuitarProduct(categorySlug, categoryName)
+      const isGuitar = isGuitarProduct(categorySlug, categoryName);
+      const guitarSpecs = isGuitar
         ? Object.fromEntries(Object.entries(form.guitarSpecs).filter(([, value]) => value.trim()))
-        : {};
-      const { bundle: _bundle, related: _related, guitarSpecs: _guitarSpecs, ...formFields } = form;
+        : undefined;
+      const {
+        bundle: _bundle,
+        related: _related,
+        guitarSpecs: _guitarSpecs,
+        filterSpecs: _filterSpecs,
+        ...formFields
+      } = form;
       const payload = {
         ...formFields,
         subcategory: form.subcategory.trim(),
@@ -244,6 +265,8 @@ export default function ProductFormPage({
         spin360Images: form.spin360Images,
         variants: prepareVariantsForSave(form.variants, form.price, form.stockQuantity),
         guitarSpecs,
+        specifications: isGuitar ? undefined : form.filterSpecs,
+        similarProductIds: form.similarProductIds,
         inTheBox: form.inTheBox.map((item) => item.trim()).filter(Boolean),
         videos: form.videos.filter((v) => v.title.trim() && v.embedUrl.trim()),
         detailSpecs: form.detailSpecs.filter((s) => s.label.trim() && s.value.trim()),
@@ -732,6 +755,12 @@ export default function ProductFormPage({
                 bundle={form.bundle}
                 onChange={(bundle: ProductBundleFormState) => setForm({ ...form, bundle })}
               />
+              <ProductSimilarEditor
+                productId={productId}
+                currentProductName={form.name}
+                similarProductIds={form.similarProductIds}
+                onChange={(similarProductIds) => setForm({ ...form, similarProductIds })}
+              />
             </div>
           ) : null}
           <ProductDescriptionBulletsEditor
@@ -756,7 +785,34 @@ export default function ProductFormPage({
               specs={form.guitarSpecs}
               onChange={(guitarSpecs) => setForm({ ...form, guitarSpecs })}
             />
-          ) : null}
+          ) : (
+            <ProductFilterSpecsEditor
+              specs={form.filterSpecs}
+              onChange={(filterSpecs) => setForm({ ...form, filterSpecs })}
+            />
+          )}
+          <div className="admin-form-grid--full">
+            <h3 style={{ margin: "1rem 0 0.5rem" }}>SEO</h3>
+            <div className="admin-form-group">
+              <label>Meta title</label>
+              <input
+                className="admin-input"
+                style={{ width: "100%" }}
+                value={form.metaTitle}
+                onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
+                placeholder="Optional — defaults to product name"
+              />
+            </div>
+            <div className="admin-form-group">
+              <label>Meta description</label>
+              <textarea
+                className="admin-textarea"
+                value={form.metaDescription}
+                onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
+                placeholder="Optional — defaults to product description"
+              />
+            </div>
+          </div>
         </fieldset>
         {saveSuccess ? (
           <p className="admin-form-success" role="status">

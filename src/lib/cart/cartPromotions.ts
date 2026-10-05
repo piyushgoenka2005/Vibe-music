@@ -1,13 +1,20 @@
 import {
+  buildShippingPolicyCopy,
+  type ShippingPolicyCopy,
   STOREFRONT_FREE_SHIPPING_THRESHOLD,
-  storefrontShippingBannerText,
 } from "@/lib/storefront/shippingPolicy";
+
+export interface CartShippingSettings {
+  freeShippingThreshold: number;
+  standardShippingCharge: number;
+}
 
 export interface CartPromotionsConfig {
   freeShippingThreshold: number;
   freeGiftThreshold: number;
   giftProductId: string | null;
   bannerText: string;
+  shippingCopy: ShippingPolicyCopy;
 }
 
 export interface CartGiftProductSummary {
@@ -33,27 +40,44 @@ function parseThreshold(value: string | undefined, fallback: number): number {
   return parsed;
 }
 
-export function getCartPromotionsConfig(): CartPromotionsConfig {
-  // Locked to storefront policy — checkout always quotes free shipping (threshold 0).
-  const freeShippingThreshold = STOREFRONT_FREE_SHIPPING_THRESHOLD;
+export function getCartPromotionsConfig(
+  shipping?: Partial<CartShippingSettings>,
+): CartPromotionsConfig {
+  const freeShippingThreshold =
+    shipping?.freeShippingThreshold ?? STOREFRONT_FREE_SHIPPING_THRESHOLD;
+  const standardShippingCharge = shipping?.standardShippingCharge ?? 0;
+  const shippingCopy = buildShippingPolicyCopy({
+    freeShippingThreshold,
+    standardShippingCharge,
+  });
   const freeGiftThreshold = parseThreshold(process.env.NEXT_PUBLIC_CART_FREE_GIFT_THRESHOLD, 799);
   const giftProductId = process.env.NEXT_PUBLIC_CART_GIFT_PRODUCT_ID?.trim() || null;
 
   const bannerText = giftProductId
     ? `Free gift on orders above ₹${freeGiftThreshold.toLocaleString("en-IN")}`
-    : storefrontShippingBannerText();
+    : shippingCopy.cartBanner;
 
   return {
     freeShippingThreshold,
     freeGiftThreshold,
     giftProductId,
     bannerText,
+    shippingCopy,
   };
+}
+
+export async function getCartPromotionsConfigFromStore(): Promise<CartPromotionsConfig> {
+  const { getStoreSettings } = await import("@/lib/server/settingsService");
+  const settings = await getStoreSettings();
+  return getCartPromotionsConfig({
+    freeShippingThreshold: settings.freeShippingThreshold,
+    standardShippingCharge: settings.standardShippingCharge,
+  });
 }
 
 export function formatCartPromoBanner(config: CartPromotionsConfig): string {
   if (config.giftProductId) {
     return `Free gift on orders above ₹${config.freeGiftThreshold.toLocaleString("en-IN")}`;
   }
-  return storefrontShippingBannerText();
+  return config.shippingCopy.cartBanner;
 }

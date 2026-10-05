@@ -6,7 +6,11 @@ import {
   listNewsletterSubscribers,
 } from "@/lib/server/newsletterRepository";
 import { logAuditEvent } from "@/lib/server/auditLog";
-import { adminNewsletterDeleteQuerySchema } from "@/lib/validations/admin";
+import {
+  adminNewsletterCreateSchema,
+  adminNewsletterDeleteQuerySchema,
+} from "@/lib/validations/admin";
+import { subscribeToNewsletter } from "@/lib/server/newsletterRepository";
 
 export async function GET(request: Request) {
   try {
@@ -28,7 +32,7 @@ export async function GET(request: Request) {
             s.source,
           ]
             .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-            .join(",")
+            .join(","),
         )
         .join("\n");
       return new NextResponse(header + rows, {
@@ -45,6 +49,32 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(page);
+  } catch (error) {
+    return adminErrorResponse(error);
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const admin = await requireAdmin("customers:write", request);
+    const body = await request.json();
+    const parsed = adminNewsletterCreateSchema.parse(body);
+    const result = await subscribeToNewsletter({
+      email: parsed.email,
+      firstName: parsed.firstName,
+      lastName: parsed.lastName,
+      marketing: parsed.marketing ?? true,
+    });
+    await logAuditEvent({
+      action: "newsletter.subscriber.created",
+      actorId: admin.uid,
+      actorEmail: admin.email,
+      resourceType: "newsletter_subscriber",
+      resourceId: parsed.email.trim().toLowerCase(),
+      request,
+      metadata: { created: result.created },
+    });
+    return NextResponse.json({ ok: true, created: result.created });
   } catch (error) {
     return adminErrorResponse(error);
   }

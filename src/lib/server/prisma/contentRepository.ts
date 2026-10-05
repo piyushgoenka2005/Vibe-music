@@ -576,9 +576,10 @@ export async function listBlogCommentsByPost(
   return rows.map(mapBlogCommentRow);
 }
 
-export async function listAllBlogComments(): Promise<BlogComment[]> {
+export async function listAllBlogComments(status?: BlogCommentStatus): Promise<BlogComment[]> {
   if (!isPostgresConfigured()) return [];
   const rows = await prisma.blogComment.findMany({
+    where: status ? { status } : undefined,
     orderBy: { createdAt: "desc" },
     take: 100,
   });

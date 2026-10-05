@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
-import {
-  getReturnRequestById,
-  updateReturnRequest,
-} from "@/lib/server/returnRequestRepository";
+import { getReturnRequestById, updateReturnRequest } from "@/lib/server/returnRequestRepository";
 import { notifyUserIfAllowed } from "@/lib/server/notificationRepository";
 import { sendReturnStatusEmail } from "@/lib/server/customerUpdateEmailService";
+import { initiateOrderRefund } from "@/lib/server/razorpayRefundService";
 import { adminReturnRequestSchema } from "@/lib/validations/wrFeatures";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -26,13 +24,26 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("orders:write", request);
+    const admin = await requireAdmin("orders:write", request);
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminReturnRequestSchema.parse(body);
     const existing = await getReturnRequestById(id);
     if (!existing) {
       return NextResponse.json({ error: "Return request not found" }, { status: 404 });
+    }
+
+    if (parsed.status === "refunded" && existing.status !== "refunded") {
+      try {
+        await initiateOrderRefund({
+          orderId: existing.orderId,
+          actorEmail: admin.email,
+          request,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Refund failed";
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
     }
 
     const returnRequest = await updateReturnRequest(id, parsed);

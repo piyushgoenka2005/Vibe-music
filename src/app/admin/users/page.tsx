@@ -86,6 +86,8 @@ function UsersContent({ canInvite, currentUid }: { canInvite: boolean; currentUi
       return adminMutateJson<{
         admin: AdminProfile;
         mode: "created" | "promoted" | "reactivated";
+        emailSent?: boolean;
+        emailSkipped?: boolean;
       }>("/api/admin/admins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -93,11 +95,15 @@ function UsersContent({ canInvite, currentUid }: { canInvite: boolean; currentUi
       });
     },
     onSuccess: (result) => {
+      const emailNote = result.emailSent
+        ? "Invite email sent."
+        : result.emailSkipped
+          ? "Invite email skipped (SMTP not configured)."
+          : "Invite email could not be sent — check SMTP settings.";
       const labels = {
-        created: "Admin account created. They can sign in at /admin/login.",
-        promoted:
-          "Existing user promoted to admin. They can sign in at /admin/login with their current credentials (or the password you set).",
-        reactivated: "Admin account reactivated.",
+        created: `Admin account created. ${emailNote} They can sign in at /admin/login.`,
+        promoted: `Existing user promoted to admin. ${emailNote} They can sign in at /admin/login with their current credentials (or the password you set).`,
+        reactivated: `Admin account reactivated. ${emailNote}`,
       } as const;
       setInviteSuccess(labels[result.mode] ?? "Admin saved.");
       setInviteForm({ email: "", displayName: "", role: "admin", password: "" });

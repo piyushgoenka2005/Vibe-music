@@ -220,6 +220,10 @@ export async function markAllAdminNotificationsRead(): Promise<void> {
   });
 }
 
+export async function deleteAdminNotification(id: string): Promise<void> {
+  await prisma.adminNotification.delete({ where: { id } });
+}
+
 export async function notifyUserIfAllowed(input: {
   userId: string;
   type: NotificationType;

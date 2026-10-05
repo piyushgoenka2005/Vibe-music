@@ -864,7 +864,15 @@ export async function upsertRentalPolicy(input: RentalPolicy): Promise<RentalPol
   };
 }
 
-export async function getRentalAnalyticsSummary(): Promise<{
+function rentalPeriodSince(period = "30d"): string {
+  const days = period === "7d" ? 7 : period === "90d" ? 90 : 30;
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  return since.toISOString();
+}
+
+export async function getRentalAnalyticsSummary(period = "30d"): Promise<{
+  period: string;
   totalBookings: number;
   activeBookings: number;
   totalRevenue: number;
@@ -872,15 +880,21 @@ export async function getRentalAnalyticsSummary(): Promise<{
   lateFeesCollected: number;
   damageChargesCollected: number;
   bookingsByStatus: Record<string, number>;
+  bookingsByMonth: Array<{ month: string; count: number; revenue: number }>;
+  topProducts: Array<{ productId: string; name: string; bookings: number; revenue: number }>;
 }> {
+  const since = rentalPeriodSince(period);
   const bookings = await prisma.rentalBooking.findMany({
+    where: { createdAt: { gte: since } },
     select: {
+      id: true,
       status: true,
       total: true,
       depositAmount: true,
       lateFees: true,
       damageCharges: true,
       paymentStatus: true,
+      createdAt: true,
     },
   });
   const bookingsByStatus: Record<string, number> = {};
@@ -903,7 +917,67 @@ export async function getRentalAnalyticsSummary(): Promise<{
     }
   }
 
+  const monthMap = new Map<string, { count: number; revenue: number }>();
+  for (const booking of bookings) {
+    const month = booking.createdAt.slice(0, 7);
+    const current = monthMap.get(month) ?? { count: 0, revenue: 0 };
+    current.count += 1;
+    if (booking.paymentStatus === "paid" || booking.paymentStatus === "partial_refund") {
+      current.revenue += booking.total;
+    }
+    monthMap.set(month, current);
+  }
+  const bookingsByMonth = [...monthMap.entries()]
+    .map(([month, data]) => ({
+      month,
+      count: data.count,
+      revenue: Math.round(data.revenue * 100) / 100,
+    }))
+    .sort((a, b) => a.month.localeCompare(b.month));
+
+  const bookingIds = bookings.map((b) => b.id);
+  const itemRows =
+    bookingIds.length > 0
+      ? await prisma.rentalBookingItem.findMany({
+          where: { bookingId: { in: bookingIds } },
+          select: {
+            productId: true,
+            productName: true,
+            lineSubtotal: true,
+            bookingId: true,
+          },
+        })
+      : [];
+  const paidBookingIds = new Set(
+    bookings
+      .filter((b) => b.paymentStatus === "paid" || b.paymentStatus === "partial_refund")
+      .map((b) => b.id),
+  );
+  const productStats = new Map<string, { name: string; bookings: number; revenue: number }>();
+  for (const item of itemRows) {
+    const current = productStats.get(item.productId) ?? {
+      name: item.productName,
+      bookings: 0,
+      revenue: 0,
+    };
+    current.bookings += 1;
+    if (paidBookingIds.has(item.bookingId)) {
+      current.revenue += item.lineSubtotal;
+    }
+    productStats.set(item.productId, current);
+  }
+  const topProducts = [...productStats.entries()]
+    .map(([productId, data]) => ({
+      productId,
+      name: data.name,
+      bookings: data.bookings,
+      revenue: Math.round(data.revenue * 100) / 100,
+    }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 10);
+
   return {
+    period,
     totalBookings: bookings.length,
     activeBookings,
     totalRevenue: Math.round(totalRevenue * 100) / 100,
@@ -911,6 +985,8 @@ export async function getRentalAnalyticsSummary(): Promise<{
     lateFeesCollected: Math.round(lateFeesCollected * 100) / 100,
     damageChargesCollected: Math.round(damageChargesCollected * 100) / 100,
     bookingsByStatus,
+    bookingsByMonth,
+    topProducts,
   };
 }
 

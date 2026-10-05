@@ -6,6 +6,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
+import BannerImageUpload from "@/components/admin/BannerImageUpload";
 import { slugify } from "@/lib/slug";
 import type { AdminSession } from "@/types/admin";
 import type { RentalAvailabilityBlock, RentalInventoryUnit, RentalProduct } from "@/types/rental";
@@ -596,11 +597,10 @@ function ProductsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
               value={form.maxDurationDays}
               onChange={(e) => setForm({ ...form, maxDurationDays: Number(e.target.value) || 1 })}
             />
-            <input
-              className="admin-input"
-              placeholder="Image URL"
+            <BannerImageUpload
+              label="Product image"
               value={form.image}
-              onChange={(e) => setForm({ ...form, image: e.target.value })}
+              onChange={(url) => setForm({ ...form, image: url })}
             />
             <textarea
               className="admin-textarea"

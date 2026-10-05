@@ -20,6 +20,7 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
     isActive: true,
     maxUses: undefined as number | undefined,
     minOrderAmount: undefined as number | undefined,
+    startsAt: "",
     expiresAt: "",
   });
   const [editId, setEditId] = useState<string | null>(null);
@@ -46,7 +47,11 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const payload = { ...form, expiresAt: form.expiresAt || undefined };
+      const payload = {
+        ...form,
+        startsAt: form.startsAt || undefined,
+        expiresAt: form.expiresAt || undefined,
+      };
       const url = editId ? `/api/admin/coupons/${editId}` : "/api/admin/coupons";
       await adminMutateJson(url, {
         method: editId ? "PUT" : "POST",
@@ -181,6 +186,16 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
+                <label>Starts At</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  type="date"
+                  value={form.startsAt}
+                  onChange={(e) => setForm({ ...form, startsAt: e.target.value })}
+                />
+              </div>
+              <div className="admin-form-group">
                 <label>Expires At</label>
                 <input
                   className="admin-input"
@@ -256,6 +271,7 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                               isActive: c.isActive,
                               maxUses: c.maxUses,
                               minOrderAmount: c.minOrderAmount,
+                              startsAt: c.startsAt?.slice(0, 10) ?? "",
                               expiresAt: c.expiresAt?.slice(0, 10) ?? "",
                             });
                             setShowForm(true);

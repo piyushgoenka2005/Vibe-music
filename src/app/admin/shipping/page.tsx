@@ -84,9 +84,9 @@ function ShippingContent({ canWrite }: { canWrite: boolean }) {
   return (
     <div className="admin-grid-2">
       <div style={{ gridColumn: "1 / -1" }}>
-        <AdminNotice tone="warning" title="Checkout shipping is free (₹0)">
-          Zone charge fields below are for coverage and ETA planning. The storefront checkout
-          resolver currently returns ₹0 for every method — customers always see free shipping.
+        <AdminNotice tone="info" title="Zone charges apply at checkout">
+          Pin-code and state rules below determine shipping quotes. Set free-shipping threshold to 0
+          in Store settings for free shipping on every order.
         </AdminNotice>
       </div>
       <div className="admin-panel">

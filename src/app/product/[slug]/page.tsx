@@ -6,6 +6,7 @@ import { resolveCanonicalProductSlug } from "@/services/catalogService";
 import { buildProductJsonLd } from "@/lib/seo/productJsonLd";
 import { cdnSeoImageUrl, storefrontImageUrl } from "@/lib/storefrontImages";
 import { BRAND } from "@/lib/brand";
+import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
 
 export const dynamicParams = true;
 export const revalidate = 300;
@@ -33,20 +34,22 @@ export async function generateMetadata({ params }: ProductRouteProps): Promise<M
         .trim()
     : "";
   const metaDescription =
-    rawDescription.length > 20
+    product.metaDescription?.trim() ||
+    (rawDescription.length > 20
       ? rawDescription.slice(0, 160)
-      : `${product.name} by ${product.brand}. Buy online with manufacturer warranty and free shipping from ${BRAND.name}.`;
+      : `${product.name} by ${product.brand}. Buy online with manufacturer warranty and free shipping from ${BRAND.name}.`);
+  const pageTitle = product.metaTitle?.trim() || `${product.name} | ${BRAND.name}`;
 
   const hero = product.images?.[0]?.src || product.image;
   const ogImage = hero ? cdnSeoImageUrl(hero) : undefined;
   const canonicalUrl = `${BRAND.siteUrl}/product/${product.slug}`;
 
   return {
-    title: `${product.name} | ${BRAND.name}`,
+    title: pageTitle,
     description: metaDescription,
     alternates: { canonical: canonicalUrl },
     openGraph: {
-      title: product.name,
+      title: product.metaTitle?.trim() || product.name,
       description: metaDescription,
       url: canonicalUrl,
       siteName: BRAND.name,
@@ -65,7 +68,7 @@ export async function generateMetadata({ params }: ProductRouteProps): Promise<M
     },
     twitter: {
       card: "summary_large_image",
-      title: product.name,
+      title: product.metaTitle?.trim() || product.name,
       description: metaDescription,
       images: ogImage ? [ogImage] : undefined,
     },
@@ -99,6 +102,7 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
   const heroImageUrl = heroRaw ? storefrontImageUrl(heroRaw, 1200).src : undefined;
 
   const jsonLd = buildProductJsonLd(initialData.product, defaultVariant);
+  const shippingPolicy = await resolveStoreShippingPolicy();
 
   return (
     <main className="storefront-page">
@@ -109,7 +113,11 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
       {heroImageUrl ? (
         <link rel="preload" as="image" href={heroImageUrl} fetchPriority="high" />
       ) : null}
-      <ProductDetailPage slug={slug} initialData={initialData} />
+      <ProductDetailPage
+        slug={slug}
+        initialData={initialData}
+        shippingDetail={shippingPolicy.pdpDetail}
+      />
     </main>
   );
 }

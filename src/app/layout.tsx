@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
 import { resolvePublicLegal } from "@/lib/brand/resolvePublicLegal";
+import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
 import GoogleAnalyticsScripts from "@/components/analytics/GoogleAnalyticsScripts";
 import { WebVitals } from "@/components/common/WebVitals";
 import SocialRailShell from "@/components/layout/SocialRailShell";
@@ -35,7 +36,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const legal = await resolvePublicLegal();
+  const [legal, shippingPolicy] = await Promise.all([
+    resolvePublicLegal(),
+    resolveStoreShippingPolicy(),
+  ]);
   const splashEnabled = false; // Disabled to eliminate artificial loading latency
 
   return (
@@ -77,7 +81,9 @@ export default async function RootLayout({
             GSTIN: {legal.gstin}
           </p>
         ) : null}
-        <AppShell legal={legal}>{children}</AppShell>
+        <AppShell legal={legal} shippingAnnouncement={shippingPolicy.announcement}>
+          {children}
+        </AppShell>
       </body>
     </html>
   );

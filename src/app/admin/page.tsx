@@ -161,6 +161,12 @@ function DashboardContent() {
           icon={CircleCheck}
         />
         <StatCard
+          label="Cancelled"
+          value={stats.cancelledOrders}
+          accent="out-of-stock"
+          icon={Ban}
+        />
+        <StatCard
           label="Low Stock"
           value={stats.lowStockProducts}
           accent="low-stock"

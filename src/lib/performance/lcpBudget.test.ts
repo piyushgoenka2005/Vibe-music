@@ -8,7 +8,8 @@ describe("lcpBudget", () => {
   it("prioritizes visible trending carousel cards", () => {
     expect(shouldPrioritizeHomepageProductImage("trending", 0)).toBe(true);
     expect(shouldPrioritizeHomepageProductImage("trending", 7)).toBe(true);
-    expect(shouldPrioritizeHomepageProductImage("trending", 8)).toBe(false);
+    expect(shouldPrioritizeHomepageProductImage("trending", 11)).toBe(true);
+    expect(shouldPrioritizeHomepageProductImage("trending", 12)).toBe(false);
     expect(shouldPrioritizeHomepageProductImage("best_sellers", 2)).toBe(true);
     expect(shouldPrioritizeHomepageProductImage("deals", 0)).toBe(false);
   });
