@@ -39,8 +39,12 @@ vi.mock("@/lib/analytics/measurementProtocol", () => ({
   sendServerRefundEvent: vi.fn(),
 }));
 
-vi.mock("@/lib/analytics/metaCapi", () => ({
+const { sendServerMetaPurchaseEvent } = vi.hoisted(() => ({
   sendServerMetaPurchaseEvent: vi.fn(),
+}));
+
+vi.mock("@/lib/analytics/metaCapi", () => ({
+  sendServerMetaPurchaseEvent,
 }));
 
 import {
@@ -154,6 +158,7 @@ describe("orderPaymentService transitions", () => {
     expect(result.skipped).toBe(false);
     expect(inventoryService.fulfillReservedStockForOrderInTx).toHaveBeenCalled();
     expect(result.order.paymentStatus).toBe("paid");
+    expect(sendServerMetaPurchaseEvent).toHaveBeenCalledWith(paid);
   });
 
   it("failOrderPayment skips when order is already paid", async () => {

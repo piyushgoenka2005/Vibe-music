@@ -2,26 +2,54 @@
 
 ## Implementation status (code complete)
 
-| Component                    | Status      | Notes                                                         |
-| ---------------------------- | ----------- | ------------------------------------------------------------- |
-| Browser Meta Pixel           | Done        | `MetaPixelScripts` + `MetaRouteTracker` in `layout.tsx`       |
-| PageView                     | Done        | SPA route changes + initial load via `trackMetaPageView`      |
-| ViewContent                  | Done        | Product PDP + brand/list pages                                |
-| AddToCart                    | Done        | Cart store via `events.ts`                                    |
-| InitiateCheckout             | Done        | Checkout page via `trackBeginCheckout`                        |
-| Purchase (browser)           | Done        | Checkout success page                                         |
-| Conversions API (CAPI)       | Done        | `metaCapi.ts` + `/api/analytics/meta` relay                   |
-| Purchase (server)            | Done        | `orderPaymentService` on payment capture                      |
-| `event_id` deduplication     | Done        | Shared IDs on Pixel + CAPI (Purchase uses `order.id`)         |
-| Domain verification meta tag | Done        | `NEXT_PUBLIC_META_DOMAIN_VERIFICATION` in `site.ts`           |
-| Gibraltar landing            | Done        | `/brands/gibraltar` (canonical); `?brand=gibraltar` redirects |
-| VPS production deploy        | **Pending** | Requires Meta credentials in `deploy/ops-secrets.env`         |
+| Component                    | Status      | Notes                                                          |
+| ---------------------------- | ----------- | -------------------------------------------------------------- |
+| Browser Meta Pixel           | Done        | `MetaPixelScripts` + `MetaRouteTracker` in `layout.tsx`        |
+| PageView                     | Done        | SPA route changes + initial load via `trackMetaPageView`       |
+| ViewContent                  | Done        | Product PDP + brand/list pages                                 |
+| AddToCart                    | Done        | Cart store via `events.ts`                                     |
+| InitiateCheckout             | Done        | Checkout page via `trackBeginCheckout`                         |
+| Purchase (browser)           | Done        | Checkout success page                                          |
+| Conversions API (CAPI)       | Done        | `metaCapi.ts` + `/api/analytics/meta` relay                    |
+| Purchase (server)            | Done        | `orderPaymentService` on payment capture                       |
+| `event_id` deduplication     | Done        | Shared IDs on Pixel + CAPI (Purchase uses `order.id`)          |
+| Domain verification meta tag | Done        | `NEXT_PUBLIC_META_DOMAIN_VERIFICATION` in `site.ts`            |
+| Gibraltar landing            | Done        | `/brands/gibraltar` (canonical); `?brand=gibraltar` redirects  |
+| Local dev configuration      | **Pending** | Copy `.env.local.example` → `.env.local` with Meta credentials |
+| VPS production deploy        | **Skipped** | Add credentials to `deploy/ops-secrets.env` when ready         |
 
-Until Pixel ID is set on the VPS and redeployed, Chrome DevTools will show:
+Until `NEXT_PUBLIC_META_PIXEL_ID` is set and the dev server restarted, Chrome DevTools will show:
 
 ```javascript
 typeof fbq; // "undefined"
 ```
+
+---
+
+## Local development (no deploy)
+
+1. Copy the template:
+
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+2. Fill in the three Meta values from Events Manager (Phase 1 below).
+
+3. Restart the dev server (`npm run dev`) — `NEXT_PUBLIC_*` vars are read at startup.
+
+4. Run the integration verifier:
+
+   ```bash
+   npm run verify:meta-integration
+   ```
+
+5. In Chrome DevTools on `http://localhost:3000`:
+
+   ```javascript
+   typeof fbq; // "function"
+   document.cookie; // includes _fbp after first page load
+   ```
 
 ---
 
@@ -123,15 +151,31 @@ Legacy URLs redirect:
 
 ## QA — Meta Events Manager Test Events
 
-1. Enable Test Event Code in Events Manager (optional env `META_TEST_EVENT_CODE`)
-2. Walk the funnel:
-   - Open `/brands/gibraltar` → PageView, ViewContent
-   - Open a product → ViewContent
-   - Add to cart → AddToCart
-   - Start checkout → InitiateCheckout
-   - Complete order → Purchase (browser + CAPI, deduped)
+### Pre-flight (code)
 
-### Chrome DevTools (after deploy)
+```bash
+npm run verify:meta-integration
+```
+
+### Manual funnel (after `.env.local` is configured)
+
+1. Set `META_TEST_EVENT_CODE` in `.env.local` (optional) and restart dev server.
+2. Open Events Manager → **Test events**.
+3. Walk this funnel on `http://localhost:3000` (or production when deployed):
+
+| Step | URL / action        | Expected event                                      |
+| ---- | ------------------- | --------------------------------------------------- |
+| 1    | `/brands/gibraltar` | PageView, ViewContent                               |
+| 2    | Open any product    | ViewContent (`content_ids`)                         |
+| 3    | Add to cart         | AddToCart (INR value)                               |
+| 4    | Go to checkout      | InitiateCheckout                                    |
+| 5    | Complete payment    | Purchase ×1 (browser + CAPI deduped via `order.id`) |
+
+4. Legacy ad URL should redirect: `/brands?brand=gibraltar` → `/brands/gibraltar`.
+
+5. Update Instagram ad destination to **`https://vibemusic.in/brands/gibraltar`**.
+
+### Chrome DevTools (after env + dev server restart)
 
 ```javascript
 typeof fbq; // "function"
@@ -141,6 +185,10 @@ document.cookie; // should include _fbp
 ### Automated verification
 
 ```bash
+# Local (no deploy)
+npm run verify:meta-integration
+
+# Production (after deploy + ops-secrets.env)
 npm run verify:meta-pixel:prod
 npm run verify:meta-ad-landing:prod
 ```
@@ -161,4 +209,6 @@ npm run verify:meta-ad-landing:prod
 - `src/app/api/analytics/meta/route.ts` — Browser → server relay
 - `src/lib/server/orderPaymentService.ts` — Server Purchase on payment
 - `src/lib/site.ts` — Domain verification meta tag
+- `scripts/ops/verify-meta-integration.mts` — Local code + env + HTML check
 - `scripts/ops/verify-meta-pixel.mts` — Production Pixel check
+- `.env.local.example` — Local Meta credential template
