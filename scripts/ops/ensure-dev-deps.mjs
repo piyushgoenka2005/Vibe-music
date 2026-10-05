@@ -14,6 +14,7 @@ const required = [
   "node_modules/next/dist/bin/next",
   "node_modules/@swc/helpers/package.json",
   "node_modules/.bin/next.cmd",
+  "node_modules/.bin/next",
 ];
 
 const missing = required.filter((rel) => !fs.existsSync(path.join(ROOT, rel)));
