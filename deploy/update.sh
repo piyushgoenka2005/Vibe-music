@@ -415,6 +415,30 @@ step "2/10 — Dependencies and environment"
 
 backup_database
 
+clean_node_modules() {
+  if [[ ! -d node_modules ]]; then
+    return 0
+  fi
+
+  log "Removing node_modules (best-effort; handles busy VPS trees)"
+  chmod -R u+w node_modules 2>/dev/null || true
+
+  if rm -rf node_modules 2>/dev/null; then
+    return 0
+  fi
+
+  warn "rm -rf node_modules incomplete — retrying with find -delete"
+  find node_modules -mindepth 1 -delete 2>/dev/null || true
+  rm -rf node_modules 2>/dev/null || true
+
+  if [[ -d node_modules ]]; then
+    local STALE_DIR="node_modules.stale.$(date +%s)"
+    warn "node_modules still present — moving aside to ${STALE_DIR}"
+    mv node_modules "$STALE_DIR" 2>/dev/null || die "cannot clear node_modules (stop PM2 and retry deploy)"
+    rm -rf "$STALE_DIR" 2>/dev/null || true &
+  fi
+}
+
 install_dependencies() {
   log "Installing npm dependencies (node $(node -v), npm $(npm -v))"
   # Guard against partial installs leaving a drifted lockfile on the VPS.
@@ -426,8 +450,8 @@ install_dependencies() {
   fi
 
   warn "npm ci failed — cleaning node_modules and running npm install"
-  rm -rf node_modules
-  npm install --no-audit
+  clean_node_modules
+  npm install --no-audit --no-fund
   rebuild_native_modules
 }
 
