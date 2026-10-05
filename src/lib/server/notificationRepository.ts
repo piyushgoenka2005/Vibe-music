@@ -11,6 +11,7 @@ import {
   type UserNotification,
 } from "@/types/notification";
 import { isNotificationAllowed } from "@/lib/notifications/preferencesLogic";
+import { clampPageLimit, pageFromRows } from "@/lib/server/prisma/pagination";
 
 export const USER_NOTIFICATIONS_COLLECTION = "userNotifications";
 export const ADMIN_NOTIFICATIONS_COLLECTION = "adminNotifications";
@@ -199,6 +200,40 @@ export async function listAdminNotifications(limit = 50): Promise<AdminNotificat
     take: Math.min(limit, 100),
   });
   return rows.map(mapAdminNotification);
+}
+
+export async function listAdminNotificationsPage(
+  options: {
+    type?: AdminNotification["type"];
+    limit?: number;
+    afterCreatedAt?: string;
+  } = {},
+): Promise<{
+  notifications: AdminNotification[];
+  hasMore: boolean;
+  nextCursor?: string;
+}> {
+  if (!isPostgresConfigured()) {
+    return { notifications: [], hasMore: false };
+  }
+  const limit = clampPageLimit(options.limit);
+  const where = {
+    ...(options.type ? { type: options.type } : {}),
+    ...(options.afterCreatedAt ? { createdAt: { lt: options.afterCreatedAt } } : {}),
+  };
+
+  const rows = await prisma.adminNotification.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: limit + 1,
+  });
+
+  const page = pageFromRows(rows, limit, (row) => row.createdAt);
+  return {
+    notifications: page.items.map(mapAdminNotification),
+    hasMore: page.hasMore,
+    nextCursor: page.nextCursor,
+  };
 }
 
 /** SQL count for badge polling — never ship the full notification list for a number. */

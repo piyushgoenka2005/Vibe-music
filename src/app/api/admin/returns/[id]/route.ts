@@ -37,7 +37,10 @@ export async function PUT(request: Request, context: RouteContext) {
       try {
         await initiateOrderRefund({
           orderId: existing.orderId,
+          amountPaise:
+            parsed.refundAmount !== undefined ? Math.round(parsed.refundAmount * 100) : undefined,
           actorEmail: admin.email,
+          note: parsed.adminNote,
           request,
         });
       } catch (error) {

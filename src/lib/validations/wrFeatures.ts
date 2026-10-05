@@ -15,15 +15,10 @@ export const createReturnRequestSchema = z.object({
 });
 
 export const adminReturnRequestSchema = z.object({
-  status: z.enum([
-    "pending",
-    "approved",
-    "rejected",
-    "received",
-    "refunded",
-    "cancelled",
-  ]),
+  status: z.enum(["pending", "approved", "rejected", "received", "refunded", "cancelled"]),
   adminNote: z.string().max(1000).optional(),
+  /** Partial refund in rupees; omit for full order refund. */
+  refundAmount: z.number().positive().optional(),
 });
 
 export const adminBrandSchema = z.object({
@@ -33,9 +28,7 @@ export const adminBrandSchema = z.object({
 
 export const adminUserUpdateSchema = z.object({
   displayName: z.string().min(1).max(120).optional(),
-  role: z
-    .enum(["super_admin", "admin", "inventory_manager", "customer_support"])
-    .optional(),
+  role: z.enum(["super_admin", "admin", "inventory_manager", "customer_support"]).optional(),
   isActive: z.boolean().optional(),
   password: z.string().min(8).max(128).optional(),
 });
@@ -57,9 +50,7 @@ export const createSupportTicketSchema = z.object({
 });
 
 export const adminSupportTicketSchema = z.object({
-  status: z
-    .enum(["open", "in_progress", "waiting_customer", "resolved", "closed"])
-    .optional(),
+  status: z.enum(["open", "in_progress", "waiting_customer", "resolved", "closed"]).optional(),
   priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
   adminNote: z.string().max(2000).optional(),
   assignedTo: z.string().max(120).optional(),
@@ -93,7 +84,7 @@ export const contentPageSchema = z.object({
     z.object({
       heading: z.string().max(160).optional(),
       paragraphs: z.array(z.string().max(4000)).min(1),
-    })
+    }),
   ),
 });
 

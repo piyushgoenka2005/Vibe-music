@@ -359,6 +359,13 @@ export const adminNewsletterDeleteQuerySchema = z.object({
   email: z.string().trim().email(),
 });
 
+export const adminNewsletterPatchSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
+  marketing: z.boolean().optional(),
+});
+
 export const adminProductDuplicateActionSchema = z.object({
   action: z.literal("duplicate"),
 });

@@ -24,6 +24,7 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
   const [selected, setSelected] = useState<ReturnRequest | null>(null);
   const [adminNote, setAdminNote] = useState("");
   const [newStatus, setNewStatus] = useState<ReturnRequestStatus>("approved");
+  const [refundAmount, setRefundAmount] = useState("");
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
@@ -44,15 +45,21 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!selected) return;
+      const amount = refundAmount.trim() ? Number(refundAmount) : undefined;
       await adminMutateJson(`/api/admin/returns/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus, adminNote: adminNote || undefined }),
+        body: JSON.stringify({
+          status: newStatus,
+          adminNote: adminNote || undefined,
+          refundAmount: amount,
+        }),
       });
     },
     onSuccess: () => {
       setSelected(null);
       setAdminNote("");
+      setRefundAmount("");
       queryClient.invalidateQueries({ queryKey: ["admin-returns"] });
     },
   });
@@ -74,8 +81,8 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
   return (
     <>
       <AdminNotice tone="info" title="Refunded status triggers Razorpay">
-        Setting a return to <strong>Refunded</strong> automatically initiates a Razorpay refund for
-        paid orders linked to this return.
+        Setting a return to <strong>Refunded</strong> initiates a Razorpay refund for the linked
+        order. Leave refund amount blank for a full refund, or enter a partial amount in rupees.
       </AdminNotice>
       <div className="admin-grid-2">
         <div className="admin-panel">
@@ -125,6 +132,7 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
                         setSelected(item);
                         setNewStatus(item.status);
                         setAdminNote(item.adminNote ?? "");
+                        setRefundAmount("");
                       }}
                     >
                       <td>
@@ -213,6 +221,20 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
                         <option value="cancelled">Cancelled</option>
                       </select>
                     </div>
+                    {newStatus === "refunded" ? (
+                      <div className="admin-form-group">
+                        <label>Refund amount (₹)</label>
+                        <input
+                          className="admin-input"
+                          type="number"
+                          min={1}
+                          step="0.01"
+                          placeholder="Leave blank for full order refund"
+                          value={refundAmount}
+                          onChange={(e) => setRefundAmount(e.target.value)}
+                        />
+                      </div>
+                    ) : null}
                     <div className="admin-form-group">
                       <label>Admin note</label>
                       <textarea

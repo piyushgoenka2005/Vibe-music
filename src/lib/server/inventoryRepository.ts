@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
+import { clampPageLimit, pageFromRows } from "@/lib/server/prisma/pagination";
 import { invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
 import {
   getAvailableStock,
@@ -897,26 +898,54 @@ export async function setProductStock(
 }
 
 export async function listInventoryLogs(limit = 50): Promise<InventoryLog[]> {
-  const rows = await prisma.inventoryLog.findMany({
-    orderBy: { timestamp: "desc" },
-    take: limit,
-  });
+  const page = await listInventoryLogsPage({ limit });
+  return page.adjustments;
+}
 
-  return rows.map((row) => ({
-    id: row.id,
-    productId: row.productId,
-    sku: row.sku,
-    orderId: row.orderId,
-    previousStock: row.previousStock,
-    newStock: row.newStock,
-    quantityChanged: row.quantityChanged,
-    action: row.action as InventoryLogAction,
-    adminId: row.adminId,
-    timestamp: row.timestamp,
-    previousReserved: row.previousReserved ?? undefined,
-    newReserved: row.newReserved ?? undefined,
-    note: row.note ?? undefined,
-  }));
+export async function listInventoryLogsPage(
+  options: {
+    limit?: number;
+    afterTimestamp?: string;
+  } = {},
+): Promise<{
+  adjustments: InventoryLog[];
+  hasMore: boolean;
+  nextCursor?: string;
+  total: number;
+}> {
+  const limit = clampPageLimit(options.limit);
+  const where = options.afterTimestamp ? { timestamp: { lt: options.afterTimestamp } } : undefined;
+
+  const [rows, total] = await Promise.all([
+    prisma.inventoryLog.findMany({
+      where,
+      orderBy: { timestamp: "desc" },
+      take: limit + 1,
+    }),
+    prisma.inventoryLog.count(),
+  ]);
+
+  const page = pageFromRows(rows, limit, (row) => row.timestamp);
+  return {
+    adjustments: page.items.map((row) => ({
+      id: row.id,
+      productId: row.productId,
+      sku: row.sku,
+      orderId: row.orderId,
+      previousStock: row.previousStock,
+      newStock: row.newStock,
+      quantityChanged: row.quantityChanged,
+      action: row.action as InventoryLogAction,
+      adminId: row.adminId,
+      timestamp: row.timestamp,
+      previousReserved: row.previousReserved ?? undefined,
+      newReserved: row.newReserved ?? undefined,
+      note: row.note ?? undefined,
+    })),
+    hasMore: page.hasMore,
+    nextCursor: page.nextCursor,
+    total,
+  };
 }
 
 export async function recordInventoryLogEntry(

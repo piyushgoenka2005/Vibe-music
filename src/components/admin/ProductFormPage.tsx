@@ -52,6 +52,7 @@ const EMPTY = {
   featured: false,
   trending: false,
   newArrival: false,
+  imageColor: "#f5f5f5",
   images: [] as string[],
   spin360Images: [] as string[],
   variants: [] as ProductVariant[],
@@ -65,6 +66,8 @@ const EMPTY = {
   detailSpecs: [] as ProductSpec[],
   metaTitle: "",
   metaDescription: "",
+  rating: undefined as number | undefined,
+  reviewCount: undefined as number | undefined,
 };
 
 type AdminProductFormState = typeof EMPTY;
@@ -117,6 +120,9 @@ function mapAdminProductToForm(product: Record<string, unknown>): AdminProductFo
     inTheBox: (product.inTheBox as string[]) ?? [],
     videos: (product.videos as ProductVideo[]) ?? [],
     detailSpecs: (product.detailSpecs as ProductSpec[]) ?? [],
+    imageColor: (product.imageColor as string) ?? "#f5f5f5",
+    rating: product.rating as number | undefined,
+    reviewCount: product.reviewCount as number | undefined,
   };
 }
 
@@ -708,6 +714,25 @@ export default function ProductFormPage({
               </label>
             </div>
           </div>
+          <div className="admin-form-group">
+            <label>Placeholder image color</label>
+            <input
+              className="admin-input"
+              type="text"
+              value={form.imageColor}
+              placeholder="#f5f5f5"
+              onChange={(e) => setForm({ ...form, imageColor: e.target.value })}
+            />
+            <p className="admin-form-hint" style={{ marginTop: "0.35rem" }}>
+              Shown behind product images in cart and order summaries when no photo is loaded.
+            </p>
+          </div>
+          {productId && (form.rating != null || form.reviewCount != null) ? (
+            <p className="admin-form-hint" style={{ marginBottom: "0.75rem" }}>
+              Storefront rating: {form.rating ?? 0} ({form.reviewCount ?? 0} reviews) — derived from
+              approved customer reviews.
+            </p>
+          ) : null}
           <ProductImageUpload
             categorySlug={form.categorySlug}
             productSlug={form.slug || slugify(`${form.brand}-${form.name}`)}

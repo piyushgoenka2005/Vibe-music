@@ -3,7 +3,7 @@ import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
   listInventory,
   adjustStock,
-  listAdjustments,
+  listAdjustmentsPage,
   computeInventoryStats,
 } from "@/lib/server/inventoryService";
 import { adminInventoryAdjustSchema } from "@/lib/validations/admin";
@@ -13,17 +13,26 @@ export async function GET(request: Request) {
     await requireAdmin("inventory:read");
     const { searchParams } = new URL(request.url);
     if (searchParams.get("view") === "adjustments") {
-      const adjustments = await listAdjustments();
-      return NextResponse.json({ adjustments });
+      const page = await listAdjustmentsPage({
+        limit: Number(searchParams.get("limit") ?? 20),
+        afterTimestamp: searchParams.get("cursor") ?? undefined,
+      });
+      return NextResponse.json({
+        adjustments: page.adjustments,
+        hasMore: page.hasMore,
+        nextCursor: page.nextCursor,
+        total: page.total,
+      });
     }
 
     if (searchParams.get("export") === "csv") {
       const inventory = await listInventory();
-      const header = "productId,productName,sku,stockQuantity,availableQuantity,lowStockThreshold\n";
+      const header =
+        "productId,productName,sku,stockQuantity,availableQuantity,lowStockThreshold\n";
       const rows = inventory
         .map(
           (item) =>
-            `${item.productId},${item.productName},${item.sku ?? ""},${item.stockQuantity},${item.availableQuantity ?? item.stockQuantity},${item.lowStockThreshold}`
+            `${item.productId},${item.productName},${item.sku ?? ""},${item.stockQuantity},${item.availableQuantity ?? item.stockQuantity},${item.lowStockThreshold}`,
         )
         .join("\n");
       return new NextResponse(header + rows, {
@@ -52,7 +61,7 @@ export async function POST(request: Request) {
       parsed.productId,
       parsed.newQuantity,
       parsed.reason,
-      admin.email
+      admin.email,
     );
     return NextResponse.json({ adjustment });
   } catch (error) {

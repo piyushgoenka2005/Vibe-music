@@ -4,11 +4,13 @@ import {
   deleteNewsletterSubscriber,
   listNewsletterSubscriberPage,
   listNewsletterSubscribers,
+  updateNewsletterSubscriber,
 } from "@/lib/server/newsletterRepository";
 import { logAuditEvent } from "@/lib/server/auditLog";
 import {
   adminNewsletterCreateSchema,
   adminNewsletterDeleteQuerySchema,
+  adminNewsletterPatchSchema,
 } from "@/lib/validations/admin";
 import { subscribeToNewsletter } from "@/lib/server/newsletterRepository";
 
@@ -75,6 +77,32 @@ export async function POST(request: Request) {
       metadata: { created: result.created },
     });
     return NextResponse.json({ ok: true, created: result.created });
+  } catch (error) {
+    return adminErrorResponse(error);
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const admin = await requireAdmin("customers:write", request);
+    const parsed = adminNewsletterPatchSchema.parse(await request.json());
+    const subscriber = await updateNewsletterSubscriber(parsed.email, {
+      firstName: parsed.firstName,
+      lastName: parsed.lastName,
+      marketing: parsed.marketing,
+    });
+    if (!subscriber) {
+      return NextResponse.json({ error: "Subscriber not found" }, { status: 404 });
+    }
+    await logAuditEvent({
+      action: "newsletter.subscriber.updated",
+      actorId: admin.uid,
+      actorEmail: admin.email,
+      resourceType: "newsletter_subscriber",
+      resourceId: parsed.email.trim().toLowerCase(),
+      request,
+    });
+    return NextResponse.json({ subscriber });
   } catch (error) {
     return adminErrorResponse(error);
   }

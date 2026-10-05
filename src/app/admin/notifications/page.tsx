@@ -5,7 +5,13 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { EmptyState, LoadingState, formatDate } from "@/components/admin/AdminUi";
+import {
+  AdminCursorPagination,
+  EmptyState,
+  LoadingState,
+  formatDate,
+} from "@/components/admin/AdminUi";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import {
   ErrorState,
   MutationError,
@@ -28,14 +34,20 @@ const NOTIFICATION_TYPES: Array<AdminNotification["type"] | "all"> = [
 function NotificationsContent() {
   const queryClient = useQueryClient();
   const [typeFilter, setTypeFilter] = useState<AdminNotification["type"] | "all">("all");
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["admin-notifications"],
+    queryKey: ["admin-notifications", typeFilter, cursor],
     queryFn: async () => {
+      const params = new URLSearchParams({ limit: "20" });
+      if (typeFilter !== "all") params.set("type", typeFilter);
+      if (cursor) params.set("cursor", cursor);
       return adminFetchJson<{
         notifications: AdminNotification[];
         unreadCount: number;
-      }>("/api/admin/notifications");
+        hasMore: boolean;
+        nextCursor?: string;
+      }>(`/api/admin/notifications?${params}`);
     },
   });
 
@@ -74,9 +86,7 @@ function NotificationsContent() {
     );
   }
 
-  const notifications = (data?.notifications ?? []).filter(
-    (item) => typeFilter === "all" || item.type === typeFilter,
-  );
+  const notifications = data?.notifications ?? [];
 
   return (
     <div className="admin-panel">
@@ -86,7 +96,10 @@ function NotificationsContent() {
           className="admin-select"
           style={{ width: "auto" }}
           value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value as AdminNotification["type"] | "all")}
+          onChange={(e) => {
+            setTypeFilter(e.target.value as AdminNotification["type"] | "all");
+            reset();
+          }}
         >
           {NOTIFICATION_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -161,6 +174,14 @@ function NotificationsContent() {
           </table>
         </div>
       )}
+      <AdminCursorPagination
+        pageIndex={pageIndex}
+        canGoPrev={canGoPrev}
+        hasMore={data?.hasMore ?? false}
+        isFetching={isFetching}
+        onPrev={goPrev}
+        onNext={() => goNext(data?.nextCursor)}
+      />
     </div>
   );
 }

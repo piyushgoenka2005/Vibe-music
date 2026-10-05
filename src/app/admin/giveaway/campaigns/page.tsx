@@ -7,7 +7,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
-import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
+import {
+  AdminCursorPagination,
+  EmptyState,
+  LoadingState,
+  StatusBadge,
+} from "@/components/admin/AdminUi";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import BannerImageUpload from "@/components/admin/BannerImageUpload";
 import { slugify } from "@/lib/slug";
 import type { AdminSession } from "@/types/admin";
@@ -129,12 +135,17 @@ function formToPayload(form: CampaignForm) {
 }
 
 function CampaignEntriesPanel({ campaignId }: { campaignId: string }) {
+  const { cursor, pageIndex, canGoPrev, goNext, goPrev } = useAdminCursorPagination();
   const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ["admin-giveaway-entries", campaignId],
+    queryKey: ["admin-giveaway-entries", campaignId, cursor],
     queryFn: async () => {
-      return adminFetchJson<{ entries: GiveawayEntry[] }>(
-        `/api/admin/giveaway/campaigns/${campaignId}/entries`,
-      );
+      const url = `/api/admin/giveaway/campaigns/${campaignId}/entries?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
+      return adminFetchJson<{
+        entries: GiveawayEntry[];
+        hasMore: boolean;
+        nextCursor?: string;
+        total: number;
+      }>(url);
     },
   });
 
@@ -182,6 +193,15 @@ function CampaignEntriesPanel({ campaignId }: { campaignId: string }) {
           ))}
         </tbody>
       </table>
+      <AdminCursorPagination
+        pageIndex={pageIndex}
+        canGoPrev={canGoPrev}
+        hasMore={data?.hasMore ?? false}
+        isFetching={isFetching}
+        total={data?.total}
+        onPrev={goPrev}
+        onNext={() => goNext(data?.nextCursor)}
+      />
     </div>
   );
 }
@@ -190,8 +210,16 @@ function CampaignsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete:
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const deepLinkId = searchParams.get("id");
-  const [showForm, setShowForm] = useState(false);
+  const openNew = searchParams.get("new") === "1";
+  const [showForm, setShowForm] = useState(openNew);
   const [form, setForm] = useState<CampaignForm>(EMPTY_FORM);
+
+  useEffect(() => {
+    if (openNew) {
+      setShowForm(true);
+      setForm(EMPTY_FORM);
+    }
+  }, [openNew]);
   const [entriesCampaignId, setEntriesCampaignId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 

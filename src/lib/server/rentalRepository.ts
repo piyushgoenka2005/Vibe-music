@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
+import { clampPageLimit, pageFromRows } from "@/lib/server/prisma/pagination";
 import { asJsonValue, asStringArray, toIsoString } from "@/lib/server/prisma/mappers";
 import type {
   RentalAvailabilityBlock,
@@ -468,6 +469,46 @@ export async function listAllRentalBookings(options?: {
     take: options?.limit ?? 100,
   });
   return rows.map(mapBooking);
+}
+
+export async function listAllRentalBookingsPage(options?: {
+  status?: string;
+  limit?: number;
+  afterCreatedAt?: string;
+}): Promise<{
+  bookings: RentalBooking[];
+  hasMore: boolean;
+  nextCursor?: string;
+  total: number;
+}> {
+  if (!isPostgresConfigured()) {
+    return { bookings: [], hasMore: false, total: 0 };
+  }
+  const limit = clampPageLimit(options?.limit);
+  const where = {
+    ...(options?.status ? { status: options.status } : {}),
+    ...(options?.afterCreatedAt ? { createdAt: { lt: options.afterCreatedAt } } : {}),
+  };
+
+  const [rows, total] = await Promise.all([
+    prisma.rentalBooking.findMany({
+      where,
+      include: { items: true },
+      orderBy: { createdAt: "desc" },
+      take: limit + 1,
+    }),
+    prisma.rentalBooking.count({
+      where: options?.status ? { status: options.status } : undefined,
+    }),
+  ]);
+
+  const page = pageFromRows(rows, limit, (row) => row.createdAt);
+  return {
+    bookings: page.items.map(mapBooking),
+    hasMore: page.hasMore,
+    nextCursor: page.nextCursor,
+    total,
+  };
 }
 
 export async function allocateNextRentalBookingNumber(): Promise<string> {

@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
+import { clampPageLimit, pageFromRows } from "@/lib/server/prisma/pagination";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import type {
   GiveawayCampaign,
@@ -453,6 +454,39 @@ export async function listGiveawayEntriesForCampaign(
     take: limit,
   });
   return rows.map(mapEntry);
+}
+
+export async function listGiveawayEntriesForCampaignPage(
+  campaignId: string,
+  options: { limit?: number; afterCreatedAt?: string } = {},
+): Promise<{
+  entries: GiveawayEntry[];
+  hasMore: boolean;
+  nextCursor?: string;
+  total: number;
+}> {
+  const limit = clampPageLimit(options.limit);
+  const where = {
+    campaignId,
+    ...(options.afterCreatedAt ? { createdAt: { lt: options.afterCreatedAt } } : {}),
+  };
+
+  const [rows, total] = await Promise.all([
+    prisma.giveawayEntry.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit + 1,
+    }),
+    prisma.giveawayEntry.count({ where: { campaignId } }),
+  ]);
+
+  const page = pageFromRows(rows, limit, (row) => row.createdAt);
+  return {
+    entries: page.items.map(mapEntry),
+    hasMore: page.hasMore,
+    nextCursor: page.nextCursor,
+    total,
+  };
 }
 
 export async function listGiveawayEntriesForUser(userId: string): Promise<GiveawayEntry[]> {

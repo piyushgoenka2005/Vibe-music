@@ -5,7 +5,14 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
+import {
+  AdminCursorPagination,
+  LoadingState,
+  EmptyState,
+  StatusBadge,
+  formatDate,
+} from "@/components/admin/AdminUi";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import {
   ErrorState,
   MutationError,
@@ -41,6 +48,7 @@ function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
   const [newStatus, setNewStatus] = useState<SupportTicketStatus>("in_progress");
   const [priority, setPriority] = useState<SupportTicketPriority>("normal");
   const [assignedTo, setAssignedTo] = useState("");
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
   const { data: adminsData } = useQuery({
     queryKey: ["admin-admins-list"],
@@ -53,10 +61,17 @@ function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
   });
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["admin-support", statusFilter],
+    queryKey: ["admin-support", statusFilter, cursor],
     queryFn: async () => {
-      const qs = statusFilter ? `?status=${statusFilter}` : "";
-      return adminFetchJson<{ tickets: SupportTicket[] }>(`/api/admin/support-tickets${qs}`);
+      const params = new URLSearchParams({ limit: "20" });
+      if (statusFilter) params.set("status", statusFilter);
+      if (cursor) params.set("cursor", cursor);
+      return adminFetchJson<{
+        tickets: SupportTicket[];
+        hasMore: boolean;
+        nextCursor?: string;
+        total: number;
+      }>(`/api/admin/support-tickets?${params}`);
     },
   });
 
@@ -103,7 +118,10 @@ function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
             className="admin-select"
             style={{ width: "auto" }}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              reset();
+            }}
           >
             <option value="">All statuses</option>
             <option value="open">Open</option>
@@ -155,6 +173,15 @@ function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
             </table>
           </div>
         )}
+        <AdminCursorPagination
+          pageIndex={pageIndex}
+          canGoPrev={canGoPrev}
+          hasMore={data?.hasMore ?? false}
+          isFetching={isFetching}
+          total={data?.total}
+          onPrev={goPrev}
+          onNext={() => goNext(data?.nextCursor)}
+        />
       </div>
 
       <div className="admin-panel">
@@ -279,12 +306,20 @@ function ContactMessagesPanel({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("");
   const [selected, setSelected] = useState<ContactMessage | null>(null);
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["admin-contact", statusFilter],
+    queryKey: ["admin-contact", statusFilter, cursor],
     queryFn: async () => {
-      const qs = statusFilter ? `?status=${statusFilter}` : "";
-      return adminFetchJson<{ messages: ContactMessage[] }>(`/api/admin/contact-messages${qs}`);
+      const params = new URLSearchParams({ limit: "20" });
+      if (statusFilter) params.set("status", statusFilter);
+      if (cursor) params.set("cursor", cursor);
+      return adminFetchJson<{
+        messages: ContactMessage[];
+        hasMore: boolean;
+        nextCursor?: string;
+        total: number;
+      }>(`/api/admin/contact-messages?${params}`);
     },
   });
 
@@ -332,7 +367,10 @@ function ContactMessagesPanel({ canWrite }: { canWrite: boolean }) {
             className="admin-select"
             style={{ width: "auto" }}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              reset();
+            }}
           >
             <option value="">All statuses</option>
             <option value="new">New</option>
@@ -376,6 +414,15 @@ function ContactMessagesPanel({ canWrite }: { canWrite: boolean }) {
             </table>
           </div>
         )}
+        <AdminCursorPagination
+          pageIndex={pageIndex}
+          canGoPrev={canGoPrev}
+          hasMore={data?.hasMore ?? false}
+          isFetching={isFetching}
+          total={data?.total}
+          onPrev={goPrev}
+          onNext={() => goNext(data?.nextCursor)}
+        />
       </div>
 
       <div className="admin-panel">

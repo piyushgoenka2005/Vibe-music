@@ -3,6 +3,7 @@ import {
   getAvailableStock,
   listAllProductStockSnapshots,
   listInventoryLogs,
+  listInventoryLogsPage,
   recordInventoryLogEntry,
   releaseReservedStockForOrder,
   releaseReservedStockForOrderInTx,
@@ -122,6 +123,15 @@ export async function adjustStock(
 
 export async function listAdjustments(limit = 50): Promise<InventoryLog[]> {
   return listInventoryLogs(limit);
+}
+
+export async function listAdjustmentsPage(
+  options: {
+    limit?: number;
+    afterTimestamp?: string;
+  } = {},
+) {
+  return listInventoryLogsPage(options);
 }
 
 /** Pure aggregation — lets callers reuse one catalog read for table + stats. */

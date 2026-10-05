@@ -7,6 +7,7 @@ import type {
   ProductQuestionListResponse,
   ProductQuestionStatus,
 } from "@/types/productQuestion";
+import { clampPageLimit, pageFromRows } from "@/lib/server/prisma/pagination";
 
 export const PRODUCT_QUESTIONS_COLLECTION = "productQuestions";
 
@@ -41,7 +42,10 @@ function mapQuestion(row: {
 }
 
 export async function createProductQuestion(
-  input: Omit<ProductQuestion, "id" | "status" | "createdAt" | "updatedAt" | "answer" | "answeredBy">
+  input: Omit<
+    ProductQuestion,
+    "id" | "status" | "createdAt" | "updatedAt" | "answer" | "answeredBy"
+  >,
 ): Promise<ProductQuestion> {
   const now = new Date().toISOString();
   const record: ProductQuestion = {
@@ -70,15 +74,13 @@ export async function createProductQuestion(
   return record;
 }
 
-export async function getProductQuestionById(
-  id: string
-): Promise<ProductQuestion | null> {
+export async function getProductQuestionById(id: string): Promise<ProductQuestion | null> {
   const row = await prisma.productQuestion.findUnique({ where: { id } });
   return row ? mapQuestion(row) : null;
 }
 
 export async function listApprovedQuestionsForProduct(
-  productId: string
+  productId: string,
 ): Promise<ProductQuestionListResponse> {
   if (!isPostgresConfigured()) {
     return { questions: [], totalCount: 0 };
@@ -97,11 +99,13 @@ export async function listApprovedQuestionsForProduct(
   }
 }
 
-export async function listProductQuestionsForAdmin(options: {
-  status?: ProductQuestionStatus;
-  productId?: string;
-  limit?: number;
-} = {}): Promise<ProductQuestion[]> {
+export async function listProductQuestionsForAdmin(
+  options: {
+    status?: ProductQuestionStatus;
+    productId?: string;
+    limit?: number;
+  } = {},
+): Promise<ProductQuestion[]> {
   const limit = Math.min(Math.max(options.limit ?? 50, 1), 100);
   const rows = await prisma.productQuestion.findMany({
     where: {
@@ -114,11 +118,52 @@ export async function listProductQuestionsForAdmin(options: {
   return rows.map(mapQuestion);
 }
 
+export async function listProductQuestionsForAdminPage(
+  options: {
+    status?: ProductQuestionStatus;
+    productId?: string;
+    limit?: number;
+    afterCreatedAt?: string;
+  } = {},
+): Promise<{
+  questions: ProductQuestion[];
+  hasMore: boolean;
+  nextCursor?: string;
+  total: number;
+}> {
+  const limit = clampPageLimit(options.limit);
+  const where = {
+    ...(options.productId ? { productId: options.productId } : {}),
+    ...(options.status ? { status: options.status } : {}),
+    ...(options.afterCreatedAt ? { createdAt: { lt: options.afterCreatedAt } } : {}),
+  };
+
+  const [rows, total] = await Promise.all([
+    prisma.productQuestion.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit + 1,
+    }),
+    prisma.productQuestion.count({
+      where: {
+        ...(options.productId ? { productId: options.productId } : {}),
+        ...(options.status ? { status: options.status } : {}),
+      },
+    }),
+  ]);
+
+  const page = pageFromRows(rows, limit, (row) => row.createdAt);
+  return {
+    questions: page.items.map(mapQuestion),
+    hasMore: page.hasMore,
+    nextCursor: page.nextCursor,
+    total,
+  };
+}
+
 export async function updateProductQuestion(
   id: string,
-  patch: Partial<
-    Pick<ProductQuestion, "status" | "answer" | "answeredBy" | "question">
-  >
+  patch: Partial<Pick<ProductQuestion, "status" | "answer" | "answeredBy" | "question">>,
 ): Promise<ProductQuestion> {
   const now = new Date().toISOString();
   await prisma.productQuestion.update({
@@ -126,9 +171,7 @@ export async function updateProductQuestion(
     data: {
       ...(patch.status !== undefined ? { status: patch.status } : {}),
       ...(patch.answer !== undefined ? { answer: patch.answer ?? null } : {}),
-      ...(patch.answeredBy !== undefined
-        ? { answeredBy: patch.answeredBy ?? null }
-        : {}),
+      ...(patch.answeredBy !== undefined ? { answeredBy: patch.answeredBy ?? null } : {}),
       ...(patch.question !== undefined ? { question: patch.question } : {}),
       updatedAt: now,
     },

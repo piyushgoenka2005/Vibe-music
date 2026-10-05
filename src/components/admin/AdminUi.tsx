@@ -15,21 +15,23 @@ export function StatusBadge({ status }: { status: string }) {
   const normalized = status.toLowerCase().replace(/_/g, " ");
   let variant = "muted";
 
-  if (["paid", "delivered", "active", "approved", "in-stock", "confirmed", "published"].includes(status)) {
+  if (
+    ["paid", "delivered", "active", "approved", "in-stock", "confirmed", "published"].includes(
+      status,
+    )
+  ) {
     variant = "success";
   } else if (["pending", "processing", "limited", "cod_pending", "scheduled"].includes(status)) {
     variant = "warning";
-  } else if (["cancelled", "failed", "rejected", "out-of-stock", "archived", "refunded"].includes(status)) {
+  } else if (
+    ["cancelled", "failed", "rejected", "out-of-stock", "archived", "refunded"].includes(status)
+  ) {
     variant = "danger";
   } else if (["shipped", "draft"].includes(status)) {
     variant = "info";
   }
 
-  return (
-    <span className={`admin-badge admin-badge--${variant}`}>
-      {normalized}
-    </span>
-  );
+  return <span className={`admin-badge admin-badge--${variant}`}>{normalized}</span>;
 }
 
 export function StatCard({
@@ -104,4 +106,49 @@ export function formatDate(iso?: string): string {
     month: "short",
     year: "numeric",
   });
+}
+
+export function AdminCursorPagination({
+  pageIndex,
+  canGoPrev,
+  hasMore,
+  isFetching,
+  onPrev,
+  onNext,
+  total,
+}: {
+  pageIndex: number;
+  canGoPrev: boolean;
+  hasMore: boolean;
+  isFetching?: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+  total?: number;
+}) {
+  return (
+    <div className="admin-pagination">
+      <span>
+        Page {pageIndex + 1}
+        {typeof total === "number" ? ` · ${total} total` : ""}
+      </span>
+      <div style={{ display: "flex", gap: "0.5rem" }}>
+        <button
+          type="button"
+          className="admin-btn admin-btn--secondary"
+          disabled={!canGoPrev || isFetching}
+          onClick={onPrev}
+        >
+          Previous
+        </button>
+        <button
+          type="button"
+          className="admin-btn admin-btn--secondary"
+          disabled={!hasMore || isFetching}
+          onClick={onNext}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
 }

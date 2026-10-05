@@ -6,7 +6,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
-import { EmptyState, LoadingState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
+import {
+  AdminCursorPagination,
+  EmptyState,
+  LoadingState,
+  StatusBadge,
+  formatDate,
+} from "@/components/admin/AdminUi";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import { formatCurrency } from "@/utils/currency";
 import type { RentalBooking, RentalBookingStatus } from "@/types/rental";
 
@@ -30,15 +37,25 @@ function BookingsAdmin({ rentalsWrite }: { rentalsWrite: boolean }) {
   const [statusNote, setStatusNote] = useState("");
   const [newStatus, setNewStatus] = useState<RentalBookingStatus>("confirmed");
   const [actionError, setActionError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState("");
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
   useEffect(() => {
     if (deepLinkId) setSelectedId(deepLinkId);
   }, [deepLinkId]);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ["admin-rental-bookings"],
+    queryKey: ["admin-rental-bookings", statusFilter, cursor],
     queryFn: async () => {
-      return adminFetchJson<{ bookings: RentalBooking[] }>("/api/admin/rentals/bookings");
+      const params = new URLSearchParams({ limit: "20" });
+      if (statusFilter) params.set("status", statusFilter);
+      if (cursor) params.set("cursor", cursor);
+      return adminFetchJson<{
+        bookings: RentalBooking[];
+        hasMore: boolean;
+        nextCursor?: string;
+        total: number;
+      }>(`/api/admin/rentals/bookings?${params}`);
     },
   });
 
@@ -101,6 +118,24 @@ function BookingsAdmin({ rentalsWrite }: { rentalsWrite: boolean }) {
   return (
     <div className="admin-grid-2">
       <div className="admin-panel">
+        <div className="admin-toolbar">
+          <select
+            className="admin-select"
+            style={{ width: "auto" }}
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              reset();
+            }}
+          >
+            <option value="">All statuses</option>
+            {STATUS_OPTIONS.map((status) => (
+              <option key={status} value={status}>
+                {status.replaceAll("_", " ")}
+              </option>
+            ))}
+          </select>
+        </div>
         {bookings.length === 0 ? (
           <EmptyState message="No rental bookings yet." />
         ) : (
@@ -139,6 +174,15 @@ function BookingsAdmin({ rentalsWrite }: { rentalsWrite: boolean }) {
             </table>
           </div>
         )}
+        <AdminCursorPagination
+          pageIndex={pageIndex}
+          canGoPrev={canGoPrev}
+          hasMore={data?.hasMore ?? false}
+          isFetching={isFetching}
+          total={data?.total}
+          onPrev={goPrev}
+          onNext={() => goNext(data?.nextCursor)}
+        />
       </div>
 
       <div className="admin-panel">

@@ -577,13 +577,49 @@ export async function listBlogCommentsByPost(
 }
 
 export async function listAllBlogComments(status?: BlogCommentStatus): Promise<BlogComment[]> {
-  if (!isPostgresConfigured()) return [];
-  const rows = await prisma.blogComment.findMany({
-    where: status ? { status } : undefined,
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
-  return rows.map(mapBlogCommentRow);
+  const page = await listAllBlogCommentsPage({ status, limit: 100 });
+  return page.comments;
+}
+
+export async function listAllBlogCommentsPage(
+  options: {
+    status?: BlogCommentStatus;
+    limit?: number;
+    afterCreatedAt?: string;
+  } = {},
+): Promise<{
+  comments: BlogComment[];
+  hasMore: boolean;
+  nextCursor?: string;
+  total: number;
+}> {
+  if (!isPostgresConfigured()) {
+    return { comments: [], hasMore: false, total: 0 };
+  }
+  const limit = clampPageLimit(options.limit);
+  const where = {
+    ...(options.status ? { status: options.status } : {}),
+    ...(options.afterCreatedAt ? { createdAt: { lt: options.afterCreatedAt } } : {}),
+  };
+
+  const [rows, total] = await Promise.all([
+    prisma.blogComment.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit + 1,
+    }),
+    prisma.blogComment.count({
+      where: options.status ? { status: options.status } : undefined,
+    }),
+  ]);
+
+  const page = pageFromRows(rows, limit, (row) => row.createdAt);
+  return {
+    comments: page.items.map(mapBlogCommentRow),
+    hasMore: page.hasMore,
+    nextCursor: page.nextCursor,
+    total,
+  };
 }
 
 export async function updateBlogCommentStatus(

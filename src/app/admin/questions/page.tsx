@@ -4,7 +4,14 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
+import {
+  AdminCursorPagination,
+  LoadingState,
+  EmptyState,
+  StatusBadge,
+  formatDate,
+} from "@/components/admin/AdminUi";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import {
   ErrorState,
   MutationError,
@@ -19,12 +26,20 @@ function QuestionsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
   const [selected, setSelected] = useState<ProductQuestion | null>(null);
   const [answer, setAnswer] = useState("");
   const [newStatus, setNewStatus] = useState<ProductQuestionStatus>("approved");
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["admin-questions", statusFilter],
+    queryKey: ["admin-questions", statusFilter, cursor],
     queryFn: async () => {
-      const qs = statusFilter ? `?status=${statusFilter}` : "";
-      return adminFetchJson<{ questions: ProductQuestion[] }>(`/api/admin/questions${qs}`);
+      const params = new URLSearchParams({ limit: "20" });
+      if (statusFilter) params.set("status", statusFilter);
+      if (cursor) params.set("cursor", cursor);
+      return adminFetchJson<{
+        questions: ProductQuestion[];
+        hasMore: boolean;
+        nextCursor?: string;
+        total: number;
+      }>(`/api/admin/questions?${params}`);
     },
   });
 
@@ -78,7 +93,10 @@ function QuestionsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
             className="admin-select"
             style={{ width: "auto" }}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              reset();
+            }}
           >
             <option value="">All</option>
             <option value="pending">Pending</option>
@@ -125,6 +143,15 @@ function QuestionsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
             </table>
           </div>
         )}
+        <AdminCursorPagination
+          pageIndex={pageIndex}
+          canGoPrev={canGoPrev}
+          hasMore={data?.hasMore ?? false}
+          isFetching={isFetching}
+          total={data?.total}
+          onPrev={goPrev}
+          onNext={() => goNext(data?.nextCursor)}
+        />
       </div>
 
       <div className="admin-panel">

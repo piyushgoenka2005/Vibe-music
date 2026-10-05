@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "crypto";
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
+import { clampPageLimit, pageFromRows } from "@/lib/server/prisma/pagination";
 import type {
   SupportTicket,
   SupportTicketCategory,
@@ -130,6 +131,47 @@ export async function listSupportTickets(
   });
 
   return rows.map(mapSupportTicket);
+}
+
+export async function listSupportTicketsPage(
+  options: {
+    status?: SupportTicketStatus;
+    limit?: number;
+    afterCreatedAt?: string;
+  } = {},
+): Promise<{
+  tickets: SupportTicket[];
+  hasMore: boolean;
+  nextCursor?: string;
+  total: number;
+}> {
+  if (!isPostgresConfigured()) {
+    return { tickets: [], hasMore: false, total: 0 };
+  }
+  const limit = clampPageLimit(options.limit);
+  const where = {
+    ...(options.status ? { status: options.status } : {}),
+    ...(options.afterCreatedAt ? { createdAt: { lt: options.afterCreatedAt } } : {}),
+  };
+
+  const [rows, total] = await Promise.all([
+    prisma.supportTicket.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit + 1,
+    }),
+    prisma.supportTicket.count({
+      where: options.status ? { status: options.status } : undefined,
+    }),
+  ]);
+
+  const page = pageFromRows(rows, limit, (row) => row.createdAt);
+  return {
+    tickets: page.items.map(mapSupportTicket),
+    hasMore: page.hasMore,
+    nextCursor: page.nextCursor,
+    total,
+  };
 }
 
 export async function updateSupportTicket(

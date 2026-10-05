@@ -71,6 +71,19 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
     },
   });
 
+  const patchMutation = useMutation({
+    mutationFn: async (payload: { email: string; marketing: boolean }) => {
+      await adminMutateJson("/api/admin/newsletter", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-newsletter"] });
+    },
+  });
+
   const deleteMutation = useMutation({
     // Optimistic: the row disappears the instant you confirm.
     mutationFn: async (email: string) => {
@@ -219,7 +232,21 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
                     <td>{s.email}</td>
                     <td>{[s.firstName, s.lastName].filter(Boolean).join(" ") || "—"}</td>
                     <td>
-                      <StatusBadge status={s.marketing ? "active" : "cancelled"} />
+                      {canWrite ? (
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                          <input
+                            type="checkbox"
+                            checked={s.marketing}
+                            disabled={patchMutation.isPending}
+                            onChange={(e) =>
+                              patchMutation.mutate({ email: s.email, marketing: e.target.checked })
+                            }
+                          />
+                          Marketing
+                        </label>
+                      ) : (
+                        <StatusBadge status={s.marketing ? "active" : "cancelled"} />
+                      )}
                     </td>
                     <td>{formatDate(s.subscribedAt)}</td>
                     <td>{s.source}</td>

@@ -2,18 +2,39 @@ import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
   deleteAdminNotification,
-  listAdminNotifications,
+  listAdminNotificationsPage,
+  countUnreadAdminNotifications,
   markAdminNotificationRead,
   markAllAdminNotificationsRead,
 } from "@/lib/server/notificationRepository";
 import { adminNotificationMarkSchema } from "@/lib/validations/admin";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await requireAdmin("dashboard:read");
-    const notifications = await listAdminNotifications();
-    const unreadCount = notifications.filter((item) => !item.read).length;
-    return NextResponse.json({ notifications, unreadCount });
+    const { searchParams } = new URL(request.url);
+    const typeParam = searchParams.get("type");
+    const type =
+      typeParam === "ticket" ||
+      typeParam === "return" ||
+      typeParam === "contact" ||
+      typeParam === "order" ||
+      typeParam === "system" ||
+      typeParam === "rental"
+        ? typeParam
+        : undefined;
+    const page = await listAdminNotificationsPage({
+      type,
+      limit: Number(searchParams.get("limit") ?? 20),
+      afterCreatedAt: searchParams.get("cursor") ?? undefined,
+    });
+    const unreadCount = await countUnreadAdminNotifications();
+    return NextResponse.json({
+      notifications: page.notifications,
+      hasMore: page.hasMore,
+      nextCursor: page.nextCursor,
+      unreadCount,
+    });
   } catch (error) {
     return adminErrorResponse(error);
   }

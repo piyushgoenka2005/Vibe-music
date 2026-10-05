@@ -206,6 +206,16 @@ export async function listBlogCommentsForAdmin(status?: BlogCommentStatus): Prom
   return pg.listAllBlogComments(status);
 }
 
+export async function listBlogCommentsForAdminPage(
+  options: {
+    status?: BlogCommentStatus;
+    limit?: number;
+    afterCreatedAt?: string;
+  } = {},
+) {
+  return pg.listAllBlogCommentsPage(options);
+}
+
 export async function updateBlogCommentStatus(
   id: string,
   status: BlogCommentStatus,

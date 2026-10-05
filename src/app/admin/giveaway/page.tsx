@@ -62,7 +62,10 @@ function GiveawayAdminDashboard() {
         <Link href={ROUTES.adminGiveawayCampaigns} className="admin-btn admin-btn--primary">
           Manage campaigns
         </Link>
-        <Link href={ROUTES.adminGiveawayCampaigns} className="admin-btn admin-btn--secondary">
+        <Link
+          href={`${ROUTES.adminGiveawayCampaigns}?new=1`}
+          className="admin-btn admin-btn--secondary"
+        >
           Create campaign
         </Link>
       </div>

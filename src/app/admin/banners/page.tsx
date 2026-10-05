@@ -7,7 +7,13 @@ import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import BannerImageUpload from "@/components/admin/BannerImageUpload";
-import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
+import {
+  AdminCursorPagination,
+  EmptyState,
+  LoadingState,
+  StatusBadge,
+} from "@/components/admin/AdminUi";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import type { HomepageBanner } from "@/types/banner";
 
@@ -63,11 +69,17 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: QUERY_KEY,
+    queryKey: [...QUERY_KEY, cursor],
     queryFn: async () => {
-      return adminFetchJson<{ banners: HomepageBanner[] }>("/api/admin/banners");
+      const url = `/api/admin/banners?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
+      return adminFetchJson<{
+        banners: HomepageBanner[];
+        hasMore: boolean;
+        nextCursor?: string;
+      }>(url);
     },
   });
 
@@ -101,6 +113,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
       setEditId(null);
       setForm(EMPTY_FORM);
       setFormError(null);
+      reset();
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
     onError: (error: Error) => setFormError(error.message),
@@ -110,7 +123,10 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
     mutationFn: async (id: string) => {
       await adminMutateJson(`/api/admin/banners/${id}`, { method: "DELETE" });
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      reset();
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
   });
 
   const toggleMutation = useMutation({
@@ -469,6 +485,14 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
             </table>
           </div>
         )}
+        <AdminCursorPagination
+          pageIndex={pageIndex}
+          canGoPrev={canGoPrev}
+          hasMore={data?.hasMore ?? false}
+          isFetching={isFetching}
+          onPrev={goPrev}
+          onNext={() => goNext(data?.nextCursor)}
+        />
       </div>
     </>
   );

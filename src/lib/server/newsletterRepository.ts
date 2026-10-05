@@ -78,9 +78,7 @@ export interface NewsletterPageOptions {
 }
 
 /** SQL keyset pagination for the admin newsletter table. */
-export async function listNewsletterSubscriberPage(
-  options: NewsletterPageOptions = {}
-): Promise<{
+export async function listNewsletterSubscriberPage(options: NewsletterPageOptions = {}): Promise<{
   subscribers: SubscriberRecord[];
   hasMore: boolean;
   nextCursor?: string;
@@ -112,6 +110,35 @@ export async function listNewsletterSubscriberPage(
     hasMore: page.hasMore,
     nextCursor: page.nextCursor,
     total,
+  };
+}
+
+export async function updateNewsletterSubscriber(
+  email: string,
+  patch: { firstName?: string; lastName?: string; marketing?: boolean },
+): Promise<SubscriberRecord | null> {
+  const normalized = email.trim().toLowerCase();
+  const existing = await prisma.newsletterSubscriber.findUnique({
+    where: { email: normalized },
+  });
+  if (!existing) return null;
+
+  const row = await prisma.newsletterSubscriber.update({
+    where: { email: normalized },
+    data: {
+      ...(patch.firstName !== undefined ? { firstName: patch.firstName.trim() || null } : {}),
+      ...(patch.lastName !== undefined ? { lastName: patch.lastName.trim() || null } : {}),
+      ...(patch.marketing !== undefined ? { marketing: patch.marketing } : {}),
+    },
+  });
+
+  return {
+    email: row.email,
+    firstName: row.firstName ?? undefined,
+    lastName: row.lastName ?? undefined,
+    marketing: row.marketing,
+    subscribedAt: row.subscribedAt,
+    source: (row.source as SubscriberRecord["source"]) || "website",
   };
 }
 

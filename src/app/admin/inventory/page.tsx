@@ -5,7 +5,14 @@ import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { StatCard, StatusBadge, LoadingState, EmptyState } from "@/components/admin/AdminUi";
+import {
+  AdminCursorPagination,
+  StatCard,
+  StatusBadge,
+  LoadingState,
+  EmptyState,
+} from "@/components/admin/AdminUi";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import {
   ErrorState,
   MutationError,
@@ -22,6 +29,13 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
   const [reason, setReason] = useState("");
   const [search, setSearch] = useState("");
   const [stockFilter, setStockFilter] = useState<"all" | "low" | "out" | "ok">("all");
+  const {
+    cursor: adjustmentsCursor,
+    pageIndex: adjustmentsPageIndex,
+    canGoPrev: adjustmentsCanGoPrev,
+    goNext: adjustmentsGoNext,
+    goPrev: adjustmentsGoPrev,
+  } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-inventory"],
@@ -39,9 +53,10 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
     },
   });
 
-  const { data: adjustmentsData } = useQuery({
-    queryKey: ["admin-inventory-adjustments"],
+  const { data: adjustmentsData, isFetching: adjustmentsFetching } = useQuery({
+    queryKey: ["admin-inventory-adjustments", adjustmentsCursor],
     queryFn: async () => {
+      const url = `/api/admin/inventory?view=adjustments&limit=20${adjustmentsCursor ? `&cursor=${encodeURIComponent(adjustmentsCursor)}` : ""}`;
       return adminFetchJson<{
         adjustments: Array<{
           id: string;
@@ -55,7 +70,10 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
           timestamp: string;
           note?: string;
         }>;
-      }>("/api/admin/inventory?view=adjustments");
+        hasMore: boolean;
+        nextCursor?: string;
+        total: number;
+      }>(url);
     },
   });
 
@@ -315,6 +333,15 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
             </table>
           </div>
         )}
+        <AdminCursorPagination
+          pageIndex={adjustmentsPageIndex}
+          canGoPrev={adjustmentsCanGoPrev}
+          hasMore={adjustmentsData?.hasMore ?? false}
+          isFetching={adjustmentsFetching}
+          total={adjustmentsData?.total}
+          onPrev={adjustmentsGoPrev}
+          onNext={() => adjustmentsGoNext(adjustmentsData?.nextCursor)}
+        />
       </div>
     </>
   );

@@ -7,12 +7,14 @@ import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import {
+  AdminCursorPagination,
   EmptyState,
   LoadingState,
   StatCard,
   StatusBadge,
   formatDate,
 } from "@/components/admin/AdminUi";
+import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { ROUTES } from "@/lib/routes";
 import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
@@ -100,10 +102,19 @@ type CommentStatusFilter = "all" | "pending" | "approved" | "rejected";
 function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<CommentStatusFilter>("all");
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin-blog-comments-list"],
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ["admin-blog-comments-list", statusFilter, cursor],
     queryFn: async () => {
-      return adminFetchJson<{ comments: BlogComment[] }>("/api/admin/blog/comments");
+      const params = new URLSearchParams({ limit: "20" });
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (cursor) params.set("cursor", cursor);
+      return adminFetchJson<{
+        comments: BlogComment[];
+        hasMore: boolean;
+        nextCursor?: string;
+        total: number;
+      }>(`/api/admin/blog/comments?${params}`);
     },
   });
 
@@ -124,10 +135,6 @@ function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
   if (isLoading) return <LoadingState message="Loading comments…" />;
 
   const comments = data?.comments ?? [];
-  const filtered =
-    statusFilter === "all"
-      ? comments
-      : comments.filter((comment) => comment.status === statusFilter);
 
   return (
     <div className="admin-panel">
@@ -137,14 +144,17 @@ function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
             key={value}
             type="button"
             className={`admin-btn ${statusFilter === value ? "admin-btn--primary" : "admin-btn--secondary"}`}
-            onClick={() => setStatusFilter(value)}
+            onClick={() => {
+              setStatusFilter(value);
+              reset();
+            }}
           >
             {value === "all" ? "All" : value.charAt(0).toUpperCase() + value.slice(1)}
           </button>
         ))}
       </div>
       <div className="admin-panel__body">
-        {filtered.length === 0 ? (
+        {comments.length === 0 ? (
           <EmptyState message="No comments match this filter." />
         ) : (
           <div className="admin-table-wrap">
@@ -158,7 +168,7 @@ function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((comment) => (
+                {comments.map((comment) => (
                   <tr key={comment.id}>
                     <td>{comment.authorName}</td>
                     <td>{comment.body}</td>
@@ -193,6 +203,15 @@ function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
             </table>
           </div>
         )}
+        <AdminCursorPagination
+          pageIndex={pageIndex}
+          canGoPrev={canGoPrev}
+          hasMore={data?.hasMore ?? false}
+          isFetching={isFetching}
+          total={data?.total}
+          onPrev={goPrev}
+          onNext={() => goNext(data?.nextCursor)}
+        />
       </div>
     </div>
   );
@@ -200,11 +219,17 @@ function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
 
 function BlogListContent({ blogWrite, blogDelete }: { blogWrite: boolean; blogDelete: boolean }) {
   const queryClient = useQueryClient();
+  const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: QUERY_KEY,
+    queryKey: [...QUERY_KEY, cursor],
     queryFn: async () => {
-      return adminFetchJson<{ posts: BlogPost[] }>("/api/admin/blog");
+      const url = `/api/admin/blog?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
+      return adminFetchJson<{
+        posts: BlogPost[];
+        hasMore: boolean;
+        nextCursor?: string;
+      }>(url);
     },
   });
 
@@ -212,7 +237,10 @@ function BlogListContent({ blogWrite, blogDelete }: { blogWrite: boolean; blogDe
     mutationFn: async (id: string) => {
       await adminMutateJson(`/api/admin/blog/${id}`, { method: "DELETE" });
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      reset();
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
   });
 
   const posts = data?.posts ?? [];
@@ -326,6 +354,14 @@ function BlogListContent({ blogWrite, blogDelete }: { blogWrite: boolean; blogDe
             </table>
           </div>
         )}
+        <AdminCursorPagination
+          pageIndex={pageIndex}
+          canGoPrev={canGoPrev}
+          hasMore={data?.hasMore ?? false}
+          isFetching={isFetching}
+          onPrev={goPrev}
+          onNext={() => goNext(data?.nextCursor)}
+        />
       </div>
     </div>
   );
