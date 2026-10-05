@@ -1,8 +1,17 @@
-export const ROLAND_BASE = "https://static.roland.com";
-export const ROLAND_GP9 = `${ROLAND_BASE}/products/gp-9/images`;
+/**
+ * GP-9 marketing assets — self-hosted under /gp9-assets (npm run download:gp9-assets).
+ * Roland CDN is only used as the download source, not at runtime.
+ */
+export const GP9_STATIC_BASE = "/gp9-assets";
+
+export const ROLAND_GP9 = `${GP9_STATIC_BASE}/images`;
 export const ROLAND_GALLERY = `${ROLAND_GP9}/gallery`;
-export const ROLAND_MEDIA = `${ROLAND_BASE}/products/gp-9/media`;
-export const ROLAND_LINEUP = `${ROLAND_BASE}/promos/gp_series/images`;
+export const ROLAND_MEDIA = `${GP9_STATIC_BASE}/media`;
+export const ROLAND_LINEUP = `${GP9_STATIC_BASE}/promos`;
+export const GP9_HDRI_BASE = `${GP9_STATIC_BASE}/hdri`;
+
+/** Sound Lab / interactive section hero still */
+export const GP9_INTERACTIVE_IMAGE = `${ROLAND_GP9}/gp-9_interactive.jpg`;
 
 export const GP9_VIDEOS = {
   hero: `${ROLAND_MEDIA}/gp-9_hero.mp4`,
@@ -35,7 +44,7 @@ export function galleryImage(finish: FinishKey, name: string) {
 
 /** Roland rc_productspinner / parallax-spinner frame conventions */
 export const GP9_SPINNER = {
-  /** Candidate CDN prefixes probed at runtime (parallax + productspinner patterns) */
+  /** Self-hosted spin frames are optional; gallery fallback is always local */
   candidatePrefixes: [
     `${ROLAND_GP9}/spin/gp-9_spin_`,
     `${ROLAND_GP9}/spin/gp-9_`,
@@ -59,3 +68,12 @@ export const GALLERY_SPINNER_FALLBACK = [
   `${ROLAND_GALLERY}/gp-9_side_gal.jpg`,
   `${ROLAND_GALLERY}/gp-9_top_angle_gal.jpg`,
 ] as const;
+
+/** Absolute URL for JSON-LD / Open Graph */
+export function gp9PublicAssetUrl(
+  relativePath: string,
+  siteOrigin = "https://vibemusic.in",
+): string {
+  const normalized = relativePath.startsWith("/") ? relativePath : `/${relativePath}`;
+  return `${siteOrigin.replace(/\/$/, "")}${normalized}`;
+}

@@ -7,8 +7,7 @@ import { ScrollReveal } from "@/gp9/components/ui/scroll-reveal";
 import { SectionHeading } from "@/gp9/components/ui/section-heading";
 import { NavArrowIcon } from "@/gp9/components/ui/nav-arrow-icon";
 import { gp9Path } from "@/gp9/lib/base-path";
-
-const LOCAL_GP9 = "/images/products/roland-gp9-front.webp";
+import { GP9_INTERACTIVE_IMAGE } from "@/gp9/lib/gp9-assets";
 
 export function InteractivePianoSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -46,7 +45,7 @@ export function InteractivePianoSection() {
           <div className="relative aspect-[16/10] w-full md:aspect-[21/9]">
             {mounted ? (
               <Image
-                src={LOCAL_GP9}
+                src={GP9_INTERACTIVE_IMAGE}
                 alt="Roland GP-9 digital grand piano"
                 fill
                 className="object-contain bg-gradient-to-b from-secondary to-muted p-6 md:p-10"

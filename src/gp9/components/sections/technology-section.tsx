@@ -4,6 +4,7 @@ import { Gp9Image as Image } from "@/gp9/components/gp9-image";
 import { useEffect, useRef, useState } from "react";
 import { ScrollReveal } from "@/gp9/components/ui/scroll-reveal";
 import { subscribeScroll } from "@/gp9/lib/scroll-performance";
+import { ROLAND_GALLERY, ROLAND_GP9 } from "@/gp9/lib/gp9-assets";
 
 function ScrollRevealText({ text }: { text: string }) {
   const containerRef = useRef<HTMLParagraphElement>(null);
@@ -30,10 +31,7 @@ function ScrollRevealText({ text }: { text: string }) {
   const words = text.split(" ");
 
   return (
-    <p
-      ref={containerRef}
-      className="text-3xl font-semibold leading-snug md:text-4xl lg:text-5xl"
-    >
+    <p ref={containerRef} className="text-3xl font-semibold leading-snug md:text-4xl lg:text-5xl">
       {words.map((word, index) => {
         const wordProgress = index / words.length;
         const isRevealed = progress > wordProgress;
@@ -54,9 +52,6 @@ function ScrollRevealText({ text }: { text: string }) {
     </p>
   );
 }
-
-const ROLAND_GP9 = "https://static.roland.com/products/gp-9/images";
-const ROLAND_GALLERY = `${ROLAND_GP9}/gallery`;
 
 const sideImages = [
   {
@@ -147,7 +142,12 @@ export function TechnologySection() {
                     className="relative overflow-hidden will-change-transform"
                     style={{ flex: img.span, borderRadius: `${borderRadius}px` }}
                   >
-                    <Image src={img.src || "/placeholder.svg"} alt={img.alt} fill className="object-cover" />
+                    <Image
+                      src={img.src || "/placeholder.svg"}
+                      alt={img.alt}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 ))}
             </div>
@@ -174,14 +174,16 @@ export function TechnologySection() {
                 className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
                 style={{ opacity: titleOpacity }}
               >
-                <p className="mb-6 text-xs uppercase tracking-[0.4em] text-white/50">Piano Reality</p>
+                <p className="mb-6 text-xs uppercase tracking-[0.4em] text-white/50">
+                  Piano Reality
+                </p>
                 <h2 className="max-w-3xl text-5xl font-medium leading-tight tracking-tight text-white md:text-5xl lg:text-7xl">
                   {["Sound", "Meets", "Space."].map((word, index) => {
                     const wordFadeStart = index * 0.07;
                     const wordFadeEnd = wordFadeStart + 0.07;
                     const wordProgress = Math.max(
                       0,
-                      Math.min(1, (scrollProgress - wordFadeStart) / (wordFadeEnd - wordFadeStart))
+                      Math.min(1, (scrollProgress - wordFadeStart) / (wordFadeEnd - wordFadeStart)),
                     );
                     const wordOpacity = 1 - wordProgress;
                     const wordBlur = wordProgress * 10;
@@ -222,7 +224,12 @@ export function TechnologySection() {
                     className="relative overflow-hidden will-change-transform"
                     style={{ flex: img.span, borderRadius: `${borderRadius}px` }}
                   >
-                    <Image src={img.src || "/placeholder.svg"} alt={img.alt} fill className="object-cover" />
+                    <Image
+                      src={img.src || "/placeholder.svg"}
+                      alt={img.alt}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 ))}
             </div>

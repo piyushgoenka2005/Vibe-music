@@ -6,13 +6,14 @@ import { NavArrowIcon } from "@/gp9/components/ui/nav-arrow-icon";
 import { ScrollReveal } from "@/gp9/components/ui/scroll-reveal";
 import { SectionHeading } from "@/gp9/components/ui/section-heading";
 import { TiltCard } from "@/gp9/components/ui/tilt-card";
-import { ROLAND_LINEUP } from "@/gp9/lib/gp9-assets";
+import { ROLAND_GP9, ROLAND_LINEUP } from "@/gp9/lib/gp9-assets";
 
 const models = [
   {
     name: "GP-3",
     tag: "Micro Grand",
-    description: "Low-profile grand with a space-saving footprint and Piano Reality Standard sound.",
+    description:
+      "Low-profile grand with a space-saving footprint and Piano Reality Standard sound.",
     image: `${ROLAND_LINEUP}/gp_series_gp-3_lineup.jpg`,
     href: "https://www.roland.com/global/products/gp-3/",
   },
@@ -27,7 +28,7 @@ const models = [
     name: "GP-9",
     tag: "Grand Piano",
     description: "Roland's premier digital grand with Piano Reality Modeling and projection sound.",
-    image: "https://static.roland.com/products/gp-9/images/gp-9_hero.jpg",
+    image: `${ROLAND_GP9}/gp-9_hero.jpg`,
     href: "#products",
     featured: true,
   },
@@ -80,7 +81,9 @@ export function LineupSection() {
                   )}
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <p className="text-xs uppercase tracking-[0.3em] text-white/60">{model.tag}</p>
-                    <p className="mt-1 font-display text-2xl font-medium text-white">{model.name}</p>
+                    <p className="mt-1 font-display text-2xl font-medium text-white">
+                      {model.name}
+                    </p>
                     <p className="mt-2 text-sm leading-relaxed text-white/80 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
                       {model.description}
                     </p>

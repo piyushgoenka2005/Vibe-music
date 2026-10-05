@@ -206,6 +206,16 @@ sync_storefront_images() {
   fi
 }
 
+sync_gp9_assets() {
+  log "GP-9 static assets (public/gp9-assets)"
+  if ! timeout 900 npm run download:gp9-assets; then
+    die "download:gp9-assets failed — /gp9 images and HDRIs will 404"
+  fi
+  if ! npm run verify:gp9-assets; then
+    die "verify:gp9-assets failed — run: npm run download:gp9-assets"
+  fi
+}
+
 build_application() {
   log "Clearing stale Next.js build cache"
   rm -rf .next
@@ -518,6 +528,7 @@ ensure_cdn_storage
 validate_production_env
 
 sync_storefront_images
+sync_gp9_assets
 
 # ── 3. Database + ops data ───────────────────────────────────────────────────
 

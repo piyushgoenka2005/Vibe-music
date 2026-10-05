@@ -81,6 +81,9 @@ tmp-out.css
 cdn-upload-manifest.json
 /tmp/
 
+# GP-9 marketing mirror (npm run download:gp9-assets on deploy)
+/public/gp9-assets/
+
 # deploy release anchors (runtime state)
 .deploy-previous.sha
 .deploy-history.log

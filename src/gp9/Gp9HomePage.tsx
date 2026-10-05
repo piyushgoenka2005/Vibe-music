@@ -19,6 +19,7 @@ import { Marquee } from "@/gp9/components/ui/marquee";
 import { StickyCta } from "@/gp9/components/sticky-cta";
 import { MobileFixedFooter } from "@/gp9/components/mobile-fixed-footer";
 import { Header } from "@/gp9/components/header";
+import { gp9PublicAssetUrl, ROLAND_GP9 } from "@/gp9/lib/gp9-assets";
 
 const heroMarquee = [
   "Roland GP-9",
@@ -35,7 +36,7 @@ const productJsonLd = {
   brand: { "@type": "Brand", name: "Roland" },
   description:
     "A premium digital grand piano with Piano Reality Modeling, hybrid keyboard, and Piano Reality Projection sound system.",
-  image: "https://static.roland.com/products/gp-9/images/gp-9_hero.jpg",
+  image: gp9PublicAssetUrl(`${ROLAND_GP9}/gp-9_hero.jpg`),
   category: "Digital Piano",
 };
 

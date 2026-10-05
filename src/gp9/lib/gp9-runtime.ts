@@ -3,6 +3,7 @@
  */
 import * as Tone from "tone";
 import type { Object3D } from "three";
+import { GP9_HDRI_BASE } from "@/gp9/lib/gp9-assets";
 
 // ============================================================================
 // SESSION
@@ -491,14 +492,14 @@ export type Gp9SceneLighting = {
   playBoost: number;
 };
 
-/** Self-hosted HDRI paths (avoids external drei-assets CDN fetch failures). */
+/** Self-hosted HDRI paths under public/gp9-assets/hdri */
 export const GP9_ENVIRONMENT_HDR: Record<Gp9SceneLighting["environment"], string> = {
-  city: "/gp9/hdri/potsdamer_platz_1k.hdr",
-  warehouse: "/gp9/hdri/empty_warehouse_01_1k.hdr",
-  sunset: "/gp9/hdri/venice_sunset_1k.hdr",
-  night: "/gp9/hdri/dikhololo_night_1k.hdr",
-  apartment: "/gp9/hdri/lebombo_1k.hdr",
-  dawn: "/gp9/hdri/venice_sunset_1k.hdr",
+  city: `${GP9_HDRI_BASE}/potsdamer_platz_1k.hdr`,
+  warehouse: `${GP9_HDRI_BASE}/empty_warehouse_01_1k.hdr`,
+  sunset: `${GP9_HDRI_BASE}/venice_sunset_1k.hdr`,
+  night: `${GP9_HDRI_BASE}/dikhololo_night_1k.hdr`,
+  apartment: `${GP9_HDRI_BASE}/lebombo_1k.hdr`,
+  dawn: `${GP9_HDRI_BASE}/venice_sunset_1k.hdr`,
 };
 
 export function getEnvironmentHdrPath(environment: Gp9SceneLighting["environment"]): string {

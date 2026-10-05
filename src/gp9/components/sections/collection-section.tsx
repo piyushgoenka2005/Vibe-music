@@ -3,8 +3,7 @@
 import { FadeImage } from "@/gp9/components/fade-image";
 import { ScrollReveal } from "@/gp9/components/ui/scroll-reveal";
 import { SectionHeading } from "@/gp9/components/ui/section-heading";
-
-const ROLAND_GALLERY = "https://static.roland.com/products/gp-9/images/gallery";
+import { ROLAND_GALLERY } from "@/gp9/lib/gp9-assets";
 
 const highlights = [
   {
@@ -91,7 +90,11 @@ export function CollectionSection() {
 
         <div className="hidden md:grid md:grid-cols-3 md:gap-8 md:px-12 lg:px-20">
           {highlights.map((item, index) => (
-            <ScrollReveal key={item.id} delay={index * 80} variant={index % 3 === 1 ? "scale" : "up"}>
+            <ScrollReveal
+              key={item.id}
+              delay={index * 80}
+              variant={index % 3 === 1 ? "scale" : "up"}
+            >
               <div className="group cursor-target">
                 <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-secondary card-shine">
                   <FadeImage

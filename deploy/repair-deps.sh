@@ -44,6 +44,10 @@ npm ci --no-audit --no-fund
 log "Verify Next.js install integrity"
 node scripts/ops/verify-node-modules.mjs
 
+log "GP-9 static assets"
+npm run download:gp9-assets
+npm run verify:gp9-assets
+
 log "Prisma client"
 npm run db:generate
 

@@ -4,7 +4,7 @@ import Image, { type ImageProps } from "next/image";
 
 function isExternalUnoptimized(src: ImageProps["src"]): boolean {
   if (typeof src !== "string") return false;
-  return src.includes("static.roland.com");
+  return src.includes("static.roland.com") || src.includes("framerusercontent.com");
 }
 
 /**
