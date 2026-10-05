@@ -48,6 +48,11 @@ jobs:
           VERIFY_BASE_URL: https://vibemusic.in
         run: bash deploy/production.sh verify-sync
 
+      - name: Verify Meta ad landing (brand routes + OG)
+        env:
+          VERIFY_BASE_URL: https://vibemusic.in
+        run: npx tsx scripts/ops/verify-meta-ad-landing.mts
+
       - name: Verify public TLS certificate
         env:
           VERIFY_HOST: vibemusic.in

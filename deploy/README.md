@@ -35,3 +35,29 @@ If shoppers see **“The OAuth client was deleted”** on [vibemusic.in/login](h
 7. Redeploy: `bash deploy/update.sh`
 
 The app hides the Google button when the client is deleted/invalid so shoppers are not sent to a broken Google screen.
+
+## Meta Pixel + Instagram / Facebook ads
+
+Storefront ad landing URLs and Open Graph metadata are served from canonical routes:
+
+| Promote  | URL                                    |
+| -------- | -------------------------------------- |
+| Brand    | `https://vibemusic.in/brands/{slug}`   |
+| Product  | `https://vibemusic.in/product/{slug}`  |
+| Category | `https://vibemusic.in/category/{slug}` |
+| Deals    | `https://vibemusic.in/deals`           |
+
+Legacy `?brand=` links redirect automatically.
+
+1. **Events Manager** → Data sources → Web → copy **Pixel ID** (numeric).
+2. On the VPS, add to `deploy/ops-secrets.env`:
+   ```bash
+   NEXT_PUBLIC_META_PIXEL_ID=<pixel-id>
+   ```
+3. Redeploy: `bash deploy/update.sh`
+4. Verify:
+   ```bash
+   npm run verify:meta-ad-landing:prod
+   ```
+5. In **Meta Sharing Debugger**, scrape `https://vibemusic.in/brands/gibraltar` and your product URL.
+6. Update Instagram ad destination to `https://vibemusic.in/brands/gibraltar` (not `?brand=` query URLs).

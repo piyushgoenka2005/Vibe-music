@@ -107,6 +107,10 @@ run_post_deploy_smoke() {
   check_http "/api/coupons/active" 200 "coupons" "$API_BASE_URL"
   check_http "/api/checkout/capabilities" 200 "checkout caps" "$API_BASE_URL"
   check_http "/deals" 200 "deals"
+  check_http "/brands/gibraltar" 200 "brand page"
+  local brand_redirect
+  brand_redirect=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 -L "${BASE_URL}/brands?brand=gibraltar" || echo "000")
+  if [[ "$brand_redirect" == "200" ]]; then echo "  ok brand redirect"; else echo "  FAIL brand redirect ($brand_redirect)"; FAILS=$((FAILS + 1)); fi
   check_http "/api/admin/me" 401 "admin auth" "$API_BASE_URL"
   if ! HOMEPAGE_VERIFY_URL="$API_BASE_URL" npm run verify:homepage-images; then
     echo "  FAIL homepage product images"
