@@ -170,11 +170,27 @@ backup_database() {
   fi
 }
 
-stop_app_for_build() {
-  if pm2 describe vibe >/dev/null 2>&1; then
-    log "Stopping PM2 vibe (avoid serving partial .next)"
-    pm2 stop vibe || true
+stop_pm2_for_deps() {
+  if ! command -v pm2 >/dev/null 2>&1; then
+    return 0
   fi
+
+  local stopped=0 app
+  for app in vibe vibe-worker; do
+    if pm2 describe "$app" >/dev/null 2>&1; then
+      log "Stopping PM2 ${app} (release node_modules file locks)"
+      pm2 stop "$app" || true
+      stopped=1
+    fi
+  done
+
+  if [[ "$stopped" == "1" ]]; then
+    sleep 4
+  fi
+}
+
+stop_app_for_build() {
+  stop_pm2_for_deps
 }
 
 sync_storefront_images() {
@@ -373,6 +389,7 @@ print_summary() {
   echo "  SSL repair:   bash deploy/fix-ssl-certificates.sh"
   echo "  SSL expand:   SYNC_SSL=1 bash deploy/update.sh"
   echo "  Rollback:     bash deploy/production.sh rollback"
+  echo "  Repair deps:  bash deploy/repair-deps.sh"
   if [[ "${SEED_CATALOG:-0}" != "1" ]]; then
     echo "  Catalog:      SEED_CATALOG=1 bash deploy/update.sh"
   fi
@@ -415,6 +432,8 @@ step "2/10 — Dependencies and environment"
 
 backup_database
 
+stop_pm2_for_deps
+
 clean_node_modules() {
   if [[ ! -d node_modules ]]; then
     return 0
@@ -439,20 +458,40 @@ clean_node_modules() {
   fi
 }
 
+verify_node_modules() {
+  node scripts/ops/verify-node-modules.mjs
+}
+
 install_dependencies() {
   log "Installing npm dependencies (node $(node -v), npm $(npm -v))"
   # Guard against partial installs leaving a drifted lockfile on the VPS.
   git checkout -- package-lock.json package.json 2>/dev/null || true
 
-  if npm ci --no-audit; then
-    rebuild_native_modules
-    return 0
-  fi
+  local attempt
+  for attempt in 1 2; do
+    if [[ "$attempt" == "2" ]] || [[ "${FORCE_CLEAN_DEPS:-0}" == "1" ]]; then
+      if [[ "$attempt" == "2" ]]; then
+        warn "dependency install failed — wiping node_modules and retrying npm ci"
+      else
+        log "FORCE_CLEAN_DEPS=1 — removing node_modules before npm ci"
+      fi
+      clean_node_modules
+    fi
 
-  warn "npm ci failed — cleaning node_modules and running npm install"
-  clean_node_modules
-  npm install --no-audit --no-fund
-  rebuild_native_modules
+    if ! npm ci --no-audit --no-fund; then
+      warn "npm ci failed (attempt ${attempt}/2)"
+      continue
+    fi
+
+    if verify_node_modules; then
+      rebuild_native_modules
+      return 0
+    fi
+
+    warn "node_modules integrity check failed (attempt ${attempt}/2)"
+  done
+
+  die "dependency install failed — run: bash deploy/repair-deps.sh"
 }
 
 rebuild_native_modules() {

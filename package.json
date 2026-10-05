@@ -41,6 +41,7 @@
     "seed:production-ops": "npx tsx --env-file=.env scripts/ops/seed-production-ops.mts",
     "publish:independence-banner": "npx tsx --env-file=.env scripts/ops/publish-independence-banner.mts",
     "deploy:update": "bash deploy/update.sh",
+    "deploy:repair-deps": "bash deploy/repair-deps.sh",
     "deploy:certify": "bash deploy/production.sh certify",
     "deploy:rollback": "bash deploy/production.sh rollback",
     "migrate:brand": "node scripts/legacy/migrate-brand.mjs && node scripts/legacy/migrate-content-brand.mjs",
