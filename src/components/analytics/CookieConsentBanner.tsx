@@ -3,14 +3,9 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import {
-  ANALYTICS_CONSENT_KEY,
-  isAnalyticsEnabled,
-} from "@/lib/analytics/config";
-import {
-  denyAnalyticsConsent,
-  grantAnalyticsConsent,
-} from "@/lib/analytics/gtag";
+import { ANALYTICS_CONSENT_KEY, isAnalyticsEnabled } from "@/lib/analytics/config";
+import { isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
+import { denyAnalyticsConsent, grantAnalyticsConsent } from "@/lib/analytics/gtag";
 import "@/components/analytics/cookie-consent.css";
 
 type ConsentState = "unknown" | "granted" | "denied";
@@ -50,7 +45,11 @@ function subscribeConsent(onStoreChange: () => void) {
 const subscribeNowhere = () => () => {};
 
 export default function CookieConsentBanner() {
-  const isClient = useSyncExternalStore(subscribeNowhere, () => true, () => false);
+  const isClient = useSyncExternalStore(
+    subscribeNowhere,
+    () => true,
+    () => false,
+  );
   const consent = useSyncExternalStore(subscribeConsent, readConsent, () => "unknown");
 
   useEffect(() => {
@@ -94,18 +93,17 @@ export default function CookieConsentBanner() {
           Analytics &amp; experience
         </p>
         <p className="cookie-consent__text">
-          We use privacy-friendly Google Analytics to understand how musicians shop
-          on Vibe Music and improve our store. No ad tracking.{" "}
+          We use Google Analytics to understand how musicians shop on Vibe Music and improve our
+          store.
+          {isMetaPixelConfigured()
+            ? " We also use the Meta Pixel to measure visits from our ads on Facebook and Instagram."
+            : " No ad tracking."}{" "}
           <Link href="/pages/cookies" className="cookie-consent__link">
             Cookie policy
           </Link>
         </p>
         <div className="cookie-consent__actions">
-          <button
-            type="button"
-            className="cookie-consent__btn"
-            onClick={decline}
-          >
+          <button type="button" className="cookie-consent__btn" onClick={decline}>
             Decline
           </button>
           <button

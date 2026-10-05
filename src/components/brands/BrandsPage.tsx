@@ -23,7 +23,7 @@ import {
   getFilteredListingProducts,
 } from "@/lib/catalog/categoryProductsCore";
 import { trackViewItemList } from "@/lib/analytics/events";
-import { ROUTES } from "@/lib/routes";
+import { brandPath, ROUTES } from "@/lib/routes";
 import type { BrandDirectoryGroup } from "@/types/brandDirectory";
 import type { Product } from "@/types/product";
 import "@/components/filters/filters.css";
@@ -32,12 +32,14 @@ import "@/components/brands/brands-directory.css";
 
 interface BrandsPageProps {
   brands: BrandDirectoryGroup[];
+  /** Set from `/brands/[slug]` so brand shop renders without relying on query params. */
+  initialBrandSlug?: string;
 }
 
 const PREVIEW_COUNT = 12;
 
 function brandHref(slug: string): string {
-  return `${ROUTES.brands}?brand=${encodeURIComponent(slug)}`;
+  return brandPath(slug);
 }
 
 function brandAnchor(slug: string): string {
@@ -154,7 +156,7 @@ function BrandProductGrid({
   );
 }
 
-export default function BrandsPage({ brands }: BrandsPageProps) {
+export default function BrandsPage({ brands, initialBrandSlug }: BrandsPageProps) {
   return (
     <Suspense
       fallback={
@@ -163,14 +165,15 @@ export default function BrandsPage({ brands }: BrandsPageProps) {
         </div>
       }
     >
-      <BrandsPageContent brands={brands} />
+      <BrandsPageContent brands={brands} initialBrandSlug={initialBrandSlug} />
     </Suspense>
   );
 }
 
-function BrandsPageContent({ brands }: BrandsPageProps) {
+function BrandsPageContent({ brands, initialBrandSlug }: BrandsPageProps) {
   const searchParams = useSearchParams();
-  const activeBrandSlug = searchParams.get("brand")?.split(",")[0]?.trim() ?? "";
+  const activeBrandSlug =
+    initialBrandSlug?.trim() || searchParams.get("brand")?.split(",")[0]?.trim() || "";
   const activeBrand = useMemo(
     () => brands.find((brand) => brand.slug === activeBrandSlug),
     [activeBrandSlug, brands],

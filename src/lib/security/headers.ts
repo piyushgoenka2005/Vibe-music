@@ -8,6 +8,7 @@ function buildContentSecurityPolicy(): string {
     "https://*.razorpay.com",
     "https://apis.google.com",
     "https://www.googletagmanager.com",
+    "https://connect.facebook.net",
   ]
     .filter(Boolean)
     .join(" ");
@@ -18,7 +19,7 @@ function buildContentSecurityPolicy(): string {
     "style-src 'self' 'unsafe-inline' https://cdn.vibemusic.in https://fonts.googleapis.com https://accounts.google.com https://checkout.razorpay.com https://*.razorpay.com",
     "img-src 'self' data: blob: https: http:",
     "font-src 'self' data: https://fonts.gstatic.com https://cdn.vibemusic.in https://checkout.razorpay.com https://*.razorpay.com",
-    "connect-src 'self' blob: https://*.googleapis.com https://www.googleapis.com https://api.razorpay.com https://*.razorpay.com https://lumberjack.razorpay.com https://api.web3forms.com https://static.roland.com https://tonejs.github.io https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com",
+    "connect-src 'self' blob: https://*.googleapis.com https://www.googleapis.com https://api.razorpay.com https://*.razorpay.com https://lumberjack.razorpay.com https://api.web3forms.com https://static.roland.com https://tonejs.github.io https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://www.facebook.com https://*.facebook.com",
     "media-src 'self' data: blob: https://static.roland.com https://tonejs.github.io",
     "worker-src 'self' blob:",
     "frame-src 'self' https://accounts.google.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://sketchfab.com https://www.youtube.com https://www.youtube-nocookie.com",

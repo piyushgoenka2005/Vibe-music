@@ -7,6 +7,12 @@ import {
   sumLineValue,
   type CartAnalyticsLine,
 } from "@/lib/analytics/items";
+import {
+  trackMetaAddToCart,
+  trackMetaPurchase,
+  trackMetaViewContent,
+  trackMetaViewItemList,
+} from "@/lib/analytics/metaEvents";
 import { hasAnalyticsConsent, trackGaEcommerce, trackGaEvent } from "@/lib/analytics/gtag";
 import type { Order } from "@/types/order";
 import type { Product } from "@/types/product";
@@ -23,6 +29,7 @@ export type ItemListContext = {
 };
 
 export function trackViewItemList(products: Product[], list: ItemListContext): void {
+  trackMetaViewItemList(list.itemListName, products);
   if (!canTrack() || products.length === 0) return;
   const items = products
     .slice(0, 30)
@@ -49,6 +56,7 @@ export function trackViewItem(
   product: Product,
   options?: { variantLabel?: string; value?: number },
 ): void {
+  trackMetaViewContent(product);
   if (!canTrack()) return;
   const item = productToGa4Item(product, {
     quantity: 1,
@@ -62,6 +70,7 @@ export function trackViewItem(
 }
 
 export function trackAddToCart(product: Product, quantity: number, variantLabel?: string): void {
+  trackMetaAddToCart(product, quantity);
   if (!canTrack()) return;
   const item = productToGa4Item(product, { quantity, variantLabel });
   trackGaEcommerce("add_to_cart", {
@@ -120,6 +129,7 @@ export function trackAddPaymentInfo(lines: CartAnalyticsLine[], paymentType = "r
 }
 
 export function trackPurchase(order: Order): void {
+  trackMetaPurchase(order);
   if (!canTrack()) return;
   const dedupeKey = `${PURCHASE_DEDUPE_PREFIX}${order.id}`;
   try {

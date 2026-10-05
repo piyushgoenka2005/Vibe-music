@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import AnalyticsRouteTracker from "@/components/analytics/AnalyticsRouteTracker";
+import MetaRouteTracker from "@/components/analytics/MetaRouteTracker";
 import CookieConsentBanner from "@/components/analytics/CookieConsentBanner";
 
 export default function AnalyticsProvider() {
@@ -9,6 +10,7 @@ export default function AnalyticsProvider() {
     <>
       <Suspense fallback={null}>
         <AnalyticsRouteTracker />
+        <MetaRouteTracker />
       </Suspense>
       <CookieConsentBanner />
     </>

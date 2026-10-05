@@ -1,4 +1,4 @@
-import { ROUTES, categoryPath } from "@/lib/routes";
+import { brandPath, ROUTES, categoryPath } from "@/lib/routes";
 
 export interface HomepageBannerSlide {
   id: string;
@@ -45,7 +45,7 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     id: "banner-hertz-hg-20",
     src: "/hertz-hg-20.webp",
     alt: "Hertz HG 20 portable guitar amplifier — delay & reverb, 20W powerful sound at Vibe Music",
-    href: `${ROUTES.searchResults}?brand=hertz`,
+    href: brandPath("hertz"),
     objectPosition: "center center",
   },
   {
@@ -59,14 +59,14 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     id: "banner-zoom-ms-200d",
     src: "/images/banner-5.jpeg",
     alt: "Zoom MS-200D+ MultiStomp — Feel Every Beat multi effects processor at Vibe Music",
-    href: `${ROUTES.searchResults}?brand=zoom`,
+    href: brandPath("zoom"),
     objectPosition: "center center",
   },
   {
     id: "banner-zoom-ms-90lp",
     src: "/images/banner-6.jpeg",
     alt: "Zoom MultiStomp MS-90LP+ Looper Pedal — Create. Loop. Perform. at Vibe Music",
-    href: `${ROUTES.searchResults}?brand=zoom`,
+    href: brandPath("zoom"),
     objectPosition: "center center",
   },
   {
@@ -74,7 +74,7 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     src: "/images/banner-7.png",
     srcOptimized: "/images/banner-7.webp",
     alt: "This Independence Day let your music fly — Hertz HG-10 guitar amplifier at Vibe Music",
-    href: `${ROUTES.searchResults}?brand=hertz`,
+    href: brandPath("hertz"),
     objectPosition: "center center",
   },
   {
@@ -82,7 +82,7 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     src: "/images/banner-8.png",
     srcOptimized: "/images/banner-8.webp",
     alt: "Happy 80th Independence Day — Hertz HG-10 guitar amplifier at Vibe Music",
-    href: `${ROUTES.searchResults}?brand=hertz`,
+    href: brandPath("hertz"),
     objectPosition: "center center",
   },
   {
@@ -96,7 +96,7 @@ export const HOMEPAGE_BANNER_SLIDES: HomepageBannerSlide[] = [
     id: "banner-hertz",
     src: "/images/Hertz.webp",
     alt: "Hertz amplifiers — turn up the power and feel every beat at Vibe Music",
-    href: `${ROUTES.searchResults}?brand=hertz`,
+    href: brandPath("hertz"),
     objectPosition: "center center",
   },
 ];

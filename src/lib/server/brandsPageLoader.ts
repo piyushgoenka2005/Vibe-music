@@ -39,3 +39,10 @@ export const loadBrandsWithCounts = cache(async function loadBrandsWithCounts():
     productCount,
   }));
 });
+
+export async function resolveBrandBySlug(slug: string): Promise<BrandDirectoryGroup | null> {
+  const normalized = slug.trim().toLowerCase();
+  if (!normalized) return null;
+  const directory = await loadBrandDirectory();
+  return directory.find((brand) => brand.slug === normalized) ?? null;
+}

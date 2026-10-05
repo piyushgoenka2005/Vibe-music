@@ -117,6 +117,10 @@ export function productPath(slug: string): string {
   return `/product/${slug}`;
 }
 
+export function brandPath(slug: string): string {
+  return `/brands/${slug}`;
+}
+
 const PLACEHOLDER_REDIRECTS: Record<string, string> = {
   "/categories": ROUTES.categories,
   "/products": ROUTES.search,
@@ -226,6 +230,7 @@ function isValidAppRoute(path: string): boolean {
   if (
     path === ROUTES.deals ||
     path === ROUTES.brands ||
+    path.startsWith(`${ROUTES.brands}/`) ||
     path === ROUTES.categories ||
     path === ROUTES.compare
   )

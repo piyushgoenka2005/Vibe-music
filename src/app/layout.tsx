@@ -5,6 +5,8 @@ import AppShell from "@/components/layout/AppShell";
 import { resolvePublicLegal } from "@/lib/brand/resolvePublicLegal";
 import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
 import GoogleAnalyticsScripts from "@/components/analytics/GoogleAnalyticsScripts";
+import MetaPixelScripts from "@/components/analytics/MetaPixelScripts";
+import { isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
 import { WebVitals } from "@/components/common/WebVitals";
 import SocialRailShell from "@/components/layout/SocialRailShell";
 import { DEFAULT_METADATA } from "@/lib/site";
@@ -52,6 +54,12 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
         <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        {isMetaPixelConfigured() ? (
+          <>
+            <link rel="preconnect" href="https://connect.facebook.net" crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href="https://connect.facebook.net" />
+          </>
+        ) : null}
         {splashEnabled ? (
           <script
             dangerouslySetInnerHTML={{
@@ -62,6 +70,7 @@ export default async function RootLayout({
       </head>
       <body className={primaryFont.className} suppressHydrationWarning>
         <GoogleAnalyticsScripts />
+        <MetaPixelScripts />
         <WebVitals />
         {splashEnabled ? (
           /* Instant framed brand cover — CSS hides unless html.vibe-splash-pending. */

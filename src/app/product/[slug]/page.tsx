@@ -4,8 +4,8 @@ import ProductDetailPage from "@/components/product/ProductDetailPage";
 import { loadProductCorePage, loadProductDetailPage } from "@/lib/server/productDetailLoader";
 import { resolveCanonicalProductSlug } from "@/services/catalogService";
 import { buildProductJsonLd } from "@/lib/seo/productJsonLd";
-import { cdnSeoImageUrl, storefrontImageUrl } from "@/lib/storefrontImages";
-import { BRAND } from "@/lib/brand";
+import { buildProductMetadata } from "@/lib/seo/productMetadata";
+import { storefrontImageUrl } from "@/lib/storefrontImages";
 import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
 
 export const dynamicParams = true;
@@ -18,61 +18,15 @@ interface ProductRouteProps {
 export async function generateMetadata({ params }: ProductRouteProps): Promise<Metadata> {
   const { slug } = await params;
   const canonicalSlug = (await resolveCanonicalProductSlug(slug)) ?? slug;
-  // Core only — merchandising must not block SEO metadata.
   const product = await loadProductCorePage(canonicalSlug);
   if (!product) {
     return {
-      title: `Product not found | ${BRAND.name}`,
+      title: `Product not found | Vibe Music`,
       robots: { index: false, follow: false },
     };
   }
 
-  const rawDescription = product.description
-    ? product.description
-        .replace(/<[^>]*>?/gm, "")
-        .replace(/\s+/g, " ")
-        .trim()
-    : "";
-  const metaDescription =
-    product.metaDescription?.trim() ||
-    (rawDescription.length > 20
-      ? rawDescription.slice(0, 160)
-      : `${product.name} by ${product.brand}. Buy online with manufacturer warranty and free shipping from ${BRAND.name}.`);
-  const pageTitle = product.metaTitle?.trim() || `${product.name} | ${BRAND.name}`;
-
-  const hero = product.images?.[0]?.src || product.image;
-  const ogImage = hero ? cdnSeoImageUrl(hero) : undefined;
-  const canonicalUrl = `${BRAND.siteUrl}/product/${product.slug}`;
-
-  return {
-    title: pageTitle,
-    description: metaDescription,
-    alternates: { canonical: canonicalUrl },
-    openGraph: {
-      title: product.metaTitle?.trim() || product.name,
-      description: metaDescription,
-      url: canonicalUrl,
-      siteName: BRAND.name,
-      locale: "en_IN",
-      type: "website",
-      images: ogImage
-        ? [
-            {
-              url: ogImage,
-              width: 1200,
-              height: 630,
-              alt: product.name,
-            },
-          ]
-        : undefined,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: product.metaTitle?.trim() || product.name,
-      description: metaDescription,
-      images: ogImage ? [ogImage] : undefined,
-    },
-  };
+  return buildProductMetadata(product);
 }
 
 export default async function ProductRoute({ params }: ProductRouteProps) {

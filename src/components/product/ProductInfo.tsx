@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { brandPath } from "@/lib/routes";
 import { attributeKey, findVariantBySelection, getVariantAttributeGroups } from "@/lib/variants";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
@@ -45,9 +46,7 @@ export default function ProductInfo({
   return (
     <div className="pdp-info">
       <div className="pdp-brand">
-        <Link href={`/category/${product.categorySlug}?brand=${product.brandSlug}`}>
-          {product.brand}
-        </Link>
+        <Link href={brandPath(product.brandSlug)}>{product.brand}</Link>
       </div>
 
       <h1 className="pdp-title">{product.name}</h1>

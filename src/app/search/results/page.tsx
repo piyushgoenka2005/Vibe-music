@@ -1,26 +1,59 @@
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import SearchResultsPage from "@/components/search/SearchResultsPage";
+import { BRAND } from "@/lib/brand";
+import {
+  buildSearchQueryMetadata,
+  resolveSearchResultsRedirect,
+  type SearchLandingParams,
+} from "@/lib/seo/adLanding";
+import { cdnSeoImageUrl } from "@/lib/storefrontImages";
 import { getSearchResults, SEARCH_MIN_QUERY_LENGTH } from "@/lib/server/searchResultsService";
 import type { SearchResultsData } from "@/types/search";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
-  robots: { index: false, follow: true },
-  alternates: { canonical: "/search" },
-};
-
 interface SearchResultsRouteProps {
-  searchParams: Promise<{
-    q?: string;
-    category?: string;
-    subcategory?: string;
-    brand?: string;
-  }>;
+  searchParams: Promise<SearchLandingParams>;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: SearchResultsRouteProps): Promise<Metadata> {
+  const params = await searchParams;
+  const redirectTarget = resolveSearchResultsRedirect(params);
+  if (redirectTarget) {
+    return { robots: { index: false, follow: true } };
+  }
+
+  const query = params.q?.trim() ?? "";
+  if (query.length >= SEARCH_MIN_QUERY_LENGTH) {
+    try {
+      const results = await getSearchResults({ query });
+      const hero = results.products[0]?.image;
+      return buildSearchQueryMetadata(query, {
+        productCount: results.total,
+        imageUrl: hero ? cdnSeoImageUrl(hero) : undefined,
+      });
+    } catch {
+      return buildSearchQueryMetadata(query);
+    }
+  }
+
+  return {
+    title: `Search | ${BRAND.name}`,
+    robots: { index: false, follow: true },
+    alternates: { canonical: "/search" },
+  };
 }
 
 export default async function SearchResultsRoute({ searchParams }: SearchResultsRouteProps) {
   const params = await searchParams;
+  const redirectTarget = resolveSearchResultsRedirect(params);
+  if (redirectTarget) {
+    redirect(redirectTarget);
+  }
+
   const query = params.q?.trim() ?? "";
   const category = params.category ?? "";
   const subcategory = params.subcategory ?? "";

@@ -1041,7 +1041,7 @@ export async function seedHomepageCuratedItemsIfEmpty(): Promise<void> {
         brandId: brand.id,
         customTitle: brand.name,
         customImage: logoUrl || null,
-        customHref: `/search/results?brand=${encodeURIComponent(brand.slug)}`,
+        customHref: `/brands/${brand.slug}`,
         createdAt: timestamp,
         updatedAt: timestamp,
       };

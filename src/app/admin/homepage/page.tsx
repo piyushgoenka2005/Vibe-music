@@ -834,9 +834,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                             ...prev,
                             brandId: event.target.value,
                             customTitle: brand?.name || prev.customTitle,
-                            customHref: brand
-                              ? `/search/results?brand=${encodeURIComponent(brand.slug)}`
-                              : prev.customHref,
+                            customHref: brand ? `/brands/${brand.slug}` : prev.customHref,
                           }));
                         }}
                       >

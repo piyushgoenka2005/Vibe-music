@@ -1,8 +1,10 @@
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import SearchLandingExperience from "@/components/search/SearchLandingExperience";
 import SearchRecentlyViewed from "@/components/search/SearchRecentlyViewed";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { BRAND } from "@/lib/brand";
+import { resolveSearchPageRedirect } from "@/lib/seo/adLanding";
 import "@/components/search/search.css";
 
 export const revalidate = 60;
@@ -13,7 +15,17 @@ export const metadata: Metadata = {
   alternates: { canonical: "/search" },
 };
 
-export default function SearchPage() {
+interface SearchPageProps {
+  searchParams: Promise<{ brand?: string }>;
+}
+
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  const params = await searchParams;
+  const redirectTarget = resolveSearchPageRedirect(params);
+  if (redirectTarget) {
+    redirect(redirectTarget);
+  }
+
   return (
     <main className="storefront-page storefront-page--subtle">
       <div className="sw-search-landing-shell">

@@ -1,5 +1,5 @@
 import { getBrandLogoUrl } from "@/lib/brandLogos";
-import { ROUTES } from "@/lib/routes";
+import { brandPath } from "@/lib/routes";
 import type { HomepageBrandItem } from "@/types/homepage";
 
 export const TOP_BRAND_STRIP_SLUGS = [
@@ -52,7 +52,7 @@ export function buildTopBrandStripItems(brands: BrandLike[]): HomepageBrandItem[
         id: brand.id,
         name: brand.name,
         slug: brand.slug,
-        href: `${ROUTES.searchResults}?brand=${encodeURIComponent(brand.slug)}`,
+        href: brandPath(brand.slug),
         ...(logoUrl ? { logoUrl } : {}),
       },
     ];

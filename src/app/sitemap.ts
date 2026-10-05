@@ -1,5 +1,6 @@
 import { getAllProductSlugs, getCategories } from "@/services/catalogService";
 import { listPublicBlogSlugs } from "@/lib/server/blogService";
+import { loadBrandsWithCounts } from "@/lib/server/brandsPageLoader";
 
 export default async function sitemap() {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibemusic.in";
@@ -29,7 +30,14 @@ export default async function sitemap() {
     priority: path === "" ? 1 : 0.7,
   }));
 
-  const categories = await getCategories();
+  const [categories, brands] = await Promise.all([getCategories(), loadBrandsWithCounts()]);
+  const brandRoutes = brands.map((brand) => ({
+    url: `${base}/brands/${brand.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.75,
+  }));
+
   const categoryRoutes = categories.map((category) => ({
     url: `${base}/category/${category.slug}`,
     lastModified: new Date(),
@@ -53,5 +61,5 @@ export default async function sitemap() {
     priority: 0.65,
   }));
 
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes, ...blogRoutes];
+  return [...staticRoutes, ...brandRoutes, ...categoryRoutes, ...productRoutes, ...blogRoutes];
 }

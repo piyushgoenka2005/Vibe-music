@@ -9,7 +9,7 @@ import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { buildTopBrandStripItems } from "@/data/topBrandStrip";
 import { resolveProductCardImage } from "@/lib/product/resolveProductCardImage";
 import { getCategoryGridImage, hasCuratedCategoryImage } from "@/lib/categoryImages";
-import { categoryPath, productPath, ROUTES } from "@/lib/routes";
+import { brandPath, categoryPath, productPath, ROUTES } from "@/lib/routes";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import {
   getSectionByKey,
@@ -309,7 +309,7 @@ async function resolveBrands(
         id: brand.id,
         name: item.customTitle || brand.name,
         slug: brand.slug,
-        href: item.customHref || `/search/results?brand=${encodeURIComponent(brand.slug)}`,
+        href: item.customHref || brandPath(brand.slug),
         logoUrl: item.customImage || getBrandLogoUrl(brand.slug),
       });
     }
@@ -334,7 +334,7 @@ async function resolveBrands(
     id: brand.id,
     name: brand.name,
     slug: brand.slug,
-    href: `/search/results?brand=${encodeURIComponent(brand.slug)}`,
+    href: brandPath(brand.slug),
     logoUrl: getBrandLogoUrl(brand.slug),
   }));
 }

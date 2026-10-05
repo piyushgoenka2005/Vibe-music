@@ -1,6 +1,8 @@
 "use client";
 
 import { ANALYTICS_CONSENT_KEY, getGaMeasurementId } from "@/lib/analytics/config";
+import { isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
+import { grantMetaConsent, revokeMetaConsent } from "@/lib/analytics/metaEvents";
 import type { Ga4EcommerceParams, Ga4EventName } from "@/lib/analytics/types";
 
 declare global {
@@ -18,12 +20,14 @@ function gtag(...args: unknown[]): void {
 }
 
 export function grantAnalyticsConsent(): void {
+  const adGranted = isMetaPixelConfigured();
   gtag("consent", "update", {
     analytics_storage: "granted",
-    ad_storage: "denied",
-    ad_user_data: "denied",
-    ad_personalization: "denied",
+    ad_storage: adGranted ? "granted" : "denied",
+    ad_user_data: adGranted ? "granted" : "denied",
+    ad_personalization: adGranted ? "granted" : "denied",
   });
+  if (adGranted) grantMetaConsent();
 }
 
 export function denyAnalyticsConsent(): void {
@@ -33,6 +37,7 @@ export function denyAnalyticsConsent(): void {
     ad_user_data: "denied",
     ad_personalization: "denied",
   });
+  if (isMetaPixelConfigured()) revokeMetaConsent();
 }
 
 export function setAnalyticsUserId(userId: string | null): void {

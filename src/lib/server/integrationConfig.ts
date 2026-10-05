@@ -7,6 +7,7 @@ import {
   isDemoPaymentsAllowed,
 } from "@/lib/server/env";
 import { isClientAnalyticsConfigured, isServerAnalyticsConfigured } from "@/lib/analytics/config";
+import { isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
 import { isGooglePlacesConfigured } from "@/lib/server/googlePlaces";
 import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
 import {
@@ -44,6 +45,7 @@ export interface IntegrationChecks {
   guestOrderSecret: IntegrationStatus;
   analyticsClient: IntegrationStatus;
   analyticsServer: IntegrationStatus;
+  metaPixel: IntegrationStatus;
   gstin: IntegrationStatus;
   sms: IntegrationStatus;
   whatsapp: IntegrationStatus;
@@ -100,6 +102,7 @@ export function getIntegrationChecks(): IntegrationChecks {
       : isClientAnalyticsConfigured()
         ? "partial"
         : "missing",
+    metaPixel: isMetaPixelConfigured() ? "ok" : "missing",
     gstin: gstinComplianceStatus(),
     sms: smsChannelStatus(),
     whatsapp: whatsappChannelStatus(),
@@ -227,6 +230,13 @@ export function getOpsStatusReport(): {
       tier: "recommended",
       detail:
         "GA_MEASUREMENT_API_SECRET — Measurement Protocol for purchase dedupe when clients block scripts",
+    },
+    {
+      key: "metaPixel",
+      label: "Meta Pixel (Facebook / Instagram ads)",
+      status: checks.metaPixel,
+      tier: "recommended",
+      detail: "NEXT_PUBLIC_META_PIXEL_ID — Events Manager → Data sources → Web",
     },
     {
       key: "gstin",
