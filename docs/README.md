@@ -4,10 +4,11 @@ Essential references for **ViBE Music** (`vibemusic.in`). Deploy and env setup l
 
 ## Core
 
-| Doc                                          | Purpose                     |
-| -------------------------------------------- | --------------------------- |
-| [ARCHITECTURE.md](ARCHITECTURE.md)           | System design               |
-| [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md) | Production incident runbook |
+| Doc                                                                        | Purpose                                      |
+| -------------------------------------------------------------------------- | -------------------------------------------- |
+| [ARCHITECTURE.md](ARCHITECTURE.md)                                         | System design                                |
+| [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md)                               | Production incident runbook                  |
+| [Vibe_Music_Meta_Pixel_CAPI_Setup.md](Vibe_Music_Meta_Pixel_CAPI_Setup.md) | Meta Pixel + CAPI (Facebook / Instagram ads) |
 
 ## Operations
 
