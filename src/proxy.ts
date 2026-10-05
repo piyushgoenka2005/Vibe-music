@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { getProtectedLoginRedirectUrl, isProtectedRoute } from "@/lib/auth/protected-routes";
 import { hasAuthSessionCookie } from "@/lib/auth/session-cookie";
 import { resolveLegacyPath } from "@/lib/routes";
+import { resolveAdLandingRedirect } from "@/lib/seo/adLanding";
 import { edgeCheckRateLimit } from "@/lib/security/edge-rate-limit";
 import { API_SECURITY_HEADERS } from "@/lib/security/headers";
 import {
@@ -154,6 +155,11 @@ export async function proxy(request: NextRequest) {
   const resolved = resolveLegacyPath(pathname);
   if (resolved) {
     return NextResponse.redirect(new URL(resolved, request.url));
+  }
+
+  const adLanding = resolveAdLandingRedirect(pathname, request.nextUrl.searchParams);
+  if (adLanding) {
+    return NextResponse.redirect(new URL(adLanding, request.url), 308);
   }
 
   if (pathname.startsWith("/api/")) {

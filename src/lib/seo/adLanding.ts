@@ -51,6 +51,34 @@ export function resolveSearchPageRedirect(params: { brand?: string }): string | 
   return brandPath(brand);
 }
 
+/** Edge-safe redirect for legacy ad URLs (`?brand=` on /brands, /search, /search/results). */
+export function resolveAdLandingRedirect(
+  pathname: string,
+  searchParams: URLSearchParams,
+): string | null {
+  const params: SearchLandingParams = {
+    q: searchParams.get("q") ?? undefined,
+    category: searchParams.get("category") ?? undefined,
+    subcategory: searchParams.get("subcategory") ?? undefined,
+    brand: searchParams.get("brand") ?? undefined,
+  };
+
+  if (pathname === "/brands" && params.brand) {
+    const brand = firstCsv(params.brand);
+    return brand ? brandPath(brand) : null;
+  }
+
+  if (pathname === "/search") {
+    return resolveSearchPageRedirect(params);
+  }
+
+  if (pathname === "/search/results") {
+    return resolveSearchResultsRedirect(params);
+  }
+
+  return null;
+}
+
 export function buildSearchQueryMetadata(
   query: string,
   options?: { productCount?: number; imageUrl?: string },

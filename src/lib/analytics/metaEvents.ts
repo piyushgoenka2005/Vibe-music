@@ -69,12 +69,15 @@ export function trackMetaViewContent(product: Product): void {
 
 export function trackMetaViewItemList(listName: string, products: Product[]): void {
   if (!canTrackMeta() || products.length === 0) return;
-  const ids = products.slice(0, 30).map((product) => product.id);
+  const slice = products.slice(0, 30);
+  const ids = slice.map((product) => product.id);
+  const value = slice.reduce((sum, product) => sum + product.price, 0);
   const eventId = metaViewListEventId(listName, ids);
   trackWithDedup("ViewContent", eventId, {
     content_name: listName,
     content_ids: ids,
     content_type: "product",
+    value,
     currency: "INR",
   });
 }
