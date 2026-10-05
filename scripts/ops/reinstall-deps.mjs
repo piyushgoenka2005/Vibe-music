@@ -27,8 +27,17 @@ function run(command, options = {}) {
 
 function stopNodeProcesses() {
   if (!isWindows) return;
-  log("Stopping Node processes (release file locks)");
-  spawnSync("taskkill", ["/F", "/IM", "node.exe"], { stdio: "ignore" });
+  const selfPid = process.pid;
+  log("Stopping other Node processes (release file locks)");
+  spawnSync(
+    "powershell",
+    [
+      "-NoProfile",
+      "-Command",
+      `Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Id -ne ${selfPid} } | Stop-Process -Force -ErrorAction SilentlyContinue`,
+    ],
+    { stdio: "ignore" },
+  );
   execSync("node -e \"setTimeout(()=>{},2000)\"", { stdio: "ignore" });
 }
 
