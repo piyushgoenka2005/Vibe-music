@@ -9,6 +9,7 @@ Essential references for **ViBE Music** (`vibemusic.in`). Deploy and env setup l
 | [ARCHITECTURE.md](ARCHITECTURE.md)                                         | System design                                |
 | [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md)                               | Production incident runbook                  |
 | [Vibe_Music_Meta_Pixel_CAPI_Setup.md](Vibe_Music_Meta_Pixel_CAPI_Setup.md) | Meta Pixel + CAPI (Facebook / Instagram ads) |
+| [META_PIXEL_DEPLOY_READY.md](META_PIXEL_DEPLOY_READY.md)                   | Meta Pixel deploy checklist (operator steps) |
 
 ## Operations
 

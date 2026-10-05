@@ -75,6 +75,7 @@
     "verify:meta-pixel": "npx tsx --env-file=.env.local scripts/ops/verify-meta-pixel.mts",
     "verify:meta-pixel:prod": "npx tsx --env-file=.env scripts/ops/verify-meta-pixel.mts",
     "verify:meta-integration": "npx tsx --env-file=.env.local scripts/ops/verify-meta-integration.mts",
+    "verify:meta-deploy-ready": "npx tsx scripts/ops/verify-meta-deploy-ready.mts",
     "verify:prod-signoff": "npx tsx scripts/ops/prod-signoff.mts",
     "verify:readiness": "npx tsx scripts/ops/verify-readiness-scorecard.mts",
     "phase8:status": "npx tsx scripts/ops/phase8-deploy-status.mts",

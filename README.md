@@ -312,15 +312,16 @@ docs/
 
 ## Meta Pixel + Conversions API (Facebook / Instagram ads)
 
-Implementation is **complete** in code. Configure credentials from Meta Events Manager, then:
+Implementation is **deployment-ready** on `main`. Pre-flight:
 
 ```bash
-cp .env.local.example .env.local   # add Pixel ID, CAPI token, domain verification
-npm run dev                        # restart after editing .env.local
-npm run verify:meta-integration
+npm run verify:meta-deploy-ready
 ```
 
-Full setup, event reference, and Events Manager QA: **[docs/Vibe_Music_Meta_Pixel_CAPI_Setup.md](docs/Vibe_Music_Meta_Pixel_CAPI_Setup.md)**.
+Local dev: copy `.env.local.example` → `.env.local`, add Meta credentials, restart `npm run dev`, then `npm run verify:meta-integration`.
+
+Deploy checklist: **[docs/META_PIXEL_DEPLOY_READY.md](docs/META_PIXEL_DEPLOY_READY.md)**  
+Full reference: **[docs/Vibe_Music_Meta_Pixel_CAPI_Setup.md](docs/Vibe_Music_Meta_Pixel_CAPI_Setup.md)**
 
 Canonical Gibraltar ad URL: `https://vibemusic.in/brands/gibraltar`
 

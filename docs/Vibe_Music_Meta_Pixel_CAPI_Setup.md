@@ -1,26 +1,28 @@
 # Vibe Music — Meta Pixel & Conversions API Setup
 
-## Status: implementation 100% complete
+## Status: deployment-ready (code 100% complete)
 
-All developer work for Meta Pixel + Conversions API is **done and merged to `main`**.  
-Remaining steps are **configuration only** (Meta Business credentials + env vars).
+All application work is **done on `main`**. No further code changes are required before deploy.
 
-| Component                    | Status | Notes                                                         |
-| ---------------------------- | ------ | ------------------------------------------------------------- |
-| Browser Meta Pixel           | ✅     | `MetaPixelScripts` + `MetaRouteTracker` in `layout.tsx`       |
-| PageView                     | ✅     | SPA route changes + initial load via `trackMetaPageView`      |
-| ViewContent                  | ✅     | Product PDP + brand/list pages                                |
-| AddToCart                    | ✅     | Cart store via `events.ts`                                    |
-| InitiateCheckout             | ✅     | Checkout page via `trackBeginCheckout`                        |
-| Purchase (browser)           | ✅     | Checkout success page                                         |
-| Conversions API (CAPI)       | ✅     | `metaCapi.ts` + `/api/analytics/meta` relay                   |
-| Purchase (server)            | ✅     | `orderPaymentService` on payment capture                      |
-| `event_id` deduplication     | ✅     | Shared IDs on Pixel + CAPI (Purchase uses `order.id`)         |
-| Domain verification meta tag | ✅     | `NEXT_PUBLIC_META_DOMAIN_VERIFICATION` in `site.ts`           |
-| Gibraltar landing            | ✅     | `/brands/gibraltar` (canonical); `?brand=gibraltar` redirects |
-| Unit + integration tests     | ✅     | `npm run verify:meta-integration`                             |
-| Operator: Meta credentials   | ⏳     | Events Manager → Pixel ID + CAPI token + domain tag           |
-| Operator: env vars           | ⏳     | `.env.local` (dev) or `deploy/ops-secrets.env` (production)   |
+**Pre-deploy check:** `npm run verify:meta-deploy-ready`  
+**Deploy checklist:** [META_PIXEL_DEPLOY_READY.md](./META_PIXEL_DEPLOY_READY.md)
+
+| Component                    | Status | Notes                                                    |
+| ---------------------------- | ------ | -------------------------------------------------------- |
+| Browser Meta Pixel           | ✅     | `MetaPixelScripts` + `MetaRouteTracker` in `layout.tsx`  |
+| PageView                     | ✅     | SPA route changes + initial load via `trackMetaPageView` |
+| ViewContent                  | ✅     | Product PDP + brand/list pages (with `value` on lists)   |
+| AddToCart                    | ✅     | Cart store via `events.ts`                               |
+| InitiateCheckout             | ✅     | Checkout page via `trackBeginCheckout`                   |
+| Purchase (browser)           | ✅     | Checkout success page                                    |
+| Conversions API (CAPI)       | ✅     | `metaCapi.ts` + `/api/analytics/meta` relay              |
+| Purchase (server)            | ✅     | `orderPaymentService` on payment capture                 |
+| `event_id` deduplication     | ✅     | Shared IDs on Pixel + CAPI (Purchase uses `order.id`)    |
+| Domain verification meta tag | ✅     | `NEXT_PUBLIC_META_DOMAIN_VERIFICATION` in `site.ts`      |
+| Gibraltar landing            | ✅     | `/brands/gibraltar` + edge 308 redirects for `?brand=`   |
+| Tests + verify scripts       | ✅     | `verify:meta-deploy-ready`, `verify:meta-integration`    |
+| Operator: Meta credentials   | ⏳     | Events Manager → Pixel ID + CAPI token + domain tag      |
+| Operator: env + deploy       | ⏳     | `deploy/ops-secrets.env` → `bash deploy/update.sh`       |
 
 Until `NEXT_PUBLIC_META_PIXEL_ID` is set and the dev server restarted, Chrome DevTools will show:
 
