@@ -9,13 +9,22 @@ export const SITE_EMAIL = BRAND.email;
 const googleSiteVerification =
   process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim() || undefined;
 
+/** Meta Business Manager domain verification token (content= value). */
+const metaDomainVerification =
+  process.env.NEXT_PUBLIC_META_DOMAIN_VERIFICATION?.trim() || undefined;
+
+const siteVerification = {
+  ...(googleSiteVerification ? { google: googleSiteVerification } : {}),
+  ...(metaDomainVerification
+    ? { other: { "facebook-domain-verification": metaDomainVerification } }
+    : {}),
+};
+
 export const DEFAULT_METADATA = {
   title: `${BRAND.name}: Musical Instruments, Pro Audio, Accessories & More`,
   description: BRAND.description,
   metadataBase: new URL(BRAND.siteUrl),
-  verification: googleSiteVerification
-    ? { google: googleSiteVerification }
-    : undefined,
+  verification: Object.keys(siteVerification).length > 0 ? siteVerification : undefined,
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },

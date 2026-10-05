@@ -9,6 +9,7 @@ import {
   sendServerPurchaseEvent,
   sendServerRefundEvent,
 } from "@/lib/analytics/measurementProtocol";
+import { sendServerMetaPurchaseEvent } from "@/lib/analytics/metaCapi";
 import {
   findOrderByRazorpayOrderId as findOrderByRazorpayOrderIdFromStore,
   findOrderByRazorpayPaymentId as findOrderByRazorpayPaymentIdFromStore,
@@ -203,6 +204,7 @@ export async function completeOrderPayment(input: {
     },
   }).catch(() => undefined);
   void sendServerPurchaseEvent(result.order);
+  void sendServerMetaPurchaseEvent(result.order);
 
   return result;
 }

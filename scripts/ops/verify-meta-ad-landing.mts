@@ -117,10 +117,20 @@ async function main() {
         checks.push(fail("brand:meta-pixel-script", "fbevents.js not in HTML"));
       }
 
-      if (isMetaPixelConfigured() && brandPage.html.includes("fbq('init'")) {
-        checks.push(pass("brand:meta-pixel-init", "fbq init present"));
+      const pixelId = getMetaPixelId();
+      if (pixelId && brandPage.html.includes(`fbq('init', '${pixelId}')`)) {
+        checks.push(pass("brand:meta-pixel-init", `fbq init with ${pixelId}`));
       } else if (isMetaPixelConfigured()) {
-        checks.push(fail("brand:meta-pixel-init", "fbq init missing from HTML"));
+        checks.push(fail("brand:meta-pixel-init", "fbq init missing or wrong Pixel ID"));
+      }
+
+      const domainToken = process.env.NEXT_PUBLIC_META_DOMAIN_VERIFICATION?.trim();
+      if (domainToken && brandPage.html.includes('name="facebook-domain-verification"')) {
+        checks.push(pass("brand:domain-verification", "facebook-domain-verification meta tag"));
+      } else if (domainToken) {
+        checks.push(
+          fail("brand:domain-verification", "domain verification meta tag missing", false),
+        );
       }
     }
 

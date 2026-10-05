@@ -9,6 +9,7 @@ import {
 } from "@/lib/analytics/items";
 import {
   trackMetaAddToCart,
+  trackMetaInitiateCheckout,
   trackMetaPurchase,
   trackMetaViewContent,
   trackMetaViewItemList,
@@ -99,6 +100,7 @@ export function trackViewCart(lines: CartAnalyticsLine[]): void {
 }
 
 export function trackBeginCheckout(lines: CartAnalyticsLine[], coupon?: string): void {
+  trackMetaInitiateCheckout(lines);
   if (!canTrack() || lines.length === 0) return;
   trackGaEcommerce("begin_checkout", {
     currency: "INR",

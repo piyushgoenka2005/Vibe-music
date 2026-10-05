@@ -39,6 +39,10 @@ vi.mock("@/lib/analytics/measurementProtocol", () => ({
   sendServerRefundEvent: vi.fn(),
 }));
 
+vi.mock("@/lib/analytics/metaCapi", () => ({
+  sendServerMetaPurchaseEvent: vi.fn(),
+}));
+
 import {
   completeOrderPayment,
   failOrderPayment,

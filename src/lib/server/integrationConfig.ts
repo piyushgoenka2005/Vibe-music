@@ -8,6 +8,7 @@ import {
 } from "@/lib/server/env";
 import { isClientAnalyticsConfigured, isServerAnalyticsConfigured } from "@/lib/analytics/config";
 import { isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
+import { isMetaCapiConfigured } from "@/lib/analytics/metaCapi";
 import { isGooglePlacesConfigured } from "@/lib/server/googlePlaces";
 import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
 import {
@@ -46,6 +47,7 @@ export interface IntegrationChecks {
   analyticsClient: IntegrationStatus;
   analyticsServer: IntegrationStatus;
   metaPixel: IntegrationStatus;
+  metaCapi: IntegrationStatus;
   gstin: IntegrationStatus;
   sms: IntegrationStatus;
   whatsapp: IntegrationStatus;
@@ -103,6 +105,7 @@ export function getIntegrationChecks(): IntegrationChecks {
         ? "partial"
         : "missing",
     metaPixel: isMetaPixelConfigured() ? "ok" : "missing",
+    metaCapi: isMetaCapiConfigured() ? "ok" : isMetaPixelConfigured() ? "partial" : "missing",
     gstin: gstinComplianceStatus(),
     sms: smsChannelStatus(),
     whatsapp: whatsappChannelStatus(),
@@ -237,6 +240,14 @@ export function getOpsStatusReport(): {
       status: checks.metaPixel,
       tier: "recommended",
       detail: "NEXT_PUBLIC_META_PIXEL_ID — Events Manager → Data sources → Web",
+    },
+    {
+      key: "metaCapi",
+      label: "Meta Conversions API",
+      status: checks.metaCapi,
+      tier: "recommended",
+      detail:
+        "META_CAPI_ACCESS_TOKEN (+ Pixel ID) — server Purchase + browser relay via /api/analytics/meta",
     },
     {
       key: "gstin",

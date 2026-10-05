@@ -50,14 +50,20 @@ Storefront ad landing URLs and Open Graph metadata are served from canonical rou
 Legacy `?brand=` links redirect automatically.
 
 1. **Events Manager** → Data sources → Web → copy **Pixel ID** (numeric).
-2. On the VPS, add to `deploy/ops-secrets.env`:
+2. **Events Manager** → Pixel → Settings → **Conversions API** → generate **Access token**.
+3. **Business Settings** → Domains → Add `vibemusic.in` → Meta tag → copy `content=` token.
+4. On the VPS, add to `deploy/ops-secrets.env`:
    ```bash
    NEXT_PUBLIC_META_PIXEL_ID=<pixel-id>
+   META_CAPI_ACCESS_TOKEN=<capi-token>
+   NEXT_PUBLIC_META_DOMAIN_VERIFICATION=<domain-token>
+   # optional QA: META_TEST_EVENT_CODE=<test-events-code>
    ```
-3. Redeploy: `bash deploy/update.sh`
-4. Verify:
+5. Redeploy: `bash deploy/update.sh`
+6. Verify:
    ```bash
+   npm run verify:meta-pixel:prod
    npm run verify:meta-ad-landing:prod
    ```
-5. In **Meta Sharing Debugger**, scrape `https://vibemusic.in/brands/gibraltar` and your product URL.
-6. Update Instagram ad destination to `https://vibemusic.in/brands/gibraltar` (not `?brand=` query URLs).
+7. In **Meta Sharing Debugger**, scrape `https://vibemusic.in/brands/gibraltar` and your product URL.
+8. Update Instagram ad destination to `https://vibemusic.in/brands/gibraltar` (not `?brand=` query URLs).
