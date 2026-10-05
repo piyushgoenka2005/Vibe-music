@@ -47,12 +47,15 @@ git pull --ff-only origin main
 bash deploy/update.sh
 ```
 
-If `npm ci` fails:
+If `npm ci` fails with OpenTelemetry / lockfile drift:
 
 ```bash
+git pull --ff-only origin main   # ensure latest package-lock.json (npm 10 compatible)
 bash deploy/repair-deps.sh
 bash deploy/update.sh SKIP_PULL=1
 ```
+
+Local check before push: `npm run verify:lockfile`
 
 ---
 

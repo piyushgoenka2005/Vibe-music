@@ -21,8 +21,10 @@ else
   warn "pm2 not in PATH — ensure no Node process is using node_modules"
 fi
 
-log "Resetting package manifests from git"
+log "Resetting package manifests from git (discard local drift)"
+git fetch origin main 2>/dev/null || true
 git checkout -- package-lock.json package.json 2>/dev/null || true
+git reset --hard HEAD -- package-lock.json package.json 2>/dev/null || true
 
 if [[ -d node_modules ]]; then
   log "Removing node_modules"
@@ -39,7 +41,14 @@ if [[ -d node_modules ]]; then
 fi
 
 log "Clean install (npm ci)"
-npm ci --no-audit --no-fund
+if ! npm ci --no-audit --no-fund; then
+  warn "npm ci failed — ensure latest main is pulled: git pull --ff-only origin main"
+  warn "retrying after hard reset of package manifests"
+  git reset --hard HEAD -- package-lock.json package.json 2>/dev/null || true
+  if ! npm ci --no-audit --no-fund; then
+    die "npm ci still failing — run: git pull --ff-only origin main && bash deploy/repair-deps.sh"
+  fi
+fi
 
 log "Verify Next.js install integrity"
 node scripts/ops/verify-node-modules.mjs

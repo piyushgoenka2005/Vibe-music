@@ -43,6 +43,7 @@
     "publish:independence-banner": "npx tsx --env-file=.env scripts/ops/publish-independence-banner.mts",
     "deploy:update": "bash deploy/update.sh",
     "deploy:repair-deps": "bash deploy/repair-deps.sh",
+    "reinstall:deps": "node scripts/ops/reinstall-deps.mjs",
     "deploy:certify": "bash deploy/production.sh certify",
     "deploy:rollback": "bash deploy/production.sh rollback",
     "migrate:brand": "node scripts/legacy/migrate-brand.mjs && node scripts/legacy/migrate-content-brand.mjs",
@@ -76,6 +77,7 @@
     "verify:meta-pixel:prod": "npx tsx --env-file=.env scripts/ops/verify-meta-pixel.mts",
     "verify:meta-integration": "npx tsx --env-file=.env.local scripts/ops/verify-meta-integration.mts",
     "verify:meta-deploy-ready": "npx tsx scripts/ops/verify-meta-deploy-ready.mts",
+    "verify:lockfile": "node scripts/ops/verify-package-lock.mjs",
     "verify:prod-signoff": "npx tsx scripts/ops/prod-signoff.mts",
     "verify:readiness": "npx tsx scripts/ops/verify-readiness-scorecard.mts",
     "phase8:status": "npx tsx scripts/ops/phase8-deploy-status.mts",
@@ -214,6 +216,9 @@
   "overrides": {
     "@opentelemetry/instrumentation": "0.220.0",
     "@opentelemetry/api-logs": "0.220.0"
+  },
+  "engines": {
+    "node": ">=20.19.0 <23.0.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

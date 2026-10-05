@@ -12,6 +12,8 @@ const requiredPaths = [
   "node_modules/next/package.json",
   "node_modules/next/dist/bin/next",
   "node_modules/next/dist/compiled/jest-worker/processChild.js",
+  "node_modules/@swc/helpers/package.json",
+  "node_modules/@next/env/package.json",
 ];
 
 const missing = requiredPaths.filter((rel) => !fs.existsSync(path.join(root, rel)));
