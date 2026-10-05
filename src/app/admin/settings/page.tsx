@@ -8,7 +8,12 @@ import AdminShell from "@/components/admin/AdminShell";
 import AdminOpsStatusPanel from "@/components/admin/AdminOpsStatusPanel";
 import AdminTwoFactorPanel from "@/components/admin/AdminTwoFactorPanel";
 import { LoadingState } from "@/components/admin/AdminUi";
-import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
+import {
+  ErrorState,
+  MutationError,
+  adminFetchJson,
+  adminMutateJson,
+} from "@/components/admin/AdminQueryState";
 import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
 import { ROUTES } from "@/lib/routes";
 import type { AdminSession, StoreSettings } from "@/types/admin";
@@ -26,9 +31,7 @@ function SettingsContent({
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-settings"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/settings");
-      if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{ settings: StoreSettings }>;
+      return adminFetchJson<{ settings: StoreSettings }>("/api/admin/settings");
     },
   });
 
@@ -36,12 +39,11 @@ function SettingsContent({
 
   const saveMutation = useMutation({
     mutationFn: async (settings: StoreSettings) => {
-      const res = await fetch("/api/admin/settings", {
+      await adminMutateJson("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       });
-      if (!res.ok) throw new Error("Save failed");
     },
     onSuccess: () => {
       setSaved(true);

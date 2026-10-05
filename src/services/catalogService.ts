@@ -27,6 +27,12 @@ import { cleanProductName } from "@/lib/product/cleanProductName";
 import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import { mergeProductSpecs } from "@/lib/product/productSpecs";
 import {
+  deriveSubcategoryFromSpecs,
+  resolveProductSubcategory,
+  type SubcategoryCandidate,
+} from "@/lib/product/resolveProductSubcategory";
+import { getSubcategoryCandidatesForCategory } from "@/lib/server/taxonomyRepository";
+import {
   resolveProductCardImage,
   resolveProductGalleryUrls,
 } from "@/lib/product/resolveProductCardImage";
@@ -39,6 +45,7 @@ import {
 import { buildProductSlug, normalizeProductSlug, slugify } from "@/lib/slug";
 import {
   batchDeleteProducts as fsBatchDelete,
+  batchUpdateProductSubcategories,
   batchUpdateProducts as fsBatchUpdate,
   batchWriteProducts,
   fetchAllProducts as fetchAllProductsFromDb,
@@ -59,7 +66,11 @@ import {
   writeProduct,
 } from "@/lib/server/storeCatalogRepository";
 import { isPostgresConfigured } from "@/lib/db/postgresConfig";
-import { getCachedCategories, getCachedProducts } from "@/lib/server/catalogSnapshotCache";
+import {
+  getCachedCategories,
+  getCachedHomepageProducts,
+  getCachedProducts,
+} from "@/lib/server/catalogSnapshotCache";
 import { isJsonCatalogFallbackAllowed } from "@/lib/server/prisma/catalogRepository";
 import {
   recordInventoryLogEntries,
@@ -384,7 +395,13 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
     brandSlug: catalogProduct.brandSlug,
     category: catalogProduct.category,
     categorySlug: catalogProduct.categorySlug,
-    subcategory: catalogProduct.subcategory,
+    subcategory:
+      catalogProduct.subcategory?.trim() ||
+      deriveSubcategoryFromSpecs(
+        catalogProduct.specifications,
+        catalogProduct.detail?.specs,
+        catalogProduct.category,
+      ),
     price: catalogProduct.price,
     originalPrice:
       catalogProduct.originalPrice > catalogProduct.price
@@ -397,6 +414,7 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
     condition: catalogProduct.condition,
     imageColor: catalogProduct.imageColor,
     image: resolvedImage.src,
+    imageFallback: resolvedImage.fallbackSrc,
     requiresVariantSelection: variantCount > 1,
     filterSpecs: extractListingFilterSpecs(catalogProduct.specifications),
   };
@@ -427,52 +445,51 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
           ...(src ? { src } : {}),
         }));
 
-  const allowedGalleryUrls = new Set(
-    resolveProductGalleryUrls({
-      slug: catalogProduct.slug,
-      category: catalogProduct.category,
-      image: catalogProduct.image,
-      images: catalogProduct.images,
-    }),
-  );
+  const orderedGalleryUrls = resolveProductGalleryUrls({
+    slug: catalogProduct.slug,
+    category: catalogProduct.category,
+    image: catalogProduct.image,
+    images: catalogProduct.images,
+  });
 
-  const gallery: ProductImage[] = rawGallery
-    .map((img: unknown, index: number) => {
-      const candidate = img as {
-        id?: string;
-        alt?: string;
-        color?: string;
-        src?: unknown;
-        url?: unknown;
-      };
-      const rawSrc =
-        typeof candidate === "string"
-          ? candidate
-          : typeof candidate?.src === "string"
-            ? candidate.src
-            : typeof candidate?.url === "string"
-              ? candidate.url
-              : "";
-      const cleanSrc = rawSrc && rawSrc !== "[object Object]" ? rawSrc : "";
-      return {
-        id: candidate?.id || `img-${index}`,
-        alt: candidate?.alt || `${catalogProduct.name} view ${index + 1}`,
-        color: candidate?.color || catalogProduct.imageColor,
-        ...(cleanSrc ? { src: cleanSrc } : {}),
-      };
-    })
-    .filter((img) => Boolean(img.src && allowedGalleryUrls.has(img.src)));
+  const rawGalleryBySrc = new Map<string, ProductImage>();
+  rawGallery.forEach((img: unknown, index: number) => {
+    const candidate = img as {
+      id?: string;
+      alt?: string;
+      color?: string;
+      src?: unknown;
+      url?: unknown;
+    };
+    const rawSrc =
+      typeof candidate === "string"
+        ? candidate
+        : typeof candidate?.src === "string"
+          ? candidate.src
+          : typeof candidate?.url === "string"
+            ? candidate.url
+            : "";
+    const cleanSrc = rawSrc && rawSrc !== "[object Object]" ? rawSrc : "";
+    if (!cleanSrc) return;
+    rawGalleryBySrc.set(cleanSrc, {
+      id: candidate?.id || `img-${index}`,
+      alt: candidate?.alt || `${catalogProduct.name} view ${index + 1}`,
+      color: candidate?.color || catalogProduct.imageColor,
+      src: cleanSrc,
+    });
+  });
 
-  if (gallery.length === 0) {
-    for (const src of allowedGalleryUrls) {
-      gallery.push({
-        id: `img-${gallery.length}`,
-        alt: `${catalogProduct.name} view ${gallery.length + 1}`,
+  const gallery: ProductImage[] = orderedGalleryUrls.map((src, index) => {
+    const existing = rawGalleryBySrc.get(src);
+    return (
+      existing ?? {
+        id: `img-${index}`,
+        alt: `${catalogProduct.name} view ${index + 1}`,
         color: catalogProduct.imageColor,
         src,
-      });
-    }
-  }
+      }
+    );
+  });
 
   return {
     ...toProduct(catalogProduct),
@@ -541,6 +558,42 @@ async function fetchCatalogSnapshot(includeInactive = false): Promise<CatalogPro
     }
     if (allowJsonFallback) {
       return loadLocalCatalogSnapshot(includeInactive);
+    }
+    throw error;
+  }
+}
+
+/** Lean active catalog for text search — skips description/specs/detail JSON blobs. */
+async function fetchSearchCatalogSnapshot(includeInactive = false): Promise<CatalogProduct[]> {
+  if (includeInactive) {
+    return fetchCatalogSnapshot(true);
+  }
+
+  if (isCatalogUnavailable()) {
+    return loadLocalCatalogSnapshot(false);
+  }
+
+  const postgresConfigured = isPostgresConfigured();
+  const allowJsonFallback = isJsonCatalogFallbackAllowed();
+
+  try {
+    const products = await getCachedHomepageProducts();
+    if (postgresConfigured || products.length > 0) {
+      return products;
+    }
+    if (allowJsonFallback) {
+      const local = await loadLocalCatalogSnapshot(false);
+      if (local.length > 0) return local;
+    }
+    return products;
+  } catch (error) {
+    if (postgresConfigured) {
+      const { fetchHomepageCatalogProducts } =
+        await import("@/lib/server/prisma/catalogRepository");
+      return fetchHomepageCatalogProducts();
+    }
+    if (allowJsonFallback) {
+      return loadLocalCatalogSnapshot(false);
     }
     throw error;
   }
@@ -955,7 +1008,7 @@ export async function searchProducts(options: ProductSearchOptions = {}): Promis
     }
   }
 
-  const source = await fetchCatalogSnapshot(includeInactive);
+  const source = await fetchSearchCatalogSnapshot(includeInactive);
   return searchInCatalogProducts(source, options);
 }
 
@@ -964,14 +1017,11 @@ export async function getBrands(): Promise<Brand[]> {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const categories = await getCachedCategories();
-  const products = await fetchCatalogSnapshot(true);
-  const countBySlug = new Map<string, number>();
-
-  for (const product of products) {
-    if (product.status !== "active") continue;
-    countBySlug.set(product.categorySlug, (countBySlug.get(product.categorySlug) ?? 0) + 1);
-  }
+  const { countActiveProductsByCategory } = await import("@/lib/server/prisma/catalogRepository");
+  const [categories, countBySlug] = await Promise.all([
+    getCachedCategories(),
+    countActiveProductsByCategory(),
+  ]);
 
   return categories.map((category) => ({
     ...category,
@@ -1023,7 +1073,10 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
   const now = new Date().toISOString();
   const stock = input.stock ?? 100;
   const originalPrice = input.originalPrice ?? input.price;
-  const primaryImage = input.image ?? input.images?.[0] ?? getProductImage(slug, category.name);
+  const primaryImage =
+    input.image?.trim() ||
+    input.images?.find((src) => src?.trim()) ||
+    getProductImage(slug, category.name);
 
   const baseSpecifications = {
     Manufacturer: input.brand,
@@ -1113,12 +1166,116 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
     };
   }
 
+  product.subcategory = resolveCatalogSubcategory(
+    product,
+    await loadSubcategoryCandidates(category, all),
+  );
+
   if (input.variants?.length) {
     const existingSkus = await fetchAllVariantSkus();
     return writeProduct(applyVariantsToProduct(product, input.variants, existingSkus));
   }
 
   return writeProduct(product);
+}
+
+async function loadSubcategoryCandidates(
+  category: { name: string; slug: string },
+  products: CatalogProduct[],
+  excludeProductId?: string,
+): Promise<SubcategoryCandidate[]> {
+  let configured: SubcategoryCandidate[] = [];
+  try {
+    configured = await getSubcategoryCandidatesForCategory(category);
+  } catch (error) {
+    console.error("[catalog] taxonomy subcategory lookup failed", error);
+  }
+  const fromSiblings = products
+    .filter(
+      (product) =>
+        product.id !== excludeProductId &&
+        product.categorySlug === category.slug &&
+        product.subcategory?.trim(),
+    )
+    .map((product) => ({ subcategory: product.subcategory.trim() }));
+  return [...configured, ...fromSiblings];
+}
+
+function resolveCatalogSubcategory(
+  product: CatalogProduct,
+  candidates: SubcategoryCandidate[],
+): string {
+  return resolveProductSubcategory({
+    subcategory: product.subcategory,
+    name: product.name,
+    categoryName: product.category,
+    specifications: product.specifications,
+    detailSpecs: product.detail?.specs,
+    candidates,
+  });
+}
+
+export interface SubcategoryBackfillResult {
+  scanned: number;
+  missing: number;
+  updated: number;
+  dryRun: boolean;
+  resolved: Array<{ id: string; slug: string; name: string; subcategory: string }>;
+  unresolved: Array<{ id: string; slug: string; name: string; category: string }>;
+}
+
+/** Fills empty subcategories on stored products using the same resolver as admin saves. */
+export async function backfillProductSubcategories(
+  options: { dryRun?: boolean } = {},
+): Promise<SubcategoryBackfillResult> {
+  const products = await fetchAllProductsFromDb(true);
+  const missing = products.filter((product) => !product.subcategory?.trim());
+  const candidatesByCategory = new Map<string, Promise<SubcategoryCandidate[]>>();
+  const resolved: SubcategoryBackfillResult["resolved"] = [];
+  const unresolved: SubcategoryBackfillResult["unresolved"] = [];
+
+  for (const product of missing) {
+    if (!candidatesByCategory.has(product.categorySlug)) {
+      candidatesByCategory.set(
+        product.categorySlug,
+        loadSubcategoryCandidates({ name: product.category, slug: product.categorySlug }, products),
+      );
+    }
+    const subcategory = resolveCatalogSubcategory(
+      product,
+      await candidatesByCategory.get(product.categorySlug)!,
+    );
+    if (subcategory) {
+      resolved.push({ id: product.id, slug: product.slug, name: product.name, subcategory });
+    } else {
+      unresolved.push({
+        id: product.id,
+        slug: product.slug,
+        name: product.name,
+        category: product.category,
+      });
+    }
+  }
+
+  let updated = 0;
+  if (!options.dryRun) {
+    for (let offset = 0; offset < resolved.length; offset += BULK_IMPORT_WRITE_BATCH_SIZE) {
+      updated += await batchUpdateProductSubcategories(
+        resolved
+          .slice(offset, offset + BULK_IMPORT_WRITE_BATCH_SIZE)
+          .map(({ id, subcategory }) => ({ id, subcategory })),
+      );
+    }
+  }
+
+  return {
+    scanned: products.length,
+    missing: missing.length,
+    updated,
+    dryRun: Boolean(options.dryRun),
+    resolved,
+    unresolved,
+  };
 }
 
 export async function updateProduct(
@@ -1163,9 +1320,14 @@ export async function updateProduct(
     patch.guitarSpecs,
   );
 
+  // Omitted fields arrive as `undefined` keys from partial admin saves; they must not erase stored values.
+  const definedPatch = Object.fromEntries(
+    Object.entries(patch).filter(([, value]) => value !== undefined),
+  ) as UpdateProductInput;
+
   const updated: CatalogProduct = {
     ...current,
-    ...patch,
+    ...definedPatch,
     slug: patch.slug ? slugify(patch.slug) : current.slug,
     category: category.name,
     categorySlug: category.slug,
@@ -1189,6 +1351,8 @@ export async function updateProduct(
   if (patch.images !== undefined) {
     updated.images = patch.images;
     updated.image = patch.images[0] ?? "";
+  } else if (!updated.image?.trim() && updated.images?.length) {
+    updated.image = updated.images[0] ?? "";
   }
 
   const all = await fetchAllProductsFromDb(true);
@@ -1297,6 +1461,15 @@ export async function updateProduct(
       gallery: buildGalleryFromImageUrls(updated),
     };
   }
+
+  const categoryChanged = category.slug !== current.categorySlug;
+  if (categoryChanged && patch.subcategory === undefined) {
+    updated.subcategory = "";
+  }
+  updated.subcategory = resolveCatalogSubcategory(
+    updated,
+    await loadSubcategoryCandidates(category, all, id),
+  );
 
   return writeProduct({ ...updated, id });
 }
@@ -1638,6 +1811,8 @@ export async function bulkImportProducts(
   let updatedCount = 0;
 
   const productsToCreate: CatalogProduct[] = [];
+  const existingProducts = createRows.length > 0 ? await fetchAllProductsFromDb(true) : [];
+  const candidatesByCategory = new Map<string, Promise<SubcategoryCandidate[]>>();
   for (const row of createRows) {
     const category =
       (row.resolvedCategorySlug ? categoryBySlug.get(row.resolvedCategorySlug) : undefined) ??
@@ -1647,9 +1822,18 @@ export async function bulkImportProducts(
       continue;
     }
     try {
-      productsToCreate.push(
-        buildBulkImportCatalogProduct(row, category, importOptions.publishStatus),
+      const product = buildBulkImportCatalogProduct(row, category, importOptions.publishStatus);
+      if (!candidatesByCategory.has(category.slug)) {
+        candidatesByCategory.set(
+          category.slug,
+          loadSubcategoryCandidates(category, [...existingProducts, ...productsToCreate]),
+        );
+      }
+      product.subcategory = resolveCatalogSubcategory(
+        product,
+        await candidatesByCategory.get(category.slug)!,
       );
+      productsToCreate.push(product);
     } catch (err) {
       runtimeFailures.push({
         ...row,
@@ -1719,7 +1903,7 @@ export async function bulkImportProducts(
         brand: row.brand.trim(),
         category: row.category.trim(),
         categorySlug: row.resolvedCategorySlug,
-        subcategory: row.subcategory?.trim() ?? "",
+        subcategory: row.subcategory?.trim() || undefined,
         price: Number(row.price),
         originalPrice: row.originalPrice ? Number(row.originalPrice) : undefined,
         stock: row.stock != null ? Number(row.stock) : stockDefault,

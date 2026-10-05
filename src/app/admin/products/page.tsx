@@ -10,7 +10,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
 import { StatusBadge, LoadingState, EmptyState, formatCurrency } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { ROUTES } from "@/lib/routes";
 import type { AdminCapabilities } from "@/lib/auth/adminCapabilities";
 import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
@@ -39,14 +39,12 @@ async function fetchProducts(params: {
   if (params.category) sp.set("category", params.category);
   if (params.stock) sp.set("stock", params.stock);
   if (params.cursor) sp.set("cursor", params.cursor);
-  const res = await fetch(`/api/admin/products?${sp}`);
-  if (!res.ok) throw new Error("Failed to load products");
-  return res.json() as Promise<{
+  return adminFetchJson<{
     products: AdminProduct[];
     total: number;
     hasMore: boolean;
     nextCursor?: string;
-  }>;
+  }>(`/api/admin/products?${sp}`);
 }
 
 function stockTone(product: AdminProduct): "ok" | "low" | "out" {
@@ -105,11 +103,9 @@ function ProductsContent({
   useQuery({
     queryKey: ["admin-categories"],
     queryFn: async () => {
-      const res = await fetch("/api/catalog/categories");
-      if (!res.ok) throw new Error("Failed to load categories");
-      const data = await res.json();
+      const data = await adminFetchJson<{ categories: Category[] }>("/api/catalog/categories");
       setCategories(data.categories ?? []);
-      return data.categories as Category[];
+      return data.categories;
     },
   });
 
@@ -159,12 +155,11 @@ function ProductsContent({
 
   const bulkMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
-      const res = await fetch("/api/admin/products/bulk", {
+      await adminMutateJson("/api/admin/products/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Bulk action failed");
       return payload;
     },
     onSuccess: (payload) => {
@@ -182,13 +177,9 @@ function ProductsContent({
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/products/${encodeURIComponent(id)}`, {
+      await adminMutateJson(`/api/admin/products/${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "Delete failed");
-      }
       return id;
     },
     onSuccess: (id) => {
@@ -226,12 +217,11 @@ function ProductsContent({
 
   const duplicateMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/products/${id}`, {
+      await adminMutateJson(`/api/admin/products/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "duplicate" }),
       });
-      if (!res.ok) throw new Error("Duplicate failed");
     },
     onSuccess: invalidate,
     onError: (err) => {

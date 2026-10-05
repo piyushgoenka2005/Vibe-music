@@ -1,9 +1,15 @@
 import { BIG_NAMES_DEALS } from "@/data/bigNamesDeals";
-import { getProductImage, isGenericProductPlaceholder } from "@/data/productImages";
 import { isCdnUrl } from "@/lib/cdnConfig";
+import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { productPath } from "@/lib/routes";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import { isNonInstrumentGuitarProduct } from "@/lib/product/productRelevance";
+import {
+  isFlatPackshotImageUrl,
+  pickBigNamesShowcaseImage,
+  resolveProductCardImage,
+  resolveProductGalleryUrls,
+} from "@/lib/product/resolveProductCardImage";
 import type { CatalogProduct } from "@/types/catalog";
 
 export const BIG_NAMES_DEALS_MAX_ITEMS = 5;
@@ -14,6 +20,7 @@ export interface BigNamesDealItem {
   href: string;
   logo: string;
   product: string;
+  productFallback?: string;
   productAlt: string;
   blendMultiply?: boolean;
 }
@@ -25,107 +32,68 @@ export function isBigNamesDealsGuitarProduct(product: CatalogProduct): boolean {
   return true;
 }
 
-function localProductImage(product: CatalogProduct): string {
-  const local = getProductImage(product.slug, product.category);
-  return local.startsWith("/images/") ? local : "";
+function usesShowcaseBlend(src: string): boolean {
+  return src.startsWith("/images/big-names-deals/");
 }
 
-export function resolveBigNamesDealSlot(options: {
-  dealKey?: string;
-  productSlug?: string;
-  slotIndex?: number;
-}): (typeof BIG_NAMES_DEALS)[number] | undefined {
-  return (
-    BIG_NAMES_DEALS.find((entry) => entry.key === options.dealKey) ??
-    BIG_NAMES_DEALS.find((entry) => entry.productSlug === options.productSlug) ??
-    (options.slotIndex != null ? BIG_NAMES_DEALS[options.slotIndex] : undefined)
-  );
-}
-
-/** Curated slot art for index — stable even when admin picks a different catalog SKU. */
-export function bigNamesShowcaseArtForSlot(slotIndex: number): string {
-  return (
-    BIG_NAMES_DEALS[slotIndex]?.product ??
-    BIG_NAMES_DEALS[slotIndex % BIG_NAMES_DEALS.length]?.product ??
-    "/images/New Guitar.png"
-  );
-}
-
-/** Showcase art must render offline — prefer curated slot art over catalog thumbnails. */
-export function resolveBigNamesShowcaseImage(
-  customImage: string | undefined,
-  deal: (typeof BIG_NAMES_DEALS)[number],
-  product?: CatalogProduct,
-): string {
-  const staticArt = deal.product;
-  const trimmed = customImage?.trim() ?? "";
-
-  if (!trimmed) return staticArt;
-  if (trimmed.startsWith("/images/")) {
-    if (isGenericProductPlaceholder(trimmed)) return staticArt;
-    const generic = product ? localProductImage(product) : "";
-    if (generic && trimmed === generic) return staticArt;
-    return trimmed;
+function resolveBigNamesProductImage(
+  product: CatalogProduct,
+  customImage?: string,
+): { src: string; fallbackSrc: string; blendMultiply: boolean } {
+  const input = {
+    slug: product.slug,
+    category: product.category,
+    image: customImage?.trim() || product.image,
+    images: product.images,
+  };
+  const resolved = resolveProductCardImage(input);
+  const gallery = resolveProductGalleryUrls(input);
+  let showcaseSrc =
+    pickBigNamesShowcaseImage(gallery) || resolved.src || gallery[0] || resolved.src;
+  // Gallery may omit CDN art when the upload folder slug differs from the product slug.
+  if (!isCdnUrl(showcaseSrc) && isCdnUrl(resolved.src)) {
+    showcaseSrc = pickBigNamesShowcaseImage([resolved.src, ...gallery]) || resolved.src;
   }
-  if (isCdnUrl(trimmed)) {
-    return staticArt || (product ? localProductImage(product) : "") || "/images/New Guitar.png";
-  }
-  return trimmed;
+  const blendMultiply = isFlatPackshotImageUrl(showcaseSrc) || usesShowcaseBlend(showcaseSrc);
+
+  return {
+    src: showcaseSrc,
+    fallbackSrc: resolved.fallbackSrc,
+    blendMultiply,
+  };
 }
 
-export function mapCatalogProductToBigNamesDeal(
+function catalogProductToBigNamesDealItem(
   product: CatalogProduct,
   overrides?: {
     href?: string;
     title?: string;
-    dealKey?: string;
-    slotIndex?: number;
+    customImage?: string;
+    key?: string;
   },
 ): BigNamesDealItem {
   const href =
     overrides?.href && overrides.href.startsWith("/product/")
       ? overrides.href
       : productPath(product.slug);
-
-  const deal = resolveBigNamesDealSlot({
-    dealKey: overrides?.dealKey,
-    productSlug: product.slug,
-    slotIndex: overrides?.slotIndex,
-  });
-
-  const productSrc =
-    deal?.product ??
-    (overrides?.slotIndex != null
-      ? bigNamesShowcaseArtForSlot(overrides.slotIndex)
-      : localProductImage(product) || "/images/New Guitar.png");
+  const { src, fallbackSrc, blendMultiply } = resolveBigNamesProductImage(
+    product,
+    overrides?.customImage,
+  );
 
   return {
-    key: deal?.key ?? product.id,
-    brand: deal?.brand ?? product.brand,
+    key: overrides?.key ?? product.id,
+    brand: product.brand,
     href,
-    logo: deal?.logo ?? "",
-    product: productSrc,
+    logo: getBrandLogoUrl(product.brandSlug) ?? "",
+    product: src,
+    productFallback: fallbackSrc !== src ? fallbackSrc : undefined,
     productAlt: overrides?.title ?? product.name,
-    blendMultiply: deal?.blendMultiply,
+    blendMultiply,
   };
 }
 
-function toShowcaseItem(
-  deal: (typeof BIG_NAMES_DEALS)[number],
-  product?: CatalogProduct,
-): BigNamesDealItem {
-  if (product) {
-    return {
-      key: deal.key,
-      brand: deal.brand,
-      href: productPath(product.slug),
-      logo: deal.logo,
-      product: deal.product,
-      productAlt: product.name,
-      blendMultiply: deal.blendMultiply,
-    };
-  }
-
+function staticDealToBigNamesDealItem(deal: (typeof BIG_NAMES_DEALS)[number]): BigNamesDealItem {
   return {
     key: deal.key,
     brand: deal.brand,
@@ -135,6 +103,28 @@ function toShowcaseItem(
     productAlt: deal.productAlt,
     blendMultiply: deal.blendMultiply,
   };
+}
+
+export function mapCatalogProductToBigNamesDeal(
+  product: CatalogProduct,
+  overrides?: {
+    href?: string;
+    title?: string;
+    customImage?: string;
+    dealKey?: string;
+    slotIndex?: number;
+  },
+): BigNamesDealItem {
+  const deal = overrides?.dealKey
+    ? BIG_NAMES_DEALS.find((entry) => entry.key === overrides.dealKey)
+    : BIG_NAMES_DEALS.find((entry) => entry.productSlug === product.slug);
+
+  return catalogProductToBigNamesDealItem(product, {
+    href: overrides?.href,
+    title: overrides?.title,
+    customImage: overrides?.customImage,
+    key: deal?.key ?? product.id,
+  });
 }
 
 /**
@@ -152,18 +142,18 @@ export function resolveBigNamesDealFallbacks(products: CatalogProduct[]): BigNam
     const preferred = bySlug.get(deal.productSlug);
     if (preferred && !used.has(preferred.id)) {
       used.add(preferred.id);
-      items.push(toShowcaseItem(deal, preferred));
+      items.push(catalogProductToBigNamesDealItem(preferred, { key: deal.key }));
       continue;
     }
 
     const next = guitars.find((product) => !used.has(product.id));
     if (next) {
       used.add(next.id);
-      items.push(toShowcaseItem(deal, next));
+      items.push(catalogProductToBigNamesDealItem(next, { key: deal.key }));
       continue;
     }
 
-    items.push(toShowcaseItem(deal));
+    items.push(staticDealToBigNamesDealItem(deal));
   }
 
   return items;

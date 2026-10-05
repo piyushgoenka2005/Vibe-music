@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson } from "@/components/admin/AdminQueryState";
 import { LoadingState, StatCard } from "@/components/admin/AdminUi";
 import { ROUTES } from "@/lib/routes";
 import { formatCurrency } from "@/utils/currency";
@@ -22,9 +22,7 @@ function RentalsAnalyticsPanel() {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-analytics"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/rentals/analytics");
-      if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{ analytics: RentalAnalytics }>;
+      return adminFetchJson<{ analytics: RentalAnalytics }>("/api/admin/rentals/analytics");
     },
   });
 
@@ -58,21 +56,9 @@ function RentalsAnalyticsPanel() {
       <div className="admin-stat-grid" style={{ marginTop: "1rem" }}>
         <StatCard label="Total bookings" value={analytics.totalBookings ?? 0} />
         <StatCard label="Active rentals" value={analytics.activeBookings ?? 0} />
-        <StatCard
-          label="Revenue"
-          value={analytics.totalRevenue ?? 0}
-          format="currency"
-        />
-        <StatCard
-          label="Deposits held"
-          value={analytics.totalDeposits ?? 0}
-          format="currency"
-        />
-        <StatCard
-          label="Late fees"
-          value={analytics.lateFeesCollected ?? 0}
-          format="currency"
-        />
+        <StatCard label="Revenue" value={analytics.totalRevenue ?? 0} format="currency" />
+        <StatCard label="Deposits held" value={analytics.totalDeposits ?? 0} format="currency" />
+        <StatCard label="Late fees" value={analytics.lateFeesCollected ?? 0} format="currency" />
         <StatCard
           label="Damage charges"
           value={analytics.damageChargesCollected ?? 0}
@@ -89,7 +75,7 @@ function RentalsAnalyticsPanel() {
             Collected late fees and damage charges total{" "}
             <strong>
               {formatCurrency(
-                (analytics.lateFeesCollected ?? 0) + (analytics.damageChargesCollected ?? 0)
+                (analytics.lateFeesCollected ?? 0) + (analytics.damageChargesCollected ?? 0),
               )}
             </strong>
             .

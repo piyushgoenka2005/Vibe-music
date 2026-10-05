@@ -24,6 +24,80 @@ function sortByName(products: CatalogProduct[]): CatalogProduct[] {
   return [...products].sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/** Lean list columns — skips description/specifications/detail JSON blobs. */
+const LEAN_PRODUCT_SELECT = {
+  id: true,
+  slug: true,
+  name: true,
+  brand: true,
+  category: true,
+  subcategory: true,
+  price: true,
+  originalPrice: true,
+  discountPercentage: true,
+  rating: true,
+  reviewCount: true,
+  stock: true,
+  reservedStock: true,
+  lowStockThreshold: true,
+  sku: true,
+  status: true,
+  featured: true,
+  trending: true,
+  newArrival: true,
+  image: true,
+  imageColor: true,
+  brandSlug: true,
+  categorySlug: true,
+  availability: true,
+  condition: true,
+  gstRate: true,
+  images: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+type LeanProductRow = {
+  id: string;
+  slug: string;
+  name: string;
+  brand: string;
+  category: string;
+  subcategory: string;
+  price: number;
+  originalPrice: number;
+  discountPercentage: number;
+  rating: number;
+  reviewCount: number;
+  stock: number;
+  reservedStock: number | null;
+  lowStockThreshold: number | null;
+  sku: string;
+  status: string;
+  featured: boolean;
+  trending: boolean;
+  newArrival: boolean;
+  image: string;
+  imageColor: string;
+  brandSlug: string;
+  categorySlug: string;
+  availability: string;
+  condition: string;
+  gstRate: number | null;
+  images: unknown;
+  createdAt: string;
+  updatedAt: string;
+};
+
+function mapLeanProductRow(row: LeanProductRow): CatalogProduct {
+  return prismaToProduct({
+    ...row,
+    description: "",
+    specifications: {},
+    detail: null,
+  });
+}
+
 /**
  * Local JSON under `src/data/catalog` is a seed/dev mirror only.
  * Production must serve Postgres; enable JSON fallback explicitly via
@@ -121,48 +195,41 @@ export async function fetchHomepageCatalogProducts(): Promise<CatalogProduct[]> 
       const rows = await prisma.product.findMany({
         where: { status: "active" },
         orderBy: { name: "asc" },
-        select: {
-          id: true,
-          slug: true,
-          name: true,
-          brand: true,
-          category: true,
-          subcategory: true,
-          price: true,
-          originalPrice: true,
-          discountPercentage: true,
-          rating: true,
-          reviewCount: true,
-          stock: true,
-          reservedStock: true,
-          lowStockThreshold: true,
-          sku: true,
-          status: true,
-          featured: true,
-          trending: true,
-          newArrival: true,
-          image: true,
-          imageColor: true,
-          brandSlug: true,
-          categorySlug: true,
-          availability: true,
-          condition: true,
-          gstRate: true,
-          images: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+        select: LEAN_PRODUCT_SELECT,
       });
-      return rows.map((row) =>
-        prismaToProduct({
-          ...row,
-          description: "",
-          specifications: {},
-          detail: null,
-        }),
-      );
+      return rows.map((row) => mapLeanProductRow(row));
     },
     async () => sortByName(await loadLocalProducts(false)),
+  );
+}
+
+/** SQL group-by for category index pages — avoids loading the full catalog. */
+export async function countActiveProductsByCategory(): Promise<Map<string, number>> {
+  return withProductFallback(
+    async () => {
+      const rows = await prisma.product.groupBy({
+        by: ["categorySlug"],
+        where: { status: "active" },
+        _count: { id: true },
+      });
+      const map = new Map<string, number>();
+      for (const row of rows) {
+        if (row.categorySlug) {
+          map.set(row.categorySlug, row._count.id);
+        }
+      }
+      return map;
+    },
+    async () => {
+      const products = await loadLocalProducts(false);
+      const map = new Map<string, number>();
+      for (const product of products) {
+        const slug = product.categorySlug?.trim();
+        if (!slug) continue;
+        map.set(slug, (map.get(slug) ?? 0) + 1);
+      }
+      return map;
+    },
   );
 }
 
@@ -242,8 +309,12 @@ export async function fetchProductsByCategory(
       const rows = await prisma.product.findMany({
         where: { categorySlug: resolved },
         orderBy: { name: "asc" },
+        select: LEAN_PRODUCT_SELECT,
       });
-      return filterActive(rows.map(prismaToProduct), includeInactive);
+      return filterActive(
+        rows.map((row) => mapLeanProductRow(row)),
+        includeInactive,
+      );
     },
     async () => {
       const { loadProducts } = await import("@/lib/server/catalogRepository");
@@ -265,8 +336,12 @@ export async function fetchProductsByBrandSlug(
       const rows = await prisma.product.findMany({
         where: { brandSlug },
         orderBy: { name: "asc" },
+        select: LEAN_PRODUCT_SELECT,
       });
-      return filterActive(rows.map(prismaToProduct), includeInactive);
+      return filterActive(
+        rows.map((row) => mapLeanProductRow(row)),
+        includeInactive,
+      );
     },
     async () => {
       const { loadProducts } = await import("@/lib/server/catalogRepository");
@@ -457,6 +532,18 @@ export async function batchWriteProducts(products: CatalogProduct[]): Promise<vo
     ),
   );
   invalidateEmptyCatalogProbe();
+}
+
+export async function batchUpdateProductSubcategories(
+  updates: Array<{ id: string; subcategory: string }>,
+): Promise<void> {
+  assertPostgresForWrite();
+  const updatedAt = new Date().toISOString();
+  await prisma.$transaction(
+    updates.map(({ id, subcategory }) =>
+      prisma.product.update({ where: { id }, data: { subcategory, updatedAt } }),
+    ),
+  );
 }
 
 export async function batchWriteCategories(categories: Category[]): Promise<void> {

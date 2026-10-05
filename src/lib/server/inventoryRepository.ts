@@ -229,6 +229,32 @@ async function applyVariantStockChanges(
   }
 }
 
+/** Lean stock listing for admin inventory — no full catalog JSON blobs. */
+export async function listAllProductStockSnapshots(): Promise<
+  Array<ProductStockSnapshot & { updatedAt: string }>
+> {
+  const rows = await prisma.product.findMany({
+    select: {
+      id: true,
+      name: true,
+      sku: true,
+      stock: true,
+      stockQuantity: true,
+      reservedStock: true,
+      lowStockThreshold: true,
+      status: true,
+      availability: true,
+      detail: true,
+      updatedAt: true,
+    },
+    orderBy: { stock: "asc" },
+  });
+  return rows.map((row) => ({
+    ...readSnapshot(row.id, row as ProductRow),
+    updatedAt: String(row.updatedAt),
+  }));
+}
+
 export async function fetchProductStockSnapshots(
   productIds: string[],
 ): Promise<Map<string, ProductStockSnapshot>> {

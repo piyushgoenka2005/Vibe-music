@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState, type ReactNode } from "react";
 import type { ProductDetail } from "@/types/product";
+import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import { buildProductDetailsViewModel } from "@/lib/product/buildProductDetailsViewModel";
 import type { ProductSpecGroup } from "@/lib/product/groupProductSpecs";
 
@@ -114,22 +115,24 @@ function SpecAccordionCard({
   title,
   panelId,
   triggerId,
-  defaultOpen,
   children,
 }: {
   title: string;
   panelId: string;
   triggerId: string;
-  defaultOpen: boolean;
   children: ReactNode;
 }) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const isMobileViewport = useIsMobileViewport();
+  const [userOpen, setUserOpen] = useState<boolean | null>(null);
+  const isOpen = userOpen ?? !isMobileViewport;
 
   return (
     <article
       className={`pdp-product-details__accordion${
         isOpen ? " pdp-product-details__accordion--open" : ""
       }`}
+      // Server render can't know the viewport; CSS keeps untouched cards closed on phones until hydration.
+      data-viewport-default={userOpen === null ? "" : undefined}
     >
       <h4 className="pdp-product-details__accordion-heading">
         <button
@@ -138,7 +141,7 @@ function SpecAccordionCard({
           className="pdp-product-details__accordion-trigger"
           aria-expanded={isOpen}
           aria-controls={panelId}
-          onClick={() => setIsOpen((open) => !open)}
+          onClick={() => setUserOpen(!isOpen)}
         >
           <span>{title}</span>
           <span className="pdp-product-details__accordion-caret" aria-hidden="true" />
@@ -162,7 +165,7 @@ function GroupedSpecAccordion({ group, baseId }: { group: ProductSpecGroup; base
   const panelId = `${baseId}-${group.id}-panel`;
 
   return (
-    <SpecAccordionCard title={group.title} triggerId={triggerId} panelId={panelId} defaultOpen>
+    <SpecAccordionCard title={group.title} triggerId={triggerId} panelId={panelId}>
       <SpecKeyValueTable specs={group.specs} dense />
     </SpecAccordionCard>
   );
@@ -173,7 +176,7 @@ function InTheBoxAccordion({ items, baseId }: { items: string[]; baseId: string 
   const panelId = `${baseId}-in-the-box-panel`;
 
   return (
-    <SpecAccordionCard title="In the box" triggerId={triggerId} panelId={panelId} defaultOpen>
+    <SpecAccordionCard title="In the box" triggerId={triggerId} panelId={panelId}>
       <ul className="pdp-product-details__box-list">
         {items.map((item, index) => (
           <li key={`${item}-${index}`}>{item}</li>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { adminFetchJson } from "@/lib/admin/adminFetch";
 import { ROUTES } from "@/lib/routes";
 
 export default function AdminNotificationBell() {
@@ -9,9 +10,7 @@ export default function AdminNotificationBell() {
     queryKey: ["admin-notifications-count"],
     queryFn: async () => {
       // Lightweight count endpoint — full list is only fetched by /admin/notifications.
-      const res = await fetch("/api/admin/notifications/count");
-      if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{ unreadCount: number }>;
+      return adminFetchJson<{ unreadCount: number }>("/api/admin/notifications/count");
     },
     staleTime: 60_000,
     refetchInterval: 120_000,

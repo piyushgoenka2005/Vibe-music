@@ -13,8 +13,15 @@ import {
 import { createPortal } from "react-dom";
 import { Play } from "lucide-react";
 import ProductShareButton from "@/components/product/ProductShareButton";
-import { productImageLocalFallback } from "@/lib/product/resolveProductCardImage";
-import { storefrontImageCandidates, storefrontZoomImageUrl } from "@/lib/storefrontImages";
+import {
+  isFlatPackshotImageUrl,
+  productImageLocalFallback,
+} from "@/lib/product/resolveProductCardImage";
+import {
+  storefrontGalleryThumbCandidates,
+  storefrontImageCandidates,
+  storefrontZoomImageUrl,
+} from "@/lib/storefrontImages";
 import type { ProductImage, ProductVideo } from "@/types/product";
 import Product360Viewer from "@/components/product/Product360Viewer";
 import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
@@ -46,23 +53,33 @@ interface LensPosition {
   y: number;
 }
 
-function GalleryThumb({ src, fallbackSrc }: { src: string; fallbackSrc?: string }) {
+function GalleryThumb({
+  src,
+  fallbackSrc,
+  eager = false,
+}: {
+  src: string;
+  fallbackSrc?: string;
+  eager?: boolean;
+}) {
   const isInvalid =
     !src || src === "[object Object]" || (!src.startsWith("http") && !src.startsWith("/"));
   const candidates = useMemo(() => {
     if (isInvalid) return [];
     const extras = fallbackSrc ? [fallbackSrc] : [];
-    const list = storefrontImageCandidates(src, 160, extras);
-    const medium = storefrontImageCandidates(src, 320, extras);
+    const list = storefrontGalleryThumbCandidates(src, extras);
     return Array.from(
-      new Set(
-        [...list, ...medium, src, ...extras].filter((u) => Boolean(u && u !== "[object Object]")),
-      ),
+      new Set([...list, src, ...extras].filter((u) => Boolean(u && u !== "[object Object]"))),
     );
   }, [src, isInvalid, fallbackSrc]);
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
   const activeSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? "";
+
+  useEffect(() => {
+    setAttempt(0);
+    setFailed(false);
+  }, [src]);
 
   if (isInvalid || !activeSrc || failed) {
     return (
@@ -93,8 +110,9 @@ function GalleryThumb({ src, fallbackSrc }: { src: string; fallbackSrc?: string 
       alt=""
       width={48}
       height={48}
-      loading="eager"
+      loading={eager ? "eager" : "lazy"}
       decoding="async"
+      fetchPriority={eager ? "high" : "auto"}
       className="pdp-gallery__thumb-photo"
       onError={() => {
         setAttempt((current) => {
@@ -151,6 +169,7 @@ export default function ProductGallery({
   const thumbsRef = useRef<HTMLDivElement>(null);
 
   const activeImage = images[activeIndex] ?? images[0];
+  const activeIsPackshot = Boolean(activeImage?.src && isFlatPackshotImageUrl(activeImage.src));
   const zoomEligible = Boolean(activeImage?.src) && !showVideo && !show360;
   const canZoom = zoomEligible && zoomSpaceOk;
   const has360 = spin360Images.length >= 2;
@@ -538,7 +557,11 @@ export default function ProductGallery({
             aria-current={index === activeIndex && !showVideo && !show360}
           >
             {image.src ? (
-              <GalleryThumb src={image.src} fallbackSrc={imageFallback} />
+              <GalleryThumb
+                src={image.src}
+                fallbackSrc={imageFallback}
+                eager={index === 0 || index === activeIndex}
+              />
             ) : (
               <div className="pdp-gallery__thumb-swatch" style={{ backgroundColor: image.color }} />
             )}
@@ -656,7 +679,9 @@ export default function ProductGallery({
             size={18}
             className="pdp-gallery__share"
           />
-          <div className="pdp-gallery__main-inner">
+          <div
+            className={`pdp-gallery__main-inner${activeIsPackshot ? " pdp-gallery__main-inner--packshot" : ""}`}
+          >
             {show360 && has360 ? (
               <Product360Viewer frames={spin360Images} productName={productName} />
             ) : showVideo && videos[0] ? (

@@ -86,8 +86,26 @@ describe("resolveProductCardImage", () => {
       ],
     });
 
-    expect(urls).toHaveLength(1);
-    expect(urls[0]).toContain("c2c0dad6");
+    expect(urls).toHaveLength(2);
+    expect(urls[0]).toContain("/images/");
+    expect(urls[1]).toContain("c2c0dad6");
     expect(urls.some((url) => url.includes("e853f8d2"))).toBe(false);
+  });
+
+  it("orders lifestyle cymbal art before flat packshots in PDP gallery", () => {
+    const urls = resolveProductGalleryUrls({
+      slug: "avus-zapcrash-12-zapcrash-12",
+      category: "Drums & Percussion",
+      image:
+        "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-zapcrash-16-avus-zapcrash-16/413d7e18-9f0d-44cf-ba41-179e18fd5175.png",
+      images: [
+        "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-zapcrash-16-avus-zapcrash-16/413d7e18-9f0d-44cf-ba41-179e18fd5175.png",
+        "https://cdn.vibemusic.in/products/drums-percussion/avus-avus-zapcrash-16-avus-zapcrash-16/1a47ce41-8c27-486a-b641-1166c3f7e66c.png",
+      ],
+    });
+
+    expect(urls).toHaveLength(2);
+    expect(urls[0]).toContain("1a47ce41");
+    expect(urls[1]).toContain("413d7e18");
   });
 });

@@ -12,10 +12,24 @@ export interface ProductCardImageInput {
 const FLAT_PACKSHOT_FILES = new Set([
   "8dbab992-6ab1-4b7b-ae61-4ad72ec93351.png",
   "c2c0dad6-9522-4d44-b686-4ab6076b2d7d.png",
+  "413d7e18-9f0d-44cf-ba41-179e18fd5175.png",
+  /** HZA-6000 hero — white packshot vanishes on ivory homepage showcase. */
+  "0c482bf6-3921-4e88-b9b4-b13b3031012d.png",
 ]);
 
 /** Wide lifestyle uploads that crop to a tiny product in square cards. */
 const WIDE_CARD_UNFRIENDLY_FILES = new Set(["e853f8d2-cfec-4a70-a7c8-ec3751205191.png"]);
+
+/** Horizontal or tight detail crops that break the standing-guitar Big Names row. */
+const BIG_NAMES_SHOWCASE_UNFRIENDLY_FILES = new Set([
+  /** HZA-6000 — guitar lying on its side */
+  "7eb0b094-9d3b-48c2-8c15-32d959ab7ce3.png",
+  "b5c1de95-b9ce-40ad-9875-9754158dc914.png",
+  "63a9469c-c343-43cb-a6de-baf135e269bc.png",
+  "3281b5df-ec59-4e46-a3f7-63b3bacb9163.png",
+  "2da2d7cc-830e-42e6-916a-09975cb31eb9.png",
+  "5a22ad17-4e18-4dd1-93b7-dd4af4d796aa.png",
+]);
 
 /** CDN masters uploaded under the wrong SKU folder (e.g. drum kit in cymbal slots). */
 const MISASSIGNED_CATALOG_FILES = new Set(["e853f8d2-cfec-4a70-a7c8-ec3751205191.png"]);
@@ -46,6 +60,35 @@ function isValidCatalogImageRef(url: string): boolean {
 
 function isFlatPackshotCatalogImage(url: string): boolean {
   return FLAT_PACKSHOT_FILES.has(imageFileName(url));
+}
+
+/** True for top-down white-background catalog packshots that need a tinted well to read. */
+export function isFlatPackshotImageUrl(url: string): boolean {
+  return isFlatPackshotCatalogImage(url);
+}
+
+export function isBigNamesShowcaseUnfriendlyImage(url: string): boolean {
+  return BIG_NAMES_SHOWCASE_UNFRIENDLY_FILES.has(imageFileName(url));
+}
+
+/**
+ * Homepage Big Names row: prefer standing vertical lifestyle shots; when a SKU
+ * only has flat packshots left, return the packshot (use multiply blend on ivory).
+ */
+export function pickBigNamesShowcaseImage(gallery: string[]): string {
+  const eligible = gallery.filter((url) => !isBigNamesShowcaseUnfriendlyImage(url));
+  const lifestyle = eligible.filter((url) => !isFlatPackshotCatalogImage(url));
+  const cdnLifestyle = lifestyle.find((url) => isCdnUrl(url));
+  if (cdnLifestyle) return cdnLifestyle;
+  if (lifestyle[0]) return lifestyle[0];
+
+  const packshot = eligible.find((url) => isFlatPackshotCatalogImage(url) && isCdnUrl(url));
+  if (packshot) return packshot;
+
+  const packshotAny = eligible.find((url) => isFlatPackshotCatalogImage(url));
+  if (packshotAny) return packshotAny;
+
+  return eligible[0] ?? gallery[0] ?? "";
 }
 
 function isCardFriendlyCatalogImage(url: string): boolean {
@@ -83,15 +126,31 @@ function cdnUrlMatchesProductSlug(url: string, slug: string): boolean {
   return folderSlug === slug;
 }
 
+function sortGalleryUrls(urls: string[]): string[] {
+  const lifestyle = urls.filter((url) => !isFlatPackshotCatalogImage(url));
+  const packshots = urls.filter((url) => isFlatPackshotCatalogImage(url));
+  return [...lifestyle, ...packshots];
+}
+
 /**
  * PDP gallery URLs: prefer this product's CDN folder; allow cross-folder borrow
  * only when the SKU has no uploads yet. Never surface misassigned masters.
+ * Lifestyle shots are ordered before flat packshots; packshot-only SKUs get
+ * curated local art first so the hero frame is never a blank white circle.
  */
 export function resolveProductGalleryUrls(input: ProductCardImageInput): string[] {
   const refs = catalogImageRefs(input);
   const ownFolder = refs.filter((url) => cdnUrlMatchesProductSlug(url, input.slug));
-  if (ownFolder.length > 0) return ownFolder;
-  return refs;
+  const pool = ownFolder.length > 0 ? ownFolder : refs;
+  const sorted = sortGalleryUrls(pool);
+  if (sorted.length === 0) return [];
+
+  if (sorted.every(isFlatPackshotCatalogImage)) {
+    const fallback = productImageLocalFallback(input.slug, input.category);
+    return fallback ? [fallback, ...sorted] : sorted;
+  }
+
+  return sorted;
 }
 
 function pickCatalogImage(input: ProductCardImageInput): string {

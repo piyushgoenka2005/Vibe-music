@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
@@ -290,7 +290,9 @@ export default function SiteHeader() {
         </div>
       </div>
 
-      <SiteHeaderNav onMegaMenuOpenChange={handleMegaMenuOpenChange} />
+      <Suspense fallback={null}>
+        <SiteHeaderNav onMegaMenuOpenChange={handleMegaMenuOpenChange} />
+      </Suspense>
 
       <SiteHeaderMobileDrawer
         open={isCompactHeader && mobileOpen}

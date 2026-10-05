@@ -1,16 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { LoadingState } from "@/components/admin/AdminUi";
+import { adminFetchJson } from "@/lib/admin/adminFetch";
 import type { SearchAnalyticsDashboard } from "@/types/searchAnalytics";
 
 interface SearchAnalyticsPanelProps {
@@ -21,9 +14,9 @@ export default function SearchAnalyticsPanel({ period }: SearchAnalyticsPanelPro
   const { data, isLoading } = useQuery({
     queryKey: ["admin-search-analytics", period],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/analytics/search?period=${period}`);
-      if (!res.ok) throw new Error("Failed to load search analytics");
-      return res.json() as Promise<{ dashboard: SearchAnalyticsDashboard }>;
+      return adminFetchJson<{ dashboard: SearchAnalyticsDashboard }>(
+        `/api/admin/analytics/search?period=${period}`,
+      );
     },
   });
 
@@ -37,8 +30,7 @@ export default function SearchAnalyticsPanel({ period }: SearchAnalyticsPanelPro
   }
 
   const topChartData = dashboard.topSearches.slice(0, 10).map((entry) => ({
-    query:
-      entry.query.length > 24 ? `${entry.query.slice(0, 24)}…` : entry.query,
+    query: entry.query.length > 24 ? `${entry.query.slice(0, 24)}…` : entry.query,
     count: entry.count,
   }));
 
@@ -102,7 +94,10 @@ export default function SearchAnalyticsPanel({ period }: SearchAnalyticsPanelPro
                       <td>{entry.query}</td>
                       <td>{entry.recentCount}</td>
                       <td>{entry.previousCount}</td>
-                      <td>{entry.changePercent >= 0 ? "+" : ""}{entry.changePercent}%</td>
+                      <td>
+                        {entry.changePercent >= 0 ? "+" : ""}
+                        {entry.changePercent}%
+                      </td>
                     </tr>
                   ))
                 )}
@@ -171,11 +166,7 @@ export default function SearchAnalyticsPanel({ period }: SearchAnalyticsPanelPro
                       <td>{new Date(event.timestamp).toLocaleString("en-IN")}</td>
                       <td>{event.eventType}</td>
                       <td>{event.query}</td>
-                      <td>
-                        {event.eventType === "search"
-                          ? event.resultsCount ?? 0
-                          : "—"}
-                      </td>
+                      <td>{event.eventType === "search" ? (event.resultsCount ?? 0) : "—"}</td>
                       <td>{event.clickedProductName ?? "—"}</td>
                     </tr>
                   ))
@@ -189,13 +180,7 @@ export default function SearchAnalyticsPanel({ period }: SearchAnalyticsPanelPro
   );
 }
 
-function StatCard({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
+function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="admin-stat-card">
       <div className="admin-stat-card__label">{label}</div>

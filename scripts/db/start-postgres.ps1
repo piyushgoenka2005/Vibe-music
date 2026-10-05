@@ -3,8 +3,6 @@
 # Prefer installed server data dirs; otherwise bootstrap a project-local cluster.
 $ErrorActionPreference = "Stop"
 
-$port = 5432
-
 function Test-PostgresPort([int]$TargetPort) {
     $client = New-Object System.Net.Sockets.TcpClient
     try {
@@ -21,13 +19,59 @@ function Test-PostgresPort([int]$TargetPort) {
     return $false
 }
 
-if (Test-PostgresPort $port) {
-    Write-Host "PostgreSQL is already running on port $port." -ForegroundColor Green
-    exit 0
+function Read-DatabaseUrlFromEnvFiles([string]$RepoRoot) {
+    foreach ($file in @(".env.local", ".env")) {
+        $path = Join-Path $RepoRoot $file
+        if (-not (Test-Path $path)) { continue }
+        foreach ($line in Get-Content $path) {
+            if ($line -match '^\s*DATABASE_URL\s*=\s*(.+)\s*$') {
+                return $Matches[1].Trim()
+            }
+        }
+    }
+    return $null
+}
+
+function Get-PortFromDatabaseUrl([string]$DatabaseUrl) {
+    if ([string]::IsNullOrWhiteSpace($DatabaseUrl)) { return $null }
+    try {
+        $uri = [Uri]$DatabaseUrl
+        if ($uri.Port -gt 0) {
+            return $uri.Port
+        }
+    } catch {
+        return $null
+    }
+    return $null
+}
+
+function Get-PortFromPostgresConf([string]$DataDir) {
+    $conf = Join-Path $DataDir "postgresql.conf"
+    if (-not (Test-Path $conf)) { return $null }
+    $matches = Select-String -Path $conf -Pattern '^\s*port\s*=\s*(\d+)\s*$'
+    if ($matches.Count -gt 0) {
+        return [int]$matches[-1].Matches[0].Groups[1].Value
+    }
+    return $null
+}
+
+function Resolve-PostgresPort([string]$DataDir, [string]$DatabaseUrl) {
+    $fromUrl = Get-PortFromDatabaseUrl $DatabaseUrl
+    if ($fromUrl) { return $fromUrl }
+    $fromConf = Get-PortFromPostgresConf $DataDir
+    if ($fromConf) { return $fromConf }
+    return 5432
 }
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $localDataDir = Join-Path $repoRoot ".data\postgres"
+$databaseUrl = Read-DatabaseUrlFromEnvFiles $repoRoot
+$port = Resolve-PostgresPort $localDataDir $databaseUrl
+
+if (Test-PostgresPort $port) {
+    Write-Host "PostgreSQL is already running on port $port." -ForegroundColor Green
+    exit 0
+}
 
 $candidates = @(
     @{ Path = "C:\Program Files\PostgreSQL\17"; Data = "C:\Program Files\PostgreSQL\17\data" },
@@ -76,14 +120,19 @@ if (-not $selected) {
         if ($content -notmatch "(?m)^listen_addresses\s*=") {
             Add-Content -Path $conf -Value "`nlisten_addresses = '127.0.0.1,::1'"
         }
+        if ($port -ne 5432 -and $content -notmatch "(?m)^port\s*=") {
+            Add-Content -Path $conf -Value "`nport = $port"
+        }
     }
     $selected = @{ Bin = $bin; Data = $localDataDir }
 }
 
+$port = Resolve-PostgresPort $selected.Data $databaseUrl
+
 $pgCtl = Join-Path $selected.Bin "pg_ctl.exe"
 $logFile = Join-Path $selected.Data "server.log"
 
-Write-Host "Starting PostgreSQL from $($selected.Data) ..." -ForegroundColor Cyan
+Write-Host "Starting PostgreSQL from $($selected.Data) on port $port ..." -ForegroundColor Cyan
 & $pgCtl start -D $selected.Data -l $logFile -w -t 90
 if ($LASTEXITCODE -ne 0) {
     # Already running is fine
@@ -116,23 +165,13 @@ Write-Host "PostgreSQL started successfully on port $port." -ForegroundColor Gre
 # Ensure vibe role/database exist for local DATABASE_URL (vibe@localhost/vibe)
 $psql = Join-Path $selected.Bin "psql.exe"
 if (Test-Path $psql) {
-    $ensureSql = @"
-DO `$`$
-BEGIN
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'vibe') THEN
-    CREATE ROLE vibe LOGIN PASSWORD 'vibe' CREATEDB;
-  END IF;
-END
-`$`$;
-SELECT 'ok' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'vibe');
-"@
-    $dbExists = & $psql -U postgres -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'vibe'" 2>$null
+    $dbExists = & $psql -h 127.0.0.1 -p $port -U postgres -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'vibe'" 2>$null
     if ("$dbExists".Trim() -ne "1") {
         Write-Host "Creating local database 'vibe' ..." -ForegroundColor Cyan
-        & $psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "DO `$`$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'vibe') THEN CREATE ROLE vibe LOGIN PASSWORD 'vibe' CREATEDB; END IF; END `$`$;"
-        & $psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE vibe OWNER vibe;"
+        & $psql -h 127.0.0.1 -p $port -U postgres -d postgres -v ON_ERROR_STOP=1 -c "DO `$`$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'vibe') THEN CREATE ROLE vibe LOGIN PASSWORD 'vibe' CREATEDB; END IF; END `$`$;"
+        & $psql -h 127.0.0.1 -p $port -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE vibe OWNER vibe;"
     } else {
-        & $psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "DO `$`$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'vibe') THEN CREATE ROLE vibe LOGIN PASSWORD 'vibe' CREATEDB; END IF; END `$`$;" | Out-Null
+        & $psql -h 127.0.0.1 -p $port -U postgres -d postgres -v ON_ERROR_STOP=1 -c "DO `$`$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'vibe') THEN CREATE ROLE vibe LOGIN PASSWORD 'vibe' CREATEDB; END IF; END `$`$;" | Out-Null
     }
     Write-Host "Local role/database 'vibe' is ready." -ForegroundColor Green
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 
 interface ProductImageUploadProps {
   categorySlug: string;
@@ -39,8 +40,11 @@ export default function ProductImageUpload({
           method: "POST",
           body: formData,
         });
+        if (!res.ok) {
+          const { readAdminApiError } = await import("@/lib/admin/adminFetch");
+          throw new Error(await readAdminApiError(res));
+        }
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Upload failed");
         onChange([...images, ...(data.urls as string[])]);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Upload failed");
@@ -119,8 +123,13 @@ export default function ProductImageUpload({
         <div className="admin-image-preview-grid">
           {images.map((url, index) => (
             <div key={`${url}-${index}`} className="admin-image-preview">
-              {/* eslint-disable-next-line @next/next/no-img-element -- admin upload preview may be blob/data URL */}
-              <img src={url} alt={`Product ${index + 1}`} />
+              <StorefrontThumbImage
+                src={url}
+                alt={`Product ${index + 1}`}
+                width={160}
+                height={160}
+                sizes="160px"
+              />
               <button
                 type="button"
                 className="admin-btn admin-btn--danger"

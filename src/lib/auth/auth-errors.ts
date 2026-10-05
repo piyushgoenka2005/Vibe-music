@@ -13,13 +13,14 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   Configuration:
     process.env.NODE_ENV === "production"
       ? "Google sign-in is temporarily unavailable. Please use email and password."
-      : "Google sign-in could not finish — usually because Postgres is offline or DATABASE_URL points at the wrong port. Run npm run db:start, verify DATABASE_URL, restart the dev server, then try again.",
+      : "Google sign-in is misconfigured. Run npm run verify:google-oauth — if the OAuth client was deleted, run npm run setup:google-oauth with a new client from Google Cloud Console (project vibemusic2026), then restart npm run dev.",
   Verification: "The verification link is invalid or has expired.",
   Default: "Something went wrong. Please try again.",
 };
 
 function resolveOAuthCallbackHint(): string {
   const siteUrl =
+    process.env.AUTH_URL?.replace(/\/$/, "").trim() ||
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "").trim() ||
     (process.env.NODE_ENV === "production" ? "https://vibemusic.in" : "http://localhost:3000");
   return `${siteUrl}/api/auth/callback/google`;

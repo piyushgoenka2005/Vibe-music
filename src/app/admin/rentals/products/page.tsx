@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
 import { slugify } from "@/lib/slug";
 import type { AdminSession } from "@/types/admin";
@@ -76,11 +76,9 @@ function UnitsPanel({
   const { data, isLoading } = useQuery({
     queryKey: ["admin-rental-units", productId],
     queryFn: async () => {
-      const res = await fetch(
-        `/api/admin/rentals/units?productId=${encodeURIComponent(productId)}`
+      return adminFetchJson<{ units: RentalInventoryUnit[] }>(
+        `/api/admin/rentals/units?productId=${encodeURIComponent(productId)}`,
       );
-      if (!res.ok) throw new Error("Failed to load units");
-      return res.json() as Promise<{ units: RentalInventoryUnit[] }>;
     },
   });
 
@@ -95,7 +93,7 @@ function UnitsPanel({
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!label.trim()) throw new Error("Label required");
-      const res = await fetch("/api/admin/rentals/units", {
+      await adminMutateJson("/api/admin/rentals/units", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -106,8 +104,6 @@ function UnitsPanel({
           status,
         }),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Save failed");
     },
     onSuccess: () => {
       resetUnitForm();
@@ -118,10 +114,9 @@ function UnitsPanel({
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/rentals/units?id=${encodeURIComponent(id)}`, {
+      await adminMutateJson(`/api/admin/rentals/units?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Delete failed");
     },
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: ["admin-rental-units", productId] }),
@@ -157,9 +152,7 @@ function UnitsPanel({
             <select
               className="admin-select"
               value={status}
-              onChange={(e) =>
-                setStatus(e.target.value as RentalInventoryUnit["status"])
-              }
+              onChange={(e) => setStatus(e.target.value as RentalInventoryUnit["status"])}
             >
               <option value="available">Available</option>
               <option value="rented">Rented</option>
@@ -264,18 +257,16 @@ function AvailabilityBlocksPanel({
   const { data, isLoading } = useQuery({
     queryKey: ["admin-rental-blocks", productId],
     queryFn: async () => {
-      const res = await fetch(
-        `/api/admin/rentals/blocks?productId=${encodeURIComponent(productId)}`
+      return adminFetchJson<{ blocks: RentalAvailabilityBlock[] }>(
+        `/api/admin/rentals/blocks?productId=${encodeURIComponent(productId)}`,
       );
-      if (!res.ok) throw new Error("Failed to load blocks");
-      return res.json() as Promise<{ blocks: RentalAvailabilityBlock[] }>;
     },
   });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!startAt || !endAt) throw new Error("Start and end required");
-      const res = await fetch("/api/admin/rentals/blocks", {
+      await adminMutateJson("/api/admin/rentals/blocks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -285,8 +276,6 @@ function AvailabilityBlocksPanel({
           reason,
         }),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Save failed");
     },
     onSuccess: () => {
       setStartAt("");
@@ -298,10 +287,9 @@ function AvailabilityBlocksPanel({
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/rentals/blocks?id=${encodeURIComponent(id)}`, {
+      await adminMutateJson(`/api/admin/rentals/blocks?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Delete failed");
     },
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: ["admin-rental-blocks", productId] }),
@@ -393,18 +381,16 @@ function ProductsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
   const { data: categoriesData } = useQuery({
     queryKey: ["admin-rental-categories"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/rentals/categories");
-      if (!res.ok) throw new Error("Failed to load categories");
-      return res.json() as Promise<{ categories: Array<{ id: string; name: string }> }>;
+      return adminFetchJson<{ categories: Array<{ id: string; name: string }> }>(
+        "/api/admin/rentals/categories",
+      );
     },
   });
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-products"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/rentals/products");
-      if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{ products: RentalProduct[] }>;
+      return adminFetchJson<{ products: RentalProduct[] }>("/api/admin/rentals/products");
     },
   });
 
@@ -417,16 +403,14 @@ function ProductsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
       if (!payload.name.trim() || !payload.categoryId) {
         throw new Error("Name and category are required");
       }
-      const res = await fetch("/api/admin/rentals/products", {
+      const json = await adminMutateJson<{
+        error?: string;
+        product?: RentalProduct;
+      }>("/api/admin/rentals/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const json = (await res.json().catch(() => ({}))) as {
-        error?: string;
-        product?: RentalProduct;
-      };
-      if (!res.ok) throw new Error(json.error ?? "Save failed");
       return json.product;
     },
     onSuccess: (product) => {
@@ -441,11 +425,9 @@ function ProductsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/rentals/products?id=${encodeURIComponent(id)}`, {
+      await adminMutateJson(`/api/admin/rentals/products?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Delete failed");
     },
     onSuccess: () => {
       setActionError(null);
@@ -605,18 +587,14 @@ function ProductsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
               type="number"
               placeholder="Min duration (hours)"
               value={form.minDurationHours}
-              onChange={(e) =>
-                setForm({ ...form, minDurationHours: Number(e.target.value) || 1 })
-              }
+              onChange={(e) => setForm({ ...form, minDurationHours: Number(e.target.value) || 1 })}
             />
             <input
               className="admin-input"
               type="number"
               placeholder="Max duration (days)"
               value={form.maxDurationDays}
-              onChange={(e) =>
-                setForm({ ...form, maxDurationDays: Number(e.target.value) || 1 })
-              }
+              onChange={(e) => setForm({ ...form, maxDurationDays: Number(e.target.value) || 1 })}
             />
             <input
               className="admin-input"
@@ -706,9 +684,7 @@ function ProductsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
                       <button
                         type="button"
                         className="admin-btn admin-btn--ghost"
-                        onClick={() =>
-                          setUnitsProductId((prev) => (prev === p.id ? null : p.id))
-                        }
+                        onClick={() => setUnitsProductId((prev) => (prev === p.id ? null : p.id))}
                       >
                         {unitsProductId === p.id ? "Hide units" : "Units"}
                       </button>
@@ -771,11 +747,7 @@ function ProductsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
       </div>
 
       {unitsProductId ? (
-        <UnitsPanel
-          productId={unitsProductId}
-          canWrite={canWrite}
-          canDelete={canDelete}
-        />
+        <UnitsPanel productId={unitsProductId} canWrite={canWrite} canDelete={canDelete} />
       ) : null}
     </>
   );

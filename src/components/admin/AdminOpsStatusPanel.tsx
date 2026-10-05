@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { adminFetchJson } from "@/lib/admin/adminFetch";
 
 type OpsItem = {
   key: string;
@@ -26,13 +27,11 @@ export default function AdminOpsStatusPanel() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin-ops-status"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/ops-status");
-      if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{
+      return adminFetchJson<{
         environment: string;
         demoPaymentsAllowed: boolean;
         items: OpsItem[];
-      }>;
+      }>("/api/admin/ops-status");
     },
   });
 

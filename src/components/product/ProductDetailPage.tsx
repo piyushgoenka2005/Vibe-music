@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -27,6 +27,7 @@ import ProductRelatedRail from "./ProductRelatedRail";
 import ProductDetailSkeleton from "./ProductDetailSkeleton";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import { isNonInstrumentGuitarProduct } from "@/lib/product/productRelevance";
+import { buildProductBreadcrumb } from "@/lib/product/productBreadcrumb";
 import "./product-detail.css";
 
 const FrequentlyBoughtTogether = dynamic(() => import("./FrequentlyBoughtTogether"), {
@@ -263,11 +264,16 @@ export default function ProductDetailPage({ slug, initialData }: ProductDetailPa
     <>
       <div className="pdp">
         <nav className="pdp-breadcrumb" aria-label="Breadcrumb">
-          <Link href="/">Home</Link>
-          <span aria-hidden="true">/</span>
-          <Link href={`/category/${product.categorySlug}`}>{product.category}</Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">{product.name}</span>
+          {buildProductBreadcrumb(product).map((crumb, index) => (
+            <Fragment key={`${crumb.label}-${index}`}>
+              {index > 0 ? <span aria-hidden="true">/</span> : null}
+              {crumb.href ? (
+                <Link href={crumb.href}>{crumb.label}</Link>
+              ) : (
+                <span aria-current="page">{crumb.label}</span>
+              )}
+            </Fragment>
+          ))}
         </nav>
 
         <div className={`pdp-main${showRelatedRail ? " pdp-main--with-rail" : ""}`}>

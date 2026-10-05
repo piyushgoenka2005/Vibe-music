@@ -6,7 +6,7 @@ import Link from "next/link";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState, formatDate } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
 import { ROUTES } from "@/lib/routes";
 import type { AdminProfile, AdminRole } from "@/types/admin";
@@ -18,13 +18,7 @@ function generateTempPassword(length = 12): string {
   return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
 }
 
-function UsersContent({
-  canInvite,
-  currentUid,
-}: {
-  canInvite: boolean;
-  currentUid: string;
-}) {
+function UsersContent({ canInvite, currentUid }: { canInvite: boolean; currentUid: string }) {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<AdminProfile | null>(null);
   const [form, setForm] = useState({
@@ -47,9 +41,7 @@ function UsersContent({
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/admins");
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json() as Promise<{ admins: AdminProfile[] }>;
+      return adminFetchJson<{ admins: AdminProfile[] }>("/api/admin/admins");
     },
   });
 
@@ -64,16 +56,14 @@ function UsersContent({
       if (form.password.trim()) {
         payload.password = form.password.trim();
       }
-      const res = await fetch(`/api/admin/admins/${selected.uid}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Update failed");
-      }
-      return res.json() as Promise<{ admin: AdminProfile; passwordUpdated?: boolean }>;
+      return adminMutateJson<{ admin: AdminProfile; passwordUpdated?: boolean }>(
+        `/api/admin/admins/${selected.uid}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
     },
     onSuccess: (result) => {
       setSelected(result?.admin ?? null);
@@ -91,23 +81,16 @@ function UsersContent({
         email: inviteForm.email.trim(),
         displayName: inviteForm.displayName.trim(),
         role: inviteForm.role,
-        ...(inviteForm.password.trim()
-          ? { password: inviteForm.password.trim() }
-          : {}),
+        ...(inviteForm.password.trim() ? { password: inviteForm.password.trim() } : {}),
       };
-      const res = await fetch("/api/admin/admins", {
+      return adminMutateJson<{
+        admin: AdminProfile;
+        mode: "created" | "promoted" | "reactivated";
+      }>("/api/admin/admins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Invite failed");
-      }
-      return res.json() as Promise<{
-        admin: AdminProfile;
-        mode: "created" | "promoted" | "reactivated";
-      }>;
     },
     onSuccess: (result) => {
       const labels = {
@@ -131,7 +114,7 @@ function UsersContent({
         if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
         return a.displayName.localeCompare(b.displayName);
       }),
-    [data?.admins]
+    [data?.admins],
   );
 
   if (isLoading) return <LoadingState />;
@@ -178,9 +161,7 @@ function UsersContent({
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={inviteForm.displayName}
-                  onChange={(e) =>
-                    setInviteForm({ ...inviteForm, displayName: e.target.value })
-                  }
+                  onChange={(e) => setInviteForm({ ...inviteForm, displayName: e.target.value })}
                 />
               </div>
               <div className="admin-form-group">
@@ -215,9 +196,7 @@ function UsersContent({
                     type={showInvitePassword ? "text" : "password"}
                     autoComplete="new-password"
                     value={inviteForm.password}
-                    onChange={(e) =>
-                      setInviteForm({ ...inviteForm, password: e.target.value })
-                    }
+                    onChange={(e) => setInviteForm({ ...inviteForm, password: e.target.value })}
                   />
                   <button
                     type="button"
@@ -290,9 +269,7 @@ function UsersContent({
                       style={{
                         cursor: "pointer",
                         background:
-                          selected?.uid === admin.uid
-                            ? "var(--admin-surface-2)"
-                            : undefined,
+                          selected?.uid === admin.uid ? "var(--admin-surface-2)" : undefined,
                       }}
                       onClick={() => {
                         setSelected(admin);
@@ -309,9 +286,7 @@ function UsersContent({
                       <td>
                         {admin.displayName}
                         {admin.uid === currentUid ? (
-                          <span style={{ color: "var(--admin-muted)", marginLeft: 6 }}>
-                            (you)
-                          </span>
+                          <span style={{ color: "var(--admin-muted)", marginLeft: 6 }}>(you)</span>
                         ) : null}
                       </td>
                       <td>{admin.email}</td>
@@ -369,9 +344,7 @@ function UsersContent({
                     id="admin-edit-role"
                     className="admin-select"
                     value={form.role}
-                    onChange={(e) =>
-                      setForm({ ...form, role: e.target.value as AdminRole })
-                    }
+                    onChange={(e) => setForm({ ...form, role: e.target.value as AdminRole })}
                   >
                     {Object.entries(ADMIN_ROLE_LABELS).map(([value, label]) => (
                       <option key={value} value={value}>

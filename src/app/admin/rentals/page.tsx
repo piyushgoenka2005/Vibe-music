@@ -4,17 +4,16 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson } from "@/components/admin/AdminQueryState";
 import { LoadingState, StatCard } from "@/components/admin/AdminUi";
 import { ROUTES } from "@/lib/routes";
+import type { RentalAnalyticsSummary } from "@/types/rental";
 
 function RentalsAdminDashboard() {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-analytics"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/rentals/analytics");
-      if (!res.ok) throw new Error("Failed");
-      return res.json();
+      return adminFetchJson<{ analytics: RentalAnalyticsSummary }>("/api/admin/rentals/analytics");
     },
   });
 

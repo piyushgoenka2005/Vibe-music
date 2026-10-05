@@ -4,21 +4,18 @@ import { useQuery } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 
 function AuditLogsContent() {
-  const { cursor, pageIndex, canGoPrev, goNext, goPrev } =
-    useAdminCursorPagination();
+  const { cursor, pageIndex, canGoPrev, goNext, goPrev } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-audit-logs", cursor],
     queryFn: async () => {
       const sp = new URLSearchParams({ limit: "50" });
       if (cursor) sp.set("cursor", cursor);
-      const res = await fetch(`/api/admin/audit-logs?${sp}`);
-      if (!res.ok) throw new Error("Failed to load audit logs");
-      return res.json() as Promise<{
+      return adminFetchJson<{
         logs: Array<{
           id: string;
           action: string;
@@ -30,7 +27,7 @@ function AuditLogsContent() {
         }>;
         hasMore: boolean;
         nextCursor?: string;
-      }>;
+      }>(`/api/admin/audit-logs?${sp}`);
     },
   });
 

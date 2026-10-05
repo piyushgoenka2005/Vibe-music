@@ -6,16 +6,11 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import {
-  EmptyState,
-  LoadingState,
-  StatusBadge,
-  formatDate,
-} from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { EmptyState, LoadingState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { ROUTES } from "@/lib/routes";
 import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
-import type { BlogComment, BlogPost } from "@/types/blog";
+import type { BlogAnalyticsSummary, BlogComment, BlogPost } from "@/types/blog";
 
 const QUERY_KEY = ["admin-blog-posts"] as const;
 
@@ -33,9 +28,7 @@ function BlogAnalyticsPanel() {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-blog-analytics"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/blog/analytics");
-      if (!res.ok) throw new Error("Failed");
-      return res.json();
+      return adminFetchJson<{ analytics: BlogAnalyticsSummary }>("/api/admin/blog/analytics");
     },
   });
 
@@ -62,13 +55,11 @@ function BlogAnalyticsPanel() {
           <>
             <h3 style={{ marginTop: "1rem" }}>Top posts</h3>
             <ul>
-              {analytics.topPosts.map(
-                (post: { title: string; slug: string; views: number }) => (
-                  <li key={post.slug}>
-                    {post.title} — {post.views} views
-                  </li>
-                )
-              )}
+              {analytics.topPosts.map((post: { title: string; slug: string; views: number }) => (
+                <li key={post.slug}>
+                  {post.title} — {post.views} views
+                </li>
+              ))}
             </ul>
           </>
         ) : null}
@@ -82,26 +73,17 @@ function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-blog-comments-list"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/blog/comments");
-      if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{ comments: BlogComment[] }>;
+      return adminFetchJson<{ comments: BlogComment[] }>("/api/admin/blog/comments");
     },
   });
 
   const moderateMutation = useMutation({
-    mutationFn: async ({
-      id,
-      status,
-    }: {
-      id: string;
-      status: BlogComment["status"];
-    }) => {
-      const res = await fetch(`/api/admin/blog/comments/${id}`, {
+    mutationFn: async ({ id, status }: { id: string; status: BlogComment["status"] }) => {
+      await adminMutateJson(`/api/admin/blog/comments/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      if (!res.ok) throw new Error("Moderation failed");
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-blog-comments-list"] });
@@ -138,26 +120,26 @@ function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
                     <td>{comment.status}</td>
                     <td>
                       {blogWrite ? (
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--secondary"
-                          onClick={() =>
-                            moderateMutation.mutate({ id: comment.id, status: "approved" })
-                          }
-                        >
-                          Approve
-                        </button>
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--ghost"
-                          onClick={() =>
-                            moderateMutation.mutate({ id: comment.id, status: "rejected" })
-                          }
-                        >
-                          Reject
-                        </button>
-                      </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button
+                            type="button"
+                            className="admin-btn admin-btn--secondary"
+                            onClick={() =>
+                              moderateMutation.mutate({ id: comment.id, status: "approved" })
+                            }
+                          >
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-btn admin-btn--ghost"
+                            onClick={() =>
+                              moderateMutation.mutate({ id: comment.id, status: "rejected" })
+                            }
+                          >
+                            Reject
+                          </button>
+                        </div>
                       ) : null}
                     </td>
                   </tr>
@@ -171,28 +153,19 @@ function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
   );
 }
 
-function BlogListContent({
-  blogWrite,
-  blogDelete,
-}: {
-  blogWrite: boolean;
-  blogDelete: boolean;
-}) {
+function BlogListContent({ blogWrite, blogDelete }: { blogWrite: boolean; blogDelete: boolean }) {
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const res = await fetch("/api/admin/blog");
-      if (!res.ok) throw new Error("Failed to load blog posts");
-      return res.json() as Promise<{ posts: BlogPost[] }>;
+      return adminFetchJson<{ posts: BlogPost[] }>("/api/admin/blog");
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/blog/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      await adminMutateJson(`/api/admin/blog/${id}`, { method: "DELETE" });
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
   });
@@ -214,10 +187,10 @@ function BlogListContent({
       <div className="admin-panel__header">
         <h2 className="admin-panel__title">Blog Posts</h2>
         {blogWrite ? (
-        <Link href={`${ROUTES.adminBlog}/new`} className="admin-btn admin-btn--primary">
-          <Plus size={16} />
-          New Post
-        </Link>
+          <Link href={`${ROUTES.adminBlog}/new`} className="admin-btn admin-btn--primary">
+            <Plus size={16} />
+            New Post
+          </Link>
         ) : null}
       </div>
       <div className="admin-panel__body">
@@ -261,10 +234,10 @@ function BlogListContent({
                     <td>{formatDate(post.updatedAt)}</td>
                     <td>
                       <div style={{ display: "flex", gap: 8 }}>
-                        {(post.status === "published" ||
-                          (post.status === "scheduled" &&
-                            post.scheduledAt &&
-                            new Date(post.scheduledAt) <= new Date())) ? (
+                        {post.status === "published" ||
+                        (post.status === "scheduled" &&
+                          post.scheduledAt &&
+                          new Date(post.scheduledAt) <= new Date()) ? (
                           <a
                             href={`${ROUTES.blog}/${post.slug}`}
                             target="_blank"
@@ -276,31 +249,29 @@ function BlogListContent({
                           </a>
                         ) : null}
                         {blogWrite ? (
-                        <Link
-                          href={`${ROUTES.adminBlog}/${post.id}`}
-                          className="admin-btn admin-btn--ghost admin-btn--icon"
-                          aria-label="Edit post"
-                        >
-                          <Pencil size={14} />
-                        </Link>
+                          <Link
+                            href={`${ROUTES.adminBlog}/${post.id}`}
+                            className="admin-btn admin-btn--ghost admin-btn--icon"
+                            aria-label="Edit post"
+                          >
+                            <Pencil size={14} />
+                          </Link>
                         ) : null}
                         {blogDelete ? (
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--ghost admin-btn--icon"
-                          aria-label="Delete post"
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                `Delete "${post.title}"? This cannot be undone.`
-                              )
-                            ) {
-                              deleteMutation.mutate(post.id);
-                            }
-                          }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                          <button
+                            type="button"
+                            className="admin-btn admin-btn--ghost admin-btn--icon"
+                            aria-label="Delete post"
+                            onClick={() => {
+                              if (
+                                window.confirm(`Delete "${post.title}"? This cannot be undone.`)
+                              ) {
+                                deleteMutation.mutate(post.id);
+                              }
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         ) : null}
                       </div>
                     </td>
@@ -315,13 +286,7 @@ function BlogListContent({
   );
 }
 
-function BlogAdminTabs({
-  blogWrite,
-  blogDelete,
-}: {
-  blogWrite: boolean;
-  blogDelete: boolean;
-}) {
+function BlogAdminTabs({ blogWrite, blogDelete }: { blogWrite: boolean; blogDelete: boolean }) {
   const [tab, setTab] = useState<"posts" | "analytics" | "comments">("posts");
 
   return (
@@ -351,9 +316,9 @@ export default function AdminBlogPage() {
       {(admin) => {
         const caps = getAdminCapabilities(admin.permissions);
         return (
-        <AdminShell admin={admin} title="Blog">
-          <BlogAdminTabs blogWrite={caps.blogWrite} blogDelete={caps.blogDelete} />
-        </AdminShell>
+          <AdminShell admin={admin} title="Blog">
+            <BlogAdminTabs blogWrite={caps.blogWrite} blogDelete={caps.blogDelete} />
+          </AdminShell>
         );
       }}
     </AdminGuard>

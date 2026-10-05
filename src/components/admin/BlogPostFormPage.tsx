@@ -9,6 +9,7 @@ import { EMPTY_BLOG_CONTENT } from "@/lib/blog/editor";
 import { BLOG_CATEGORIES } from "@/lib/blog/blogEngine";
 import BlogCoverImageUpload from "@/components/admin/BlogCoverImageUpload";
 import TipTapEditor from "@/components/admin/TipTapEditor";
+import { adminMutateJson } from "@/lib/admin/adminFetch";
 import type { BlogPostStatus } from "@/types/blog";
 
 const EMPTY_FORM = {
@@ -48,10 +49,7 @@ interface BlogPostFormPageProps {
   readOnly?: boolean;
 }
 
-export default function BlogPostFormPage({
-  postId,
-  readOnly = false,
-}: BlogPostFormPageProps) {
+export default function BlogPostFormPage({ postId, readOnly = false }: BlogPostFormPageProps) {
   const router = useRouter();
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
@@ -107,20 +105,15 @@ export default function BlogPostFormPage({
         seoTitle: form.seoTitle || form.title,
         seoDescription: form.seoDescription || form.excerpt,
         status: form.status,
-        scheduledAt:
-          form.status === "scheduled"
-            ? fromDatetimeLocal(form.scheduledAt)
-            : null,
+        scheduledAt: form.status === "scheduled" ? fromDatetimeLocal(form.scheduledAt) : null,
       };
 
       const url = postId ? `/api/admin/blog/${postId}` : "/api/admin/blog";
-      const res = await fetch(url, {
+      await adminMutateJson(url, {
         method: postId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const body = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(body.error ?? "Save failed");
     },
     onSuccess: () => router.push(ROUTES.adminBlog),
     onError: (err) => setError(err instanceof Error ? err.message : "Save failed"),
@@ -190,9 +183,7 @@ export default function BlogPostFormPage({
                 style={{ width: "100%" }}
                 type="datetime-local"
                 value={form.scheduledAt}
-                onChange={(e) =>
-                  setForm({ ...form, scheduledAt: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })}
                 required
               />
             </div>
@@ -303,9 +294,7 @@ export default function BlogPostFormPage({
               id="blog-form-seo-description"
               className="admin-textarea"
               value={form.seoDescription}
-              onChange={(e) =>
-                setForm({ ...form, seoDescription: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, seoDescription: e.target.value })}
               rows={2}
               placeholder={form.excerpt || "Defaults to excerpt"}
             />

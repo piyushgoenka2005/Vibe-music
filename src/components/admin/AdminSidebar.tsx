@@ -41,6 +41,7 @@ import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
 import type { AdminSession } from "@/types/admin";
 import { useAuthStore } from "@/store/authStore";
 import { useAdminUiStore } from "@/store/adminUiStore";
+import { adminFetchJson } from "@/lib/admin/adminFetch";
 
 const NAV_ITEMS = [
   { href: ROUTES.admin, label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:read" },
@@ -145,9 +146,7 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
     queryKey: ["admin-notifications-count"],
     queryFn: async () => {
       // Lightweight count endpoint — full list is only fetched by /admin/notifications.
-      const res = await fetch("/api/admin/notifications/count");
-      if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{ unreadCount: number }>;
+      return adminFetchJson<{ unreadCount: number }>("/api/admin/notifications/count");
     },
     enabled: showNotificationBadge,
     staleTime: 60_000,

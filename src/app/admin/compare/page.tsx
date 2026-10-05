@@ -4,15 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson } from "@/components/admin/AdminQueryState";
+import type { CompareAnalyticsSummary } from "@/types/compare";
 
 function CompareAnalyticsPanel() {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-compare-analytics"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/compare/analytics");
-      if (!res.ok) throw new Error("Failed");
-      return res.json();
+      return adminFetchJson<{ analytics: CompareAnalyticsSummary }>("/api/admin/compare/analytics");
     },
   });
 

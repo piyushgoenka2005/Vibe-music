@@ -9,11 +9,7 @@ import { fetchProductDetail } from "@/services/product.service";
 import { useCartStore, type CartItem } from "@/store/cartStore";
 import { DEFAULT_BUNDLE_DISCOUNT_PERCENT } from "@/types/bundle";
 import type { Product } from "@/types/product";
-import {
-  formatCurrency,
-  formatDisplayPrice,
-  isPurchasablePrice,
-} from "@/utils/currency";
+import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 
 interface CartCompleteYourOrderProps {
   primaryItem: CartItem;
@@ -40,21 +36,14 @@ function cartItemAsProduct(item: CartItem): Product {
   };
 }
 
-export default function CartCompleteYourOrder({
-  primaryItem,
-}: CartCompleteYourOrderProps) {
+export default function CartCompleteYourOrder({ primaryItem }: CartCompleteYourOrderProps) {
   const addItem = useCartStore((s) => s.addItem);
   const cartItems = useCartStore((s) => s.items);
   const slug = primaryItem.slug?.trim() || "";
 
   const cartProductIds = useMemo(
-    () =>
-      new Set(
-        cartItems
-          .filter((item) => !item.isPromoGift)
-          .map((item) => item.productId)
-      ),
-    [cartItems]
+    () => new Set(cartItems.filter((item) => !item.isPromoGift).map((item) => item.productId)),
+    [cartItems],
   );
 
   const { data } = useQuery({
@@ -80,27 +69,25 @@ export default function CartCompleteYourOrder({
     const fromRelated = data?.relatedProducts ?? [];
     const merged = [...fromBundle, ...fromRelated];
     const seen = new Set<string>([mainProduct.id]);
-    return merged.filter((product) => {
-      if (
-        seen.has(product.id) ||
-        cartProductIds.has(product.id) ||
-        !product.slug?.trim() ||
-        !isPurchasablePrice(product.price)
-      ) {
-        return false;
-      }
-      seen.add(product.id);
-      return true;
-    }).slice(0, 3);
+    return merged
+      .filter((product) => {
+        if (
+          seen.has(product.id) ||
+          cartProductIds.has(product.id) ||
+          !product.slug?.trim() ||
+          !isPurchasablePrice(product.price)
+        ) {
+          return false;
+        }
+        seen.add(product.id);
+        return true;
+      })
+      .slice(0, 3);
   }, [data?.bundle?.items, data?.relatedProducts, cartProductIds, mainProduct.id]);
 
-  const discountPercent =
-    data?.bundle?.discountPercent ?? DEFAULT_BUNDLE_DISCOUNT_PERCENT;
+  const discountPercent = data?.bundle?.discountPercent ?? DEFAULT_BUNDLE_DISCOUNT_PERCENT;
 
-  const allProducts = useMemo(
-    () => [mainProduct, ...extras],
-    [mainProduct, extras]
-  );
+  const allProducts = useMemo(() => [mainProduct, ...extras], [mainProduct, extras]);
 
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -108,8 +95,7 @@ export default function CartCompleteYourOrder({
   const selectedMap = useMemo(() => {
     const next: Record<string, boolean> = { [mainProduct.id]: true };
     for (const product of extras) {
-      next[product.id] =
-        selected[product.id] ?? true;
+      next[product.id] = selected[product.id] ?? true;
     }
     return next;
   }, [mainProduct.id, extras, selected]);
@@ -145,12 +131,8 @@ export default function CartCompleteYourOrder({
   const selectedExtras = selectedProducts.filter((p) => p.id !== mainProduct.id);
   const selectedCount = selectedProducts.length;
 
-  const subtotal = selectedProducts.reduce(
-    (sum, p) => sum + p.price * (quantityMap[p.id] ?? 1),
-    0
-  );
-  const bundlePrice =
-    Math.round(subtotal * (1 - discountPercent / 100) * 100) / 100;
+  const subtotal = selectedProducts.reduce((sum, p) => sum + p.price * (quantityMap[p.id] ?? 1), 0);
+  const bundlePrice = Math.round(subtotal * (1 - discountPercent / 100) * 100) / 100;
   const savings = Math.round((subtotal - bundlePrice) * 100) / 100;
 
   function addBundle() {
@@ -164,16 +146,13 @@ export default function CartCompleteYourOrder({
           price: unitPrice,
           originalPrice: product.price,
         },
-        qty
+        qty,
       );
     });
   }
 
   return (
-    <section
-      className="cart-complete-order"
-      aria-label="Complete your order"
-    >
+    <section className="cart-complete-order" aria-label="Complete your order">
       <h2 className="cart-complete-order__title">Complete Your Order</h2>
       <div className="cart-fbt">
         <div className="cart-fbt__products">
@@ -204,10 +183,7 @@ export default function CartCompleteYourOrder({
                       <span className="cart-fbt__checkmark" />
                     </label>
                   ) : null}
-                  <Link
-                    href={productPath(product.slug)}
-                    className="cart-fbt__card-link"
-                  >
+                  <Link href={productPath(product.slug)} className="cart-fbt__card-link">
                     <div className="cart-fbt__image-wrap">
                       {product.image ? (
                         <StorefrontThumbImage
@@ -216,7 +192,7 @@ export default function CartCompleteYourOrder({
                           className="cart-fbt__image"
                           width={240}
                           height={240}
-                          preferOriginal
+                          sizes="120px"
                         />
                       ) : (
                         <div
@@ -231,9 +207,7 @@ export default function CartCompleteYourOrder({
                     <h3 className="cart-fbt__name" title={product.name}>
                       {product.name}
                     </h3>
-                    <span className="cart-fbt__price">
-                      {formatDisplayPrice(product.price)}
-                    </span>
+                    <span className="cart-fbt__price">{formatDisplayPrice(product.price)}</span>
                     {!isMain && isChecked ? (
                       <div className="cart-fbt__qty-row">
                         <span className="cart-fbt__qty-label">qty</span>
@@ -271,9 +245,7 @@ export default function CartCompleteYourOrder({
                 =
               </span>
               <div className="cart-fbt__savings-badge">
-                <span className="cart-fbt__savings-amount">
-                  {formatCurrency(savings)}
-                </span>
+                <span className="cart-fbt__savings-amount">{formatCurrency(savings)}</span>
                 <span className="cart-fbt__savings-label">
                   Bundle
                   <br />
@@ -286,17 +258,11 @@ export default function CartCompleteYourOrder({
 
         <div className="cart-fbt__summary">
           <div className="cart-fbt__summary-pricing">
-            <span className="cart-fbt__summary-label">
-              Buy all {selectedCount}:
-            </span>
+            <span className="cart-fbt__summary-label">Buy all {selectedCount}:</span>
             {savings > 0 ? (
-              <span className="cart-fbt__summary-original">
-                {formatCurrency(subtotal)}
-              </span>
+              <span className="cart-fbt__summary-original">{formatCurrency(subtotal)}</span>
             ) : null}
-            <span className="cart-fbt__summary-total">
-              {formatCurrency(bundlePrice)}
-            </span>
+            <span className="cart-fbt__summary-total">{formatCurrency(bundlePrice)}</span>
           </div>
           <button
             type="button"
@@ -309,10 +275,7 @@ export default function CartCompleteYourOrder({
               : `Add ${selectedExtras.length} to Cart`}
           </button>
           <span className="cart-fbt__divider-text">OR</span>
-          <Link
-            href={categoryPath("cables-cases-accessories")}
-            className="cart-fbt__build-own"
-          >
+          <Link href={categoryPath("cables-cases-accessories")} className="cart-fbt__build-own">
             Build Your Own Bundle and Save
           </Link>
         </div>

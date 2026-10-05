@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { EmptyState, LoadingState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
 import { formatCurrency } from "@/utils/currency";
 import type { RentalBooking, RentalBookingStatus } from "@/types/rental";
@@ -38,18 +38,22 @@ function BookingsAdmin({ rentalsWrite }: { rentalsWrite: boolean }) {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-bookings"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/rentals/bookings");
-      if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{ bookings: RentalBooking[] }>;
+      return adminFetchJson<{ bookings: RentalBooking[] }>("/api/admin/rentals/bookings");
     },
   });
 
-  const { data: detailData, isLoading: detailLoading, isError: detailError, refetch: refetchDetail, isFetching: detailFetching } = useQuery({
+  const {
+    data: detailData,
+    isLoading: detailLoading,
+    isError: detailError,
+    refetch: refetchDetail,
+    isFetching: detailFetching,
+  } = useQuery({
     queryKey: ["admin-rental-booking", selectedId],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/rentals/bookings/${selectedId}`);
-      if (!res.ok) throw new Error("Failed to load booking");
-      return res.json() as Promise<{ booking: RentalBooking }>;
+      return adminFetchJson<{ booking: RentalBooking }>(
+        `/api/admin/rentals/bookings/${selectedId}`,
+      );
     },
     enabled: Boolean(selectedId),
   });
@@ -63,13 +67,11 @@ function BookingsAdmin({ rentalsWrite }: { rentalsWrite: boolean }) {
   const actionMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
       if (!selectedId) throw new Error("No booking selected");
-      const res = await fetch(`/api/admin/rentals/bookings/${selectedId}`, {
+      await adminMutateJson(`/api/admin/rentals/bookings/${selectedId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Action failed");
     },
     onSuccess: () => {
       setActionError(null);
@@ -118,8 +120,7 @@ function BookingsAdmin({ rentalsWrite }: { rentalsWrite: boolean }) {
                     key={b.id}
                     style={{
                       cursor: "pointer",
-                      background:
-                        selectedId === b.id ? "var(--admin-surface-2)" : undefined,
+                      background: selectedId === b.id ? "var(--admin-surface-2)" : undefined,
                     }}
                     onClick={() => {
                       setSelectedId(b.id);
@@ -215,105 +216,107 @@ function BookingsAdmin({ rentalsWrite }: { rentalsWrite: boolean }) {
               </ul>
 
               {rentalsWrite ? (
-              <>
-              <div className="admin-form-group" style={{ marginTop: "1rem" }}>
-                <label>Update status</label>
-                <select
-                  className="admin-select"
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value as RentalBookingStatus)}
-                >
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="admin-form-group">
-                <label>Status note</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={statusNote}
-                  onChange={(e) => setStatusNote(e.target.value)}
-                />
-              </div>
-              <button
-                type="button"
-                className="admin-btn admin-btn--primary"
-                disabled={actionMutation.isPending}
-                onClick={() =>
-                  actionMutation.mutate({
-                    status: newStatus,
-                    note: statusNote || undefined,
-                  })
-                }
-              >
-                Save status
-              </button>
+                <>
+                  <div className="admin-form-group" style={{ marginTop: "1rem" }}>
+                    <label>Update status</label>
+                    <select
+                      className="admin-select"
+                      value={newStatus}
+                      onChange={(e) => setNewStatus(e.target.value as RentalBookingStatus)}
+                    >
+                      {STATUS_OPTIONS.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Status note</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={statusNote}
+                      onChange={(e) => setStatusNote(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--primary"
+                    disabled={actionMutation.isPending}
+                    onClick={() =>
+                      actionMutation.mutate({
+                        status: newStatus,
+                        note: statusNote || undefined,
+                      })
+                    }
+                  >
+                    Save status
+                  </button>
 
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem" }}>
-                <button
-                  type="button"
-                  className="admin-btn admin-btn--ghost"
-                  disabled={actionMutation.isPending}
-                  onClick={() => actionMutation.mutate({ action: "activate" })}
-                >
-                  Activate
-                </button>
-              </div>
+                  <div
+                    style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem" }}
+                  >
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--ghost"
+                      disabled={actionMutation.isPending}
+                      onClick={() => actionMutation.mutate({ action: "activate" })}
+                    >
+                      Activate
+                    </button>
+                  </div>
 
-              <div className="admin-form-group" style={{ marginTop: "1rem" }}>
-                <label>Damage charge on return (₹)</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  type="number"
-                  min={0}
-                  value={damageCharge}
-                  onChange={(e) => setDamageCharge(e.target.value)}
-                />
-              </div>
-              <button
-                type="button"
-                className="admin-btn admin-btn--ghost"
-                disabled={actionMutation.isPending}
-                onClick={() =>
-                  actionMutation.mutate({
-                    action: "return",
-                    damageCharge: Number(damageCharge) || 0,
-                    returnedAt: new Date().toISOString(),
-                  })
-                }
-              >
-                Mark returned
-              </button>
+                  <div className="admin-form-group" style={{ marginTop: "1rem" }}>
+                    <label>Damage charge on return (₹)</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      type="number"
+                      min={0}
+                      value={damageCharge}
+                      onChange={(e) => setDamageCharge(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--ghost"
+                    disabled={actionMutation.isPending}
+                    onClick={() =>
+                      actionMutation.mutate({
+                        action: "return",
+                        damageCharge: Number(damageCharge) || 0,
+                        returnedAt: new Date().toISOString(),
+                      })
+                    }
+                  >
+                    Mark returned
+                  </button>
 
-              <div className="admin-form-group" style={{ marginTop: "1rem" }}>
-                <label>Cancel reason</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                />
-              </div>
-              <button
-                type="button"
-                className="admin-btn admin-btn--danger"
-                disabled={actionMutation.isPending}
-                onClick={() => {
-                  if (!window.confirm("Cancel this rental booking?")) return;
-                  actionMutation.mutate({
-                    action: "cancel",
-                    reason: cancelReason || undefined,
-                  });
-                }}
-              >
-                Cancel booking
-              </button>
-              </>
+                  <div className="admin-form-group" style={{ marginTop: "1rem" }}>
+                    <label>Cancel reason</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--danger"
+                    disabled={actionMutation.isPending}
+                    onClick={() => {
+                      if (!window.confirm("Cancel this rental booking?")) return;
+                      actionMutation.mutate({
+                        action: "cancel",
+                        reason: cancelReason || undefined,
+                      });
+                    }}
+                  >
+                    Cancel booking
+                  </button>
+                </>
               ) : null}
             </>
           )}
@@ -331,11 +334,11 @@ export default function AdminRentalBookingsPage() {
       {(admin) => {
         const caps = getAdminCapabilities(admin.permissions);
         return (
-        <AdminShell admin={admin} title="Rental bookings">
-          <Suspense fallback={<LoadingState />}>
-            <BookingsAdmin rentalsWrite={caps.rentalsWrite} />
-          </Suspense>
-        </AdminShell>
+          <AdminShell admin={admin} title="Rental bookings">
+            <Suspense fallback={<LoadingState />}>
+              <BookingsAdmin rentalsWrite={caps.rentalsWrite} />
+            </Suspense>
+          </AdminShell>
         );
       }}
     </AdminGuard>

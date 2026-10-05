@@ -2,8 +2,9 @@
 
 import { useState, type CSSProperties } from "react";
 
-import { isCdnUrl } from "@/lib/cdnConfig";
-import { cdnMasterUrl } from "@/lib/storefrontImages";
+import { generateCdnSrcSet } from "@/lib/storefrontImages";
+
+export { generateCdnSrcSet };
 
 export type ProductImageVariant = "card" | "pdp" | "thumb";
 
@@ -43,40 +44,6 @@ function productImageInlineStyle(options: {
         ? 0
         : "var(--product-image-well-padding, clamp(0.5rem, 1.2vw, 0.75rem))",
   };
-}
-
-/** Universal thumb buckets supported across all CDN uploads. */
-const THUMB_WIDTHS = [480, 960, 1600] as const;
-
-function isCdnSizedDerivative(src: string): boolean {
-  return isCdnUrl(src) && /-w\d+\.webp(?:\?|$)/i.test(src);
-}
-
-export function generateCdnSrcSet(
-  src: string,
-  variant: ProductImageVariant = "card",
-): string | undefined {
-  if (!src) return undefined;
-  if (!isCdnUrl(src) || !src.endsWith(".webp")) return undefined;
-  if (isCdnSizedDerivative(src)) return undefined;
-
-  const master = cdnMasterUrl(src);
-  // master is something like https://cdn.vibemusic.in/.../uuid.webp
-  const parsed = new URL(master);
-  const file = parsed.pathname.split("/").pop() ?? "";
-  const match = file.match(/^(.+)\.([a-z0-9]+)$/i);
-  if (!match || match[2].toLowerCase() !== "webp") return undefined;
-
-  const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
-  const name = match[1];
-
-  const widths =
-    variant === "card"
-      ? THUMB_WIDTHS.slice(0, 2)
-      : variant === "thumb"
-        ? [THUMB_WIDTHS[0]]
-        : THUMB_WIDTHS;
-  return widths.map((w) => `${parsed.origin}${dir}${name}-w${w}.webp ${w}w`).join(", ");
 }
 
 /**

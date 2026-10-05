@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     "Inspected used and open-box instruments from Vibe Music. Browse current stock or enquire about upcoming arrivals.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function UsedGearPage() {
   return withServerPageError(async () => {

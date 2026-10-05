@@ -5,16 +5,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import type { Brand } from "@/types/brand";
 
-function BrandsContent({
-  canWrite,
-  canDelete,
-}: {
-  canWrite: boolean;
-  canDelete: boolean;
-}) {
+function BrandsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: boolean }) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", slug: "" });
@@ -23,21 +17,18 @@ function BrandsContent({
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-brands"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/brands");
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json() as Promise<{ brands: Brand[] }>;
+      return adminFetchJson<{ brands: Brand[] }>("/api/admin/brands");
     },
   });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const url = editId ? `/api/admin/brands/${editId}` : "/api/admin/brands";
-      const res = await fetch(url, {
+      await adminMutateJson(url, {
         method: editId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error("Save failed");
     },
     onSuccess: () => {
       setShowForm(false);
@@ -49,8 +40,7 @@ function BrandsContent({
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/brands/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      await adminMutateJson(`/api/admin/brands/${id}`, { method: "DELETE" });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-brands"] }),
   });
@@ -72,17 +62,17 @@ function BrandsContent({
     <>
       <div className="admin-toolbar">
         {canWrite ? (
-        <button
-          type="button"
-          className="admin-btn admin-btn--primary"
-          onClick={() => {
-            setShowForm(true);
-            setEditId(null);
-            setForm({ name: "", slug: "" });
-          }}
-        >
-          Add Brand
-        </button>
+          <button
+            type="button"
+            className="admin-btn admin-btn--primary"
+            onClick={() => {
+              setShowForm(true);
+              setEditId(null);
+              setForm({ name: "", slug: "" });
+            }}
+          >
+            Add Brand
+          </button>
         ) : null}
       </div>
 
@@ -150,28 +140,28 @@ function BrandsContent({
                     <td>{brand.slug}</td>
                     <td>
                       {canWrite ? (
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn--ghost"
-                        style={{ padding: "0.25rem 0.5rem" }}
-                        onClick={() => {
-                          setEditId(brand.id);
-                          setForm({ name: brand.name, slug: brand.slug });
-                          setShowForm(true);
-                        }}
-                      >
-                        Edit
-                      </button>
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--ghost"
+                          style={{ padding: "0.25rem 0.5rem" }}
+                          onClick={() => {
+                            setEditId(brand.id);
+                            setForm({ name: brand.name, slug: brand.slug });
+                            setShowForm(true);
+                          }}
+                        >
+                          Edit
+                        </button>
                       ) : null}
                       {canDelete ? (
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn--danger"
-                        style={{ padding: "0.25rem 0.5rem" }}
-                        onClick={() => deleteMutation.mutate(brand.id)}
-                      >
-                        Delete
-                      </button>
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--danger"
+                          style={{ padding: "0.25rem 0.5rem" }}
+                          onClick={() => deleteMutation.mutate(brand.id)}
+                        >
+                          Delete
+                        </button>
                       ) : null}
                     </td>
                   </tr>

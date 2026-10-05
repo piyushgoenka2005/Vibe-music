@@ -32,6 +32,7 @@ interface SearchResultsPageProps {
   query: string;
   initialCategory?: string;
   initialSubcategory?: string;
+  initialBrand?: string;
   /** Server-rendered results for the initial query — skips the first client fetch. */
   initialResults?: SearchResultsData | null;
 }
@@ -64,6 +65,7 @@ function SearchResultsPageContent({
   query,
   initialCategory = "",
   initialSubcategory = "",
+  initialBrand = "",
   initialResults = null,
 }: SearchResultsPageProps) {
   const {
@@ -99,7 +101,7 @@ function SearchResultsPageContent({
       initialFilters: {
         category: initialCategory,
         subcategory: initialSubcategory,
-        brand: listingBrand || undefined,
+        brand: initialBrand || listingBrand || undefined,
       },
     },
   );

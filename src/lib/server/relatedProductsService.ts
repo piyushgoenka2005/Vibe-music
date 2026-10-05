@@ -3,12 +3,7 @@ import "server-only";
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "@/lib/server/prisma/mappers";
 import { fetchProductsByIds, invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
-import {
-  getAllProducts,
-  getCatalogProductBySlug,
-  getProductById,
-  toProduct,
-} from "@/services/catalogService";
+import { getCatalogProductBySlug, getProductById, toProduct } from "@/services/catalogService";
 import type { CatalogProduct } from "@/types/catalog";
 import {
   areMerchandisingPeersCompatible,
@@ -200,15 +195,27 @@ function appendUniqueProducts(
 }
 
 async function loadMerchandisingCandidatePool(product: CatalogProduct): Promise<CatalogProduct[]> {
-  const snapshot = await getAllProducts(false);
-  return snapshot.filter(
-    (candidate) =>
-      candidate.id !== product.id &&
-      candidate.status === "active" &&
-      candidate.price > 0 &&
-      (candidate.categorySlug === product.categorySlug ||
-        candidate.brandSlug === product.brandSlug),
-  );
+  const { fetchProductsByCategory, fetchProductsByBrandSlug } =
+    await import("@/lib/server/prisma/catalogRepository");
+
+  const [byCategory, byBrand] = await Promise.all([
+    fetchProductsByCategory(product.categorySlug, false),
+    product.brandSlug
+      ? fetchProductsByBrandSlug(product.brandSlug, false)
+      : Promise.resolve([] as CatalogProduct[]),
+  ]);
+
+  const seen = new Set<string>([product.id]);
+  const merged: CatalogProduct[] = [];
+
+  for (const candidate of [...byCategory, ...byBrand]) {
+    if (seen.has(candidate.id)) continue;
+    if (candidate.status !== "active" || candidate.price <= 0) continue;
+    seen.add(candidate.id);
+    merged.push(candidate);
+  }
+
+  return merged;
 }
 
 function resolveRankedFallbackProducts(

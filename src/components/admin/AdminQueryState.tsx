@@ -1,5 +1,7 @@
 "use client";
 
+export { adminFetchJson, adminMutateJson, readAdminApiError } from "@/lib/admin/adminFetch";
+
 interface ErrorStateProps {
   message: string;
   onRetry?: () => void;

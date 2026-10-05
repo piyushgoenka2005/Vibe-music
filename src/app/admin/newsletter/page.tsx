@@ -5,7 +5,12 @@ import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
-import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
+import {
+  ErrorState,
+  MutationError,
+  adminFetchJson,
+  adminMutateJson,
+} from "@/components/admin/AdminQueryState";
 import { downloadFromApi } from "@/lib/client/downloadFromApi";
 
 type Subscriber = {
@@ -25,14 +30,12 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
     queryKey: ["admin-newsletter", cursor],
     queryFn: async () => {
       const url = `/api/admin/newsletter?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json() as Promise<{
+      return adminFetchJson<{
         subscribers: Subscriber[];
         total: number;
         hasMore: boolean;
         nextCursor?: string;
-      }>;
+      }>(url);
     },
     // Live table: new signups show up without a manual refresh.
     refetchInterval: 30_000,
@@ -44,10 +47,9 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
   const deleteMutation = useMutation({
     // Optimistic: the row disappears the instant you confirm.
     mutationFn: async (email: string) => {
-      const res = await fetch(`/api/admin/newsletter?email=${encodeURIComponent(email)}`, {
+      await adminMutateJson(`/api/admin/newsletter?email=${encodeURIComponent(email)}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Delete failed");
       return email;
     },
     onMutate: async (email) => {

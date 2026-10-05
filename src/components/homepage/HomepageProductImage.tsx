@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { storefrontImageCandidates } from "@/lib/storefrontImages";
+import { generateCdnSrcSet, storefrontImageCandidates } from "@/lib/storefrontImages";
 
 type HomepageProductImageProps = {
   src: string;
@@ -21,14 +21,10 @@ type HomepageProductImageProps = {
   decorative?: boolean;
 };
 
-const THUMB_SLOW_MS = 5000;
+const DECORATIVE_MAX_WAIT_MS = 400;
 
 function placeholderClass(className?: string) {
   return `${className ?? ""} homepage-product-image--placeholder`.trim();
-}
-
-function isThumbProxy(src: string): boolean {
-  return src.includes("/api/media/thumb?");
 }
 
 /** Global registry of image assets loaded by the primary sequence in this session. */
@@ -44,19 +40,22 @@ function markSourceLoaded(src: string) {
 
 /**
  * Product images for homepage carousels/grids.
- * Plain <img> so thumb-proxy redirects and CDN fallbacks swap reliably.
+ * Plain <img> + srcSet so thumb-proxy redirects and CDN fallbacks swap reliably.
  */
 export default function HomepageProductImage({
   src,
   fallbackSrc,
   className,
-  sizes: _sizes,
+  sizes = "(max-width: 767px) 46vw, 280px",
   fill = false,
   width = 480,
   height = 480,
   priority = false,
   decorative = false,
 }: HomepageProductImageProps) {
+  const [useSrcSet, setUseSrcSet] = useState(true);
+  const srcSet = useSrcSet ? generateCdnSrcSet(src, "card") : undefined;
+
   const candidates = useMemo(() => {
     const extras = fallbackSrc ? [fallbackSrc] : [];
     return storefrontImageCandidates(src, width, extras);
@@ -79,21 +78,9 @@ export default function HomepageProductImage({
 
   useEffect(() => {
     setAttempt(0);
+    setUseSrcSet(true);
     loadedRef.current = false;
   }, [src, fallbackSrc, width]);
-
-  useEffect(() => {
-    if (decorative || !isThumbProxy(activeSrc)) return undefined;
-    loadedRef.current = false;
-
-    const timeout = window.setTimeout(() => {
-      if (!loadedRef.current) {
-        advanceCandidate();
-      }
-    }, THUMB_SLOW_MS);
-
-    return () => window.clearTimeout(timeout);
-  }, [activeSrc, decorative, attempt, candidates.length]);
 
   useEffect(() => {
     if (!decorative) return;
@@ -112,7 +99,7 @@ export default function HomepageProductImage({
     window.addEventListener("vibe:img-ready", onReady);
     const timer = window.setTimeout(() => {
       setCanRenderClone(true);
-    }, 2500);
+    }, DECORATIVE_MAX_WAIT_MS);
 
     return () => {
       window.removeEventListener("vibe:img-ready", onReady);
@@ -134,9 +121,17 @@ export default function HomepageProductImage({
       fetchPriority={decorative ? "low" : priority ? "high" : "auto"}
       height={fill ? undefined : height}
       loading={decorative ? "lazy" : priority ? "eager" : "lazy"}
+      sizes={srcSet ? sizes : undefined}
       src={activeSrc}
+      srcSet={srcSet}
       width={fill ? undefined : width}
-      onError={advanceCandidate}
+      onError={() => {
+        if (useSrcSet && srcSet) {
+          setUseSrcSet(false);
+          return;
+        }
+        advanceCandidate();
+      }}
       onLoad={() => {
         loadedRef.current = true;
         if (!decorative) {

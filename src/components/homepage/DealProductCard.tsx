@@ -50,7 +50,7 @@ export default function DealProductCard({ item, slotPosition }: DealProductCardP
                     width={480}
                     height={480}
                     sizes="(max-width: 767px) 46vw, 280px"
-                    priority={slotPosition <= 3}
+                    priority={slotPosition <= 6}
                   />
                 ) : null}
               </div>

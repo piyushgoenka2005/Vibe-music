@@ -23,6 +23,8 @@ export interface Product {
   condition: ProductCondition;
   imageColor: string;
   image: string;
+  /** Self-hosted or CDN master used when card derivatives fail to load. */
+  imageFallback?: string;
   /** True when the SKU has multiple purchasable variants — PLP must open PDP before add-to-cart. */
   requiresVariantSelection?: boolean;
   /** Normalized specification values used by listing sidebar filters. */

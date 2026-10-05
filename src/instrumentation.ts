@@ -55,6 +55,19 @@ export async function register() {
       warnIfGooglePlacesMisconfigured("instrumentation");
     }
 
+    const { isGoogleAuthConfigured } = await import("@/lib/auth/google-config");
+    if (isGoogleAuthConfigured()) {
+      void import("@/lib/auth/google-oauth-health")
+        .then(({ probeGoogleOAuthClient, formatGoogleOAuthHealthMessage }) =>
+          probeGoogleOAuthClient({ bypassCache: true, timeoutMs: 8_000 }).then((oauthHealth) => {
+            if (!oauthHealth.ok) {
+              logWarn(formatGoogleOAuthHealthMessage(oauthHealth), "instrumentation");
+            }
+          }),
+        )
+        .catch(() => {});
+    }
+
     try {
       const { ensureTracingInitialized, isTracingEnabled } = await import("@/lib/server/tracing");
       if (isTracingEnabled()) {

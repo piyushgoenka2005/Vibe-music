@@ -3,12 +3,9 @@ import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { adminGiveawayDrawSchema } from "@/lib/validations/admin-giveaway";
 import { runGiveawayDraw } from "@/lib/server/giveawayEntryService";
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const admin = await requireAdmin("giveaways:write");
+    const admin = await requireAdmin("giveaways:write", request);
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
     const parsed = adminGiveawayDrawSchema.parse(body);

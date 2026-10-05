@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { storefrontImageCandidates } from "@/lib/storefrontImages";
+import { generateCdnSrcSet, storefrontImageCandidates } from "@/lib/storefrontImages";
 
 interface StorefrontThumbImageProps {
   src: string;
@@ -9,22 +9,18 @@ interface StorefrontThumbImageProps {
   className?: string;
   width?: number;
   height?: number;
+  sizes?: string;
   /** Self-hosted art when CDN/thumb candidates fail. */
   fallbackSrc?: string;
   /** Fill positioned parent (PDP cross-sell / card media wells). */
   fill?: boolean;
   loading?: "lazy" | "eager";
   fetchPriority?: "high" | "auto" | "low";
-  /**
-   * Prefer the CDN/original URL first (useful when many thumbs load at once
-   * and the thumb API can rate-limit or time out).
-   */
-  preferOriginal?: boolean;
 }
 
 /**
  * Product thumbs via CDN derivatives or `/api/media/thumb`, with CDN fallback.
- * Uses plain <img> so 404/timeout thumbs swap to the master URL immediately.
+ * Uses plain <img> + srcSet so the browser picks the smallest sufficient bucket.
  */
 export default function StorefrontThumbImage({
   src,
@@ -32,26 +28,27 @@ export default function StorefrontThumbImage({
   className,
   width = 72,
   height = 72,
+  sizes = "(max-width: 767px) 46vw, 280px",
   fallbackSrc,
   fill = false,
   loading = "lazy",
   fetchPriority = "auto",
-  preferOriginal = false,
 }: StorefrontThumbImageProps) {
+  const displayWidth = Math.max(width, height);
+  const [useSrcSet, setUseSrcSet] = useState(true);
+  const srcSet = useSrcSet ? generateCdnSrcSet(src, "card") : undefined;
+
   const candidates = useMemo(() => {
     const extras = fallbackSrc ? [fallbackSrc] : [];
-    const list = storefrontImageCandidates(src, Math.max(width, height), extras);
-    if (!preferOriginal || list.length < 2) return list;
-    const [preferred, ...rest] = list;
-    const original = rest[rest.length - 1] ?? preferred;
-    return Array.from(new Set([original, preferred, ...rest, ...extras].filter(Boolean)));
-  }, [src, width, height, preferOriginal, fallbackSrc]);
+    return storefrontImageCandidates(src, displayWidth, extras);
+  }, [src, displayWidth, fallbackSrc]);
 
   const [attempt, setAttempt] = useState(0);
   const [srcKey, setSrcKey] = useState(src);
   if (src !== srcKey) {
     setSrcKey(src);
     setAttempt(0);
+    setUseSrcSet(true);
   }
 
   const safeAttempt = src === srcKey ? attempt : 0;
@@ -72,6 +69,8 @@ export default function StorefrontThumbImage({
     <img
       key={displaySrc}
       src={displaySrc}
+      srcSet={srcSet}
+      sizes={srcSet ? sizes : undefined}
       alt={alt}
       width={fill ? undefined : width}
       height={fill ? undefined : height}
@@ -79,7 +78,13 @@ export default function StorefrontThumbImage({
       decoding="async"
       fetchPriority={fetchPriority}
       loading={loading}
-      onError={() => setAttempt((current) => current + 1)}
+      onError={() => {
+        if (useSrcSet && srcSet) {
+          setUseSrcSet(false);
+          return;
+        }
+        setAttempt((current) => current + 1);
+      }}
       style={
         fill
           ? {

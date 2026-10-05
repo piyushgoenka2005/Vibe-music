@@ -2,13 +2,13 @@
 
 import type { CSSProperties } from "react";
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ProductPageLink from "@/components/navigation/ProductPageLink";
 import RevealGroup from "@/components/layout/RevealGroup";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
-import { bigNamesShowcaseArtForSlot, type BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
-import { BIG_NAMES_DEALS } from "@/data/bigNamesDeals";
+import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
 /** Slightly snappier than a typical 3–4s carousel. */
 const AUTO_ADVANCE_MS = 2200;
 /** Brief pause after swipe / dot tap — auto keeps running alongside manual control. */
@@ -49,22 +49,8 @@ function nearestSlideIndex(track: HTMLElement): number {
 }
 
 function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: number }) {
-  const slotArt = bigNamesShowcaseArtForSlot(index);
-  const candidates = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          [slotArt, item.product, item.logo, ...BIG_NAMES_DEALS.map((deal) => deal.product)].filter(
-            (src) => src.startsWith("/images/"),
-          ),
-        ),
-      ),
-    [slotArt, item.product, item.logo],
-  );
-  const [attempt, setAttempt] = useState(0);
   const [logoFailed, setLogoFailed] = useState(false);
-  const productSrc = candidates[Math.min(attempt, candidates.length - 1)] ?? slotArt;
-  const blendMultiply = item.blendMultiply ?? true;
+  const blendMultiply = item.blendMultiply ?? false;
 
   return (
     <div
@@ -96,34 +82,22 @@ function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: numb
           )}
         </div>
         <div className="big-names-deals__hang-wrap">
-          <span className="big-names-deals__hanger" aria-hidden>
-            <span className="big-names-deals__hanger-hook" />
-            <span className="big-names-deals__hanger-plate" />
-          </span>
           <div className="big-names-deals__product-stage">
-            <span className="big-names-deals__floor-shadow" aria-hidden />
             <span
               className={`big-names-deals__product-shadow${blendMultiply ? " big-names-deals__product-shadow--blend" : ""}`}
             >
               <span
                 className={`big-names-deals__product-wrap${blendMultiply ? " big-names-deals__product-wrap--blend" : ""}`}
               >
-                <img
-                  alt={item.productAlt}
+                <StorefrontThumbImage
                   className="big-names-deals__product"
-                  decoding="async"
-                  draggable={false}
-                  fetchPriority={index < 2 ? "high" : "auto"}
+                  fallbackSrc={item.productFallback}
+                  fetchPriority={index < 5 ? "high" : "auto"}
                   height={480}
-                  loading={index < 2 ? "eager" : "lazy"}
-                  sizes="(max-width: 767px) 80vw, (max-width: 1024px) 33vw, 260px"
-                  src={productSrc}
+                  loading={index < 5 ? "eager" : "lazy"}
+                  sizes="(max-width: 1023px) 82vw, 18vw"
+                  src={item.product}
                   width={480}
-                  onError={() => {
-                    if (attempt < candidates.length - 1) {
-                      setAttempt((current) => current + 1);
-                    }
-                  }}
                 />
               </span>
             </span>

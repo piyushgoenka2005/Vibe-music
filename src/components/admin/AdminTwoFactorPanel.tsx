@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { adminFetchJson, adminMutateJson } from "@/lib/admin/adminFetch";
 
 interface Enrollment {
   secret: string;
@@ -25,9 +26,7 @@ export default function AdminTwoFactorPanel() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-2fa"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/2fa");
-      if (!res.ok) throw new Error("Failed to load 2FA status");
-      return res.json() as Promise<{ enabled: boolean }>;
+      return adminFetchJson<{ enabled: boolean }>("/api/admin/2fa");
     },
     staleTime: 30_000,
   });
@@ -37,16 +36,11 @@ export default function AdminTwoFactorPanel() {
     setError(null);
     setMessage(null);
     try {
-      const res = await fetch("/api/admin/2fa", {
+      const body = await adminMutateJson<{ ok?: boolean } & Partial<Enrollment>>("/api/admin/2fa", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, token: token.replace(/\s+/g, "") }),
       });
-      const body = (await res.json().catch(() => ({}))) as {
-        error?: string;
-        ok?: boolean;
-      } & Partial<Enrollment>;
-      if (!res.ok) throw new Error(body.error ?? "Action failed");
 
       if (action === "begin" && body.secret) {
         setEnrollment({
@@ -85,8 +79,7 @@ export default function AdminTwoFactorPanel() {
         ) : (
           <>
             <p style={{ marginTop: 0 }}>
-              Status:{" "}
-              <strong>{enabled ? "Enabled (TOTP app)" : "Disabled"}</strong>
+              Status: <strong>{enabled ? "Enabled (TOTP app)" : "Disabled"}</strong>
             </p>
 
             {!enabled && !enrollment ? (
@@ -110,7 +103,14 @@ export default function AdminTwoFactorPanel() {
                   height={220}
                   style={{ borderRadius: 8 }}
                 />
-                <p style={{ margin: 0, wordBreak: "break-all", color: "var(--admin-muted)", fontSize: 12 }}>
+                <p
+                  style={{
+                    margin: 0,
+                    wordBreak: "break-all",
+                    color: "var(--admin-muted)",
+                    fontSize: 12,
+                  }}
+                >
                   Manual setup key: <code>{enrollment.secret}</code>
                 </p>
                 <label htmlFor="totp-confirm">
@@ -158,9 +158,7 @@ export default function AdminTwoFactorPanel() {
 
             {enabled ? (
               <div style={{ display: "grid", gap: "0.75rem", maxWidth: 360 }}>
-                <label htmlFor="totp-disable">
-                  Enter a current code to turn two-factor off:
-                </label>
+                <label htmlFor="totp-disable">Enter a current code to turn two-factor off:</label>
                 <input
                   id="totp-disable"
                   inputMode="numeric"

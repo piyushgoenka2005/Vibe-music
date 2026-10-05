@@ -6,7 +6,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
-import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
+import {
+  ErrorState,
+  MutationError,
+  adminFetchJson,
+  adminMutateJson,
+} from "@/components/admin/AdminQueryState";
 import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
 import { adminOrderPath } from "@/lib/routes";
 import type {
@@ -41,16 +46,14 @@ function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
     queryKey: ["admin-support", statusFilter],
     queryFn: async () => {
       const qs = statusFilter ? `?status=${statusFilter}` : "";
-      const res = await fetch(`/api/admin/support-tickets${qs}`);
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json() as Promise<{ tickets: SupportTicket[] }>;
+      return adminFetchJson<{ tickets: SupportTicket[] }>(`/api/admin/support-tickets${qs}`);
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!selected) return;
-      const res = await fetch(`/api/admin/support-tickets/${selected.id}`, {
+      await adminMutateJson(`/api/admin/support-tickets/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -60,7 +63,6 @@ function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
           adminNote: adminNote || undefined,
         }),
       });
-      if (!res.ok) throw new Error("Update failed");
     },
     onSuccess: () => {
       setSelected(null);
@@ -242,7 +244,9 @@ function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
                       <strong>Admin note:</strong> {selected.adminNote}
                     </p>
                   ) : null}
-                  <p style={{ marginTop: "1rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+                  <p
+                    style={{ marginTop: "1rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}
+                  >
                     View-only — you need orders:write to update tickets.
                   </p>
                 </>
@@ -264,9 +268,7 @@ function ContactMessagesPanel({ canWrite }: { canWrite: boolean }) {
     queryKey: ["admin-contact", statusFilter],
     queryFn: async () => {
       const qs = statusFilter ? `?status=${statusFilter}` : "";
-      const res = await fetch(`/api/admin/contact-messages${qs}`);
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json() as Promise<{ messages: ContactMessage[] }>;
+      return adminFetchJson<{ messages: ContactMessage[] }>(`/api/admin/contact-messages${qs}`);
     },
   });
 
@@ -278,13 +280,14 @@ function ContactMessagesPanel({ canWrite }: { canWrite: boolean }) {
       message: ContactMessage;
       status: "new" | "read";
     }) => {
-      const res = await fetch(`/api/admin/contact-messages/${message.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      if (!res.ok) throw new Error("Update failed");
-      return res.json() as Promise<{ message: ContactMessage }>;
+      return adminMutateJson<{ message: ContactMessage }>(
+        `/api/admin/contact-messages/${message.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        },
+      );
     },
     onSuccess: (result) => {
       setSelected(result.message);
@@ -412,7 +415,13 @@ function ContactMessagesPanel({ canWrite }: { canWrite: boolean }) {
                 ) : null}
               </div>
               {!canWrite ? (
-                <p style={{ marginTop: "0.75rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+                <p
+                  style={{
+                    marginTop: "0.75rem",
+                    color: "var(--admin-muted)",
+                    fontSize: "0.875rem",
+                  }}
+                >
                   View-only — you need orders:write to change message status.
                 </p>
               ) : null}

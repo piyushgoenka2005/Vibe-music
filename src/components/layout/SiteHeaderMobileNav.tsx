@@ -2,10 +2,11 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { HEADER_MEGA_MENUS } from "@/data/headerMegaMenu";
 import { ROUTES } from "@/lib/routes";
+import { isHeaderNavItemActive } from "@/lib/navigation/headerNavActive";
 import { useAuthStore } from "@/store/authStore";
 import { useShallow } from "zustand/react/shallow";
 
@@ -39,6 +40,9 @@ interface SiteHeaderMobileNavProps {
 
 export default function SiteHeaderMobileNav({ onNavigate }: SiteHeaderMobileNavProps) {
   const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams();
+  const searchCategory = searchParams.get("category");
+  const searchQuery = searchParams.get("q");
   const { isAuthenticated, isInitialized } = useAuthStore(
     useShallow((state) => ({
       isAuthenticated: state.isAuthenticated,
@@ -68,8 +72,29 @@ export default function SiteHeaderMobileNav({ onNavigate }: SiteHeaderMobileNavP
       <div className="site-header__mobile-nav-scroll">
         <Link
           href={MOBILE_BRANDS_LINK.href}
-          className="site-header__mobile-nav-link site-header__mobile-nav-link--solo"
+          className={`site-header__mobile-nav-link site-header__mobile-nav-link--solo${
+            isHeaderNavItemActive({
+              key: MOBILE_BRANDS_LINK.key,
+              href: MOBILE_BRANDS_LINK.href,
+              pathname,
+              searchCategory,
+              searchQuery,
+            })
+              ? " site-header__mobile-nav-link--active"
+              : ""
+          }`}
           onClick={handleNavigate}
+          aria-current={
+            isHeaderNavItemActive({
+              key: MOBILE_BRANDS_LINK.key,
+              href: MOBILE_BRANDS_LINK.href,
+              pathname,
+              searchCategory,
+              searchQuery,
+            })
+              ? "page"
+              : undefined
+          }
         >
           {MOBILE_BRANDS_LINK.label}
         </Link>
@@ -84,8 +109,31 @@ export default function SiteHeaderMobileNav({ onNavigate }: SiteHeaderMobileNavP
               <div className="site-header__mobile-nav-row">
                 <Link
                   href={menu.href}
-                  className="site-header__mobile-nav-link"
+                  className={`site-header__mobile-nav-link${
+                    isHeaderNavItemActive({
+                      key: menu.slug,
+                      href: menu.href,
+                      slug: menu.slug,
+                      pathname,
+                      searchCategory,
+                      searchQuery,
+                    })
+                      ? " site-header__mobile-nav-link--active"
+                      : ""
+                  }`}
                   onClick={handleNavigate}
+                  aria-current={
+                    isHeaderNavItemActive({
+                      key: menu.slug,
+                      href: menu.href,
+                      slug: menu.slug,
+                      pathname,
+                      searchCategory,
+                      searchQuery,
+                    })
+                      ? "page"
+                      : undefined
+                  }
                 >
                   {menu.name}
                 </Link>
@@ -127,18 +175,28 @@ export default function SiteHeaderMobileNav({ onNavigate }: SiteHeaderMobileNavP
         })}
 
         <div className="site-header__mobile-nav-extras">
-          {MOBILE_EXTRA_LINKS.map((link) => (
-            <Link
-              key={link.key}
-              href={link.href}
-              className={`site-header__mobile-nav-link site-header__mobile-nav-link--solo${
-                "accent" in link && link.accent ? " site-header__mobile-nav-link--accent" : ""
-              }`}
-              onClick={handleNavigate}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {MOBILE_EXTRA_LINKS.map((link) => {
+            const active = isHeaderNavItemActive({
+              key: link.key,
+              href: link.href,
+              pathname,
+              searchCategory,
+              searchQuery,
+            });
+            return (
+              <Link
+                key={link.key}
+                href={link.href}
+                className={`site-header__mobile-nav-link site-header__mobile-nav-link--solo${
+                  active ? " site-header__mobile-nav-link--active" : ""
+                }`}
+                onClick={handleNavigate}
+                aria-current={active ? "page" : undefined}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
       </div>
 

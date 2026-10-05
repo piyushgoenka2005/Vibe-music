@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { HEADER_MEGA_MENUS, MEGA_MENU_BY_SLUG } from "@/data/headerMegaMenu";
 import { ROUTES } from "@/lib/routes";
+import { isHeaderNavItemActive } from "@/lib/navigation/headerNavActive";
 import HeaderMegaMenu from "@/components/layout/HeaderMegaMenu";
 
 interface SiteHeaderNavProps {
@@ -21,48 +22,71 @@ interface NavGooItem {
   slug?: string;
   accent?: boolean;
   active?: boolean;
+  routeActive?: boolean;
 }
 
 export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: SiteHeaderNavProps) {
   const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams();
+  const searchCategory = searchParams.get("category");
+  const searchQuery = searchParams.get("q");
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [scrollable, setScrollable] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navShellRef = useRef<HTMLDivElement>(null);
 
-  const navItems: NavGooItem[] = [
-    {
-      key: "brands",
-      label: "Brands",
-      href: ROUTES.brands,
-      active: pathname === ROUTES.brands || pathname.startsWith(`${ROUTES.brands}/`),
-    },
-    ...HEADER_MEGA_MENUS.map((menu) => ({
-      key: menu.slug,
-      label: menu.name,
-      href: menu.href,
-      slug: menu.slug,
-      active: activeSlug === menu.slug,
-    })),
-    {
-      key: "deals",
-      label: "Deals",
-      href: ROUTES.deals,
-    },
-    {
-      key: "guides",
-      label: "Guides",
-      href: ROUTES.blog,
-    },
-    {
-      key: "gp9",
-      label: "Grand Piano",
-      href: ROUTES.gp9,
-      accent: true,
-      active: pathname === ROUTES.gp9 || pathname.startsWith(`${ROUTES.gp9}/`),
-    },
-  ];
+  const navItems: NavGooItem[] = useMemo(
+    () => [
+      {
+        key: "brands",
+        label: "Brands",
+        href: ROUTES.brands,
+      },
+      ...HEADER_MEGA_MENUS.map((menu) => ({
+        key: menu.slug,
+        label: menu.name,
+        href: menu.href,
+        slug: menu.slug,
+      })),
+      {
+        key: "deals",
+        label: "Deals",
+        href: ROUTES.deals,
+      },
+      {
+        key: "guides",
+        label: "Guides",
+        href: ROUTES.blog,
+      },
+      {
+        key: "gp9",
+        label: "Grand Piano",
+        href: ROUTES.gp9,
+      },
+    ],
+    [],
+  );
+
+  const resolvedNavItems = useMemo(
+    () =>
+      navItems.map((item) => {
+        const routeActive = isHeaderNavItemActive({
+          key: item.key,
+          href: item.href,
+          slug: item.slug,
+          pathname,
+          searchCategory,
+          searchQuery,
+        });
+        return {
+          ...item,
+          active: routeActive,
+          routeActive,
+        };
+      }),
+    [navItems, pathname, searchCategory, searchQuery],
+  );
 
   useEffect(() => {
     const el = navShellRef.current?.querySelector(".site-header__nav-inner");
@@ -111,7 +135,9 @@ export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: Site
     onMegaMenuOpenChange?.(Boolean(activeSlug));
   }, [activeSlug, onMegaMenuOpenChange]);
 
-  const hoveredIndex = hoveredKey ? navItems.findIndex((item) => item.key === hoveredKey) : -1;
+  const hoveredIndex = hoveredKey
+    ? resolvedNavItems.findIndex((item) => item.key === hoveredKey)
+    : -1;
 
   const shouldPull = (index: number) => {
     if (hoveredIndex < 0 || index <= 0) return false;
@@ -154,7 +180,7 @@ export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: Site
             onMouseLeave={() => setHoveredKey(null)}
           >
             <div className="gooey-linkup__blobs" aria-hidden>
-              {navItems.map((item, index) => (
+              {resolvedNavItems.map((item, index) => (
                 <span
                   key={item.key}
                   className={blobClass(item)}
@@ -166,7 +192,7 @@ export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: Site
             </div>
 
             <div className="gooey-linkup__hits">
-              {navItems.map((item, index) => (
+              {resolvedNavItems.map((item, index) => (
                 <div
                   key={item.key}
                   className="gooey-linkup__unit"
@@ -181,6 +207,7 @@ export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: Site
                     href={item.href}
                     className={hitClass(item)}
                     onClick={handleNavigate}
+                    aria-current={item.routeActive ? "page" : undefined}
                     aria-expanded={item.slug ? activeSlug === item.slug : undefined}
                     aria-haspopup={item.slug ? "true" : undefined}
                   >

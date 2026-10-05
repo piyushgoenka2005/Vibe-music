@@ -3,7 +3,6 @@ import {
   isBigNamesDealsGuitarProduct,
   mapCatalogProductToBigNamesDeal,
   resolveBigNamesDealFallbacks,
-  resolveBigNamesShowcaseImage,
 } from "@/lib/homepage/bigNamesDeals";
 import { BIG_NAMES_DEALS } from "@/data/bigNamesDeals";
 import type { CatalogProduct } from "@/types/catalog";
@@ -13,6 +12,7 @@ function guitar(
 ): CatalogProduct {
   return {
     brand: "HERTZ",
+    brandSlug: "hertz",
     category: "Guitars",
     categorySlug: "guitars",
     price: 10000,
@@ -42,26 +42,32 @@ describe("resolveBigNamesDealFallbacks", () => {
         id: "1",
         slug: "hertz-hertz-hza-uk-24-hertz-hza-uk-24",
         name: "HERTZ HZA - UK(24) Professional Guitar",
+        image:
+          "https://cdn.vibemusic.in/products/guitars/hertz-hertz-hza-uk-24-hertz-hza-uk-24/live.png",
       }),
       guitar({
         id: "2",
         slug: "hertz-hza-3900-hza-3900",
         name: "HERTZ HZA-3900 Acoustic Guitar with Tobacco Sunburst",
+        image: "https://cdn.vibemusic.in/products/guitars/hertz-hza-3900-hza-3900/live.png",
       }),
       guitar({
         id: "3",
         slug: "hertz-hza-3600-hza-3600",
         name: "HERTZ HZA-3600 Natural Finish Acoustic Guitar",
+        image: "https://cdn.vibemusic.in/products/guitars/hertz-hza-3600-hza-3600/live.png",
       }),
       guitar({
         id: "4",
         slug: "hertz-hza3900eq-hza3900eq",
         name: "HERTZ HZA3900EQ Electro Acoustic Guitar",
+        image: "https://cdn.vibemusic.in/products/guitars/hertz-hza3900eq-hza3900eq/live.png",
       }),
       guitar({
         id: "5",
         slug: "hertz-hza-6000-hza-6000",
         name: "HERTZ HZA-6000 Acoustic Guitar",
+        image: "https://cdn.vibemusic.in/products/guitars/hertz-hza-6000-hza-6000/live.png",
       }),
     ];
 
@@ -73,6 +79,8 @@ describe("resolveBigNamesDealFallbacks", () => {
       "/product/hertz-hza3900eq-hza3900eq",
       "/product/hertz-hza-6000-hza-6000",
     ]);
+    expect(items.every((item) => item.product.includes("cdn.vibemusic.in"))).toBe(true);
+    expect(items.every((item) => item.brand === "HERTZ")).toBe(true);
   });
 
   it("rejects amplifiers even when category looks like guitars", () => {
@@ -89,53 +97,43 @@ describe("resolveBigNamesDealFallbacks", () => {
     ).toBe(false);
   });
 
-  it("prefers self-hosted showcase art when catalog image is on CDN", () => {
-    const deal = BIG_NAMES_DEALS[0]!;
-    const image = resolveBigNamesShowcaseImage(
-      "https://cdn.vibemusic.in/products/guitars/example/missing.png",
-      deal,
+  it("uses vertical packshot with multiply blend when HZA-6000 has no standing lifestyle art", () => {
+    const products = [
       guitar({
-        id: "1",
-        slug: deal.productSlug,
-        name: "HERTZ showcase guitar",
-        image: "https://cdn.vibemusic.in/products/guitars/example/missing.png",
+        id: "5",
+        slug: "hertz-hza-6000-hza-6000",
+        name: "HERTZ HZA-6000 Acoustic Guitar",
+        image:
+          "https://cdn.vibemusic.in/products/guitars/hertz-hza-6000-hza-6000/0c482bf6-3921-4e88-b9b4-b13b3031012d.png",
+        images: [
+          "https://cdn.vibemusic.in/products/guitars/hertz-hza-6000-hza-6000/0c482bf6-3921-4e88-b9b4-b13b3031012d.png",
+          "https://cdn.vibemusic.in/products/guitars/hertz-hza-6000-hza-6000/7eb0b094-9d3b-48c2-8c15-32d959ab7ce3.png",
+        ],
       }),
-    );
-    expect(image.startsWith("/images/")).toBe(true);
-    expect(image).not.toContain("cdn.vibemusic.in");
-    expect(image).toBe(deal.product);
+    ];
+
+    const items = resolveBigNamesDealFallbacks(products);
+    expect(items[0]?.product).toContain("0c482bf6-3921-4e88-b9b4-b13b3031012d.png");
+    expect(items[0]?.product).not.toContain("7eb0b094-9d3b-48c2-8c15-32d959ab7ce3.png");
+    expect(items[0]?.blendMultiply).toBe(true);
   });
 
-  it("ignores generic local product thumbnails for configured showcase slots", () => {
-    const deal = BIG_NAMES_DEALS[0]!;
-    const image = resolveBigNamesShowcaseImage(
-      "/images/m/products/image/d55a7ca800bRKFzzzI1LkoPdgD1ymbxu18tLjQgI.png",
-      deal,
-      guitar({
-        id: "1",
-        slug: deal.productSlug,
-        name: "HERTZ showcase guitar",
-      }),
-    );
-    expect(image).toBe(deal.product);
-  });
-
-  it("uses distinct showcase art for each configured deal slot", () => {
+  it("uses catalog CDN images instead of hardcoded showcase art", () => {
     const products = BIG_NAMES_DEALS.map((deal, index) =>
       guitar({
         id: String(index + 1),
         slug: deal.productSlug,
         name: deal.productAlt,
-        image: "https://cdn.vibemusic.in/products/guitars/example/missing.png",
+        image: `https://cdn.vibemusic.in/products/guitars/${deal.productSlug}/live.png`,
       }),
     );
 
     const items = resolveBigNamesDealFallbacks(products);
-    expect(new Set(items.map((item) => item.product)).size).toBe(5);
-    expect(items.every((item) => item.product.includes("/images/big-names-deals/"))).toBe(true);
+    expect(items.every((item) => item.product.includes("cdn.vibemusic.in"))).toBe(true);
+    expect(items.every((item) => !item.product.includes("/images/big-names-deals/"))).toBe(true);
   });
 
-  it("uses slot art for admin-picked products that do not match deal slugs", () => {
+  it("uses catalog images for admin-picked products", () => {
     const item = mapCatalogProductToBigNamesDeal(
       guitar({
         id: "unknown",
@@ -146,7 +144,13 @@ describe("resolveBigNamesDealFallbacks", () => {
       { slotIndex: 2 },
     );
 
-    expect(item.product).toBe(BIG_NAMES_DEALS[2]!.product);
-    expect(item.product).not.toContain("cdn.vibemusic.in");
+    expect(item.product).toContain("cdn.vibemusic.in");
+    expect(item.brand).toBe("HERTZ");
+    expect(item.href).toBe("/product/hertz-random-acoustic-guitar");
+  });
+
+  it("falls back to static showcase art only when catalog is empty", () => {
+    const items = resolveBigNamesDealFallbacks([]);
+    expect(items.every((item) => item.product.includes("/images/big-names-deals/"))).toBe(true);
   });
 });

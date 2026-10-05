@@ -4,8 +4,9 @@ import { cache } from "react";
 import { getCategoryGridImage, hasCuratedCategoryImage } from "@/lib/categoryImages";
 import { isAmplifierProduct } from "@/lib/catalog/categoryProductsCore";
 import { ROUTES } from "@/lib/routes";
+import { getCachedHomepageProducts } from "@/lib/server/catalogSnapshotCache";
+import { countActiveProductsByCategory } from "@/lib/server/prisma/catalogRepository";
 import { getCategoryCatalog } from "@/lib/server/categoryResolver";
-import { getAllProducts } from "@/services/catalogService";
 import type { Category } from "@/types/category";
 
 export interface CategoryIndexItem extends Category {
@@ -40,15 +41,11 @@ const FEATURED_INDEX_DEPARTMENTS: CategoryIndexItem[] = [
 export const loadCategoriesForIndex = cache(async function loadCategoriesForIndex(): Promise<
   CategoryIndexItem[]
 > {
-  const [categories, products] = await Promise.all([getCategoryCatalog(), getAllProducts(false)]);
-
-  const countBySlug = new Map<string, number>();
-  for (const product of products) {
-    if (product.status !== "active") continue;
-    const slug = product.categorySlug?.trim();
-    if (!slug) continue;
-    countBySlug.set(slug, (countBySlug.get(slug) ?? 0) + 1);
-  }
+  const [categories, countBySlug, homepageProducts] = await Promise.all([
+    getCategoryCatalog(),
+    countActiveProductsByCategory(),
+    getCachedHomepageProducts(),
+  ]);
 
   const items: CategoryIndexItem[] = categories
     .map((category) => {
@@ -70,9 +67,7 @@ export const loadCategoriesForIndex = cache(async function loadCategoriesForInde
         FEATURED_INDEX_SLUGS.includes(category.slug as (typeof FEATURED_INDEX_SLUGS)[number]),
     );
 
-  const amplifierCount = products.filter(
-    (product) => product.status === "active" && isAmplifierProduct(product),
-  ).length;
+  const amplifierCount = homepageProducts.filter((product) => isAmplifierProduct(product)).length;
 
   if (amplifierCount > 0) {
     const amplifierItem: CategoryIndexItem = {

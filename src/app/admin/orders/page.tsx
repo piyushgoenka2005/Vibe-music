@@ -14,7 +14,12 @@ import {
   formatCurrency,
   formatDate,
 } from "@/components/admin/AdminUi";
-import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
+import {
+  ErrorState,
+  MutationError,
+  adminFetchJson,
+  adminMutateJson,
+} from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import type { AdminCapabilities } from "@/lib/auth/adminCapabilities";
 import type { Order, OrderStatus } from "@/types/order";
@@ -24,19 +29,15 @@ async function fetchOrders(params: { search: string; status: string; cursor?: st
   if (params.search) sp.set("search", params.search);
   if (params.status) sp.set("status", params.status);
   if (params.cursor) sp.set("cursor", params.cursor);
-  const res = await fetch(`/api/admin/orders?${sp}`);
-  if (!res.ok) throw new Error("Failed to load orders");
-  return res.json() as Promise<{
+  return adminFetchJson<{
     orders: Order[];
     hasMore: boolean;
     nextCursor?: string;
-  }>;
+  }>(`/api/admin/orders?${sp}`);
 }
 
 async function fetchOrderDetail(orderId: string): Promise<Order> {
-  const res = await fetch(`/api/admin/orders/${orderId}`);
-  if (!res.ok) throw new Error("Failed to load order");
-  const data = (await res.json()) as { order: Order };
+  const data = await adminFetchJson<{ order: Order }>(`/api/admin/orders/${orderId}`);
   return data.order;
 }
 
@@ -95,13 +96,11 @@ function OrdersContent({
           "This order is still paid on Razorpay. Use Refund via Razorpay below — do not mark status refunded first.",
         );
       }
-      const res = await fetch(`/api/admin/orders/${selected.id}`, {
+      await adminMutateJson(`/api/admin/orders/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus, note: note || undefined }),
       });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error ?? "Update failed");
     },
     onSuccess: () => {
       setNote("");
@@ -120,7 +119,7 @@ function OrdersContent({
       if (amount != null && amount > selected.total) {
         throw new Error(`Refund cannot exceed order total (${selected.total})`);
       }
-      const res = await fetch(`/api/admin/orders/${selected.id}/refund`, {
+      await adminMutateJson(`/api/admin/orders/${selected.id}/refund`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -128,8 +127,6 @@ function OrdersContent({
           ...(amount != null ? { amount } : {}),
         }),
       });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error ?? "Refund failed");
     },
     onSuccess: () => {
       setNote("");

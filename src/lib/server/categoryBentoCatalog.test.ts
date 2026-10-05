@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/server/catalogSnapshotCache", () => ({
-  getCachedProducts: vi.fn(),
+  getCachedHomepageProducts: vi.fn(),
 }));
 
-import { getCachedProducts } from "@/lib/server/catalogSnapshotCache";
+import { getCachedHomepageProducts } from "@/lib/server/catalogSnapshotCache";
 import { buildCategoryBentoCatalogMeta } from "@/lib/server/categoryBentoCatalog";
 
 describe("buildCategoryBentoCatalogMeta", () => {
   beforeEach(() => {
-    vi.mocked(getCachedProducts).mockResolvedValue([
+    vi.mocked(getCachedHomepageProducts).mockResolvedValue([
       {
         id: "p1",
         name: "Guitar A",

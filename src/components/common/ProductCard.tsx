@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { memo, useState } from "react";
+import { memo } from "react";
+import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { useCartStore } from "@/store/cartStore";
 import { formatProductCardTitle } from "@/lib/product/formatProductCardTitle";
 import {
@@ -15,8 +15,6 @@ import CompareButton from "@/components/compare/CompareButton";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
 import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
-import { shouldBypassNextImageOptimization } from "@/lib/cdnConfig";
-import { optimizeImageUrl } from "@/lib/storefrontImages";
 import { trackSelectItem, type ItemListContext } from "@/lib/analytics/events";
 import type { Product } from "@/types/product";
 import type { ViewMode } from "@/types/filters";
@@ -125,17 +123,6 @@ const ProductCard = memo(function ProductCard({
       ? "Add to cart"
       : "Out of stock";
   const isGrid = view === "grid";
-  const preferredSrc = product.image ? optimizeImageUrl(product.image, "productCard") : "";
-  const imageCandidates = Array.from(new Set([preferredSrc, product.image].filter(Boolean)));
-  const [imageAttempt, setImageAttempt] = useState(0);
-  const [imageSrcKey, setImageSrcKey] = useState(preferredSrc);
-  if (preferredSrc !== imageSrcKey) {
-    setImageSrcKey(preferredSrc);
-    setImageAttempt(0);
-  }
-  const safeImageAttempt = preferredSrc === imageSrcKey ? imageAttempt : 0;
-  const imageSrc = imageCandidates[Math.min(safeImageAttempt, imageCandidates.length - 1)] ?? "";
-  const imageFailed = !imageSrc || safeImageAttempt >= imageCandidates.length;
 
   return (
     <article
@@ -164,20 +151,18 @@ const ProductCard = memo(function ProductCard({
               {conditionLabel(product.condition)}
             </span>
           ) : null}
-          {imageSrc && !imageFailed ? (
-            <Image
-              key={imageSrc}
-              src={imageSrc}
+          {product.image ? (
+            <StorefrontThumbImage
+              src={product.image}
+              fallbackSrc={product.imageFallback}
               alt=""
               width={480}
               height={480}
-              priority={eager}
-              unoptimized={shouldBypassNextImageOptimization(imageSrc)}
-              sizes="(max-width: 767px) 50vw, (max-width: 1024px) 33vw, 360px"
+              fill
+              loading={eager ? "eager" : "lazy"}
+              fetchPriority={eager ? "high" : "auto"}
+              sizes="(max-width: 767px) 46vw, 280px"
               className="cat-product-card__image-photo"
-              onError={() => {
-                setImageAttempt((current) => current + 1);
-              }}
             />
           ) : null}
           {displayReviewCount > 0 ? (

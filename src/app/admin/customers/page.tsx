@@ -13,7 +13,7 @@ import {
   formatCurrency,
   formatDate,
 } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import { adminOrderPath } from "@/lib/routes";
 import { downloadFromApi } from "@/lib/client/downloadFromApi";
@@ -22,9 +22,7 @@ async function fetchCustomers(params: { search: string; cursor?: string }) {
   const sp = new URLSearchParams({ limit: "20" });
   if (params.search) sp.set("search", params.search);
   if (params.cursor) sp.set("cursor", params.cursor);
-  const res = await fetch(`/api/admin/customers?${sp}`);
-  if (!res.ok) throw new Error("Failed to load customers");
-  return res.json() as Promise<{
+  return adminFetchJson<{
     customers: Array<{
       uid: string;
       email: string;
@@ -36,7 +34,7 @@ async function fetchCustomers(params: { search: string; cursor?: string }) {
     }>;
     hasMore: boolean;
     nextCursor?: string;
-  }>;
+  }>(`/api/admin/customers?${sp}`);
 }
 
 function CustomersContent({ canWrite }: { canWrite: boolean }) {
@@ -56,9 +54,9 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
   const { data: detail } = useQuery({
     queryKey: ["admin-customer", selectedId],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/customers/${selectedId}`);
-      if (!res.ok) throw new Error("Failed to load customer");
-      return res.json();
+      return adminFetchJson<{ customer: Record<string, unknown> }>(
+        `/api/admin/customers/${selectedId}`,
+      );
     },
     enabled: !!selectedId,
   });
@@ -66,16 +64,11 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
   const statusMutation = useMutation({
     mutationFn: async (isActive: boolean) => {
       if (!selectedId) throw new Error("No customer selected");
-      const res = await fetch(`/api/admin/customers/${selectedId}`, {
+      return adminMutateJson(`/api/admin/customers/${selectedId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive }),
       });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(body?.error ?? "Status update failed");
-      }
-      return res.json();
     },
     onSuccess: () => {
       setStatusError(null);
@@ -91,9 +84,7 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
 
   const eraseMutation = useMutation({
     mutationFn: async (uid: string) => {
-      const res = await fetch(`/api/admin/customers/${uid}`, { method: "DELETE" });
-      const body = (await res.json().catch(() => null)) as { error?: string } | null;
-      if (!res.ok) throw new Error(body?.error ?? "Erase failed");
+      await adminMutateJson(`/api/admin/customers/${uid}`, { method: "DELETE" });
     },
     onSuccess: () => {
       setSelectedId(null);

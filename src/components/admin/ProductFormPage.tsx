@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { slugify } from "@/lib/slug";
@@ -23,7 +23,8 @@ import ProductInTheBoxEditor from "@/components/admin/ProductInTheBoxEditor";
 import ProductSpecsEditor from "@/components/admin/ProductSpecsEditor";
 import ProductVideosEditor from "@/components/admin/ProductVideosEditor";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
-import type { Category } from "@/types/category";
+import { adminFetchJson } from "@/lib/admin/adminFetch";
+import type { AdminCategory } from "@/types/admin";
 import type { Brand } from "@/types/brand";
 import type { ProductSpec, ProductVariant, ProductVideo } from "@/types/product";
 
@@ -115,7 +116,14 @@ export default function ProductFormPage({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const mainCategories = useMemo(
+    () =>
+      categories
+        .filter((category) => !category.parentId)
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [categories],
+  );
   const [brands, setBrands] = useState<Brand[]>([]);
   const [subcategoryOptions, setSubcategoryOptions] = useState<string[]>([]);
   const [isCustomSubcategory, setIsCustomSubcategory] = useState(false);
@@ -125,8 +133,7 @@ export default function ProductFormPage({
   const [loaded, setLoaded] = useState(!productId);
 
   useEffect(() => {
-    fetch("/api/catalog/categories")
-      .then((r) => r.json())
+    adminFetchJson<{ categories: AdminCategory[] }>("/api/admin/categories")
       .then((d) => setCategories(d.categories ?? []))
       .catch(() => undefined);
 
@@ -137,7 +144,10 @@ export default function ProductFormPage({
   }, []);
 
   useEffect(() => {
-    const activeCategory = form.category || form.categorySlug;
+    const activeCategory =
+      form.categorySlug ||
+      categories.find((category) => category.name === form.category)?.slug ||
+      form.category;
     let active = true;
 
     if (!activeCategory) {
@@ -163,7 +173,7 @@ export default function ProductFormPage({
     return () => {
       active = false;
     };
-  }, [form.category, form.categorySlug, form.subcategory]);
+  }, [categories, form.category, form.categorySlug, form.subcategory]);
 
   useEffect(() => {
     if (!productId) return;
@@ -212,7 +222,7 @@ export default function ProductFormPage({
   const saveMutation = useMutation({
     mutationFn: async () => {
       const slug = slugify(form.slug || `${form.brand}-${form.name}`);
-      const selectedCategory = categories.find(
+      const selectedCategory = mainCategories.find(
         (c) => c.slug === form.categorySlug || c.name === form.category,
       );
       const categoryName = selectedCategory?.name ?? form.category;
@@ -426,7 +436,7 @@ export default function ProductFormPage({
               required
             >
               <option value="">Select category</option>
-              {categories.map((category) => (
+              {mainCategories.map((category) => (
                 <option key={category.slug} value={category.slug}>
                   {category.name}
                 </option>

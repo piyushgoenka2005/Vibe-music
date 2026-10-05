@@ -1,7 +1,7 @@
 "use client";
 
+import { Suspense, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { type RefObject } from "react";
 import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useIsClient } from "@/hooks/useIsClient";
 import SiteHeaderMobileNav from "@/components/layout/SiteHeaderMobileNav";
@@ -38,9 +38,11 @@ export default function SiteHeaderMobileDrawer({
         role="dialog"
         aria-modal="true"
       >
-        <SiteHeaderMobileNav onNavigate={onNavigate} />
+        <Suspense fallback={null}>
+          <SiteHeaderMobileNav onNavigate={onNavigate} />
+        </Suspense>
       </nav>
     </>,
-    document.body
+    document.body,
   );
 }

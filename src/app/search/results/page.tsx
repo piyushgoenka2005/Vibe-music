@@ -3,7 +3,7 @@ import SearchResultsPage from "@/components/search/SearchResultsPage";
 import { getSearchResults, SEARCH_MIN_QUERY_LENGTH } from "@/lib/server/searchResultsService";
 import type { SearchResultsData } from "@/types/search";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   robots: { index: false, follow: true },
@@ -31,14 +31,11 @@ export default async function SearchResultsRoute({ searchParams }: SearchResults
 
   if (query.length >= SEARCH_MIN_QUERY_LENGTH || hasFilter) {
     try {
-      // Load the browse set server-side. Listing `brand=` chips filter client-side
-      // (same as price/rating), so pass brand only when we also have a text query
-      // and want server narrowing — for brand-only URLs, omit it to hydrate facets.
       initialResults = await getSearchResults({
         query,
         category: category || undefined,
         subcategory: subcategory || undefined,
-        brand: query || category ? undefined : brand || undefined,
+        brand: brand || undefined,
       });
     } catch {
       initialResults = null;
@@ -51,6 +48,7 @@ export default async function SearchResultsRoute({ searchParams }: SearchResults
         query={query}
         initialCategory={category}
         initialSubcategory={subcategory}
+        initialBrand={brand}
         initialResults={initialResults}
       />
     </main>

@@ -5,7 +5,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState, formatDate } from "@/components/admin/AdminUi";
-import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
+import {
+  ErrorState,
+  MutationError,
+  adminFetchJson,
+  adminMutateJson,
+} from "@/components/admin/AdminQueryState";
 import { normalizeAdminNotificationLink } from "@/lib/routes";
 import type { AdminNotification } from "@/types/notification";
 
@@ -15,23 +20,20 @@ function NotificationsContent() {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-notifications"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/notifications");
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json() as Promise<{
+      return adminFetchJson<{
         notifications: AdminNotification[];
         unreadCount: number;
-      }>;
+      }>("/api/admin/notifications");
     },
   });
 
   const markReadMutation = useMutation({
     mutationFn: async (payload: { id?: string; markAllRead?: boolean }) => {
-      const res = await fetch("/api/admin/notifications", {
+      await adminMutateJson("/api/admin/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Update failed");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
@@ -81,9 +83,7 @@ function NotificationsContent() {
             </thead>
             <tbody>
               {notifications.map((item) => {
-                const href = item.link
-                  ? normalizeAdminNotificationLink(item.link)
-                  : null;
+                const href = item.link ? normalizeAdminNotificationLink(item.link) : null;
                 return (
                   <tr key={item.id}>
                     <td>

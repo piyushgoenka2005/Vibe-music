@@ -22,7 +22,7 @@ import {
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import type { CatalogTaxonomyItem, TaxonomyStats, TaxonomyImportResult } from "@/types/taxonomy";
 
 function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }) {
@@ -59,23 +59,12 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
       if (search) params.set("search", search);
       if (selectedCategory !== "all") params.set("category", selectedCategory);
 
-      const res = await fetch(`/api/admin/taxonomy?${params.toString()}`);
-      const json = (await res.json().catch(() => ({}))) as {
-        error?: string;
-        items?: CatalogTaxonomyItem[];
-        pagination?: { page: number; limit: number; total: number; totalPages: number };
-        stats?: TaxonomyStats;
-        filterOptions?: { categories: string[]; subcategories: string[] };
-      };
-      if (!res.ok) {
-        throw new Error(json.error || "Failed to load taxonomy data");
-      }
-      return json as {
+      return adminFetchJson<{
         items: CatalogTaxonomyItem[];
         pagination: { page: number; limit: number; total: number; totalPages: number };
         stats?: TaxonomyStats;
         filterOptions?: { categories: string[]; subcategories: string[] };
-      };
+      }>(`/api/admin/taxonomy?${params.toString()}`);
     },
   });
 
@@ -104,15 +93,13 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
         formData.append("replace", "true");
       }
 
-      const res = await fetch("/api/admin/taxonomy/import", {
-        method: "POST",
-        body: formData,
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || "Failed to import catalog");
-      }
+      const json = await adminMutateJson<{ result: TaxonomyImportResult }>(
+        "/api/admin/taxonomy/import",
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
 
       setImportResult(json.result);
       setUploadFile(null);
@@ -130,15 +117,41 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
     setSyncFeedback(null);
     startSyncTransition(async () => {
       try {
-        const res = await fetch("/api/admin/taxonomy/sync", { method: "POST" });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Sync failed");
+        const json = await adminMutateJson<{ result: { created: number; existing: number } }>(
+          "/api/admin/taxonomy/sync",
+          { method: "POST" },
+        );
         setSyncFeedback(
           `Sync complete: ${json.result.created} new categories created, ${json.result.existing} already matched.`,
         );
         queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
       } catch (err) {
         setSyncFeedback(err instanceof Error ? err.message : "Sync error");
+      }
+    });
+  };
+
+  const handleBackfillSubcategories = () => {
+    setSyncFeedback(null);
+    startSyncTransition(async () => {
+      try {
+        const json = await adminMutateJson<{
+          updated: number;
+          missing: number;
+          unresolved?: Array<{ name: string }>;
+        }>("/api/admin/products/backfill-subcategories", { method: "POST" });
+        const unresolved = (json.unresolved ?? []) as Array<{ name: string }>;
+        setSyncFeedback(
+          `Subcategories: ${json.updated} of ${json.missing} products missing one were filled.` +
+            (unresolved.length
+              ? ` Still missing (set Product Type or Subcategory in admin): ${unresolved
+                  .slice(0, 5)
+                  .map((item) => item.name)
+                  .join(", ")}${unresolved.length > 5 ? `, +${unresolved.length - 5} more` : ""}.`
+              : ""),
+        );
+      } catch (err) {
+        setSyncFeedback(err instanceof Error ? err.message : "Subcategory backfill error");
       }
     });
   };
@@ -213,6 +226,18 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
                 <RefreshCw size={16} />
               )}
               Sync Categories
+            </button>
+          )}
+
+          {canWrite && (
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              onClick={handleBackfillSubcategories}
+              disabled={isSyncing}
+            >
+              {isSyncing ? <Loader2 size={16} className="admin-spinner" /> : <Tag size={16} />}
+              Fill Missing Product Subcategories
             </button>
           )}
         </div>

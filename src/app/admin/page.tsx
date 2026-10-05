@@ -24,6 +24,7 @@ import {
   formatDate,
 } from "@/components/admin/AdminUi";
 import { ErrorState } from "@/components/admin/AdminQueryState";
+import { adminFetchJson } from "@/lib/admin/adminFetch";
 import type { DashboardStats, RevenueDataPoint } from "@/types/admin";
 import type { Order } from "@/types/order";
 
@@ -51,9 +52,7 @@ interface DashboardData {
 }
 
 async function fetchDashboard(): Promise<DashboardData> {
-  const res = await fetch("/api/admin/dashboard");
-  if (!res.ok) throw new Error("Failed to load dashboard");
-  return res.json();
+  return adminFetchJson<DashboardData>("/api/admin/dashboard");
 }
 
 function DashboardContent() {

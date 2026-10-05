@@ -6,7 +6,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatCard, StatusBadge, LoadingState, EmptyState } from "@/components/admin/AdminUi";
-import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
+import {
+  ErrorState,
+  MutationError,
+  adminFetchJson,
+  adminMutateJson,
+} from "@/components/admin/AdminQueryState";
 import type { InventoryRecord } from "@/types/admin";
 import { downloadFromApi } from "@/lib/client/downloadFromApi";
 
@@ -21,18 +26,23 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-inventory"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/inventory");
-      if (!res.ok) throw new Error("Failed");
-      return res.json();
+      return adminFetchJson<{
+        inventory: InventoryRecord[];
+        stats: {
+          totalSkus: number;
+          lowStock: number;
+          outOfStock: number;
+          totalUnits: number;
+          totalAvailableUnits: number;
+        };
+      }>("/api/admin/inventory");
     },
   });
 
   const { data: adjustmentsData } = useQuery({
     queryKey: ["admin-inventory-adjustments"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/inventory?view=adjustments");
-      if (!res.ok) throw new Error("Failed to load adjustments");
-      return res.json() as Promise<{
+      return adminFetchJson<{
         adjustments: Array<{
           id: string;
           productId: string;
@@ -45,19 +55,18 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
           timestamp: string;
           note?: string;
         }>;
-      }>;
+      }>("/api/admin/inventory?view=adjustments");
     },
   });
 
   const adjustMutation = useMutation({
     mutationFn: async () => {
       if (!adjustProduct) return;
-      const res = await fetch("/api/admin/inventory", {
+      await adminMutateJson("/api/admin/inventory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId: adjustProduct.productId, newQuantity: newQty, reason }),
       });
-      if (!res.ok) throw new Error("Adjust failed");
     },
     onSuccess: () => {
       setAdjustProduct(null);

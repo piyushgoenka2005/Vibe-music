@@ -6,9 +6,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatCard, LoadingState, EmptyState, formatCurrency } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson } from "@/components/admin/AdminQueryState";
 import SearchAnalyticsPanel from "@/components/admin/SearchAnalyticsPanel";
 import { downloadFromApi } from "@/lib/client/downloadFromApi";
+import type { AnalyticsReport } from "@/types/admin";
+import type { PaymentWebhookMetrics } from "@/types/payment";
 
 function AnalyticsContent() {
   const [period, setPeriod] = useState("30d");
@@ -16,18 +18,16 @@ function AnalyticsContent() {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-analytics", period],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/analytics?period=${period}`);
-      if (!res.ok) throw new Error("Failed");
-      return res.json();
+      return adminFetchJson<{ report: AnalyticsReport }>(`/api/admin/analytics?period=${period}`);
     },
   });
 
   const { data: webhookData, isLoading: webhooksLoading } = useQuery({
     queryKey: ["admin-payment-webhooks"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/payments/webhooks?logs=true");
-      if (!res.ok) throw new Error("Failed to load webhook metrics");
-      return res.json();
+      return adminFetchJson<{ metrics: PaymentWebhookMetrics; logs?: unknown[] }>(
+        "/api/admin/payments/webhooks?logs=true",
+      );
     },
   });
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   cdnSeoImageUrl,
+  storefrontGalleryThumbCandidates,
   storefrontImageCandidates,
   storefrontImageUrl,
   storefrontZoomImageUrl,
@@ -10,27 +11,27 @@ const master =
   "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.png";
 
 describe("storefrontImageUrl", () => {
-  it("routes legacy PNG masters through the cached thumb proxy", () => {
+  it("prefers prebuilt CDN WebP derivatives for legacy PNG masters", () => {
     const result = storefrontImageUrl(master, 480);
-    expect(result.kind).toBe("thumb");
-    expect(result.src).toContain("/api/media/thumb?url=");
-    expect(result.src).toContain("w=480");
+    expect(result.kind).toBe("derivative");
+    expect(result.src).toContain("-w480.webp");
+    expect(result.src).not.toContain("/api/media/thumb?url=");
   });
 
   it("snaps thumb widths to shared buckets including zoom sizes for webp", () => {
     const webpMaster =
       "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp";
     const result = storefrontImageUrl(webpMaster, 310);
-    expect(result.src).toContain("-w480.webp");
+    expect(result.src).toContain("-w320.webp");
 
     const card = storefrontImageUrl(webpMaster, 640);
     expect(card.src).toContain("-w960.webp");
   });
 
-  it("serves zoom panes via thumb proxy for legacy PNG masters", () => {
+  it("serves zoom panes via 1600w CDN derivative for legacy PNG masters", () => {
     const zoom = storefrontZoomImageUrl(master);
-    expect(zoom).toContain("/api/media/thumb?url=");
-    expect(zoom).toContain("w=1600");
+    expect(zoom).toContain("-w1600.webp");
+    expect(zoom).not.toContain("/api/media/thumb?url=");
   });
 
   it("serves zoom panes via 1600w static CDN derivative for webp masters", () => {
@@ -41,16 +42,24 @@ describe("storefrontImageUrl", () => {
     expect(zoom).not.toContain("/api/media/thumb?url=");
   });
 
-  it("keeps thumb + original fallbacks for legacy PNG masters", () => {
+  it("keeps CDN derivatives, thumb proxy, and original fallback for legacy PNG masters", () => {
     const candidates = storefrontImageCandidates(master, 480);
-    expect(candidates[0]).toContain("/api/media/thumb?url=");
-    expect(candidates[1]).toBe(master);
+    expect(candidates[0]).toContain("-w480.webp");
+    expect(candidates.some((url) => url === master)).toBe(true);
+    expect(candidates.some((url) => url.includes("/api/media/thumb?url="))).toBe(true);
   });
 
-  it("appends optional self-hosted fallbacks after CDN candidates", () => {
+  it("omits flaky 480px thumb proxies from PDP gallery rail candidates", () => {
+    const candidates = storefrontGalleryThumbCandidates(master);
+    expect(candidates.some((url) => url.includes("w=1600"))).toBe(true);
+    expect(candidates.some((url) => url.includes("w=480"))).toBe(false);
+  });
+
+  it("places self-hosted fallbacks before the raw CDN master for legacy PNG", () => {
     const fallback = "/images/PA-Speaker.png";
     const candidates = storefrontImageCandidates(master, 480, [fallback]);
-    expect(candidates.at(-1)).toBe(fallback);
+    expect(candidates.at(-1)).toBe(master);
+    expect(candidates).toContain(fallback);
   });
 
   it("steps down CDN derivative buckets when larger sizes are missing", () => {
@@ -58,9 +67,10 @@ describe("storefrontImageUrl", () => {
       "https://cdn.vibemusic.in/products/guitars/abc/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp";
     const candidates = storefrontImageCandidates(webpMaster, 1200);
     expect(candidates).toEqual([
-      `${webpMaster.replace(".webp", "")}-w480.webp`,
-      `${webpMaster.replace(".webp", "")}-w960.webp`,
       `${webpMaster.replace(".webp", "")}-w1600.webp`,
+      `${webpMaster.replace(".webp", "")}-w960.webp`,
+      `${webpMaster.replace(".webp", "")}-w480.webp`,
+      `${webpMaster.replace(".webp", "")}-w320.webp`,
       webpMaster,
     ]);
   });

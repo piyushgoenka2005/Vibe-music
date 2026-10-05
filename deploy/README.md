@@ -17,3 +17,21 @@ bash deploy/update.sh
 bash deploy/production.sh certify
 bash deploy/production.sh rollback
 ```
+
+## Google sign-in (`deleted_client` / Error 401)
+
+If shoppers see **“The OAuth client was deleted”** on [vibemusic.in/login](https://vibemusic.in/login):
+
+1. Open [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials?project=vibemusic2026) (project **vibemusic2026**).
+2. **Create credentials → OAuth client ID → Web application**.
+3. **Authorized JavaScript origins:** `https://vibemusic.in`, `https://www.vibemusic.in`
+4. **Authorized redirect URIs:**
+   - `https://vibemusic.in/api/auth/callback/google`
+   - `https://www.vibemusic.in/api/auth/callback/google`
+5. On the VPS, update `.env` (or merged secrets):
+   - `AUTH_GOOGLE_ID=<new client id>`
+   - `AUTH_GOOGLE_SECRET=<new client secret>`
+6. Verify: `npm run verify:google-oauth` (on the server with production `.env`)
+7. Redeploy: `bash deploy/update.sh`
+
+The app hides the Google button when the client is deleted/invalid so shoppers are not sent to a broken Google screen.

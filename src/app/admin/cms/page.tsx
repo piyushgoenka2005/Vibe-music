@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { slugify } from "@/lib/slug";
 import type { ContentPage } from "@/data/contentPages";
 
@@ -29,9 +29,7 @@ function CmsContent({ canWrite }: { canWrite: boolean }) {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-cms-pages"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/cms/pages");
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json() as Promise<{ pages: ContentPage[] }>;
+      return adminFetchJson<{ pages: ContentPage[] }>("/api/admin/cms/pages");
     },
   });
 
@@ -39,13 +37,11 @@ function CmsContent({ canWrite }: { canWrite: boolean }) {
     queryKey: ["admin-cms-page", selectedSlug],
     enabled: Boolean(selectedSlug) && !creating,
     queryFn: async () => {
-      const res = await fetch(`/api/admin/cms/pages/${selectedSlug}`);
-      if (!res.ok) throw new Error("Failed to load page");
-      const json = (await res.json()) as {
+      const json = await adminFetchJson<{
         page: ContentPage;
         isSeeded?: boolean;
         hasDbOverride?: boolean;
-      };
+      }>(`/api/admin/cms/pages/${selectedSlug}`);
       setDraft(json.page);
       setIsSeeded(Boolean(json.isSeeded));
       setHasDbOverride(Boolean(json.hasDbOverride));
@@ -55,16 +51,12 @@ function CmsContent({ canWrite }: { canWrite: boolean }) {
 
   const saveMutation = useMutation({
     mutationFn: async (page: ContentPage) => {
-      const url = creating
-        ? "/api/admin/cms/pages"
-        : `/api/admin/cms/pages/${page.slug}`;
-      const res = await fetch(url, {
+      const url = creating ? "/api/admin/cms/pages" : `/api/admin/cms/pages/${page.slug}`;
+      await adminMutateJson(url, {
         method: creating ? "POST" : "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(page),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Save failed");
       return page;
     },
     onSuccess: (page) => {
@@ -81,13 +73,10 @@ function CmsContent({ canWrite }: { canWrite: boolean }) {
 
   const deleteMutation = useMutation({
     mutationFn: async (slug: string) => {
-      const res = await fetch(`/api/admin/cms/pages/${slug}`, { method: "DELETE" });
-      const json = (await res.json().catch(() => ({}))) as {
+      return adminMutateJson<{
         error?: string;
         revertedToSeed?: boolean;
-      };
-      if (!res.ok) throw new Error(json.error ?? "Delete failed");
-      return json;
+      }>(`/api/admin/cms/pages/${slug}`, { method: "DELETE" });
     },
     onSuccess: (result, slug) => {
       setActionError(null);
@@ -156,8 +145,7 @@ function CmsContent({ canWrite }: { canWrite: boolean }) {
                     key={page.slug}
                     style={{
                       cursor: "pointer",
-                      background:
-                        selectedSlug === page.slug ? "var(--admin-surface-2)" : undefined,
+                      background: selectedSlug === page.slug ? "var(--admin-surface-2)" : undefined,
                     }}
                     onClick={() => {
                       setCreating(false);
@@ -191,15 +179,15 @@ function CmsContent({ canWrite }: { canWrite: boolean }) {
           (creating && !draft) ? (
             <EmptyState
               message={
-                canWrite
-                  ? "Select a page to edit, or create a new one."
-                  : "Select a page to view."
+                canWrite ? "Select a page to edit, or create a new one." : "Select a page to view."
               }
             />
           ) : draft ? (
             <>
               {!canWrite ? (
-                <p style={{ margin: "0 0 1rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+                <p
+                  style={{ margin: "0 0 1rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}
+                >
                   View-only — you need settings:write to edit CMS pages.
                 </p>
               ) : null}
@@ -207,174 +195,165 @@ function CmsContent({ canWrite }: { canWrite: boolean }) {
                 disabled={!canWrite}
                 style={{ border: "none", padding: 0, margin: 0, minWidth: 0 }}
               >
-              <div className="admin-form-group">
-                <label>Title</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={draft.title}
-                  onChange={(e) => {
-                    const title = e.target.value;
-                    setDraft({
-                      ...draft,
-                      title,
-                      slug: creating ? slugify(title) : draft.slug,
-                    });
-                  }}
-                />
-              </div>
-              <div className="admin-form-group">
-                <label>Slug</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={draft.slug}
-                  disabled={!creating}
-                  onChange={(e) =>
-                    setDraft({ ...draft, slug: slugify(e.target.value) })
-                  }
-                />
-              </div>
-              <div className="admin-form-group">
-                <label>Eyebrow</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={draft.eyebrow}
-                  onChange={(e) => setDraft({ ...draft, eyebrow: e.target.value })}
-                />
-              </div>
-              {draft.sections.map((section, sectionIndex) => (
-                <div key={sectionIndex} className="admin-form-group admin-form-grid--full">
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "0.35rem",
-                    }}
-                  >
-                    <label style={{ margin: 0 }}>Section {sectionIndex + 1}</label>
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--ghost"
-                      onClick={() => {
-                        const sections = draft.sections.filter((_, i) => i !== sectionIndex);
-                        setDraft({
-                          ...draft,
-                          sections:
-                            sections.length > 0
-                              ? sections
-                              : [{ paragraphs: ["Write page content here."] }],
-                        });
-                      }}
-                    >
-                      Remove section
-                    </button>
-                  </div>
+                <div className="admin-form-group">
+                  <label>Title</label>
                   <input
                     className="admin-input"
-                    style={{ width: "100%", marginBottom: "0.5rem" }}
-                    placeholder="Heading (optional)"
-                    value={section.heading ?? ""}
+                    style={{ width: "100%" }}
+                    value={draft.title}
                     onChange={(e) => {
-                      const sections = [...draft.sections];
-                      sections[sectionIndex] = {
-                        ...section,
-                        heading: e.target.value || undefined,
-                      };
-                      setDraft({ ...draft, sections });
-                    }}
-                  />
-                  <textarea
-                    className="admin-textarea"
-                    value={section.paragraphs.join("\n\n")}
-                    onChange={(e) => {
-                      const sections = [...draft.sections];
-                      sections[sectionIndex] = {
-                        ...section,
-                        paragraphs: e.target.value
-                          .split(/\n{2,}/)
-                          .map((item) => item.trim())
-                          .filter(Boolean),
-                      };
-                      setDraft({ ...draft, sections });
+                      const title = e.target.value;
+                      setDraft({
+                        ...draft,
+                        title,
+                        slug: creating ? slugify(title) : draft.slug,
+                      });
                     }}
                   />
                 </div>
-              ))}
-              <button
-                type="button"
-                className="admin-btn admin-btn--secondary"
-                style={{ marginBottom: "1rem" }}
-                onClick={() =>
-                  setDraft({
-                    ...draft,
-                    sections: [
-                      ...draft.sections,
-                      { paragraphs: ["New section content."] },
-                    ],
-                  })
-                }
-              >
-                Add section
-              </button>
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                {canWrite ? (
-                  <button
-                    type="button"
-                    className="admin-btn admin-btn--primary"
-                    disabled={saveMutation.isPending}
-                    onClick={() => draft && saveMutation.mutate(draft)}
-                  >
-                    {saveMutation.isPending
-                      ? "Saving…"
-                      : creating
-                        ? "Create page"
-                        : "Save page"}
-                  </button>
-                ) : null}
-                {canWrite && !creating && selectedSlug ? (
-                  <button
-                    type="button"
-                    className="admin-btn admin-btn--danger"
-                    disabled={deleteMutation.isPending}
-                    onClick={() => {
-                      const message = isSeeded
-                        ? hasDbOverride
-                          ? "Reset this page to the seeded default content?"
-                          : "This seeded page has no DB override to delete."
-                        : `Permanently delete “${selectedSlug}”?`;
-                      if (isSeeded && !hasDbOverride) {
-                        setActionError("Seeded page has no override to delete.");
-                        return;
-                      }
-                      if (window.confirm(message)) {
-                        deleteMutation.mutate(selectedSlug);
-                      }
-                    }}
-                  >
-                    {isSeeded ? "Reset to default" : "Delete page"}
-                  </button>
-                ) : null}
-                {creating ? (
-                  <button
-                    type="button"
-                    className="admin-btn admin-btn--secondary"
-                    onClick={() => {
-                      setCreating(false);
-                      setDraft(null);
-                    }}
-                  >
-                    Cancel
-                  </button>
-                ) : null}
-                {saved ? (
-                  <span style={{ color: "var(--admin-success)", alignSelf: "center" }}>
-                    Saved
-                  </span>
-                ) : null}
-              </div>
+                <div className="admin-form-group">
+                  <label>Slug</label>
+                  <input
+                    className="admin-input"
+                    style={{ width: "100%" }}
+                    value={draft.slug}
+                    disabled={!creating}
+                    onChange={(e) => setDraft({ ...draft, slug: slugify(e.target.value) })}
+                  />
+                </div>
+                <div className="admin-form-group">
+                  <label>Eyebrow</label>
+                  <input
+                    className="admin-input"
+                    style={{ width: "100%" }}
+                    value={draft.eyebrow}
+                    onChange={(e) => setDraft({ ...draft, eyebrow: e.target.value })}
+                  />
+                </div>
+                {draft.sections.map((section, sectionIndex) => (
+                  <div key={sectionIndex} className="admin-form-group admin-form-grid--full">
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "0.35rem",
+                      }}
+                    >
+                      <label style={{ margin: 0 }}>Section {sectionIndex + 1}</label>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--ghost"
+                        onClick={() => {
+                          const sections = draft.sections.filter((_, i) => i !== sectionIndex);
+                          setDraft({
+                            ...draft,
+                            sections:
+                              sections.length > 0
+                                ? sections
+                                : [{ paragraphs: ["Write page content here."] }],
+                          });
+                        }}
+                      >
+                        Remove section
+                      </button>
+                    </div>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%", marginBottom: "0.5rem" }}
+                      placeholder="Heading (optional)"
+                      value={section.heading ?? ""}
+                      onChange={(e) => {
+                        const sections = [...draft.sections];
+                        sections[sectionIndex] = {
+                          ...section,
+                          heading: e.target.value || undefined,
+                        };
+                        setDraft({ ...draft, sections });
+                      }}
+                    />
+                    <textarea
+                      className="admin-textarea"
+                      value={section.paragraphs.join("\n\n")}
+                      onChange={(e) => {
+                        const sections = [...draft.sections];
+                        sections[sectionIndex] = {
+                          ...section,
+                          paragraphs: e.target.value
+                            .split(/\n{2,}/)
+                            .map((item) => item.trim())
+                            .filter(Boolean),
+                        };
+                        setDraft({ ...draft, sections });
+                      }}
+                    />
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--secondary"
+                  style={{ marginBottom: "1rem" }}
+                  onClick={() =>
+                    setDraft({
+                      ...draft,
+                      sections: [...draft.sections, { paragraphs: ["New section content."] }],
+                    })
+                  }
+                >
+                  Add section
+                </button>
+                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                  {canWrite ? (
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--primary"
+                      disabled={saveMutation.isPending}
+                      onClick={() => draft && saveMutation.mutate(draft)}
+                    >
+                      {saveMutation.isPending ? "Saving…" : creating ? "Create page" : "Save page"}
+                    </button>
+                  ) : null}
+                  {canWrite && !creating && selectedSlug ? (
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--danger"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => {
+                        const message = isSeeded
+                          ? hasDbOverride
+                            ? "Reset this page to the seeded default content?"
+                            : "This seeded page has no DB override to delete."
+                          : `Permanently delete “${selectedSlug}”?`;
+                        if (isSeeded && !hasDbOverride) {
+                          setActionError("Seeded page has no override to delete.");
+                          return;
+                        }
+                        if (window.confirm(message)) {
+                          deleteMutation.mutate(selectedSlug);
+                        }
+                      }}
+                    >
+                      {isSeeded ? "Reset to default" : "Delete page"}
+                    </button>
+                  ) : null}
+                  {creating ? (
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--secondary"
+                      onClick={() => {
+                        setCreating(false);
+                        setDraft(null);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
+                  {saved ? (
+                    <span style={{ color: "var(--admin-success)", alignSelf: "center" }}>
+                      Saved
+                    </span>
+                  ) : null}
+                </div>
               </fieldset>
             </>
           ) : null}

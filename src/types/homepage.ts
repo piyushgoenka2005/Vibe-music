@@ -97,6 +97,8 @@ export interface HomepageCategoryItem {
   desc?: string;
   /** Brands line (category bento). */
   brands?: string;
+  /** Product count line (category bento). */
+  productCount?: string;
 }
 
 export interface HomepageBrandItem {

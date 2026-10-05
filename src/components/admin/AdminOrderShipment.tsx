@@ -3,11 +3,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Shipment, ShipmentCarrier, ShipmentStatus, TrackingEvent } from "@/types/shipment";
-import {
-  SHIPMENT_CARRIER_LABELS,
-  SHIPMENT_STATUS_LABELS,
-} from "@/types/shipment";
+import { SHIPMENT_CARRIER_LABELS, SHIPMENT_STATUS_LABELS } from "@/types/shipment";
 import { formatDate } from "@/components/admin/AdminUi";
+import { adminFetchJson, adminMutateJson } from "@/lib/admin/adminFetch";
 
 interface AdminOrderShipmentProps {
   orderId: string;
@@ -17,17 +15,13 @@ async function fetchShipment(orderId: string): Promise<{
   shipment: Shipment | null;
   events: TrackingEvent[];
 }> {
-  const res = await fetch(`/api/admin/orders/${orderId}/shipment`);
-  if (!res.ok) throw new Error("Failed to load shipment");
-  return res.json();
+  return adminFetchJson<{ shipment: Shipment | null; events: TrackingEvent[] }>(
+    `/api/admin/orders/${orderId}/shipment`,
+  );
 }
 
-const CARRIERS = Object.entries(SHIPMENT_CARRIER_LABELS) as Array<
-  [ShipmentCarrier, string]
->;
-const STATUSES = Object.entries(SHIPMENT_STATUS_LABELS) as Array<
-  [ShipmentStatus, string]
->;
+const CARRIERS = Object.entries(SHIPMENT_CARRIER_LABELS) as Array<[ShipmentCarrier, string]>;
+const STATUSES = Object.entries(SHIPMENT_STATUS_LABELS) as Array<[ShipmentStatus, string]>;
 
 interface ShipmentFormProps {
   orderId: string;
@@ -41,7 +35,7 @@ function ShipmentForm({ orderId, shipment, events }: ShipmentFormProps) {
   const [carrier, setCarrier] = useState<ShipmentCarrier>(shipment?.carrier ?? "delhivery");
   const [status, setStatus] = useState<ShipmentStatus>(shipment?.status ?? "label_created");
   const [estimatedDelivery, setEstimatedDelivery] = useState(
-    shipment?.estimatedDelivery ? shipment.estimatedDelivery.slice(0, 10) : ""
+    shipment?.estimatedDelivery ? shipment.estimatedDelivery.slice(0, 10) : "",
   );
   const [eventStatus, setEventStatus] = useState<ShipmentStatus>("in_transit");
   const [eventTitle, setEventTitle] = useState("");
@@ -50,7 +44,7 @@ function ShipmentForm({ orderId, shipment, events }: ShipmentFormProps) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/admin/orders/${orderId}/shipment`, {
+      return adminMutateJson(`/api/admin/orders/${orderId}/shipment`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -62,11 +56,6 @@ function ShipmentForm({ orderId, shipment, events }: ShipmentFormProps) {
             : null,
         }),
       });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(body?.error ?? "Failed to save shipment");
-      }
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-order-shipment", orderId] });
@@ -77,7 +66,7 @@ function ShipmentForm({ orderId, shipment, events }: ShipmentFormProps) {
 
   const eventMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/admin/orders/${orderId}/shipment`, {
+      return adminMutateJson(`/api/admin/orders/${orderId}/shipment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -87,11 +76,6 @@ function ShipmentForm({ orderId, shipment, events }: ShipmentFormProps) {
           description: eventDescription || undefined,
         }),
       });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(body?.error ?? "Failed to add tracking event");
-      }
-      return res.json();
     },
     onSuccess: () => {
       setEventTitle("");
@@ -175,7 +159,9 @@ function ShipmentForm({ orderId, shipment, events }: ShipmentFormProps) {
 
       {shipment ? (
         <>
-          <h4 style={{ margin: "1.25rem 0 0.75rem", fontSize: "0.9375rem" }}>Add delivery update</h4>
+          <h4 style={{ margin: "1.25rem 0 0.75rem", fontSize: "0.9375rem" }}>
+            Add delivery update
+          </h4>
           <div className="admin-form-group">
             <label>Event status</label>
             <select
@@ -230,13 +216,17 @@ function ShipmentForm({ orderId, shipment, events }: ShipmentFormProps) {
           </button>
           {eventMutation.isError ? (
             <p role="alert" style={{ color: "#c5221f", fontSize: "0.875rem", marginTop: "0.5rem" }}>
-              {eventMutation.error instanceof Error ? eventMutation.error.message : "Add event failed"}
+              {eventMutation.error instanceof Error
+                ? eventMutation.error.message
+                : "Add event failed"}
             </p>
           ) : null}
 
           <h4 style={{ margin: "1.25rem 0 0.75rem", fontSize: "0.9375rem" }}>Timeline</h4>
           {events.length === 0 ? (
-            <p style={{ fontSize: "0.875rem", color: "var(--admin-muted)" }}>No delivery updates yet.</p>
+            <p style={{ fontSize: "0.875rem", color: "var(--admin-muted)" }}>
+              No delivery updates yet.
+            </p>
           ) : (
             <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
               {events.map((event) => (
@@ -281,7 +271,14 @@ export default function AdminOrderShipment({ orderId }: AdminOrderShipmentProps)
   const formKey = `${orderId}:${data?.shipment?.updatedAt ?? "new"}:${data?.events.length ?? 0}`;
 
   return (
-    <div className="admin-shipment" style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid var(--admin-border)" }}>
+    <div
+      className="admin-shipment"
+      style={{
+        marginTop: "1.25rem",
+        paddingTop: "1.25rem",
+        borderTop: "1px solid var(--admin-border)",
+      }}
+    >
       <h3 style={{ margin: "0 0 0.75rem", fontSize: "1rem" }}>Shipment</h3>
       <ShipmentForm
         key={formKey}

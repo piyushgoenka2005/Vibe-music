@@ -1,12 +1,14 @@
 import "server-only";
 
 import { cache } from "react";
-import { getAllProducts, toProduct } from "@/services/catalogService";
+import { getCachedHomepageProducts } from "@/lib/server/catalogSnapshotCache";
+import { toProduct } from "@/services/catalogService";
+import type { CatalogProduct } from "@/types/catalog";
 import type { Product } from "@/types/product";
 
 const DEALS_LOAD_TIMEOUT_MS = 8_000;
 
-function filterDealProducts(catalog: Awaited<ReturnType<typeof getAllProducts>>): Product[] {
+function filterDealProducts(catalog: CatalogProduct[]): Product[] {
   return catalog
     .filter(
       (item) =>
@@ -21,7 +23,7 @@ function filterDealProducts(catalog: Awaited<ReturnType<typeof getAllProducts>>)
 export const loadDealProducts = cache(async function loadDealProducts(): Promise<Product[]> {
   try {
     const catalog = await Promise.race([
-      getAllProducts(false),
+      getCachedHomepageProducts(),
       new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error("DEALS_LOAD_TIMEOUT")), DEALS_LOAD_TIMEOUT_MS);
       }),

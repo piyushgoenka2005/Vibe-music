@@ -441,15 +441,52 @@ export async function exportTaxonomyCsv(): Promise<string> {
   return lines.join("\n");
 }
 
+function mergeSubcategoryNames(...groups: string[][]): string[] {
+  const merged = new Map<string, string>();
+  for (const group of groups) {
+    for (const name of group) {
+      const trimmed = name.trim();
+      const key = trimmed.toLowerCase();
+      if (!key || merged.has(key)) continue;
+      merged.set(key, trimmed);
+    }
+  }
+  return Array.from(merged.values()).sort((a, b) => a.localeCompare(b));
+}
+
+async function findParentCategory(category: string) {
+  const categorySlug = slugify(category);
+  return prisma.category.findFirst({
+    where: {
+      OR: [
+        { name: { equals: category, mode: "insensitive" } },
+        { slug: { equals: categorySlug, mode: "insensitive" } },
+      ],
+      parentId: null,
+    },
+  });
+}
+
 /**
- * Get distinct subcategories for a given category from Taxonomy or Category table.
+ * Distinct subcategories for a master category — admin Category children first,
+ * then taxonomy upload rows as fallback.
  */
 export async function getSubcategoriesByCategory(category: string): Promise<string[]> {
   if (!isPostgresConfigured() || !category) {
     return [];
   }
 
-  // 1. Query CatalogTaxonomy table first
+  const parentCat = await findParentCategory(category);
+  const fromCategories = parentCat
+    ? (
+        await prisma.category.findMany({
+          where: { parentId: parentCat.id },
+          select: { name: true },
+          orderBy: { name: "asc" },
+        })
+      ).map((child) => child.name)
+    : [];
+
   const taxonomyItems = await prisma.catalogTaxonomy.findMany({
     where: {
       category: { equals: category, mode: "insensitive" },
@@ -458,30 +495,73 @@ export async function getSubcategoriesByCategory(category: string): Promise<stri
     distinct: ["subcategory"],
     orderBy: { subcategory: "asc" },
   });
+  const fromTaxonomy = taxonomyItems.map((item) => item.subcategory).filter(Boolean);
 
-  const fromTaxonomy = taxonomyItems.map((t) => t.subcategory).filter(Boolean);
-  if (fromTaxonomy.length > 0) {
-    return fromTaxonomy;
+  return mergeSubcategoryNames(fromCategories, fromTaxonomy);
+}
+
+/**
+ * Subcategory / product-type pairs configured for a category, from the taxonomy upload
+ * plus child rows in the Category table. Matches the category by name or slug.
+ */
+export async function getSubcategoryCandidatesForCategory(category: {
+  name: string;
+  slug: string;
+}): Promise<Array<{ subcategory: string; productType: string }>> {
+  if (!isPostgresConfigured() || (!category.name && !category.slug)) {
+    return [];
   }
 
-  // 2. Query Category table (children where parentId matches category)
-  const parentCat = await prisma.category.findFirst({
-    where: {
-      OR: [
-        { name: { equals: category, mode: "insensitive" } },
-        { slug: { equals: slugify(category), mode: "insensitive" } },
-      ],
-    },
+  const categorySlug = category.slug || slugify(category.name);
+  const taxonomyCategories = await prisma.catalogTaxonomy.findMany({
+    select: { category: true },
+    distinct: ["category"],
   });
+  const matchingCategories = taxonomyCategories
+    .map((row) => row.category)
+    .filter(
+      (value) =>
+        value.toLowerCase() === category.name.toLowerCase() || slugify(value) === categorySlug,
+    );
 
-  if (parentCat) {
-    const children = await prisma.category.findMany({
-      where: { parentId: parentCat.id },
-      select: { name: true },
-      orderBy: { name: "asc" },
+  const [taxonomyRows, parent] = await Promise.all([
+    matchingCategories.length
+      ? prisma.catalogTaxonomy.findMany({
+          where: { category: { in: matchingCategories } },
+          select: { subcategory: true, productType: true },
+          distinct: ["subcategory", "productType"],
+        })
+      : Promise.resolve([]),
+    prisma.category.findFirst({
+      where: {
+        parentId: null,
+        OR: [{ slug: categorySlug }, { name: { equals: category.name, mode: "insensitive" } }],
+      },
+      select: { id: true },
+    }),
+  ]);
+
+  const children = parent
+    ? await prisma.category.findMany({ where: { parentId: parent.id }, select: { name: true } })
+    : [];
+
+  const childCandidates = children
+    .filter((child) => child.name)
+    .map((child) => ({ subcategory: child.name, productType: "" }));
+
+  const taxonomyCandidates = taxonomyRows.filter((row) => row.subcategory);
+
+  const seen = new Set<string>();
+  const merged: Array<{ subcategory: string; productType: string }> = [];
+  for (const candidate of [...childCandidates, ...taxonomyCandidates]) {
+    const key = candidate.subcategory.trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    merged.push({
+      subcategory: candidate.subcategory.trim(),
+      productType: candidate.productType?.trim() ?? "",
     });
-    return children.map((c) => c.name).filter(Boolean);
   }
 
-  return [];
+  return merged;
 }

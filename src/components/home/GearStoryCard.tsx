@@ -174,6 +174,8 @@ export default function GearStoryCard({
             aria-hidden="true"
             fill
             sizes="(max-width: 768px) 22vw, 260px"
+            loading="lazy"
+            unoptimized
           />
         ) : null}
         {shouldMountVideo ? (

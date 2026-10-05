@@ -12,7 +12,12 @@ import {
   StatCard,
   formatDate,
 } from "@/components/admin/AdminUi";
-import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
+import {
+  ErrorState,
+  MutationError,
+  adminFetchJson,
+  adminMutateJson,
+} from "@/components/admin/AdminQueryState";
 import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
@@ -40,10 +45,7 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
   const [adminReply, setAdminReply] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
   const closeReviewDrawer = useCallback(() => setSelectedReview(null), []);
-  const reviewDrawerRef = useDialogA11y(
-    selectedReview !== null,
-    closeReviewDrawer
-  );
+  const reviewDrawerRef = useDialogA11y(selectedReview !== null, closeReviewDrawer);
 
   const queryParams = useMemo(
     () => ({
@@ -55,28 +57,24 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
       cursor: pagination.cursor,
       limit: "20",
     }),
-    [statusFilter, ratingFilter, verifiedFilter, hasImagesFilter, sort, pagination.cursor]
+    [statusFilter, ratingFilter, verifiedFilter, hasImagesFilter, sort, pagination.cursor],
   );
 
   const { data: statsData } = useQuery({
     queryKey: ["admin-review-stats"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/reviews/stats");
-      if (!res.ok) throw new Error("Failed to load review stats");
-      return res.json() as Promise<{ stats: AdminReviewStats }>;
+      return adminFetchJson<{ stats: AdminReviewStats }>("/api/admin/reviews/stats");
     },
   });
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-reviews", queryParams],
     queryFn: async () => {
-      const res = await fetch(buildReviewsQuery(queryParams));
-      if (!res.ok) throw new Error("Failed to load reviews");
-      return res.json() as Promise<{
+      return adminFetchJson<{
         reviews: Review[];
         hasMore: boolean;
         nextCursor?: string;
-      }>;
+      }>(buildReviewsQuery(queryParams));
     },
   });
 
@@ -92,12 +90,11 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
       adminReply?: string;
       rejectionReason?: string;
     }) => {
-      const res = await fetch(`/api/admin/reviews/${id}`, {
+      await adminMutateJson(`/api/admin/reviews/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status, adminReply: reply, rejectionReason: reason }),
       });
-      if (!res.ok) throw new Error("Failed to update review");
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
@@ -110,8 +107,7 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete review");
+      await adminMutateJson(`/api/admin/reviews/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
@@ -257,10 +253,16 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
                     <td>{review.rating}★</td>
                     <td>{review.title}</td>
                     <td>
-                      {review.verifiedPurchase ? <span className="admin-badge admin-badge--success">Verified</span> : null}
-                      {review.hasImages ? <span className="admin-badge admin-badge--info">Photos</span> : null}
+                      {review.verifiedPurchase ? (
+                        <span className="admin-badge admin-badge--success">Verified</span>
+                      ) : null}
+                      {review.hasImages ? (
+                        <span className="admin-badge admin-badge--info">Photos</span>
+                      ) : null}
                       {review.helpfulCount > 0 ? (
-                        <span className="admin-badge admin-badge--muted">{review.helpfulCount} helpful</span>
+                        <span className="admin-badge admin-badge--muted">
+                          {review.helpfulCount} helpful
+                        </span>
                       ) : null}
                     </td>
                     <td>
@@ -301,13 +303,13 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
                         </button>
                       ) : null}
                       {reviewsWrite ? (
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn--danger"
-                        onClick={() => deleteMutation.mutate(review.id)}
-                      >
-                        Delete
-                      </button>
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--danger"
+                          onClick={() => deleteMutation.mutate(review.id)}
+                        >
+                          Delete
+                        </button>
                       ) : null}
                     </td>
                   </tr>
@@ -339,10 +341,7 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
       </div>
 
       {selectedReview ? (
-        <div
-          className="admin-drawer-backdrop"
-          onClick={closeReviewDrawer}
-        >
+        <div className="admin-drawer-backdrop" onClick={closeReviewDrawer}>
           <div
             ref={reviewDrawerRef as RefObject<HTMLDivElement>}
             className="admin-drawer"
@@ -363,7 +362,8 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
             </div>
 
             <p className="admin-drawer__meta">
-              {selectedReview.author} · {selectedReview.rating}★ · {formatDate(selectedReview.createdAt)}
+              {selectedReview.author} · {selectedReview.rating}★ ·{" "}
+              {formatDate(selectedReview.createdAt)}
             </p>
             <p>{selectedReview.body}</p>
 
@@ -383,56 +383,56 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
             ) : null}
 
             {reviewsWrite ? (
-            <>
-            <label className="admin-field">
-              <span>Admin reply</span>
-              <textarea
-                value={adminReply}
-                rows={3}
-                onChange={(event) => setAdminReply(event.target.value)}
-              />
-            </label>
+              <>
+                <label className="admin-field">
+                  <span>Admin reply</span>
+                  <textarea
+                    value={adminReply}
+                    rows={3}
+                    onChange={(event) => setAdminReply(event.target.value)}
+                  />
+                </label>
 
-            <label className="admin-field">
-              <span>Rejection reason (internal)</span>
-              <input
-                type="text"
-                value={rejectionReason}
-                onChange={(event) => setRejectionReason(event.target.value)}
-              />
-            </label>
+                <label className="admin-field">
+                  <span>Rejection reason (internal)</span>
+                  <input
+                    type="text"
+                    value={rejectionReason}
+                    onChange={(event) => setRejectionReason(event.target.value)}
+                  />
+                </label>
 
-            <div className="admin-drawer__actions">
-              <button
-                type="button"
-                className="admin-btn"
-                onClick={() =>
-                  updateMutation.mutate({
-                    id: selectedReview.id,
-                    status: "approved",
-                    adminReply,
-                    rejectionReason,
-                  })
-                }
-              >
-                Approve with reply
-              </button>
-              <button
-                type="button"
-                className="admin-btn admin-btn--ghost"
-                onClick={() =>
-                  updateMutation.mutate({
-                    id: selectedReview.id,
-                    status: "rejected",
-                    adminReply,
-                    rejectionReason,
-                  })
-                }
-              >
-                Reject
-              </button>
-            </div>
-            </>
+                <div className="admin-drawer__actions">
+                  <button
+                    type="button"
+                    className="admin-btn"
+                    onClick={() =>
+                      updateMutation.mutate({
+                        id: selectedReview.id,
+                        status: "approved",
+                        adminReply,
+                        rejectionReason,
+                      })
+                    }
+                  >
+                    Approve with reply
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--ghost"
+                    onClick={() =>
+                      updateMutation.mutate({
+                        id: selectedReview.id,
+                        status: "rejected",
+                        adminReply,
+                        rejectionReason,
+                      })
+                    }
+                  >
+                    Reject
+                  </button>
+                </div>
+              </>
             ) : null}
             <MutationError error={updateMutation.isError ? updateMutation.error : null} />
             <MutationError error={deleteMutation.isError ? deleteMutation.error : null} />
@@ -451,9 +451,9 @@ export default function AdminReviewsPage() {
       {(admin) => {
         const caps = getAdminCapabilities(admin.permissions);
         return (
-        <AdminShell admin={admin} title="Reviews">
-          <ReviewsContent reviewsWrite={caps.reviewsWrite} />
-        </AdminShell>
+          <AdminShell admin={admin} title="Reviews">
+            <ReviewsContent reviewsWrite={caps.reviewsWrite} />
+          </AdminShell>
         );
       }}
     </AdminGuard>

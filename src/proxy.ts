@@ -58,11 +58,16 @@ function isDevAuthReadFastPath(request: NextRequest, pathname: string): boolean 
   );
 }
 
+/** Thumb route enforces its own limits; skip edge Redis round-trip on hot image reads. */
+function isMediaThumbReadFastPath(request: NextRequest, pathname: string): boolean {
+  return request.method === "GET" && pathname.startsWith("/api/media/thumb");
+}
+
 async function handleApiRequest(request: NextRequest): Promise<NextResponse | null> {
   const pathname = request.nextUrl.pathname;
 
-  if (isDevAuthReadFastPath(request, pathname)) {
-    return NextResponse.next();
+  if (isDevAuthReadFastPath(request, pathname) || isMediaThumbReadFastPath(request, pathname)) {
+    return withSecurityHeaders(NextResponse.next(), pathname);
   }
 
   const requestId = request.headers.get(REQUEST_ID_HEADER) ?? createRequestId();

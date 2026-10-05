@@ -1,6 +1,7 @@
 import type { Product } from "@/types/product";
 import type { CategoryFilters, CategoryProductsResult } from "@/types/filters";
 import { normalizeCategoryFilters } from "@/lib/filterUrl";
+import { formatSubcategoryLabel } from "@/lib/product/productBreadcrumb";
 import { slugify } from "@/lib/slug";
 import { specValueSlug } from "@/lib/catalog/listingFilterSpecs";
 
@@ -146,9 +147,10 @@ function buildCategoryFacets(products: Product[]): FacetOption[] {
 function buildSubcategoryFacets(products: Product[]): FacetOption[] {
   const counts = new Map<string, { name: string; count: number }>();
   products.forEach((product) => {
-    const label = product.subcategory?.trim();
-    if (!label) return;
-    const slug = slugify(label);
+    const raw = product.subcategory?.trim();
+    if (!raw) return;
+    const slug = slugify(raw);
+    const label = formatSubcategoryLabel(raw);
     const existing = counts.get(slug);
     if (existing) existing.count += 1;
     else counts.set(slug, { name: label, count: 1 });

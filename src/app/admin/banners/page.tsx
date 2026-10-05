@@ -8,7 +8,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import BannerImageUpload from "@/components/admin/BannerImageUpload";
 import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import type { HomepageBanner } from "@/types/banner";
 
 const QUERY_KEY = ["admin-banners"] as const;
@@ -66,9 +66,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const res = await fetch("/api/admin/banners");
-      if (!res.ok) throw new Error("Failed to load banners");
-      return res.json() as Promise<{ banners: HomepageBanner[] }>;
+      return adminFetchJson<{ banners: HomepageBanner[] }>("/api/admin/banners");
     },
   });
 
@@ -90,13 +88,11 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
         endDate: fromDatetimeLocal(form.endDate),
       };
       const url = editId ? `/api/admin/banners/${editId}` : "/api/admin/banners";
-      const res = await fetch(url, {
+      await adminMutateJson(url, {
         method: editId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const body = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(body.error ?? "Save failed");
     },
     onSuccess: () => {
       setShowForm(false);
@@ -110,34 +106,31 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/banners/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      await adminMutateJson(`/api/admin/banners/${id}`, { method: "DELETE" });
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
   });
 
   const toggleMutation = useMutation({
     mutationFn: async (banner: HomepageBanner) => {
-      const res = await fetch(`/api/admin/banners/${banner.id}`, {
+      await adminMutateJson(`/api/admin/banners/${banner.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: banner.status === "active" ? "inactive" : "active",
         }),
       });
-      if (!res.ok) throw new Error("Status update failed");
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
   });
 
   const reorderMutation = useMutation({
     mutationFn: async (orderedIds: string[]) => {
-      const res = await fetch("/api/admin/banners/reorder", {
+      await adminMutateJson("/api/admin/banners/reorder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderedIds }),
       });
-      if (!res.ok) throw new Error("Reorder failed");
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
   });

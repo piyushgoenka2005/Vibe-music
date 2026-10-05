@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { LoadingState } from "@/components/admin/AdminUi";
 import type { AdminSession } from "@/types/admin";
 
@@ -36,9 +36,7 @@ function PoliciesAdmin({ canWrite }: { canWrite: boolean }) {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-policy"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/rentals/policy");
-      if (!res.ok) throw new Error("Failed to load policy");
-      return res.json() as Promise<{ policy: PolicyForm | null }>;
+      return adminFetchJson<{ policy: PolicyForm | null }>("/api/admin/rentals/policy");
     },
   });
 
@@ -60,13 +58,11 @@ function PoliciesAdmin({ canWrite }: { canWrite: boolean }) {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!form.title.trim()) throw new Error("Title is required");
-      const res = await fetch("/api/admin/rentals/policy", {
+      await adminMutateJson("/api/admin/rentals/policy", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Save failed");
     },
     onSuccess: () => {
       setActionError(null);

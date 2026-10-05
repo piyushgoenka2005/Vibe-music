@@ -1,43 +1,74 @@
 import "server-only";
 
-const PLACEHOLDER_RE = /^(your[_-]?|changeme|xxx+|todo|replace|example|placeholder|<.*>)$/i;
+import { unstable_cache } from "next/cache";
+import { getGoogleAuthCredentials, isGoogleAuthConfigured } from "@/lib/auth/google-credentials";
 
-function readEnv(...keys: string[]): string | undefined {
-  for (const key of keys) {
-    const value = process.env[key]?.trim();
-    if (!value) continue;
-    if (PLACEHOLDER_RE.test(value)) continue;
-    return value;
+export { getGoogleAuthCredentials, isGoogleAuthConfigured };
+
+export type GoogleAuthUnavailableReason = "oauth" | "oauth_deleted" | "oauth_invalid" | "database";
+
+export interface GoogleSignInStatus {
+  available: boolean;
+  reason?: GoogleAuthUnavailableReason;
+}
+
+function mapOAuthHealthReason(
+  reason: import("@/lib/auth/google-oauth-health").GoogleOAuthHealthReason,
+): GoogleAuthUnavailableReason {
+  if (reason === "deleted_client") return "oauth_deleted";
+  if (reason === "invalid_client" || reason === "redirect_mismatch") return "oauth_invalid";
+  return "oauth";
+}
+
+async function resolveGoogleSignInStatus(): Promise<GoogleSignInStatus> {
+  if (!isGoogleAuthConfigured()) {
+    return { available: false, reason: "oauth" };
   }
-  return undefined;
+
+  const [{ verifyPostgresConnection }, { probeGoogleOAuthClient }] = await Promise.all([
+    import("@/lib/server/postgresHealth"),
+    import("@/lib/auth/google-oauth-health"),
+  ]);
+
+  const [database, oauth] = await Promise.all([
+    verifyPostgresConnection(),
+    // Reuse the module cache populated by instrumentation when possible.
+    probeGoogleOAuthClient({ timeoutMs: 1_500 }),
+  ]);
+
+  if (!database.ok) {
+    return { available: false, reason: "database" };
+  }
+
+  if (!oauth.ok) {
+    return { available: false, reason: mapOAuthHealthReason(oauth.reason) };
+  }
+
+  return { available: true };
 }
 
-/** True only when Google OAuth credentials look usable (not blank/placeholder). */
-export function isGoogleAuthConfigured(): boolean {
-  const clientId = readEnv("AUTH_GOOGLE_ID", "GOOGLE_CLIENT_ID");
-  const clientSecret = readEnv("AUTH_GOOGLE_SECRET", "GOOGLE_CLIENT_SECRET");
-  if (!clientId || !clientSecret) return false;
-  if (clientId.length < 20 || clientSecret.length < 10) return false;
-  // Client secret accidentally pasted into the ID field.
-  if (clientId.startsWith("GOCSPX-")) return false;
-  return true;
+const googleSignInStatusCacheKey = [
+  "google-sign-in-status-v3",
+  process.env.AUTH_GOOGLE_ID?.trim() ?? "",
+  process.env.AUTH_URL?.trim() ?? process.env.NEXT_PUBLIC_SITE_URL?.trim() ?? "",
+];
+
+const getCachedGoogleSignInStatus = unstable_cache(
+  resolveGoogleSignInStatus,
+  googleSignInStatusCacheKey,
+  { revalidate: process.env.NODE_ENV === "production" ? 300 : 30 },
+);
+
+/** Google OAuth persists accounts in Postgres and needs a live Google client. */
+export async function getGoogleSignInStatus(): Promise<GoogleSignInStatus> {
+  // Dev: always probe live so credential rotations show up without waiting on cache.
+  if (process.env.NODE_ENV !== "production") {
+    return resolveGoogleSignInStatus();
+  }
+  return getCachedGoogleSignInStatus();
 }
 
-export function getGoogleAuthCredentials(): {
-  clientId: string;
-  clientSecret: string;
-} | null {
-  if (!isGoogleAuthConfigured()) return null;
-  return {
-    clientId: readEnv("AUTH_GOOGLE_ID", "GOOGLE_CLIENT_ID")!,
-    clientSecret: readEnv("AUTH_GOOGLE_SECRET", "GOOGLE_CLIENT_SECRET")!,
-  };
-}
-
-/** Google OAuth persists accounts in Postgres — require a live database connection. */
 export async function isGoogleSignInAvailable(): Promise<boolean> {
-  if (!isGoogleAuthConfigured()) return false;
-  const { verifyPostgresConnection } = await import("@/lib/server/postgresHealth");
-  const database = await verifyPostgresConnection();
-  return database.ok;
+  const status = await getGoogleSignInStatus();
+  return status.available;
 }

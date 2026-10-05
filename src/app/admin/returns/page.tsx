@@ -7,7 +7,12 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminNotice from "@/components/admin/AdminNotice";
 import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
-import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
+import {
+  ErrorState,
+  MutationError,
+  adminFetchJson,
+  adminMutateJson,
+} from "@/components/admin/AdminQueryState";
 import { adminOrderPath } from "@/lib/routes";
 import type { ReturnRequest, ReturnRequestStatus } from "@/types/returnRequest";
 
@@ -22,21 +27,18 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
     queryKey: ["admin-returns", statusFilter],
     queryFn: async () => {
       const qs = statusFilter ? `?status=${statusFilter}` : "";
-      const res = await fetch(`/api/admin/returns${qs}`);
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json() as Promise<{ returns: ReturnRequest[] }>;
+      return adminFetchJson<{ returns: ReturnRequest[] }>(`/api/admin/returns${qs}`);
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!selected) return;
-      const res = await fetch(`/api/admin/returns/${selected.id}`, {
+      await adminMutateJson(`/api/admin/returns/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus, adminNote: adminNote || undefined }),
       });
-      if (!res.ok) throw new Error("Update failed");
     },
     onSuccess: () => {
       setSelected(null);

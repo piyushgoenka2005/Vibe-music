@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatusBadge, LoadingState, EmptyState } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import type { Coupon } from "@/types/admin";
 
@@ -30,14 +30,12 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
     queryKey: ["admin-coupons", cursor],
     queryFn: async () => {
       const url = `/api/admin/coupons?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{
+      return adminFetchJson<{
         coupons: Coupon[];
         hasMore: boolean;
         nextCursor?: string;
         total: number;
-      }>;
+      }>(url);
     },
     // Live table: poll quietly so usage counts / new coupons appear on their own.
     refetchInterval: 30_000,
@@ -50,12 +48,11 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
     mutationFn: async () => {
       const payload = { ...form, expiresAt: form.expiresAt || undefined };
       const url = editId ? `/api/admin/coupons/${editId}` : "/api/admin/coupons";
-      const res = await fetch(url, {
+      await adminMutateJson(url, {
         method: editId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Save failed");
     },
     onSuccess: () => {
       setShowForm(false);
@@ -67,9 +64,7 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/coupons/${id}`, { method: "DELETE" });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Delete failed");
+      await adminMutateJson(`/api/admin/coupons/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
       reset();

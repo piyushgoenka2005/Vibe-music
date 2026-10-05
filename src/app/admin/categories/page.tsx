@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import type { AdminCategory } from "@/types/admin";
 
 function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: boolean }) {
@@ -28,21 +28,18 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/categories");
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json() as Promise<{ categories: AdminCategory[] }>;
+      return adminFetchJson<{ categories: AdminCategory[] }>("/api/admin/categories");
     },
   });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const url = editId ? `/api/admin/categories/${editId}` : "/api/admin/categories";
-      const res = await fetch(url, {
+      await adminMutateJson(url, {
         method: editId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error("Save failed");
     },
     onSuccess: () => {
       setShowForm(false);
@@ -54,8 +51,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      await adminMutateJson(`/api/admin/categories/${id}`, { method: "DELETE" });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-categories"] }),
   });

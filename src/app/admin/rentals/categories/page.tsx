@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
 import { slugify } from "@/lib/slug";
 import type { AdminSession } from "@/types/admin";
@@ -32,13 +32,7 @@ const EMPTY_FORM: CategoryForm = {
   description: "",
 };
 
-function CategoriesAdmin({
-  canWrite,
-  canDelete,
-}: {
-  canWrite: boolean;
-  canDelete: boolean;
-}) {
+function CategoriesAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete: boolean }) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<CategoryForm>(EMPTY_FORM);
@@ -47,9 +41,7 @@ function CategoriesAdmin({
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-categories"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/rentals/categories");
-      if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{ categories: CategoryRow[] }>;
+      return adminFetchJson<{ categories: CategoryRow[] }>("/api/admin/rentals/categories");
     },
   });
 
@@ -60,13 +52,11 @@ function CategoriesAdmin({
         ...form,
         slug: form.slug || slugify(form.name),
       };
-      const res = await fetch("/api/admin/rentals/categories", {
+      await adminMutateJson("/api/admin/rentals/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Save failed");
     },
     onSuccess: () => {
       setShowForm(false);
@@ -79,11 +69,9 @@ function CategoriesAdmin({
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/rentals/categories?id=${encodeURIComponent(id)}`, {
+      await adminMutateJson(`/api/admin/rentals/categories?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Delete failed");
     },
     onSuccess: () => {
       setActionError(null);

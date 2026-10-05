@@ -1,18 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { adminGiveawayCampaignSchema } from "@/lib/validations/admin-giveaway";
-import {
-  deleteGiveawayCampaign,
-  getGiveawayCampaignById,
-} from "@/lib/server/giveawayRepository";
+import { deleteGiveawayCampaign, getGiveawayCampaignById } from "@/lib/server/giveawayRepository";
 import { saveGiveawayCampaign } from "@/lib/server/giveawayEntryService";
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAdmin("giveaways:read");
+    await requireAdmin("giveaways:read", request);
     const { id } = await params;
     const campaign = await getGiveawayCampaignById(id);
     if (!campaign) {
@@ -24,12 +18,9 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const admin = await requireAdmin("giveaways:write");
+    const admin = await requireAdmin("giveaways:write", request);
     const { id } = await params;
     const body = await request.json();
     const parsed = adminGiveawayCampaignSchema.parse({ ...body, id });
@@ -39,7 +30,7 @@ export async function PUT(
         id,
         prizeImageUrl: parsed.prizeImageUrl || null,
       },
-      { id: admin.uid, email: admin.email, request }
+      { id: admin.uid, email: admin.email, request },
     );
     return NextResponse.json({ campaign });
   } catch (error) {
@@ -47,12 +38,9 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAdmin("giveaways:delete");
+    await requireAdmin("giveaways:delete", request);
     const { id } = await params;
     await deleteGiveawayCampaign(id);
     return NextResponse.json({ ok: true });

@@ -506,6 +506,7 @@ export async function getBigNamesDealsPublicData(
         return mapCatalogProductToBigNamesDeal(product, {
           href: item.customHref || undefined,
           title: item.customTitle || undefined,
+          customImage: item.customImage || undefined,
           dealKey,
           slotIndex: index,
         });
@@ -618,15 +619,15 @@ export async function getBrowseByCategoriesPublicData(
   }
 }
 
-function withLiveCategoryBentoMeta<T extends { slug: string; brands?: string }>(
-  items: T[],
-  catalogMeta: Map<string, { brands?: string }>,
-): T[] {
+function withLiveCategoryBentoMeta<
+  T extends { slug: string; brands?: string; productCount?: string },
+>(items: T[], catalogMeta: Map<string, { brands?: string; productCount?: string }>): T[] {
   return items.map((item) => {
     const live = catalogMeta.get(item.slug);
     return {
       ...item,
       brands: item.brands || live?.brands,
+      productCount: item.productCount || live?.productCount,
     };
   });
 }

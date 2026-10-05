@@ -69,7 +69,8 @@ function useInViewOnce(rootMargin = "240px"): {
   visible: boolean;
 } {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [visible, setVisible] = useState(() => typeof IntersectionObserver === "undefined");
+  // Keep false on server and first client paint so lazy grids match SSR markup.
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (visible) return;

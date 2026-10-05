@@ -24,9 +24,7 @@ const FOOTER_TRENDING_STALE_MS = 60_000;
 const FOOTER_TRENDING_REFETCH_MS = 5 * 60_000;
 
 async function fetchFooterTrendingProducts(): Promise<Product[]> {
-  const response = await fetch(
-    `/api/products/footer-trending?limit=${FOOTER_TRENDING_LIMIT}`
-  );
+  const response = await fetch(`/api/products/footer-trending?limit=${FOOTER_TRENDING_LIMIT}`);
   if (!response.ok) {
     throw new Error("Unable to load trending products");
   }
@@ -81,7 +79,7 @@ function FooterProductSnippet({ product }: { product: Product }) {
               alt={product.name}
               width={128}
               height={128}
-              preferOriginal
+              sizes="64px"
             />
           ) : null}
         </div>
@@ -109,9 +107,7 @@ function FooterProductSnippet({ product }: { product: Product }) {
           onPointerDown={(event) => event.stopPropagation()}
           disabled={outOfStock || !canQuickAdd}
           aria-label={
-            outOfStock
-              ? `${product.name} is out of stock`
-              : listingQuickAddAriaLabel(product)
+            outOfStock ? `${product.name} is out of stock` : listingQuickAddAriaLabel(product)
           }
         >
           +
@@ -125,7 +121,11 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
   const panelRef = useRef<HTMLDivElement>(null);
   const [fetchEnabled, setFetchEnabled] = useState(false);
 
-  const { data: products = [], isLoading, isFetching } = useQuery({
+  const {
+    data: products = [],
+    isLoading,
+    isFetching,
+  } = useQuery({
     queryKey: ["footer-trending-products"],
     queryFn: fetchFooterTrendingProducts,
     enabled: fetchEnabled,
@@ -146,7 +146,7 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
           setFetchEnabled(true);
         }
       },
-      { rootMargin: "240px 0px", threshold: 0.01 }
+      { rootMargin: "240px 0px", threshold: 0.01 },
     );
 
     observer.observe(node);
@@ -162,10 +162,8 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
     }
   }
 
-  const showSkeletons =
-    !fetchEnabled || isLoading || (isFetching && products.length === 0);
-  const showEmpty =
-    fetchEnabled && !isLoading && !isFetching && products.length === 0;
+  const showSkeletons = !fetchEnabled || isLoading || (isFetching && products.length === 0);
+  const showEmpty = fetchEnabled && !isLoading && !isFetching && products.length === 0;
 
   return (
     <div ref={setPanelRef} className="footer-products-panel" data-footer-panel>
@@ -191,23 +189,21 @@ const FooterProductsPanel = forwardRef<HTMLDivElement>(function FooterProductsPa
         </div>
 
         <div className="footer-products-panel__products">
-          {showSkeletons
-            ? Array.from({ length: FOOTER_TRENDING_LIMIT }, (_, index) => (
-                <div
-                  key={`footer-product-skeleton-${index}`}
-                  className="footer-product-snippet footer-product-snippet--skeleton"
-                  aria-hidden
-                />
-              ))
-            : showEmpty
-              ? (
-                <p className="footer-products-panel__empty">
-                  Curated picks with live pricing will appear here soon.
-                </p>
-              )
-              : products.map((product) => (
-                  <FooterProductSnippet key={product.id} product={product} />
-                ))}
+          {showSkeletons ? (
+            Array.from({ length: FOOTER_TRENDING_LIMIT }, (_, index) => (
+              <div
+                key={`footer-product-skeleton-${index}`}
+                className="footer-product-snippet footer-product-snippet--skeleton"
+                aria-hidden
+              />
+            ))
+          ) : showEmpty ? (
+            <p className="footer-products-panel__empty">
+              Curated picks with live pricing will appear here soon.
+            </p>
+          ) : (
+            products.map((product) => <FooterProductSnippet key={product.id} product={product} />)
+          )}
         </div>
 
         <Link href={ROUTES.search} className="footer-products-panel__shop-all">

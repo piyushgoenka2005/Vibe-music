@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson } from "@/components/admin/AdminQueryState";
 import { EmptyState, LoadingState, StatCard } from "@/components/admin/AdminUi";
 import { adminGiveawayCampaignPath, ROUTES } from "@/lib/routes";
 
@@ -12,9 +12,7 @@ function GiveawayAdminDashboard() {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-giveaway-analytics"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/giveaway/analytics");
-      if (!res.ok) throw new Error("Failed");
-      return res.json() as Promise<{
+      return adminFetchJson<{
         analytics: {
           totalCampaigns: number;
           activeCampaigns: number;
@@ -27,7 +25,7 @@ function GiveawayAdminDashboard() {
             count: number;
           }>;
         };
-      }>;
+      }>("/api/admin/giveaway/analytics");
     },
   });
 
@@ -78,9 +76,7 @@ function GiveawayAdminDashboard() {
                   {(a.entriesByCampaign ?? []).map((row) => (
                     <tr key={row.campaignId}>
                       <td>
-                        <Link href={adminGiveawayCampaignPath(row.campaignId)}>
-                          {row.title}
-                        </Link>
+                        <Link href={adminGiveawayCampaignPath(row.campaignId)}>{row.title}</Link>
                       </td>
                       <td>{row.count}</td>
                     </tr>

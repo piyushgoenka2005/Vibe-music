@@ -34,8 +34,8 @@ function resolveLocalCdnFile(url: string): string | null {
   }
 }
 const CACHE_CONTROL = "public, max-age=31536000, immutable";
-/** Allow time to pull large PNG masters once; cached WebP thereafter. */
-const UPSTREAM_TIMEOUT_MS = 20_000;
+/** Fail fast — cards fall back via 302 to CDN original or next candidate. */
+const UPSTREAM_TIMEOUT_MS = 3_500;
 
 type CachedThumb = {
   body: Buffer;
@@ -44,6 +44,21 @@ type CachedThumb = {
 
 const memoryCache = new Map<string, CachedThumb>();
 const inflight = new Map<string, Promise<CachedThumb | null>>();
+
+function cdnDerivativeRedirect(url: string, width: number): string | null {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== "cdn.vibemusic.in") return null;
+    const file = parsed.pathname.split("/").pop() ?? "";
+    const match = file.match(/^(.+)\.(png|jpe?g)$/i);
+    if (!match?.[1]) return null;
+    const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
+    const snappedW = snapStorefrontThumbWidth(width);
+    return `${parsed.origin}${dir}${match[1]}-w${snappedW}.webp`;
+  } catch {
+    return null;
+  }
+}
 
 function parseWidth(value: string | null): number {
   const parsed = Number(value);
@@ -274,9 +289,19 @@ export async function GET(request: Request) {
       });
     }
 
+    const derivativeRedirect = cdnDerivativeRedirect(parsed.toString(), width);
+    if (derivativeRedirect) {
+      return NextResponse.redirect(derivativeRedirect, {
+        status: 302,
+        headers: {
+          "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+          "X-Thumb-Cache": "derivative-redirect",
+        },
+      });
+    }
+
     const rateLimited = await enforceRateLimit(request, "media-thumb", RATE_LIMITS.mediaThumb);
     if (rateLimited) {
-      // Prefer a live CDN image over a blank card under burst traffic.
       return NextResponse.redirect(parsed.toString(), {
         status: 302,
         headers: {
@@ -290,11 +315,10 @@ export async function GET(request: Request) {
     const { thumb, cache } = await getThumb(cacheKey, parsed.toString(), width);
 
     if (!thumb) {
-      // Never leave product rails blank — fall back to the upstream CDN asset.
       return NextResponse.redirect(parsed.toString(), {
         status: 302,
         headers: {
-          "Cache-Control": "public, max-age=30, stale-while-revalidate=120",
+          "Cache-Control": "public, max-age=300, stale-while-revalidate=3600",
           "X-Thumb-Cache": "miss-redirect",
         },
       });

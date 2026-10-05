@@ -1,6 +1,7 @@
 import {
   fetchProductStockSnapshots,
   getAvailableStock,
+  listAllProductStockSnapshots,
   listInventoryLogs,
   recordInventoryLogEntry,
   releaseReservedStockForOrder,
@@ -11,7 +12,7 @@ import {
 } from "@/lib/server/inventoryRepository";
 import { sendLowStockAdminNotification } from "@/lib/server/adminNotificationEmailService";
 import { notifyWaitlistOnRestock } from "@/lib/server/restockNotificationService";
-import { getAllProducts, getProductById } from "@/services/catalogService";
+import { getProductById } from "@/services/catalogService";
 import {
   getAvailableStock as calcAvailable,
   isLowStock,
@@ -43,16 +44,16 @@ function orderToInventoryLines(order: Order): OrderInventoryLine[] {
 }
 
 export async function listInventory(): Promise<InventoryRecord[]> {
-  const products = await getAllProducts(true);
+  const snapshots = await listAllProductStockSnapshots();
 
-  return products
+  return snapshots
     .map((product) => {
       const reservedStock = product.reservedStock ?? 0;
       const threshold = product.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD;
       const available = calcAvailable(product.stock, reservedStock);
 
       return {
-        productId: product.id,
+        productId: product.productId,
         productName: product.name,
         sku: product.sku,
         stockQuantity: product.stock,
@@ -145,7 +146,7 @@ export async function getInventoryStats() {
 }
 
 export async function getLowStockProducts(limit = 10) {
-  const products = await getAllProducts(true);
+  const products = await listAllProductStockSnapshots();
   return products
     .map((product) => {
       const reservedStock = product.reservedStock ?? 0;
@@ -157,19 +158,20 @@ export async function getLowStockProducts(limit = 10) {
     .sort((a, b) => a.available - b.available)
     .slice(0, limit)
     .map(({ product, threshold, available, reservedStock }) => ({
-      id: product.id,
+      id: product.productId,
       name: product.name,
       sku: product.sku,
       stockQuantity: product.stock,
       reservedQuantity: reservedStock,
       availableQuantity: available,
       lowStockThreshold: threshold,
-      availability: product.availability,
+      availability:
+        available <= 0 ? "out-of-stock" : available <= threshold ? "limited" : "in-stock",
     }));
 }
 
 export async function getOutOfStockProducts(limit = 10) {
-  const products = await getAllProducts(true);
+  const products = await listAllProductStockSnapshots();
   return products
     .map((product) => {
       const reservedStock = product.reservedStock ?? 0;
@@ -179,7 +181,7 @@ export async function getOutOfStockProducts(limit = 10) {
     .filter(({ available }) => available <= 0)
     .slice(0, limit)
     .map(({ product, reservedStock, available }) => ({
-      id: product.id,
+      id: product.productId,
       name: product.name,
       sku: product.sku,
       stockQuantity: product.stock,

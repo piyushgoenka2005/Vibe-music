@@ -410,7 +410,7 @@ export async function createAdminProduct(
     availability: input.availability,
     condition: input.condition,
     imageColor: input.imageColor,
-    image: input.image || getProductImage(input.slug, input.category),
+    image: input.image || input.images?.[0] || getProductImage(input.slug, input.category),
     images: input.images,
     gstRate: input.gstRate,
     featured: input.featured,

@@ -79,7 +79,12 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
         activeCount={activeCount}
         onClearAll={clearAllFilters}
       >
-        <CategoryBreadcrumb categoryName={category.name} />
+        <CategoryBreadcrumb
+          categoryName={category.name}
+          categorySlug={category.slug}
+          activeSubcategorySlug={filters.subcategories[0]}
+          subcategoryLabels={facetLabels.subcategories}
+        />
         <h1 className="cat-page__title">{category.name}</h1>
         <p className="cat-page__desc">{category.description}</p>
 
@@ -193,7 +198,7 @@ function CategoryInitialFallback({ category, initialData }: CategoryPageProps) {
   const products = initialData?.products ?? [];
   return (
     <div className="cat-page">
-      <CategoryBreadcrumb categoryName={category.name} />
+      <CategoryBreadcrumb categoryName={category.name} categorySlug={category.slug} />
       <h1 className="cat-page__title">{category.name}</h1>
       {category.description ? <p className="cat-page__desc">{category.description}</p> : null}
       <div className="cat-toolbar">

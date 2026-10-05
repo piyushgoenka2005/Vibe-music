@@ -5,7 +5,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState, StatusBadge, formatDate } from "@/components/admin/AdminUi";
-import { ErrorState, MutationError } from "@/components/admin/AdminQueryState";
+import {
+  ErrorState,
+  MutationError,
+  adminFetchJson,
+  adminMutateJson,
+} from "@/components/admin/AdminQueryState";
 import type { ProductQuestion, ProductQuestionStatus } from "@/types/productQuestion";
 
 function QuestionsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
@@ -19,16 +24,14 @@ function QuestionsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
     queryKey: ["admin-questions", statusFilter],
     queryFn: async () => {
       const qs = statusFilter ? `?status=${statusFilter}` : "";
-      const res = await fetch(`/api/admin/questions${qs}`);
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json() as Promise<{ questions: ProductQuestion[] }>;
+      return adminFetchJson<{ questions: ProductQuestion[] }>(`/api/admin/questions${qs}`);
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!selected) return;
-      const res = await fetch(`/api/admin/questions/${selected.id}`, {
+      await adminMutateJson(`/api/admin/questions/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -36,7 +39,6 @@ function QuestionsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
           answer: answer || undefined,
         }),
       });
-      if (!res.ok) throw new Error("Update failed");
     },
     onSuccess: () => {
       setSelected(null);
@@ -47,8 +49,7 @@ function QuestionsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/questions/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      await adminMutateJson(`/api/admin/questions/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
       setSelected(null);
@@ -110,7 +111,10 @@ function QuestionsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
                     }}
                   >
                     <td>{item.productName}</td>
-                    <td>{item.question.slice(0, 60)}{item.question.length > 60 ? "…" : ""}</td>
+                    <td>
+                      {item.question.slice(0, 60)}
+                      {item.question.length > 60 ? "…" : ""}
+                    </td>
                     <td>
                       <StatusBadge status={item.status} />
                     </td>
@@ -142,53 +146,53 @@ function QuestionsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
                 <strong>Question:</strong> {selected.question}
               </p>
               {reviewsWrite ? (
-              <>
-              <div className="admin-form-group" style={{ marginTop: "1rem" }}>
-                <label>Answer</label>
-                <textarea
-                  className="admin-textarea"
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  placeholder="Write an official answer for the storefront"
-                />
-              </div>
-              <div className="admin-form-group">
-                <label>Status</label>
-                <select
-                  className="admin-select"
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value as ProductQuestionStatus)}
-                >
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </div>
-              <button
-                type="button"
-                className="admin-btn admin-btn--primary"
-                disabled={updateMutation.isPending}
-                onClick={() => updateMutation.mutate()}
-              >
-                {updateMutation.isPending ? "Saving…" : "Save"}
-              </button>
-              <MutationError error={updateMutation.isError ? updateMutation.error : null} />
-              <MutationError error={deleteMutation.isError ? deleteMutation.error : null} />
-              <button
-                type="button"
-                className="admin-btn admin-btn--danger"
-                style={{ marginLeft: "0.5rem" }}
-                disabled={deleteMutation.isPending}
-                onClick={() => {
-                  if (!selected) return;
-                  if (window.confirm("Delete this product question?")) {
-                    deleteMutation.mutate(selected.id);
-                  }
-                }}
-              >
-                Delete
-              </button>
-              </>
+                <>
+                  <div className="admin-form-group" style={{ marginTop: "1rem" }}>
+                    <label>Answer</label>
+                    <textarea
+                      className="admin-textarea"
+                      value={answer}
+                      onChange={(e) => setAnswer(e.target.value)}
+                      placeholder="Write an official answer for the storefront"
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Status</label>
+                    <select
+                      className="admin-select"
+                      value={newStatus}
+                      onChange={(e) => setNewStatus(e.target.value as ProductQuestionStatus)}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--primary"
+                    disabled={updateMutation.isPending}
+                    onClick={() => updateMutation.mutate()}
+                  >
+                    {updateMutation.isPending ? "Saving…" : "Save"}
+                  </button>
+                  <MutationError error={updateMutation.isError ? updateMutation.error : null} />
+                  <MutationError error={deleteMutation.isError ? deleteMutation.error : null} />
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--danger"
+                    style={{ marginLeft: "0.5rem" }}
+                    disabled={deleteMutation.isPending}
+                    onClick={() => {
+                      if (!selected) return;
+                      if (window.confirm("Delete this product question?")) {
+                        deleteMutation.mutate(selected.id);
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </>
               ) : null}
             </>
           )}
@@ -206,9 +210,9 @@ export default function AdminQuestionsPage() {
       {(admin) => {
         const caps = getAdminCapabilities(admin.permissions);
         return (
-        <AdminShell admin={admin} title="Product Q&A">
-          <QuestionsContent reviewsWrite={caps.reviewsWrite} />
-        </AdminShell>
+          <AdminShell admin={admin} title="Product Q&A">
+            <QuestionsContent reviewsWrite={caps.reviewsWrite} />
+          </AdminShell>
         );
       }}
     </AdminGuard>

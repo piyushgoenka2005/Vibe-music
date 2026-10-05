@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
 import { slugify } from "@/lib/slug";
 import type { AdminSession } from "@/types/admin";
@@ -131,9 +131,9 @@ function CampaignEntriesPanel({ campaignId }: { campaignId: string }) {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-giveaway-entries", campaignId],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/giveaway/campaigns/${campaignId}/entries`);
-      if (!res.ok) throw new Error("Failed to load entries");
-      return res.json() as Promise<{ entries: GiveawayEntry[] }>;
+      return adminFetchJson<{ entries: GiveawayEntry[] }>(
+        `/api/admin/giveaway/campaigns/${campaignId}/entries`,
+      );
     },
   });
 
@@ -197,9 +197,7 @@ function CampaignsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete:
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-giveaway-campaigns"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/giveaway/campaigns");
-      if (!res.ok) throw new Error("Failed to load campaigns");
-      return res.json() as Promise<{ campaigns: GiveawayCampaign[] }>;
+      return adminFetchJson<{ campaigns: GiveawayCampaign[] }>("/api/admin/giveaway/campaigns");
     },
   });
 
@@ -212,13 +210,11 @@ function CampaignsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete:
       const url = form.id
         ? `/api/admin/giveaway/campaigns/${form.id}`
         : "/api/admin/giveaway/campaigns";
-      const res = await fetch(url, {
+      await adminMutateJson(url, {
         method: form.id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Save failed");
     },
     onSuccess: () => {
       setShowForm(false);
@@ -231,9 +227,7 @@ function CampaignsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete:
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/giveaway/campaigns/${id}`, { method: "DELETE" });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Delete failed");
+      await adminMutateJson(`/api/admin/giveaway/campaigns/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
       setActionError(null);
@@ -244,13 +238,11 @@ function CampaignsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete:
 
   const drawMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/giveaway/campaigns/${id}/draw`, {
+      await adminMutateJson(`/api/admin/giveaway/campaigns/${id}/draw`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Draw failed");
     },
     onSuccess: () => {
       setActionError(null);
@@ -261,11 +253,9 @@ function CampaignsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete:
 
   const announceMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/giveaway/campaigns/${id}/announce`, {
+      await adminMutateJson(`/api/admin/giveaway/campaigns/${id}/announce`, {
         method: "POST",
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Announce failed");
     },
     onSuccess: () => {
       setActionError(null);
@@ -325,9 +315,7 @@ function CampaignsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete:
       {showForm ? (
         <div className="admin-panel" style={{ marginBottom: "1rem" }}>
           <div className="admin-panel__header">
-            <h2 className="admin-panel__title">
-              {form.id ? "Edit campaign" : "Create campaign"}
-            </h2>
+            <h2 className="admin-panel__title">{form.id ? "Edit campaign" : "Create campaign"}</h2>
           </div>
           <div className="admin-panel__body">
             <div className="admin-form-grid">
@@ -421,9 +409,7 @@ function CampaignsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                   min={1}
                   max={20}
                   value={form.winnerCount}
-                  onChange={(e) =>
-                    setForm({ ...form, winnerCount: Number(e.target.value) || 1 })
-                  }
+                  onChange={(e) => setForm({ ...form, winnerCount: Number(e.target.value) || 1 })}
                 />
               </div>
               <div className="admin-form-group">
@@ -668,9 +654,7 @@ function CampaignsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                           className="admin-btn admin-btn--danger"
                           onClick={() => {
                             if (
-                              window.confirm(
-                                `Delete campaign “${c.title}”? This cannot be undone.`
-                              )
+                              window.confirm(`Delete campaign “${c.title}”? This cannot be undone.`)
                             ) {
                               deleteMutation.mutate(c.id);
                             }

@@ -2,7 +2,7 @@
  * Cap concurrent high-priority image fetches on the homepage so LCP
  * (banner + hero mosaic) is not starved by carousel/grid cards.
  */
-const VISIBLE_CAROUSEL_CARD_COUNT = 8;
+const VISIBLE_CAROUSEL_CARD_COUNT = 12;
 
 export function shouldPrioritizeHomepageProductImage(
   sectionKey: string,

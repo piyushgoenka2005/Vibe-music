@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { EmptyState, LoadingState } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { ADMIN_ROLE_LABELS, ALL_PERMISSIONS } from "@/lib/auth/permissions";
 import type { AdminRole, Permission } from "@/types/admin";
 
@@ -24,9 +24,7 @@ function RolesContent({ canWrite }: { canWrite: boolean }) {
   const { data, isLoading, isError, refetch, isFetching, error } = useQuery({
     queryKey: ["admin-roles"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/roles");
-      if (!res.ok) throw new Error("Failed to load roles");
-      return res.json() as Promise<MatrixResponse>;
+      return adminFetchJson<MatrixResponse>("/api/admin/roles");
     },
   });
 
@@ -38,16 +36,13 @@ function RolesContent({ canWrite }: { canWrite: boolean }) {
     if (!data) return;
     setDraft(
       Object.fromEntries(
-        data.editableRoles.map((role) => [role, [...(data.effective[role] ?? [])]])
-      )
+        data.editableRoles.map((role) => [role, [...(data.effective[role] ?? [])]]),
+      ),
     );
   }, [data]);
 
   const permissions = data?.allPermissions ?? ALL_PERMISSIONS;
-  const editable = useMemo(
-    () => new Set(data?.editableRoles ?? []),
-    [data?.editableRoles]
-  );
+  const editable = useMemo(() => new Set(data?.editableRoles ?? []), [data?.editableRoles]);
 
   const saveMutation = useMutation({
     mutationFn: async (payload: {
@@ -55,21 +50,17 @@ function RolesContent({ canWrite }: { canWrite: boolean }) {
       permissions?: Permission[];
       reset?: boolean;
     }) => {
-      const res = await fetch("/api/admin/roles", {
+      return adminMutateJson("/api/admin/roles", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Save failed");
-      return json;
     },
     onSuccess: async () => {
       setMessage("Role permissions saved.");
       await queryClient.invalidateQueries({ queryKey: ["admin-roles"] });
     },
-    onError: (err) =>
-      setMessage(err instanceof Error ? err.message : "Save failed"),
+    onError: (err) => setMessage(err instanceof Error ? err.message : "Save failed"),
   });
 
   if (isLoading) {
@@ -79,11 +70,7 @@ function RolesContent({ canWrite }: { canWrite: boolean }) {
   if (isError || !data) {
     return (
       <ErrorState
-        message={
-          error instanceof Error
-            ? error.message
-            : "Unable to load role permissions."
-        }
+        message={error instanceof Error ? error.message : "Unable to load role permissions."}
         onRetry={() => void refetch()}
         isRetrying={isFetching}
       />
@@ -183,9 +170,7 @@ function RolesContent({ canWrite }: { canWrite: boolean }) {
             type="button"
             className="acct__btn acct__btn--secondary"
             disabled={saveMutation.isPending}
-            onClick={() =>
-              saveMutation.mutate({ role: selectedRole, reset: true })
-            }
+            onClick={() => saveMutation.mutate({ role: selectedRole, reset: true })}
           >
             Reset to defaults
           </button>

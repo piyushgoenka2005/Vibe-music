@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import { searchProducts } from "@/lib/server/productRepository";
 import type { Product } from "@/types/product";
 import type { SearchBrand, SearchCategory } from "@/types/search";
@@ -46,7 +47,7 @@ export function buildBrandFacets(products: Product[]): SearchBrand[] {
   return Array.from(map.values());
 }
 
-export async function getSearchResults(options: {
+async function getSearchResultsUncached(options: {
   query: string;
   category?: string;
   subcategory?: string;
@@ -69,4 +70,25 @@ export async function getSearchResults(options: {
     brands: buildBrandFacets(products),
     total: products.length,
   };
+}
+
+export async function getSearchResults(options: {
+  query: string;
+  category?: string;
+  subcategory?: string;
+  brand?: string;
+  sort?: string;
+}): Promise<SearchResultsPayload> {
+  const cacheKey = [
+    options.query.trim(),
+    options.category ?? "",
+    options.subcategory ?? "",
+    options.brand ?? "",
+    options.sort ?? "",
+  ].join("|");
+
+  return unstable_cache(() => getSearchResultsUncached(options), ["search-results-v1", cacheKey], {
+    revalidate: 30,
+    tags: ["catalog"],
+  })();
 }

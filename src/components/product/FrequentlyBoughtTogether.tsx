@@ -23,9 +23,7 @@ export default function FrequentlyBoughtTogether({
   const addItem = useCartStore((s) => s.addItem);
   const openDrawer = useCartStore((s) => s.openDrawer);
 
-  const purchasableExtras = bundle.items.filter((p) =>
-    isPurchasablePrice(p.price)
-  );
+  const purchasableExtras = bundle.items.filter((p) => isPurchasablePrice(p.price));
 
   const mainLine: Product = {
     ...mainProduct,
@@ -36,7 +34,7 @@ export default function FrequentlyBoughtTogether({
   const allProducts = useMemo(
     () => [mainLine, ...purchasableExtras],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [mainLine.id, purchasableExtras.map((p) => p.id).join(",")]
+    [mainLine.id, purchasableExtras.map((p) => p.id).join(",")],
   );
 
   const [selected, setSelected] = useState<Record<string, boolean>>(() => {
@@ -51,10 +49,7 @@ export default function FrequentlyBoughtTogether({
     return init;
   });
 
-  if (
-    purchasableExtras.length === 0 ||
-    !isPurchasablePrice(mainLine.price)
-  ) {
+  if (purchasableExtras.length === 0 || !isPurchasablePrice(mainLine.price)) {
     return null;
   }
 
@@ -73,28 +68,19 @@ export default function FrequentlyBoughtTogether({
   const selectedProducts = allProducts.filter((p) => selected[p.id]);
   const selectedCount = selectedProducts.length;
 
-  const subtotal = selectedProducts.reduce(
-    (sum, p) => sum + p.price * (quantities[p.id] ?? 1),
-    0
-  );
-  const bundlePrice =
-    Math.round(subtotal * (1 - bundle.discountPercent / 100) * 100) / 100;
+  const subtotal = selectedProducts.reduce((sum, p) => sum + p.price * (quantities[p.id] ?? 1), 0);
+  const bundlePrice = Math.round(subtotal * (1 - bundle.discountPercent / 100) * 100) / 100;
   const savings = Math.round((subtotal - bundlePrice) * 100) / 100;
 
-  const discountFactor =
-    subtotal > 0 && savings > 0 ? bundlePrice / subtotal : 1;
+  const discountFactor = subtotal > 0 && savings > 0 ? bundlePrice / subtotal : 1;
 
   function addBundle() {
     selectedProducts.forEach((p) => {
       const qty = quantities[p.id] ?? 1;
       const unitPrice =
-        discountFactor < 1
-          ? Math.round(p.price * discountFactor * 100) / 100
-          : p.price;
+        discountFactor < 1 ? Math.round(p.price * discountFactor * 100) / 100 : p.price;
       const lineProduct =
-        unitPrice < p.price
-          ? { ...p, price: unitPrice, originalPrice: p.price }
-          : p;
+        unitPrice < p.price ? { ...p, price: unitPrice, originalPrice: p.price } : p;
 
       if (p.id === mainLine.id) {
         addItem(lineProduct, qty, mainVariant);
@@ -138,10 +124,7 @@ export default function FrequentlyBoughtTogether({
                         <span className="pdp-fbt__checkmark" />
                       </label>
                     )}
-                    <Link
-                      href={productPath(product.slug)}
-                      className="pdp-fbt__card-link"
-                    >
+                    <Link href={productPath(product.slug)} className="pdp-fbt__card-link">
                       <div className="pdp-fbt__image-wrap">
                         {product.image ? (
                           <StorefrontThumbImage
@@ -150,7 +133,7 @@ export default function FrequentlyBoughtTogether({
                             className="pdp-fbt__image"
                             width={240}
                             height={240}
-                            preferOriginal
+                            sizes="120px"
                           />
                         ) : (
                           <div
@@ -165,9 +148,7 @@ export default function FrequentlyBoughtTogether({
                       <h3 className="pdp-fbt__name" title={product.name}>
                         {product.name}
                       </h3>
-                      <span className="pdp-fbt__price">
-                        {formatDisplayPrice(product.price)}
-                      </span>
+                      <span className="pdp-fbt__price">{formatDisplayPrice(product.price)}</span>
                       {!isMain && isChecked && (
                         <div className="pdp-fbt__qty-row">
                           <span className="pdp-fbt__qty-label">qty</span>
@@ -206,10 +187,12 @@ export default function FrequentlyBoughtTogether({
                 =
               </span>
               <div className="pdp-fbt__savings-badge">
-                <span className="pdp-fbt__savings-amount">
-                  {formatCurrency(savings)}
+                <span className="pdp-fbt__savings-amount">{formatCurrency(savings)}</span>
+                <span className="pdp-fbt__savings-label">
+                  Bundle
+                  <br />
+                  Savings
                 </span>
-                <span className="pdp-fbt__savings-label">Bundle<br />Savings</span>
               </div>
             </div>
           )}
@@ -217,17 +200,11 @@ export default function FrequentlyBoughtTogether({
 
         <div className="pdp-fbt__summary">
           <div className="pdp-fbt__summary-pricing">
-            <span className="pdp-fbt__summary-label">
-              Buy all {selectedCount}:
-            </span>
+            <span className="pdp-fbt__summary-label">Buy all {selectedCount}:</span>
             {savings > 0 && (
-              <span className="pdp-fbt__summary-original">
-                {formatCurrency(subtotal)}
-              </span>
+              <span className="pdp-fbt__summary-original">{formatCurrency(subtotal)}</span>
             )}
-            <span className="pdp-fbt__summary-total">
-              {formatCurrency(bundlePrice)}
-            </span>
+            <span className="pdp-fbt__summary-total">{formatCurrency(bundlePrice)}</span>
           </div>
           <button
             type="button"

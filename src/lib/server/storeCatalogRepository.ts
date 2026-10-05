@@ -81,6 +81,15 @@ export async function batchUpdateProducts(
   return updated;
 }
 
+export async function batchUpdateProductSubcategories(
+  updates: Array<{ id: string; subcategory: string }>,
+): Promise<number> {
+  if (updates.length === 0) return 0;
+  await pg.batchUpdateProductSubcategories(updates);
+  await invalidateCatalogCache();
+  return updates.length;
+}
+
 export function isCatalogUnavailable(): boolean {
   return !process.env.DATABASE_URL?.trim();
 }

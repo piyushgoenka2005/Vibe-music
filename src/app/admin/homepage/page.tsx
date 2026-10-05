@@ -8,7 +8,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import BannerImageUpload from "@/components/admin/BannerImageUpload";
 import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
-import { ErrorState } from "@/components/admin/AdminQueryState";
+import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import {
   HOMEPAGE_SECTION_KEYS,
   HOMEPAGE_SECTION_LABELS,
@@ -62,21 +62,19 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const res = await fetch("/api/admin/homepage");
-      if (!res.ok) throw new Error("Failed to load homepage config");
-      return res.json() as Promise<{
+      return adminFetchJson<{
         sections: HomepageSection[];
         items: HomepageSectionItem[];
-      }>;
+      }>("/api/admin/homepage");
     },
   });
 
   const { data: guitarProducts = [] } = useQuery({
     queryKey: ["admin-homepage-guitars"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/products?category=guitars&limit=200");
-      if (!res.ok) throw new Error("Failed to load guitar products");
-      const body = (await res.json()) as { products?: AdminProduct[] };
+      const body = await adminFetchJson<{ products?: AdminProduct[] }>(
+        "/api/admin/products?category=guitars&limit=200",
+      );
       return body.products ?? [];
     },
     enabled: activeKey === "big_names_deals",
@@ -85,11 +83,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
   const { data: catalogBrands = [] } = useQuery({
     queryKey: ["admin-homepage-brands"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/brands");
-      if (!res.ok) throw new Error("Failed to load brands");
-      const body = (await res.json()) as {
+      const body = await adminFetchJson<{
         brands?: Array<{ id: string; name: string; slug: string }>;
-      };
+      }>("/api/admin/brands");
       return body.brands ?? [];
     },
     enabled: activeKey === "brand_strip",
@@ -98,10 +94,14 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
   const { data: catalogProductCount } = useQuery({
     queryKey: ["admin-homepage-product-count"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/products?limit=1");
-      if (!res.ok) return null;
-      const body = (await res.json()) as { total?: number; products?: AdminProduct[] };
-      return body.total ?? body.products?.length ?? 0;
+      try {
+        const body = await adminFetchJson<{ total?: number; products?: AdminProduct[] }>(
+          "/api/admin/products?limit=1",
+        );
+        return body.total ?? body.products?.length ?? 0;
+      } catch {
+        return null;
+      }
     },
   });
 
@@ -113,10 +113,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     }
     setProductSearching(true);
     try {
-      const res = await fetch(
+      const body = await adminFetchJson<{ products?: AdminProduct[] }>(
         `/api/admin/products?search=${encodeURIComponent(query.trim())}&limit=12`,
       );
-      const body = (await res.json()) as { products?: AdminProduct[] };
       setProductResults(body.products ?? []);
     } finally {
       setProductSearching(false);
@@ -150,7 +149,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
   const saveSectionMutation = useMutation({
     mutationFn: async () => {
       if (!activeSection) throw new Error("Section not found");
-      const res = await fetch(`/api/admin/homepage/sections/${activeKey}`, {
+      await adminMutateJson(`/api/admin/homepage/sections/${activeKey}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -175,8 +174,6 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
               : (sectionForm.maxItems ?? activeSection.maxItems),
         }),
       });
-      const body = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(body.error ?? "Save failed");
     },
     onSuccess: () => {
       setFormError(null);
@@ -202,14 +199,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
       const url = editingItemId
         ? `/api/admin/homepage/items/${editingItemId}`
         : "/api/admin/homepage/items";
-      const res = await fetch(url, {
+      await adminMutateJson(url, {
         method: editingItemId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const body = (await res.json()) as { error?: string };
-      if (!res.ok)
-        throw new Error(body.error ?? (editingItemId ? "Update failed" : "Add item failed"));
     },
     onSuccess: () => {
       setItemForm(EMPTY_ITEM);
@@ -225,8 +219,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
 
   const deleteItemMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/homepage/items/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      await adminMutateJson(`/api/admin/homepage/items/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
       setSaveNotice("Item removed. Storefront cache refreshed.");
@@ -236,12 +229,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
 
   const toggleItemMutation = useMutation({
     mutationFn: async (item: HomepageSectionItem) => {
-      const res = await fetch(`/api/admin/homepage/items/${item.id}`, {
+      await adminMutateJson(`/api/admin/homepage/items/${item.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !item.isActive }),
       });
-      if (!res.ok) throw new Error("Update failed");
     },
     onSuccess: () => {
       setSaveNotice("Item status updated. Storefront cache refreshed.");
@@ -251,12 +243,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
 
   const reorderMutation = useMutation({
     mutationFn: async (orderedIds: string[]) => {
-      const res = await fetch("/api/admin/homepage/items/reorder", {
+      await adminMutateJson("/api/admin/homepage/items/reorder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sectionKey: activeKey, orderedIds }),
       });
-      if (!res.ok) throw new Error("Reorder failed");
     },
     onSuccess: () => {
       setSaveNotice("Order updated. Storefront cache refreshed.");
