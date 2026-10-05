@@ -483,16 +483,15 @@ install_dependencies() {
   # Guard against partial installs leaving a drifted lockfile on the VPS.
   git checkout -- package-lock.json package.json 2>/dev/null || true
 
+  log "Verifying package-lock.json (npm 10.x — production VPS)"
+  npm run verify:lockfile || die "package-lock.json not deployable — fix locally with npm run verify:lockfile and push"
+
   local attempt
   for attempt in 1 2; do
-    if [[ "$attempt" == "2" ]] || [[ "${FORCE_CLEAN_DEPS:-0}" == "1" ]]; then
-      if [[ "$attempt" == "2" ]]; then
-        warn "dependency install failed — wiping node_modules and retrying npm ci"
-      else
-        log "FORCE_CLEAN_DEPS=1 — removing node_modules before npm ci"
-      fi
-      clean_node_modules
+    if [[ "$attempt" == "2" ]]; then
+      warn "dependency install failed — wiping node_modules and retrying npm ci"
     fi
+    clean_node_modules
 
     if ! npm ci --no-audit --no-fund; then
       warn "npm ci failed (attempt ${attempt}/2)"

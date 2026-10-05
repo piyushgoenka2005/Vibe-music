@@ -40,6 +40,9 @@ if [[ -d node_modules ]]; then
   fi
 fi
 
+log "Verifying package-lock.json (npm 10.x)"
+npm run verify:lockfile
+
 log "Clean install (npm ci)"
 if ! npm ci --no-audit --no-fund; then
   warn "npm ci failed — ensure latest main is pulled: git pull --ff-only origin main"
