@@ -296,15 +296,33 @@ docs/
 
 ## Key npm scripts
 
-| Script                        | Purpose                        |
-| ----------------------------- | ------------------------------ |
-| `npm run deploy:update`       | Run `deploy/update.sh` on VPS  |
-| `npm run ops:ssh`             | SSH to CloudOnFire VPS         |
-| `npm run ops:verify-ssh`      | Test deploy key                |
-| `npm run sync:cdn-vps`        | Push CDN files to VPS          |
-| `npm run download:images`     | Fetch storefront static images |
-| `npm run verify:integrations` | Smoke public APIs              |
-| `npm run monitor:checkout`    | Synthetic checkout probe       |
+| Script                                | Purpose                            |
+| ------------------------------------- | ---------------------------------- |
+| `npm run deploy:update`               | Run `deploy/update.sh` on VPS      |
+| `npm run ops:ssh`                     | SSH to CloudOnFire VPS             |
+| `npm run ops:verify-ssh`              | Test deploy key                    |
+| `npm run sync:cdn-vps`                | Push CDN files to VPS              |
+| `npm run download:images`             | Fetch storefront static images     |
+| `npm run verify:integrations`         | Smoke public APIs                  |
+| `npm run verify:meta-integration`     | Meta Pixel + CAPI code/env check   |
+| `npm run verify:meta-ad-landing:prod` | Gibraltar ad landing + OG metadata |
+| `npm run monitor:checkout`            | Synthetic checkout probe           |
+
+---
+
+## Meta Pixel + Conversions API (Facebook / Instagram ads)
+
+Implementation is **complete** in code. Configure credentials from Meta Events Manager, then:
+
+```bash
+cp .env.local.example .env.local   # add Pixel ID, CAPI token, domain verification
+npm run dev                        # restart after editing .env.local
+npm run verify:meta-integration
+```
+
+Full setup, event reference, and Events Manager QA: **[docs/Vibe_Music_Meta_Pixel_CAPI_Setup.md](docs/Vibe_Music_Meta_Pixel_CAPI_Setup.md)**.
+
+Canonical Gibraltar ad URL: `https://vibemusic.in/brands/gibraltar`
 
 ---
 

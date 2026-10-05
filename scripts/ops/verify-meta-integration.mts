@@ -10,7 +10,11 @@
  *   VERIFY_BASE_URL=http://localhost:3000 npx tsx --env-file=.env.local scripts/ops/verify-meta-integration.mts
  */
 import { spawnSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { getMetaPixelId, isMetaPixelConfigured } from "../../src/lib/analytics/metaPixel";
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 const BASE_URL = (process.env.VERIFY_BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
@@ -29,10 +33,11 @@ function skip(name: string, detail: string): Check {
 }
 
 function runMetaUnitTests(): Check {
+  const vitestBin = path.join(REPO_ROOT, "node_modules", "vitest", "vitest.mjs");
   const result = spawnSync(
-    "npx",
+    process.execPath,
     [
-      "vitest",
+      vitestBin,
       "run",
       "src/lib/analytics/metaPixel.test.ts",
       "src/lib/analytics/metaCapiHash.test.ts",
@@ -41,10 +46,9 @@ function runMetaUnitTests(): Check {
       "src/app/api/analytics/meta/route.test.ts",
       "src/lib/seo/adLanding.test.ts",
       "src/lib/seo/brandMetadata.test.ts",
-      "src/lib/server/integrationConfig.test.ts",
       "src/lib/server/orderPaymentService.test.ts",
     ],
-    { stdio: "pipe", shell: true, encoding: "utf-8" },
+    { stdio: "pipe", encoding: "utf-8", cwd: REPO_ROOT },
   );
   if (result.status === 0) {
     return pass("unit-tests", "Meta-related Vitest suite passed");

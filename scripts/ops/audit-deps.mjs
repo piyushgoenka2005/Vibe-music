@@ -28,7 +28,12 @@ const ACCEPTED_TRANSITIVE_PREFIXES = [
  * Direct deps whose npm "fix" is a false positive (downgrade or wrong major).
  * Advisory is transitive; tracked until upstream ships a real patch.
  */
-const ACCEPTED_DIRECT_FALSE_FIX = new Set(["next-auth", "prisma"]);
+const ACCEPTED_DIRECT_FALSE_FIX = new Set([
+  "next-auth",
+  "prisma",
+  /** npm audit fix downgrades to eslint-config-next@14 — incompatible with Next 16. */
+  "eslint-config-next",
+]);
 
 function runAuditJson() {
   const result = spawnSync("npm", ["audit", "--json"], {

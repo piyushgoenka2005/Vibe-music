@@ -39,8 +39,13 @@ function walk(dir, files = []) {
   return files;
 }
 
+/** Canonical shipping copy builder — may contain threshold-based phrases by design. */
+const ALLOWLIST = new Set(["src/lib/storefront/shippingPolicy.ts"]);
+
 const violations = [];
 for (const file of walk(srcDir)) {
+  const rel = path.relative(root, file).replaceAll("\\", "/");
+  if (ALLOWLIST.has(rel)) continue;
   const text = fs.readFileSync(file, "utf8");
   for (const ban of BANNED) {
     if (ban.pattern.test(text)) {
