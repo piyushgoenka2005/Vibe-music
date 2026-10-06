@@ -10,6 +10,7 @@ import { getMetaDomainVerification, isMetaPixelConfigured } from "@/lib/analytic
 import SocialRailShell from "@/components/layout/SocialRailShell";
 import AppProviders from "@/providers/AppProviders";
 import { DEFAULT_METADATA } from "@/lib/site";
+import { isPageLoadSplashEnabled } from "@/lib/splash/pageLoadSplash";
 import "./globals.css";
 import "@/styles/typography.css";
 import "@/styles/gooey-linkup.css";
@@ -42,7 +43,7 @@ export default async function RootLayout({
     resolvePublicLegal(),
     resolveStoreShippingPolicy(),
   ]);
-  const splashEnabled = false; // Disabled to eliminate artificial loading latency
+  const splashEnabled = isPageLoadSplashEnabled();
   const metaDomainVerification = getMetaDomainVerification();
 
   return (

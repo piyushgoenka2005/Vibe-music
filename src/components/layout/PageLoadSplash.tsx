@@ -7,6 +7,14 @@ import SplashMusicalItems from "@/components/layout/SplashMusicalItems";
 import SplashCornerAccents from "@/components/layout/SplashCornerAccents";
 import SplashEcommerceBeat from "@/components/layout/SplashEcommerceBeat";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import {
+  SPLASH_ACTIVE_CLASS,
+  SPLASH_PENDING_CLASS,
+  SPLASH_SEEN_KEY,
+  isPageLoadSplashEnabled,
+} from "@/lib/splash/pageLoadSplash";
+
+export { SPLASH_ACTIVE_CLASS, SPLASH_PENDING_CLASS, SPLASH_SEEN_KEY, isPageLoadSplashEnabled };
 
 const splashFont = Bebas_Neue({
   subsets: ["latin"],
@@ -21,15 +29,7 @@ const BRAND_EXIT_MS = 160;
 const TEASER_DELAY_MS = 280;
 const ITEMS_PHASE_MS = 400;
 const FULL_EXIT_MS = 150;
-export const SPLASH_SEEN_KEY = "vibe-splash-seen";
-export const SPLASH_ACTIVE_CLASS = "vibe-splash-active";
-export const SPLASH_PENDING_CLASS = "vibe-splash-pending";
-
-const SPLASH_ENABLED = process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH === "true";
-
-export function isPageLoadSplashEnabled(): boolean {
-  return SPLASH_ENABLED;
-}
+const SPLASH_ENABLED = isPageLoadSplashEnabled();
 
 export function shouldShowInitialSplash(): boolean {
   if (!SPLASH_ENABLED) return false;
