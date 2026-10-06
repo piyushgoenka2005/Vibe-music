@@ -1,4 +1,5 @@
 import Script from "next/script";
+import { ANALYTICS_CONSENT_KEY } from "@/lib/analytics/config";
 import { getMetaPixelId, isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
 
 export default function MetaPixelScripts() {
@@ -18,7 +19,11 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '${pixelId}');`}
+var storedMeta=null;
+try{storedMeta=localStorage.getItem('${ANALYTICS_CONSENT_KEY}');}catch(e){}
+if(storedMeta==='denied'){fbq('consent','revoke');}
+fbq('init', '${pixelId}');
+fbq('track', 'PageView');`}
       </Script>
       <noscript>
         <img

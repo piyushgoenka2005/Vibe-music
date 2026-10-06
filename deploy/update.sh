@@ -133,6 +133,9 @@ ensure_ops_secrets_brief() {
   if ! grep -qE '^METRICS_SCRAPE_TOKEN=.{16,}' "$SECRETS" 2>/dev/null; then
     echo "METRICS_SCRAPE_TOKEN=$(openssl rand -hex 24 2>/dev/null || echo changeme)" >> "$SECRETS"
   fi
+  if ! grep -qE '^NEXT_PUBLIC_META_PIXEL_ID=[0-9]{5,20}' "$SECRETS" 2>/dev/null; then
+    echo "NEXT_PUBLIC_META_PIXEL_ID=2368094903963199" >> "$SECRETS"
+  fi
 }
 
 load_database_url() {
@@ -633,5 +636,10 @@ npm run ops:release-stale-reservations || echo "    WARN: sweeper failed — che
 step "10/10 — Edge verification"
 
 run_edge_check
+
+if [[ "${SKIP_BUILD:-0}" != "1" ]]; then
+  log "Meta Pixel live check"
+  npm run verify:meta-pixel:prod || warn "Meta Pixel verify failed — set NEXT_PUBLIC_META_PIXEL_ID in deploy/ops-secrets.env and redeploy"
+fi
 
 print_summary

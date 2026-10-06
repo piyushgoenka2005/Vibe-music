@@ -55,6 +55,22 @@ export function trackMetaPageView(path?: string): void {
   trackWithDedup("PageView", eventId, {});
 }
 
+/** Server CAPI relay for the initial load (browser PageView comes from MetaPixelScripts). */
+export function relayMetaPageViewCapi(path?: string): void {
+  if (!canTrackMeta()) return;
+  const pathname = path ?? (typeof window !== "undefined" ? window.location.pathname : "/");
+  const eventId = metaPageViewEventId(pathname);
+  const { fbp, fbc } = readMetaBrowserCookies();
+  relayMetaCapiEvent({
+    eventName: "PageView",
+    eventId,
+    eventSourceUrl: typeof window !== "undefined" ? window.location.href : undefined,
+    customData: {},
+    fbp,
+    fbc,
+  });
+}
+
 export function trackMetaViewContent(product: Product): void {
   const eventId = metaViewContentEventId(product.id);
   trackWithDedup("ViewContent", eventId, {

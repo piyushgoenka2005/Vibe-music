@@ -73,6 +73,7 @@
     "verify:google-oauth": "npx tsx --env-file=.env.local scripts/ops/verify-google-oauth.mts",
     "verify:google-oauth:prod": "npx tsx --env-file=.env scripts/ops/verify-google-oauth.mts",
     "ops:sync-google-oauth-vps": "node scripts/ops/sync-google-oauth-vps.mjs",
+    "ops:sync-meta-pixel-vps": "node scripts/ops/sync-meta-pixel-vps.mjs",
     "verify:meta-ad-landing": "npx tsx --env-file=.env.local scripts/ops/verify-meta-ad-landing.mts",
     "verify:meta-ad-landing:prod": "npx tsx --env-file=.env scripts/ops/verify-meta-ad-landing.mts",
     "verify:meta-pixel": "npx tsx --env-file=.env.local scripts/ops/verify-meta-pixel.mts",
