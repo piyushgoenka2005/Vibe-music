@@ -254,6 +254,11 @@ build_application() {
 restart_pm2() {
   mkdir -p /var/log/vibe
 
+  # PM2 keeps process env across reloads; export deploy SHA so /api/health version matches git.
+  if [[ -f .env ]] && grep -q '^GIT_COMMIT_SHA=' .env 2>/dev/null; then
+    export GIT_COMMIT_SHA="$(grep '^GIT_COMMIT_SHA=' .env | cut -d= -f2- | tr -d '"' | tr -d "'")"
+  fi
+
   log "Restarting PM2 (vibe)"
   if pm2 describe vibe >/dev/null 2>&1; then
     pm2 reload deploy/ecosystem.config.cjs --only vibe --update-env
