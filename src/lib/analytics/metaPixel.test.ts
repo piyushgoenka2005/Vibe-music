@@ -18,4 +18,12 @@ describe("metaPixel config", () => {
     expect(getMetaPixelId()).toBeUndefined();
     expect(isMetaPixelConfigured()).toBe(false);
   });
+
+  it("builds official Meta Pixel base code with init and PageView", async () => {
+    const { buildMetaPixelInlineScript } = await import("@/lib/analytics/metaPixel");
+    const script = buildMetaPixelInlineScript("2368094903963199");
+    expect(script).toContain("fbevents.js");
+    expect(script).toContain("fbq('init', '2368094903963199')");
+    expect(script).toContain("fbq('track', 'PageView')");
+  });
 });

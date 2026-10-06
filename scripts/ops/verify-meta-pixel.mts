@@ -96,10 +96,31 @@ async function main() {
     }
 
     const pixelId = getMetaPixelId();
+    const headHtml = html.includes("</head>") ? html.slice(0, html.indexOf("</head>")) : html;
     if (pixelId && html.includes(`fbq('init', '${pixelId}')`)) {
       checks.push(pass("html:fbq-init", `init with Pixel ID ${pixelId}`));
     } else if (isMetaPixelConfigured()) {
       checks.push(fail("html:fbq-init", "fbq init missing or wrong Pixel ID in HTML"));
+    }
+
+    if (pixelId && headHtml.includes(`fbq('init', '${pixelId}')`)) {
+      checks.push(pass("html:fbq-in-head", "base code in <head> (Meta install guide)"));
+    } else if (isMetaPixelConfigured() && pixelId && html.includes(`fbq('init', '${pixelId}')`)) {
+      checks.push(
+        fail(
+          "html:fbq-in-head",
+          "fbq init is in <body> — move Meta Pixel base code into <head>",
+          false,
+        ),
+      );
+    } else if (isMetaPixelConfigured()) {
+      checks.push(fail("html:fbq-in-head", "fbq init not in <head>", false));
+    }
+
+    if (pixelId && html.includes("fbq('track', 'PageView')")) {
+      checks.push(pass("html:fbq-pageview", "PageView track in HTML"));
+    } else if (isMetaPixelConfigured()) {
+      checks.push(fail("html:fbq-pageview", "fbq PageView missing in HTML", false));
     }
 
     if (domainToken && html.includes('name="facebook-domain-verification"')) {

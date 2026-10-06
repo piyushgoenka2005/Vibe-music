@@ -67,10 +67,10 @@ export default async function RootLayout({
             }}
           />
         ) : null}
+        <MetaPixelScripts />
       </head>
       <body className={primaryFont.className} suppressHydrationWarning>
         <GoogleAnalyticsScripts />
-        <MetaPixelScripts />
         <WebVitals />
         {splashEnabled ? (
           /* Instant framed brand cover — CSS hides unless html.vibe-splash-pending. */
