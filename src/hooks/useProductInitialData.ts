@@ -28,7 +28,7 @@ export function useProductInitialData(slug: string, initialData: ProductDetailRe
     const run = () => {
       void fetchProductDetail(slug)
         .then((next) => {
-          if (!cancelled) {
+          if (!cancelled && next) {
             setData(next);
           }
         })
