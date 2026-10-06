@@ -878,14 +878,14 @@ body.is-landing-page .storefront-main + .site-footer.site-footer--layered .site-
   }
 
   /* Sticky commerce bars own the bottom edge — keep panel pass-through */
-  body:has(.pdp-mobile-bar--visible) .footer-products-panel.is-ready.is-interactive,
+  body:has(.pdp-mobile-prefooter) .footer-products-panel.is-ready.is-interactive,
   body:has(.checkout-mobile-bar) .footer-products-panel.is-ready.is-interactive,
   body:has(.acct__mobile-nav) .footer-products-panel.is-ready.is-interactive {
     z-index: 0;
     pointer-events: none;
   }
 
-  body:has(.pdp-mobile-bar--visible) .footer-products-panel.is-ready .footer-product-snippet__add,
+  body:has(.pdp-mobile-prefooter) .footer-products-panel.is-ready .footer-product-snippet__add,
   body:has(.checkout-mobile-bar) .footer-products-panel.is-ready .footer-product-snippet__add,
   body:has(.acct__mobile-nav) .footer-products-panel.is-ready .footer-product-snippet__add {
     pointer-events: none;

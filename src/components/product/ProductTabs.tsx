@@ -1,11 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
 import type { ProductDetail } from "@/types/product";
 import ProductDetailsPanel from "./ProductDetailsPanel";
-import ProductReviewsSection from "./reviews/ProductReviewsSection";
-import ProductQASection from "./qa/ProductQASection";
 import "@/styles/product-reviews.css";
+
+const ProductReviewsSection = dynamic(() => import("./reviews/ProductReviewsSection"), {
+  ssr: false,
+  loading: () => <p className="pdp-sections__empty">Loading reviews…</p>,
+});
+
+const ProductQASection = dynamic(() => import("./qa/ProductQASection"), {
+  ssr: false,
+  loading: () => <p className="pdp-sections__empty">Loading Q&amp;A…</p>,
+});
 
 const SECTIONS = [
   { id: "details", label: "Product Details" },

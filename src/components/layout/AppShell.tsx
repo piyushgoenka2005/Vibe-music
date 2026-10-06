@@ -8,7 +8,6 @@ import ToastContainer from "@/components/common/ToastContainer";
 import DeferredGlobalSearch from "@/components/layout/DeferredGlobalSearch";
 import StorefrontChrome from "@/components/layout/StorefrontChrome";
 import DeferredHtmlLinkInterceptor from "@/components/vibe/DeferredHtmlLinkInterceptor";
-import QueryProvider from "@/providers/QueryProvider";
 import NextAuthSessionProvider from "@/providers/SessionProvider";
 import WebVitalsReporter from "@/components/performance/WebVitalsReporter";
 import RoutePreloader from "@/components/layout/RoutePreloader";
@@ -80,42 +79,38 @@ export default function AppShell({
 
   if (isAdmin) {
     return (
-      <QueryProvider>
-        <NextAuthSessionProvider>
-          <AuthProvider>
-            <ToastContainer />
-            {children}
-          </AuthProvider>
-        </NextAuthSessionProvider>
-      </QueryProvider>
+      <NextAuthSessionProvider>
+        <AuthProvider>
+          <ToastContainer />
+          {children}
+        </AuthProvider>
+      </NextAuthSessionProvider>
     );
   }
 
   return (
-    <QueryProvider>
-      <NextAuthSessionProvider>
-        <AuthProvider>
-          <SplashPendingClear />
-          {ENABLE_PAGE_LOAD_SPLASH ? <PageLoadSplash onComplete={handleSplashComplete} /> : null}
-          <WebVitalsReporter />
-          <AnalyticsProvider />
-          <SupportChatLoader />
-          <ServiceWorkerRegister />
-          <RoutePreloader />
-          <Suspense fallback={null}>
-            <ScrollRestoration />
-          </Suspense>
-          <div className="storefront-root">
-            <StorefrontChrome legal={legal} shippingAnnouncement={shippingAnnouncement}>
-              <DeferredHtmlLinkInterceptor />
-              <DeferredGlobalSearch />
-              <StorefrontDrawers />
-              <ToastContainer />
-              {children}
-            </StorefrontChrome>
-          </div>
-        </AuthProvider>
-      </NextAuthSessionProvider>
-    </QueryProvider>
+    <NextAuthSessionProvider>
+      <AuthProvider>
+        <SplashPendingClear />
+        {ENABLE_PAGE_LOAD_SPLASH ? <PageLoadSplash onComplete={handleSplashComplete} /> : null}
+        <WebVitalsReporter />
+        <AnalyticsProvider />
+        <SupportChatLoader />
+        <ServiceWorkerRegister />
+        <RoutePreloader />
+        <Suspense fallback={null}>
+          <ScrollRestoration />
+        </Suspense>
+        <div className="storefront-root">
+          <StorefrontChrome legal={legal} shippingAnnouncement={shippingAnnouncement}>
+            <DeferredHtmlLinkInterceptor />
+            <DeferredGlobalSearch />
+            <StorefrontDrawers />
+            <ToastContainer />
+            {children}
+          </StorefrontChrome>
+        </div>
+      </AuthProvider>
+    </NextAuthSessionProvider>
   );
 }

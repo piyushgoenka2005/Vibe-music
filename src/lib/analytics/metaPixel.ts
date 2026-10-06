@@ -12,6 +12,16 @@ export function isMetaPixelConfigured(): boolean {
   return Boolean(getMetaPixelId());
 }
 
+/** Meta domain verification token — server env preferred (no rebuild to update on VPS). */
+export function getMetaDomainVerification(): string | undefined {
+  const token =
+    process.env.META_DOMAIN_VERIFICATION?.trim() ||
+    process.env.NEXT_PUBLIC_META_DOMAIN_VERIFICATION?.trim();
+  if (!token) return undefined;
+  if (!/^[a-z0-9]+$/i.test(token)) return undefined;
+  return token;
+}
+
 /** Official Meta Pixel base code — paste into <head> on every page (Events Manager). */
 export function buildMetaPixelInlineScript(pixelId: string): string {
   return `!function(f,b,e,v,n,t,s)

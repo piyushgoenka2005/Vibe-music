@@ -6,9 +6,9 @@ import { resolvePublicLegal } from "@/lib/brand/resolvePublicLegal";
 import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
 import GoogleAnalyticsScripts from "@/components/analytics/GoogleAnalyticsScripts";
 import MetaPixelScripts from "@/components/analytics/MetaPixelScripts";
-import { isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
-import { WebVitals } from "@/components/common/WebVitals";
+import { getMetaDomainVerification, isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
 import SocialRailShell from "@/components/layout/SocialRailShell";
+import AppProviders from "@/providers/AppProviders";
 import { DEFAULT_METADATA } from "@/lib/site";
 import "./globals.css";
 import "@/styles/typography.css";
@@ -43,6 +43,7 @@ export default async function RootLayout({
     resolveStoreShippingPolicy(),
   ]);
   const splashEnabled = false; // Disabled to eliminate artificial loading latency
+  const metaDomainVerification = getMetaDomainVerification();
 
   return (
     <html lang="en-IN" className={primaryFont.variable} suppressHydrationWarning>
@@ -68,10 +69,12 @@ export default async function RootLayout({
           />
         ) : null}
         <MetaPixelScripts />
+        {metaDomainVerification ? (
+          <meta name="facebook-domain-verification" content={metaDomainVerification} />
+        ) : null}
       </head>
       <body className={primaryFont.className} suppressHydrationWarning>
         <GoogleAnalyticsScripts />
-        <WebVitals />
         {splashEnabled ? (
           /* Instant framed brand cover — CSS hides unless html.vibe-splash-pending. */
           <div id="vibe-boot-splash" className="vibe-boot-splash" aria-hidden="true">
@@ -90,9 +93,11 @@ export default async function RootLayout({
             GSTIN: {legal.gstin}
           </p>
         ) : null}
-        <AppShell legal={legal} shippingAnnouncement={shippingPolicy.announcement}>
-          {children}
-        </AppShell>
+        <AppProviders>
+          <AppShell legal={legal} shippingAnnouncement={shippingPolicy.announcement}>
+            {children}
+          </AppShell>
+        </AppProviders>
       </body>
     </html>
   );

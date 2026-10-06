@@ -136,6 +136,12 @@ ensure_ops_secrets_brief() {
   if ! grep -qE '^NEXT_PUBLIC_META_PIXEL_ID=[0-9]{5,20}' "$SECRETS" 2>/dev/null; then
     echo "NEXT_PUBLIC_META_PIXEL_ID=2368094903963199" >> "$SECRETS"
   fi
+  if ! grep -qE '^META_CAPI_ACCESS_TOKEN=.{20,}' "$SECRETS" 2>/dev/null; then
+    warn "META_CAPI_ACCESS_TOKEN missing in deploy/ops-secrets.env — run: npm run setup:meta-integration"
+  fi
+  if ! grep -qE '^NEXT_PUBLIC_META_DOMAIN_VERIFICATION=.{6,}' "$SECRETS" 2>/dev/null; then
+    warn "NEXT_PUBLIC_META_DOMAIN_VERIFICATION missing — domain won't verify in Meta Business Manager"
+  fi
 }
 
 load_database_url() {
@@ -639,7 +645,7 @@ run_edge_check
 
 if [[ "${SKIP_BUILD:-0}" != "1" ]]; then
   log "Meta Pixel live check"
-  npm run verify:meta-pixel:prod || warn "Meta Pixel verify failed — set NEXT_PUBLIC_META_PIXEL_ID in deploy/ops-secrets.env and redeploy"
+  npm run verify:meta-pixel:prod || warn "Meta verify failed — run npm run setup:meta-integration then ops:sync-meta-integration-vps"
 fi
 
 print_summary

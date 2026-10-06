@@ -1,11 +1,12 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
 import { useProduct } from "@/hooks/useProduct";
+import { useProductInitialData } from "@/hooks/useProductInitialData";
 import { useCartStore } from "@/store/cartStore";
 import { BUY_NOW_CHECKOUT_HREF, useBuyNowStore } from "@/store/buyNowStore";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
@@ -24,6 +25,7 @@ import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import ProductBuyBox from "./ProductBuyBox";
 import ProductRelatedRail from "./ProductRelatedRail";
+import ProductStickyBar from "./ProductStickyBar";
 import ProductDetailSkeleton from "./ProductDetailSkeleton";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import { isNonInstrumentGuitarProduct } from "@/lib/product/productRelevance";
@@ -117,14 +119,68 @@ function buildGalleryImages(
   return [...variantImages, ...extras];
 }
 
-export default function ProductDetailPage({
+export default function ProductDetailPage(props: ProductDetailPageProps) {
+  if (props.initialData?.product) {
+    return (
+      <ProductDetailPageWithInitialData
+        slug={props.slug}
+        initialData={props.initialData}
+        shippingDetail={props.shippingDetail}
+      />
+    );
+  }
+
+  return <ProductDetailPageWithQuery slug={props.slug} shippingDetail={props.shippingDetail} />;
+}
+
+function ProductDetailPageWithInitialData({
   slug,
   initialData,
   shippingDetail,
-}: ProductDetailPageProps) {
+}: ProductDetailPageProps & { initialData: ProductDetailResult }) {
+  const { data, isError } = useProductInitialData(slug, initialData);
+
+  return (
+    <ProductDetailPageContent
+      slug={slug}
+      data={data}
+      isLoading={false}
+      isError={isError}
+      shippingDetail={shippingDetail}
+    />
+  );
+}
+
+function ProductDetailPageWithQuery({ slug, shippingDetail }: ProductDetailPageProps) {
+  const { data, isLoading, isError } = useProduct(slug);
+
+  return (
+    <ProductDetailPageContent
+      slug={slug}
+      data={data}
+      isLoading={isLoading}
+      isError={isError}
+      shippingDetail={shippingDetail}
+    />
+  );
+}
+
+function ProductDetailPageContent({
+  slug,
+  data,
+  isLoading,
+  isError,
+  shippingDetail,
+}: {
+  slug: string;
+  data?: ProductDetailResult | null;
+  isLoading: boolean;
+  isError: boolean;
+  shippingDetail?: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data, isLoading, isError } = useProduct(slug, initialData);
+  const atcSentinelRef = useRef<HTMLDivElement>(null);
   const showSkeleton = isLoading && !data;
   const addItem = useCartStore((s) => s.addItem);
   const openCartDrawer = useCartStore((s) => s.openDrawer);
@@ -312,6 +368,7 @@ export default function ProductDetailPage({
               onBuyNow={handleBuyNow}
               onToggleWishlist={() => toggleWishlist(product)}
               isWishlisted={isWishlisted}
+              atcSentinelRef={atcSentinelRef}
             />
           </div>
           {showRelatedRail ? (
@@ -344,6 +401,17 @@ export default function ProductDetailPage({
           <GuitarStorySections />
         </div>
       ) : null}
+
+      <ProductStickyBar
+        price={variant.price}
+        productId={product.id}
+        productSlug={product.slug}
+        productName={product.name}
+        inStock={variant.availability !== "out-of-stock"}
+        onAddToCart={handleAddToCart}
+        onBuyNow={handleBuyNow}
+        sentinelRef={atcSentinelRef}
+      />
     </>
   );
 }

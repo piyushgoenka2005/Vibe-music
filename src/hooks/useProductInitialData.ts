@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { fetchProductDetail, type ProductDetailResult } from "@/services/product.service";
 
 function needsMerchandising(data: ProductDetailResult | null | undefined): boolean {
@@ -14,31 +13,30 @@ function needsMerchandising(data: ProductDetailResult | null | undefined): boole
   );
 }
 
-export function useProduct(slug: string, initialData?: ProductDetailResult | null) {
-  const hasInitialProduct = Boolean(initialData?.product);
-
-  const query = useQuery({
-    queryKey: ["product", slug],
-    queryFn: () => fetchProductDetail(slug),
-    enabled: Boolean(slug) && !hasInitialProduct,
-    initialData: hasInitialProduct ? initialData! : undefined,
-    staleTime: 5 * 60_000,
-    gcTime: 10 * 60_000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
+/** SSR-safe product data hook — avoids React Query when server passes initialData. */
+export function useProductInitialData(slug: string, initialData: ProductDetailResult) {
+  const [data, setData] = useState(initialData);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
-    if (!slug || !hasInitialProduct || !needsMerchandising(initialData)) {
+    if (!slug || !needsMerchandising(initialData)) {
       return;
     }
 
     let cancelled = false;
 
     const run = () => {
-      void query.refetch().finally(() => {
-        if (cancelled) return;
-      });
+      void fetchProductDetail(slug)
+        .then((next) => {
+          if (!cancelled) {
+            setData(next);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setIsError(true);
+          }
+        });
     };
 
     if (typeof window.requestIdleCallback === "function") {
@@ -54,7 +52,7 @@ export function useProduct(slug: string, initialData?: ProductDetailResult | nul
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [hasInitialProduct, initialData, query, slug]);
+  }, [initialData, slug]);
 
-  return query;
+  return { data, isLoading: false, isError };
 }

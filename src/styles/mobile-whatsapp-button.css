@@ -56,7 +56,6 @@
     --mobile-whatsapp-stack-offset: 3.5rem;
   }
 
-  body:has(.pdp-mobile-bar) .mobile-whatsapp-btn,
   body:has(.checkout-mobile-bar) .mobile-whatsapp-btn {
     --mobile-whatsapp-clearance: 5.25rem;
   }

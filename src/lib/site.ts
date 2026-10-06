@@ -1,3 +1,4 @@
+import { getMetaDomainVerification } from "@/lib/analytics/metaPixel";
 import { BRAND } from "@/lib/brand";
 
 export const SITE_NAME = BRAND.name;
@@ -10,8 +11,7 @@ const googleSiteVerification =
   process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim() || undefined;
 
 /** Meta Business Manager domain verification token (content= value). */
-const metaDomainVerification =
-  process.env.NEXT_PUBLIC_META_DOMAIN_VERIFICATION?.trim() || undefined;
+const metaDomainVerification = getMetaDomainVerification();
 
 const siteVerification = {
   ...(googleSiteVerification ? { google: googleSiteVerification } : {}),

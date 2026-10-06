@@ -17,6 +17,13 @@ const examplePath = path.join(root, "deploy", "ops-secrets.env.example");
 const CANONICAL_PHONE = "8910482950";
 const LEGACY_PHONE_DIGITS = new Set(["919773651006", "9773651006"]);
 const PHONE_KEYS = new Set(["NEXT_PUBLIC_STORE_PHONE", "STORE_PHONE"]);
+const META_KEYS = new Set([
+  "NEXT_PUBLIC_META_PIXEL_ID",
+  "META_CAPI_ACCESS_TOKEN",
+  "META_DOMAIN_VERIFICATION",
+  "NEXT_PUBLIC_META_DOMAIN_VERIFICATION",
+  "META_TEST_EVENT_CODE",
+]);
 
 function phoneDigits(raw) {
   return String(raw ?? "").replace(/\D/g, "");
@@ -97,7 +104,7 @@ function setLine(key, value) {
 
 for (const [key, value] of incoming) {
   const current = existing.get(key);
-  const forceOverwrite = overwriteKeys.has(key);
+  const forceOverwrite = overwriteKeys.has(key) || META_KEYS.has(key);
   const legacyPhone = PHONE_KEYS.has(key) && isLegacyPhone(current);
   const emptyCurrent = !current?.trim();
 

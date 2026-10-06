@@ -10,9 +10,7 @@ function buildAllowedOrigins(): Set<string> {
   const candidates = [
     process.env.NEXT_PUBLIC_SITE_URL,
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
-    process.env.VERCEL_BRANCH_URL
-      ? `https://${process.env.VERCEL_BRANCH_URL}`
-      : undefined,
+    process.env.VERCEL_BRANCH_URL ? `https://${process.env.VERCEL_BRANCH_URL}` : undefined,
     process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : undefined,
@@ -22,11 +20,7 @@ function buildAllowedOrigins(): Set<string> {
     process.env.NODE_ENV !== "production" ? "http://127.0.0.1:3000" : undefined,
   ];
 
-  return new Set(
-    candidates
-      .filter(Boolean)
-      .map((value) => normalizeOrigin(value as string))
-  );
+  return new Set(candidates.filter(Boolean).map((value) => normalizeOrigin(value as string)));
 }
 
 const ALLOWED_ORIGINS = buildAllowedOrigins();
@@ -56,7 +50,7 @@ export function verifyMutationOrigin(request: Request): boolean {
 }
 
 export function isWebhookPath(pathname: string): boolean {
-  return pathname.startsWith("/api/payment/webhook");
+  return pathname.startsWith("/api/payment/webhook") || pathname === "/api/analytics/meta";
 }
 
 export function isMutationMethod(method: string): boolean {

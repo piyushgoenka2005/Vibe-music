@@ -1887,7 +1887,6 @@ body.site-nav-open .site-header--hidden {
     pointer-events: none;
   }
 
-  body:has(.pdp-mobile-bar) .help-widget,
   body:has(.checkout-mobile-bar) .help-widget {
     --floating-ui-clearance: 5.25rem;
     bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--floating-ui-clearance));
@@ -1898,7 +1897,6 @@ body.site-nav-open .site-header--hidden {
     bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--floating-ui-clearance));
   }
 
-  body:has(.pdp-mobile-bar) .back-to-top,
   body:has(.checkout-mobile-bar) .back-to-top {
     --floating-ui-clearance: 9.5rem;
     bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--floating-ui-clearance));

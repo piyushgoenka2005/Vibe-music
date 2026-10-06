@@ -19,6 +19,8 @@ describe("SECURITY_HEADERS", () => {
     expect(csp).toContain("https://checkout.razorpay.com");
     expect(csp).toContain("https://connect.facebook.net");
     expect(csp).toContain("https://www.facebook.com");
+    expect(csp).toContain("frame-src");
+    expect(csp).toContain("https://*.facebook.com");
     expect(csp).toContain("https://fonts.gstatic.com");
     expect(csp).toContain("media-src 'self' data: blob:");
     expect(csp).toContain("form-action 'self' https://api.razorpay.com");

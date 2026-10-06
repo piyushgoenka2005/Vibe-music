@@ -19,6 +19,12 @@ describe("metaPixel config", () => {
     expect(isMetaPixelConfigured()).toBe(false);
   });
 
+  it("reads domain verification from server env", async () => {
+    vi.stubEnv("META_DOMAIN_VERIFICATION", "abc123domaintoken");
+    const { getMetaDomainVerification } = await import("@/lib/analytics/metaPixel");
+    expect(getMetaDomainVerification()).toBe("abc123domaintoken");
+  });
+
   it("builds official Meta Pixel base code with init and PageView", async () => {
     const { buildMetaPixelInlineScript } = await import("@/lib/analytics/metaPixel");
     const script = buildMetaPixelInlineScript("2368094903963199");

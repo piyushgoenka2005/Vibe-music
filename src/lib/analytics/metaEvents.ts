@@ -10,6 +10,7 @@ import {
   metaViewListEventId,
   readMetaBrowserCookies,
 } from "@/lib/analytics/metaEventId";
+import { hasAnalyticsConsent } from "@/lib/analytics/gtag";
 import { relayMetaCapiEvent } from "@/lib/analytics/metaCapiRelay";
 import { isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
 import type { Order } from "@/types/order";
@@ -26,8 +27,13 @@ function fbq(...args: unknown[]): void {
   window.fbq?.(...args);
 }
 
-function canTrackMeta(): boolean {
+function canUseMetaPixel(): boolean {
   return typeof window !== "undefined" && isMetaPixelConfigured();
+}
+
+/** E-commerce + SPA events — after cookie consent (base head PageView is separate). */
+function canTrackMeta(): boolean {
+  return canUseMetaPixel() && hasAnalyticsConsent();
 }
 
 function trackWithDedup(
@@ -57,7 +63,7 @@ export function trackMetaPageView(path?: string): void {
 
 /** Server CAPI relay for the initial load (browser PageView comes from MetaPixelScripts). */
 export function relayMetaPageViewCapi(path?: string): void {
-  if (!canTrackMeta()) return;
+  if (!canUseMetaPixel()) return;
   const pathname = path ?? (typeof window !== "undefined" ? window.location.pathname : "/");
   const eventId = metaPageViewEventId(pathname);
   const { fbp, fbc } = readMetaBrowserCookies();

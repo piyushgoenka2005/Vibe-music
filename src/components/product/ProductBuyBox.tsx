@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type RefObject } from "react";
 import { MapPin, Truck } from "lucide-react";
 import { formatCurrencyPrecise, isPurchasablePrice } from "@/utils/currency";
 import type { ProductDetail, ProductVariant } from "@/types/product";
@@ -18,6 +18,7 @@ interface ProductBuyBoxProps {
   onBuyNow: () => void;
   onToggleWishlist: () => void;
   isWishlisted: boolean;
+  atcSentinelRef?: RefObject<HTMLDivElement | null>;
 }
 
 function splitPriceParts(price: number) {
@@ -86,6 +87,7 @@ export default function ProductBuyBox({
   onBuyNow,
   onToggleWishlist,
   isWishlisted,
+  atcSentinelRef,
 }: ProductBuyBoxProps) {
   const displayPrice = selectedVariant.price;
   const lineTotal = displayPrice * quantity;
@@ -140,7 +142,7 @@ export default function ProductBuyBox({
 
   return (
     <aside className="pdp-buybox" aria-label="Purchase options">
-      <div className="pdp-buybox__card">
+      <div ref={atcSentinelRef} className="pdp-buybox__card">
         <div className="pdp-buybox__price-block">
           {isComingSoon ? (
             <div className="pdp-buybox__price pdp-buybox__price--coming-soon">

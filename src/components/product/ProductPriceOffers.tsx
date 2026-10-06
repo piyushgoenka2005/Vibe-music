@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { buildPdpOfferRows, resolvePdpPricing } from "@/lib/product/pdpOffers";
 import { buildPdpOfferRowsFromCoupons } from "@/lib/product/pdpOffersFromCoupons";
 import type { StorefrontCouponOffer } from "@/types/coupon";
@@ -21,26 +20,47 @@ export default function ProductPriceOffers({ product, selectedVariant }: Product
     [displayPrice, product.msrp, product.originalPrice],
   );
 
-  const offersQuery = useQuery({
-    queryKey: ["storefront-active-coupons"],
-    queryFn: async () => {
-      const res = await fetch("/api/coupons/active");
-      if (!res.ok) throw new Error("Failed to load offers");
-      const data = (await res.json()) as { coupons: StorefrontCouponOffer[] };
-      return data.coupons ?? [];
-    },
-    staleTime: 180_000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    // Defer off the buy-box critical path — paint price first.
-    enabled: typeof window !== "undefined",
-  });
+  const [activeCoupons, setActiveCoupons] = useState<StorefrontCouponOffer[] | null>(null);
+  const [offersError, setOffersError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadOffers = async () => {
+      try {
+        const res = await fetch("/api/coupons/active");
+        if (!res.ok) throw new Error("Failed to load offers");
+        const payload = (await res.json()) as { coupons: StorefrontCouponOffer[] };
+        if (!cancelled) {
+          setActiveCoupons(payload.coupons ?? []);
+        }
+      } catch {
+        if (!cancelled) {
+          setOffersError(true);
+        }
+      }
+    };
+
+    if (typeof window.requestIdleCallback === "function") {
+      const idleId = window.requestIdleCallback(() => void loadOffers(), { timeout: 2500 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(idleId);
+      };
+    }
+
+    const timeoutId = window.setTimeout(() => void loadOffers(), 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
 
   const offers = useMemo(() => {
-    const fromCoupons = buildPdpOfferRowsFromCoupons(offersQuery.data ?? []);
+    const fromCoupons = buildPdpOfferRowsFromCoupons(activeCoupons ?? []);
     if (fromCoupons.length > 0) return fromCoupons;
     return buildPdpOfferRows(displayPrice);
-  }, [offersQuery.data, displayPrice]);
+  }, [activeCoupons, displayPrice]);
 
   if (!isPurchasablePrice(displayPrice)) {
     return (
@@ -82,7 +102,7 @@ export default function ProductPriceOffers({ product, selectedVariant }: Product
 
       <p className="pdp-info-pricing__tax">Inclusive of all taxes</p>
 
-      {offersQuery.isError ? (
+      {offersError ? (
         <p className="pdp-info-pricing__tax" role="status">
           Offers unavailable right now — try again later or apply a coupon at checkout.
         </p>
