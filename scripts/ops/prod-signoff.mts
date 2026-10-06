@@ -250,9 +250,6 @@ const checks: Check[] = [];
     blocking: true,
   });
 
-  const hsts = response.headers.get("strict-transport-security") ?? "";
-  const csp = response.headers.get("content-security-policy") ?? "";
-  const nosniff = response.headers.get("x-content-type-options") ?? "";
   const server = response.headers.get("server") ?? "unknown";
   const productionEdgeOk =
     response.status === 200 &&
