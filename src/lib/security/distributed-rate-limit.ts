@@ -5,6 +5,10 @@ import {
   type RateLimitOptions,
   type RateLimitResult,
 } from "@/lib/security/rate-limit-core";
+import {
+  rateLimitBackendFailureResult,
+  shouldFailClosedOnRateLimitBackendError,
+} from "@/lib/security/rate-limit-fallback";
 import { getUpstashConfig, upstashPipeline } from "@/lib/security/upstashRedis";
 
 /**
@@ -13,7 +17,7 @@ import { getUpstashConfig, upstashPipeline } from "@/lib/security/upstashRedis";
  */
 export async function distributedCheckRateLimit(
   key: string,
-  options: RateLimitOptions
+  options: RateLimitOptions,
 ): Promise<RateLimitResult> {
   const config = getUpstashConfig();
   if (!config) {
@@ -53,6 +57,9 @@ export async function distributedCheckRateLimit(
       resetAt,
     };
   } catch {
+    if (shouldFailClosedOnRateLimitBackendError()) {
+      return rateLimitBackendFailureResult(options);
+    }
     return checkRateLimit(key, options);
   }
 }

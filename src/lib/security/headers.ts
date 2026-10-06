@@ -1,6 +1,10 @@
 function buildContentSecurityPolicy(): string {
+  const isProd = process.env.NODE_ENV === "production";
   // Webpack/Next.js dev tooling evaluates scripts; production bundles do not need this.
-  const allowEval = process.env.NODE_ENV !== "production";
+  const allowEval = !isProd;
+  const imgSrc = isProd
+    ? "img-src 'self' data: blob: https:"
+    : "img-src 'self' data: blob: https: http:";
   const scriptSrc = [
     "script-src 'self' 'unsafe-inline'",
     allowEval ? "'unsafe-eval'" : null,
@@ -17,7 +21,7 @@ function buildContentSecurityPolicy(): string {
     "default-src 'self'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline' https://cdn.vibemusic.in https://fonts.googleapis.com https://accounts.google.com https://checkout.razorpay.com https://*.razorpay.com",
-    "img-src 'self' data: blob: https: http:",
+    imgSrc,
     "font-src 'self' data: https://fonts.gstatic.com https://cdn.vibemusic.in https://checkout.razorpay.com https://*.razorpay.com",
     "connect-src 'self' blob: https://*.googleapis.com https://www.googleapis.com https://api.razorpay.com https://*.razorpay.com https://lumberjack.razorpay.com https://api.web3forms.com https://static.roland.com https://tonejs.github.io https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://www.facebook.com https://*.facebook.com",
     "media-src 'self' data: blob: https://static.roland.com https://tonejs.github.io",

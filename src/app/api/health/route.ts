@@ -24,6 +24,14 @@ type HealthSnapshot = {
 
 let cached: HealthSnapshot | null = null;
 
+function resolvePublicHealthVersion(isProduction: boolean): string {
+  const full =
+    process.env.GIT_COMMIT_SHA?.trim() || process.env.VERCEL_GIT_COMMIT_SHA?.trim() || "local";
+  if (!isProduction || full === "local") return full;
+  // Expose short SHA for deploy sync probes; omit full hash from public responses.
+  return full.length > 12 ? full.slice(0, 12) : full;
+}
+
 export async function GET() {
   try {
     if (isShuttingDown()) {
@@ -96,8 +104,7 @@ export async function GET() {
         inflightRequests: cache.inflightRequests,
       },
       integrations: isProduction ? undefined : integrations,
-      version:
-        process.env.GIT_COMMIT_SHA?.trim() || process.env.VERCEL_GIT_COMMIT_SHA?.trim() || "local",
+      version: resolvePublicHealthVersion(isProduction),
       uptime: Math.floor(process.uptime()),
       memoryMB: Math.round(process.memoryUsage().rss / 1024 / 1024),
     };

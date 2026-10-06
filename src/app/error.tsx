@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { reportClientError } from "@/lib/client/errorReporting";
 import { ROUTES } from "@/lib/routes";
 
 export default function Error({
@@ -13,6 +14,12 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error(error);
+    reportClientError({
+      message: error.message || "Route error",
+      digest: error.digest,
+      stack: error.stack,
+      boundary: "route",
+    });
   }, [error]);
 
   return (

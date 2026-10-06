@@ -19,7 +19,6 @@ describe("productionSecurityGuards", () => {
     delete process.env.ALLOW_JSON_CATALOG_FALLBACK;
     process.env.UPSTASH_REDIS_REST_URL = "https://example.upstash.io";
     process.env.UPSTASH_REDIS_REST_TOKEN = "token";
-
     const audit = auditProductionSecurityControls();
     expect(audit.demoPaymentsBlocked).toBe(true);
     expect(audit.e2eResetCaptureDisabled).toBe(true);

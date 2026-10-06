@@ -6,6 +6,9 @@ import {
   getRazorpayKeyMode,
 } from "@/lib/server/env";
 import { isClientAnalyticsConfigured } from "@/lib/analytics/config";
+import { isMetaCapiConfigured } from "@/lib/analytics/metaCapi";
+import { isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
+import { gstinComplianceStatus } from "@/lib/server/integrationChannels";
 import { warnIfGooglePlacesMisconfigured } from "@/lib/server/googlePlaces";
 import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
 import { formatIndianPhone } from "@/lib/brand";
@@ -51,6 +54,9 @@ export async function GET(request: Request) {
       storeEmail: settings.storeEmail,
       paymentMethods: ["razorpay"] as const,
       analyticsEnabled: isClientAnalyticsConfigured(),
+      metaPixelConfigured: isMetaPixelConfigured(),
+      metaCapiConfigured: isMetaCapiConfigured(),
+      gstinConfigured: gstinComplianceStatus() === "ok",
     });
   } catch (error) {
     console.error("[api/checkout/capabilities] Error:", error);

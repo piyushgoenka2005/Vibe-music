@@ -1,3 +1,9 @@
+const path = require("path");
+const { loadEnvRecord } = require("../scripts/ops/load-merged-env.mjs");
+
+const projectRoot = path.join(__dirname, "..");
+const fileEnv = loadEnvRecord(projectRoot);
+
 /**
  * PM2 production config for Vibe Music (Next.js).
  *
@@ -16,6 +22,11 @@
 const clusterMode = process.env.PM2_CLUSTER === "1";
 const instanceCount = process.env.PM2_INSTANCES || "max";
 
+const baseEnv = {
+  NODE_ENV: "production",
+  ...fileEnv,
+};
+
 const webApp = clusterMode
   ? {
       name: "vibe",
@@ -30,7 +41,7 @@ const webApp = clusterMode
       max_memory_restart: "1G",
       kill_timeout: 30_000,
       env: {
-        NODE_ENV: "production",
+        ...baseEnv,
         PORT: "3000",
         HOSTNAME: "127.0.0.1",
       },
@@ -53,7 +64,7 @@ const webApp = clusterMode
       max_memory_restart: "1G",
       kill_timeout: 30_000,
       env: {
-        NODE_ENV: "production",
+        ...baseEnv,
         PORT: "3000",
         HOSTNAME: "127.0.0.1",
       },
@@ -76,9 +87,7 @@ const workerApp = {
   min_uptime: "10s",
   max_memory_restart: "512M",
   kill_timeout: 30_000,
-  env: {
-    NODE_ENV: "production",
-  },
+  env: baseEnv,
   error_file: "/var/log/vibe/pm2-worker-error.log",
   out_file: "/var/log/vibe/pm2-worker-out.log",
   merge_logs: true,

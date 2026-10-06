@@ -350,6 +350,13 @@ limit_req_zone $binary_remote_addr zone=page_limit:20m rate=120r/s;
 # Connection limiting — prevent a single IP from exhausting the upstream
 limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
 
+# Auth.js session cookies — bypass SSR page cache for logged-in users
+# (matches src/lib/auth/session-config.ts: authjs.session-token / __Secure-authjs.session-token)
+map $cookie_authjs_session_token$cookie___Secure_authjs_session_token $vibe_session_cache_bypass {
+    default 0;
+    "~."    1;
+}
+
 upstream vibe_nextjs {
     server 127.0.0.1:3000;
 
@@ -530,8 +537,8 @@ server {
         proxy_cache_lock_timeout 5s;
 
         # Bypass cache for logged-in users (cookie-based)
-        proxy_cache_bypass $cookie_vibe_session;
-        proxy_no_cache $cookie_vibe_session;
+        proxy_cache_bypass $vibe_session_cache_bypass;
+        proxy_no_cache $vibe_session_cache_bypass;
 
         add_header X-Cache-Status $upstream_cache_status;
         add_header Cache-Control "public, max-age=0, s-maxage=60, stale-while-revalidate=86400" always;
@@ -559,8 +566,8 @@ server {
         proxy_cache_lock on;
         proxy_cache_lock_timeout 5s;
 
-        proxy_cache_bypass $cookie_vibe_session;
-        proxy_no_cache $cookie_vibe_session;
+        proxy_cache_bypass $vibe_session_cache_bypass;
+        proxy_no_cache $vibe_session_cache_bypass;
 
         add_header X-Cache-Status $upstream_cache_status;
         add_header Cache-Control "public, max-age=0, s-maxage=60, stale-while-revalidate=86400" always;
@@ -588,8 +595,8 @@ server {
         proxy_cache_lock on;
         proxy_cache_lock_timeout 5s;
 
-        proxy_cache_bypass $cookie_vibe_session;
-        proxy_no_cache $cookie_vibe_session;
+        proxy_cache_bypass $vibe_session_cache_bypass;
+        proxy_no_cache $vibe_session_cache_bypass;
 
         add_header X-Cache-Status $upstream_cache_status;
         add_header Cache-Control "public, max-age=0, s-maxage=60, stale-while-revalidate=86400" always;
@@ -617,8 +624,8 @@ server {
         proxy_cache_lock on;
         proxy_cache_lock_timeout 5s;
 
-        proxy_cache_bypass $cookie_vibe_session;
-        proxy_no_cache $cookie_vibe_session;
+        proxy_cache_bypass $vibe_session_cache_bypass;
+        proxy_no_cache $vibe_session_cache_bypass;
 
         add_header X-Cache-Status $upstream_cache_status;
         add_header Cache-Control "public, max-age=0, s-maxage=60, stale-while-revalidate=86400" always;
@@ -646,8 +653,8 @@ server {
         proxy_cache_lock on;
         proxy_cache_lock_timeout 5s;
 
-        proxy_cache_bypass $cookie_vibe_session;
-        proxy_no_cache $cookie_vibe_session;
+        proxy_cache_bypass $vibe_session_cache_bypass;
+        proxy_no_cache $vibe_session_cache_bypass;
 
         add_header X-Cache-Status $upstream_cache_status;
         add_header Cache-Control "public, max-age=0, s-maxage=60, stale-while-revalidate=86400" always;

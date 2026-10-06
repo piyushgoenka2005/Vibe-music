@@ -34,6 +34,12 @@ function isTrustedOrigin(candidate: string, requestOrigin: string): boolean {
 
 export function verifyMutationOrigin(request: Request): boolean {
   const requestOrigin = normalizeOrigin(request.url);
+  const { pathname } = new URL(request.url);
+
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (isTelemetryPath(pathname) && (fetchSite === "same-origin" || fetchSite === "same-site")) {
+    return true;
+  }
 
   const origin = request.headers.get("origin");
   if (origin) {
@@ -51,6 +57,11 @@ export function verifyMutationOrigin(request: Request): boolean {
 
 export function isWebhookPath(pathname: string): boolean {
   return pathname.startsWith("/api/payment/webhook") || pathname === "/api/analytics/meta";
+}
+
+/** Low-risk same-site telemetry (web vitals, client error relay). */
+export function isTelemetryPath(pathname: string): boolean {
+  return pathname === "/api/ops/client-error" || pathname === "/api/vitals";
 }
 
 export function isMutationMethod(method: string): boolean {

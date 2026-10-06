@@ -1,0 +1,8 @@
+# Vibe Music — production cron examples (install as root on VPS)
+#   crontab -e
+#
+# Release stale inventory reservations every 15 minutes
+*/15 * * * * cd /root/Vibe-music && /usr/bin/npm run ops:release-stale-reservations >> /var/log/vibe/reservation-sweeper.log 2>&1
+#
+# Optional: daily dependency health (non-fatal)
+# 0 4 * * * cd /root/Vibe-music && /usr/bin/npm run verify:lockfile >> /var/log/vibe/verify-lockfile.log 2>&1

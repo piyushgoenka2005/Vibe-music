@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { reportClientError } from "@/lib/client/errorReporting";
 import { ROUTES } from "@/lib/routes";
 
 export default function GlobalError({
@@ -12,6 +13,12 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error(error);
+    reportClientError({
+      message: error.message || "Global error",
+      digest: error.digest,
+      stack: error.stack,
+      boundary: "global",
+    });
   }, [error]);
 
   return (

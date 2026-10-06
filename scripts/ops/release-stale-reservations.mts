@@ -126,6 +126,20 @@ async function main() {
       consecutiveFailures = 0;
       console.log(`released ${order.id} (updatedAt=${order.updatedAt})`);
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (/variant not found|product not found/i.test(message)) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: {
+            inventoryStatus: "none",
+            updatedAt: new Date().toISOString(),
+          },
+        });
+        released += 1;
+        consecutiveFailures = 0;
+        console.warn(`cleared orphan reservation ${order.id}: ${message}`);
+        continue;
+      }
       consecutiveFailures += 1;
       console.error(`failed ${order.id}`, error);
     }

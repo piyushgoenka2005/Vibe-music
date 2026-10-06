@@ -3,11 +3,15 @@ import {
   type RateLimitOptions,
   type RateLimitResult,
 } from "@/lib/security/rate-limit-core";
+import {
+  rateLimitBackendFailureResult,
+  shouldFailClosedOnRateLimitBackendError,
+} from "@/lib/security/rate-limit-fallback";
 import { getUpstashConfig, upstashPipeline } from "@/lib/security/upstashRedis";
 
 export async function edgeCheckRateLimit(
   key: string,
-  options: RateLimitOptions
+  options: RateLimitOptions,
 ): Promise<RateLimitResult> {
   const config = getUpstashConfig();
   if (!config) {
@@ -47,6 +51,9 @@ export async function edgeCheckRateLimit(
       resetAt,
     };
   } catch {
+    if (shouldFailClosedOnRateLimitBackendError()) {
+      return rateLimitBackendFailureResult(options);
+    }
     return checkRateLimit(key, options);
   }
 }
