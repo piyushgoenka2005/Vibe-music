@@ -1,16 +1,22 @@
+import "./register-cli-stubs-side-effect.mts";
+
+/**
+ * Sync social rail + footer defaults in Postgres to official Vibe Music profiles.
+ *
+ * Usage: npm run ops:update-social-rail-links
+ */
 import { PrismaClient } from "@prisma/client";
 
-const FACEBOOK_URL = "https://www.facebook.com/vibemusicindiaofficial/";
-const INSTAGRAM_URL = "https://www.instagram.com/vibemusicindia";
+const LINKS = {
+  facebook: "https://www.facebook.com/vibemusicindiaofficial/",
+  instagram: "https://www.instagram.com/vibemusicindia?stkn=MXQ5MDJqbmhwb3R6eQ==",
+  linkedin: "https://x.com/",
+  twitter: "https://x.com/",
+} as const;
 
 const prisma = new PrismaClient();
 
-const updates = [
-  { platform: "facebook", href: FACEBOOK_URL },
-  { platform: "instagram", href: INSTAGRAM_URL },
-] as const;
-
-for (const { platform, href } of updates) {
+for (const [platform, href] of Object.entries(LINKS)) {
   const result = await prisma.homepageSectionItem.updateMany({
     where: { sectionKey: "social_rail", customTitle: platform },
     data: { customHref: href, updatedAt: new Date().toISOString() },
