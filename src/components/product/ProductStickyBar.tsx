@@ -124,9 +124,15 @@ export default function ProductStickyBar({
     };
   }, [sentinelRef]);
 
-  if (!isClient) return null;
-
   const showBar = visible && !footerInView;
+
+  useLayoutEffect(() => {
+    if (!isClient) return;
+    document.body.classList.toggle("pdp-mobile-bar-active", showBar);
+    return () => document.body.classList.remove("pdp-mobile-bar-active");
+  }, [isClient, showBar]);
+
+  if (!isClient) return null;
 
   return createPortal(
     <div

@@ -123,6 +123,7 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
   if (props.initialData?.product) {
     return (
       <ProductDetailPageWithInitialData
+        key={props.slug}
         slug={props.slug}
         initialData={props.initialData}
         shippingDetail={props.shippingDetail}
