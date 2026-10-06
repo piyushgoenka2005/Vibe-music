@@ -2,7 +2,7 @@
 /**
  * BullMQ background worker — run as PM2 `vibe-worker` when REDIS_URL is set.
  *
- *   npx tsx scripts/workers/job-worker.mts
+ *   npx tsx --tsconfig scripts/workers/tsconfig.json scripts/workers/job-worker.mts
  *   pm2 start deploy/ecosystem.config.cjs --only vibe-worker
  */
 import { closeJobQueue, isJobQueueEnabled, startJobWorker } from "@/lib/server/jobQueue";

@@ -68,7 +68,7 @@ const workerApp = {
   cwd: __dirname + "/..",
   script: "scripts/workers/job-worker.mts",
   interpreter: "npx",
-  interpreter_args: "tsx",
+  interpreter_args: "tsx --tsconfig scripts/workers/tsconfig.json",
   instances: 1,
   exec_mode: "fork",
   autorestart: true,

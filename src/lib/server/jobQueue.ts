@@ -1,3 +1,5 @@
+import "server-only";
+
 import { Queue, Worker, type Job, type JobsOptions } from "bullmq";
 import IORedis from "ioredis";
 import { logInfo, logWarn } from "@/lib/server/logger";
