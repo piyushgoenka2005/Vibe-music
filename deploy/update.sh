@@ -254,12 +254,27 @@ build_application() {
 restart_pm2() {
   mkdir -p /var/log/vibe
 
-  log "Restarting PM2 (vibe + vibe-worker)"
+  log "Restarting PM2 (vibe)"
   if pm2 describe vibe >/dev/null 2>&1; then
-    pm2 reload deploy/ecosystem.config.cjs --update-env
+    pm2 reload deploy/ecosystem.config.cjs --only vibe --update-env
   else
-    pm2 start deploy/ecosystem.config.cjs --update-env
+    pm2 start deploy/ecosystem.config.cjs --only vibe --update-env
   fi
+
+  if grep -qE '^REDIS_URL=.{8,}' .env 2>/dev/null; then
+    log "REDIS_URL set — starting vibe-worker"
+    if pm2 describe vibe-worker >/dev/null 2>&1; then
+      pm2 reload deploy/ecosystem.config.cjs --only vibe-worker --update-env
+    else
+      pm2 start deploy/ecosystem.config.cjs --only vibe-worker --update-env
+    fi
+  else
+    if pm2 describe vibe-worker >/dev/null 2>&1; then
+      log "REDIS_URL unset — stopping vibe-worker (webhooks process in API)"
+      pm2 delete vibe-worker || true
+    fi
+  fi
+
   pm2 save
 }
 

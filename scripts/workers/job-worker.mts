@@ -10,8 +10,10 @@ import { disconnectPrisma } from "@/lib/db/prisma";
 
 async function main(): Promise<void> {
   if (!isJobQueueEnabled()) {
-    console.error("[vibe-worker] REDIS_URL is not set — cannot start worker.");
-    process.exit(1);
+    console.log(
+      "[vibe-worker] REDIS_URL is not set — webhooks run synchronously in the API; worker not needed.",
+    );
+    process.exit(0);
   }
 
   const worker = startJobWorker();
