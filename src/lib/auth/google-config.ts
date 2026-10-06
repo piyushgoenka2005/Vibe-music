@@ -33,7 +33,7 @@ async function resolveGoogleSignInStatus(): Promise<GoogleSignInStatus> {
   const [database, oauth] = await Promise.all([
     verifyPostgresConnection(),
     // Reuse the module cache populated by instrumentation when possible.
-    probeGoogleOAuthClient({ timeoutMs: 1_500 }),
+    probeGoogleOAuthClient({ timeoutMs: 8_000 }),
   ]);
 
   if (!database.ok) {
@@ -48,7 +48,7 @@ async function resolveGoogleSignInStatus(): Promise<GoogleSignInStatus> {
 }
 
 const googleSignInStatusCacheKey = [
-  "google-sign-in-status-v3",
+  "google-sign-in-status-v4",
   process.env.AUTH_GOOGLE_ID?.trim() ?? "",
   process.env.AUTH_URL?.trim() ?? process.env.NEXT_PUBLIC_SITE_URL?.trim() ?? "",
 ];
