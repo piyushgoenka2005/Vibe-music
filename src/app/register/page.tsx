@@ -7,6 +7,9 @@ import RegisterForm from "@/components/auth/RegisterForm";
 import { getGoogleSignInStatus } from "@/lib/auth/google-config";
 import { BRAND } from "@/lib/brand";
 
+// OAuth availability is read from live env + Google probe — never bake at build time.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: `Create Account | ${BRAND.name}`,
   description: "Join Vibe Music to save your wishlist and track orders.",

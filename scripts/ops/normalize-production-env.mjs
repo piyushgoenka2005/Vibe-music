@@ -11,6 +11,7 @@ import path from "node:path";
 
 const root = process.cwd();
 const envPath = path.join(root, ".env");
+const localEnvPath = path.join(root, ".env.local");
 const CANONICAL_PHONE = "8910482950";
 const LEGACY_PHONE_DIGITS = new Set(["919773651006", "9773651006"]);
 const PHONE_KEYS = new Set(["NEXT_PUBLIC_STORE_PHONE", "STORE_PHONE"]);
@@ -84,4 +85,20 @@ if (phoneFixed > 0) {
 }
 if (!hasTrustProxy) {
   console.log("Appended TRUST_PROXY_HOPS=1.");
+}
+
+// .env.local overrides .env in production — stale AUTH_GOOGLE_* there breaks Google sign-in.
+if (fs.existsSync(localEnvPath)) {
+  const localOriginal = fs.readFileSync(localEnvPath, "utf8");
+  const localFiltered = localOriginal
+    .split(/\r?\n/)
+    .filter((line) => !/^AUTH_GOOGLE_(ID|SECRET)=/.test(line.trim()))
+    .join("\n");
+  if (localFiltered !== localOriginal) {
+    fs.writeFileSync(
+      localEnvPath,
+      localFiltered.endsWith("\n") ? localFiltered : `${localFiltered}\n`,
+    );
+    console.log("Removed stale AUTH_GOOGLE_* from .env.local (use .env / ops-secrets on VPS).");
+  }
 }

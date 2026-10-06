@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
+// OAuth availability is read from live env + Google probe — never bake at build time.
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage() {
   const googleSignIn = await getGoogleSignInStatus();
   const googleAuthEnabled = googleSignIn.available;
