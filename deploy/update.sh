@@ -260,11 +260,11 @@ restart_pm2() {
   fi
 
   log "Restarting PM2 (vibe)"
+  # reload keeps stale process env (e.g. GIT_COMMIT_SHA); recreate app on each deploy.
   if pm2 describe vibe >/dev/null 2>&1; then
-    pm2 reload deploy/ecosystem.config.cjs --only vibe --update-env
-  else
-    pm2 start deploy/ecosystem.config.cjs --only vibe --update-env
+    pm2 delete vibe || true
   fi
+  pm2 start deploy/ecosystem.config.cjs --only vibe --update-env
 
   if grep -qE '^REDIS_URL=.{8,}' .env 2>/dev/null; then
     log "REDIS_URL set — starting vibe-worker"
