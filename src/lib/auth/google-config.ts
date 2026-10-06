@@ -48,7 +48,7 @@ async function resolveGoogleSignInStatus(): Promise<GoogleSignInStatus> {
 }
 
 const googleSignInStatusCacheKey = [
-  "google-sign-in-status-v4",
+  "google-sign-in-status-v5",
   process.env.AUTH_GOOGLE_ID?.trim() ?? "",
   process.env.AUTH_URL?.trim() ?? process.env.NEXT_PUBLIC_SITE_URL?.trim() ?? "",
 ];
