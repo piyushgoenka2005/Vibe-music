@@ -131,7 +131,13 @@ export default function ProductDetailPage(props: ProductDetailPageProps) {
     );
   }
 
-  return <ProductDetailPageWithQuery slug={props.slug} shippingDetail={props.shippingDetail} />;
+  return (
+    <ProductDetailPageWithQuery
+      key={props.slug}
+      slug={props.slug}
+      shippingDetail={props.shippingDetail}
+    />
+  );
 }
 
 function ProductDetailPageWithInitialData({
