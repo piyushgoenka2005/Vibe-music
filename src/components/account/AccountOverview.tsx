@@ -14,6 +14,7 @@ import { fetchUserOrders } from "@/services/orderService";
 import type { Order } from "@/types/order";
 import type { SupportTicket } from "@/types/supportTicket";
 import { formatOrderDate, formatPaymentLabel, statusBadgeClass } from "./orderDisplay";
+import AccountReferralCard from "./AccountReferralCard";
 
 const RECENT_ORDERS_LIMIT = 3;
 
@@ -126,6 +127,8 @@ export default function AccountOverview() {
           );
         })}
       </div>
+
+      <AccountReferralCard />
 
       <div className="acct__stats" style={{ marginTop: "1.5rem" }}>
         <Link href={ROUTES.accountNotifications} className="acct__stat-card">

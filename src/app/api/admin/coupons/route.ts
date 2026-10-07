@@ -22,7 +22,16 @@ export async function POST(request: Request) {
     await requireAdmin("coupons:write", request);
     const body = await request.json();
     const parsed = adminCouponSchema.parse(body);
-    const coupon = await createCoupon({ ...parsed, isActive: parsed.isActive ?? true });
+    const coupon = await createCoupon({
+      ...parsed,
+      isActive: parsed.isActive ?? true,
+      kind: parsed.kind ?? "standard",
+      scope: parsed.scope ?? "store",
+      productIds: parsed.productIds ?? [],
+      referralOwnerUserId:
+        parsed.referralOwnerUserId ??
+        (parsed.kind === "referral" ? parsed.referralOwnerEmail : undefined),
+    });
     return NextResponse.json({ coupon }, { status: 201 });
   } catch (error) {
     return adminErrorResponse(error);

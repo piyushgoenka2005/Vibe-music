@@ -1,16 +1,19 @@
 import type {
+  CouponCartLineItem,
   CouponValidationResult,
   ValidateCouponResponse,
 } from "@/types/coupon";
 
 export async function validateCouponCode(
   code: string,
-  subtotal: number
+  subtotal: number,
+  items?: CouponCartLineItem[],
+  customerEmail?: string,
 ): Promise<CouponValidationResult> {
   const response = await fetch("/api/coupons/validate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code, subtotal }),
+    body: JSON.stringify({ code, subtotal, items, customerEmail }),
   });
 
   const data = (await response.json()) as ValidateCouponResponse & {

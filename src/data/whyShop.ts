@@ -1,6 +1,5 @@
 import { WHY_SHOP_SECURE_PAYMENTS_SUBTITLE } from "@/data/trustSignals";
 import { ROUTES } from "@/lib/routes";
-import { BRAND } from "@/lib/brand";
 import { SUPPORT_HOURS_DETAIL } from "@/lib/brand/businessIdentity";
 import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 
@@ -58,7 +57,7 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
     iconId: "price-match",
     title: "Price Protection",
     subtitle: "Worry-free shopping.",
-    href: `mailto:${BRAND.email}?subject=Price%20Match%20Request`,
+    href: `${ROUTES.contact}?subject=${encodeURIComponent("Price match request")}`,
   },
   {
     id: "wishlist-save",

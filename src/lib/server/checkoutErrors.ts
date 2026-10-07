@@ -29,10 +29,15 @@ export function formatCheckoutError(error: unknown): string {
     return "Online payments are not configured yet. Please contact support.";
   }
 
-  if (
-    /authentication failed|invalid key|bad auth/i.test(message) &&
-    /razorpay/i.test(message)
-  ) {
+  if (/still on test keys|requires live Razorpay|rzp_live_/i.test(message)) {
+    return "Online payments are temporarily unavailable. Our team is updating the payment gateway — please try again shortly or contact support.";
+  }
+
+  if (/Unable to create Razorpay payment order|Razorpay:/i.test(message)) {
+    return message.replace(/^Razorpay:\s*/i, "Payment gateway: ");
+  }
+
+  if (/authentication failed|invalid key|bad auth/i.test(message) && /razorpay/i.test(message)) {
     return "Payment gateway authentication failed. Check Razorpay keys on the server.";
   }
 

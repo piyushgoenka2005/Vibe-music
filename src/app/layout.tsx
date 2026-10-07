@@ -3,6 +3,9 @@ import { Suspense } from "react";
 import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
 import { resolvePublicLegal } from "@/lib/brand/resolvePublicLegal";
+import brandsCatalog from "@/data/catalog/brands.json";
+import { buildBrandsMegaMenu } from "@/lib/navigation/buildBrandsMegaMenu";
+import { loadBrandsWithCounts } from "@/lib/server/brandsPageLoader";
 import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
 import GoogleAnalyticsScripts from "@/components/analytics/GoogleAnalyticsScripts";
 import MetaPixelScripts from "@/components/analytics/MetaPixelScripts";
@@ -39,10 +42,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [legal, shippingPolicy] = await Promise.all([
+  const [legal, shippingPolicy, brands] = await Promise.all([
     resolvePublicLegal(),
     resolveStoreShippingPolicy(),
+    loadBrandsWithCounts(),
   ]);
+  const brandsMegaMenu = buildBrandsMegaMenu(
+    brands.length > 0 ? brands : brandsCatalog.map((brand) => ({ ...brand, productCount: 0 })),
+  );
   const splashEnabled = isPageLoadSplashEnabled();
   const metaDomainVerification = getMetaDomainVerification();
 
@@ -95,7 +102,11 @@ export default async function RootLayout({
           </p>
         ) : null}
         <AppProviders>
-          <AppShell legal={legal} shippingAnnouncement={shippingPolicy.announcement}>
+          <AppShell
+            legal={legal}
+            shippingAnnouncement={shippingPolicy.announcement}
+            brandsMegaMenu={brandsMegaMenu}
+          >
             {children}
           </AppShell>
         </AppProviders>

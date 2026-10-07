@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import RentalsHubEmpty from "@/components/rentals/RentalsHubEmpty";
 import { ROUTES } from "@/lib/routes";
 import type { RentalCategory, RentalProduct } from "@/types/rental";
 import { formatCurrency } from "@/utils/currency";
@@ -36,9 +37,7 @@ export default function RentalsHubPage({
   const { data: productsData, isLoading } = useQuery({
     queryKey: ["rental-products", category],
     queryFn: async () => {
-      const url = queryString
-        ? `/api/rentals/products?${queryString}`
-        : "/api/rentals/products";
+      const url = queryString ? `/api/rentals/products?${queryString}` : "/api/rentals/products";
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed");
       return res.json() as Promise<{ products: RentalProduct[] }>;
@@ -85,21 +84,14 @@ export default function RentalsHubPage({
       {isLoading ? (
         <p className="rentals-empty">Loading rental catalog…</p>
       ) : products.length === 0 ? (
-        <p className="rentals-empty">
-          Rental catalog is being prepared. Check back soon or{" "}
-          <Link href={ROUTES.contact}>contact us</Link> for a quote.
-        </p>
+        <RentalsHubEmpty />
       ) : (
         <div className="rentals-grid">
           {products.map((product) => (
             <article key={product.id} className="rentals-product-card">
               {product.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={product.image}
-                  alt=""
-                  className="rentals-product-card__image"
-                />
+                <img src={product.image} alt="" className="rentals-product-card__image" />
               ) : (
                 <div className="rentals-product-card__image" aria-hidden />
               )}

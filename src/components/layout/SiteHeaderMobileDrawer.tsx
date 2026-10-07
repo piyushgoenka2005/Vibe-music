@@ -5,17 +5,20 @@ import { createPortal } from "react-dom";
 import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useIsClient } from "@/hooks/useIsClient";
 import SiteHeaderMobileNav from "@/components/layout/SiteHeaderMobileNav";
+import type { MegaMenuItem } from "@/data/headerMegaMenu";
 
 interface SiteHeaderMobileDrawerProps {
   open: boolean;
   onClose: () => void;
   onNavigate?: () => void;
+  brandsMegaMenu?: MegaMenuItem | null;
 }
 
 export default function SiteHeaderMobileDrawer({
   open,
   onClose,
   onNavigate,
+  brandsMegaMenu = null,
 }: SiteHeaderMobileDrawerProps) {
   const isClient = useIsClient();
   const navRef = useDialogA11y(open, onClose);
@@ -39,7 +42,7 @@ export default function SiteHeaderMobileDrawer({
         aria-modal="true"
       >
         <Suspense fallback={null}>
-          <SiteHeaderMobileNav onNavigate={onNavigate} />
+          <SiteHeaderMobileNav onNavigate={onNavigate} brandsMegaMenu={brandsMegaMenu} />
         </Suspense>
       </nav>
     </>,

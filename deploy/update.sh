@@ -142,6 +142,12 @@ ensure_ops_secrets_brief() {
   if ! grep -qE '^NEXT_PUBLIC_META_DOMAIN_VERIFICATION=.{6,}' "$SECRETS" 2>/dev/null; then
     warn "NEXT_PUBLIC_META_DOMAIN_VERIFICATION missing — domain won't verify in Meta Business Manager"
   fi
+  if ! grep -qE '^RAZORPAY_KEY_ID=rzp_live_' "$SECRETS" 2>/dev/null; then
+    warn "RAZORPAY_KEY_ID missing or not live in deploy/ops-secrets.env — run: npm run setup:razorpay-integration && npm run ops:sync-razorpay-vps"
+  fi
+  if ! grep -qE '^RAZORPAY_WEBHOOK_SECRET=.{8,}' "$SECRETS" 2>/dev/null; then
+    warn "RAZORPAY_WEBHOOK_SECRET missing — Razorpay webhooks will not update order status"
+  fi
 }
 
 load_database_url() {

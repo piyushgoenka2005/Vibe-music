@@ -1,4 +1,7 @@
-export type CouponType = "percentage" | "flat";
+export type CouponType = "percentage" | "flat" | "free_shipping";
+
+/** store = discount on full cart; products = only assigned catalog items */
+export type CouponScope = "store" | "products";
 
 /** Coupon fields required to compute discount (shared client + server). */
 export interface CouponDiscountRule {
@@ -12,8 +15,23 @@ export interface CouponEligibilityRule {
   startsAt?: string;
   expiresAt?: string;
   maxUses?: number;
+  maxUsesPerUser?: number;
+  userRedemptionCount?: number;
   usedCount: number;
   minOrderAmount?: number;
+}
+
+export interface CouponValidateContext {
+  userId?: string | null;
+  customerEmail?: string | null;
+}
+
+export interface CouponRedemptionContext extends CouponValidateContext {
+  orderId?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
 }
 
 /** Snapshot stored in cart after successful validation. */
@@ -23,6 +41,14 @@ export interface AppliedCouponSnapshot {
   type: CouponType;
   value: number;
   minOrderAmount?: number;
+  scope?: CouponScope;
+  productIds?: string[];
+}
+
+export interface CouponCartLineItem {
+  productId: string;
+  quantity: number;
+  price: number;
 }
 
 export interface CouponValidationResult {
@@ -35,6 +61,8 @@ export interface CouponValidationResult {
 export interface ValidateCouponRequest {
   code: string;
   subtotal: number;
+  items?: CouponCartLineItem[];
+  customerEmail?: string;
 }
 
 export interface ValidateCouponResponse {
@@ -48,4 +76,6 @@ export interface StorefrontCouponOffer {
   type: CouponType;
   value: number;
   minOrderAmount?: number;
+  scope?: CouponScope;
+  productIds?: string[];
 }

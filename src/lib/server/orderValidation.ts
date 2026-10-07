@@ -6,6 +6,7 @@ import { getDefaultGstRateForCategory, type GSTRate } from "@/lib/gstCalculator"
 import { getAvailableStock } from "@/lib/inventory/stockMath";
 import { resolvePositiveUnitPrice } from "@/lib/pricing/unitPrice";
 import { validateCoupon } from "@/lib/server/couponService";
+import type { CouponCartLineItem } from "@/types/coupon";
 import { validateStockAvailability } from "@/lib/server/inventoryService";
 import type { CreateOrderRequestItem, ResolvedOrderItem } from "@/types/order";
 
@@ -126,8 +127,10 @@ export async function resolveOrderItems(
 export async function resolveCouponDiscount(
   couponCode: string | null | undefined,
   subtotal: number,
+  items?: CouponCartLineItem[],
+  context?: { userId?: string | null; customerEmail?: string | null },
 ): Promise<number> {
   if (!couponCode) return 0;
-  const result = await validateCoupon(couponCode, subtotal);
+  const result = await validateCoupon(couponCode, subtotal, items, context);
   return result.valid ? result.discount : 0;
 }

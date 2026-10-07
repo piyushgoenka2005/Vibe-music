@@ -21,12 +21,17 @@ import SearchRollingPlaceholder, {
 import { MIN_QUERY_LENGTH } from "@/services/search.service";
 import { searchStore } from "@/store/searchStore";
 import WishlistCounter from "@/components/wishlist/WishlistCounter";
+import type { MegaMenuItem } from "@/data/headerMegaMenu";
 
 interface SiteHeaderProps {
   shippingAnnouncement?: string;
+  brandsMegaMenu?: MegaMenuItem | null;
 }
 
-export default function SiteHeader({ shippingAnnouncement }: SiteHeaderProps) {
+export default function SiteHeader({
+  shippingAnnouncement,
+  brandsMegaMenu = null,
+}: SiteHeaderProps) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
   const headerRef = useRef<HTMLElement>(null);
@@ -295,13 +300,17 @@ export default function SiteHeader({ shippingAnnouncement }: SiteHeaderProps) {
       </div>
 
       <Suspense fallback={null}>
-        <SiteHeaderNav onMegaMenuOpenChange={handleMegaMenuOpenChange} />
+        <SiteHeaderNav
+          brandsMegaMenu={brandsMegaMenu}
+          onMegaMenuOpenChange={handleMegaMenuOpenChange}
+        />
       </Suspense>
 
       <SiteHeaderMobileDrawer
         open={isCompactHeader && mobileOpen}
         onClose={() => setMobileOpen(false)}
         onNavigate={() => setMobileOpen(false)}
+        brandsMegaMenu={brandsMegaMenu}
       />
 
       {/* Mobile nav account states (legacy CSS hooks) */}

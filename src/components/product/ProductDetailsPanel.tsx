@@ -89,24 +89,45 @@ function SpecKeyValueTable({
   );
 }
 
-function SpecGrid({ specs }: { specs: Array<{ label: string; value: string }> }) {
+function DetailSpecGroup({
+  title,
+  specs,
+}: {
+  title: string;
+  specs: Array<{ label: string; value: string }>;
+}) {
+  if (specs.length === 0) return null;
+
   return (
-    <dl className="pdp-product-details__spec-grid">
-      {specs.map((spec, index) => (
-        <div key={`${spec.label}-${index}`} className="pdp-product-details__spec-cell">
-          <dt>{spec.label}</dt>
-          <dd>{spec.value}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className="pdp-product-details__spec-group">
+      <h4 className="pdp-product-details__spec-group-title">{title}</h4>
+      <SpecKeyValueTable specs={specs} dense />
+    </div>
   );
 }
 
-function DetailSubsection({ title, children }: { title: string; children: ReactNode }) {
+function AdditionalDetailsCard({
+  sizeAndFitSpecs,
+  materialAndCareSpecs,
+  styleSpec,
+}: {
+  sizeAndFitSpecs: Array<{ label: string; value: string }>;
+  materialAndCareSpecs: Array<{ label: string; value: string }>;
+  styleSpec: { label: string; value: string } | null;
+}) {
+  const hasContent =
+    sizeAndFitSpecs.length > 0 || materialAndCareSpecs.length > 0 || styleSpec !== null;
+
+  if (!hasContent) return null;
+
   return (
-    <section className="pdp-product-details__subsection">
-      <h3 className="pdp-product-details__subsection-title">{title}</h3>
-      <div className="pdp-product-details__subsection-body">{children}</div>
+    <section className="pdp-product-details__spec-card" aria-label="Additional product details">
+      <h3 className="pdp-product-details__spec-card-title">Additional details</h3>
+      <div className="pdp-product-details__spec-card-body">
+        <DetailSpecGroup title="Size & Fit" specs={sizeAndFitSpecs} />
+        <DetailSpecGroup title="Material & Care" specs={materialAndCareSpecs} />
+        {styleSpec ? <DetailSpecGroup title="Style" specs={[styleSpec]} /> : null}
+      </div>
     </section>
   );
 }
@@ -239,23 +260,11 @@ export default function ProductDetailsPanel({ product }: ProductDetailsPanelProp
         </header>
       )}
 
-      {viewModel.sizeAndFitSpecs.length > 0 ? (
-        <DetailSubsection title="Size & Fit">
-          <SpecGrid specs={viewModel.sizeAndFitSpecs} />
-        </DetailSubsection>
-      ) : null}
-
-      {viewModel.materialAndCareSpecs.length > 0 ? (
-        <DetailSubsection title="Material & Care">
-          <SpecGrid specs={viewModel.materialAndCareSpecs} />
-        </DetailSubsection>
-      ) : null}
-
-      {viewModel.styleSpec ? (
-        <p className="pdp-product-details__style">
-          Style Name: <strong>{viewModel.styleSpec.value}</strong>
-        </p>
-      ) : null}
+      <AdditionalDetailsCard
+        sizeAndFitSpecs={viewModel.sizeAndFitSpecs}
+        materialAndCareSpecs={viewModel.materialAndCareSpecs}
+        styleSpec={viewModel.styleSpec}
+      />
 
       {viewModel.aboutItems.length > 0 ? (
         <section className="pdp-product-details__about" aria-label="About this item">

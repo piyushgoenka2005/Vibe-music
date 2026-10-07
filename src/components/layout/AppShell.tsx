@@ -24,6 +24,7 @@ import SplashPendingClear from "@/components/layout/SplashPendingClear";
 import ServiceWorkerRegister from "@/components/layout/ServiceWorkerRegister";
 import AnalyticsProvider from "@/components/analytics/AnalyticsProvider";
 import SupportChatLoader from "@/components/support/SupportChatLoader";
+import type { MegaMenuItem } from "@/data/headerMegaMenu";
 import type { PublicLegalInfo } from "@/types/publicLegal";
 
 const ENABLE_PAGE_LOAD_SPLASH = isPageLoadSplashEnabled();
@@ -37,10 +38,12 @@ export default function AppShell({
   children,
   legal,
   shippingAnnouncement,
+  brandsMegaMenu = null,
 }: {
   children: React.ReactNode;
   legal: PublicLegalInfo;
   shippingAnnouncement?: string;
+  brandsMegaMenu?: MegaMenuItem | null;
 }) {
   const pathname = usePathname() ?? "";
   const isAdmin = pathname.startsWith("/admin");
@@ -102,7 +105,11 @@ export default function AppShell({
           <ScrollRestoration />
         </Suspense>
         <div className="storefront-root">
-          <StorefrontChrome legal={legal} shippingAnnouncement={shippingAnnouncement}>
+          <StorefrontChrome
+            legal={legal}
+            shippingAnnouncement={shippingAnnouncement}
+            brandsMegaMenu={brandsMegaMenu}
+          >
             <DeferredHtmlLinkInterceptor />
             <DeferredGlobalSearch />
             <StorefrontDrawers />

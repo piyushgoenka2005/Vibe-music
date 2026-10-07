@@ -9,14 +9,21 @@ export async function GET(request: Request) {
     const rl = await enforceRateLimit(request, "coupons-active", RATE_LIMITS.publicApi);
     if (rl) return rl;
 
-    const coupons = await listActiveCouponsForStorefront();
+    const { searchParams } = new URL(request.url);
+    const productId = searchParams.get("productId")?.trim() || undefined;
+    const productIds = searchParams
+      .get("productIds")
+      ?.split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+    const coupons = await listActiveCouponsForStorefront({ productId, productIds });
     return NextResponse.json(
       { coupons },
       {
         headers: {
           "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
         },
-      }
+      },
     );
   } catch (error) {
     return handleRouteError(error, "api/coupons/active", request);

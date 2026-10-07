@@ -35,7 +35,7 @@ function featured(
   title: string,
   query: string,
   variant?: string,
-  imageClassName?: string
+  imageClassName?: string,
 ): MegaMenuFeatured {
   return {
     title,
@@ -110,7 +110,10 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       {
         heading: "Shop studio",
         links: [
-          { label: "Home studio bundles", href: subSearch("studio-recording", "home studio bundle") },
+          {
+            label: "Home studio bundles",
+            href: subSearch("studio-recording", "home studio bundle"),
+          },
           { label: "Podcast gear", href: subSearch("studio-recording", "podcast") },
           { label: "USB mics", href: subSearch("studio-recording", "usb microphone") },
           { label: "Shop all studio", href: categoryPath("studio-recording") },
@@ -269,10 +272,16 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       {
         heading: "Cables",
         links: [
-          { label: "Instrument cables", href: subSearch("cables-cases-accessories", "instrument cable") },
+          {
+            label: "Instrument cables",
+            href: subSearch("cables-cases-accessories", "instrument cable"),
+          },
           { label: "XLR & mic cables", href: subSearch("cables-cases-accessories", "xlr cable") },
           { label: "Patch cables", href: subSearch("cables-cases-accessories", "patch cable") },
-          { label: "Power & adapters", href: subSearch("cables-cases-accessories", "power adapter") },
+          {
+            label: "Power & adapters",
+            href: subSearch("cables-cases-accessories", "power adapter"),
+          },
         ],
       },
       {
@@ -302,5 +311,5 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
 ];
 
 export const MEGA_MENU_BY_SLUG = Object.fromEntries(
-  HEADER_MEGA_MENUS.map((menu) => [menu.slug, menu])
+  HEADER_MEGA_MENUS.map((menu) => [menu.slug, menu]),
 ) as Record<string, MegaMenuItem>;

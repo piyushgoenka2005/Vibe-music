@@ -3,6 +3,7 @@ import {
   isHeaderBrandsActive,
   isHeaderDealsActive,
   isHeaderGrandPianoActive,
+  isHeaderProgramsActive,
   isHeaderGuidesActive,
   isHeaderMegaMenuActive,
   isHeaderNavItemActive,
@@ -26,6 +27,9 @@ describe("headerNavActive", () => {
     expect(isHeaderDealsActive("/search/results", "deals")).toBe(true);
     expect(isHeaderGuidesActive("/blog/studio-setup")).toBe(true);
     expect(isHeaderGrandPianoActive("/gp9")).toBe(true);
+    expect(isHeaderProgramsActive("/programs")).toBe(true);
+    expect(isHeaderProgramsActive("/rentals")).toBe(true);
+    expect(isHeaderProgramsActive("/gear-exchange")).toBe(true);
   });
 
   it("resolves nav item keys consistently", () => {

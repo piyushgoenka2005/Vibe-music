@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
+import { useLayoutEffect, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { GlassFilter } from "@/components/ui/liquid-glass";
@@ -13,6 +13,7 @@ import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import DeferredSplashCursor from "@/components/layout/DeferredSplashCursor";
 import { isMobileWhatsAppPath } from "@/data/helpWidget";
 import { ROUTES } from "@/lib/routes";
+import type { MegaMenuItem } from "@/data/headerMegaMenu";
 import type { PublicLegalInfo } from "@/types/publicLegal";
 
 const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
@@ -48,10 +49,12 @@ export default function StorefrontChrome({
   children,
   legal,
   shippingAnnouncement,
+  brandsMegaMenu = null,
 }: {
   children: React.ReactNode;
   legal: PublicLegalInfo;
   shippingAnnouncement?: string;
+  brandsMegaMenu?: MegaMenuItem | null;
 }) {
   const pathname = usePathname() ?? "";
   const hideChrome = pathname.startsWith("/admin") || pathname.startsWith("/gp9");
@@ -77,7 +80,7 @@ export default function StorefrontChrome({
   const hideMobileFloatingUi =
     hasMounted &&
     isMobileViewport &&
-    (isProductPage || isLandingPage || isListingPage || isCheckoutOrCart);
+    (isProductPage || isLandingPage || isListingPage || isCheckoutOrCart || isAuthPage);
   const showHelpWidget = !hideMobileFloatingUi;
   const showBackToTop = !hideMobileFloatingUi;
   const showMobileWhatsApp = hasMounted && isMobileViewport && isMobileWhatsAppPath(pathname);
@@ -94,7 +97,15 @@ export default function StorefrontChrome({
     document.body.classList.toggle("is-landing-page", isLandingPage);
     document.body.classList.toggle("is-product-page", isProductPage);
     document.body.classList.toggle("is-account-page", isAccountPage);
+    document.body.classList.toggle("is-auth-page", isAuthPage);
     document.body.classList.toggle("has-footer-reveal", hasFooterReveal);
+
+    if (isAuthPage || pathname.startsWith("/checkout") || pathname.startsWith("/cart")) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+
     window.dispatchEvent(new Event("site-header:sync"));
     requestAnimationFrame(() => {
       window.dispatchEvent(new Event("site-header:sync"));
@@ -104,16 +115,11 @@ export default function StorefrontChrome({
         "is-landing-page",
         "is-product-page",
         "is-account-page",
+        "is-auth-page",
         "has-footer-reveal",
       );
     };
-  }, [isLandingPage, isProductPage, isAccountPage]);
-
-  useEffect(() => {
-    if (pathname.startsWith("/checkout") || pathname.startsWith("/cart")) {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    }
-  }, [pathname]);
+  }, [isLandingPage, isProductPage, isAccountPage, isAuthPage, pathname]);
 
   if (hideChrome) {
     return <>{children}</>;
@@ -126,6 +132,7 @@ export default function StorefrontChrome({
     "storefront-shell",
     isLandingPage ? "is-landing-page" : "",
     isProductPage ? "is-product-page" : "",
+    isAuthPage ? "is-auth-page" : "",
     isLandingPage || isProductPage ? "has-footer-reveal" : "",
   ]
     .filter(Boolean)
@@ -135,11 +142,11 @@ export default function StorefrontChrome({
     <div className={shellClassName}>
       <GlassFilter />
       <SkipToContent />
-      <SiteHeader shippingAnnouncement={shippingAnnouncement} />
+      <SiteHeader shippingAnnouncement={shippingAnnouncement} brandsMegaMenu={brandsMegaMenu} />
       <div className="storefront-main" id="main-content" tabIndex={-1}>
         {children}
       </div>
-      <SiteFooter legal={legal} />
+      {!isAuthPage ? <SiteFooter legal={legal} /> : null}
       {showBackToTop ? <BackToTop /> : null}
       {showHelpWidget ? <HelpWidget /> : null}
       {showMobileWhatsApp ? <MobileWhatsAppButton /> : null}

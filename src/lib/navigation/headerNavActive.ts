@@ -17,7 +17,9 @@ export function isHeaderMegaMenuActive(
 }
 
 export function isHeaderBrandsActive(pathname: string): boolean {
-  return pathnameMatchesHref(pathname, ROUTES.brands);
+  if (pathnameMatchesHref(pathname, ROUTES.brands)) return true;
+  if (pathname.startsWith(`${ROUTES.brands}/`)) return true;
+  return false;
 }
 
 export function isHeaderDealsActive(pathname: string, searchQuery?: string | null): boolean {
@@ -34,6 +36,17 @@ export function isHeaderGrandPianoActive(pathname: string): boolean {
   return pathnameMatchesHref(pathname, ROUTES.gp9);
 }
 
+export function isHeaderProgramsActive(pathname: string): boolean {
+  if (pathnameMatchesHref(pathname, ROUTES.programs)) return true;
+  if (pathnameMatchesHref(pathname, ROUTES.rentals)) return true;
+  if (pathnameMatchesHref(pathname, ROUTES.giveaway)) return true;
+  if (pathnameMatchesHref(pathname, ROUTES.used)) return true;
+  if (pathnameMatchesHref(pathname, ROUTES.gearExchange)) return true;
+  if (pathnameMatchesHref(pathname, ROUTES.studios)) return true;
+  if (pathnameMatchesHref(pathname, ROUTES.financing)) return true;
+  return false;
+}
+
 export function isHeaderNavItemActive(options: {
   key: string;
   href: string;
@@ -44,10 +57,11 @@ export function isHeaderNavItemActive(options: {
 }): boolean {
   const { key, href, slug, pathname, searchCategory, searchQuery } = options;
 
-  if (key === "brands") return isHeaderBrandsActive(pathname);
+  if (key === "brands" || slug === "brands") return isHeaderBrandsActive(pathname);
   if (key === "deals") return isHeaderDealsActive(pathname, searchQuery);
   if (key === "guides") return isHeaderGuidesActive(pathname);
   if (key === "gp9") return isHeaderGrandPianoActive(pathname);
+  if (key === "programs") return isHeaderProgramsActive(pathname);
   if (slug) return isHeaderMegaMenuActive(pathname, slug, searchCategory);
 
   return pathnameMatchesHref(pathname, href);

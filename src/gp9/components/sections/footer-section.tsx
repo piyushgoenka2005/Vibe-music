@@ -23,10 +23,18 @@ const footerLinks = {
     { label: "Where to Buy", href: "#dealers" },
   ],
   service: [
-    { label: "Owner's Manual", href: "https://www.roland.com/global/support/manuals/", external: true },
+    {
+      label: "Owner's Manual",
+      href: "https://www.roland.com/global/support/manuals/",
+      external: true,
+    },
     { label: "Support", href: "https://www.roland.com/global/support/", external: true },
     { label: "Quick Start", href: "https://www.roland.com/global/products/gp-9/", external: true },
-    { label: "Roland Cloud", href: "https://www.roland.com/global/promos/roland_cloud/", external: true },
+    {
+      label: "Roland Cloud",
+      href: "https://www.roland.com/global/promos/roland_cloud/",
+      external: true,
+    },
   ],
 };
 
@@ -131,7 +139,7 @@ export function FooterSection() {
       <div className="border-t border-border/80 bg-muted/20 px-4 py-5 sm:px-6 md:px-10 lg:px-16">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 sm:flex-row sm:justify-between">
           <p className="text-center text-[11px] tracking-wide text-muted-foreground sm:text-left">
-            © {new Date().getFullYear()} Roland. All rights reserved.
+            © {new Date().getFullYear()} Vibe Music. All rights reserved.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
@@ -144,10 +152,7 @@ export function FooterSection() {
                 className="group inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background px-3 py-1.5 text-[11px] text-muted-foreground transition-all hover:border-foreground/15 hover:text-foreground"
               >
                 <span>{link.label}</span>
-                <NavArrowIcon
-                  size="sm"
-                  className="h-5 w-5 opacity-50 group-hover:opacity-100"
-                />
+                <NavArrowIcon size="sm" className="h-5 w-5 opacity-50 group-hover:opacity-100" />
               </Link>
             ))}
           </div>

@@ -492,15 +492,53 @@ model Coupon {
   value           Float
   minOrderAmount  Float?  @map("min_order_amount")
   maxUses         Int?    @map("max_uses")
+  maxUsesPerUser  Int?    @map("max_uses_per_user")
   usedCount       Int     @default(0) @map("used_count")
   isActive        Boolean @default(true) @map("is_active")
+  /// standard | referral
+  kind            String  @default("standard")
+  referralOwnerUserId   String? @map("referral_owner_user_id")
+  referralOwnerEmail    String? @map("referral_owner_email")
+  parentCouponId        String? @map("parent_coupon_id")
+  utmSource       String? @map("utm_source")
+  utmMedium       String? @map("utm_medium")
+  utmCampaign     String? @map("utm_campaign")
+  utmContent      String? @map("utm_content")
+  /// store = entire cart; products = only lines matching productIds
+  scope           String  @default("store")
+  productIds      Json    @default("[]") @map("product_ids")
   startsAt        String? @map("starts_at")
   expiresAt       String? @map("expires_at")
   createdAt       String  @map("created_at")
   updatedAt       String  @map("updated_at")
 
+  redemptions CouponRedemption[]
+
   @@index([isActive])
+  @@index([kind])
+  @@index([referralOwnerUserId])
   @@map("coupons")
+}
+
+model CouponRedemption {
+  id            String  @id
+  couponId      String  @map("coupon_id")
+  couponCode    String  @map("coupon_code")
+  userId        String? @map("user_id")
+  customerEmail String? @map("customer_email")
+  orderId       String? @map("order_id")
+  utmSource     String? @map("utm_source")
+  utmMedium     String? @map("utm_medium")
+  utmCampaign   String? @map("utm_campaign")
+  utmContent    String? @map("utm_content")
+  createdAt     String  @map("created_at")
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([couponId, userId])
+  @@index([couponCode, customerEmail])
+  @@index([orderId])
+  @@map("coupon_redemptions")
 }
 
 model StoreSettings {

@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { HEADER_MEGA_MENUS, MEGA_MENU_BY_SLUG } from "@/data/headerMegaMenu";
+import { HEADER_MEGA_MENUS, MEGA_MENU_BY_SLUG, type MegaMenuItem } from "@/data/headerMegaMenu";
+import { BRANDS_MEGA_MENU_SLUG, resolveBrandsMegaMenu } from "@/lib/navigation/buildBrandsMegaMenu";
 import { ROUTES } from "@/lib/routes";
 import { isHeaderNavItemActive } from "@/lib/navigation/headerNavActive";
 import HeaderMegaMenu from "@/components/layout/HeaderMegaMenu";
 
 interface SiteHeaderNavProps {
+  brandsMegaMenu?: MegaMenuItem | null;
   onNavigate?: () => void;
   onMegaMenuOpenChange?: (open: boolean) => void;
 }
@@ -25,7 +27,11 @@ interface NavGooItem {
   routeActive?: boolean;
 }
 
-export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: SiteHeaderNavProps) {
+export default function SiteHeaderNav({
+  brandsMegaMenu = null,
+  onNavigate,
+  onMegaMenuOpenChange,
+}: SiteHeaderNavProps) {
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const searchCategory = searchParams.get("category");
@@ -36,12 +42,26 @@ export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: Site
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navShellRef = useRef<HTMLDivElement>(null);
 
+  const resolvedBrandsMegaMenu = useMemo(
+    () => resolveBrandsMegaMenu(brandsMegaMenu),
+    [brandsMegaMenu],
+  );
+
+  const megaMenuBySlug = useMemo(() => {
+    const menus = { ...MEGA_MENU_BY_SLUG };
+    if (resolvedBrandsMegaMenu) {
+      menus[BRANDS_MEGA_MENU_SLUG] = resolvedBrandsMegaMenu;
+    }
+    return menus;
+  }, [resolvedBrandsMegaMenu]);
+
   const navItems: NavGooItem[] = useMemo(
     () => [
       {
         key: "brands",
         label: "Brands",
         href: ROUTES.brands,
+        slug: resolvedBrandsMegaMenu ? BRANDS_MEGA_MENU_SLUG : undefined,
       },
       ...HEADER_MEGA_MENUS.map((menu) => ({
         key: menu.slug,
@@ -55,6 +75,11 @@ export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: Site
         href: ROUTES.deals,
       },
       {
+        key: "programs",
+        label: "Programs",
+        href: ROUTES.programs,
+      },
+      {
         key: "guides",
         label: "Guides",
         href: ROUTES.blog,
@@ -65,7 +90,7 @@ export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: Site
         href: ROUTES.gp9,
       },
     ],
-    [],
+    [resolvedBrandsMegaMenu],
   );
 
   const resolvedNavItems = useMemo(
@@ -129,7 +154,7 @@ export default function SiteHeaderNav({ onNavigate, onMegaMenuOpenChange }: Site
     onNavigate?.();
   }, [onNavigate]);
 
-  const activeMenu = activeSlug ? (MEGA_MENU_BY_SLUG[activeSlug] ?? null) : null;
+  const activeMenu = activeSlug ? (megaMenuBySlug[activeSlug] ?? null) : null;
 
   useEffect(() => {
     onMegaMenuOpenChange?.(Boolean(activeSlug));

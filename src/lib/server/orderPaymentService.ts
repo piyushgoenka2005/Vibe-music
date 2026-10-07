@@ -178,7 +178,11 @@ export async function completeOrderPayment(input: {
 
     // We own the paid transition (row lock), so only this writer reaches here.
     if (completedOrder.couponCode && !completedOrder.couponUsageApplied) {
-      await incrementCouponUsage(completedOrder.couponCode);
+      await incrementCouponUsage(completedOrder.couponCode, {
+        userId: completedOrder.userId,
+        customerEmail: completedOrder.email,
+        orderId: completedOrder.id,
+      });
       await updateOrderInTx(tx, completedOrder, {
         couponUsageApplied: true,
         updatedAt: timestamp,

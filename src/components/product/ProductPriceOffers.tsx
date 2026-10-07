@@ -3,10 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { buildPdpOfferRows, resolvePdpPricing } from "@/lib/product/pdpOffers";
 import { buildPdpOfferRowsFromCoupons } from "@/lib/product/pdpOffersFromCoupons";
+import ProductCouponPromoBanner from "@/components/product/ProductCouponPromoBanner";
 import type { StorefrontCouponOffer } from "@/types/coupon";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 import { formatCurrencyPrecise, isPurchasablePrice } from "@/utils/currency";
 import { BadgePercent, ChevronRight } from "lucide-react";
+import { useCartStore } from "@/store/cartStore";
+import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 
 interface ProductPriceOffersProps {
   product: ProductDetail;
@@ -14,6 +17,9 @@ interface ProductPriceOffersProps {
 }
 
 export default function ProductPriceOffers({ product, selectedVariant }: ProductPriceOffersProps) {
+  const applyCoupon = useCartStore((s) => s.applyCoupon);
+  const couponCode = useCartStore((s) => s.couponCode);
+  const pendingCouponCode = useCartStore((s) => s.pendingCouponCode);
   const displayPrice = selectedVariant.price;
   const pricing = useMemo(
     () => resolvePdpPricing(displayPrice, product.msrp, product.originalPrice),
@@ -28,7 +34,7 @@ export default function ProductPriceOffers({ product, selectedVariant }: Product
 
     const loadOffers = async () => {
       try {
-        const res = await fetch("/api/coupons/active");
+        const res = await fetch(`/api/coupons/active?productId=${encodeURIComponent(product.id)}`);
         if (!res.ok) throw new Error("Failed to load offers");
         const payload = (await res.json()) as { coupons: StorefrontCouponOffer[] };
         if (!cancelled) {
@@ -54,7 +60,7 @@ export default function ProductPriceOffers({ product, selectedVariant }: Product
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [product.id]);
 
   const offers = useMemo(() => {
     const fromCoupons = buildPdpOfferRowsFromCoupons(activeCoupons ?? []);
@@ -102,6 +108,16 @@ export default function ProductPriceOffers({ product, selectedVariant }: Product
 
       <p className="pdp-info-pricing__tax">Inclusive of all taxes</p>
 
+      {activeCoupons && activeCoupons.length > 0 ? (
+        <ProductCouponPromoBanner
+          coupon={activeCoupons[0]}
+          selected={
+            couponCode === activeCoupons[0].code || pendingCouponCode === activeCoupons[0].code
+          }
+          onSelect={() => void applyCoupon(activeCoupons[0].code)}
+        />
+      ) : null}
+
       {offersError ? (
         <p className="pdp-info-pricing__tax" role="status">
           Offers unavailable right now — try again later or apply a coupon at checkout.
@@ -117,16 +133,37 @@ export default function ProductPriceOffers({ product, selectedVariant }: Product
 
           <div className="pdp-offers__carousel-wrap">
             <div className="pdp-offers__track" role="list" aria-label="Available offers">
-              {offers.map((offer) => (
-                <article key={offer.id} className="pdp-offers__card" role="listitem">
-                  <h4 className="pdp-offers__card-title">{offer.title}</h4>
-                  <p className="pdp-offers__card-detail">{offer.detail}</p>
-                  <span className="pdp-offers__card-link" aria-hidden="true">
-                    {offer.offerCount} {offer.offerCount === 1 ? "offer" : "offers"}
-                    <ChevronRight size={14} aria-hidden />
-                  </span>
-                </article>
-              ))}
+              {offers.map((offer) => {
+                const code = offer.id;
+                const selected = couponCode === code || pendingCouponCode === code;
+                const couponMeta = activeCoupons?.find((entry) => entry.code === code);
+                return (
+                  <button
+                    key={offer.id}
+                    type="button"
+                    className="pdp-offers__card"
+                    role="listitem"
+                    disabled={selected}
+                    onClick={() => void applyCoupon(code)}
+                    style={{
+                      cursor: selected ? "default" : "pointer",
+                      textAlign: "left",
+                      border: selected ? "2px solid var(--accent, #2563eb)" : undefined,
+                    }}
+                  >
+                    <h4 className="pdp-offers__card-title">{offer.title}</h4>
+                    <p className="pdp-offers__card-detail">{offer.detail}</p>
+                    <span className="pdp-offers__card-link">
+                      {selected
+                        ? "Selected for checkout"
+                        : couponMeta
+                          ? `Use ${formatCouponLabel(couponMeta)}`
+                          : `Use code ${code}`}
+                      <ChevronRight size={14} aria-hidden />
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

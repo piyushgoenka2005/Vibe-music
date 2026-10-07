@@ -13,6 +13,8 @@ import {
   toPaise,
   type GSTRate,
 } from "@/lib/gstCalculator";
+import { resolveShippingChargeWithCoupon } from "@/lib/coupons/couponShipping";
+import { getCouponByCode } from "@/lib/server/couponService";
 import { getDefaultShippingMethod } from "@/lib/shipping/shippingMethods";
 import { notifyAdminNewOrder } from "@/lib/server/orderNotificationService";
 import { resolveAuthoritativeShippingCharge } from "@/lib/server/shippingQuoteService";
@@ -216,13 +218,33 @@ export async function createOrder(
 
   const subtotal = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shippingMethod = payload.shippingMethod ?? getDefaultShippingMethod();
-  const shippingCharge = await resolveAuthoritativeShippingCharge({
+  let shippingCharge = await resolveAuthoritativeShippingCharge({
     method: shippingMethod,
     subtotal,
     discount: payload.couponDiscount,
     postalCode: payload.shippingAddress.postalCode,
     state: payload.shippingAddress.state,
   });
+
+  if (payload.couponCode) {
+    const coupon = await getCouponByCode(payload.couponCode);
+    if (coupon) {
+      shippingCharge = resolveShippingChargeWithCoupon(
+        shippingCharge,
+        {
+          type: coupon.type,
+          scope: coupon.scope,
+          productIds: coupon.productIds,
+        },
+        payload.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        subtotal,
+      );
+    }
+  }
 
   const orderData = buildOrderRecord(orderId, payload, userId, shippingCharge);
   const inventoryLines = toInventoryLines(payload.items);

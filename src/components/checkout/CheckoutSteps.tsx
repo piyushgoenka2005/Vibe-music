@@ -378,6 +378,7 @@ interface PaymentStepProps {
   setOnlineChannel: (ch: OnlinePaymentChannel) => void;
   effectivePaymentMethod: "razorpay";
   onlinePaymentsAvailable: boolean;
+  paymentCapabilitiesLoading?: boolean;
   razorpayIssue?: string | null;
   resolvedAddress: ShippingAddress | null;
   hasValidContact: boolean;
@@ -394,6 +395,7 @@ export function PaymentStep({
   setOnlineChannel,
   effectivePaymentMethod,
   onlinePaymentsAvailable,
+  paymentCapabilitiesLoading = false,
   razorpayIssue,
   resolvedAddress,
   hasValidContact,
@@ -423,7 +425,13 @@ export function PaymentStep({
         paymentMethod={effectivePaymentMethod}
       />
 
-      {!onlinePaymentsAvailable ? (
+      {paymentCapabilitiesLoading ? (
+        <p className="checkout-panel__hint" role="status">
+          Checking Razorpay payment gateway…
+        </p>
+      ) : null}
+
+      {!paymentCapabilitiesLoading && !onlinePaymentsAvailable ? (
         <p className="checkout-panel__alert" role="alert">
           <strong>Online payments unavailable:</strong>{" "}
           {razorpayIssue ??

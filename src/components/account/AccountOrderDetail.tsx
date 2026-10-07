@@ -174,13 +174,16 @@ export default function AccountOrderDetail({
           >
             {invoiceDownload.label}
           </a>
-        ) : (
-          <span className="acct__btn acct__btn--secondary acct__btn--disabled">Print invoice</span>
-        )}
+        ) : null}
         {canShowInvoice && invoiceViewUrl ? (
           <a href={invoiceViewUrl} className="acct__btn acct__btn--secondary">
             View invoice
           </a>
+        ) : null}
+        {!canShowInvoice ? (
+          <span className="acct__order-detail-invoice-note" role="status">
+            Invoice available after payment is confirmed.
+          </span>
         ) : null}
         <Link href={trackHref} className="acct__btn acct__btn--secondary">
           Track Order

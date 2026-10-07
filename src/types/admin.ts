@@ -131,20 +131,47 @@ export interface AdminCategory {
   updatedAt?: string;
 }
 
+export type CouponKind = "standard" | "referral";
+
 export interface Coupon {
   id: string;
   code: string;
   label: string;
-  type: "percentage" | "flat";
+  type: "percentage" | "flat" | "free_shipping";
   value: number;
   minOrderAmount?: number;
   maxUses?: number;
+  maxUsesPerUser?: number;
   usedCount: number;
   isActive: boolean;
+  kind: CouponKind;
+  referralOwnerUserId?: string;
+  referralOwnerEmail?: string;
+  parentCouponId?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  scope: "store" | "products";
+  productIds: string[];
   startsAt?: string;
   expiresAt?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CouponRedemption {
+  id: string;
+  couponId: string;
+  couponCode: string;
+  userId?: string;
+  customerEmail?: string;
+  orderId?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  createdAt: string;
 }
 
 export interface InventoryRecord {

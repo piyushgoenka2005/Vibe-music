@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import { getCouponEligibilityError } from "@/lib/coupons/couponMath";
+import {
+  getCouponEligibleSubtotal,
+  getCouponProductScopeError,
+} from "@/lib/coupons/couponProductScope";
 import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
+import ApplicableCouponsPicker from "@/components/checkout/ApplicableCouponsPicker";
 import { formatCurrency } from "@/utils/currency";
 
 export default function CartSavingsSummary() {
@@ -27,16 +32,37 @@ export default function CartSavingsSummary() {
     rows.push({ label: "Instant discount", amount: itemSavings });
   }
 
+  const scopeItems = items.map((item) => ({
+    productId: item.productId,
+    lineTotal: item.price * item.quantity,
+  }));
+  const eligibleSubtotal = appliedCoupon
+    ? getCouponEligibleSubtotal(
+        subtotal,
+        scopeItems,
+        appliedCoupon.scope ?? "store",
+        appliedCoupon.productIds,
+      )
+    : subtotal;
+
   const ineligibilityMessage =
     couponCode && appliedCoupon && discount <= 0 && subtotal > 0
-      ? getCouponEligibilityError(
+      ? (getCouponProductScopeError(
+          {
+            scope: appliedCoupon.scope ?? "store",
+            productIds: appliedCoupon.productIds,
+          },
+          scopeItems,
+          subtotal,
+        ) ??
+        getCouponEligibilityError(
           {
             isActive: true,
             usedCount: 0,
             minOrderAmount: appliedCoupon.minOrderAmount,
           },
-          subtotal
-        )
+          eligibleSubtotal,
+        ))
       : null;
 
   async function handleApply() {
@@ -50,9 +76,7 @@ export default function CartSavingsSummary() {
         <>
           <div className="cart-savings__headline">
             <span className="cart-savings__title">You saved</span>
-            <strong className="cart-savings__total">
-              {formatCurrency(totalSavings)}
-            </strong>
+            <strong className="cart-savings__total">{formatCurrency(totalSavings)}</strong>
           </div>
           {rows.length > 0 ? (
             <ul className="cart-savings__rows">
@@ -85,48 +109,43 @@ export default function CartSavingsSummary() {
             </div>
             <div className="cart-savings__coupon-actions">
               {discount > 0 ? (
-                <span className="cart-savings__coupon-discount">
-                  -{formatCurrency(discount)}
-                </span>
+                <span className="cart-savings__coupon-discount">-{formatCurrency(discount)}</span>
               ) : null}
-              <button
-                type="button"
-                className="cart-savings__coupon-remove"
-                onClick={removeCoupon}
-              >
+              <button type="button" className="cart-savings__coupon-remove" onClick={removeCoupon}>
                 Remove
               </button>
             </div>
           </div>
         ) : (
-          <div className="cart-savings__coupon-field">
-            <input
-              type="text"
-              placeholder="Enter coupon code"
-              value={couponInput}
-              onChange={(e) =>
-                setCouponInput(e.target.value.toUpperCase())
-              }
-              aria-label="Coupon code"
-              autoCapitalize="characters"
-              spellCheck={false}
-              disabled={isApplyingCoupon}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  void handleApply();
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="cart-savings__coupon-apply"
-              onClick={() => void handleApply()}
-              disabled={isApplyingCoupon || !couponInput.trim()}
-            >
-              {isApplyingCoupon ? "..." : "Apply"}
-            </button>
-          </div>
+          <>
+            <ApplicableCouponsPicker style={{ marginBottom: 12 }} />
+            <div className="cart-savings__coupon-field">
+              <input
+                type="text"
+                placeholder="Enter coupon code"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                aria-label="Coupon code"
+                autoCapitalize="characters"
+                spellCheck={false}
+                disabled={isApplyingCoupon}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    void handleApply();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="cart-savings__coupon-apply"
+                onClick={() => void handleApply()}
+                disabled={isApplyingCoupon || !couponInput.trim()}
+              >
+                {isApplyingCoupon ? "..." : "Apply"}
+              </button>
+            </div>
+          </>
         )}
 
         {ineligibilityMessage ? (

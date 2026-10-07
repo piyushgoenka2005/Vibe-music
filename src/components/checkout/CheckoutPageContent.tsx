@@ -12,6 +12,7 @@ import { useCheckoutPayment } from "@/hooks/useCheckoutPayment";
 import { addressToShipping } from "@/lib/address/addressMappers";
 import { ROUTES } from "@/lib/routes";
 import { normalizeIndianPhone } from "@/lib/validations/address";
+import { resolveShippingChargeWithCoupon } from "@/lib/coupons/couponShipping";
 import { DEFAULT_GST_RATE } from "@/lib/gstCalculator";
 import {
   type ShippingMethod,
@@ -109,6 +110,7 @@ export default function CheckoutPageContent() {
   const cartCouponCode = useCartStore((s) => s.couponCode);
   const applyCoupon = useCartStore((s) => s.applyCoupon);
   const cartCouponDiscount = useCartStore((s) => s.discount());
+  const appliedCoupon = useCartStore((s) => s.appliedCoupon);
   const couponCode = isBuyNowMode ? null : cartCouponCode;
   const couponDiscount = isBuyNowMode ? 0 : cartCouponDiscount;
   const user = useAuthStore((s) => s.user);
@@ -168,30 +170,50 @@ export default function CheckoutPageContent() {
     demoPaymentsAllowed: boolean;
     onlinePaymentsAvailable: boolean;
   } | null>(null);
+  const [capabilitiesStatus, setCapabilitiesStatus] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
   const [guestEmailInput, setGuestEmailInput] = useState("");
   const guestEmail = guestEmailInput || user?.email || "";
   const [addressError, setAddressError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    void fetch("/api/checkout/capabilities")
-      .then(async (response) => {
-        if (!response.ok) return null;
-        return response.json() as Promise<{
+    setCapabilitiesStatus("loading");
+
+    const loadCapabilities = async (attempt = 0): Promise<void> => {
+      try {
+        const response = await fetch("/api/checkout/capabilities");
+        if (!response.ok) {
+          if (attempt < 2 && (response.status === 429 || response.status >= 500)) {
+            await new Promise((resolve) => window.setTimeout(resolve, 600 * (attempt + 1)));
+            if (!cancelled) return loadCapabilities(attempt + 1);
+          }
+          if (!cancelled) setCapabilitiesStatus("error");
+          return;
+        }
+
+        const data = (await response.json()) as {
           placesAutocomplete: boolean;
           razorpayConfigured: boolean;
           razorpayIssue?: string | null;
           demoPaymentsAllowed: boolean;
           onlinePaymentsAvailable: boolean;
-        }>;
-      })
-      .then((data) => {
-        if (cancelled || !data) return;
+        };
+
+        if (cancelled) return;
         setCheckoutCapabilities(data);
-      })
-      .catch(() => {
-        /* Keep optimistic defaults if capabilities fail to load. */
-      });
+        setCapabilitiesStatus("ready");
+      } catch {
+        if (attempt < 2 && !cancelled) {
+          await new Promise((resolve) => window.setTimeout(resolve, 600 * (attempt + 1)));
+          return loadCapabilities(attempt + 1);
+        }
+        if (!cancelled) setCapabilitiesStatus("error");
+      }
+    };
+
+    void loadCapabilities();
     return () => {
       cancelled = true;
     };
@@ -212,12 +234,14 @@ export default function CheckoutPageContent() {
   }, [searchParams, cartCouponCode, applyCoupon, isBuyNowMode]);
 
   const placesAutocomplete = checkoutCapabilities?.placesAutocomplete ?? false;
-  const razorpayConfigured =
-    checkoutCapabilities?.razorpayConfigured ??
-    Boolean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith("rzp_"));
   const onlinePaymentsAvailable =
-    checkoutCapabilities?.onlinePaymentsAvailable ?? razorpayConfigured;
-  const razorpayIssue = checkoutCapabilities?.razorpayIssue ?? null;
+    capabilitiesStatus === "ready"
+      ? (checkoutCapabilities?.onlinePaymentsAvailable ?? false)
+      : false;
+  const razorpayIssue =
+    capabilitiesStatus === "error"
+      ? "Unable to verify payment gateway status. Refresh the page or try again in a moment."
+      : (checkoutCapabilities?.razorpayIssue ?? null);
 
   const checkoutItems = items.map((item) => ({
     productId: item.productId,
@@ -296,8 +320,19 @@ export default function CheckoutPageContent() {
   const shippingMethodCharges =
     zoneQuote?.key === shippingQuoteKey ? zoneQuote.charges : fallbackShippingCharges;
 
-  const activeShippingCharge =
+  const baseShippingCharge =
     shippingMethodCharges[shippingMethod] ?? fallbackShippingCharges[shippingMethod] ?? 0;
+
+  const activeShippingCharge = resolveShippingChargeWithCoupon(
+    baseShippingCharge,
+    isBuyNowMode ? null : appliedCoupon,
+    items.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      price: item.price,
+    })),
+    cartSubtotal,
+  );
 
   useEffect(() => {
     if (!shippingQuoteKey || !resolvedAddress?.postalCode) return;
@@ -644,6 +679,7 @@ export default function CheckoutPageContent() {
                 setOnlineChannel={setOnlineChannel}
                 effectivePaymentMethod={effectivePaymentMethod}
                 onlinePaymentsAvailable={onlinePaymentsAvailable}
+                paymentCapabilitiesLoading={capabilitiesStatus === "loading"}
                 razorpayIssue={razorpayIssue}
                 resolvedAddress={resolvedAddress}
                 hasValidContact={hasValidContact}

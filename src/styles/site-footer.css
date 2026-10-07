@@ -893,6 +893,7 @@ body.is-landing-page .storefront-main + .site-footer.site-footer--layered .site-
 
   /* Account pages: hide the blue reveal panel under the bottom nav */
   body.is-account-page .footer-products-panel,
+  body.is-auth-page .footer-products-panel,
   body:has(.acct__mobile-nav) .footer-products-panel {
     display: none !important;
     visibility: hidden !important;
@@ -900,11 +901,21 @@ body.is-landing-page .storefront-main + .site-footer.site-footer--layered .site-
   }
 
   body.is-account-page .site-footer__panel-spacer,
+  body.is-auth-page .site-footer__panel-spacer,
   body:has(.acct__mobile-nav) .site-footer__panel-spacer {
     display: none;
     height: 0 !important;
     min-height: 0 !important;
   }
+}
+
+/* Auth pages: marketing footer + scroll-reveal panel distract from sign-in */
+body.is-auth-page .site-footer.site-footer--layered,
+body.is-auth-page .footer-products-panel,
+body.is-auth-page .site-footer__panel-spacer {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

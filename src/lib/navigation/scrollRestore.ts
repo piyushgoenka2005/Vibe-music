@@ -21,6 +21,16 @@ export const ROUTE_SCROLL_RESET_PX = 48;
 /** How long after popstate / click-nav we refuse to clobber a mid-page Y with ~0. */
 export const SCROLL_NAV_GUARD_MS = 2500;
 
+/** Auth flows must always open at the top — never restore footer scroll. */
+export function isAuthScrollResetPath(pathname: string): boolean {
+  return (
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password" ||
+    pathname.startsWith("/reset-password")
+  );
+}
+
 export type PendingPopRestore = {
   key: string;
   at: number;

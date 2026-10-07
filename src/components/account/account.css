@@ -944,6 +944,25 @@
   margin: 0;
 }
 
+.acct__setting-hint {
+  font-size: 13px;
+  color: var(--acct-muted);
+  margin: 0.25rem 0 0;
+  line-height: 1.45;
+}
+
+.acct__setting-error {
+  font-size: 12px;
+  color: #b45309;
+  margin: 0.35rem 0 0;
+}
+
+.acct__order-detail-invoice-note {
+  font-size: 13px;
+  color: var(--acct-muted);
+  align-self: center;
+}
+
 /* Toggle switch */
 .acct__toggle {
   position: relative;

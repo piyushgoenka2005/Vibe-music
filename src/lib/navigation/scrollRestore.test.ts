@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeRestoreScrollY,
   findSectionAnchorId,
+  isAuthScrollResetPath,
   isBackToKey,
   isPendingPopRestoreForKey,
   mergeScrollAnchorForKey,
@@ -20,6 +21,15 @@ import {
 } from "@/lib/navigation/scrollRestore";
 
 describe("scrollRestore helpers", () => {
+  it("isAuthScrollResetPath matches login, register, and password routes", () => {
+    expect(isAuthScrollResetPath("/login")).toBe(true);
+    expect(isAuthScrollResetPath("/register")).toBe(true);
+    expect(isAuthScrollResetPath("/forgot-password")).toBe(true);
+    expect(isAuthScrollResetPath("/reset-password/abc")).toBe(true);
+    expect(isAuthScrollResetPath("/account")).toBe(false);
+    expect(isAuthScrollResetPath("/")).toBe(false);
+  });
+
   it("isBackToKey treats pending pop as back when key exists in stack", () => {
     expect(isBackToKey("/", ["/", "/category/guitars"], true)).toBe(true);
     expect(isBackToKey("/other", ["/", "/category/guitars"], true)).toBe(false);

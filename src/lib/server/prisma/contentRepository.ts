@@ -6,7 +6,7 @@ import { isPrismaUnavailableError } from "@/lib/db/prisma-errors";
 import { asJsonValue, asStringArray, toIsoString } from "./mappers";
 import { clampPageLimit, pageFromRows } from "./pagination";
 import type { StoreSettings } from "@/types/admin";
-import type { Coupon } from "@/types/admin";
+import type { Coupon, CouponRedemption } from "@/types/admin";
 import type { CreateBannerInput, HomepageBanner, UpdateBannerInput } from "@/types/banner";
 import type {
   BlogAnalyticsSummary,
@@ -64,6 +64,13 @@ function mapBanner(row: {
   };
 }
 
+function parseCouponProductIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
+  );
+}
+
 function mapCoupon(row: {
   id: string;
   code: string;
@@ -72,13 +79,27 @@ function mapCoupon(row: {
   value: number;
   minOrderAmount: number | null;
   maxUses: number | null;
+  maxUsesPerUser?: number | null;
   usedCount: number;
   isActive: boolean;
+  kind?: string | null;
+  referralOwnerUserId?: string | null;
+  referralOwnerEmail?: string | null;
+  parentCouponId?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  utmContent?: string | null;
+  scope?: string | null;
+  productIds?: unknown;
   startsAt: string | null;
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string;
 }): Coupon {
+  const productIds = parseCouponProductIds(row.productIds);
+  const scope = row.scope === "products" && productIds.length > 0 ? "products" : "store";
+
   return {
     id: row.id,
     code: row.code,
@@ -87,12 +108,51 @@ function mapCoupon(row: {
     value: row.value,
     minOrderAmount: row.minOrderAmount ?? undefined,
     maxUses: row.maxUses ?? undefined,
+    maxUsesPerUser: row.maxUsesPerUser ?? undefined,
     usedCount: row.usedCount,
     isActive: row.isActive,
+    kind: row.kind === "referral" ? "referral" : "standard",
+    referralOwnerUserId: row.referralOwnerUserId ?? undefined,
+    referralOwnerEmail: row.referralOwnerEmail ?? undefined,
+    parentCouponId: row.parentCouponId ?? undefined,
+    utmSource: row.utmSource ?? undefined,
+    utmMedium: row.utmMedium ?? undefined,
+    utmCampaign: row.utmCampaign ?? undefined,
+    utmContent: row.utmContent ?? undefined,
+    scope,
+    productIds: scope === "products" ? productIds : [],
     startsAt: row.startsAt ?? undefined,
     expiresAt: row.expiresAt ?? undefined,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  };
+}
+
+function mapCouponRedemption(row: {
+  id: string;
+  couponId: string;
+  couponCode: string;
+  userId: string | null;
+  customerEmail: string | null;
+  orderId: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  utmContent: string | null;
+  createdAt: string;
+}): CouponRedemption {
+  return {
+    id: row.id,
+    couponId: row.couponId,
+    couponCode: row.couponCode,
+    userId: row.userId ?? undefined,
+    customerEmail: row.customerEmail ?? undefined,
+    orderId: row.orderId ?? undefined,
+    utmSource: row.utmSource ?? undefined,
+    utmMedium: row.utmMedium ?? undefined,
+    utmCampaign: row.utmCampaign ?? undefined,
+    utmContent: row.utmContent ?? undefined,
+    createdAt: row.createdAt,
   };
 }
 
@@ -271,6 +331,44 @@ export async function getCouponByCode(code: string): Promise<Coupon | null> {
     where: { code: code.toUpperCase() },
   });
   return row ? mapCoupon(row) : null;
+}
+
+export async function getCouponById(id: string): Promise<Coupon | null> {
+  if (!isPostgresConfigured()) return null;
+  const row = await prisma.coupon.findUnique({ where: { id } });
+  return row ? mapCoupon(row) : null;
+}
+
+export async function getReferralCouponForUser(userId: string): Promise<Coupon | null> {
+  if (!isPostgresConfigured()) return null;
+  const row = await prisma.coupon.findFirst({
+    where: { kind: "referral", referralOwnerUserId: userId, isActive: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return row ? mapCoupon(row) : null;
+}
+
+export async function countCouponRedemptionsForUser(
+  couponId: string,
+  options: { userId?: string | null; customerEmail?: string | null },
+): Promise<number> {
+  if (!isPostgresConfigured()) return 0;
+
+  const userId = options.userId?.trim();
+  const email = options.customerEmail?.trim().toLowerCase();
+
+  if (!userId && !email) return 0;
+
+  const orFilters: Array<{ userId: string } | { customerEmail: string }> = [];
+  if (userId) orFilters.push({ userId });
+  if (email) orFilters.push({ customerEmail: email });
+
+  return prisma.couponRedemption.count({
+    where: {
+      couponId,
+      OR: orFilters,
+    },
+  });
 }
 
 export async function getStoreSettings(): Promise<StoreSettings | null> {
@@ -698,8 +796,19 @@ export async function createCouponRecord(coupon: Coupon): Promise<Coupon> {
       value: coupon.value,
       minOrderAmount: coupon.minOrderAmount ?? null,
       maxUses: coupon.maxUses ?? null,
+      maxUsesPerUser: coupon.maxUsesPerUser ?? null,
       usedCount: coupon.usedCount,
       isActive: coupon.isActive,
+      kind: coupon.kind ?? "standard",
+      referralOwnerUserId: coupon.referralOwnerUserId ?? null,
+      referralOwnerEmail: coupon.referralOwnerEmail ?? null,
+      parentCouponId: coupon.parentCouponId ?? null,
+      utmSource: coupon.utmSource ?? null,
+      utmMedium: coupon.utmMedium ?? null,
+      utmCampaign: coupon.utmCampaign ?? null,
+      utmContent: coupon.utmContent ?? null,
+      scope: coupon.scope === "products" && coupon.productIds.length > 0 ? "products" : "store",
+      productIds: coupon.scope === "products" ? coupon.productIds : [],
       startsAt: coupon.startsAt ?? null,
       expiresAt: coupon.expiresAt ?? null,
       createdAt: coupon.createdAt,
@@ -725,7 +834,32 @@ export async function updateCouponRecord(id: string, patch: Partial<Coupon>): Pr
       ...(rest.value !== undefined ? { value: rest.value } : {}),
       ...(rest.minOrderAmount !== undefined ? { minOrderAmount: rest.minOrderAmount ?? null } : {}),
       ...(rest.maxUses !== undefined ? { maxUses: rest.maxUses ?? null } : {}),
+      ...(rest.maxUsesPerUser !== undefined ? { maxUsesPerUser: rest.maxUsesPerUser ?? null } : {}),
       ...(rest.isActive !== undefined ? { isActive: rest.isActive } : {}),
+      ...(rest.kind !== undefined ? { kind: rest.kind } : {}),
+      ...(rest.referralOwnerUserId !== undefined
+        ? { referralOwnerUserId: rest.referralOwnerUserId ?? null }
+        : {}),
+      ...(rest.referralOwnerEmail !== undefined
+        ? { referralOwnerEmail: rest.referralOwnerEmail ?? null }
+        : {}),
+      ...(rest.parentCouponId !== undefined ? { parentCouponId: rest.parentCouponId ?? null } : {}),
+      ...(rest.utmSource !== undefined ? { utmSource: rest.utmSource ?? null } : {}),
+      ...(rest.utmMedium !== undefined ? { utmMedium: rest.utmMedium ?? null } : {}),
+      ...(rest.utmCampaign !== undefined ? { utmCampaign: rest.utmCampaign ?? null } : {}),
+      ...(rest.utmContent !== undefined ? { utmContent: rest.utmContent ?? null } : {}),
+      ...(rest.scope !== undefined || rest.productIds !== undefined
+        ? {
+            scope:
+              (rest.scope ?? "store") === "products" && (rest.productIds?.length ?? 0) > 0
+                ? "products"
+                : "store",
+            productIds:
+              (rest.scope ?? "store") === "products" && (rest.productIds?.length ?? 0) > 0
+                ? (rest.productIds ?? [])
+                : [],
+          }
+        : {}),
       ...(rest.startsAt !== undefined ? { startsAt: rest.startsAt ?? null } : {}),
       ...(rest.expiresAt !== undefined ? { expiresAt: rest.expiresAt ?? null } : {}),
       updatedAt: timestamp,
@@ -754,6 +888,27 @@ export async function incrementCouponUsageRecord(code: string): Promise<boolean>
     },
   });
   return result.count > 0;
+}
+
+export async function createCouponRedemptionRecord(
+  redemption: CouponRedemption,
+): Promise<CouponRedemption> {
+  await prisma.couponRedemption.create({
+    data: {
+      id: redemption.id,
+      couponId: redemption.couponId,
+      couponCode: redemption.couponCode.toUpperCase(),
+      userId: redemption.userId ?? null,
+      customerEmail: redemption.customerEmail?.toLowerCase() ?? null,
+      orderId: redemption.orderId ?? null,
+      utmSource: redemption.utmSource ?? null,
+      utmMedium: redemption.utmMedium ?? null,
+      utmCampaign: redemption.utmCampaign ?? null,
+      utmContent: redemption.utmContent ?? null,
+      createdAt: redemption.createdAt,
+    },
+  });
+  return redemption;
 }
 
 export async function upsertStoreSettingsRecord(settings: StoreSettings): Promise<StoreSettings> {

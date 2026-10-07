@@ -16,9 +16,24 @@ test.describe("enterprise program pages", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test("retired financing paths redirect", async ({ page }) => {
+  test("financing hub loads", async ({ page }) => {
     await page.goto("/financing", { waitUntil: "domcontentloaded" });
-    await expect(page).not.toHaveURL(/\/financing/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/payment/i);
+  });
+
+  test("programs hub loads", async ({ page }) => {
+    await page.goto("/programs", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/programs/i);
+  });
+
+  test("gear exchange page loads", async ({ page }) => {
+    await page.goto("/gear-exchange", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  });
+
+  test("studios page loads", async ({ page }) => {
+    await page.goto("/studios", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 });
 

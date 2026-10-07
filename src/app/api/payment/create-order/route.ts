@@ -41,7 +41,15 @@ async function postHandler(request: Request) {
         const resolvedItems = await resolveOrderItems(body.items);
         logPayment("Order items resolved", { count: resolvedItems.length });
         const subtotal = resolvedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        const couponDiscount = await resolveCouponDiscount(body.couponCode, subtotal);
+        const couponItems = resolvedItems.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+        }));
+        const couponDiscount = await resolveCouponDiscount(body.couponCode, subtotal, couponItems, {
+          userId: sessionUser?.uid,
+          customerEmail: body.email.trim().toLowerCase(),
+        });
 
         const payload: CreateOrderPayload = {
           ...body,

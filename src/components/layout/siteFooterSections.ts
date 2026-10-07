@@ -1,3 +1,4 @@
+import { STOREFRONT_PROGRAMS } from "@/data/storefrontPrograms";
 import { BRAND } from "@/lib/brand";
 import { CANONICAL_BUSINESS_ADDRESS } from "@/lib/brand/businessIdentity";
 import { ROUTES } from "@/lib/routes";
@@ -14,8 +15,19 @@ export function buildFooterSections(legal: PublicLegalInfo): FooterAccordionSect
 
   return [
     {
+      id: "programs",
+      label: "01 / Programs",
+      links: [
+        { label: "All programs", href: ROUTES.programs },
+        ...STOREFRONT_PROGRAMS.map((program) => ({
+          label: program.title,
+          href: program.href,
+        })),
+      ],
+    },
+    {
       id: "service",
-      label: "01 / Customer Service",
+      label: "02 / Customer Service",
       links: [
         { label: "Shop brands", href: ROUTES.brands },
         { label: "Track your order", href: ROUTES.trackOrder },
@@ -32,7 +44,7 @@ export function buildFooterSections(legal: PublicLegalInfo): FooterAccordionSect
     },
     {
       id: "legal",
-      label: "02 / Legal",
+      label: "03 / Legal",
       links: [
         { label: "Terms & conditions", href: ROUTES.page("terms") },
         { label: "Privacy policy", href: ROUTES.page("privacy") },
@@ -43,7 +55,7 @@ export function buildFooterSections(legal: PublicLegalInfo): FooterAccordionSect
     },
     {
       id: "follow",
-      label: "03 / Follow",
+      label: "04 / Follow",
       links: [
         { label: "Instagram", href: SOCIAL_LINKS.instagram, external: true },
         { label: "YouTube", href: SOCIAL_LINKS.youtube, external: true },

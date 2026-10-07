@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Bell } from "lucide-react";
+import WebPushOptIn from "@/components/account/WebPushOptIn";
 import type { NotificationPreferences, UserNotification } from "@/types/notification";
 
 function NotificationsPanel() {
@@ -98,14 +99,13 @@ function NotificationsPanel() {
                 <input
                   type="checkbox"
                   checked={data.preferences[item.key]}
-                  onChange={(e) =>
-                    prefsMutation.mutate({ [item.key]: e.target.checked })
-                  }
+                  onChange={(e) => prefsMutation.mutate({ [item.key]: e.target.checked })}
                 />
                 <span className="acct__toggle-slider" />
               </label>
             </div>
           ))}
+          <WebPushOptIn />
         </div>
       </section>
 
@@ -136,10 +136,7 @@ function NotificationsPanel() {
                   <h4>{item.title}</h4>
                   <p>{item.body}</p>
                   {item.link ? (
-                    <Link
-                      href={item.link}
-                      onClick={() => handleNotificationOpen(item)}
-                    >
+                    <Link href={item.link} onClick={() => handleNotificationOpen(item)}>
                       View details
                     </Link>
                   ) : !item.read ? (

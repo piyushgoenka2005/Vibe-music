@@ -40,6 +40,7 @@ const eslintConfig = defineConfig([
       "src/components/cart/**/*.{ts,tsx}",
       "src/app/admin/**/*.{ts,tsx}",
       "src/hooks/useStorefrontBack.ts",
+      "src/hooks/useWebPushSubscription.ts",
     ],
     rules: {
       "react-hooks/set-state-in-effect": "off",
@@ -61,6 +62,7 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "scripts/**",
+    "deploy/**",
     // Playwright / test artifacts (generated after e2e runs)
     "playwright-report/**",
     "test-results/**",

@@ -87,18 +87,28 @@ if (!hasTrustProxy) {
   console.log("Appended TRUST_PROXY_HOPS=1.");
 }
 
-// .env.local overrides .env in production — stale AUTH_GOOGLE_* there breaks Google sign-in.
+// .env.local overrides .env in production — stale secrets there break OAuth + Razorpay.
 if (fs.existsSync(localEnvPath)) {
   const localOriginal = fs.readFileSync(localEnvPath, "utf8");
   const localFiltered = localOriginal
     .split(/\r?\n/)
-    .filter((line) => !/^AUTH_GOOGLE_(ID|SECRET)=/.test(line.trim()))
+    .filter((line) => {
+      const trimmed = line.trim();
+      return (
+        !/^AUTH_GOOGLE_(ID|SECRET)=/.test(trimmed) &&
+        !/^RAZORPAY_/.test(trimmed) &&
+        !/^NEXT_PUBLIC_RAZORPAY_KEY_ID=/.test(trimmed) &&
+        !/^ALLOW_DEMO_PAYMENTS=/.test(trimmed)
+      );
+    })
     .join("\n");
   if (localFiltered !== localOriginal) {
     fs.writeFileSync(
       localEnvPath,
       localFiltered.endsWith("\n") ? localFiltered : `${localFiltered}\n`,
     );
-    console.log("Removed stale AUTH_GOOGLE_* from .env.local (use .env / ops-secrets on VPS).");
+    console.log(
+      "Removed stale AUTH_GOOGLE_* / RAZORPAY_* / ALLOW_DEMO_PAYMENTS from .env.local (use .env / ops-secrets on VPS).",
+    );
   }
 }

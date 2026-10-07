@@ -125,6 +125,64 @@ const checks: Check[] = [];
   record(checks, "catalog-sample", status === 200 && products.length > 0, `HTTP ${status}`);
 }
 
+{
+  const catalog = await get("/api/products?limit=8");
+  const products =
+    (catalog.body as { products?: Array<{ id: string; inStock?: boolean }> }).products ?? [];
+  const product = products.find((item) => item.inStock !== false) ?? products[0];
+
+  if (!product?.id) {
+    record(checks, "razorpay-create-order", false, "no catalog product for probe");
+  } else {
+    const { status, body } = await post("/api/payment/create-order", {
+      items: [{ productId: product.id, quantity: 1 }],
+      email: `monitor-${Date.now()}@vibemusic.test`,
+      paymentMethod: "razorpay",
+      shippingAddress: {
+        name: "Checkout Monitor",
+        phone: "9876543210",
+        line1: "4/1 Middleton Street",
+        city: "Kolkata",
+        state: "West Bengal",
+        postalCode: "700071",
+        country: "India",
+      },
+    });
+
+    const data = body as {
+      orderId?: string;
+      trackingToken?: string;
+      razorpayOrderId?: string;
+      keyId?: string;
+      amount?: number;
+      error?: string;
+    };
+
+    const ok =
+      status === 200 &&
+      Boolean(data.razorpayOrderId?.startsWith("order_")) &&
+      Boolean(data.keyId?.startsWith("rzp_")) &&
+      typeof data.amount === "number" &&
+      data.amount > 0;
+
+    record(
+      checks,
+      "razorpay-create-order",
+      ok,
+      ok
+        ? `HTTP ${status} order=${data.razorpayOrderId?.slice(0, 12)}… key=${data.keyId?.slice(0, 12)}…`
+        : `HTTP ${status} ${String(data.error ?? "missing razorpay fields").slice(0, 80)}`,
+    );
+
+    if (data.orderId && data.trackingToken) {
+      await post("/api/payment/release-reservation", {
+        orderId: data.orderId,
+        trackingToken: data.trackingToken,
+      });
+    }
+  }
+}
+
 console.log(`\nSynthetic checkout monitor — ${BASE_URL}\n`);
 for (const check of checks) {
   console.log(`${check.ok ? "OK  " : "FAIL"}  ${check.name.padEnd(22)} ${check.detail}`);

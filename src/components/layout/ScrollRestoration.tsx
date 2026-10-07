@@ -19,6 +19,7 @@ import {
   type ScrollAnchorsMap,
   computeRestoreScrollY,
   findSectionAnchorId,
+  isAuthScrollResetPath,
   isPendingPopRestoreForKey,
   isSameOriginPathHref,
   mergeScrollAnchorForKey,
@@ -487,7 +488,8 @@ export default function ScrollRestoration() {
     const pendingPop = pendingPopFlag || isPendingPopRestore(key);
 
     const intentionalBack = peekStorefrontBackIntent(key);
-    const savedY = readPositions()[key];
+    const positions = readPositions();
+    const savedY = positions[key];
     const isBack = shouldTreatAsBackNavigation({
       intentionalBack,
       key,
@@ -497,6 +499,22 @@ export default function ScrollRestoration() {
     });
     historyStackRef.current = updateHistoryStack(stack, key, isBack);
     recordStorefrontNavigation(key, isBack);
+
+    if (isAuthScrollResetPath(pathname)) {
+      restoringRef.current = false;
+      restoreTargetYRef.current = 0;
+      clearPendingPopRestore();
+      clearStorefrontBackIntent();
+      applyScrollY(0);
+      lastYRef.current = 0;
+      if (savedY != null) {
+        const { [key]: _removed, ...rest } = positions;
+        writePositions(rest, true);
+      }
+      // Images/fonts can expand the card after first paint — pin auth routes to top.
+      requestAnimationFrame(() => applyScrollY(0));
+      return undefined;
+    }
 
     const shouldRestore =
       isBack &&

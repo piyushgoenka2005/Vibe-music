@@ -25,6 +25,12 @@ const META_KEYS = new Set([
   "META_TEST_EVENT_CODE",
 ]);
 const OAUTH_KEYS = new Set(["AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET"]);
+const RAZORPAY_KEYS = new Set([
+  "RAZORPAY_KEY_ID",
+  "RAZORPAY_KEY_SECRET",
+  "NEXT_PUBLIC_RAZORPAY_KEY_ID",
+  "RAZORPAY_WEBHOOK_SECRET",
+]);
 
 function phoneDigits(raw) {
   return String(raw ?? "").replace(/\D/g, "");
@@ -105,7 +111,8 @@ function setLine(key, value) {
 
 for (const [key, value] of incoming) {
   const current = existing.get(key);
-  const forceOverwrite = overwriteKeys.has(key) || META_KEYS.has(key) || OAUTH_KEYS.has(key);
+  const forceOverwrite =
+    overwriteKeys.has(key) || META_KEYS.has(key) || OAUTH_KEYS.has(key) || RAZORPAY_KEYS.has(key);
   const legacyPhone = PHONE_KEYS.has(key) && isLegacyPhone(current);
   const emptyCurrent = !current?.trim();
 

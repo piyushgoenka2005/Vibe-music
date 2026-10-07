@@ -8,13 +8,15 @@ import {
   syncPromoGiftItems,
 } from "@/lib/cart/promoGift";
 import { createSafeJSONStorage } from "@/lib/storage/safeLocalStorage";
+import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/store/toastStore";
 import { getCartLineId } from "@/lib/variants";
-import {
-  calculateCouponDiscountAmount,
-  getCouponEligibilityError,
-} from "@/lib/coupons/couponMath";
+import { calculateCouponDiscountAmount, getCouponEligibilityError } from "@/lib/coupons/couponMath";
 import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
+import {
+  getCouponEligibleSubtotal,
+  getCouponProductScopeError,
+} from "@/lib/coupons/couponProductScope";
 import { validateCouponCode } from "@/services/coupon.service";
 import type { AppliedCouponSnapshot } from "@/types/coupon";
 import type { Product, ProductVariant } from "@/types/product";
@@ -61,6 +63,8 @@ interface CartState {
   drawerOpen: boolean;
   couponCode: string | null;
   appliedCoupon: AppliedCouponSnapshot | null;
+  /** Staged from PDP before cart has items — auto-applied on add-to-cart. */
+  pendingCouponCode: string | null;
   isApplyingCoupon: boolean;
   isUpdating: boolean;
   promoConfig: CartPromotionsPublic | null;
@@ -89,7 +93,7 @@ interface CartState {
 function resolveProductOriginalPrice(
   product: Product,
   unitPrice: number,
-  variant?: ProductVariant
+  variant?: ProductVariant,
 ): number | undefined {
   const variantPrice = variant?.price;
   void variantPrice;
@@ -98,11 +102,7 @@ function resolveProductOriginalPrice(
   return undefined;
 }
 
-function productToCartItem(
-  product: Product,
-  quantity: number,
-  variant?: ProductVariant
-): CartItem {
+function productToCartItem(product: Product, quantity: number, variant?: ProductVariant): CartItem {
   const variantId = variant?.id;
   const lineId = getCartLineId(product.id, variantId);
   const image = variant?.images?.[0] || product.image;
@@ -128,9 +128,32 @@ function productToCartItem(
 
 function resolveCartDiscount(
   appliedCoupon: AppliedCouponSnapshot | null,
-  subtotal: number
+  subtotal: number,
+  items: CartItem[],
 ): number {
   if (!appliedCoupon || subtotal <= 0) return 0;
+
+  const scopeItems = items.map((item) => ({
+    productId: item.productId,
+    lineTotal: item.price * item.quantity,
+  }));
+
+  const scopeError = getCouponProductScopeError(
+    {
+      scope: appliedCoupon.scope ?? "store",
+      productIds: appliedCoupon.productIds,
+    },
+    scopeItems,
+    subtotal,
+  );
+  if (scopeError) return 0;
+
+  const eligibleSubtotal = getCouponEligibleSubtotal(
+    subtotal,
+    scopeItems,
+    appliedCoupon.scope ?? "store",
+    appliedCoupon.productIds,
+  );
 
   const eligibilityError = getCouponEligibilityError(
     {
@@ -138,18 +161,15 @@ function resolveCartDiscount(
       usedCount: 0,
       minOrderAmount: appliedCoupon.minOrderAmount,
     },
-    subtotal
+    eligibleSubtotal,
   );
 
   if (eligibilityError) return 0;
 
-  return calculateCouponDiscountAmount(subtotal, appliedCoupon);
+  return calculateCouponDiscountAmount(eligibleSubtotal, appliedCoupon);
 }
 
-function applyPromoSync(
-  items: CartItem[],
-  promoConfig: CartPromotionsPublic | null
-): CartItem[] {
+function applyPromoSync(items: CartItem[], promoConfig: CartPromotionsPublic | null): CartItem[] {
   const gift = promoConfig?.giftProduct ?? null;
   const threshold = promoConfig?.freeGiftThreshold ?? 799;
   return syncPromoGiftItems(items, gift, threshold);
@@ -162,6 +182,7 @@ export const useCartStore = create<CartState>()(
       drawerOpen: false,
       couponCode: null,
       appliedCoupon: null,
+      pendingCouponCode: null,
       isApplyingCoupon: false,
       isUpdating: false,
       promoConfig: null,
@@ -175,21 +196,18 @@ export const useCartStore = create<CartState>()(
           return;
         }
         const maxStock =
-          variant?.stock != null && variant.stock > 0
-            ? Math.min(99, variant.stock)
-            : 99;
+          variant?.stock != null && variant.stock > 0 ? Math.min(99, variant.stock) : 99;
         const qty = Math.max(1, quantity);
         const lineId = getCartLineId(product.id, variant?.id);
         const existingQty =
-          get().items.find(
-            (item) => item.lineId === lineId && !isPromoGiftLine(item)
-          )?.quantity ?? 0;
+          get().items.find((item) => item.lineId === lineId && !isPromoGiftLine(item))?.quantity ??
+          0;
         const requestedTotal = existingQty + qty;
         const capped = requestedTotal > maxStock;
         const fresh = productToCartItem(product, qty, variant);
         set((state) => {
           const existing = state.items.find(
-            (item) => item.lineId === lineId && !isPromoGiftLine(item)
+            (item) => item.lineId === lineId && !isPromoGiftLine(item),
           );
           let items: CartItem[];
           let nextQty = qty;
@@ -204,7 +222,7 @@ export const useCartStore = create<CartState>()(
                     lineId: item.lineId,
                     isPromoGift: undefined,
                   }
-                : item
+                : item,
             );
           } else {
             nextQty = Math.min(qty, maxStock);
@@ -213,14 +231,15 @@ export const useCartStore = create<CartState>()(
           return { items: applyPromoSync(items, state.promoConfig) };
         });
         if (capped) {
-          useToastStore
-            .getState()
-            .show(`Only ${maxStock} available for this item`, "info");
+          useToastStore.getState().show(`Only ${maxStock} available for this item`, "info");
         }
-        useToastStore
-          .getState()
-          .show(`${variant?.label ?? product.name} added to cart`);
+        useToastStore.getState().show(`${variant?.label ?? product.name} added to cart`);
         trackAddToCart(product, qty, variant?.label);
+
+        const pending = get().pendingCouponCode;
+        if (pending) {
+          void get().applyCoupon(pending);
+        }
       },
 
       removeItem: (lineId, options) => {
@@ -230,14 +249,12 @@ export const useCartStore = create<CartState>()(
         set((state) => {
           const items = applyPromoSync(
             state.items.filter((i) => i.lineId !== lineId),
-            state.promoConfig
+            state.promoConfig,
           );
           return { items };
         });
         if (item && !options?.silent) {
-          useToastStore
-            .getState()
-            .show(`${item.name} removed from cart`, "info");
+          useToastStore.getState().show(`${item.name} removed from cart`, "info");
           trackRemoveFromCart(cartItemToAnalyticsLine(item));
         } else if (item) {
           trackRemoveFromCart(cartItemToAnalyticsLine(item));
@@ -259,9 +276,9 @@ export const useCartStore = create<CartState>()(
         set((state) => {
           const items = applyPromoSync(
             state.items.map((entry) =>
-              entry.lineId === lineId ? { ...entry, quantity: qty } : entry
+              entry.lineId === lineId ? { ...entry, quantity: qty } : entry,
             ),
-            state.promoConfig
+            state.promoConfig,
           );
           return { items };
         });
@@ -277,10 +294,7 @@ export const useCartStore = create<CartState>()(
         if (updates.length === 0) return;
 
         const byLine = new Map(
-          updates.map((update) => [
-            getCartLineId(update.productId, update.variantId),
-            update,
-          ])
+          updates.map((update) => [getCartLineId(update.productId, update.variantId), update]),
         );
 
         set((state) => {
@@ -294,15 +308,11 @@ export const useCartStore = create<CartState>()(
             const next = {
               ...item,
               price: update.price,
-              ...(update.originalPrice != null
-                ? { originalPrice: update.originalPrice }
-                : {}),
+              ...(update.originalPrice != null ? { originalPrice: update.originalPrice } : {}),
               ...(update.name ? { name: update.name } : {}),
               ...(update.gstRate ? { gstRate: update.gstRate } : {}),
               ...(update.variantSku ? { variantSku: update.variantSku } : {}),
-              ...(update.variantLabel
-                ? { variantLabel: update.variantLabel }
-                : {}),
+              ...(update.variantLabel ? { variantLabel: update.variantLabel } : {}),
               ...(update.image ? { image: update.image } : {}),
               ...(update.brand ? { brand: update.brand } : {}),
               ...(update.slug ? { slug: update.slug } : {}),
@@ -324,14 +334,9 @@ export const useCartStore = create<CartState>()(
         });
       },
 
-      itemCount: () =>
-        get().items.reduce((sum, item) => sum + item.quantity, 0),
+      itemCount: () => get().items.reduce((sum, item) => sum + item.quantity, 0),
 
-      subtotal: () =>
-        get().items.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        ),
+      subtotal: () => get().items.reduce((sum, item) => sum + item.price * item.quantity, 0),
 
       paidSubtotal: () => computePaidSubtotal(get().items),
 
@@ -339,8 +344,7 @@ export const useCartStore = create<CartState>()(
 
       totalSavings: () => get().itemSavings() + get().discount(),
 
-      discount: () =>
-        resolveCartDiscount(get().appliedCoupon, get().subtotal()),
+      discount: () => resolveCartDiscount(get().appliedCoupon, get().subtotal(), get().items),
 
       total: () => {
         const sub = get().subtotal();
@@ -357,27 +361,31 @@ export const useCartStore = create<CartState>()(
 
         const subtotal = get().subtotal();
         if (subtotal <= 0) {
-          useToastStore.getState().show("Add items before applying a coupon", "error");
-          return false;
+          set({ pendingCouponCode: normalized });
+          useToastStore.getState().show(`Coupon ${normalized} saved — add to bag to apply`, "info");
+          return true;
         }
 
         set({ isApplyingCoupon: true });
         try {
-          const result = await validateCouponCode(normalized, subtotal);
+          const cartItems = get().items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+          }));
+          const customerEmail = useAuthStore.getState().user?.email;
+          const result = await validateCouponCode(normalized, subtotal, cartItems, customerEmail);
           if (!result.valid || !result.coupon) {
-            useToastStore
-              .getState()
-              .show(result.error ?? "Invalid coupon code", "error");
+            useToastStore.getState().show(result.error ?? "Invalid coupon code", "error");
             return false;
           }
 
           set({
             couponCode: result.coupon.code,
             appliedCoupon: result.coupon,
+            pendingCouponCode: null,
           });
-          useToastStore
-            .getState()
-            .show(`Coupon applied: ${formatCouponLabel(result.coupon)}`);
+          useToastStore.getState().show(`Coupon applied: ${formatCouponLabel(result.coupon)}`);
           return true;
         } catch {
           useToastStore.getState().show("Unable to validate coupon", "error");
@@ -388,7 +396,7 @@ export const useCartStore = create<CartState>()(
       },
 
       removeCoupon: () => {
-        set({ couponCode: null, appliedCoupon: null });
+        set({ couponCode: null, appliedCoupon: null, pendingCouponCode: null });
         useToastStore.getState().show("Coupon removed", "info");
       },
 
@@ -414,6 +422,7 @@ export const useCartStore = create<CartState>()(
         items: state.items,
         couponCode: state.couponCode,
         appliedCoupon: state.appliedCoupon,
+        pendingCouponCode: state.pendingCouponCode,
       }),
       migrate: (persisted: unknown, version) => {
         const state = persisted as {
@@ -427,8 +436,7 @@ export const useCartStore = create<CartState>()(
           items:
             state?.items?.map((item) => ({
               ...item,
-              lineId:
-                item.lineId ?? getCartLineId(item.productId, item.variantId),
+              lineId: item.lineId ?? getCartLineId(item.productId, item.variantId),
               price: isPurchasablePrice(item.price) ? item.price : 0,
               isPromoGift: item.isPromoGift ?? item.lineId?.startsWith("promo-gift:"),
             })) ?? [],
@@ -449,12 +457,10 @@ export const useCartStore = create<CartState>()(
       version: 5,
       onRehydrateStorage: () => (state) => {
         if (!state) return;
-        state.items = state.items.filter(
-          (item) => !item.lineId?.startsWith("promo-gift:")
-        );
+        state.items = state.items.filter((item) => !item.lineId?.startsWith("promo-gift:"));
       },
-    }
-  )
+    },
+  ),
 );
 
 export type { CartGiftProductSummary, CartPromotionsPublic };

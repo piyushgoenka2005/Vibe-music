@@ -19,6 +19,7 @@ import SwipeToPayButton from "@/components/checkout/SwipeToPayButton";
 import CheckoutStaticPayButton from "@/components/checkout/CheckoutStaticPayButton";
 import type { OnlinePaymentChannel } from "@/components/checkout/CheckoutPaymentMethods";
 import { getSwipePayLabel } from "@/components/checkout/checkoutPayLabels";
+import ApplicableCouponsPicker from "@/components/checkout/ApplicableCouponsPicker";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import type { PaymentMethod } from "@/types/order";
 
@@ -238,9 +239,12 @@ export default function CheckoutSummary({
               </>
             )}
             {!couponCode ? (
-              <p className="checkout-summary__promo-hint">
-                Enter a valid promo code from your offer email or checkout page.
-              </p>
+              <>
+                <ApplicableCouponsPicker style={{ marginTop: 12 }} />
+                <p className="checkout-summary__promo-hint">
+                  Select an offer above or enter a promo code manually.
+                </p>
+              </>
             ) : null}
           </div>
         ) : null}

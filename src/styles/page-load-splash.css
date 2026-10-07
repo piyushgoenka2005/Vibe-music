@@ -55,17 +55,24 @@ html.vibe-splash-pending .vibe-boot-splash {
   display: grid;
 }
 
+/* Hand off to the React overlay once hydration starts the splash controller. */
+html.vibe-splash-active .vibe-boot-splash {
+  display: none;
+}
+
 .page-load-splash {
   --splash-blue: #0057ff;
   --splash-border: 8px;
   position: fixed;
   inset: 0;
-  z-index: 99999;
+  z-index: 100001;
   display: grid;
   place-items: center;
   background: var(--splash-blue);
   pointer-events: all;
-  transition: opacity 0.38s ease, visibility 0.38s ease;
+  transition:
+    opacity 0.38s ease,
+    visibility 0.38s ease;
 }
 
 .page-load-splash--exiting {
@@ -764,8 +771,7 @@ html.vibe-splash-pending .vibe-boot-splash {
   justify-content: center;
   width: 100%;
   /* Boot splash has no Next font class — keep condensed look before hydrate. */
-  font-family: "Bebas Neue", "Arial Narrow", "Helvetica Neue Condensed", Impact,
-    sans-serif;
+  font-family: "Bebas Neue", "Arial Narrow", "Helvetica Neue Condensed", Impact, sans-serif;
   font-size: clamp(2.75rem, 10.5vw, 4.85rem);
   font-weight: 400;
   line-height: 1;

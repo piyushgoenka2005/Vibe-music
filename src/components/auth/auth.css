@@ -11,6 +11,18 @@
   background: linear-gradient(180deg, #f7f8f8 0%, #ffffff 55%);
 }
 
+/* Auth routes: fill the viewport and center the card — no footer scroll-reveal below */
+body.is-auth-page .storefront-main {
+  min-height: calc(100dvh - var(--site-header-offset, 118px));
+}
+
+body.is-auth-page .auth-page {
+  flex: 1;
+  min-height: calc(100dvh - var(--site-header-offset, 118px));
+  align-items: center;
+  padding: 1.5rem 1.25rem 2rem;
+}
+
 .auth-page__content {
   width: 100%;
   max-width: 26rem;

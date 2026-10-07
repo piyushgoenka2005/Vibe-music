@@ -14,7 +14,11 @@ import * as pg from "@/lib/server/prisma/contentRepository";
 vi.mock("@/lib/server/prisma/contentRepository", () => ({
   countCoupons: vi.fn(),
   createCouponRecord: vi.fn(),
+  createCouponRedemptionRecord: vi.fn(),
+  countCouponRedemptionsForUser: vi.fn(),
   getCouponByCode: vi.fn(),
+  getCouponById: vi.fn(),
+  getReferralCouponForUser: vi.fn(),
   listCouponPage: vi.fn(),
   updateCouponRecord: vi.fn(),
   deleteCouponRecord: vi.fn(),
@@ -36,6 +40,9 @@ describe("couponService", () => {
         value: 20,
         usedCount: 0,
         isActive: true,
+        kind: "standard" as const,
+        scope: "store" as const,
+        productIds: [] as string[],
         createdAt: "2026-01-01",
         updatedAt: "2026-01-01",
       };
@@ -92,6 +99,9 @@ describe("couponService", () => {
         minOrderAmount: 5000,
         usedCount: 0,
         isActive: true,
+        kind: "standard" as const,
+        scope: "store",
+        productIds: [],
         createdAt: "2026-01-01",
         updatedAt: "2026-01-01",
       };
@@ -105,6 +115,83 @@ describe("couponService", () => {
       expect(success.valid).toBe(true);
       expect(success.discount).toBe(500);
     });
+
+    it("rejects product coupons when cart has no eligible lines", async () => {
+      const mockCoupon = {
+        id: "c4",
+        code: "GUITAR10",
+        label: "Guitar 10%",
+        type: "percentage" as const,
+        value: 10,
+        usedCount: 0,
+        isActive: true,
+        kind: "standard" as const,
+        scope: "products" as const,
+        productIds: ["p1"],
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-01",
+      };
+      vi.mocked(pg.getCouponByCode).mockResolvedValue(mockCoupon);
+
+      const res = await validateCoupon("GUITAR10", 5000, [
+        { productId: "p2", quantity: 1, price: 5000 },
+      ]);
+      expect(res.valid).toBe(false);
+      expect(res.error).toMatch(/does not apply/i);
+    });
+
+    it("validates free shipping coupons with zero line discount", async () => {
+      const mockCoupon = {
+        id: "c5",
+        code: "SHIPFREE",
+        label: "Free shipping",
+        type: "free_shipping" as const,
+        value: 0,
+        usedCount: 0,
+        isActive: true,
+        kind: "standard" as const,
+        scope: "products" as const,
+        productIds: ["p1"],
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-01",
+      };
+      vi.mocked(pg.getCouponByCode).mockResolvedValue(mockCoupon);
+
+      const res = await validateCoupon("SHIPFREE", 3000, [
+        { productId: "p1", quantity: 1, price: 3000 },
+      ]);
+      expect(res.valid).toBe(true);
+      expect(res.discount).toBe(0);
+      expect(res.coupon?.type).toBe("free_shipping");
+      expect(res.coupon?.productIds).toEqual(["p1"]);
+    });
+
+    it("enforces per-user redemption limits", async () => {
+      const mockCoupon = {
+        id: "c3",
+        code: "ONCE",
+        label: "One time",
+        type: "percentage" as const,
+        value: 10,
+        maxUsesPerUser: 1,
+        usedCount: 0,
+        isActive: true,
+        kind: "standard" as const,
+        scope: "store",
+        productIds: [],
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-01",
+      };
+      vi.mocked(pg.getCouponByCode).mockResolvedValue(mockCoupon);
+      vi.mocked(pg.countCouponRedemptionsForUser).mockResolvedValue(1);
+
+      const res = await validateCoupon("ONCE", 2000, undefined, {
+        userId: "user-1",
+        customerEmail: "friend@test.com",
+      });
+      expect(res.valid).toBe(false);
+      expect(res.error).toMatch(/already used/i);
+    });
   });
 
   describe("createCoupon / updateCoupon / deleteCoupon / incrementUsage", () => {
@@ -115,6 +202,9 @@ describe("couponService", () => {
         type: "percentage" as const,
         value: 25,
         isActive: true,
+        kind: "standard" as const,
+        scope: "store" as const,
+        productIds: [] as string[],
       };
 
       vi.mocked(pg.createCouponRecord).mockImplementation(async (record) => record);
@@ -134,6 +224,9 @@ describe("couponService", () => {
         value: 30,
         usedCount: 1,
         isActive: true,
+        kind: "standard" as const,
+        scope: "store",
+        productIds: [],
         createdAt: "2026-01-01",
         updatedAt: "2026-01-02",
       };
@@ -155,6 +248,36 @@ describe("couponService", () => {
       const applied = await incrementCouponUsage("SAVE10");
       expect(applied).toBe(true);
       expect(pg.incrementCouponUsageRecord).toHaveBeenCalledWith("SAVE10");
+    });
+
+    it("records redemption for database coupons", async () => {
+      const mockCoupon = {
+        id: "c9",
+        code: "DB10",
+        label: "DB 10%",
+        type: "percentage" as const,
+        value: 10,
+        usedCount: 0,
+        isActive: true,
+        kind: "standard" as const,
+        scope: "store",
+        productIds: [],
+        utmSource: "email",
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-01",
+      };
+      vi.mocked(pg.getCouponByCode).mockResolvedValue(mockCoupon);
+      vi.mocked(pg.incrementCouponUsageRecord).mockResolvedValue(true);
+      vi.mocked(pg.createCouponRedemptionRecord).mockImplementation(async (r) => r);
+
+      const applied = await incrementCouponUsage("DB10", {
+        userId: "u1",
+        customerEmail: "buyer@test.com",
+        orderId: "ord-1",
+      });
+
+      expect(applied).toBe(true);
+      expect(pg.createCouponRedemptionRecord).toHaveBeenCalled();
     });
   });
 
@@ -178,6 +301,9 @@ describe("couponService", () => {
           type: "percentage" as const,
           value: 10,
           isActive: true,
+          kind: "standard" as const,
+          scope: "store",
+          productIds: [],
           usedCount: 0,
           createdAt: "2026-01-01",
           updatedAt: "2026-01-01",
@@ -189,6 +315,9 @@ describe("couponService", () => {
           type: "percentage" as const,
           value: 15,
           isActive: false,
+          kind: "standard" as const,
+          scope: "store",
+          productIds: [],
           usedCount: 0,
           createdAt: "2026-01-01",
           updatedAt: "2026-01-01",
@@ -200,7 +329,10 @@ describe("couponService", () => {
           type: "percentage" as const,
           value: 20,
           isActive: true,
+          kind: "standard" as const,
           expiresAt: "2026-01-01T00:00:00Z",
+          scope: "store",
+          productIds: [],
           usedCount: 0,
           createdAt: "2026-01-01",
           updatedAt: "2026-01-01",
@@ -213,6 +345,47 @@ describe("couponService", () => {
       const offers = await listActiveCouponsForStorefront(now);
       expect(offers).toHaveLength(1);
       expect(offers[0].code).toBe("ACTIVE1");
+    });
+
+    it("returns only product-scoped coupons for a product context", async () => {
+      const now = new Date("2026-06-15T12:00:00Z");
+      const coupons = [
+        {
+          id: "1",
+          code: "STORE10",
+          label: "Store 10%",
+          type: "percentage" as const,
+          value: 10,
+          isActive: true,
+          kind: "standard" as const,
+          scope: "store" as const,
+          productIds: [],
+          usedCount: 0,
+          createdAt: "2026-01-01",
+          updatedAt: "2026-01-01",
+        },
+        {
+          id: "2",
+          code: "P1ONLY",
+          label: "Product only",
+          type: "percentage" as const,
+          value: 15,
+          isActive: true,
+          kind: "standard" as const,
+          scope: "products" as const,
+          productIds: ["p1"],
+          usedCount: 0,
+          createdAt: "2026-01-01",
+          updatedAt: "2026-01-01",
+        },
+      ];
+
+      vi.mocked(pg.countCoupons).mockResolvedValue(2);
+      vi.mocked(pg.listCouponPage).mockResolvedValue({ coupons, hasMore: false });
+
+      const offers = await listActiveCouponsForStorefront({ at: now, productId: "p1" });
+      expect(offers).toHaveLength(1);
+      expect(offers[0].code).toBe("P1ONLY");
     });
   });
 });

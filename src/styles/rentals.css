@@ -198,6 +198,38 @@
   opacity: 0.75;
 }
 
+.rentals-empty-panel {
+  margin: 1.5rem 0 2rem;
+  padding: 1.25rem 1.35rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.rentals-empty-panel__lead {
+  margin: 0 0 1rem;
+  line-height: 1.55;
+}
+
+.rentals-empty-panel__list {
+  margin: 0 0 1.25rem;
+  padding-left: 1.1rem;
+  line-height: 1.5;
+}
+
+.rentals-empty-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: center;
+}
+
+.rentals-empty-panel__secondary {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .rentals-booking-list {
   display: grid;
   gap: 1rem;
