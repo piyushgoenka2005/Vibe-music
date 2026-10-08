@@ -42,9 +42,7 @@ test.describe("storefront smoke", () => {
   test("compare page loads", async ({ page }) => {
     await page.goto("/compare", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle(/Compare Products/i);
-    await expect(
-      page.getByRole("heading", { name: "Compare Products", level: 1 })
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Compare Products", level: 1 })).toBeVisible();
   });
 
   test("search page loads", async ({ page }) => {
@@ -67,9 +65,7 @@ test.describe("storefront smoke", () => {
     expect(overflow).toBeLessThanOrEqual(2);
   });
 
-  test("key storefront pages have no horizontal overflow at mobile width", async ({
-    page,
-  }) => {
+  test("key storefront pages have no horizontal overflow at mobile width", async ({ page }) => {
     test.setTimeout(120_000);
     test.slow();
     await page.setViewportSize({ width: 390, height: 844 });
@@ -159,10 +155,7 @@ test.describe("api smoke", () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("checkout capabilities exposes payment flags", async ({
-    request,
-    requiresDatabase,
-  }) => {
+  test("checkout capabilities exposes payment flags", async ({ request, requiresDatabase }) => {
     void requiresDatabase;
     const response = await request.get("/api/checkout/capabilities");
     expect(response.ok()).toBeTruthy();
@@ -172,6 +165,26 @@ test.describe("api smoke", () => {
     expect(Array.isArray(body.paymentMethods)).toBe(true);
     expect(body.paymentMethods).toEqual(["razorpay"]);
     expect(body.paymentMethods).not.toContain("cod");
+  });
+
+  test("active coupons endpoint responds", async ({ request, requiresDatabase }) => {
+    void requiresDatabase;
+    const response = await request.get("/api/coupons/active");
+    expect(response.ok()).toBeTruthy();
+    const body = await response.json();
+    expect(Array.isArray(body.coupons)).toBe(true);
+  });
+
+  test("category page renders listing shell", async ({ page, requiresDatabase }) => {
+    void requiresDatabase;
+    await page.goto("/category/guitars", { waitUntil: "domcontentloaded", timeout: 60_000 });
+    await expect(page.locator("h1.cat-page__title")).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator(".cat-toolbar__count")).toContainText(/products/i, {
+      timeout: 25_000,
+    });
+    await expect(page.locator(".cat-product-grid .product-card, .cat-empty").first()).toBeVisible({
+      timeout: 25_000,
+    });
   });
 
   test("create-order rejects empty cart", async ({ request }) => {
@@ -199,7 +212,7 @@ test.describe("program landings", () => {
     await page.goto("/giveaway", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(
-      page.getByText(/no live giveaway|live now|giveaways & contests/i).first()
+      page.getByText(/no live giveaway|live now|giveaways & contests/i).first(),
     ).toBeVisible();
   });
 

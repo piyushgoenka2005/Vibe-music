@@ -1,22 +1,23 @@
 import { test, expect } from "./fixtures";
-import {
-  fetchCheckoutProduct,
-  fetchTrendingProduct,
-  seedGuestCart,
-} from "./helpers/test-utils";
+import { fetchCheckoutProduct, fetchTrendingProduct, seedGuestCart } from "./helpers/test-utils";
 
 test.describe("edge cases + resilience", () => {
   test("invalid product URL shows not-found or recoverable state", async ({ page }) => {
     await page.goto("/product/__no_such_slug_zzz__", { waitUntil: "domcontentloaded" });
     await expect(page.locator("body")).toBeVisible();
-    await expect(
-      page.getByText(/not found|doesn't exist|404|unavailable/i).first()
-    ).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/not found|doesn't exist|404|unavailable/i).first()).toBeVisible({
+      timeout: 20_000,
+    });
   });
 
-  test("invalid category URL is recoverable", async ({ page }) => {
-    await page.goto("/category/__no_such_category__", { waitUntil: "domcontentloaded" });
-    await expect(page.locator("body")).toBeVisible();
+  test("invalid category URL returns not found", async ({ page }) => {
+    const response = await page.goto("/category/__no_such_category__", {
+      waitUntil: "domcontentloaded",
+    });
+    expect(response?.status()).toBe(404);
+    await expect(page.getByText(/not found|doesn't exist|404|unavailable/i).first()).toBeVisible({
+      timeout: 20_000,
+    });
   });
 
   test("duplicate add-to-cart clicks do not crash PDP", async ({

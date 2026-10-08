@@ -1,7 +1,7 @@
 #!/usr/bin/env npx tsx
 import { isGoogleAuthConfigured } from "../../src/lib/auth/google-credentials";
 import { probeGoogleOAuthClient } from "../../src/lib/auth/google-oauth-health";
-import { verifyPostgresConnection } from "../../src/lib/server/postgresHealth";
+import { verifyPostgresConnection } from "../../src/lib/server/platform/postgresHealth";
 
 const configured = isGoogleAuthConfigured();
 const db = await verifyPostgresConnection();

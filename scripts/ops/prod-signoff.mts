@@ -121,6 +121,33 @@ const checks: Check[] = [];
 }
 
 {
+  const { status, body } = await getJson("/api/coupons/active");
+  const data = asRecord(body);
+  const coupons = Array.isArray(data.coupons) ? data.coupons : [];
+  checks.push({
+    name: "coupons-active",
+    ok: status === 200 && Array.isArray(data.coupons),
+    detail: `HTTP ${status} coupons=${coupons.length}`,
+    blocking: true,
+  });
+}
+
+{
+  const response = await fetch(`${BASE_URL}/category/studio-recording`, { cache: "no-store" });
+  const html = await response.text();
+  const hasListingShell =
+    response.status === 200 &&
+    html.includes("cat-page__title") &&
+    (html.toLowerCase().includes("studio") || html.includes("cat-toolbar__count"));
+  checks.push({
+    name: "category-page",
+    ok: hasListingShell,
+    detail: `HTTP ${response.status}`,
+    blocking: true,
+  });
+}
+
+{
   const { status, body } = await postJson("/api/auth/forgot-password", {
     email: "signoff-check@vibemusic.in",
   });

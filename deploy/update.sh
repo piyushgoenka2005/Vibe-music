@@ -107,6 +107,8 @@ run_post_deploy_smoke() {
   check_http "/api/coupons/active" 200 "coupons" "$API_BASE_URL"
   check_http "/api/checkout/capabilities" 200 "checkout caps" "$API_BASE_URL"
   check_http "/deals" 200 "deals"
+  check_http "/category/guitars" 200 "category page"
+  check_http "/category/__no_such_category__" 404 "invalid category"
   check_http "/brands/gibraltar" 200 "brand page"
   local brand_redirect_code brand_redirect_loc
   brand_redirect_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 "${BASE_URL}/brands?brand=gibraltar" || echo "000")
@@ -242,7 +244,11 @@ build_application() {
   rm -rf .next
 
   log "Razorpay + production env preflight"
-  run_razorpay_preflight || warn "Razorpay preflight failed — continuing deploy (verify manually)"
+  if grep -qE '^RAZORPAY_KEY_ID=rzp_live_' deploy/ops-secrets.env 2>/dev/null; then
+    run_razorpay_preflight || die "Razorpay preflight failed — fix scripts/ops/verify/verify-razorpay-ops.mts or ops-secrets"
+  else
+    run_razorpay_preflight || warn "Razorpay preflight failed — continuing deploy (no live key in ops-secrets)"
+  fi
 
   log "Type-check"
   npm run type-check
@@ -403,11 +409,11 @@ run_smoke_tests() {
   fi
 
   log "Post-deploy smoke (loopback APIs)"
-  run_post_deploy_smoke "$LOOPBACK" "$LOOPBACK" || true
+  run_post_deploy_smoke "$LOOPBACK" "$LOOPBACK" || die "post-deploy loopback smoke failed"
 
   if [[ "${VERIFY_PUBLIC_SMOKE:-0}" == "1" ]]; then
     log "Post-deploy smoke (public URL via nginx: $PUBLIC_BASE)"
-    run_post_deploy_smoke "$PUBLIC_BASE" "$LOOPBACK" || echo "    WARN: public smoke had failures" >&2
+    run_post_deploy_smoke "$PUBLIC_BASE" "$LOOPBACK" || die "post-deploy public smoke failed"
   fi
 }
 
@@ -583,7 +589,7 @@ log "Production ops banner sync"
 npx tsx --env-file=.env scripts/ops/seed-production-ops.mts || true
 
 log "Reconcile product review aggregates"
-npx tsx --env-file=.env scripts/ops/reconcile-product-review-aggregates.mts || true
+npx tsx --env-file=.env scripts/ops/reconcile-product-review-aggregates.mts
 
 if [[ "${SEED_CATALOG:-0}" == "1" ]]; then
   log "Seeding catalog from JSON"

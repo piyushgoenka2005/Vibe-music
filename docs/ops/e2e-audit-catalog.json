@@ -72,6 +72,16 @@
       "pattern": "checkout shows Razorpay-only payment options"
     },
     { "id": "L-26-smoke-health", "finding": "L-26", "pattern": "health endpoint responds" },
+    {
+      "id": "L-26-coupons-active",
+      "finding": "L-26",
+      "pattern": "active coupons endpoint responds"
+    },
+    {
+      "id": "L-26-category-page",
+      "finding": "L-26",
+      "pattern": "category page renders listing shell"
+    },
     { "id": "L-26-empty-cart", "finding": "L-26", "pattern": "create-order rejects empty cart" },
     {
       "id": "L-26-admin-guard",

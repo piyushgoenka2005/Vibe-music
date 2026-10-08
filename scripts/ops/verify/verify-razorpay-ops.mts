@@ -7,7 +7,7 @@
  *   (loads .env + .env.local + .env.production + .env.production.local)
  */
 
-import { applyMergedEnvToProcess } from "./load-merged-env.mjs";
+import { applyMergedEnvToProcess } from "../load-merged-env.mjs";
 import { PrismaClient } from "@prisma/client";
 
 applyMergedEnvToProcess();

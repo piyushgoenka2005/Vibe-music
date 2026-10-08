@@ -6,7 +6,7 @@
  */
 import "./register-cli-stubs-side-effect.mts";
 import { prisma } from "../../src/lib/db/prisma";
-import { recalculateProductReviewStats } from "../../src/lib/server/reviewStatsService";
+import { recalculateProductReviewStats } from "../../src/lib/server/reviews/reviewStatsService";
 
 async function main(): Promise<void> {
   const products = await prisma.product.findMany({ select: { id: true, slug: true } });

@@ -24,7 +24,10 @@ test.describe("customer storefront journeys", () => {
   test("category + brands browse", async ({ page, requiresDatabase }) => {
     void requiresDatabase;
     await page.goto("/category/guitars", { waitUntil: "domcontentloaded" });
-    await expect(page.locator("body")).toBeVisible();
+    await expect(page.locator("h1.cat-page__title")).toHaveText(/guitar/i);
+    await expect(page.locator(".cat-toolbar__count")).toContainText(/products/i, {
+      timeout: 25_000,
+    });
     await page.goto("/brands", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
@@ -58,7 +61,7 @@ test.describe("customer storefront journeys", () => {
     await seedGuestCart(page, product);
     await page.goto("/cart", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: /complete your order|recommended for you/i }).first()
+      page.getByRole("heading", { name: /complete your order|recommended for you/i }).first(),
     ).toBeVisible({ timeout: 25_000 });
   });
 
@@ -69,9 +72,7 @@ test.describe("customer storefront journeys", () => {
 
   test("compare page loads", async ({ page }) => {
     await page.goto("/compare", { waitUntil: "domcontentloaded" });
-    await expect(
-      page.getByRole("heading", { name: /compare products/i, level: 1 })
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /compare products/i, level: 1 })).toBeVisible();
   });
 
   test("blog + contact + support entry points", async ({ page }) => {
@@ -137,7 +138,7 @@ test.describe("customer storefront journeys", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     // Soft assertion: variants may be absent for many SKUs.
     const variant = page.locator(
-      "[data-variant], .pdp-variant, .product-options, [role='radiogroup']"
+      "[data-variant], .pdp-variant, .product-options, [role='radiogroup']",
     );
     if ((await variant.count()) > 0) {
       await expect(variant.first()).toBeVisible();
