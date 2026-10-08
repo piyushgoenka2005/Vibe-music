@@ -64,6 +64,7 @@ const HOMEPAGE_LAYOUT_OPTIONS: HomepageSectionLayout[] = [
   "brand_strip",
   "big_names_deals",
   "story_banners",
+  "gear_stories_reels",
   "social_rail",
 ];
 
@@ -195,6 +196,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
             activeKey === "featured_categories" ||
             activeKey === "browse_by_categories" ||
             activeKey === "category_bento" ||
+            activeKey === "gear_stories" ||
             activeKey === "social_rail"
               ? "manual"
               : (sectionForm.sourceMode ?? activeSection.sourceMode),
@@ -216,6 +218,15 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
 
   const addItemMutation = useMutation({
     mutationFn: async () => {
+      if (isGearStoriesSection) {
+        if (!itemForm.customHref.trim()) {
+          throw new Error("Video URL is required for gear reels.");
+        }
+        if (!itemForm.customTitle.trim()) {
+          throw new Error("Reel title is required for gear reels.");
+        }
+      }
+
       const payload = {
         sectionKey: activeKey,
         productId: itemForm.productId || undefined,
@@ -347,6 +358,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
 
   const isStorySection = activeKey === "featured_stories";
   const isBigNamesSection = activeKey === "big_names_deals";
+  const isGearStoriesSection = activeKey === "gear_stories";
   const isSocialRailSection = activeKey === "social_rail";
   const isCategorySection =
     activeKey === "featured_categories" ||
@@ -360,10 +372,15 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     activeKey !== "category_bento" &&
     activeKey !== "brand_strip" &&
     activeKey !== "featured_stories" &&
+    activeKey !== "gear_stories" &&
     activeKey !== "social_rail";
   const isBrandSection = activeKey === "brand_strip";
   const forceManualSource =
-    isStorySection || isBigNamesSection || isCategorySection || isSocialRailSection;
+    isStorySection ||
+    isBigNamesSection ||
+    isCategorySection ||
+    isGearStoriesSection ||
+    isSocialRailSection;
   const canAddBigNamesItem = !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
   const showCatalogEmptyWarning =
     isProductSection &&
@@ -581,6 +598,13 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   {isBrowseSection ? ", and card photos" : ""} below. Use Manual source mode.
                 </p>
               </div>
+            ) : isGearStoriesSection ? (
+              <div className="admin-form-group">
+                <p className="admin-form-hint" style={{ margin: 0 }}>
+                  Manage the homepage gear-style reel strip below. Each row is one vertical video
+                  card (poster, MP4, Instagram handle, optional linked product).
+                </p>
+              </div>
             ) : isSocialRailSection ? (
               <div className="admin-form-group">
                 <p className="admin-form-hint" style={{ margin: 0 }}>
@@ -605,7 +629,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                     setSectionForm((prev) => ({ ...prev, isActive: event.target.checked }))
                   }
                 />
-                {isSocialRailSection ? "Show social rail on storefront" : "Section active"}
+                {isSocialRailSection
+                  ? "Show social rail on storefront"
+                  : isGearStoriesSection
+                    ? "Show gear reels on homepage"
+                    : "Section active"}
               </label>
             </div>
           </div>
@@ -630,9 +658,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
             <h2 className="admin-panel__title">
               {isStorySection
                 ? "Story Banners"
-                : isSocialRailSection
-                  ? "Social Links"
-                  : "Curated Items"}
+                : isGearStoriesSection
+                  ? "Gear Reels"
+                  : isSocialRailSection
+                    ? "Social Links"
+                    : "Curated Items"}
             </h2>
           </div>
           <div className="admin-panel__body">
@@ -681,6 +711,150 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                         setItemForm((prev) => ({ ...prev, customHref: event.target.value }))
                       }
                     />
+                  </div>
+                </>
+              ) : isGearStoriesSection ? (
+                <>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <BannerImageUpload
+                      label="Poster / thumbnail (upload to CDN)"
+                      value={itemForm.customImage}
+                      onChange={(url) => setItemForm((prev) => ({ ...prev, customImage: url }))}
+                    />
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Or poster URL / path</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.customImage}
+                      placeholder="/images/guitar-1.webp or https://cdn.vibemusic.in/..."
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, customImage: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Reel title</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.customTitle}
+                      placeholder="e.g. Hertz HZA-3900"
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, customTitle: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Modal description (optional)</label>
+                    <textarea
+                      className="admin-input"
+                      style={{ width: "100%", minHeight: 72 }}
+                      value={itemForm.categorySlug}
+                      placeholder="Short copy shown in the reel shop modal when no product is linked."
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, categorySlug: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Modal bullet features (optional, one per line)</label>
+                    <textarea
+                      className="admin-input"
+                      style={{ width: "100%", minHeight: 72 }}
+                      value={itemForm.brandId}
+                      placeholder="Hand-wound pickups&#10;Mahogany body"
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, brandId: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Video URL (MP4, required)</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.customHref}
+                      placeholder="/videos/style-story/reel-1.mp4 or https://cdn.vibemusic.in/videos/..."
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, customHref: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Instagram handle</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.badgeLabel}
+                      placeholder="@vibemusicindia"
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, badgeLabel: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Instagram link</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.offerText}
+                      placeholder="https://www.instagram.com/vibemusicindia/"
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, offerText: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Search catalog product (optional shop modal)</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={productSearch}
+                      onChange={(event) => void runProductSearch(event.target.value)}
+                      placeholder="Type 2+ characters to search…"
+                    />
+                    {productSearching ? <p className="admin-form-hint">Searching…</p> : null}
+                    {productResults.length > 0 ? (
+                      <ul
+                        style={{
+                          listStyle: "none",
+                          margin: "0.5rem 0 0",
+                          padding: 0,
+                          border: "1px solid var(--admin-border, #333)",
+                          borderRadius: 8,
+                          overflow: "hidden",
+                        }}
+                      >
+                        {productResults.map((product) => (
+                          <li key={product.id}>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--ghost"
+                              style={{
+                                width: "100%",
+                                justifyContent: "flex-start",
+                                borderRadius: 0,
+                                padding: "0.65rem 0.85rem",
+                              }}
+                              onClick={() => {
+                                setItemForm((prev) => ({ ...prev, productId: product.id }));
+                                setProductSearch(`${product.brand} — ${product.name}`);
+                                setProductResults([]);
+                              }}
+                            >
+                              {product.brand} — {product.name}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {itemForm.productId ? (
+                      <p className="admin-form-hint" style={{ margin: "0.35rem 0 0" }}>
+                        Linked product ID: {itemForm.productId}
+                      </p>
+                    ) : null}
                   </div>
                 </>
               ) : isSocialRailSection ? (
@@ -990,16 +1164,20 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   {editingItemId
                     ? isStorySection
                       ? "Update Story Banner"
-                      : isSocialRailSection
-                        ? "Update Social Link"
-                        : "Update Item"
+                      : isGearStoriesSection
+                        ? "Update Gear Reel"
+                        : isSocialRailSection
+                          ? "Update Social Link"
+                          : "Update Item"
                     : isStorySection
                       ? "Add Story Banner"
-                      : isSocialRailSection
-                        ? "Add Social Link"
-                        : isBigNamesSection
-                          ? "Add Guitar"
-                          : "Add Item"}
+                      : isGearStoriesSection
+                        ? "Add Gear Reel"
+                        : isSocialRailSection
+                          ? "Add Social Link"
+                          : isBigNamesSection
+                            ? "Add Guitar"
+                            : "Add Item"}
                 </button>
               ) : null}
               {canWrite && editingItemId ? (
@@ -1064,6 +1242,41 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                                 {item.customHref ? (
                                   <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
                                     Link: {item.customHref}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          ) : isGearStoriesSection ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              {item.customImage ? (
+                                <Image
+                                  src={item.customImage}
+                                  alt={item.customTitle || "Reel poster"}
+                                  width={54}
+                                  height={96}
+                                  unoptimized
+                                  style={{
+                                    width: 36,
+                                    height: 64,
+                                    objectFit: "cover",
+                                    borderRadius: 4,
+                                    background: "#111",
+                                    border: "1px solid var(--admin-border, #333)",
+                                  }}
+                                />
+                              ) : null}
+                              <div>
+                                <div style={{ fontWeight: 600 }}>
+                                  {item.customTitle || "Untitled reel"}
+                                </div>
+                                {item.customHref ? (
+                                  <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+                                    Video: {item.customHref}
+                                  </div>
+                                ) : null}
+                                {item.badgeLabel ? (
+                                  <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+                                    {item.badgeLabel}
                                   </div>
                                 ) : null}
                               </div>

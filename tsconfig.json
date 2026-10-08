@@ -19,6 +19,7 @@
       }
     ],
     "paths": {
+      "@/components/homepage/*": ["./src/components/storefront/sections/*"],
       "@/*": ["./src/*"]
     }
   },

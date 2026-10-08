@@ -1,8 +1,8 @@
-import { getPublicGearStories } from "@/data/gearStoriesPublic";
+import { getCachedGearStories } from "@/lib/server/homepage/gearStoryService";
 import GearStoriesSection from "@/components/home/GearStoriesSection";
 
-/** Static homepage strip — avoids DB/catalog latency on every page load. */
-export default function GearStoriesReelsSection() {
-  const data = getPublicGearStories();
+export default async function GearStoriesReelsSection() {
+  const data = await getCachedGearStories();
+  if (!data.isActive || data.stories.length === 0) return null;
   return <GearStoriesSection data={data} />;
 }

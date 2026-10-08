@@ -242,6 +242,7 @@ const homepageSectionKeySchema = z.enum([
   "big_names_deals",
   "brand_strip",
   "featured_stories",
+  "gear_stories",
   "social_rail",
 ]);
 
@@ -266,6 +267,7 @@ export const adminHomepageSectionSchema = z.object({
       "brand_strip",
       "big_names_deals",
       "story_banners",
+      "gear_stories_reels",
       "social_rail",
     ])
     .optional(),
@@ -276,8 +278,8 @@ export const adminHomepageSectionItemSchema = z.object({
   sortOrder: z.number().int().min(0).optional(),
   isActive: z.boolean().optional(),
   productId: z.string().optional(),
-  categorySlug: z.string().optional(),
-  brandId: z.string().optional(),
+  categorySlug: z.string().max(2000).optional(),
+  brandId: z.string().max(2000).optional(),
   customImage: z.union([z.string().url(), safeStorefrontHref, z.literal("")]).optional(),
   customTitle: z.string().max(200).optional(),
   customHref: z.union([z.literal(""), safeStorefrontHref]).optional(),
@@ -286,6 +288,25 @@ export const adminHomepageSectionItemSchema = z.object({
   startDate: z.string().optional().nullable(),
   endDate: z.string().optional().nullable(),
 });
+
+export function assertGearStoryItemPayload(
+  sectionKey: z.infer<typeof homepageSectionKeySchema>,
+  data: { customHref?: string; customTitle?: string },
+  mode: "create" | "update" = "create",
+): void {
+  if (sectionKey !== "gear_stories") return;
+
+  const isStatusOnlyUpdate =
+    mode === "update" && data.customHref === undefined && data.customTitle === undefined;
+  if (isStatusOnlyUpdate) return;
+
+  if (!data.customHref?.trim()) {
+    throw new Error("Video URL is required for gear reels.");
+  }
+  if (!data.customTitle?.trim()) {
+    throw new Error("Reel title is required for gear reels.");
+  }
+}
 
 export const adminProductBundleSchema = z.object({
   relatedProductIds: z.array(z.string().min(1)).max(6),

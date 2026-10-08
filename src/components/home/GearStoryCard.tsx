@@ -2,10 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getReelVideoCandidateUrls } from "@/data/reelVideos";
-import { GEAR_STORY_SEEDS } from "@/data/gearStories";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
-import { STYLE_STORY_REELS } from "@/data/styleStory";
 import { useVisibleVideo } from "@/hooks/useVisibleVideo";
 import type { GearStory } from "@/types/gear-story";
 import GearStoryHotspot from "./GearStoryHotspot";
@@ -27,13 +24,6 @@ interface GearStoryCardProps {
   onOpen: (story: GearStory) => void;
 }
 
-function storySeedIndex(story: GearStory): number {
-  const fromSeed = GEAR_STORY_SEEDS.findIndex((seed) => seed.id === story.id);
-  if (fromSeed >= 0) return fromSeed;
-  const fromReel = STYLE_STORY_REELS.findIndex((reel) => reel.videoSrc === story.videoUrl);
-  return fromReel >= 0 ? fromReel : 0;
-}
-
 export default function GearStoryCard({
   story,
   cardKey,
@@ -49,9 +39,13 @@ export default function GearStoryCard({
   const [videoFailed, setVideoFailed] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [nearViewport, setNearViewport] = useState(false);
-  const seedIndex = storySeedIndex(story);
-  const reelUrl = STYLE_STORY_REELS[seedIndex]?.reelUrl ?? SOCIAL_LINKS.instagram;
-  const videoCandidates = useMemo(() => getReelVideoCandidateUrls(seedIndex), [seedIndex]);
+  const reelUrl = story.instagramUrl ?? SOCIAL_LINKS.instagram;
+  const instagramHandle = story.instagramHandle ?? SOCIAL_LINKS.instagramHandle;
+  const videoCandidates = useMemo(() => {
+    if (story.videoCandidates?.length) return story.videoCandidates;
+    if (story.videoUrl) return [story.videoUrl];
+    return [];
+  }, [story.videoCandidates, story.videoUrl]);
   const [candidateIndex, setCandidateIndex] = useState(0);
   const videoSrc = videoCandidates[candidateIndex] ?? videoCandidates[0] ?? story.videoUrl;
 
@@ -59,7 +53,7 @@ export default function GearStoryCard({
     setCandidateIndex(0);
     setVideoFailed(false);
     setVideoReady(false);
-  }, [story.id, seedIndex]);
+  }, [story.id, story.videoUrl]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -206,7 +200,7 @@ export default function GearStoryCard({
             onClick={(event) => event.stopPropagation()}
           >
             <InstagramGlyph />
-            <span>{SOCIAL_LINKS.instagramHandle}</span>
+            <span>{instagramHandle}</span>
           </a>
           <GearStoryHotspot
             onClick={() => onOpen(story)}

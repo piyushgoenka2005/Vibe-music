@@ -47,6 +47,7 @@ export default defineConfig({
         /admin\.(authenticated|crud-smoke|security)\.spec\.ts/,
         /admin-features\.authenticated\.spec\.ts/,
         /idor\.authenticated\.spec\.ts/,
+        /coupons\.(spec|authenticated\.spec)\.ts/,
       ],
       use: { ...devices["Desktop Chrome"] },
     },
@@ -62,6 +63,7 @@ export default defineConfig({
         /admin\.(authenticated|crud-smoke|security)\.spec\.ts/,
         /admin-features\.authenticated\.spec\.ts/,
         /admin-product-edit\.authenticated\.spec\.ts/,
+        /coupons\.(spec|authenticated\.spec)\.ts/,
       ],
       dependencies: ["admin-setup"],
       use: {

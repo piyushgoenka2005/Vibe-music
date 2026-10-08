@@ -33,7 +33,7 @@ const eslintConfig = defineConfig([
       "src/components/checkout/**/*.{ts,tsx}",
       "src/components/compare/**/*.{ts,tsx}",
       "src/components/product/**/*.{ts,tsx}",
-      "src/components/homepage/**/*.{ts,tsx}",
+      "src/components/storefront/sections/**/*.{ts,tsx}",
       "src/components/home/**/*.{ts,tsx}",
       "src/components/layout/**/*.{ts,tsx}",
       "src/components/search/**/*.{ts,tsx}",

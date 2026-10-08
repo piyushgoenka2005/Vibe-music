@@ -14,7 +14,7 @@ if (!hasEnv) {
   process.exit(1);
 }
 
-const result = spawnSync("npx", ["tsx", "scripts/ops/verify-razorpay-ops.mts"], {
+const result = spawnSync("npx", ["tsx", "scripts/ops/verify/verify-razorpay-ops.mts"], {
   stdio: "inherit",
   cwd: root,
   shell: true,

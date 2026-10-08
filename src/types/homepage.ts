@@ -12,6 +12,7 @@ export const HOMEPAGE_SECTION_KEYS = [
   "big_names_deals",
   "brand_strip",
   "featured_stories",
+  "gear_stories",
   "social_rail",
 ] as const;
 
@@ -29,6 +30,7 @@ export type HomepageSectionLayout =
   | "brand_strip"
   | "big_names_deals"
   | "story_banners"
+  | "gear_stories_reels"
   | "social_rail";
 
 export interface HomepageSection {
@@ -189,6 +191,7 @@ export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionKey, string> = {
   big_names_deals: "Big Names / Serious Savings",
   brand_strip: "Brand Strip",
   featured_stories: "Featured Stories (A+ Banners)",
+  gear_stories: "Gear Style Reels",
   social_rail: "Social Rail (Sidebar)",
 };
 
@@ -319,6 +322,16 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     layout: "story_banners",
   },
   {
+    sectionKey: "gear_stories",
+    title: "Gear style stories",
+    subtitle: "Discover instruments in action.",
+    isActive: true,
+    sortOrder: 11,
+    sourceMode: "manual",
+    maxItems: 12,
+    layout: "gear_stories_reels",
+  },
+  {
     sectionKey: "social_rail",
     title: "Social Rail",
     subtitle:
@@ -326,7 +339,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     ctaText: "Newsletter",
     ctaLink: "#newsletter",
     isActive: true,
-    sortOrder: 11,
+    sortOrder: 12,
     sourceMode: "manual",
     maxItems: 10,
     layout: "social_rail",

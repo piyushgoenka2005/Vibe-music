@@ -77,5 +77,5 @@ removeNodeModules();
 // --ignore-scripts avoids postinstall racing with incomplete extraction on Windows.
 run("npm ci --no-audit --no-fund --ignore-scripts");
 run("npm run db:generate");
-run("node scripts/ops/verify-node-modules.mjs");
+run("node scripts/ops/verify/verify-node-modules.mjs");
 log("Dependency reinstall complete — run: npm run dev");

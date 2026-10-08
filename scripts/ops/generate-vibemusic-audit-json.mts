@@ -123,7 +123,7 @@ const L_REGISTER: Array<{
     category: "performance",
     title: "Deal card responsive images",
     repoStatus: "fixed",
-    verifyCommand: "npm test -- src/components/homepage/DealProductCard.test.tsx",
+    verifyCommand: "npm test -- src/components/storefront/sections/DealProductCard.test.tsx",
     testRefs: ["DealProductCard.test.tsx"],
   },
   {

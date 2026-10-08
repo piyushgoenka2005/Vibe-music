@@ -5,7 +5,11 @@ import {
   invalidatePublicHomepageCacheAsync,
   updateSectionItem,
 } from "@/lib/server/homepageService";
-import { adminHomepageSectionItemSchema } from "@/lib/validations/admin";
+import {
+  adminHomepageSectionItemSchema,
+  assertGearStoryItemPayload,
+} from "@/lib/validations/admin";
+import { getSectionItemById } from "@/lib/server/homepageService";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -17,6 +21,10 @@ export async function PUT(request: Request, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
     const parsed = adminHomepageSectionItemSchema.omit({ sectionKey: true }).parse(body);
+    const existing = await getSectionItemById(id);
+    if (existing) {
+      assertGearStoryItemPayload(existing.sectionKey, parsed, "update");
+    }
     const item = await updateSectionItem(id, {
       ...parsed,
       customImage: parsed.customImage || undefined,

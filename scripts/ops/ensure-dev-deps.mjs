@@ -43,7 +43,7 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-const verify = spawnSync(process.execPath, ["scripts/ops/verify-node-modules.mjs"], {
+const verify = spawnSync(process.execPath, ["scripts/ops/verify/verify-node-modules.mjs"], {
   cwd: ROOT,
   stdio: "inherit",
 });

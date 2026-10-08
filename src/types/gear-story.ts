@@ -5,7 +5,10 @@ export interface GearStory {
   title: string;
   productId: string;
   videoUrl: string;
+  videoCandidates?: string[];
   posterUrl: string;
+  instagramHandle?: string;
+  instagramUrl?: string;
   category: string;
   price: number;
   originalPrice: number;
@@ -33,6 +36,7 @@ export interface GearStorySeed {
 }
 
 export interface GearStoriesSectionData {
+  isActive?: boolean;
   title: string;
   subtitle: string;
   stories: GearStory[];

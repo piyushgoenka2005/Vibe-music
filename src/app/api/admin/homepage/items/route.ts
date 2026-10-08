@@ -4,13 +4,17 @@ import {
   createSectionItem,
   invalidatePublicHomepageCacheAsync,
 } from "@/lib/server/homepageService";
-import { adminHomepageSectionItemSchema } from "@/lib/validations/admin";
+import {
+  adminHomepageSectionItemSchema,
+  assertGearStoryItemPayload,
+} from "@/lib/validations/admin";
 
 export async function POST(request: Request) {
   try {
     await requireAdmin("homepage:write", request);
     const body = await request.json();
     const parsed = adminHomepageSectionItemSchema.parse(body);
+    assertGearStoryItemPayload(parsed.sectionKey, parsed, "create");
     const item = await createSectionItem({
       ...parsed,
       customImage: parsed.customImage || undefined,

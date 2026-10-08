@@ -1,0 +1,432 @@
+import Razorpay from "razorpay";
+import { cache } from "react";
+import {
+  isRazorpayConfigured,
+  getRazorpayPublicKey,
+  assertLiveRazorpayKeys,
+} from "@/lib/server/env";
+import { verifyRazorpayPaymentSignature } from "@/lib/razorpay/signature";
+import {
+  calculateGST,
+  DEFAULT_GST_RATE,
+  SELLER_STATE,
+  toPaise,
+  type GSTRate,
+} from "@/lib/gstCalculator";
+import { resolveShippingChargeWithCoupon } from "@/lib/coupons/couponShipping";
+import { getCouponByCode } from "@/lib/server/couponService";
+import { getDefaultShippingMethod } from "@/lib/shipping/shippingMethods";
+import { notifyAdminNewOrder } from "@/lib/server/orderNotificationService";
+import { resolveAuthoritativeShippingCharge } from "@/lib/server/shippingQuoteService";
+import { reserveStockForOrder, releaseReservedStockForOrder } from "@/lib/server/inventoryService";
+import { completeOrderPayment } from "@/lib/server/orderPaymentService";
+import { withTimeout } from "@/lib/server/withTimeout";
+import { allocateNextOrderId } from "@/lib/server/orderIdGenerator";
+import {
+  logPayment,
+  logPaymentError,
+  logRazorpayEnvPresence,
+} from "@/lib/server/paymentDiagnostics";
+import {
+  fetchOrderById,
+  listOrdersForUser as listStoredOrdersForUser,
+  persistOrder,
+  removeOrder,
+  updateOrderFields,
+} from "@/lib/server/orderRepository";
+import * as pgOrder from "@/lib/server/prisma/orderRepository";
+import { isPlacedOrder } from "@/lib/server/orderAccess";
+import { generateOrderTrackingToken } from "@/lib/server/orderTrackingToken";
+import type { OrderInventoryLine } from "@/types/inventory";
+import type {
+  CreateOrderPayload,
+  Order,
+  PaymentMethod,
+  PaymentStatus,
+  VerifyPaymentPayload,
+} from "@/types/order";
+
+const PLATFORM_FEE = 0;
+
+function getRazorpayInstance(): Razorpay {
+  logRazorpayEnvPresence();
+  assertLiveRazorpayKeys();
+
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret) {
+    throw new Error("Missing Razorpay env vars: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET");
+  }
+
+  const instance = new Razorpay({ key_id: keyId, key_secret: keySecret });
+  logPayment("Razorpay initialized");
+  return instance;
+}
+
+function extractRazorpayError(error: unknown): string | null {
+  if (!error || typeof error !== "object") return null;
+  const record = error as {
+    error?: { description?: string; reason?: string };
+    description?: string;
+    message?: string;
+  };
+  return (
+    record.error?.description ??
+    record.error?.reason ??
+    record.description ??
+    record.message ??
+    null
+  );
+}
+
+function toInventoryLines(items: CreateOrderPayload["items"]): OrderInventoryLine[] {
+  return items.map((item) => ({
+    productId: item.productId,
+    variantId: item.variantId,
+    quantity: item.quantity,
+    name: item.name,
+  }));
+}
+
+function buildOrderRecord(
+  orderId: string,
+  payload: CreateOrderPayload,
+  userId: string | undefined,
+  shippingCharge: number,
+): Omit<Order, "id"> {
+  const shippingMethod = payload.shippingMethod ?? getDefaultShippingMethod();
+
+  const invoice = calculateGST({
+    items: payload.items.map((item) => ({
+      productId: item.productId,
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.price,
+      gstRate: item.gstRate,
+    })),
+    couponDiscount: payload.couponDiscount,
+    shippingCharge,
+    platformFee: PLATFORM_FEE,
+    sellerState: SELLER_STATE,
+    buyerState: payload.buyerState,
+  });
+
+  const paymentStatus: PaymentStatus = "pending";
+
+  const orderStatus = "pending";
+
+  const items = payload.items.map((source, index) => {
+    const line = invoice.lineBreakdown[index]!;
+    return {
+      productId: source.productId,
+      variantId: source.variantId,
+      variantSku: source.variantSku,
+      variantLabel: source.variantLabel,
+      name: line.name,
+      quantity: line.quantity,
+      price: line.unitPrice,
+      gstRate: line.gstRate as GSTRate,
+      taxableAmount: line.taxableAmount,
+      gstAmount: line.gstAmount,
+      cgst: line.cgst,
+      sgst: line.sgst,
+      igst: line.igst,
+    };
+  });
+
+  const now = new Date().toISOString();
+  const customerName = payload.customerName?.trim() || payload.shippingAddress.name.trim();
+  const customerPhone =
+    payload.customerPhone?.trim() || payload.shippingAddress.phone?.trim() || undefined;
+
+  return {
+    userId,
+    email: payload.email.trim().toLowerCase(),
+    trackingToken: generateOrderTrackingToken(),
+    customerName,
+    customerPhone,
+    isGuestOrder: !userId,
+    status: orderStatus,
+    paymentStatus,
+    paymentMethod: payload.paymentMethod,
+    subtotal: invoice.subtotal,
+    couponCode: payload.couponCode ?? null,
+    couponDiscount: invoice.couponDiscount,
+    shippingCharge: invoice.shippingCharge,
+    shippingMethod,
+    platformFee: invoice.platformFee,
+    totalGst: invoice.totalGst,
+    cgst: invoice.totalCgst,
+    sgst: invoice.totalSgst,
+    igst: invoice.totalIgst,
+    total: invoice.grandTotal,
+    items,
+    shippingAddress: payload.shippingAddress,
+    invoice: undefined,
+    inventoryStatus: "none",
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+async function createRazorpayPaymentOrder(
+  order: Order,
+  payload: CreateOrderPayload,
+  orderId: string,
+): Promise<string> {
+  const razorpay = getRazorpayInstance();
+  try {
+    const razorpayOrder = (await withTimeout(
+      razorpay.orders.create({
+        amount: toPaise(order.total),
+        currency: "INR",
+        receipt: orderId,
+        notes: {
+          email: payload.email,
+          orderId,
+        },
+      }),
+      15000,
+      "Razorpay order.create",
+    )) as { id: string };
+    return razorpayOrder.id;
+  } catch (razorpayError) {
+    const description = extractRazorpayError(razorpayError);
+    throw new Error(
+      description ? `Razorpay: ${description}` : "Unable to create Razorpay payment order",
+    );
+  }
+}
+
+export async function createOrder(
+  payload: CreateOrderPayload,
+  userId?: string,
+): Promise<{
+  order: Order;
+  razorpayOrderId?: string;
+  keyId?: string;
+}> {
+  logPayment("Starting create order", {
+    paymentMethod: payload.paymentMethod,
+    itemCount: payload.items.length,
+  });
+
+  logPayment("Allocating order ID");
+  const orderId = await allocateNextOrderId();
+  logPayment("Order ID allocated", { orderId });
+
+  const subtotal = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const shippingMethod = payload.shippingMethod ?? getDefaultShippingMethod();
+  let shippingCharge = await resolveAuthoritativeShippingCharge({
+    method: shippingMethod,
+    subtotal,
+    discount: payload.couponDiscount,
+    postalCode: payload.shippingAddress.postalCode,
+    state: payload.shippingAddress.state,
+  });
+
+  if (payload.couponCode) {
+    const coupon = await getCouponByCode(payload.couponCode);
+    if (coupon) {
+      shippingCharge = resolveShippingChargeWithCoupon(
+        shippingCharge,
+        {
+          type: coupon.type,
+          scope: coupon.scope,
+          productIds: coupon.productIds,
+        },
+        payload.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        subtotal,
+      );
+    }
+  }
+
+  const orderData = buildOrderRecord(orderId, payload, userId, shippingCharge);
+  const inventoryLines = toInventoryLines(payload.items);
+
+  const order: Order = { id: orderId, ...orderData };
+  let razorpayOrderId: string | undefined;
+  let persisted = false;
+
+  try {
+    if (payload.paymentMethod === "razorpay") {
+      if (!isRazorpayConfigured()) {
+        throw new Error(
+          "Online payments are not configured. Add Razorpay keys to .env.local and restart the dev server.",
+        );
+      }
+
+      logPayment("Creating Razorpay order", { orderId, amountPaise: toPaise(order.total) });
+      razorpayOrderId = await createRazorpayPaymentOrder(order, payload, orderId);
+      logPayment("Razorpay order created", { orderId, razorpayOrderId });
+      order.razorpayOrderId = razorpayOrderId;
+    }
+
+    logPayment("Persisting order", { orderId });
+    await persistOrder(order);
+    persisted = true;
+    logPayment("Order persisted", { orderId });
+    void notifyAdminNewOrder(order);
+
+    // Reserve inventory BEFORE returning checkout credentials (atomic vs payment race).
+    try {
+      logPayment("Inventory reservation started (online)", { orderId });
+      await reserveStockForOrder(orderId, inventoryLines);
+      await updateOrderFields(orderId, {
+        inventoryStatus: "reserved",
+        updatedAt: new Date().toISOString(),
+      });
+      logPayment("Inventory reservation completed", { orderId });
+    } catch (inventoryError) {
+      logPaymentError(inventoryError, {
+        orderId,
+        step: "inventoryReservation",
+        paymentMethod: payload.paymentMethod,
+      });
+      await releaseOrderReservation(orderId).catch(() => undefined);
+      await removeOrder(orderId).catch(() => undefined);
+      persisted = false;
+      throw inventoryError instanceof Error
+        ? inventoryError
+        : new Error("Unable to reserve inventory for this order.");
+    }
+
+    logPayment("Create order completed", { orderId, paymentMethod: payload.paymentMethod });
+    return {
+      order: { ...order, razorpayOrderId, inventoryStatus: "reserved" },
+      razorpayOrderId,
+      keyId: getRazorpayPublicKey(),
+    };
+  } catch (error) {
+    logPaymentError(error, { orderId, step: "createOrder" });
+    if (persisted) {
+      await releaseOrderReservation(orderId).catch(() => undefined);
+      await removeOrder(orderId).catch(() => undefined);
+    }
+    throw error;
+  }
+}
+
+export function verifyRazorpaySignature(
+  razorpayOrderId: string,
+  razorpayPaymentId: string,
+  razorpaySignature: string,
+): boolean {
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  if (!keySecret) {
+    throw new Error("Missing RAZORPAY_KEY_SECRET");
+  }
+
+  return verifyRazorpayPaymentSignature(
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+    keySecret,
+  );
+}
+
+export async function fetchRazorpayOrderAmountPaise(razorpayOrderId: string): Promise<number> {
+  const razorpay = getRazorpayInstance();
+  const remote = (await withTimeout(
+    razorpay.orders.fetch(razorpayOrderId),
+    15000,
+    "Razorpay orders.fetch",
+  )) as { amount?: number };
+  if (typeof remote.amount !== "number" || remote.amount <= 0) {
+    throw new Error("Unable to read Razorpay order amount");
+  }
+  return remote.amount;
+}
+
+export async function verifyAndCompletePayment(payload: VerifyPaymentPayload): Promise<Order> {
+  const isValid = verifyRazorpaySignature(
+    payload.razorpayOrderId,
+    payload.razorpayPaymentId,
+    payload.razorpaySignature,
+  );
+
+  if (!isValid) {
+    throw new Error("Invalid payment signature");
+  }
+
+  const paymentAmountPaise = await fetchRazorpayOrderAmountPaise(payload.razorpayOrderId);
+
+  // Signature is persisted inside the same transaction that marks the order
+  // paid, so there is no second read-modify-write window.
+  const result = await completeOrderPayment({
+    orderId: payload.orderId,
+    razorpayPaymentId: payload.razorpayPaymentId,
+    razorpayOrderId: payload.razorpayOrderId,
+    razorpaySignature: payload.razorpaySignature,
+    paymentAmountPaise,
+    source: "client_verify",
+  });
+
+  return result.order;
+}
+
+export async function releaseOrderReservation(orderId: string, email?: string): Promise<void> {
+  const order = await fetchOrderById(orderId);
+  if (!order) {
+    return;
+  }
+
+  if (email) {
+    const normalized = email.trim().toLowerCase();
+    if (order.email !== normalized) {
+      return;
+    }
+  }
+
+  if (order.inventoryStatus !== "reserved") {
+    return;
+  }
+
+  if (order.paymentStatus === "paid") {
+    return;
+  }
+
+  const inventoryLines = toInventoryLines(order.items);
+  await releaseReservedStockForOrder(orderId, inventoryLines);
+}
+
+export const getOrderById = cache(async (orderId: string): Promise<Order | null> => {
+  return fetchOrderById(orderId);
+});
+
+export async function listOrdersForUser(uid?: string): Promise<Order[]> {
+  const orders = await listStoredOrdersForUser(uid);
+  return orders.filter(isPlacedOrder);
+}
+
+export function normalizeGstRate(rate: number | undefined): GSTRate {
+  if (rate === 5 || rate === 12 || rate === 18 || rate === 28) return rate;
+  return DEFAULT_GST_RATE;
+}
+
+export async function linkGuestOrdersToUser(userId: string, email: string): Promise<number> {
+  // Intentionally disabled: bulk email linking is an IDOR vector.
+  // Use attachPaidOrderToUser for cryptographically verified checkout ownership.
+  void userId;
+  void email;
+  return 0;
+}
+
+/**
+ * Attach a single guest order to a user only when the order email matches
+ * the authenticated account email (case-insensitive). Used after payment verify.
+ */
+export async function attachPaidOrderToUser(
+  orderId: string,
+  userId: string,
+  email: string,
+): Promise<boolean> {
+  return pgOrder.attachPaidOrderToUser(orderId, userId, email);
+}
+
+export type { PaymentMethod, PaymentStatus };

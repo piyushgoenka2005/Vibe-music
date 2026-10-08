@@ -51,7 +51,7 @@ jobs:
       - name: Verify Meta ad landing (brand routes + OG)
         env:
           VERIFY_BASE_URL: https://vibemusic.in
-        run: npx tsx scripts/ops/verify-meta-ad-landing.mts
+        run: npx tsx scripts/ops/verify/verify-meta-ad-landing.mts
 
       - name: Verify public TLS certificate
         env:
@@ -59,7 +59,7 @@ jobs:
           VERIFY_IP: 109.122.56.126
           VERIFY_SSL_ATTEMPTS: 15
           VERIFY_SSL_MIN_OK_RATIO: 0.9
-        run: npx tsx scripts/ops/verify-ssl-cert.mts
+        run: npx tsx scripts/ops/verify/verify-ssl-cert.mts
 
       - name: Verify essential storefront images on VPS
         uses: appleboy/ssh-action@v1.2.0

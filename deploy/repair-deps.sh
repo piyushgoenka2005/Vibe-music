@@ -54,7 +54,7 @@ if ! npm ci --no-audit --no-fund; then
 fi
 
 log "Verify Next.js install integrity"
-node scripts/ops/verify-node-modules.mjs
+node scripts/ops/verify/verify-node-modules.mjs
 
 log "GP-9 static assets"
 npm run download:gp9-assets

@@ -1,18 +1,2 @@
-import "server-only";
-
-import * as pgOrder from "@/lib/server/prisma/orderRepository";
-
-export interface PurchaseVerification {
-  verified: boolean;
-  orderId?: string;
-}
-
-export async function hasPurchasedProduct(
-  userId: string,
-  productId: string,
-): Promise<PurchaseVerification> {
-  const orders = await pgOrder.findPurchasedProductOrders(userId, productId);
-  const match = orders[0];
-  if (!match) return { verified: false };
-  return { verified: true, orderId: match.id };
-}
+/** @deprecated Import from `@/lib/server/orders/orderVerificationService` — shim for legacy paths. */
+export * from "@/lib/server/orders/orderVerificationService";

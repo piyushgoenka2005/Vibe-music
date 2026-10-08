@@ -69,7 +69,7 @@ run_preflight() {
 run_razorpay_preflight() {
   export NODE_ENV=production
   npm run check:env
-  npx tsx scripts/ops/verify-razorpay-ops.mts
+  npx tsx scripts/ops/verify/verify-razorpay-ops.mts
 }
 
 wait_for_ready() {
@@ -510,7 +510,7 @@ clean_node_modules() {
 }
 
 verify_node_modules() {
-  node scripts/ops/verify-node-modules.mjs
+  node scripts/ops/verify/verify-node-modules.mjs
 }
 
 install_dependencies() {

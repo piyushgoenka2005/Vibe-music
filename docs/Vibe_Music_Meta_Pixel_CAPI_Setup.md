@@ -215,6 +215,6 @@ npm run verify:meta-ad-landing:prod
 - `src/app/api/analytics/meta/route.ts` — Browser → server relay
 - `src/lib/server/orderPaymentService.ts` — Server Purchase on payment
 - `src/lib/site.ts` — Domain verification meta tag
-- `scripts/ops/verify-meta-integration.mts` — Local code + env + HTML check
-- `scripts/ops/verify-meta-pixel.mts` — Production Pixel check
+- `scripts/ops/verify/verify-meta-integration.mts` — Local code + env + HTML check
+- `scripts/ops/verify/verify-meta-pixel.mts` — Production Pixel check
 - `.env.local.example` — Local Meta credential template

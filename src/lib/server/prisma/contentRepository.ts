@@ -1127,6 +1127,27 @@ export async function seedHomepageCuratedItemsIfEmpty(): Promise<void> {
     });
   }
 
+  if (await empty("gear_stories")) {
+    const { DEFAULT_GEAR_STORY_ITEMS } = await import("@/lib/gearStoriesConfig");
+    await prisma.homepageSectionItem.createMany({
+      data: DEFAULT_GEAR_STORY_ITEMS.map((item, index) => ({
+        id: item.id,
+        sectionKey: "gear_stories",
+        sortOrder: index,
+        isActive: true,
+        productId: item.productId,
+        customTitle: item.customTitle,
+        customImage: item.customImage,
+        customHref: item.customHref,
+        badgeLabel: item.badgeLabel,
+        offerText: item.offerText,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
   if (await empty("social_rail")) {
     const { DEFAULT_SOCIAL_RAIL_ITEMS } = await import("@/lib/socialRail");
     await prisma.homepageSectionItem.createMany({

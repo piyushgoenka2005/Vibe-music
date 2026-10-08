@@ -168,7 +168,7 @@ async function main() {
     console.warn("WARN: generate-category-thumbs failed (non-fatal for deploy)");
   }
 
-  const verify = spawnSync("node", ["scripts/ops/verify-essential-images.mjs"], {
+  const verify = spawnSync("node", ["scripts/ops/verify/verify-essential-images.mjs"], {
     cwd: ROOT,
     stdio: "inherit",
   });
