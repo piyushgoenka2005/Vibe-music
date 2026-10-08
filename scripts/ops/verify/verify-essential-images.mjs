@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { ESSENTIAL_STATIC_IMAGE_PATHS } from "../assets/essential-static-paths.mjs";
+import { ESSENTIAL_STATIC_IMAGE_PATHS } from "../../assets/essential-static-paths.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const PUBLIC = path.join(ROOT, "public");

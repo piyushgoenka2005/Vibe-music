@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { GP9_PUBLIC_ROOT, GP9_REQUIRED_FILES } from "../assets/gp9-asset-manifest.mjs";
+import { GP9_PUBLIC_ROOT, GP9_REQUIRED_FILES } from "../../assets/gp9-asset-manifest.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const base = path.join(ROOT, "public", GP9_PUBLIC_ROOT);
