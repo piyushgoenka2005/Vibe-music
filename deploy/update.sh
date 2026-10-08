@@ -249,7 +249,9 @@ build_application() {
 
   log "Production build"
   export NODE_ENV=production
-  export ALLOW_POSTGRES_DURING_BUILD="${ALLOW_POSTGRES_DURING_BUILD:-true}"
+  # Default false on VPS — parallel SSG workers × connection_limit exhausts small Postgres.
+  # JSON catalog fallback covers `next build`; runtime always uses DATABASE_URL.
+  export ALLOW_POSTGRES_DURING_BUILD="${ALLOW_POSTGRES_DURING_BUILD:-false}"
   export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=4096}"
   npm run build
 
