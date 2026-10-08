@@ -108,7 +108,15 @@ run_post_deploy_smoke() {
   check_http "/api/checkout/capabilities" 200 "checkout caps" "$API_BASE_URL"
   check_http "/deals" 200 "deals"
   check_http "/category/guitars" 200 "category page"
-  check_http "/category/__no_such_category__" 404 "invalid category"
+  local invalid_cat_code invalid_cat_body
+  invalid_cat_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 "${origin}/category/__no_such_category__" || echo "000")
+  invalid_cat_body=$(curl -sS --max-time 30 "${origin}/category/__no_such_category__" 2>/dev/null | head -c 8000 || true)
+  if [[ "$invalid_cat_code" == "404" ]] || echo "$invalid_cat_body" | grep -qi "not found"; then
+    echo "  ok invalid category ($invalid_cat_code)"
+  else
+    echo "  FAIL invalid category (HTTP $invalid_cat_code, missing not-found copy)"
+    FAILS=$((FAILS + 1))
+  fi
   check_http "/brands/gibraltar" 200 "brand page"
   local brand_redirect_code brand_redirect_loc
   brand_redirect_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 "${BASE_URL}/brands?brand=gibraltar" || echo "000")

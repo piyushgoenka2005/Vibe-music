@@ -52,18 +52,18 @@ export async function generateMetadata({ params }: CategoryRouteProps): Promise<
 }
 
 export default async function CategoryRoute({ params }: CategoryRouteProps) {
+  const { slug } = await params;
+  const category = await resolveCategoryBySlug(slug);
+
+  if (!category) {
+    notFound();
+  }
+
+  if (!isCanonicalCategorySlug(category, slug)) {
+    redirect(categoryPath(category.slug));
+  }
+
   return withServerPageError(async () => {
-    const { slug } = await params;
-    const category = await resolveCategoryBySlug(slug);
-
-    if (!category) {
-      notFound();
-    }
-
-    if (!isCanonicalCategorySlug(category, slug)) {
-      redirect(categoryPath(category.slug));
-    }
-
     const initialData = await loadCategoryProducts(category.slug, DEFAULT_FILTERS);
 
     return (

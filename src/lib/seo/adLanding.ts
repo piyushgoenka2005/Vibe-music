@@ -63,7 +63,7 @@ export function resolveAdLandingRedirect(
     brand: searchParams.get("brand") ?? undefined,
   };
 
-  if (pathname === "/search") {
+  if (pathname === "/search" || pathname === "/brands") {
     return resolveSearchPageRedirect(params);
   }
 
