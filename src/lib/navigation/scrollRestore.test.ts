@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   computeRestoreScrollY,
   findSectionAnchorId,
@@ -189,15 +189,16 @@ describe("scrollRestore helpers", () => {
   });
 
   it("restoreScrollRailForAnchor applies saved horizontal offset", () => {
-    document.body.innerHTML = `
-      <section id="category-bento">
-        <div data-hp-scroll-rail style="overflow-x:auto;width:200px">
-          <div style="width:800px;height:40px"></div>
-        </div>
-      </section>
-    `;
-    const rail = document.querySelector<HTMLElement>("[data-hp-scroll-rail]");
-    expect(rail).toBeTruthy();
+    const rail = { scrollLeft: 0 };
+    const section = {
+      querySelector: (selector: string) => (selector.includes("data-hp-scroll-rail") ? rail : null),
+    };
+
+    vi.stubGlobal("document", {
+      getElementById: (id: string) => (id === "category-bento" ? section : null),
+      querySelector: () => null,
+    });
+
     expect(
       restoreScrollRailForAnchor({
         sectionId: "category-bento",
@@ -205,7 +206,11 @@ describe("scrollRestore helpers", () => {
         railScrollLeft: 240,
       }),
     ).toBe(true);
-    expect(rail?.scrollLeft).toBe(240);
+    expect(rail.scrollLeft).toBe(240);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("shouldSkipSplashScrollToTop when restoring or mid-page saved", () => {

@@ -13,7 +13,6 @@ import type { CouponCartLineItem as ScopeCartLine } from "@/lib/coupons/couponPr
 import {
   couponAppliesToAnyProduct,
   couponAppliesToProduct,
-  isProductScopedCoupon,
 } from "@/lib/coupons/couponProductScope";
 import { mapCouponPdpFields } from "@/lib/coupons/couponPdpDisplay";
 import { validateCouponForSubtotal } from "@/lib/coupons/couponMath";

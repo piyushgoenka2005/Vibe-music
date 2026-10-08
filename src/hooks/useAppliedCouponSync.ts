@@ -40,12 +40,12 @@ export function useAppliedCouponSync({
     });
   }, [
     couponCode,
+    lineItems,
     lineItemsKey,
     activeCodesKey,
     isLoadingActiveCoupons,
     isActiveCouponsError,
     reconcileAppliedCoupon,
-    lineItems,
     activeCoupons,
   ]);
 }

@@ -142,34 +142,6 @@ function mapCoupon(row: {
   };
 }
 
-function mapCouponRedemption(row: {
-  id: string;
-  couponId: string;
-  couponCode: string;
-  userId: string | null;
-  customerEmail: string | null;
-  orderId: string | null;
-  utmSource: string | null;
-  utmMedium: string | null;
-  utmCampaign: string | null;
-  utmContent: string | null;
-  createdAt: string;
-}): CouponRedemption {
-  return {
-    id: row.id,
-    couponId: row.couponId,
-    couponCode: row.couponCode,
-    userId: row.userId ?? undefined,
-    customerEmail: row.customerEmail ?? undefined,
-    orderId: row.orderId ?? undefined,
-    utmSource: row.utmSource ?? undefined,
-    utmMedium: row.utmMedium ?? undefined,
-    utmCampaign: row.utmCampaign ?? undefined,
-    utmContent: row.utmContent ?? undefined,
-    createdAt: row.createdAt,
-  };
-}
-
 export async function listAllBanners() {
   if (!isPostgresConfigured()) return [];
   try {

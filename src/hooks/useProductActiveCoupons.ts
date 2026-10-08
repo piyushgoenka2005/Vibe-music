@@ -10,7 +10,7 @@ import {
 export function useProductActiveCoupons(productId: string) {
   const query = useQuery({
     queryKey: [ACTIVE_COUPONS_QUERY_ROOT, "product", productId],
-    queryFn: () => fetchActiveCoupons({ productId }),
+    queryFn: ({ signal }) => fetchActiveCoupons({ productId }, signal),
     enabled: Boolean(productId),
     ...activeCouponsQueryOptions,
   });

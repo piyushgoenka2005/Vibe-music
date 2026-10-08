@@ -3,21 +3,30 @@ import type { StorefrontCouponOffer } from "@/types/coupon";
 
 export const ACTIVE_COUPONS_QUERY_ROOT = "active-coupons";
 
-/** Keep storefront coupon lists fresh — admin edits should show quickly everywhere. */
+/** Poll interval for live admin coupon updates (ms). */
+export const ACTIVE_COUPONS_REFETCH_MS = 15_000;
+
+/** Keep storefront coupon lists fresh without stale cached offers. */
 export const activeCouponsQueryOptions = {
   staleTime: 0,
   gcTime: 60_000,
-  refetchInterval: 15_000,
-  refetchIntervalInBackground: true,
+  refetchInterval: ACTIVE_COUPONS_REFETCH_MS,
+  refetchIntervalInBackground: false,
   refetchOnMount: true,
   refetchOnWindowFocus: true,
   refetchOnReconnect: true,
+  retry: 2,
 } as const;
 
-export async function fetchActiveCoupons(params: {
-  productId?: string;
-  productIds?: string[];
-}): Promise<StorefrontCouponOffer[]> {
+export const MAX_ACTIVE_COUPON_PRODUCT_IDS = 50;
+
+export async function fetchActiveCoupons(
+  params: {
+    productId?: string;
+    productIds?: string[];
+  },
+  signal?: AbortSignal,
+): Promise<StorefrontCouponOffer[]> {
   const search = new URLSearchParams();
   if (params.productId) {
     search.set("productId", params.productId);
@@ -28,6 +37,7 @@ export async function fetchActiveCoupons(params: {
 
   const res = await fetch(`/api/coupons/active?${search.toString()}`, {
     cache: "no-store",
+    signal,
   });
   if (!res.ok) throw new Error("Failed to load active coupons");
   const payload = (await res.json()) as { coupons?: StorefrontCouponOffer[] };

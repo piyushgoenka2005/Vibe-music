@@ -4,7 +4,7 @@ import {
   type CouponCartLineItem,
   type CouponProductScopeRule,
 } from "@/lib/coupons/couponProductScope";
-import type { CouponDiscountRule, CouponEligibilityRule, CouponScope } from "@/types/coupon";
+import type { CouponDiscountRule, CouponEligibilityRule } from "@/types/coupon";
 
 /** Rupee discount for a subtotal — same formula used at checkout. */
 export function calculateCouponDiscountAmount(
