@@ -414,7 +414,7 @@ async function resolveSection(
       ...base,
       title: effectiveSection.title || "Popular Categories",
       ctaText: effectiveSection.ctaText || "Browse All Categories",
-      ctaLink: effectiveSection.ctaLink || "/categories",
+      ctaLink: effectiveSection.ctaLink || ROUTES.categories,
       categories,
     };
   }

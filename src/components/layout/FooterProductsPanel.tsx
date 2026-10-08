@@ -35,7 +35,7 @@ async function fetchFooterTrendingProducts(): Promise<Product[]> {
 const PANEL_CATEGORIES = [
   { label: "01 / Pro audio", href: categoryPath("studio-recording") },
   { label: "02 / Instruments", href: categoryPath("guitars") },
-  { label: "03 / Studio gear", href: categoryPath("studio-recording") },
+  { label: "03 / Studio gear", href: categoryPath("microphones-wireless") },
   { label: "04 / Expert setup", href: `${ROUTES.search}?q=studio+setup` },
 ] as const;
 

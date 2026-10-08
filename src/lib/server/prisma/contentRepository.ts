@@ -1282,6 +1282,11 @@ export async function ensureMissingHomepageSections(): Promise<void> {
 
   g.__vibeHomepageSectionsEnsurePromise = (async () => {
     await ensureDefaultHomepageSections();
+    const timestamp = now();
+    await prisma.homepageSection.updateMany({
+      where: { ctaLink: "/categories" },
+      data: { ctaLink: "/category", updatedAt: timestamp },
+    });
     const existing = await prisma.homepageSection.findMany({
       select: { sectionKey: true },
     });

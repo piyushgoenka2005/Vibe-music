@@ -8,6 +8,7 @@ import {
   HOMEPAGE_BANNER_SLIDES,
   type HomepageBannerSlide,
 } from "@/data/homepageBannerHero";
+import { resolveLinkHref } from "@/lib/routes";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { useIsClient } from "@/hooks/useIsClient";
 
@@ -114,7 +115,7 @@ export default function HomepageBannerHero({
           return (
             <Link
               key={slide.id}
-              href={slide.href}
+              href={resolveLinkHref(slide.href)}
               className={`homepage-banner-hero__slide${isActive ? " is-active" : ""}`}
               aria-hidden={!isActive}
               tabIndex={isActive ? 0 : -1}

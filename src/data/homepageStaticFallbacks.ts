@@ -259,7 +259,7 @@ export async function getHomepageStaticFallbacks(at: Date): Promise<PublicHomepa
     sectionId: "popular-categories",
     title: "Popular Categories",
     ctaText: "Browse All Categories",
-    ctaLink: "/categories",
+    ctaLink: "/category",
     layout: "category_grid",
     categories: popularCategories,
   });

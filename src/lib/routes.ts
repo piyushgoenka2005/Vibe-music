@@ -235,11 +235,20 @@ function isValidAppRoute(path: string): boolean {
     path === ROUTES.brands ||
     path.startsWith(`${ROUTES.brands}/`) ||
     path === ROUTES.categories ||
-    path === ROUTES.compare
+    path === ROUTES.compare ||
+    path.startsWith("/compare/share/")
   )
     return true;
   if (path === ROUTES.contact) return true;
-  if (path === ROUTES.used || path === ROUTES.rentals) return true;
+  if (
+    path === ROUTES.used ||
+    path === ROUTES.rentals ||
+    path === ROUTES.programs ||
+    path === ROUTES.gearExchange ||
+    path === ROUTES.studios ||
+    path === ROUTES.financing
+  )
+    return true;
   if (path.startsWith("/rentals/")) return true;
   if (path === ROUTES.giveaway) return true;
   if (path.startsWith("/giveaway/")) return true;

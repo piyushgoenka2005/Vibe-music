@@ -40,11 +40,12 @@ export function buildProductBreadcrumb(
   const subcategoryLabel = formatSubcategoryLabel(subcategory);
   const subcategorySlug = slugify(subcategory);
   if (subcategoryLabel && subcategorySlug && subcategorySlug !== categorySlug) {
+    const subcategoryHref = categorySlug
+      ? `${categoryPath(categorySlug)}?subcat=${encodeURIComponent(subcategorySlug)}`
+      : `${ROUTES.searchResults}?subcategory=${encodeURIComponent(subcategory)}`;
     items.push({
       label: subcategoryLabel,
-      href: categorySlug
-        ? `${categoryPath(categorySlug)}?subcat=${encodeURIComponent(subcategorySlug)}`
-        : `${ROUTES.searchResults}?subcategory=${encodeURIComponent(subcategory)}`,
+      href: subcategoryHref,
     });
   }
 

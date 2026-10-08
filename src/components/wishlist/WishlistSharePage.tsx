@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
-import { ROUTES } from "@/lib/routes";
+import { productPath, ROUTES } from "@/lib/routes";
 import { formatDisplayPrice } from "@/utils/currency";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useToastStore } from "@/store/toastStore";
@@ -82,7 +82,7 @@ export default function WishlistSharePage({ token }: { token: string }) {
       added > 0
         ? `Added ${added} item${added === 1 ? "" : "s"} to your wishlist`
         : "All items already in your wishlist",
-      added > 0 ? "success" : "info"
+      added > 0 ? "success" : "info",
     );
   }
 
@@ -95,11 +95,7 @@ export default function WishlistSharePage({ token }: { token: string }) {
         </p>
 
         <div className="acct__toolbar">
-          <button
-            type="button"
-            className="acct__btn acct__btn--primary"
-            onClick={saveAll}
-          >
+          <button type="button" className="acct__btn acct__btn--primary" onClick={saveAll}>
             Save all to my wishlist
           </button>
           <Link href={ROUTES.accountWishlist} className="acct__btn acct__btn--secondary">
@@ -112,12 +108,7 @@ export default function WishlistSharePage({ token }: { token: string }) {
             <article key={item.productId} className="acct__wishlist-card">
               <div className="acct__wishlist-img">
                 {item.image ? (
-                  <StorefrontThumbImage
-                    src={item.image}
-                    alt={item.name}
-                    width={120}
-                    height={120}
-                  />
+                  <StorefrontThumbImage src={item.image} alt={item.name} width={120} height={120} />
                 ) : (
                   <div
                     className="acct__wishlist-swatch"
@@ -128,7 +119,7 @@ export default function WishlistSharePage({ token }: { token: string }) {
               </div>
               <div className="acct__wishlist-body">
                 <p className="acct__wishlist-brand">{item.brand}</p>
-                <Link href={`/product/${item.slug}`} className="acct__wishlist-name">
+                <Link href={productPath(item.slug)} className="acct__wishlist-name">
                   {item.name}
                 </Link>
                 <p className="acct__wishlist-price">{formatDisplayPrice(item.price)}</p>
@@ -147,10 +138,7 @@ export default function WishlistSharePage({ token }: { token: string }) {
                   >
                     {has(item.productId) ? "Saved" : "Save"}
                   </button>
-                  <Link
-                    href={`/product/${item.slug}`}
-                    className="acct__btn acct__btn--secondary"
-                  >
+                  <Link href={productPath(item.slug)} className="acct__btn acct__btn--secondary">
                     View
                   </Link>
                 </div>
