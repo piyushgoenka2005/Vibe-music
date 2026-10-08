@@ -109,8 +109,8 @@ run_post_deploy_smoke() {
   check_http "/deals" 200 "deals"
   check_http "/category/guitars" 200 "category page"
   local invalid_cat_code invalid_cat_body
-  invalid_cat_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 "${origin}/category/__no_such_category__" || echo "000")
-  invalid_cat_body=$(curl -sS --max-time 30 "${origin}/category/__no_such_category__" 2>/dev/null | head -c 8000 || true)
+  invalid_cat_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 "${BASE_URL}/category/__no_such_category__" || echo "000")
+  invalid_cat_body=$(curl -sS --max-time 30 "${BASE_URL}/category/__no_such_category__" 2>/dev/null | head -c 8000 || true)
   if [[ "$invalid_cat_code" == "404" ]] || echo "$invalid_cat_body" | grep -qi "not found"; then
     echo "  ok invalid category ($invalid_cat_code)"
   else
