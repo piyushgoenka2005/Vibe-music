@@ -14,7 +14,7 @@ import "./register-cli-stubs-side-effect.mts";
 import fs from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
-import { releaseReservedStockForOrderInTx } from "../../src/lib/server/inventoryRepository";
+import { releaseReservedStockForOrderInTx } from "../../src/lib/server/inventory/inventoryRepository";
 
 function readEnvFile(file: string): Record<string, string> {
   const full = path.join(process.cwd(), file);

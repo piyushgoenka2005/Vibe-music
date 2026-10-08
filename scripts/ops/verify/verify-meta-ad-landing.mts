@@ -6,7 +6,7 @@
  *   npx tsx scripts/ops/verify/verify-meta-ad-landing.mts
  *   VERIFY_BASE_URL=https://vibemusic.in npx tsx scripts/ops/verify/verify-meta-ad-landing.mts
  */
-import { getMetaPixelId, isMetaPixelConfigured } from "../../src/lib/analytics/metaPixel";
+import { getMetaPixelId, isMetaPixelConfigured } from "../../../src/lib/analytics/metaPixel";
 
 const BASE_URL = (process.env.VERIFY_BASE_URL ?? "https://vibemusic.in").replace(/\/$/, "");
 const BRAND_SLUG = process.env.VERIFY_BRAND_SLUG ?? "gibraltar";

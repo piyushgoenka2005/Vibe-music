@@ -6,7 +6,7 @@
  *   npx tsx scripts/ops/verify/verify-meta-pixel.mts
  *   VERIFY_BASE_URL=https://vibemusic.in npx tsx --env-file=.env scripts/ops/verify/verify-meta-pixel.mts
  */
-import { getMetaPixelId, isMetaPixelConfigured } from "../../src/lib/analytics/metaPixel";
+import { getMetaPixelId, isMetaPixelConfigured } from "../../../src/lib/analytics/metaPixel";
 
 function isMetaCapiConfigured(): boolean {
   return Boolean(

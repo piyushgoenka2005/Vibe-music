@@ -13,7 +13,7 @@ import {
   getMetaDomainVerification,
   getMetaPixelId,
   isMetaPixelConfigured,
-} from "../../src/lib/analytics/metaPixel";
+} from "../../../src/lib/analytics/metaPixel";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const BASE_URL = (process.env.VERIFY_BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");

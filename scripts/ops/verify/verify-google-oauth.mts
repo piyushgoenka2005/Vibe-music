@@ -3,12 +3,12 @@
  * Verify Google OAuth credentials against Google's token endpoint.
  * Usage: npx tsx --env-file=.env scripts/ops/verify/verify-google-oauth.mts
  */
-import { isGoogleAuthConfigured } from "../../src/lib/auth/google-credentials";
+import { isGoogleAuthConfigured } from "../../../src/lib/auth/google-credentials";
 import {
   formatGoogleOAuthHealthMessage,
   probeGoogleOAuthClient,
   resolveGoogleOAuthRedirectUri,
-} from "../../src/lib/auth/google-oauth-health";
+} from "../../../src/lib/auth/google-oauth-health";
 
 async function main() {
   if (!isGoogleAuthConfigured()) {

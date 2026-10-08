@@ -12,7 +12,7 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { getMetaPixelId, isMetaPixelConfigured } from "../../src/lib/analytics/metaPixel";
+import { getMetaPixelId, isMetaPixelConfigured } from "../../../src/lib/analytics/metaPixel";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 
