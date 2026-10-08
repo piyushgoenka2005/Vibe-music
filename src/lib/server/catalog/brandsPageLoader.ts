@@ -44,5 +44,5 @@ export async function resolveBrandBySlug(slug: string): Promise<BrandDirectoryGr
   const normalized = slug.trim().toLowerCase();
   if (!normalized) return null;
   const directory = await loadBrandDirectory();
-  return directory.find((brand) => brand.slug === normalized) ?? null;
+  return directory.find((brand) => brand.slug.toLowerCase() === normalized) ?? null;
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { MARKETING_HERO_SLIDES, type MarketingHeroSlide } from "@/data/marketingHeroSlides";
 import { cdnThumbUrl } from "@/lib/images";
+import { resolveLinkHref } from "@/lib/routes";
 
 const MOSAIC_COUNT = 4;
 const MOSAIC_WIDTH = 480;
@@ -45,7 +46,7 @@ function HeroMosaicCell({ slide, index }: { slide: MarketingHeroSlide; index: nu
 
   return (
     <Link
-      href={slide.href}
+      href={resolveLinkHref(slide.href)}
       className={`premium-hero__mosaic-cell${
         slide.fit === "cover" ? " premium-hero__mosaic-cell--cover" : ""
       }`}
@@ -77,9 +78,7 @@ function HeroMosaicCell({ slide, index }: { slide: MarketingHeroSlide; index: nu
         />
       </div>
       <span className="premium-hero__mosaic-meta" aria-hidden="true">
-        {slide.brand ? (
-          <span className="premium-hero__mosaic-brand">{slide.brand}</span>
-        ) : null}
+        {slide.brand ? <span className="premium-hero__mosaic-brand">{slide.brand}</span> : null}
         <span className="premium-hero__mosaic-title">{title}</span>
         <span className="premium-hero__mosaic-desc">{description}</span>
       </span>

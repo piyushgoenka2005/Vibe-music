@@ -78,6 +78,7 @@ function mapCoupon(row: {
   type: string;
   value: number;
   minOrderAmount: number | null;
+  maxDiscountAmount?: number | null;
   maxUses: number | null;
   maxUsesPerUser?: number | null;
   usedCount: number;
@@ -92,6 +93,12 @@ function mapCoupon(row: {
   utmContent?: string | null;
   scope?: string | null;
   productIds?: unknown;
+  pdpHeadline?: string | null;
+  pdpOfferLine?: string | null;
+  pdpMaxDiscountLine?: string | null;
+  pdpTermsLine?: string | null;
+  pdpDisclaimer?: string | null;
+  pdpFooter?: string | null;
   startsAt: string | null;
   expiresAt: string | null;
   createdAt: string;
@@ -107,6 +114,7 @@ function mapCoupon(row: {
     type: row.type as Coupon["type"],
     value: row.value,
     minOrderAmount: row.minOrderAmount ?? undefined,
+    maxDiscountAmount: row.maxDiscountAmount ?? undefined,
     maxUses: row.maxUses ?? undefined,
     maxUsesPerUser: row.maxUsesPerUser ?? undefined,
     usedCount: row.usedCount,
@@ -121,6 +129,12 @@ function mapCoupon(row: {
     utmContent: row.utmContent ?? undefined,
     scope,
     productIds: scope === "products" ? productIds : [],
+    pdpHeadline: row.pdpHeadline ?? undefined,
+    pdpOfferLine: row.pdpOfferLine ?? undefined,
+    pdpMaxDiscountLine: row.pdpMaxDiscountLine ?? undefined,
+    pdpTermsLine: row.pdpTermsLine ?? undefined,
+    pdpDisclaimer: row.pdpDisclaimer ?? undefined,
+    pdpFooter: row.pdpFooter ?? undefined,
     startsAt: row.startsAt ?? undefined,
     expiresAt: row.expiresAt ?? undefined,
     createdAt: row.createdAt,
@@ -795,6 +809,7 @@ export async function createCouponRecord(coupon: Coupon): Promise<Coupon> {
       type: coupon.type,
       value: coupon.value,
       minOrderAmount: coupon.minOrderAmount ?? null,
+      maxDiscountAmount: coupon.maxDiscountAmount ?? null,
       maxUses: coupon.maxUses ?? null,
       maxUsesPerUser: coupon.maxUsesPerUser ?? null,
       usedCount: coupon.usedCount,
@@ -809,6 +824,12 @@ export async function createCouponRecord(coupon: Coupon): Promise<Coupon> {
       utmContent: coupon.utmContent ?? null,
       scope: coupon.scope === "products" && coupon.productIds.length > 0 ? "products" : "store",
       productIds: coupon.scope === "products" ? coupon.productIds : [],
+      pdpHeadline: coupon.pdpHeadline ?? null,
+      pdpOfferLine: coupon.pdpOfferLine ?? null,
+      pdpMaxDiscountLine: coupon.pdpMaxDiscountLine ?? null,
+      pdpTermsLine: coupon.pdpTermsLine ?? null,
+      pdpDisclaimer: coupon.pdpDisclaimer ?? null,
+      pdpFooter: coupon.pdpFooter ?? null,
       startsAt: coupon.startsAt ?? null,
       expiresAt: coupon.expiresAt ?? null,
       createdAt: coupon.createdAt,
@@ -833,6 +854,9 @@ export async function updateCouponRecord(id: string, patch: Partial<Coupon>): Pr
       ...(rest.type !== undefined ? { type: rest.type } : {}),
       ...(rest.value !== undefined ? { value: rest.value } : {}),
       ...(rest.minOrderAmount !== undefined ? { minOrderAmount: rest.minOrderAmount ?? null } : {}),
+      ...(rest.maxDiscountAmount !== undefined
+        ? { maxDiscountAmount: rest.maxDiscountAmount ?? null }
+        : {}),
       ...(rest.maxUses !== undefined ? { maxUses: rest.maxUses ?? null } : {}),
       ...(rest.maxUsesPerUser !== undefined ? { maxUsesPerUser: rest.maxUsesPerUser ?? null } : {}),
       ...(rest.isActive !== undefined ? { isActive: rest.isActive } : {}),
@@ -848,6 +872,14 @@ export async function updateCouponRecord(id: string, patch: Partial<Coupon>): Pr
       ...(rest.utmMedium !== undefined ? { utmMedium: rest.utmMedium ?? null } : {}),
       ...(rest.utmCampaign !== undefined ? { utmCampaign: rest.utmCampaign ?? null } : {}),
       ...(rest.utmContent !== undefined ? { utmContent: rest.utmContent ?? null } : {}),
+      ...(rest.pdpHeadline !== undefined ? { pdpHeadline: rest.pdpHeadline ?? null } : {}),
+      ...(rest.pdpOfferLine !== undefined ? { pdpOfferLine: rest.pdpOfferLine ?? null } : {}),
+      ...(rest.pdpMaxDiscountLine !== undefined
+        ? { pdpMaxDiscountLine: rest.pdpMaxDiscountLine ?? null }
+        : {}),
+      ...(rest.pdpTermsLine !== undefined ? { pdpTermsLine: rest.pdpTermsLine ?? null } : {}),
+      ...(rest.pdpDisclaimer !== undefined ? { pdpDisclaimer: rest.pdpDisclaimer ?? null } : {}),
+      ...(rest.pdpFooter !== undefined ? { pdpFooter: rest.pdpFooter ?? null } : {}),
       ...(rest.scope !== undefined || rest.productIds !== undefined
         ? {
             scope:

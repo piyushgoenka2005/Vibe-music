@@ -39,7 +39,11 @@ export type PendingPopRestore = {
 export type ScrollAnchorRecord = {
   sectionId: string;
   y: number;
+  /** Horizontal scroll within `[data-hp-scroll-rail]` when leaving a carousel section. */
+  railScrollLeft?: number;
 };
+
+export const HP_SCROLL_RAIL_ATTR = "data-hp-scroll-rail";
 
 export type ScrollAnchorsMap = Record<string, ScrollAnchorRecord>;
 
@@ -254,17 +258,43 @@ export function findSectionAnchorId(from: Element | null): string | null {
   return fallback;
 }
 
+export function findScrollRailFromLink(from: Element | null): HTMLElement | null {
+  if (!from) return null;
+  const rail = from.closest(`[${HP_SCROLL_RAIL_ATTR}]`);
+  return rail instanceof HTMLElement ? rail : null;
+}
+
 export function mergeScrollAnchorForKey(
   anchors: ScrollAnchorsMap,
   key: string,
   sectionId: string,
   y: number,
+  railScrollLeft?: number,
 ): ScrollAnchorsMap {
   if (!sectionId) return anchors;
+  const record: ScrollAnchorRecord = {
+    sectionId,
+    y: Math.max(0, Math.round(y)),
+  };
+  if (railScrollLeft != null && railScrollLeft > 0) {
+    record.railScrollLeft = Math.round(railScrollLeft);
+  }
   return {
     ...anchors,
-    [key]: { sectionId, y: Math.max(0, Math.round(y)) },
+    [key]: record,
   };
+}
+
+/** Re-apply saved horizontal rail offset inside a restored homepage section. */
+export function restoreScrollRailForAnchor(anchor: ScrollAnchorRecord | undefined): boolean {
+  if (!anchor?.sectionId || anchor.railScrollLeft == null) return false;
+  const section =
+    document.getElementById(anchor.sectionId) ??
+    document.querySelector<HTMLElement>(`[data-hp-section="${CSS.escape(anchor.sectionId)}"]`);
+  const rail = section?.querySelector<HTMLElement>(`[${HP_SCROLL_RAIL_ATTR}]`);
+  if (!rail) return false;
+  rail.scrollLeft = anchor.railScrollLeft;
+  return true;
 }
 
 /** Pick the stronger restore target when a section anchor exists in the DOM. */
@@ -315,10 +345,20 @@ export function persistStorefrontScroll(options: {
   lastKnownY: number;
   navGuardActive: boolean;
   sectionId?: string | null;
+  railScrollLeft?: number;
   positionsRaw?: string | null;
   anchorsRaw?: string | null;
 }): void {
-  const { key, liveY, lastKnownY, navGuardActive, sectionId, positionsRaw, anchorsRaw } = options;
+  const {
+    key,
+    liveY,
+    lastKnownY,
+    navGuardActive,
+    sectionId,
+    railScrollLeft,
+    positionsRaw,
+    anchorsRaw,
+  } = options;
   const y = Math.max(0, Math.round(resolveScrollYForPersist(liveY, lastKnownY)));
   const positions = mergeScrollPositionForKey(
     readScrollPositions(positionsRaw ?? null),
@@ -335,6 +375,7 @@ export function persistStorefrontScroll(options: {
       key,
       sectionId,
       y,
+      railScrollLeft,
     );
     sessionStorage.setItem(SCROLL_ANCHORS_KEY, JSON.stringify(anchors));
   }

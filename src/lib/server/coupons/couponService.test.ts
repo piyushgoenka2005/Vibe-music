@@ -347,7 +347,7 @@ describe("couponService", () => {
       expect(offers[0].code).toBe("ACTIVE1");
     });
 
-    it("returns only product-scoped coupons for a product context", async () => {
+    it("returns storewide and matching product coupons for cart context", async () => {
       const now = new Date("2026-06-15T12:00:00Z");
       const coupons = [
         {
@@ -378,14 +378,81 @@ describe("couponService", () => {
           createdAt: "2026-01-01",
           updatedAt: "2026-01-01",
         },
+        {
+          id: "3",
+          code: "P2ONLY",
+          label: "Other product",
+          type: "percentage" as const,
+          value: 20,
+          isActive: true,
+          kind: "standard" as const,
+          scope: "products" as const,
+          productIds: ["p2"],
+          usedCount: 0,
+          createdAt: "2026-01-01",
+          updatedAt: "2026-01-01",
+        },
       ];
 
-      vi.mocked(pg.countCoupons).mockResolvedValue(2);
+      vi.mocked(pg.countCoupons).mockResolvedValue(3);
+      vi.mocked(pg.listCouponPage).mockResolvedValue({ coupons, hasMore: false });
+
+      const offers = await listActiveCouponsForStorefront({ at: now, productIds: ["p1"] });
+      expect(offers.map((offer) => offer.code).sort()).toEqual(["P1ONLY", "STORE10"]);
+    });
+
+    it("returns storewide and product-linked coupons for a product page", async () => {
+      const now = new Date("2026-06-15T12:00:00Z");
+      const coupons = [
+        {
+          id: "1",
+          code: "STORE10",
+          label: "Store 10%",
+          type: "percentage" as const,
+          value: 10,
+          isActive: true,
+          kind: "standard" as const,
+          scope: "store" as const,
+          productIds: [],
+          usedCount: 0,
+          createdAt: "2026-01-01",
+          updatedAt: "2026-01-01",
+        },
+        {
+          id: "2",
+          code: "P1ONLY",
+          label: "Product only",
+          type: "percentage" as const,
+          value: 15,
+          isActive: true,
+          kind: "standard" as const,
+          scope: "products" as const,
+          productIds: ["p1"],
+          usedCount: 0,
+          createdAt: "2026-01-01",
+          updatedAt: "2026-01-01",
+        },
+        {
+          id: "3",
+          code: "P2ONLY",
+          label: "Other product",
+          type: "percentage" as const,
+          value: 20,
+          isActive: true,
+          kind: "standard" as const,
+          scope: "products" as const,
+          productIds: ["p2"],
+          usedCount: 0,
+          createdAt: "2026-01-01",
+          updatedAt: "2026-01-01",
+        },
+      ];
+
+      vi.mocked(pg.countCoupons).mockResolvedValue(3);
       vi.mocked(pg.listCouponPage).mockResolvedValue({ coupons, hasMore: false });
 
       const offers = await listActiveCouponsForStorefront({ at: now, productId: "p1" });
-      expect(offers).toHaveLength(1);
-      expect(offers[0].code).toBe("P1ONLY");
+      expect(offers.map((offer) => offer.code).sort()).toEqual(["P1ONLY", "STORE10"]);
     });
   });
 });

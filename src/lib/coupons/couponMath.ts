@@ -18,7 +18,11 @@ export function calculateCouponDiscountAmount(
   }
 
   if (coupon.type === "percentage") {
-    return Math.round(subtotal * (coupon.value / 100) * 100) / 100;
+    let discount = Math.round(subtotal * (coupon.value / 100) * 100) / 100;
+    if (coupon.maxDiscountAmount != null && coupon.maxDiscountAmount > 0) {
+      discount = Math.min(discount, coupon.maxDiscountAmount);
+    }
+    return discount;
   }
 
   return Math.min(coupon.value, subtotal);

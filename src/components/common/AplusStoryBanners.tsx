@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { resolveLinkHref } from "@/lib/routes";
 import "./aplus-story-banners.css";
 
 export interface AplusStoryBanner {
@@ -34,7 +35,7 @@ export default function AplusStoryBanners({ banners }: AplusStoryBannersProps) {
         return (
           <section key={banner.id} className="aplus-story__banner" aria-label={banner.imageAlt}>
             {banner.href ? (
-              <Link href={banner.href} className="aplus-story__link">
+              <Link href={resolveLinkHref(banner.href)} className="aplus-story__link">
                 {image}
               </Link>
             ) : (

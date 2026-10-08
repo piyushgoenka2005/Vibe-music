@@ -1,25 +1,16 @@
+import { buildProductCouponCopy } from "@/lib/product/productCouponDisplay";
 import type { StorefrontCouponOffer } from "@/types/coupon";
 import type { PdpOfferRow } from "@/lib/product/pdpOffers";
-import { formatCurrency } from "@/utils/currency";
-
-function offerHeadline(coupon: StorefrontCouponOffer): string {
-  if (coupon.label.trim()) return coupon.label;
-  if (coupon.type === "percentage") return `${coupon.value}% off this item`;
-  if (coupon.type === "free_shipping") return "Free shipping on this item";
-  return `₹${coupon.value} off this item`;
-}
 
 export function buildPdpOfferRowsFromCoupons(coupons: StorefrontCouponOffer[]): PdpOfferRow[] {
   return coupons.map((coupon) => {
-    const minLabel =
-      coupon.minOrderAmount != null && coupon.minOrderAmount > 0
-        ? `Min order ${formatCurrency(coupon.minOrderAmount)}`
-        : "Apply at checkout";
+    const copy = buildProductCouponCopy(coupon);
+    const detailParts = [copy.termsLine, copy.maxDiscountLine, copy.disclaimer].filter(Boolean);
 
     return {
       id: coupon.code,
-      title: offerHeadline(coupon),
-      detail: `${minLabel} · Code ${coupon.code}`,
+      title: copy.headline,
+      detail: detailParts.length > 0 ? detailParts.join(" · ") : `Code ${copy.code}`,
       offerCount: 1,
     };
   });

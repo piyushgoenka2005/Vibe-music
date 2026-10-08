@@ -63,6 +63,17 @@ export function couponAppliesToProduct(rule: CouponProductScopeRule, productId: 
   return normalizeCouponProductIds(rule.productIds).includes(productId);
 }
 
+/** PDP — only coupons explicitly linked to this product in admin (not storewide). */
+export function couponAppliesToProductPage(
+  rule: CouponProductScopeRule,
+  productId: string,
+): boolean {
+  if (!isProductScopedCoupon(rule.scope, rule.productIds)) {
+    return false;
+  }
+  return normalizeCouponProductIds(rule.productIds).includes(productId);
+}
+
 /** True when a coupon can be used with at least one product in the cart. */
 export function couponAppliesToAnyProduct(
   rule: CouponProductScopeRule,

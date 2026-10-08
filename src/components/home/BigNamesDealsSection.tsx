@@ -3,6 +3,7 @@ import { ArrowUpRight } from "lucide-react";
 import Reveal from "@/components/layout/Reveal";
 import BigNamesDealsShowcase from "@/components/home/BigNamesDealsShowcase";
 import { getCachedBigNamesDealsPublicData } from "@/lib/server/homepageSnapshotCache";
+import { resolveLinkHref } from "@/lib/routes";
 import { storefrontImageUrl } from "@/lib/storefrontImages";
 import type { PublicBigNamesDealsData } from "@/types/homepage";
 
@@ -19,7 +20,7 @@ export function BigNamesDealsView({ data }: { data: PublicBigNamesDealsData }) {
     .filter(Boolean);
 
   return (
-    <section className="big-names-deals" aria-labelledby={HEADLINE_ID}>
+    <section id="big-names-deals" className="big-names-deals" aria-labelledby={HEADLINE_ID}>
       {data.items.slice(0, 5).map((item) => (
         <link
           key={`preload-${item.key}`}
@@ -62,7 +63,7 @@ export function BigNamesDealsView({ data }: { data: PublicBigNamesDealsData }) {
 
         <Reveal immediate>
           <div className="big-names-deals__cta-wrap">
-            <Link className="big-names-deals__cta" href={data.ctaLink}>
+            <Link className="big-names-deals__cta" href={resolveLinkHref(data.ctaLink)}>
               {data.ctaText}
               <span className="big-names-deals__cta-arrow" aria-hidden>
                 <ArrowUpRight size={23} strokeWidth={2.75} />

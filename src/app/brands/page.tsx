@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import BrandsPage from "@/components/brands/BrandsPage";
-import { loadBrandDirectory } from "@/lib/server/brandsPageLoader";
+import { loadBrandDirectory, resolveBrandBySlug } from "@/lib/server/brandsPageLoader";
 import { brandPath } from "@/lib/routes";
 import { withServerPageError } from "@/lib/serverPageError";
 
@@ -21,7 +21,10 @@ export default async function BrandsRoute({ searchParams }: BrandsDirectoryRoute
   const params = await searchParams;
   const brandSlug = params.brand?.split(",")[0]?.trim();
   if (brandSlug) {
-    redirect(brandPath(brandSlug));
+    const brand = await resolveBrandBySlug(brandSlug);
+    if (brand) {
+      redirect(brandPath(brand.slug));
+    }
   }
 
   return withServerPageError(async () => {

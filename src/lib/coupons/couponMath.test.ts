@@ -10,6 +10,16 @@ describe("calculateCouponDiscountAmount", () => {
     expect(calculateCouponDiscountAmount(1000, { type: "percentage", value: 10 })).toBe(100);
   });
 
+  it("caps percentage discounts when maxDiscountAmount is set", () => {
+    expect(
+      calculateCouponDiscountAmount(10000, {
+        type: "percentage",
+        value: 15,
+        maxDiscountAmount: 500,
+      }),
+    ).toBe(500);
+  });
+
   it("caps flat discounts at subtotal", () => {
     expect(calculateCouponDiscountAmount(500, { type: "flat", value: 800 })).toBe(500);
   });

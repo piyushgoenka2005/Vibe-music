@@ -174,10 +174,11 @@ function BrandsPageContent({ brands, initialBrandSlug }: BrandsPageProps) {
   const searchParams = useSearchParams();
   const activeBrandSlug =
     initialBrandSlug?.trim() || searchParams.get("brand")?.split(",")[0]?.trim() || "";
-  const activeBrand = useMemo(
-    () => brands.find((brand) => brand.slug === activeBrandSlug),
-    [activeBrandSlug, brands],
-  );
+  const activeBrand = useMemo(() => {
+    const normalized = activeBrandSlug.toLowerCase();
+    if (!normalized) return undefined;
+    return brands.find((brand) => brand.slug.toLowerCase() === normalized);
+  }, [activeBrandSlug, brands]);
 
   const {
     letter,
@@ -352,20 +353,32 @@ function BrandsPageContent({ brands, initialBrandSlug }: BrandsPageProps) {
               {activeBrand ? (
                 data.products.length === 0 ? (
                   <div className="cat-empty">
-                    <h2 style={{ margin: "0 0 8px" }}>No products match your filters</h2>
-                    <p style={{ margin: 0, color: "#807f7e" }}>
-                      Try adjusting or clearing your filters for {activeBrand.name}.
-                    </p>
-                    {hasActive ? (
-                      <button
-                        type="button"
-                        className="cat-filter-clear"
-                        style={{ marginTop: 16 }}
-                        onClick={clearAllFilters}
-                      >
-                        Clear filters
-                      </button>
-                    ) : null}
+                    {activeBrand.productCount === 0 && !hasActive ? (
+                      <>
+                        <h2 style={{ margin: "0 0 8px" }}>No products yet</h2>
+                        <p style={{ margin: 0, color: "#807f7e" }}>
+                          {activeBrand.name} products will appear here once they are added to the
+                          catalog.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h2 style={{ margin: "0 0 8px" }}>No products match your filters</h2>
+                        <p style={{ margin: 0, color: "#807f7e" }}>
+                          Try adjusting or clearing your filters for {activeBrand.name}.
+                        </p>
+                        {hasActive ? (
+                          <button
+                            type="button"
+                            className="cat-filter-clear"
+                            style={{ marginTop: 16 }}
+                            onClick={clearAllFilters}
+                          >
+                            Clear filters
+                          </button>
+                        ) : null}
+                      </>
+                    )}
                   </div>
                 ) : (
                   <>

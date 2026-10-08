@@ -1186,6 +1186,47 @@
   max-width: none;
 }
 
+.pdp-info-pricing__layout {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+}
+
+.pdp-info-pricing__price-col {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-width: 9.5rem;
+  max-width: 42%;
+  padding-right: 1rem;
+}
+
+.pdp-info-pricing__offers-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.85rem 0 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #2e2e2d;
+  line-height: 1.2;
+}
+
+.pdp-info-pricing__offers-icon {
+  flex-shrink: 0;
+  color: #2e2e2d;
+}
+
+.pdp-info-pricing__offers-col {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-left: 1px solid #e5e4e3;
+  padding-left: 1rem;
+  display: flex;
+  align-items: flex-end;
+}
+
 .pdp-info-pricing__coming-soon {
   margin: 0;
   font-size: 1.05rem;
@@ -1277,65 +1318,63 @@
 }
 
 .pdp-info-pricing__tax {
-  margin: 0 0 0.65rem;
+  margin: 0;
   font-size: 0.75rem;
   color: #807f7e;
   line-height: 1.35;
 }
 
-.pdp-coupon-promo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0.85rem 0 0.5rem;
-  padding: 0.85rem 1rem;
-  border-radius: 12px;
-  border: 1px solid #c7e7ff;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e8f5ff 55%, #f5f3ff 100%);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+.pdp-coupon-promo--pricing {
+  margin: 0.85rem 0 0;
+  padding: 0.15rem 0 0.35rem;
 }
 
-.pdp-coupon-promo__icon {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: #2563eb;
-  color: #fff;
+.pdp-coupon-promo--pricing + .pdp-coupon-promo--pricing {
+  margin-top: 0.5rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed rgba(15, 23, 42, 0.12);
 }
 
-.pdp-coupon-promo__body {
-  flex: 1;
-  min-width: 0;
+.pdp-coupon-promo__code {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #111827;
+  line-height: 1.15;
 }
 
-.pdp-coupon-promo__title {
+.pdp-coupon-promo__offer {
   margin: 0 0 0.2rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #1d4ed8;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #1f2937;
+  font-weight: 500;
 }
 
-.pdp-coupon-promo__text {
-  margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.4;
+.pdp-coupon-promo__max {
+  margin: 0 0 0.15rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
   color: #1f2937;
-  font-weight: 600;
+  font-weight: 500;
+}
+
+.pdp-coupon-promo__disclaimer {
+  margin: 0;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #374151;
 }
 
 .pdp-coupon-promo__cta {
-  flex-shrink: 0;
+  margin-top: 0.65rem;
   border: 0;
   border-radius: 999px;
-  padding: 0.55rem 0.95rem;
+  padding: 0.5rem 0.9rem;
   background: #111827;
   color: #fff;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -1345,9 +1384,92 @@
   cursor: default;
 }
 
+.pdp-buybox-coupon {
+  margin: 0.65rem 0 0;
+  padding: 0.85rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.pdp-buybox-coupon + .pdp-buybox-coupon {
+  margin-top: 0.5rem;
+}
+
+.pdp-buybox-coupon__loading {
+  margin: 0.65rem 0 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.pdp-buybox-coupon__headline {
+  margin: 0 0 0.35rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.35;
+}
+
+.pdp-buybox-coupon__code {
+  margin: 0 0 0.25rem;
+  font-size: 0.88rem;
+  color: #1f2937;
+}
+
+.pdp-buybox-coupon__code strong {
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.pdp-buybox-coupon__terms {
+  margin: 0 0 0.2rem;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.pdp-buybox-coupon__footer {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.pdp-buybox-coupon__apply {
+  margin-top: 0.55rem;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  background: #fff;
+  color: #111827;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pdp-buybox-coupon__apply:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
 .pdp-offers {
   margin-top: 0;
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pdp-offers--inline {
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.pdp-offers__loading {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: #807f7e;
 }
 
 .pdp-offers__header {
@@ -1374,24 +1496,50 @@
 
 .pdp-offers__carousel-wrap {
   position: relative;
-  padding-top: 0.7rem;
-  border-top: 1px solid #e5e4e3;
   width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.pdp-offers--inline .pdp-offers__carousel-wrap {
+  padding-top: 0.35rem;
+  border-top: 0;
 }
 
 .pdp-offers__track {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11.5rem), 1fr));
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
   gap: 10px;
   width: 100%;
-  overflow: visible;
-  padding: 0;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 0 0.45rem;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: #9ec5fe #e8f1ff;
+}
+
+.pdp-offers__track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.pdp-offers__track::-webkit-scrollbar-track {
+  background: #e8f1ff;
+  border-radius: 999px;
+}
+
+.pdp-offers__track::-webkit-scrollbar-thumb {
+  background: #9ec5fe;
+  border-radius: 999px;
 }
 
 .pdp-offers__card {
   box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
+  flex: 0 0 min(11.5rem, 78%);
+  width: min(11.5rem, 78%);
+  min-width: 9.5rem;
   min-height: 0;
   height: auto;
   display: flex;
@@ -1405,6 +1553,26 @@
   overflow-wrap: break-word;
   word-break: normal;
   hyphens: none;
+  text-align: left;
+  cursor: pointer;
+  scroll-snap-align: start;
+}
+
+.pdp-offers__card--selected {
+  border: 2px solid var(--pdp-blue, #1253ed);
+  cursor: default;
+}
+
+.pdp-offers__card--invalid {
+  border: 2px solid #b45309;
+}
+
+.pdp-offers__card--invalid .pdp-offers__card-link {
+  color: #b45309;
+}
+
+.pdp-offers__card:disabled {
+  cursor: default;
 }
 
 .pdp-offers__card-title {
@@ -1460,18 +1628,38 @@
   display: none;
 }
 
-@media (max-width: 480px) {
-  .pdp-offers__track,
-  .storefront-page .pdp-offers__track {
-    grid-template-columns: 1fr;
-    gap: 8px;
+@media (max-width: 767px) {
+  .pdp-info-pricing__layout {
+    flex-direction: column;
+  }
+
+  .pdp-info-pricing__price-col {
+    max-width: none;
+    padding-right: 0;
+  }
+
+  .pdp-info-pricing__offers-col {
+    border-left: 0;
+    border-top: 1px solid #e5e4e3;
+    margin-top: 0.5rem;
+    padding-left: 0;
+    padding-top: 0.65rem;
+    align-items: stretch;
+  }
+
+  .pdp-offers--inline {
+    justify-content: flex-start;
   }
 
   .pdp-offers__card,
   .storefront-page .pdp-offers__card {
-    min-height: 0;
+    flex-basis: min(10.5rem, 84%);
+    width: min(10.5rem, 84%);
+    min-width: 8.75rem;
   }
+}
 
+@media (max-width: 480px) {
   .pdp-offers__card-title {
     font-size: 0.875rem;
   }

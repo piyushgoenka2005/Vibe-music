@@ -18,7 +18,7 @@ import {
   getCouponProductScopeError,
 } from "@/lib/coupons/couponProductScope";
 import { validateCouponCode } from "@/services/coupon.service";
-import type { AppliedCouponSnapshot } from "@/types/coupon";
+import type { AppliedCouponSnapshot, StorefrontCouponOffer } from "@/types/coupon";
 import type { Product, ProductVariant } from "@/types/product";
 import { getDefaultGstRateForCategory, type GSTRate } from "@/lib/gstCalculator";
 import { resolvePositiveUnitPrice } from "@/lib/pricing/unitPrice";
@@ -44,6 +44,12 @@ export interface CartItem {
   isPromoGift?: boolean;
 }
 
+export interface CouponLineInput {
+  productId: string;
+  quantity: number;
+  price: number;
+}
+
 export interface CatalogPriceUpdate {
   productId: string;
   variantId?: string;
@@ -63,6 +69,8 @@ interface CartState {
   drawerOpen: boolean;
   couponCode: string | null;
   appliedCoupon: AppliedCouponSnapshot | null;
+  /** Set when a saved/applied code is deleted or fails re-validation. */
+  couponInvalidReason: string | null;
   /** Staged from PDP before cart has items — auto-applied on add-to-cart. */
   pendingCouponCode: string | null;
   isApplyingCoupon: boolean;
@@ -83,7 +91,14 @@ interface CartState {
   openDrawer: () => void;
   closeDrawer: () => void;
   toggleDrawer: () => void;
-  applyCoupon: (code: string) => Promise<boolean>;
+  applyCoupon: (code: string, options?: { items?: CouponLineInput[] }) => Promise<boolean>;
+  reconcileAppliedCoupon: (
+    items: CouponLineInput[],
+    options?: {
+      activeCoupons?: StorefrontCouponOffer[] | null;
+      activeCouponsReady?: boolean;
+    },
+  ) => Promise<void>;
   removeCoupon: () => void;
   setUpdating: (value: boolean) => void;
   setPromoConfig: (config: CartPromotionsPublic | null) => void;
@@ -126,10 +141,18 @@ function productToCartItem(product: Product, quantity: number, variant?: Product
   };
 }
 
+export function computeCouponDiscount(
+  appliedCoupon: AppliedCouponSnapshot | null,
+  items: CouponLineInput[],
+): number {
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  return resolveCartDiscount(appliedCoupon, subtotal, items);
+}
+
 function resolveCartDiscount(
   appliedCoupon: AppliedCouponSnapshot | null,
   subtotal: number,
-  items: CartItem[],
+  items: CouponLineInput[],
 ): number {
   if (!appliedCoupon || subtotal <= 0) return 0;
 
@@ -182,6 +205,7 @@ export const useCartStore = create<CartState>()(
       drawerOpen: false,
       couponCode: null,
       appliedCoupon: null,
+      couponInvalidReason: null,
       pendingCouponCode: null,
       isApplyingCoupon: false,
       isUpdating: false,
@@ -355,11 +379,19 @@ export const useCartStore = create<CartState>()(
       closeDrawer: () => set({ drawerOpen: false }),
       toggleDrawer: () => set((s) => ({ drawerOpen: !s.drawerOpen })),
 
-      applyCoupon: async (code) => {
+      applyCoupon: async (code, options) => {
         const normalized = code.trim().toUpperCase();
         if (!normalized) return false;
 
-        const subtotal = get().subtotal();
+        const lineItems =
+          options?.items ??
+          get().items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+          }));
+        const subtotal = lineItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
         if (subtotal <= 0) {
           set({ pendingCouponCode: normalized });
           useToastStore.getState().show(`Coupon ${normalized} saved — add to bag to apply`, "info");
@@ -368,7 +400,7 @@ export const useCartStore = create<CartState>()(
 
         set({ isApplyingCoupon: true });
         try {
-          const cartItems = get().items.map((item) => ({
+          const cartItems = lineItems.map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
             price: item.price,
@@ -376,6 +408,9 @@ export const useCartStore = create<CartState>()(
           const customerEmail = useAuthStore.getState().user?.email;
           const result = await validateCouponCode(normalized, subtotal, cartItems, customerEmail);
           if (!result.valid || !result.coupon) {
+            set({
+              couponInvalidReason: result.error ?? "Invalid coupon code",
+            });
             useToastStore.getState().show(result.error ?? "Invalid coupon code", "error");
             return false;
           }
@@ -384,6 +419,7 @@ export const useCartStore = create<CartState>()(
             couponCode: result.coupon.code,
             appliedCoupon: result.coupon,
             pendingCouponCode: null,
+            couponInvalidReason: null,
           });
           useToastStore.getState().show(`Coupon applied: ${formatCouponLabel(result.coupon)}`);
           return true;
@@ -395,8 +431,60 @@ export const useCartStore = create<CartState>()(
         }
       },
 
+      reconcileAppliedCoupon: async (lineItems, options) => {
+        const { couponCode, isApplyingCoupon } = get();
+        if (!couponCode || isApplyingCoupon) return;
+
+        const subtotal = lineItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        if (subtotal <= 0) return;
+
+        const activeCoupons = options?.activeCoupons;
+        if (options?.activeCouponsReady && activeCoupons != null) {
+          const stillListed = activeCoupons.some((coupon) => coupon.code === couponCode);
+          if (!stillListed) {
+            set({
+              appliedCoupon: null,
+              couponInvalidReason: "This coupon is no longer available",
+            });
+            return;
+          }
+        }
+
+        try {
+          const cartItems = lineItems.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+          }));
+          const customerEmail = useAuthStore.getState().user?.email;
+          const result = await validateCouponCode(couponCode, subtotal, cartItems, customerEmail);
+
+          if (!result.valid || !result.coupon) {
+            set({
+              appliedCoupon: null,
+              couponInvalidReason: result.error ?? "Invalid coupon code",
+            });
+            return;
+          }
+
+          set({
+            appliedCoupon: result.coupon,
+            couponInvalidReason: null,
+          });
+        } catch {
+          set({
+            couponInvalidReason: "Unable to verify coupon right now",
+          });
+        }
+      },
+
       removeCoupon: () => {
-        set({ couponCode: null, appliedCoupon: null, pendingCouponCode: null });
+        set({
+          couponCode: null,
+          appliedCoupon: null,
+          pendingCouponCode: null,
+          couponInvalidReason: null,
+        });
         useToastStore.getState().show("Coupon removed", "info");
       },
 

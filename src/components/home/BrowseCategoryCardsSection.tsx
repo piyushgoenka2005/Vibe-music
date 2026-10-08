@@ -39,6 +39,7 @@ export default async function BrowseCategoryCardsSection() {
   return (
     <Reveal
       as="section"
+      id="browse-category-cards"
       className="browse-category-cards category-cards-container"
       aria-labelledby={HEADLINE_ID}
     >

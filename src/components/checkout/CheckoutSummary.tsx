@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Lock, Package, Tag } from "lucide-react";
 import { CHECKOUT_TRUST_SUMMARY } from "@/data/trustSignals";
 import { formatCurrencyPrecise } from "@/utils/currency";
@@ -14,12 +14,14 @@ import {
   type GSTRate,
 } from "@/lib/gstCalculator";
 import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
-import { useCartStore } from "@/store/cartStore";
+import { type CouponLineInput, useCartStore } from "@/store/cartStore";
 import SwipeToPayButton from "@/components/checkout/SwipeToPayButton";
 import CheckoutStaticPayButton from "@/components/checkout/CheckoutStaticPayButton";
 import type { OnlinePaymentChannel } from "@/components/checkout/CheckoutPaymentMethods";
 import { getSwipePayLabel } from "@/components/checkout/checkoutPayLabels";
-import ApplicableCouponsPicker from "@/components/checkout/ApplicableCouponsPicker";
+import ActiveCouponsDropdown from "@/components/checkout/ActiveCouponsDropdown";
+import { useAppliedCouponSync } from "@/hooks/useAppliedCouponSync";
+import { useCartActiveCoupons } from "@/hooks/useCartActiveCoupons";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import type { PaymentMethod } from "@/types/order";
 
@@ -48,6 +50,7 @@ export interface CheckoutSummaryProps {
   platformFee?: number;
   showLineItems?: boolean;
   showPromo?: boolean;
+  couponLines?: CouponLineInput[];
   className?: string;
   shippingMethod?: ShippingMethod;
   shippingChargeOverride?: number;
@@ -118,6 +121,7 @@ export default function CheckoutSummary({
   platformFee = 0,
   showLineItems = false,
   showPromo = false,
+  couponLines,
   shippingMethod = "standard",
   shippingChargeOverride,
   className = "",
@@ -134,6 +138,7 @@ export default function CheckoutSummary({
 
   const couponCode = useCartStore((s) => s.couponCode);
   const appliedCoupon = useCartStore((s) => s.appliedCoupon);
+  const couponInvalidReason = useCartStore((s) => s.couponInvalidReason);
   const isApplyingCoupon = useCartStore((s) => s.isApplyingCoupon);
   const applyCoupon = useCartStore((s) => s.applyCoupon);
   const removeCoupon = useCartStore((s) => s.removeCoupon);
@@ -142,9 +147,35 @@ export default function CheckoutSummary({
   const lineItems: CheckoutSummaryDisplayItem[] =
     displayItems ?? items.map((item) => ({ ...item }));
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const productIds = useMemo(() => [...new Set(items.map((item) => item.productId))], [items]);
+
+  const applyOptions = couponLines?.length ? { items: couponLines } : undefined;
+  const {
+    coupons: activeCoupons,
+    isLoading: offersLoading,
+    isError: offersError,
+  } = useCartActiveCoupons(productIds);
+
+  const syncLineItems = useMemo(
+    () =>
+      couponLines ??
+      items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+    [couponLines, items],
+  );
+
+  useAppliedCouponSync({
+    lineItems: syncLineItems,
+    activeCoupons,
+    isLoadingActiveCoupons: offersLoading,
+    isActiveCouponsError: offersError,
+  });
 
   async function handleApplyCoupon() {
-    const ok = await applyCoupon(couponInput);
+    const ok = await applyCoupon(couponInput, applyOptions);
     if (ok) setCouponInput("");
   }
 
@@ -207,17 +238,30 @@ export default function CheckoutSummary({
               Promo code
             </p>
             {couponCode ? (
-              <div className="checkout-summary__promo-applied">
-                <span>
-                  <strong>{couponCode}</strong>
-                  {appliedCoupon ? ` (${formatCouponLabel(appliedCoupon)})` : null}
-                </span>
-                <button type="button" onClick={removeCoupon}>
-                  Remove
-                </button>
-              </div>
+              <>
+                <div className="checkout-summary__promo-applied">
+                  <span>
+                    <strong>{couponCode}</strong>
+                    {appliedCoupon && !couponInvalidReason
+                      ? ` (${formatCouponLabel(appliedCoupon)})`
+                      : null}
+                  </span>
+                  <button type="button" onClick={removeCoupon}>
+                    Remove
+                  </button>
+                </div>
+                {couponInvalidReason ? (
+                  <p
+                    className="checkout-summary__promo-hint checkout-summary__promo-invalid"
+                    role="alert"
+                  >
+                    {couponInvalidReason}
+                  </p>
+                ) : null}
+              </>
             ) : (
               <>
+                <ActiveCouponsDropdown productIds={productIds} couponLines={couponLines} />
                 <div className="checkout-summary__promo-row">
                   <input
                     type="text"
@@ -236,16 +280,11 @@ export default function CheckoutSummary({
                     {isApplyingCoupon ? "..." : "Apply"}
                   </button>
                 </div>
-              </>
-            )}
-            {!couponCode ? (
-              <>
-                <ApplicableCouponsPicker style={{ marginTop: 12 }} />
                 <p className="checkout-summary__promo-hint">
                   Select an offer above or enter a promo code manually.
                 </p>
               </>
-            ) : null}
+            )}
           </div>
         ) : null}
 

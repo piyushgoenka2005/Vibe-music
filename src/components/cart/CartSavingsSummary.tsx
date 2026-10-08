@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useAppliedCouponSync } from "@/hooks/useAppliedCouponSync";
+import { useCartActiveCoupons } from "@/hooks/useCartActiveCoupons";
 import { getCouponEligibilityError } from "@/lib/coupons/couponMath";
 import {
   getCouponEligibleSubtotal,
@@ -18,11 +20,35 @@ export default function CartSavingsSummary() {
   const totalSavings = useCartStore((s) => s.totalSavings());
   const couponCode = useCartStore((s) => s.couponCode);
   const appliedCoupon = useCartStore((s) => s.appliedCoupon);
+  const couponInvalidReason = useCartStore((s) => s.couponInvalidReason);
   const subtotal = useCartStore((s) => s.subtotal());
   const isApplyingCoupon = useCartStore((s) => s.isApplyingCoupon);
   const applyCoupon = useCartStore((s) => s.applyCoupon);
   const removeCoupon = useCartStore((s) => s.removeCoupon);
   const [couponInput, setCouponInput] = useState("");
+
+  const couponLines = useMemo(
+    () =>
+      items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+    [items],
+  );
+  const productIds = useMemo(() => items.map((item) => item.productId), [items]);
+  const {
+    coupons: activeCoupons,
+    isLoading: offersLoading,
+    isError: offersError,
+  } = useCartActiveCoupons(productIds);
+
+  useAppliedCouponSync({
+    lineItems: couponLines,
+    activeCoupons,
+    isLoadingActiveCoupons: offersLoading,
+    isActiveCouponsError: offersError,
+  });
 
   if (items.length === 0) return null;
 
@@ -118,7 +144,7 @@ export default function CartSavingsSummary() {
           </div>
         ) : (
           <>
-            <ApplicableCouponsPicker style={{ marginBottom: 12 }} />
+            <ApplicableCouponsPicker variant="cart" style={{ marginBottom: 12 }} />
             <div className="cart-savings__coupon-field">
               <input
                 type="text"
@@ -148,9 +174,9 @@ export default function CartSavingsSummary() {
           </>
         )}
 
-        {ineligibilityMessage ? (
+        {couponInvalidReason || ineligibilityMessage ? (
           <p className="cart-savings__coupon-warning" role="alert">
-            {ineligibilityMessage}
+            {couponInvalidReason ?? ineligibilityMessage}
           </p>
         ) : null}
         {isApplyingCoupon ? (

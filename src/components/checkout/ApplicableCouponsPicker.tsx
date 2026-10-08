@@ -1,108 +1,70 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { BadgePercent } from "lucide-react";
-import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
+import { buildProductCouponCopy } from "@/lib/product/productCouponDisplay";
+import { useCartActiveCoupons } from "@/hooks/useCartActiveCoupons";
 import { useCartStore } from "@/store/cartStore";
-import type { StorefrontCouponOffer } from "@/types/coupon";
 
 interface ApplicableCouponsPickerProps {
   className?: string;
   style?: React.CSSProperties;
+  variant?: "cart" | "checkout";
 }
 
 export default function ApplicableCouponsPicker({
   className,
   style,
+  variant = "checkout",
 }: ApplicableCouponsPickerProps) {
   const items = useCartStore((s) => s.items);
   const couponCode = useCartStore((s) => s.couponCode);
   const applyCoupon = useCartStore((s) => s.applyCoupon);
   const isApplyingCoupon = useCartStore((s) => s.isApplyingCoupon);
-  const [offers, setOffers] = useState<StorefrontCouponOffer[]>([]);
-  const [loading, setLoading] = useState(false);
 
   const productIds = useMemo(() => [...new Set(items.map((item) => item.productId))], [items]);
+  const { coupons, isLoading } = useCartActiveCoupons(productIds);
 
-  useEffect(() => {
-    if (productIds.length === 0) {
-      setOffers([]);
-      return;
-    }
+  if (productIds.length === 0) return null;
 
-    let cancelled = false;
-    setLoading(true);
+  const hasOffers = (coupons?.length ?? 0) > 0;
+  if (!isLoading && !hasOffers) return null;
 
-    void (async () => {
-      try {
-        const res = await fetch(
-          `/api/coupons/active?productIds=${encodeURIComponent(productIds.join(","))}`,
-        );
-        if (!res.ok) throw new Error("Failed to load coupons");
-        const payload = (await res.json()) as { coupons: StorefrontCouponOffer[] };
-        if (!cancelled) {
-          setOffers(payload.coupons ?? []);
-        }
-      } catch {
-        if (!cancelled) setOffers([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [productIds]);
-
-  if (productIds.length === 0 || (!loading && offers.length === 0)) {
-    return null;
-  }
+  const labelClass =
+    variant === "cart" ? "cart-savings__offers-label" : "checkout-summary__promo-label";
+  const hintClass =
+    variant === "cart" ? "cart-savings__offers-hint" : "checkout-summary__promo-hint";
+  const listClass = variant === "cart" ? "cart-savings__offers-list" : undefined;
 
   return (
     <div className={className} style={style}>
-      <p className="checkout-summary__promo-label" style={{ marginBottom: 8 }}>
+      <p className={labelClass}>
         <BadgePercent size={13} strokeWidth={2.25} aria-hidden />
         Available offers for your items
       </p>
-      {loading ? (
-        <p className="checkout-summary__promo-hint">Loading offers…</p>
+      {isLoading ? (
+        <p className={hintClass}>Loading offers…</p>
       ) : (
-        <ul
-          style={{
-            listStyle: "none",
-            margin: 0,
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-          }}
-        >
-          {offers.map((offer) => {
+        <ul className={listClass}>
+          {coupons?.map((offer) => {
+            const copy = buildProductCouponCopy(offer);
             const selected = couponCode === offer.code;
             return (
               <li key={offer.code}>
                 <button
                   type="button"
+                  className={`cart-savings__offer${selected ? " cart-savings__offer--selected" : ""}`}
                   disabled={isApplyingCoupon || selected}
                   onClick={() => void applyCoupon(offer.code)}
-                  style={{
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    borderRadius: 8,
-                    border: selected
-                      ? "2px solid var(--accent, #2563eb)"
-                      : "1px solid var(--border, #e5e7eb)",
-                    background: selected ? "rgba(37, 99, 235, 0.06)" : "transparent",
-                    cursor: selected ? "default" : "pointer",
-                  }}
                 >
-                  <strong>{offer.code}</strong>
-                  <span style={{ display: "block", fontSize: "0.85rem", opacity: 0.85 }}>
-                    {offer.label} · {formatCouponLabel(offer)}
-                    {offer.scope === "products" ? " · Dedicated product offer" : ""}
-                  </span>
+                  <span className="cart-savings__offer-code">{copy.code}</span>
+                  <span className="cart-savings__offer-copy">{copy.offerLine}</span>
+                  {copy.termsLine && copy.termsLine !== copy.offerLine ? (
+                    <span className="cart-savings__offer-terms">{copy.termsLine}</span>
+                  ) : null}
+                  {copy.maxDiscountLine ? (
+                    <span className="cart-savings__offer-max">{copy.maxDiscountLine}</span>
+                  ) : null}
                 </button>
               </li>
             );

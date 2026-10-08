@@ -140,6 +140,7 @@ export interface Coupon {
   type: "percentage" | "flat" | "free_shipping";
   value: number;
   minOrderAmount?: number;
+  maxDiscountAmount?: number;
   maxUses?: number;
   maxUsesPerUser?: number;
   usedCount: number;
@@ -154,6 +155,12 @@ export interface Coupon {
   utmContent?: string;
   scope: "store" | "products";
   productIds: string[];
+  pdpHeadline?: string;
+  pdpOfferLine?: string;
+  pdpMaxDiscountLine?: string;
+  pdpTermsLine?: string;
+  pdpDisclaimer?: string;
+  pdpFooter?: string;
   startsAt?: string;
   expiresAt?: string;
   createdAt: string;

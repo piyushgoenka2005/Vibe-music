@@ -9,6 +9,7 @@ import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import CouponProductPicker from "@/components/admin/CouponProductPicker";
 import CouponShareLink from "@/components/admin/CouponShareLink";
+import { invalidateActiveCouponsQueries } from "@/lib/coupons/activeCouponsQuery";
 import { buildCouponShareUrl } from "@/lib/coupons/couponShareUrl";
 import type { Coupon, CouponKind } from "@/types/admin";
 
@@ -36,6 +37,13 @@ const EMPTY_FORM = {
   maxUsesPerUser: undefined as number | undefined,
   referralOwnerEmail: "",
   minOrderAmount: undefined as number | undefined,
+  maxDiscountAmount: undefined as number | undefined,
+  pdpHeadline: "",
+  pdpOfferLine: "",
+  pdpMaxDiscountLine: "",
+  pdpTermsLine: "",
+  pdpDisclaimer: "",
+  pdpFooter: "",
   startsAt: "",
   expiresAt: "",
   utmSource: "",
@@ -112,6 +120,12 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
         utmMedium: form.utmMedium || undefined,
         utmCampaign: form.utmCampaign || undefined,
         utmContent: form.utmContent || undefined,
+        pdpHeadline: form.pdpHeadline || undefined,
+        pdpOfferLine: form.pdpOfferLine || undefined,
+        pdpMaxDiscountLine: form.pdpMaxDiscountLine || undefined,
+        pdpTermsLine: form.pdpTermsLine || undefined,
+        pdpDisclaimer: form.pdpDisclaimer || undefined,
+        pdpFooter: form.pdpFooter || undefined,
       };
       const url = editId ? `/api/admin/coupons/${editId}` : "/api/admin/coupons";
       await adminMutateJson(url, {
@@ -126,6 +140,7 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
       setForm(EMPTY_FORM);
       reset();
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+      invalidateActiveCouponsQueries(queryClient);
     },
   });
 
@@ -139,6 +154,7 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+      invalidateActiveCouponsQueries(queryClient);
     },
   });
 
@@ -150,6 +166,7 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
       setDeleteConfirmId(null);
       reset();
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+      invalidateActiveCouponsQueries(queryClient);
     },
   });
 
@@ -162,6 +179,7 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
     onSuccess: () => {
       reset();
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+      invalidateActiveCouponsQueries(queryClient);
     },
   });
 
@@ -191,6 +209,7 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
       });
       reset();
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
+      invalidateActiveCouponsQueries(queryClient);
     },
   });
 
@@ -472,6 +491,99 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                   placeholder="Optional"
                 />
               </div>
+              {form.type === "percentage" ? (
+                <div className="admin-form-group">
+                  <label>Max discount cap (INR)</label>
+                  <input
+                    className="admin-input"
+                    style={{ width: "100%" }}
+                    type="number"
+                    min={0}
+                    value={form.maxDiscountAmount ?? ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        maxDiscountAmount: e.target.value ? Number(e.target.value) : undefined,
+                      })
+                    }
+                    placeholder="Optional — caps % discount"
+                  />
+                </div>
+              ) : null}
+              <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                <label>Product page display</label>
+                <p
+                  style={{
+                    margin: "0.25rem 0 0.75rem",
+                    fontSize: "0.8rem",
+                    color: "var(--admin-muted)",
+                  }}
+                >
+                  Shown on product pages (Offers section), cart, and checkout. Link products for
+                  product-only coupons, or use storewide for all products. Leave blank to
+                  auto-generate copy from discount rules.
+                </p>
+              </div>
+              <div className="admin-form-group">
+                <label>PDP headline</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.pdpHeadline}
+                  onChange={(e) => setForm({ ...form, pdpHeadline: e.target.value })}
+                  placeholder="e.g. Pujo special"
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>PDP offer line</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.pdpOfferLine}
+                  onChange={(e) => setForm({ ...form, pdpOfferLine: e.target.value })}
+                  placeholder="e.g. 15% OFF"
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>PDP max discount line</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.pdpMaxDiscountLine}
+                  onChange={(e) => setForm({ ...form, pdpMaxDiscountLine: e.target.value })}
+                  placeholder="e.g. Maximum Discount ₹500"
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>PDP terms line</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.pdpTermsLine}
+                  onChange={(e) => setForm({ ...form, pdpTermsLine: e.target.value })}
+                  placeholder="e.g. 15% OFF up to ₹500 on orders above ₹2000"
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>PDP disclaimer</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.pdpDisclaimer}
+                  onChange={(e) => setForm({ ...form, pdpDisclaimer: e.target.value })}
+                  placeholder="e.g. Exclusions apply"
+                />
+              </div>
+              <div className="admin-form-group">
+                <label>PDP buy-box footer</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.pdpFooter}
+                  onChange={(e) => setForm({ ...form, pdpFooter: e.target.value })}
+                  placeholder="e.g. Limited time offer"
+                />
+              </div>
               <div className="admin-form-group">
                 <label>Starts At</label>
                 <input
@@ -522,9 +634,15 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                       checked={form.scope === "products"}
                       onChange={() => setForm({ ...form, scope: "products" })}
                     />
-                    Specific products
+                    Specific products (independent per product page)
                   </label>
                 </div>
+                <p
+                  style={{ margin: "0.35rem 0 0", fontSize: "0.8rem", color: "var(--admin-muted)" }}
+                >
+                  Storewide coupons appear on every product page, cart, and checkout. Product-linked
+                  coupons also appear on their assigned product pages.
+                </p>
               </div>
               {form.scope === "products" ? (
                 <>
@@ -719,6 +837,13 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                                 maxUsesPerUser: c.maxUsesPerUser,
                                 referralOwnerEmail: c.referralOwnerEmail ?? "",
                                 minOrderAmount: c.minOrderAmount,
+                                maxDiscountAmount: c.maxDiscountAmount,
+                                pdpHeadline: c.pdpHeadline ?? "",
+                                pdpOfferLine: c.pdpOfferLine ?? "",
+                                pdpMaxDiscountLine: c.pdpMaxDiscountLine ?? "",
+                                pdpTermsLine: c.pdpTermsLine ?? "",
+                                pdpDisclaimer: c.pdpDisclaimer ?? "",
+                                pdpFooter: c.pdpFooter ?? "",
                                 startsAt: c.startsAt?.slice(0, 10) ?? "",
                                 expiresAt: c.expiresAt?.slice(0, 10) ?? "",
                                 utmSource: c.utmSource ?? "",

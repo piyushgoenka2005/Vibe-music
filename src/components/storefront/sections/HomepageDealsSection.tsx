@@ -100,7 +100,7 @@ export default function HomepageDealsSection({ section }: HomepageDealsSectionPr
         <div className="homepage-deals-section__cta-wrap">
           <Link
             className="premium-btn premium-btn--primary homepage-deals-section__cta"
-            href={ctaLink}
+            href={resolveLinkHref(ctaLink)}
           >
             {ctaText}
             {SECTION_CTA_ARROW}

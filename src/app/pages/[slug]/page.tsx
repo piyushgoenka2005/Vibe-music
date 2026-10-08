@@ -2,13 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
-import { resolveContentPage } from "@/lib/server/contentPageRepository";
+import { listContentPages, resolveContentPage } from "@/lib/server/contentPageRepository";
 import { withServerPageError } from "@/lib/serverPageError";
 import { CONTENT_PAGE_SLUGS } from "@/data/contentPages";
 import { ROUTES } from "@/lib/routes";
 import "@/styles/cms-page.css";
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 const RELATED_POLICY_PAGES = [
   { slug: "shipping", label: "Shipping & Delivery" },
@@ -23,7 +23,13 @@ interface ContentPageRouteProps {
 }
 
 export async function generateStaticParams() {
-  return CONTENT_PAGE_SLUGS.map((slug) => ({ slug }));
+  try {
+    const pages = await listContentPages();
+    const slugs = new Set([...CONTENT_PAGE_SLUGS, ...pages.map((page) => page.slug)]);
+    return [...slugs].map((slug) => ({ slug }));
+  } catch {
+    return CONTENT_PAGE_SLUGS.map((slug) => ({ slug }));
+  }
 }
 
 export async function generateMetadata({ params }: ContentPageRouteProps): Promise<Metadata> {

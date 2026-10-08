@@ -65,4 +65,17 @@ describe("groupCatalogByBrand", () => {
     expect(groups[0]?.letter).toBe("N");
     expect(groups[0]?.products).toHaveLength(1);
   });
+
+  it("includes catalog brands with no active products", () => {
+    const groups = groupCatalogByBrand(
+      [],
+      [
+        { id: "zoom", name: "ZOOM", slug: "zoom" },
+        { id: "hertz", name: "HERTZ", slug: "hertz" },
+      ],
+    );
+
+    expect(groups).toHaveLength(2);
+    expect(groups.find((group) => group.slug === "zoom")?.products).toHaveLength(0);
+  });
 });

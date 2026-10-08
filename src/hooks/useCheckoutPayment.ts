@@ -87,8 +87,9 @@ export function useCheckoutPayment({
     promise: Promise<CreateRazorpayOrderResponse>;
   } | null>(null);
 
-  const cartCouponCode = useCartStore((s) => s.couponCode);
-  const couponCode = checkoutMode === "buyNow" ? null : cartCouponCode;
+  const couponCode = useCartStore((s) => s.couponCode);
+  const couponInvalidReason = useCartStore((s) => s.couponInvalidReason);
+  const effectiveCouponCode = couponInvalidReason ? null : couponCode;
   const showToast = useToastStore((s) => s.show);
 
   const isDisabled = disabled || isProcessing;
@@ -106,7 +107,7 @@ export function useCheckoutPayment({
       email,
       customerName: customerName ?? shippingAddress.name,
       customerPhone: customerPhone ?? shippingAddress.phone,
-      couponCode,
+      couponCode: effectiveCouponCode,
       shippingAddress,
       paymentMethod,
       shippingMethod,
@@ -118,7 +119,7 @@ export function useCheckoutPayment({
     customerName,
     customerPhone,
     shippingAddress,
-    couponCode,
+    effectiveCouponCode,
     paymentMethod,
     shippingMethod,
     buyerState,

@@ -7,6 +7,8 @@ export type CouponScope = "store" | "products";
 export interface CouponDiscountRule {
   type: CouponType;
   value: number;
+  /** Caps percentage discount (INR). */
+  maxDiscountAmount?: number;
 }
 
 /** Coupon fields required for eligibility checks (shared client + server). */
@@ -41,6 +43,7 @@ export interface AppliedCouponSnapshot {
   type: CouponType;
   value: number;
   minOrderAmount?: number;
+  maxDiscountAmount?: number;
   scope?: CouponScope;
   productIds?: string[];
 }
@@ -69,6 +72,16 @@ export interface ValidateCouponResponse {
   result: CouponValidationResult;
 }
 
+/** Admin-authored product-page copy — all optional; blank fields are auto-derived from rules. */
+export interface CouponPdpDisplay {
+  headline?: string;
+  offerLine?: string;
+  maxDiscountLine?: string;
+  termsLine?: string;
+  disclaimer?: string;
+  footer?: string;
+}
+
 /** Public storefront coupon row for PDP offer cards and marketing surfaces. */
 export interface StorefrontCouponOffer {
   code: string;
@@ -76,6 +89,8 @@ export interface StorefrontCouponOffer {
   type: CouponType;
   value: number;
   minOrderAmount?: number;
+  maxDiscountAmount?: number;
   scope?: CouponScope;
   productIds?: string[];
+  pdp?: CouponPdpDisplay;
 }

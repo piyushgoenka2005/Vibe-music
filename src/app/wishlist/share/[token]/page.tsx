@@ -1,5 +1,7 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import WishlistSharePage from "@/components/wishlist/WishlistSharePage";
+import { getWishlistShareByToken } from "@/lib/server/wishlistShareRepository";
 import { withServerPageError } from "@/lib/serverPageError";
 import "@/styles/storefront-pages.css";
 import "@/components/account/account.css";
@@ -16,6 +18,8 @@ export default async function WishlistShareRoute({
 }) {
   return withServerPageError(async () => {
     const { token } = await params;
+    const share = await getWishlistShareByToken(token);
+    if (!share) notFound();
     return <WishlistSharePage token={token} />;
   }, "Wishlist");
 }

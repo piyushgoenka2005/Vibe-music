@@ -21,7 +21,7 @@ export async function GET(request: Request) {
       { coupons },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
+          "Cache-Control": "private, no-cache, no-store, must-revalidate",
         },
       },
     );

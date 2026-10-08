@@ -58,7 +58,7 @@ export default function WhyShopSection({ shippingSubtitle }: WhyShopSectionProps
     .join(" ");
 
   return (
-    <section className="why-shop" aria-labelledby="why-shop-title">
+    <section id="why-shop" className="why-shop" aria-labelledby="why-shop-title">
       <div className="why-shop__inner">
         <Reveal as="header" className="why-shop__header">
           <h2 id="why-shop-title" className="why-shop__title">

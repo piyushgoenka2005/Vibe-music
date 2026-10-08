@@ -26,7 +26,7 @@ import { useCartCatalogReprice } from "@/hooks/useCartCatalogReprice";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
 import { useAuthStore } from "@/store/authStore";
-import { useCartStore } from "@/store/cartStore";
+import { computeCouponDiscount, useCartStore } from "@/store/cartStore";
 import {
   isBuyNowCheckoutSearchParam,
   setLastCheckoutMode,
@@ -108,11 +108,10 @@ export default function CheckoutPageContent() {
     [isBuyNowMode, buyNowItem, cartItems],
   );
   const cartCouponCode = useCartStore((s) => s.couponCode);
+  const couponInvalidReason = useCartStore((s) => s.couponInvalidReason);
   const applyCoupon = useCartStore((s) => s.applyCoupon);
-  const cartCouponDiscount = useCartStore((s) => s.discount());
   const appliedCoupon = useCartStore((s) => s.appliedCoupon);
-  const couponCode = isBuyNowMode ? null : cartCouponCode;
-  const couponDiscount = isBuyNowMode ? 0 : cartCouponDiscount;
+  const couponCode = couponInvalidReason ? null : cartCouponCode;
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const phone = useAccountProfileStore((s) => s.phone);
@@ -226,13 +225,6 @@ export default function CheckoutPageContent() {
     }
   }, [step]);
 
-  useEffect(() => {
-    if (isBuyNowMode) return;
-    const fromUrl = searchParams.get("coupon") ?? searchParams.get("code");
-    if (!fromUrl || cartCouponCode) return;
-    void applyCoupon(fromUrl);
-  }, [searchParams, cartCouponCode, applyCoupon, isBuyNowMode]);
-
   const placesAutocomplete = checkoutCapabilities?.placesAutocomplete ?? false;
   const onlinePaymentsAvailable =
     capabilitiesStatus === "ready"
@@ -274,6 +266,27 @@ export default function CheckoutPageContent() {
   }, [confirmedAddress, useNewAddress, addressDraft, savedAddresses, effectiveSelectedAddressId]);
 
   const cartSubtotal = checkoutItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const checkoutCouponLines = useMemo(
+    () =>
+      items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+    [items],
+  );
+
+  useEffect(() => {
+    const fromUrl = searchParams.get("coupon") ?? searchParams.get("code");
+    if (!fromUrl || cartCouponCode || checkoutCouponLines.length === 0) return;
+    void applyCoupon(fromUrl, { items: checkoutCouponLines });
+  }, [searchParams, cartCouponCode, applyCoupon, checkoutCouponLines]);
+
+  const couponDiscount = useMemo(
+    () => (couponInvalidReason ? 0 : computeCouponDiscount(appliedCoupon, checkoutCouponLines)),
+    [appliedCoupon, checkoutCouponLines, couponInvalidReason],
+  );
 
   const effectivePaymentMethod: PaymentMethod = "razorpay";
 
@@ -325,7 +338,7 @@ export default function CheckoutPageContent() {
 
   const activeShippingCharge = resolveShippingChargeWithCoupon(
     baseShippingCharge,
-    isBuyNowMode ? null : appliedCoupon,
+    appliedCoupon,
     items.map((item) => ({
       productId: item.productId,
       quantity: item.quantity,
@@ -721,7 +734,8 @@ export default function CheckoutPageContent() {
                 : undefined
             }
             showLineItems={step === "payment"}
-            showPromo={!isBuyNowMode}
+            showPromo
+            couponLines={checkoutCouponLines}
           />
         </div>
       </div>

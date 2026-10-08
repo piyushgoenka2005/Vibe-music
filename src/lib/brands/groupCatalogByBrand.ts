@@ -14,28 +14,37 @@ export function brandIndexLetter(name: string): string {
   return ch >= "A" && ch <= "Z" ? ch : "#";
 }
 
+function normalizeBrandSlug(slug: string): string {
+  return slug.trim().toLowerCase();
+}
+
 export function groupCatalogByBrand(
   catalog: CatalogProduct[],
   brands: Brand[],
 ): BrandCatalogGroup[] {
-  const brandMeta = new Map(brands.map((brand) => [brand.slug, brand]));
+  const brandMeta = new Map(brands.map((brand) => [normalizeBrandSlug(brand.slug), brand]));
   const groups = new Map<string, BrandCatalogGroup>();
 
   function ensureGroup(slug: string, fallbackName: string): BrandCatalogGroup {
-    const existing = groups.get(slug);
+    const normalized = normalizeBrandSlug(slug);
+    const existing = groups.get(normalized);
     if (existing) return existing;
 
-    const meta = brandMeta.get(slug);
-    const name = meta?.name || fallbackName || slug;
+    const meta = brandMeta.get(normalized);
+    const name = meta?.name || fallbackName || normalized;
     const group: BrandCatalogGroup = {
-      id: meta?.id ?? slug,
+      id: meta?.id ?? normalized,
       name,
-      slug,
+      slug: meta?.slug ?? normalized,
       letter: brandIndexLetter(name),
       products: [],
     };
-    groups.set(slug, group);
+    groups.set(normalized, group);
     return group;
+  }
+
+  for (const brand of brands) {
+    ensureGroup(brand.slug, brand.name);
   }
 
   for (const product of catalog) {

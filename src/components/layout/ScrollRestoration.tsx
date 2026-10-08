@@ -18,6 +18,7 @@ import {
   SCROLL_POSITIONS_KEY,
   type ScrollAnchorsMap,
   computeRestoreScrollY,
+  findScrollRailFromLink,
   findSectionAnchorId,
   isAuthScrollResetPath,
   isPendingPopRestoreForKey,
@@ -27,6 +28,7 @@ import {
   parsePendingPopRestore,
   readScrollAnchors,
   resolveScrollYForPersist,
+  restoreScrollRailForAnchor,
   serializePendingPopRestore,
   shouldCancelRestoreForUserScroll,
   shouldIgnoreTransientScrollReset,
@@ -222,6 +224,7 @@ function saveScrollForKey(
   lastKnownY = y,
   sync = false,
   sectionId?: string | null,
+  railScrollLeft?: number,
 ) {
   const nextPositions = mergeScrollPositionForKey(
     readPositions(),
@@ -232,7 +235,7 @@ function saveScrollForKey(
   );
   writePositions(nextPositions, sync);
   if (sectionId) {
-    const nextAnchors = mergeScrollAnchorForKey(readAnchors(), key, sectionId, y);
+    const nextAnchors = mergeScrollAnchorForKey(readAnchors(), key, sectionId, y, railScrollLeft);
     writeAnchors(nextAnchors, sync);
   }
 }
@@ -277,6 +280,7 @@ function runScrollRestore(key: string, savedY: number, onNaturalStop?: () => voi
   const restore = () => {
     if (stopped) return;
     applyScrollY(currentTargetY());
+    restoreScrollRailForAnchor(readAnchors()[key]);
   };
 
   const onScrollCheck = () => {
@@ -433,6 +437,7 @@ export default function ScrollRestoration() {
       lastYRef.current = y;
 
       let sectionId: string | null = null;
+      let railScrollLeft: number | undefined;
       const target = event?.target;
       if (target instanceof Element) {
         const link = target.closest("a[href]");
@@ -440,11 +445,13 @@ export default function ScrollRestoration() {
           const href = link.getAttribute("href");
           if (href && isSameOriginPathHref(href)) {
             sectionId = findSectionAnchorId(link);
+            const rail = findScrollRailFromLink(link);
+            if (rail) railScrollLeft = rail.scrollLeft;
           }
         }
       }
 
-      saveScrollForKey(activeKeyRef.current, y, y, true, sectionId);
+      saveScrollForKey(activeKeyRef.current, y, y, true, sectionId, railScrollLeft);
     };
 
     window.addEventListener("scroll", persistFromWindow, { passive: true });

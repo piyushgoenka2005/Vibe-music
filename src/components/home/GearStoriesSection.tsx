@@ -31,7 +31,7 @@ export default function GearStoriesSection({ data }: GearStoriesSectionProps) {
   if (data.stories.length === 0) return null;
 
   return (
-    <section className="gear-stories" aria-labelledby="gear-stories-heading">
+    <section id="gear-stories" className="gear-stories" aria-labelledby="gear-stories-heading">
       <Reveal as="header" className="gear-stories__header" immediate>
         <h2 id="gear-stories-heading" className="gear-stories__title typo-series">
           {data.title}

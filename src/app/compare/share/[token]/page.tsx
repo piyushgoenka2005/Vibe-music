@@ -1,5 +1,7 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import CompareSharePage from "@/components/compare/CompareSharePage";
+import { getCompareShareByToken } from "@/lib/server/compareRepository";
 import { withServerPageError } from "@/lib/serverPageError";
 import "@/styles/storefront-pages.css";
 import "@/styles/compare.css";
@@ -16,6 +18,8 @@ export default async function CompareShareRoute({
 }) {
   return withServerPageError(async () => {
     const { token } = await params;
+    const share = await getCompareShareByToken(token);
+    if (!share) notFound();
     return <CompareSharePage token={token} />;
   }, "Compare");
 }

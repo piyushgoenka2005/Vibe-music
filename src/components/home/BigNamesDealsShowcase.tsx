@@ -9,6 +9,7 @@ import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
+import { resolveLinkHref } from "@/lib/routes";
 /** Slightly snappier than a typical 3–4s carousel. */
 const AUTO_ADVANCE_MS = 2200;
 /** Brief pause after swipe / dot tap — auto keeps running alongside manual control. */
@@ -61,7 +62,7 @@ function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: numb
       <ProductPageLink
         aria-label={`Shop ${item.brand} — open product`}
         className="big-names-deals__link"
-        href={item.href}
+        href={resolveLinkHref(item.href)}
         tabIndex={0}
       >
         <div className="big-names-deals__spotlight" aria-hidden />

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getLoginRedirectUrl } from "@/lib/auth/protected-routes";
 import { withServerPageError } from "@/lib/serverPageError";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { verifyInvoiceAccessToken } from "@/lib/security/invoiceAccessToken";
@@ -27,14 +28,8 @@ export default async function InvoicePage({
     const sessionUser = hasGuestAccess ? null : await getSessionUser();
 
     if (!hasGuestAccess && !sessionUser) {
-      return (
-        <main className="storefront-page storefront-page--subtle">
-          <div className="storefront-page__inner">
-            <h1 className="storefront-h1">Invoice unavailable</h1>
-            <p>Order not found or not accessible.</p>
-          </div>
-        </main>
-      );
+      const returnPath = `/orders/${encodeURIComponent(orderId)}/invoice`;
+      redirect(getLoginRedirectUrl(returnPath));
     }
 
     let htmlUrl = `/api/invoices/${encodeURIComponent(orderId)}/html`;

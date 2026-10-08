@@ -16,9 +16,7 @@ function prefersFinePointer(): boolean {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
-export default function BrowseCategoryCardsSlider({
-  items,
-}: BrowseCategoryCardsSliderProps) {
+export default function BrowseCategoryCardsSlider({ items }: BrowseCategoryCardsSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -46,9 +44,7 @@ export default function BrowseCategoryCardsSlider({
     // Mouse/trackpad: axis-lock + wheel assist.
     // Touch phones: native overflow scroll (momentum + snap) — smoother.
     const usePointerDrag = prefersFinePointer();
-    const detachAxis = usePointerDrag
-      ? attachAxisLockedRailScroll(track)
-      : () => undefined;
+    const detachAxis = usePointerDrag ? attachAxisLockedRailScroll(track) : () => undefined;
     const detachWheel = attachHorizontalWheelScroll(track);
 
     return () => {
@@ -80,6 +76,7 @@ export default function BrowseCategoryCardsSlider({
       <div
         ref={trackRef}
         className="category-cards-inner"
+        data-hp-scroll-rail
         role="list"
         aria-label="Browse by categories"
       >
@@ -109,11 +106,7 @@ export default function BrowseCategoryCardsSlider({
         ))}
       </div>
 
-      <div
-        className="category-cards__pagination"
-        role="tablist"
-        aria-label="Category slides"
-      >
+      <div className="category-cards__pagination" role="tablist" aria-label="Category slides">
         {items.map((item, index) => (
           <button
             key={item.id}

@@ -9,7 +9,7 @@ import { CATEGORY_BENTO_ITEMS, type CategoryBentoItem } from "@/data/categoryBen
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { attachAxisLockedRailScroll } from "@/lib/axisLockedRailScroll";
 import { attachHorizontalWheelScroll } from "@/lib/horizontalWheelScroll";
-import { categoryPath, ROUTES } from "@/lib/routes";
+import { categoryPath, resolveLinkHref, ROUTES } from "@/lib/routes";
 import CategoryBentoImage from "@/components/home/CategoryBentoImage";
 
 function bentoIndexStyle(index: number): CSSProperties {
@@ -336,14 +336,18 @@ export default function CategoryBentoShowcase({
   }, []);
 
   return (
-    <section className="category-bento" aria-label={title || "Featured category departments"}>
+    <section
+      id="category-bento"
+      className="category-bento"
+      aria-label={title || "Featured category departments"}
+    >
       <div className="category-bento__atmosphere" aria-hidden>
         <span className="category-bento__grid-texture" />
         <span className="category-bento__noise" />
       </div>
 
       <div className="category-bento__inner">
-        <div ref={scrollRef} className="category-bento__showcase-scroll">
+        <div ref={scrollRef} className="category-bento__showcase-scroll" data-hp-scroll-rail>
           <motion.div
             className="category-bento__grid"
             initial={reduceMotion ? false : "hidden"}
@@ -381,7 +385,7 @@ export default function CategoryBentoShowcase({
           viewport={{ once: true }}
           whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
         >
-          <Link href={ctaLink} className="category-bento__browse-btn">
+          <Link href={resolveLinkHref(ctaLink)} className="category-bento__browse-btn">
             <span className="category-bento__browse-btn-label">
               <span className="category-bento__browse-btn-track">
                 <span className="category-bento__browse-btn-segment">

@@ -1,3 +1,5 @@
+import { unstable_rethrow } from "next/navigation";
+
 /**
  * Wrap a server page component's async body with error handling.
  * If the body throws, renders ServerPageErrorFallback instead of crashing.
@@ -19,6 +21,7 @@ export async function withServerPageError<TRender>(
   try {
     return await fn();
   } catch (error) {
+    unstable_rethrow(error);
     console.error(`[server-page] ${pageName ?? "Page"} render error:`, error);
     // Dynamic import so the client component is only loaded on error.
     const { default: ServerPageErrorFallback } =

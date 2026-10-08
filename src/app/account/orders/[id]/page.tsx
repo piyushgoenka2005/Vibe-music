@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import AccountOrderDetail from "@/components/account/AccountOrderDetail";
+import { getLoginRedirectUrl } from "@/lib/auth/protected-routes";
 import { withServerPageError } from "@/lib/serverPageError";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { formatOrderIdDisplay } from "@/lib/orderId";
@@ -67,7 +68,7 @@ export default async function AccountOrderDetailPage({
     const sessionUser = await getSessionUser();
 
     if (!sessionUser) {
-      notFound();
+      redirect(getLoginRedirectUrl(`/account/orders/${id}`));
     }
 
     const order = await getOrderById(id);

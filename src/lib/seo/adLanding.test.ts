@@ -33,7 +33,7 @@ describe("adLanding redirects", () => {
 
   it("resolves edge redirects for legacy ad landing paths", () => {
     const gibraltar = new URLSearchParams({ brand: "gibraltar" });
-    expect(resolveAdLandingRedirect("/brands", gibraltar)).toBe("/brands/gibraltar");
+    expect(resolveAdLandingRedirect("/brands", gibraltar)).toBeNull();
     expect(resolveAdLandingRedirect("/search/results", gibraltar)).toBe("/brands/gibraltar");
     expect(resolveAdLandingRedirect("/search", gibraltar)).toBe("/brands/gibraltar");
   });

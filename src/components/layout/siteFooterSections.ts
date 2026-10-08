@@ -6,6 +6,9 @@ import { SOCIAL_LINKS } from "@/lib/socialLinks";
 import type { FooterAccordionSection } from "@/components/layout/FooterAccordion";
 import type { PublicLegalInfo } from "@/types/publicLegal";
 
+/** Footer "04 / Follow" social links — off until profiles are finalized. */
+const FOOTER_FOLLOW_SECTION_ENABLED = false;
+
 export function buildFooterSections(legal: PublicLegalInfo): FooterAccordionSection[] {
   const legalNoteLines = [
     legal.legalName || BRAND.name,
@@ -53,18 +56,22 @@ export function buildFooterSections(legal: PublicLegalInfo): FooterAccordionSect
       ],
       noteLines: legalNoteLines.length > 0 ? legalNoteLines : undefined,
     },
-    {
-      id: "follow",
-      label: "04 / Follow",
-      links: [
-        { label: "Instagram", href: SOCIAL_LINKS.instagram, external: true },
-        { label: "YouTube", href: SOCIAL_LINKS.youtube, external: true },
-        { label: "Facebook", href: SOCIAL_LINKS.facebook, external: true },
-        { label: "LinkedIn", href: SOCIAL_LINKS.linkedin, external: true },
-        ...(BRAND.whatsappUrl
-          ? [{ label: "WhatsApp", href: BRAND.whatsappUrl, external: true }]
-          : []),
-      ],
-    },
+    ...(FOOTER_FOLLOW_SECTION_ENABLED
+      ? [
+          {
+            id: "follow",
+            label: "04 / Follow",
+            links: [
+              { label: "Instagram", href: SOCIAL_LINKS.instagram, external: true },
+              { label: "YouTube", href: SOCIAL_LINKS.youtube, external: true },
+              { label: "Facebook", href: SOCIAL_LINKS.facebook, external: true },
+              { label: "LinkedIn", href: SOCIAL_LINKS.linkedin, external: true },
+              ...(BRAND.whatsappUrl
+                ? [{ label: "WhatsApp", href: BRAND.whatsappUrl, external: true }]
+                : []),
+            ],
+          },
+        ]
+      : []),
   ];
 }

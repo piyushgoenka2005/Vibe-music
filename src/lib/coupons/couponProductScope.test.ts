@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   couponAppliesToAnyProduct,
   couponAppliesToProduct,
+  couponAppliesToProductPage,
   getCouponEligibleSubtotal,
   getCouponProductScopeError,
 } from "@/lib/coupons/couponProductScope";
@@ -41,6 +42,12 @@ describe("couponProductScope", () => {
     expect(couponAppliesToProduct({ scope: "products", productIds: ["a"] }, "a")).toBe(true);
     expect(couponAppliesToProduct({ scope: "products", productIds: ["a"] }, "b")).toBe(false);
     expect(couponAppliesToProduct({ scope: "store", productIds: [] }, "b")).toBe(true);
+  });
+
+  it("shows only product-linked coupons on a product page", () => {
+    expect(couponAppliesToProductPage({ scope: "products", productIds: ["a"] }, "a")).toBe(true);
+    expect(couponAppliesToProductPage({ scope: "products", productIds: ["a"] }, "b")).toBe(false);
+    expect(couponAppliesToProductPage({ scope: "store", productIds: [] }, "b")).toBe(false);
   });
 
   it("matches cart when any line is eligible", () => {

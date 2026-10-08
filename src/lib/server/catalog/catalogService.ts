@@ -795,12 +795,7 @@ export async function resolveCanonicalProductSlug(slug: string): Promise<string 
 
   const products = await fetchCatalogSnapshot();
   const match = products.find(
-    (p) =>
-      p.status === "active" &&
-      (p.slug === clean ||
-        p.slug.endsWith(`-${clean}`) ||
-        p.slug.includes(clean) ||
-        clean.includes(p.slug)),
+    (p) => p.status === "active" && (p.slug === clean || p.slug.endsWith(`-${clean}`)),
   );
 
   return match?.slug ?? null;

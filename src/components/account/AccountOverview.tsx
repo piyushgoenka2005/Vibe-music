@@ -15,10 +15,15 @@ import type { Order } from "@/types/order";
 import type { SupportTicket } from "@/types/supportTicket";
 import { formatOrderDate, formatPaymentLabel, statusBadgeClass } from "./orderDisplay";
 import AccountReferralCard from "./AccountReferralCard";
+import type { AccountReferralPayload } from "@/types/accountReferral";
 
 const RECENT_ORDERS_LIMIT = 3;
 
-export default function AccountOverview() {
+interface AccountOverviewProps {
+  initialReferral?: AccountReferralPayload | null;
+}
+
+export default function AccountOverview({ initialReferral = null }: AccountOverviewProps) {
   const user = useAuthStore((s) => s.user);
   const wishlistCount = useWishlistStore((s) => s.items.length);
   const wishlistItems = useWishlistStore((s) => s.items);
@@ -128,7 +133,7 @@ export default function AccountOverview() {
         })}
       </div>
 
-      <AccountReferralCard />
+      <AccountReferralCard initialReferral={initialReferral} />
 
       <div className="acct__stats" style={{ marginTop: "1.5rem" }}>
         <Link href={ROUTES.accountNotifications} className="acct__stat-card">

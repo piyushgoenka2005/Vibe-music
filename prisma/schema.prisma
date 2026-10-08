@@ -491,6 +491,8 @@ model Coupon {
   type            String
   value           Float
   minOrderAmount  Float?  @map("min_order_amount")
+  /// Caps percentage discounts (INR) — also shown on product pages when set.
+  maxDiscountAmount Float? @map("max_discount_amount")
   maxUses         Int?    @map("max_uses")
   maxUsesPerUser  Int?    @map("max_uses_per_user")
   usedCount       Int     @default(0) @map("used_count")
@@ -507,6 +509,13 @@ model Coupon {
   /// store = entire cart; products = only lines matching productIds
   scope           String  @default("store")
   productIds      Json    @default("[]") @map("product_ids")
+  /// Admin-authored product-page copy (optional overrides; blank = auto from discount rules).
+  pdpHeadline         String? @map("pdp_headline")
+  pdpOfferLine        String? @map("pdp_offer_line")
+  pdpMaxDiscountLine  String? @map("pdp_max_discount_line")
+  pdpTermsLine        String? @map("pdp_terms_line")
+  pdpDisclaimer       String? @map("pdp_disclaimer")
+  pdpFooter           String? @map("pdp_footer")
   startsAt        String? @map("starts_at")
   expiresAt       String? @map("expires_at")
   createdAt       String  @map("created_at")

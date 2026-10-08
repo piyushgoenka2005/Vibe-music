@@ -15,6 +15,7 @@ import {
   couponAppliesToProduct,
   isProductScopedCoupon,
 } from "@/lib/coupons/couponProductScope";
+import { mapCouponPdpFields } from "@/lib/coupons/couponPdpDisplay";
 import { validateCouponForSubtotal } from "@/lib/coupons/couponMath";
 import type { CouponCartLineItem } from "@/types/coupon";
 
@@ -210,6 +211,7 @@ export async function validateCoupon(
     type: coupon.type,
     value: coupon.value,
     minOrderAmount: coupon.minOrderAmount,
+    maxDiscountAmount: coupon.maxDiscountAmount,
     scope: coupon.scope,
     productIds: coupon.productIds,
   };
@@ -245,6 +247,12 @@ function normalizeCouponInput(
     utmMedium: input.utmMedium?.trim() || undefined,
     utmCampaign: input.utmCampaign?.trim() || undefined,
     utmContent: input.utmContent?.trim() || undefined,
+    pdpHeadline: input.pdpHeadline?.trim() || undefined,
+    pdpOfferLine: input.pdpOfferLine?.trim() || undefined,
+    pdpMaxDiscountLine: input.pdpMaxDiscountLine?.trim() || undefined,
+    pdpTermsLine: input.pdpTermsLine?.trim() || undefined,
+    pdpDisclaimer: input.pdpDisclaimer?.trim() || undefined,
+    pdpFooter: input.pdpFooter?.trim() || undefined,
   };
 }
 
@@ -302,12 +310,19 @@ export async function duplicateCoupon(id: string): Promise<Coupon> {
     type: source.type,
     value: source.value,
     minOrderAmount: source.minOrderAmount,
+    maxDiscountAmount: source.maxDiscountAmount,
     maxUses: source.maxUses,
     maxUsesPerUser: source.maxUsesPerUser,
     isActive: false,
     kind: source.kind,
     scope: source.scope,
     productIds: source.productIds,
+    pdpHeadline: source.pdpHeadline,
+    pdpOfferLine: source.pdpOfferLine,
+    pdpMaxDiscountLine: source.pdpMaxDiscountLine,
+    pdpTermsLine: source.pdpTermsLine,
+    pdpDisclaimer: source.pdpDisclaimer,
+    pdpFooter: source.pdpFooter,
     startsAt: source.startsAt,
     expiresAt: source.expiresAt,
     utmSource: source.utmSource,
@@ -434,16 +449,11 @@ export async function listActiveCouponsForStorefront(
   const productId = options.productId?.trim();
   const cartProductIds = (options.productIds ?? []).map((id) => id.trim()).filter(Boolean);
 
-  const productContext = cartProductIds.length > 0 || Boolean(productId);
-
   const { coupons } = await listCoupons({ limit: 100 });
   return coupons
     .filter((coupon) => coupon.kind !== "referral")
     .filter((coupon) => isCouponScheduleActive(coupon, at))
     .filter((coupon) => {
-      if (productContext) {
-        if (!isProductScopedCoupon(coupon.scope, coupon.productIds)) return false;
-      }
       if (cartProductIds.length > 0) {
         return couponAppliesToAnyProduct(coupon, cartProductIds);
       }
@@ -453,13 +463,18 @@ export async function listActiveCouponsForStorefront(
       return true;
     })
     .slice(0, 12)
-    .map((coupon) => ({
-      code: coupon.code,
-      label: coupon.label,
-      type: coupon.type,
-      value: coupon.value,
-      minOrderAmount: coupon.minOrderAmount,
-      scope: coupon.scope,
-      productIds: coupon.productIds,
-    }));
+    .map((coupon) => {
+      const pdp = mapCouponPdpFields(coupon);
+      return {
+        code: coupon.code,
+        label: coupon.label,
+        type: coupon.type,
+        value: coupon.value,
+        minOrderAmount: coupon.minOrderAmount,
+        maxDiscountAmount: coupon.maxDiscountAmount,
+        scope: coupon.scope,
+        productIds: coupon.productIds,
+        ...(Object.keys(pdp).length > 0 ? { pdp } : {}),
+      };
+    });
 }

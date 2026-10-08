@@ -7,6 +7,7 @@ import {
   isPendingPopRestoreForKey,
   mergeScrollAnchorForKey,
   mergeScrollPositionForKey,
+  restoreScrollRailForAnchor,
   parsePendingPopRestore,
   resolveScrollYForPersist,
   serializePendingPopRestore,
@@ -180,6 +181,31 @@ describe("scrollRestore helpers", () => {
       sectionId: "new-arrivals",
       y: 1800,
     });
+    expect(mergeScrollAnchorForKey({}, "/", "category-bento", 2200, 480)["/"]).toEqual({
+      sectionId: "category-bento",
+      y: 2200,
+      railScrollLeft: 480,
+    });
+  });
+
+  it("restoreScrollRailForAnchor applies saved horizontal offset", () => {
+    document.body.innerHTML = `
+      <section id="category-bento">
+        <div data-hp-scroll-rail style="overflow-x:auto;width:200px">
+          <div style="width:800px;height:40px"></div>
+        </div>
+      </section>
+    `;
+    const rail = document.querySelector<HTMLElement>("[data-hp-scroll-rail]");
+    expect(rail).toBeTruthy();
+    expect(
+      restoreScrollRailForAnchor({
+        sectionId: "category-bento",
+        y: 1800,
+        railScrollLeft: 240,
+      }),
+    ).toBe(true);
+    expect(rail?.scrollLeft).toBe(240);
   });
 
   it("shouldSkipSplashScrollToTop when restoring or mid-page saved", () => {
