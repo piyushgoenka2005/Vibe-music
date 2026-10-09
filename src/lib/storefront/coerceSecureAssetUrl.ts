@@ -1,5 +1,26 @@
 const PUBLIC_HTTP_UPGRADE_HOSTS = new Set(["cdn.vibemusic.in", "vibemusic.in", "www.vibemusic.in"]);
 
+const DISALLOWED_IMAGE_HOST_PATTERN = /postimage\.me|postimg\.cc/i;
+
+export function isDisallowedStorefrontImageUrl(url: string): boolean {
+  const trimmed = url?.trim() ?? "";
+  if (!trimmed || trimmed.startsWith("/") || trimmed.startsWith("data:")) return false;
+  if (DISALLOWED_IMAGE_HOST_PATTERN.test(trimmed)) return true;
+  try {
+    return DISALLOWED_IMAGE_HOST_PATTERN.test(new URL(trimmed).hostname);
+  } catch {
+    return false;
+  }
+}
+
+/** Drop disallowed third-party hosts, then apply HTTPS / same-origin fixes. */
+export function sanitizeStorefrontImageUrl(url: string, options?: { pageOrigin?: string }): string {
+  const trimmed = url?.trim() ?? "";
+  if (!trimmed) return trimmed;
+  if (isDisallowedStorefrontImageUrl(trimmed)) return "";
+  return coerceSecureAssetUrl(trimmed, options);
+}
+
 function isPrivateOrLoopbackHost(hostname: string): boolean {
   const host = hostname.toLowerCase();
   if (host === "localhost" || host === "127.0.0.1" || host === "[::1]") return true;

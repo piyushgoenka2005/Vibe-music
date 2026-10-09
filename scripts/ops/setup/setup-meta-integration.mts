@@ -193,13 +193,18 @@ async function main() {
   }
   console.log(`OK  ${capiCheck.detail}`);
 
-  upsertEnvFile(ENV_LOCAL, {
+  const metaEnv = {
     NEXT_PUBLIC_META_PIXEL_ID: creds.pixelId,
     META_CAPI_ACCESS_TOKEN: creds.capiToken,
     NEXT_PUBLIC_META_DOMAIN_VERIFICATION: creds.domainToken,
+    META_DOMAIN_VERIFICATION: creds.domainToken,
     META_TEST_EVENT_CODE: creds.testEventCode,
-  });
+  };
+  upsertEnvFile(ENV_LOCAL, metaEnv);
+  const opsSecretsPath = path.join(ROOT, "deploy", "ops-secrets.env");
+  upsertEnvFile(opsSecretsPath, metaEnv);
   console.log(`\nWrote Meta credentials to ${path.relative(ROOT, ENV_LOCAL)}`);
+  console.log(`Wrote Meta credentials to ${path.relative(ROOT, opsSecretsPath)}`);
   console.log("Restart dev server: npm run dev\n");
 
   if (args.syncVps) {

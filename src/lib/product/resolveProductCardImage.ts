@@ -1,6 +1,6 @@
 import { getProductImage } from "@/data/productImages";
 import { isCdnUrl } from "@/lib/cdnConfig";
-import { coerceSecureAssetUrl } from "@/lib/storefront/coerceSecureAssetUrl";
+import { sanitizeStorefrontImageUrl } from "@/lib/storefront/sanitizeStorefrontImageUrl";
 
 export interface ProductCardImageInput {
   slug: string;
@@ -149,10 +149,10 @@ export function resolveProductGalleryUrls(input: ProductCardImageInput): string[
   if (sorted.every(isFlatPackshotCatalogImage)) {
     const fallback = productImageLocalFallback(input.slug, input.category);
     const list = fallback ? [fallback, ...sorted] : sorted;
-    return list.map((item) => coerceSecureAssetUrl(item));
+    return list.map((item) => sanitizeStorefrontImageUrl(item));
   }
 
-  return sorted.map((item) => coerceSecureAssetUrl(item));
+  return sorted.map((item) => sanitizeStorefrontImageUrl(item));
 }
 
 function pickCatalogImage(input: ProductCardImageInput): string {
@@ -193,27 +193,27 @@ export function resolveProductCardImage(input: ProductCardImageInput): {
 
   if (!catalogImage) {
     return {
-      src: coerceSecureAssetUrl(localFallback),
-      fallbackSrc: coerceSecureAssetUrl(localFallback),
+      src: sanitizeStorefrontImageUrl(localFallback),
+      fallbackSrc: sanitizeStorefrontImageUrl(localFallback),
     };
   }
 
   if (catalogImage.startsWith("/images/")) {
     return {
       src: catalogImage,
-      fallbackSrc: coerceSecureAssetUrl(cdnFlatPackshot || localFallback),
+      fallbackSrc: sanitizeStorefrontImageUrl(cdnFlatPackshot || localFallback),
     };
   }
 
   if (isCdnUrl(catalogImage)) {
     return {
-      src: coerceSecureAssetUrl(catalogImage),
-      fallbackSrc: coerceSecureAssetUrl(localFallback),
+      src: sanitizeStorefrontImageUrl(catalogImage),
+      fallbackSrc: sanitizeStorefrontImageUrl(localFallback),
     };
   }
 
   return {
-    src: coerceSecureAssetUrl(catalogImage),
-    fallbackSrc: coerceSecureAssetUrl(localFallback),
+    src: sanitizeStorefrontImageUrl(catalogImage),
+    fallbackSrc: sanitizeStorefrontImageUrl(localFallback),
   };
 }

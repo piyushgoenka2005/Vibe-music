@@ -7,6 +7,7 @@ import {
   listSectionItems,
   isHomepageItemScheduledActive,
 } from "@/lib/server/homepageRepository";
+import { sanitizeStorefrontImageUrl } from "@/lib/storefront/coerceSecureAssetUrl";
 
 export interface HomepageStoryBannersData {
   isActive: boolean;
@@ -42,7 +43,7 @@ export async function getHomepageStoryBanners(): Promise<HomepageStoryBannersDat
     if (activeItems.length > 0) {
       const banners: AplusStoryBanner[] = activeItems.map((item) => ({
         id: item.id,
-        imageSrc: item.customImage || "/images/guitar-1.webp",
+        imageSrc: sanitizeStorefrontImageUrl(item.customImage || "") || "/images/guitar-1.webp",
         imageAlt: item.customTitle || "Featured gear story",
         href: item.customHref || undefined,
       }));

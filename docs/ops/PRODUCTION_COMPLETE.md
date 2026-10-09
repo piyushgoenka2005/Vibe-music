@@ -1,10 +1,11 @@
 # Production completion status (engineering)
 
-**Live:** https://vibemusic.in · **Deploy:** `329b6d90` (verify `/api/health` → `version`)
+**Live:** https://vibemusic.in · **Deploy:** `966f8de7` (verify `/api/health` → `version`)
 
 ## Automated gates (run anytime)
 
 ```bash
+VERIFY_BASE_URL=https://vibemusic.in npm run verify:production-final
 VERIFY_BASE_URL=https://vibemusic.in npm run verify:external-audit-passive
 VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 npm run verify:e2e-catalog          # CI merge gate (22 cases)
@@ -21,18 +22,27 @@ Deploy (`bash deploy/update.sh`) now runs **blocking** loopback + public smoke, 
 - Ops scripts fixed (Razorpay verify, review reconcile)
 - Audit response: `docs/ops/EXTERNAL_AUDIT_V2_RESPONSE.md`
 
-## One action left for zero-warn sign-off
+## Operator secrets (not in git) — then one command
 
-**GSTIN not in homepage HTML** — engineering deploy is complete; `verify:prod-signoff` still **WARN**s until a valid 15-character GSTIN is in `deploy/ops-secrets.env` **and** a rebuild runs (`NEXT_PUBLIC_*` is baked at build time):
+Fill **`deploy/ops-secrets.env`** locally (gitignored), then:
+
+| Secret           | Key                                                                          |
+| ---------------- | ---------------------------------------------------------------------------- |
+| Meta CAPI token  | `META_CAPI_ACCESS_TOKEN`                                                     |
+| Meta domain tag  | `NEXT_PUBLIC_META_DOMAIN_VERIFICATION` (+ `META_DOMAIN_VERIFICATION` mirror) |
+| GSTIN (15 chars) | `NEXT_PUBLIC_GSTIN`                                                          |
 
 ```bash
-# On VPS (replace with your real GSTIN)
-cd ~/Vibe-music
-# Add to deploy/ops-secrets.env: NEXT_PUBLIC_GSTIN=19XXXXXXXXXXXZ1
+# Meta (local machine — pushes to VPS + redeploy)
+npm run setup:meta-integration -- --from-ops-secrets
+# or after editing deploy/ops-secrets.env only:
+npm run ops:sync-meta-integration-vps
+
+# GSTIN (on VPS)
 bash deploy/production.sh compliance
 ```
 
-Or set `NEXT_PUBLIC_GSTIN` in `deploy/ops-secrets.env`, run `node scripts/ops/merge-ops-secrets.mjs`, `npx tsx --env-file=.env scripts/ops/seed-production-ops.mts`, `pm2 restart vibe --update-env`.
+Then: `VERIFY_BASE_URL=https://vibemusic.in npm run verify:production-final` (exit 0 = fully final).
 
 ## Optional (non-blocking)
 

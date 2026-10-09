@@ -15,13 +15,13 @@ async function loadPublicHomepageData(): Promise<PublicHomepageData> {
 
 export const getCachedPublicHomepageData = unstable_cache(
   loadPublicHomepageData,
-  ["public-homepage-data-v7"],
+  ["public-homepage-data-v8"],
   { revalidate: HOMEPAGE_REVALIDATE_SECONDS, tags: ["homepage", "catalog"] },
 );
 
 export const getCachedBigNamesDealsPublicData = unstable_cache(
   async (): Promise<PublicBigNamesDealsData> => buildBigNamesDealsPublicData(),
-  ["public-big-names-deals-v4"],
+  ["public-big-names-deals-v5"],
   { revalidate: HOMEPAGE_REVALIDATE_SECONDS, tags: ["homepage", "catalog"] },
 );
 

@@ -11,6 +11,7 @@ import { spawnSync } from "node:child_process";
 const DEFAULT_PIXEL_ID = "2368094903963199";
 const root = process.cwd();
 const localEnvPath = path.join(root, ".env.local");
+const opsSecretsPath = path.join(root, "deploy", "ops-secrets.env");
 const host = process.env.VPS_HOST ?? "109.122.56.126";
 const user = process.env.VPS_USER ?? "root";
 const key = path.join(os.homedir(), ".ssh", "vibe_vps_deploy");
@@ -40,6 +41,9 @@ function readMetaCreds() {
   if (fs.existsSync(localEnvPath)) {
     for (const [k, v] of parseEnv(fs.readFileSync(localEnvPath, "utf8"))) merged.set(k, v);
   }
+  if (fs.existsSync(opsSecretsPath)) {
+    for (const [k, v] of parseEnv(fs.readFileSync(opsSecretsPath, "utf8"))) merged.set(k, v);
+  }
   for (const keyName of META_KEYS) {
     const fromShell = process.env[keyName]?.trim();
     if (fromShell) merged.set(keyName, fromShell);
@@ -47,9 +51,16 @@ function readMetaCreds() {
   if (!merged.get("NEXT_PUBLIC_META_PIXEL_ID")) {
     merged.set("NEXT_PUBLIC_META_PIXEL_ID", DEFAULT_PIXEL_ID);
   }
-  return Object.fromEntries(
+  const out = Object.fromEntries(
     META_KEYS.filter((k) => merged.get(k)).map((k) => [k, merged.get(k)]),
   );
+  const domain =
+    out.NEXT_PUBLIC_META_DOMAIN_VERIFICATION || merged.get("META_DOMAIN_VERIFICATION");
+  if (domain) {
+    out.NEXT_PUBLIC_META_DOMAIN_VERIFICATION = domain;
+    out.META_DOMAIN_VERIFICATION = domain;
+  }
+  return out;
 }
 
 function mask(value) {
