@@ -16,6 +16,8 @@ Deploy (`bash deploy/update.sh`) now runs **blocking** loopback + public smoke, 
 
 ## Done (engineering)
 
+**Status:** Automated production sign-off **complete** on `80c14cdf` (store, payments, Meta Pixel browser, passive audit, homepage hygiene).
+
 - Category routing, coupons API, checkout/auth E2E coverage
 - Payment server-side totals, Razorpay verify + webhook, rate limits, security headers
 - Policy pages SSR, legacy redirects, social URL sanitization, grievance line in footer
