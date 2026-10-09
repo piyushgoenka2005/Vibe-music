@@ -19,6 +19,19 @@ async function fetchText(path: string): Promise<{ status: number; html: string }
   return { status: response.status, html: await response.text() };
 }
 
+/** Deploy smoke + audit can burst the same edge; retry 429s before failing the gate. */
+async function fetchTextResilient(
+  path: string,
+  attempts = 4,
+): Promise<{ status: number; html: string }> {
+  let last = await fetchText(path);
+  for (let i = 1; i < attempts && last.status === 429; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 1200 * i));
+    last = await fetchText(path);
+  }
+  return last;
+}
+
 const rows: Row[] = [];
 
 for (const slug of ["privacy", "terms", "returns", "shipping", "cookies"]) {
@@ -91,7 +104,7 @@ for (const path of ["/financing", "/gear-exchange", "/giveaway"]) {
 }
 
 {
-  const { status, html } = await fetchText("/api/coupons/active");
+  const { status, html } = await fetchTextResilient("/api/coupons/active");
   rows.push({
     name: "coupons-active",
     ok: status === 200 && html.includes('"coupons"'),
