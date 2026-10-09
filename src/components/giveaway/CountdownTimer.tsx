@@ -37,10 +37,12 @@ export default function CountdownTimer({
   targetIso: string;
   label?: string;
 }) {
-  const [parts, setParts] = useState<CountdownParts | null>(() => getCountdownParts(targetIso));
+  // Time-based values must not run during SSR — server clock ≠ client hydrate instant.
+  const [parts, setParts] = useState<CountdownParts | null>(null);
 
   useEffect(() => {
     const tick = () => setParts(getCountdownParts(targetIso));
+    tick();
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
   }, [targetIso]);

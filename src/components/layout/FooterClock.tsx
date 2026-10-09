@@ -14,17 +14,14 @@ function formatMumbaiClock(date: Date): string {
 }
 
 export default function FooterClock() {
-  const [time, setTime] = useState(() => formatMumbaiClock(new Date()));
+  const [time, setTime] = useState<string | null>(null);
 
   useEffect(() => {
     const tick = () => setTime(formatMumbaiClock(new Date()));
+    tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
   }, []);
 
-  return (
-    <time dateTime={new Date().toISOString()} suppressHydrationWarning>
-      {time}
-    </time>
-  );
+  return <time suppressHydrationWarning>{time ?? "MUM/IND —:—:—"}</time>;
 }
