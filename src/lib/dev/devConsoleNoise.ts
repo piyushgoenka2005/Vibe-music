@@ -1,9 +1,16 @@
+import { EXTENSION_CONSOLE_NOISE_PATTERN } from "@/lib/client/extensionConsoleNoise";
+
 /**
  * Known noisy console output in local dev — browser extensions (contentscript.js)
  * and Next.js forward-logs (React DevTools / HMR). Not application bugs.
  */
-export const DEV_CONSOLE_SUPPRESSED =
-  /save-page|Extension context invalidated|chrome-extension:|ObjectMultiplex|app-init-liveness|background-liveness|orphaned data for stream|MaxListenersExceededWarning|React DevTools|react\.dev\/link\/react-devtools|\[HMR\] connected|\[Fast Refresh\]/i;
+const DEV_TOOLING_NOISE =
+  /React DevTools|react\.dev\/link\/react-devtools|\[HMR\] connected|\[Fast Refresh\]|was preloaded using link preload but not used|Encountered a script tag while rendering React component/i;
+
+export const DEV_CONSOLE_SUPPRESSED = new RegExp(
+  `${EXTENSION_CONSOLE_NOISE_PATTERN.source}|${DEV_TOOLING_NOISE.source}`,
+  "i",
+);
 
 export function formatConsoleArgs(args: unknown[]): string {
   return args
@@ -23,13 +30,21 @@ export function isSuppressedDevConsoleMessage(text: string): boolean {
   return DEV_CONSOLE_SUPPRESSED.test(text);
 }
 
+export function isSuppressedDevConsoleArgs(args: unknown[]): boolean {
+  for (const value of args) {
+    if (typeof value === "string" && DEV_CONSOLE_SUPPRESSED.test(value)) return true;
+    if (value instanceof Error && DEV_CONSOLE_SUPPRESSED.test(value.message)) return true;
+  }
+  return DEV_CONSOLE_SUPPRESSED.test(formatConsoleArgs(args));
+}
+
 const PATCHED = Symbol("vibeDevConsoleFilter");
 
 type ConsoleFn = (...args: unknown[]) => void;
 
 function wrapConsoleMethod(original: ConsoleFn): ConsoleFn {
   const wrapped = (...args: unknown[]) => {
-    if (isSuppressedDevConsoleMessage(formatConsoleArgs(args))) {
+    if (isSuppressedDevConsoleArgs(args)) {
       return;
     }
     original(...args);
@@ -98,5 +113,5 @@ export function scheduleDevConsoleNoiseFilterRefresh(): void {
 /** Earliest possible setup — inline in root layout `<head>` before React / extensions. */
 export function buildDevConsoleFilterInlineScript(): string {
   const pattern = JSON.stringify(DEV_CONSOLE_SUPPRESSED.source);
-  return `(function(){try{if(typeof window!=="undefined"&&!window.__REACT_DEVTOOLS_GLOBAL_HOOK__){window.__REACT_DEVTOOLS_GLOBAL_HOOK__={isDisabled:false,supportsFiber:true,checkDCE:true,inject:function(){return 0}}}var re=new RegExp(${pattern},"i");function fmt(args){var list=Array.prototype.slice.call(args);return list.map(function(v){if(typeof v==="string")return v;if(v&&v.message)return v.message;try{return JSON.stringify(v)}catch(e){return String(v)}}).join(" ")}function wrap(fn){return function(){if(re.test(fmt(arguments)))return;fn.apply(console,arguments)}}if(typeof console!=="undefined"){console.warn=wrap(console.warn.bind(console));console.error=wrap(console.error.bind(console));console.log=wrap(console.log.bind(console));console.info=wrap(console.info.bind(console));console.debug=wrap(console.debug.bind(console))}}catch(e){}})();`;
+  return `(function(){try{if(typeof window!=="undefined"&&!window.__REACT_DEVTOOLS_GLOBAL_HOOK__){window.__REACT_DEVTOOLS_GLOBAL_HOOK__={isDisabled:false,supportsFiber:true,checkDCE:true,inject:function(){return 0}}}var re=new RegExp(${pattern},"i");function suppressed(args){var list=Array.prototype.slice.call(args);for(var i=0;i<list.length;i++){var v=list[i];if(typeof v==="string"&&re.test(v))return true;if(v&&v.message&&re.test(v.message))return true}var joined=list.map(function(v){if(typeof v==="string")return v;if(v&&v.message)return v.message;try{return JSON.stringify(v)}catch(e){return String(v)}}).join(" ");return re.test(joined)}function wrap(fn){return function(){if(suppressed(arguments))return;fn.apply(console,arguments)}}function patch(){if(typeof console==="undefined")return;["warn","error","log","info","debug"].forEach(function(m){var cur=console[m];if(typeof cur!=="function")return;console[m]=wrap(cur.bind(console))})}patch();var n=0;var t=window.setInterval(function(){patch();n+=1;if(n>=24)window.clearInterval(t)},250)}catch(e){}})();`;
 }

@@ -534,7 +534,7 @@ export default function ProductGallery({
       >
         {images.map((image, index) => (
           <button
-            key={image.id}
+            key={`${image.id}-${index}`}
             type="button"
             role="listitem"
             className={`pdp-gallery__thumb${index === activeIndex && !showVideo && !show360 ? " pdp-gallery__thumb--active" : ""}`}

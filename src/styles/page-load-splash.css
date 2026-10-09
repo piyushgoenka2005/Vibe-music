@@ -41,6 +41,10 @@ html.vibe-splash-active .cookie-consent,
   background: var(--surface-base, #ffffff);
 }
 
+.vibe-boot-splash[hidden] {
+  display: none !important;
+}
+
 .vibe-boot-splash {
   display: none;
   position: fixed;
@@ -51,7 +55,7 @@ html.vibe-splash-active .cookie-consent,
   pointer-events: all;
 }
 
-html.vibe-splash-pending .vibe-boot-splash {
+html.vibe-splash-pending .vibe-boot-splash:not([hidden]) {
   display: grid;
 }
 

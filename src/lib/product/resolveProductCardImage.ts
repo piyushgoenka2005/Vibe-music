@@ -1,5 +1,6 @@
 import { getProductImage } from "@/data/productImages";
 import { isCdnUrl } from "@/lib/cdnConfig";
+import { coerceSecureAssetUrl } from "@/lib/storefront/coerceSecureAssetUrl";
 
 export interface ProductCardImageInput {
   slug: string;
@@ -147,10 +148,11 @@ export function resolveProductGalleryUrls(input: ProductCardImageInput): string[
 
   if (sorted.every(isFlatPackshotCatalogImage)) {
     const fallback = productImageLocalFallback(input.slug, input.category);
-    return fallback ? [fallback, ...sorted] : sorted;
+    const list = fallback ? [fallback, ...sorted] : sorted;
+    return list.map((item) => coerceSecureAssetUrl(item));
   }
 
-  return sorted;
+  return sorted.map((item) => coerceSecureAssetUrl(item));
 }
 
 function pickCatalogImage(input: ProductCardImageInput): string {
@@ -190,19 +192,28 @@ export function resolveProductCardImage(input: ProductCardImageInput): {
   const cdnFlatPackshot = flatPackshotCdnUrl(refs);
 
   if (!catalogImage) {
-    return { src: localFallback, fallbackSrc: localFallback };
+    return {
+      src: coerceSecureAssetUrl(localFallback),
+      fallbackSrc: coerceSecureAssetUrl(localFallback),
+    };
   }
 
   if (catalogImage.startsWith("/images/")) {
     return {
       src: catalogImage,
-      fallbackSrc: cdnFlatPackshot || localFallback,
+      fallbackSrc: coerceSecureAssetUrl(cdnFlatPackshot || localFallback),
     };
   }
 
   if (isCdnUrl(catalogImage)) {
-    return { src: catalogImage, fallbackSrc: localFallback };
+    return {
+      src: coerceSecureAssetUrl(catalogImage),
+      fallbackSrc: coerceSecureAssetUrl(localFallback),
+    };
   }
 
-  return { src: catalogImage, fallbackSrc: localFallback };
+  return {
+    src: coerceSecureAssetUrl(catalogImage),
+    fallbackSrc: coerceSecureAssetUrl(localFallback),
+  };
 }

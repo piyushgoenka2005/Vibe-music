@@ -108,6 +108,7 @@ export default function HomepageBannerHero({
         }}
       >
         {slides.map((slide, index) => {
+          const isFirstSlide = index === 0;
           const isActive = index === activeIndex;
           const hasCopy = Boolean(
             slide.title?.trim() || slide.subtitle?.trim() || slide.ctaText?.trim(),
@@ -136,8 +137,8 @@ export default function HomepageBannerHero({
                   <img
                     src={slide.src}
                     alt={slide.alt}
-                    loading={index === 0 ? "eager" : "lazy"}
-                    fetchPriority={index === 0 ? "high" : "auto"}
+                    loading={isFirstSlide ? "eager" : "lazy"}
+                    fetchPriority={isFirstSlide ? "high" : undefined}
                     decoding="async"
                     className="homepage-banner-hero__image"
                     style={{

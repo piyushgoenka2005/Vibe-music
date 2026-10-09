@@ -15,10 +15,9 @@ import {
 export default function SplashPendingClear() {
   useLayoutEffect(() => {
     const clear = () => {
-      document.documentElement.classList.remove(
-        SPLASH_PENDING_CLASS,
-        SPLASH_ACTIVE_CLASS
-      );
+      document.documentElement.classList.remove(SPLASH_PENDING_CLASS, SPLASH_ACTIVE_CLASS);
+      const boot = document.getElementById("vibe-boot-splash");
+      if (boot) boot.setAttribute("hidden", "");
       document.documentElement.style.removeProperty("background");
       document.documentElement.style.removeProperty("background-color");
       document.body?.style.removeProperty("background");

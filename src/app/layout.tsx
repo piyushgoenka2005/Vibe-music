@@ -93,16 +93,20 @@ export default async function RootLayout({
       </head>
       <body className={primaryFont.className} suppressHydrationWarning>
         <GoogleAnalyticsScripts />
-        {splashEnabled ? (
-          /* Instant framed brand cover — CSS hides unless html.vibe-splash-pending. */
-          <div id="vibe-boot-splash" className="vibe-boot-splash" aria-hidden="true">
-            <div className="page-load-splash__frame page-load-splash__frame--settled">
-              <span className="page-load-splash__text page-load-splash__text--settled">
-                VIBE MUSIC
-              </span>
-            </div>
+        {/* Always mount — stable SSR/hydration tree; visibility via html.vibe-splash-pending CSS. */}
+        <div
+          id="vibe-boot-splash"
+          className="vibe-boot-splash"
+          aria-hidden="true"
+          suppressHydrationWarning
+          data-splash-enabled={splashEnabled ? "true" : "false"}
+        >
+          <div className="page-load-splash__frame page-load-splash__frame--settled">
+            <span className="page-load-splash__text page-load-splash__text--settled">
+              VIBE MUSIC
+            </span>
           </div>
-        ) : null}
+        </div>
         <Suspense fallback={null}>
           <SocialRailShell />
         </Suspense>

@@ -36,6 +36,7 @@ import {
   resolveProductCardImage,
   resolveProductGalleryUrls,
 } from "@/lib/product/resolveProductCardImage";
+import { coerceSecureAssetUrl } from "@/lib/storefront/coerceSecureAssetUrl";
 import {
   detectSearchInstrumentIntent,
   isNonInstrumentGuitarProduct,
@@ -474,7 +475,7 @@ export function toProductDetail(catalogProduct: CatalogProduct): ProductDetail {
           : typeof candidate?.url === "string"
             ? candidate.url
             : "";
-    const cleanSrc = rawSrc && rawSrc !== "[object Object]" ? rawSrc : "";
+    const cleanSrc = rawSrc && rawSrc !== "[object Object]" ? coerceSecureAssetUrl(rawSrc) : "";
     if (!cleanSrc) return;
     rawGalleryBySrc.set(cleanSrc, {
       id: candidate?.id || `img-${index}`,

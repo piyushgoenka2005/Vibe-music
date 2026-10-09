@@ -1,4 +1,3 @@
-import { SOCIAL_LINKS } from "@/lib/socialLinks";
 import {
   getDefaultSocialRailConfig,
   SOCIAL_RAIL_PLATFORMS,
@@ -24,16 +23,4 @@ export function getFooterSocialLinks(): FooterSocialLink[] {
       label: SOCIAL_RAIL_PLATFORM_LABELS[platform],
     };
   }).filter((link) => link.href.length > 0);
-}
-
-export function getFooterNewsletterHref(): string {
-  const href =
-    getDefaultSocialRailConfig().newsletter?.href?.trim() ||
-    SOCIAL_LINKS.newsletter?.trim() ||
-    "#newsletter";
-  return href.startsWith("#") || href.startsWith("/") ? href : "#newsletter";
-}
-
-export function getFooterNewsletterLabel(): string {
-  return getDefaultSocialRailConfig().newsletter?.label?.trim() || "Newsletter";
 }

@@ -1,3 +1,4 @@
+import Script from "next/script";
 import {
   buildMetaPixelInlineScript,
   getMetaPixelId,
@@ -16,11 +17,9 @@ export default function MetaPixelScripts() {
 
   return (
     <>
-      {/* Meta Pixel Code */}
-      <script
-        id="meta-pixel-base"
-        dangerouslySetInnerHTML={{ __html: buildMetaPixelInlineScript(pixelId) }}
-      />
+      <Script id="meta-pixel-base" strategy="beforeInteractive">
+        {buildMetaPixelInlineScript(pixelId)}
+      </Script>
       <noscript>
         <img
           height="1"
@@ -30,7 +29,6 @@ export default function MetaPixelScripts() {
           alt=""
         />
       </noscript>
-      {/* End Meta Pixel Code */}
     </>
   );
 }

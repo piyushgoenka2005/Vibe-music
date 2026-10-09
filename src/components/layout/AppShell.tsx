@@ -25,7 +25,6 @@ import ServiceWorkerRegister from "@/components/layout/ServiceWorkerRegister";
 import AnalyticsProvider from "@/components/analytics/AnalyticsProvider";
 import SupportChatLoader from "@/components/support/SupportChatLoader";
 import DevExtensionNoiseFilter from "@/components/dev/DevExtensionNoiseFilter";
-import DevSiteUrlHint from "@/components/dev/DevSiteUrlHint";
 import type { MegaMenuItem } from "@/data/headerMegaMenu";
 import type { PublicLegalInfo } from "@/types/publicLegal";
 
@@ -100,7 +99,6 @@ export default function AppShell({
         {ENABLE_PAGE_LOAD_SPLASH ? <PageLoadSplash onComplete={handleSplashComplete} /> : null}
         <WebVitalsReporter />
         <DevExtensionNoiseFilter />
-        <DevSiteUrlHint />
         <AnalyticsProvider />
         <SupportChatLoader />
         <ServiceWorkerRegister />

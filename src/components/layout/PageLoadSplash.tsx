@@ -39,6 +39,8 @@ function clearSplashCover() {
   const root = document.documentElement;
   root.classList.remove(SPLASH_PENDING_CLASS);
   root.classList.remove(SPLASH_ACTIVE_CLASS);
+  const boot = document.getElementById("vibe-boot-splash");
+  if (boot) boot.setAttribute("hidden", "");
 }
 
 function setSplashCoverActive(active: boolean) {
@@ -150,29 +152,35 @@ export default function PageLoadSplash({ variant = "initial", onComplete }: Page
   const finish = (markSeen: boolean) => {
     if (finishedRef.current) return;
     finishedRef.current = true;
-    setVisible(false);
     clearSplashCover();
     if (markSeen) markSplashSeen();
     onCompleteRef.current?.();
   };
 
+  const skipSplash = () => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    clearSplashCover();
+  };
+
   useLayoutEffect(() => {
     if (variant !== "initial") {
-      finish(false);
+      skipSplash();
       return;
     }
 
     if (!SPLASH_ENABLED) {
-      finish(false);
+      skipSplash();
       return;
     }
 
     if (!shouldShowInitialSplash()) {
-      finish(false);
+      skipSplash();
       return;
     }
 
     startedAtRef.current = performance.now();
+    document.getElementById("vibe-boot-splash")?.removeAttribute("hidden");
     setVisible(true);
     setSplashCoverActive(true);
   }, [variant]);
@@ -194,7 +202,10 @@ export default function PageLoadSplash({ variant = "initial", onComplete }: Page
         if (cancelled || finishedRef.current) return;
         setExiting(true);
         fadeTimer = window.setTimeout(() => {
-          if (!cancelled) finish(true);
+          if (!cancelled) {
+            finish(true);
+            setVisible(false);
+          }
         }, SPLASH_EXIT_MS);
       }, waitMs);
     };
