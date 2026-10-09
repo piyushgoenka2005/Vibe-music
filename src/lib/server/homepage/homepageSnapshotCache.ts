@@ -27,7 +27,7 @@ export const getCachedBigNamesDealsPublicData = unstable_cache(
 
 export const getCachedHomepageStoryBanners = unstable_cache(
   async (): Promise<HomepageStoryBannersData> => buildHomepageStoryBanners(),
-  ["public-homepage-story-banners-v1"],
+  ["public-homepage-story-banners-v2"],
   { revalidate: HOMEPAGE_REVALIDATE_SECONDS, tags: ["homepage"] },
 );
 
