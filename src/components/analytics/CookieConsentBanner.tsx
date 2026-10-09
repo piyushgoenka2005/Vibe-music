@@ -3,14 +3,16 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ANALYTICS_CONSENT_KEY, isAnalyticsEnabled } from "@/lib/analytics/config";
+import {
+  ANALYTICS_CONSENT_CHANGE_EVENT,
+  ANALYTICS_CONSENT_KEY,
+  isAnalyticsEnabled,
+} from "@/lib/analytics/config";
 import { isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
 import { denyAnalyticsConsent, grantAnalyticsConsent } from "@/lib/analytics/gtag";
 import "@/components/analytics/cookie-consent.css";
 
 type ConsentState = "unknown" | "granted" | "denied";
-
-const CONSENT_CHANGE_EVENT = "vibe-analytics-consent";
 
 function readConsent(): ConsentState {
   if (typeof window === "undefined") return "unknown";
@@ -30,15 +32,15 @@ function writeConsent(value: "granted" | "denied") {
   } catch {
     /* ignore */
   }
-  window.dispatchEvent(new Event(CONSENT_CHANGE_EVENT));
+  window.dispatchEvent(new Event(ANALYTICS_CONSENT_CHANGE_EVENT));
 }
 
 function subscribeConsent(onStoreChange: () => void) {
   window.addEventListener("storage", onStoreChange);
-  window.addEventListener(CONSENT_CHANGE_EVENT, onStoreChange);
+  window.addEventListener(ANALYTICS_CONSENT_CHANGE_EVENT, onStoreChange);
   return () => {
     window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(CONSENT_CHANGE_EVENT, onStoreChange);
+    window.removeEventListener(ANALYTICS_CONSENT_CHANGE_EVENT, onStoreChange);
   };
 }
 

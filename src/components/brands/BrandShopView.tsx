@@ -7,6 +7,7 @@ import { useFilterStore } from "@/store/filterStore";
 import { useCategoryFilters } from "@/hooks/useCategoryFilters";
 import { buildCategoryProductsResult } from "@/lib/catalog/categoryProductsCore";
 import { trackViewItemList } from "@/lib/analytics/events";
+import { onAnalyticsConsentGranted } from "@/lib/analytics/gtag";
 import { ROUTES } from "@/lib/routes";
 import ProductCard from "@/components/common/ProductCard";
 import CategoryPagination from "@/components/category/CategoryPagination";
@@ -76,7 +77,9 @@ function BrandShopViewContent({ brand }: BrandShopViewProps) {
 
   useEffect(() => {
     if (!data.products.length) return;
-    trackViewItemList(data.products, listContext);
+    const fireList = () => trackViewItemList(data.products, listContext);
+    fireList();
+    return onAnalyticsConsentGranted(fireList);
   }, [listContext, data.products, data.page]);
 
   const handleClearAll = () => {

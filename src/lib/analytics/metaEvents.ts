@@ -141,11 +141,11 @@ export function trackMetaPurchase(order: Order): void {
 }
 
 export function grantMetaConsent(): void {
-  if (!canTrackMeta()) return;
+  if (!canUseMetaPixel()) return;
   fbq("consent", "grant");
 }
 
 export function revokeMetaConsent(): void {
-  if (!canTrackMeta()) return;
+  if (!canUseMetaPixel()) return;
   fbq("consent", "revoke");
 }

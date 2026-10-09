@@ -1,8 +1,7 @@
 /** GA4 measurement ID (client + server). Example: G-XXXXXXXXXX */
 export function getGaMeasurementId(): string | undefined {
   const id =
-    process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() ||
-    process.env.GA_MEASUREMENT_ID?.trim();
+    process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || process.env.GA_MEASUREMENT_ID?.trim();
   if (!id) return undefined;
   if (!/^G-[A-Z0-9]+$/i.test(id)) return undefined;
   return id;
@@ -10,9 +9,7 @@ export function getGaMeasurementId(): string | undefined {
 
 /** Optional Google Tag Manager container. Example: GTM-XXXXXXX */
 export function getGtmId(): string | undefined {
-  const id =
-    process.env.NEXT_PUBLIC_GTM_ID?.trim() ||
-    process.env.GTM_ID?.trim();
+  const id = process.env.NEXT_PUBLIC_GTM_ID?.trim() || process.env.GTM_ID?.trim();
   if (!id) return undefined;
   if (!/^GTM-[A-Z0-9]+$/i.test(id)) return undefined;
   return id;
@@ -37,3 +34,6 @@ export function isAnalyticsEnabled(): boolean {
 }
 
 export const ANALYTICS_CONSENT_KEY = "vibe-analytics-consent";
+
+/** Dispatched when the user accepts or declines analytics (see CookieConsentBanner). */
+export const ANALYTICS_CONSENT_CHANGE_EVENT = "vibe-analytics-consent";

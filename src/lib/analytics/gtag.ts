@@ -12,6 +12,26 @@ declare global {
   }
 }
 
+const consentGrantedListeners = new Set<() => void>();
+
+/** Re-run ecommerce trackers after the user accepts analytics (PDP ViewContent, etc.). */
+export function onAnalyticsConsentGranted(listener: () => void): () => void {
+  consentGrantedListeners.add(listener);
+  return () => {
+    consentGrantedListeners.delete(listener);
+  };
+}
+
+function notifyAnalyticsConsentGranted(): void {
+  for (const listener of consentGrantedListeners) {
+    try {
+      listener();
+    } catch {
+      /* ignore listener errors */
+    }
+  }
+}
+
 function gtag(...args: unknown[]): void {
   if (typeof window === "undefined") return;
   window.dataLayer = window.dataLayer ?? [];
@@ -28,6 +48,7 @@ export function grantAnalyticsConsent(): void {
     ad_personalization: adGranted ? "granted" : "denied",
   });
   if (adGranted) grantMetaConsent();
+  notifyAnalyticsConsentGranted();
 }
 
 export function denyAnalyticsConsent(): void {

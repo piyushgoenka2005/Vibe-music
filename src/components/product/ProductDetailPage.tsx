@@ -21,6 +21,7 @@ import type { ProductImage, ProductVariant } from "@/types/product";
 import type { ProductDetailResult } from "@/services/product.service";
 import { isPurchasablePrice } from "@/utils/currency";
 import { trackViewItem } from "@/lib/analytics/events";
+import { onAnalyticsConsentGranted } from "@/lib/analytics/gtag";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import ProductBuyBox from "./ProductBuyBox";
@@ -226,10 +227,14 @@ function ProductDetailPageContent({
 
   useEffect(() => {
     if (!catalogProduct || !selectedVariant) return;
-    trackViewItem(catalogProduct, {
-      variantLabel: selectedVariant.label,
-      value: selectedVariant.price ?? catalogProduct.price,
-    });
+    const fireViewItem = () => {
+      trackViewItem(catalogProduct, {
+        variantLabel: selectedVariant.label,
+        value: selectedVariant.price ?? catalogProduct.price,
+      });
+    };
+    fireViewItem();
+    return onAnalyticsConsentGranted(fireViewItem);
   }, [catalogProduct, selectedVariant]);
 
   useEffect(() => {

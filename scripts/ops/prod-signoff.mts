@@ -94,6 +94,18 @@ const checks: Check[] = [];
     detail: `analyticsEnabled=${String(data.analyticsEnabled)}`,
     blocking: false,
   });
+  checks.push({
+    name: "meta-pixel",
+    ok: status === 200 && data.metaPixelConfigured === true,
+    detail: `metaPixelConfigured=${String(data.metaPixelConfigured)}`,
+    blocking: false,
+  });
+  checks.push({
+    name: "meta-capi",
+    ok: status === 200 && data.metaCapiConfigured === true,
+    detail: `metaCapiConfigured=${String(data.metaCapiConfigured)}`,
+    blocking: false,
+  });
 }
 
 {
