@@ -158,7 +158,7 @@ async function main() {
     }
     if (caps.metaCapiConfigured === true) {
       checks.push(pass("live:meta-capi", "metaCapiConfigured=true (Purchase dedupe)"));
-    } else if (isMetaPixelConfigured()) {
+    } else if (isMetaPixelConfigured() || caps.metaPixelConfigured === true) {
       checks.push(
         fail(
           "live:meta-capi",
@@ -179,10 +179,10 @@ async function main() {
       cache: "no-store",
     });
     const pdpHtml = await pdpRes.text();
-    const pixelId = getMetaPixelId();
+    const pixelId = getMetaPixelId() ?? pixelIdFromHtml(pdpHtml) ?? pixelIdFromHtml(liveHtmlForEnv);
     if (pdpRes.status === 200 && pixelId && pdpHtml.includes(`fbq('init', '${pixelId}')`)) {
       checks.push(pass("live:pdp-pixel", `GET /product/${sampleSlug} includes Pixel base code`));
-    } else if (isMetaPixelConfigured()) {
+    } else if (isMetaPixelConfigured() || pixelIdFromHtml(liveHtmlForEnv)) {
       checks.push(
         fail("live:pdp-pixel", `HTTP ${pdpRes.status} or Pixel init missing on product page`),
       );
