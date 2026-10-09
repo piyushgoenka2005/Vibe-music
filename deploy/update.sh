@@ -599,6 +599,9 @@ npx tsx --env-file=.env scripts/ops/seed-production-ops.mts || true
 log "Reconcile product review aggregates"
 npx tsx --env-file=.env scripts/ops/reconcile-product-review-aggregates.mts
 
+log "Repair homepage images on disallowed hosts (postimage.me, etc.)"
+npx tsx --env-file=.env scripts/ops/repair-homepage-postimage.mts || true
+
 if [[ "${SEED_CATALOG:-0}" == "1" ]]; then
   log "Seeding catalog from JSON"
   npm run seed:catalog
