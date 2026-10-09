@@ -1,6 +1,6 @@
 import { getProductImage } from "@/data/productImages";
 import { isCdnUrl } from "@/lib/cdnConfig";
-import { sanitizeStorefrontImageUrl } from "@/lib/storefront/sanitizeStorefrontImageUrl";
+import { sanitizeStorefrontImageUrl } from "@/lib/storefront/coerceSecureAssetUrl";
 
 export interface ProductCardImageInput {
   slug: string;
