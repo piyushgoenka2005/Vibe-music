@@ -1,5 +1,4 @@
 import {
-  installDevConsoleNoiseFilter,
   installReactDevToolsStub,
   scheduleDevConsoleNoiseFilterRefresh,
 } from "@/lib/dev/devConsoleNoise";
