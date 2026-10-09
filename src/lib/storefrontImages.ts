@@ -1,5 +1,6 @@
 import { buildMediaTransformUrl, MEDIA_PRESETS } from "@/lib/media-url";
 import { getCdnHostname, isCdnHostname, isCdnUrl } from "@/lib/cdnConfig";
+import { sanitizeStorefrontImageUrl } from "@/lib/storefront/coerceSecureAssetUrl";
 
 /** Shared thumb buckets supported across all catalog uploads. */
 export const STOREFRONT_THUMB_WIDTHS = [320, 480, 960, 1600] as const;
@@ -82,7 +83,9 @@ export function storefrontImageUrl(
   url: string,
   width = 640,
 ): { src: string; kind: "derivative" | "thumb" | "direct" } {
-  if (!url) return { src: url, kind: "direct" };
+  const safeUrl = sanitizeStorefrontImageUrl(url);
+  if (!safeUrl) return { src: "", kind: "direct" };
+  url = safeUrl;
   try {
     const host = new URL(url).hostname;
 

@@ -2,6 +2,7 @@ import "server-only";
 
 import type { ScannerProduct } from "@/components/home/find-your-product/types";
 import { getCachedHomepageProducts } from "@/lib/server/catalogSnapshotCache";
+import { productImageLocalFallback } from "@/lib/product/resolveProductCardImage";
 import { storefrontImageUrl } from "@/lib/storefrontImages";
 import { formatDisplayPrice } from "@/utils/currency";
 
@@ -33,9 +34,8 @@ function toScannerProduct(
   },
   index: number,
 ): ScannerProduct {
-  const image = product.image
-    ? storefrontImageUrl(product.image, 480).src
-    : "/images/guitar-1.webp";
+  const resolved = product.image ? storefrontImageUrl(product.image, 480).src : "";
+  const image = resolved || productImageLocalFallback(product.slug) || "/images/guitar-1.webp";
 
   return {
     id: product.id || `catalog-${index}`,
