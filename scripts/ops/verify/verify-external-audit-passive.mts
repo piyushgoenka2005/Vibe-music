@@ -21,12 +21,22 @@ async function fetchText(path: string): Promise<{ status: number; html: string }
 
 const rows: Row[] = [];
 
-for (const slug of ["privacy", "terms", "returns", "shipping"]) {
+for (const slug of ["privacy", "terms", "returns", "shipping", "cookies"]) {
   const { status, html } = await fetchText(`/pages/${slug}`);
   const words = visibleWordCount(html);
   rows.push({
     name: `policy:${slug}`,
     ok: status === 200 && words >= 200,
+    detail: `HTTP ${status} words≈${words}`,
+  });
+}
+
+for (const path of ["/financing", "/gear-exchange", "/giveaway"]) {
+  const { status, html } = await fetchText(path);
+  const words = visibleWordCount(html);
+  rows.push({
+    name: `program:${path}`,
+    ok: status === 200 && words >= 120,
     detail: `HTTP ${status} words≈${words}`,
   });
 }
@@ -37,6 +47,16 @@ for (const slug of ["privacy", "terms", "returns", "shipping"]) {
     name: "legacy-phone-absent",
     ok: status === 200 && !/977[\s-]?365[\s-]?1006|919773651006/i.test(html),
     detail: status === 200 ? "no legacy 9773651006 in HTML" : `HTTP ${status}`,
+  });
+  rows.push({
+    name: "postimage-absent",
+    ok: status === 200 && !/postimage\.me|postimg\.cc/i.test(html),
+    detail: "no postimage/postimg hosts on homepage",
+  });
+  rows.push({
+    name: "grievance-officer",
+    ok: status === 200 && /grievance officer/i.test(html),
+    detail: "footer grievance line present",
   });
   rows.push({
     name: "security-headers",
@@ -76,6 +96,25 @@ for (const slug of ["privacy", "terms", "returns", "shipping"]) {
     name: "coupons-active",
     ok: status === 200 && html.includes('"coupons"'),
     detail: `HTTP ${status}`,
+  });
+}
+
+{
+  const sampleSlug = "adeon-ad12-dsp-ad12-dsp";
+  const { status, html } = await fetchText(`/product/${sampleSlug}`);
+  const staleSeptember =
+    status === 200 && /FREE delivery[^<]*September/i.test(html) && !/October/i.test(html);
+  const fakeReviewInflation =
+    status === 200 && /300 reviews/i.test(html) && /Showing 0 of 0 reviews/i.test(html);
+  rows.push({
+    name: "pdp-delivery-fresh",
+    ok: status === 200 && !staleSeptember,
+    detail: staleSeptember ? "stale September delivery text" : `HTTP ${status}`,
+  });
+  rows.push({
+    name: "pdp-review-integrity",
+    ok: status === 200 && !fakeReviewInflation,
+    detail: fakeReviewInflation ? "300 reviews with zero listed" : `HTTP ${status}`,
   });
 }
 

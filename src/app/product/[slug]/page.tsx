@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
+import ProductDeliveryEstimateServer from "@/components/product/ProductDeliveryEstimateServer";
 import ProductDetailPage from "@/components/product/ProductDetailPage";
 import { loadProductCorePage, loadProductDetailPage } from "@/lib/server/productDetailLoader";
 import { resolveCanonicalProductSlug } from "@/services/catalogService";
@@ -67,6 +68,7 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
       {heroImageUrl ? (
         <link rel="preload" as="image" href={heroImageUrl} fetchPriority="high" />
       ) : null}
+      <ProductDeliveryEstimateServer />
       <ProductDetailPage
         slug={slug}
         initialData={initialData}

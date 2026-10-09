@@ -10,7 +10,12 @@ This maps the passive **vibemusic.in Security, Vulnerability & Production-Readin
 | F-04 Legacy phone `9773651006`                    | **Mitigated**             | Normalized in ops scripts; `verify:prod-signoff` fails if legacy phone appears in homepage HTML.                                                                            |
 | F-05 Fake review counts                           | **Mitigated**             | `ensureProductReviewMetrics` never invents counts; PDP loader uses `getProductReviewStats`; deploy runs `reconcile-product-review-aggregates.mts`. Tab headings hide `(0)`. |
 | F-07 `/category/recording`, `/category/keyboards` | **Fixed**                 | 301-style redirects in `resolveLegacyPath` → `studio-recording`, `keyboards-synthesizers`.                                                                                  |
-| F-08 Countdown dashes                             | **Fixed**                 | `CountdownTimer` initializes from server target on first paint; footer clock SSR-initializes IST time.                                                                      |
+| F-08 Countdown dashes                             | **Fixed**                 | `CountdownTimer` updates after mount (no hydration skew); deals use end-of-day IST target.                                                                                  |
+| F-02 Price / MRP guard                            | **Partial**               | Admin updates blocked above 40% discount or 20% delta (`priceChangePolicy.ts`); audit log `product.price_change`. Emergency: `ALLOW_LARGE_PRICE_CHANGES=1`.                 |
+| F-12 Giveaway rules (SSR)                         | **Partial**               | Server-rendered rules summary on `/giveaway` (`GiveawayContestRulesSection`). Per-campaign rules still required.                                                            |
+| F-16 Hertz reel handle mismatch                   | **Fixed**                 | Style-story cards show `@hertzmusicindia` when linking to Hertz reels.                                                                                                      |
+| F-17 Keywords spec row                            | **Fixed**                 | `specVisibility.ts` strips Keywords from PDP spec tables.                                                                                                                   |
+| F-04 Stale PDP delivery in HTML fetch             | **Mitigated**             | Server `ProductDeliveryEstimateServer` on product route (visually hidden, crawler-visible). Full buy-box SSR split still optional.                                          |
 | F-09 `postimage.me`                               | **Migrated**              | Prisma migration `20260908163000_migrate_postimg_to_cdn`; no `postimage` in repo. Verify banners in admin DB on VPS.                                                        |
 | F-10 Next.js patch                                | **On 16.3.6**             | `package.json`; CI runs `npm audit` + full `validate:ci`.                                                                                                                   |
 | F-16 Wrong social URLs (LinkedIn → x.com)         | **Fixed**                 | `sanitizeSocialRailHref` merges CMS overrides with canonical `SOCIAL_LINKS`.                                                                                                |
@@ -30,15 +35,15 @@ npm run verify:prod-signoff
 
 ## Still requires business / legal / manual action
 
-| Item                                                   | Owner                                                                    |
-| ------------------------------------------------------ | ------------------------------------------------------------------------ |
-| F-02 MRP evidence & price-change approval workflow     | Merchandising + admin process                                            |
-| F-12–F-14 Giveaway / gear exchange / rental legal copy | Legal counsel                                                            |
-| F-03 GSTIN visible on site                             | Set `NEXT_PUBLIC_GSTIN` in production env                                |
-| T-07 SPF/DKIM/DMARC                                    | DNS / mail provider                                                      |
-| T-08 Cookie consent before marketing tags              | Product decision + CMP if required                                       |
-| Appendix C routes (checkout, account)                  | Run full Playwright `validate:ci` and staged pen-test with authorization |
-| One live ₹1 test order + refund                        | Commercial smoke (F-14 sign-off optional item)                           |
+| Item                                                   | Owner                                                                     |
+| ------------------------------------------------------ | ------------------------------------------------------------------------- |
+| F-02 MRP evidence (documents per SKU)                  | Merchandising — guard blocks bad publishes; keep manufacturer price lists |
+| F-12–F-14 Giveaway / gear exchange / rental legal copy | Legal counsel                                                             |
+| F-03 GSTIN visible on site                             | Set `NEXT_PUBLIC_GSTIN` in production env                                 |
+| T-07 SPF/DKIM/DMARC                                    | DNS / mail provider                                                       |
+| T-08 Cookie consent before marketing tags              | Product decision + CMP if required                                        |
+| Appendix C routes (checkout, account)                  | Run full Playwright `validate:ci` and staged pen-test with authorization  |
+| One live ₹1 test order + refund                        | Commercial smoke (F-14 sign-off optional item)                            |
 
 ## Known limitation (F-04 / crawlers)
 

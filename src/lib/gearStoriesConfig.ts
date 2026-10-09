@@ -24,7 +24,7 @@ export const DEFAULT_GEAR_STORY_ITEMS: Array<{
       reel?.thumbnailSrc ?? (index % 2 === 0 ? "/images/guitar-1.webp" : "/images/guitar-2.webp"),
     customHref: seed.videoUrl || getMirroredReelVideoUrl(index),
     productId: seed.productId,
-    badgeLabel: SOCIAL_LINKS.instagramHandle,
+    badgeLabel: reel?.reelInstagramHandle ?? SOCIAL_LINKS.instagramHandle,
     offerText: reel?.reelUrl ?? SOCIAL_LINKS.instagram,
   };
 });
@@ -102,7 +102,7 @@ export function buildGearStoryFromSeed(
     videoUrl,
     videoCandidates: resolveVideoCandidates(videoUrl),
     posterUrl,
-    instagramHandle: SOCIAL_LINKS.instagramHandle,
+    instagramHandle: reel?.reelInstagramHandle ?? SOCIAL_LINKS.instagramHandle,
     instagramUrl: reel?.reelUrl ?? SOCIAL_LINKS.instagram,
     category: "guitars",
     price: 0,

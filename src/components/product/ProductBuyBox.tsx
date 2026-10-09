@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 import { useToastStore } from "@/store/toastStore";
 import NotifyMeButton from "./NotifyMeButton";
+import { getDeliveryEstimate } from "@/lib/shipping/deliveryEstimate";
 
 interface ProductBuyBoxProps {
   product: ProductDetail;
@@ -45,37 +46,6 @@ function availabilityLabel(av: ProductVariant["availability"]): string {
     case "out-of-stock":
       return "Currently unavailable";
   }
-}
-
-function getDeliveryEstimate() {
-  const now = new Date();
-  const delivery = new Date(now);
-  let businessDays = 0;
-
-  while (businessDays < 5) {
-    delivery.setDate(delivery.getDate() + 1);
-    const day = delivery.getDay();
-    if (day !== 0 && day !== 6) businessDays += 1;
-  }
-
-  const dateLabel = delivery.toLocaleDateString("en-IN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-
-  const cutoff = new Date(now);
-  cutoff.setHours(18, 0, 0, 0);
-
-  let orderWindow = "today";
-  if (now < cutoff) {
-    const diffMs = cutoff.getTime() - now.getTime();
-    const hours = Math.floor(diffMs / 3_600_000);
-    const minutes = Math.floor((diffMs % 3_600_000) / 60_000);
-    orderWindow = `${hours} hrs ${minutes} mins`;
-  }
-
-  return { dateLabel, orderWindow };
 }
 
 export default function ProductBuyBox({

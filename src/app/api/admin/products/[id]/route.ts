@@ -6,10 +6,7 @@ import {
   deleteAdminProduct,
   duplicateAdminProduct,
 } from "@/lib/server/adminProductService";
-import {
-  adminProductSchema,
-  adminProductDuplicateActionSchema,
-} from "@/lib/validations/admin";
+import { adminProductSchema, adminProductDuplicateActionSchema } from "@/lib/validations/admin";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -29,11 +26,15 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("products:write", request);
+    const admin = await requireAdmin("products:write", request);
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminProductSchema.partial().parse(body);
-    const product = await updateAdminProduct(id, parsed);
+    const product = await updateAdminProduct(id, parsed, {
+      actorId: admin.uid,
+      actorEmail: admin.email,
+      request,
+    });
     return NextResponse.json({ product });
   } catch (error) {
     return adminErrorResponse(error);

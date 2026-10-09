@@ -24,6 +24,8 @@ import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import type { AdminProduct } from "@/types/admin";
 import type { CatalogProduct, CreateProductInput } from "@/types/catalog";
 import type { ProductSpec, ProductVideo } from "@/types/product";
+import { evaluatePriceChangeGuard } from "@/lib/catalog/priceChangePolicy";
+import { logAuditEvent } from "@/lib/server/auditLog";
 import { paginateSortedById } from "@/lib/admin/paginateByCursor";
 import { prismaToProduct } from "@/lib/server/prisma/mappers";
 import type { Prisma } from "@prisma/client";
@@ -433,6 +435,12 @@ export async function createAdminProduct(
   return toAdminProduct(created);
 }
 
+export type AdminProductMutationContext = {
+  actorId?: string;
+  actorEmail?: string;
+  request?: Request;
+};
+
 export async function updateAdminProduct(
   id: string,
   patch: Partial<Omit<AdminProduct, "variants">> & {
@@ -445,9 +453,28 @@ export async function updateAdminProduct(
     detailSpecs?: ProductSpec[];
     similarProductIds?: string[];
   },
+  mutationContext?: AdminProductMutationContext,
 ): Promise<AdminProduct> {
-  const needsSnapshot = patch.stockQuantity !== undefined || patch.price !== undefined;
+  const needsSnapshot =
+    patch.stockQuantity !== undefined ||
+    patch.price !== undefined ||
+    patch.originalPrice !== undefined;
   const existing = needsSnapshot ? await getProductById(id) : null;
+
+  if (existing && (patch.price !== undefined || patch.originalPrice !== undefined)) {
+    const guard = evaluatePriceChangeGuard(
+      {
+        sku: existing.sku,
+        previousPrice: existing.price,
+        nextPrice: patch.price ?? existing.price,
+        mrp: patch.originalPrice ?? existing.originalPrice,
+      },
+      { allowLargeChanges: process.env.ALLOW_LARGE_PRICE_CHANGES === "1" },
+    );
+    if (!guard.allowed) {
+      throw new Error(guard.reason);
+    }
+  }
 
   const updated = await updateProduct(id, {
     name: patch.name,
@@ -506,6 +533,29 @@ export async function updateAdminProduct(
       productSlug: updated.slug,
       previousPrice: existing.price,
       newPrice: updated.price,
+    }).catch(() => undefined);
+  }
+
+  if (
+    existing &&
+    mutationContext &&
+    (patch.price !== undefined || patch.originalPrice !== undefined) &&
+    (updated.price !== existing.price || updated.originalPrice !== existing.originalPrice)
+  ) {
+    void logAuditEvent({
+      action: "product.price_change",
+      actorId: mutationContext.actorId,
+      actorEmail: mutationContext.actorEmail,
+      resourceType: "product",
+      resourceId: id,
+      request: mutationContext.request,
+      metadata: {
+        sku: updated.sku,
+        previousPrice: existing.price,
+        nextPrice: updated.price,
+        previousMrp: existing.originalPrice,
+        nextMrp: updated.originalPrice,
+      },
     }).catch(() => undefined);
   }
 

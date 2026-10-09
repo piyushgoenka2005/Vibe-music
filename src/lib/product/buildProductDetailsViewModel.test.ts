@@ -140,6 +140,20 @@ describe("buildProductDetailsViewModel", () => {
     expect(model.hasExpandedContent).toBe(true);
   });
 
+  it("hides internal Keywords spec rows from the PDP", () => {
+    const model = buildProductDetailsViewModel(
+      makeProduct({
+        specs: [
+          { label: "Keywords", value: "guitar amp boss" },
+          { label: "Weight", value: "2.1 kg" },
+        ],
+      }),
+    );
+
+    expect(model.completeSpecs.some((spec) => spec.label === "Keywords")).toBe(false);
+    expect(model.completeSpecs.some((spec) => spec.label === "Weight")).toBe(true);
+  });
+
   it("enriches sparse catalog rows into multiple accordion groups", () => {
     const model = buildProductDetailsViewModel(
       makeProduct({

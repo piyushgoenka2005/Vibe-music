@@ -10,6 +10,7 @@ import {
   normalizeSpecLabel,
   type ProductSpecGroup,
 } from "@/lib/product/groupProductSpecs";
+import { filterPublicProductSpecs } from "@/lib/product/specVisibility";
 import type { ProductDetail, ProductSpec } from "@/types/product";
 
 export interface ProductDetailsAboutItem {
@@ -53,7 +54,7 @@ function excludeStyleFromQuickSpecs(
 }
 
 export function buildProductDetailsViewModel(product: ProductDetail): ProductDetailsViewModel {
-  const enrichedSpecs = enrichProductSpecs(product);
+  const enrichedSpecs = filterPublicProductSpecs(enrichProductSpecs(product));
 
   const descriptionBlocks = parseProductDescription(product.description);
   const introBlocks = descriptionBlocks

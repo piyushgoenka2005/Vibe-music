@@ -22,16 +22,7 @@ export default function GiveawayHubPage() {
   const past = campaigns.filter((c) => getCampaignPhase(c) === "closed");
 
   return (
-    <main className="storefront-page giveaway-page">
-      <header className="giveaway-hero">
-        <p className="rentals-hero__eyebrow">Promotions</p>
-        <h1 className="rentals-hero__title">Giveaways & contests</h1>
-        <p className="rentals-hero__subtitle">
-          Enter live gear giveaways, earn bonus entries with referrals and social shares, and track
-          your entries from your account.
-        </p>
-      </header>
-
+    <div className="giveaway-hub">
       {isLoading ? (
         <p>Loading campaigns…</p>
       ) : active.length === 0 && upcoming.length === 0 ? (
@@ -56,11 +47,7 @@ export default function GiveawayHubPage() {
             <article key={campaign.id} className="giveaway-card">
               {campaign.prizeImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={campaign.prizeImageUrl}
-                  alt=""
-                  className="giveaway-card__image"
-                />
+                <img src={campaign.prizeImageUrl} alt="" className="giveaway-card__image" />
               ) : null}
               <p className="giveaway-card__eyebrow">
                 {getCampaignPhase(campaign) === "open" ? "Live now" : "Coming soon"}
@@ -93,6 +80,6 @@ export default function GiveawayHubPage() {
           </ul>
         </section>
       ) : null}
-    </main>
+    </div>
   );
 }
