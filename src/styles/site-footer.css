@@ -242,6 +242,132 @@ body.is-landing-page .storefront-main + .site-footer.site-footer--layered .site-
   cursor: not-allowed;
 }
 
+/* Mobile / tablet social icons — band above footer accordions (desktop uses fixed social rail) */
+.site-footer-social {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .site-footer-social {
+    display: block;
+    padding: 0.85rem max(1.25rem, env(safe-area-inset-right, 0px)) 1.1rem
+      max(1.25rem, env(safe-area-inset-left, 0px));
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  }
+
+  .site-footer-newsletter {
+    padding-bottom: clamp(1.25rem, 4vw, 1.75rem);
+    border-bottom: none;
+  }
+
+  .site-footer__grid {
+    border-top: none;
+  }
+
+  .site-footer-social__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem 0.85rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-footer-social__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    padding: 0.35rem;
+    border: none;
+    background: transparent;
+    color: #fff;
+    text-decoration: none;
+    transition:
+      color 0.2s ease,
+      transform 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  .site-footer-social__link svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+  }
+
+  .site-footer-social__link:hover,
+  .site-footer-social__link:focus-visible {
+    color: #fff;
+    opacity: 0.92;
+  }
+
+  .site-footer-social__link[aria-label*="WhatsApp"]:hover,
+  .site-footer-social__link[aria-label*="WhatsApp"]:focus-visible {
+    color: #6ef0a8;
+  }
+
+  .site-footer-social__link:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  .site-footer-social__link:active {
+    transform: scale(0.94);
+  }
+
+  .site-footer-social__newsletter-item {
+    display: flex;
+    align-items: center;
+  }
+
+  .site-footer-social__newsletter-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 52px;
+    margin-left: 0.15rem;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 6px;
+    background: #fff;
+    color: #0e46c8;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .site-footer-social__newsletter-pill:hover,
+  .site-footer-social__newsletter-pill:focus-visible {
+    background: rgba(255, 255, 255, 0.92);
+    color: #0a2160;
+    border-color: #fff;
+  }
+
+  .site-footer-social__newsletter-pill:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+  }
+
+  .site-footer-social__newsletter-text {
+    font-size: 0.375rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    line-height: 1;
+    user-select: none;
+  }
+}
+
 /* Grid + accordions — footer bottom links */
 .site-footer__grid {
   border-top: 1px solid rgba(255, 255, 255, 0.28);

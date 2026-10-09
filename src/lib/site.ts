@@ -1,5 +1,6 @@
 import { getMetaDomainVerification } from "@/lib/analytics/metaPixel";
 import { BRAND } from "@/lib/brand";
+import { resolveMetadataBaseUrl } from "@/lib/publicSiteUrl";
 
 export const SITE_NAME = BRAND.name;
 export const SITE_DESCRIPTION = BRAND.description;
@@ -23,7 +24,7 @@ const siteVerification = {
 export const DEFAULT_METADATA = {
   title: `${BRAND.name}: Musical Instruments, Pro Audio, Accessories & More`,
   description: BRAND.description,
-  metadataBase: new URL(BRAND.siteUrl),
+  metadataBase: new URL(resolveMetadataBaseUrl()),
   verification: Object.keys(siteVerification).length > 0 ? siteVerification : undefined,
   icons: {
     icon: [

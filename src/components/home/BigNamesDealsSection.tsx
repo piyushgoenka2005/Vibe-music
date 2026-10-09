@@ -4,7 +4,6 @@ import Reveal from "@/components/layout/Reveal";
 import BigNamesDealsShowcase from "@/components/home/BigNamesDealsShowcase";
 import { getCachedBigNamesDealsPublicData } from "@/lib/server/homepageSnapshotCache";
 import { resolveLinkHref } from "@/lib/routes";
-import { storefrontImageUrl } from "@/lib/storefrontImages";
 import type { PublicBigNamesDealsData } from "@/types/homepage";
 
 const HEADLINE_ID = "bigNamesDealsHeadline";
@@ -21,15 +20,6 @@ export function BigNamesDealsView({ data }: { data: PublicBigNamesDealsData }) {
 
   return (
     <section id="big-names-deals" className="big-names-deals" aria-labelledby={HEADLINE_ID}>
-      {data.items.slice(0, 5).map((item) => (
-        <link
-          key={`preload-${item.key}`}
-          rel="preload"
-          as="image"
-          href={storefrontImageUrl(item.product, 480).src}
-          fetchPriority="high"
-        />
-      ))}
       <div className="big-names-deals__inner">
         <header className="big-names-deals__header">
           <Reveal immediate>

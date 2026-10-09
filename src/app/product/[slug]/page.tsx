@@ -6,7 +6,6 @@ import { loadProductCorePage, loadProductDetailPage } from "@/lib/server/product
 import { resolveCanonicalProductSlug } from "@/services/catalogService";
 import { buildProductJsonLd } from "@/lib/seo/productJsonLd";
 import { buildProductMetadata } from "@/lib/seo/productMetadata";
-import { storefrontImageUrl } from "@/lib/storefrontImages";
 import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
 
 export const dynamicParams = true;
@@ -53,9 +52,6 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
     initialData.product.variants.find((v) => v.availability !== "out-of-stock") ??
     initialData.product.variants[0];
 
-  const heroRaw = initialData.product.images?.[0]?.src || initialData.product.image;
-  const heroImageUrl = heroRaw ? storefrontImageUrl(heroRaw, 1200).src : undefined;
-
   const jsonLd = buildProductJsonLd(initialData.product, defaultVariant);
   const shippingPolicy = await resolveStoreShippingPolicy();
 
@@ -65,9 +61,6 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {heroImageUrl ? (
-        <link rel="preload" as="image" href={heroImageUrl} fetchPriority="high" />
-      ) : null}
       <ProductDeliveryEstimateServer />
       <ProductDetailPage
         slug={slug}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 import FooterAccordion from "@/components/layout/FooterAccordion";
+import FooterSocialIcons from "@/components/layout/FooterSocialIcons";
 import FooterClock from "@/components/layout/FooterClock";
 import FooterProductsPanel from "@/components/layout/FooterProductsPanel";
 import { buildFooterSections } from "@/components/layout/siteFooterSections";
@@ -256,6 +257,8 @@ export default function SiteFooter({ legal }: { legal: PublicLegalInfo }) {
                 </label>
               </form>
             </section>
+
+            <FooterSocialIcons />
 
             <div className="site-footer__grid">
               <FooterAccordion sections={footerSections} />

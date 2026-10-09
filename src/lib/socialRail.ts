@@ -2,11 +2,12 @@ import { BRAND } from "@/lib/brand";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
 import type { HomepageSection, HomepageSectionItem } from "@/types/homepage";
 
+/** Display order: desktop rail + mobile footer social band. */
 export const SOCIAL_RAIL_PLATFORMS = [
-  "whatsapp",
   "facebook",
-  "twitter",
+  "whatsapp",
   "instagram",
+  "twitter",
   "linkedin",
   "youtube",
 ] as const;
@@ -119,7 +120,9 @@ export function buildSocialRailConfig(
     });
   }
 
-  const links = [...linkMap.values()];
+  const links = SOCIAL_RAIL_PLATFORMS.map((platform) => linkMap.get(platform)).filter(
+    (link): link is SocialRailLink => link !== undefined,
+  );
 
   const newsletterLabel = section.ctaText?.trim();
   const newsletter =

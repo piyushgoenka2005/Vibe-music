@@ -21,9 +21,9 @@ Deploy (`bash deploy/update.sh`) now runs **blocking** loopback + public smoke, 
 - Ops scripts fixed (Razorpay verify, review reconcile)
 - Audit response: `docs/ops/EXTERNAL_AUDIT_V2_RESPONSE.md`
 
-## One action left for full L-30 compliance sign-off
+## One action left for zero-warn sign-off
 
-**GSTIN not in homepage HTML** — `verify:prod-signoff` warns until a valid 15-character GSTIN is in production env **and** synced:
+**GSTIN not in homepage HTML** — engineering deploy is complete; `verify:prod-signoff` still **WARN**s until a valid 15-character GSTIN is in `deploy/ops-secrets.env` **and** a rebuild runs (`NEXT_PUBLIC_*` is baked at build time):
 
 ```bash
 # On VPS (replace with your real GSTIN)
