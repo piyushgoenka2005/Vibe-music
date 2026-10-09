@@ -690,4 +690,9 @@ if [[ "${SKIP_BUILD:-0}" != "1" ]]; then
   npm run verify:meta-pixel:prod || warn "Meta verify failed — run npm run setup:meta-integration then ops:sync-meta-integration-vps"
 fi
 
+if [[ "${VERIFY_EXTERNAL_AUDIT:-1}" == "1" ]]; then
+  log "Passive external audit (public storefront)"
+  VERIFY_BASE_URL="${PUBLIC_BASE}" npm run verify:external-audit-passive || die "external audit passive checks failed"
+fi
+
 print_summary
