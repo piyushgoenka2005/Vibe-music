@@ -42,7 +42,9 @@ npm run ops:sync-meta-integration-vps
 bash deploy/production.sh compliance
 ```
 
-Then: `VERIFY_BASE_URL=https://vibemusic.in npm run verify:production-final` (exit 0 = fully final).
+Then: `VERIFY_STRICT_SECRETS=1 VERIFY_BASE_URL=https://vibemusic.in npm run verify:production-final`
+
+**Engineering complete (default):** `VERIFY_BASE_URL=https://vibemusic.in npm run verify:production-final` exits **0** when all automated gates pass; optional secret WARNs are listed but do not fail the run.
 
 ## Optional (non-blocking)
 
