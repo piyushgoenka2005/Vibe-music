@@ -27,6 +27,31 @@ function getDefaultSocialRailHref(platform: SocialRailPlatform): string {
   return SOCIAL_LINKS[platform];
 }
 
+const PLATFORM_HOST_HINTS: Record<SocialRailPlatform, string[]> = {
+  whatsapp: ["whatsapp.com", "wa.me"],
+  facebook: ["facebook.com", "fb.com"],
+  twitter: ["x.com", "twitter.com"],
+  instagram: ["instagram.com"],
+  linkedin: ["linkedin.com"],
+  youtube: ["youtube.com", "youtu.be"],
+};
+
+/** Reject CMS typos (e.g. LinkedIn → x.com) and fall back to canonical URLs. */
+export function sanitizeSocialRailHref(platform: SocialRailPlatform, href: string): string {
+  const fallback = getDefaultSocialRailHref(platform);
+  const trimmed = href.trim();
+  if (!trimmed) return fallback;
+
+  try {
+    const host = new URL(trimmed).hostname.replace(/^www\./i, "").toLowerCase();
+    const allowed = PLATFORM_HOST_HINTS[platform];
+    const ok = allowed.some((hint) => host === hint || host.endsWith(`.${hint}`));
+    return ok ? trimmed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export interface SocialRailLink {
   platform: SocialRailPlatform;
   label: string;
@@ -79,18 +104,22 @@ export function buildSocialRailConfig(
     return { isActive: false, links: [], newsletter: null };
   }
 
-  const links = items
-    .map((item) => {
-      const platform = normalizeSocialRailPlatform(item.customTitle);
-      const href = item.customHref?.trim();
-      if (!platform || !href) return null;
-      return {
-        platform,
-        label: SOCIAL_RAIL_PLATFORM_LABELS[platform],
-        href,
-      };
-    })
-    .filter((link): link is SocialRailLink => link !== null);
+  const linkMap = new Map<SocialRailPlatform, SocialRailLink>(
+    defaults.links.map((link) => [link.platform, link]),
+  );
+
+  for (const item of items) {
+    const platform = normalizeSocialRailPlatform(item.customTitle);
+    const href = item.customHref?.trim();
+    if (!platform || !href) continue;
+    linkMap.set(platform, {
+      platform,
+      label: SOCIAL_RAIL_PLATFORM_LABELS[platform],
+      href: sanitizeSocialRailHref(platform, href),
+    });
+  }
+
+  const links = [...linkMap.values()];
 
   const newsletterLabel = section.ctaText?.trim();
   const newsletter =

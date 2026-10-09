@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
 import type { ProductDetail } from "@/types/product";
+import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import ProductDetailsPanel from "./ProductDetailsPanel";
 import "@/styles/product-reviews.css";
 
@@ -53,11 +54,15 @@ function ProductSectionHeading({
 }
 
 export default function ProductTabs({ product, productSlug, reviewCount }: ProductTabsProps) {
-  const displayedReviewCount = reviewCount ?? product.reviewCount;
+  const { reviewCount: displayedReviewCount } = ensureProductReviewMetrics({
+    id: product.id,
+    rating: product.rating,
+    reviewCount: reviewCount ?? product.reviewCount,
+  });
 
   function sectionHeading(sectionId: SectionId, label: string) {
     if (sectionId === "reviews") {
-      return { label, count: displayedReviewCount };
+      return { label, count: displayedReviewCount > 0 ? displayedReviewCount : undefined };
     }
     if (sectionId === "qa") {
       return { label, count: product.qa.length };

@@ -37,11 +37,10 @@ export default function CountdownTimer({
   targetIso: string;
   label?: string;
 }) {
-  const [parts, setParts] = useState<CountdownParts | null>(null);
+  const [parts, setParts] = useState<CountdownParts | null>(() => getCountdownParts(targetIso));
 
   useEffect(() => {
     const tick = () => setParts(getCountdownParts(targetIso));
-    tick();
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
   }, [targetIso]);

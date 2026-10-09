@@ -14,3 +14,10 @@ export const SUPPORT_HOURS_DETAIL = "Gear advisors reply by email Mon–Sat (IST
 
 export const DISPATCH_COPY =
   "Orders are packed securely and dispatched within 1–2 business days after payment confirmation.";
+
+/** DPDP / Consumer Protection grievance contact (shown in footer and legal pages). */
+export const GRIEVANCE_OFFICER_NAME =
+  process.env.NEXT_PUBLIC_GRIEVANCE_OFFICER_NAME?.trim() || "Customer Grievance Officer";
+
+export const GRIEVANCE_OFFICER_EMAIL =
+  process.env.NEXT_PUBLIC_GRIEVANCE_EMAIL?.trim() || "support@vibemusic.in";

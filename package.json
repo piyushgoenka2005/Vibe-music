@@ -86,6 +86,7 @@
     "verify:meta-deploy-ready": "npx tsx scripts/ops/verify/verify-meta-deploy-ready.mts",
     "verify:lockfile": "node scripts/ops/verify/verify-package-lock.mjs",
     "verify:prod-signoff": "npx tsx scripts/ops/prod-signoff.mts",
+    "verify:external-audit-passive": "npx tsx scripts/ops/verify/verify-external-audit-passive.mts",
     "verify:readiness": "npx tsx scripts/ops/verify/verify-readiness-scorecard.mts",
     "phase8:status": "npx tsx scripts/ops/phase8-deploy-status.mts",
     "verify:go-live": "npx tsx scripts/ops/verify/verify-go-live.mts",

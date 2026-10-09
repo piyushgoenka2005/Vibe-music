@@ -27,6 +27,7 @@ import { BIG_NAMES_DEALS, BIG_NAMES_DEALS_CTA } from "@/data/bigNamesDeals";
 import {
   BIG_NAMES_DEALS_MAX_ITEMS,
   isBigNamesDealsGuitarProduct,
+  isRenderableBigNamesDealItem,
   mapCatalogProductToBigNamesDeal,
   resolveBigNamesDealFallbacks,
 } from "@/lib/homepage/bigNamesDeals";
@@ -524,7 +525,9 @@ export async function getBigNamesDealsPublicData(
         "Find all the top brands you already love, at prices that simply can't be beat",
       ctaText: config.ctaText ?? "Shop All Deals",
       ctaLink: config.ctaLink ?? BIG_NAMES_DEALS_CTA,
-      items: curated.length > 0 ? curated : resolveBigNamesDealFallbacks(products),
+      items: (curated.length > 0 ? curated : resolveBigNamesDealFallbacks(products)).filter(
+        isRenderableBigNamesDealItem,
+      ),
     };
   } catch {
     return {
@@ -537,7 +540,7 @@ export async function getBigNamesDealsPublicData(
       ctaText: defaults?.ctaText ?? "Shop All Deals",
       ctaLink: defaults?.ctaLink ?? BIG_NAMES_DEALS_CTA,
       // Offline / DB-down: still deep-link each guitar to its product PDP.
-      items: resolveBigNamesDealFallbacks([]),
+      items: resolveBigNamesDealFallbacks([]).filter(isRenderableBigNamesDealItem),
     };
   }
 }

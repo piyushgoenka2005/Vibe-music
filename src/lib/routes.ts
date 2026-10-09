@@ -126,6 +126,8 @@ export function brandPath(slug: string): string {
 }
 
 const PLACEHOLDER_REDIRECTS: Record<string, string> = {
+  "/category/recording": categoryPath("studio-recording"),
+  "/category/keyboards": categoryPath("keyboards-synthesizers"),
   "/categories": ROUTES.categories,
   "/products": ROUTES.search,
   "/wishlist": ROUTES.accountWishlist,

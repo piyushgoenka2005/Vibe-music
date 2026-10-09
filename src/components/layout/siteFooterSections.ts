@@ -1,6 +1,10 @@
 import { STOREFRONT_PROGRAMS } from "@/data/storefrontPrograms";
 import { BRAND } from "@/lib/brand";
-import { CANONICAL_BUSINESS_ADDRESS } from "@/lib/brand/businessIdentity";
+import {
+  CANONICAL_BUSINESS_ADDRESS,
+  GRIEVANCE_OFFICER_EMAIL,
+  GRIEVANCE_OFFICER_NAME,
+} from "@/lib/brand/businessIdentity";
 import { ROUTES } from "@/lib/routes";
 import { SOCIAL_LINKS } from "@/lib/socialLinks";
 import type { FooterAccordionSection } from "@/components/layout/FooterAccordion";
@@ -14,6 +18,7 @@ export function buildFooterSections(legal: PublicLegalInfo): FooterAccordionSect
     legal.legalName || BRAND.name,
     legal.address || CANONICAL_BUSINESS_ADDRESS,
     legal.gstin ? `GSTIN: ${legal.gstin}` : "",
+    `Grievance officer: ${GRIEVANCE_OFFICER_NAME} (${GRIEVANCE_OFFICER_EMAIL})`,
   ].filter(Boolean);
 
   return [

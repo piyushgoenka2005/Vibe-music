@@ -131,6 +131,13 @@ export function mapCatalogProductToBigNamesDeal(
  * Featured guitars deep-link to real PDPs. Brand text always matches the
  * catalog product — never Gibson/Fender labels on Hertz SKUs.
  */
+export function isRenderableBigNamesDealItem(item: BigNamesDealItem): boolean {
+  if (!item.href.startsWith("/product/")) return false;
+  if (item.brand.trim().startsWith("/")) return false;
+  if (!item.product.trim()) return false;
+  return true;
+}
+
 export function resolveBigNamesDealFallbacks(products: CatalogProduct[]): BigNamesDealItem[] {
   const guitars = products.filter(isBigNamesDealsGuitarProduct);
   const bySlug = new Map(guitars.map((product) => [product.slug, product]));
