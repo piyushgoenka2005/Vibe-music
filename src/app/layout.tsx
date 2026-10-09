@@ -14,6 +14,7 @@ import SocialRailShell from "@/components/layout/SocialRailShell";
 import AppProviders from "@/providers/AppProviders";
 import { DEFAULT_METADATA } from "@/lib/site";
 import { isPageLoadSplashEnabled } from "@/lib/splash/pageLoadSplash";
+import { buildDevConsoleFilterInlineScript } from "@/lib/dev/devConsoleNoise";
 import "./globals.css";
 import "@/styles/typography.css";
 import "@/styles/gooey-linkup.css";
@@ -37,6 +38,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const isProd = process.env.NODE_ENV === "production";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -56,6 +59,13 @@ export default async function RootLayout({
   return (
     <html lang="en-IN" className={primaryFont.variable} suppressHydrationWarning>
       <head>
+        {!isProd ? (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: buildDevConsoleFilterInlineScript(),
+            }}
+          />
+        ) : null}
         {/* Resource hints for faster third-party connections */}
         <link rel="preconnect" href="https://cdn.vibemusic.in" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://cdn.vibemusic.in" />

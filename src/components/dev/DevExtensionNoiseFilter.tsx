@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-
-const EXTENSION_NOISE =
-  /save-page|Extension context invalidated|chrome-extension:|ObjectMultiplex|app-init-liveness|background-liveness/i;
+import {
+  DEV_CONSOLE_SUPPRESSED,
+  isSuppressedDevConsoleMessage,
+  scheduleDevConsoleNoiseFilterRefresh,
+} from "@/lib/dev/devConsoleNoise";
 
 function messageFromUnknown(reason: unknown): string {
   if (reason instanceof Error) return reason.message;
@@ -13,7 +15,7 @@ function messageFromUnknown(reason: unknown): string {
 
 function isExtensionNoise(reason: unknown): boolean {
   const message = messageFromUnknown(reason);
-  if (EXTENSION_NOISE.test(message)) return true;
+  if (isSuppressedDevConsoleMessage(message)) return true;
   if (reason instanceof Error && reason.cause) {
     return isExtensionNoise(reason.cause);
   }
@@ -22,11 +24,13 @@ function isExtensionNoise(reason: unknown): boolean {
 
 /**
  * Suppresses known browser-extension errors in local dev (MetaMask, save-page menus).
- * Not an app bug — see contentscript.js in the console stack.
+ * Console patching runs earlier via instrumentation-client; this handles window error events.
  */
 export default function DevExtensionNoiseFilter() {
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return;
+
+    scheduleDevConsoleNoiseFilterRefresh();
 
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       if (isExtensionNoise(event.reason)) {
@@ -35,7 +39,7 @@ export default function DevExtensionNoiseFilter() {
     };
 
     const onError = (event: ErrorEvent) => {
-      if (isExtensionNoise(event.error) || EXTENSION_NOISE.test(event.message ?? "")) {
+      if (isExtensionNoise(event.error) || DEV_CONSOLE_SUPPRESSED.test(event.message ?? "")) {
         event.preventDefault();
       }
     };
