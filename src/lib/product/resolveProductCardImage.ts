@@ -1,6 +1,9 @@
 import { getProductImage } from "@/data/productImages";
 import { isCdnUrl } from "@/lib/cdnConfig";
-import { sanitizeStorefrontImageUrl } from "@/lib/storefront/coerceSecureAssetUrl";
+import {
+  isDisallowedStorefrontImageUrl,
+  sanitizeStorefrontImageUrl,
+} from "@/lib/storefront/coerceSecureAssetUrl";
 
 export interface ProductCardImageInput {
   slug: string;
@@ -117,7 +120,7 @@ function catalogImageRefs(input: ProductCardImageInput): string[] {
     }
   }
 
-  return refs;
+  return refs.filter((ref) => !isDisallowedStorefrontImageUrl(ref));
 }
 
 function cdnUrlMatchesProductSlug(url: string, slug: string): boolean {
@@ -207,13 +210,13 @@ export function resolveProductCardImage(input: ProductCardImageInput): {
 
   if (isCdnUrl(catalogImage)) {
     return {
-      src: sanitizeStorefrontImageUrl(catalogImage),
+      src: sanitizeStorefrontImageUrl(catalogImage) || localFallback,
       fallbackSrc: sanitizeStorefrontImageUrl(localFallback),
     };
   }
 
   return {
-    src: sanitizeStorefrontImageUrl(catalogImage),
+    src: sanitizeStorefrontImageUrl(catalogImage) || localFallback,
     fallbackSrc: sanitizeStorefrontImageUrl(localFallback),
   };
 }
