@@ -1,6 +1,6 @@
 # Production completion status (engineering)
 
-**Live:** https://vibemusic.in · **Deploy:** `80c14cdf` (verify `/api/health` → `version`)
+**Live:** https://vibemusic.in · **Deploy:** `a5161f48` (verify `/api/health` → `version`)
 
 ## Automated gates (run anytime)
 
@@ -16,7 +16,7 @@ Deploy (`bash deploy/update.sh`) now runs **blocking** loopback + public smoke, 
 
 ## Done (engineering)
 
-**Status:** Automated production sign-off **complete** on `80c14cdf` (store, payments, Meta Pixel browser, passive audit, homepage hygiene).
+**Status:** Automated production sign-off **complete** on `a5161f48` (Next.js 16.3.8, store, payments, Meta Pixel browser, passive audit, homepage hygiene).
 
 - Category routing, coupons API, checkout/auth E2E coverage
 - Payment server-side totals, Razorpay verify + webhook, rate limits, security headers
