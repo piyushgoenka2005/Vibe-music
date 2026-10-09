@@ -10,10 +10,12 @@ const TRACK_COUNT = 3;
 const ITEMS_PER_TRACK = 9;
 
 function deriveScannerTag(product: {
+  price: number;
   featured: boolean;
   trending: boolean;
   newArrival: boolean;
 }): string | null {
+  if (product.price <= 0) return "Coming Soon";
   if (product.featured) return "Featured";
   if (product.trending) return "Trending";
   if (product.newArrival) return "New";
@@ -64,6 +66,7 @@ export async function loadFindYourProductTracks(): Promise<ScannerProduct[][]> {
 
     const ranked = [...active].sort((a, b) => {
       const score = (p: (typeof active)[number]) =>
+        (p.price > 0 ? 8 : 0) +
         (p.featured ? 4 : 0) +
         (p.trending ? 2 : 0) +
         (p.newArrival ? 1 : 0) +

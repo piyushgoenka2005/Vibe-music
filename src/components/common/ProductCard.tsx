@@ -206,7 +206,8 @@ const ProductCard = memo(function ProductCard({
         </h3>
         {isGrid ? (
           <p className="cat-product-card__descriptor">
-            {conditionLabel(product.condition)} · {availabilityLabel(product.availability)}
+            {conditionLabel(product.condition)} ·{" "}
+            {isComingSoon ? "Coming Soon" : availabilityLabel(product.availability)}
           </p>
         ) : null}
         {isGrid ? (
@@ -243,8 +244,14 @@ const ProductCard = memo(function ProductCard({
                 </span>
               ) : null}
             </div>
-            <span className={`cat-product-card__badge ${availabilityClass(product.availability)}`}>
-              {availabilityLabel(product.availability)}
+            <span
+              className={`cat-product-card__badge ${
+                isComingSoon
+                  ? "cat-product-card__badge--oos"
+                  : availabilityClass(product.availability)
+              }`}
+            >
+              {isComingSoon ? "Coming Soon" : availabilityLabel(product.availability)}
             </span>
           </div>
         )}
