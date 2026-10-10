@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { getAdminSession } from "@/lib/server/adminService";
 import { AdminSessionBootstrapProvider } from "@/components/admin/AdminSessionBootstrap";
+import AdminQueryProvider from "@/providers/AdminQueryProvider";
 
 export const metadata: Metadata = {
   robots: {
@@ -25,8 +26,10 @@ export default async function AdminRootLayout({ children }: { children: React.Re
   }
 
   return (
-    <AdminSessionBootstrapProvider initialAdmin={initialAdmin}>
-      {children}
-    </AdminSessionBootstrapProvider>
+    <AdminQueryProvider>
+      <AdminSessionBootstrapProvider initialAdmin={initialAdmin}>
+        {children}
+      </AdminSessionBootstrapProvider>
+    </AdminQueryProvider>
   );
 }

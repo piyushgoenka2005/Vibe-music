@@ -5,7 +5,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Trash2 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
@@ -15,6 +15,7 @@ import { ROUTES } from "@/lib/routes";
 import type { AdminCapabilities } from "@/lib/auth/adminCapabilities";
 import { getAdminCapabilities } from "@/lib/auth/adminCapabilities";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
+import { useAdminSearchTerm } from "@/hooks/useAdminSearchTerm";
 import {
   VIBEMUSIC_BULK_IMPORT_SHORT_LABEL,
   vibemusicBulkExportFilename,
@@ -26,13 +27,16 @@ const BulkImportModal = dynamic(() => import("@/components/admin/BulkImportModal
   ssr: false,
 });
 
-async function fetchProducts(params: {
-  search: string;
-  status: string;
-  category: string;
-  stock: string;
-  cursor?: string;
-}) {
+async function fetchProducts(
+  params: {
+    search: string;
+    status: string;
+    category: string;
+    stock: string;
+    cursor?: string;
+  },
+  signal?: AbortSignal,
+) {
   const sp = new URLSearchParams({ limit: "20" });
   if (params.search) sp.set("search", params.search);
   if (params.status) sp.set("status", params.status);
@@ -44,7 +48,7 @@ async function fetchProducts(params: {
     total: number;
     hasMore: boolean;
     nextCursor?: string;
-  }>(`/api/admin/products?${sp}`);
+  }>(`/api/admin/products?${sp}`, { signal });
 }
 
 function stockTone(product: AdminProduct): "ok" | "low" | "out" {
@@ -66,7 +70,12 @@ function ProductsContent({
 }: Pick<AdminCapabilities, "productsWrite" | "productsDelete">) {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  const [search, setSearch] = useState("");
+  const {
+    input: searchInput,
+    setInput: setSearchInput,
+    query: search,
+    isDebouncing: searchPending,
+  } = useAdminSearchTerm();
   const [status, setStatus] = useState("");
   const [category, setCategory] = useState("");
   const [stockFilter, setStockFilter] = useState(() => {
@@ -100,8 +109,9 @@ function ProductsContent({
     cursor,
   ] as const;
 
+  // Distinct key: ["admin-categories"] holds the admin categories page's `{ categories }` shape.
   useQuery({
-    queryKey: ["admin-categories"],
+    queryKey: ["admin-product-category-options"],
     queryFn: async () => {
       const data = await adminFetchJson<{ categories: Category[] }>("/api/catalog/categories");
       setCategories(data.categories ?? []);
@@ -109,15 +119,13 @@ function ProductsContent({
     },
   });
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching, isPlaceholderData } = useQuery({
     queryKey: productsQueryKey,
-    queryFn: () => fetchProducts({ search, status, category, stock: stockFilter, cursor }),
-    staleTime: 60_000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    queryFn: ({ signal }) =>
+      fetchProducts({ search, status, category, stock: stockFilter, cursor }, signal),
+    placeholderData: keepPreviousData,
   });
-
-  // Intentionally no mount-time invalidate — that forced a double fetch on every visit.
+  const isSearching = searchPending || (isFetching && isPlaceholderData);
 
   function removeProductsFromCache(ids: string[]) {
     const idSet = new Set(ids);
@@ -149,6 +157,10 @@ function ProductsContent({
     });
     void queryClient.invalidateQueries({
       queryKey: ["admin-categories"],
+      refetchType: "active",
+    });
+    void queryClient.invalidateQueries({
+      queryKey: ["admin-product-category-options"],
       refetchType: "active",
     });
   };
@@ -286,13 +298,15 @@ function ProductsContent({
       <div className="admin-toolbar admin-toolbar--wrap">
         <input
           className="admin-input"
+          type="search"
           placeholder="Search name, brand, SKU…"
-          value={search}
+          value={searchInput}
           onChange={(e) => {
-            setSearch(e.target.value);
+            setSearchInput(e.target.value);
             reset();
           }}
           aria-label="Search products"
+          aria-busy={isSearching}
         />
         <select
           className="admin-select"
@@ -358,6 +372,11 @@ function ProductsContent({
         >
           {exporting ? "Exporting…" : "Export vibemusic bulk"}
         </button>
+        {isSearching ? (
+          <span className="admin-toolbar__status" role="status">
+            Searching…
+          </span>
+        ) : null}
         {productsWrite && selected.size > 0 ? (
           <>
             <button

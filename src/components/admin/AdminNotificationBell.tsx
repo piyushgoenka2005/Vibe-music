@@ -12,8 +12,6 @@ export default function AdminNotificationBell() {
       // Lightweight count endpoint — full list is only fetched by /admin/notifications.
       return adminFetchJson<{ unreadCount: number }>("/api/admin/notifications/count");
     },
-    staleTime: 60_000,
-    refetchInterval: 120_000,
   });
 
   const unread = data?.unreadCount ?? 0;

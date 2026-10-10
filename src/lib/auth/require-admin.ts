@@ -116,6 +116,9 @@ export function adminErrorResponse(error: unknown, request?: Request): NextRespo
     }
     return response;
   }
+  if (error instanceof SyntaxError) {
+    return NextResponse.json({ error: "Invalid JSON request body" }, { status: 400 });
+  }
   if (error instanceof ZodError) {
     const message = error.issues[0]?.message?.trim() || "Invalid request";
     return NextResponse.json(

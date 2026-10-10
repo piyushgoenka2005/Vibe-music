@@ -127,6 +127,10 @@ export function handleRouteError(
   request?: Request,
   statusCode?: number,
 ): NextResponse {
+  if (error instanceof SyntaxError) {
+    const response = jsonError("Invalid JSON request body", 400);
+    return request ? applyRequestIdHeader(response, request) : response;
+  }
   reportServerError(error, {
     source: context,
     requestId: request ? getRequestId(request) : undefined,

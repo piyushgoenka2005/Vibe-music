@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -37,18 +37,28 @@ function CmsContent({ canWrite }: { canWrite: boolean }) {
   const pageQuery = useQuery({
     queryKey: ["admin-cms-page", selectedSlug],
     enabled: Boolean(selectedSlug) && !creating,
-    queryFn: async () => {
-      const json = await adminFetchJson<{
+    queryFn: () =>
+      adminFetchJson<{
         page: ContentPage;
         isSeeded?: boolean;
         hasDbOverride?: boolean;
-      }>(`/api/admin/cms/pages/${selectedSlug}`);
-      setDraft(json.page);
-      setIsSeeded(Boolean(json.isSeeded));
-      setHasDbOverride(Boolean(json.hasDbOverride));
-      return json.page;
-    },
+      }>(`/api/admin/cms/pages/${selectedSlug}`),
   });
+
+  // Last server copy loaded into the editor; while `draft` is still that object the
+  // admin has no unsaved edits, so fresher server data (other tab/admin) may replace it.
+  const hydratedRef = useRef<{ slug: string; page: ContentPage } | null>(null);
+  const pageData = pageQuery.data;
+  useEffect(() => {
+    if (creating || !selectedSlug || !pageData) return;
+    const prev = hydratedRef.current;
+    const hasUnsavedEdits = prev?.slug === selectedSlug && draft !== prev.page;
+    if (hasUnsavedEdits) return;
+    hydratedRef.current = { slug: selectedSlug, page: pageData.page };
+    setDraft(pageData.page);
+    setIsSeeded(Boolean(pageData.isSeeded));
+    setHasDbOverride(Boolean(pageData.hasDbOverride));
+  }, [creating, selectedSlug, pageData, draft]);
 
   const saveMutation = useMutation({
     mutationFn: async (page: ContentPage) => {
@@ -65,6 +75,8 @@ function CmsContent({ canWrite }: { canWrite: boolean }) {
       setTimeout(() => setSaved(false), 3000);
       setActionError(null);
       setCreating(false);
+      hydratedRef.current = { slug: page.slug, page };
+      setDraft(page);
       setSelectedSlug(page.slug);
       void queryClient.invalidateQueries({ queryKey: ["admin-cms-pages"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-cms-page", page.slug] });

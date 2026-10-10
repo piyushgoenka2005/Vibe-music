@@ -61,24 +61,23 @@ export function installReactDevToolsStub(): void {
   if (typeof window === "undefined") return;
   if (process.env.NODE_ENV !== "development") return;
 
-  const w = window as Window & {
-    __REACT_DEVTOOLS_GLOBAL_HOOK__?: {
-      isDisabled?: boolean;
-      supportsFiber?: boolean;
-      checkDCE?: boolean;
-      inject?: (internals: unknown) => number;
-    };
-  };
-
+  const w = window as Window & { __REACT_DEVTOOLS_GLOBAL_HOOK__?: unknown };
   if (w.__REACT_DEVTOOLS_GLOBAL_HOOK__) return;
 
+  // React Refresh wraps this hook and iterates `renderers`; without it the dev
+  // client crashes before hydration (nothing on the page becomes interactive).
   w.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
     isDisabled: false,
     supportsFiber: true,
-    checkDCE: true,
+    checkDCE() {},
+    renderers: new Map(),
     inject() {
       return 0;
     },
+    onScheduleFiberRoot() {},
+    onCommitFiberRoot() {},
+    onCommitFiberUnmount() {},
+    onPostCommitFiberRoot() {},
   };
 }
 
@@ -113,5 +112,5 @@ export function scheduleDevConsoleNoiseFilterRefresh(): void {
 /** Earliest possible setup — inline in root layout `<head>` before React / extensions. */
 export function buildDevConsoleFilterInlineScript(): string {
   const pattern = JSON.stringify(DEV_CONSOLE_SUPPRESSED.source);
-  return `(function(){try{if(typeof window!=="undefined"&&!window.__REACT_DEVTOOLS_GLOBAL_HOOK__){window.__REACT_DEVTOOLS_GLOBAL_HOOK__={isDisabled:false,supportsFiber:true,checkDCE:true,inject:function(){return 0}}}var re=new RegExp(${pattern},"i");function suppressed(args){var list=Array.prototype.slice.call(args);for(var i=0;i<list.length;i++){var v=list[i];if(typeof v==="string"&&re.test(v))return true;if(v&&v.message&&re.test(v.message))return true}var joined=list.map(function(v){if(typeof v==="string")return v;if(v&&v.message)return v.message;try{return JSON.stringify(v)}catch(e){return String(v)}}).join(" ");return re.test(joined)}function wrap(fn){return function(){if(suppressed(arguments))return;fn.apply(console,arguments)}}function patch(){if(typeof console==="undefined")return;["warn","error","log","info","debug"].forEach(function(m){var cur=console[m];if(typeof cur!=="function")return;console[m]=wrap(cur.bind(console))})}patch();var n=0;var t=window.setInterval(function(){patch();n+=1;if(n>=24)window.clearInterval(t)},250)}catch(e){}})();`;
+  return `(function(){try{if(typeof window!=="undefined"&&!window.__REACT_DEVTOOLS_GLOBAL_HOOK__){window.__REACT_DEVTOOLS_GLOBAL_HOOK__={isDisabled:false,supportsFiber:true,checkDCE:function(){},renderers:new Map(),inject:function(){return 0},onScheduleFiberRoot:function(){},onCommitFiberRoot:function(){},onCommitFiberUnmount:function(){},onPostCommitFiberRoot:function(){}}}var re=new RegExp(${pattern},"i");function suppressed(args){var list=Array.prototype.slice.call(args);for(var i=0;i<list.length;i++){var v=list[i];if(typeof v==="string"&&re.test(v))return true;if(v&&v.message&&re.test(v.message))return true}var joined=list.map(function(v){if(typeof v==="string")return v;if(v&&v.message)return v.message;try{return JSON.stringify(v)}catch(e){return String(v)}}).join(" ");return re.test(joined)}function wrap(fn){return function(){if(suppressed(arguments))return;fn.apply(console,arguments)}}function patch(){if(typeof console==="undefined")return;["warn","error","log","info","debug"].forEach(function(m){var cur=console[m];if(typeof cur!=="function")return;console[m]=wrap(cur.bind(console))})}patch();var n=0;var t=window.setInterval(function(){patch();n+=1;if(n>=24)window.clearInterval(t)},250)}catch(e){}})();`;
 }

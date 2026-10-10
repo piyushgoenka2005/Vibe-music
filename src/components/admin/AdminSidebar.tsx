@@ -149,8 +149,6 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
       return adminFetchJson<{ unreadCount: number }>("/api/admin/notifications/count");
     },
     enabled: showNotificationBadge,
-    staleTime: 60_000,
-    refetchInterval: 120_000,
   });
 
   const unreadNotifications = notificationData?.unreadCount ?? 0;
