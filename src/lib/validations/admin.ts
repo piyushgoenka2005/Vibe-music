@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { MAX_COUPON_PRODUCT_URLS } from "@/lib/coupons/parseProductUrl";
 
+/** Matches checkout `variantSku` and bulk-import real-world model names. */
+export const ADMIN_PRODUCT_SKU_MAX_LENGTH = 120;
+
 const variantAttributeSchema = z.object({
   type: z.enum(["color", "size", "finish", "custom"]),
   name: z.string().min(1).max(50),
@@ -8,8 +11,8 @@ const variantAttributeSchema = z.object({
 });
 
 const productSpecSchema = z.object({
-  label: z.string(),
-  value: z.string(),
+  label: z.string().min(1).max(200),
+  value: z.string().min(1).max(2000),
 });
 
 const productVideoSchema = z
@@ -34,7 +37,7 @@ const productVideoSchema = z
 const productVariantSchema = z.object({
   id: z.string().optional(),
   label: z.string().max(200).optional(),
-  sku: z.string().min(4).max(32).optional(),
+  sku: z.string().min(1).max(ADMIN_PRODUCT_SKU_MAX_LENGTH).optional(),
   /** ₹0 allowed for Coming Soon / unpublished pricing. */
   price: z.number().min(0),
   stock: z.number().min(0),
@@ -77,7 +80,7 @@ export const adminProductSchema = z.object({
   salePrice: z.number().min(0).nullable().optional(),
   sku: z.preprocess(
     (value) => (value === "" ? undefined : value),
-    z.string().min(4).max(20).optional(),
+    z.string().min(1).max(ADMIN_PRODUCT_SKU_MAX_LENGTH).optional(),
   ),
   gstRate: z.union([z.literal(5), z.literal(12), z.literal(18), z.literal(28)]).optional(),
   rating: z.number().min(0).max(5).optional(),
@@ -99,11 +102,11 @@ export const adminProductSchema = z.object({
   inTheBox: z.array(z.string()).optional(),
   videos: z.array(productVideoSchema).optional(),
   detailSpecs: z.array(productSpecSchema).optional(),
-  specifications: z.record(z.string(), z.string()).optional(),
+  specifications: z.record(z.string().max(200), z.string().max(2000)).optional(),
   metaTitle: z.string().max(255).optional(),
   metaDescription: z.string().max(500).optional(),
   variants: z.array(productVariantSchema).optional(),
-  guitarSpecs: z.record(z.string(), z.string()).optional(),
+  guitarSpecs: z.record(z.string().max(100), z.string().max(500)).optional(),
   similarProductIds: z.array(z.string().min(1)).max(4).optional(),
 });
 

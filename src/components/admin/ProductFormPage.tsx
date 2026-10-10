@@ -18,6 +18,7 @@ import ProductVariantsEditor from "@/components/admin/ProductVariantsEditor";
 import GuitarSpecsEditor, {
   extractGuitarSpecsFromRecord,
 } from "@/components/admin/GuitarSpecsEditor";
+import { ADMIN_PRODUCT_SKU_MAX_LENGTH } from "@/lib/validations/admin";
 import ProductFilterSpecsEditor, {
   extractFilterSpecsFromRecord,
 } from "@/components/admin/ProductFilterSpecsEditor";
@@ -443,8 +444,13 @@ export default function ProductFormPage({
               className="admin-input"
               style={{ width: "100%" }}
               value={form.sku}
+              maxLength={ADMIN_PRODUCT_SKU_MAX_LENGTH}
               onChange={(e) => setForm({ ...form, sku: e.target.value })}
             />
+            <p className="admin-form-hint" style={{ marginTop: "0.35rem" }}>
+              Up to {ADMIN_PRODUCT_SKU_MAX_LENGTH} characters (model names and finish variants are
+              OK).
+            </p>
           </div>
           <div className="admin-form-group">
             <label htmlFor="product-form-category">Category *</label>

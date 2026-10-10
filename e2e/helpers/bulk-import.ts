@@ -12,7 +12,7 @@ export const BULK_IMPORT_FIXTURE_CSV = path.join(
   "bulk-import-e2e.csv",
 );
 
-/** Admin product SKU field allows max 20 characters. */
+/** Admin product SKU field allows max 120 characters (`ADMIN_PRODUCT_SKU_MAX_LENGTH`). */
 export function generateE2EBulkImportSku(prefix = "E2E"): string {
   const suffix = Date.now().toString(36).slice(-8).toUpperCase();
   return `${prefix}${suffix}`.slice(0, 20);

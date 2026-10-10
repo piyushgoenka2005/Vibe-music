@@ -20,32 +20,31 @@ export default function GuitarSpecsEditor({ specs, onChange }: GuitarSpecsEditor
       <div className="admin-form-group">
         <label>Showcase specifications</label>
         <p className="admin-form-hint">
-          These fields power the guitar specs section on the product page. Leave
-          blank to auto-fill from the product name when saved.
+          These fields power the guitar specs section on the product page. Leave blank to auto-fill
+          from the product name when saved.
         </p>
       </div>
       <div className="admin-form-grid">
-        {GUITAR_SHOWCASE_ROW_LABELS.flatMap(({ left, right }) => [left, right]).map(
-          (label) => (
-            <div key={label} className="admin-form-group">
-              <label>{label}</label>
-              <input
-                className="admin-input"
-                style={{ width: "100%" }}
-                value={specs[label] ?? ""}
-                onChange={(e) => updateField(label, e.target.value)}
-                placeholder={`Auto: ${label}`}
-              />
-            </div>
-          )
-        )}
+        {GUITAR_SHOWCASE_ROW_LABELS.flatMap(({ left, right }) => [left, right]).map((label) => (
+          <div key={label} className="admin-form-group">
+            <label>{label}</label>
+            <input
+              className="admin-input"
+              style={{ width: "100%" }}
+              value={specs[label] ?? ""}
+              maxLength={500}
+              onChange={(e) => updateField(label, e.target.value)}
+              placeholder={`Auto: ${label}`}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
 export function extractGuitarSpecsFromRecord(
-  specifications: Record<string, string> | undefined
+  specifications: Record<string, string> | undefined,
 ): Record<string, string> {
   if (!specifications) return {};
   const result: Record<string, string> = {};
