@@ -247,10 +247,7 @@ sync_gp9_assets() {
   fi
 }
 
-build_application() {
-  log "Clearing stale Next.js build cache"
-  rm -rf .next
-
+build_preflight() {
   log "Razorpay + production env preflight"
   if grep -qE '^RAZORPAY_KEY_ID=rzp_live_' deploy/ops-secrets.env 2>/dev/null; then
     run_razorpay_preflight || die "Razorpay preflight failed — fix scripts/ops/verify/verify-razorpay-ops.mts or ops-secrets"
@@ -260,6 +257,11 @@ build_application() {
 
   log "Type-check"
   npm run type-check
+}
+
+build_application() {
+  log "Clearing stale Next.js build cache"
+  rm -rf .next
 
   log "Production build"
   export NODE_ENV=production
@@ -499,8 +501,6 @@ step "2/10 — Dependencies and environment"
 
 backup_database
 
-stop_pm2_for_deps
-
 clean_node_modules() {
   if [[ ! -d node_modules ]]; then
     return 0
@@ -565,10 +565,36 @@ rebuild_native_modules() {
   npm rebuild sharp --foreground-scripts 2>/dev/null || npm install sharp --no-save --foreground-scripts 2>/dev/null || true
 }
 
-install_dependencies
+DEPS_STAMP="node_modules/.vibe-deps-fingerprint"
 
-log "Prisma client"
-npm run db:generate
+deps_fingerprint() {
+  git checkout -- package-lock.json package.json 2>/dev/null || true
+  printf '%s|%s|%s|%s\n' \
+    "$(node -v)" \
+    "$(uname -m)" \
+    "$(sha256sum package-lock.json | cut -d' ' -f1)" \
+    "$(cat prisma/schema.prisma 2>/dev/null | sha256sum | cut -d' ' -f1)"
+}
+
+deps_up_to_date() {
+  [[ "${FORCE_NPM_CI:-0}" != "1" ]] || return 1
+  [[ -f "$DEPS_STAMP" ]] || return 1
+  [[ "$(cat "$DEPS_STAMP")" == "$(deps_fingerprint)" ]] || return 1
+  verify_node_modules >/dev/null 2>&1
+}
+
+# Reinstalling node_modules under a running app crashes it, so the app only goes
+# down here when the lockfile, Node version, or Prisma schema actually changed.
+if deps_up_to_date; then
+  log "Dependencies + Prisma client unchanged — keeping node_modules (app stays online; FORCE_NPM_CI=1 to reinstall)"
+else
+  stop_pm2_for_deps
+  install_dependencies
+
+  log "Prisma client"
+  npm run db:generate
+  deps_fingerprint > "$DEPS_STAMP"
+fi
 
 log "Normalize production env"
 node scripts/ops/normalize-production-env.mjs
@@ -614,6 +640,7 @@ step "4/10 — Build"
 if [[ "${SKIP_BUILD:-0}" == "1" ]]; then
   log "Build skipped (SKIP_BUILD=1) — reloading PM2 only"
 else
+  build_preflight
   stop_app_for_build
   build_application
 fi

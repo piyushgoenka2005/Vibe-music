@@ -1,9 +1,11 @@
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { enforceRateLimit, handleRouteError } from "@/lib/api/route-utils";
 import { isThumbPlaceholderBody } from "@/lib/mediaThumb";
+import { loadSharp } from "@/lib/server/platform/cdnImageOptimize";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { snapStorefrontThumbWidth } from "@/lib/storefrontImages";
 
@@ -54,7 +56,13 @@ function cdnDerivativeRedirect(url: string, width: number): string | null {
     if (!match?.[1]) return null;
     const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
     const snappedW = snapStorefrontThumbWidth(width);
-    return `${parsed.origin}${dir}${match[1]}-w${snappedW}.webp`;
+    const derivative = `${parsed.origin}${dir}${match[1]}-w${snappedW}.webp`;
+    const localDerivative = resolveLocalCdnFile(derivative);
+    // Uploads stored without sharp (no WebP derivatives) must fall through to the original.
+    if (localDerivative && existsSync(CDN_STORAGE_ROOT) && !existsSync(localDerivative)) {
+      return null;
+    }
+    return derivative;
   } catch {
     return null;
   }
@@ -153,7 +161,8 @@ async function buildThumb(url: string, width: number): Promise<CachedThumb | nul
       try {
         const input = await readFile(localCdnPath);
         if (input.byteLength > 0 && input.byteLength <= MAX_UPSTREAM_BYTES) {
-          const sharp = (await import("sharp")).default;
+          const sharp = await loadSharp();
+          if (!sharp) return null;
           const body = await sharp(input, { failOn: "none" })
             .rotate()
             .resize(width, width, {
@@ -192,7 +201,8 @@ async function buildThumb(url: string, width: number): Promise<CachedThumb | nul
       return null;
     }
 
-    const sharp = (await import("sharp")).default;
+    const sharp = await loadSharp();
+    if (!sharp) return null;
     const body = await sharp(input, { failOn: "none" })
       .rotate()
       .resize(width, width, {

@@ -89,6 +89,7 @@
     "verify:prod-signoff": "npx tsx scripts/ops/prod-signoff.mts",
     "verify:production-final": "npx tsx scripts/ops/verify/verify-production-final.mts",
     "verify:external-audit-passive": "npx tsx scripts/ops/verify/verify-external-audit-passive.mts",
+    "verify:internal-links": "npx tsx scripts/ops/verify/verify-internal-links.mts",
     "verify:readiness": "npx tsx scripts/ops/verify/verify-readiness-scorecard.mts",
     "phase8:status": "npx tsx scripts/ops/phase8-deploy-status.mts",
     "verify:go-live": "npx tsx scripts/ops/verify/verify-go-live.mts",

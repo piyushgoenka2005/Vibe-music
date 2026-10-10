@@ -182,7 +182,19 @@ const NAV_TOP_REDIRECTS: Record<string, string> = {
   "/tracking": ROUTES.trackOrder,
 };
 
+/** Exact-match only: sub-paths of these have their own rules (or none). */
+const EXACT_ALIAS_REDIRECTS: Record<string, string> = {
+  "/shop": ROUTES.search,
+  "/brand": ROUTES.brands,
+  "/contact-us": ROUTES.contact,
+  "/about": ROUTES.contact,
+  "/about-us": ROUTES.contact,
+};
+
 const ACCOUNT_REDIRECTS: Record<string, string> = {
+  "/my-account": ROUTES.account,
+  "/dashboard": ROUTES.account,
+  "/orders": ROUTES.accountOrders,
   "/myaccount": ROUTES.account,
   "/myaccount/update_account": ROUTES.accountProfile,
   "/myaccount/accounts": ROUTES.accountAddresses,
@@ -202,6 +214,12 @@ const STORE_REDIRECTS: Record<string, string> = {
 const AUTH_REDIRECTS: Record<string, string> = {
   "/auth/signin": ROUTES.login,
   "/auth/signup": ROUTES.register,
+  "/signin": ROUTES.login,
+  "/sign-in": ROUTES.login,
+  "/user/login": ROUTES.login,
+  "/signup": ROUTES.register,
+  "/sign-up": ROUTES.register,
+  "/user/register": ROUTES.register,
 };
 
 function normalizePath(pathname: string): string {
@@ -307,6 +325,7 @@ export function resolveLegacyPath(pathname: string): string | null {
     if (path.startsWith(`${key}/`)) return target;
   }
 
+  if (EXACT_ALIAS_REDIRECTS[path]) return EXACT_ALIAS_REDIRECTS[path];
   if (NAV_TOP_REDIRECTS[path]) return NAV_TOP_REDIRECTS[path];
   for (const [key, target] of Object.entries(NAV_TOP_REDIRECTS)) {
     if (path.startsWith(`${key}/`)) return target;
@@ -314,6 +333,9 @@ export function resolveLegacyPath(pathname: string): string | null {
 
   const catalog = resolveCatalogCategory(path);
   if (catalog) return catalog;
+
+  const legacyStore = resolveLegacyStorePath(path);
+  if (legacyStore) return legacyStore;
 
   const shop = resolveShopPath(path);
   if (shop) return shop;
@@ -347,6 +369,20 @@ function resolveStoreDetail(path: string): string | null {
   const match = path.match(/^\/store\/detail\/[^/]+--(.+)$/);
   if (!match?.[1]) return null;
   return productPath(match[1]);
+}
+
+/** Previous WooCommerce storefront: /brand/<slug>/… and /product-category/<parent>/<child>. */
+function resolveLegacyStorePath(path: string): string | null {
+  const brand = path.match(/^\/brand\/([^/]+)/);
+  if (brand?.[1]) return brandPath(brand[1]);
+
+  const category = path.match(/^\/product-category\/(.+)$/);
+  if (category?.[1]) {
+    const leaf = category[1].split("/").filter(Boolean).pop() ?? "";
+    const query = leaf.replace(/-and-/g, " ").replace(/-/g, " ").trim();
+    return query ? `${ROUTES.searchResults}?q=${encodeURIComponent(query)}` : ROUTES.search;
+  }
+  return null;
 }
 
 function resolveCatalogCategory(path: string): string | null {

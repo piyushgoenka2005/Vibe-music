@@ -4,6 +4,38 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { getCdnPublicBaseUrl, getCdnStorageRoot } from "@/lib/server/cdnStorage";
+import { logWarn } from "@/lib/server/logger";
+import { sniffImageType } from "@/lib/security/imageUploadValidation";
+
+type SharpFactory = typeof import("sharp").default;
+
+let sharpLoader: Promise<SharpFactory | null> | null = null;
+
+/**
+ * sharp's prebuilt linux-x64 binary needs an x86-64-v2 CPU (SSE4.2/POPCNT); some VPS
+ * hypervisors expose a generic QEMU CPU without it, so the native module fails to load.
+ */
+export function loadSharp(): Promise<SharpFactory | null> {
+  sharpLoader ??= import("sharp").then(
+    (mod) => mod.default,
+    (error: unknown) => {
+      logWarn(
+        `sharp unavailable — storing original images without WebP derivatives: ${
+          error instanceof Error ? error.message.split("\n")[0] : String(error)
+        }`,
+        "cdn-image-optimize",
+      );
+      return null;
+    },
+  );
+  return sharpLoader;
+}
+
+const ORIGINAL_EXTENSION: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 /** Longest edge for the master WebP written to CDN. */
 export const CDN_MASTER_MAX_EDGE = 2000;
@@ -45,9 +77,19 @@ export async function uploadOptimizedImageToCdn(
     throw new Error(`CDN upload folder escapes storage root: ${folder}`);
   }
 
-  const sharp = (await import("sharp")).default;
+  const sharp = await loadSharp();
   const id = randomUUID();
   await mkdir(directory, { recursive: true });
+  const publicBase = getCdnPublicBaseUrl();
+
+  if (!sharp) {
+    const mime = sniffImageType(buffer);
+    if (!mime) throw new Error("Unsupported image type");
+    const originalName = `${id}.${ORIGINAL_EXTENSION[mime]}`;
+    await writeFile(path.join(directory, originalName), buffer);
+    const originalUrl = `${publicBase}/${folder}/${originalName}`;
+    return { url: originalUrl, masterUrl: originalUrl, derivatives: {} };
+  }
 
   const masterBody = await sharp(buffer)
     .rotate()
@@ -60,7 +102,6 @@ export async function uploadOptimizedImageToCdn(
 
   const masterName = `${id}.webp`;
   await writeFile(path.join(directory, masterName), masterBody);
-  const publicBase = getCdnPublicBaseUrl();
   const masterUrl = `${publicBase}/${folder}/${masterName}`;
 
   const derivatives: Partial<Record<CdnDerivativeWidth, string>> = {};
