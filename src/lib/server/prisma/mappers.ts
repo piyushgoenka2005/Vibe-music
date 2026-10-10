@@ -144,8 +144,22 @@ export function prismaToProduct(row: {
     imageColor: row.imageColor,
     image: row.image,
     gstRate: (row.gstRate ?? undefined) as CatalogProduct["gstRate"],
-    detail: row.detail as CatalogProduct["detail"],
+    detail: normalizeProductDetail(row.detail),
   };
+}
+
+/**
+ * `{}` (written by bulk migrations) means "no detail yet" so callers rebuild a default;
+ * partial objects get an empty `specs` list because spec editing assumes an array.
+ */
+export function normalizeProductDetail(raw: unknown): CatalogProduct["detail"] {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const detail = raw as Record<string, unknown>;
+  if (Object.keys(detail).length === 0) return undefined;
+  return {
+    ...detail,
+    specs: Array.isArray(detail.specs) ? detail.specs : [],
+  } as NonNullable<CatalogProduct["detail"]>;
 }
 
 export function categoryToPrisma(category: Category): Prisma.CategoryUncheckedCreateInput {

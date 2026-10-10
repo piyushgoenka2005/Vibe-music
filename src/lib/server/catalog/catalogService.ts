@@ -220,7 +220,7 @@ function syncDetailSpecsFromSpecifications(
   detail: NonNullable<CatalogProduct["detail"]>,
   specifications: Record<string, string>,
 ): NonNullable<CatalogProduct["detail"]> {
-  const baseSpecs = detail.specs.filter(
+  const baseSpecs = (detail.specs ?? []).filter(
     (spec) => !GUITAR_SHOWCASE_FIELD_LABELS.includes(spec.label),
   );
   const guitarSpecs = GUITAR_SHOWCASE_FIELD_LABELS.flatMap((label) => {
