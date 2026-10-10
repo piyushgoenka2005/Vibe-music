@@ -259,9 +259,26 @@ build_preflight() {
   npm run type-check
 }
 
+PREVIOUS_BUILD_DIR=".next.prev"
+
+# PM2 is stopped during the build; without this a failed build leaves the site down.
+restore_previous_build() {
+  if [[ -d "$PREVIOUS_BUILD_DIR" ]]; then
+    warn "Restoring previous Next.js build and restarting PM2"
+    rm -rf .next
+    mv "$PREVIOUS_BUILD_DIR" .next
+    pm2 start deploy/ecosystem.config.cjs --only vibe --update-env || true
+  fi
+}
+
 build_application() {
-  log "Clearing stale Next.js build cache"
-  rm -rf .next
+  log "Moving previous Next.js build aside (restored if this build fails)"
+  rm -rf "$PREVIOUS_BUILD_DIR"
+  if [[ -f .next/BUILD_ID ]]; then
+    mv .next "$PREVIOUS_BUILD_DIR"
+  else
+    rm -rf .next
+  fi
 
   log "Production build"
   export NODE_ENV=production
@@ -269,7 +286,15 @@ build_application() {
   # JSON catalog fallback covers `next build`; runtime always uses DATABASE_URL.
   export ALLOW_POSTGRES_DURING_BUILD="${ALLOW_POSTGRES_DURING_BUILD:-false}"
   export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=4096}"
-  npm run build
+  if ! npm run build; then
+    warn "next build failed — retrying once"
+    rm -rf .next
+    if ! npm run build; then
+      restore_previous_build
+      die "next build failed twice (previous build restored if one existed)"
+    fi
+  fi
+  rm -rf "$PREVIOUS_BUILD_DIR"
 
   log "Gear story videos (optional)"
   npm run verify:gear-videos || true

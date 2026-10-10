@@ -1,6 +1,6 @@
 "use client";
 
-import { Bebas_Neue } from "next/font/google";
+import localFont from "next/font/local";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import "@/styles/page-load-splash.css";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -18,8 +18,8 @@ import {
 
 export { SPLASH_ACTIVE_CLASS, SPLASH_PENDING_CLASS, SPLASH_SEEN_KEY, isPageLoadSplashEnabled };
 
-const splashFont = Bebas_Neue({
-  subsets: ["latin"],
+const splashFont = localFont({
+  src: "../../lib/fonts/bebas-neue-latin-400.woff2",
   weight: "400",
   display: "swap",
 });

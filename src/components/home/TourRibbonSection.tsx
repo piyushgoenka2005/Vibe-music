@@ -1,14 +1,14 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { Anton } from "next/font/google";
+import localFont from "next/font/local";
 import { TOUR_RIBBON_BANDS, type TourRibbonItem } from "@/data/tourRibbon";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import "@/styles/tour-ribbon.css";
 
-const tourDisplay = Anton({
+const tourDisplay = localFont({
+  src: "../../lib/fonts/anton-latin-400.woff2",
   weight: "400",
-  subsets: ["latin"],
   display: "swap",
   variable: "--font-tour-ribbon",
 });

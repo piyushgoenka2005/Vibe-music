@@ -1,10 +1,10 @@
-import { Bebas_Neue } from "next/font/google";
+import localFont from "next/font/local";
 import type { CSSProperties } from "react";
 import Marquee from "@/components/common/Marquee";
 import { BRAND } from "@/lib/brand";
 
-const beatFont = Bebas_Neue({
-  subsets: ["latin"],
+const beatFont = localFont({
+  src: "../../lib/fonts/bebas-neue-latin-400.woff2",
   weight: "400",
   display: "swap",
 });
