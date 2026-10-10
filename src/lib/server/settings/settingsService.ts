@@ -70,8 +70,8 @@ export async function updateStoreSettings(patch: Partial<StoreSettings>): Promis
   await pgContent.upsertStoreSettingsRecord(updated);
   // Bust the cache so subsequent reads get fresh data
   await invalidateCache(SETTINGS_CACHE_KEY);
-  revalidateTag("store-settings", "max");
-  revalidateTag("public-legal", "max");
+  revalidateTag("store-settings", { expire: 0 });
+  revalidateTag("public-legal", { expire: 0 });
   return updated;
 }
 

@@ -1,16 +1,19 @@
 import "server-only";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { expireStorefrontTags, purgeNginxPageCache } from "./storefrontCacheInvalidation";
 
 /** Bust all Next.js data caches that affect the public homepage and catalog shell. */
 export function revalidateStorefrontPresentationCaches(): void {
+  expireStorefrontTags([
+    "homepage",
+    "catalog",
+    "categories",
+    "banners",
+    "social-rail",
+    "gear-stories",
+  ]);
   try {
-    revalidateTag("homepage", "max");
-    revalidateTag("catalog", "max");
-    revalidateTag("categories", "max");
-    revalidateTag("banners", "max");
-    revalidateTag("social-rail", "max");
-    revalidateTag("gear-stories", "max");
     revalidatePath("/");
     revalidatePath("/category", "layout");
     revalidatePath("/product", "layout");
@@ -18,4 +21,5 @@ export function revalidateStorefrontPresentationCaches(): void {
   } catch {
     /* ignore outside request context (CLI / workers) */
   }
+  void purgeNginxPageCache();
 }

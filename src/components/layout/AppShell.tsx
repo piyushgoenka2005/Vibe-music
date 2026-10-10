@@ -22,6 +22,7 @@ import ScrollRestoration from "@/components/layout/ScrollRestoration";
 import PageLoadSplash, { isPageLoadSplashEnabled } from "@/components/layout/PageLoadSplash";
 import SplashPendingClear from "@/components/layout/SplashPendingClear";
 import ServiceWorkerRegister from "@/components/layout/ServiceWorkerRegister";
+import StorefrontLiveRefresh from "@/components/layout/StorefrontLiveRefresh";
 import AnalyticsProvider from "@/components/analytics/AnalyticsProvider";
 import SupportChatLoader from "@/components/support/SupportChatLoader";
 import DevExtensionNoiseFilter from "@/components/dev/DevExtensionNoiseFilter";
@@ -102,6 +103,7 @@ export default function AppShell({
         <AnalyticsProvider />
         <SupportChatLoader />
         <ServiceWorkerRegister />
+        <StorefrontLiveRefresh />
         <RoutePreloader />
         <Suspense fallback={null}>
           <ScrollRestoration />

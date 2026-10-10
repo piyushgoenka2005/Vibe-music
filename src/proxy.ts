@@ -64,10 +64,19 @@ function isMediaThumbReadFastPath(request: NextRequest, pathname: string): boole
   return request.method === "GET" && pathname.startsWith("/api/media/thumb");
 }
 
+/** Polled by every open storefront tab; in-memory read, no DB — skip Redis + request logs. */
+function isStorefrontVersionFastPath(request: NextRequest, pathname: string): boolean {
+  return request.method === "GET" && pathname === "/api/storefront/version";
+}
+
 async function handleApiRequest(request: NextRequest): Promise<NextResponse | null> {
   const pathname = request.nextUrl.pathname;
 
-  if (isDevAuthReadFastPath(request, pathname) || isMediaThumbReadFastPath(request, pathname)) {
+  if (
+    isDevAuthReadFastPath(request, pathname) ||
+    isMediaThumbReadFastPath(request, pathname) ||
+    isStorefrontVersionFastPath(request, pathname)
+  ) {
     return withSecurityHeaders(NextResponse.next(), pathname);
   }
 

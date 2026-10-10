@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { isMutationMethod } from "@/lib/security/mutation-origin";
@@ -7,12 +7,16 @@ import { logAuditEvent } from "@/lib/server/auditLog";
 import { hasPermission } from "@/lib/auth/permissions";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { distributedCheckRateLimit } from "@/lib/security/distributed-rate-limit";
+import {
+  invalidateAllStorefrontCaches,
+  isStorefrontAdminWrite,
+} from "@/lib/server/storefront/storefrontCacheInvalidation";
 import type { AdminSession, Permission } from "@/types/admin";
 
 export class AdminAuthError extends Error {
   constructor(
     message: string,
-    public status: 401 | 403 = 403
+    public status: 401 | 403 = 403,
   ) {
     super(message);
     this.name = "AdminAuthError";
@@ -33,9 +37,23 @@ export class AdminRateLimitError extends Error {
   }
 }
 
+/**
+ * Runs once the admin handler has written to the DB, so every storefront surface
+ * (pages, data caches, nginx HTML cache) shows the change on the next load — even for
+ * routes whose service layer forgets to invalidate.
+ */
+function scheduleStorefrontRefresh(pathname: string): void {
+  if (!isStorefrontAdminWrite(pathname)) return;
+  try {
+    after(() => invalidateAllStorefrontCaches());
+  } catch {
+    /* outside a request scope (unit tests / scripts) */
+  }
+}
+
 export async function requireAdmin(
   permission?: Permission,
-  request?: Request
+  request?: Request,
 ): Promise<AdminSession> {
   const sessionUser = await getSessionUser();
   if (!sessionUser) {
@@ -55,21 +73,15 @@ export async function requireAdmin(
   // exhaust each other's budget. Runs after auth so unauthenticated
   // requests never consume the admin rate-limit bucket.
   if (request) {
-    const result = await distributedCheckRateLimit(
-      `admin:${adminSession.uid}`,
-      RATE_LIMITS.admin
-    );
+    const result = await distributedCheckRateLimit(`admin:${adminSession.uid}`, RATE_LIMITS.admin);
     if (!result.allowed) {
-      throw new AdminRateLimitError(
-        RATE_LIMITS.admin.limit,
-        result.remaining,
-        result.resetAt
-      );
+      throw new AdminRateLimitError(RATE_LIMITS.admin.limit, result.remaining, result.resetAt);
     }
   }
 
   if (request && isMutationMethod(request.method)) {
     const { pathname } = new URL(request.url);
+    scheduleStorefrontRefresh(pathname);
     void logAuditEvent({
       action: `admin.${request.method.toLowerCase()}`,
       actorId: adminSession.uid,
@@ -88,34 +100,24 @@ export async function requireAdmin(
 
 export function adminErrorResponse(error: unknown, request?: Request): NextResponse {
   if (error instanceof AdminRateLimitError) {
-    const response = NextResponse.json(
-      { error: error.message },
-      { status: 429 }
-    );
+    const response = NextResponse.json({ error: error.message }, { status: 429 });
     response.headers.set("X-RateLimit-Limit", String(error.limit));
     response.headers.set("X-RateLimit-Remaining", String(error.remaining));
     response.headers.set("X-RateLimit-Reset", String(error.resetAt));
     if (request) {
-      response.headers.set(
-        "x-request-id",
-        request.headers.get("x-request-id") ?? ""
-      );
+      response.headers.set("x-request-id", request.headers.get("x-request-id") ?? "");
     }
     return response;
   }
   if (error instanceof AdminAuthError) {
     const response = NextResponse.json({ error: error.message }, { status: error.status });
     if (request) {
-      response.headers.set(
-        "x-request-id",
-        request.headers.get("x-request-id") ?? ""
-      );
+      response.headers.set("x-request-id", request.headers.get("x-request-id") ?? "");
     }
     return response;
   }
   if (error instanceof ZodError) {
-    const message =
-      error.issues[0]?.message?.trim() || "Invalid request";
+    const message = error.issues[0]?.message?.trim() || "Invalid request";
     return NextResponse.json(
       {
         error: message,
@@ -124,7 +126,7 @@ export function adminErrorResponse(error: unknown, request?: Request): NextRespo
           message: issue.message,
         })),
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
   // Avoid leaking internal exception details to admin clients.

@@ -81,9 +81,12 @@ export async function getCachedProducts(includeInactive = false): Promise<Catalo
 export async function revalidateCatalogSnapshot(): Promise<void> {
   try {
     const { revalidateTag } = await import("next/cache");
-    revalidateTag("catalog", "max");
-    revalidateTag("categories", "max");
-    revalidateTag("footer-trending", "max");
+    const { bumpStorefrontVersion } =
+      await import("@/lib/server/storefront/storefrontCacheInvalidation");
+    bumpStorefrontVersion();
+    revalidateTag("catalog", { expire: 0 });
+    revalidateTag("categories", { expire: 0 });
+    revalidateTag("footer-trending", { expire: 0 });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     // Admin/catalog writes invoked outside an App Router request (CLI, workers).
