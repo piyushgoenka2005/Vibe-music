@@ -103,6 +103,7 @@
     "verify:audit": "npx tsx scripts/ops/verify/verify-audit-remediation.mts",
     "monitor:checkout": "npx tsx scripts/ops/synthetic-checkout-monitor.mts",
     "verify:e2e-catalog": "npx tsx scripts/ops/verify/verify-e2e-catalog.mts",
+    "verify:e2e-admin-account": "npx tsx --env-file=.env.local scripts/ops/verify/verify-admin-account-e2e.mts",
     "setup:razorpay-integration": "npx tsx scripts/ops/setup/setup-razorpay-integration.mts",
     "ops:sync-razorpay-vps": "node scripts/ops/sync/sync-razorpay-vps.mjs",
     "verify:razorpay-ops": "node scripts/ops/run-verify-razorpay-ops.mjs",

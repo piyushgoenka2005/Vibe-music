@@ -18,6 +18,7 @@ import ProductVariantsEditor from "@/components/admin/ProductVariantsEditor";
 import GuitarSpecsEditor, {
   extractGuitarSpecsFromRecord,
 } from "@/components/admin/GuitarSpecsEditor";
+import { formatAdminApiError } from "@/lib/admin/formatAdminApiError";
 import { ADMIN_PRODUCT_SKU_MAX_LENGTH } from "@/lib/validations/admin";
 import ProductFilterSpecsEditor, {
   extractFilterSpecsFromRecord,
@@ -286,8 +287,11 @@ export default function ProductFormPage({
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Save failed");
+        const data = (await res.json()) as {
+          error?: string;
+          issues?: Array<{ path?: string; message?: string }>;
+        };
+        throw new Error(formatAdminApiError(data));
       }
       const saved = await res.json();
       const savedId = productId ?? saved.product?.id;

@@ -90,4 +90,57 @@ test.describe("Admin product edit roundtrip", () => {
     expect(loaded.product?.inTheBox).toEqual(["Processor", "Power adapter"]);
     expect(loaded.product?.detailSpecs?.[0]?.label).toBe("Weight");
   });
+
+  test("accepts long SKU and guitar showcase specs (regression)", async ({ request }) => {
+    test.setTimeout(90_000);
+
+    const slug = `e2e-guitar-${Date.now()}`;
+    const longSku = "HZ STMP-X (Mint Green Finish)";
+    const createRes = await request.post("/api/admin/products", {
+      headers: mutationHeaders,
+      data: {
+        name: "E2E Guitar Spec Product",
+        slug,
+        brand: "HERTZ",
+        category: "Guitars",
+        categorySlug: "guitars",
+        price: 11789,
+        originalPrice: 13500,
+        sku: longSku,
+        stockQuantity: 5,
+        status: "active",
+        availability: "in-stock",
+        guitarSpecs: {
+          Controls: "1 Volume, 1 Tone, Coil-Split",
+          "Tuners & Hardware": "Locking Tuners, Chrome",
+          Bridge: "Floyd Rose / Tremolo",
+        },
+        variants: [
+          {
+            label: "Standard",
+            sku: longSku,
+            price: 11789,
+            stock: 5,
+            attributes: [],
+            isDefault: true,
+          },
+        ],
+      },
+    });
+    expect(createRes.ok()).toBeTruthy();
+    const created = (await createRes.json()) as { product?: { id?: string; sku?: string } };
+    productId = created.product?.id;
+    expect(created.product?.sku).toBe(longSku);
+
+    const updateRes = await request.put(`/api/admin/products/${productId}`, {
+      headers: mutationHeaders,
+      data: {
+        guitarSpecs: {
+          Controls: "1 Volume, 1 Tone, 5-Way",
+          "Pickup Selector": "5-Way",
+        },
+      },
+    });
+    expect(updateRes.ok()).toBeTruthy();
+  });
 });
