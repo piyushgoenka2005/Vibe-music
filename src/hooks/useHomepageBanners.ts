@@ -1,8 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { HOMEPAGE_BANNER_SLIDES, type HomepageBannerSlide } from "@/data/homepageBannerHero";
+import type { HomepageBannerSlide } from "@/data/homepageBannerHero";
 import { mapBannersToSlides, slidesFingerprint } from "@/lib/banners/mapBannerToSlide";
+import { pickHomepageBannerSlides } from "@/lib/banners/pickHomepageBannerSlides";
 import type { HomepageBanner } from "@/types/banner";
 
 const HOMEPAGE_BANNERS_QUERY_KEY = ["homepage-banners"] as const;
@@ -13,7 +14,7 @@ const HOMEPAGE_BANNERS_REFETCH_MS = 5 * 60_000;
 async function fetchActiveBannerSlides(): Promise<HomepageBannerSlide[]> {
   // Default HTTP caching — lets the browser reuse the payload instead of
   // hammering the origin from every open tab.
-  const response = await fetch("/api/banners");
+  const response = await fetch("/api/banners", { cache: "no-store" });
   if (!response.ok) {
     throw new Error("Unable to load homepage banners");
   }
@@ -35,12 +36,7 @@ export function useHomepageBanners(initialSlides: HomepageBannerSlide[]) {
     refetchOnMount: false,
   });
 
-  const slides = (() => {
-    const fetched = query.data;
-    const source = fetched !== undefined ? fetched : initialSlides;
-    if (source.length > 0) return source;
-    return HOMEPAGE_BANNER_SLIDES;
-  })();
+  const slides = pickHomepageBannerSlides(query.data, initialSlides);
 
   return {
     slides,

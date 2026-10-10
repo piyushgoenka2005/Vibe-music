@@ -124,7 +124,8 @@ function resolveManualProducts(
     .map((item, index) => {
       if (!item.productId) return null;
       const product = productMap.get(item.productId);
-      if (!product || product.status !== "active" || product.price <= 0) return null;
+      if (!product || product.status !== "active") return null;
+      // Manual pins stay visible even when price is TBD / Coming Soon (price <= 0).
       return toProductItem(product, item, index + 1);
     })
     .filter((item): item is HomepageProductItem => item !== null);

@@ -15,7 +15,7 @@ async function loadPublicHomepageData(): Promise<PublicHomepageData> {
 
 export const getCachedPublicHomepageData = unstable_cache(
   loadPublicHomepageData,
-  ["public-homepage-data-v8"],
+  ["public-homepage-data-v9"],
   { revalidate: HOMEPAGE_REVALIDATE_SECONDS, tags: ["homepage", "catalog"] },
 );
 
@@ -27,21 +27,15 @@ export const getCachedBigNamesDealsPublicData = unstable_cache(
 
 export const getCachedHomepageStoryBanners = unstable_cache(
   async (): Promise<HomepageStoryBannersData> => buildHomepageStoryBanners(),
-  ["public-homepage-story-banners-v2"],
+  ["public-homepage-story-banners-v3"],
   { revalidate: HOMEPAGE_REVALIDATE_SECONDS, tags: ["homepage"] },
 );
 
 export async function revalidateHomepageSnapshot(): Promise<void> {
   try {
-    revalidateTag("homepage", "max");
-    revalidateTag("social-rail", "max");
-    revalidateTag("gear-stories", "max");
-    revalidateTag("catalog", "max");
-    // Bust the storefront shell so admin edits show on the next request.
-    revalidatePath("/");
-    revalidatePath("/category", "layout");
-    revalidatePath("/product", "layout");
-    revalidatePath("/search", "layout");
+    const { revalidateStorefrontPresentationCaches } =
+      await import("@/lib/server/storefront/storefrontPresentationCache");
+    revalidateStorefrontPresentationCaches();
     revalidatePath("/admin/homepage");
   } catch {
     /* ignore outside request context (scripts / tests) */

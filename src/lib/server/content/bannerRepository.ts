@@ -1,6 +1,6 @@
 import "server-only";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateStorefrontPresentationCaches } from "@/lib/server/storefront/storefrontPresentationCache";
 import { unstable_cache } from "next/cache";
 import { isPrismaUnavailableError } from "@/lib/db/prisma-errors";
 import * as pg from "@/lib/server/prisma/contentRepository";
@@ -11,16 +11,11 @@ import type {
   UpdateBannerInput,
 } from "@/types/banner";
 
-const ACTIVE_BANNERS_CACHE_KEY = "homepage-active-banners";
+const ACTIVE_BANNERS_CACHE_KEY = "homepage-active-banners-v2";
 const ACTIVE_BANNERS_REVALIDATE_SECONDS = 120;
 
 function invalidateBannerCache(): void {
-  try {
-    revalidateTag("banners", "max");
-    revalidatePath("/");
-  } catch {
-    /* ignore outside request context */
-  }
+  revalidateStorefrontPresentationCaches();
 }
 
 function isBannerScheduledActive(banner: HomepageBanner, at: Date): boolean {

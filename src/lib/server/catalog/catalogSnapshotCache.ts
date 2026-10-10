@@ -32,7 +32,7 @@ const getCachedActiveProductsInner = unstable_cache(
 
 const getCachedHomepageProductsInner = unstable_cache(
   loadHomepageProducts,
-  ["catalog-homepage-products-v2"],
+  ["catalog-homepage-products-v3"],
   { revalidate: CATALOG_REVALIDATE_SECONDS, tags: ["catalog"] },
 );
 

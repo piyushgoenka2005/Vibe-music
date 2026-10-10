@@ -17,27 +17,31 @@ export async function GET(request: Request) {
         headers: {
           // Public marketing content — safe to cache briefly at the browser,
           // shared caches, and origin. Admin edits propagate within minutes.
-          "Cache-Control":
-            "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
+          "Cache-Control": "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
         },
-      }
+      },
     );
   } catch (error) {
     if (isPrismaUnavailableError(error)) {
       return NextResponse.json(
-        { banners: [] },
+        { banners: [], error: "store_unavailable" },
         {
+          status: 503,
           headers: {
-            "Cache-Control":
-              "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
+            "Cache-Control": "private, no-store, max-age=0",
           },
-        }
+        },
       );
     }
-    const message =
-      error instanceof Error ? error.message : "Unable to load banners";
+    const message = error instanceof Error ? error.message : "Unable to load banners";
     if (message.includes("Quota exceeded")) {
-      return NextResponse.json({ error: "Service busy", banners: [] }, { status: 503 });
+      return NextResponse.json(
+        { error: "Service busy", banners: [] },
+        {
+          status: 503,
+          headers: { "Cache-Control": "private, no-store, max-age=0" },
+        },
+      );
     }
     return handleRouteError(error, "api/banners", request);
   }
