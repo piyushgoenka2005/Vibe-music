@@ -8,6 +8,8 @@ import {
   adminHomepageSectionItemSchema,
   assertGearStoryItemPayload,
 } from "@/lib/validations/admin";
+import { bannerUploadFolder } from "@/lib/server/platform/cdnStorage";
+import { mirrorOptionalExternalImage } from "@/lib/server/platform/mirrorExternalImage";
 
 export async function POST(request: Request) {
   try {
@@ -17,7 +19,8 @@ export async function POST(request: Request) {
     assertGearStoryItemPayload(parsed.sectionKey, parsed, "create");
     const item = await createSectionItem({
       ...parsed,
-      customImage: parsed.customImage || undefined,
+      customImage:
+        (await mirrorOptionalExternalImage(parsed.customImage, bannerUploadFolder())) || undefined,
     });
     await invalidatePublicHomepageCacheAsync();
     return NextResponse.json({ item }, { status: 201 });

@@ -25,7 +25,7 @@ The external **vibemusic-test-kit** (73 unit tests, conformance, k6, Playwright 
 | Catalog quality            |        4/10 | **5/10**                               | 165 SKUs, taxonomy fixes in repo; brand marketing vs stocked brands is **content**.                                                                    |
 | Deployment consistency     |        4/10 | **8/10**                               | Single deploy `a5161f48`, Next **16.3.8**; legacy phone absent on live PDP/home. v3 “3 footers” likely snapshot/cache — re-check if seen again.        |
 | Frontend / SEO / a11y      |        6/10 | **6–7/10**                             | `/brands` index canonical+OG fixed in repo (deploy pending). Lighthouse/axe still **run locally** (`validate:ci`).                                     |
-| Third-party / supply chain |        4/10 | **7/10**                               | Homepage blocks postimg/postimage; CDN primary. Some legacy Cloudinary URLs remain in seed JSON — migrate via admin/CDN.                               |
+| Third-party / supply chain |        4/10 | **7/10**                               | postimg/postimage images mirrored to CDN; CDN primary. Some legacy Cloudinary URLs remain in seed JSON — migrate via admin/CDN.                        |
 | Security (observable)      |        5/10 | **7/10**                               | HSTS/CSP/nosniff on live; auth/payments covered by unit + E2E + Razorpay ops. Pen-test **not done**.                                                   |
 | Performance                |        5/10 | **UNVERIFIED**                         | Needs Lighthouse/CWV on staging; duplicate DOM may still exist — profile in browser.                                                                   |
 | **Weighted (external)**    |    **~4.2** | **~6.5 engineering** (no GSTIN/CWV/k6) | Hidden areas scored up once automated gates pass; merchandising/legal data still cap “10/10”.                                                          |
@@ -63,16 +63,16 @@ Legend: **Fixed** · **Mitigated** (guard + ops) · **Partial** · **Open (data/
 
 ### Security (S-01–S-08)
 
-| ID                               | Status        | Repo / live                                                                 |
-| -------------------------------- | ------------- | --------------------------------------------------------------------------- |
-| S-01 Next/React CVEs             | **Mitigated** | **next@16.3.8** on production; `npm run audit:deps` in `verify:audit`.      |
-| S-02 Cloudinary personal account | **Partial**   | New uploads → `cdn.vibemusic.in`; migrate legacy URLs in catalog.           |
-| S-03 Open redirect / XSS         | **Fixed**     | `safeRedirect.ts` + tests; passive `open-redirect-login`.                   |
-| S-04 Filter injection            | **Partial**   | Slug resolvers + category redirects; normalize taxonomy in admin.           |
-| S-05 Four image hosts            | **Mitigated** | `coerceSecureAssetUrl` blocks postimg; homepage passive `postimage-absent`. |
-| S-06 Headers/TLS/DMARC           | **Partial**   | `verify:prod-signoff` + `check:edge`; DMARC = DNS ops.                      |
-| S-07 Payments/auth               | **Mitigated** | Server totals, webhook verify, `verify:razorpay-ops`, E2E catalog.          |
-| S-08 Checkout bots blocked       | **By design** | Keep; test on staging with Playwright.                                      |
+| ID                               | Status        | Repo / live                                                                                                                                                       |
+| -------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S-01 Next/React CVEs             | **Mitigated** | **next@16.3.8** on production; `npm run audit:deps` in `verify:audit`.                                                                                            |
+| S-02 Cloudinary personal account | **Partial**   | New uploads → `cdn.vibemusic.in`; migrate legacy URLs in catalog.                                                                                                 |
+| S-03 Open redirect / XSS         | **Fixed**     | `safeRedirect.ts` + tests; passive `open-redirect-login`.                                                                                                         |
+| S-04 Filter injection            | **Partial**   | Slug resolvers + category redirects; normalize taxonomy in admin.                                                                                                 |
+| S-05 Four image hosts            | **Mitigated** | postimg/postimage images are copied to `cdn.vibemusic.in` on admin save and at deploy (`mirror-external-images-to-cdn.mts`); homepage passive `postimage-absent`. |
+| S-06 Headers/TLS/DMARC           | **Partial**   | `verify:prod-signoff` + `check:edge`; DMARC = DNS ops.                                                                                                            |
+| S-07 Payments/auth               | **Mitigated** | Server totals, webhook verify, `verify:razorpay-ops`, E2E catalog.                                                                                                |
+| S-08 Checkout bots blocked       | **By design** | Keep; test on staging with Playwright.                                                                                                                            |
 
 ### Consistency & front-end (C-11–C-22)
 

@@ -10,6 +10,8 @@ import {
   assertGearStoryItemPayload,
 } from "@/lib/validations/admin";
 import { getSectionItemById } from "@/lib/server/homepageService";
+import { bannerUploadFolder } from "@/lib/server/platform/cdnStorage";
+import { mirrorOptionalExternalImage } from "@/lib/server/platform/mirrorExternalImage";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -27,7 +29,8 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
     const item = await updateSectionItem(id, {
       ...parsed,
-      customImage: parsed.customImage || undefined,
+      customImage:
+        (await mirrorOptionalExternalImage(parsed.customImage, bannerUploadFolder())) || undefined,
     });
     await invalidatePublicHomepageCacheAsync();
     return NextResponse.json({ item });

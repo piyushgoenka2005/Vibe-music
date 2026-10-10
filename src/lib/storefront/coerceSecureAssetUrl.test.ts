@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  coerceSecureAssetUrl,
-  isDisallowedStorefrontImageUrl,
-  sanitizeStorefrontImageUrl,
-} from "./coerceSecureAssetUrl";
+import { coerceSecureAssetUrl, sanitizeStorefrontImageUrl } from "./coerceSecureAssetUrl";
 
 describe("coerceSecureAssetUrl", () => {
   it("upgrades public Vibe hosts to HTTPS", () => {
@@ -28,8 +24,12 @@ describe("coerceSecureAssetUrl", () => {
 });
 
 describe("sanitizeStorefrontImageUrl", () => {
-  it("blocks postimg and postimage hosts", () => {
-    expect(isDisallowedStorefrontImageUrl("https://i.postimg.cc/abc/photo.webp")).toBe(true);
-    expect(sanitizeStorefrontImageUrl("https://cdn.postimage.me/x.jpg")).toBe("");
+  it("keeps admin-chosen third-party images instead of hiding them", () => {
+    expect(sanitizeStorefrontImageUrl("https://cdn.postimage.me/2026/09/10/3-2.webp")).toBe(
+      "https://cdn.postimage.me/2026/09/10/3-2.webp",
+    );
+    expect(sanitizeStorefrontImageUrl("https://i.postimg.cc/abc/photo.webp")).toBe(
+      "https://i.postimg.cc/abc/photo.webp",
+    );
   });
 });

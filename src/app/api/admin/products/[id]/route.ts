@@ -7,6 +7,8 @@ import {
   duplicateAdminProduct,
 } from "@/lib/server/adminProductService";
 import { adminProductSchema, adminProductDuplicateActionSchema } from "@/lib/validations/admin";
+import { productUploadFolder } from "@/lib/server/platform/cdnStorage";
+import { mirrorProductImageFields } from "@/lib/server/platform/mirrorExternalImage";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -29,7 +31,14 @@ export async function PUT(request: Request, context: RouteContext) {
     const admin = await requireAdmin("products:write", request);
     const { id } = await context.params;
     const body = await request.json();
-    const parsed = adminProductSchema.partial().parse(body);
+    const validated = adminProductSchema.partial().parse(body);
+    const parsed = await mirrorProductImageFields(
+      validated,
+      productUploadFolder(
+        validated.categorySlug ?? validated.category ?? "general",
+        validated.slug ?? id,
+      ),
+    );
     const product = await updateAdminProduct(id, parsed, {
       actorId: admin.uid,
       actorEmail: admin.email,

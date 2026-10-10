@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
-import {
-  deleteBanner,
-  getBannerById,
-  updateBanner,
-} from "@/lib/server/bannerService";
+import { deleteBanner, getBannerById, updateBanner } from "@/lib/server/bannerService";
 import { adminBannerSchema } from "@/lib/validations/admin";
+import { bannerUploadFolder } from "@/lib/server/platform/cdnStorage";
+import { mirrorOptionalExternalImage } from "@/lib/server/platform/mirrorExternalImage";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -29,10 +27,14 @@ export async function PUT(request: Request, context: RouteContext) {
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminBannerSchema.partial().parse(body);
+    const folder = bannerUploadFolder();
     const banner = await updateBanner(id, {
       ...parsed,
+      image: await mirrorOptionalExternalImage(parsed.image, folder),
       mobileImage:
-        parsed.mobileImage === "" ? undefined : parsed.mobileImage,
+        parsed.mobileImage === ""
+          ? undefined
+          : await mirrorOptionalExternalImage(parsed.mobileImage, folder),
     });
     return NextResponse.json({ banner });
   } catch (error) {

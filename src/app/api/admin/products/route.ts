@@ -9,6 +9,8 @@ import {
 } from "@/lib/server/adminProductService";
 import { slugify } from "@/lib/slug";
 import { adminProductSchema } from "@/lib/validations/admin";
+import { productUploadFolder } from "@/lib/server/platform/cdnStorage";
+import { mirrorProductImageFields } from "@/lib/server/platform/mirrorExternalImage";
 
 export async function GET(request: Request) {
   try {
@@ -67,7 +69,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ updated: count });
     }
 
-    const parsed = adminProductSchema.parse(body);
+    const validated = adminProductSchema.parse(body);
+    const parsed = await mirrorProductImageFields(
+      validated,
+      productUploadFolder(validated.categorySlug ?? slugify(validated.category), validated.slug),
+    );
     const product = await createAdminProduct({
       ...parsed,
       availability: parsed.availability ?? "in-stock",

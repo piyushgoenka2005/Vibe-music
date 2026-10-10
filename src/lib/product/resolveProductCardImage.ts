@@ -1,9 +1,6 @@
 import { getProductImage, isGenericProductPlaceholder } from "@/data/productImages";
 import { isCdnUrl } from "@/lib/cdnConfig";
-import {
-  isDisallowedStorefrontImageUrl,
-  sanitizeStorefrontImageUrl,
-} from "@/lib/storefront/coerceSecureAssetUrl";
+import { sanitizeStorefrontImageUrl } from "@/lib/storefront/coerceSecureAssetUrl";
 
 export interface ProductCardImageInput {
   slug: string;
@@ -121,7 +118,7 @@ function catalogImageRefs(input: ProductCardImageInput): string[] {
     }
   }
 
-  return refs.filter((ref) => !isDisallowedStorefrontImageUrl(ref));
+  return refs;
 }
 
 function cdnUrlMatchesProductSlug(url: string, slug: string): boolean {

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
-import {
-  createBanner,
-  listAllBanners,
-} from "@/lib/server/bannerService";
+import { createBanner, listAllBanners } from "@/lib/server/bannerService";
 import { paginateSortedById } from "@/lib/admin/paginateByCursor";
+import { bannerUploadFolder } from "@/lib/server/platform/cdnStorage";
+import {
+  mirrorExternalImageToCdn,
+  mirrorOptionalExternalImage,
+} from "@/lib/server/platform/mirrorExternalImage";
 import { adminBannerSchema } from "@/lib/validations/admin";
 
 export async function GET(request: Request) {
@@ -31,9 +33,11 @@ export async function POST(request: Request) {
     await requireAdmin("banners:write", request);
     const body = await request.json();
     const parsed = adminBannerSchema.parse(body);
+    const folder = bannerUploadFolder();
     const banner = await createBanner({
       ...parsed,
-      mobileImage: parsed.mobileImage || undefined,
+      image: await mirrorExternalImageToCdn(parsed.image, folder),
+      mobileImage: (await mirrorOptionalExternalImage(parsed.mobileImage, folder)) || undefined,
       startDate: parsed.startDate ?? null,
       endDate: parsed.endDate ?? null,
     });
