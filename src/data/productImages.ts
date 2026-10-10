@@ -57,6 +57,10 @@ const SLUG_OVERRIDES: Record<string, string> = {
   "roland-v-drums-td516-electronic-drum-set": IMAGES.eDrums,
   "yamaha-dtx6k5-m-electronic-drum-set": IMAGES.eDrums,
   "evans-ec2s-clear-tom-pack-10-12-16": IMAGES.drumAccessories,
+  "avus-linage-7a-hickory-drumsticks-natural": IMAGES.drumAccessories,
+  "avus-linage-5a-hickory-drumsticks-natural": IMAGES.drums,
+  "avus-linage-5b-hickory-drumsticks-natural": IMAGES.eDrums,
+  "avus-linage-x5a-hickory-drumsticks-natural": IMAGES.cymbals,
   "shure-sm58-dynamic-vocal-microphone": IMAGES.microphone,
   "audio-technica-at2020-cardioid-condenser-microphone": IMAGES.microphone,
   "neumann-u-87-ai-condenser-microphone": IMAGES.microphone,
@@ -106,7 +110,10 @@ const SLUG_PREFIX_DEFAULTS: Array<{ test: RegExp; image: string }> = [
   { test: /(keyboard|synth|piano|stage)/, image: IMAGES.keyboard },
 ];
 
-function avusFallbackImage(_slug: string): string {
+function avusFallbackImage(slug: string): string {
+  for (const rule of SLUG_PREFIX_DEFAULTS) {
+    if (rule.test.test(slug)) return rule.image;
+  }
   return IMAGES.cymbals;
 }
 

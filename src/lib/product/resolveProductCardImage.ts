@@ -1,4 +1,4 @@
-import { getProductImage } from "@/data/productImages";
+import { getProductImage, isGenericProductPlaceholder } from "@/data/productImages";
 import { isCdnUrl } from "@/lib/cdnConfig";
 import {
   isDisallowedStorefrontImageUrl,
@@ -59,6 +59,7 @@ export function isMisassignedCatalogImage(url: string): boolean {
 function isValidCatalogImageRef(url: string): boolean {
   if (!url || url === "[object Object]") return false;
   if (isMisassignedCatalogImage(url)) return false;
+  if (isGenericProductPlaceholder(url)) return false;
   return true;
 }
 
@@ -147,7 +148,10 @@ export function resolveProductGalleryUrls(input: ProductCardImageInput): string[
   const ownFolder = refs.filter((url) => cdnUrlMatchesProductSlug(url, input.slug));
   const pool = ownFolder.length > 0 ? ownFolder : refs;
   const sorted = sortGalleryUrls(pool);
-  if (sorted.length === 0) return [];
+  if (sorted.length === 0) {
+    const fallback = productImageLocalFallback(input.slug, input.category);
+    return fallback ? [sanitizeStorefrontImageUrl(fallback)] : [];
+  }
 
   if (sorted.every(isFlatPackshotCatalogImage)) {
     const fallback = productImageLocalFallback(input.slug, input.category);

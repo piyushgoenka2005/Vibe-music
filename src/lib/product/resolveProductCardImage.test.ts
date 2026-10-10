@@ -92,6 +92,25 @@ describe("resolveProductCardImage", () => {
     expect(urls.some((url) => url.includes("e853f8d2"))).toBe(false);
   });
 
+  it("uses per-SKU curated art when catalog only stores Drum Month promo placeholders", () => {
+    const promo =
+      "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg";
+    const sevenA = resolveProductCardImage({
+      slug: "avus-linage-7a-hickory-drumsticks-natural",
+      category: "Drums & Percussion",
+      image: promo,
+    });
+    const fiveA = resolveProductCardImage({
+      slug: "avus-linage-5a-hickory-drumsticks-natural",
+      category: "Drums & Percussion",
+      image: promo,
+    });
+
+    expect(sevenA.src).toContain("Superhero-Images-4");
+    expect(fiveA.src).toContain("Superhero-Images-1");
+    expect(sevenA.src).not.toBe(fiveA.src);
+  });
+
   it("orders lifestyle cymbal art before flat packshots in PDP gallery", () => {
     const urls = resolveProductGalleryUrls({
       slug: "avus-zapcrash-12-zapcrash-12",
