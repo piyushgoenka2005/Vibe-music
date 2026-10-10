@@ -23,12 +23,15 @@ const dryRun = process.argv.includes("--dry-run");
 const mirroredUrls = new Map<string, string>();
 let copied = 0;
 let failed = 0;
+let planned = 0;
 
 async function mirror(url: string, folder: string): Promise<string> {
   const cached = mirroredUrls.get(url);
   if (cached) return cached;
   if (dryRun) {
     console.log(`  [dry-run] would mirror ${url} → ${folder}/`);
+    mirroredUrls.set(url, url);
+    planned += 1;
     return url;
   }
   const next = await mirrorExternalImageToCdn(url, folder);
@@ -131,6 +134,10 @@ async function main(): Promise<void> {
   await mirrorHomepageItems(now);
   await mirrorProducts(now);
 
+  if (dryRun) {
+    console.log(`[dry-run] ${planned} distinct image(s) would be mirrored to ${cdnBase}.`);
+    return;
+  }
   if (copied === 0 && failed === 0) {
     console.log("No banner, homepage or product images on postimage/postimg hosts.");
     return;

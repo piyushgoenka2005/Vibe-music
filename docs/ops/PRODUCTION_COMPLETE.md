@@ -1,6 +1,6 @@
 # Production completion status (engineering)
 
-**Live:** https://vibemusic.in · **Deploy:** `a5161f48` (verify `/api/health` → `version`)
+**Live:** https://vibemusic.in · **Deploy:** `78a941f1` (verify `/api/health` → `version`)
 
 ## Automated gates (run anytime)
 
