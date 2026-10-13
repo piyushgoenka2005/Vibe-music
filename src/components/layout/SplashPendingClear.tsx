@@ -1,12 +1,15 @@
 "use client";
 
 import { useLayoutEffect } from "react";
+import { clearSplashCover } from "@/lib/splash/clearSplashCover";
 import {
   SPLASH_ACTIVE_CLASS,
+  SPLASH_CONTROLLER_ATTR,
+  SPLASH_CONTROLLER_READY,
   SPLASH_PENDING_CLASS,
   SPLASH_SEEN_KEY,
   isPageLoadSplashEnabled,
-} from "@/components/layout/PageLoadSplash";
+} from "@/lib/splash/pageLoadSplash";
 
 /**
  * Clears the SSR splash cover for return visitors without injecting <script>
@@ -15,9 +18,7 @@ import {
 export default function SplashPendingClear() {
   useLayoutEffect(() => {
     const clear = () => {
-      document.documentElement.classList.remove(SPLASH_PENDING_CLASS, SPLASH_ACTIVE_CLASS);
-      const boot = document.getElementById("vibe-boot-splash");
-      if (boot) boot.setAttribute("hidden", "");
+      clearSplashCover();
       document.documentElement.style.removeProperty("background");
       document.documentElement.style.removeProperty("background-color");
       document.body?.style.removeProperty("background");
@@ -31,10 +32,26 @@ export default function SplashPendingClear() {
     try {
       if (sessionStorage.getItem(SPLASH_SEEN_KEY) === "1") {
         clear();
+        return;
       }
     } catch {
       /* keep cover until PageLoadSplash decides */
     }
+
+    // If React never hands off from the SSR boot overlay, unblock the storefront.
+    const failsafeMs = 12_000;
+    const failsafe = window.setTimeout(() => {
+      const html = document.documentElement;
+      if (html.getAttribute(SPLASH_CONTROLLER_ATTR) === SPLASH_CONTROLLER_READY) return;
+      if (
+        html.classList.contains(SPLASH_PENDING_CLASS) &&
+        !html.classList.contains(SPLASH_ACTIVE_CLASS)
+      ) {
+        clearSplashCover(true);
+      }
+    }, failsafeMs);
+
+    return () => window.clearTimeout(failsafe);
   }, []);
 
   return null;

@@ -266,6 +266,8 @@
 
 .culture-typography__cta-wrap {
   margin-top: 2rem;
+  position: relative;
+  z-index: 5;
 }
 
 .culture-typography__cta {
@@ -280,6 +282,10 @@
   font-size: 0.9375rem;
   font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
+  pointer-events: auto;
+  position: relative;
+  z-index: 5;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.35),
     0 10px 36px rgba(10, 52, 150, 0.28);

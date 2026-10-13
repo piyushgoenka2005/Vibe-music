@@ -2,11 +2,10 @@
 
 .mobile-whatsapp-btn {
   position: fixed;
-  right: max(0.75rem, env(safe-area-inset-right, 0px));
-  left: auto;
+  left: max(0.75rem, env(safe-area-inset-left, 0px));
+  right: auto;
   bottom: calc(
-    max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--mobile-whatsapp-clearance, 0px) +
-      var(--mobile-whatsapp-stack-offset, 0px)
+    max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--mobile-whatsapp-clearance, 0px)
   );
   z-index: 155;
   display: none;
@@ -52,10 +51,6 @@
     display: inline-flex;
   }
 
-  body:has(.help-widget) .mobile-whatsapp-btn {
-    --mobile-whatsapp-stack-offset: 3.5rem;
-  }
-
   body:has(.checkout-mobile-bar) .mobile-whatsapp-btn {
     --mobile-whatsapp-clearance: 5.25rem;
   }
@@ -73,6 +68,7 @@
     --mobile-whatsapp-clearance: 5.5rem;
   }
 
+  body:has(.help-widget--open) .mobile-whatsapp-btn,
   body:has(.cart-drawer--open) .mobile-whatsapp-btn,
   body:has(.sw-search-overlay) .mobile-whatsapp-btn,
   body.site-nav-open .mobile-whatsapp-btn {

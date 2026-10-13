@@ -80,8 +80,7 @@
 
 @media (min-width: 1024px) {
   .category-bento__inner {
-    padding-inline-start: var(--bento-rail-offset);
-    padding-inline-end: 0.75rem;
+    padding-inline: var(--hp-frame-gutter, var(--bento-rail-offset));
   }
 }
 
@@ -255,11 +254,7 @@
 .category-bento__link--overlay {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(
-    165deg,
-    rgba(255, 255, 255, 0.94) 0%,
-    rgba(248, 250, 255, 0.82) 100%
-  );
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 255, 0.82) 100%);
   border: 1.5px solid rgba(18, 83, 237, 0.1);
   box-shadow:
     0 8px 32px rgba(18, 83, 237, 0.07),
@@ -307,22 +302,14 @@
 .category-bento__card-overlay-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    transparent 50%,
-    rgba(18, 83, 237, 0.04) 100%
-  );
+  background: linear-gradient(180deg, transparent 50%, rgba(18, 83, 237, 0.04) 100%);
   transition: opacity 320ms ease;
 }
 
 .category-bento__link--overlay:hover .category-bento__card-overlay-shade,
 .category-bento__link--overlay:focus-visible .category-bento__card-overlay-shade {
   opacity: 0.75;
-  background: linear-gradient(
-    180deg,
-    rgba(18, 83, 237, 0.02) 0%,
-    rgba(18, 83, 237, 0.08) 100%
-  );
+  background: linear-gradient(180deg, rgba(18, 83, 237, 0.02) 0%, rgba(18, 83, 237, 0.08) 100%);
 }
 
 .category-bento__card-caption {
@@ -374,11 +361,7 @@
   display: flex;
   flex-direction: row;
   color: var(--text-primary, #0f172a);
-  background: linear-gradient(
-    165deg,
-    rgba(255, 255, 255, 0.94) 0%,
-    rgba(248, 250, 255, 0.84) 100%
-  );
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 255, 0.84) 100%);
   border: 1.5px solid rgba(18, 83, 237, 0.1);
   box-shadow:
     0 8px 32px rgba(18, 83, 237, 0.07),
@@ -978,13 +961,7 @@
 .category-bento__browse-btn:focus-visible .category-bento__browse-btn-label {
   max-width: 11.5rem;
   overflow: hidden;
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    #000 8%,
-    #000 92%,
-    transparent 100%
-  );
+  mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
 }
 
 .category-bento__browse-btn:hover .category-bento__browse-btn-static,

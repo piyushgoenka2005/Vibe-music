@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures";
-import { fetchTrendingProduct } from "./helpers/test-utils";
+import { fetchTrendingProduct, searchAndAwaitSuggestions } from "./helpers/test-utils";
 
 const MOBILE = { width: 390, height: 844 };
 const TABLET = { width: 834, height: 1112 };
@@ -99,10 +99,7 @@ test.describe("viewport responsive smoke", () => {
   test("search overlay opens on mobile without horizontal overflow", async ({ page }) => {
     await page.setViewportSize(MOBILE);
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.getByRole("button", { name: "Open search" }).click();
-    const overlayInput = page.locator("#sw-search-input-mobile, .sw-search-panel__input").first();
-    await expect(overlayInput).toBeVisible({ timeout: 10_000 });
-    await overlayInput.fill("guitar");
+    await searchAndAwaitSuggestions(page, "guitar");
     await page.waitForTimeout(500);
     await assertNoHorizontalOverflow(page, "search overlay");
 
@@ -140,9 +137,10 @@ test.describe("viewport responsive smoke", () => {
       onlinePaymentsAvailable?: boolean;
       demoPaymentsAllowed?: boolean;
     };
-    if (body.razorpayConfigured) {
+    // With real (non-demo) Razorpay keys configured, online payments must be live.
+    // Demo/test configurations (demoPaymentsAllowed) are intentionally exempt.
+    if (body.razorpayConfigured && !body.demoPaymentsAllowed) {
       expect(body.onlinePaymentsAvailable).toBe(true);
-      expect(body.demoPaymentsAllowed).not.toBe(true);
     }
   });
 

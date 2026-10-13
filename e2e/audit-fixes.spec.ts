@@ -3,6 +3,7 @@ import {
   fetchCheckoutProduct,
   fetchTrendingProduct,
   mutationHeaders,
+  searchAndAwaitSuggestions,
   seedGuestCart,
 } from "./helpers/test-utils";
 
@@ -40,17 +41,7 @@ test.describe("audit-fix E2E: search and commerce", () => {
     expect(api.status()).toBeLessThan(500);
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    const toggle = page.getByRole("button", { name: /open search/i });
-    if (await toggle.count()) {
-      await toggle.click();
-    }
-
-    const input = page.locator("#sw-search-input-mobile, #sw-search-input").first();
-    await expect(input).toBeVisible({ timeout: 10_000 });
-    await input.fill("guitar");
-    await expect(
-      page.locator("[role='listbox'], .search-suggest, .search-overlay").first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await searchAndAwaitSuggestions(page, "guitar");
   });
 
   test("search typeahead returns suggestions for guitar (UX-07)", async ({
@@ -66,19 +57,7 @@ test.describe("audit-fix E2E: search and commerce", () => {
       expect(count).toBeGreaterThan(0);
     }
     await page.goto("/search", { waitUntil: "domcontentloaded" });
-    const input = page
-      .locator(
-        '#sw-search-input, #sw-search-input-mobile, .site-header__search-input, input[type="search"]',
-      )
-      .first();
-    if (await input.count()) {
-      await input.fill("guitar");
-      await expect(
-        page
-          .locator(".search-suggest, .search-overlay, [role='listbox'], .search-dropdown")
-          .first(),
-      ).toBeVisible({ timeout: 15_000 });
-    }
+    await searchAndAwaitSuggestions(page, "guitar");
   });
 });
 
@@ -134,8 +113,10 @@ test.describe("audit-fix E2E: out-of-stock and coupon flows", () => {
     const product = await fetchCheckoutProduct(request);
     await seedGuestCart(page, product);
     await page.goto("/checkout", { waitUntil: "domcontentloaded" });
-    // The checkout form must be visible and not clipped on mobile
-    const form = page.locator(".checkout-form, form").first();
+    // The checkout form must be visible and not clipped on mobile.
+    // Target the checkout form specifically — a bare `form` also matches the
+    // header search form, which is hidden at mobile widths.
+    const form = page.locator(".checkout-form");
     await expect(form).toBeVisible({ timeout: 20_000 });
     const overflow = await page.evaluate(() => {
       const doc = document.documentElement;

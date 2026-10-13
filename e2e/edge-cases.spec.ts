@@ -47,7 +47,12 @@ test.describe("edge cases + resilience", () => {
     await seedGuestCart(page, product);
     await page.goto("/checkout", { waitUntil: "domcontentloaded" });
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.getByText(product.name).first()).toBeVisible({ timeout: 20_000 });
+    // The checkout summary lists the item count (not product names), so assert
+    // the persisted guest cart still renders after a reload.
+    await expect(page.getByRole("heading", { name: /order summary/i })).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.getByText(/1 item/i).first()).toBeVisible({ timeout: 20_000 });
   });
 
   test("browser back from cart to PDP remains usable", async ({

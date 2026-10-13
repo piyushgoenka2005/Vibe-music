@@ -13,7 +13,10 @@ import { getMetaDomainVerification, isMetaPixelConfigured } from "@/lib/analytic
 import SocialRailShell from "@/components/layout/SocialRailShell";
 import AppProviders from "@/providers/AppProviders";
 import { DEFAULT_METADATA } from "@/lib/site";
+import StorefrontSplashRoot from "@/components/layout/StorefrontSplashRoot";
+import VibeBootSplashMarkup from "@/components/layout/VibeBootSplashMarkup";
 import { isPageLoadSplashEnabled } from "@/lib/splash/pageLoadSplash";
+import { buildSplashBootInlineScript } from "@/lib/splash/splashBootInlineScript";
 import { buildDevConsoleFilterInlineScript } from "@/lib/dev/devConsoleNoise";
 import "./globals.css";
 import "@/styles/typography.css";
@@ -82,7 +85,7 @@ export default async function RootLayout({
         {splashEnabled ? (
           <script
             dangerouslySetInnerHTML={{
-              __html: `(function(){try{var p=location.pathname;if(/^\\/admin(?:\\/|$)/.test(p)||p==="/login"||p==="/register"||p==="/forgot-password"||p==="/reset-password"||p.startsWith("/checkout")||p.startsWith("/cart"))return;if(sessionStorage.getItem("vibe-splash-seen")==="1")return;}catch(e){}document.documentElement.classList.add("vibe-splash-pending");})();`,
+              __html: buildSplashBootInlineScript(),
             }}
           />
         ) : null}
@@ -101,12 +104,9 @@ export default async function RootLayout({
           suppressHydrationWarning
           data-splash-enabled={splashEnabled ? "true" : "false"}
         >
-          <div className="page-load-splash__frame page-load-splash__frame--settled">
-            <span className="page-load-splash__text page-load-splash__text--settled">
-              VIBE MUSIC
-            </span>
-          </div>
+          <VibeBootSplashMarkup />
         </div>
+        <StorefrontSplashRoot />
         <Suspense fallback={null}>
           <SocialRailShell />
         </Suspense>

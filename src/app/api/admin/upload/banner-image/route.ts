@@ -27,8 +27,10 @@ export async function POST(request: Request) {
       filenameHint: file.name,
     });
 
+    // Hero slides render full-bleed up to ~1920px wide, so store the highest
+    // quality variant (master WebP ≤2000px) instead of the w960 card default.
     return NextResponse.json({
-      url: uploaded.url,
+      url: uploaded.masterUrl || uploaded.url,
       masterUrl: uploaded.masterUrl,
       derivatives: uploaded.derivatives,
     });

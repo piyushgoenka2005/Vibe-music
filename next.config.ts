@@ -5,6 +5,12 @@ const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Server-only packages that pull Node builtins (`node:child_process`) or
+  // optional native deps must stay external to the server bundle; bundling
+  // them under --webpack raises UnhandledSchemeError / unresolved-optional-dep.
+  serverExternalPackages: ["@sentry/node", "bullmq", "@valkey/valkey-glide"],
+  // Dev overlay/indicator intercepts pointer events in E2E; keep it off.
+  devIndicators: false,
   // Dev: compress spawns many Gzip streams → MaxListenersExceededWarning on concurrent RSC requests.
   compress: isProd,
   experimental: {

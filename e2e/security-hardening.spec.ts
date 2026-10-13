@@ -43,11 +43,14 @@ test.describe("Phase 2 security hardening (L-16/L-17/L-18)", () => {
     }
   });
 
-  test("mutations without Origin/Referer are rejected with 403 (L-16 CSRF)", async ({
+  test("mutations from an untrusted origin are rejected with 403 (L-16 CSRF)", async ({
     request,
   }) => {
     const response = await request.post("/api/cart/reprice", {
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Origin: "https://evil.example.com",
+      },
       data: { items: [] },
     });
     expect(response.status()).toBe(403);

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   computeRestoreScrollY,
   findSectionAnchorId,
+  isAnchorCurrent,
   isAuthScrollResetPath,
   isBackToKey,
   isPendingPopRestoreForKey,
@@ -9,6 +10,7 @@ import {
   mergeScrollPositionForKey,
   restoreScrollRailForAnchor,
   parsePendingPopRestore,
+  pickViewportSectionId,
   resolveScrollYForPersist,
   serializePendingPopRestore,
   shouldCancelRestoreForUserScroll,
@@ -170,10 +172,38 @@ describe("scrollRestore helpers", () => {
     expect(findSectionAnchorId(null)).toBeNull();
   });
 
-  it("computeRestoreScrollY uses section top when higher than saved Y", () => {
+  it("computeRestoreScrollY follows the section's live position plus saved offset", () => {
+    // Sections above rendered taller (+900px) or shorter (-600px) on the way back.
+    expect(computeRestoreScrollY(4000, 4940, 60, -40)).toBe(4900);
+    expect(computeRestoreScrollY(4000, 3440, 60, -40)).toBe(3400);
+    expect(computeRestoreScrollY(4000, 3440, 60, 250)).toBe(3690);
+    expect(computeRestoreScrollY(800, 10, 60, -40)).toBe(0);
+  });
+
+  it("computeRestoreScrollY falls back to header-aligned section top, then saved Y", () => {
     expect(computeRestoreScrollY(800, 2400, 60)).toBe(2340);
-    expect(computeRestoreScrollY(2500, 2400, 60)).toBe(2500);
-    expect(computeRestoreScrollY(800, null, 60)).toBe(800);
+    expect(computeRestoreScrollY(2500, 2400, 60)).toBe(2340);
+    expect(computeRestoreScrollY(800, null, 60, -40)).toBe(800);
+  });
+
+  it("isAnchorCurrent rejects anchors captured at a different scroll position", () => {
+    expect(isAnchorCurrent({ sectionId: "trending-products", y: 5417 }, 5417)).toBe(true);
+    expect(isAnchorCurrent({ sectionId: "trending-products", y: 5417 }, 5419.4)).toBe(true);
+    expect(isAnchorCurrent({ sectionId: "trending-products", y: 5417 }, 9000)).toBe(false);
+    expect(isAnchorCurrent(undefined, 5417)).toBe(false);
+  });
+
+  it("pickViewportSectionId returns the innermost section under the line", () => {
+    const sections = [
+      { id: "page", top: -3000, bottom: 9000 },
+      { id: "new-arrivals", top: -900, bottom: 40 },
+      { id: "trending-products", top: 40, bottom: 520 },
+      { id: "staff-picks", top: 520, bottom: 980 },
+    ];
+    expect(pickViewportSectionId(sections, 61)).toBe("trending-products");
+    expect(pickViewportSectionId(sections, 600)).toBe("staff-picks");
+    expect(pickViewportSectionId([{ id: "page", top: -3000, bottom: 9000 }], 61)).toBe("page");
+    expect(pickViewportSectionId([], 61)).toBeNull();
   });
 
   it("mergeScrollAnchorForKey stores section anchor per path", () => {
@@ -185,6 +215,13 @@ describe("scrollRestore helpers", () => {
       sectionId: "category-bento",
       y: 2200,
       railScrollLeft: 480,
+    });
+    expect(
+      mergeScrollAnchorForKey({}, "/", "trending-products", 5417, undefined, -40.4)["/"],
+    ).toEqual({
+      sectionId: "trending-products",
+      y: 5417,
+      offset: -40,
     });
   });
 

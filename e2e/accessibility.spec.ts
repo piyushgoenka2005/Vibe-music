@@ -124,14 +124,20 @@ test.describe("accessibility basics", () => {
       waitUntil: "domcontentloaded",
       timeout: 60_000,
     });
-    const ctas = page.locator(".pdp-buybox__btn");
-    await expect(ctas.first()).toBeAttached({ timeout: 15_000 });
-    const heights = await ctas.evaluateAll((elements) =>
-      elements.map((el) => el.getBoundingClientRect().height),
-    );
-    expect(heights.length).toBeGreaterThan(0);
-    for (const [i, height] of heights.entries()) {
-      expect(height, `cta ${i} height`).toBeGreaterThanOrEqual(44);
-    }
+    // Only measure buttons actually rendered at mobile widths; hidden/duplicate
+    // variants would report a 0-height box.
+    const ctas = page.locator(".pdp-buybox__btn:visible");
+    await expect(ctas.first()).toBeVisible({ timeout: 20_000 });
+    await expect
+      .poll(
+        async () => {
+          const heights = await ctas.evaluateAll((elements) =>
+            elements.map((el) => el.getBoundingClientRect().height),
+          );
+          return heights.length > 0 && heights.every((height) => height >= 44);
+        },
+        { timeout: 15_000, message: "PDP buy box CTAs should be at least 44px tall" },
+      )
+      .toBe(true);
   });
 });

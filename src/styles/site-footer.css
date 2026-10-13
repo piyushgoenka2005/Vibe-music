@@ -793,6 +793,10 @@ body.is-landing-page .storefront-main + .site-footer.site-footer--layered .site-
   text-decoration: none;
   cursor: pointer;
   transition: background 0.2s ease;
+  /* Always clickable — overrides the panel-level pointer-events: none pass-through */
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .footer-products-panel__shop-all:hover {

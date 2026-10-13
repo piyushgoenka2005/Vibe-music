@@ -32,6 +32,20 @@ test.describe("customer storefront journeys", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 
+  test("brand directory redirects to a brand detail page that loads", async ({
+    page,
+    requiresDatabase,
+  }) => {
+    void requiresDatabase;
+    await page.goto("/brands?brand=gibraltar", {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(page).toHaveURL(/\/brands\/gibraltar/);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
   test("product detail + add to cart + update + remove", async ({
     page,
     request,

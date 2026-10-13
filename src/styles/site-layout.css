@@ -1920,8 +1920,7 @@ body.site-nav-open .site-header--hidden {
     display: none !important;
   }
 
-  body.is-landing-page .back-to-top,
-  body.is-landing-page .help-widget {
+  body.is-landing-page .back-to-top {
     display: none !important;
   }
 }

@@ -1515,6 +1515,11 @@
   row-gap: 0.65rem;
 }
 
+.admin-toolbar__status {
+  font-size: 0.75rem;
+  color: var(--admin-muted);
+}
+
 .admin-quick-links {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

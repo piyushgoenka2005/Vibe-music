@@ -9,28 +9,30 @@ import {
   recordStorefrontNavigation,
 } from "@/lib/navigation/storefrontHistory";
 import {
-  HEIGHT_STABLE_MS,
   PENDING_POP_RESTORE_KEY,
+  RESTORE_SETTLE_MS,
   RESTORE_WINDOW_MS,
   ROUTE_SCROLL_RESET_PX,
   SCROLL_ANCHORS_KEY,
   SCROLL_NAV_GUARD_MS,
   SCROLL_POSITIONS_KEY,
   type ScrollAnchorsMap,
+  type SectionBounds,
   computeRestoreScrollY,
   findScrollRailFromLink,
   findSectionAnchorId,
+  isAnchorCurrent,
   isAuthScrollResetPath,
   isPendingPopRestoreForKey,
   isSameOriginPathHref,
   mergeScrollAnchorForKey,
   mergeScrollPositionForKey,
   parsePendingPopRestore,
+  pickViewportSectionId,
   readScrollAnchors,
   resolveScrollYForPersist,
   restoreScrollRailForAnchor,
   serializePendingPopRestore,
-  shouldCancelRestoreForUserScroll,
   shouldIgnoreTransientScrollReset,
   shouldPersistScrollWhileRestoring,
   shouldTreatAsBackNavigation,
@@ -44,6 +46,8 @@ let pendingPopRestoreKey: string | null = null;
 let pendingPopRestoreAt = 0;
 /** While active, refuse to clobber mid-page saved Y with ~0. */
 let scrollNavGuardUntil = 0;
+/** Last anchor taken from a clicked link — survives until the page unloads. */
+let lastLinkAnchor: { key: string; at: number } | null = null;
 
 function armScrollNavGuard(ms = SCROLL_NAV_GUARD_MS) {
   scrollNavGuardUntil = Math.max(scrollNavGuardUntil, Date.now() + ms);
@@ -197,14 +201,43 @@ function readHeaderOffsetPx(): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
 }
 
-function resolveSectionTopPx(sectionId: string): number | null {
-  const el =
+function resolveSectionElement(sectionId: string): HTMLElement | null {
+  return (
     document.getElementById(sectionId) ??
     document.querySelector<HTMLElement>(`[data-vibe-section="${CSS.escape(sectionId)}"]`) ??
-    document.querySelector<HTMLElement>(`[data-hp-section="${CSS.escape(sectionId)}"]`);
+    document.querySelector<HTMLElement>(`[data-hp-section="${CSS.escape(sectionId)}"]`)
+  );
+}
+
+function resolveSectionTopPx(sectionId: string): number | null {
+  const el = resolveSectionElement(sectionId);
   if (!el) return null;
   const rect = el.getBoundingClientRect();
   return Math.max(0, Math.round(rect.top + (window.scrollY || 0)));
+}
+
+/** Section the reader is looking at (just under the sticky header). */
+function findViewportSectionId(): string | null {
+  const scope = document.querySelector("main") ?? document.body;
+  const lineY = readHeaderOffsetPx() + 1;
+  const bounds: SectionBounds[] = [];
+  scope.querySelectorAll<HTMLElement>("section[id], [data-vibe-section]").forEach((el) => {
+    const id = el.id || el.getAttribute("data-vibe-section");
+    if (!id) return;
+    // Fixed/sticky boxes track the viewport, so they can't anchor a scroll position.
+    const position = getComputedStyle(el).position;
+    if (position === "fixed" || position === "sticky") return;
+    const rect = el.getBoundingClientRect();
+    if (rect.height <= 0) return;
+    bounds.push({ id, top: rect.top, bottom: rect.bottom });
+  });
+  return pickViewportSectionId(bounds, lineY);
+}
+
+/** Offset of `y` into the section, measured against the live layout. */
+function measureSectionOffset(sectionId: string, y: number): number | undefined {
+  const top = resolveSectionTopPx(sectionId);
+  return top == null ? undefined : y - top;
 }
 
 function pathKey(pathname: string): string {
@@ -234,102 +267,112 @@ function saveScrollForKey(
     isScrollNavGuardActive(),
   );
   writePositions(nextPositions, sync);
-  if (sectionId) {
-    const nextAnchors = mergeScrollAnchorForKey(readAnchors(), key, sectionId, y, railScrollLeft);
+  // `undefined` = detect from the viewport (sync flushes only, never per scroll
+  // frame); `null` = the DOM no longer belongs to `key`, keep the stored anchor.
+  const anchorId =
+    sectionId === undefined
+      ? sync && y > ROUTE_SCROLL_RESET_PX
+        ? findViewportSectionId()
+        : null
+      : sectionId;
+  if (anchorId) {
+    const nextAnchors = mergeScrollAnchorForKey(
+      readAnchors(),
+      key,
+      anchorId,
+      y,
+      railScrollLeft,
+      measureSectionOffset(anchorId, y),
+    );
     writeAnchors(nextAnchors, sync);
   }
 }
 
 function resolveRestoreTargetY(key: string, savedY: number): number {
   const anchor = readAnchors()[key];
-  if (!anchor?.sectionId) return savedY;
+  if (!isAnchorCurrent(anchor, savedY)) return savedY;
   const sectionTop = resolveSectionTopPx(anchor.sectionId);
-  return computeRestoreScrollY(savedY, sectionTop, readHeaderOffsetPx());
+  return computeRestoreScrollY(savedY, sectionTop, readHeaderOffsetPx(), anchor.offset);
 }
 
+const RESTORE_TICK_MS = 100;
+
+/**
+ * Hold the anchored section in place while the page settles. Only real user
+ * input ends the restore early — layout shifts, lazy sections and router
+ * scroll resets are re-corrected instead of being mistaken for user scrolls.
+ */
 function runScrollRestore(key: string, savedY: number, onNaturalStop?: () => void) {
+  const root = document.documentElement;
+  const previousOverflowAnchor = root.style.overflowAnchor;
+  // Native scroll anchoring would fight the section-relative target.
+  root.style.overflowAnchor = "none";
   document.body.classList.add("is-scroll-restoring");
+
+  const startedAt = Date.now();
   let stopped = false;
+  let lastTargetY = -1;
+  let lastHeight = -1;
+  let settledSince = Date.now();
   let resizeObserver: ResizeObserver | null = null;
-  let mutationObserver: MutationObserver | null = null;
+  let intervalId = 0;
   let timeoutId = 0;
-  let stableTimeoutId = 0;
-  let lastHeight = 0;
-  let heightStableSince = 0;
+
+  const currentTargetY = () => resolveRestoreTargetY(key, savedY);
 
   const teardown = (natural: boolean) => {
     if (stopped) return;
     stopped = true;
+    root.style.overflowAnchor = previousOverflowAnchor;
     document.body.classList.remove("is-scroll-restoring");
     resizeObserver?.disconnect();
-    mutationObserver?.disconnect();
+    if (intervalId) window.clearInterval(intervalId);
     if (timeoutId) window.clearTimeout(timeoutId);
-    if (stableTimeoutId) window.clearTimeout(stableTimeoutId);
     window.removeEventListener("wheel", onUserGesture, true);
     window.removeEventListener("touchstart", onUserGesture, true);
+    window.removeEventListener("pointerdown", onUserGesture, true);
     window.removeEventListener("keydown", onUserGesture, true);
-    window.removeEventListener("scroll", onScrollCheck, true);
+    window.removeEventListener("scroll", onScroll, true);
     if (natural) onNaturalStop?.();
   };
 
   const stopNatural = () => teardown(true);
   const stopForRemount = () => teardown(false);
 
-  const currentTargetY = () => resolveRestoreTargetY(key, savedY);
-
   const restore = () => {
     if (stopped) return;
-    applyScrollY(currentTargetY());
+    const targetY = currentTargetY();
+    const height = root.scrollHeight;
+    if (Math.abs(targetY - lastTargetY) > 1 || height !== lastHeight) {
+      lastTargetY = targetY;
+      lastHeight = height;
+      settledSince = Date.now();
+    }
+    const y = window.scrollY || root.scrollTop || 0;
+    if (Math.abs(y - targetY) > 1) applyScrollY(targetY);
     restoreScrollRailForAnchor(readAnchors()[key]);
   };
 
-  const onScrollCheck = () => {
-    if (stopped) return;
-    const y = window.scrollY || document.documentElement.scrollTop || 0;
-    const targetY = currentTargetY();
-    // Ignore Next/App Router forcing scroll to ~0 during restore.
-    if (y <= 2) {
-      restore();
-      return;
-    }
-    if (shouldCancelRestoreForUserScroll(y, targetY)) {
-      stopNatural();
-    }
-  };
+  const onScroll = () => restore();
 
   const onUserGesture = () => {
     if (stopped) return;
-    const y = window.scrollY || document.documentElement.scrollTop || 0;
-    const targetY = currentTargetY();
-    // Accidental touch / wheel during load while still at top: keep restoring.
-    if (y <= 2) {
-      restore();
-      return;
-    }
-    // Accidental gesture during load: re-apply unless user clearly moved away.
-    if (shouldCancelRestoreForUserScroll(y, targetY)) {
-      stopNatural();
-      return;
-    }
-    restore();
+    const y = window.scrollY || root.scrollTop || 0;
+    // A stray touch before the page has moved off the top must not cancel.
+    if (y <= 2 && currentTargetY() > ROUTE_SCROLL_RESET_PX) return;
+    stopNatural();
   };
 
-  const noteHeight = () => {
+  const tick = () => {
     if (stopped) return;
-    const height = document.documentElement.scrollHeight;
-    if (height !== lastHeight) {
-      lastHeight = height;
-      heightStableSince = Date.now();
-      restore();
-      if (stableTimeoutId) window.clearTimeout(stableTimeoutId);
-      stableTimeoutId = window.setTimeout(() => {
-        if (stopped) return;
-        if (Date.now() - heightStableSince >= HEIGHT_STABLE_MS) {
-          restore();
-        }
-      }, HEIGHT_STABLE_MS);
-    } else {
-      restore();
+    restore();
+    const now = Date.now();
+    if (
+      document.readyState === "complete" &&
+      now - startedAt >= RESTORE_SETTLE_MS &&
+      now - settledSince >= RESTORE_SETTLE_MS
+    ) {
+      stopNatural();
     }
   };
 
@@ -339,32 +382,16 @@ function runScrollRestore(key: string, savedY: number, onNaturalStop?: () => voi
     requestAnimationFrame(restore);
   });
 
-  lastHeight = document.documentElement.scrollHeight;
-  heightStableSince = Date.now();
-
-  resizeObserver = new ResizeObserver(() => {
-    noteHeight();
-  });
-  resizeObserver.observe(document.documentElement);
-  if (document.body) {
-    resizeObserver.observe(document.body);
-  }
-
-  mutationObserver = new MutationObserver(() => {
-    noteHeight();
-  });
-  mutationObserver.observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-  });
+  resizeObserver = new ResizeObserver(restore);
+  resizeObserver.observe(root);
+  if (document.body) resizeObserver.observe(document.body);
 
   window.addEventListener("wheel", onUserGesture, { passive: true, capture: true });
-  window.addEventListener("touchstart", onUserGesture, {
-    passive: true,
-    capture: true,
-  });
+  window.addEventListener("touchstart", onUserGesture, { passive: true, capture: true });
+  window.addEventListener("pointerdown", onUserGesture, { passive: true, capture: true });
   window.addEventListener("keydown", onUserGesture, true);
-  window.addEventListener("scroll", onScrollCheck, { passive: true, capture: true });
+  window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+  intervalId = window.setInterval(tick, RESTORE_TICK_MS);
   timeoutId = window.setTimeout(stopNatural, RESTORE_WINDOW_MS);
 
   return stopForRemount;
@@ -436,7 +463,9 @@ export default function ScrollRestoration() {
       const y = resolveScrollYForPersist(liveY, lastYRef.current);
       lastYRef.current = y;
 
-      let sectionId: string | null = null;
+      const key = activeKeyRef.current;
+      // undefined = measure the viewport section; null = keep the stored anchor.
+      let sectionId: string | null | undefined = event?.type === "click" ? undefined : null;
       let railScrollLeft: number | undefined;
       const target = event?.target;
       if (target instanceof Element) {
@@ -444,14 +473,22 @@ export default function ScrollRestoration() {
         if (link instanceof HTMLAnchorElement) {
           const href = link.getAttribute("href");
           if (href && isSameOriginPathHref(href)) {
-            sectionId = findSectionAnchorId(link);
+            sectionId = findSectionAnchorId(link) ?? undefined;
+            if (sectionId) lastLinkAnchor = { key, at: Date.now() };
             const rail = findScrollRailFromLink(link);
             if (rail) railScrollLeft = rail.scrollLeft;
           }
         }
+      } else if (!event) {
+        // pagehide right after a link click: the clicked section is the better anchor.
+        const linkAnchorFresh =
+          lastLinkAnchor?.key === key &&
+          Date.now() - lastLinkAnchor.at < SCROLL_NAV_GUARD_MS &&
+          isAnchorCurrent(readAnchors()[key], y);
+        sectionId = linkAnchorFresh ? null : undefined;
       }
 
-      saveScrollForKey(activeKeyRef.current, y, y, true, sectionId, railScrollLeft);
+      saveScrollForKey(key, y, y, true, sectionId, railScrollLeft);
     };
 
     window.addEventListener("scroll", persistFromWindow, { passive: true });
@@ -537,9 +574,9 @@ export default function ScrollRestoration() {
       armScrollNavGuard(RESTORE_WINDOW_MS);
 
       const stopForRemount = runScrollRestore(key, savedY, () => {
-        // Natural end (timeout / user cancel) — clear durable back markers.
+        // Natural end (settled / timeout / user input) — clear durable back markers.
         if (restoreGenerationRef.current === generation) {
-          lastYRef.current = restoreTargetYRef.current || targetY;
+          lastYRef.current = Math.round(window.scrollY || document.documentElement.scrollTop || 0);
           saveScrollForKey(key, lastYRef.current, lastYRef.current, true);
           armScrollNavGuard(SCROLL_NAV_GUARD_MS);
           restoringRef.current = false;
@@ -576,7 +613,8 @@ export default function ScrollRestoration() {
     if (prevKey !== null && prevKey !== key && !isBack) {
       const departingY = lastYRef.current;
       if (departingY > ROUTE_SCROLL_RESET_PX) {
-        saveScrollForKey(prevKey, departingY, departingY, true);
+        // DOM already shows the new route — keep the anchor captured before nav.
+        saveScrollForKey(prevKey, departingY, departingY, true, null);
       }
       armScrollNavGuard();
       applyScrollY(0);
@@ -587,18 +625,19 @@ export default function ScrollRestoration() {
     return undefined;
   }, [pathname, searchKey]);
 
-  /** Next may scroll to top after layout — re-apply frozen target while restoring. */
+  /** Next may scroll to top after layout — re-apply the live target while restoring. */
   useEffect(() => {
     if (!restoringRef.current) return undefined;
+    if (restoreTargetYRef.current <= 0) return undefined;
 
-    const targetY = restoreTargetYRef.current;
-    if (targetY <= 0) return undefined;
-
+    const key = activeKeyRef.current;
+    const savedY = readPositions()[key] ?? restoreTargetYRef.current;
     let frame = 0;
     let rafId = 0;
 
     const tick = () => {
-      applyScrollY(targetY);
+      if (!restoringRef.current) return;
+      applyScrollY(resolveRestoreTargetY(key, savedY));
       frame += 1;
       if (frame < 20 && restoringRef.current) {
         rafId = requestAnimationFrame(tick);

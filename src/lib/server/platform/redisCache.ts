@@ -71,11 +71,54 @@ function staleSet<T>(key: string, value: T): void {
 
 const inflight = new Map<string, Promise<unknown>>();
 
+// ─── Invalidation ticks ──────────────────────────────────────────────────
+//
+// A fetch that started before a write must not repopulate the caches with its
+// pre-write result — otherwise a concurrent GET (e.g. an admin page poll in
+// flight while a save commits) resurrects the old value in the
+// memory/stale/Redis stores for a full TTL window. Ticks are monotonic: a
+// cached write is allowed only when the fetch started after the last
+// invalidation of its key (and after the last prefix-wide invalidation).
+
+let clock = 0;
+let prefixLastInvalidatedAt = 0;
+const keyLastInvalidatedAt = new Map<string, number>();
+const KEY_EPOCH_CAP = 5_000;
+
+function nextTick(): number {
+  return ++clock;
+}
+
+function recordKeyInvalidation(key: string): void {
+  keyLastInvalidatedAt.set(key, nextTick());
+  if (keyLastInvalidatedAt.size > KEY_EPOCH_CAP) {
+    // Too many tracked keys — fall back to treating everything as invalidated
+    // once (in-flight fetches skip caching; correctness over hit rate).
+    keyLastInvalidatedAt.clear();
+    prefixLastInvalidatedAt = nextTick();
+  }
+}
+
+/** Capture at fetch start; pass to `mayCacheAfter` when the fetch resolves. */
+function invalidationTick(): number {
+  return nextTick();
+}
+
+function mayCacheAfter(key: string, startTick: number): boolean {
+  if (startTick <= prefixLastInvalidatedAt) return false;
+  const keyTick = keyLastInvalidatedAt.get(key) ?? 0;
+  return startTick > keyTick;
+}
+
 async function singleFlight<T>(key: string, fn: () => Promise<T>): Promise<T> {
   const existing = inflight.get(key);
   if (existing) return existing as T;
 
-  const promise = fn().finally(() => inflight.delete(key));
+  const promise = fn().finally(() => {
+    // Only clear our own entry — an invalidation may have already dropped it
+    // and a newer fetch may be registered under the same key.
+    if (inflight.get(key) === promise) inflight.delete(key);
+  });
   inflight.set(key, promise);
   return promise;
 }
@@ -122,16 +165,18 @@ async function getCachedRedis<T>(
     if (stale !== undefined) {
       // Serve stale, but background-refresh if possible
       singleFlight(key, async () => {
+        const tick = invalidationTick();
         const value = await fetcher();
-        staleSet(key, value);
+        if (mayCacheAfter(key, tick)) staleSet(key, value);
         return value;
       }).catch(() => {}); // fire-and-forget
       return stale;
     }
     // No stale cache either — fall through to fetcher directly
     return singleFlight(key, async () => {
+      const tick = invalidationTick();
       const value = await fetcher();
-      staleSet(key, value);
+      if (mayCacheAfter(key, tick)) staleSet(key, value);
       return value;
     });
   }
@@ -175,8 +220,12 @@ async function getCachedRedis<T>(
 
   // Cache miss — fetch with stampede protection
   return singleFlight(key, async () => {
+    const tick = invalidationTick();
     const value = await fetcher();
     if (value === undefined) return value; // never cache undefined
+    // A write during the fetch invalidated us — return the value to our caller
+    // but do not let the pre-write snapshot poison any cache layer.
+    if (!mayCacheAfter(key, tick)) return value;
     staleSet(key, value);
 
     // Write to Redis (fire-and-forget). Upstash REST treats the request
@@ -204,9 +253,12 @@ async function getCachedMemory<T>(
   if (hit !== undefined) return hit;
 
   return singleFlight(key, async () => {
+    const tick = invalidationTick();
     const value = await fetcher();
-    memorySet(key, value, ttlSeconds);
-    staleSet(key, value);
+    if (mayCacheAfter(key, tick)) {
+      memorySet(key, value, ttlSeconds);
+      staleSet(key, value);
+    }
     return value;
   });
 }
@@ -224,7 +276,11 @@ function clearStoresByPrefix(prefix: string): void {
  * Invalidate all cached keys that start with `prefix` (memory, stale, and Redis).
  */
 export async function invalidateCacheByPrefix(prefix: string): Promise<void> {
+  prefixLastInvalidatedAt = nextTick();
   clearStoresByPrefix(prefix);
+  for (const key of [...inflight.keys()]) {
+    if (key.startsWith(prefix)) inflight.delete(key);
+  }
 
   const config = getUpstashConfig();
   if (!config || !redisCircuitBreaker.isHealthy()) return;
@@ -246,8 +302,12 @@ export async function invalidateCacheByPrefix(prefix: string): Promise<void> {
  * Invalidate a cached key (works for both Redis and memory).
  */
 export async function invalidateCache(key: string): Promise<void> {
+  recordKeyInvalidation(key);
   staleStore.delete(key);
   memoryStore.delete(key);
+  // Drop any pre-write fetch so the next read starts a fresh one instead of
+  // joining a promise that will resolve with the old value.
+  inflight.delete(key);
 
   const config = getUpstashConfig();
   if (config && redisCircuitBreaker.isHealthy()) {

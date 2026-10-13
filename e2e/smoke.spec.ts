@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures";
+import { mutationHeaders } from "./helpers/test-utils";
 
 test.describe("storefront smoke", () => {
   test("homepage loads", async ({ page }) => {
@@ -110,6 +111,18 @@ test.describe("storefront smoke", () => {
     });
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
+
+  test("newsletter subscribe accepts a valid email", async ({ request }) => {
+    const email = `e2e-newsletter-${Date.now()}@example.com`;
+    const response = await request.post("/api/newsletter/subscribe", {
+      headers: mutationHeaders(),
+      data: { email },
+    });
+    expect(response.ok()).toBeTruthy();
+    const body = (await response.json()) as { ok?: boolean; created?: boolean };
+    expect(body.ok).toBe(true);
+    expect(typeof body.created).toBe("boolean");
+  });
 });
 
 test.describe("admin smoke", () => {
@@ -182,7 +195,9 @@ test.describe("api smoke", () => {
     await expect(page.locator(".cat-toolbar__count")).toContainText(/products/i, {
       timeout: 25_000,
     });
-    await expect(page.locator(".cat-product-grid .product-card, .cat-empty").first()).toBeVisible({
+    await expect(
+      page.locator(".cat-product-grid .cat-product-card, .cat-empty").first(),
+    ).toBeVisible({
       timeout: 25_000,
     });
   });

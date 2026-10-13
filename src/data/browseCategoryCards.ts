@@ -62,7 +62,7 @@ export const BROWSE_CATEGORY_CARDS: BrowseCategoryCard[] = [
     id: "amplifiers",
     title: "Amplifiers",
     href: browseSearch({ category: "guitars", subcategory: "AMPLIFIER" }),
-    ...heroImage("guitars", 800, 571),
+    ...heroImage("amplifiers", 800, 571),
   },
   {
     id: "drums-percussion",

@@ -21,6 +21,19 @@
     --homepage-content-max: calc(100dvw - 2.5rem);
     --homepage-gutter: clamp(0.625rem, 0.85vw, 0.875rem);
     --homepage-gutter-left: calc(var(--homepage-gutter) + var(--social-rail-clearance, 4.5rem));
+    /*
+     * Shared laptop/desktop frame: identical left and right edges for every
+     * section. The minimum clears the fixed social rail; past --hp-frame-max the
+     * frame centres. Resolve only on full-width section boxes (uses 100%).
+     */
+    --hp-frame-max: 1440px;
+    --hp-frame-gutter: max(
+      calc(
+        var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) +
+          clamp(1.5rem, 2.6vw, 3.25rem)
+      ),
+      calc((100% - var(--hp-frame-max)) / 2)
+    );
   }
 }
 
@@ -338,10 +351,7 @@ body.is-scroll-restoring .premium-home > * {
 
 @media (min-width: 1024px) {
   .premium-hero__inner {
-    padding-inline-start: calc(
-      var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) + 0.65rem
-    );
-    padding-inline-end: 0.65rem;
+    padding-inline: var(--hp-frame-gutter);
   }
 }
 
@@ -2469,10 +2479,7 @@ body.is-scroll-restoring .premium-home > * {
 
 @media (min-width: 1024px) {
   .premium-home .new-arrivals-section__inner {
-    padding-inline-start: calc(
-      var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) + 0.65rem
-    );
-    padding-inline-end: 0.75rem;
+    padding-inline: var(--hp-frame-gutter);
   }
 }
 
@@ -2537,9 +2544,6 @@ body.is-scroll-restoring .premium-home > * {
 }
 
 .premium-home .new-arrivals-marquee {
-  --na-rail-offset: calc(
-    var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) + 0.65rem
-  );
   position: relative;
   z-index: 0;
   width: 100%;
@@ -2558,17 +2562,15 @@ body.is-scroll-restoring .premium-home > * {
 }
 
 /*
- * Desktop: clip the marquee viewport just past the social rail so the
- * auto-scroll never paints under the fixed social icons.
+ * Desktop: clip the marquee viewport to the shared frame so the auto-scroll
+ * never paints under the fixed social icons and both edges line up.
  */
 @media (min-width: 1024px) {
   .premium-home .new-arrivals-marquee {
-    width: calc(100% - var(--na-rail-offset));
+    width: auto;
     max-width: none;
-    margin-inline-start: var(--na-rail-offset);
-    margin-inline-end: 0;
-    padding-inline-start: 0.35rem;
-    padding-inline-end: 0.75rem;
+    margin-inline: var(--hp-frame-gutter);
+    padding-inline: 0;
     padding-block: 1.75rem 0.85rem;
     overflow-x: clip;
     overflow-y: visible;
@@ -3608,10 +3610,7 @@ body.is-scroll-restoring .premium-home > * {
 
 @media (min-width: 1024px) {
   .premium-home .popular-categories__inner {
-    padding-inline-start: calc(
-      var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) + 0.65rem
-    );
-    padding-inline-end: 0.75rem;
+    padding-inline: var(--hp-frame-gutter);
   }
 }
 
@@ -5081,10 +5080,7 @@ body.is-scroll-restoring .premium-home > * {
   }
 
   .premium-home .homepage-deals-section__inner.tile-block {
-    padding-inline-start: calc(
-      var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) + 0.65rem
-    );
-    padding-inline-end: 0.75rem;
+    padding-inline: var(--hp-frame-gutter);
   }
 }
 
@@ -5993,5 +5989,80 @@ body.is-scroll-restoring .premium-home > * {
     height: auto;
     min-height: 7.5rem;
     max-height: none;
+  }
+}
+
+/* ─── Laptop / desktop frame: every section aligns to --hp-frame-gutter ─── */
+@media (min-width: 1024px) {
+  .premium-home > .homepage-stats,
+  .premium-home > .big-names-deals,
+  .premium-home > .editorial-split,
+  .premium-home > .social-proof-strip,
+  .premium-home .blog-teaser {
+    padding-inline: var(--hp-frame-gutter);
+  }
+
+  /* Header sits on the frame; the reel strip extends left up to the social rail. */
+  .premium-home > .gear-stories {
+    max-width: none;
+    padding-inline: 0;
+  }
+
+  .premium-home .gear-stories__header {
+    max-width: none;
+    padding-inline: var(--hp-frame-gutter);
+  }
+
+  .premium-home .gear-stories__strip-outer {
+    padding-inline: calc(
+      var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) + 0.75rem
+    );
+  }
+
+  .premium-home .gear-stories__marquee {
+    mask-image: linear-gradient(90deg, transparent 0%, #000 2%, #000 98%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 2%, #000 98%, transparent 100%);
+  }
+
+  .premium-home .homepage-stats__inner,
+  .premium-home .big-names-deals__inner,
+  .premium-home .editorial-split__inner,
+  .premium-home .blog-teaser__inner,
+  .premium-home .social-proof-strip__inner {
+    max-width: none;
+  }
+
+  .premium-home .why-shop__inner {
+    max-width: none;
+    padding-inline: var(--hp-frame-gutter);
+  }
+
+  .premium-home .why-shop__marquee {
+    width: auto;
+    margin-inline: var(--hp-frame-gutter);
+    mask-image: linear-gradient(90deg, #000 0%, #000 96%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 96%, transparent 100%);
+  }
+
+  .premium-home .why-shop__marquee .why-shop__marquee-track {
+    padding-inline: 0;
+  }
+
+  .premium-home .category-cards-container .page-width,
+  .premium-home .locations-strip__inner,
+  .premium-home .service-carousel__inner {
+    max-width: none;
+    padding-inline: var(--hp-frame-gutter);
+  }
+
+  .premium-home .service-carousel__ledger {
+    max-width: none;
+    margin-inline: var(--hp-frame-gutter);
+  }
+
+  .premium-home .homepage-brand-strip .homepage-brand-strip__inner {
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: var(--hp-frame-gutter);
   }
 }

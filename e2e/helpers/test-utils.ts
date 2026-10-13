@@ -1,4 +1,4 @@
-import type { APIRequestContext, Page } from "@playwright/test";
+import type { APIRequestContext, Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 export interface E2EProduct {
@@ -15,8 +15,7 @@ export interface E2EProduct {
   availability?: string;
 }
 
-export const E2E_ORIGIN =
-  process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+export const E2E_ORIGIN = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 
 export async function gotoStorefront(
   page: Page,
@@ -24,7 +23,7 @@ export async function gotoStorefront(
   options?: {
     timeout?: number;
     waitUntil?: "domcontentloaded" | "load" | "networkidle";
-  }
+  },
 ): Promise<void> {
   const timeout = options?.timeout ?? 60_000;
   const waitUntil = options?.waitUntil ?? "domcontentloaded";
@@ -43,10 +42,62 @@ export async function gotoStorefront(
   throw lastError;
 }
 
-async function seedGuestCartViaStorage(
-  page: Page,
-  product: E2EProduct
-): Promise<void> {
+/**
+ * Opens the mobile navigation drawer and returns it. Retries the toggle until
+ * React has hydrated — clicking a not-yet-hydrated toggle is a no-op.
+ */
+export async function openMobileMenu(page: Page): Promise<Locator> {
+  const toggle = page.getByRole("button", { name: /open menu/i });
+  const drawer = page.locator("#site-header-mobile-nav");
+  await expect(async () => {
+    await toggle.click({ timeout: 2_000 });
+    await expect(drawer).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 20_000 });
+  return drawer;
+}
+
+/**
+ * Opens the storefront search overlay and returns its input.
+ * Retries the toggle until React has hydrated and the panel is interactive —
+ * clicking a not-yet-hydrated toggle is a no-op and would otherwise flake.
+ * Re-opens the panel if GlobalSearch's mount effect closes it right after open.
+ */
+export async function openSearchOverlay(page: Page): Promise<Locator> {
+  const toggle = page.getByRole("button", { name: /open search/i });
+  const overlayInput = page.locator(".sw-search-panel__input").first();
+  await expect(async () => {
+    if (!(await overlayInput.isVisible().catch(() => false))) {
+      await toggle.click({ timeout: 2_000 });
+    }
+    await expect(overlayInput).toBeVisible({ timeout: 1_500 });
+  }).toPass({ timeout: 25_000 });
+  return overlayInput;
+}
+
+/**
+ * Types a query into the storefront search and waits for suggestions to render.
+ * Handles hydration timing and both desktop (header input) and mobile (overlay
+ * input) entry points. Asserts on the real overlay hooks (`.sw-search-panel`).
+ */
+export async function searchAndAwaitSuggestions(page: Page, query: string): Promise<void> {
+  const headerInput = page.locator("#sw-search-input").first();
+  const overlayInput = page.locator(".sw-search-panel__input").first();
+  const toggle = page.getByRole("button", { name: /open search/i });
+  const suggestion = page.locator("#sw-search-panel-listbox, .sw-search-suggestion").first();
+
+  await expect(async () => {
+    const headerVisible = await headerInput.isVisible().catch(() => false);
+    const overlayVisible = await overlayInput.isVisible().catch(() => false);
+    if (!headerVisible && !overlayVisible && (await toggle.isVisible().catch(() => false))) {
+      await toggle.click({ timeout: 2_000 });
+    }
+    const input = (await overlayInput.isVisible().catch(() => false)) ? overlayInput : headerInput;
+    await input.fill(query, { timeout: 3_000 });
+    await expect(suggestion).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 30_000 });
+}
+
+async function seedGuestCartViaStorage(page: Page, product: E2EProduct): Promise<void> {
   await gotoStorefront(page, "/");
   await page.evaluate((p) => {
     const item = {
@@ -66,16 +117,13 @@ async function seedGuestCartViaStorage(
       JSON.stringify({
         state: { items: [item], couponCode: null, appliedCoupon: null },
         version: 5,
-      })
+      }),
     );
   }, product);
   await page.reload({ waitUntil: "domcontentloaded" });
 }
 
-async function trySeedGuestCartViaUi(
-  page: Page,
-  product: E2EProduct
-): Promise<boolean> {
+async function trySeedGuestCartViaUi(page: Page, product: E2EProduct): Promise<boolean> {
   await gotoStorefront(page, `/product/${product.slug}`);
 
   const addToCart = page.getByRole("button", { name: /^Add to Cart$/i }).first();
@@ -87,9 +135,9 @@ async function trySeedGuestCartViaUi(
 
   try {
     await addToCart.click({ timeout: 5_000 });
-    await expect(
-      page.getByRole("link", { name: /item.*in your cart/i })
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("link", { name: /item.*in your cart/i })).toBeVisible({
+      timeout: 10_000,
+    });
     return true;
   } catch {
     return false;
@@ -114,9 +162,7 @@ export async function seedGuestCart(page: Page, product: E2EProduct): Promise<vo
   });
 }
 
-export async function fetchTrendingProduct(
-  request: APIRequestContext
-): Promise<E2EProduct> {
+export async function fetchTrendingProduct(request: APIRequestContext): Promise<E2EProduct> {
   const response = await request.get("/api/products?trending=true&limit=1");
   expect(response.ok()).toBeTruthy();
   const body = (await response.json()) as { products?: E2EProduct[] };
@@ -133,9 +179,7 @@ function isPurchasableProduct(product: E2EProduct): boolean {
 }
 
 /** Prefer in-stock products so API checkout paths stay valid after prior test orders. */
-export async function fetchCheckoutProduct(
-  request: APIRequestContext
-): Promise<E2EProduct> {
+export async function fetchCheckoutProduct(request: APIRequestContext): Promise<E2EProduct> {
   const response = await request.get("/api/products?limit=40");
   if (response.ok()) {
     const body = (await response.json()) as { products?: E2EProduct[] };
@@ -151,10 +195,7 @@ export async function waitForCheckoutAddressForm(page: Page): Promise<void> {
   await expect(page.locator(".checkout-form")).toBeVisible({ timeout: 20_000 });
 }
 
-export async function fillGuestCheckoutAddress(
-  page: Page,
-  email: string
-): Promise<void> {
+export async function fillGuestCheckoutAddress(page: Page, email: string): Promise<void> {
   await waitForCheckoutAddressForm(page);
   const form = page.locator(".checkout-form");
   await form.locator('input[autocomplete="name"]').fill("E2E Test Buyer");
@@ -184,9 +225,7 @@ export const guestShippingAddress = {
 };
 
 /** True when the app health endpoint reports PostgreSQL as ok. */
-export async function isDatabaseHealthy(
-  request: APIRequestContext
-): Promise<boolean> {
+export async function isDatabaseHealthy(request: APIRequestContext): Promise<boolean> {
   try {
     const response = await request.get("/api/health", { timeout: 10_000 });
     if (!response.ok()) return false;

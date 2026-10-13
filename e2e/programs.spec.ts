@@ -23,7 +23,7 @@ test.describe("enterprise program pages", () => {
 
   test("programs hub loads", async ({ page }) => {
     await page.goto("/programs", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(/programs/i);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/ways to play|programs/i);
   });
 
   test("gear exchange page loads", async ({ page }) => {

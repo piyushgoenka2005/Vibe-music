@@ -27,6 +27,13 @@ function SettingsContent({
 }) {
   const queryClient = useQueryClient();
   const [saved, setSaved] = useState(false);
+  /**
+   * Unsaved edits live here, not in the React Query cache: the admin query
+   * client refetches on a 30s poll and after every admin mutation, and those
+   * background refetches used to overwrite in-progress edits (worst case, a
+   * save then persisted the old values).
+   */
+  const [draft, setDraft] = useState<StoreSettings | null>(null);
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-settings"],
@@ -35,7 +42,7 @@ function SettingsContent({
     },
   });
 
-  const form = data?.settings ?? null;
+  const form = draft ?? data?.settings ?? null;
 
   const saveMutation = useMutation({
     mutationFn: async (settings: StoreSettings) => {
@@ -48,13 +55,16 @@ function SettingsContent({
     onSuccess: () => {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+      // Server state now matches what was saved — drop the draft so fresh
+      // server data (including other admins' later edits) becomes visible.
+      setDraft(null);
       queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
     },
   });
 
   function updateField<K extends keyof StoreSettings>(key: K, value: StoreSettings[K]) {
     if (!form || !settingsWrite) return;
-    queryClient.setQueryData(["admin-settings"], { settings: { ...form, [key]: value } });
+    setDraft({ ...form, [key]: value });
   }
 
   if (isLoading) return <LoadingState />;

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import {
@@ -15,10 +15,11 @@ import {
 } from "@/components/admin/AdminUi";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
+import { useAdminSearchTerm } from "@/hooks/useAdminSearchTerm";
 import { adminOrderPath } from "@/lib/routes";
 import { downloadFromApi } from "@/lib/client/downloadFromApi";
 
-async function fetchCustomers(params: { search: string; cursor?: string }) {
+async function fetchCustomers(params: { search: string; cursor?: string }, signal?: AbortSignal) {
   const sp = new URLSearchParams({ limit: "20" });
   if (params.search) sp.set("search", params.search);
   if (params.cursor) sp.set("cursor", params.cursor);
@@ -34,22 +35,29 @@ async function fetchCustomers(params: { search: string; cursor?: string }) {
     }>;
     hasMore: boolean;
     nextCursor?: string;
-  }>(`/api/admin/customers?${sp}`);
+  }>(`/api/admin/customers?${sp}`, { signal });
 }
 
 function CustomersContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get("search")?.trim() ?? "";
-  const [search, setSearch] = useState(initialSearch);
+  const {
+    input: searchInput,
+    setInput: setSearchInput,
+    query: search,
+    isDebouncing: searchPending,
+  } = useAdminSearchTerm(initialSearch);
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching, isPlaceholderData } = useQuery({
     queryKey: ["admin-customers", search, cursor],
-    queryFn: () => fetchCustomers({ search, cursor }),
+    queryFn: ({ signal }) => fetchCustomers({ search, cursor }, signal),
+    placeholderData: keepPreviousData,
   });
+  const isSearching = searchPending || (isFetching && isPlaceholderData);
 
   const { data: detail } = useQuery({
     queryKey: ["admin-customer", selectedId],
@@ -129,12 +137,15 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
       <div className="admin-toolbar">
         <input
           className="admin-input"
+          type="search"
           placeholder="Search customers…"
-          value={search}
+          value={searchInput}
           onChange={(e) => {
-            setSearch(e.target.value);
+            setSearchInput(e.target.value);
             reset();
           }}
+          aria-label="Search customers"
+          aria-busy={isSearching}
         />
         <button
           type="button"
@@ -145,6 +156,11 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
         >
           Export CSV
         </button>
+        {isSearching ? (
+          <span className="admin-toolbar__status" role="status">
+            Searching…
+          </span>
+        ) : null}
       </div>
       <div className="admin-grid-2">
         <div className="admin-panel">

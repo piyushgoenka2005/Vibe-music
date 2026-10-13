@@ -9,6 +9,8 @@ export const SCROLL_ANCHORS_KEY = "vibe:scroll-anchors";
 export const PENDING_POP_RESTORE_KEY = "vibe:pending-pop-restore";
 /** Re-apply saved Y while async sections / images expand after back. */
 export const RESTORE_WINDOW_MS = 8000;
+/** Restore ends early once the target has held this long without layout movement. */
+export const RESTORE_SETTLE_MS = 900;
 /** User must move this far from target before we treat it as intentional scroll. */
 export const USER_SCROLL_CANCEL_PX = 40;
 /** Height unchanged this long → layout considered settled. */
@@ -39,8 +41,20 @@ export type PendingPopRestore = {
 export type ScrollAnchorRecord = {
   sectionId: string;
   y: number;
+  /**
+   * Window scroll minus the section's document top when leaving. Restoring
+   * `sectionTop + offset` lands on the same content even if sections above
+   * rendered taller or shorter on the way back.
+   */
+  offset?: number;
   /** Horizontal scroll within `[data-hp-scroll-rail]` when leaving a carousel section. */
   railScrollLeft?: number;
+};
+
+export type SectionBounds = {
+  id: string;
+  top: number;
+  bottom: number;
 };
 
 export const HP_SCROLL_RAIL_ATTR = "data-hp-scroll-rail";
@@ -264,18 +278,35 @@ export function findScrollRailFromLink(from: Element | null): HTMLElement | null
   return rail instanceof HTMLElement ? rail : null;
 }
 
+/**
+ * Section under the viewport line (just below the sticky header). Innermost
+ * match wins so nested anchors beat their page-level wrappers.
+ */
+export function pickViewportSectionId(sections: SectionBounds[], lineY: number): string | null {
+  let best: SectionBounds | null = null;
+  for (const section of sections) {
+    if (!section.id || section.top > lineY || section.bottom <= lineY) continue;
+    if (!best || section.top >= best.top) best = section;
+  }
+  return best?.id ?? null;
+}
+
 export function mergeScrollAnchorForKey(
   anchors: ScrollAnchorsMap,
   key: string,
   sectionId: string,
   y: number,
   railScrollLeft?: number,
+  offset?: number,
 ): ScrollAnchorsMap {
   if (!sectionId) return anchors;
   const record: ScrollAnchorRecord = {
     sectionId,
     y: Math.max(0, Math.round(y)),
   };
+  if (offset != null && Number.isFinite(offset)) {
+    record.offset = Math.round(offset);
+  }
   if (railScrollLeft != null && railScrollLeft > 0) {
     record.railScrollLeft = Math.round(railScrollLeft);
   }
@@ -297,16 +328,32 @@ export function restoreScrollRailForAnchor(anchor: ScrollAnchorRecord | undefine
   return true;
 }
 
-/** Pick the stronger restore target when a section anchor exists in the DOM. */
+/** Anchor was captured at the saved Y (a later plain scroll save makes it stale). */
+export function isAnchorCurrent(
+  anchor: ScrollAnchorRecord | undefined,
+  savedY: number,
+  tolerancePx = 4,
+): anchor is ScrollAnchorRecord {
+  if (!anchor?.sectionId) return false;
+  return Math.abs(anchor.y - Math.round(savedY)) <= tolerancePx;
+}
+
+/**
+ * Restore target: the anchored section's live position plus the saved offset
+ * into it. Falls back to raw saved Y until the section exists in the DOM.
+ */
 export function computeRestoreScrollY(
   savedY: number,
   sectionTopPx: number | null,
   headerOffsetPx: number,
+  offsetPx?: number,
 ): number {
   const baseY = Math.max(0, Math.round(savedY));
   if (sectionTopPx == null) return baseY;
-  const anchorY = Math.max(0, Math.round(sectionTopPx - headerOffsetPx));
-  return Math.max(baseY, anchorY);
+  if (offsetPx != null && Number.isFinite(offsetPx)) {
+    return Math.max(0, Math.round(sectionTopPx + offsetPx));
+  }
+  return Math.max(0, Math.round(sectionTopPx - headerOffsetPx));
 }
 
 export function readScrollPositions(raw: string | null): Record<string, number> {

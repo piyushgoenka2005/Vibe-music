@@ -13,6 +13,7 @@ const SLUG_TO_HREF: Record<string, string> = {
   "software-plug-ins": categoryPath("software-plug-ins"),
   "software-plugins": categoryPath("software-plug-ins"),
   "dj-equipment": categoryPath("dj-equipment"),
+  amplifiers: categoryPath("guitars"),
   "cables-cases-accessories": categoryPath("cables-cases-accessories"),
   "microphones-wireless": categoryPath("microphones-wireless"),
   "band-orchestra": categoryPath("band-orchestra"),
@@ -92,6 +93,7 @@ export const MARKETING_EDITORIAL_IMAGE = "/images/New Guitar.png";
 /** Full-resolution category art for mega menus / larger placements. */
 const HERO_IMAGE_BY_SLUG: Record<string, string> = {
   guitars: "/images/m/home/cats/LPR59VOWCSNH.png",
+  amplifiers: "/Hertz Amplifiers in a Warm Studio.png",
   "studio-recording": "/images/m/home/cats/Arrow-small.png",
   "drums-percussion": "/images/m/home/cats/LM402.png",
   bass: "/images/m/home/cats/PBassAPR3SB.png",
@@ -110,6 +112,7 @@ const HERO_IMAGE_BY_SLUG: Record<string, string> = {
 /** Explicit grid thumbs — WebP first for homepage tiles; PNG/JPG fallback on error. */
 const GRID_THUMB_BY_SLUG: Record<string, string> = {
   guitars: categoryThumbWebp("LPR59VOWCSNH.png"),
+  amplifiers: "/Hertz Amplifiers in a Warm Studio.png",
   bass: categoryThumbWebp("PBassAPR3SB.png"),
   "studio-recording": categoryThumbWebp("Arrow-small.png"),
   "drums-percussion": categoryThumbWebp("LM402.png"),
@@ -127,6 +130,7 @@ const GRID_THUMB_BY_SLUG: Record<string, string> = {
 
 const GRID_FALLBACK_BY_SLUG: Record<string, string> = {
   guitars: "/images/m/home/cats/LPR59VOWCSNH.png",
+  amplifiers: "/Hertz Amplifiers in a Warm Studio.png",
   bass: "/images/m/home/cats/PBassAPR3SB.png",
   "studio-recording": "/images/m/home/cats/Arrow-small.png",
   "drums-percussion": "/images/m/home/cats/LM402.png",

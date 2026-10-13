@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminOrderShipment from "@/components/admin/AdminOrderShipment";
@@ -21,11 +21,15 @@ import {
   adminMutateJson,
 } from "@/components/admin/AdminQueryState";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
+import { useAdminSearchTerm } from "@/hooks/useAdminSearchTerm";
 import type { AdminCapabilities } from "@/lib/auth/adminCapabilities";
 import type { Order, OrderStatus } from "@/types/order";
 import type { OrderTimelineEvent } from "@/types/order";
 
-async function fetchOrders(params: { search: string; status: string; cursor?: string }) {
+async function fetchOrders(
+  params: { search: string; status: string; cursor?: string },
+  signal?: AbortSignal,
+) {
   const sp = new URLSearchParams({ limit: "20" });
   if (params.search) sp.set("search", params.search);
   if (params.status) sp.set("status", params.status);
@@ -34,7 +38,7 @@ async function fetchOrders(params: { search: string; status: string; cursor?: st
     orders: Order[];
     hasMore: boolean;
     nextCursor?: string;
-  }>(`/api/admin/orders?${sp}`);
+  }>(`/api/admin/orders?${sp}`, { signal });
 }
 
 async function fetchOrderDetail(
@@ -53,7 +57,12 @@ function OrdersContent({
   const searchParams = useSearchParams();
   const deepLinkOrderId = searchParams.get("orderId");
   const deepLinkStatus = searchParams.get("status");
-  const [search, setSearch] = useState("");
+  const {
+    input: searchInput,
+    setInput: setSearchInput,
+    query: search,
+    isDebouncing: searchPending,
+  } = useAdminSearchTerm();
   const [status, setStatus] = useState(() => deepLinkStatus ?? "");
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
   const [selectedId, setSelectedId] = useState<string | null>(deepLinkOrderId);
@@ -73,10 +82,12 @@ function OrdersContent({
     }
   }, [deepLinkStatus, reset]);
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching, isPlaceholderData } = useQuery({
     queryKey: ["admin-orders", search, status, cursor],
-    queryFn: () => fetchOrders({ search, status, cursor }),
+    queryFn: ({ signal }) => fetchOrders({ search, status, cursor }, signal),
+    placeholderData: keepPreviousData,
   });
+  const isSearching = searchPending || (isFetching && isPlaceholderData);
 
   const { data: orderDetail, isLoading: detailLoading } = useQuery({
     queryKey: ["admin-order-detail", selectedId],
@@ -186,12 +197,15 @@ function OrdersContent({
       <div className="admin-toolbar">
         <input
           className="admin-input"
+          type="search"
           placeholder="Search orders…"
-          value={search}
+          value={searchInput}
           onChange={(e) => {
-            setSearch(e.target.value);
+            setSearchInput(e.target.value);
             reset();
           }}
+          aria-label="Search orders"
+          aria-busy={isSearching}
         />
         <select
           className="admin-select"
@@ -223,6 +237,11 @@ function OrdersContent({
         >
           Export CSV
         </button>
+        {isSearching ? (
+          <span className="admin-toolbar__status" role="status">
+            Searching…
+          </span>
+        ) : null}
         {exportError ? (
           <p className="admin-error__message" role="alert">
             {exportError}
