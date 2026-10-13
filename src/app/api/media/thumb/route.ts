@@ -27,8 +27,10 @@ function resolveLocalCdnFile(url: string): string | null {
     if (parsed.hostname !== "cdn.vibemusic.in") return null;
     const relative = parsed.pathname.replace(/^\/+/, "");
     if (!relative || relative.includes("..")) return null;
-    const filePath = path.resolve(CDN_STORAGE_ROOT, relative);
-    const root = path.resolve(CDN_STORAGE_ROOT);
+    // CDN_STORAGE_ROOT is env-driven and lives outside the project — opt these
+    // out of bundler tracing so the whole repo is not traced into the output.
+    const filePath = path.resolve(/*turbopackIgnore: true*/ CDN_STORAGE_ROOT, relative);
+    const root = path.resolve(/*turbopackIgnore: true*/ CDN_STORAGE_ROOT);
     if (!filePath.startsWith(root + path.sep)) return null;
     return filePath;
   } catch {
@@ -59,7 +61,11 @@ function cdnDerivativeRedirect(url: string, width: number): string | null {
     const derivative = `${parsed.origin}${dir}${match[1]}-w${snappedW}.webp`;
     const localDerivative = resolveLocalCdnFile(derivative);
     // Uploads stored without sharp (no WebP derivatives) must fall through to the original.
-    if (localDerivative && existsSync(CDN_STORAGE_ROOT) && !existsSync(localDerivative)) {
+    if (
+      localDerivative &&
+      existsSync(/*turbopackIgnore: true*/ CDN_STORAGE_ROOT) &&
+      !existsSync(/*turbopackIgnore: true*/ localDerivative)
+    ) {
       return null;
     }
     return derivative;
@@ -159,7 +165,7 @@ async function buildThumb(url: string, width: number): Promise<CachedThumb | nul
     const localCdnPath = resolveLocalCdnFile(url);
     if (localCdnPath) {
       try {
-        const input = await readFile(localCdnPath);
+        const input = await readFile(/*turbopackIgnore: true*/ localCdnPath);
         if (input.byteLength > 0 && input.byteLength <= MAX_UPSTREAM_BYTES) {
           const sharp = await loadSharp();
           if (!sharp) return null;

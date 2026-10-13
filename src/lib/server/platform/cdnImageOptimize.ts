@@ -86,7 +86,9 @@ export async function uploadOptimizedImageToCdn(
     const mime = sniffImageType(buffer);
     if (!mime) throw new Error("Unsupported image type");
     const originalName = `${id}.${ORIGINAL_EXTENSION[mime]}`;
-    await writeFile(path.join(directory, originalName), buffer);
+    // `directory` is the CDN volume (env-driven, outside the project) — tell the
+    // bundler not to trace it, otherwise the whole repo (incl. public/) is bundled.
+    await writeFile(path.join(/*turbopackIgnore: true*/ directory, originalName), buffer);
     const originalUrl = `${publicBase}/${folder}/${originalName}`;
     return { url: originalUrl, masterUrl: originalUrl, derivatives: {} };
   }
@@ -101,7 +103,7 @@ export async function uploadOptimizedImageToCdn(
     .toBuffer();
 
   const masterName = `${id}.webp`;
-  await writeFile(path.join(directory, masterName), masterBody);
+  await writeFile(path.join(/*turbopackIgnore: true*/ directory, masterName), masterBody);
   const masterUrl = `${publicBase}/${folder}/${masterName}`;
 
   const derivatives: Partial<Record<CdnDerivativeWidth, string>> = {};
@@ -115,7 +117,7 @@ export async function uploadOptimizedImageToCdn(
         .webp({ quality: 92, effort: 5 })
         .toBuffer();
       const name = `${id}-w${width}.webp`;
-      await writeFile(path.join(directory, name), body);
+      await writeFile(path.join(/*turbopackIgnore: true*/ directory, name), body);
       derivatives[width] = `${publicBase}/${folder}/${name}`;
     }),
   );

@@ -64,12 +64,21 @@ const NGINX_PAGE_CACHE_DIR = process.env.NGINX_PAGE_CACHE_DIR ?? "/var/cache/ngi
 
 /** nginx caches anonymous HTML (60–300s); drop it so the next visitor reaches Next.js. */
 export async function purgeNginxPageCache(): Promise<void> {
-  if (process.env.NODE_ENV !== "production" || !existsSync(NGINX_PAGE_CACHE_DIR)) return;
+  // nginx's cache directory is host-level and env-driven — opt out of bundler
+  // tracing so the whole repo is not traced into the server output.
+  if (
+    process.env.NODE_ENV !== "production" ||
+    !existsSync(/*turbopackIgnore: true*/ NGINX_PAGE_CACHE_DIR)
+  )
+    return;
   try {
-    const entries = await readdir(NGINX_PAGE_CACHE_DIR);
+    const entries = await readdir(/*turbopackIgnore: true*/ NGINX_PAGE_CACHE_DIR);
     await Promise.all(
       entries.map((entry) =>
-        rm(path.join(NGINX_PAGE_CACHE_DIR, entry), { recursive: true, force: true }),
+        rm(path.join(/*turbopackIgnore: true*/ NGINX_PAGE_CACHE_DIR, entry), {
+          recursive: true,
+          force: true,
+        }),
       ),
     );
   } catch (error) {
