@@ -71,7 +71,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
   const [formError, setFormError] = useState<string | null>(null);
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: [...QUERY_KEY, cursor],
     queryFn: async () => {
       const url = `/api/admin/banners?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
