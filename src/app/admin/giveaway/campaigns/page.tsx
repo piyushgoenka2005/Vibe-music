@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
@@ -138,6 +138,8 @@ function CampaignEntriesPanel({ campaignId }: { campaignId: string }) {
   const { cursor, pageIndex, canGoPrev, goNext, goPrev } = useAdminCursorPagination();
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-giveaway-entries", campaignId, cursor],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       const url = `/api/admin/giveaway/campaigns/${campaignId}/entries?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
       return adminFetchJson<{

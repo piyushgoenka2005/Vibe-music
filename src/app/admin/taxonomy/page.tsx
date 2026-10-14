@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useTransition } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   UploadCloud,
   FileSpreadsheet,
@@ -49,6 +49,8 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
   // Fetch Taxonomy Data + Stats + Filter Options
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-taxonomy", page, limit, search, selectedCategory],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       const params = new URLSearchParams({
         page: String(page),

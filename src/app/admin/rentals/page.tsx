@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { ErrorState, adminFetchJson } from "@/components/admin/AdminQueryState";
@@ -12,6 +12,8 @@ import type { RentalAnalyticsSummary } from "@/types/rental";
 function RentalsAdminDashboard() {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-analytics"],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       return adminFetchJson<{ analytics: RentalAnalyticsSummary }>("/api/admin/rentals/analytics");
     },

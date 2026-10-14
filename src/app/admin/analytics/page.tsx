@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -17,6 +17,8 @@ function AnalyticsContent() {
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-analytics", period],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       return adminFetchJson<{ report: AnalyticsReport }>(`/api/admin/analytics?period=${period}`);
     },

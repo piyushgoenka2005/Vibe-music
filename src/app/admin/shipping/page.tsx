@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminNotice from "@/components/admin/AdminNotice";
@@ -30,6 +30,8 @@ function ShippingContent({ canWrite }: { canWrite: boolean }) {
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-shipping-zones"],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       return adminFetchJson<{ zones: ShippingZone[] }>("/api/admin/shipping-zones");
     },

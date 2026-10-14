@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -71,8 +71,10 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
   const [formError, setFormError] = useState<string | null>(null);
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
-const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: [...QUERY_KEY, cursor],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       const url = `/api/admin/banners?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
       return adminFetchJson<{

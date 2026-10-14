@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminOpsStatusPanel from "@/components/admin/AdminOpsStatusPanel";
@@ -37,6 +37,8 @@ function SettingsContent({
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-settings"],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       return adminFetchJson<{ settings: StoreSettings }>("/api/admin/settings");
     },

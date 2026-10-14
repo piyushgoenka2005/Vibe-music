@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import {
@@ -62,6 +62,8 @@ function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-support", statusFilter, cursor],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       const params = new URLSearchParams({ limit: "20" });
       if (statusFilter) params.set("status", statusFilter);

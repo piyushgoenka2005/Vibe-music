@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminNotice from "@/components/admin/AdminNotice";
@@ -29,6 +29,8 @@ function ReturnsContent({ ordersWrite }: { ordersWrite: boolean }) {
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-returns", statusFilter, cursor],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       const params = new URLSearchParams({ limit: "20" });
       if (statusFilter) params.set("status", statusFilter);

@@ -1186,7 +1186,7 @@ model GiveawayEntry {
   emailVerified     Boolean           @default(false) @map("email_verified")
   emailVerifyToken  String?           @unique @map("email_verify_token")
   emailVerifiedAt   String?           @map("email_verified_at")
-  status            String            @default("active")
+  status            String            @default("active")          @@index([status])
   ipHash            String?           @map("ip_hash")
   userAgentHash     String?           @map("user_agent_hash")
   fraudFlags        Json              @default("[]") @map("fraud_flags")
@@ -1240,7 +1240,7 @@ model GiveawayCampaignEvent {
 // ─── Product Compare ────────────────────────────────────────────────────────
 
 model ProductCompareList {
-  userId    String @id @map("user_id")
+  userId    String @id @map("user_id") @@index([createdAt])
   items     Json   @default("[]")
   updatedAt String @map("updated_at")
 

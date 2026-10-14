@@ -17,14 +17,12 @@ export interface MetaCapiRelayPayload {
 /** Fire-and-forget browser → server CAPI relay (deduped via shared event_id). */
 export function relayMetaCapiEvent(payload: MetaCapiRelayPayload): void {
   if (!isMetaPixelConfigured()) return;
-  try {
-    void fetch("/api/analytics/meta", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      keepalive: true,
-    });
-  } catch {
+  void fetch("/api/analytics/meta", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    keepalive: true,
+  }).catch(() => {
     /* ignore */
-  }
+  });
 }

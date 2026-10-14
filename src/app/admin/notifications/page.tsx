@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import {
@@ -38,6 +38,8 @@ function NotificationsContent() {
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-notifications", typeFilter, cursor],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       const params = new URLSearchParams({ limit: "20" });
       if (typeFilter !== "all") params.set("type", typeFilter);

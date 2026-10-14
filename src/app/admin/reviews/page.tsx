@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState, type RefObject } from "react";
 import Image from "next/image";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import {
@@ -62,6 +62,8 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
 
   const { data: statsData } = useQuery({
     queryKey: ["admin-review-stats"],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       return adminFetchJson<{ stats: AdminReviewStats }>("/api/admin/reviews/stats");
     },
@@ -69,6 +71,8 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-reviews", queryParams],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       return adminFetchJson<{
         reviews: Review[];

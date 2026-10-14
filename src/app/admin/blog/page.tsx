@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
 import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -35,6 +35,8 @@ function scheduleHint(post: BlogPost): string | null {
 function BlogAnalyticsPanel() {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-blog-analytics"],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       return adminFetchJson<{ analytics: BlogAnalyticsSummary }>("/api/admin/blog/analytics");
     },

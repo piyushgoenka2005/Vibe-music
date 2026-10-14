@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import Link from "next/link";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -40,6 +40,8 @@ function UsersContent({ canInvite, currentUid }: { canInvite: boolean; currentUi
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-users"],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       return adminFetchJson<{ admins: AdminProfile[] }>("/api/admin/admins");
     },

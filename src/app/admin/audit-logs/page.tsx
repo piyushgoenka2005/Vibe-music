@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState } from "@/components/admin/AdminUi";
@@ -56,6 +56,8 @@ function AuditLogsContent() {
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-audit-logs", cursor, actionFilter, actorFilter],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       const sp = new URLSearchParams({ limit: "50" });
       if (cursor) sp.set("cursor", cursor);

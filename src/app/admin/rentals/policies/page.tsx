@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
@@ -35,6 +35,8 @@ function PoliciesAdmin({ canWrite }: { canWrite: boolean }) {
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-policy"],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       return adminFetchJson<{ policy: PolicyForm | null }>("/api/admin/rentals/policy");
     },

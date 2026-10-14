@@ -87,6 +87,14 @@ jobs:
           NEXT_PUBLIC_SITE_URL: https://example.com
           GUEST_ORDER_ACCESS_SECRET: ci-guest-order-secret-min-32-chars-long
           ALLOW_POSTGRES_DURING_BUILD: "true"
+      - name: Verify build artifacts
+        run: |
+          if [ -d "out/" ] || [ -d ".next/" ]; then
+            echo "✓ Build artifacts present"
+          else
+            echo "✗ Build artifacts missing"
+            exit 1
+          fi
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
@@ -95,7 +103,7 @@ jobs:
         run: npm run verify:e2e-catalog
 
       - name: E2E tests
-        run: npm run test:e2e
+        run: npm run test:e2e -- --project=chromium
         env:
           CI: "true"
           DISABLE_RATE_LIMIT: "true"

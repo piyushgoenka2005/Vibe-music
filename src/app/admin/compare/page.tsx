@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -25,6 +25,8 @@ function CompareAnalyticsPanel() {
   const [period, setPeriod] = useState("30d");
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-compare-analytics", period],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       return adminFetchJson<{ analytics: CompareAnalyticsSummary }>(
         `/api/admin/compare/analytics?period=${period}`,

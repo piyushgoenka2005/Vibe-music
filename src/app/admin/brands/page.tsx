@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
@@ -16,6 +16,8 @@ function BrandsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-brands"],
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
     queryFn: async () => {
       return adminFetchJson<{ brands: Brand[] }>("/api/admin/brands");
     },
