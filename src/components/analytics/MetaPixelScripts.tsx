@@ -17,9 +17,7 @@ export default function MetaPixelScripts() {
 
   return (
     <>
-      <Script id="meta-pixel-base" strategy="beforeInteractive">
-        {buildMetaPixelInlineScript(pixelId)}
-      </Script>
+      <Script id="meta-pixel-base">{buildMetaPixelInlineScript(pixelId)}</Script>
       <noscript>
         <img
           height="1"
@@ -27,6 +25,8 @@ export default function MetaPixelScripts() {
           style={{ display: "none" }}
           src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
           alt=""
+          loading="lazy"
+          fetchPriority="low"
         />
       </noscript>
     </>
