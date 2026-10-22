@@ -21,6 +21,7 @@ import { ROUTES } from "@/lib/routes";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/authStore";
 import type { AdminSession } from "@/types/admin";
+import { setCachedAdminSession } from "@/components/admin/AdminGuard";
 
 type AdminLoginResponse =
   { ok: true; admin: AdminSession } | { ok?: false; error?: string; code?: string };
@@ -69,6 +70,7 @@ export default function AdminLoginForm() {
 
       // Seed client caches so /admin paints without waiting for /api/admin/me.
       queryClient.setQueryData(["admin-session"], payload.admin);
+      setCachedAdminSession(payload.admin);
       setSessionUser({
         id: payload.admin.uid,
         email: payload.admin.email,

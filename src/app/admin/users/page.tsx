@@ -41,7 +41,7 @@ function UsersContent({ canInvite, currentUid }: { canInvite: boolean; currentUi
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-users"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ admins: AdminProfile[] }>("/api/admin/admins");
     },

@@ -26,7 +26,7 @@ function CompareAnalyticsPanel() {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-compare-analytics", period],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ analytics: CompareAnalyticsSummary }>(
         `/api/admin/compare/analytics?period=${period}`,

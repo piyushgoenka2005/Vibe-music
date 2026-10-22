@@ -36,7 +36,7 @@ function BlogAnalyticsPanel() {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-blog-analytics"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ analytics: BlogAnalyticsSummary }>("/api/admin/blog/analytics");
     },

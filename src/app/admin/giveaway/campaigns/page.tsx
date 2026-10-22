@@ -139,7 +139,7 @@ function CampaignEntriesPanel({ campaignId }: { campaignId: string }) {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-giveaway-entries", campaignId, cursor],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       const url = `/api/admin/giveaway/campaigns/${campaignId}/entries?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
       return adminFetchJson<{

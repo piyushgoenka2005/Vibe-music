@@ -9,9 +9,11 @@ export default function AdminNotificationBell() {
   const { data } = useQuery({
     queryKey: ["admin-notifications-count"],
     queryFn: async () => {
-      // Lightweight count endpoint — full list is only fetched by /admin/notifications.
       return adminFetchJson<{ unreadCount: number }>("/api/admin/notifications/count");
     },
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const unread = data?.unreadCount ?? 0;
@@ -19,6 +21,7 @@ export default function AdminNotificationBell() {
   return (
     <Link
       href={ROUTES.adminNotifications}
+      prefetch={false}
       className="admin-notification-bell"
       aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
       title="Notifications"

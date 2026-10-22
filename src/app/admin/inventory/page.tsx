@@ -40,7 +40,7 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-inventory"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{
         inventory: InventoryRecord[];

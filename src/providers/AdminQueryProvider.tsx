@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -17,10 +17,10 @@ function makeAdminQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 5_000,
-        gcTime: 5 * 60_000,
-        refetchOnMount: true,
-        refetchOnWindowFocus: true,
+        staleTime: 30_000,
+        gcTime: 10 * 60_000,
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
         refetchOnReconnect: true,
         refetchInterval: ADMIN_POLL_MS,
         refetchIntervalInBackground: false,
@@ -31,9 +31,9 @@ function makeAdminQueryClient(): QueryClient {
 }
 
 /**
- * Admin-only query client: unlike the storefront defaults (60s stale, no refetch on
- * mount/focus), admin data is always fresh, and any successful admin write in this or
- * another tab refetches every admin query on screen.
+ * Admin-only query client: fast cached navigation (30s stale time, smooth tab switches),
+ * and targeted live synchronization across tabs without tearing down the admin session
+ * or over-fetching background queries.
  */
 export default function AdminQueryProvider({ children }: { children: React.ReactNode }) {
   const [client] = useState(makeAdminQueryClient);
@@ -42,7 +42,16 @@ export default function AdminQueryProvider({ children }: { children: React.React
     let timer: number | undefined;
     const scheduleInvalidate = () => {
       window.clearTimeout(timer);
-      timer = window.setTimeout(() => void client.invalidateQueries(), INVALIDATE_DEBOUNCE_MS);
+      timer = window.setTimeout(() => {
+        // Only refresh active queries on screen, never session or notification badges
+        void client.invalidateQueries({
+          type: "active",
+          predicate: (query) => {
+            const rootKey = query.queryKey[0];
+            return rootKey !== "admin-session" && rootKey !== "admin-notifications-count";
+          },
+        });
+      }, INVALIDATE_DEBOUNCE_MS);
     };
     const unsubscribe = subscribeAdminDataChanged(scheduleInvalidate);
 

@@ -39,7 +39,7 @@ function GiveawayAdminDashboard() {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-giveaway-analytics"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ analytics: GiveawayAnalytics }>("/api/admin/giveaway/analytics");
     },

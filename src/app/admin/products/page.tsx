@@ -117,6 +117,7 @@ function ProductsContent({
       setCategories(data.categories ?? []);
       return data.categories;
     },
+    staleTime: 5 * 60_000,
   });
 
   const { data, isLoading, isError, refetch, isFetching, isPlaceholderData } = useQuery({
@@ -124,6 +125,7 @@ function ProductsContent({
     queryFn: ({ signal }) =>
       fetchProducts({ search, status, category, stock: stockFilter, cursor }, signal),
     placeholderData: keepPreviousData,
+    staleTime: 60_000,
   });
   const isSearching = searchPending || (isFetching && isPlaceholderData);
 

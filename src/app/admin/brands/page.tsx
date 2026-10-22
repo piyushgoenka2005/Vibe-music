@@ -17,7 +17,7 @@ function BrandsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-brands"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ brands: Brand[] }>("/api/admin/brands");
     },

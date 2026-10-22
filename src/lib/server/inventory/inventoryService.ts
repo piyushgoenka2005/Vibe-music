@@ -2,6 +2,9 @@ import {
   fetchProductStockSnapshots,
   getAvailableStock,
   listAllProductStockSnapshots,
+  getDirectInventoryStats,
+  getDirectLowStockProducts,
+  getDirectOutOfStockProducts,
   listInventoryLogs,
   listInventoryLogsPage,
   recordInventoryLogEntry,
@@ -11,6 +14,7 @@ import {
   restoreStockForCancelledOrderInTx,
   setProductStock,
 } from "@/lib/server/inventoryRepository";
+import { isPostgresConfigured } from "@/lib/db/prisma";
 import { sendLowStockAdminNotification } from "@/lib/server/adminNotificationEmailService";
 import { notifyWaitlistOnRestock } from "@/lib/server/restockNotificationService";
 import { getProductById } from "@/services/catalogService";
@@ -152,10 +156,24 @@ export function computeInventoryStats(records: InventoryRecord[]) {
 }
 
 export async function getInventoryStats() {
+  if (isPostgresConfigured()) {
+    try {
+      return await getDirectInventoryStats();
+    } catch (e) {
+      console.warn("[inventory] direct stats query failed, falling back to scan", e);
+    }
+  }
   return computeInventoryStats(await listInventory());
 }
 
 export async function getLowStockProducts(limit = 10) {
+  if (isPostgresConfigured()) {
+    try {
+      return await getDirectLowStockProducts(limit);
+    } catch (e) {
+      console.warn("[inventory] direct low stock query failed, falling back to scan", e);
+    }
+  }
   const products = await listAllProductStockSnapshots();
   return products
     .map((product) => {
@@ -181,6 +199,13 @@ export async function getLowStockProducts(limit = 10) {
 }
 
 export async function getOutOfStockProducts(limit = 10) {
+  if (isPostgresConfigured()) {
+    try {
+      return await getDirectOutOfStockProducts(limit);
+    } catch (e) {
+      console.warn("[inventory] direct out of stock query failed, falling back to scan", e);
+    }
+  }
   const products = await listAllProductStockSnapshots();
   return products
     .map((product) => {

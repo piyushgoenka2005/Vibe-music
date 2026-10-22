@@ -50,7 +50,7 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-taxonomy", page, limit, search, selectedCategory],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       const params = new URLSearchParams({
         page: String(page),

@@ -245,15 +245,110 @@ export async function listAllProductStockSnapshots(): Promise<
       lowStockThreshold: true,
       status: true,
       availability: true,
-      detail: true,
       updatedAt: true,
     },
     orderBy: { stock: "asc" },
   });
   return rows.map((row) => ({
-    ...readSnapshot(row.id, row as ProductRow),
+    ...readSnapshot(row.id, row as unknown as ProductRow),
     updatedAt: String(row.updatedAt),
   }));
+}
+
+export async function getDirectOutOfStockProducts(limit = 10) {
+  const rows = await prisma.product.findMany({
+    where: {
+      OR: [{ stock: { lte: 0 } }, { availability: "out-of-stock" }],
+    },
+    select: {
+      id: true,
+      name: true,
+      sku: true,
+      stock: true,
+      reservedStock: true,
+      lowStockThreshold: true,
+    },
+    orderBy: { stock: "asc" },
+    take: limit,
+  });
+  return rows.map((product) => {
+    const reserved = product.reservedStock ?? 0;
+    const available = Math.max(0, product.stock - reserved);
+    return {
+      id: product.id,
+      name: product.name,
+      sku: product.sku,
+      stockQuantity: product.stock,
+      reservedQuantity: reserved,
+      availableQuantity: available,
+      lowStockThreshold: product.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD,
+      availability: "out-of-stock" as const,
+    };
+  });
+}
+
+export async function getDirectLowStockProducts(limit = 10) {
+  const rows = await prisma.product.findMany({
+    where: {
+      stock: { gt: 0, lte: 10 },
+      availability: { not: "out-of-stock" },
+    },
+    select: {
+      id: true,
+      name: true,
+      sku: true,
+      stock: true,
+      reservedStock: true,
+      lowStockThreshold: true,
+    },
+    orderBy: { stock: "asc" },
+    take: limit,
+  });
+  return rows.map((product) => {
+    const reserved = product.reservedStock ?? 0;
+    const available = Math.max(0, product.stock - reserved);
+    const threshold = product.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD;
+    return {
+      id: product.id,
+      name: product.name,
+      sku: product.sku,
+      stockQuantity: product.stock,
+      reservedQuantity: reserved,
+      availableQuantity: available,
+      lowStockThreshold: threshold,
+      availability: (available <= 0
+        ? "out-of-stock"
+        : available <= threshold
+          ? "limited"
+          : "in-stock") as "limited" | "in-stock" | "out-of-stock",
+    };
+  });
+}
+
+export async function getDirectInventoryStats() {
+  const [totalSkus, totalUnitsAgg, outOfStockCount, lowStockCount] = await Promise.all([
+    prisma.product.count(),
+    prisma.product.aggregate({ _sum: { stock: true } }),
+    prisma.product.count({
+      where: {
+        OR: [{ stock: { lte: 0 } }, { availability: "out-of-stock" }],
+      },
+    }),
+    prisma.product.count({
+      where: {
+        stock: { gt: 0, lte: 10 },
+        availability: { not: "out-of-stock" },
+      },
+    }),
+  ]);
+  const totalUnits = Number(totalUnitsAgg._sum.stock ?? 0);
+  return {
+    totalSkus,
+    lowStock: lowStockCount,
+    outOfStock: outOfStockCount,
+    totalUnits,
+    totalAvailableUnits: totalUnits,
+  };
 }
 
 export async function fetchProductStockSnapshots(

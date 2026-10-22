@@ -66,7 +66,7 @@ function AttributesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-attributes", search, selectedCategory],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       const params = new URLSearchParams();
       if (search) params.set("search", search);

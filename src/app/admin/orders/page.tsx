@@ -86,6 +86,7 @@ function OrdersContent({
     queryKey: ["admin-orders", search, status, cursor],
     queryFn: ({ signal }) => fetchOrders({ search, status, cursor }, signal),
     placeholderData: keepPreviousData,
+    staleTime: 60_000,
   });
   const isSearching = searchPending || (isFetching && isPlaceholderData);
 

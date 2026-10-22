@@ -249,13 +249,18 @@ const DEFAULT_ATTRIBUTES: ProductAttribute[] = [
   },
 ];
 
-let attributesState: ProductAttribute[] = [...DEFAULT_ATTRIBUTES];
+const g = globalThis as unknown as { __vibeAttributesState?: ProductAttribute[] };
+g.__vibeAttributesState ??= [...DEFAULT_ATTRIBUTES];
+
+function getAttributesState(): ProductAttribute[] {
+  return (g.__vibeAttributesState ??= [...DEFAULT_ATTRIBUTES]);
+}
 
 export async function getProductAttributes(filters?: {
   search?: string;
   category?: string;
 }): Promise<ProductAttribute[]> {
-  let list = attributesState;
+  let list = getAttributesState();
 
   if (filters?.category && filters.category !== "all" && filters.category !== "All") {
     list = list.filter(
@@ -278,7 +283,7 @@ export async function getProductAttributes(filters?: {
 }
 
 export async function getProductAttributeById(id: string): Promise<ProductAttribute | null> {
-  return attributesState.find((a) => a.id === id) ?? null;
+  return getAttributesState().find((a) => a.id === id) ?? null;
 }
 
 export async function createProductAttribute(
@@ -290,7 +295,7 @@ export async function createProductAttribute(
     productCount: 0,
     updatedAt: new Date().toISOString(),
   };
-  attributesState.unshift(newAttr);
+  getAttributesState().unshift(newAttr);
   return newAttr;
 }
 
@@ -298,20 +303,22 @@ export async function updateProductAttribute(
   id: string,
   payload: Partial<Omit<ProductAttribute, "id" | "updatedAt">>,
 ): Promise<ProductAttribute | null> {
-  const index = attributesState.findIndex((a) => a.id === id);
+  const state = getAttributesState();
+  const index = state.findIndex((a) => a.id === id);
   if (index === -1) return null;
 
-  attributesState[index] = {
-    ...attributesState[index],
+  state[index] = {
+    ...state[index],
     ...payload,
     updatedAt: new Date().toISOString(),
   };
 
-  return attributesState[index];
+  return state[index];
 }
 
 export async function deleteProductAttribute(id: string): Promise<boolean> {
-  const initialLength = attributesState.length;
-  attributesState = attributesState.filter((a) => a.id !== id);
-  return attributesState.length < initialLength;
+  const state = getAttributesState();
+  const initialLength = state.length;
+  g.__vibeAttributesState = state.filter((a) => a.id !== id);
+  return g.__vibeAttributesState.length < initialLength;
 }

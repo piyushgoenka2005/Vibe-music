@@ -13,7 +13,7 @@ function RentalsAdminDashboard() {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-analytics"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ analytics: RentalAnalyticsSummary }>("/api/admin/rentals/analytics");
     },

@@ -63,7 +63,7 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
   const { data: statsData } = useQuery({
     queryKey: ["admin-review-stats"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ stats: AdminReviewStats }>("/api/admin/reviews/stats");
     },
@@ -72,7 +72,7 @@ function ReviewsContent({ reviewsWrite }: { reviewsWrite: boolean }) {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-reviews", queryParams],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{
         reviews: Review[];

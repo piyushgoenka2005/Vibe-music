@@ -391,7 +391,7 @@ function ProductsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-products"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ products: RentalProduct[] }>("/api/admin/rentals/products");
     },

@@ -47,6 +47,7 @@ import type { AdminSession } from "@/types/admin";
 import { useAuthStore } from "@/store/authStore";
 import { useAdminUiStore } from "@/store/adminUiStore";
 import { adminFetchJson } from "@/lib/admin/adminFetch";
+import { setCachedAdminSession } from "@/components/admin/AdminGuard";
 
 const NAV_ITEMS = [
   { href: ROUTES.admin, label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:read" },
@@ -160,6 +161,7 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
   const logout = useAuthStore((s) => s.logout);
 
   async function handleLogout() {
+    setCachedAdminSession(null);
     await logout();
     router.replace(ROUTES.adminLogin);
   }
@@ -179,6 +181,9 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
       return adminFetchJson<{ unreadCount: number }>("/api/admin/notifications/count");
     },
     enabled: showNotificationBadge,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const unreadNotifications = notificationData?.unreadCount ?? 0;
@@ -190,7 +195,7 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
     >
       <div className="admin-sidebar__brand">
         {!collapsed ? (
-          <Link href={ROUTES.admin} className="admin-sidebar__brand-text">
+          <Link href={ROUTES.admin} prefetch={false} className="admin-sidebar__brand-text">
             Vibe <span>Music</span>
           </Link>
         ) : null}
@@ -215,6 +220,7 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               className={`admin-sidebar__link${isActive ? " admin-sidebar__link--active" : ""}`}
               title={collapsed ? item.label : undefined}
               onClick={closeSidebarOnMobile}

@@ -36,7 +36,7 @@ function PoliciesAdmin({ canWrite }: { canWrite: boolean }) {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-policy"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ policy: PolicyForm | null }>("/api/admin/rentals/policy");
     },

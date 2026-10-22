@@ -42,7 +42,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-categories"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ categories: AdminCategory[] }>("/api/admin/categories");
     },

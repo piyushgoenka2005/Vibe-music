@@ -23,7 +23,7 @@ function LocalizationContent({ canWrite }: { canWrite: boolean }) {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-localization"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{
         currencies: CurrencyConfig[];

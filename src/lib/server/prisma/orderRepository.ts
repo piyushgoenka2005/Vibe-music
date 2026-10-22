@@ -345,7 +345,10 @@ export async function countOrders(): Promise<number> {
   return prisma.order.count();
 }
 
-export async function findPaidOrders(options?: { sinceDays?: number }): Promise<Order[]> {
+export async function findPaidOrders(options?: {
+  sinceDays?: number;
+  limit?: number;
+}): Promise<Order[]> {
   const sinceDays = options?.sinceDays ?? 90;
   const since = new Date();
   since.setDate(since.getDate() - sinceDays);
@@ -357,7 +360,7 @@ export async function findPaidOrders(options?: { sinceDays?: number }): Promise<
       createdAt: { gte: since.toISOString() },
     },
     orderBy: { createdAt: "desc" },
-    take: 5_000,
+    take: options?.limit ?? 500,
   });
   return rows.map(prismaToOrder);
 }

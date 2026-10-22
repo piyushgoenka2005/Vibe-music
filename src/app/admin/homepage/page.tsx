@@ -93,7 +93,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: QUERY_KEY,
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{
         sections: HomepageSection[];
@@ -105,7 +105,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
   const { data: guitarProducts = [] } = useQuery({
     queryKey: ["admin-homepage-guitars"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       const body = await adminFetchJson<{ products?: AdminProduct[] }>(
         "/api/admin/products?category=guitars&limit=200",
@@ -128,7 +128,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
   const { data: catalogProductCount } = useQuery({
     queryKey: ["admin-homepage-product-count"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       try {
         const body = await adminFetchJson<{ total?: number; products?: AdminProduct[] }>(

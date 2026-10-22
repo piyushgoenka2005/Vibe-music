@@ -11,27 +11,65 @@ import { ROUTES } from "@/lib/routes";
 import AuthLoading from "@/components/auth/AuthLoading";
 import type { AdminSession } from "@/types/admin";
 
+const SESSION_STORAGE_KEY = "vibe_admin_session";
+
+function getCachedAdminSession(): AdminSession | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.uid === "string" && Array.isArray(parsed.permissions)) {
+      return parsed as AdminSession;
+    }
+  } catch {
+    /* ignore session storage parse error */
+  }
+  return null;
+}
+
+export function setCachedAdminSession(session: AdminSession | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (session) {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+    } else {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    }
+  } catch {
+    /* ignore storage errors */
+  }
+}
+
 async function fetchAdminSession(): Promise<AdminSession | null> {
   const res = await fetch("/api/admin/me");
-  if (res.status === 401 || res.status === 403) return null;
+  if (res.status === 401 || res.status === 403) {
+    setCachedAdminSession(null);
+    return null;
+  }
   if (!res.ok) throw new Error("Failed to verify admin session");
   const data = (await res.json()) as { admin: AdminSession };
+  if (data?.admin) {
+    setCachedAdminSession(data.admin);
+  }
   return data.admin;
 }
 
 export function useAdminSession() {
   const bootstrap = useAdminSessionBootstrap();
+  const cached = bootstrap ?? getCachedAdminSession();
   return useQuery({
     queryKey: ["admin-session"],
     queryFn: fetchAdminSession,
     retry: false,
-    staleTime: 120_000,
+    staleTime: 10 * 60_000,
+    gcTime: 60 * 60_000,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
-    // Server layout already resolved the session — paint immediately.
-    // Treat bootstrap as freshly resolved so React Query won't background-refetch.
-    initialData: bootstrap === undefined ? undefined : (bootstrap ?? undefined),
-    initialDataUpdatedAt: bootstrap ? Number.MAX_SAFE_INTEGER : undefined,
+    refetchOnReconnect: false,
+    // Server layout or sessionStorage already resolved the session — paint immediately with zero delay
+    initialData: cached ?? undefined,
+    initialDataUpdatedAt: cached ? Number.MAX_SAFE_INTEGER : undefined,
   });
 }
 

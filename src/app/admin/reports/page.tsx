@@ -23,7 +23,7 @@ function ReportsContent() {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-reports", range],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ report: SalesReportSummary }>(`/api/admin/reports?range=${range}`);
     },

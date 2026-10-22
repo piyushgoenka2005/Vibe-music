@@ -82,7 +82,7 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
     refetchInterval: 30_000,
     refetchIntervalInBackground: false,
     placeholderData: (previous) => previous,
-    staleTime: 10_000,
+    staleTime: 60_000,
   });
   const hasMore = data?.hasMore ?? false;
 

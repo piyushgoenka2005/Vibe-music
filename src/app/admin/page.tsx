@@ -59,6 +59,7 @@ function DashboardContent() {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-dashboard"],
     queryFn: fetchDashboard,
+    staleTime: 60_000,
   });
 
   if (isLoading) return <LoadingState message="Loading dashboard…" />;

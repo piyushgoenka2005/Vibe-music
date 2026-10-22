@@ -27,7 +27,9 @@ export default function AdminShell({ admin, title, children, actions }: AdminShe
   useEffect(() => {
     const mq = window.matchMedia(MOBILE_ADMIN_MQ);
     const sync = () => {
-      if (mq.matches) setSidebarCollapsed(true);
+      if (mq.matches && !useAdminUiStore.getState().sidebarCollapsed) {
+        setSidebarCollapsed(true);
+      }
     };
     sync();
     mq.addEventListener("change", sync);

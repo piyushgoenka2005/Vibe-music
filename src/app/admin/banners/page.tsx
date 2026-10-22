@@ -74,7 +74,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: [...QUERY_KEY, cursor],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       const url = `/api/admin/banners?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
       return adminFetchJson<{

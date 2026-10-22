@@ -24,7 +24,7 @@ function RolesContent({ canWrite }: { canWrite: boolean }) {
   const { data, isLoading, isError, refetch, isFetching, error } = useQuery({
     queryKey: ["admin-roles"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<MatrixResponse>("/api/admin/roles");
     },

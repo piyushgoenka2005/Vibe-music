@@ -31,7 +31,7 @@ function ShippingContent({ canWrite }: { canWrite: boolean }) {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-shipping-zones"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ zones: ShippingZone[] }>("/api/admin/shipping-zones");
     },

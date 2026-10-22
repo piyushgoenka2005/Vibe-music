@@ -57,7 +57,7 @@ function AuditLogsContent() {
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-audit-logs", cursor, actionFilter, actorFilter],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       const sp = new URLSearchParams({ limit: "50" });
       if (cursor) sp.set("cursor", cursor);

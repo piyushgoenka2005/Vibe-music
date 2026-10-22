@@ -38,7 +38,7 @@ function SettingsContent({
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-settings"],
     placeholderData: keepPreviousData,
-    staleTime: 10_000,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ settings: StoreSettings }>("/api/admin/settings");
     },

@@ -130,7 +130,7 @@ export async function getOutOfStockProductList(limit = 10) {
  * hard row cap) instead of reading the entire order table.
  */
 export async function getTopProducts(limit = 5) {
-  const orders = await pgOrder.findPaidOrders({ sinceDays: 90 });
+  const orders = await pgOrder.findPaidOrders({ sinceDays: 30, limit: 150 });
   return topProductsFromOrders(orders, limit);
 }
 
