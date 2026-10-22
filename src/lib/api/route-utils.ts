@@ -55,6 +55,10 @@ export async function enforceRateLimit(
   if (process.env.DISABLE_RATE_LIMIT === "true" && process.env.NODE_ENV !== "production") {
     return null;
   }
+  // Proxy already rate-limited this request — skip the duplicate Upstash round trip.
+  if (request.headers.get("X-RateLimit-Checked") === "1") {
+    return null;
+  }
   const ip = getClientIp(request);
   const result = await distributedCheckRateLimit(`${scope}:${ip}`, options);
   if (!result.allowed) {

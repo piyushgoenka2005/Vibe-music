@@ -8,6 +8,7 @@ import {
   SEARCH_MIN_QUERY_LENGTH as MIN_QUERY_LENGTH,
 } from "@/lib/server/searchResultsService";
 import { searchProducts } from "@/lib/server/productRepository";
+import { getCached } from "@/lib/server/redisCache";
 
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 48;
@@ -57,13 +58,19 @@ async function getHandler(request: Request) {
     const isBrandOnly = !query && !category && !subcategory;
     const apiBrand = returnAll && !isBrandOnly ? undefined : brand;
     const apiSort = returnAll ? undefined : sort;
-    const products = await searchProducts({
-      query,
-      category,
-      subcategory,
-      brand: apiBrand,
-      sort: apiSort,
-    });
+    const cacheKey = `search:${query}:${category ?? ""}:${subcategory ?? ""}:${apiBrand ?? ""}:${apiSort ?? ""}:${returnAll ? "all" : ""}`;
+    const products = await getCached(
+      cacheKey,
+      () =>
+        searchProducts({
+          query,
+          category,
+          subcategory,
+          brand: apiBrand,
+          sort: apiSort,
+        }),
+      30, // seconds — matches s-maxage below
+    );
     const categories = buildCategoryFacets(products);
     const brands = buildBrandFacets(products);
 

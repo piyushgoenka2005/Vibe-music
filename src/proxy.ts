@@ -5,7 +5,7 @@ import { hasAuthSessionCookie } from "@/lib/auth/session-cookie";
 import { resolveLegacyPath } from "@/lib/routes";
 import { resolveAdLandingRedirect } from "@/lib/seo/adLanding";
 import { edgeCheckRateLimit } from "@/lib/security/edge-rate-limit";
-import { API_SECURITY_HEADERS } from "@/lib/security/headers";
+import { API_PROXY_CACHE_HEADER, API_SECURITY_HEADERS } from "@/lib/security/headers";
 import {
   isMutationMethod,
   isWebhookPath,
@@ -26,10 +26,10 @@ import {
 
 function withSecurityHeaders(response: NextResponse, pathname?: string): NextResponse {
   for (const header of API_SECURITY_HEADERS) {
-    if (header.key === "Cache-Control" && pathname?.startsWith("/api/media/thumb")) {
-      continue;
-    }
     response.headers.set(header.key, header.value);
+  }
+  if (!pathname?.startsWith("/api/media/thumb") && !response.headers.has("Cache-Control")) {
+    response.headers.set(API_PROXY_CACHE_HEADER.key, API_PROXY_CACHE_HEADER.value);
   }
   return response;
 }
@@ -127,6 +127,7 @@ async function handleApiRequest(request: NextRequest): Promise<NextResponse | nu
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(REQUEST_ID_HEADER, requestId);
   requestHeaders.set(REQUEST_START_HEADER, String(startedAt));
+  requestHeaders.set("X-RateLimit-Checked", "1");
 
   const response = withSecurityHeaders(
     NextResponse.next({ request: { headers: requestHeaders } }),

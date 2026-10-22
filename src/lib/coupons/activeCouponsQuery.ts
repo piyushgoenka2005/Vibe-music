@@ -4,12 +4,12 @@ import type { StorefrontCouponOffer } from "@/types/coupon";
 export const ACTIVE_COUPONS_QUERY_ROOT = "active-coupons";
 
 /** Poll interval for live admin coupon updates (ms). */
-export const ACTIVE_COUPONS_REFETCH_MS = 15_000;
+export const ACTIVE_COUPONS_REFETCH_MS = 60_000;
 
 /** Keep storefront coupon lists fresh without stale cached offers. */
 export const activeCouponsQueryOptions = {
-  staleTime: 0,
-  gcTime: 60_000,
+  staleTime: 30_000,
+  gcTime: 5 * 60_000,
   refetchInterval: ACTIVE_COUPONS_REFETCH_MS,
   refetchIntervalInBackground: false,
   refetchOnMount: true,

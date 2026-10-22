@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -127,30 +128,45 @@ export default function HomepageBannerHero({
               }
             >
               <div className="homepage-banner-hero__media">
-                <picture className="homepage-banner-hero__picture">
-                  {slide.mobileSrc ? (
-                    <source media="(max-width: 767px)" srcSet={slide.mobileSrc} />
-                  ) : null}
-                  {slide.srcOptimized ? (
+                {slide.srcOptimized ? (
+                  <picture className="homepage-banner-hero__picture">
+                    {slide.mobileSrc ? (
+                      <source media="(max-width: 767px)" srcSet={slide.mobileSrc} />
+                    ) : null}
                     <source type="image/webp" srcSet={slide.srcOptimized} />
-                  ) : null}
-                  <img
+                    <img
+                      src={slide.src}
+                      alt={slide.alt}
+                      loading={isFirstSlide ? "eager" : "lazy"}
+                      fetchPriority={isFirstSlide ? "high" : undefined}
+                      decoding="async"
+                      className="homepage-banner-hero__image"
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: slide.fit ?? "cover",
+                        ...(slide.objectPosition ? { objectPosition: slide.objectPosition } : {}),
+                      }}
+                    />
+                  </picture>
+                ) : (
+                  <Image
                     src={slide.src}
                     alt={slide.alt}
+                    fill
+                    sizes="100vw"
                     loading={isFirstSlide ? "eager" : "lazy"}
-                    fetchPriority={isFirstSlide ? "high" : undefined}
+                    priority={isFirstSlide}
                     decoding="async"
                     className="homepage-banner-hero__image"
                     style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
                       objectFit: slide.fit ?? "cover",
                       ...(slide.objectPosition ? { objectPosition: slide.objectPosition } : {}),
                     }}
                   />
-                </picture>
+                )}
               </div>
               {hasCopy ? (
                 <div className="homepage-banner-hero__copy">

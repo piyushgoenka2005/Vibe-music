@@ -64,7 +64,7 @@ export const SECURITY_HEADERS = [
   },
 ];
 
-export const API_SECURITY_HEADERS = [
-  { key: "Cache-Control", value: "no-store" },
-  { key: "X-Content-Type-Options", value: "nosniff" },
-] as const;
+export const API_SECURITY_HEADERS = [{ key: "X-Content-Type-Options", value: "nosniff" }] as const;
+
+/** Applied by the proxy only — routes may override Cache-Control with s-maxage. */
+export const API_PROXY_CACHE_HEADER = { key: "Cache-Control", value: "no-store" } as const;

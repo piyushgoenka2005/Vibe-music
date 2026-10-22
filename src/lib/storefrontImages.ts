@@ -295,14 +295,14 @@ export function generateCdnSrcSet(
   variant: StorefrontImageVariant = "card",
 ): string | undefined {
   if (!src) return undefined;
-  if (!isCdnUrl(src) || !src.endsWith(".webp")) return undefined;
+  if (!isCdnUrl(src)) return undefined;
   if (isCdnSizedDerivative(src)) return undefined;
 
   const master = cdnMasterUrl(src);
   const parsed = new URL(master);
   const file = parsed.pathname.split("/").pop() ?? "";
   const match = file.match(/^(.+)\.([a-z0-9]+)$/i);
-  if (!match || match[2].toLowerCase() !== "webp") return undefined;
+  if (!match) return undefined;
 
   const dir = parsed.pathname.slice(0, parsed.pathname.lastIndexOf("/") + 1);
   const name = match[1];
@@ -313,6 +313,8 @@ export function generateCdnSrcSet(
       : variant === "thumb"
         ? [THUMB_WIDTHS[1]!]
         : THUMB_WIDTHS;
+  // CDN nginx serves -w{width}.webp derivatives for any source format;
+  // missing derivatives fall back to the original file.
   return widths.map((w) => `${parsed.origin}${dir}${name}-w${w}.webp ${w}w`).join(", ");
 }
 
