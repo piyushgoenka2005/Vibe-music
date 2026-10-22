@@ -19,6 +19,7 @@ export default function MetaPixelScripts() {
     <>
       <Script id="meta-pixel-base">{buildMetaPixelInlineScript(pixelId)}</Script>
       <noscript>
+        {/* eslint-disable @next/next/no-img-element */}
         <img
           height="1"
           width="1"
@@ -28,6 +29,7 @@ export default function MetaPixelScripts() {
           loading="lazy"
           fetchPriority="low"
         />
+        {/* eslint-enable @next/next/no-img-element */}
       </noscript>
     </>
   );
