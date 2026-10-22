@@ -774,7 +774,7 @@ function MediaContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: b
                     type="text"
                     required
                     className="admin-input"
-                    placeholder="e.g. Fender Stratocaster Sunburst Hero"
+                    placeholder="e.g. Yamaha Pacifica Sunburst Hero"
                     value={uploadName}
                     onChange={(e) => setUploadName(e.target.value)}
                   />
