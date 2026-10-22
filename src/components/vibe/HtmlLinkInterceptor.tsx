@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { resolveLinkHref } from "@/lib/routes";
 
-const SECTION_SELECTOR = '[data-vibe-section="header"], [data-vibe-section="main"], [data-vibe-section="footer"]';
+const SECTION_SELECTOR =
+  '[data-vibe-section="header"], [data-vibe-section="main"], [data-vibe-section="footer"]';
 
 function patchSectionLinks(section: Element) {
   section.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((anchor) => {
@@ -61,6 +62,69 @@ export default function HtmlLinkInterceptor() {
       }
     }
 
+    const prefetched = new Set<string>();
+    let hoverTimer: number | undefined;
+
+    function onPointerOver(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest("a[href]");
+      if (!anchor || !(anchor instanceof HTMLAnchorElement)) return;
+      if (anchor.target === "_blank") return;
+
+      const rawHref = anchor.getAttribute("href");
+      if (
+        !rawHref ||
+        rawHref.startsWith("#") ||
+        rawHref.startsWith("mailto:") ||
+        rawHref.startsWith("tel:")
+      )
+        return;
+
+      const href = resolveLinkHref(rawHref);
+      if (href.startsWith("http") && !href.startsWith(window.location.origin)) return;
+
+      const path = href.startsWith("http") ? new URL(href).pathname : href.split("?")[0];
+      if (prefetched.has(path)) return;
+
+      if (hoverTimer) window.clearTimeout(hoverTimer);
+      hoverTimer = window.setTimeout(() => {
+        prefetched.add(path);
+        try {
+          router.prefetch(href);
+        } catch {
+          /* prefetch non-critical */
+        }
+      }, 40);
+    }
+
+    function onTouchStart(event: TouchEvent) {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest("a[href]");
+      if (!anchor || !(anchor instanceof HTMLAnchorElement)) return;
+      if (anchor.target === "_blank") return;
+
+      const rawHref = anchor.getAttribute("href");
+      if (
+        !rawHref ||
+        rawHref.startsWith("#") ||
+        rawHref.startsWith("mailto:") ||
+        rawHref.startsWith("tel:")
+      )
+        return;
+      const href = resolveLinkHref(rawHref);
+      if (href.startsWith("http") && !href.startsWith(window.location.origin)) return;
+      const path = href.startsWith("http") ? new URL(href).pathname : href.split("?")[0];
+      if (prefetched.has(path)) return;
+      prefetched.add(path);
+      try {
+        router.prefetch(href);
+      } catch {
+        /* prefetch non-critical */
+      }
+    }
+
     patchAll();
 
     const observer = new MutationObserver(patchAll);
@@ -69,10 +133,15 @@ export default function HtmlLinkInterceptor() {
     });
 
     document.addEventListener("click", onClick, true);
+    document.addEventListener("pointerover", onPointerOver, { passive: true });
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
 
     return () => {
       observer.disconnect();
+      if (hoverTimer) window.clearTimeout(hoverTimer);
       document.removeEventListener("click", onClick, true);
+      document.removeEventListener("pointerover", onPointerOver);
+      document.removeEventListener("touchstart", onTouchStart);
     };
   }, [router]);
 

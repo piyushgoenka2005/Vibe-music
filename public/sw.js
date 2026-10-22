@@ -17,8 +17,7 @@ function isPrivatePath(pathname) {
     pathname.startsWith("/cart") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
-    pathname.startsWith("/orders/") ||
-    pathname.startsWith("/product/")
+    pathname.startsWith("/orders/")
   );
 }
 

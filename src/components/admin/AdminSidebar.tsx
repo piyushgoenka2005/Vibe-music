@@ -35,6 +35,11 @@ import {
   GitCompare,
   Mail,
   ListTree,
+  Sliders,
+  Languages,
+  Images,
+  TrendingUp,
+  Receipt,
 } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
@@ -58,6 +63,12 @@ const NAV_ITEMS = [
     icon: ListTree,
     permission: "categories:read",
   },
+  {
+    href: ROUTES.adminAttributes,
+    label: "Attributes",
+    icon: Sliders,
+    permission: "categories:read",
+  },
   { href: ROUTES.adminBrands, label: "Brands", icon: Tag, permission: "categories:read" },
   { href: ROUTES.adminOrders, label: "Orders", icon: ShoppingCart, permission: "orders:read" },
   { href: ROUTES.adminRentals, label: "Rentals", icon: KeyRound, permission: "rentals:read" },
@@ -74,6 +85,12 @@ const NAV_ITEMS = [
     label: "Homepage",
     icon: LayoutTemplate,
     permission: "homepage:read",
+  },
+  {
+    href: ROUTES.adminMedia,
+    label: "Media Library",
+    icon: Images,
+    permission: "products:read",
   },
   { href: ROUTES.adminReviews, label: "Reviews", icon: Star, permission: "reviews:read" },
   {
@@ -95,6 +112,12 @@ const NAV_ITEMS = [
     permission: "analytics:read",
   },
   {
+    href: ROUTES.adminReports,
+    label: "Reports",
+    icon: TrendingUp,
+    permission: "analytics:read",
+  },
+  {
     href: ROUTES.adminNotifications,
     label: "Notifications",
     icon: Bell,
@@ -105,6 +128,13 @@ const NAV_ITEMS = [
   { href: ROUTES.adminRoles, label: "Roles", icon: Shield, permission: "admins:read" },
   { href: ROUTES.adminCms, label: "CMS", icon: FilePenLine, permission: "settings:read" },
   { href: ROUTES.adminShipping, label: "Shipping zones", icon: Truck, permission: "settings:read" },
+  { href: ROUTES.adminTax, label: "GST & Taxes", icon: Receipt, permission: "settings:read" },
+  {
+    href: ROUTES.adminLocalization,
+    label: "Localization",
+    icon: Languages,
+    permission: "settings:read",
+  },
   { href: ROUTES.adminSettings, label: "Settings", icon: Settings, permission: "settings:read" },
   { href: ROUTES.adminBlog, label: "Blog", icon: FileText, permission: "blog:read" },
 ] as const;

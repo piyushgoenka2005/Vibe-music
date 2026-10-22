@@ -5,13 +5,10 @@ import { useRouter } from "next/navigation";
 import { SPLASH_ACTIVE_CLASS } from "@/components/layout/PageLoadSplash";
 
 /** High-intent routes only — avoid prefetch storms during LCP. */
-const ROUTES_TO_PREFETCH =
-  process.env.NODE_ENV === "production"
-    ? ["/cart", "/search", "/account"]
-    : [];
+const ROUTES_TO_PREFETCH = ["/deals", "/category", "/brands", "/cart", "/search"];
 
-const PREFETCH_GAP_MS = 600;
-const IDLE_TIMEOUT_MS = 8000;
+const PREFETCH_GAP_MS = 400;
+const IDLE_TIMEOUT_MS = 2500;
 
 function shouldDeferPrefetch(): boolean {
   if (typeof window === "undefined") return true;
@@ -27,10 +24,7 @@ function shouldDeferPrefetch(): boolean {
   ).connection;
 
   if (connection?.saveData) return true;
-  if (
-    connection?.effectiveType &&
-    /(?:2g|slow-2g)/i.test(connection.effectiveType)
-  ) {
+  if (connection?.effectiveType && /(?:2g|slow-2g)/i.test(connection.effectiveType)) {
     return true;
   }
 

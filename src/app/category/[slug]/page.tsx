@@ -11,6 +11,16 @@ import { BRAND } from "@/lib/brand";
 export const dynamicParams = true;
 export const revalidate = 60;
 
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  try {
+    const { getCategoryCatalog } = await import("@/lib/server/categoryResolver");
+    const categories = await getCategoryCatalog();
+    return categories.map((c) => ({ slug: c.slug }));
+  } catch {
+    return [];
+  }
+}
+
 interface CategoryRouteProps {
   params: Promise<{ slug: string }>;
 }

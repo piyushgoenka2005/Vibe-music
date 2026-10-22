@@ -24,12 +24,9 @@ import {
   REQUEST_ID_HEADER,
 } from "@/lib/security/request-log";
 
-function withSecurityHeaders(response: NextResponse, pathname?: string): NextResponse {
+function withSecurityHeaders(response: NextResponse): NextResponse {
   for (const header of API_SECURITY_HEADERS) {
     response.headers.set(header.key, header.value);
-  }
-  if (!pathname?.startsWith("/api/media/thumb") && !response.headers.has("Cache-Control")) {
-    response.headers.set(API_PROXY_CACHE_HEADER.key, API_PROXY_CACHE_HEADER.value);
   }
   return response;
 }
@@ -42,6 +39,7 @@ function jsonApiError(
 ): NextResponse {
   const response = NextResponse.json({ error: message }, { status });
   response.headers.set(REQUEST_ID_HEADER, requestId);
+  response.headers.set(API_PROXY_CACHE_HEADER.key, API_PROXY_CACHE_HEADER.value);
   if (extraHeaders) {
     for (const [key, value] of Object.entries(extraHeaders)) {
       response.headers.set(key, value);
@@ -50,34 +48,27 @@ function jsonApiError(
   return withSecurityHeaders(response);
 }
 
-function isDevAuthReadFastPath(request: NextRequest, pathname: string): boolean {
+/** Internal fast paths that don't need edge rate limit / Redis overhead */
+function isApiFastPath(request: NextRequest, pathname: string): boolean {
+  if (request.method !== "GET") return false;
   return (
-    process.env.NODE_ENV !== "production" &&
-    process.env.DISABLE_RATE_LIMIT === "true" &&
-    request.method === "GET" &&
-    (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/admin/"))
+    pathname.startsWith("/api/media/thumb") ||
+    pathname === "/api/storefront/version" ||
+    pathname === "/api/vitals" ||
+    pathname === "/api/health" ||
+    pathname === "/api/healthz" ||
+    pathname === "/api/readyz" ||
+    (process.env.NODE_ENV !== "production" &&
+      process.env.DISABLE_RATE_LIMIT === "true" &&
+      (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/admin/")))
   );
-}
-
-/** Thumb route enforces its own limits; skip edge Redis round-trip on hot image reads. */
-function isMediaThumbReadFastPath(request: NextRequest, pathname: string): boolean {
-  return request.method === "GET" && pathname.startsWith("/api/media/thumb");
-}
-
-/** Polled by every open storefront tab; in-memory read, no DB — skip Redis + request logs. */
-function isStorefrontVersionFastPath(request: NextRequest, pathname: string): boolean {
-  return request.method === "GET" && pathname === "/api/storefront/version";
 }
 
 async function handleApiRequest(request: NextRequest): Promise<NextResponse | null> {
   const pathname = request.nextUrl.pathname;
 
-  if (
-    isDevAuthReadFastPath(request, pathname) ||
-    isMediaThumbReadFastPath(request, pathname) ||
-    isStorefrontVersionFastPath(request, pathname)
-  ) {
-    return withSecurityHeaders(NextResponse.next(), pathname);
+  if (isApiFastPath(request, pathname)) {
+    return withSecurityHeaders(NextResponse.next());
   }
 
   const requestId = request.headers.get(REQUEST_ID_HEADER) ?? createRequestId();
@@ -129,10 +120,7 @@ async function handleApiRequest(request: NextRequest): Promise<NextResponse | nu
   requestHeaders.set(REQUEST_START_HEADER, String(startedAt));
   requestHeaders.set("X-RateLimit-Checked", "1");
 
-  const response = withSecurityHeaders(
-    NextResponse.next({ request: { headers: requestHeaders } }),
-    pathname,
-  );
+  const response = withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
   response.headers.set(REQUEST_ID_HEADER, requestId);
   response.headers.set("X-RateLimit-Limit", String(options.limit));
   response.headers.set("X-RateLimit-Remaining", String(rateLimit.remaining));

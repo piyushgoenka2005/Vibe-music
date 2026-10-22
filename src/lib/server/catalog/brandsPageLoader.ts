@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { groupCatalogByBrand } from "@/lib/brands/groupCatalogByBrand";
 import { getCachedBrands, getCachedHomepageProducts } from "@/lib/server/catalogSnapshotCache";
@@ -9,9 +10,7 @@ import type { BrandDirectoryGroup, BrandWithCount } from "@/types/brandDirectory
 
 export type { BrandDirectoryGroup, BrandWithCount };
 
-export const loadBrandDirectory = cache(async function loadBrandDirectory(): Promise<
-  BrandDirectoryGroup[]
-> {
+async function loadBrandDirectoryUncached(): Promise<BrandDirectoryGroup[]> {
   const [brands, catalog] = await Promise.all([getCachedBrands(), getCachedHomepageProducts()]);
 
   return groupCatalogByBrand(catalog, brands).map((group) => {
@@ -26,18 +25,37 @@ export const loadBrandDirectory = cache(async function loadBrandDirectory(): Pro
       products: group.products.map(toProduct),
     };
   });
+}
+
+const getCachedBrandDirectory = unstable_cache(loadBrandDirectoryUncached, ["brand-directory-v2"], {
+  revalidate: 300,
+  tags: ["catalog", "brands"],
 });
+
+export const loadBrandDirectory = cache(async function loadBrandDirectory(): Promise<
+  BrandDirectoryGroup[]
+> {
+  return getCachedBrandDirectory();
+});
+
+const getCachedBrandsWithCounts = unstable_cache(
+  async function loadBrandsWithCountsUncached(): Promise<BrandWithCount[]> {
+    const directory = await getCachedBrandDirectory();
+    return directory.map(({ id, name, slug, productCount }) => ({
+      id,
+      name,
+      slug,
+      productCount,
+    }));
+  },
+  ["brands-with-counts-v2"],
+  { revalidate: 300, tags: ["catalog", "brands"] },
+);
 
 export const loadBrandsWithCounts = cache(async function loadBrandsWithCounts(): Promise<
   BrandWithCount[]
 > {
-  const directory = await loadBrandDirectory();
-  return directory.map(({ id, name, slug, productCount }) => ({
-    id,
-    name,
-    slug,
-    productCount,
-  }));
+  return getCachedBrandsWithCounts();
 });
 
 export async function resolveBrandBySlug(slug: string): Promise<BrandDirectoryGroup | null> {

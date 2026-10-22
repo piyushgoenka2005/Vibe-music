@@ -29,17 +29,12 @@ export async function distributedCheckRateLimit(
   const redisKey = `rl:${key}:${bucket}`;
 
   try {
-    const [incrResult, ttlResult] = await upstashPipeline([
+    const results = await upstashPipeline([
       ["INCR", redisKey],
-      ["TTL", redisKey],
+      ["EXPIRE", redisKey, String(windowSec), "NX"],
     ]);
 
-    const count = Number(incrResult?.result ?? 0);
-    const ttl = Number(ttlResult?.result ?? -1);
-
-    if (count === 1 || ttl < 0) {
-      await upstashPipeline([["EXPIRE", redisKey, String(windowSec)]]);
-    }
+    const count = Number(results[0]?.result ?? 0);
 
     const resetAt = (bucket + 1) * options.windowMs;
 

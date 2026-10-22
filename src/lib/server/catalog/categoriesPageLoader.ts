@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { getCategoryGridImage, hasCuratedCategoryImage } from "@/lib/categoryImages";
 import { isAmplifierProduct } from "@/lib/catalog/categoryProductsCore";
 import { ROUTES } from "@/lib/routes";
@@ -38,9 +39,7 @@ const FEATURED_INDEX_DEPARTMENTS: CategoryIndexItem[] = [
   },
 ];
 
-export const loadCategoriesForIndex = cache(async function loadCategoriesForIndex(): Promise<
-  CategoryIndexItem[]
-> {
+async function loadCategoriesForIndexUncached(): Promise<CategoryIndexItem[]> {
   const [categories, countBySlug, homepageProducts] = await Promise.all([
     getCategoryCatalog(),
     countActiveProductsByCategory(),
@@ -104,4 +103,16 @@ export const loadCategoriesForIndex = cache(async function loadCategoriesForInde
     if (orderA !== orderB) return orderA - orderB;
     return a.name.localeCompare(b.name);
   });
+}
+
+const getCachedCategoriesForIndex = unstable_cache(
+  loadCategoriesForIndexUncached,
+  ["categories-index-v2"],
+  { revalidate: 300, tags: ["catalog", "categories"] },
+);
+
+export const loadCategoriesForIndex = cache(async function loadCategoriesForIndex(): Promise<
+  CategoryIndexItem[]
+> {
+  return getCachedCategoriesForIndex();
 });

@@ -13,12 +13,17 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   // Dev: compress spawns many Gzip streams → MaxListenersExceededWarning on concurrent RSC requests.
   compress: isProd,
+  compiler: {
+    removeConsole: isProd ? { exclude: ["error", "warn"] } : false,
+  },
   experimental: {
     // CDN PNG masters often exceed the default 7s optimizer fetch window in local/dev.
     imgOptTimeoutInSeconds: 30,
     optimizeCss: true,
     optimizePackageImports: [
       "lucide-react",
+      "@radix-ui/react-accordion",
+      "@radix-ui/react-dialog",
       "@radix-ui/react-label",
       "@radix-ui/react-separator",
       "@radix-ui/react-slot",
@@ -51,7 +56,7 @@ const nextConfig: NextConfig = {
     // - every other local asset must be query-free
     localPatterns: [{ pathname: "/api/media/thumb" }, { pathname: "/**", search: "" }],
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 86400,
+    minimumCacheTTL: 31536000,
     deviceSizes: [640, 750, 828, 1080, 1200, 1280, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384, 480],
   },

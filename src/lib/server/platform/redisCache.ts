@@ -142,6 +142,12 @@ export async function getCached<T>(
   fetcher: () => Promise<T>,
   ttlSeconds: number,
 ): Promise<T> {
+  // L1 fast path: in-memory hit is 0ms, zero network hops
+  const l1Hit = memoryGet<T>(key);
+  if (l1Hit !== undefined) {
+    return l1Hit;
+  }
+
   const config = getUpstashConfig();
 
   if (config) {
@@ -163,11 +169,15 @@ async function getCachedRedis<T>(
   if (!redisCircuitBreaker.isHealthy()) {
     const stale = staleGet<T>(key);
     if (stale !== undefined) {
+      memorySet(key, stale, Math.min(ttlSeconds, 15));
       // Serve stale, but background-refresh if possible
       singleFlight(key, async () => {
         const tick = invalidationTick();
         const value = await fetcher();
-        if (mayCacheAfter(key, tick)) staleSet(key, value);
+        if (mayCacheAfter(key, tick)) {
+          staleSet(key, value);
+          memorySet(key, value, Math.min(ttlSeconds, 60));
+        }
         return value;
       }).catch(() => {}); // fire-and-forget
       return stale;
@@ -176,7 +186,10 @@ async function getCachedRedis<T>(
     return singleFlight(key, async () => {
       const tick = invalidationTick();
       const value = await fetcher();
-      if (mayCacheAfter(key, tick)) staleSet(key, value);
+      if (mayCacheAfter(key, tick)) {
+        staleSet(key, value);
+        memorySet(key, value, Math.min(ttlSeconds, 60));
+      }
       return value;
     });
   }
@@ -208,6 +221,7 @@ async function getCachedRedis<T>(
             value = raw as T;
           }
           staleSet(key, value); // Keep as stale backup
+          memorySet(key, value, Math.min(ttlSeconds, 60)); // L1 process cache
           redisCircuitBreaker.recordSuccess();
           return value;
         }
@@ -227,6 +241,7 @@ async function getCachedRedis<T>(
     // but do not let the pre-write snapshot poison any cache layer.
     if (!mayCacheAfter(key, tick)) return value;
     staleSet(key, value);
+    memorySet(key, value, Math.min(ttlSeconds, 60)); // L1 process cache
 
     // Write to Redis (fire-and-forget). Upstash REST treats the request
     // body as the raw value and applies no expiry by itself, so we issue the

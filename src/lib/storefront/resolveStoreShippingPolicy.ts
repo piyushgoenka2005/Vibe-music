@@ -17,6 +17,13 @@ const getCachedShippingPolicy = unstable_cache(
 );
 
 export async function resolveStoreShippingPolicy(): Promise<ShippingPolicyCopy> {
+  if (process.env.NODE_ENV === "development" && process.env.DEV_LAYOUT_DB !== "true") {
+    return buildShippingPolicyCopy({
+      freeShippingThreshold: 0,
+      standardShippingCharge: 0,
+    });
+  }
+
   try {
     return await getCachedShippingPolicy();
   } catch {

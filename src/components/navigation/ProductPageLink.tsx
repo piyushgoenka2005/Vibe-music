@@ -4,13 +4,19 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 import { hardNavigateToHref } from "@/lib/navigation/hardNavigate";
 
-type ProductPageLinkProps = ComponentProps<typeof Link>;
+interface ProductPageLinkProps extends ComponentProps<typeof Link> {
+  hardNavigate?: boolean;
+}
 
-/** Product links use full navigation so PDP always loads (avoids stale homepage on failed soft nav). */
+/**
+ * Fast client navigation for PDP with prefetch enabled.
+ * Soft navigates instantly without full document reload.
+ */
 export default function ProductPageLink({
   href,
   onClick,
-  prefetch = false,
+  prefetch,
+  hardNavigate = false,
   ...rest
 }: ProductPageLinkProps) {
   return (
@@ -20,7 +26,9 @@ export default function ProductPageLink({
       onClick={(event) => {
         onClick?.(event);
         if (event.defaultPrevented) return;
-        hardNavigateToHref(event, href);
+        if (hardNavigate) {
+          hardNavigateToHref(event, href);
+        }
       }}
       {...rest}
     />

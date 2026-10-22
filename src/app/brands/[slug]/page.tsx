@@ -9,6 +9,15 @@ import { withServerPageError } from "@/lib/serverPageError";
 export const dynamicParams = true;
 export const revalidate = 300;
 
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  try {
+    const brands = await loadBrandDirectory();
+    return brands.map((b) => ({ slug: b.slug }));
+  } catch {
+    return [];
+  }
+}
+
 interface BrandRouteProps {
   params: Promise<{ slug: string }>;
 }
@@ -29,7 +38,8 @@ export default async function BrandRoute({ params }: BrandRouteProps) {
   const { slug } = await params;
 
   return withServerPageError(async () => {
-    const [brands, brand] = await Promise.all([loadBrandDirectory(), resolveBrandBySlug(slug)]);
+    const brands = await loadBrandDirectory();
+    const brand = brands.find((b) => b.slug.toLowerCase() === slug.trim().toLowerCase());
     if (!brand) notFound();
     return <BrandsPage brands={brands} initialBrandSlug={brand.slug} />;
   }, "Brand");

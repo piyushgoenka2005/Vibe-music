@@ -1021,16 +1021,24 @@ export async function getBrands(): Promise<Brand[]> {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const { countActiveProductsByCategory } = await import("@/lib/server/prisma/catalogRepository");
-  const [categories, countBySlug] = await Promise.all([
-    getCachedCategories(),
-    countActiveProductsByCategory(),
-  ]);
+  const { unstable_cache } = await import("next/cache");
+  return unstable_cache(
+    async (): Promise<Category[]> => {
+      const { countActiveProductsByCategory } =
+        await import("@/lib/server/prisma/catalogRepository");
+      const [categories, countBySlug] = await Promise.all([
+        getCachedCategories(),
+        countActiveProductsByCategory(),
+      ]);
 
-  return categories.map((category) => ({
-    ...category,
-    productCount: countBySlug.get(category.slug) ?? 0,
-  }));
+      return categories.map((category) => ({
+        ...category,
+        productCount: countBySlug.get(category.slug) ?? 0,
+      }));
+    },
+    ["catalog-service-categories-v2"],
+    { revalidate: 300, tags: ["catalog", "categories"] },
+  )();
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | undefined> {
