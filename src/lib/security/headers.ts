@@ -64,7 +64,12 @@ export const SECURITY_HEADERS = [
   },
 ];
 
-export const API_SECURITY_HEADERS = [{ key: "X-Content-Type-Options", value: "nosniff" }] as const;
+export const API_SECURITY_HEADERS = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+] as const;
 
 /** Applied by the proxy only — routes may override Cache-Control with s-maxage. */
 export const API_PROXY_CACHE_HEADER = { key: "Cache-Control", value: "no-store" } as const;

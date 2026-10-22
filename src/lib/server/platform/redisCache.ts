@@ -302,10 +302,31 @@ export async function invalidateCacheByPrefix(prefix: string): Promise<void> {
 
   try {
     const pattern = `${buildRedisKey(prefix)}*`;
-    const results = await upstashPipeline([["KEYS", pattern]]);
-    const keys = results[0]?.result as string[] | undefined;
-    if (keys?.length) {
-      await upstashPipeline(keys.map((key) => ["DEL", key]));
+    // Non-blocking cursor-based SCAN loop to eliminate O(N) event-loop blocking in Redis
+    let cursor = "0";
+    const allKeys: string[] = [];
+    const maxIterations = 25; // safety ceiling against infinite iteration
+    let iterations = 0;
+
+    do {
+      const results = await upstashPipeline([["SCAN", cursor, "MATCH", pattern, "COUNT", "100"]]);
+      const scanResult = results[0]?.result as [string, string[]] | undefined;
+      if (!scanResult || !Array.isArray(scanResult)) break;
+      cursor = String(scanResult[0] ?? "0");
+      const matched = scanResult[1];
+      if (Array.isArray(matched) && matched.length > 0) {
+        allKeys.push(...matched);
+      }
+      iterations++;
+    } while (cursor !== "0" && iterations < maxIterations);
+
+    if (allKeys.length > 0) {
+      // Chunk deletions to prevent oversized pipeline payloads
+      const chunkSize = 100;
+      for (let i = 0; i < allKeys.length; i += chunkSize) {
+        const chunk = allKeys.slice(i, i + chunkSize);
+        await upstashPipeline(chunk.map((key) => ["DEL", key]));
+      }
     }
     redisCircuitBreaker.recordSuccess();
   } catch {
