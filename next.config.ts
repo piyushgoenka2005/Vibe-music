@@ -121,19 +121,6 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      ...(isProd
-        ? [
-            {
-              source: "/_next/static/:path*",
-              headers: [
-                {
-                  key: "Cache-Control",
-                  value: "public, max-age=31536000, immutable",
-                },
-              ],
-            },
-          ]
-        : []),
       ...["svg", "png", "jpg", "jpeg", "gif", "webp", "ico", "woff2"].map((ext) => ({
         source: `/:path*.${ext}`,
         headers: [

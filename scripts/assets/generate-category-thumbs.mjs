@@ -35,7 +35,15 @@ async function writeWebp(sharp, inputPath, outputPath, width = 160) {
 }
 
 async function main() {
-  const sharp = (await import("sharp")).default;
+  let sharp = null;
+  try {
+    const mod = await import("sharp");
+    sharp = mod.default || mod;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message.split("\n")[0] : String(err);
+    console.warn(`WARN: sharp unavailable on this CPU (${msg}) — skipping WebP thumbnail generation (storefront will use standard images).`);
+    process.exit(0);
+  }
   let ok = 0;
   let failed = 0;
 

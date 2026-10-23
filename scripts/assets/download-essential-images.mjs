@@ -29,21 +29,40 @@ function collectLocalPaths() {
     if (clean.length > 220) return;
     if (!IMAGE_PATH.test(clean)) return;
     if (clean.includes(".css") || clean.includes(".map")) return;
-    // CDN product masters live on cdn.vibemusic.in — not Sweetwater mirrors.
-    if (clean.includes("/products/")) return;
-    if (clean.includes("uuid") || clean.includes("...")) return;
+    // Product masters, banners, and brands are self-hosted/CDN, not Sweetwater mirrors
+    if (
+      clean.includes("/products/") ||
+      clean.includes("/banners/") ||
+      clean.startsWith("/brands/") ||
+      clean.includes("custom-banner") ||
+      clean.includes("uuid") ||
+      clean.includes("...")
+    ) {
+      return;
+    }
+    // Filter out test/dummy filenames
+    if (
+      clean.endsWith("/test.jpg") ||
+      clean.endsWith("/test.webp") ||
+      clean.endsWith("/copy.webp") ||
+      clean.endsWith("/a.webp") ||
+      clean === "/test.jpg" ||
+      clean === "/a.webp"
+    ) {
+      return;
+    }
     if (clean.endsWith(".svg")) return;
-    if (clean.endsWith("/test.jpg") || clean === "/test.jpg") return;
     paths.add(`/images${clean}`);
   }
 
   function scanFile(filePath) {
     const content = fs.readFileSync(filePath, "utf8");
-    for (const match of content.matchAll(/\/images(\/[^"'\s)]+)/g)) {
+    // Only match relative /images/... not preceded by protocol or domain
+    for (const match of content.matchAll(/(?:^|["'\s(`=])\/images(\/[^"'\s)<]+)/g)) {
       addPath(match[1]);
     }
     for (const match of content.matchAll(
-      /https:\/\/(?:media|assets|cdn)\.vibemusic\.in(\/[^"'\s)<]+)/g
+      /https:\/\/(?:media|assets)\.vibemusic\.in(\/[^"'\s)<]+)/g
     )) {
       addPath(match[1]);
     }
@@ -53,8 +72,15 @@ function collectLocalPaths() {
     if (!fs.existsSync(dir)) return;
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (/\.(ts|tsx|html|css)$/.test(entry.name)) scanFile(full);
+      if (entry.isDirectory()) {
+        if (entry.name === "__tests__" || entry.name === "node_modules") continue;
+        walk(full);
+      } else if (
+        /\.(ts|tsx|html|css)$/.test(entry.name) &&
+        !/\.(test|spec)\.[a-z]+$/.test(entry.name)
+      ) {
+        scanFile(full);
+      }
     }
   }
 

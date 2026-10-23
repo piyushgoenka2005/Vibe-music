@@ -1,9 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import {
-  E2E_ADMIN_EMAIL,
-  E2E_ADMIN_PASSWORD,
-} from "./e2e-credentials";
+import { E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD } from "./e2e-credentials";
+import { withAdminCredentialLock } from "./e2e-lock";
 
 export const E2E_ADMIN_STORAGE_PATH = "e2e/.auth/admin.json";
 
@@ -16,10 +14,7 @@ async function fillReactInput(locator: Locator, value: string): Promise<void> {
   if ((await locator.inputValue()) !== value) {
     await locator.evaluate((node, next) => {
       const input = node as HTMLInputElement;
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        "value"
-      )?.set;
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
       setter?.call(input, next);
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
@@ -34,10 +29,7 @@ async function fillReactInput(locator: Locator, value: string): Promise<void> {
  * Establish an authenticated admin browser session via Auth.js credentials
  * callback (CSRF + cookie) using page.request so cookies land in the browser context.
  */
-export async function createE2EAdminStorageState(
-  page: Page,
-  storagePath: string
-): Promise<void> {
+export async function createE2EAdminStorageState(page: Page, storagePath: string): Promise<void> {
   const csrfRes = await page.request.get("/api/auth/csrf");
   expect(csrfRes.ok(), `csrf endpoint failed: ${csrfRes.status()}`).toBeTruthy();
   const { csrfToken } = (await csrfRes.json()) as { csrfToken?: string };
@@ -58,14 +50,14 @@ export async function createE2EAdminStorageState(
   const signInBody = await signInRes.text();
   expect(
     signInRes.ok() || signInRes.status() === 302,
-    `credentials sign-in failed: ${signInRes.status()} ${signInBody}`
+    `credentials sign-in failed: ${signInRes.status()} ${signInBody}`,
   ).toBeTruthy();
 
   const sessionRes = await page.request.get("/api/auth/session");
   const session = (await sessionRes.json()) as { user?: { email?: string } };
   expect(
     session.user?.email,
-    `session missing after credentials login: ${JSON.stringify(session)} body=${signInBody}`
+    `session missing after credentials login: ${JSON.stringify(session)} body=${signInBody}`,
   ).toBeTruthy();
 
   await page.goto("/admin", { waitUntil: "domcontentloaded" });
@@ -79,6 +71,12 @@ export async function createE2EAdminStorageState(
 
 /** UI login path — used for explicit Admin Login E2E coverage. */
 export async function loginAsE2EAdmin(page: Page): Promise<void> {
+  // The seeded admin password is shared fixture state: a concurrent password-reset
+  // flow can change it mid-login, so serialize access to it.
+  await withAdminCredentialLock(() => loginAsE2EAdminUnlocked(page));
+}
+
+async function loginAsE2EAdminUnlocked(page: Page): Promise<void> {
   await page.goto("/admin/login", { waitUntil: "load" });
   await expect(page.getByRole("heading", { name: /Admin Login/i })).toBeVisible();
 

@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import sharp from "sharp";
 
 const WIDTHS = [320, 480, 800, 960, 1600];
 const CDN_DIR = path.join(process.cwd(), ".data", "cdn");
@@ -22,6 +21,16 @@ function walk(dir) {
 
 async function generateDerivatives() {
   console.log("=== OFFLINE CDN DERIVATIVE GENERATOR ===");
+  let sharp = null;
+  try {
+    const mod = await import("sharp");
+    sharp = mod.default || mod;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message.split("\n")[0] : String(err);
+    console.warn(`WARN: sharp unavailable on this CPU (${msg}) — skipping offline derivative generation.`);
+    process.exit(0);
+  }
+
   if (!fs.existsSync(CDN_DIR)) {
     console.error("Directory .data/cdn does not exist.");
     process.exit(1);

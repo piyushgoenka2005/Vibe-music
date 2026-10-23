@@ -6,8 +6,21 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import sharp from "sharp";
 import toIco from "to-ico";
+
+let sharpInstance = null;
+async function getSharp() {
+  if (sharpInstance) return sharpInstance;
+  try {
+    const mod = await import("sharp");
+    sharpInstance = mod.default || mod;
+    return sharpInstance;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message.split("\n")[0] : String(err);
+    console.warn(`WARN: sharp unavailable on this CPU (${msg})`);
+    return null;
+  }
+}
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const PUBLIC = path.join(ROOT, "public");
@@ -32,6 +45,10 @@ function resolveLogoSource() {
 }
 
 async function buildSquareLogo(size) {
+  const sharp = await getSharp();
+  if (!sharp) {
+    throw new Error("sharp unavailable");
+  }
   const source = resolveLogoSource();
 
   return sharp(source)
@@ -53,6 +70,15 @@ async function writeSquarePng(size, relativePath) {
 }
 
 async function main() {
+  const sharp = await getSharp();
+  if (!sharp) {
+    const existingFavicon = path.join(PUBLIC, "favicon.ico");
+    if (fs.existsSync(existingFavicon)) {
+      console.log("Favicon assets already exist — skipping regeneration (sharp unavailable on this CPU).");
+      process.exit(0);
+    }
+  }
+
   const source = resolveLogoSource();
   console.log(`Using logo source: ${path.relative(ROOT, source)}`);
 

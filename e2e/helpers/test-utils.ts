@@ -108,30 +108,49 @@ export async function searchAndAwaitSuggestions(page: Page, query: string): Prom
   }).toPass({ timeout: 30_000 });
 }
 
+let cartSeedSequence = 0;
+
 async function seedGuestCartViaStorage(page: Page, product: E2EProduct): Promise<void> {
-  await gotoStorefront(page, "/");
-  await page.evaluate((p) => {
-    const item = {
-      lineId: p.id,
-      productId: p.id,
-      slug: p.slug,
-      name: p.name,
-      brand: p.brand,
-      price: p.price,
-      gstRate: p.gstRate ?? 18,
-      imageColor: p.imageColor ?? "#cccccc",
-      image: p.image ?? "",
-      quantity: 1,
-    };
-    localStorage.setItem(
-      "vibe-cart-guest",
-      JSON.stringify({
-        state: { items: [item], couponCode: null, appliedCoupon: null },
-        version: 5,
-      }),
-    );
-  }, product);
-  await page.reload({ waitUntil: "domcontentloaded" });
+  // Write the guest cart before any app script runs. A plain evaluate() after the
+  // page has loaded races the cart store hydration write, which intermittently
+  // dropped the seed under parallel load (observed in WebKit).
+  const marker = `e2e-cart-seed-${(cartSeedSequence += 1)}`;
+  const payload = JSON.stringify({
+    state: {
+      items: [
+        {
+          lineId: product.id,
+          productId: product.id,
+          slug: product.slug,
+          name: product.name,
+          brand: product.brand,
+          price: product.price,
+          gstRate: product.gstRate ?? 18,
+          imageColor: product.imageColor ?? "#cccccc",
+          image: product.image ?? "",
+          quantity: 1,
+        },
+      ],
+      couponCode: null,
+      appliedCoupon: null,
+    },
+    version: 5,
+  });
+
+  await page.addInitScript(
+    ({ markerKey, cart }) => {
+      try {
+        if (sessionStorage.getItem(markerKey) === "1") return;
+        localStorage.setItem("vibe-cart-guest", cart);
+        sessionStorage.setItem(markerKey, "1");
+      } catch {
+        // Storage can be unavailable in locked-down contexts; the caller asserts.
+      }
+    },
+    { markerKey: marker, cart: payload },
+  );
+
+  await gotoStorefront(page, "/cart");
 }
 
 async function trySeedGuestCartViaUi(page: Page, product: E2EProduct): Promise<boolean> {

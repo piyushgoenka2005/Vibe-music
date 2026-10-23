@@ -65,7 +65,8 @@ test.describe("edge cases + resilience", () => {
     await page.goto(`/product/${product.slug}`, { waitUntil: "domcontentloaded" });
     await seedGuestCart(page, product);
     await page.goto("/cart", { waitUntil: "domcontentloaded" });
-    await page.goBack();
+    // history navigation can wait on unrelated asset loads; the assertion only needs the DOM.
+    await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page.locator("body")).toBeVisible();
   });
 

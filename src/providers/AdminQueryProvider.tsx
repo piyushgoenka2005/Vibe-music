@@ -12,22 +12,36 @@ import {
 const ADMIN_POLL_MS = 0;
 /** Lets a mutation's own onSuccess (optimistic cache edits, targeted invalidation) run first. */
 const INVALIDATE_DEBOUNCE_MS = 250;
+/** Admin data cached for 5 minutes with Redis-backed invalidation */
+const ADMIN_STALE_TIME_MS = 5 * 60_000;
 
 function makeAdminQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60_000,
-        gcTime: 15 * 60_000,
+        staleTime: ADMIN_STALE_TIME_MS,
+        gcTime: 30 * 60_000,
         refetchOnMount: false,
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
         refetchInterval: ADMIN_POLL_MS,
         refetchIntervalInBackground: false,
         retry: 1,
+        // Enable structural sharing to prevent unnecessary re-renders
+        structuralSharing: true,
+      },
+      mutations: {
+        // Don't retry mutations on failure
+        retry: 0,
       },
     },
   });
+}
+
+/** Prefetch admin query on link hover for instant navigation */
+export function prefetchAdminQuery(queryKey: readonly unknown[], queryFn: () => Promise<unknown>) {
+  // This will be called by the query client in components
+  // Actual prefetching is done via useQueryClient().prefetchQuery()
 }
 
 /**

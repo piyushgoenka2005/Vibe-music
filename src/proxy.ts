@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getProtectedLoginRedirectUrl, isProtectedRoute } from "@/lib/auth/protected-routes";
-import { hasAuthSessionCookie } from "@/lib/auth/session-cookie";
+import { hasAuthSessionCookie, hasAdminSessionCookie } from "@/lib/auth/session-cookie";
 import { resolveLegacyPath } from "@/lib/routes";
 import { resolveAdLandingRedirect } from "@/lib/seo/adLanding";
 import { edgeCheckRateLimit } from "@/lib/security/edge-rate-limit";
@@ -51,18 +51,38 @@ function jsonApiError(
 /** Internal fast paths that don't need edge rate limit / Redis overhead */
 function isApiFastPath(request: NextRequest, pathname: string): boolean {
   if (request.method !== "GET") return false;
-  return (
-    pathname.startsWith("/api/media/thumb") ||
-    pathname === "/api/storefront/version" ||
-    pathname === "/api/vitals" ||
-    pathname === "/api/health" ||
-    pathname === "/api/healthz" ||
-    pathname === "/api/readyz" ||
-    pathname === "/api/auth/session" ||
-    (process.env.NODE_ENV !== "production" &&
-      process.env.DISABLE_RATE_LIMIT === "true" &&
-      (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/admin/")))
-  );
+
+  // Always fast-path these regardless of auth
+  const alwaysFastPaths = [
+    "/api/media/thumb",
+    "/api/storefront/version",
+    "/api/vitals",
+    "/api/health",
+    "/api/healthz",
+    "/api/readyz",
+    "/api/auth/session",
+  ];
+  if (alwaysFastPaths.some((p) => pathname.startsWith(p))) return true;
+
+  // Admin API routes: skip rate limit if user has valid admin session
+  // Admin routes are already protected by session auth + requireAdmin() guards
+  if (pathname.startsWith("/api/admin/")) {
+    const secure = request.nextUrl.protocol === "https:";
+    if (hasAdminSessionCookie(request.cookies, secure)) {
+      return true;
+    }
+  }
+
+  // Non-production: skip rate limit for auth/admin routes when explicitly disabled
+  if (
+    process.env.NODE_ENV !== "production" &&
+    process.env.DISABLE_RATE_LIMIT === "true" &&
+    (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/admin/"))
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 async function handleApiRequest(request: NextRequest): Promise<NextResponse | null> {

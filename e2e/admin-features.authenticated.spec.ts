@@ -14,6 +14,7 @@ import {
   generateE2EBulkImportSku,
   runBulkImportWizardConfirm,
 } from "./helpers/bulk-import";
+import { withAdminCredentialLock } from "./helpers/e2e-lock";
 
 const adminReady = isE2EAdminReady();
 
@@ -26,59 +27,63 @@ test.describe("Admin password reset full flow", () => {
   test.skip(!adminReady, "DATABASE_URL / seeded E2E admin required");
 
   test("request reset, set new password, login, restore password", async ({ page, request }) => {
-    test.setTimeout(120_000);
-    test.skip(!(await isE2EServerMode(request)), "Server must run with E2E_TEST_MODE=true");
+    test.setTimeout(180_000);
+    // The reset flow mutates the shared seeded admin password, so hold the
+    // cross-worker lock for the whole flow (released before the test returns).
+    await withAdminCredentialLock(async () => {
+      test.skip(!(await isE2EServerMode(request)), "Server must run with E2E_TEST_MODE=true");
 
-    // /reset-password is a guest-only route; drop the admin session so the
-    // reset form renders instead of redirecting to /account.
-    await page.context().clearCookies();
+      // /reset-password is a guest-only route; drop the admin session so the
+      // reset form renders instead of redirecting to /account.
+      await page.context().clearCookies();
 
-    await request.delete("/api/e2e/password-reset");
+      await request.delete("/api/e2e/password-reset");
 
-    const forgotRes = await request.post("/api/auth/forgot-password", {
-      headers: e2eMutationHeaders(),
-      data: { email: E2E_ADMIN_EMAIL },
+      const forgotRes = await request.post("/api/auth/forgot-password", {
+        headers: e2eMutationHeaders(),
+        data: { email: E2E_ADMIN_EMAIL },
+      });
+      expect(forgotRes.ok()).toBeTruthy();
+
+      const captureRes = await request.get("/api/e2e/password-reset");
+      expect(captureRes.ok()).toBeTruthy();
+      const capture = (await captureRes.json()) as {
+        resetUrl: string;
+        token: string;
+      };
+      expect(capture.resetUrl).toContain("reset-password");
+      expect(capture.token.length).toBeGreaterThan(10);
+
+      await page.goto(capture.resetUrl, { waitUntil: "domcontentloaded" });
+      await page.locator('input[name="password"]').fill(RESET_PASSWORD);
+      await page.locator('input[name="confirmPassword"]').fill(RESET_PASSWORD);
+      await page.getByRole("button", { name: /Update password/i }).click();
+      await expect(page).toHaveURL(/\/login/, { timeout: 20_000 });
+
+      await page.goto("/admin/login");
+      await page.locator('input[name="email"]').fill(E2E_ADMIN_EMAIL);
+      await page.locator('input[name="password"]').fill(RESET_PASSWORD);
+      await page.getByRole("button", { name: /Admin Login/i }).click();
+      await expect(page).toHaveURL(/\/admin(?:\/)?$/, { timeout: 30_000 });
+
+      await request.delete("/api/e2e/password-reset");
+      const restoreForgot = await request.post("/api/auth/forgot-password", {
+        headers: e2eMutationHeaders(),
+        data: { email: E2E_ADMIN_EMAIL },
+      });
+      expect(restoreForgot.ok()).toBeTruthy();
+      const restore = await (await request.get("/api/e2e/password-reset")).json();
+      // Re-entering the guest-only reset page after the re-login above.
+      await page.context().clearCookies();
+      await page.goto(restore.resetUrl, { waitUntil: "domcontentloaded" });
+      await page.locator('input[name="password"]').fill(ORIGINAL_PASSWORD);
+      await page.locator('input[name="confirmPassword"]').fill(ORIGINAL_PASSWORD);
+      await page.getByRole("button", { name: /Update password/i }).click();
+      await expect(page).toHaveURL(/\/login/, { timeout: 20_000 });
+
+      await loginAsE2EAdmin(page);
+      await expect(page).toHaveURL(/\/admin(?:\/)?$/);
     });
-    expect(forgotRes.ok()).toBeTruthy();
-
-    const captureRes = await request.get("/api/e2e/password-reset");
-    expect(captureRes.ok()).toBeTruthy();
-    const capture = (await captureRes.json()) as {
-      resetUrl: string;
-      token: string;
-    };
-    expect(capture.resetUrl).toContain("reset-password");
-    expect(capture.token.length).toBeGreaterThan(10);
-
-    await page.goto(capture.resetUrl, { waitUntil: "domcontentloaded" });
-    await page.locator('input[name="password"]').fill(RESET_PASSWORD);
-    await page.locator('input[name="confirmPassword"]').fill(RESET_PASSWORD);
-    await page.getByRole("button", { name: /Update password/i }).click();
-    await expect(page).toHaveURL(/\/login/, { timeout: 20_000 });
-
-    await page.goto("/admin/login");
-    await page.locator('input[name="email"]').fill(E2E_ADMIN_EMAIL);
-    await page.locator('input[name="password"]').fill(RESET_PASSWORD);
-    await page.getByRole("button", { name: /Admin Login/i }).click();
-    await expect(page).toHaveURL(/\/admin(?:\/)?$/, { timeout: 30_000 });
-
-    await request.delete("/api/e2e/password-reset");
-    const restoreForgot = await request.post("/api/auth/forgot-password", {
-      headers: e2eMutationHeaders(),
-      data: { email: E2E_ADMIN_EMAIL },
-    });
-    expect(restoreForgot.ok()).toBeTruthy();
-    const restore = await (await request.get("/api/e2e/password-reset")).json();
-    // Re-entering the guest-only reset page after the re-login above.
-    await page.context().clearCookies();
-    await page.goto(restore.resetUrl, { waitUntil: "domcontentloaded" });
-    await page.locator('input[name="password"]').fill(ORIGINAL_PASSWORD);
-    await page.locator('input[name="confirmPassword"]').fill(ORIGINAL_PASSWORD);
-    await page.getByRole("button", { name: /Update password/i }).click();
-    await expect(page).toHaveURL(/\/login/, { timeout: 20_000 });
-
-    await loginAsE2EAdmin(page);
-    await expect(page).toHaveURL(/\/admin(?:\/)?$/);
   });
 
   test("rejects reused reset token", async ({ page, request }) => {

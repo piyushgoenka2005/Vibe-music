@@ -115,6 +115,39 @@ export interface AdminProduct extends Product {
   similarProductIds?: string[];
 }
 
+/** Lean admin product for list views — excludes heavy JSON blobs (description, specifications, detail, variants, videos, etc.) */
+export interface AdminProductLean {
+  id: string;
+  slug: string;
+  name: string;
+  brand: string;
+  category: string;
+  subcategory: string;
+  price: number;
+  originalPrice: number;
+  discountPercentage: number;
+  rating: number;
+  reviewCount: number;
+  stock: number;
+  reservedStock: number | null;
+  lowStockThreshold: number | null;
+  sku: string;
+  status: string;
+  featured: boolean;
+  trending: boolean;
+  newArrival: boolean;
+  image: string;
+  imageColor: string;
+  brandSlug: string;
+  categorySlug: string;
+  availability: string;
+  condition: string;
+  gstRate: number | null;
+  images: unknown;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AdminCategory {
   id: string;
   name: string;

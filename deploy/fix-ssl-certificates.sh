@@ -75,10 +75,43 @@ disable_rogue_nginx_sites() {
   bash deploy/production.sh nginx
 }
 
+ensure_vps_dns() {
+  local dns_ok=0
+  if command -v getent >/dev/null 2>&1; then
+    if getent ahosts acme-v02.api.letsencrypt.org >/dev/null 2>&1 || getent ahosts google.com >/dev/null 2>&1; then
+      dns_ok=1
+    fi
+  fi
+  if [[ "$dns_ok" -eq 0 ]]; then
+    warn "VPS DNS resolution is failing — adding 1.1.1.1 and 8.8.8.8 to /etc/resolv.conf..."
+    if [[ -w /etc/resolv.conf ]]; then
+      chattr -i /etc/resolv.conf 2>/dev/null || true
+      if ! grep -q "1.1.1.1" /etc/resolv.conf 2>/dev/null; then
+        echo -e "nameserver 1.1.1.1\nnameserver 8.8.8.8\nnameserver 1.0.0.1" > /tmp/vibe-resolv.conf
+        cat /etc/resolv.conf >> /tmp/vibe-resolv.conf 2>/dev/null || true
+        cat /tmp/vibe-resolv.conf > /etc/resolv.conf 2>/dev/null || true
+        rm -f /tmp/vibe-resolv.conf
+      fi
+      if command -v systemctl >/dev/null 2>&1; then
+        systemctl restart systemd-resolved 2>/dev/null || true
+      fi
+    fi
+  fi
+}
+
 renew_or_expand_certs() {
   if ! command -v certbot >/dev/null 2>&1; then
     warn "certbot not installed — skipping renewal"
     return 0
+  fi
+
+  ensure_vps_dns
+
+  local cert_has_time=0
+  if [[ -f "${CERT_DIR}/fullchain.pem" ]]; then
+    if openssl x509 -checkend 86400 -noout -in "${CERT_DIR}/fullchain.pem" 2>/dev/null; then
+      cert_has_time=1
+    fi
   fi
 
   log "Ensuring certbot covers vibemusic.in + www + mail"
@@ -87,7 +120,14 @@ renew_or_expand_certs() {
     --expand --non-interactive --agree-tos --keep-until-expiring \
     || certbot certonly --nginx \
     -d vibemusic.in -d www.vibemusic.in -d mail.vibemusic.in \
-    --expand --non-interactive --agree-tos
+    --expand --non-interactive --agree-tos \
+    || {
+      if [[ "$cert_has_time" -eq 1 ]]; then
+        warn "certbot failed to reach Let's Encrypt API, but local certificate is valid until $(openssl x509 -in "${CERT_DIR}/fullchain.pem" -noout -enddate 2>/dev/null | cut -d= -f2-) — proceeding with existing certificate"
+      else
+        die "certbot failed and no valid certificate exists"
+      fi
+    }
 
   if command -v certbot >/dev/null 2>&1; then
     log "CDN subdomain certificate (cdn.vibemusic.in)"

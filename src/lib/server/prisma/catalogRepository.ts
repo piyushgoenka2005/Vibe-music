@@ -25,7 +25,7 @@ function sortByName(products: CatalogProduct[]): CatalogProduct[] {
 }
 
 /** Lean list columns — skips description/specifications/detail JSON blobs. */
-const LEAN_PRODUCT_SELECT = {
+export const LEAN_PRODUCT_SELECT = {
   id: true,
   slug: true,
   name: true,
@@ -57,7 +57,7 @@ const LEAN_PRODUCT_SELECT = {
   updatedAt: true,
 } as const;
 
-type LeanProductRow = {
+export type LeanProductRow = {
   id: string;
   slug: string;
   name: string;
@@ -89,7 +89,7 @@ type LeanProductRow = {
   updatedAt: string;
 };
 
-function mapLeanProductRow(row: LeanProductRow): CatalogProduct {
+export function mapLeanProductRow(row: LeanProductRow): CatalogProduct {
   return prismaToProduct({
     ...row,
     description: "",
@@ -357,6 +357,7 @@ export async function fetchProductsPage(options: {
   includeInactive?: boolean;
   status?: ProductStatus;
   categorySlug?: string;
+  lean?: boolean;
 }): Promise<{
   products: CatalogProduct[];
   hasMore: boolean;
@@ -364,6 +365,7 @@ export async function fetchProductsPage(options: {
 }> {
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
   const includeInactive = options.includeInactive ?? false;
+  const useLean = options.lean ?? false;
 
   const fromLocal = async () => {
     let products = await loadLocalProducts(includeInactive);
@@ -410,28 +412,46 @@ export async function fetchProductsPage(options: {
       where.status = "active";
     }
 
-    let products = (await prisma.product.findMany({ where })).map(prismaToProduct);
-    products.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() ||
-        b.id.localeCompare(a.id),
-    );
+    const cursor = options.cursor;
+    let cursorWhere: Record<string, unknown> | undefined;
 
-    if (options.cursor) {
-      const index = products.findIndex((product) => product.id === options.cursor);
-      if (index >= 0) {
-        products = products.slice(index + 1);
+    if (cursor) {
+      const cursorRow = await prisma.product.findUnique({
+        where: { id: cursor },
+        select: { id: true, createdAt: true },
+      });
+      if (cursorRow) {
+        cursorWhere = {
+          OR: [
+            { createdAt: { lt: cursorRow.createdAt } },
+            { createdAt: cursorRow.createdAt, id: { lt: cursorRow.id } },
+          ],
+        };
       }
     }
 
-    const page = products.slice(0, limit + 1);
-    const hasMore = page.length > limit;
-    const items = page.slice(0, limit);
+    const select = useLean ? LEAN_PRODUCT_SELECT : undefined;
+
+    const [rows, total] = await Promise.all([
+      prisma.product.findMany({
+        where: cursorWhere ? { ...where, AND: [cursorWhere] } : where,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: limit + 1,
+        select,
+      }),
+      prisma.product.count({ where }),
+    ]);
+
+    const products = rows
+      .slice(0, limit)
+      .map((row) => (useLean ? mapLeanProductRow(row as LeanProductRow) : prismaToProduct(row)));
+    const hasMore = rows.length > limit;
 
     return {
-      products: items,
+      products,
+      total,
       hasMore,
-      nextCursor: hasMore && items.length > 0 ? items[items.length - 1]!.id : undefined,
+      nextCursor: hasMore && products.length > 0 ? products[products.length - 1]!.id : undefined,
     };
   }, fromLocal);
 }

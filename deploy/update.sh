@@ -50,12 +50,50 @@ die() {
   exit 1
 }
 
+ensure_vps_dns() {
+  local dns_ok=0
+  if command -v getent >/dev/null 2>&1; then
+    if getent ahosts acme-v02.api.letsencrypt.org >/dev/null 2>&1 || getent ahosts google.com >/dev/null 2>&1; then
+      dns_ok=1
+    fi
+  elif command -v host >/dev/null 2>&1; then
+    if host -W 2 acme-v02.api.letsencrypt.org >/dev/null 2>&1 || host -W 2 google.com >/dev/null 2>&1; then
+      dns_ok=1
+    fi
+  else
+    if curl -sI --connect-timeout 3 https://acme-v02.api.letsencrypt.org >/dev/null 2>&1; then
+      dns_ok=1
+    fi
+  fi
+
+  if [[ "$dns_ok" -eq 0 ]]; then
+    warn "VPS DNS resolution is failing — adding 1.1.1.1 and 8.8.8.8 to /etc/resolv.conf..."
+    if [[ -w /etc/resolv.conf ]]; then
+      chattr -i /etc/resolv.conf 2>/dev/null || true
+      if ! grep -q "1.1.1.1" /etc/resolv.conf 2>/dev/null; then
+        echo -e "nameserver 1.1.1.1\nnameserver 8.8.8.8\nnameserver 1.0.0.1" > /tmp/vibe-resolv.conf
+        cat /etc/resolv.conf >> /tmp/vibe-resolv.conf 2>/dev/null || true
+        cat /tmp/vibe-resolv.conf > /etc/resolv.conf 2>/dev/null || true
+        rm -f /tmp/vibe-resolv.conf
+      fi
+      if command -v systemctl >/dev/null 2>&1; then
+        systemctl restart systemd-resolved 2>/dev/null || true
+      fi
+      sleep 1
+    fi
+  fi
+}
+
 run_preflight() {
   local FAILS=0
   pass() { echo "  ok $1"; }
   fail() { echo "  FAIL $1"; FAILS=$((FAILS + 1)); }
   warn() { echo "  warn $1"; }
   echo "==> Deploy preflight"
+  ensure_vps_dns
+  if [[ -f /root/package-lock.json ]] && [[ "$APP_DIR" != "/root" ]]; then
+    rm -f /root/package-lock.json 2>/dev/null || true
+  fi
   for cmd in node npm git curl; do
     command -v "$cmd" >/dev/null 2>&1 && pass "$cmd" || fail "$cmd missing"
   done
@@ -276,9 +314,8 @@ build_application() {
   rm -rf "$PREVIOUS_BUILD_DIR"
   if [[ -f .next/BUILD_ID ]]; then
     mv .next "$PREVIOUS_BUILD_DIR"
-  else
-    rm -rf .next
   fi
+  rm -rf .next
 
   log "Production build"
   export NODE_ENV=production
@@ -686,10 +723,17 @@ if command -v nginx >/dev/null 2>&1; then
   bash deploy/production.sh nginx
   if [[ "${SYNC_SSL:-1}" == "1" ]]; then
     log "SSL certificate sync (SYNC_SSL=${SYNC_SSL:-1})"
+    ensure_vps_dns
     bash deploy/production.sh ssl || {
       if [[ "${AUTO_FIX_SSL:-1}" == "1" ]]; then
         warn "SSL sync failed — running deploy/fix-ssl-certificates.sh"
-        bash deploy/fix-ssl-certificates.sh || die "SSL repair failed — see docs/ops/cloudonfire-duplicate-ip-ticket.txt"
+        bash deploy/fix-ssl-certificates.sh || {
+          if verify_local_tls_cert; then
+            warn "Certbot network call failed, but existing certificate is valid — continuing"
+          else
+            die "SSL repair failed — see docs/ops/cloudonfire-duplicate-ip-ticket.txt"
+          fi
+        }
       else
         die "SSL sync failed — run: bash deploy/fix-ssl-certificates.sh"
       fi

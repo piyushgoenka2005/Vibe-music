@@ -158,13 +158,27 @@ sync_ssl() {
     [[ -f "$cert" ]] || return 1
     openssl x509 -in "$cert" -noout -text 2>/dev/null | grep -q "DNS:vibemusic.in"
   }
+  local cert_has_time=0
+  if verify_local_cert_files; then
+    if openssl x509 -checkend 86400 -noout -in "/etc/letsencrypt/live/vibemusic.in/fullchain.pem" 2>/dev/null; then
+      cert_has_time=1
+    fi
+  fi
   if command -v certbot >/dev/null 2>&1; then
     certbot certonly --nginx \
       -d vibemusic.in -d www.vibemusic.in -d mail.vibemusic.in \
       --expand --non-interactive --agree-tos --keep-until-expiring \
       || certbot certonly --nginx \
       -d vibemusic.in -d www.vibemusic.in -d mail.vibemusic.in \
-      --expand --non-interactive --agree-tos
+      --expand --non-interactive --agree-tos \
+      || {
+        if [[ "$cert_has_time" -eq 1 ]]; then
+          echo "WARN: certbot renew/expand failed, but existing certificate is valid until $(openssl x509 -in /etc/letsencrypt/live/vibemusic.in/fullchain.pem -noout -enddate 2>/dev/null | cut -d= -f2-) — proceeding with existing certificate" >&2
+        else
+          echo "ERROR: certbot failed and no valid certificate exists" >&2
+          return 1
+        fi
+      }
     certbot certonly --nginx -d cdn.vibemusic.in \
       --non-interactive --agree-tos --keep-until-expiring \
       || certbot certonly --nginx -d cdn.vibemusic.in --non-interactive --agree-tos \
