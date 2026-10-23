@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -17,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { getAuthErrorMessage } from "@/lib/auth/auth-errors";
+import { sanitizeAuthRedirect } from "@/lib/auth/safeRedirect";
 import { ROUTES } from "@/lib/routes";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/authStore";
@@ -27,6 +29,7 @@ type AdminLoginResponse =
   { ok: true; admin: AdminSession } | { ok?: false; error?: string; code?: string };
 
 export default function AdminLoginForm() {
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const setSessionUser = useAuthStore((s) => s.setSessionUser);
 
@@ -80,7 +83,12 @@ export default function AdminLoginForm() {
 
       // Hard navigate so the next document request carries the new cookie
       // and the server layout bootstraps immediately.
-      window.location.assign(ROUTES.admin);
+      const redirectParam = searchParams?.get("redirect");
+      const safeTarget = redirectParam
+        ? sanitizeAuthRedirect(redirectParam, ROUTES.admin)
+        : ROUTES.admin;
+      const destination = safeTarget.startsWith("/admin") ? safeTarget : ROUTES.admin;
+      window.location.assign(destination);
     } catch (err) {
       setError(getAuthErrorMessage(err, "Admin sign in failed."));
       setIsLoading(false);

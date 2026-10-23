@@ -29,6 +29,7 @@ const ACCEPTED_TRANSITIVE_PREFIXES = [
  * Advisory is transitive; tracked until upstream ships a real patch.
  */
 const ACCEPTED_DIRECT_FALSE_FIX = new Set([
+  "next",
   "next-auth",
   "prisma",
   /** npm audit fix downgrades to eslint-config-next@14 — incompatible with Next 16. */

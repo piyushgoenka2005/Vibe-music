@@ -288,3 +288,268 @@
   font-size: 0.775rem;
   color: var(--admin-text-secondary);
 }
+
+/* Clickable Stat Cards */
+.admin-stat-card--clickable {
+  cursor: pointer;
+  text-decoration: none;
+}
+.admin-stat-card--clickable:hover .admin-stat-card__value {
+  color: var(--admin-accent);
+}
+
+/* Spin Animation */
+@keyframes adminSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.admin-spin {
+  animation: adminSpin 0.8s linear infinite;
+}
+
+/* Dashboard Action Header */
+.admin-dashboard-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-dashboard-welcome h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.02em;
+}
+
+.admin-dashboard-welcome p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--admin-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-dashboard-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+/* Action button variations */
+.admin-btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid var(--admin-border);
+  background: hsla(var(--admin-hue), 15%, 18%, 0.7);
+  color: var(--admin-text-primary);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-btn-action:hover {
+  background: hsla(var(--admin-hue), 25%, 25%, 0.9);
+  border-color: var(--admin-accent);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.admin-btn-action--primary {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--admin-hue), 80%, 55%),
+    hsl(var(--admin-hue), 80%, 45%)
+  );
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px var(--admin-accent-glow);
+}
+
+.admin-btn-action--primary:hover {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--admin-hue), 85%, 60%),
+    hsl(var(--admin-hue), 80%, 50%)
+  );
+  box-shadow: 0 6px 20px var(--admin-accent-glow);
+}
+
+/* Rank Pills */
+.admin-rank-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: hsla(var(--admin-hue), 20%, 25%, 0.5);
+  color: var(--admin-text-secondary);
+}
+
+.admin-rank-pill--1 {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000000;
+}
+.admin-rank-pill--2 {
+  background: linear-gradient(135deg, #94a3b8, #64748b);
+  color: #ffffff;
+}
+.admin-rank-pill--3 {
+  background: linear-gradient(135deg, #b45309, #78350f);
+  color: #ffffff;
+}
+
+/* Customer Avatar Circle */
+.admin-avatar-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--admin-hue), 40%, 30%),
+    hsl(var(--admin-hue), 40%, 20%)
+  );
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Panel Header Controls & Footer Links */
+.admin-panel-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-tab-pill {
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.775rem;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-tab-pill:hover {
+  color: var(--admin-text-primary);
+  border-color: var(--admin-accent);
+}
+
+.admin-tab-pill--active {
+  background: var(--admin-accent);
+  color: #ffffff;
+  border-color: var(--admin-accent);
+}
+
+.admin-panel-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin-panel-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--admin-accent);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.admin-panel-footer a:hover {
+  color: hsl(var(--admin-hue), 90%, 75%);
+  transform: translateX(3px);
+}
+
+/* System Infrastructure Health Grid */
+.admin-infra-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.admin-infra-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem 1.15rem;
+  border-radius: var(--admin-radius);
+  background: hsla(var(--admin-hue), 15%, 15%, 0.6);
+  border: 1px solid var(--admin-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.admin-infra-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: hsla(var(--admin-hue), 25%, 22%, 0.5);
+  color: var(--admin-accent);
+}
+
+.admin-infra-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.admin-infra-card__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.admin-infra-card__status {
+  font-size: 0.75rem;
+  color: #4ade80;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.admin-infra-card__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+}

@@ -28,14 +28,19 @@ function memoryGet<T>(key: string): T | undefined {
     memoryStore.delete(key);
     return undefined;
   }
+  // Refresh LRU order on cache hit
+  memoryStore.delete(key);
+  memoryStore.set(key, entry);
   return entry.value as T;
 }
 
 function memorySet<T>(key: string, value: T, ttlSeconds: number): void {
-  // Evict oldest entries when at capacity
-  if (memoryStore.size >= MEMORY_MAX_ENTRIES) {
+  // If key already exists, delete first so re-insertion refreshes LRU position
+  if (memoryStore.has(key)) {
+    memoryStore.delete(key);
+  } else if (memoryStore.size >= MEMORY_MAX_ENTRIES) {
     const oldest = memoryStore.keys().next().value;
-    if (oldest) memoryStore.delete(oldest);
+    if (oldest !== undefined) memoryStore.delete(oldest);
   }
   memoryStore.set(key, {
     value,
@@ -52,14 +57,22 @@ const STALE_TTL_SECONDS = 300; // 5 minutes
 function staleGet<T>(key: string): T | undefined {
   const entry = staleStore.get(key);
   if (!entry) return undefined;
-  if (Date.now() > entry.expiresAt) return undefined;
+  if (Date.now() > entry.expiresAt) {
+    staleStore.delete(key);
+    return undefined;
+  }
+  // Refresh LRU order on hit
+  staleStore.delete(key);
+  staleStore.set(key, entry);
   return entry.value as T;
 }
 
 function staleSet<T>(key: string, value: T): void {
-  if (staleStore.size >= STALE_MAX_ENTRIES) {
+  if (staleStore.has(key)) {
+    staleStore.delete(key);
+  } else if (staleStore.size >= STALE_MAX_ENTRIES) {
     const oldest = staleStore.keys().next().value;
-    if (oldest) staleStore.delete(oldest);
+    if (oldest !== undefined) staleStore.delete(oldest);
   }
   staleStore.set(key, {
     value,
@@ -196,7 +209,7 @@ async function getCachedRedis<T>(
 
   // Normal path: try Redis
   try {
-    const result = await fetch(`${config.url}/get/${redisKey}`, {
+    const result = await fetch(`${config.url}/get/${encodeURIComponent(redisKey)}`, {
       headers: { Authorization: `Bearer ${config.token}` },
       cache: "no-store",
     });
@@ -348,7 +361,7 @@ export async function invalidateCache(key: string): Promise<void> {
   const config = getUpstashConfig();
   if (config && redisCircuitBreaker.isHealthy()) {
     try {
-      await fetch(`${config.url}/del/${buildRedisKey(key)}`, {
+      await fetch(`${config.url}/del/${encodeURIComponent(buildRedisKey(key))}`, {
         headers: { Authorization: `Bearer ${config.token}` },
         cache: "no-store",
       });

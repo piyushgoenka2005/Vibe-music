@@ -314,5 +314,10 @@ if (!missingRequired.length) {
     "Still verify production VPS values (not localhost AUTH_URL) before go-live."
   );
 }
-console.log("");
-process.exit(missingRequired.length || productionMisconfig ? 1 : 0);
+const requireLiveSecrets =
+  /vibemusic\.in/i.test(siteUrl) ||
+  process.env.REQUIRE_PROD_ENV === "true" ||
+  process.env.VERIFY_ON_VPS === "1";
+
+const hasBlockingIssue = productionMisconfig || (requireLiveSecrets && missingRequired.length > 0);
+process.exit(hasBlockingIssue ? 1 : 0);

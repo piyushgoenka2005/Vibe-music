@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import Link from "next/link";
 
 export type StatCardAccent =
   | "revenue"
@@ -41,6 +42,7 @@ export function StatCard({
   format = "number",
   accent,
   icon: Icon,
+  href,
 }: {
   label: string;
   value: number;
@@ -50,6 +52,8 @@ export function StatCard({
   accent?: StatCardAccent;
   /** Decorative icon — presentation only. */
   icon?: LucideIcon;
+  /** Optional navigation destination on click. */
+  href?: string;
 }) {
   const formatted =
     format === "currency"
@@ -60,8 +64,8 @@ export function StatCard({
         }).format(value)
       : value.toLocaleString("en-IN");
 
-  return (
-    <div className={`admin-stat-card${accent ? ` admin-stat-card--${accent}` : ""}`}>
+  const content = (
+    <>
       <div className="admin-stat-card__top">
         <div className="admin-stat-card__label">{label}</div>
         {Icon ? (
@@ -79,8 +83,20 @@ export function StatCard({
         </div>
       ) : null}
       <div className="admin-stat-card__spark" aria-hidden="true" />
-    </div>
+    </>
   );
+
+  const cardClass = `admin-stat-card${accent ? ` admin-stat-card--${accent}` : ""}${href ? " admin-stat-card--clickable" : ""}`;
+
+  if (href) {
+    return (
+      <Link href={href} className={cardClass} style={{ textDecoration: "none" }} prefetch={false}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={cardClass}>{content}</div>;
 }
 
 export function EmptyState({ message }: { message: string }) {
