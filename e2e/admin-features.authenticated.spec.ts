@@ -284,7 +284,7 @@ test.describe("Bulk import upload", () => {
     try {
       await runBulkImportWizardConfirm(page, { sku, productName, publishStatus: "draft" });
 
-      await page.getByRole("textbox", { name: /Search products/i }).fill(sku);
+      await page.getByRole("searchbox", { name: /Search products/i }).fill(sku);
       const productRow = page.locator(".admin-table tbody tr").filter({ hasText: sku });
       await expect(productRow).toBeVisible({ timeout: 30_000 });
       await productRow.getByRole("link", { name: "Edit" }).click();
@@ -329,7 +329,7 @@ test.describe("Bulk import upload", () => {
         publishStatus: "active",
       });
 
-      await page.getByRole("textbox", { name: /Search products/i }).fill(sku);
+      await page.getByRole("searchbox", { name: /Search products/i }).fill(sku);
       const productRow = page.locator(".admin-table tbody tr").filter({ hasText: sku });
       await expect(productRow).toBeVisible({ timeout: 30_000 });
       await productRow.getByRole("link", { name: "Edit" }).click();
