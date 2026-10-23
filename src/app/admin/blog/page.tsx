@@ -107,6 +107,8 @@ function BlogCommentsPanel({ blogWrite }: { blogWrite: boolean }) {
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["admin-blog-comments-list", statusFilter, cursor],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: async () => {
       const params = new URLSearchParams({ limit: "20" });
       if (statusFilter !== "all") params.set("status", statusFilter);
@@ -225,6 +227,8 @@ function BlogListContent({ blogWrite, blogDelete }: { blogWrite: boolean; blogDe
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: [...QUERY_KEY, cursor],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: async () => {
       const url = `/api/admin/blog?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
       return adminFetchJson<{

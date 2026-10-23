@@ -39,6 +39,8 @@ function CmsContent({ canWrite }: { canWrite: boolean }) {
   const pageQuery = useQuery({
     queryKey: ["admin-cms-page", selectedSlug],
     enabled: Boolean(selectedSlug) && !creating,
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: () =>
       adminFetchJson<{
         page: ContentPage;

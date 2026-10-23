@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
@@ -46,6 +46,8 @@ function BookingsAdmin({ rentalsWrite }: { rentalsWrite: boolean }) {
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-bookings", statusFilter, cursor],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: async () => {
       const params = new URLSearchParams({ limit: "20" });
       if (statusFilter) params.set("status", statusFilter);
@@ -67,6 +69,8 @@ function BookingsAdmin({ rentalsWrite }: { rentalsWrite: boolean }) {
     isFetching: detailFetching,
   } = useQuery({
     queryKey: ["admin-rental-booking", selectedId],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ booking: RentalBooking }>(
         `/api/admin/rentals/bookings/${selectedId}`,

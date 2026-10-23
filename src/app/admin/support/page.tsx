@@ -52,6 +52,7 @@ function SupportTicketsPanel({ canWrite }: { canWrite: boolean }) {
 
   const { data: adminsData } = useQuery({
     queryKey: ["admin-admins-list"],
+    staleTime: 5 * 60_000,
     queryFn: async () => {
       return adminFetchJson<{
         admins: Array<{ email: string; displayName: string }>;
@@ -312,6 +313,8 @@ function ContactMessagesPanel({ canWrite }: { canWrite: boolean }) {
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-contact", statusFilter, cursor],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: async () => {
       const params = new URLSearchParams({ limit: "20" });
       if (statusFilter) params.set("status", statusFilter);

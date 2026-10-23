@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { adminFetchJson } from "@/lib/admin/adminFetch";
 import { ROUTES } from "@/lib/routes";
 
 export default function AdminNotificationBell() {
+  const router = useRouter();
   const { data } = useQuery({
     queryKey: ["admin-notifications-count"],
     queryFn: async () => {
@@ -22,6 +24,7 @@ export default function AdminNotificationBell() {
     <Link
       href={ROUTES.adminNotifications}
       prefetch={false}
+      onMouseEnter={() => router.prefetch(ROUTES.adminNotifications)}
       className="admin-notification-bell"
       aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
       title="Notifications"

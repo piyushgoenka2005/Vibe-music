@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -27,6 +27,8 @@ function RentalsAnalyticsPanel() {
   const [period, setPeriod] = useState("30d");
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-analytics", period],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ analytics: RentalAnalytics }>(
         `/api/admin/rentals/analytics?period=${period}`,

@@ -76,6 +76,8 @@ function UnitsPanel({
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-rental-units", productId],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ units: RentalInventoryUnit[] }>(
         `/api/admin/rentals/units?productId=${encodeURIComponent(productId)}`,
@@ -257,6 +259,8 @@ function AvailabilityBlocksPanel({
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-rental-blocks", productId],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ blocks: RentalAvailabilityBlock[] }>(
         `/api/admin/rentals/blocks?productId=${encodeURIComponent(productId)}`,
@@ -381,6 +385,8 @@ function ProductsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
 
   const { data: categoriesData } = useQuery({
     queryKey: ["admin-rental-categories"],
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60_000,
     queryFn: async () => {
       return adminFetchJson<{ categories: Array<{ id: string; name: string }> }>(
         "/api/admin/rentals/categories",

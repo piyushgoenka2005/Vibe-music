@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
@@ -40,6 +40,8 @@ function CategoriesAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-rental-categories"],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ categories: CategoryRow[] }>("/api/admin/rentals/categories");
     },

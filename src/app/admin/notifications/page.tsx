@@ -63,6 +63,7 @@ function NotificationsContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-notifications-count"] });
     },
   });
 
@@ -74,6 +75,7 @@ function NotificationsContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-notifications-count"] });
     },
   });
 

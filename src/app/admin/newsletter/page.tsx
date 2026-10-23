@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -45,10 +45,7 @@ function NewsletterContent({ canWrite }: { canWrite: boolean }) {
         nextCursor?: string;
       }>(url);
     },
-    // Live table: new signups show up without a manual refresh.
-    refetchInterval: 30_000,
-    refetchIntervalInBackground: false,
-    placeholderData: (previous) => previous,
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
   const hasMore = data?.hasMore ?? false;

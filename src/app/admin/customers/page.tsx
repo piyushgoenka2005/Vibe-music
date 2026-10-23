@@ -56,11 +56,14 @@ function CustomersContent({ canWrite }: { canWrite: boolean }) {
     queryKey: ["admin-customers", search, cursor],
     queryFn: ({ signal }) => fetchCustomers({ search, cursor }, signal),
     placeholderData: keepPreviousData,
+    staleTime: 60_000,
   });
   const isSearching = searchPending || (isFetching && isPlaceholderData);
 
   const { data: detail } = useQuery({
     queryKey: ["admin-customer", selectedId],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: async () => {
       return adminFetchJson<{ customer: Record<string, unknown> }>(
         `/api/admin/customers/${selectedId}`,

@@ -165,6 +165,14 @@ function ProductsContent({
       queryKey: ["admin-product-category-options"],
       refetchType: "active",
     });
+    void queryClient.invalidateQueries({
+      queryKey: ["admin-inventory"],
+      refetchType: "active",
+    });
+    void queryClient.invalidateQueries({
+      queryKey: ["admin:dashboard:overview"],
+      refetchType: "active",
+    });
   };
 
   const bulkMutation = useMutation({

@@ -57,6 +57,8 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
 
   const { data: adjustmentsData, isFetching: adjustmentsFetching } = useQuery({
     queryKey: ["admin-inventory-adjustments", adjustmentsCursor],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     queryFn: async () => {
       const url = `/api/admin/inventory?view=adjustments&limit=20${adjustmentsCursor ? `&cursor=${encodeURIComponent(adjustmentsCursor)}` : ""}`;
       return adminFetchJson<{
@@ -93,6 +95,8 @@ function InventoryContent({ inventoryWrite }: { inventoryWrite: boolean }) {
       setReason("");
       queryClient.invalidateQueries({ queryKey: ["admin-inventory"] });
       queryClient.invalidateQueries({ queryKey: ["admin-inventory-adjustments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
     },
   });
 

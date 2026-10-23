@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { StatusBadge, LoadingState, EmptyState } from "@/components/admin/AdminUi";
@@ -79,9 +79,7 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
         total: number;
       }>(url);
     },
-    refetchInterval: 30_000,
-    refetchIntervalInBackground: false,
-    placeholderData: (previous) => previous,
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
   const hasMore = data?.hasMore ?? false;
