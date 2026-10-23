@@ -17,6 +17,7 @@ export async function createProductScopedCoupon(
   product: E2EProduct,
   options?: {
     code?: string;
+    label?: string;
     type?: "percentage" | "flat" | "free_shipping";
     value?: number;
   },
@@ -29,7 +30,7 @@ export async function createProductScopedCoupon(
     headers: mutationHeaders(),
     data: {
       code,
-      label: `E2E ${type} on ${product.name}`,
+      label: options?.label ?? `E2E ${type} on ${product.name}`,
       type,
       value,
       scope: "products",
