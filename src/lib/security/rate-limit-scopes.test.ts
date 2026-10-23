@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveRateLimitScope } from "@/lib/security/rate-limit-scopes";
+import { resolveRateLimitScope } from "./rate-limit-scopes";
 
 describe("resolveRateLimitScope", () => {
   it("uses a dedicated bucket for bulk import", () => {
