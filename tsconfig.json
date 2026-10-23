@@ -36,6 +36,7 @@
     "playwright.config.ts",
     "scripts",
     "**/*.test.ts",
-    "**/*.test.tsx"
+    "**/*.test.tsx",
+    ".next/dev/types/validator.ts"
   ]
 }

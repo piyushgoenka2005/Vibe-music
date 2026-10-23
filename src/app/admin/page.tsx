@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   IndianRupee,
   ShoppingCart,
@@ -67,21 +68,30 @@ async function fetchDashboard(): Promise<DashboardData> {
 }
 
 function DashboardContent({ admin }: { admin: AdminSession }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [chartMetric, setChartMetric] = useState<"revenue" | "orders">("revenue");
   const [chartDays, setChartDays] = useState<7 | 14 | 30>(30);
+  const [refreshSuccess, setRefreshSuccess] = useState(false);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-dashboard"],
     queryFn: fetchDashboard,
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 
   const handleRefresh = async () => {
-    await queryClient.fetchQuery({
-      queryKey: ["admin-dashboard"],
-      queryFn: () => adminFetchJson<DashboardData>("/api/admin/dashboard?refresh=true"),
-    });
+    try {
+      await queryClient.fetchQuery({
+        queryKey: ["admin-dashboard"],
+        queryFn: () => adminFetchJson<DashboardData>("/api/admin/dashboard?refresh=true"),
+      });
+      setRefreshSuccess(true);
+      setTimeout(() => setRefreshSuccess(false), 2000);
+    } catch {
+      // Handled by query state
+    }
   };
 
   if (isLoading) return <LoadingState message="Loading dashboard metrics…" />;
@@ -159,17 +169,32 @@ function DashboardContent({ admin }: { admin: AdminSession }) {
         </div>
 
         <div className="admin-dashboard-actions">
-          <Link href="/admin/products/new" className="admin-btn-action admin-btn-action--primary">
+          <Link
+            href="/admin/products/new"
+            prefetch={false}
+            onMouseEnter={() => router.prefetch("/admin/products/new")}
+            className="admin-btn-action admin-btn-action--primary"
+          >
             <Plus size={15} />
             <span>New Product</span>
           </Link>
 
-          <Link href="/admin/orders" className="admin-btn-action">
+          <Link
+            href="/admin/orders"
+            prefetch={false}
+            onMouseEnter={() => router.prefetch("/admin/orders")}
+            className="admin-btn-action"
+          >
             <ShoppingCart size={15} />
             <span>Orders</span>
           </Link>
 
-          <Link href="/admin/inventory" className="admin-btn-action">
+          <Link
+            href="/admin/inventory"
+            prefetch={false}
+            onMouseEnter={() => router.prefetch("/admin/inventory")}
+            className="admin-btn-action"
+          >
             <Package size={15} />
             <span>Inventory</span>
           </Link>
@@ -187,38 +212,68 @@ function DashboardContent({ admin }: { admin: AdminSession }) {
             title="Refresh dashboard metrics"
           >
             <RefreshCw size={15} className={isFetching ? "admin-spin" : ""} />
-            <span>{isFetching ? "Refreshing…" : "Refresh"}</span>
+            <span>{isFetching ? "Refreshing…" : refreshSuccess ? "Updated!" : "Refresh"}</span>
           </button>
         </div>
       </header>
 
       {/* Actionable Quick Navigation Links with live counts */}
       <div className="admin-quick-links">
-        <Link href="/admin/orders?status=pending" className="admin-quick-link">
+        <Link
+          href="/admin/orders?status=pending"
+          prefetch={false}
+          onMouseEnter={() => router.prefetch("/admin/orders?status=pending")}
+          className="admin-quick-link"
+        >
           <span className="admin-quick-link__label">Pending orders</span>
           <span className="admin-quick-link__hint">
             {stats.pendingOrders} order{stats.pendingOrders === 1 ? "" : "s"} need attention
           </span>
         </Link>
-        <Link href="/admin/orders?status=processing" className="admin-quick-link">
+        <Link
+          href="/admin/orders?status=processing"
+          prefetch={false}
+          onMouseEnter={() => router.prefetch("/admin/orders?status=processing")}
+          className="admin-quick-link"
+        >
           <span className="admin-quick-link__label">Processing orders</span>
           <span className="admin-quick-link__hint">{stats.processingOrders} in fulfillment</span>
         </Link>
-        <Link href="/admin/products?stock=low" className="admin-quick-link">
+        <Link
+          href="/admin/products?stock=low"
+          prefetch={false}
+          onMouseEnter={() => router.prefetch("/admin/products?stock=low")}
+          className="admin-quick-link"
+        >
           <span className="admin-quick-link__label">Low stock items</span>
           <span className="admin-quick-link__hint">{stats.lowStockProducts} SKUs near limit</span>
         </Link>
-        <Link href="/admin/products?stock=out" className="admin-quick-link">
+        <Link
+          href="/admin/products?stock=out"
+          prefetch={false}
+          onMouseEnter={() => router.prefetch("/admin/products?stock=out")}
+          className="admin-quick-link"
+        >
           <span className="admin-quick-link__label">Out of stock</span>
           <span className="admin-quick-link__hint">
             {stats.outOfStockProducts} SKUs unavailable
           </span>
         </Link>
-        <Link href="/admin/returns" className="admin-quick-link">
+        <Link
+          href="/admin/returns"
+          prefetch={false}
+          onMouseEnter={() => router.prefetch("/admin/returns")}
+          className="admin-quick-link"
+        >
           <span className="admin-quick-link__label">Customer returns</span>
           <span className="admin-quick-link__hint">Moderate &amp; inspect</span>
         </Link>
-        <Link href="/admin/products" className="admin-quick-link">
+        <Link
+          href="/admin/products"
+          prefetch={false}
+          onMouseEnter={() => router.prefetch("/admin/products")}
+          className="admin-quick-link"
+        >
           <span className="admin-quick-link__label">Catalog manager</span>
           <span className="admin-quick-link__hint">Import &amp; bulk edit</span>
         </Link>

@@ -122,66 +122,80 @@ export const adminCategorySchema = z.object({
   metaDescription: z.string().optional(),
 });
 
-export const adminCouponSchema = z
-  .object({
-    code: z.string().min(3).max(20),
-    label: z.string().min(1),
-    type: z.enum(["percentage", "flat", "free_shipping"]),
-    value: z.number().min(0),
-    minOrderAmount: z.number().min(0).optional(),
-    maxDiscountAmount: z.number().min(0).optional(),
-    maxUses: z.number().min(1).optional(),
-    maxUsesPerUser: z.number().min(1).optional(),
-    isActive: z.boolean().optional(),
-    kind: z.enum(["standard", "referral"]).optional(),
-    referralOwnerUserId: z.string().min(1).optional(),
-    referralOwnerEmail: z.string().email().optional(),
-    parentCouponId: z.string().min(1).optional(),
-    utmSource: z.string().max(120).optional(),
-    utmMedium: z.string().max(120).optional(),
-    utmCampaign: z.string().max(120).optional(),
-    utmContent: z.string().max(120).optional(),
-    scope: z.enum(["store", "products"]).optional(),
-    productIds: z.array(z.string().min(1)).max(MAX_COUPON_PRODUCT_URLS).optional(),
-    pdpHeadline: z.string().max(200).optional(),
-    pdpOfferLine: z.string().max(300).optional(),
-    pdpMaxDiscountLine: z.string().max(200).optional(),
-    pdpTermsLine: z.string().max(300).optional(),
-    pdpDisclaimer: z.string().max(200).optional(),
-    pdpFooter: z.string().max(200).optional(),
-    startsAt: z.string().optional(),
-    expiresAt: z.string().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.type !== "free_shipping" && data.value <= 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Discount value must be greater than zero",
-        path: ["value"],
-      });
-    }
-    if (data.scope === "products" && (!data.productIds || data.productIds.length === 0)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Select at least one product for product-scoped coupons",
-        path: ["productIds"],
-      });
-    }
-    if (data.productIds && data.productIds.length > MAX_COUPON_PRODUCT_URLS) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `A coupon can apply to at most ${MAX_COUPON_PRODUCT_URLS} products`,
-        path: ["productIds"],
-      });
-    }
-    if (data.kind === "referral" && !data.referralOwnerUserId && !data.referralOwnerEmail) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Referral coupons require an owner user or email",
-        path: ["referralOwnerEmail"],
-      });
-    }
-  });
+const couponFieldsSchema = z.object({
+  code: z.string().min(3).max(20),
+  label: z.string().min(1),
+  type: z.enum(["percentage", "flat", "free_shipping"]),
+  value: z.number().min(0),
+  minOrderAmount: z.number().min(0).optional(),
+  maxDiscountAmount: z.number().min(0).optional(),
+  maxUses: z.number().min(1).optional(),
+  maxUsesPerUser: z.number().min(1).optional(),
+  isActive: z.boolean().optional(),
+  kind: z.enum(["standard", "referral"]).optional(),
+  referralOwnerUserId: z.string().min(1).optional(),
+  referralOwnerEmail: z.string().email().optional(),
+  parentCouponId: z.string().min(1).optional(),
+  utmSource: z.string().max(120).optional(),
+  utmMedium: z.string().max(120).optional(),
+  utmCampaign: z.string().max(120).optional(),
+  utmContent: z.string().max(120).optional(),
+  scope: z.enum(["store", "products"]).optional(),
+  productIds: z.array(z.string().min(1)).max(MAX_COUPON_PRODUCT_URLS).optional(),
+  pdpHeadline: z.string().max(200).optional(),
+  pdpOfferLine: z.string().max(300).optional(),
+  pdpMaxDiscountLine: z.string().max(200).optional(),
+  pdpTermsLine: z.string().max(300).optional(),
+  pdpDisclaimer: z.string().max(200).optional(),
+  pdpFooter: z.string().max(200).optional(),
+  startsAt: z.string().optional(),
+  expiresAt: z.string().optional(),
+});
+
+function validateCouponRules(
+  data: Partial<z.infer<typeof couponFieldsSchema>>,
+  ctx: z.RefinementCtx,
+): void {
+  if (data.type !== "free_shipping" && typeof data.value === "number" && data.value <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Discount value must be greater than zero",
+      path: ["value"],
+    });
+  }
+  if (data.scope === "products" && (!data.productIds || data.productIds.length === 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Select at least one product for product-scoped coupons",
+      path: ["productIds"],
+    });
+  }
+  if (data.productIds && data.productIds.length > MAX_COUPON_PRODUCT_URLS) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `A coupon can apply to at most ${MAX_COUPON_PRODUCT_URLS} products`,
+      path: ["productIds"],
+    });
+  }
+  if (data.kind === "referral" && !data.referralOwnerUserId && !data.referralOwnerEmail) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Referral coupons require an owner user or email",
+      path: ["referralOwnerEmail"],
+    });
+  }
+}
+
+export const adminCouponSchema = couponFieldsSchema.superRefine(validateCouponRules);
+
+/**
+ * Partial-update variant for PUT /api/admin/coupons/[id].
+ * Zod forbids .partial() on a schema that already carries refinements, so the
+ * refinement is re-applied to the partial base schema instead.
+ */
+export const adminCouponUpdateSchema = couponFieldsSchema
+  .partial()
+  .superRefine(validateCouponRules);
 
 export const adminCouponPatchSchema = z.object({
   isActive: z.boolean().optional(),

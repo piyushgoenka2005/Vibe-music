@@ -85,6 +85,7 @@ export default function DashboardRevenueChart({
           fill={`url(#${gradientId})`}
           dot={false}
           activeDot={{ r: 4, strokeWidth: 0, fill: strokeColor }}
+          animationDuration={300}
         />
       </AreaChart>
     </ResponsiveContainer>
