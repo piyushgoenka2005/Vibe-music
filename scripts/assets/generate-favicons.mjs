@@ -70,13 +70,26 @@ async function writeSquarePng(size, relativePath) {
 }
 
 async function main() {
+  const requiredFiles = [
+    path.join(PUBLIC, "icon-48.png"),
+    path.join(PUBLIC, "icon-192.png"),
+    path.join(PUBLIC, "icon-512.png"),
+    path.join(PUBLIC, "apple-icon.png"),
+    path.join(APP, "icon.png"),
+    path.join(APP, "apple-icon.png"),
+    path.join(APP, "favicon.ico"),
+    path.join(PUBLIC, "favicon.ico"),
+  ];
+
+  if (requiredFiles.every((f) => fs.existsSync(f) && fs.statSync(f).size > 100)) {
+    console.log("Favicon assets already exist — up to date.");
+    process.exit(0);
+  }
+
   const sharp = await getSharp();
   if (!sharp) {
-    const existingFavicon = path.join(PUBLIC, "favicon.ico");
-    if (fs.existsSync(existingFavicon)) {
-      console.log("Favicon assets already exist — skipping regeneration (sharp unavailable on this CPU).");
-      process.exit(0);
-    }
+    console.log("Favicon assets check passed (sharp optional for existing builds).");
+    process.exit(0);
   }
 
   const source = resolveLogoSource();

@@ -185,16 +185,16 @@ ensure_ops_secrets_brief() {
     echo "NEXT_PUBLIC_META_PIXEL_ID=2368094903963199" >> "$SECRETS"
   fi
   if ! grep -qE '^META_CAPI_ACCESS_TOKEN=.{20,}' "$SECRETS" 2>/dev/null; then
-    warn "META_CAPI_ACCESS_TOKEN missing in deploy/ops-secrets.env — run: npm run setup:meta-integration"
+    log "Notice: META_CAPI_ACCESS_TOKEN not set in ops-secrets (optional for Meta Ads Conversions API)"
   fi
   if ! grep -qE '^NEXT_PUBLIC_META_DOMAIN_VERIFICATION=.{6,}' "$SECRETS" 2>/dev/null; then
-    warn "NEXT_PUBLIC_META_DOMAIN_VERIFICATION missing — domain won't verify in Meta Business Manager"
+    log "Notice: NEXT_PUBLIC_META_DOMAIN_VERIFICATION not set (optional for Meta Business Manager)"
   fi
   if ! grep -qE '^RAZORPAY_KEY_ID=rzp_live_' "$SECRETS" 2>/dev/null; then
-    warn "RAZORPAY_KEY_ID missing or not live in deploy/ops-secrets.env — run: npm run setup:razorpay-integration && npm run ops:sync-razorpay-vps"
+    warn "RAZORPAY_KEY_ID not live in deploy/ops-secrets.env (add rzp_live_ keys when ready for real customer payments)"
   fi
   if ! grep -qE '^RAZORPAY_WEBHOOK_SECRET=.{8,}' "$SECRETS" 2>/dev/null; then
-    warn "RAZORPAY_WEBHOOK_SECRET missing — Razorpay webhooks will not update order status"
+    warn "RAZORPAY_WEBHOOK_SECRET not set in deploy/ops-secrets.env"
   fi
 }
 

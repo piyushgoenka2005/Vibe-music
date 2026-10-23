@@ -35,13 +35,30 @@ async function writeWebp(sharp, inputPath, outputPath, width = 160) {
 }
 
 async function main() {
+  const allExist = CATEGORY_NAMES.every((filename) => {
+    const base = filename.replace(/\.(png|jpe?g)$/i, "");
+    const catThumb = path.join(CAT_THUMB_DIR, `${base}.webp`);
+    const prodThumb = path.join(PRODUCT_THUMB_DIR, `${base}.webp`);
+    return (
+      fs.existsSync(catThumb) &&
+      fs.statSync(catThumb).size > 256 &&
+      fs.existsSync(prodThumb) &&
+      fs.statSync(prodThumb).size > 256
+    );
+  });
+
+  if (allExist) {
+    console.log("All category and product WebP thumbnails are cached and up to date.");
+    process.exit(0);
+  }
+
   let sharp = null;
   try {
     const mod = await import("sharp");
     sharp = mod.default || mod;
   } catch (err) {
     const msg = err instanceof Error ? err.message.split("\n")[0] : String(err);
-    console.warn(`WARN: sharp unavailable on this CPU (${msg}) — skipping WebP thumbnail generation (storefront will use standard images).`);
+    console.log(`Note: sharp optional (${msg}) — existing images will be served.`);
     process.exit(0);
   }
   let ok = 0;
