@@ -15,7 +15,7 @@ export interface E2EProduct {
   availability?: string;
 }
 
-export const E2E_ORIGIN = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+export const E2E_ORIGIN = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 
 /**
  * Single source of truth for whether the E2E harness starts the app with

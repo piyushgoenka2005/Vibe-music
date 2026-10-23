@@ -1,6 +1,6 @@
 /** Origin for CSRF-safe Playwright API mutations (matches PLAYWRIGHT_BASE_URL). */
 export const E2E_ORIGIN =
-  process.env.PLAYWRIGHT_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+  process.env.PLAYWRIGHT_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:3000";
 
 export function e2eMutationHeaders(): Record<string, string> {
   return {

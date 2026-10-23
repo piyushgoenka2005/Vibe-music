@@ -5,7 +5,7 @@ import { E2E_DISABLE_RATE_LIMIT } from "./e2e/helpers/test-utils";
 
 loadLocalEnv();
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 const isCI = Boolean(process.env.CI);
 const skipNonChromium = process.env.E2E_SKIP_NON_CHROMIUM === "true";
 
@@ -130,7 +130,7 @@ export default defineConfig({
         // Default (Turbopack) dev server — boots fast and is the app's own
         // `npm run dev` path. `--webpack` currently fails to compile server
         // deps (see serverExternalPackages in next.config.ts).
-        command: "npx next dev",
+        command: "npx next dev --port 3000 --hostname 127.0.0.1",
         url: baseURL,
         reuseExistingServer: !isCI || Boolean(process.env.PLAYWRIGHT_REUSE_SERVER),
         timeout: 180_000,
