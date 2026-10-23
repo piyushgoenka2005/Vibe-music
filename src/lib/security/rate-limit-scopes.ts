@@ -40,6 +40,13 @@ export function resolveRateLimitScope(pathname: string): ResolvedRateLimitScope 
   }
 
   if (pathname.startsWith("/api/auth") || pathname === "/api/contact") {
+    if (
+      pathname === "/api/auth/session" ||
+      pathname === "/api/auth/csrf" ||
+      pathname === "/api/auth/providers"
+    ) {
+      return { scope: "public-api", bucket: "publicApi", options: limits.publicApi };
+    }
     return { scope: "auth-api", bucket: "auth", options: limits.auth };
   }
 

@@ -58,6 +58,7 @@ function isApiFastPath(request: NextRequest, pathname: string): boolean {
     pathname === "/api/health" ||
     pathname === "/api/healthz" ||
     pathname === "/api/readyz" ||
+    pathname === "/api/auth/session" ||
     (process.env.NODE_ENV !== "production" &&
       process.env.DISABLE_RATE_LIMIT === "true" &&
       (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/admin/")))
@@ -90,7 +91,10 @@ async function handleApiRequest(request: NextRequest): Promise<NextResponse | nu
     remaining: options.limit,
     resetAt: Date.now() + options.windowMs,
   };
-  if (process.env.DISABLE_RATE_LIMIT === "true" && process.env.NODE_ENV !== "production") {
+  if (
+    (process.env.DISABLE_RATE_LIMIT === "true" || process.env.NODE_ENV === "development") &&
+    process.env.NODE_ENV !== "production"
+  ) {
     // Rate limits intentionally skipped in non-production only.
   } else {
     rateLimit = await edgeCheckRateLimit(`${scope}:${ip}`, options);

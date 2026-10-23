@@ -119,7 +119,7 @@ test.describe("product-dedicated coupons (API)", () => {
 test.describe("product-dedicated coupons (storefront UI)", () => {
   test.skip(!adminReady, "DATABASE_URL / seeded E2E admin required");
 
-  test("checkout shows applicable offer and applies product coupon", async ({
+  test("checkout offer dropdown lists and applies product coupon", async ({
     page,
     request,
     requiresDatabase,
@@ -137,19 +137,22 @@ test.describe("product-dedicated coupons (storefront UI)", () => {
       await seedGuestCart(page, product);
       await page.goto("/checkout", { waitUntil: "domcontentloaded" });
 
-      const offerButton = page.getByRole("button", { name: new RegExp(coupon.code, "i") });
-      await expect(offerButton).toBeVisible({ timeout: 20_000 });
-      await offerButton.click();
-
-      await expect(page.locator(".checkout-summary").getByText(coupon.code)).toBeVisible({
-        timeout: 15_000,
+      const offerSelect = page.getByLabel("Available offers");
+      await expect(offerSelect).toBeVisible({ timeout: 20_000 });
+      await expect(offerSelect.locator(`option[value="${coupon.code}"]`)).toHaveCount(1, {
+        timeout: 20_000,
       });
+      await offerSelect.selectOption(coupon.code);
+
+      await expect(
+        page.locator(".checkout-summary__promo-applied").getByText(coupon.code),
+      ).toBeVisible({ timeout: 15_000 });
     } finally {
       await deleteCouponById(request, coupon.id);
     }
   });
 
-  test("PDP shows promo banner when product coupon is active", async ({
+  test("PDP offer card lists product coupon and marks it selected", async ({
     page,
     request,
     requiresDatabase,
@@ -158,16 +161,23 @@ test.describe("product-dedicated coupons (storefront UI)", () => {
     test.slow();
 
     const product = await fetchCheckoutProduct(request);
+    const code = uniqueCouponCode("BAN");
     const coupon = await createProductScopedCoupon(request, product, {
-      code: uniqueCouponCode("BAN"),
+      code,
+      label: `E2E PDP ${code}`,
       value: 12,
     });
 
     try {
       await page.goto(`/product/${product.slug}`, { waitUntil: "domcontentloaded" });
-      await expect(page.locator(".pdp-coupon-promo")).toBeVisible({ timeout: 20_000 });
-      await expect(page.getByText(new RegExp(coupon.code))).toBeVisible();
-      await page.getByRole("button", { name: /use offer/i }).click();
+
+      const couponCard = page.locator(".pdp-offers__card").filter({ hasText: coupon.code });
+      await expect(couponCard).toHaveCount(1, { timeout: 20_000 });
+      await couponCard.click();
+
+      await expect(couponCard.getByText("Selected for checkout")).toBeVisible({
+        timeout: 15_000,
+      });
     } finally {
       await deleteCouponById(request, coupon.id);
     }

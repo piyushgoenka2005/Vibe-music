@@ -21,4 +21,14 @@ describe("resolveRateLimitScope", () => {
     expect(resolved.scope).toBe("auth-api");
     expect(resolved.bucket).toBe("auth");
   });
+
+  it("routes read-only auth endpoints to publicApi bucket", () => {
+    const session = resolveRateLimitScope("/api/auth/session");
+    expect(session.scope).toBe("public-api");
+    expect(session.bucket).toBe("publicApi");
+
+    const csrf = resolveRateLimitScope("/api/auth/csrf");
+    expect(csrf.scope).toBe("public-api");
+    expect(csrf.bucket).toBe("publicApi");
+  });
 });
