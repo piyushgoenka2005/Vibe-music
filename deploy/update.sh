@@ -679,7 +679,13 @@ sync_gp9_assets
 step "3/10 — Database"
 
 log "Migrations"
-npm run db:migrate
+# Automatically clear any previous failed attempt for performance_indexes (P3018 auto-heal)
+node scripts/db/prisma-with-env.mjs migrate resolve --rolled-back 20261023000000_performance_indexes 2>/dev/null || true
+npm run db:migrate || {
+  warn "prisma migrate deploy encountered an issue — attempting automated migration recovery"
+  node scripts/db/prisma-with-env.mjs migrate resolve --rolled-back 20261023000000_performance_indexes 2>/dev/null || true
+  npm run db:migrate
+}
 
 log "Production ops banner sync"
 npx tsx --env-file=.env scripts/ops/seed-production-ops.mts || true

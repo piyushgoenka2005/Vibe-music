@@ -1,7 +1,7 @@
 -- Performance indexes for admin query patterns
 -- Admin products list: search, status, category, stock filters + cursor pagination
 CREATE INDEX IF NOT EXISTS "products_admin_list_idx" 
-ON "products" ("status", "categorySlug", "createdAt" DESC, "id" DESC)
+ON "products" ("status", "category_slug", "created_at" DESC, "id" DESC)
 WHERE "status" IN ('active', 'draft', 'archived');
 
 -- Admin products search: name, brand, slug, sku (partial index for active products)
@@ -11,93 +11,93 @@ WHERE "status" = 'active';
 
 -- Admin products stock filters
 CREATE INDEX IF NOT EXISTS "products_stock_filter_idx" 
-ON "products" ("stock", "lowStockThreshold", "status")
+ON "products" ("stock", "low_stock_threshold", "status")
 WHERE "status" = 'active';
 
--- Admin orders list: status, createdAt desc, cursor pagination
+-- Admin orders list: status, created_at desc, cursor pagination
 CREATE INDEX IF NOT EXISTS "orders_admin_list_idx" 
-ON "orders" ("status", "createdAt" DESC, "id" DESC);
+ON "orders" ("status", "created_at" DESC, "id" DESC);
 
--- Admin orders search by email, userId
+-- Admin orders search by email, user_id
 CREATE INDEX IF NOT EXISTS "orders_admin_search_idx" 
-ON "orders" ("email" text_pattern_ops, "userId" text_pattern_ops);
+ON "orders" ("email" text_pattern_ops, "user_id" text_pattern_ops);
 
 -- Admin dashboard: paid revenue aggregates
 CREATE INDEX IF NOT EXISTS "orders_paid_revenue_idx" 
-ON "orders" ("paymentStatus", "createdAt" DESC, "total")
-WHERE "paymentStatus" = 'paid';
+ON "orders" ("payment_status", "created_at" DESC, "total")
+WHERE "payment_status" = 'paid';
 
--- Admin customers list: createdAt desc
+-- Admin customers list: created_at desc
 CREATE INDEX IF NOT EXISTS "users_admin_list_idx" 
-ON "users" ("createdAt" DESC);
+ON "users" ("created_at" DESC);
 
--- Admin reviews list: productId, status, createdAt
+-- Admin reviews list: product_id, status, created_at
 CREATE INDEX IF NOT EXISTS "reviews_admin_list_idx" 
-ON "reviews" ("productId", "status", "createdAt" DESC);
+ON "reviews" ("product_id", "status", "created_at" DESC);
 
--- Admin coupons list: isActive, createdAt
+-- Admin coupons list: is_active, created_at
 CREATE INDEX IF NOT EXISTS "coupons_admin_list_idx" 
-ON "coupons" ("isActive", "createdAt" DESC);
+ON "coupons" ("is_active", "created_at" DESC);
 
--- Admin banners list: status, priority, startDate
+-- Admin banners list: status, priority, start_date
 CREATE INDEX IF NOT EXISTS "banners_admin_list_idx" 
-ON "banners" ("status", "priority", "startDate" DESC);
+ON "banners" ("status", "priority", "start_date" DESC);
 
--- Admin blog posts: status, createdAt
+-- Admin blog posts: status, created_at
 CREATE INDEX IF NOT EXISTS "blog_posts_admin_list_idx" 
-ON "blog_posts" ("status", "createdAt" DESC);
+ON "blog_posts" ("status", "created_at" DESC);
 
--- Inventory logs: productId, createdAt for audit trail
+-- Inventory logs: product_id, timestamp for audit trail
 CREATE INDEX IF NOT EXISTS "inventory_log_product_idx" 
-ON "inventory_log" ("productId", "createdAt" DESC);
+ON "inventory_logs" ("product_id", "timestamp" DESC);
 
--- Product relations: productId for related products
+-- Product relations: product_id for related products
 CREATE INDEX IF NOT EXISTS "product_relation_source_idx" 
-ON "product_relation" ("productId");
+ON "product_relations" ("product_id");
 
--- Product bundles: productId
+-- Product bundles: product_id
 CREATE INDEX IF NOT EXISTS "product_bundle_product_idx" 
-ON "product_bundle" ("productId");
+ON "product_bundles" ("product_id");
 
--- Product review stats: productId
+-- Product review stats: product_id
 CREATE INDEX IF NOT EXISTS "product_review_stats_product_idx" 
-ON "product_review_stats" ("productId");
+ON "product_review_stats" ("product_id");
 
--- Shipment: orderId
+-- Shipment: order_id
 CREATE INDEX IF NOT EXISTS "shipment_order_idx" 
-ON "shipment" ("orderId");
+ON "shipments" ("order_id");
 
--- Tracking events: orderId, createdAt
+-- Tracking events: order_id, created_at
 CREATE INDEX IF NOT EXISTS "tracking_event_order_idx" 
-ON "tracking_events" ("orderId", "createdAt" DESC);
+ON "tracking_events" ("order_id", "created_at" DESC);
 
--- Return requests: orderId, status
+-- Return requests: order_id, status
 CREATE INDEX IF NOT EXISTS "return_request_order_idx" 
-ON "return_requests" ("orderId", "status");
+ON "return_requests" ("order_id", "status");
 
--- Admin notifications: userId, read, createdAt
+-- Admin notifications: read, created_at
 CREATE INDEX IF NOT EXISTS "admin_notification_user_idx" 
-ON "admin_notifications" ("userId", "read", "createdAt" DESC);
+ON "admin_notifications" ("read", "created_at" DESC);
 
--- Support tickets: userId, status, createdAt
+-- Support tickets: user_id, status, created_at
 CREATE INDEX IF NOT EXISTS "support_ticket_user_idx" 
-ON "support_tickets" ("userId", "status", "createdAt" DESC);
+ON "support_tickets" ("user_id", "status", "created_at" DESC);
 
--- Newsletter subscribers: email, subscribedAt
+-- Newsletter subscribers: email
 CREATE INDEX IF NOT EXISTS "newsletter_subscriber_email_idx" 
-ON "newsletter_subscriber" ("email");
+ON "newsletter_subscribers" ("email");
 
--- Product stock alerts: productId, notified
+-- Product stock alerts: product_id, notified_at
 CREATE INDEX IF NOT EXISTS "product_stock_alert_product_idx" 
-ON "product_stock_alert" ("productId", "notified");
+ON "product_stock_alerts" ("product_id", "notified_at");
 
--- Homepage section items: sectionKey, sortOrder
+-- Homepage section items: section_key, sort_order
 CREATE INDEX IF NOT EXISTS "homepage_section_item_section_idx" 
-ON "homepage_section_items" ("sectionKey", "sortOrder");
+ON "homepage_section_items" ("section_key", "sort_order");
 
--- Product questions: productId, status
+-- Product questions: product_id, status
 CREATE INDEX IF NOT EXISTS "product_question_product_idx" 
-ON "product_questions" ("productId", "status");
+ON "product_questions" ("product_id", "status");
 
 -- Full-text search index for product search (PostgreSQL GIN index)
 -- This enables fast text search queries using to_tsvector
@@ -115,18 +115,18 @@ ON "products" USING GIN (
 
 -- Composite index for admin orders with search
 CREATE INDEX IF NOT EXISTS "orders_admin_search_composite_idx" 
-ON "orders" ("status", "email" text_pattern_ops, "createdAt" DESC);
+ON "orders" ("status", "email" text_pattern_ops, "created_at" DESC);
 
 -- Index for admin products by category and status (common filter combo)
 CREATE INDEX IF NOT EXISTS "products_admin_category_status_idx" 
-ON "products" ("categorySlug", "status", "createdAt" DESC, "id" DESC);
+ON "products" ("category_slug", "status", "created_at" DESC, "id" DESC);
 
 -- Index for low stock queries
 CREATE INDEX IF NOT EXISTS "products_low_stock_idx" 
-ON "products" ("lowStockThreshold", "stock", "status")
-WHERE "status" = 'active' AND "lowStockThreshold" IS NOT NULL;
+ON "products" ("low_stock_threshold", "stock", "status")
+WHERE "status" = 'active' AND "low_stock_threshold" IS NOT NULL;
 
 -- Index for featured/trending products
 CREATE INDEX IF NOT EXISTS "products_featured_trending_idx" 
-ON "products" ("featured", "trending", "newArrival", "status", "createdAt" DESC)
+ON "products" ("featured", "trending", "new_arrival", "status", "created_at" DESC)
 WHERE "status" = 'active';
