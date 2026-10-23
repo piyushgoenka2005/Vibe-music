@@ -301,45 +301,49 @@ export default function ProductFormPage({
       let relatedPayload: { related?: { relatedProductIds?: string[]; isActive?: boolean } } = {};
 
       if (savedId) {
-        const bundleRes = await fetch(`/api/admin/products/${savedId}/bundle`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            relatedProductIds: form.bundle.relatedProductIds,
-            discountPercent: form.bundle.discountPercent,
-            isActive: form.bundle.isActive,
-            productName: form.name,
-            productSlug: slug,
+        const [bundleRes, relatedRes] = await Promise.all([
+          fetch(`/api/admin/products/${savedId}/bundle`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              relatedProductIds: form.bundle.relatedProductIds,
+              discountPercent: form.bundle.discountPercent,
+              isActive: form.bundle.isActive,
+              productName: form.name,
+              productSlug: slug,
+            }),
           }),
-        });
+          fetch(`/api/admin/products/${savedId}/related`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              relatedProductIds: form.related.relatedProductIds,
+              isActive: form.related.isActive,
+              productName: form.name,
+              productSlug: slug,
+            }),
+          }),
+        ]);
+
         if (!bundleRes.ok) {
           const bundleData = await bundleRes.json();
           throw new Error(bundleData.error ?? "Bundle save failed");
         }
-        bundlePayload = await bundleRes.json();
-
-        const relatedRes = await fetch(`/api/admin/products/${savedId}/related`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            relatedProductIds: form.related.relatedProductIds,
-            isActive: form.related.isActive,
-            productName: form.name,
-            productSlug: slug,
-          }),
-        });
         if (!relatedRes.ok) {
           const relatedData = await relatedRes.json();
           throw new Error(relatedData.error ?? "Related products save failed");
         }
+        bundlePayload = await bundleRes.json();
         relatedPayload = await relatedRes.json();
       }
       return { ...saved, ...bundlePayload, ...relatedPayload };
     },
     onSuccess: async (saved) => {
-      // Drop cached list so the products page always refetches after create/edit.
-      await queryClient.cancelQueries({ queryKey: ["admin-products"] });
-      queryClient.removeQueries({ queryKey: ["admin-products"] });
+      // Invalidate products query without dropping existing cache to prevent white-flash loading state
+      void queryClient.invalidateQueries({
+        queryKey: ["admin-products"],
+        refetchType: "all",
+      });
       void queryClient.invalidateQueries({
         queryKey: ["admin-homepage-product-count"],
         refetchType: "active",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -29,6 +29,7 @@ type AdminLoginResponse =
   { ok: true; admin: AdminSession } | { ok?: false; error?: string; code?: string };
 
 export default function AdminLoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const setSessionUser = useAuthStore((s) => s.setSessionUser);
@@ -81,14 +82,15 @@ export default function AdminLoginForm() {
         photoURL: null,
       });
 
-      // Hard navigate so the next document request carries the new cookie
-      // and the server layout bootstraps immediately.
       const redirectParam = searchParams?.get("redirect");
       const safeTarget = redirectParam
         ? sanitizeAuthRedirect(redirectParam, ROUTES.admin)
         : ROUTES.admin;
       const destination = safeTarget.startsWith("/admin") ? safeTarget : ROUTES.admin;
-      window.location.assign(destination);
+
+      // Fast SPA client-side transition without cold document reload
+      router.push(destination);
+      router.refresh();
     } catch (err) {
       setError(getAuthErrorMessage(err, "Admin sign in failed."));
       setIsLoading(false);

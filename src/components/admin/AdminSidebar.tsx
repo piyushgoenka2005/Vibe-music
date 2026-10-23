@@ -221,6 +221,7 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
               key={item.href}
               href={item.href}
               prefetch={false}
+              onMouseEnter={() => router.prefetch(item.href)}
               className={`admin-sidebar__link${isActive ? " admin-sidebar__link--active" : ""}`}
               title={collapsed ? item.label : undefined}
               onClick={closeSidebarOnMobile}

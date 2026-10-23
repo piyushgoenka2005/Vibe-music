@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IndianRupee,
   ShoppingCart,
@@ -67,6 +67,7 @@ async function fetchDashboard(): Promise<DashboardData> {
 }
 
 function DashboardContent({ admin }: { admin: AdminSession }) {
+  const queryClient = useQueryClient();
   const [chartMetric, setChartMetric] = useState<"revenue" | "orders">("revenue");
   const [chartDays, setChartDays] = useState<7 | 14 | 30>(30);
 
@@ -75,6 +76,13 @@ function DashboardContent({ admin }: { admin: AdminSession }) {
     queryFn: fetchDashboard,
     staleTime: 60_000,
   });
+
+  const handleRefresh = async () => {
+    await queryClient.fetchQuery({
+      queryKey: ["admin-dashboard"],
+      queryFn: () => adminFetchJson<DashboardData>("/api/admin/dashboard?refresh=true"),
+    });
+  };
 
   if (isLoading) return <LoadingState message="Loading dashboard metrics…" />;
   if (error || !data) {
@@ -174,7 +182,7 @@ function DashboardContent({ admin }: { admin: AdminSession }) {
           <button
             type="button"
             className="admin-btn-action"
-            onClick={() => void refetch()}
+            onClick={() => void handleRefresh()}
             disabled={isFetching}
             title="Refresh dashboard metrics"
           >

@@ -9,15 +9,27 @@ import {
   getRecentCustomers,
   getTopProducts,
 } from "@/lib/server/dashboardService";
+import { getCached, invalidateCache } from "@/lib/server/platform/redisCache";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await requireAdmin("dashboard:read");
 
-    // Every widget below is served by Postgres aggregates / bounded queries —
-    // the dashboard no longer loads the whole orders table per request.
-    const [stats, revenueChart, recentOrders, recentCustomers, lowStock, outOfStock, topProducts] =
-      await Promise.all([
+    const url = new URL(request.url);
+    const forceRefresh = url.searchParams.get("refresh") === "true";
+
+    const fetchDashboardData = async () => {
+      // Every widget below is served by Postgres aggregates / bounded queries —
+      // the dashboard no longer loads the whole orders table per request.
+      const [
+        stats,
+        revenueChart,
+        recentOrders,
+        recentCustomers,
+        lowStock,
+        outOfStock,
+        topProducts,
+      ] = await Promise.all([
         getDashboardStats(),
         getRevenueChartData(30),
         getRecentOrders(10),
@@ -27,15 +39,25 @@ export async function GET() {
         getTopProducts(5),
       ]);
 
-    return NextResponse.json({
-      stats,
-      revenueChart,
-      recentOrders,
-      recentCustomers,
-      lowStock,
-      outOfStock,
-      topProducts,
-    });
+      return {
+        stats,
+        revenueChart,
+        recentOrders,
+        recentCustomers,
+        lowStock,
+        outOfStock,
+        topProducts,
+      };
+    };
+
+    if (forceRefresh) {
+      await invalidateCache("admin:dashboard:overview");
+      const data = await fetchDashboardData();
+      return NextResponse.json(data);
+    }
+
+    const data = await getCached("admin:dashboard:overview", fetchDashboardData, 15);
+    return NextResponse.json(data);
   } catch (error) {
     return adminErrorResponse(error);
   }
