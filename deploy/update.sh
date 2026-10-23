@@ -324,7 +324,9 @@ build_application() {
   export ALLOW_POSTGRES_DURING_BUILD="${ALLOW_POSTGRES_DURING_BUILD:-false}"
   export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=4096}"
   if ! npm run build; then
-    warn "next build failed — retrying once"
+    warn "next build failed — cleaning workers and retrying once"
+    pkill -f 'next-router-worker|next-server' 2>/dev/null || true
+    sleep 3
     rm -rf .next
     if ! npm run build; then
       restore_previous_build

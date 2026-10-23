@@ -19,7 +19,6 @@ const nextConfig: NextConfig = {
   experimental: {
     // CDN PNG masters often exceed the default 7s optimizer fetch window in local/dev.
     imgOptTimeoutInSeconds: 30,
-    optimizeCss: true,
     optimizePackageImports: [
       "lucide-react",
       "@radix-ui/react-accordion",
