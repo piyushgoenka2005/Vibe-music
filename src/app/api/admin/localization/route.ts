@@ -151,28 +151,73 @@ let localesState: LocaleConfig[] = [
   },
 ];
 
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
+import type { Prisma } from "@prisma/client";
+
 let regionalPreferencesState: RegionalPreferences = {
   timezone: "Asia/Kolkata (IST, UTC+05:30)",
   dateFormat: "DD/MM/YYYY",
   numberFormat: "indian",
   fiscalYearStart: "01-04",
   gstEnabled: true,
-  fulfillmentStateCode: "27",
-  fulfillmentStateName: "Maharashtra",
+  fulfillmentStateCode: "19",
+  fulfillmentStateName: "West Bengal",
 };
 
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin("settings:read", request);
 
+    let currencies = currenciesState;
+    let locales = localesState;
+    let preferences = regionalPreferencesState;
+
+    if (isPostgresConfigured()) {
+      try {
+        const record = await prisma.localizationSetting.findUnique({
+          where: { id: "default" },
+        });
+
+        if (record) {
+          if (Array.isArray(record.currencies) && record.currencies.length > 0) {
+            currencies = record.currencies as unknown as CurrencyConfig[];
+            currenciesState = currencies;
+          }
+          if (Array.isArray(record.locales) && record.locales.length > 0) {
+            locales = record.locales as unknown as LocaleConfig[];
+            localesState = locales;
+          }
+          if (record.preferences && typeof record.preferences === "object") {
+            preferences = {
+              ...regionalPreferencesState,
+              ...(record.preferences as unknown as Partial<RegionalPreferences>),
+            };
+            regionalPreferencesState = preferences;
+          }
+        } else {
+          await prisma.localizationSetting.create({
+            data: {
+              id: "default",
+              currencies: currenciesState as unknown as Prisma.InputJsonValue,
+              locales: localesState as unknown as Prisma.InputJsonValue,
+              preferences: regionalPreferencesState as unknown as Prisma.InputJsonValue,
+              updatedAt: new Date().toISOString(),
+            },
+          });
+        }
+      } catch {
+        // Safe fallback to in-memory defaults
+      }
+    }
+
     return NextResponse.json({
-      currencies: currenciesState,
-      locales: localesState,
-      preferences: regionalPreferencesState,
+      currencies,
+      locales,
+      preferences,
       stats: {
         baseCurrency: "INR (₹)",
-        totalCurrencies: currenciesState.length,
-        activeLocales: localesState.filter((l) => l.isActive).length,
+        totalCurrencies: currencies.length,
+        activeLocales: locales.filter((l) => l.isActive).length,
         timezone: "Asia/Kolkata (IST)",
         gstMode: "Dynamic Intra/Inter-state",
       },
@@ -202,6 +247,29 @@ export async function PUT(request: NextRequest) {
         ...regionalPreferencesState,
         ...body.preferences,
       };
+    }
+
+    if (isPostgresConfigured()) {
+      try {
+        await prisma.localizationSetting.upsert({
+          where: { id: "default" },
+          create: {
+            id: "default",
+            currencies: currenciesState as unknown as Prisma.InputJsonValue,
+            locales: localesState as unknown as Prisma.InputJsonValue,
+            preferences: regionalPreferencesState as unknown as Prisma.InputJsonValue,
+            updatedAt: new Date().toISOString(),
+          },
+          update: {
+            currencies: currenciesState as unknown as Prisma.InputJsonValue,
+            locales: localesState as unknown as Prisma.InputJsonValue,
+            preferences: regionalPreferencesState as unknown as Prisma.InputJsonValue,
+            updatedAt: new Date().toISOString(),
+          },
+        });
+      } catch {
+        // Non-blocking fallback to in-memory state
+      }
     }
 
     return NextResponse.json({

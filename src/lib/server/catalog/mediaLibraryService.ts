@@ -175,12 +175,91 @@ const DEFAULT_MEDIA_ASSETS: MediaAsset[] = [
   },
 ];
 
+import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
+
 let mediaState: MediaAsset[] = [...DEFAULT_MEDIA_ASSETS];
+let isSeeded = false;
+
+async function ensureDefaultMediaAssetsSeeded(): Promise<void> {
+  if (isSeeded || !isPostgresConfigured()) return;
+  try {
+    const count = await prisma.mediaAsset.count();
+    if (count === 0) {
+      await prisma.mediaAsset.createMany({
+        data: DEFAULT_MEDIA_ASSETS.map((m) => ({
+          id: m.id,
+          name: m.name,
+          url: m.url,
+          type: m.type,
+          format: m.format,
+          sizeKb: m.sizeKb,
+          dimensions: m.dimensions ?? null,
+          category: m.category,
+          productSku: m.productSku ?? null,
+          createdAt: m.createdAt,
+        })),
+        skipDuplicates: true,
+      });
+    }
+    isSeeded = true;
+  } catch {
+    // Non-blocking fallback to in-memory defaults
+  }
+}
 
 export async function getMediaAssets(filters?: {
   category?: string;
   search?: string;
 }): Promise<MediaAsset[]> {
+  if (isPostgresConfigured()) {
+    try {
+      await ensureDefaultMediaAssetsSeeded();
+      const where: {
+        category?: string;
+        OR?: Array<{
+          name?: { contains: string; mode: "insensitive" };
+          url?: { contains: string; mode: "insensitive" };
+          format?: { contains: string; mode: "insensitive" };
+          productSku?: { contains: string; mode: "insensitive" };
+        }>;
+      } = {};
+
+      if (filters?.category && filters.category !== "all" && filters.category !== "All") {
+        where.category = filters.category.toLowerCase();
+      }
+
+      if (filters?.search) {
+        const q = filters.search.trim();
+        where.OR = [
+          { name: { contains: q, mode: "insensitive" } },
+          { url: { contains: q, mode: "insensitive" } },
+          { format: { contains: q, mode: "insensitive" } },
+          { productSku: { contains: q, mode: "insensitive" } },
+        ];
+      }
+
+      const rows = await prisma.mediaAsset.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+      });
+
+      return rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        url: r.url,
+        type: r.type as "image" | "video",
+        format: r.format,
+        sizeKb: r.sizeKb,
+        dimensions: r.dimensions ?? undefined,
+        category: r.category as MediaAsset["category"],
+        productSku: r.productSku ?? undefined,
+        createdAt: r.createdAt,
+      }));
+    } catch {
+      // Fallback to in-memory list on transient DB error
+    }
+  }
+
   let list = mediaState;
 
   if (filters?.category && filters.category !== "all" && filters.category !== "All") {
@@ -204,6 +283,16 @@ export async function getMediaAssets(filters?: {
 export async function deleteMediaAsset(id: string): Promise<boolean> {
   const initial = mediaState.length;
   mediaState = mediaState.filter((m) => m.id !== id);
+
+  if (isPostgresConfigured()) {
+    try {
+      await prisma.mediaAsset.delete({ where: { id } });
+      return true;
+    } catch {
+      return mediaState.length < initial;
+    }
+  }
+
   return mediaState.length < initial;
 }
 
@@ -215,6 +304,28 @@ export async function addUploadedMediaAsset(
     id: `med-${Date.now()}`,
     createdAt: new Date().toISOString(),
   };
+
+  if (isPostgresConfigured()) {
+    try {
+      await prisma.mediaAsset.create({
+        data: {
+          id: newAsset.id,
+          name: newAsset.name,
+          url: newAsset.url,
+          type: newAsset.type,
+          format: newAsset.format,
+          sizeKb: newAsset.sizeKb,
+          dimensions: newAsset.dimensions ?? null,
+          category: newAsset.category,
+          productSku: newAsset.productSku ?? null,
+          createdAt: newAsset.createdAt,
+        },
+      });
+    } catch {
+      // In-memory fallback
+    }
+  }
+
   mediaState.unshift(newAsset);
   return newAsset;
 }

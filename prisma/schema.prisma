@@ -576,6 +576,48 @@ model AdminRolePermissionOverride {
   @@map("admin_role_permission_overrides")
 }
 
+model MediaAsset {
+  id         String  @id
+  name       String
+  url        String
+  type       String  @default("image")
+  format     String
+  sizeKb     Int     @map("size_kb")
+  dimensions String?
+  category   String  @default("uploads")
+  productSku String? @map("product_sku")
+  createdAt  String  @map("created_at")
+
+  @@index([category])
+  @@index([createdAt])
+  @@map("media_assets")
+}
+
+model TaxCategory {
+  hsnCode     String  @id @map("hsn_code")
+  name        String
+  description String  @default("")
+  gstRate     Int     @map("gst_rate")
+  cgstRate    Int     @map("cgst_rate")
+  sgstRate    Int     @map("sgst_rate")
+  igstRate    Int     @map("igst_rate")
+  isActive    Boolean @default(true) @map("is_active")
+  itemCount   Int     @default(0) @map("item_count")
+  updatedAt   String  @map("updated_at")
+
+  @@map("tax_categories")
+}
+
+model LocalizationSetting {
+  id          String @id @default("default")
+  currencies  Json   @default("[]")
+  locales     Json   @default("[]")
+  preferences Json   @default("{}")
+  updatedAt   String @map("updated_at")
+
+  @@map("localization_settings")
+}
+
 model Shipment {
   id                String  @id
   orderId           String  @unique @map("order_id")
