@@ -39,7 +39,10 @@ function makeAdminQueryClient(): QueryClient {
 }
 
 /** Prefetch admin query on link hover for instant navigation */
-export function prefetchAdminQuery(queryKey: readonly unknown[], queryFn: () => Promise<unknown>) {
+export function prefetchAdminQuery(
+  _queryKey: readonly unknown[],
+  _queryFn: () => Promise<unknown>,
+) {
   // This will be called by the query client in components
   // Actual prefetching is done via useQueryClient().prefetchQuery()
 }
