@@ -12,17 +12,30 @@ export function isDemoPaymentsAllowed(): boolean {
 
 export type RazorpayKeyMode = "live" | "test" | "missing";
 
+function cleanRazorpayKey(val?: string): string | undefined {
+  const trimmed = val?.trim();
+  if (!trimmed) return undefined;
+  if (
+    /^(your([_-].*)?|changeme.*|xxx+.*|todo.*|replace.*|example.*|placeholder.*|<.*>|rzp_(live|test)_(your|placeholder|test).*)$/i.test(
+      trimmed,
+    )
+  ) {
+    return undefined;
+  }
+  return trimmed;
+}
+
 export function getRazorpayPublicKey(): string | undefined {
   return (
-    process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim() ||
-    process.env.RAZORPAY_KEY_ID?.trim() ||
+    cleanRazorpayKey(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) ||
+    cleanRazorpayKey(process.env.RAZORPAY_KEY_ID) ||
     undefined
   );
 }
 
 /** Infer live vs test from key id prefix (never log the full key). */
 export function getRazorpayKeyMode(): RazorpayKeyMode {
-  const keyId = process.env.RAZORPAY_KEY_ID?.trim();
+  const keyId = cleanRazorpayKey(process.env.RAZORPAY_KEY_ID);
   const publicKey = getRazorpayPublicKey();
   const sample = keyId || publicKey;
   if (!sample) return "missing";
@@ -38,8 +51,8 @@ export function requiresLiveRazorpay(): boolean {
 
 /** Human-readable reason when Razorpay cannot open checkout (safe to show in admin/checkout). */
 export function describeRazorpayMisconfiguration(): string | null {
-  const keyId = process.env.RAZORPAY_KEY_ID?.trim();
-  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
+  const keyId = cleanRazorpayKey(process.env.RAZORPAY_KEY_ID);
+  const keySecret = cleanRazorpayKey(process.env.RAZORPAY_KEY_SECRET);
   const publicKey = getRazorpayPublicKey();
 
   if (!keyId || !keySecret) {

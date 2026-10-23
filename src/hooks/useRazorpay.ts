@@ -269,7 +269,11 @@ export function useRazorpay() {
           throw new Error("Razorpay SDK unavailable");
         }
 
-        if (!options.key?.startsWith("rzp_")) {
+        if (
+          !options.key?.startsWith("rzp_") ||
+          options.key.toLowerCase().includes("your_") ||
+          options.key.toLowerCase().includes("placeholder")
+        ) {
           throw new Error(
             "Payment gateway is not configured. Add NEXT_PUBLIC_RAZORPAY_KEY_ID to .env.local.",
           );

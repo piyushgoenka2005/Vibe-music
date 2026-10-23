@@ -1,4 +1,5 @@
-const PLACEHOLDER_RE = /^(your[_-]?|changeme|xxx+|todo|replace|example|placeholder|<.*>)$/i;
+const PLACEHOLDER_RE =
+  /^(your([_-].*)?|changeme.*|xxx+.*|todo.*|replace.*|example.*|placeholder.*|<.*>)$/i;
 
 function readEnv(...keys: string[]): string | undefined {
   for (const key of keys) {

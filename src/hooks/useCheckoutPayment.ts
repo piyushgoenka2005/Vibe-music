@@ -190,7 +190,11 @@ export function useCheckoutPayment({
       const trackingToken = pendingTrackingToken;
       setProcessingLabel("Opening Razorpay…");
 
-      if (!orderResponse.keyId?.startsWith("rzp_")) {
+      if (
+        !orderResponse.keyId?.startsWith("rzp_") ||
+        orderResponse.keyId.toLowerCase().includes("your_") ||
+        orderResponse.keyId.toLowerCase().includes("placeholder")
+      ) {
         throw new Error(
           "Online payments are not configured. Add Razorpay keys to .env.local and restart the dev server.",
         );
