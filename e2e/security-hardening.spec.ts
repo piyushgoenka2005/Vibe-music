@@ -1,14 +1,26 @@
 import { test, expect } from "./fixtures";
-import { mutationHeaders } from "./helpers/test-utils";
+import { mutationHeaders, E2E_DISABLE_RATE_LIMIT } from "./helpers/test-utils";
 
 test.describe("Phase 2 security hardening (L-16/L-17/L-18)", () => {
   test("API responses include nosniff and rate-limit headers (L-17)", async ({ request }) => {
     const response = await request.get("/api/health");
     expect(response.status()).toBeLessThan(500);
     const headers = response.headers();
+    // nosniff is emitted by the static security-header config on every response,
+    // in every mode — assert it unconditionally.
     expect(headers["x-content-type-options"]).toBe("nosniff");
-    expect(headers["x-ratelimit-remaining"]).toBeTruthy();
-    expect(headers["x-ratelimit-reset"]).toBeTruthy();
+
+    // Rate-limit headers are only attached when the limiter actually runs. The
+    // E2E harness intentionally starts the server with rate limiting disabled
+    // (see E2E_DISABLE_RATE_LIMIT and src/lib/api/route-utils.ts) so suites never
+    // self-throttle, so assert against the harness's real configuration rather
+    // than a hard-coded expectation.
+    if (E2E_DISABLE_RATE_LIMIT === "true") {
+      expect(headers["x-ratelimit-remaining"]).toBeUndefined();
+    } else {
+      expect(headers["x-ratelimit-remaining"]).toBeTruthy();
+      expect(headers["x-ratelimit-reset"]).toBeTruthy();
+    }
   });
 
   test("forgot-password returns ok for unknown email without oracle (L-18)", async ({

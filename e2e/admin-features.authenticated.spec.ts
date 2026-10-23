@@ -4,6 +4,7 @@ import { E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD } from "./helpers/e2e-credentials";
 import { isE2EAdminReady } from "./helpers/admin-ready";
 import { loginAsE2EAdmin } from "./helpers/admin-auth";
 import { isE2EServerMode } from "./helpers/e2e-server";
+import { e2eMutationHeaders } from "./helpers/e2e-origin";
 import {
   BULK_IMPORT_FIXTURE_CSV,
   buildSkuImageZip,

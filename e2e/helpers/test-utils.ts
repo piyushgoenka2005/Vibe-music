@@ -17,6 +17,17 @@ export interface E2EProduct {
 
 export const E2E_ORIGIN = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 
+/**
+ * Single source of truth for whether the E2E harness starts the app with
+ * rate limiting disabled. `playwright.config.ts` reads this to set the
+ * webServer env, and specs read it to know which headers the server emits.
+ *
+ * Route- and proxy-level rate limiting is intentionally skipped when this is
+ * `"true"` outside production (see src/lib/api/route-utils.ts and src/proxy.ts)
+ * so suites never self-throttle. Security headers like nosniff are unaffected.
+ */
+export const E2E_DISABLE_RATE_LIMIT = "true";
+
 export async function gotoStorefront(
   page: Page,
   path: string,

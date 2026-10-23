@@ -280,8 +280,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
             <h3 className="admin-panel__title">Generate referral coupon</h3>
             <div className="admin-form-grid">
               <div className="admin-form-group">
-                <label>Owner email</label>
+                <label htmlFor="coupon-owner-email">Owner email</label>
                 <input
+                  id="coupon-owner-email"
                   className="admin-input"
                   style={{ width: "100%" }}
                   type="email"
@@ -290,8 +291,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>Owner user ID (optional)</label>
+                <label htmlFor="coupon-owner-user-id-optional">Owner user ID (optional)</label>
                 <input
+                  id="coupon-owner-user-id-optional"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={referralForm.ownerUserId}
@@ -302,8 +304,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>Template coupon</label>
+                <label htmlFor="coupon-template-coupon">Template coupon</label>
                 <select
+                  id="coupon-template-coupon"
                   className="admin-select"
                   value={referralForm.templateCouponId}
                   onChange={(e) =>
@@ -321,8 +324,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 </select>
               </div>
               <div className="admin-form-group">
-                <label>Max uses per friend</label>
+                <label htmlFor="coupon-max-uses-per-friend">Max uses per friend</label>
                 <input
+                  id="coupon-max-uses-per-friend"
                   className="admin-input"
                   style={{ width: "100%" }}
                   type="number"
@@ -369,8 +373,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
             <h3 className="admin-panel__title">{editId ? "Edit coupon" : "New coupon"}</h3>
             <div className="admin-form-grid">
               <div className="admin-form-group">
-                <label>Code</label>
+                <label htmlFor="coupon-code">Code</label>
                 <input
+                  id="coupon-code"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.code}
@@ -378,8 +383,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>Label</label>
+                <label htmlFor="coupon-label">Label</label>
                 <input
+                  id="coupon-label"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.label}
@@ -387,8 +393,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>Kind</label>
+                <label htmlFor="coupon-kind">Kind</label>
                 <select
+                  id="coupon-kind"
                   className="admin-select"
                   value={form.kind}
                   onChange={(e) => setForm({ ...form, kind: e.target.value as CouponKind })}
@@ -399,8 +406,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
               </div>
               {form.kind === "referral" ? (
                 <div className="admin-form-group">
-                  <label>Referral owner email</label>
+                  <label htmlFor="coupon-referral-owner-email">Referral owner email</label>
                   <input
+                    id="coupon-referral-owner-email"
                     className="admin-input"
                     style={{ width: "100%" }}
                     type="email"
@@ -410,8 +418,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 </div>
               ) : null}
               <div className="admin-form-group">
-                <label>Type</label>
+                <label htmlFor="coupon-type">Type</label>
                 <select
+                  id="coupon-type"
                   className="admin-select"
                   value={form.type}
                   onChange={(e) =>
@@ -429,8 +438,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
               </div>
               {form.type !== "free_shipping" ? (
                 <div className="admin-form-group">
-                  <label>Value</label>
+                  <label htmlFor="coupon-value">Value</label>
                   <input
+                    id="coupon-value"
                     className="admin-input"
                     style={{ width: "100%" }}
                     type="number"
@@ -441,8 +451,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 </div>
               ) : null}
               <div className="admin-form-group">
-                <label>Max uses (global)</label>
+                <label htmlFor="coupon-max-uses-global">Max uses (global)</label>
                 <input
+                  id="coupon-max-uses-global"
                   className="admin-input"
                   style={{ width: "100%" }}
                   type="number"
@@ -457,8 +468,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>Max uses per user</label>
+                <label htmlFor="coupon-max-uses-per-user">Max uses per user</label>
                 <input
+                  id="coupon-max-uses-per-user"
                   className="admin-input"
                   style={{ width: "100%" }}
                   type="number"
@@ -474,8 +486,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>Min order amount (INR)</label>
+                <label htmlFor="coupon-min-order-amount-inr">Min order amount (INR)</label>
                 <input
+                  id="coupon-min-order-amount-inr"
                   className="admin-input"
                   style={{ width: "100%" }}
                   type="number"
@@ -492,8 +505,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
               </div>
               {form.type === "percentage" ? (
                 <div className="admin-form-group">
-                  <label>Max discount cap (INR)</label>
+                  <label htmlFor="coupon-max-discount-cap-inr">Max discount cap (INR)</label>
                   <input
+                    id="coupon-max-discount-cap-inr"
                     className="admin-input"
                     style={{ width: "100%" }}
                     type="number"
@@ -524,8 +538,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 </p>
               </div>
               <div className="admin-form-group">
-                <label>PDP headline</label>
+                <label htmlFor="coupon-pdp-headline">PDP headline</label>
                 <input
+                  id="coupon-pdp-headline"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.pdpHeadline}
@@ -534,8 +549,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>PDP offer line</label>
+                <label htmlFor="coupon-pdp-offer-line">PDP offer line</label>
                 <input
+                  id="coupon-pdp-offer-line"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.pdpOfferLine}
@@ -544,8 +560,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>PDP max discount line</label>
+                <label htmlFor="coupon-pdp-max-discount-line">PDP max discount line</label>
                 <input
+                  id="coupon-pdp-max-discount-line"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.pdpMaxDiscountLine}
@@ -554,8 +571,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>PDP terms line</label>
+                <label htmlFor="coupon-pdp-terms-line">PDP terms line</label>
                 <input
+                  id="coupon-pdp-terms-line"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.pdpTermsLine}
@@ -564,8 +582,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>PDP disclaimer</label>
+                <label htmlFor="coupon-pdp-disclaimer">PDP disclaimer</label>
                 <input
+                  id="coupon-pdp-disclaimer"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.pdpDisclaimer}
@@ -574,8 +593,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>PDP buy-box footer</label>
+                <label htmlFor="coupon-pdp-buy-box-footer">PDP buy-box footer</label>
                 <input
+                  id="coupon-pdp-buy-box-footer"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.pdpFooter}
@@ -584,8 +604,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>Starts At</label>
+                <label htmlFor="coupon-starts-at">Starts At</label>
                 <input
+                  id="coupon-starts-at"
                   className="admin-input"
                   style={{ width: "100%" }}
                   type="date"
@@ -594,8 +615,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>Expires At</label>
+                <label htmlFor="coupon-expires-at">Expires At</label>
                 <input
+                  id="coupon-expires-at"
                   className="admin-input"
                   style={{ width: "100%" }}
                   type="date"
@@ -604,9 +626,10 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>Status</label>
+                <label htmlFor="coupon-status">Status</label>
                 <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <input
+                    id="coupon-status"
                     type="checkbox"
                     checked={form.isActive}
                     onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
@@ -615,10 +638,11 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 </label>
               </div>
               <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                <label>Applies to</label>
+                <label htmlFor="coupon-applies-to">Applies to</label>
                 <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                   <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <input
+                      id="coupon-applies-to"
                       type="radio"
                       name="coupon-scope"
                       checked={form.scope === "store"}
@@ -688,8 +712,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 </div>
               </div>
               <div className="admin-form-group">
-                <label>utm_source</label>
+                <label htmlFor="coupon-utm-source">utm_source</label>
                 <input
+                  id="coupon-utm-source"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.utmSource}
@@ -697,8 +722,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>utm_medium</label>
+                <label htmlFor="coupon-utm-medium">utm_medium</label>
                 <input
+                  id="coupon-utm-medium"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.utmMedium}
@@ -706,8 +732,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>utm_campaign</label>
+                <label htmlFor="coupon-utm-campaign">utm_campaign</label>
                 <input
+                  id="coupon-utm-campaign"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.utmCampaign}
@@ -715,8 +742,9 @@ function CouponsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 />
               </div>
               <div className="admin-form-group">
-                <label>utm_content</label>
+                <label htmlFor="coupon-utm-content">utm_content</label>
                 <input
+                  id="coupon-utm-content"
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.utmContent}

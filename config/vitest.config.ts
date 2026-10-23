@@ -34,6 +34,10 @@ export default defineConfig({
         find: "server-only",
         replacement: path.resolve(root, "./src/test/mocks/server-only.ts"),
       },
+      {
+        find: "next/server",
+        replacement: path.resolve(root, "./node_modules/next/server.js"),
+      },
     ],
   },
 });

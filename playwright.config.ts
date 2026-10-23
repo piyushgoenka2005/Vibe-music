@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD } from "./e2e/helpers/e2e-credentials";
 import { loadLocalEnv } from "./e2e/load-env";
+import { E2E_DISABLE_RATE_LIMIT } from "./e2e/helpers/test-utils";
 
 loadLocalEnv();
 
@@ -138,7 +139,7 @@ export default defineConfig({
           NODE_OPTIONS: "",
           NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH: "false",
           NEXT_PUBLIC_ENABLE_SPLASH_CURSOR: "false",
-          DISABLE_RATE_LIMIT: "true",
+          DISABLE_RATE_LIMIT: E2E_DISABLE_RATE_LIMIT,
           E2E_TEST_MODE: "true",
           E2E_ADMIN_EMAIL,
           E2E_ADMIN_PASSWORD,

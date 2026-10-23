@@ -11,6 +11,7 @@ function buildContentSecurityPolicy(): string {
     "https://checkout.razorpay.com",
     "https://*.razorpay.com",
     "https://apis.google.com",
+    "https://accounts.google.com",
     "https://www.googletagmanager.com",
     "https://connect.facebook.net",
   ]

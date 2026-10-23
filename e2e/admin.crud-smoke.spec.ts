@@ -15,7 +15,7 @@ test.describe("admin CRUD smoke matrix", () => {
   test("products list: search, empty/error-safe render, pagination controls", async ({ page }) => {
     await page.goto("/admin/products", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: /products/i }).first()).toBeVisible();
-    const search = page.getByRole("textbox", { name: /search products/i });
+    const search = page.getByRole("searchbox", { name: /search products/i });
     await expect(search).toBeVisible();
     await search.fill("__no_such_product_zzz__");
     await expect(page.locator(".admin-empty, .admin-table, .admin-error").first()).toBeVisible({
