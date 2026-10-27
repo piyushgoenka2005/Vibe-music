@@ -24,12 +24,30 @@ const WIDE_CARD_UNFRIENDLY_FILES = new Set(["e853f8d2-cfec-4a70-a7c8-ec375120519
 /** Horizontal or tight detail crops that break the standing-guitar Big Names row. */
 const BIG_NAMES_SHOWCASE_UNFRIENDLY_FILES = new Set([
   /** HZA-6000 — guitar lying on its side */
+  "7eb0b094-9d3b-48c2-8c15-32d959ab7ce3",
+  "b5c1de95-b9ce-40ad-9875-9754158dc914",
+  "63a9469c-c343-43cb-a6de-baf135e269bc",
+  "3281b5df-ec59-4e46-a3f7-63b3bacb9163",
+  "2da2d7cc-830e-42e6-916a-09975cb31eb9",
+  "5a22ad17-4e18-4dd1-93b7-dd4af4d796aa",
+  /** HZA-4000EQN / horizontal crops and side-lying shots */
+  "ab6157a7-3831-498d-be49-1831177b1223",
+  "6565a45b-4339-456e-b0cc-4f4d9f2be249",
+  "d7cca533-4d8b-4e7d-b808-e0d7ad49be74",
+  "d905832a-438b-47a3-b065-4115ad1b755f",
+  "fcffebad-d116-4c11-9405-54a285df29d4",
+  /** Also retain filenames with .png extension for backward compatibility */
   "7eb0b094-9d3b-48c2-8c15-32d959ab7ce3.png",
   "b5c1de95-b9ce-40ad-9875-9754158dc914.png",
   "63a9469c-c343-43cb-a6de-baf135e269bc.png",
   "3281b5df-ec59-4e46-a3f7-63b3bacb9163.png",
   "2da2d7cc-830e-42e6-916a-09975cb31eb9.png",
   "5a22ad17-4e18-4dd1-93b7-dd4af4d796aa.png",
+  "ab6157a7-3831-498d-be49-1831177b1223.png",
+  "6565a45b-4339-456e-b0cc-4f4d9f2be249.png",
+  "d7cca533-4d8b-4e7d-b808-e0d7ad49be74.png",
+  "d905832a-438b-47a3-b065-4115ad1b755f.png",
+  "fcffebad-d116-4c11-9405-54a285df29d4.png",
 ]);
 
 /** CDN masters uploaded under the wrong SKU folder (e.g. drum kit in cymbal slots). */
@@ -37,6 +55,11 @@ const MISASSIGNED_CATALOG_FILES = new Set(["e853f8d2-cfec-4a70-a7c8-ec3751205191
 
 function imageFileName(url: string): string {
   return url.split("/").pop()?.split("?")[0] ?? "";
+}
+
+function imageFileBaseName(url: string): string {
+  const file = imageFileName(url);
+  return file.replace(/(-w\d+)?\.(png|jpg|jpeg|webp)$/i, "");
 }
 
 export function cdnUrlProductSlug(url: string): string | null {
@@ -70,7 +93,15 @@ export function isFlatPackshotImageUrl(url: string): boolean {
 }
 
 export function isBigNamesShowcaseUnfriendlyImage(url: string): boolean {
-  return BIG_NAMES_SHOWCASE_UNFRIENDLY_FILES.has(imageFileName(url));
+  if (!url) return false;
+  const file = imageFileName(url);
+  const base = imageFileBaseName(url);
+  return (
+    BIG_NAMES_SHOWCASE_UNFRIENDLY_FILES.has(file) ||
+    BIG_NAMES_SHOWCASE_UNFRIENDLY_FILES.has(base) ||
+    BIG_NAMES_SHOWCASE_UNFRIENDLY_FILES.has(`${base}.png`) ||
+    BIG_NAMES_SHOWCASE_UNFRIENDLY_FILES.has(`${base}.webp`)
+  );
 }
 
 /**

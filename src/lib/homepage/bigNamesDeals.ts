@@ -5,6 +5,7 @@ import { productPath } from "@/lib/routes";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
 import { isNonInstrumentGuitarProduct } from "@/lib/product/productRelevance";
 import {
+  isBigNamesShowcaseUnfriendlyImage,
   isFlatPackshotImageUrl,
   pickBigNamesShowcaseImage,
   resolveProductCardImage,
@@ -40,10 +41,11 @@ function resolveBigNamesProductImage(
   product: CatalogProduct,
   customImage?: string,
 ): { src: string; fallbackSrc: string; blendMultiply: boolean } {
+  const custom = customImage?.trim();
   const input = {
     slug: product.slug,
     category: product.category,
-    image: customImage?.trim() || product.image,
+    image: custom && !isBigNamesShowcaseUnfriendlyImage(custom) ? custom : product.image,
     images: product.images,
   };
   const resolved = resolveProductCardImage(input);
@@ -53,6 +55,15 @@ function resolveBigNamesProductImage(
   // Gallery may omit CDN art when the upload folder slug differs from the product slug.
   if (!isCdnUrl(showcaseSrc) && isCdnUrl(resolved.src)) {
     showcaseSrc = pickBigNamesShowcaseImage([resolved.src, ...gallery]) || resolved.src;
+  }
+  // Guarantee standing vertical orientation — bypass any horizontal body crops
+  if (isBigNamesShowcaseUnfriendlyImage(showcaseSrc)) {
+    const verticalAlternative = [...gallery, resolved.src, ...(product.images ?? [])].find(
+      (u) => u && !isBigNamesShowcaseUnfriendlyImage(u),
+    );
+    if (verticalAlternative) {
+      showcaseSrc = verticalAlternative;
+    }
   }
   const blendMultiply = isFlatPackshotImageUrl(showcaseSrc) || usesShowcaseBlend(showcaseSrc);
 

@@ -118,6 +118,29 @@ describe("resolveBigNamesDealFallbacks", () => {
     expect(items[0]?.blendMultiply).toBe(true);
   });
 
+  it("rejects horizontal crops for HZA-4000EQN in favor of vertical standing packshot", () => {
+    const item = mapCatalogProductToBigNamesDeal(
+      guitar({
+        id: "hza-4000eqn",
+        slug: "hertz-hza-4000eqn-semi-acoustic-guitar-built-in-eq-electronics-natural",
+        name: "HERTZ HZA-4000EQN Semi-Acoustic Guitar",
+        image:
+          "https://cdn.vibemusic.in/products/guitars/hertz-hza-4000eqn-semi-acoustic-guitar-built-in-eq-electronics-natural/ab6157a7-3831-498d-be49-1831177b1223-w480.webp",
+        images: [
+          "https://cdn.vibemusic.in/products/guitars/hertz-hza-4000eqn-semi-acoustic-guitar-built-in-eq-electronics-natural/ab6157a7-3831-498d-be49-1831177b1223-w480.webp",
+          "https://cdn.vibemusic.in/products/guitars/hertz-hza-4000eqn-semi-acoustic-guitar-built-in-eq-electronics-natural/c7f6a833-e94d-4934-ba57-8a99d4018b2d.webp",
+        ],
+      }),
+      {
+        customImage:
+          "https://cdn.vibemusic.in/products/guitars/hertz-hza-4000eqn-semi-acoustic-guitar-built-in-eq-electronics-natural/ab6157a7-3831-498d-be49-1831177b1223-w480.webp",
+      },
+    );
+
+    expect(item.product).toContain("c7f6a833-e94d-4934-ba57-8a99d4018b2d");
+    expect(item.product).not.toContain("ab6157a7-3831-498d-be49-1831177b1223");
+  });
+
   it("uses catalog CDN images instead of hardcoded showcase art", () => {
     const products = BIG_NAMES_DEALS.map((deal, index) =>
       guitar({
