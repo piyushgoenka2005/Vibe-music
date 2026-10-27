@@ -13,11 +13,7 @@ import { ROUTES } from "@/lib/routes";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 
 export async function POST(request: Request) {
-  const rateLimited = await enforceRateLimit(
-    request,
-    "support-ticket",
-    RATE_LIMITS.publicApi
-  );
+  const rateLimited = await enforceRateLimit(request, "support-ticket", RATE_LIMITS.publicApi);
   if (rateLimited) return rateLimited;
 
   const csrfError = enforceMutationSecurity(request);
@@ -46,9 +42,7 @@ export async function POST(request: Request) {
     });
 
     if (sessionUser?.uid) {
-      const { notifyUserIfAllowed } = await import(
-        "@/lib/server/notificationRepository"
-      );
+      const { notifyUserIfAllowed } = await import("@/lib/server/notificationRepository");
       void notifyUserIfAllowed({
         userId: sessionUser.uid,
         type: "system",
@@ -76,15 +70,16 @@ export async function GET() {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const { listSupportTickets } = await import(
-      "@/lib/server/supportTicketRepository"
-    );
+    const { listSupportTickets } = await import("@/lib/server/supportTicketRepository");
     const tickets = await listSupportTickets({
       userId: sessionUser.uid,
       email: sessionUser.email ?? undefined,
       limit: 50,
     });
-    return NextResponse.json({ tickets });
+    return NextResponse.json(
+      { tickets },
+      { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } },
+    );
   } catch (error) {
     console.error("[support-tickets]", error);
     return jsonError("Unable to load tickets.", 500);

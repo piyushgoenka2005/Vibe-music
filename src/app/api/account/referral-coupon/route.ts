@@ -15,5 +15,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unable to load referral coupon" }, { status: 500 });
   }
 
-  return NextResponse.json(payload);
+  return NextResponse.json(payload, {
+    headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120" },
+  });
 }

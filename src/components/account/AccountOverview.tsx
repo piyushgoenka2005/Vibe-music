@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Package, Heart, MapPin, ShoppingBag, ArrowRight, Bell, Headset } from "lucide-react";
@@ -29,8 +28,11 @@ export default function AccountOverview({ initialReferral = null }: AccountOverv
   const wishlistItems = useWishlistStore((s) => s.items);
   const { addresses, isLoading: addressesLoading } = useAddresses();
 
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(true);
+  const { data: orders = [], isLoading: ordersLoading } = useQuery<Order[]>({
+    queryKey: ["account-user-orders"],
+    queryFn: fetchUserOrders,
+    staleTime: 30_000,
+  });
 
   const { data: ticketsData } = useQuery({
     queryKey: ["account-support-tickets"],
@@ -57,25 +59,6 @@ export default function AccountOverview({ initialReferral = null }: AccountOverv
       (t) => t.status === "open" || t.status === "in_progress" || t.status === "waiting_customer",
     ).length ?? 0;
   const unreadNotificationsCount = notificationsData?.unreadCount ?? 0;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchUserOrders()
-      .then((data) => {
-        if (!cancelled) setOrders(data);
-      })
-      .catch(() => {
-        if (!cancelled) setOrders([]);
-      })
-      .finally(() => {
-        if (!cancelled) setOrdersLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const orderCount = orders.length;
   const recentOrders = orders.slice(0, RECENT_ORDERS_LIMIT);

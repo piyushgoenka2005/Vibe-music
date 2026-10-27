@@ -24,6 +24,7 @@ export interface RazorpayCheckoutOptions {
   currency: string;
   name: string;
   description?: string;
+  image?: string;
   order_id: string;
   prefill?: {
     name?: string;
@@ -33,7 +34,11 @@ export interface RazorpayCheckoutOptions {
     method?: "card" | "netbanking" | "wallet" | "emi" | "upi";
   };
   notes?: Record<string, string>;
-  theme?: { color?: string };
+  theme?: {
+    color?: string;
+    backdrop_color?: string;
+    hide_topbar?: boolean;
+  };
   /** Prefer / limit instruments shown in Checkout (Standard Checkout config). */
   config?: {
     display?: {
@@ -43,6 +48,14 @@ export interface RazorpayCheckoutOptions {
   };
   modal?: {
     ondismiss?: () => void;
+    confirm_close?: boolean;
+    escape?: boolean;
+    animation?: boolean;
+    backdropclose?: boolean;
+  };
+  retry?: {
+    enabled?: boolean;
+    max_count?: number;
   };
   handler: (response: RazorpaySuccessResponse) => void;
 }
@@ -281,6 +294,7 @@ export function useRazorpay() {
 
         const checkoutPromise = new Promise<RazorpayCheckoutResult>((resolve) => {
           let settled = false;
+          let lastFailureReason: string | null = null;
 
           const finish = (value: RazorpayCheckoutResult) => {
             if (settled) return;
@@ -296,10 +310,15 @@ export function useRazorpay() {
               finish({ status: "success", response });
             },
             modal: {
+              confirm_close: true,
               ...options.modal,
               ondismiss: () => {
                 options.modal?.ondismiss?.();
-                finish({ status: "cancelled" });
+                if (lastFailureReason) {
+                  finish({ status: "failed", message: lastFailureReason });
+                } else {
+                  finish({ status: "cancelled" });
+                }
               },
             },
           });
@@ -312,7 +331,10 @@ export function useRazorpay() {
               response.error.reason ||
               "Payment failed. Please try another method.";
             setError(message);
-            finish({ status: "failed", message });
+            lastFailureReason = message;
+            // Do NOT call finish() here. The Razorpay modal stays open and allows the
+            // customer to retry or choose another payment method. Only upon dismissal
+            // (modal.ondismiss) without a successful payment does the flow finish.
           });
 
           try {

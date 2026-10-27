@@ -31,7 +31,10 @@ export async function GET(request: Request) {
     ]);
 
     const unreadCount = notifications.filter((item) => !item.read).length;
-    return NextResponse.json({ notifications, preferences, unreadCount });
+    return NextResponse.json(
+      { notifications, preferences, unreadCount },
+      { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } },
+    );
   } catch (error) {
     return publicApiError(error, "Failed to load notifications");
   }

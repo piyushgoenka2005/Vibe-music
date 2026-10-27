@@ -139,33 +139,21 @@ export default function SwipeToPayButton({
     }
   }, [completed, dragX, loading]);
 
-  const finishSwipe = useCallback(async () => {
+  const triggerSlideAndConfirm = useCallback(async () => {
     if (completed || isLocked) return;
-
     setCompleted(true);
+    setIsSwiping(true);
     const endX = measureMaxDrag();
-    dragX.set(endX);
+    animate(dragX, endX, SPRING);
 
     try {
       await onConfirm();
     } catch {
       setCompleted(false);
       setIsSwiping(false);
-      dragX.set(0);
+      void animate(dragX, 0, SPRING);
     }
   }, [completed, dragX, isLocked, measureMaxDrag, onConfirm]);
-
-  const triggerSlideAndConfirm = useCallback(async () => {
-    if (completed || isLocked) return;
-    const endX = measureMaxDrag();
-    setIsSwiping(true);
-    animate(dragX, endX, {
-      ...SPRING,
-      onComplete: () => {
-        void finishSwipe();
-      },
-    });
-  }, [completed, dragX, finishSwipe, isLocked, measureMaxDrag]);
 
   const handleDragStart = useCallback(() => {
     if (isLocked || completed) return;

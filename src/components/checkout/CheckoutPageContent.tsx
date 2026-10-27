@@ -220,10 +220,8 @@ export default function CheckoutPageContent() {
 
   useEffect(() => {
     preloadRazorpayCheckout();
-    if (step === "summary" || step === "payment") {
-      void import("@/components/checkout/SwipeToPayButton");
-    }
-  }, [step]);
+    void import("@/components/checkout/SwipeToPayButton");
+  }, []);
 
   const placesAutocomplete = checkoutCapabilities?.placesAutocomplete ?? false;
   const onlinePaymentsAvailable =

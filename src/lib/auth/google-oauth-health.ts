@@ -22,6 +22,14 @@ export function clearGoogleOAuthProbeCache(): void {
   cached = null;
 }
 
+/** Reads the cached probe result without triggering network requests. */
+export function getCachedGoogleOAuthProbeResult(): GoogleOAuthHealthResult | null {
+  if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
+    return cached.result;
+  }
+  return null;
+}
+
 /** Must match Auth.js Google provider callback for this deployment. */
 export function resolveGoogleOAuthRedirectUri(): string {
   const base =

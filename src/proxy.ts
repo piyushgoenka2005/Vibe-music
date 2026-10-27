@@ -73,6 +73,20 @@ function isApiFastPath(request: NextRequest, pathname: string): boolean {
     }
   }
 
+  // Authenticated user account read routes: skip edge rate limit overhead when session cookie is present
+  const accountGetPaths = [
+    "/api/account/",
+    "/api/orders",
+    "/api/addresses",
+    "/api/support/tickets",
+  ];
+  if (accountGetPaths.some((p) => pathname.startsWith(p))) {
+    const secure = request.nextUrl.protocol === "https:";
+    if (hasAuthSessionCookie(request.cookies, secure)) {
+      return true;
+    }
+  }
+
   // Non-production: skip rate limit for auth/admin routes when explicitly disabled
   if (
     process.env.NODE_ENV !== "production" &&

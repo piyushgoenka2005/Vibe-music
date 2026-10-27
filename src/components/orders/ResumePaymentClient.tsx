@@ -52,12 +52,18 @@ export function ResumePaymentClient({ order, email }: ResumePaymentClientProps) 
         phone: order.customerPhone ?? order.shippingAddress.phone,
       };
 
+      const logoUrl =
+        typeof window !== "undefined" && window.location.origin.startsWith("http")
+          ? `${window.location.origin}/icon-192.png`
+          : `${BRAND.siteUrl}/icon-192.png`;
+
       const result = await openCheckout({
         key: session.razorpay.keyId,
         amount: session.razorpay.amount,
         currency: session.razorpay.currency,
         name: BRAND.name,
         description: `Order ${order.id}`,
+        image: logoUrl,
         order_id: session.razorpay.orderId,
         prefill: {
           name: shipping.name,
@@ -65,7 +71,20 @@ export function ResumePaymentClient({ order, email }: ResumePaymentClientProps) 
           contact: shipping.phone,
         },
         notes: { orderId: order.id },
-        theme: { color: "#1253ED" },
+        theme: {
+          color: "#1253ED",
+          backdrop_color: "rgba(0, 0, 0, 0.65)",
+        },
+        modal: {
+          confirm_close: true,
+          escape: true,
+          animation: true,
+          backdropclose: false,
+        },
+        retry: {
+          enabled: true,
+          max_count: 3,
+        },
         handler: () => undefined,
       });
 

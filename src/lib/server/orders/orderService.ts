@@ -48,6 +48,9 @@ import type {
 
 const PLATFORM_FEE = 0;
 
+let cachedRazorpayInstance: Razorpay | null = null;
+let cachedKeyId: string | undefined;
+
 function getRazorpayInstance(): Razorpay {
   logRazorpayEnvPresence();
   assertLiveRazorpayKeys();
@@ -59,9 +62,13 @@ function getRazorpayInstance(): Razorpay {
     throw new Error("Missing Razorpay env vars: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET");
   }
 
-  const instance = new Razorpay({ key_id: keyId, key_secret: keySecret });
-  logPayment("Razorpay initialized");
-  return instance;
+  if (!cachedRazorpayInstance || cachedKeyId !== keyId) {
+    cachedRazorpayInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    cachedKeyId = keyId;
+    logPayment("Razorpay initialized");
+  }
+
+  return cachedRazorpayInstance;
 }
 
 function extractRazorpayError(error: unknown): string | null {
@@ -354,16 +361,18 @@ export async function verifyAndCompletePayment(payload: VerifyPaymentPayload): P
     throw new Error("Invalid payment signature");
   }
 
-  const paymentAmountPaise = await fetchRazorpayOrderAmountPaise(payload.razorpayOrderId);
-
   // Signature is persisted inside the same transaction that marks the order
   // paid, so there is no second read-modify-write window.
+  // Note: We avoid making an extra blocking outbound roundtrip to Razorpay's API
+  // during client verify because:
+  // 1. The HMAC SHA256 signature already cryptographically authenticates the orderId, paymentId, and secret.
+  // 2. completeOrderPayment locks the order in DB and verifies order.razorpayOrderId matches.
+  // 3. Razorpay orders are immutable (amount cannot be modified after creation).
   const result = await completeOrderPayment({
     orderId: payload.orderId,
     razorpayPaymentId: payload.razorpayPaymentId,
     razorpayOrderId: payload.razorpayOrderId,
     razorpaySignature: payload.razorpaySignature,
-    paymentAmountPaise,
     source: "client_verify",
   });
 

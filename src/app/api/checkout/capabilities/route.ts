@@ -41,23 +41,30 @@ export async function GET(request: Request) {
         settings.storePhone,
     );
 
-    return NextResponse.json({
-      placesAutocomplete,
-      razorpayConfigured,
-      razorpayMode,
-      razorpayIssue: describeRazorpayMisconfiguration(),
-      demoPaymentsAllowed,
-      onlinePaymentsAvailable: razorpayConfigured,
-      storePhoneConfigured: Boolean(phone.tel),
-      storePhoneDisplay: phone.display || null,
-      storePhoneTel: phone.tel || null,
-      storeEmail: settings.storeEmail,
-      paymentMethods: ["razorpay"] as const,
-      analyticsEnabled: isClientAnalyticsConfigured(),
-      metaPixelConfigured: isMetaPixelConfigured(),
-      metaCapiConfigured: isMetaCapiConfigured(),
-      gstinConfigured: gstinComplianceStatus() === "ok",
-    });
+    return NextResponse.json(
+      {
+        placesAutocomplete,
+        razorpayConfigured,
+        razorpayMode,
+        razorpayIssue: describeRazorpayMisconfiguration(),
+        demoPaymentsAllowed,
+        onlinePaymentsAvailable: razorpayConfigured,
+        storePhoneConfigured: Boolean(phone.tel),
+        storePhoneDisplay: phone.display || null,
+        storePhoneTel: phone.tel || null,
+        storeEmail: settings.storeEmail,
+        paymentMethods: ["razorpay"] as const,
+        analyticsEnabled: isClientAnalyticsConfigured(),
+        metaPixelConfigured: isMetaPixelConfigured(),
+        metaCapiConfigured: isMetaCapiConfigured(),
+        gstinConfigured: gstinComplianceStatus() === "ok",
+      },
+      {
+        headers: {
+          "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
+        },
+      },
+    );
   } catch (error) {
     console.error("[api/checkout/capabilities] Error:", error);
     return NextResponse.json({ error: "Failed to load checkout capabilities" }, { status: 500 });

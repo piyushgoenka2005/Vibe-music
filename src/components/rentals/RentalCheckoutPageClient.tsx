@@ -131,14 +131,34 @@ export default function RentalCheckoutPageClient() {
       }
       if (result.razorpayOrderId) {
         const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "";
+        const logoUrl =
+          typeof window !== "undefined" && window.location.origin.startsWith("http")
+            ? `${window.location.origin}/icon-192.png`
+            : "https://vibemusic.in/icon-192.png";
+
         const checkoutResult = await openCheckout({
           key,
           amount: Math.round((quoteQuery.data?.total ?? 0) * 100),
           currency: "INR",
           name: "Vibe Music Rentals",
           description: result.booking.bookingNumber,
+          image: logoUrl,
           order_id: result.razorpayOrderId,
           prefill: { name: customerName, email, contact: customerPhone },
+          theme: {
+            color: "#1253ED",
+            backdrop_color: "rgba(0, 0, 0, 0.65)",
+          },
+          modal: {
+            confirm_close: true,
+            escape: true,
+            animation: true,
+            backdropclose: false,
+          },
+          retry: {
+            enabled: true,
+            max_count: 3,
+          },
           handler: async (response) => {
             await fetch("/api/rentals/bookings/verify-payment", {
               method: "POST",
@@ -177,7 +197,7 @@ export default function RentalCheckoutPageClient() {
 
   const cancellationPolicy = useMemo(
     () => policyData?.policy.cancellationPolicy ?? "",
-    [policyData]
+    [policyData],
   );
 
   if (!productSlug) {
@@ -206,7 +226,11 @@ export default function RentalCheckoutPageClient() {
         </label>
         <label>
           Phone
-          <input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} required />
+          <input
+            value={customerPhone}
+            onChange={(e) => setCustomerPhone(e.target.value)}
+            required
+          />
         </label>
         <p className="rentals-form__payment-note">
           Payment is collected online via Razorpay (UPI, cards, net banking).
@@ -216,11 +240,17 @@ export default function RentalCheckoutPageClient() {
           <>
             <label>
               Address line
-              <input value={address.line1} onChange={(e) => setAddress({ ...address, line1: e.target.value })} />
+              <input
+                value={address.line1}
+                onChange={(e) => setAddress({ ...address, line1: e.target.value })}
+              />
             </label>
             <label>
               City
-              <input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} />
+              <input
+                value={address.city}
+                onChange={(e) => setAddress({ ...address, city: e.target.value })}
+              />
             </label>
             <label>
               Postal code
@@ -255,7 +285,9 @@ export default function RentalCheckoutPageClient() {
 
         {quote ? (
           <div className="rentals-quote">
-            <p>Total due now: <strong>{formatCurrency(quote.total)}</strong></p>
+            <p>
+              Total due now: <strong>{formatCurrency(quote.total)}</strong>
+            </p>
             <p className="rentals-product-card__meta">
               Includes refundable deposit {formatCurrency(quote.depositAmount)}
             </p>
@@ -271,9 +303,7 @@ export default function RentalCheckoutPageClient() {
           {bookMutation.isPending ? "Processing…" : "Confirm rental booking"}
         </button>
 
-        {bookMutation.error ? (
-          <p role="alert">{bookMutation.error.message}</p>
-        ) : null}
+        {bookMutation.error ? <p role="alert">{bookMutation.error.message}</p> : null}
       </div>
     </main>
   );

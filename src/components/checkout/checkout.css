@@ -2273,3 +2273,16 @@
 .checkout-invoice td:last-child {
   text-align: right;
 }
+
+/* Razorpay checkout modal overlay protection */
+.razorpay-container {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+  inset: 0 !important;
+}
+
+.razorpay-container iframe,
+.razorpay-checkout-frame {
+  max-width: none !important;
+  border: none !important;
+}

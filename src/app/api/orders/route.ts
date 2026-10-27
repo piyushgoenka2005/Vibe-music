@@ -17,7 +17,10 @@ export async function GET(request: Request) {
 
     const orders = await listOrdersForUser(sessionUser.uid);
 
-    return NextResponse.json({ orders });
+    return NextResponse.json(
+      { orders },
+      { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" } },
+    );
   } catch (error) {
     return handleRouteError(error, "api/orders", request);
   }

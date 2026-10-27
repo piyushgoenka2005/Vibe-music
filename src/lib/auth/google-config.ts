@@ -24,23 +24,27 @@ async function resolveGoogleSignInStatus(): Promise<GoogleSignInStatus> {
     return { available: false, reason: "oauth" };
   }
 
-  const [{ verifyPostgresConnection }, { probeGoogleOAuthClient }] = await Promise.all([
+  const [{ verifyPostgresConnection }, { getCachedGoogleOAuthProbeResult }] = await Promise.all([
     import("@/lib/server/postgresHealth"),
     import("@/lib/auth/google-oauth-health"),
   ]);
 
-  const [database, oauth] = await Promise.all([
-    verifyPostgresConnection(),
-    // Reuse the module cache populated by instrumentation when possible.
-    probeGoogleOAuthClient({ timeoutMs: 8_000 }),
-  ]);
-
+  const database = await verifyPostgresConnection();
   if (!database.ok) {
     return { available: false, reason: "database" };
   }
 
-  if (!oauth.ok) {
-    return { available: false, reason: mapOAuthHealthReason(oauth.reason) };
+  // Check if a background startup probe definitively detected a deleted or invalid client.
+  // We NEVER block live customer login/register requests with outbound network calls to Google.
+  const cached = getCachedGoogleOAuthProbeResult();
+  if (
+    cached &&
+    !cached.ok &&
+    (cached.reason === "deleted_client" ||
+      cached.reason === "invalid_client" ||
+      cached.reason === "redirect_mismatch")
+  ) {
+    return { available: false, reason: mapOAuthHealthReason(cached.reason) };
   }
 
   return { available: true };

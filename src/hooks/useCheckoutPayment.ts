@@ -208,19 +208,24 @@ export function useCheckoutPayment({
         throw new Error("Unable to start Razorpay checkout.");
       }
 
-      setIsProcessing(false);
+      setProcessingLabel("Opening Razorpay…");
 
       const resolvedPhone = phone || customerPhone || shippingAddress.phone;
       const normalizedContact = resolvedPhone ? normalizeIndianPhone(resolvedPhone) : undefined;
-
       const preferredMethod = razorpayPrefillMethod(onlineChannel);
+
+      const logoUrl =
+        typeof window !== "undefined" && window.location.origin.startsWith("http")
+          ? `${window.location.origin}/icon-192.png`
+          : `${BRAND.siteUrl}/icon-192.png`;
 
       const result = await openCheckout({
         key: orderResponse.keyId,
         amount: orderResponse.amount,
         currency: orderResponse.currency,
         name: BRAND.name,
-        description: "Secure payment for your order",
+        description: `Order ${orderResponse.orderId}`,
+        image: logoUrl,
         order_id: orderResponse.razorpayOrderId,
         prefill: {
           name: customerName?.trim() || shippingAddress.name?.trim() || undefined,
@@ -232,7 +237,20 @@ export function useCheckoutPayment({
           ...(preferredMethod ? { method: preferredMethod } : {}),
         },
         notes: { orderId: orderResponse.orderId },
-        theme: { color: "#1253ED" },
+        theme: {
+          color: "#1253ED",
+          backdrop_color: "rgba(0, 0, 0, 0.65)",
+        },
+        modal: {
+          confirm_close: true,
+          escape: true,
+          animation: true,
+          backdropclose: false,
+        },
+        retry: {
+          enabled: true,
+          max_count: 3,
+        },
         handler: () => undefined,
       });
 
@@ -251,6 +269,8 @@ export function useCheckoutPayment({
         return;
       }
 
+      setProcessingLabel("Verifying payment…");
+
       const verified = await verifyPayment({
         orderId: orderResponse.orderId,
         razorpayOrderId: result.response.razorpay_order_id,
@@ -262,6 +282,7 @@ export function useCheckoutPayment({
         cacheOrderForConfirmation(verified.order, { checkoutMode });
       }
 
+      setProcessingLabel("Redirecting…");
       goToOrderConfirmation(orderResponse.orderId, trackingToken, email);
     } catch (err) {
       if (pendingOrderId && pendingTrackingToken) {
