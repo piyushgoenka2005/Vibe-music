@@ -34,6 +34,11 @@
       ),
       calc((100% - var(--hp-frame-max)) / 2)
     );
+    /* Edge-to-edge product showcases: close to vertical social rail on left, end of screen on right */
+    --hp-edge-rail-clearance: calc(
+      var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) + 0.625rem
+    );
+    --hp-edge-right-clearance: clamp(0.5rem, 1vw, 1rem);
   }
 }
 
@@ -2479,7 +2484,11 @@ body.is-scroll-restoring .premium-home > * {
 
 @media (min-width: 1024px) {
   .premium-home .new-arrivals-section__inner {
-    padding-inline: var(--hp-frame-gutter);
+    padding-left: var(
+      --hp-edge-rail-clearance,
+      calc(var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) + 0.625rem)
+    );
+    padding-right: var(--hp-edge-right-clearance, clamp(0.5rem, 1vw, 1rem));
   }
 }
 
@@ -2562,20 +2571,25 @@ body.is-scroll-restoring .premium-home > * {
 }
 
 /*
- * Desktop: clip the marquee viewport to the shared frame so the auto-scroll
- * never paints under the fixed social icons and both edges line up.
+ * Desktop: fill edge-to-edge from the fixed social rail to the right edge of the screen.
  */
 @media (min-width: 1024px) {
   .premium-home .new-arrivals-marquee {
     width: auto;
     max-width: none;
-    margin-inline: var(--hp-frame-gutter);
-    padding-inline: 0;
+    margin-left: var(
+      --hp-edge-rail-clearance,
+      calc(var(--social-rail-inset-left, 4px) + var(--social-rail-track-width, 26px) + 0.625rem)
+    );
+    margin-right: 0;
+    margin-inline: 0;
+    padding-left: 0;
+    padding-right: var(--hp-edge-right-clearance, clamp(0.5rem, 1vw, 1rem));
     padding-block: 1.75rem 0.85rem;
     overflow-x: clip;
     overflow-y: visible;
-    mask-image: linear-gradient(90deg, #000 0%, #000 97%, transparent 100%);
-    -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 97%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 20px), transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 20px), transparent 100%);
   }
 }
 

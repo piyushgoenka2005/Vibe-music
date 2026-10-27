@@ -58,7 +58,12 @@ export default function HomepageProductGridSection({ section }: HomepageProductG
   const eyebrow = section.accentLabel ?? "New arrivals";
 
   return (
-    <section aria-labelledby={titleId} className="new-arrivals-section" id={section.sectionId}>
+    <section
+      aria-labelledby={titleId}
+      className="new-arrivals-section"
+      data-section={section.key}
+      id={section.sectionId}
+    >
       <div className="new-arrivals-section__inner">
         <header className="new-arrivals-section__header">
           <div className="new-arrivals-section__header-copy">
