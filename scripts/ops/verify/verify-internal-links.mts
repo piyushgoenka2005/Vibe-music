@@ -43,14 +43,23 @@ function normalize(raw: string, from: string): string | null {
 }
 
 async function fetchWithRetry(path: string, method: "GET" | "HEAD"): Promise<Response> {
+  const url = /^https?:\/\//i.test(path) ? path : `${ORIGIN}${path}`;
   for (let attempt = 0; ; attempt++) {
-    const response = await fetch(/^https?:\/\//i.test(path) ? path : `${ORIGIN}${path}`, {
-      method,
-      redirect: "manual",
-      headers: { "user-agent": "VibeLinkCheck/1.0 (+ops verify)" },
-    });
-    if (response.status !== 429 || attempt >= 4) return response;
-    await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+    try {
+      const response = await fetch(url, {
+        method,
+        redirect: "manual",
+        headers: {
+          "user-agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 VibeLinkCheck/1.0",
+        },
+        signal: AbortSignal.timeout(12000),
+      });
+      if (response.status !== 429 || attempt >= 3) return response;
+    } catch (err) {
+      if (attempt >= 3) throw err;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
   }
 }
 
@@ -83,7 +92,12 @@ async function checkAsset(path: string): Promise<number> {
 }
 
 async function checkAssetOnce(path: string): Promise<number> {
-  const response = await fetchWithRetry(path, path.startsWith("/_next/image") ? "GET" : "HEAD");
+  let response: Response;
+  try {
+    response = await fetchWithRetry(path, path.startsWith("/_next/image") ? "GET" : "HEAD");
+  } catch {
+    response = await fetchWithRetry(path, "GET");
+  }
   if (path.startsWith("/_next/image")) await response.body?.cancel();
   if (response.status === 405) {
     const get = await fetchWithRetry(path, "GET");

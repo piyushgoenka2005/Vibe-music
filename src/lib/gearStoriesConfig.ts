@@ -46,19 +46,27 @@ function resolveVideoCandidates(videoUrl: string): string[] {
   return candidates.filter((url, position, list) => url && list.indexOf(url) === position);
 }
 
+function isUnusableGearStoryPoster(url: string | null | undefined): boolean {
+  if (!url) return true;
+  if (url.includes("0a8d04bb-8336-4b89-a393-955115a5ed7c")) return true;
+  if (url.includes("/banners/homepage/")) return true;
+  return false;
+}
+
 function enrichStoryFromProduct(
   base: GearStory,
   product: CatalogProduct,
   posterFallback: string,
   preservePoster = false,
 ): GearStory {
-  const posterUrl =
-    preservePoster && base.posterUrl
-      ? base.posterUrl
-      : product.image?.trim() ||
-        base.posterUrl ||
-        posterFallback ||
-        getProductImage(product.slug, product.category);
+  const canPreserve =
+    preservePoster && base.posterUrl && !isUnusableGearStoryPoster(base.posterUrl);
+  const posterUrl = canPreserve
+    ? base.posterUrl
+    : product.image?.trim() ||
+      (!isUnusableGearStoryPoster(base.posterUrl) ? base.posterUrl : "") ||
+      posterFallback ||
+      getProductImage(product.slug, product.category);
   const images = product.images.length > 0 ? product.images : [posterUrl];
   const salePrice =
     product.detail?.salePrice ?? (product.price < product.originalPrice ? product.price : null);
@@ -143,8 +151,9 @@ export function buildGearStoryFromItem(
   const videoUrl = item.customHref?.trim();
   if (!videoUrl) return null;
 
-  const customPoster = item.customImage?.trim() || "";
-  const posterUrl = customPoster || "/images/guitar-1.webp";
+  const rawPoster = item.customImage?.trim() || "";
+  const customPoster = isUnusableGearStoryPoster(rawPoster) ? "" : rawPoster;
+  const posterUrl = customPoster || product?.image?.trim() || "/images/guitar-1.webp";
   const title = item.customTitle?.trim() || "Gear story";
   const description = item.categorySlug?.trim() || "";
   const features = parseGearStoryFeatures(item.brandId);

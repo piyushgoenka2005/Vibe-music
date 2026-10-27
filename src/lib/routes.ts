@@ -194,6 +194,8 @@ const EXACT_ALIAS_REDIRECTS: Record<string, string> = {
   "/contact-us": ROUTES.contact,
   "/about": ROUTES.contact,
   "/about-us": ROUTES.contact,
+  "/other": ROUTES.categories,
+  "/others": ROUTES.categories,
 };
 
 const ACCOUNT_REDIRECTS: Record<string, string> = {

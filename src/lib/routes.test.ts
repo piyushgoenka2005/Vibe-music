@@ -13,6 +13,8 @@ describe("resolveLegacyPath", () => {
     ["/orders", "/account/orders"],
     ["/contact-us", "/contact"],
     ["/about-us", "/contact"],
+    ["/other", "/category"],
+    ["/others", "/category"],
     ["/shop", "/search"],
     ["/brand", "/brands"],
     ["/brand/boss", "/brands/boss"],
