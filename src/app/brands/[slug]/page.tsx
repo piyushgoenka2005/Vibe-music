@@ -23,21 +23,28 @@ interface BrandRouteProps {
 }
 
 export async function generateMetadata({ params }: BrandRouteProps): Promise<Metadata> {
-  const { slug } = await params;
-  const brand = await resolveBrandBySlug(slug);
-  if (!brand) {
+  try {
+    const { slug } = await params;
+    const brand = await resolveBrandBySlug(slug);
+    if (!brand) {
+      return {
+        title: `Brand not found | ${BRAND.name}`,
+        robots: { index: false, follow: false },
+      };
+    }
+    return buildBrandMetadata(brand);
+  } catch (error) {
+    console.error("[brand:generateMetadata] error generating brand metadata", error);
     return {
-      title: `Brand not found | ${BRAND.name}`,
+      title: `Brand | ${BRAND.name}`,
       robots: { index: false, follow: false },
     };
   }
-  return buildBrandMetadata(brand);
 }
 
 export default async function BrandRoute({ params }: BrandRouteProps) {
-  const { slug } = await params;
-
   return withServerPageError(async () => {
+    const { slug } = await params;
     const brands = await loadBrandDirectory();
     const brand = brands.find((b) => b.slug.toLowerCase() === slug.trim().toLowerCase());
     if (!brand) notFound();

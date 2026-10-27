@@ -47,43 +47,47 @@ export async function generateMetadata({
   };
 }
 
+import { withServerPageError } from "@/lib/serverPageError";
+
 export default async function SearchResultsRoute({ searchParams }: SearchResultsRouteProps) {
-  const params = await searchParams;
-  const redirectTarget = resolveSearchResultsRedirect(params);
-  if (redirectTarget) {
-    redirect(redirectTarget);
-  }
-
-  const query = params.q?.trim() ?? "";
-  const category = params.category ?? "";
-  const subcategory = params.subcategory ?? "";
-  const brand = params.brand?.split(",")[0]?.trim() ?? "";
-
-  let initialResults: SearchResultsData | null = null;
-  const hasFilter = Boolean(category || subcategory || brand);
-
-  if (query.length >= SEARCH_MIN_QUERY_LENGTH || hasFilter) {
-    try {
-      initialResults = await getSearchResults({
-        query,
-        category: category || undefined,
-        subcategory: subcategory || undefined,
-        brand: brand || undefined,
-      });
-    } catch {
-      initialResults = null;
+  return withServerPageError(async () => {
+    const params = await searchParams;
+    const redirectTarget = resolveSearchResultsRedirect(params);
+    if (redirectTarget) {
+      redirect(redirectTarget);
     }
-  }
 
-  return (
-    <main className="storefront-page storefront-page--subtle">
-      <SearchResultsPage
-        query={query}
-        initialCategory={category}
-        initialSubcategory={subcategory}
-        initialBrand={brand}
-        initialResults={initialResults}
-      />
-    </main>
-  );
+    const query = params.q?.trim() ?? "";
+    const category = params.category ?? "";
+    const subcategory = params.subcategory ?? "";
+    const brand = params.brand?.split(",")[0]?.trim() ?? "";
+
+    let initialResults: SearchResultsData | null = null;
+    const hasFilter = Boolean(category || subcategory || brand);
+
+    if (query.length >= SEARCH_MIN_QUERY_LENGTH || hasFilter) {
+      try {
+        initialResults = await getSearchResults({
+          query,
+          category: category || undefined,
+          subcategory: subcategory || undefined,
+          brand: brand || undefined,
+        });
+      } catch {
+        initialResults = null;
+      }
+    }
+
+    return (
+      <main className="storefront-page storefront-page--subtle">
+        <SearchResultsPage
+          query={query}
+          initialCategory={category}
+          initialSubcategory={subcategory}
+          initialBrand={brand}
+          initialResults={initialResults}
+        />
+      </main>
+    );
+  }, "SearchResults");
 }

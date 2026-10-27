@@ -138,6 +138,10 @@ export async function invalidateAllStorefrontCaches(): Promise<void> {
     expireStorefrontTags(STOREFRONT_CACHE_TAGS);
     try {
       revalidatePath("/", "layout");
+      revalidatePath("/");
+      revalidatePath("/category");
+      revalidatePath("/deals");
+      revalidatePath("/search");
     } catch {
       /* outside a request context */
     }

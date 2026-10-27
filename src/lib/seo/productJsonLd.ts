@@ -2,9 +2,7 @@ import { BRAND } from "@/lib/brand";
 import { cdnSeoImageUrl } from "@/lib/storefrontImages";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 
-function availabilitySchema(
-  availability: ProductDetail["availability"]
-): string {
+function availabilitySchema(availability: ProductDetail["availability"]): string {
   switch (availability) {
     case "out-of-stock":
       return "https://schema.org/OutOfStock";
@@ -29,12 +27,11 @@ function conditionSchema(condition: ProductDetail["condition"]): string {
 /** Google Product / Offer JSON-LD for PDP SEO. */
 export function buildProductJsonLd(
   product: ProductDetail,
-  variant?: ProductVariant
+  variant?: ProductVariant,
 ): Record<string, unknown> {
+  const variants = Array.isArray(product?.variants) ? product.variants : [];
   const selectedVariant =
-    variant ??
-    product.variants.find((entry) => entry.availability !== "out-of-stock") ??
-    product.variants[0];
+    variant ?? variants.find((entry) => entry.availability !== "out-of-stock") ?? variants[0];
   const displayPrice = selectedVariant?.price ?? product.price;
   const hero = product.images?.[0]?.src || product.image;
   // JSON-LD images must be absolute CDN URLs — crawlers never fetch our proxy.
@@ -70,9 +67,7 @@ export function buildProductJsonLd(
       url,
       priceCurrency: "INR",
       price: displayPrice,
-      availability: availabilitySchema(
-        selectedVariant?.availability ?? product.availability
-      ),
+      availability: availabilitySchema(selectedVariant?.availability ?? product.availability),
       itemCondition: conditionSchema(product.condition),
       seller: {
         "@type": "Organization",

@@ -5,7 +5,15 @@ import { useRouter } from "next/navigation";
 import { SPLASH_ACTIVE_CLASS } from "@/components/layout/PageLoadSplash";
 
 /** High-intent routes only — avoid prefetch storms during LCP. */
-const ROUTES_TO_PREFETCH = ["/deals", "/category", "/brands", "/cart", "/search"];
+const ROUTES_TO_PREFETCH = [
+  "/deals",
+  "/category",
+  "/category/electric-guitars",
+  "/category/acoustic-guitars",
+  "/brands",
+  "/cart",
+  "/search",
+];
 
 const PREFETCH_GAP_MS = 400;
 const IDLE_TIMEOUT_MS = 2500;

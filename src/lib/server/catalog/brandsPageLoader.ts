@@ -55,7 +55,12 @@ const getCachedBrandsWithCounts = unstable_cache(
 export const loadBrandsWithCounts = cache(async function loadBrandsWithCounts(): Promise<
   BrandWithCount[]
 > {
-  return getCachedBrandsWithCounts();
+  try {
+    return await getCachedBrandsWithCounts();
+  } catch (error) {
+    console.error("[brandsPageLoader] loadBrandsWithCounts error:", error);
+    return [];
+  }
 });
 
 export async function resolveBrandBySlug(slug: string): Promise<BrandDirectoryGroup | null> {

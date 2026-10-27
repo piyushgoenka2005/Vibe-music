@@ -33,10 +33,14 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: ContentPageRouteProps): Promise<Metadata> {
-  const { slug } = await params;
-  const page = await resolveContentPage(slug);
-  if (!page) return {};
-  return { title: page.title, description: page.sections[0]?.paragraphs[0] };
+  try {
+    const { slug } = await params;
+    const page = await resolveContentPage(slug);
+    if (!page) return {};
+    return { title: page.title, description: page.sections[0]?.paragraphs[0] };
+  } catch {
+    return { title: "Vibe Music" };
+  }
 }
 
 function splitIntroSection(sections: Array<{ heading?: string; paragraphs: string[] }>) {

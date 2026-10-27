@@ -5,12 +5,13 @@ import { isMutationMethod } from "@/lib/security/mutation-origin";
 import { getAdminSession } from "@/lib/server/adminService";
 import { logAuditEvent } from "@/lib/server/auditLog";
 import { hasPermission } from "@/lib/auth/permissions";
-import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { RATE_LIMITS } from "@/lib/security/rate-limit-core";
 import { distributedCheckRateLimit } from "@/lib/security/distributed-rate-limit";
 import {
   invalidateAllStorefrontCaches,
   isStorefrontAdminWrite,
 } from "@/lib/server/storefront/storefrontCacheInvalidation";
+import { getPrismaErrorMessage, isPrismaUnavailableError } from "@/lib/db/prisma-errors";
 import type { AdminSession, Permission } from "@/types/admin";
 
 export class AdminAuthError extends Error {
@@ -137,7 +138,59 @@ export function adminErrorResponse(error: unknown, request?: Request): NextRespo
       { status: 400 },
     );
   }
-  // Avoid leaking internal exception details to admin clients.
+
+  // Handle Prisma database constraints (unique slug/SKU conflicts, missing records, FK errors)
+  const prismaError = getPrismaErrorMessage(error);
+  if (prismaError) {
+    return NextResponse.json({ error: prismaError.message }, { status: prismaError.status });
+  }
+
+  // Handle circuit breaker / transient database connection saturation
+  if (
+    error instanceof Error &&
+    (error.name === "CircuitBreakerOpenError" || isPrismaUnavailableError(error))
+  ) {
+    return NextResponse.json(
+      { error: "Database is temporarily busy. Please retry in a few seconds." },
+      { status: 503 },
+    );
+  }
+
+  // Handle clean application domain / business rule errors thrown as standard Error
+  if (error instanceof Error) {
+    const msg = error.message?.trim() || "";
+    if (
+      msg &&
+      !msg.includes("\n") &&
+      !msg.includes("at ") &&
+      !msg.includes("node_modules") &&
+      !msg.includes("DATABASE_URL")
+    ) {
+      const lower = msg.toLowerCase();
+      const isDomainError =
+        lower.includes("already exists") ||
+        lower.includes("duplicate") ||
+        lower.includes("not found") ||
+        lower.includes("safety limit") ||
+        lower.includes("cannot be") ||
+        lower.includes("not allowed") ||
+        lower.includes("is required") ||
+        lower.includes("are required") ||
+        lower.includes("exceeds");
+
+      if (isDomainError) {
+        const status =
+          lower.includes("already exists") || lower.includes("duplicate")
+            ? 409
+            : lower.includes("not found")
+              ? 404
+              : 400;
+        return NextResponse.json({ error: msg }, { status });
+      }
+    }
+  }
+
+  // Avoid leaking raw internal stack traces to admin clients
   console.error("[admin]", error);
   return NextResponse.json({ error: "Internal server error" }, { status: 500 });
 }

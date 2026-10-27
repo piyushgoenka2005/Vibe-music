@@ -62,41 +62,46 @@ function buildArticleJsonLd(post: {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const post = await getPublicBlogPostBySlug(slug);
-  if (!post) {
-    return { title: "Post Not Found" };
+  try {
+    const { slug } = await params;
+    const post = await getPublicBlogPostBySlug(slug);
+    if (!post) {
+      return { title: "Post Not Found" };
+    }
+
+    const title = post.seoTitle || post.title;
+    const description = post.seoDescription || post.excerpt;
+    const url = `${SITE_URL}/blog/${post.slug}`;
+
+    return {
+      title: `${title} | ${SITE_NAME}`,
+      description,
+      alternates: {
+        canonical: `/blog/${post.slug}`,
+      },
+      openGraph: {
+        title,
+        description,
+        url,
+        type: "article",
+        publishedTime: post.publishedAt ?? undefined,
+        modifiedTime: post.updatedAt,
+        authors: [post.authorName],
+        section: post.categoryLabel || undefined,
+        tags: post.tags,
+        images: post.coverImage ? [{ url: post.coverImage, alt: post.title }] : undefined,
+      },
+      twitter: {
+        card: post.coverImage ? "summary_large_image" : "summary",
+        title,
+        description,
+        images: post.coverImage ? [post.coverImage] : undefined,
+      },
+    };
+  } catch (error) {
+    console.error("[blog:generateMetadata] error generating blog metadata", error);
+    return { title: `Blog | ${SITE_NAME}` };
   }
-
-  const title = post.seoTitle || post.title;
-  const description = post.seoDescription || post.excerpt;
-  const url = `${SITE_URL}/blog/${post.slug}`;
-
-  return {
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    alternates: {
-      canonical: `/blog/${post.slug}`,
-    },
-    openGraph: {
-      title,
-      description,
-      url,
-      type: "article",
-      publishedTime: post.publishedAt ?? undefined,
-      modifiedTime: post.updatedAt,
-      authors: [post.authorName],
-      section: post.categoryLabel || undefined,
-      tags: post.tags,
-      images: post.coverImage ? [{ url: post.coverImage, alt: post.title }] : undefined,
-    },
-    twitter: {
-      card: post.coverImage ? "summary_large_image" : "summary",
-      title,
-      description,
-      images: post.coverImage ? [post.coverImage] : undefined,
-    },
-  };
 }
 
 export default async function BlogPostPage({ params }: PageProps) {

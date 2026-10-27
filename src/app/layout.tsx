@@ -48,11 +48,30 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [legal, shippingPolicy, brands] = await Promise.all([
-    resolvePublicLegal(),
-    resolveStoreShippingPolicy(),
-    loadBrandsWithCounts(),
-  ]);
+  let legal;
+  let shippingPolicy;
+  let brands: Awaited<ReturnType<typeof loadBrandsWithCounts>> = [];
+  try {
+    const [resolvedLegal, resolvedShipping, resolvedBrands] = await Promise.all([
+      resolvePublicLegal(),
+      resolveStoreShippingPolicy(),
+      loadBrandsWithCounts(),
+    ]);
+    legal = resolvedLegal;
+    shippingPolicy = resolvedShipping;
+    brands = resolvedBrands;
+  } catch (error) {
+    console.error("[layout] error resolving layout data, using safe defaults", error);
+    legal = { legalName: "Vibe Music", address: "India", gstin: "" };
+    shippingPolicy = {
+      freeShippingThreshold: 0,
+      standardShippingCharge: 0,
+      pdpDetail: "Free delivery on all prepaid orders across India",
+      pdpBadge: "Free Delivery",
+      cartCallout: "Free delivery on all orders",
+    };
+  }
+
   const brandsMegaMenu = buildBrandsMegaMenu(
     brands.length > 0 ? brands : brandsCatalog.map((brand) => ({ ...brand, productCount: 0 })),
   );

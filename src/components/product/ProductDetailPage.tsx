@@ -48,17 +48,20 @@ interface ProductDetailPageProps {
   shippingDetail?: string;
 }
 
-function buildInitialSelection(variant: ProductVariant): Record<string, string> {
+function buildInitialSelection(variant: ProductVariant | null | undefined): Record<string, string> {
   const selection: Record<string, string> = {};
+  if (!variant || !Array.isArray(variant.attributes)) return selection;
   variant.attributes.forEach((attr) => {
-    selection[attributeKey(attr)] = attr.value;
+    if (attr) {
+      selection[attributeKey(attr)] = attr.value;
+    }
   });
   return selection;
 }
 
 function buildGalleryImages(
   productImages: ProductImage[],
-  variant: ProductVariant,
+  variant: ProductVariant | null | undefined,
   productName: string,
   imageColor: string,
 ): ProductImage[] {
@@ -78,12 +81,14 @@ function buildGalleryImages(
   };
 
   const rawVariantImages = Array.isArray(variant?.images) ? variant.images : [];
+  const variantId = variant?.id ?? "default";
+  const variantLabel = variant?.label ?? "";
   const variantImages: ProductImage[] = rawVariantImages
     .map((raw, index) => {
       const src = extractSrc(raw);
       return {
-        id: `${variant.id}-img-${index}`,
-        alt: `${productName} — ${variant.label}`,
+        id: `${variantId}-img-${index}`,
+        alt: variantLabel ? `${productName} — ${variantLabel}` : productName,
         color: imageColor,
         src,
       };

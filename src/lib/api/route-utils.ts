@@ -17,6 +17,7 @@ import {
   releaseBackpressure,
   getBackpressureScope,
 } from "@/lib/security/backpressure";
+import { isPrismaUnavailableError } from "@/lib/db/prisma-errors";
 
 export function jsonError(message: string, status: number): NextResponse {
   return NextResponse.json({ error: message }, { status });
@@ -133,6 +134,13 @@ export function handleRouteError(
 ): NextResponse {
   if (error instanceof SyntaxError) {
     const response = jsonError("Invalid JSON request body", 400);
+    return request ? applyRequestIdHeader(response, request) : response;
+  }
+  if (isPrismaUnavailableError(error)) {
+    const response = jsonError(
+      "Service is temporarily busy. Please try again in a few seconds.",
+      503,
+    );
     return request ? applyRequestIdHeader(response, request) : response;
   }
   reportServerError(error, {

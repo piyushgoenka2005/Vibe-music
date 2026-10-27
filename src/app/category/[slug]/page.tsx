@@ -26,54 +26,62 @@ interface CategoryRouteProps {
 }
 
 export async function generateMetadata({ params }: CategoryRouteProps): Promise<Metadata> {
-  const { slug } = await params;
-  const category = await resolveCategoryBySlug(slug);
-  if (!category) {
+  try {
+    const { slug } = await params;
+    const category = await resolveCategoryBySlug(slug);
+    if (!category) {
+      return {
+        title: "Category not found | Vibe Music",
+        robots: { index: false, follow: false },
+      };
+    }
+
+    const title = `${category.name} | Vibe Music`;
+    const description =
+      category.description?.trim() ||
+      `Explore premium ${category.name} at Vibe Music. Authentic instruments, pro gear, authorized brand warranties, and fast free delivery across India.`;
+    const canonicalUrl = `${BRAND.siteUrl}${categoryPath(category.slug)}`;
+
     return {
-      title: "Category not found | Vibe Music",
+      title,
+      description,
+      alternates: { canonical: canonicalUrl },
+      openGraph: {
+        title,
+        description,
+        url: canonicalUrl,
+        siteName: BRAND.name,
+        locale: "en_IN",
+        type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+      },
+    };
+  } catch (error) {
+    console.error("[category:generateMetadata] error generating category metadata", error);
+    return {
+      title: "Category | Vibe Music",
       robots: { index: false, follow: false },
     };
   }
-
-  const title = `${category.name} | Vibe Music`;
-  const description =
-    category.description?.trim() ||
-    `Explore premium ${category.name} at Vibe Music. Authentic instruments, pro gear, authorized brand warranties, and fast free delivery across India.`;
-  const canonicalUrl = `${BRAND.siteUrl}${categoryPath(category.slug)}`;
-
-  return {
-    title,
-    description,
-    alternates: { canonical: canonicalUrl },
-    openGraph: {
-      title,
-      description,
-      url: canonicalUrl,
-      siteName: BRAND.name,
-      locale: "en_IN",
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-    },
-  };
 }
 
 export default async function CategoryRoute({ params }: CategoryRouteProps) {
-  const { slug } = await params;
-  const category = await resolveCategoryBySlug(slug);
-
-  if (!category) {
-    notFound();
-  }
-
-  if (!isCanonicalCategorySlug(category, slug)) {
-    redirect(categoryPath(category.slug));
-  }
-
   return withServerPageError(async () => {
+    const { slug } = await params;
+    const category = await resolveCategoryBySlug(slug);
+
+    if (!category) {
+      notFound();
+    }
+
+    if (!isCanonicalCategorySlug(category, slug)) {
+      redirect(categoryPath(category.slug));
+    }
+
     const initialData = await loadCategoryProducts(category.slug, DEFAULT_FILTERS);
 
     return (
