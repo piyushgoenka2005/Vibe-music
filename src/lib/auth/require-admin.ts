@@ -72,7 +72,12 @@ export async function requireAdmin(
   // Rate-limit per admin UID (not IP) so shared-NAT admins don't
   // exhaust each other's budget. Runs after auth so unauthenticated
   // requests never consume the admin rate-limit bucket.
-  if (request) {
+  // Skipped in development/test unless explicitly enabled.
+  if (
+    request &&
+    process.env.DISABLE_RATE_LIMIT !== "true" &&
+    process.env.NODE_ENV !== "development"
+  ) {
     const result = await distributedCheckRateLimit(`admin:${adminSession.uid}`, RATE_LIMITS.admin);
     if (!result.allowed) {
       throw new AdminRateLimitError(RATE_LIMITS.admin.limit, result.remaining, result.resetAt);

@@ -50,8 +50,6 @@ function jsonApiError(
 
 /** Internal fast paths that don't need edge rate limit / Redis overhead */
 function isApiFastPath(request: NextRequest, pathname: string): boolean {
-  if (request.method !== "GET") return false;
-
   // Always fast-path these regardless of auth
   const alwaysFastPaths = [
     "/api/media/thumb",
@@ -64,14 +62,27 @@ function isApiFastPath(request: NextRequest, pathname: string): boolean {
   ];
   if (alwaysFastPaths.some((p) => pathname.startsWith(p))) return true;
 
-  // Admin API routes: skip rate limit if user has valid admin session
-  // Admin routes are already protected by session auth + requireAdmin() guards
+  // Admin API routes: skip edge rate limit if user has valid admin session cookie.
+  // Admin routes are already protected by session auth + requireAdmin() permission guards.
+  // This applies to ALL methods (GET, POST, PUT, DELETE, PATCH) so admin writes/updates
+  // don't get throttled at the public IP layer.
   if (pathname.startsWith("/api/admin/")) {
     const secure = request.nextUrl.protocol === "https:";
     if (hasAdminSessionCookie(request.cookies, secure)) {
       return true;
     }
   }
+
+  // Non-production: skip rate limit for auth/admin routes when explicitly disabled or in development
+  if (
+    process.env.NODE_ENV !== "production" &&
+    (process.env.DISABLE_RATE_LIMIT === "true" || process.env.NODE_ENV === "development") &&
+    (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/admin/"))
+  ) {
+    return true;
+  }
+
+  if (request.method !== "GET") return false;
 
   // Authenticated user account read routes: skip edge rate limit overhead when session cookie is present
   const accountGetPaths = [
@@ -85,15 +96,6 @@ function isApiFastPath(request: NextRequest, pathname: string): boolean {
     if (hasAuthSessionCookie(request.cookies, secure)) {
       return true;
     }
-  }
-
-  // Non-production: skip rate limit for auth/admin routes when explicitly disabled
-  if (
-    process.env.NODE_ENV !== "production" &&
-    process.env.DISABLE_RATE_LIMIT === "true" &&
-    (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/admin/"))
-  ) {
-    return true;
   }
 
   return false;
