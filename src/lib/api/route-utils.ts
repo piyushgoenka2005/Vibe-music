@@ -53,7 +53,10 @@ export async function enforceRateLimit(
   // Mirror src/proxy.ts: rate limits are intentionally skipped when disabled
   // outside production (E2E / local load). Keeps route-level limits consistent
   // with the proxy-level ones so test suites never self-throttle.
-  if (process.env.DISABLE_RATE_LIMIT === "true" && process.env.NODE_ENV !== "production") {
+  if (
+    (process.env.DISABLE_RATE_LIMIT === "true" || process.env.NODE_ENV === "development") &&
+    process.env.NODE_ENV !== "production"
+  ) {
     return null;
   }
   // Proxy already rate-limited this request — skip the duplicate Upstash round trip.

@@ -170,11 +170,18 @@ export function validateEnv(): void {
     if (razorpayKeyId && razorpayPublicKeyId && razorpayKeyId !== razorpayPublicKeyId) {
       throw new Error("RAZORPAY_KEY_ID and NEXT_PUBLIC_RAZORPAY_KEY_ID must match in production.");
     }
-    if (razorpayKeyId && !razorpayKeyId.startsWith("rzp_live_")) {
-      throw new Error("Production requires live Razorpay keys (rzp_live_…).");
-    }
-    if (razorpayPublicKeyId && !razorpayPublicKeyId.startsWith("rzp_live_")) {
-      throw new Error("NEXT_PUBLIC_RAZORPAY_KEY_ID must be a live key (rzp_live_…) in production.");
+    const siteUrl = (envValue(process.env.NEXT_PUBLIC_SITE_URL) || "").toLowerCase();
+    const isVibeProd = siteUrl.includes("vibemusic.in");
+    const allowTest = envValue(process.env.ALLOW_TEST_RAZORPAY) === "true";
+    if (isVibeProd && !allowTest) {
+      if (razorpayKeyId && !razorpayKeyId.startsWith("rzp_live_")) {
+        throw new Error("Production requires live Razorpay keys (rzp_live_…).");
+      }
+      if (razorpayPublicKeyId && !razorpayPublicKeyId.startsWith("rzp_live_")) {
+        throw new Error(
+          "NEXT_PUBLIC_RAZORPAY_KEY_ID must be a live key (rzp_live_…) in production.",
+        );
+      }
     }
 
     const authUrl = envValue(process.env.AUTH_URL);
@@ -184,7 +191,6 @@ export function validateEnv(): void {
       );
     }
 
-    const siteUrl = envValue(process.env.NEXT_PUBLIC_SITE_URL);
     if (siteUrl && /localhost|127\.0\.0\.1/i.test(siteUrl)) {
       throw new Error(
         "NEXT_PUBLIC_SITE_URL must be the public site URL in production (not localhost).",

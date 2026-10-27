@@ -22,7 +22,7 @@ export const DEFAULT_RATE_LIMITS: Record<RateLimitScopeKey, RateLimitOptions> = 
   /** Homepage/product thumbs should not exhaust the general API bucket. */
   mediaThumb: { limit: 900, windowMs: 60_000 },
   search: { limit: 90, windowMs: 60_000 },
-  analytics: { limit: 60, windowMs: 60_000 },
+  analytics: { limit: 300, windowMs: 60_000 },
   auth: { limit: 40, windowMs: 60_000 },
   checkout: { limit: 20, windowMs: 60_000 },
   /** Admin catalog work (lists, saves, navigation). */

@@ -87,7 +87,7 @@ export function getClientIp(request: Request): string {
     if (candidate && isValidIpAddress(candidate)) return candidate;
   }
 
-  return realIp || "unknown";
+  return realIp || "127.0.0.1";
 }
 
 export const RATE_LIMITS = buildRateLimits();

@@ -16,14 +16,16 @@ const vitalsSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const rateLimited = await enforceRateLimit(request, "web-vitals", RATE_LIMITS.publicApi);
-    if (rateLimited) return rateLimited;
+    const rateLimited = await enforceRateLimit(request, "web-vitals", RATE_LIMITS.analytics);
+    if (rateLimited) return NextResponse.json({ ok: true, throttled: true });
 
     const parsed = await parseJsonBody(request, vitalsSchema);
     if ("error" in parsed) return parsed.error;
 
     const metric = parsed.data;
-    logInfo(`[web-vitals] ${metric.name}=${metric.value} rating=${metric.rating ?? "n/a"} path=${metric.path ?? "n/a"}`);
+    logInfo(
+      `[web-vitals] ${metric.name}=${metric.value} rating=${metric.rating ?? "n/a"} path=${metric.path ?? "n/a"}`,
+    );
 
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -44,9 +44,12 @@ export function getRazorpayKeyMode(): RazorpayKeyMode {
   return "missing";
 }
 
-/** Production must never accept Razorpay test keys (Test Mode ribbon in Checkout). */
+/** Production on vibemusic.in requires live Razorpay keys unless ALLOW_TEST_RAZORPAY=true. */
 export function requiresLiveRazorpay(): boolean {
-  return isProduction();
+  if (process.env.ALLOW_TEST_RAZORPAY === "true") return false;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").toLowerCase();
+  const isVibeMusicProd = siteUrl.includes("vibemusic.in");
+  return isProduction() && isVibeMusicProd;
 }
 
 /** Human-readable reason when Razorpay cannot open checkout (safe to show in admin/checkout). */

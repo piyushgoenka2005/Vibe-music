@@ -62,5 +62,9 @@ export function resolveRateLimitScope(pathname: string): ResolvedRateLimitScope 
     return { scope: "media-thumb", bucket: "mediaThumb", options: limits.mediaThumb };
   }
 
+  if (pathname === "/api/vitals" || pathname.startsWith("/api/analytics")) {
+    return { scope: "analytics", bucket: "analytics", options: limits.analytics };
+  }
+
   return { scope: "public-api", bucket: "publicApi", options: limits.publicApi };
 }
