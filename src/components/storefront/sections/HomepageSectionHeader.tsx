@@ -24,7 +24,7 @@ export default function HomepageSectionHeader({
         {subtitle ? <p className="homepage-section__subtitle">{subtitle}</p> : null}
       </div>
       {ctaText && ctaLink ? (
-        <Link className="homepage-section__cta-btn" href={resolveLinkHref(ctaLink)}>
+        <Link prefetch className="homepage-section__cta-btn" href={resolveLinkHref(ctaLink)}>
           {ctaText}
           {SECTION_CTA_ARROW}
         </Link>

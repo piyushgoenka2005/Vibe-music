@@ -129,6 +129,7 @@ export default function HomepageProductCarouselSection({
               <Link
                 className="homepage-section__cta-btn premium-product-carousel__cta"
                 href={resolveLinkHref(ctaLink)}
+                prefetch
               >
                 {ctaText}
                 {SECTION_CTA_ARROW}

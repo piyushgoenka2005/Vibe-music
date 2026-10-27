@@ -31,6 +31,7 @@ export default function HomepageCategoryGridSection({ section }: HomepageCategor
               data-hp-section="categories"
               data-hp-slot={index + 1}
               href={resolveLinkHref(item.href)}
+              prefetch
               role="listitem"
             >
               {item.badge ? <span className="popcat-badge">{item.badge}</span> : null}

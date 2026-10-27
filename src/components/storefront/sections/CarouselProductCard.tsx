@@ -83,12 +83,24 @@ export default function CarouselProductCard({
   const cartProduct = toCartProduct(item);
   const canQuickAdd = canListingQuickAdd(cartProduct);
 
+  function warmupBuy() {
+    try {
+      if (shouldNavigateForVariants(cartProduct)) {
+        router.prefetch(productHref);
+      } else {
+        router.prefetch(BUY_NOW_CHECKOUT_HREF);
+      }
+    } catch {
+      // Best-effort
+    }
+  }
+
   function handleBuyNow(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
     if (!canQuickAdd) return;
     if (shouldNavigateForVariants(cartProduct)) {
-      window.location.assign(productHref);
+      router.push(productHref);
       return;
     }
     if (!startBuyNow(cartProduct)) return;
@@ -96,7 +108,23 @@ export default function CarouselProductCard({
   }
 
   return (
-    <div className="product-suggest__item-wrap">
+    <div
+      className="product-suggest__item-wrap"
+      onMouseEnter={() => {
+        try {
+          router.prefetch(productHref);
+        } catch {
+          // Best-effort
+        }
+      }}
+      onTouchStart={() => {
+        try {
+          router.prefetch(productHref);
+        } catch {
+          // Best-effort
+        }
+      }}
+    >
       <ProductShareButton
         overlay
         position="top-right"
@@ -183,6 +211,8 @@ export default function CarouselProductCard({
               type="button"
               className="new-arrivals-card__buy"
               onClick={handleBuyNow}
+              onMouseEnter={warmupBuy}
+              onPointerDown={warmupBuy}
               aria-label={listingQuickAddAriaLabel({
                 name: item.name,
                 requiresVariantSelection: item.requiresVariantSelection,

@@ -75,6 +75,7 @@ export default function HomepageProductGridSection({ section }: HomepageProductG
             <Link
               className="homepage-section__cta-btn new-arrivals-section__cta"
               href={resolveLinkHref(section.ctaLink)}
+              prefetch
             >
               {section.ctaText}
               {SECTION_CTA_ARROW}
@@ -102,7 +103,11 @@ export default function HomepageProductGridSection({ section }: HomepageProductG
       {section.ctaText && section.ctaLink ? (
         <div className="new-arrivals-section__inner">
           <div className="new-arrivals-section__cta-mobile">
-            <Link className="homepage-section__cta-btn" href={resolveLinkHref(section.ctaLink)}>
+            <Link
+              className="homepage-section__cta-btn"
+              href={resolveLinkHref(section.ctaLink)}
+              prefetch
+            >
               {section.ctaText}
               {SECTION_CTA_ARROW}
             </Link>
