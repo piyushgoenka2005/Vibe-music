@@ -1145,8 +1145,11 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
     gstRate: input.gstRate,
   };
 
-  const all = await fetchAllProductsFromDb(true);
-  product.detail = buildDefaultDetail(product, all);
+  const categorySiblings =
+    typeof fetchProductsByCategory === "function"
+      ? await fetchProductsByCategory(category.slug)
+      : [];
+  product.detail = buildDefaultDetail(product, categorySiblings);
 
   if (input.spin360Images?.length) {
     product.detail = {
@@ -1197,7 +1200,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
 
   product.subcategory = resolveCatalogSubcategory(
     product,
-    await loadSubcategoryCandidates(category, all),
+    await loadSubcategoryCandidates(category, categorySiblings),
   );
 
   if (input.variants?.length) {
@@ -1310,6 +1313,7 @@ export async function backfillProductSubcategories(
 export async function updateProduct(
   id: string,
   patch: UpdateProductInput,
+  options?: { skipCacheInvalidation?: boolean },
 ): Promise<CatalogProduct> {
   const current = await fetchProductById(id);
   if (!current) throw new Error("Product not found");
@@ -1384,9 +1388,21 @@ export async function updateProduct(
     updated.image = updated.images[0] ?? "";
   }
 
-  const all = await fetchAllProductsFromDb(true);
+  let categorySiblingsPromise: Promise<CatalogProduct[]> | null = null;
+  const getCategorySiblings = () => {
+    categorySiblingsPromise ??=
+      typeof fetchProductsByCategory === "function"
+        ? fetchProductsByCategory(category.slug)
+        : Promise.resolve([]);
+    return categorySiblingsPromise;
+  };
+
   const preservedDetail = syncDetailSpecsFromSpecifications(
-    current.detail ?? buildDefaultDetail({ ...current, specifications: nextSpecifications }, all),
+    current.detail ??
+      buildDefaultDetail(
+        { ...current, specifications: nextSpecifications },
+        await getCategorySiblings(),
+      ),
     nextSpecifications,
   );
 
@@ -1512,12 +1528,12 @@ export async function updateProduct(
   if (categoryChanged && patch.subcategory === undefined) {
     updated.subcategory = "";
   }
-  updated.subcategory = resolveCatalogSubcategory(
-    updated,
-    await loadSubcategoryCandidates(category, all, id),
-  );
+  if (!updated.subcategory || categoryChanged) {
+    const candidates = await loadSubcategoryCandidates(category, await getCategorySiblings(), id);
+    updated.subcategory = resolveCatalogSubcategory(updated, candidates);
+  }
 
-  return writeProduct({ ...updated, id });
+  return writeProduct({ ...updated, id }, options);
 }
 
 export async function deleteProduct(id: string): Promise<void> {
@@ -1537,27 +1553,51 @@ export async function bulkActivateProducts(ids: string[]): Promise<BulkStatusRes
   return bulkSetStatus(ids, "active");
 }
 
-async function bulkSetStatus(ids: string[], status: ProductStatus): Promise<BulkStatusResult> {
+export async function bulkSetStatus(
+  ids: string[],
+  status: ProductStatus,
+): Promise<BulkStatusResult> {
+  if (ids.length === 0) return { updated: 0 };
   const updated = await fsBatchUpdate(ids, { status });
   return { updated };
 }
 
 export async function bulkUpdateStock(updates: BulkStockUpdate[]): Promise<BulkStatusResult> {
-  let count = 0;
+  if (updates.length === 0) return { updated: 0 };
+  const byStock = new Map<number, string[]>();
   for (const { id, stock } of updates) {
-    await updateProduct(id, { stock });
-    count += 1;
+    const list = byStock.get(stock) ?? [];
+    list.push(id);
+    byStock.set(stock, list);
   }
-  return { updated: count };
+
+  let totalUpdated = 0;
+  for (const [stock, ids] of byStock.entries()) {
+    const updated = await fsBatchUpdate(ids, { stock });
+    totalUpdated += updated;
+  }
+  return { updated: totalUpdated };
 }
 
 export async function bulkUpdateCategory(updates: BulkCategoryUpdate[]): Promise<BulkStatusResult> {
-  let count = 0;
+  if (updates.length === 0) return { updated: 0 };
+  const byCategory = new Map<string, { category: string; categorySlug: string; ids: string[] }>();
   for (const { id, category, categorySlug } of updates) {
-    await updateProduct(id, { category, categorySlug });
-    count += 1;
+    const key = `${categorySlug}:${category}`;
+    const group = byCategory.get(key) ?? { category, categorySlug, ids: [] };
+    group.ids.push(id);
+    byCategory.set(key, group);
   }
-  return { updated: count };
+
+  let totalUpdated = 0;
+  for (const group of byCategory.values()) {
+    const updated = await fsBatchUpdate(group.ids, {
+      category: group.category,
+      categorySlug: group.categorySlug,
+    });
+    totalUpdated += updated;
+  }
+  return { updated: totalUpdated };
 }
 
 function parseBool(value: string | undefined): boolean {
@@ -1891,7 +1931,7 @@ export async function bulkImportProducts(
   for (let offset = 0; offset < productsToCreate.length; offset += BULK_IMPORT_WRITE_BATCH_SIZE) {
     const chunk = productsToCreate.slice(offset, offset + BULK_IMPORT_WRITE_BATCH_SIZE);
     try {
-      await batchWriteProducts(chunk);
+      await batchWriteProducts(chunk, { skipCacheInvalidation: true });
       importedProducts.push(...chunk);
       const timestamp = new Date().toISOString();
       await recordInventoryLogEntries(
@@ -1912,7 +1952,7 @@ export async function bulkImportProducts(
       const reason = err instanceof Error ? err.message : "Batch import failed";
       for (const product of chunk) {
         try {
-          await writeProduct(product);
+          await writeProduct(product, { skipCacheInvalidation: true });
           importedProducts.push(product);
           await recordInventoryLogEntry({
             productId: product.id,
@@ -1944,25 +1984,29 @@ export async function bulkImportProducts(
       const images =
         row.resolvedImages ?? collectBulkImportImageNames(row).filter((img) => Boolean(img.trim()));
       const stockDefault = row.sourceFormat === "vibemusic-bulk" ? 0 : undefined;
-      const product = await updateProduct(row.existingProductId!, {
-        name: row.name.trim(),
-        brand: row.brand.trim(),
-        category: row.category.trim(),
-        categorySlug: row.resolvedCategorySlug,
-        subcategory: row.subcategory?.trim() || undefined,
-        price: Number(row.price),
-        originalPrice: row.originalPrice ? Number(row.originalPrice) : undefined,
-        stock: row.stock != null ? Number(row.stock) : stockDefault,
-        description: row.description?.trim(),
-        featured: parseBool(String(row.featured ?? "")),
-        trending: parseBool(String(row.trending ?? "")),
-        newArrival: parseBool(String(row.newArrival ?? "")),
-        images: images.length > 0 ? images : undefined,
-        specifications: row.specifications,
-        detailSpecs: row.detailSpecs,
-        inTheBox: row.inTheBox,
-        status: importOptions.publishStatus,
-      });
+      const product = await updateProduct(
+        row.existingProductId!,
+        {
+          name: row.name.trim(),
+          brand: row.brand.trim(),
+          category: row.category.trim(),
+          categorySlug: row.resolvedCategorySlug,
+          subcategory: row.subcategory?.trim() || undefined,
+          price: Number(row.price),
+          originalPrice: row.originalPrice ? Number(row.originalPrice) : undefined,
+          stock: row.stock != null ? Number(row.stock) : stockDefault,
+          description: row.description?.trim(),
+          featured: parseBool(String(row.featured ?? "")),
+          trending: parseBool(String(row.trending ?? "")),
+          newArrival: parseBool(String(row.newArrival ?? "")),
+          images: images.length > 0 ? images : undefined,
+          specifications: row.specifications,
+          detailSpecs: row.detailSpecs,
+          inTheBox: row.inTheBox,
+          status: importOptions.publishStatus,
+        },
+        { skipCacheInvalidation: true },
+      );
       importedProducts.push(product);
       updatedCount += 1;
     } catch (err) {

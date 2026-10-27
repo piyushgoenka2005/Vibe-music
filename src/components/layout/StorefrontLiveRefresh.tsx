@@ -32,7 +32,13 @@ export default function StorefrontLiveRefresh() {
         const { v } = (await response.json()) as { v?: unknown };
         if (cancelled || typeof v !== "number") return;
         if (versionRef.current !== null && v !== versionRef.current) {
-          router.refresh();
+          // Add randomized jitter (1-5s) to spread out refreshes and eliminate thundering herd spikes
+          const jitterMs = Math.floor(Math.random() * 4000) + 1000;
+          setTimeout(() => {
+            if (!cancelled && document.visibilityState === "visible") {
+              router.refresh();
+            }
+          }, jitterMs);
         }
         versionRef.current = v;
       } catch {

@@ -26,32 +26,56 @@ export {
   skuExists,
 } from "@/lib/server/prisma/catalogRepository";
 
-export async function invalidateCatalogCache(): Promise<void> {
-  try {
-    const [
-      { revalidateCatalogSnapshot },
-      { revalidateHomepageSnapshot },
-      { invalidateCacheByPrefix },
-    ] = await Promise.all([
-      import("@/lib/server/catalogSnapshotCache"),
-      import("@/lib/server/homepageSnapshotCache"),
-      import("@/lib/server/redisCache"),
-    ]);
+let inFlightCatalogInvalidate: Promise<void> | null = null;
+let lastCatalogInvalidateTime = 0;
+const CATALOG_INVALIDATE_COOLDOWN_MS = 1000;
 
-    await Promise.all([
-      revalidateCatalogSnapshot(),
-      revalidateHomepageSnapshot(),
-      invalidateCacheByPrefix("products"),
-    ]);
-  } catch (error) {
-    // Never fail a catalog write/delete because cache busting threw.
-    console.error("[catalog] invalidateCatalogCache failed", error);
+export async function invalidateCatalogCache(): Promise<void> {
+  if (inFlightCatalogInvalidate) {
+    return inFlightCatalogInvalidate;
   }
+  const now = Date.now();
+  if (now - lastCatalogInvalidateTime < CATALOG_INVALIDATE_COOLDOWN_MS) {
+    return;
+  }
+
+  inFlightCatalogInvalidate = (async () => {
+    try {
+      const [
+        { revalidateCatalogSnapshot },
+        { revalidateHomepageSnapshot },
+        { invalidateCacheByPrefix },
+      ] = await Promise.all([
+        import("@/lib/server/catalogSnapshotCache"),
+        import("@/lib/server/homepageSnapshotCache"),
+        import("@/lib/server/redisCache"),
+      ]);
+
+      await Promise.all([
+        revalidateCatalogSnapshot(),
+        revalidateHomepageSnapshot(),
+        invalidateCacheByPrefix("products"),
+      ]);
+    } catch (error) {
+      // Never fail a catalog write/delete because cache busting threw.
+      console.error("[catalog] invalidateCatalogCache failed", error);
+    }
+  })().finally(() => {
+    inFlightCatalogInvalidate = null;
+    lastCatalogInvalidateTime = Date.now();
+  });
+
+  return inFlightCatalogInvalidate;
 }
 
-export async function writeProduct(product: CatalogProduct): Promise<CatalogProduct> {
+export async function writeProduct(
+  product: CatalogProduct,
+  options?: { skipCacheInvalidation?: boolean },
+): Promise<CatalogProduct> {
   const saved = await pg.writeProduct(product);
-  await invalidateCatalogCache();
+  if (!options?.skipCacheInvalidation) {
+    await invalidateCatalogCache();
+  }
   return saved;
 }
 
@@ -60,9 +84,14 @@ export async function removeProduct(id: string): Promise<void> {
   await invalidateCatalogCache();
 }
 
-export async function batchWriteProducts(products: CatalogProduct[]): Promise<number> {
+export async function batchWriteProducts(
+  products: CatalogProduct[],
+  options?: { skipCacheInvalidation?: boolean },
+): Promise<number> {
   await pg.batchWriteProducts(products);
-  await invalidateCatalogCache();
+  if (!options?.skipCacheInvalidation) {
+    await invalidateCatalogCache();
+  }
   return products.length;
 }
 

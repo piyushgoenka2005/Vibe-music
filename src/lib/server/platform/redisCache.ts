@@ -212,6 +212,7 @@ async function getCachedRedis<T>(
     const result = await fetch(`${config.url}/get/${encodeURIComponent(redisKey)}`, {
       headers: { Authorization: `Bearer ${config.token}` },
       cache: "no-store",
+      signal: AbortSignal.timeout(1500),
     });
     if (result.ok) {
       const text = await result.text();
@@ -364,6 +365,7 @@ export async function invalidateCache(key: string): Promise<void> {
       await fetch(`${config.url}/del/${encodeURIComponent(buildRedisKey(key))}`, {
         headers: { Authorization: `Bearer ${config.token}` },
         cache: "no-store",
+        signal: AbortSignal.timeout(1500),
       });
       redisCircuitBreaker.recordSuccess();
     } catch {

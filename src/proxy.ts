@@ -66,9 +66,12 @@ function isApiFastPath(request: NextRequest, pathname: string): boolean {
   // Admin routes are already protected by session auth + requireAdmin() permission guards.
   // This applies to ALL methods (GET, POST, PUT, DELETE, PATCH) so admin writes/updates
   // don't get throttled at the public IP layer.
+  const isHttps =
+    request.nextUrl.protocol === "https:" ||
+    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() === "https";
+
   if (pathname.startsWith("/api/admin/")) {
-    const secure = request.nextUrl.protocol === "https:";
-    if (hasAdminSessionCookie(request.cookies, secure)) {
+    if (hasAdminSessionCookie(request.cookies, isHttps)) {
       return true;
     }
   }
@@ -92,8 +95,7 @@ function isApiFastPath(request: NextRequest, pathname: string): boolean {
     "/api/support/tickets",
   ];
   if (accountGetPaths.some((p) => pathname.startsWith(p))) {
-    const secure = request.nextUrl.protocol === "https:";
-    if (hasAuthSessionCookie(request.cookies, secure)) {
+    if (hasAuthSessionCookie(request.cookies, isHttps)) {
       return true;
     }
   }
@@ -174,7 +176,9 @@ function handleProtectedPage(request: NextRequest): NextResponse | null {
     return null;
   }
 
-  const secure = request.nextUrl.protocol === "https:";
+  const secure =
+    request.nextUrl.protocol === "https:" ||
+    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() === "https";
   if (!hasAuthSessionCookie(request.cookies, secure)) {
     logSecurityEvent("session_rejected", {
       path: pathname,

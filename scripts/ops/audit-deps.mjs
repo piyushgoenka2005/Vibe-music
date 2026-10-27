@@ -36,6 +36,8 @@ const ACCEPTED_DIRECT_FALSE_FIX = new Set([
   "eslint-config-next",
   /** npm audit fix jumps to vitest@5 — major; stay on v3 until test suite is migrated. */
   "vitest",
+  /** npm audit fix downgrades @tiptap/html to v2 (2.27.3) — incompatible with TipTap 3 suite. */
+  "@tiptap/html",
 ]);
 
 function runAuditJson() {

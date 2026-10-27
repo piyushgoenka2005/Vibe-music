@@ -366,7 +366,7 @@ limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
 
 # Auth.js session cookies — bypass SSR page cache for logged-in users
 # (matches src/lib/auth/session-config.ts: authjs.session-token / __Secure-authjs.session-token)
-map $cookie_authjs_session_token$cookie___Secure_authjs_session_token $vibe_session_cache_bypass {
+map $cookie_authjs_session_token$cookie___secure_authjs_session_token$cookie___Secure_authjs_session_token $vibe_session_cache_bypass {
     default 0;
     "~."    1;
 }

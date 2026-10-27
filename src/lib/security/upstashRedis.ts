@@ -6,7 +6,7 @@ export function getUpstashConfig(): { url: string; token: string } | null {
 }
 
 export async function upstashPipeline(
-  commands: Array<[string, ...string[]]>
+  commands: Array<[string, ...string[]]>,
 ): Promise<Array<{ result: unknown }>> {
   const config = getUpstashConfig();
   if (!config) {
@@ -21,6 +21,7 @@ export async function upstashPipeline(
     },
     body: JSON.stringify(commands),
     cache: "no-store",
+    signal: AbortSignal.timeout(1500),
   });
 
   if (!response.ok) {

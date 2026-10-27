@@ -99,7 +99,7 @@ export async function uploadOptimizedImageToCdn(
       fit: "inside",
       withoutEnlargement: true,
     })
-    .webp({ quality: 92, effort: 5 })
+    .webp({ quality: 86, effort: 3 })
     .toBuffer();
 
   const masterName = `${id}.webp`;
@@ -114,7 +114,7 @@ export async function uploadOptimizedImageToCdn(
           fit: "inside",
           withoutEnlargement: true,
         })
-        .webp({ quality: 92, effort: 5 })
+        .webp({ quality: 86, effort: 3 })
         .toBuffer();
       const name = `${id}-w${width}.webp`;
       await writeFile(path.join(/*turbopackIgnore: true*/ directory, name), body);

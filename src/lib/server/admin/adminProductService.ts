@@ -1,7 +1,6 @@
 import {
-  bulkActivateProducts,
-  bulkArchiveProducts,
   bulkDeleteProducts,
+  bulkSetStatus,
   bulkUpdateCategory,
   bulkUpdateStock,
   createProduct,
@@ -12,7 +11,7 @@ import {
   toProductDetail,
   updateProduct,
 } from "@/services/catalogService";
-import { fetchAllProducts } from "@/lib/server/storeCatalogRepository";
+import { fetchAllProducts, fetchProductsByIds } from "@/lib/server/storeCatalogRepository";
 import {
   notifyWaitlistOnGoLive,
   notifyWaitlistOnRestock,
@@ -591,10 +590,8 @@ export async function bulkUpdateProductStatus(
   ids: string[],
   status: NonNullable<AdminProduct["status"]>,
 ): Promise<number> {
-  if (status === "active") return (await bulkActivateProducts(ids)).updated;
-  if (status === "archived") return (await bulkArchiveProducts(ids)).updated;
-  for (const id of ids) await updateProduct(id, { status });
-  return ids.length;
+  if (ids.length === 0) return 0;
+  return (await bulkSetStatus(ids, status)).updated;
 }
 
 export async function bulkDeleteAdminProducts(ids: string[]): Promise<number> {
@@ -605,17 +602,18 @@ export async function bulkDeleteAdminProducts(ids: string[]): Promise<number> {
 export async function bulkUpdateAdminStock(
   updates: Array<{ id: string; stockQuantity: number }>,
 ): Promise<number> {
+  if (updates.length === 0) return 0;
+
+  const ids = updates.map((u) => u.id);
+  const products = await fetchProductsByIds(ids);
   const before = new Map<string, { stock: number; reserved: number; name: string; slug: string }>();
-  for (const update of updates) {
-    const product = await getProductById(update.id);
-    if (product) {
-      before.set(update.id, {
-        stock: product.stock,
-        reserved: product.reservedStock ?? 0,
-        name: product.name,
-        slug: product.slug,
-      });
-    }
+  for (const product of products) {
+    before.set(product.id, {
+      stock: product.stock,
+      reserved: product.reservedStock ?? 0,
+      name: product.name,
+      slug: product.slug,
+    });
   }
 
   const result = await bulkUpdateStock(updates.map((u) => ({ id: u.id, stock: u.stockQuantity })));
@@ -640,5 +638,6 @@ export async function bulkUpdateAdminStock(
 export async function bulkUpdateAdminCategory(
   updates: Array<{ id: string; category: string; categorySlug: string }>,
 ): Promise<number> {
+  if (updates.length === 0) return 0;
   return (await bulkUpdateCategory(updates)).updated;
 }

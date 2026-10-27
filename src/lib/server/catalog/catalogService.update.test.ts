@@ -5,6 +5,7 @@ vi.mock("@/lib/server/storeCatalogRepository", () => ({
   fetchProductById: vi.fn(),
   fetchAllProducts: vi.fn(),
   fetchCategories: vi.fn(),
+  fetchProductsByCategory: vi.fn(async () => []),
   slugExists: vi.fn(),
   skuExists: vi.fn(),
   writeProduct: vi.fn(),

@@ -62,27 +62,39 @@ export function expireStorefrontTags(tags: readonly StorefrontCacheTag[]): void 
 
 const NGINX_PAGE_CACHE_DIR = process.env.NGINX_PAGE_CACHE_DIR ?? "/var/cache/nginx/vibe-pages";
 
+let isPurgingNginx = false;
+
 /** nginx caches anonymous HTML (60–300s); drop it so the next visitor reaches Next.js. */
 export async function purgeNginxPageCache(): Promise<void> {
   // nginx's cache directory is host-level and env-driven — opt out of bundler
   // tracing so the whole repo is not traced into the server output.
   if (
     process.env.NODE_ENV !== "production" ||
-    !existsSync(/*turbopackIgnore: true*/ NGINX_PAGE_CACHE_DIR)
+    !existsSync(/*turbopackIgnore: true*/ NGINX_PAGE_CACHE_DIR) ||
+    isPurgingNginx
   )
     return;
+
+  isPurgingNginx = true;
   try {
     const entries = await readdir(/*turbopackIgnore: true*/ NGINX_PAGE_CACHE_DIR);
-    await Promise.all(
-      entries.map((entry) =>
-        rm(path.join(/*turbopackIgnore: true*/ NGINX_PAGE_CACHE_DIR, entry), {
-          recursive: true,
-          force: true,
-        }),
-      ),
-    );
+    // Remove in bounded chunks to prevent VPS disk I/O saturation and database stalls
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < entries.length; i += BATCH_SIZE) {
+      const chunk = entries.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        chunk.map((entry) =>
+          rm(path.join(/*turbopackIgnore: true*/ NGINX_PAGE_CACHE_DIR, entry), {
+            recursive: true,
+            force: true,
+          }).catch(() => undefined),
+        ),
+      );
+    }
   } catch (error) {
     console.warn("[storefront-cache] nginx page cache purge failed", error);
+  } finally {
+    isPurgingNginx = false;
   }
 }
 
@@ -104,18 +116,41 @@ async function clearProcessCaches(): Promise<void> {
   await invalidateCacheByPrefix("products");
 }
 
+let inFlightInvalidation: Promise<void> | null = null;
+let lastInvalidationCompletedAt = 0;
+const INVALIDATION_COOLDOWN_MS = 2000;
+
 /** Make every public page (and the admin views that read the same caches) fresh on next load. */
 export async function invalidateAllStorefrontCaches(): Promise<void> {
-  expireStorefrontTags(STOREFRONT_CACHE_TAGS);
-  try {
-    revalidatePath("/", "layout");
-  } catch {
-    /* outside a request context */
+  // Coalesce concurrent calls so multiple simultaneous admin writes only run one invalidation cascade
+  if (inFlightInvalidation) {
+    return inFlightInvalidation;
   }
-  await Promise.all([
-    clearProcessCaches().catch((error) =>
-      console.warn("[storefront-cache] process cache clear failed", error),
-    ),
-    purgeNginxPageCache(),
-  ]);
+
+  // Prevent back-to-back cache thrashing during bursts of admin updates
+  const now = Date.now();
+  if (now - lastInvalidationCompletedAt < INVALIDATION_COOLDOWN_MS) {
+    bumpStorefrontVersion();
+    return;
+  }
+
+  inFlightInvalidation = (async () => {
+    expireStorefrontTags(STOREFRONT_CACHE_TAGS);
+    try {
+      revalidatePath("/", "layout");
+    } catch {
+      /* outside a request context */
+    }
+    await Promise.all([
+      clearProcessCaches().catch((error) =>
+        console.warn("[storefront-cache] process cache clear failed", error),
+      ),
+      purgeNginxPageCache(),
+    ]);
+  })().finally(() => {
+    inFlightInvalidation = null;
+    lastInvalidationCompletedAt = Date.now();
+  });
+
+  return inFlightInvalidation;
 }
