@@ -20,6 +20,13 @@ vi.mock("@/lib/server/auditLog", () => ({
 
 vi.mock("@/lib/auth/permissions", () => ({
   hasPermission: vi.fn(),
+  ALL_PERMISSIONS: [
+    "dashboard:read",
+    "products:read",
+    "products:write",
+    "products:delete",
+    "admins:write",
+  ],
 }));
 
 vi.mock("@/lib/security/mutation-origin", () => ({
@@ -118,6 +125,13 @@ describe("requireAdmin", () => {
   });
 
   it("throws AdminRateLimitError when rate limited", async () => {
+    vi.mocked(getAdminSession).mockResolvedValue({
+      uid: "admin-1",
+      email: "admin@test.com",
+      displayName: "Admin",
+      role: "admin",
+      permissions: ["products:read"],
+    });
     vi.mocked(distributedCheckRateLimit).mockResolvedValue({
       allowed: false,
       remaining: 0,
@@ -152,5 +166,25 @@ describe("requireAdmin", () => {
       new Request("http://localhost/api/admin/products", { method: "GET" }),
     );
     expect(after).not.toHaveBeenCalled();
+  });
+
+  it("unconditionally grants all permissions to super_admin and bypasses rate limits", async () => {
+    vi.mocked(getAdminSession).mockResolvedValue({
+      uid: "super-1",
+      email: "super@vibemusic.in",
+      displayName: "Super Admin",
+      role: "super_admin",
+      permissions: [],
+    });
+    // Even if hasPermission would return false for a normal check
+    vi.mocked(hasPermission).mockReturnValue(false);
+
+    const request = new Request("http://localhost/api/admin/products", { method: "POST" });
+    const session = await requireAdmin("admins:write", request);
+
+    expect(session.role).toBe("super_admin");
+    expect(session.permissions.length).toBeGreaterThan(0);
+    // Super admins are exempt from rate limiting
+    expect(distributedCheckRateLimit).not.toHaveBeenCalled();
   });
 });

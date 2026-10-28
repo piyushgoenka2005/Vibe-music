@@ -1,6 +1,10 @@
 import "server-only";
 
-import { EDITABLE_ADMIN_ROLES, getDefaultPermissionsForRole } from "@/lib/auth/permissions";
+import {
+  ALL_PERMISSIONS,
+  EDITABLE_ADMIN_ROLES,
+  getDefaultPermissionsForRole,
+} from "@/lib/auth/permissions";
 import {
   deleteRolePermissionOverride,
   getRolePermissionOverride,
@@ -11,7 +15,7 @@ import type { AdminRole, Permission } from "@/types/admin";
 
 export async function resolvePermissionsForRole(role: AdminRole): Promise<Permission[]> {
   if (role === "super_admin") {
-    return getDefaultPermissionsForRole(role);
+    return [...ALL_PERMISSIONS];
   }
   const override = await getRolePermissionOverride(role);
   return override ?? getDefaultPermissionsForRole(role);

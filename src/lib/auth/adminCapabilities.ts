@@ -2,7 +2,33 @@ import { hasPermission } from "@/lib/auth/permissions";
 import type { Permission } from "@/types/admin";
 
 /** UI capability flags derived from admin session permissions. */
-export function getAdminCapabilities(permissions: Permission[]) {
+export function getAdminCapabilities(permissions: Permission[], role?: string) {
+  const isSuperAdmin = role === "super_admin" || permissions.includes("admins:write");
+  if (isSuperAdmin) {
+    return {
+      productsWrite: true,
+      productsDelete: true,
+      ordersWrite: true,
+      ordersRefund: true,
+      reviewsWrite: true,
+      inventoryWrite: true,
+      blogWrite: true,
+      blogDelete: true,
+      rentalsWrite: true,
+      settingsWrite: true,
+      couponsWrite: true,
+      couponsDelete: true,
+      categoriesWrite: true,
+      categoriesDelete: true,
+      customersWrite: true,
+      homepageWrite: true,
+      bannersWrite: true,
+      bannersDelete: true,
+      adminsWrite: true,
+      giveawaysWrite: true,
+      giveawaysDelete: true,
+    };
+  }
   return {
     productsWrite: hasPermission(permissions, "products:write"),
     productsDelete: hasPermission(permissions, "products:delete"),

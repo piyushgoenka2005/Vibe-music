@@ -4,7 +4,7 @@ import { getSessionUser } from "@/lib/auth/server-session";
 import { isMutationMethod } from "@/lib/security/mutation-origin";
 import { getAdminSession } from "@/lib/server/adminService";
 import { logAuditEvent } from "@/lib/server/auditLog";
-import { hasPermission } from "@/lib/auth/permissions";
+import { ALL_PERMISSIONS, hasPermission } from "@/lib/auth/permissions";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-core";
 import { distributedCheckRateLimit } from "@/lib/security/distributed-rate-limit";
 import {
@@ -66,16 +66,20 @@ export async function requireAdmin(
     throw new AdminAuthError("Admin access denied", 403);
   }
 
-  if (permission && !hasPermission(adminSession.permissions, permission)) {
+  // Super admins have unconditional full control over everything on the website, store, and warehouse.
+  if (adminSession.role === "super_admin") {
+    adminSession.permissions = [...ALL_PERMISSIONS];
+  } else if (permission && !hasPermission(adminSession.permissions, permission)) {
     throw new AdminAuthError("Insufficient permissions", 403);
   }
 
   // Rate-limit per admin UID (not IP) so shared-NAT admins don't
   // exhaust each other's budget. Runs after auth so unauthenticated
   // requests never consume the admin rate-limit bucket.
-  // Skipped in development/test unless explicitly enabled.
+  // Skipped in development/test unless explicitly enabled. Super admins are exempt.
   if (
     request &&
+    adminSession.role !== "super_admin" &&
     process.env.DISABLE_RATE_LIMIT !== "true" &&
     process.env.NODE_ENV !== "development"
   ) {

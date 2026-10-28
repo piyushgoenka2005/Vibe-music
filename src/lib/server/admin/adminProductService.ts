@@ -473,12 +473,21 @@ export async function updateAdminProduct(
       Boolean(mutationContext?.allowLargePriceChanges) ||
       process.env.ALLOW_LARGE_PRICE_CHANGES !== "0";
 
+    const nextPrice = patch.price ?? existing.price;
+    let mrp = patch.originalPrice ?? existing.originalPrice;
+    if (mrp <= 0 || (isSuperAdminOrAdmin && nextPrice > mrp)) {
+      mrp = Math.max(mrp, nextPrice);
+      if (patch.originalPrice === undefined) {
+        patch.originalPrice = mrp;
+      }
+    }
+
     const guard = evaluatePriceChangeGuard(
       {
         sku: existing.sku,
         previousPrice: existing.price,
-        nextPrice: patch.price ?? existing.price,
-        mrp: patch.originalPrice ?? existing.originalPrice,
+        nextPrice,
+        mrp,
       },
       {
         allowLargeChanges: allowLarge,

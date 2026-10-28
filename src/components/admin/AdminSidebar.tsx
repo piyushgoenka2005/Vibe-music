@@ -166,8 +166,10 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
     router.replace(ROUTES.adminLogin);
   }
 
-  const visibleItems = NAV_ITEMS.filter((item) =>
-    admin.permissions.includes(item.permission as (typeof admin.permissions)[number]),
+  const visibleItems = NAV_ITEMS.filter(
+    (item) =>
+      admin.role === "super_admin" ||
+      admin.permissions.includes(item.permission as (typeof admin.permissions)[number]),
   );
 
   const showNotificationBadge = visibleItems.some(

@@ -102,7 +102,10 @@ export default function AdminGuard({ children }: AdminGuardProps) {
     return <AuthLoading />;
   }
 
-  if (!canAccessAdminPath(admin.permissions, pathname)) {
+  if (
+    admin.role !== "super_admin" &&
+    !canAccessAdminPath(admin.permissions, pathname, admin.role)
+  ) {
     return (
       <AdminShell admin={admin} title="Access denied">
         <div className="admin-panel">

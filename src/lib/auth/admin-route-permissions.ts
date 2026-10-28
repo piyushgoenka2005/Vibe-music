@@ -62,7 +62,12 @@ export function getRequiredPermissionForAdminPath(pathname: string): Permission 
   return "dashboard:read";
 }
 
-export function canAccessAdminPath(permissions: Permission[], pathname: string): boolean {
+export function canAccessAdminPath(
+  permissions: Permission[],
+  pathname: string,
+  role?: string,
+): boolean {
+  if (role === "super_admin" || permissions.includes("admins:write")) return true;
   const required = getRequiredPermissionForAdminPath(pathname);
   if (!required) return true;
   return hasPermission(permissions, required);
