@@ -3,6 +3,7 @@ import "server-only";
 export {
   checkRateLimit,
   getClientIp,
+  isInternalServerIp,
   RATE_LIMITS,
   type RateLimitOptions,
   type RateLimitResult,

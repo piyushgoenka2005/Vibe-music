@@ -90,4 +90,18 @@ export function getClientIp(request: Request): string {
   return realIp || "127.0.0.1";
 }
 
+/**
+ * Detect loopback and local VPS internal IP addresses.
+ * Server-internal requests (PM2 health checks, deploy smoke tests, local crons)
+ * must never self-throttle or exhaust external visitor rate limit budgets.
+ */
+export function isInternalServerIp(ip: string): boolean {
+  if (process.env.NODE_ENV === "test" || process.env.VITEST) {
+    return false;
+  }
+  if (ip === "127.0.0.1" || ip === "::1" || ip === "localhost") return true;
+  const vpsIp = process.env.VPS_IP?.trim() || "109.122.56.126";
+  return ip === vpsIp;
+}
+
 export const RATE_LIMITS = buildRateLimits();

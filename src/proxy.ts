@@ -11,7 +11,11 @@ import {
   isWebhookPath,
   verifyMutationOrigin,
 } from "@/lib/security/mutation-origin";
-import { getClientIp, type RateLimitResult } from "@/lib/security/rate-limit-core";
+import {
+  getClientIp,
+  isInternalServerIp,
+  type RateLimitResult,
+} from "@/lib/security/rate-limit-core";
 import { resolveRateLimitScope } from "@/lib/security/rate-limit-scopes";
 import {
   finalizeRouteObservationFromStatus,
@@ -131,7 +135,9 @@ async function handleApiRequest(request: NextRequest): Promise<NextResponse | nu
     remaining: options.limit,
     resetAt: Date.now() + options.windowMs,
   };
-  if (
+  if (isInternalServerIp(ip)) {
+    // Loopback / server-internal processes (smoke tests, PM2, local health checks) never self-throttle
+  } else if (
     (process.env.DISABLE_RATE_LIMIT === "true" || process.env.NODE_ENV === "development") &&
     process.env.NODE_ENV !== "production"
   ) {

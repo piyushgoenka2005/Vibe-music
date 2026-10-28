@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit-core";
+import { checkRateLimit, getClientIp, isInternalServerIp } from "@/lib/security/rate-limit-core";
 
 describe("getClientIp", () => {
   it("prefers X-Real-IP over spoofable left-most X-Forwarded-For", () => {
@@ -118,5 +118,12 @@ describe("checkRateLimit", () => {
     const r2 = checkRateLimit(key, { limit: 5, windowMs: 10_000 });
 
     expect(r2.resetAt).toBeGreaterThan(r1.resetAt);
+  });
+});
+
+describe("isInternalServerIp", () => {
+  it("enforces rate limits in test environments even for loopback", () => {
+    expect(isInternalServerIp("127.0.0.1")).toBe(false);
+    expect(isInternalServerIp("::1")).toBe(false);
   });
 });

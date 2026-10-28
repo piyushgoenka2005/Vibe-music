@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { distributedCheckRateLimit } from "@/lib/security/distributed-rate-limit";
-import { getClientIp, RATE_LIMITS, type RateLimitOptions } from "@/lib/security/rate-limit";
+import {
+  getClientIp,
+  isInternalServerIp,
+  RATE_LIMITS,
+  type RateLimitOptions,
+} from "@/lib/security/rate-limit";
 import {
   isMutationMethod,
   isWebhookPath,
@@ -64,6 +69,9 @@ export async function enforceRateLimit(
     return null;
   }
   const ip = getClientIp(request);
+  if (isInternalServerIp(ip)) {
+    return null;
+  }
   const result = await distributedCheckRateLimit(`${scope}:${ip}`, options);
   if (!result.allowed) {
     const response = jsonError("Too many requests. Please try again later.", 429);
