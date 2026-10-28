@@ -203,7 +203,7 @@ run_post_deploy_smoke() {
   fi
 
   check_http "/api/admin/me" 401 "admin auth" "$API_BASE_URL"
-  check_http "/api/admin/products/import" 401 "admin import auth" "$API_BASE_URL"
+  check_http "/api/admin/products" 401 "admin products auth" "$API_BASE_URL"
   if ! HOMEPAGE_VERIFY_URL="$API_BASE_URL" npm run verify:homepage-images; then
     echo "  FAIL homepage product images"
     FAILS=$((FAILS + 1))
