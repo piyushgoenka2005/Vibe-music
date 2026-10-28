@@ -21,7 +21,7 @@ export async function upstashPipeline(
     },
     body: JSON.stringify(commands),
     cache: "no-store",
-    signal: AbortSignal.timeout(1500),
+    signal: AbortSignal.timeout(300),
   });
 
   if (!response.ok) {

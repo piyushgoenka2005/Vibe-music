@@ -9,10 +9,11 @@ describe("rate-limit-fallback", () => {
     vi.unstubAllEnvs();
   });
 
-  it("fails closed in production when Upstash is configured", () => {
+  it("fails closed in production when Upstash is configured and fail closed is enabled", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://example.upstash.io");
     vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "token");
+    vi.stubEnv("RATE_LIMIT_FAIL_CLOSED", "true");
     expect(shouldFailClosedOnRateLimitBackendError()).toBe(true);
   });
 

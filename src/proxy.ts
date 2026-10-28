@@ -65,6 +65,9 @@ function isApiFastPath(request: NextRequest, pathname: string): boolean {
     "/api/auth/session",
     "/api/checkout/capabilities",
     "/api/coupons/active",
+    "/api/shipping/quote",
+    "/api/products/footer-trending",
+    "/api/analytics/meta",
   ];
   if (alwaysFastPaths.some((p) => pathname.startsWith(p))) return true;
 

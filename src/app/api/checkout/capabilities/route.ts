@@ -19,15 +19,8 @@ import { RATE_LIMITS } from "@/lib/security/rate-limit";
 export const dynamic = "force-dynamic";
 
 /** Non-secret checkout capability flags for storefront UX. */
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
-    const rateLimited = await enforceRateLimit(
-      request,
-      "checkout-capabilities",
-      RATE_LIMITS.publicApi,
-    );
-    if (rateLimited) return rateLimited;
-
     const razorpayConfigured = isRazorpayConfigured();
     const demoPaymentsAllowed = isDemoPaymentsAllowed();
     const razorpayMode = getRazorpayKeyMode();

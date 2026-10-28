@@ -24,7 +24,7 @@ export const DEFAULT_RATE_LIMITS: Record<RateLimitScopeKey, RateLimitOptions> = 
   search: { limit: 90, windowMs: 60_000 },
   analytics: { limit: 300, windowMs: 60_000 },
   auth: { limit: 40, windowMs: 60_000 },
-  checkout: { limit: 20, windowMs: 60_000 },
+  checkout: { limit: 60, windowMs: 60_000 },
   /** Admin catalog work (lists, saves, navigation). */
   admin: { limit: 600, windowMs: 60_000 },
   /** Bulk import preview + confirm cycles (heavy, low frequency). */

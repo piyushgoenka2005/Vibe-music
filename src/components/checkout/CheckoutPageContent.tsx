@@ -224,12 +224,13 @@ export default function CheckoutPageContent() {
   }, []);
 
   const placesAutocomplete = checkoutCapabilities?.placesAutocomplete ?? false;
+  const hasClientRazorpayKey = Boolean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
   const onlinePaymentsAvailable =
     capabilitiesStatus === "ready"
       ? (checkoutCapabilities?.onlinePaymentsAvailable ?? false)
-      : false;
+      : hasClientRazorpayKey;
   const razorpayIssue =
-    capabilitiesStatus === "error"
+    capabilitiesStatus === "error" && !hasClientRazorpayKey
       ? "Unable to verify payment gateway status. Refresh the page or try again in a moment."
       : (checkoutCapabilities?.razorpayIssue ?? null);
 
