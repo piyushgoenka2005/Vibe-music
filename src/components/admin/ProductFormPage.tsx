@@ -96,34 +96,35 @@ function prepareVariantsForSave(
   ];
 }
 
-function mapAdminProductToForm(product: Record<string, unknown>): AdminProductFormState {
+function mapAdminProductToForm(
+  product: AdminProduct | Record<string, unknown>,
+): AdminProductFormState {
+  const p = product as unknown as Record<string, unknown>;
   return {
     ...EMPTY,
-    ...product,
-    subcategory: (product.subcategory as string) ?? "",
-    featured: (product.featured as boolean) ?? false,
-    trending: (product.trending as boolean) ?? false,
-    newArrival: (product.newArrival as boolean) ?? false,
-    images: (product.images as string[]) ?? (product.image ? [product.image as string] : []),
-    spin360Images: (product.spin360Images as string[]) ?? [],
-    variants: (product.variants as ProductVariant[]) ?? [],
+    ...p,
+    subcategory: (p.subcategory as string) ?? "",
+    featured: (p.featured as boolean) ?? false,
+    trending: (p.trending as boolean) ?? false,
+    newArrival: (p.newArrival as boolean) ?? false,
+    images: (p.images as string[]) ?? (p.image ? [p.image as string] : []),
+    spin360Images: (p.spin360Images as string[]) ?? [],
+    variants: (p.variants as ProductVariant[]) ?? [],
     bundle: createEmptyBundleState(),
     related: createEmptyRelatedState(),
     guitarSpecs: extractGuitarSpecsFromRecord(
-      product.specifications as Record<string, string> | undefined,
+      p.specifications as Record<string, string> | undefined,
     ),
     filterSpecs: extractFilterSpecsFromRecord(
-      product.specifications as Record<string, string> | undefined,
+      p.specifications as Record<string, string> | undefined,
     ),
-    similarProductIds: Array.isArray(product.similarProductIds)
-      ? (product.similarProductIds as string[])
-      : [],
-    inTheBox: (product.inTheBox as string[]) ?? [],
-    videos: (product.videos as ProductVideo[]) ?? [],
-    detailSpecs: (product.detailSpecs as ProductSpec[]) ?? [],
-    imageColor: (product.imageColor as string) ?? "#f5f5f5",
-    rating: product.rating as number | undefined,
-    reviewCount: product.reviewCount as number | undefined,
+    similarProductIds: Array.isArray(p.similarProductIds) ? (p.similarProductIds as string[]) : [],
+    inTheBox: (p.inTheBox as string[]) ?? [],
+    videos: (p.videos as ProductVideo[]) ?? [],
+    detailSpecs: (p.detailSpecs as ProductSpec[]) ?? [],
+    imageColor: (p.imageColor as string) ?? "#f5f5f5",
+    rating: p.rating as number | undefined,
+    reviewCount: p.reviewCount as number | undefined,
   };
 }
 
