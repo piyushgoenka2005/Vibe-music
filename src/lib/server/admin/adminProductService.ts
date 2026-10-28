@@ -402,7 +402,7 @@ export async function createAdminProduct(
     categorySlug: input.categorySlug,
     subcategory: input.subcategory,
     price: input.price,
-    originalPrice: input.originalPrice ?? input.price,
+    originalPrice: Math.max(input.originalPrice ?? input.price, input.price),
     stock: input.stockQuantity ?? 100,
     lowStockThreshold: input.lowStockThreshold,
     sku: input.sku,

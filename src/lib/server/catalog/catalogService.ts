@@ -1084,7 +1084,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
   const brandSlug = input.brandSlug ?? slugify(input.brand);
   const now = new Date().toISOString();
   const stock = input.stock ?? 100;
-  const originalPrice = input.originalPrice ?? input.price;
+  const originalPrice = Math.max(input.originalPrice ?? input.price, input.price);
   const primaryImage =
     input.image?.trim() ||
     input.images?.find((src) => src?.trim()) ||

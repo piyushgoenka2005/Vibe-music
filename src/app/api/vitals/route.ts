@@ -16,13 +16,29 @@ const vitalsSchema = z
   })
   .passthrough();
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     const rateLimited = await enforceRateLimit(request, "web-vitals", RATE_LIMITS.analytics);
     if (rateLimited) return NextResponse.json({ ok: true, throttled: true });
 
-    const parsed = await parseJsonBody(request, vitalsSchema);
-    if ("error" in parsed) return parsed.error;
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      const text = await request.text().catch(() => "");
+      try {
+        rawBody = text ? JSON.parse(text) : {};
+      } catch {
+        return NextResponse.json({ ok: true, ignored: true });
+      }
+    }
+
+    const parsed = vitalsSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ ok: true, ignored: true });
+    }
 
     const metric = parsed.data;
     logInfo(
