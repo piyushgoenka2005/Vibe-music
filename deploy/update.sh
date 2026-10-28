@@ -144,8 +144,22 @@ run_post_deploy_smoke() {
   check_http "/api/health" 200 "health" "$API_BASE_URL"
   check_http "/api/coupons/active" 200 "coupons" "$API_BASE_URL"
   check_http "/api/checkout/capabilities" 200 "checkout caps" "$API_BASE_URL"
+  check_http "/api/catalog/categories" 200 "catalog categories api" "$API_BASE_URL"
+  check_http "/api/banners" 200 "banners api" "$API_BASE_URL"
+  check_http "/api/homepage" 200 "homepage api" "$API_BASE_URL"
   check_http "/deals" 200 "deals"
+  check_http "/category" 200 "category hub"
   check_http "/category/guitars" 200 "category page"
+  check_http "/cart" 200 "cart page"
+  check_http "/search?q=piano" 200 "search page"
+  check_http "/financing" 200 "financing page"
+  check_http "/gear-exchange" 200 "gear exchange page"
+  check_http "/giveaway" 200 "giveaway page"
+  check_http "/blog" 200 "blog page"
+  check_http "/pages/privacy" 200 "privacy policy"
+  check_http "/pages/terms" 200 "terms policy"
+  check_http "/pages/returns" 200 "returns policy"
+
   local invalid_cat_code invalid_cat_body
   invalid_cat_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 "${BASE_URL}/category/__no_such_category__" || echo "000")
   invalid_cat_body=$(curl -sS --max-time 30 "${BASE_URL}/category/__no_such_category__" 2>/dev/null | head -c 8000 || true)
@@ -155,6 +169,7 @@ run_post_deploy_smoke() {
     echo "  FAIL invalid category (HTTP $invalid_cat_code, missing not-found copy)"
     FAILS=$((FAILS + 1))
   fi
+
   check_http "/brands/gibraltar" 200 "brand page"
   local brand_redirect_code brand_redirect_loc
   brand_redirect_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 "${BASE_URL}/brands?brand=gibraltar" || echo "000")
@@ -165,7 +180,30 @@ run_post_deploy_smoke() {
     echo "  FAIL brand redirect (HTTP $brand_redirect_code location=${brand_redirect_loc:-none})"
     FAILS=$((FAILS + 1))
   fi
+
+  # Validate legacy /other and /others permanent 308 redirects to /category
+  local other_redirect_code other_redirect_loc
+  other_redirect_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 "${BASE_URL}/other" || echo "000")
+  other_redirect_loc=$(curl -sS -I --max-time 30 "${BASE_URL}/other" 2>/dev/null | tr -d '\r' | awk -F': ' 'tolower($1)=="location"{print $2; exit}')
+  if [[ "$other_redirect_code" =~ ^30[78]$ ]] && [[ "$other_redirect_loc" == *"/category"* ]]; then
+    echo "  ok /other redirect ($other_redirect_code → $other_redirect_loc)"
+  else
+    echo "  FAIL /other redirect (HTTP $other_redirect_code location=${other_redirect_loc:-none})"
+    FAILS=$((FAILS + 1))
+  fi
+
+  local others_redirect_code others_redirect_loc
+  others_redirect_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 "${BASE_URL}/others" || echo "000")
+  others_redirect_loc=$(curl -sS -I --max-time 30 "${BASE_URL}/others" 2>/dev/null | tr -d '\r' | awk -F': ' 'tolower($1)=="location"{print $2; exit}')
+  if [[ "$others_redirect_code" =~ ^30[78]$ ]] && [[ "$others_redirect_loc" == *"/category"* ]]; then
+    echo "  ok /others redirect ($others_redirect_code → $others_redirect_loc)"
+  else
+    echo "  FAIL /others redirect (HTTP $others_redirect_code location=${others_redirect_loc:-none})"
+    FAILS=$((FAILS + 1))
+  fi
+
   check_http "/api/admin/me" 401 "admin auth" "$API_BASE_URL"
+  check_http "/api/admin/products/import" 401 "admin import auth" "$API_BASE_URL"
   if ! HOMEPAGE_VERIFY_URL="$API_BASE_URL" npm run verify:homepage-images; then
     echo "  FAIL homepage product images"
     FAILS=$((FAILS + 1))
