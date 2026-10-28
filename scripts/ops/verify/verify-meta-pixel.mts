@@ -147,7 +147,11 @@ async function main() {
   }
 
   try {
-    const capsRes = await fetch(`${BASE_URL}/api/checkout/capabilities`, { cache: "no-store" });
+    let capsRes = await fetch(`${BASE_URL}/api/checkout/capabilities`, { cache: "no-store" });
+    for (let i = 1; i < 4 && capsRes.status === 429; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 1500 * i));
+      capsRes = await fetch(`${BASE_URL}/api/checkout/capabilities`, { cache: "no-store" });
+    }
     const caps = (await capsRes.json()) as Record<string, unknown>;
     if (capsRes.status === 200 && caps.metaPixelConfigured === true) {
       checks.push(pass("live:meta-pixel", "metaPixelConfigured=true"));
