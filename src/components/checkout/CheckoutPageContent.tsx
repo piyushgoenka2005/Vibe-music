@@ -226,13 +226,11 @@ export default function CheckoutPageContent() {
   const placesAutocomplete = checkoutCapabilities?.placesAutocomplete ?? false;
   const hasClientRazorpayKey = Boolean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
   const onlinePaymentsAvailable =
-    capabilitiesStatus === "ready"
-      ? (checkoutCapabilities?.onlinePaymentsAvailable ?? false)
-      : hasClientRazorpayKey;
+    checkoutCapabilities !== null ? checkoutCapabilities.onlinePaymentsAvailable : true;
   const razorpayIssue =
-    capabilitiesStatus === "error" && !hasClientRazorpayKey
-      ? "Unable to verify payment gateway status. Refresh the page or try again in a moment."
-      : (checkoutCapabilities?.razorpayIssue ?? null);
+    checkoutCapabilities?.onlinePaymentsAvailable === false
+      ? (checkoutCapabilities.razorpayIssue ?? "Razorpay is not configured on this store.")
+      : null;
 
   const checkoutItems = items.map((item) => ({
     productId: item.productId,
@@ -691,7 +689,9 @@ export default function CheckoutPageContent() {
                 setOnlineChannel={setOnlineChannel}
                 effectivePaymentMethod={effectivePaymentMethod}
                 onlinePaymentsAvailable={onlinePaymentsAvailable}
-                paymentCapabilitiesLoading={capabilitiesStatus === "loading"}
+                paymentCapabilitiesLoading={
+                  capabilitiesStatus === "loading" && !onlinePaymentsAvailable
+                }
                 razorpayIssue={razorpayIssue}
                 resolvedAddress={resolvedAddress}
                 hasValidContact={hasValidContact}

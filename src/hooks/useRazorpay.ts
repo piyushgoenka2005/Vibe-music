@@ -130,38 +130,57 @@ function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
     return Promise.resolve();
   }
 
-  if (isScriptAlreadyLoaded(script)) {
-    return pollForRazorpayGlobal();
-  }
-
   return new Promise((resolve, reject) => {
-    const timeoutId = window.setTimeout(() => {
-      reject(new Error("Razorpay SDK load timed out"));
-    }, SCRIPT_LOAD_TIMEOUT_MS);
+    let settled = false;
 
-    const finish = (callback: () => void) => {
-      window.clearTimeout(timeoutId);
-      callback();
+    const cleanup = () => {
+      if (typeof window !== "undefined") {
+        window.clearInterval(pollTimer);
+        window.clearTimeout(timeoutId);
+      }
+      script.removeEventListener?.("load", onLoad);
+      script.removeEventListener?.("error", onError);
     };
 
-    script.addEventListener(
-      "load",
-      () => {
-        markScriptLoaded(script);
-        finish(() => {
-          void pollForRazorpayGlobal().then(resolve).catch(reject);
-        });
-      },
-      { once: true },
-    );
+    const succeed = () => {
+      if (settled) return;
+      settled = true;
+      markScriptLoaded(script);
+      cleanup();
+      resolve();
+    };
 
-    script.addEventListener(
-      "error",
-      () => {
-        finish(() => reject(new Error("Failed to load Razorpay SDK")));
-      },
-      { once: true },
-    );
+    const fail = (err: Error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(err);
+    };
+
+    const onLoad = () => {
+      void pollForRazorpayGlobal(3000).then(succeed).catch(fail);
+    };
+
+    const onError = () => {
+      fail(new Error("Failed to load Razorpay SDK"));
+    };
+
+    script.addEventListener?.("load", onLoad, { once: true });
+    script.addEventListener?.("error", onError, { once: true });
+
+    const pollTimer = window.setInterval(() => {
+      if (window.Razorpay) {
+        succeed();
+      }
+    }, RAZORPAY_POLL_INTERVAL_MS);
+
+    const timeoutId = window.setTimeout(() => {
+      if (window.Razorpay) {
+        succeed();
+      } else {
+        fail(new Error("Razorpay SDK load timed out"));
+      }
+    }, SCRIPT_LOAD_TIMEOUT_MS);
   });
 }
 
