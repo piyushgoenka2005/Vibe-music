@@ -138,6 +138,16 @@ const nextConfig: NextConfig = {
         destination: "/login",
         permanent: false,
       },
+      {
+        source: "/other",
+        destination: "/category",
+        permanent: true,
+      },
+      {
+        source: "/others",
+        destination: "/category",
+        permanent: true,
+      },
     ];
   },
 };
