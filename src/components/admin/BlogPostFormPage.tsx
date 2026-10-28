@@ -10,7 +10,7 @@ import { BLOG_CATEGORIES } from "@/lib/blog/blogEngine";
 import BlogCoverImageUpload from "@/components/admin/BlogCoverImageUpload";
 import TipTapEditor from "@/components/admin/TipTapEditor";
 import { adminMutateJson } from "@/lib/admin/adminFetch";
-import type { BlogPostStatus } from "@/types/blog";
+import type { BlogPost, BlogPostStatus } from "@/types/blog";
 
 const EMPTY_FORM = {
   title: "",
@@ -58,8 +58,10 @@ export default function BlogPostFormPage({ postId, readOnly = false }: BlogPostF
   useEffect(() => {
     if (!postId) return;
     fetch(`/api/admin/blog/${postId}`)
-      .then((r) => r.json())
-      .then((d) => {
+      .then((r) =>
+        r.ok ? (r.json().catch(() => ({})) as Promise<{ post?: Partial<BlogPost> }>) : {},
+      )
+      .then((d: { post?: Partial<BlogPost> }) => {
         if (d.post) {
           setForm({
             title: d.post.title ?? "",

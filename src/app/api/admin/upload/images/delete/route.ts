@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import {
-  AdminAuthError,
-  requireAdmin,
-  adminErrorResponse,
-} from "@/lib/auth/require-admin";
+import { AdminAuthError, requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { hasAnyPermission } from "@/lib/auth/permissions";
 import { deleteImageFromCdn, isCdnUrl } from "@/lib/server/cdnStorage";
 import { adminDeleteImagesSchema } from "@/lib/validations/admin";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +14,10 @@ export async function POST(request: Request) {
         "products:write",
         "banners:write",
         "blog:write",
+        "homepage:write",
+        "categories:write",
+        "rentals:write",
+        "giveaways:write",
       ])
     ) {
       throw new AdminAuthError("Insufficient permissions", 403);
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
         } catch {
           return { url, deleted: false };
         }
-      })
+      }),
     );
 
     return NextResponse.json({
@@ -44,6 +46,6 @@ export async function POST(request: Request) {
       total: results.length,
     });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }

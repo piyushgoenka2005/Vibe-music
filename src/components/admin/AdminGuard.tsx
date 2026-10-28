@@ -9,6 +9,7 @@ import { useAdminSessionBootstrap } from "@/components/admin/AdminSessionBootstr
 import { canAccessAdminPath } from "@/lib/auth/admin-route-permissions";
 import { ROUTES } from "@/lib/routes";
 import AuthLoading from "@/components/auth/AuthLoading";
+import { safeReadApiResponse } from "@/lib/admin/adminFetch";
 import type { AdminSession } from "@/types/admin";
 
 const SESSION_STORAGE_KEY = "vibe_admin_session";
@@ -47,12 +48,12 @@ async function fetchAdminSession(): Promise<AdminSession | null> {
     setCachedAdminSession(null);
     return null;
   }
-  if (!res.ok) throw new Error("Failed to verify admin session");
-  const data = (await res.json()) as { admin: AdminSession };
-  if (data?.admin) {
-    setCachedAdminSession(data.admin);
+  const parsed = await safeReadApiResponse<{ admin?: AdminSession }>(res);
+  if (!parsed.ok || !parsed.data?.admin) {
+    throw new Error(parsed.error ?? "Failed to verify admin session");
   }
-  return data.admin;
+  setCachedAdminSession(parsed.data.admin);
+  return parsed.data.admin;
 }
 
 export function useAdminSession() {

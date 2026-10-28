@@ -27,6 +27,13 @@ export default function ProductImageUpload({
       if (list.length === 0) return;
 
       setUploading(true);
+      for (const file of list) {
+        if (file.size > 10 * 1024 * 1024) {
+          setError(`"${file.name}" is larger than 10MB. Please select an image under 10MB.`);
+          return;
+        }
+      }
+
       setError(null);
       const formData = new FormData();
       formData.append("categorySlug", categorySlug || "general");
@@ -40,12 +47,12 @@ export default function ProductImageUpload({
           method: "POST",
           body: formData,
         });
-        if (!res.ok) {
-          const { readAdminApiError } = await import("@/lib/admin/adminFetch");
-          throw new Error(await readAdminApiError(res));
+        const { safeReadApiResponse } = await import("@/lib/admin/adminFetch");
+        const parsed = await safeReadApiResponse<{ urls?: string[] }>(res);
+        if (!parsed.ok || !parsed.data?.urls) {
+          throw new Error(parsed.error ?? "Upload failed");
         }
-        const data = await res.json();
-        onChange([...images, ...(data.urls as string[])]);
+        onChange([...images, ...parsed.data.urls]);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Upload failed");
       } finally {

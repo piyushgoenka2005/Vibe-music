@@ -40,10 +40,7 @@ export default function ProductBundleEditor({
   const [results, setResults] = useState<AdminProduct[]>([]);
   const [searching, setSearching] = useState(false);
 
-  const selectedProducts = useMemo(
-    () => bundle.relatedProductIds,
-    [bundle.relatedProductIds]
-  );
+  const selectedProducts = useMemo(() => bundle.relatedProductIds, [bundle.relatedProductIds]);
 
   async function runSearch(query: string) {
     setSearch(query);
@@ -54,13 +51,11 @@ export default function ProductBundleEditor({
 
     setSearching(true);
     try {
-      const res = await fetch(
-        `/api/admin/products?search=${encodeURIComponent(query)}&limit=12`
-      );
-      const data = (await res.json()) as { products?: AdminProduct[] };
-      setResults(
-        (data.products ?? []).filter((product) => product.id !== productId)
-      );
+      const res = await fetch(`/api/admin/products?search=${encodeURIComponent(query)}&limit=12`);
+      const data = (await res.json().catch(() => ({}))) as { products?: AdminProduct[] };
+      setResults((data.products ?? []).filter((product) => product.id !== productId));
+    } catch {
+      setResults([]);
     } finally {
       setSearching(false);
     }
@@ -126,9 +121,7 @@ export default function ProductBundleEditor({
               <input
                 type="checkbox"
                 checked={bundle.isActive}
-                onChange={(event) =>
-                  onChange({ ...bundle, isActive: event.target.checked })
-                }
+                onChange={(event) => onChange({ ...bundle, isActive: event.target.checked })}
               />
               Bundle active on storefront
             </label>
@@ -187,7 +180,8 @@ export default function ProductBundleEditor({
 
         {selectedProducts.length === 0 ? (
           <p style={{ color: "var(--admin-muted)" }}>
-            No related products selected. Legacy catalog suggestions may be auto-imported on first view.
+            No related products selected. Legacy catalog suggestions may be auto-imported on first
+            view.
           </p>
         ) : (
           <div className="admin-table-wrap" style={{ marginTop: "1rem" }}>
@@ -205,7 +199,9 @@ export default function ProductBundleEditor({
                     <td>
                       <code>{id}</code>
                       {currentProductSlug ? (
-                        <span style={{ display: "block", fontSize: 12, color: "var(--admin-muted)" }}>
+                        <span
+                          style={{ display: "block", fontSize: 12, color: "var(--admin-muted)" }}
+                        >
                           Paired with /product/{currentProductSlug}
                         </span>
                       ) : null}

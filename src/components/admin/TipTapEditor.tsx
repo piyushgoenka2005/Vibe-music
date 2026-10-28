@@ -16,11 +16,8 @@ import {
   Underline as UnderlineIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import {
-  blogEditorExtensions,
-  EMPTY_BLOG_CONTENT,
-  parseBlogContent,
-} from "@/lib/blog/editor";
+import { blogEditorExtensions, EMPTY_BLOG_CONTENT, parseBlogContent } from "@/lib/blog/editor";
+import { safeReadApiResponse } from "@/lib/admin/adminFetch";
 import "./tiptap-editor.css";
 
 interface TipTapEditorProps {
@@ -66,10 +63,7 @@ export default function TipTapEditor({
   const editor = useEditor({
     immediatelyRender: false,
     editable: !readOnly,
-    extensions: [
-      ...blogEditorExtensions,
-      Placeholder.configure({ placeholder }),
-    ],
+    extensions: [...blogEditorExtensions, Placeholder.configure({ placeholder })],
     content: parseBlogContent(value || EMPTY_BLOG_CONTENT),
     editorProps: {
       attributes: {
@@ -112,6 +106,10 @@ export default function TipTapEditor({
 
   async function uploadInlineImage(file: File) {
     if (!editor || !file.type.startsWith("image/")) return;
+    if (file.size > 10 * 1024 * 1024) {
+      window.alert("Image must be smaller than 10MB");
+      return;
+    }
 
     setUploadingImage(true);
     try {
@@ -121,15 +119,13 @@ export default function TipTapEditor({
         method: "POST",
         body: formData,
       });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok || !data.url) {
-        throw new Error(data.error ?? "Upload failed");
+      const parsed = await safeReadApiResponse<{ url?: string; error?: string }>(res);
+      if (!parsed.ok || !parsed.data?.url) {
+        throw new Error(parsed.error ?? "Upload failed");
       }
-      editor.chain().focus().setImage({ src: data.url, alt: "" }).run();
+      editor.chain().focus().setImage({ src: parsed.data.url, alt: "" }).run();
     } catch (error) {
-      window.alert(
-        error instanceof Error ? error.message : "Image upload failed"
-      );
+      window.alert(error instanceof Error ? error.message : "Image upload failed");
     } finally {
       setUploadingImage(false);
     }
@@ -207,10 +203,7 @@ export default function TipTapEditor({
           <ToolbarButton label="Link" active={editor.isActive("link")} onClick={setLink}>
             <Link2 size={16} />
           </ToolbarButton>
-          <ToolbarButton
-            label="Insert image"
-            onClick={() => imageInputRef.current?.click()}
-          >
+          <ToolbarButton label="Insert image" onClick={() => imageInputRef.current?.click()}>
             <ImageIcon size={16} />
           </ToolbarButton>
           <input
@@ -226,9 +219,7 @@ export default function TipTapEditor({
           />
         </div>
       ) : null}
-      {uploadingImage ? (
-        <p className="tiptap-editor__status">Uploading image…</p>
-      ) : null}
+      {uploadingImage ? <p className="tiptap-editor__status">Uploading image…</p> : null}
       <EditorContent editor={editor} />
     </div>
   );

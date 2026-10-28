@@ -72,12 +72,14 @@ async function readJsonResponse(res: Response): Promise<{
   data: Record<string, unknown> | null;
   text: string;
 }> {
-  const contentType = res.headers.get("content-type") ?? "";
-  if (contentType.includes("application/json")) {
-    return { data: (await res.json()) as Record<string, unknown>, text: "" };
+  let text = "";
+  try {
+    text = await res.text();
+    const data = JSON.parse(text) as Record<string, unknown>;
+    return { data, text };
+  } catch {
+    return { data: null, text };
   }
-  const text = await res.text();
-  return { data: null, text };
 }
 
 function formatBytes(bytes: number): string {

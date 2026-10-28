@@ -10,6 +10,8 @@ import { adminProductUploadMetaSchema } from "@/lib/validations/admin";
 
 const MAX_UPLOAD_FILES = 20;
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     await requireAdmin("products:write", request);
@@ -49,6 +51,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ urls, masters });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }

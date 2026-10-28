@@ -36,10 +36,7 @@ export default function ProductRelatedEditor({
   const [results, setResults] = useState<AdminProduct[]>([]);
   const [searching, setSearching] = useState(false);
 
-  const selectedProducts = useMemo(
-    () => related.relatedProductIds,
-    [related.relatedProductIds]
-  );
+  const selectedProducts = useMemo(() => related.relatedProductIds, [related.relatedProductIds]);
 
   async function runSearch(query: string) {
     setSearch(query);
@@ -50,23 +47,18 @@ export default function ProductRelatedEditor({
 
     setSearching(true);
     try {
-      const res = await fetch(
-        `/api/admin/products?search=${encodeURIComponent(query)}&limit=12`
-      );
-      const data = (await res.json()) as { products?: AdminProduct[] };
-      setResults(
-        (data.products ?? []).filter((product) => product.id !== productId)
-      );
+      const res = await fetch(`/api/admin/products?search=${encodeURIComponent(query)}&limit=12`);
+      const data = (await res.json().catch(() => ({}))) as { products?: AdminProduct[] };
+      setResults((data.products ?? []).filter((product) => product.id !== productId));
+    } catch {
+      setResults([]);
     } finally {
       setSearching(false);
     }
   }
 
   function addProduct(id: string) {
-    if (
-      selectedProducts.includes(id) ||
-      selectedProducts.length >= MAX_RELATED_PRODUCTS
-    ) {
+    if (selectedProducts.includes(id) || selectedProducts.length >= MAX_RELATED_PRODUCTS) {
       return;
     }
     onChange({
@@ -101,8 +93,8 @@ export default function ProductRelatedEditor({
       <div className="admin-panel__body">
         <p style={{ color: "var(--admin-muted)", marginTop: 0 }}>
           Choose up to {MAX_RELATED_PRODUCTS} related products for{" "}
-          <strong>{currentProductName || "this product"}</strong>. Empty slots
-          are filled automatically from the same category, then the same brand.
+          <strong>{currentProductName || "this product"}</strong>. Empty slots are filled
+          automatically from the same category, then the same brand.
         </p>
 
         <div className="admin-form-group">
@@ -110,9 +102,7 @@ export default function ProductRelatedEditor({
             <input
               type="checkbox"
               checked={related.isActive}
-              onChange={(event) =>
-                onChange({ ...related, isActive: event.target.checked })
-              }
+              onChange={(event) => onChange({ ...related, isActive: event.target.checked })}
             />
             Manual picks active (disable to use category/brand fallback only)
           </label>
@@ -133,9 +123,7 @@ export default function ProductRelatedEditor({
             </span>
           </div>
           {searching ? (
-            <p style={{ fontSize: 13, color: "var(--admin-muted)" }}>
-              Searching…
-            </p>
+            <p style={{ fontSize: 13, color: "var(--admin-muted)" }}>Searching…</p>
           ) : null}
           {results.length > 0 ? (
             <div
@@ -175,9 +163,8 @@ export default function ProductRelatedEditor({
 
         {selectedProducts.length === 0 ? (
           <p style={{ color: "var(--admin-muted)" }}>
-            No manual related products selected. Legacy catalog picks may be
-            auto-imported on first view; otherwise category and brand fallback
-            applies.
+            No manual related products selected. Legacy catalog picks may be auto-imported on first
+            view; otherwise category and brand fallback applies.
           </p>
         ) : (
           <div className="admin-table-wrap" style={{ marginTop: "1rem" }}>

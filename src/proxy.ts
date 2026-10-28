@@ -205,6 +205,10 @@ function handleProtectedPage(request: NextRequest): NextResponse | null {
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
+  if (pathname.startsWith("/api/")) {
+    return handleApiRequest(request);
+  }
+
   const resolved = resolveLegacyPath(pathname);
   if (resolved) {
     return NextResponse.redirect(new URL(resolved, request.url));
@@ -213,10 +217,6 @@ export async function proxy(request: NextRequest) {
   const adLanding = resolveAdLandingRedirect(pathname, request.nextUrl.searchParams);
   if (adLanding) {
     return NextResponse.redirect(new URL(adLanding, request.url), 308);
-  }
-
-  if (pathname.startsWith("/api/")) {
-    return handleApiRequest(request);
   }
 
   const protectedResponse = handleProtectedPage(request);

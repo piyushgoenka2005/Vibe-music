@@ -18,7 +18,6 @@ import ProductVariantsEditor from "@/components/admin/ProductVariantsEditor";
 import GuitarSpecsEditor, {
   extractGuitarSpecsFromRecord,
 } from "@/components/admin/GuitarSpecsEditor";
-import { formatAdminApiError } from "@/lib/admin/formatAdminApiError";
 import { ADMIN_PRODUCT_SKU_MAX_LENGTH } from "@/lib/validations/admin";
 import ProductFilterSpecsEditor, {
   extractFilterSpecsFromRecord,
@@ -29,8 +28,8 @@ import ProductInTheBoxEditor from "@/components/admin/ProductInTheBoxEditor";
 import ProductSpecsEditor from "@/components/admin/ProductSpecsEditor";
 import ProductVideosEditor from "@/components/admin/ProductVideosEditor";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
-import { adminFetchJson } from "@/lib/admin/adminFetch";
-import type { AdminCategory } from "@/types/admin";
+import { adminFetchJson, safeReadApiResponse } from "@/lib/admin/adminFetch";
+import type { AdminCategory, AdminProduct } from "@/types/admin";
 import type { Brand } from "@/types/brand";
 import type { ProductSpec, ProductVariant, ProductVideo } from "@/types/product";
 
@@ -200,8 +199,10 @@ export default function ProductFormPage({
   useEffect(() => {
     if (!productId) return;
     fetch(`/api/admin/products/${productId}`)
-      .then((r) => r.json())
-      .then((d) => {
+      .then((r) =>
+        r.ok ? (r.json().catch(() => ({})) as Promise<{ product?: AdminProduct }>) : {},
+      )
+      .then((d: { product?: AdminProduct }) => {
         if (d.product) {
           setForm(mapAdminProductToForm(d.product));
         }
@@ -210,30 +211,50 @@ export default function ProductFormPage({
       .catch(() => setLoaded(true));
 
     fetch(`/api/admin/products/${productId}/bundle`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.bundle) {
-          setForm((prev) => ({
-            ...prev,
-            bundle: {
-              relatedProductIds: d.bundle.relatedProductIds ?? [],
-              discountPercent: d.bundle.discountPercent ?? 8,
-              isActive: d.bundle.isActive !== false,
-            },
-          }));
-        }
-      })
+      .then((r) =>
+        r.ok
+          ? (r.json().catch(() => ({})) as Promise<{
+              bundle?: {
+                relatedProductIds?: string[];
+                discountPercent?: number;
+                isActive?: boolean;
+              };
+            }>)
+          : {},
+      )
+      .then(
+        (d: {
+          bundle?: { relatedProductIds?: string[]; discountPercent?: number; isActive?: boolean };
+        }) => {
+          if (d.bundle) {
+            setForm((prev) => ({
+              ...prev,
+              bundle: {
+                relatedProductIds: d.bundle?.relatedProductIds ?? [],
+                discountPercent: d.bundle?.discountPercent ?? 8,
+                isActive: d.bundle?.isActive !== false,
+              },
+            }));
+          }
+        },
+      )
       .catch(() => undefined);
 
     fetch(`/api/admin/products/${productId}/related`)
-      .then((r) => r.json())
-      .then((d) => {
+      .then((r) =>
+        r.ok
+          ? (r.json().catch(() => ({})) as Promise<{
+              related?: { relatedProductIds?: string[]; isActive?: boolean };
+            }>)
+          : {},
+      )
+      .then((d: { related?: { relatedProductIds?: string[]; isActive?: boolean } }) => {
         if (d.related) {
           setForm((prev) => ({
             ...prev,
             related: {
-              relatedProductIds: d.related.relatedProductIds ?? [],
-              isActive: d.related.isActive !== false,
+              relatedProductIds: d.related?.relatedProductIds ?? [],
+              isActive: d.related?.isActive !== false,
             },
           }));
         }
@@ -286,14 +307,15 @@ export default function ProductFormPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) {
-        const data = (await res.json()) as {
-          error?: string;
-          issues?: Array<{ path?: string; message?: string }>;
-        };
-        throw new Error(formatAdminApiError(data));
+      const parsed = await safeReadApiResponse<{
+        product?: { id: string };
+        error?: string;
+        issues?: Array<{ path?: string; message?: string }>;
+      }>(res);
+      if (!parsed.ok || !parsed.data) {
+        throw new Error(parsed.error ?? "Failed to save product");
       }
-      const saved = await res.json();
+      const saved = parsed.data;
       const savedId = productId ?? saved.product?.id;
       let bundlePayload: {
         bundle?: { relatedProductIds?: string[]; discountPercent?: number; isActive?: boolean };
@@ -325,16 +347,22 @@ export default function ProductFormPage({
           }),
         ]);
 
-        if (!bundleRes.ok) {
-          const bundleData = await bundleRes.json();
-          throw new Error(bundleData.error ?? "Bundle save failed");
+        const parsedBundle = await safeReadApiResponse<{
+          bundle?: { relatedProductIds?: string[]; discountPercent?: number; isActive?: boolean };
+          error?: string;
+        }>(bundleRes);
+        if (!parsedBundle.ok) {
+          throw new Error(parsedBundle.error ?? "Bundle save failed");
         }
-        if (!relatedRes.ok) {
-          const relatedData = await relatedRes.json();
-          throw new Error(relatedData.error ?? "Related products save failed");
+        const parsedRelated = await safeReadApiResponse<{
+          related?: { relatedProductIds?: string[]; isActive?: boolean };
+          error?: string;
+        }>(relatedRes);
+        if (!parsedRelated.ok) {
+          throw new Error(parsedRelated.error ?? "Related products save failed");
         }
-        bundlePayload = await bundleRes.json();
-        relatedPayload = await relatedRes.json();
+        bundlePayload = parsedBundle.data ?? {};
+        relatedPayload = parsedRelated.data ?? {};
       }
       return { ...saved, ...bundlePayload, ...relatedPayload };
     },

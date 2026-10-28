@@ -60,8 +60,10 @@ export default function CouponProductPicker({
     setSearching(true);
     try {
       const res = await fetch(`/api/admin/products?search=${encodeURIComponent(query)}&limit=12`);
-      const data = (await res.json()) as { products?: AdminProduct[] };
+      const data = (await res.json().catch(() => ({}))) as { products?: AdminProduct[] };
       setResults((data.products ?? []).filter((product) => !productIds.includes(product.id)));
+    } catch {
+      setResults([]);
     } finally {
       setSearching(false);
     }

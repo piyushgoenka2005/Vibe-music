@@ -7,6 +7,8 @@ import {
   readAndValidateImageFile,
 } from "@/lib/security/imageUploadValidation";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     await requireAdmin("blog:write", request);
@@ -33,6 +35,6 @@ export async function POST(request: Request) {
       derivatives: uploaded.derivatives,
     });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }

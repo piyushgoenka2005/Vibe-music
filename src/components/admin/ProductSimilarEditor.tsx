@@ -33,10 +33,14 @@ export default function ProductSimilarEditor({
 
     void Promise.all(
       missing.map(async (id) => {
-        const res = await fetch(`/api/admin/products/${id}`);
-        if (!res.ok) return null;
-        const data = (await res.json()) as { product?: AdminProduct };
-        return data.product ?? null;
+        try {
+          const res = await fetch(`/api/admin/products/${id}`);
+          if (!res.ok) return null;
+          const data = (await res.json().catch(() => ({}))) as { product?: AdminProduct };
+          return data.product ?? null;
+        } catch {
+          return null;
+        }
       }),
     ).then((products) => {
       if (!active) return;
@@ -62,8 +66,10 @@ export default function ProductSimilarEditor({
     setSearching(true);
     try {
       const res = await fetch(`/api/admin/products?search=${encodeURIComponent(query)}&limit=12`);
-      const data = (await res.json()) as { products?: AdminProduct[] };
+      const data = (await res.json().catch(() => ({}))) as { products?: AdminProduct[] };
       setResults((data.products ?? []).filter((product) => product.id !== productId));
+    } catch {
+      setResults([]);
     } finally {
       setSearching(false);
     }

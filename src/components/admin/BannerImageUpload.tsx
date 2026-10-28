@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { safeReadApiResponse } from "@/lib/admin/adminFetch";
 
 interface BannerImageUploadProps {
   label: string;
@@ -8,11 +9,7 @@ interface BannerImageUploadProps {
   onChange: (url: string) => void;
 }
 
-export default function BannerImageUpload({
-  label,
-  value,
-  onChange,
-}: BannerImageUploadProps) {
+export default function BannerImageUpload({ label, value, onChange }: BannerImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +32,10 @@ export default function BannerImageUpload({
       setError("Please select an image file");
       return;
     }
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Image must be smaller than 10MB");
+      return;
+    }
 
     setUploading(true);
     setError(null);
@@ -47,12 +48,12 @@ export default function BannerImageUpload({
         method: "POST",
         body: formData,
       });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok || !data.url) {
-        throw new Error(data.error ?? "Upload failed");
+      const parsed = await safeReadApiResponse<{ url?: string; error?: string }>(res);
+      if (!parsed.ok || !parsed.data?.url) {
+        throw new Error(parsed.error ?? "Upload failed");
       }
-      onChange(data.url);
-      if (previousUrl && previousUrl !== data.url) {
+      onChange(parsed.data.url);
+      if (previousUrl && previousUrl !== parsed.data.url) {
         bestEffortDelete(previousUrl);
       }
     } catch (err) {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
+import { requireAdmin, adminErrorResponse, AdminAuthError } from "@/lib/auth/require-admin";
+import { hasAnyPermission } from "@/lib/auth/permissions";
 import { bannerUploadFolder } from "@/lib/server/cdnStorage";
 import { uploadOptimizedImageToCdn } from "@/lib/server/cdnImageOptimize";
 import {
@@ -7,9 +8,24 @@ import {
   readAndValidateImageFile,
 } from "@/lib/security/imageUploadValidation";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
-    await requireAdmin("banners:write", request);
+    const admin = await requireAdmin(undefined, request);
+    if (
+      !hasAnyPermission(admin.permissions, [
+        "banners:write",
+        "homepage:write",
+        "categories:write",
+        "products:write",
+        "giveaways:write",
+        "rentals:write",
+      ])
+    ) {
+      throw new AdminAuthError("Insufficient permissions", 403);
+    }
+
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -27,7 +43,7 @@ export async function POST(request: Request) {
       filenameHint: file.name,
     });
 
-    // Hero slides render full-bleed up to ~1920px wide, so store the highest
+    // Hero slides and homepage cards render full-bleed up to ~1920px wide, so store the highest
     // quality variant (master WebP ≤2000px) instead of the w960 card default.
     return NextResponse.json({
       url: uploaded.masterUrl || uploaded.url,
@@ -35,6 +51,6 @@ export async function POST(request: Request) {
       derivatives: uploaded.derivatives,
     });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }
