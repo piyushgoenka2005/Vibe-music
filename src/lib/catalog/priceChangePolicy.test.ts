@@ -39,4 +39,30 @@ describe("evaluatePriceChangeGuard", () => {
       ).allowed,
     ).toBe(true);
   });
+
+  it("allows super_admin and admin to make large changes without manager approval", () => {
+    expect(
+      evaluatePriceChangeGuard(
+        {
+          sku: "VM-1",
+          previousPrice: 80_000,
+          nextPrice: 37_000, // > 60% discount
+          mrp: 95_000,
+        },
+        { role: "super_admin" },
+      ).allowed,
+    ).toBe(true);
+
+    expect(
+      evaluatePriceChangeGuard(
+        {
+          sku: "VM-1",
+          previousPrice: 80_000,
+          nextPrice: 37_000,
+          mrp: 95_000,
+        },
+        { role: "admin" },
+      ).allowed,
+    ).toBe(true);
+  });
 });

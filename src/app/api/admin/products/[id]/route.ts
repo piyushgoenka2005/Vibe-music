@@ -42,6 +42,8 @@ export async function PUT(request: Request, context: RouteContext) {
     const product = await updateAdminProduct(id, parsed, {
       actorId: admin.uid,
       actorEmail: admin.email,
+      actorRole: admin.role,
+      allowLargePriceChanges: true,
       request,
     });
     return NextResponse.json({ product });

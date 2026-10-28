@@ -11,13 +11,15 @@ export type PriceChangeSnapshot = {
 export type PriceChangeGuardResult =
   { allowed: true } | { allowed: false; reason: string; requiresApproval: true };
 
+export type PriceChangeGuardOptions = {
+  allowLargeChanges?: boolean;
+  role?: string;
+};
+
 export function evaluatePriceChangeGuard(
   input: PriceChangeSnapshot,
-  options?: { allowLargeChanges?: boolean },
+  options?: PriceChangeGuardOptions,
 ): PriceChangeGuardResult {
-  if (options?.allowLargeChanges) {
-    return { allowed: true };
-  }
   const { previousPrice, nextPrice, mrp } = input;
 
   if (!Number.isFinite(nextPrice) || nextPrice <= 0) {
@@ -36,6 +38,16 @@ export function evaluatePriceChangeGuard(
       requiresApproval: true,
       reason: "Sale price cannot exceed MRP.",
     };
+  }
+
+  // Super admin and admin have full control over price updates — no manager approvals required.
+  const isPrivilegedAdmin =
+    Boolean(options?.allowLargeChanges) ||
+    options?.role === "super_admin" ||
+    options?.role === "admin";
+
+  if (isPrivilegedAdmin) {
+    return { allowed: true };
   }
 
   const discountRatio = mrp > 0 ? 1 - nextPrice / mrp : 0;

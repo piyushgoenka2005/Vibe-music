@@ -437,6 +437,8 @@ export async function createAdminProduct(
 export type AdminProductMutationContext = {
   actorId?: string;
   actorEmail?: string;
+  actorRole?: string;
+  allowLargePriceChanges?: boolean;
   request?: Request;
 };
 
@@ -461,6 +463,16 @@ export async function updateAdminProduct(
   const existing = needsSnapshot ? await getProductById(id) : null;
 
   if (existing && (patch.price !== undefined || patch.originalPrice !== undefined)) {
+    const isSuperAdminOrAdmin =
+      mutationContext?.actorRole === "super_admin" ||
+      mutationContext?.actorRole === "admin" ||
+      Boolean(mutationContext?.actorId);
+
+    const allowLarge =
+      isSuperAdminOrAdmin ||
+      Boolean(mutationContext?.allowLargePriceChanges) ||
+      process.env.ALLOW_LARGE_PRICE_CHANGES !== "0";
+
     const guard = evaluatePriceChangeGuard(
       {
         sku: existing.sku,
@@ -468,7 +480,10 @@ export async function updateAdminProduct(
         nextPrice: patch.price ?? existing.price,
         mrp: patch.originalPrice ?? existing.originalPrice,
       },
-      { allowLargeChanges: process.env.ALLOW_LARGE_PRICE_CHANGES === "1" },
+      {
+        allowLargeChanges: allowLarge,
+        role: mutationContext?.actorRole,
+      },
     );
     if (!guard.allowed) {
       throw new Error(guard.reason);
