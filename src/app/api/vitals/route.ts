@@ -5,14 +5,16 @@ import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { logInfo } from "@/lib/server/logger";
 import { publicApiError } from "@/lib/server/publicApiError";
 
-const vitalsSchema = z.object({
-  name: z.string(),
-  value: z.number(),
-  rating: z.string().optional(),
-  id: z.string().optional(),
-  navigationType: z.string().optional(),
-  path: z.string().optional(),
-});
+const vitalsSchema = z
+  .object({
+    name: z.string(),
+    value: z.number(),
+    rating: z.string().optional(),
+    id: z.string().optional(),
+    navigationType: z.string().optional(),
+    path: z.string().optional(),
+  })
+  .passthrough();
 
 export async function POST(request: Request) {
   try {

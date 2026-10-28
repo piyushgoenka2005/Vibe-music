@@ -2,8 +2,7 @@
 
 import { useReportWebVitals } from "next/web-vitals";
 
-const VITALS_ENDPOINT =
-  process.env.NEXT_PUBLIC_WEB_VITALS_ENDPOINT ?? "/api/vitals";
+const VITALS_ENDPOINT = process.env.NEXT_PUBLIC_WEB_VITALS_ENDPOINT ?? "/api/vitals";
 
 export default function WebVitalsReporter() {
   useReportWebVitals((metric) => {
@@ -22,8 +21,14 @@ export default function WebVitalsReporter() {
     });
 
     if (typeof navigator !== "undefined" && "sendBeacon" in navigator) {
-      navigator.sendBeacon(VITALS_ENDPOINT, body);
-      return;
+      try {
+        const blob = new Blob([body], { type: "application/json" });
+        navigator.sendBeacon(VITALS_ENDPOINT, blob);
+        return;
+      } catch {
+        navigator.sendBeacon(VITALS_ENDPOINT, body);
+        return;
+      }
     }
 
     void fetch(VITALS_ENDPOINT, {
