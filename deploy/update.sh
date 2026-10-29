@@ -736,7 +736,7 @@ npx tsx --env-file=.env scripts/ops/reconcile-product-review-aggregates.mts
 log "Mirror admin images on postimage/postimg hosts to the CDN"
 NODE_ENV=production npx tsx --env-file=.env scripts/ops/mirror-external-images-to-cdn.mts || true
 
-if [[ "${SEED_CATALOG:-0}" == "1" ]]; then
+if [[ "${SEED_CATALOG:-1}" == "1" ]]; then
   log "Seeding catalog from JSON"
   npm run seed:catalog
 fi

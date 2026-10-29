@@ -2,7 +2,8 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { asJsonValue } from "@/lib/server/prisma/mappers";
+import { asJsonValue, productToPrisma } from "@/lib/server/prisma/mappers";
+import { loadProducts } from "@/lib/server/catalogRepository";
 import { clampPageLimit, pageFromRows } from "@/lib/server/prisma/pagination";
 import { invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
 import {
@@ -148,7 +149,18 @@ async function loadProductRows(
   }
   for (const productId of uniqueIds) {
     if (!map.has(productId)) {
-      throw new Error(`Product not found: ${productId}`);
+      const localProducts = loadProducts();
+      const local = localProducts.find((p) => p.id === productId);
+      if (local) {
+        const created = await tx.product.upsert({
+          where: { id: local.id },
+          create: productToPrisma(local),
+          update: productToPrisma(local),
+        });
+        map.set(created.id, created as unknown as ProductRow);
+      } else {
+        throw new Error(`Product not found: ${productId}`);
+      }
     }
   }
   return map;

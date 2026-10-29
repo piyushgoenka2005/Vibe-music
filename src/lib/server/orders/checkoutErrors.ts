@@ -57,5 +57,9 @@ export function formatCheckoutError(error: unknown): string {
     return message;
   }
 
+  if (/Product not found/i.test(message)) {
+    return "A product in your cart is no longer available. Please update your cart.";
+  }
+
   return "Unable to complete checkout. Please try again.";
 }

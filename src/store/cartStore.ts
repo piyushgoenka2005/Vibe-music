@@ -438,17 +438,7 @@ export const useCartStore = create<CartState>()(
         const subtotal = lineItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
         if (subtotal <= 0) return;
 
-        const activeCoupons = options?.activeCoupons;
-        if (options?.activeCouponsReady && activeCoupons != null) {
-          const stillListed = activeCoupons.some((coupon) => coupon.code === couponCode);
-          if (!stillListed) {
-            set({
-              appliedCoupon: null,
-              couponInvalidReason: "This coupon is no longer available",
-            });
-            return;
-          }
-        }
+
 
         try {
           const cartItems = lineItems.map((item) => ({
