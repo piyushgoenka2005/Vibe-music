@@ -151,7 +151,11 @@ export async function listCoupons(options: { limit?: number; cursor?: string } =
 export async function getCouponByCode(code: string): Promise<Coupon | null> {
   const normalized = code.toUpperCase();
   const coupon = await pg.getCouponByCode(normalized);
-  return coupon ?? staticCoupon(normalized);
+  if (coupon) return coupon;
+  if (process.env.NODE_ENV !== "production") {
+    return staticCoupon(normalized);
+  }
+  return null;
 }
 
 export async function getCouponById(id: string): Promise<Coupon | null> {

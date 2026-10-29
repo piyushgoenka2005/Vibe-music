@@ -265,7 +265,7 @@ export default function CheckoutSummary({
                 <div className="checkout-summary__promo-row">
                   <input
                     type="text"
-                    placeholder="e.g. SAVE10"
+                    placeholder="Enter promo code"
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                     aria-label="Promo code"
