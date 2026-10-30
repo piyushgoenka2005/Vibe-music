@@ -15,6 +15,7 @@ export function revalidateStorefrontPresentationCaches(): void {
   ]);
   try {
     revalidatePath("/");
+    revalidatePath("/", "page");
     revalidatePath("/category", "layout");
     revalidatePath("/product", "layout");
     revalidatePath("/search", "layout");

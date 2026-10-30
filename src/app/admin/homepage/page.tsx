@@ -27,6 +27,33 @@ import type { AdminProduct } from "@/types/admin";
 
 const QUERY_KEY = ["admin-homepage"] as const;
 
+const REEL_VIDEO_PRESETS = [
+  {
+    label: "Reel 1: Guitar Strings Showcase (/videos/style-story/reel-1.mp4)",
+    url: "https://cdn.vibemusic.in/videos/style-story/reel-1.mp4",
+  },
+  {
+    label: "Reel 2: Telecaster Demo (/videos/style-story/reel-2.mp4)",
+    url: "https://cdn.vibemusic.in/videos/style-story/reel-2.mp4",
+  },
+  {
+    label: "Reel 3: Bass Performance (/videos/style-story/reel-3.mp4)",
+    url: "https://cdn.vibemusic.in/videos/style-story/reel-3.mp4",
+  },
+  {
+    label: "Reel 4: Electric Guitar Store (/videos/style-story/reel-4.mp4)",
+    url: "https://cdn.vibemusic.in/videos/style-story/reel-4.mp4",
+  },
+  {
+    label: "Reel 5: Drum Kit Showcase (/videos/style-story/reel-5.mp4)",
+    url: "https://cdn.vibemusic.in/videos/style-story/reel-5.mp4",
+  },
+  {
+    label: "Reel 6: Studio PA & Gear (/videos/style-story/reel-6.mp4)",
+    url: "https://cdn.vibemusic.in/videos/style-story/reel-6.mp4",
+  },
+];
+
 function toDatetimeLocal(value?: string | null): string {
   if (!value) return "";
   const date = new Date(value);
@@ -216,6 +243,25 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     onSuccess: () => {
       setFormError(null);
       setSaveNotice("Section saved. Storefront cache refreshed — reload the homepage to verify.");
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+    onError: (error: Error) => setFormError(error.message),
+  });
+
+  const seedReelsMutation = useMutation({
+    mutationFn: async () => {
+      return adminMutateJson<{ ok: boolean; count: number }>(
+        "/api/admin/homepage/seed/gear_stories",
+        {
+          method: "POST",
+        },
+      );
+    },
+    onSuccess: (res) => {
+      setFormError(null);
+      setSaveNotice(
+        `Restored ${res.count ?? 6} default gear reels successfully. Storefront updated!`,
+      );
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
     onError: (error: Error) => setFormError(error.message),
@@ -642,16 +688,36 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
               </label>
             </div>
           </div>
-          <div style={{ marginTop: "1rem" }}>
+          <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             {canWrite ? (
-              <button
-                type="button"
-                className="admin-btn admin-btn--primary"
-                disabled={saveSectionMutation.isPending}
-                onClick={() => saveSectionMutation.mutate()}
-              >
-                Save Section
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--primary"
+                  disabled={saveSectionMutation.isPending}
+                  onClick={() => saveSectionMutation.mutate()}
+                >
+                  Save Section
+                </button>
+                {isGearStoriesSection ? (
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary"
+                    disabled={seedReelsMutation.isPending}
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "Restore all 6 default gear reels? This will reset all reels in this section to working defaults.",
+                        )
+                      ) {
+                        seedReelsMutation.mutate();
+                      }
+                    }}
+                  >
+                    {seedReelsMutation.isPending ? "Restoring…" : "Restore Default Reels"}
+                  </button>
+                ) : null}
+              </>
             ) : null}
           </div>
         </div>
@@ -776,16 +842,66 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                     />
                   </div>
                   <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Choose video preset (or enter custom MP4 below)</label>
+                    <select
+                      className="admin-select"
+                      style={{ width: "100%" }}
+                      value={
+                        REEL_VIDEO_PRESETS.find(
+                          (p) =>
+                            p.url === itemForm.customHref ||
+                            p.url.replace("https://cdn.vibemusic.in", "") === itemForm.customHref,
+                        )?.url || (itemForm.customHref ? "custom" : "")
+                      }
+                      onChange={(event) => {
+                        const val = event.target.value;
+                        if (val && val !== "custom") {
+                          setItemForm((prev) => ({ ...prev, customHref: val }));
+                        }
+                      }}
+                    >
+                      <option value="">-- Select video preset --</option>
+                      {REEL_VIDEO_PRESETS.map((preset) => (
+                        <option key={preset.url} value={preset.url}>
+                          {preset.label}
+                        </option>
+                      ))}
+                      <option value="custom">Custom MP4 URL</option>
+                    </select>
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
                     <label>Video URL (MP4, required)</label>
                     <input
                       className="admin-input"
                       style={{ width: "100%" }}
                       value={itemForm.customHref}
                       placeholder="/videos/style-story/reel-1.mp4 or https://cdn.vibemusic.in/videos/..."
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, customHref: event.target.value }))
-                      }
+                      onChange={(event) => {
+                        const val = event.target.value;
+                        if (
+                          val.includes("instagram.com/reel/") ||
+                          val.includes("instagram.com/p/")
+                        ) {
+                          setItemForm((prev) => ({
+                            ...prev,
+                            offerText: val.trim(),
+                            customHref:
+                              prev.customHref && !prev.customHref.includes("instagram.com")
+                                ? prev.customHref
+                                : "https://cdn.vibemusic.in/videos/style-story/reel-1.mp4",
+                          }));
+                          setSaveNotice(
+                            "Notice: Instagram links are set as the post link. HTML video players require a direct .mp4 video file, so a video preset has been selected.",
+                          );
+                        } else {
+                          setItemForm((prev) => ({ ...prev, customHref: val }));
+                        }
+                      }}
                     />
+                    <p className="admin-form-hint" style={{ margin: "0.25rem 0 0" }}>
+                      Direct MP4 video file. For Instagram post/reel link, enter it in the Instagram
+                      link field below.
+                    </p>
                   </div>
                   <div className="admin-form-group">
                     <label>Instagram handle</label>
@@ -1352,6 +1468,13 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                                     startDate: toDatetimeLocal(item.startDate),
                                     endDate: toDatetimeLocal(item.endDate),
                                   });
+                                  if (item.productId) {
+                                    setProductSearch(
+                                      productNameMap.get(item.productId) ?? item.productId,
+                                    );
+                                  } else {
+                                    setProductSearch("");
+                                  }
                                 }}
                               >
                                 Edit

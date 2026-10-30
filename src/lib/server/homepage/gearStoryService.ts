@@ -62,3 +62,64 @@ export async function buildStaticGearStories(
 
 /** Alias for GET /api/reels */
 export const listReels = listGearStories;
+
+/** Restores all 6 default gear reels into the database and invalidates storefront caches. */
+export async function seedDefaultGearStories() {
+  const { prisma } = await import("@/lib/db/prisma");
+  const { DEFAULT_GEAR_STORY_ITEMS } = await import("@/lib/gearStoriesConfig");
+  const { invalidateHomepageCache, listSectionItems } =
+    await import("@/lib/server/homepage/homepageRepository");
+  const { invalidatePublicHomepageCacheAsync } =
+    await import("@/lib/server/homepage/homepageService");
+
+  const timestamp = new Date().toISOString();
+
+  await prisma.homepageSection.upsert({
+    where: { sectionKey: "gear_stories" },
+    create: {
+      id: "gear_stories",
+      sectionKey: "gear_stories",
+      title: "Gear style stories",
+      subtitle: "Discover instruments in action.",
+      isActive: true,
+      sortOrder: 11,
+      sourceMode: "manual",
+      maxItems: 12,
+      layout: "gear_stories_reels",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    update: {
+      isActive: true,
+      title: "Gear style stories",
+      subtitle: "Discover instruments in action.",
+      updatedAt: timestamp,
+    },
+  });
+
+  await prisma.homepageSectionItem.deleteMany({
+    where: { sectionKey: "gear_stories" },
+  });
+
+  await prisma.homepageSectionItem.createMany({
+    data: DEFAULT_GEAR_STORY_ITEMS.map((item, index) => ({
+      id: `gs-${index + 1}-${Date.now()}`,
+      sectionKey: "gear_stories",
+      sortOrder: index,
+      isActive: true,
+      productId: item.productId,
+      customTitle: item.customTitle,
+      customImage: item.customImage,
+      customHref: item.customHref,
+      badgeLabel: item.badgeLabel,
+      offerText: item.offerText,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    })),
+  });
+
+  invalidateHomepageCache();
+  await invalidatePublicHomepageCacheAsync();
+
+  return listSectionItems("gear_stories");
+}

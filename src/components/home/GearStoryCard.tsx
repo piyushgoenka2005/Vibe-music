@@ -42,9 +42,22 @@ export default function GearStoryCard({
   const reelUrl = story.instagramUrl ?? SOCIAL_LINKS.instagram;
   const instagramHandle = story.instagramHandle ?? SOCIAL_LINKS.instagramHandle;
   const videoCandidates = useMemo(() => {
-    if (story.videoCandidates?.length) return story.videoCandidates;
-    if (story.videoUrl) return [story.videoUrl];
-    return [];
+    const raw = story.videoCandidates?.length
+      ? story.videoCandidates
+      : story.videoUrl
+        ? [story.videoUrl]
+        : [];
+    const expanded: string[] = [];
+    for (const url of raw) {
+      if (!url) continue;
+      expanded.push(url);
+      if (url.startsWith("https://cdn.vibemusic.in/")) {
+        expanded.push(url.replace("https://cdn.vibemusic.in", ""));
+      } else if (url.startsWith("/")) {
+        expanded.push(`https://cdn.vibemusic.in${url}`);
+      }
+    }
+    return expanded.filter((url, idx) => url && expanded.indexOf(url) === idx);
   }, [story.videoCandidates, story.videoUrl]);
   const [candidateIndex, setCandidateIndex] = useState(0);
   const videoSrc = videoCandidates[candidateIndex] ?? videoCandidates[0] ?? story.videoUrl;
