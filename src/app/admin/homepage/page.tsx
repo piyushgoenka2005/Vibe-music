@@ -1403,7 +1403,9 @@ export default function AdminHomepagePage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Homepage Sections">
-          <HomepageContent canWrite={admin.permissions.includes("homepage:write")} />
+          <HomepageContent
+            canWrite={admin.role === "super_admin" || admin.permissions.includes("homepage:write")}
+          />
         </AdminShell>
       )}
     </AdminGuard>

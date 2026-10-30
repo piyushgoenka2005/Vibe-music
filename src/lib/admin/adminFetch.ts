@@ -2,6 +2,14 @@
 
 export async function readAdminApiError(res: Response): Promise<string> {
   const status = res.status;
+  if (status === 401 && typeof window !== "undefined") {
+    try {
+      sessionStorage.removeItem("vibe_admin_session");
+      window.dispatchEvent(new CustomEvent("vibe:admin:unauthorized"));
+    } catch {
+      /* ignore */
+    }
+  }
   try {
     const text = await res.clone().text();
     const trimmed = text.trim();
@@ -61,6 +69,15 @@ export async function safeReadApiResponse<T>(
     trimmed.includes("<html") ||
     trimmed.includes("<!DOCTYPE") ||
     (res.headers.get("content-type") || "").includes("text/html");
+
+  if (status === 401 && typeof window !== "undefined") {
+    try {
+      sessionStorage.removeItem("vibe_admin_session");
+      window.dispatchEvent(new CustomEvent("vibe:admin:unauthorized"));
+    } catch {
+      /* ignore */
+    }
+  }
 
   if (isHtml) {
     if (status === 413 || text.includes("413") || text.includes("Request Entity Too Large")) {

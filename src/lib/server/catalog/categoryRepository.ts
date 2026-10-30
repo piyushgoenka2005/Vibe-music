@@ -77,9 +77,9 @@ async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
     };
   });
 
-  await prisma.$transaction(
-    categories.map((category) =>
-      prisma.category.upsert({
+  for (const category of categories) {
+    try {
+      await prisma.category.upsert({
         where: { id: category.id },
         create: {
           ...categoryToPrisma(category),
@@ -95,9 +95,11 @@ async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
           productCount: category.productCount ?? 0,
           updatedAt: now,
         },
-      }),
-    ),
-  );
+      });
+    } catch (upsertErr) {
+      console.warn(`[categoryRepository] Failed to upsert category ${category.id}:`, upsertErr);
+    }
+  }
 
   return categories;
 }
@@ -109,14 +111,14 @@ export async function listCategories(): Promise<AdminCategory[]> {
 
   try {
     const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
-    if (rows.length === 0) {
-      return seedCategoriesFromStatic();
-    }
     return rows.map(mapAdminCategory);
-  } catch {
-    return staticCategories();
+  } catch (err) {
+    console.error("[categoryRepository] Failed to list categories from database:", err);
+    return [];
   }
 }
+
+export { seedCategoriesFromStatic };
 
 export async function getCategoryById(id: string): Promise<AdminCategory | null> {
   const row = await prisma.category.findUnique({ where: { id } });

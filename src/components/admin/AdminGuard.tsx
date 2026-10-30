@@ -91,6 +91,15 @@ export default function AdminGuard({ children }: AdminGuardProps) {
     }
   }, [admin, isLoading, isFetched, pathname, router]);
 
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setCachedAdminSession(null);
+      router.replace(`${ROUTES.adminLogin}?redirect=${encodeURIComponent(pathname)}`);
+    };
+    window.addEventListener("vibe:admin:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("vibe:admin:unauthorized", handleUnauthorized);
+  }, [pathname, router]);
+
   if (isLoading && !admin) {
     return (
       <div className="admin-root">

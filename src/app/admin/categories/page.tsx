@@ -39,7 +39,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
   const [form, setForm] = useState<CategoryForm>(EMPTY_FORM);
   const [editId, setEditId] = useState<string | null>(null);
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-categories"],
     placeholderData: keepPreviousData,
     staleTime: 60_000,
@@ -77,11 +77,20 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-categories"] }),
   });
 
+  const seedMutation = useMutation({
+    mutationFn: async () => {
+      await adminMutateJson("/api/admin/categories/seed", { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
+  });
+
   if (isLoading) return <LoadingState />;
   if (isError) {
     return (
       <ErrorState
-        message="Unable to load categories."
+        message={error instanceof Error ? error.message : "Unable to load categories."}
         onRetry={() => void refetch()}
         isRetrying={isFetching}
       />
@@ -136,17 +145,29 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
         </div>
 
         {canWrite ? (
-          <button
-            type="button"
-            className="admin-btn admin-btn--primary"
-            onClick={() => {
-              setShowForm(true);
-              setEditId(null);
-              setForm(EMPTY_FORM);
-            }}
-          >
-            Add Category / Subcategory
-          </button>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            {categories.length === 0 ? (
+              <button
+                type="button"
+                className="admin-btn admin-btn--secondary"
+                disabled={seedMutation.isPending}
+                onClick={() => seedMutation.mutate()}
+              >
+                {seedMutation.isPending ? "Restoring Defaults…" : "Restore Default Categories"}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="admin-btn admin-btn--primary"
+              onClick={() => {
+                setShowForm(true);
+                setEditId(null);
+                setForm(EMPTY_FORM);
+              }}
+            >
+              Add Category / Subcategory
+            </button>
+          </div>
         ) : null}
       </div>
 
@@ -281,7 +302,36 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
 
       <div className="admin-panel">
         {filteredCategories.length === 0 ? (
-          <EmptyState message="No categories found for this filter." />
+          <div style={{ padding: "2rem", textAlign: "center" }}>
+            <p style={{ margin: "0 0 1rem", color: "#666" }}>
+              {categories.length === 0
+                ? "No categories exist yet. You can create your first category above or restore default categories."
+                : "No categories found for this filter."}
+            </p>
+            {canWrite && categories.length === 0 ? (
+              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--primary"
+                  onClick={() => {
+                    setShowForm(true);
+                    setEditId(null);
+                    setForm(EMPTY_FORM);
+                  }}
+                >
+                  Add your first category
+                </button>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--secondary"
+                  disabled={seedMutation.isPending}
+                  onClick={() => seedMutation.mutate()}
+                >
+                  {seedMutation.isPending ? "Restoring Defaults…" : "Restore Defaults"}
+                </button>
+              </div>
+            ) : null}
+          </div>
         ) : (
           <div className="admin-table-wrap">
             <table className="admin-table">
@@ -371,8 +421,12 @@ export default function AdminCategoriesPage() {
       {(admin) => (
         <AdminShell admin={admin} title="Categories & Subcategories">
           <CategoriesContent
-            canWrite={admin.permissions.includes("categories:write")}
-            canDelete={admin.permissions.includes("categories:delete")}
+            canWrite={
+              admin.role === "super_admin" || admin.permissions.includes("categories:write")
+            }
+            canDelete={
+              admin.role === "super_admin" || admin.permissions.includes("categories:delete")
+            }
           />
         </AdminShell>
       )}
