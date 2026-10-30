@@ -24,8 +24,8 @@ function loadEnvFile(file) {
 
 const env = {
   ...loadEnvFile(".env"),
-  ...loadEnvFile(".env.local"),
   ...loadEnvFile(".env.production"),
+  ...loadEnvFile(".env.local"),
   ...loadEnvFile(".env.production.local"),
 };
 

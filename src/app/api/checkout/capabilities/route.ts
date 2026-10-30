@@ -13,8 +13,6 @@ import { warnIfGooglePlacesMisconfigured } from "@/lib/server/googlePlaces";
 import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
 import { formatIndianPhone } from "@/lib/brand";
 import { getStoreSettings } from "@/lib/server/settingsService";
-import { enforceRateLimit } from "@/lib/api/route-utils";
-import { RATE_LIMITS } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 

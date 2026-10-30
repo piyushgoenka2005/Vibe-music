@@ -13,6 +13,9 @@ import { resolveLinkHref } from "@/lib/routes";
 import { useHydrationSafeReducedMotion } from "@/hooks/useHydrationSafeReducedMotion";
 import { useIsClient } from "@/hooks/useIsClient";
 
+const FALLBACK_BANNER_SRC = "/independence-day-special.png";
+const FALLBACK_BANNER_WEBP = "/independence-day-special.webp";
+
 /** Keep in sync with `PageLoadSplash` class names. */
 function isSplashCovering(): boolean {
   if (typeof document === "undefined") return false;
@@ -30,6 +33,7 @@ export default function HomepageBannerHero({
   slides = HOMEPAGE_BANNER_SLIDES,
 }: HomepageBannerHeroProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [failedSlideIds, setFailedSlideIds] = useState<Record<string, boolean>>({});
   const ready = useIsClient();
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const reduceMotion = useHydrationSafeReducedMotion();
@@ -43,11 +47,35 @@ export default function HomepageBannerHero({
     [slideCount],
   );
 
+  const handleImageError = useCallback((id: string) => {
+    setFailedSlideIds((prev) => ({ ...prev, [id]: true }));
+  }, []);
+
   useEffect(() => {
     window.dispatchEvent(new Event("site-header:sync"));
   }, []);
 
-  // Always open on slide 0 (Hertz HG 20). Do not advance while the page-load
+  // Preload upcoming slides so rotations and navigation are instant without black flash
+  useEffect(() => {
+    if (typeof window === "undefined" || slideCount <= 1) return;
+    const isMobile = window.innerWidth <= 767;
+    const nextIndices = [
+      (activeIndex + 1) % slideCount,
+      (activeIndex + 2) % slideCount,
+      (activeIndex - 1 + slideCount) % slideCount,
+    ];
+    for (const idx of nextIndices) {
+      const s = slides[idx];
+      if (!s) continue;
+      const target = isMobile && s.mobileSrc ? s.mobileSrc : s.srcOptimized || s.src;
+      if (target && !target.startsWith("data:")) {
+        const img = new window.Image();
+        img.src = target;
+      }
+    }
+  }, [activeIndex, slides, slideCount]);
+
+  // Always open on slide 0. Do not advance while the page-load
   // splash covers the storefront, then reset and start rotation when it lifts.
   useEffect(() => {
     if (reduceMotion || slideCount <= 1) return;
@@ -111,6 +139,15 @@ export default function HomepageBannerHero({
         {slides.map((slide, index) => {
           const isFirstSlide = index === 0;
           const isActive = index === activeIndex;
+          const shouldPreload = index <= 1 || isActive || index === (activeIndex + 1) % slideCount;
+          const isFailed = Boolean(failedSlideIds[slide.id]);
+          const currentSrc = isFailed ? FALLBACK_BANNER_SRC : slide.src;
+          const currentSrcOptimized = isFailed
+            ? FALLBACK_BANNER_WEBP
+            : slide.srcOptimized ||
+              (slide.src.endsWith(".webp") || slide.src.includes(".webp?") ? slide.src : undefined);
+          const currentMobileSrc = isFailed ? FALLBACK_BANNER_WEBP : slide.mobileSrc;
+
           const hasCopy = Boolean(
             slide.title?.trim() || slide.subtitle?.trim() || slide.ctaText?.trim(),
           );
@@ -128,19 +165,20 @@ export default function HomepageBannerHero({
               }
             >
               <div className="homepage-banner-hero__media">
-                {slide.srcOptimized ? (
+                {currentSrcOptimized ? (
                   <picture className="homepage-banner-hero__picture">
-                    {slide.mobileSrc ? (
-                      <source media="(max-width: 767px)" srcSet={slide.mobileSrc} />
+                    {currentMobileSrc ? (
+                      <source media="(max-width: 767px)" srcSet={currentMobileSrc} />
                     ) : null}
-                    <source type="image/webp" srcSet={slide.srcOptimized} />
+                    <source type="image/webp" srcSet={currentSrcOptimized} />
                     <img
-                      src={slide.src}
+                      src={currentSrc}
                       alt={slide.alt}
-                      loading={isFirstSlide ? "eager" : "lazy"}
-                      fetchPriority={isFirstSlide ? "high" : undefined}
+                      loading={shouldPreload ? "eager" : "lazy"}
+                      fetchPriority={isFirstSlide ? "high" : "auto"}
                       decoding="async"
                       className="homepage-banner-hero__image"
+                      onError={() => handleImageError(slide.id)}
                       style={{
                         position: "absolute",
                         inset: 0,
@@ -153,14 +191,18 @@ export default function HomepageBannerHero({
                   </picture>
                 ) : (
                   <Image
-                    src={slide.src}
+                    src={currentSrc}
                     alt={slide.alt}
                     fill
                     sizes="100vw"
-                    loading={isFirstSlide ? "eager" : "lazy"}
+                    loading={shouldPreload ? "eager" : "lazy"}
                     priority={isFirstSlide}
+                    unoptimized={
+                      slide.src.includes("cdn.vibemusic.in") || slide.src.endsWith(".webp")
+                    }
                     decoding="async"
                     className="homepage-banner-hero__image"
+                    onError={() => handleImageError(slide.id)}
                     style={{
                       objectFit: slide.fit ?? "cover",
                       ...(slide.objectPosition ? { objectPosition: slide.objectPosition } : {}),

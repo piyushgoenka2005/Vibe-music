@@ -11,10 +11,13 @@ export function mapBannerToSlide(banner: HomepageBanner): HomepageBannerSlide {
   const src = sanitizeStorefrontImageUrl(banner.image) || banner.image;
   const mobileRaw = banner.mobileImage?.trim();
   const mobileSrc = mobileRaw ? sanitizeStorefrontImageUrl(mobileRaw) || mobileRaw : undefined;
+  const isWebp = src.endsWith(".webp") || src.includes(".webp?");
+  const srcOptimized = isWebp ? src : undefined;
 
   return {
     id: `admin-banner-${banner.id}`,
     src,
+    srcOptimized,
     mobileSrc,
     alt,
     href: banner.ctaLink?.trim() || "/search",

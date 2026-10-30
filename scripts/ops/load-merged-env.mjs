@@ -1,14 +1,14 @@
 /**
  * Load merged env files the same way as scripts/ops/check-env.mjs.
- * Later files override earlier: .env → .env.local → .env.production → .env.production.local
+ * Later files override earlier: .env → .env.production → .env.local → .env.production.local
  */
 import fs from "node:fs";
 import path from "node:path";
 
 export const MERGED_ENV_FILES = [
   ".env",
-  ".env.local",
   ".env.production",
+  ".env.local",
   ".env.production.local",
 ];
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { enforceRateLimit, parseJsonBody } from "@/lib/api/route-utils";
+import { enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { logInfo } from "@/lib/server/logger";
 import { publicApiError } from "@/lib/server/publicApiError";

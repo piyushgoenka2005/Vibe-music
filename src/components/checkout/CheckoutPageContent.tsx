@@ -224,7 +224,6 @@ export default function CheckoutPageContent() {
   }, []);
 
   const placesAutocomplete = checkoutCapabilities?.placesAutocomplete ?? false;
-  const hasClientRazorpayKey = Boolean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
   const onlinePaymentsAvailable =
     checkoutCapabilities !== null ? checkoutCapabilities.onlinePaymentsAvailable : true;
   const razorpayIssue =

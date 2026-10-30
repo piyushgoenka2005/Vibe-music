@@ -129,6 +129,9 @@ function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
   if (window.Razorpay) {
     return Promise.resolve();
   }
+  if (isScriptAlreadyLoaded(script)) {
+    return pollForRazorpayGlobal(3000);
+  }
 
   return new Promise((resolve, reject) => {
     let settled = false;

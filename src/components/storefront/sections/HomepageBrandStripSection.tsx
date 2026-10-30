@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import Marquee from "@/components/common/Marquee";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageBrandItem, ResolvedHomepageSection } from "@/types/homepage";
@@ -9,23 +12,28 @@ interface HomepageBrandStripSectionProps {
 }
 
 function BrandStripLink({ brand }: { brand: HomepageBrandItem }) {
+  const [imgError, setImgError] = useState(false);
+
   return (
     <Link
       className="homepage-brand-strip__item"
       data-hp-section="brand-strip"
       href={resolveLinkHref(brand.href)}
     >
-      {brand.logoUrl ? (
+      {brand.logoUrl && !imgError ? (
         <>
           <span className="homepage-brand-strip__logo-wrap">
             <Image
-              alt=""
+              alt={brand.name}
               className="homepage-brand-strip__logo"
               height={140}
-              loading="lazy"
+              loading="eager"
+              unoptimized
+              decoding="async"
               sizes="(max-width: 479px) 200px, (max-width: 767px) 210px, 260px"
               src={brand.logoUrl}
               width={260}
+              onError={() => setImgError(true)}
             />
           </span>
           <span className="visually-hidden">{brand.name}</span>

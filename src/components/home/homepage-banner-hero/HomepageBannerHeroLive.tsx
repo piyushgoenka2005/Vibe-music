@@ -9,9 +9,7 @@ interface HomepageBannerHeroLiveProps {
 }
 
 /** Client wrapper — polls `/api/banners` so admin edits appear without a full reload. */
-export default function HomepageBannerHeroLive({
-  initialSlides,
-}: HomepageBannerHeroLiveProps) {
-  const { slides, fingerprint } = useHomepageBanners(initialSlides);
-  return <HomepageBannerHero key={fingerprint} slides={slides} />;
+export default function HomepageBannerHeroLive({ initialSlides }: HomepageBannerHeroLiveProps) {
+  const { slides } = useHomepageBanners(initialSlides);
+  return <HomepageBannerHero slides={slides} />;
 }
