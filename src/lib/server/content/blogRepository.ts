@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "crypto";
 import * as pg from "@/lib/server/prisma/contentRepository";
+import { invalidateAllStorefrontCaches } from "@/lib/server/storefront/storefrontCacheInvalidation";
 import { slugify } from "@/lib/slug";
 import type {
   BlogAnalyticsSummary,
@@ -269,7 +270,7 @@ export async function createBlogPost(input: CreateBlogPostInput): Promise<BlogPo
   const categorySlug = input.categorySlug?.trim() ?? "";
   const categoryLabel = input.categoryLabel?.trim() || resolveCategoryLabel(categorySlug);
 
-  return pg.createBlogPostRecord({
+  const post = await pg.createBlogPostRecord({
     id: randomUUID(),
     slug,
     title: input.title.trim(),
@@ -292,6 +293,14 @@ export async function createBlogPost(input: CreateBlogPostInput): Promise<BlogPo
     createdAt: timestamp,
     updatedAt: timestamp,
   });
+
+  try {
+    invalidateAllStorefrontCaches();
+  } catch {
+    /* outside request scope */
+  }
+
+  return post;
 }
 
 export async function updateBlogPost(id: string, input: UpdateBlogPostInput): Promise<BlogPost> {
@@ -332,7 +341,7 @@ export async function updateBlogPost(id: string, input: UpdateBlogPostInput): Pr
         ? resolveCategoryLabel(nextCategorySlug)
         : existing.categoryLabel;
 
-  return pg.updateBlogPostRecord(id, {
+  const post = await pg.updateBlogPostRecord(id, {
     ...(input.title !== undefined ? { title: input.title.trim() } : {}),
     ...(input.slug !== undefined ? { slug: nextSlug } : {}),
     ...(input.excerpt !== undefined ? { excerpt: input.excerpt.trim() } : {}),
@@ -353,10 +362,23 @@ export async function updateBlogPost(id: string, input: UpdateBlogPostInput): Pr
     scheduledAt: publishFields.scheduledAt,
     updatedAt: timestamp,
   });
+
+  try {
+    invalidateAllStorefrontCaches();
+  } catch {
+    /* outside request scope */
+  }
+
+  return post;
 }
 
 export async function deleteBlogPost(id: string): Promise<void> {
   const existing = await getBlogPostById(id);
   if (!existing) throw new Error("Blog post not found");
   await pg.deleteBlogPostRecord(id);
+  try {
+    invalidateAllStorefrontCaches();
+  } catch {
+    /* outside request scope */
+  }
 }

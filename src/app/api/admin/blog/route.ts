@@ -6,7 +6,7 @@ import { adminBlogPostSchema } from "@/lib/validations/admin";
 
 export async function GET(request: Request) {
   try {
-    await requireAdmin("blog:read");
+    await requireAdmin(["blog:read", "guides:read"], request);
     const { searchParams } = new URL(request.url);
     const posts = await listAllBlogPosts();
     const page = paginateSortedById(posts, {
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdmin("blog:write", request);
+    const admin = await requireAdmin(["blog:write", "guides:write"], request);
     const body = await request.json();
     const parsed = adminBlogPostSchema.parse(body);
     const post = await createBlogPost({

@@ -53,7 +53,7 @@ function scheduleStorefrontRefresh(pathname: string): void {
 }
 
 export async function requireAdmin(
-  permission?: Permission,
+  permission?: Permission | Permission[],
   request?: Request,
 ): Promise<AdminSession> {
   const sessionUser = await getSessionUser();
@@ -69,8 +69,12 @@ export async function requireAdmin(
   // Super admins have unconditional full control over everything on the website, store, and warehouse.
   if (adminSession.role === "super_admin") {
     adminSession.permissions = [...ALL_PERMISSIONS];
-  } else if (permission && !hasPermission(adminSession.permissions, permission)) {
-    throw new AdminAuthError("Insufficient permissions", 403);
+  } else if (permission) {
+    const list = Array.isArray(permission) ? permission : [permission];
+    const allowed = list.some((p) => hasPermission(adminSession.permissions, p));
+    if (!allowed) {
+      throw new AdminAuthError("Insufficient permissions", 403);
+    }
   }
 
   // Rate-limit per admin UID (not IP) so shared-NAT admins don't

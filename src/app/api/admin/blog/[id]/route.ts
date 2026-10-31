@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
-import {
-  deleteBlogPost,
-  getBlogPostById,
-  updateBlogPost,
-} from "@/lib/server/blogService";
+import { deleteBlogPost, getBlogPostById, updateBlogPost } from "@/lib/server/blogService";
 import { adminBlogPostUpdateSchema } from "@/lib/validations/admin";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    await requireAdmin("blog:read");
+    await requireAdmin(["blog:read", "guides:read"], _request);
     const { id } = await context.params;
     const post = await getBlogPostById(id);
     if (!post) {
@@ -25,7 +21,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("blog:write", request);
+    await requireAdmin(["blog:write", "guides:write"], request);
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminBlogPostUpdateSchema.parse(body);
@@ -38,7 +34,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    await requireAdmin("blog:delete", _request);
+    await requireAdmin(["blog:delete", "guides:delete"], _request);
     const { id } = await context.params;
     await deleteBlogPost(id);
     return NextResponse.json({ ok: true });

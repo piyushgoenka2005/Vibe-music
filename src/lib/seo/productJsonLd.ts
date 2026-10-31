@@ -55,7 +55,7 @@ export function buildProductJsonLd(
       ? {
           aggregateRating: {
             "@type": "AggregateRating",
-            ratingValue: Number(product.rating.toFixed(1)),
+            ratingValue: Number((product.rating ?? 0).toFixed(1)),
             reviewCount: product.reviewCount,
             bestRating: 5,
             worstRating: 1,

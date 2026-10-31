@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
-import {
-  getBrandById,
-  updateBrand,
-  deleteBrand,
-} from "@/lib/server/brandRepository";
+import { getBrandById, updateBrand, deleteBrand } from "@/lib/server/brandRepository";
 import { adminBrandSchema } from "@/lib/validations/wrFeatures";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    await requireAdmin("categories:read");
+    await requireAdmin(["brands:read", "categories:read"], _request);
     const { id } = await context.params;
     const brand = await getBrandById(id);
     if (!brand) {
@@ -25,7 +21,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("categories:write", request);
+    await requireAdmin(["brands:write", "categories:write"], request);
     const { id } = await context.params;
     const body = await request.json();
     const parsed = adminBrandSchema.partial().parse(body);
@@ -38,7 +34,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
 export async function DELETE(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("categories:delete", request);
+    await requireAdmin(["brands:delete", "categories:delete"], request);
     const { id } = await context.params;
     await deleteBrand(id);
     return NextResponse.json({ ok: true });

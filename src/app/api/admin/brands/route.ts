@@ -3,9 +3,9 @@ import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import { listBrands, createBrand } from "@/lib/server/brandRepository";
 import { adminBrandSchema } from "@/lib/validations/wrFeatures";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    await requireAdmin("categories:read");
+    await requireAdmin(["brands:read", "categories:read"], request);
     const brands = await listBrands();
     return NextResponse.json({ brands });
   } catch (error) {
@@ -15,7 +15,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin("categories:write", request);
+    await requireAdmin(["brands:write", "categories:write"], request);
     const body = await request.json();
     const parsed = adminBrandSchema.parse(body);
     const brand = await createBrand(parsed);

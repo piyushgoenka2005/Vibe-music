@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { loadBrands, saveBrands } from "@/lib/server/catalogRepository";
 import { invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
+import { invalidateAllStorefrontCaches } from "@/lib/server/storefront/storefrontCacheInvalidation";
 import { brandToPrisma, prismaToBrand } from "@/lib/server/prisma/mappers";
 import { slugify } from "@/lib/slug";
 import type { Brand } from "@/types/brand";
@@ -10,6 +11,11 @@ import type { Brand } from "@/types/brand";
 async function syncBrandsJson(brands: Brand[]): Promise<void> {
   saveBrands([...brands].sort((a, b) => a.name.localeCompare(b.name)));
   invalidateCatalogCache();
+  try {
+    invalidateAllStorefrontCaches();
+  } catch {
+    /* outside request scope */
+  }
 }
 
 async function seedBrandsFromStatic(): Promise<Brand[]> {
