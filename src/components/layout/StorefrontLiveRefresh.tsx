@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-const POLL_MS = 30_000;
+const POLL_MS = 5_000;
 /** Pages with in-progress forms — a server refresh there could reset what the shopper is typing. */
 const SKIP_PATHS = /^\/(admin|checkout|login|register|forgot-password|reset-password)(\/|$)/;
 
@@ -32,13 +32,7 @@ export default function StorefrontLiveRefresh() {
         const { v } = (await response.json()) as { v?: unknown };
         if (cancelled || typeof v !== "number") return;
         if (versionRef.current !== null && v !== versionRef.current) {
-          // Add randomized jitter (1-5s) to spread out refreshes and eliminate thundering herd spikes
-          const jitterMs = Math.floor(Math.random() * 4000) + 1000;
-          setTimeout(() => {
-            if (!cancelled && document.visibilityState === "visible") {
-              router.refresh();
-            }
-          }, jitterMs);
+          router.refresh();
         }
         versionRef.current = v;
       } catch {

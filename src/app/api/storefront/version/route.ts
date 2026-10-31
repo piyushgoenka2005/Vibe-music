@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { getStorefrontVersion } from "@/lib/server/storefront/storefrontCacheInvalidation";
+import { readStorefrontVersion } from "@/lib/server/storefront/storefrontCacheInvalidation";
 
 export const dynamic = "force-dynamic";
 
-export function GET() {
+export async function GET() {
   return NextResponse.json(
-    { v: getStorefrontVersion() },
+    { v: await readStorefrontVersion() },
     { headers: { "Cache-Control": "private, no-cache, no-store, must-revalidate" } },
   );
 }

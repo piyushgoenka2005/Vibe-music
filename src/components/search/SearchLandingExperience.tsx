@@ -5,28 +5,15 @@ import {
   KeyboardEvent as ReactKeyboardEvent,
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
 } from "react";
-import {
-  Drum,
-  Guitar,
-  Mic2,
-  Radio,
-  Search,
-  Sparkles,
-  Tag,
-  TrendingUp,
-} from "lucide-react";
+import { Drum, Guitar, Mic2, Radio, Search, Sparkles, Tag, TrendingUp } from "lucide-react";
 import { useSearch } from "@/hooks/useSearch";
-import {
-  SEARCH_LANDING_QUICK_CHIPS,
-  SEARCH_LANDING_TRENDING,
-} from "@/data/searchLandingHints";
+import { SEARCH_LANDING_QUICK_CHIPS, SEARCH_LANDING_TRENDING } from "@/data/searchLandingHints";
 import SearchAutocomplete from "@/components/search/SearchAutocomplete";
-import SearchLandingRollingPlaceholder, {
-  SEARCH_LANDING_INPUT_ID,
-} from "@/components/search/SearchLandingRollingPlaceholder";
+import SearchLandingRollingPlaceholder from "@/components/search/SearchLandingRollingPlaceholder";
 import { searchStore } from "@/store/searchStore";
 import type { LucideIcon } from "lucide-react";
 
@@ -48,6 +35,7 @@ export default function SearchLandingExperience({
 }: SearchLandingExperienceProps) {
   const shellRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
   const [isFocused, setIsFocused] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
 
@@ -81,9 +69,7 @@ export default function SearchLandingExperience({
       const target = event.target as HTMLElement | null;
       if (
         target &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable)
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)
       ) {
         return;
       }
@@ -114,7 +100,7 @@ export default function SearchLandingExperience({
       event.preventDefault();
       submitSearch();
     },
-    [submitSearch]
+    [submitSearch],
   );
 
   const onInputKeyDown = useCallback(
@@ -146,7 +132,7 @@ export default function SearchLandingExperience({
         inputRef.current?.blur();
       }
     },
-    [flatSuggestions.length, handleEnter, moveActiveIndex]
+    [flatSuggestions.length, handleEnter, moveActiveIndex],
   );
 
   const onTrendingClick = useCallback(
@@ -154,7 +140,7 @@ export default function SearchLandingExperience({
       setQuery(term);
       submitSearch(term);
     },
-    [setQuery, submitSearch]
+    [setQuery, submitSearch],
   );
 
   const showRollingPlaceholder = !query && !isFocused;
@@ -163,11 +149,7 @@ export default function SearchLandingExperience({
 
   return (
     <div ref={shellRef} className="sw-search-landing-bar">
-      <form
-        className="sw-search-landing-bar__form"
-        role="search"
-        onSubmit={onSubmit}
-      >
+      <form className="sw-search-landing-bar__form" role="search" onSubmit={onSubmit}>
         <div
           className={`sw-search-landing-bar__glow${isFocused ? " sw-search-landing-bar__glow--focused" : ""}`}
         >
@@ -178,45 +160,45 @@ export default function SearchLandingExperience({
           <div
             className={`sw-search-landing-bar__shell${isFocused ? " sw-search-landing-bar__shell--focused" : ""}`}
           >
-          <span className="sw-search-landing-bar__icon" aria-hidden="true">
-            <Search size={20} strokeWidth={2.25} />
-          </span>
+            <span className="sw-search-landing-bar__icon" aria-hidden="true">
+              <Search size={20} strokeWidth={2.25} />
+            </span>
 
-          <div className="sw-search-landing-bar__field">
-            <SearchLandingRollingPlaceholder visible={showRollingPlaceholder} />
-            <input
-              ref={inputRef}
-              id={SEARCH_LANDING_INPUT_ID}
-              type="search"
-              role="combobox"
-              className="sw-search-landing-bar__input"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onFocus={() => {
-                setIsFocused(true);
-                setShowPanel(true);
-              }}
-              onBlur={() => setIsFocused(false)}
-              onKeyDown={onInputKeyDown}
-              placeholder={showRollingPlaceholder ? " " : "Search products, brands, categories…"}
-              aria-label="Search Vibe Music for products, brands, and categories"
-              autoFocus={autoFocus}
-              autoComplete="off"
-              minLength={2}
-              aria-expanded={panelOpen}
-              aria-controls="sw-search-landing-panel"
-              aria-autocomplete="list"
-              aria-activedescendant={activeDescendantId}
-            />
-          </div>
+            <div className="sw-search-landing-bar__field">
+              <SearchLandingRollingPlaceholder visible={showRollingPlaceholder} />
+              <input
+                ref={inputRef}
+                id={`sw-search-landing-input-${inputId.replace(/:/g, "")}`}
+                type="search"
+                role="combobox"
+                className="sw-search-landing-bar__input"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onFocus={() => {
+                  setIsFocused(true);
+                  setShowPanel(true);
+                }}
+                onBlur={() => setIsFocused(false)}
+                onKeyDown={onInputKeyDown}
+                placeholder={showRollingPlaceholder ? " " : "Search products, brands, categories…"}
+                aria-label="Search Vibe Music for products, brands, and categories"
+                autoFocus={autoFocus}
+                autoComplete="off"
+                minLength={2}
+                aria-expanded={panelOpen}
+                aria-controls="sw-search-landing-panel"
+                aria-autocomplete="list"
+                aria-activedescendant={activeDescendantId}
+              />
+            </div>
 
-          <kbd className="sw-search-landing-bar__shortcut" aria-hidden="true">
-            /
-          </kbd>
+            <kbd className="sw-search-landing-bar__shortcut" aria-hidden="true">
+              /
+            </kbd>
 
-          <button type="submit" className="sw-search-landing-bar__submit">
-            Search
-          </button>
+            <button type="submit" className="sw-search-landing-bar__submit">
+              Search
+            </button>
           </div>
         </div>
 

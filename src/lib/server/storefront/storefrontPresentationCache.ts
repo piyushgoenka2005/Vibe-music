@@ -12,14 +12,30 @@ export function revalidateStorefrontPresentationCaches(): void {
     "banners",
     "social-rail",
     "gear-stories",
+    "blog",
+    "store-settings",
+    "footer-trending",
+    "product-detail",
+    "product-merchandising",
   ]);
   try {
     revalidatePath("/", "layout"); // root layout — refreshes header category nav, brands
     revalidatePath("/");
     revalidatePath("/", "page");
     revalidatePath("/category", "layout");
+    revalidatePath("/category/[slug]", "page");
     revalidatePath("/product", "layout");
+    revalidatePath("/product/[slug]", "page");
     revalidatePath("/search", "layout");
+    revalidatePath("/brands", "page");
+    revalidatePath("/deals", "page");
+    revalidatePath("/programs", "page");
+    revalidatePath("/blog", "layout");
+    revalidatePath("/blog", "page");
+    revalidatePath("/admin/categories", "page");
+    revalidatePath("/admin/brands", "page");
+    revalidatePath("/admin/homepage", "page");
+    revalidatePath("/admin/blog", "page");
   } catch {
     /* ignore outside request context (CLI / workers) */
   }

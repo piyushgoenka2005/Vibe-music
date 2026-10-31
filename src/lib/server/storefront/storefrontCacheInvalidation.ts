@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { getUpstashConfig, upstashPipeline } from "@/lib/security/upstashRedis";
 
 /** Every unstable_cache tag that feeds a public page. */
 export const STOREFRONT_CACHE_TAGS = [
@@ -36,6 +37,8 @@ export function isStorefrontAdminWrite(pathname: string): boolean {
 }
 
 const versionStore = globalThis as typeof globalThis & { __vibeStorefrontVersion?: number };
+const STOREFRONT_VERSION_KEY = "storefront:version:v1";
+const STOREFRONT_VERSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 /** Changes whenever storefront content is invalidated; open tabs poll it to refresh. */
 export function getStorefrontVersion(): number {
@@ -45,6 +48,50 @@ export function getStorefrontVersion(): number {
 
 export function bumpStorefrontVersion(): void {
   versionStore.__vibeStorefrontVersion = Math.max(Date.now(), getStorefrontVersion() + 1);
+}
+
+/**
+ * Read the cross-process version beacon without the normal cache L1. The local
+ * value remains the fallback for development and when Redis is unavailable.
+ */
+export async function readStorefrontVersion(): Promise<number> {
+  const config = getUpstashConfig();
+  if (!config) return getStorefrontVersion();
+
+  try {
+    const response = await fetch(
+      `${config.url}/get/${encodeURIComponent(STOREFRONT_VERSION_KEY)}`,
+      {
+        headers: { Authorization: `Bearer ${config.token}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(1500),
+      },
+    );
+    if (!response.ok) return getStorefrontVersion();
+    const envelope = (await response.json()) as { result?: unknown };
+    const value = Number(envelope.result);
+    return Number.isFinite(value) && value > 0 ? value : getStorefrontVersion();
+  } catch {
+    return getStorefrontVersion();
+  }
+}
+
+async function publishStorefrontVersion(): Promise<void> {
+  const config = getUpstashConfig();
+  if (!config) return;
+
+  try {
+    const [increment] = await upstashPipeline([
+      ["INCR", STOREFRONT_VERSION_KEY],
+      ["EXPIRE", STOREFRONT_VERSION_KEY, String(STOREFRONT_VERSION_TTL_SECONDS)],
+    ]);
+    const distributedVersion = Number(increment?.result);
+    if (Number.isFinite(distributedVersion) && distributedVersion > 0) {
+      versionStore.__vibeStorefrontVersion = Math.max(getStorefrontVersion(), distributedVersion);
+    }
+  } catch {
+    // The local beacon still refreshes tabs on the current process.
+  }
 }
 
 /**
@@ -131,17 +178,31 @@ export async function invalidateAllStorefrontCaches(): Promise<void> {
   const now = Date.now();
   if (now - lastInvalidationCompletedAt < INVALIDATION_COOLDOWN_MS) {
     bumpStorefrontVersion();
+    await publishStorefrontVersion();
     return;
   }
 
   inFlightInvalidation = (async () => {
     expireStorefrontTags(STOREFRONT_CACHE_TAGS);
+    await publishStorefrontVersion();
     try {
       revalidatePath("/", "layout");
       revalidatePath("/");
-      revalidatePath("/category");
-      revalidatePath("/deals");
-      revalidatePath("/search");
+      revalidatePath("/", "page");
+      revalidatePath("/category", "layout");
+      revalidatePath("/category/[slug]", "page");
+      revalidatePath("/product", "layout");
+      revalidatePath("/product/[slug]", "page");
+      revalidatePath("/brands", "page");
+      revalidatePath("/deals", "page");
+      revalidatePath("/programs", "page");
+      revalidatePath("/search", "layout");
+      revalidatePath("/blog", "layout");
+      revalidatePath("/blog", "page");
+      revalidatePath("/admin/categories", "page");
+      revalidatePath("/admin/brands", "page");
+      revalidatePath("/admin/homepage", "page");
+      revalidatePath("/admin/blog", "page");
     } catch {
       /* outside a request context */
     }

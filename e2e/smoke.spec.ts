@@ -1,5 +1,25 @@
 import { test, expect } from "./fixtures";
 import { mutationHeaders } from "./helpers/test-utils";
+import type { Page } from "@playwright/test";
+
+async function gotoSmokePage(
+  page: Page,
+  path: string,
+  waitUntil: "commit" | "domcontentloaded" = "domcontentloaded",
+): Promise<void> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await page.goto(path, { waitUntil, timeout: 90_000 });
+      return;
+    } catch (error) {
+      const message = String(error);
+      const isNavigationRace =
+        message.includes("ERR_ABORTED") || message.includes("interrupted by another navigation");
+      if (attempt === 1 || !isNavigationRace) throw error;
+      await page.waitForLoadState("domcontentloaded").catch(() => undefined);
+    }
+  }
+}
 
 test.describe("storefront smoke", () => {
   test("homepage loads", async ({ page }) => {
@@ -82,7 +102,9 @@ test.describe("storefront smoke", () => {
       "/deals",
     ];
     for (const path of paths) {
-      await page.goto(path, { waitUntil: "domcontentloaded", timeout: 90_000 });
+      // Empty checkout intentionally redirects to cart; browser clients can
+      // report that client-side redirect as an interrupted navigation.
+      await gotoSmokePage(page, path, "commit");
       const overflow = await page.evaluate(() => {
         const doc = document.documentElement;
         return doc.scrollWidth - doc.clientWidth;
@@ -93,10 +115,7 @@ test.describe("storefront smoke", () => {
 
   test("category listing keeps product card actions on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/category/guitars", {
-      waitUntil: "domcontentloaded",
-      timeout: 60_000,
-    });
+    await gotoSmokePage(page, "/category/guitars");
     const actions = page.locator(".cat-product-grid--grid .product-card-actions").first();
     if (await actions.count()) {
       await expect(actions).toBeVisible();

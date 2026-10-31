@@ -137,7 +137,7 @@ const NAV_ITEMS = [
     permission: "settings:read",
   },
   { href: ROUTES.adminSettings, label: "Settings", icon: Settings, permission: "settings:read" },
-  { href: ROUTES.adminBlog, label: "Blog", icon: FileText, permission: "blog:read" },
+  { href: ROUTES.adminBlog, label: "Guides / Blog", icon: FileText, permission: "blog:read" },
 ] as const;
 
 interface AdminSidebarProps {

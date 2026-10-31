@@ -95,18 +95,22 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
         formData.append("replace", "true");
       }
 
-      const json = await adminMutateJson<{ result: TaxonomyImportResult }>(
-        "/api/admin/taxonomy/import",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const json = await adminMutateJson<{
+        result: TaxonomyImportResult;
+        categorySync: { created: number; existing: number };
+      }>("/api/admin/taxonomy/import", {
+        method: "POST",
+        body: formData,
+      });
 
       setImportResult(json.result);
+      setSyncFeedback(
+        `Category hierarchy synced: ${json.categorySync.created} new categories/subcategories created; ${json.categorySync.existing} already matched.`,
+      );
       setUploadFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       queryClient.invalidateQueries({ queryKey: ["admin-taxonomy"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed");
     } finally {

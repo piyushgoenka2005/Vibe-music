@@ -275,6 +275,43 @@ async function resolveCategories(
     return resolved.slice(0, section.maxItems);
   }
 
+  // For featured_categories: show ALL main categories (not just featured), with manual override support
+  if (section.sectionKey === "featured_categories") {
+    // First, get all manually configured items (for those featured)
+    const configuredSlugs = new Set(items.map((item) => item.categorySlug).filter(Boolean));
+    const configured: HomepageCategoryItem[] = [];
+
+    for (const slug of configuredSlugs) {
+      const cat = categories.find((c) => c.slug === slug);
+      if (!cat) continue;
+      const item = items.find((i) => i.categorySlug === slug);
+      configured.push({
+        id: cat.id,
+        slug: cat.slug,
+        title: item?.customTitle || cat.name,
+        href: item?.customHref || categoryPath(cat.slug),
+        imageSrc: item?.customImage || cat.imageUrl || getCategoryGridImage(cat.slug),
+        badge: item?.badgeLabel,
+      });
+    }
+
+    // Add unconfigured main categories (not in manual items list)
+    const unconfigured: HomepageCategoryItem[] = categories
+      .filter((cat) => !cat.parentId && !configuredSlugs.has(cat.slug))
+      .map((cat) => ({
+        id: cat.id,
+        slug: cat.slug,
+        title: cat.name,
+        href: categoryPath(cat.slug),
+        imageSrc: cat.imageUrl || getCategoryGridImage(cat.slug),
+        badge: undefined,
+      }));
+
+    return [...configured, ...unconfigured]
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .slice(0, section.maxItems);
+  }
+
   // Support both featured parent and child categories, preventing duplicates
   const featured = categories.filter((category) => category.isFeatured);
   const pool = featured.length > 0 ? featured : categories.filter((category) => !category.parentId);

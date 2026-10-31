@@ -170,6 +170,22 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     },
   });
 
+  const { data: allCategories = [] } = useQuery({
+    queryKey: ["admin-homepage-categories"],
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const body = await adminFetchJson<{
+        categories?: Array<{ id: string; name: string; slug: string; parentId?: string | null }>;
+      }>("/api/admin/categories");
+      return (body.categories ?? []).filter((c) => !c.parentId); // Only main categories
+    },
+    enabled:
+      activeKey === "featured_categories" ||
+      activeKey === "browse_by_categories" ||
+      activeKey === "category_bento",
+  });
+
   async function runProductSearch(query: string) {
     setProductSearch(query);
     if (query.trim().length < 2) {
@@ -1136,15 +1152,34 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   ) : null}
                   {isCategorySection ? (
                     <div className="admin-form-group">
-                      <label>Category Slug</label>
-                      <input
-                        className="admin-input"
+                      <label>Category</label>
+                      <select
+                        className="admin-select"
                         style={{ width: "100%" }}
                         value={itemForm.categorySlug}
-                        onChange={(event) =>
-                          setItemForm((prev) => ({ ...prev, categorySlug: event.target.value }))
-                        }
-                      />
+                        onChange={(event) => {
+                          const category = allCategories.find(
+                            (entry) => entry.slug === event.target.value,
+                          );
+                          setItemForm((prev) => ({
+                            ...prev,
+                            categorySlug: event.target.value,
+                            customTitle: category?.name || prev.customTitle,
+                          }));
+                        }}
+                      >
+                        <option value="">Select a category</option>
+                        {allCategories.map((category) => (
+                          <option key={category.slug} value={category.slug}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                      {!allCategories.length ? (
+                        <p className="admin-form-hint" style={{ margin: "0.35rem 0 0" }}>
+                          Loading categories...
+                        </p>
+                      ) : null}
                     </div>
                   ) : null}
                   {isBrandSection ? (

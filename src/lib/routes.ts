@@ -313,6 +313,17 @@ function resolveShopPath(path: string): string | null {
 export function resolveLegacyPath(pathname: string): string | null {
   const path = normalizePath(pathname);
 
+  const legacyCategoryMatch = path.match(/^\/categories?\/([^/]+)$/i);
+  if (legacyCategoryMatch?.[1]) {
+    let categoryName = legacyCategoryMatch[1];
+    try {
+      categoryName = decodeURIComponent(categoryName);
+    } catch {
+      // Keep the original segment; slugify still produces a safe fallback.
+    }
+    return categoryPath(slugify(categoryName));
+  }
+
   // Retired / placeholder paths first (before /admin/* validity catch-all).
   if (PLACEHOLDER_REDIRECTS[path]) return PLACEHOLDER_REDIRECTS[path];
   for (const [key, target] of Object.entries(PLACEHOLDER_REDIRECTS)) {

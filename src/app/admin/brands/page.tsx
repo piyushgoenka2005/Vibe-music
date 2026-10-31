@@ -183,8 +183,16 @@ export default function AdminBrandsPage() {
       {(admin) => (
         <AdminShell admin={admin} title="Brands">
           <BrandsContent
-            canWrite={admin.permissions.includes("categories:write")}
-            canDelete={admin.permissions.includes("categories:delete")}
+            canWrite={
+              admin.role === "super_admin" ||
+              admin.permissions.includes("categories:write") ||
+              admin.permissions.includes("brands:write")
+            }
+            canDelete={
+              admin.role === "super_admin" ||
+              admin.permissions.includes("categories:delete") ||
+              admin.permissions.includes("brands:delete")
+            }
           />
         </AdminShell>
       )}

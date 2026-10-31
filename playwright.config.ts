@@ -95,6 +95,9 @@ export default defineConfig({
     },
     {
       name: "admin-authenticated",
+      // These specs share one seeded admin account; password-reset coverage
+      // temporarily changes its credential and must not overlap other admin flows.
+      fullyParallel: false,
       testMatch: [
         /admin\.(authenticated|crud-smoke|security)\.spec\.ts/,
         /admin-features\.authenticated\.spec\.ts/,

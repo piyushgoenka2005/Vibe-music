@@ -41,7 +41,7 @@ describe("GET /api/catalog/categories", () => {
 
   it("returns 429 when rate limited", async () => {
     (enforceRateLimit as ReturnType<typeof vi.fn>).mockResolvedValue(
-      new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 })
+      new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 }),
     );
 
     const res = await GET(makeRequest("http://localhost/api/catalog/categories"));
@@ -49,9 +49,7 @@ describe("GET /api/catalog/categories", () => {
   });
 
   it("handles errors gracefully", async () => {
-    (getCategories as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("Catalog unavailable")
-    );
+    (getCategories as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Catalog unavailable"));
 
     const res = await GET(makeRequest("http://localhost/api/catalog/categories"));
     expect(res.status).toBe(500);
@@ -59,6 +57,6 @@ describe("GET /api/catalog/categories", () => {
 
   it("sets Cache-Control headers", async () => {
     const res = await GET(makeRequest("http://localhost/api/catalog/categories"));
-    expect(res.headers.get("Cache-Control")).toContain("s-maxage");
+    expect(res.headers.get("Cache-Control")).toBe("private, no-cache, no-store, must-revalidate");
   });
 });

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/require-admin";
-import { parseTaxonomyBuffer, bulkImportTaxonomies } from "@/lib/server/taxonomyRepository";
+import {
+  parseTaxonomyBuffer,
+  bulkImportTaxonomies,
+  syncCategoriesFromTaxonomy,
+} from "@/lib/server/taxonomyRepository";
 import { taxonomyApiErrorResponse } from "@/lib/server/taxonomyApiErrors";
 
 export const maxDuration = 60; // Allow sufficient time for 40k row parsing and bulk db insert
@@ -38,10 +42,12 @@ export async function POST(request: NextRequest) {
 
     // Bulk insert into database
     const result = await bulkImportTaxonomies(rows, totalRowsRead, duplicatesSkipped, replace);
+    const categorySync = await syncCategoriesFromTaxonomy();
 
     return NextResponse.json({
       success: true,
       result,
+      categorySync,
     });
   } catch (error) {
     return taxonomyApiErrorResponse(error, request);

@@ -40,7 +40,8 @@ function mapAdminCategory(row: {
 
 async function staticCategories(): Promise<AdminCategory[]> {
   const { loadCategories } = await import("@/lib/server/catalogRepository");
-  return loadCategories().map((cat, index) => ({
+  const { HEADER_MEGA_MENUS } = await import("@/data/headerMegaMenu");
+  const mains: AdminCategory[] = loadCategories().map((cat, index) => ({
     id: cat.id,
     name: cat.name,
     slug: cat.slug,
@@ -51,13 +52,60 @@ async function staticCategories(): Promise<AdminCategory[]> {
     sortOrder: index,
     productCount: 0,
   }));
+
+  const subs: AdminCategory[] = [];
+  const usedSlugs = new Set(mains.map((m) => m.slug));
+  let subOrder = 100;
+
+  for (const menu of HEADER_MEGA_MENUS) {
+    const mainCat = mains.find(
+      (c) =>
+        c.slug === menu.slug ||
+        c.id === menu.slug ||
+        c.name.toLowerCase() === menu.name.toLowerCase(),
+    );
+    if (!mainCat) continue;
+
+    for (const column of menu.columns) {
+      for (const link of column.links) {
+        if (link.label.toLowerCase().startsWith("shop all")) continue;
+        const baseSlug = slugify(link.label);
+        const subSlug = usedSlugs.has(baseSlug) ? `${mainCat.slug}-${baseSlug}` : baseSlug;
+        usedSlugs.add(subSlug);
+
+        subs.push({
+          id: `sub_${mainCat.slug}_${subSlug}`,
+          name: link.label,
+          slug: subSlug,
+          description: `${link.label} in ${mainCat.name}`,
+          parentId: mainCat.id,
+          isFeatured: false,
+          sortOrder: subOrder++,
+          productCount: 0,
+        });
+      }
+    }
+  }
+
+  return [...mains, ...subs];
 }
 
 async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
   const { loadCategories } = await import("@/lib/server/catalogRepository");
   const { getAllProducts } = await import("@/services/catalogService");
+  const { HEADER_MEGA_MENUS } = await import("@/data/headerMegaMenu");
   const staticCategories = loadCategories();
-  const products = await getAllProducts(true);
+
+  let products: Awaited<ReturnType<typeof getAllProducts>> = [];
+  try {
+    products = await getAllProducts(true);
+  } catch (err) {
+    console.warn(
+      "[categoryRepository] Failed to load products for seeding, continuing with empty products:",
+      err,
+    );
+  }
+
   const now = new Date().toISOString();
 
   const categories: AdminCategory[] = staticCategories.map((cat, index) => {
@@ -78,13 +126,59 @@ async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
     };
   });
 
-  for (const category of categories) {
+  const subCategories: AdminCategory[] = [];
+  const usedSlugs = new Set(categories.map((c) => c.slug));
+  let subOrder = 100;
+
+  for (const menu of HEADER_MEGA_MENUS) {
+    const mainCat = categories.find(
+      (c) =>
+        c.slug === menu.slug ||
+        c.id === menu.slug ||
+        c.name.toLowerCase() === menu.name.toLowerCase(),
+    );
+    if (!mainCat) continue;
+
+    for (const column of menu.columns) {
+      for (const link of column.links) {
+        if (link.label.toLowerCase().startsWith("shop all")) continue;
+        const baseSlug = slugify(link.label);
+        const subSlug = usedSlugs.has(baseSlug) ? `${mainCat.slug}-${baseSlug}` : baseSlug;
+        usedSlugs.add(subSlug);
+
+        const subCount = products.filter(
+          (p) =>
+            p.status === "active" &&
+            p.price > 0 &&
+            (p.subcategory?.toLowerCase().includes(link.label.toLowerCase()) ||
+              p.categorySlug === mainCat.slug),
+        ).length;
+
+        subCategories.push({
+          id: `sub_${mainCat.slug}_${subSlug}`,
+          name: link.label,
+          slug: subSlug,
+          description: `${link.label} in ${mainCat.name}`,
+          parentId: mainCat.id,
+          isFeatured: false,
+          sortOrder: subOrder++,
+          productCount: subCount,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+    }
+  }
+
+  const allCategories = [...categories, ...subCategories];
+
+  for (const category of allCategories) {
     try {
       await prisma.category.upsert({
         where: { id: category.id },
         create: {
           ...categoryToPrisma(category),
-          parentId: null,
+          parentId: category.parentId ?? null,
           metaTitle: null,
           metaDescription: null,
           productCount: category.productCount ?? 0,
@@ -93,6 +187,7 @@ async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
         },
         update: {
           ...categoryToPrisma(category),
+          parentId: category.parentId ?? null,
           productCount: category.productCount ?? 0,
           updatedAt: now,
         },
@@ -102,7 +197,7 @@ async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
     }
   }
 
-  return categories;
+  return allCategories;
 }
 
 export async function listCategories(): Promise<AdminCategory[]> {
@@ -112,10 +207,19 @@ export async function listCategories(): Promise<AdminCategory[]> {
 
   try {
     const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+    if (rows.length === 0) {
+      try {
+        return await seedCategoriesFromStatic();
+      } catch (seedErr) {
+        console.error("[categoryRepository] Failed to seed categories from static data:", seedErr);
+        // If seeding fails, fall back to static categories without DB persistence
+        return staticCategories();
+      }
+    }
     return rows.map(mapAdminCategory);
   } catch (err) {
     console.error("[categoryRepository] Failed to list categories from database:", err);
-    return [];
+    return staticCategories();
   }
 }
 

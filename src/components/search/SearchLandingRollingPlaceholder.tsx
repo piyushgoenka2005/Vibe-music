@@ -5,12 +5,10 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { SEARCH_LANDING_ROLLING_TERMS } from "@/data/searchLandingHints";
 
 const CYCLE_MS = 2800;
-const INPUT_ID = "sw-search-landing-input";
 
 interface SearchLandingRollingPlaceholderProps {
   visible: boolean;
 }
-
 export default function SearchLandingRollingPlaceholder({
   visible,
 }: SearchLandingRollingPlaceholderProps) {
@@ -51,5 +49,3 @@ export default function SearchLandingRollingPlaceholder({
     </span>
   );
 }
-
-export { INPUT_ID as SEARCH_LANDING_INPUT_ID };

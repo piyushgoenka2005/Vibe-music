@@ -26,6 +26,13 @@ describe("resolveLegacyPath", () => {
     expect(resolveLegacyPath(from)).toBe(to);
   });
 
+  it("canonicalizes legacy category title URLs", () => {
+    expect(resolveLegacyPath("/Categories/Keyboards%20%26%20Synthesizers")).toBe(
+      "/category/keyboards-synthesizers",
+    );
+    expect(resolveLegacyPath("/categories/Studio%20Recording")).toBe("/category/studio-recording");
+  });
+
   it("keeps existing shop prefix rules ahead of the bare /shop alias", () => {
     expect(resolveLegacyPath("/shop/guitars/electric")).toBe("/category/guitars");
   });

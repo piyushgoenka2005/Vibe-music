@@ -104,7 +104,7 @@ test.describe("viewport responsive smoke", () => {
     await assertNoHorizontalOverflow(page, "search overlay");
 
     await page.goto("/search", { waitUntil: "domcontentloaded" });
-    const landingInput = page.locator("#sw-search-landing-input");
+    const landingInput = page.getByRole("combobox", { name: /Search Vibe Music for/i }).first();
     await expect(landingInput).toBeVisible({ timeout: 10_000 });
     await landingInput.fill("drums");
     await page.waitForTimeout(500);
