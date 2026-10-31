@@ -113,7 +113,12 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
   });
 
   if (isLoading) return <LoadingState />;
-  if (isError) {
+
+  const categories = data?.categories ?? [];
+
+  // Only show ErrorState when there is an actual fetch failure AND we have no data at all.
+  // An empty list (0 categories) is a valid state — show the empty-state UI instead.
+  if (isError && !data) {
     return (
       <ErrorState
         message={error instanceof Error ? error.message : "Unable to load categories."}
@@ -122,8 +127,6 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
       />
     );
   }
-
-  const categories = data?.categories ?? [];
   const mainCategories = categories.filter((c) => !c.parentId);
   const subCategories = categories.filter((c) => Boolean(c.parentId));
 

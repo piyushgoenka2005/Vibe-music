@@ -275,10 +275,24 @@ async function resolveCategories(
     return resolved.slice(0, section.maxItems);
   }
 
-  const featured = categories.filter((category) => category.isFeatured && !category.parentId);
+  // Support both featured parent and child categories, preventing duplicates
+  const featured = categories.filter((category) => category.isFeatured);
   const pool = featured.length > 0 ? featured : categories.filter((category) => !category.parentId);
 
-  return pool
+  const seenSlugs = new Set<string>();
+  const seenNames = new Set<string>();
+  const uniquePool = pool.filter((category) => {
+    const normSlug = category.slug.toLowerCase().replace(/s$/, "");
+    const normName = category.name.toLowerCase().replace(/s$/, "");
+    if (seenSlugs.has(normSlug) || seenNames.has(normName)) {
+      return false;
+    }
+    seenSlugs.add(normSlug);
+    seenNames.add(normName);
+    return true;
+  });
+
+  return uniquePool
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
     .slice(0, section.maxItems)
     .map((category) => ({
@@ -409,9 +423,12 @@ async function resolveSection(
   ) {
     let categories = await resolveCategories(effectiveSection, items);
     if (categories.length === 0 && effectiveSection.sectionKey === "featured_categories") {
-      categories = getHomepagePopularCategoryItems(
-        effectiveSection.maxItems || HOMEPAGE_POPULAR_CATEGORY_COUNT,
-      );
+      const { isPostgresConfigured } = await import("@/lib/db/prisma");
+      if (!isPostgresConfigured()) {
+        categories = getHomepagePopularCategoryItems(
+          effectiveSection.maxItems || HOMEPAGE_POPULAR_CATEGORY_COUNT,
+        );
+      }
     }
     if (categories.length === 0) return null;
     return {

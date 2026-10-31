@@ -37,6 +37,8 @@ export async function revalidateHomepageSnapshot(): Promise<void> {
       await import("@/lib/server/storefront/storefrontPresentationCache");
     revalidateStorefrontPresentationCaches();
     revalidatePath("/admin/homepage");
+    // Also directly revalidate the homepage page so ISR serves fresh HTML on next request.
+    revalidatePath("/");
   } catch {
     /* ignore outside request context (scripts / tests) */
   }

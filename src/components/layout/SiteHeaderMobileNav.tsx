@@ -140,7 +140,9 @@ export default function SiteHeaderMobileNav({
 
   const effectiveCategoryMenus = useMemo(
     () =>
-      categoryMegaMenus && categoryMegaMenus.length > 0 ? categoryMegaMenus : HEADER_MEGA_MENUS,
+      categoryMegaMenus !== null && categoryMegaMenus !== undefined
+        ? categoryMegaMenus
+        : HEADER_MEGA_MENUS,
     [categoryMegaMenus],
   );
   const { isAuthenticated, isInitialized } = useAuthStore(

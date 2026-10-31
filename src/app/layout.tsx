@@ -37,6 +37,9 @@ import "@/styles/page-load-splash.css";
 
 export const metadata: Metadata = DEFAULT_METADATA;
 
+/** Revalidate root layout (header navigation, brands mega-menu, policies) every 30s or on-demand via revalidatePath('/', 'layout'). */
+export const revalidate = 30;
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,

@@ -10,7 +10,11 @@ export async function GET(request: Request) {
     if (rl) return rl;
 
     const data = await listReels();
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      },
+    });
   } catch (error) {
     return publicApiError(error, "Unable to load gear stories");
   }

@@ -8,6 +8,18 @@ export const ALL_PERMISSIONS: Permission[] = [
   "categories:read",
   "categories:write",
   "categories:delete",
+  "deals:read",
+  "deals:write",
+  "deals:delete",
+  "programs:read",
+  "programs:write",
+  "programs:delete",
+  "guides:read",
+  "guides:write",
+  "guides:delete",
+  "brands:read",
+  "brands:write",
+  "brands:delete",
   "orders:read",
   "orders:write",
   "orders:refund",
@@ -43,11 +55,7 @@ export const ALL_PERMISSIONS: Permission[] = [
   "compare:read",
 ];
 
-export const EDITABLE_ADMIN_ROLES: AdminRole[] = [
-  "admin",
-  "inventory_manager",
-  "customer_support",
-];
+export const EDITABLE_ADMIN_ROLES: AdminRole[] = ["admin", "inventory_manager", "customer_support"];
 
 const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
   super_admin: [...ALL_PERMISSIONS],
@@ -59,6 +67,18 @@ const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     "categories:read",
     "categories:write",
     "categories:delete",
+    "deals:read",
+    "deals:write",
+    "deals:delete",
+    "programs:read",
+    "programs:write",
+    "programs:delete",
+    "guides:read",
+    "guides:write",
+    "guides:delete",
+    "brands:read",
+    "brands:write",
+    "brands:delete",
     "orders:read",
     "orders:write",
     "orders:refund",
@@ -125,24 +145,15 @@ export function getPermissionsForRole(role: AdminRole): Permission[] {
   return getDefaultPermissionsForRole(role);
 }
 
-export function hasPermission(
-  permissions: Permission[],
-  required: Permission
-): boolean {
+export function hasPermission(permissions: Permission[], required: Permission): boolean {
   return permissions.includes(required);
 }
 
-export function hasAnyPermission(
-  permissions: Permission[],
-  required: Permission[]
-): boolean {
+export function hasAnyPermission(permissions: Permission[], required: Permission[]): boolean {
   return required.some((p) => permissions.includes(p));
 }
 
-export function canAccessRoute(
-  permissions: Permission[],
-  routePermission: Permission
-): boolean {
+export function canAccessRoute(permissions: Permission[], routePermission: Permission): boolean {
   return hasPermission(permissions, routePermission);
 }
 

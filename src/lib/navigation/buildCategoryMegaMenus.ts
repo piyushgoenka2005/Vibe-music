@@ -9,10 +9,14 @@ import type { Category } from "@/types/category";
  */
 export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
   if (!categories || categories.length === 0) {
-    return HEADER_MEGA_MENUS;
+    return [];
   }
 
   const mainCategories = categories.filter((c) => !c.parentId);
+  if (mainCategories.length === 0) {
+    return [];
+  }
+
   const subCategoriesByParent = new Map<string, Category[]>();
 
   for (const cat of categories) {
@@ -30,33 +34,80 @@ export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
 
   const result: MegaMenuItem[] = [];
 
-  // Iterate over baseline menus to preserve curated order and imagery, enriching with DB subcategories
-  for (const baseline of HEADER_MEGA_MENUS) {
-    const dbMain = mainCategories.find(
-      (c) =>
-        c.slug === baseline.slug ||
-        c.id === baseline.slug ||
-        c.name.toLowerCase() === baseline.name.toLowerCase(),
+  // Iterate over DB main categories so that deleted categories are completely excluded from the header.
+  // Order follows DB sortOrder, then baseline position if available.
+  const sortedMainCategories = [...mainCategories].sort((a, b) => {
+    const aOrder = a.sortOrder ?? 0;
+    const bOrder = b.sortOrder ?? 0;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    const aBaseIdx = HEADER_MEGA_MENUS.findIndex((m) => m.slug === a.slug);
+    const bBaseIdx = HEADER_MEGA_MENUS.findIndex((m) => m.slug === b.slug);
+    if (aBaseIdx !== -1 && bBaseIdx !== -1) return aBaseIdx - bBaseIdx;
+    if (aBaseIdx !== -1) return -1;
+    if (bBaseIdx !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  for (const dbMain of sortedMainCategories) {
+    const baseline = HEADER_MEGA_MENUS.find(
+      (m) =>
+        m.slug === dbMain.slug ||
+        m.slug === dbMain.id ||
+        m.name.toLowerCase() === dbMain.name.toLowerCase(),
     );
 
-    if (!dbMain) {
-      result.push(baseline);
-      continue;
-    }
-
     const dbSubs = subCategoriesByParent.get(dbMain.id) ?? [];
-    if (dbSubs.length === 0) {
+    const sortedDbSubs = [...dbSubs].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name),
+    );
+
+    if (!baseline) {
+      // Custom category in DB not in baseline: chunk subcategories into columns
+      const chunkSize = 5;
+      const customColumns: MegaMenuColumn[] = [];
+      if (sortedDbSubs.length > 0) {
+        for (let i = 0; i < sortedDbSubs.length; i += chunkSize) {
+          const chunk = sortedDbSubs.slice(i, i + chunkSize);
+          customColumns.push({
+            heading: i === 0 ? "Categories" : "More",
+            links: chunk.map((s) => ({
+              label: s.name,
+              href: categoryPath(s.slug),
+            })),
+          });
+        }
+      } else {
+        customColumns.push({
+          heading: dbMain.name,
+          links: [{ label: `Shop all ${dbMain.name}`, href: categoryPath(dbMain.slug) }],
+        });
+      }
+
       result.push({
-        ...baseline,
-        name: dbMain.name || baseline.name,
+        slug: dbMain.slug,
+        name: dbMain.name,
+        href: categoryPath(dbMain.slug),
+        columns: customColumns,
+        featured: [
+          {
+            title: dbMain.name,
+            href: categoryPath(dbMain.slug),
+            image: dbMain.imageUrl || "/images/m/home/cats/thumbs/Arrow-small.webp",
+          },
+        ],
       });
       continue;
     }
 
-    // Sort DB subcategories by sortOrder then name
-    const sortedDbSubs = [...dbSubs].sort(
-      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name),
-    );
+    // Baseline exists for this DB category
+    if (sortedDbSubs.length === 0) {
+      result.push({
+        ...baseline,
+        name: dbMain.name || baseline.name,
+        href: categoryPath(dbMain.slug),
+      });
+      continue;
+    }
 
     // Deep clone baseline columns so we can enrich them
     const columns: MegaMenuColumn[] = baseline.columns.map((col) => ({
@@ -69,7 +120,6 @@ export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
 
     for (const col of columns) {
       col.links = col.links.map((link) => {
-        // Check if this link corresponds to a subcategory in DB
         const match = sortedDbSubs.find(
           (sub) =>
             sub.name.toLowerCase() === link.label.toLowerCase() ||
@@ -87,7 +137,24 @@ export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
       });
     }
 
-    // Any DB subcategories that didn't match existing static links get added
+    // Check if any subcategory matches a column heading directly (e.g. "Electric", "Acoustic")
+    for (const sub of sortedDbSubs) {
+      if (matchedSubIds.has(sub.id)) continue;
+      const targetCol = columns.find(
+        (col) =>
+          col.heading.toLowerCase().includes(sub.name.toLowerCase()) ||
+          sub.name.toLowerCase().includes(col.heading.toLowerCase()),
+      );
+      if (targetCol) {
+        matchedSubIds.add(sub.id);
+        targetCol.links.unshift({
+          label: sub.name,
+          href: categoryPath(sub.slug),
+        });
+      }
+    }
+
+    // Any DB subcategories that didn't match existing static links get added to the last column
     const unmatchedSubs = sortedDbSubs.filter((sub) => !matchedSubIds.has(sub.id));
     if (unmatchedSubs.length > 0) {
       const targetCol = columns[columns.length - 1];
@@ -104,46 +171,8 @@ export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
     result.push({
       ...baseline,
       name: dbMain.name || baseline.name,
+      href: categoryPath(dbMain.slug),
       columns,
-    });
-  }
-
-  // Also include any newly created main categories in DB that are not in baseline
-  for (const mainCat of mainCategories) {
-    if (baselineBySlug.has(mainCat.slug)) continue;
-    const subs = subCategoriesByParent.get(mainCat.id) ?? [];
-    if (subs.length === 0) continue;
-
-    const sortedSubs = [...subs].sort(
-      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name),
-    );
-
-    // Group into columns of max 5 links
-    const chunkSize = 5;
-    const customColumns: MegaMenuColumn[] = [];
-    for (let i = 0; i < sortedSubs.length; i += chunkSize) {
-      const chunk = sortedSubs.slice(i, i + chunkSize);
-      customColumns.push({
-        heading: i === 0 ? "Categories" : "More",
-        links: chunk.map((s) => ({
-          label: s.name,
-          href: categoryPath(s.slug),
-        })),
-      });
-    }
-
-    result.push({
-      slug: mainCat.slug,
-      name: mainCat.name,
-      href: categoryPath(mainCat.slug),
-      columns: customColumns,
-      featured: [
-        {
-          title: mainCat.name,
-          href: categoryPath(mainCat.slug),
-          image: mainCat.imageUrl || "/images/m/home/cats/thumbs/Arrow-small.webp",
-        },
-      ],
     });
   }
 

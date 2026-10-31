@@ -14,6 +14,7 @@ export function revalidateStorefrontPresentationCaches(): void {
     "gear-stories",
   ]);
   try {
+    revalidatePath("/", "layout"); // root layout — refreshes header category nav, brands
     revalidatePath("/");
     revalidatePath("/", "page");
     revalidatePath("/category", "layout");
