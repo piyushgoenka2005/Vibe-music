@@ -115,7 +115,7 @@ export const adminCategorySchema = z.object({
   slug: z.string().min(1).max(255).optional(),
   description: z.string().optional(),
   parentId: z.string().nullable().optional(),
-  imageUrl: z.string().url().optional().or(z.literal("")),
+  imageUrl: z.string().optional().or(z.literal("")),
   isFeatured: z.boolean().optional(),
   sortOrder: z.number().optional(),
   metaTitle: z.string().optional(),

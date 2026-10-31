@@ -176,7 +176,7 @@ export function adminErrorResponse(error: unknown, request?: Request): NextRespo
         lower.includes("duplicate") ||
         lower.includes("not found") ||
         lower.includes("safety limit") ||
-        lower.includes("cannot be") ||
+        lower.includes("cannot ") ||
         lower.includes("not allowed") ||
         lower.includes("is required") ||
         lower.includes("are required") ||

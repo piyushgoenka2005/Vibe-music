@@ -275,8 +275,10 @@ async function resolveCategories(
     return resolved.slice(0, section.maxItems);
   }
 
-  return categories
-    .filter((category) => category.isFeatured)
+  const featured = categories.filter((category) => category.isFeatured && !category.parentId);
+  const pool = featured.length > 0 ? featured : categories.filter((category) => !category.parentId);
+
+  return pool
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
     .slice(0, section.maxItems)
     .map((category) => ({

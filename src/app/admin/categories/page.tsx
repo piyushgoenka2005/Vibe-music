@@ -4,8 +4,13 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
-import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
-import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
+import { LoadingState } from "@/components/admin/AdminUi";
+import {
+  ErrorState,
+  MutationError,
+  adminFetchJson,
+  adminMutateJson,
+} from "@/components/admin/AdminQueryState";
 import type { AdminCategory } from "@/types/admin";
 
 type CategoryForm = {
@@ -38,6 +43,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
   const [filterType, setFilterType] = useState<"all" | "main" | "sub">("all");
   const [form, setForm] = useState<CategoryForm>(EMPTY_FORM);
   const [editId, setEditId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-categories"],
@@ -70,11 +76,31 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
     },
   });
 
+  const toggleFeaturedMutation = useMutation({
+    mutationFn: async ({ id, isFeatured }: { id: string; isFeatured: boolean }) => {
+      await adminMutateJson(`/api/admin/categories/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFeatured }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await adminMutateJson(`/api/admin/categories/${id}`, { method: "DELETE" });
+      setDeletingId(id);
+      try {
+        await adminMutateJson(`/api/admin/categories/${id}`, { method: "DELETE" });
+      } finally {
+        setDeletingId(null);
+      }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-categories"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
   });
 
   const seedMutation = useMutation({
@@ -107,6 +133,26 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
   const getParentName = (parentId: string | null | undefined) => {
     if (!parentId) return null;
     return categories.find((c) => c.id === parentId)?.name ?? "Parent";
+  };
+
+  const handleDelete = (cat: AdminCategory) => {
+    const isParent = categories.some((c) => c.parentId === cat.id);
+    const message = isParent
+      ? `Are you sure you want to delete "${cat.name}" and all of its subcategories? This cannot be undone.`
+      : `Are you sure you want to delete "${cat.name}"? This cannot be undone.`;
+
+    if (window.confirm(message)) {
+      deleteMutation.mutate(cat.id);
+    }
+  };
+
+  const handleAddSubcategory = (parentId: string) => {
+    setEditId(null);
+    setForm({
+      ...EMPTY_FORM,
+      parentId,
+    });
+    setShowForm(true);
   };
 
   return (
@@ -171,8 +217,22 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
         ) : null}
       </div>
 
+      {deleteMutation.isError ? (
+        <div
+          className="admin-panel"
+          style={{ marginBottom: "1rem", borderColor: "var(--color-danger, #ef4444)" }}
+        >
+          <div className="admin-panel__body">
+            <MutationError error={deleteMutation.error} fallback="Failed to delete category." />
+          </div>
+        </div>
+      ) : null}
+
       {showForm ? (
         <div className="admin-panel" style={{ marginBottom: "1rem" }}>
+          <div className="admin-panel__header">
+            <h3>{editId ? "Edit Category" : "Add Category / Subcategory"}</h3>
+          </div>
           <div className="admin-panel__body">
             <div className="admin-form-grid">
               <div className="admin-form-group">
@@ -182,7 +242,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                   style={{ width: "100%" }}
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. Guitars or Electric Guitars"
+                  placeholder="e.g. Guitars or Electric Guitar"
                   required
                 />
               </div>
@@ -194,7 +254,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                   style={{ width: "100%" }}
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                  placeholder="Leave empty to auto-generate"
+                  placeholder="Leave empty to auto-generate from name"
                 />
               </div>
 
@@ -224,7 +284,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                   style={{ width: "100%" }}
                   value={form.imageUrl}
                   onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                  placeholder="https://…"
+                  placeholder="https://… or /images/…"
                 />
               </div>
 
@@ -239,14 +299,24 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                 />
               </div>
 
-              <div className="admin-form-group">
-                <label>
+              <div
+                className="admin-form-group"
+                style={{ display: "flex", alignItems: "center", paddingTop: "1.5rem" }}
+              >
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    cursor: "pointer",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={form.isFeatured}
                     onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
-                  />{" "}
-                  Featured
+                  />
+                  <span>Featured (Display in Popular Categories on homepage)</span>
                 </label>
               </div>
 
@@ -279,19 +349,33 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                 />
               </div>
             </div>
+
+            <MutationError error={saveMutation.error} fallback="Failed to save category." />
+
             <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
               <button
                 type="button"
                 className="admin-btn admin-btn--primary"
                 onClick={() => saveMutation.mutate()}
-                disabled={!form.name.trim()}
+                disabled={!form.name.trim() || saveMutation.isPending}
               >
-                {editId ? "Update" : "Create"}
+                {saveMutation.isPending
+                  ? editId
+                    ? "Updating…"
+                    : "Creating…"
+                  : editId
+                    ? "Update Category"
+                    : "Create Category"}
               </button>
               <button
                 type="button"
                 className="admin-btn admin-btn--secondary"
-                onClick={() => setShowForm(false)}
+                disabled={saveMutation.isPending}
+                onClick={() => {
+                  setShowForm(false);
+                  setEditId(null);
+                  setForm(EMPTY_FORM);
+                }}
               >
                 Cancel
               </button>
@@ -348,6 +432,9 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
               <tbody>
                 {filteredCategories.map((cat) => {
                   const parentName = getParentName(cat.parentId);
+                  const isMain = !cat.parentId;
+                  const isDeleting = deletingId === cat.id;
+
                   return (
                     <tr key={cat.id}>
                       <td>
@@ -365,43 +452,77 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                       <td>
                         <code style={{ fontSize: "0.8rem" }}>{cat.slug}</code>
                       </td>
-                      <td>{cat.isFeatured ? "Yes" : "—"}</td>
-                      <td>{cat.productCount ?? 0}</td>
                       <td>
                         {canWrite ? (
                           <button
                             type="button"
-                            className="admin-btn admin-btn--ghost"
-                            style={{ padding: "0.25rem 0.5rem" }}
-                            onClick={() => {
-                              setEditId(cat.id);
-                              setForm({
-                                name: cat.name,
-                                slug: cat.slug,
-                                description: cat.description ?? "",
-                                parentId: cat.parentId ?? null,
-                                imageUrl: cat.imageUrl ?? "",
-                                isFeatured: cat.isFeatured ?? false,
-                                sortOrder: cat.sortOrder ?? 0,
-                                metaTitle: cat.metaTitle ?? "",
-                                metaDescription: cat.metaDescription ?? "",
-                              });
-                              setShowForm(true);
-                            }}
+                            className={`admin-btn ${cat.isFeatured ? "admin-btn--primary" : "admin-btn--secondary"}`}
+                            style={{ padding: "0.2rem 0.5rem", fontSize: "0.75rem" }}
+                            disabled={toggleFeaturedMutation.isPending}
+                            title="Click to toggle featured status on storefront"
+                            onClick={() =>
+                              toggleFeaturedMutation.mutate({
+                                id: cat.id,
+                                isFeatured: !cat.isFeatured,
+                              })
+                            }
                           >
-                            Edit
+                            {cat.isFeatured ? "★ Featured" : "☆ Standard"}
                           </button>
-                        ) : null}
-                        {canDelete ? (
-                          <button
-                            type="button"
-                            className="admin-btn admin-btn--danger"
-                            style={{ padding: "0.25rem 0.5rem" }}
-                            onClick={() => deleteMutation.mutate(cat.id)}
-                          >
-                            Delete
-                          </button>
-                        ) : null}
+                        ) : (
+                          <span>{cat.isFeatured ? "Yes" : "—"}</span>
+                        )}
+                      </td>
+                      <td>{cat.productCount ?? 0}</td>
+                      <td>
+                        <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+                          {canWrite && isMain ? (
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--secondary"
+                              style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
+                              title={`Add subcategory under ${cat.name}`}
+                              onClick={() => handleAddSubcategory(cat.id)}
+                            >
+                              + Subcategory
+                            </button>
+                          ) : null}
+                          {canWrite ? (
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--ghost"
+                              style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
+                              onClick={() => {
+                                setEditId(cat.id);
+                                setForm({
+                                  name: cat.name,
+                                  slug: cat.slug,
+                                  description: cat.description ?? "",
+                                  parentId: cat.parentId ?? null,
+                                  imageUrl: cat.imageUrl ?? "",
+                                  isFeatured: cat.isFeatured ?? false,
+                                  sortOrder: cat.sortOrder ?? 0,
+                                  metaTitle: cat.metaTitle ?? "",
+                                  metaDescription: cat.metaDescription ?? "",
+                                });
+                                setShowForm(true);
+                              }}
+                            >
+                              Edit
+                            </button>
+                          ) : null}
+                          {canDelete ? (
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--danger"
+                              style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
+                              disabled={isDeleting || deleteMutation.isPending}
+                              onClick={() => handleDelete(cat)}
+                            >
+                              {isDeleting ? "Deleting…" : "Delete"}
+                            </button>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   );

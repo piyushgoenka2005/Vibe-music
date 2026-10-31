@@ -4,14 +4,14 @@ import {
   getCategoryById,
   updateCategory,
   deleteCategory,
-} from "@/lib/server/categoryRepository";
+} from "@/lib/server/catalog/categoryRepository";
 import { adminCategorySchema } from "@/lib/validations/admin";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("categories:read");
+    await requireAdmin("categories:read", request);
     const { id } = await context.params;
     const category = await getCategoryById(id);
     if (!category) {
@@ -19,7 +19,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     return NextResponse.json({ category });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }
 
@@ -32,17 +32,17 @@ export async function PUT(request: Request, context: RouteContext) {
     const category = await updateCategory(id, parsed);
     return NextResponse.json({ category });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
-    await requireAdmin("categories:delete", _request);
+    await requireAdmin("categories:delete", request);
     const { id } = await context.params;
     await deleteCategory(id);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }

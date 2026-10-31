@@ -180,6 +180,7 @@ export function prismaToCategory(row: {
   name: string;
   slug: string;
   description: string | null;
+  parentId?: string | null;
   imageUrl: string | null;
   isFeatured: boolean;
   sortOrder: number;
@@ -189,6 +190,7 @@ export function prismaToCategory(row: {
     name: row.name,
     slug: row.slug,
     description: row.description ?? undefined,
+    parentId: row.parentId ?? null,
     imageUrl: row.imageUrl ?? undefined,
     isFeatured: row.isFeatured,
     sortOrder: row.sortOrder,

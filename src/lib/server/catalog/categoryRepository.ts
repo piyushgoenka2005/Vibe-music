@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
 import { invalidateCatalogCache } from "@/lib/server/storeCatalogRepository";
+import { invalidateAllStorefrontCaches } from "@/lib/server/storefront/storefrontCacheInvalidation";
 import { categoryToPrisma } from "@/lib/server/prisma/mappers";
 import { slugify } from "@/lib/slug";
 import type { AdminCategory } from "@/types/admin";
@@ -151,6 +152,11 @@ export async function createCategory(
   });
 
   invalidateCatalogCache();
+  try {
+    invalidateAllStorefrontCaches();
+  } catch {
+    /* outside request scope */
+  }
   return record;
 }
 
@@ -183,16 +189,33 @@ export async function updateCategory(
   });
 
   invalidateCatalogCache();
+  try {
+    invalidateAllStorefrontCaches();
+  } catch {
+    /* outside request scope */
+  }
   const updated = await getCategoryById(id);
   if (!updated) throw new Error("Category not found after update");
   return updated;
 }
 
 export async function deleteCategory(id: string): Promise<void> {
-  const children = await prisma.category.count({ where: { parentId: id } });
-  if (children > 0) {
-    throw new Error("Cannot delete category with subcategories");
-  }
+  const category = await prisma.category.findUnique({ where: { id } });
+  if (!category) return;
+
+  // Clean up any subcategories belonging to this parent so deletion never fails with foreign/orphan errors
+  await prisma.category.deleteMany({ where: { parentId: id } });
+
+  // Clean up any homepage section item pointing to this category slug
+  await prisma.homepageSectionItem.deleteMany({
+    where: { categorySlug: category.slug },
+  });
+
   await prisma.category.delete({ where: { id } });
   invalidateCatalogCache();
+  try {
+    invalidateAllStorefrontCaches();
+  } catch {
+    /* outside request scope */
+  }
 }

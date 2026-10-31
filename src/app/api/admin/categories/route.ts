@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
-import {
-  listCategories,
-  createCategory,
-} from "@/lib/server/categoryRepository";
+import { listCategories, createCategory } from "@/lib/server/catalog/categoryRepository";
 import { adminCategorySchema } from "@/lib/validations/admin";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    await requireAdmin("categories:read");
+    await requireAdmin("categories:read", request);
     const categories = await listCategories();
     return NextResponse.json({ categories });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }
 
@@ -28,6 +25,6 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ category }, { status: 201 });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }
