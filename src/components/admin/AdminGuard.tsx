@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminShell from "@/components/admin/AdminShell";
 import { useAdminSessionBootstrap } from "@/components/admin/AdminSessionBootstrap";
 import { canAccessAdminPath } from "@/lib/auth/admin-route-permissions";
@@ -63,14 +63,15 @@ export function useAdminSession() {
     queryKey: ["admin-session"],
     queryFn: fetchAdminSession,
     retry: false,
-    staleTime: 10 * 60_000,
+    staleTime: 60_000,
     gcTime: 60 * 60_000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    // Server layout or sessionStorage already resolved the session — paint immediately with zero delay
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    // Server layout or sessionStorage already resolved the session — paint immediately with zero delay,
+    // but still validate with /api/admin/me in the background so expired cookies are detected cleanly.
     initialData: cached ?? undefined,
-    initialDataUpdatedAt: cached ? Number.MAX_SAFE_INTEGER : undefined,
+    initialDataUpdatedAt: cached ? 0 : undefined,
   });
 }
 
@@ -81,6 +82,7 @@ interface AdminGuardProps {
 export default function AdminGuard({ children }: AdminGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const { data: admin, isLoading, isError, isFetched } = useAdminSession();
 
   useEffect(() => {
@@ -94,11 +96,12 @@ export default function AdminGuard({ children }: AdminGuardProps) {
   useEffect(() => {
     const handleUnauthorized = () => {
       setCachedAdminSession(null);
+      queryClient.setQueryData(["admin-session"], null);
       router.replace(`${ROUTES.adminLogin}?redirect=${encodeURIComponent(pathname)}`);
     };
     window.addEventListener("vibe:admin:unauthorized", handleUnauthorized);
     return () => window.removeEventListener("vibe:admin:unauthorized", handleUnauthorized);
-  }, [pathname, router]);
+  }, [pathname, router, queryClient]);
 
   if (isLoading && !admin) {
     return (

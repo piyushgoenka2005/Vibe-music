@@ -19,6 +19,6 @@ export async function POST(request: Request) {
     await invalidatePublicHomepageCacheAsync();
     return NextResponse.json({ items });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }

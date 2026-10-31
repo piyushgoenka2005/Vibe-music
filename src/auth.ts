@@ -208,7 +208,7 @@ export const authConfig = {
     async jwt({ token, user, account, trigger, session }) {
       if (user) {
         token.uid = user.id;
-        const rememberMe = user.rememberMe ?? false;
+        const rememberMe = user.rememberMe ?? true;
         const maxAge = resolveSessionMaxAgeSeconds(rememberMe);
         token.exp = Math.floor(Date.now() / 1000) + maxAge;
 
@@ -216,6 +216,13 @@ export const authConfig = {
         if (typeof user.isAdmin === "boolean") {
           token.isAdmin = user.isAdmin;
           token.adminRole = user.adminRole;
+        }
+      } else if (typeof token.exp === "number") {
+        // Sliding window: extend active sessions when within 15 days of expiry
+        const nowSec = Math.floor(Date.now() / 1000);
+        const remaining = token.exp - nowSec;
+        if (remaining > 0 && remaining < 60 * 60 * 24 * 15) {
+          token.exp = nowSec + AUTH_SESSION_REMEMBER_MAX_AGE_SECONDS;
         }
       }
 

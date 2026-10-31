@@ -18,6 +18,6 @@ export async function PUT(request: Request, { params }: RouteParams) {
     await invalidatePublicHomepageCacheAsync();
     return NextResponse.json({ section });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }

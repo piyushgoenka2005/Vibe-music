@@ -80,7 +80,7 @@ export async function authenticateAdminFastLogin(
     }
   }
 
-  const rememberMe = Boolean(input.rememberMe);
+  const rememberMe = input.rememberMe !== false;
   const maxAge = resolveSessionMaxAgeSeconds(rememberMe);
   const nowSec = Math.floor(Date.now() / 1000);
   const secure = shouldUseSecureCookies(request);

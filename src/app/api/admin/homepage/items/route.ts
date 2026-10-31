@@ -25,6 +25,6 @@ export async function POST(request: Request) {
     await invalidatePublicHomepageCacheAsync();
     return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
-    return adminErrorResponse(error);
+    return adminErrorResponse(error, request);
   }
 }

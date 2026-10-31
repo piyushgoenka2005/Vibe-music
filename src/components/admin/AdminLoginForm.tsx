@@ -56,6 +56,7 @@ export default function AdminLoginForm() {
           email: values.email,
           password: values.password,
           totp: totpCode.trim() || undefined,
+          rememberMe: true,
         }),
       });
 

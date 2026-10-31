@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -106,6 +107,7 @@ function itemLabel(item: HomepageSectionItem, productNames: Map<string, string>)
 }
 
 function HomepageContent({ canWrite }: { canWrite: boolean }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [activeKey, setActiveKey] = useState<HomepageSectionKey>("new_arrivals");
   const [sectionForm, setSectionForm] = useState<Partial<HomepageSection>>({});
@@ -464,9 +466,40 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
       </div>
 
       {formError ? (
-        <p style={{ color: "#c41e3a", marginBottom: 12 }} role="alert">
-          {formError}
-        </p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "0.75rem",
+            background: "rgba(239, 68, 68, 0.12)",
+            border: "1px solid rgba(239, 68, 68, 0.35)",
+            borderRadius: "6px",
+            padding: "0.75rem 1rem",
+            marginBottom: 16,
+            color: "#ef4444",
+          }}
+          role="alert"
+        >
+          <span>{formError}</span>
+          {formError.toLowerCase().includes("auth") ||
+          formError.toLowerCase().includes("session") ? (
+            <button
+              type="button"
+              className="admin-btn admin-btn--primary"
+              style={{ fontSize: "0.8rem", padding: "0.3rem 0.75rem", whiteSpace: "nowrap" }}
+              onClick={() => {
+                sessionStorage.removeItem("vibe_admin_session");
+                router.push(
+                  `/admin/login?redirect=${encodeURIComponent(window.location.pathname)}`,
+                );
+              }}
+            >
+              Sign in again
+            </button>
+          ) : null}
+        </div>
       ) : null}
       {saveNotice ? (
         <p style={{ color: "#0a7a3e", marginBottom: 12 }} role="status">
