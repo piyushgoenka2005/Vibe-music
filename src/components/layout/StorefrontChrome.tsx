@@ -50,11 +50,13 @@ export default function StorefrontChrome({
   legal,
   shippingAnnouncement,
   brandsMegaMenu = null,
+  categoryMegaMenus = null,
 }: {
   children: React.ReactNode;
   legal: PublicLegalInfo;
   shippingAnnouncement?: string;
   brandsMegaMenu?: MegaMenuItem | null;
+  categoryMegaMenus?: MegaMenuItem[] | null;
 }) {
   const pathname = usePathname() ?? "";
   const hideChrome = pathname.startsWith("/admin") || pathname.startsWith("/gp9");
@@ -142,7 +144,11 @@ export default function StorefrontChrome({
     <div className={shellClassName}>
       <GlassFilter />
       <SkipToContent />
-      <SiteHeader shippingAnnouncement={shippingAnnouncement} brandsMegaMenu={brandsMegaMenu} />
+      <SiteHeader
+        shippingAnnouncement={shippingAnnouncement}
+        brandsMegaMenu={brandsMegaMenu}
+        categoryMegaMenus={categoryMegaMenus}
+      />
       <div className="storefront-main" id="main-content" tabIndex={-1}>
         {children}
       </div>

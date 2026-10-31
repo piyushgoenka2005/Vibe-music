@@ -12,6 +12,7 @@ interface SiteHeaderMobileDrawerProps {
   onClose: () => void;
   onNavigate?: () => void;
   brandsMegaMenu?: MegaMenuItem | null;
+  categoryMegaMenus?: MegaMenuItem[] | null;
 }
 
 export default function SiteHeaderMobileDrawer({
@@ -19,6 +20,7 @@ export default function SiteHeaderMobileDrawer({
   onClose,
   onNavigate,
   brandsMegaMenu = null,
+  categoryMegaMenus = null,
 }: SiteHeaderMobileDrawerProps) {
   const isClient = useIsClient();
   const navRef = useDialogA11y(open, onClose);
@@ -42,7 +44,11 @@ export default function SiteHeaderMobileDrawer({
         aria-modal="true"
       >
         <Suspense fallback={null}>
-          <SiteHeaderMobileNav onNavigate={onNavigate} brandsMegaMenu={brandsMegaMenu} />
+          <SiteHeaderMobileNav
+            onNavigate={onNavigate}
+            brandsMegaMenu={brandsMegaMenu}
+            categoryMegaMenus={categoryMegaMenus}
+          />
         </Suspense>
       </nav>
     </>,

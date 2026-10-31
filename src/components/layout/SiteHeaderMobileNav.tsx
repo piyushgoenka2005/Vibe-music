@@ -37,6 +37,7 @@ const MOBILE_EXTRA_LINKS = [
 interface SiteHeaderMobileNavProps {
   onNavigate?: () => void;
   brandsMegaMenu?: MegaMenuItem | null;
+  categoryMegaMenus?: MegaMenuItem[] | null;
 }
 
 function renderMegaMenuGroup(
@@ -130,11 +131,18 @@ function renderMegaMenuGroup(
 export default function SiteHeaderMobileNav({
   onNavigate,
   brandsMegaMenu = null,
+  categoryMegaMenus = null,
 }: SiteHeaderMobileNavProps) {
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const searchCategory = searchParams.get("category");
   const searchQuery = searchParams.get("q");
+
+  const effectiveCategoryMenus = useMemo(
+    () =>
+      categoryMegaMenus && categoryMegaMenus.length > 0 ? categoryMegaMenus : HEADER_MEGA_MENUS,
+    [categoryMegaMenus],
+  );
   const { isAuthenticated, isInitialized } = useAuthStore(
     useShallow((state) => ({
       isAuthenticated: state.isAuthenticated,
@@ -177,7 +185,7 @@ export default function SiteHeaderMobileNav({
             })
           : null}
 
-        {HEADER_MEGA_MENUS.map((menu) =>
+        {effectiveCategoryMenus.map((menu) =>
           renderMegaMenuGroup(menu, {
             expandedSlug,
             pathname,

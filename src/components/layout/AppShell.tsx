@@ -31,11 +31,13 @@ export default function AppShell({
   legal,
   shippingAnnouncement,
   brandsMegaMenu = null,
+  categoryMegaMenus = null,
 }: {
   children: React.ReactNode;
   legal: PublicLegalInfo;
   shippingAnnouncement?: string;
   brandsMegaMenu?: MegaMenuItem | null;
+  categoryMegaMenus?: MegaMenuItem[] | null;
 }) {
   const pathname = usePathname() ?? "";
   const isAdmin = pathname.startsWith("/admin");
@@ -70,6 +72,7 @@ export default function AppShell({
             legal={legal}
             shippingAnnouncement={shippingAnnouncement}
             brandsMegaMenu={brandsMegaMenu}
+            categoryMegaMenus={categoryMegaMenus}
           >
             <DeferredHtmlLinkInterceptor />
             <DeferredGlobalSearch />

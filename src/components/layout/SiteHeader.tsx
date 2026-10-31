@@ -26,11 +26,13 @@ import type { MegaMenuItem } from "@/data/headerMegaMenu";
 interface SiteHeaderProps {
   shippingAnnouncement?: string;
   brandsMegaMenu?: MegaMenuItem | null;
+  categoryMegaMenus?: MegaMenuItem[] | null;
 }
 
 export default function SiteHeader({
   shippingAnnouncement,
   brandsMegaMenu = null,
+  categoryMegaMenus = null,
 }: SiteHeaderProps) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
@@ -302,6 +304,7 @@ export default function SiteHeader({
       <Suspense fallback={null}>
         <SiteHeaderNav
           brandsMegaMenu={brandsMegaMenu}
+          categoryMegaMenus={categoryMegaMenus}
           onMegaMenuOpenChange={handleMegaMenuOpenChange}
         />
       </Suspense>
@@ -311,6 +314,7 @@ export default function SiteHeader({
         onClose={() => setMobileOpen(false)}
         onNavigate={() => setMobileOpen(false)}
         brandsMegaMenu={brandsMegaMenu}
+        categoryMegaMenus={categoryMegaMenus}
       />
 
       {/* Mobile nav account states (legacy CSS hooks) */}

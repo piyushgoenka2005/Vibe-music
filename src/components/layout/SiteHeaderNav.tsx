@@ -11,6 +11,7 @@ import HeaderMegaMenu from "@/components/layout/HeaderMegaMenu";
 
 interface SiteHeaderNavProps {
   brandsMegaMenu?: MegaMenuItem | null;
+  categoryMegaMenus?: MegaMenuItem[] | null;
   onNavigate?: () => void;
   onMegaMenuOpenChange?: (open: boolean) => void;
 }
@@ -29,6 +30,7 @@ interface NavGooItem {
 
 export default function SiteHeaderNav({
   brandsMegaMenu = null,
+  categoryMegaMenus = null,
   onNavigate,
   onMegaMenuOpenChange,
 }: SiteHeaderNavProps) {
@@ -47,13 +49,22 @@ export default function SiteHeaderNav({
     [brandsMegaMenu],
   );
 
+  const effectiveCategoryMenus = useMemo(
+    () =>
+      categoryMegaMenus && categoryMegaMenus.length > 0 ? categoryMegaMenus : HEADER_MEGA_MENUS,
+    [categoryMegaMenus],
+  );
+
   const megaMenuBySlug = useMemo(() => {
     const menus = { ...MEGA_MENU_BY_SLUG };
+    for (const menu of effectiveCategoryMenus) {
+      menus[menu.slug] = menu;
+    }
     if (resolvedBrandsMegaMenu) {
       menus[BRANDS_MEGA_MENU_SLUG] = resolvedBrandsMegaMenu;
     }
     return menus;
-  }, [resolvedBrandsMegaMenu]);
+  }, [effectiveCategoryMenus, resolvedBrandsMegaMenu]);
 
   const navItems: NavGooItem[] = useMemo(
     () => [
@@ -63,7 +74,7 @@ export default function SiteHeaderNav({
         href: ROUTES.brands,
         slug: resolvedBrandsMegaMenu ? BRANDS_MEGA_MENU_SLUG : undefined,
       },
-      ...HEADER_MEGA_MENUS.map((menu) => ({
+      ...effectiveCategoryMenus.map((menu) => ({
         key: menu.slug,
         label: menu.name,
         href: menu.href,
@@ -90,7 +101,7 @@ export default function SiteHeaderNav({
         href: ROUTES.gp9,
       },
     ],
-    [resolvedBrandsMegaMenu],
+    [effectiveCategoryMenus, resolvedBrandsMegaMenu],
   );
 
   const resolvedNavItems = useMemo(
