@@ -202,23 +202,45 @@ async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
 
 export async function listCategories(): Promise<AdminCategory[]> {
   if (!isPostgresConfigured()) {
+    console.debug("[categoryRepository] PostgreSQL not configured, using static categories");
     return staticCategories();
   }
 
   try {
     const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+
+    // If database is empty (e.g., after deletion), seed from static data
     if (rows.length === 0) {
+      console.debug(
+        "[categoryRepository] No categories in database, attempting to seed from static data...",
+      );
       try {
-        return await seedCategoriesFromStatic();
+        const seededCategories = await seedCategoriesFromStatic();
+        console.debug(
+          "[categoryRepository] Successfully seeded",
+          seededCategories.length,
+          "categories from static data",
+        );
+        return seededCategories;
       } catch (seedErr) {
-        console.error("[categoryRepository] Failed to seed categories from static data:", seedErr);
+        console.error(
+          "[categoryRepository] Failed to seed categories from static data, falling back to in-memory static categories:",
+          seedErr instanceof Error ? seedErr.message : String(seedErr),
+        );
         // If seeding fails, fall back to static categories without DB persistence
         return staticCategories();
       }
     }
+
+    // Return categories from database
+    console.debug("[categoryRepository] Returning", rows.length, "categories from database");
     return rows.map(mapAdminCategory);
   } catch (err) {
-    console.error("[categoryRepository] Failed to list categories from database:", err);
+    console.error(
+      "[categoryRepository] Failed to list categories from database, falling back to in-memory static categories:",
+      err instanceof Error ? err.message : String(err),
+    );
+    // Ultimate fallback: return in-memory static categories
     return staticCategories();
   }
 }

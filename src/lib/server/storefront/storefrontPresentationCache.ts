@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { expireStorefrontTags, purgeNginxPageCache } from "./storefrontCacheInvalidation";
 
 /** Bust all Next.js data caches that affect the public homepage and catalog shell. */
-export function revalidateStorefrontPresentationCaches(): void {
+export async function revalidateStorefrontPresentationCaches(): Promise<void> {
   expireStorefrontTags([
     "homepage",
     "catalog",
@@ -39,5 +39,6 @@ export function revalidateStorefrontPresentationCaches(): void {
   } catch {
     /* ignore outside request context (CLI / workers) */
   }
-  void purgeNginxPageCache();
+  // Wait for nginx cache purge to complete (async operation)
+  await purgeNginxPageCache();
 }

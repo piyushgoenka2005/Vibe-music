@@ -35,7 +35,8 @@ export async function revalidateHomepageSnapshot(): Promise<void> {
   try {
     const { revalidateStorefrontPresentationCaches } =
       await import("@/lib/server/storefront/storefrontPresentationCache");
-    revalidateStorefrontPresentationCaches();
+    // revalidateStorefrontPresentationCaches is now async and properly awaited
+    await revalidateStorefrontPresentationCaches();
     revalidatePath("/admin/homepage");
     // Also directly revalidate the homepage page so ISR serves fresh HTML on next request.
     revalidatePath("/");
