@@ -64,7 +64,11 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     await requireAdmin("homepage:write", request);
     const { id } = await params;
 
-    const existing = await getSectionItemById(id);
+    // Verify item exists before deletion
+    const _existing = await getSectionItemById(id);
+    if (!_existing) {
+      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    }
 
     await deleteSectionItem(id);
 

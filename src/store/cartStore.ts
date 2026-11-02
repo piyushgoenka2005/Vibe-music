@@ -431,14 +431,12 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      reconcileAppliedCoupon: async (lineItems, options) => {
+      reconcileAppliedCoupon: async (lineItems, _options) => {
         const { couponCode, isApplyingCoupon } = get();
         if (!couponCode || isApplyingCoupon) return;
 
         const subtotal = lineItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
         if (subtotal <= 0) return;
-
-
 
         try {
           const cartItems = lineItems.map((item) => ({
