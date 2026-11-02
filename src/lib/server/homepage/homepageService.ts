@@ -408,6 +408,7 @@ function sectionDomId(sectionKey: HomepageSectionKey): string {
     brand_strip: "brand-strip",
     featured_stories: "featured-gear-stories",
     gear_stories: "gear-stories",
+    shop_the_highlights: "shop-the-highlights",
     social_rail: "social-rail",
   };
   return map[sectionKey];
@@ -856,3 +857,165 @@ export {
   updateSectionItem,
   invalidateHomepageCache,
 } from "@/lib/server/homepageRepository";
+
+/**
+ * Fetch shop_the_highlights section for storefront rendering.
+ * Returns database-driven manual products or static fallbacks.
+ */
+export async function getShopTheHighlightsPublicData(at = new Date()): Promise<{
+  isActive: boolean;
+  title: string;
+  subtitle?: string;
+  ctaText: string;
+  ctaLink: string;
+  products: HomepageProductItem[];
+}> {
+  const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
+    (section) => section.sectionKey === "shop_the_highlights",
+  );
+
+  try {
+    const [section, products, allItems] = await Promise.all([
+      getSectionByKey("shop_the_highlights"),
+      getCachedHomepageProducts(),
+      listAllSectionItems(),
+    ]);
+
+    const config = section ?? {
+      id: "shop_the_highlights",
+      sectionKey: "shop_the_highlights" as const,
+      title: defaults?.title ?? "Shop the Highlights",
+      subtitle: defaults?.subtitle,
+      accentLabel: defaults?.accentLabel,
+      ctaText: defaults?.ctaText ?? "Shop All Products",
+      ctaLink: defaults?.ctaLink ?? ROUTES.search,
+      isActive: defaults?.isActive ?? true,
+      sortOrder: defaults?.sortOrder ?? 3,
+      sourceMode: "manual" as const,
+      maxItems: 3,
+      layout: "product_grid" as const,
+      createdAt: at.toISOString(),
+      updatedAt: at.toISOString(),
+    };
+
+    if (!config.isActive) {
+      return {
+        isActive: false,
+        title: config.title,
+        subtitle: config.subtitle,
+        ctaText: config.ctaText ?? "Shop All Products",
+        ctaLink: config.ctaLink ?? ROUTES.search,
+        products: [],
+      };
+    }
+
+    const items = allItems
+      .filter(
+        (item) =>
+          item.sectionKey === "shop_the_highlights" &&
+          item.isActive &&
+          item.productId &&
+          isHomepageItemScheduledActive(item, at),
+      )
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .slice(0, 3); // Enforce hard limit of 3
+
+    const resolved = resolveManualProducts(items, products);
+
+    // Use static fallback if no items configured
+    const fallbackProducts: HomepageProductItem[] = [];
+    if (resolved.length === 0) {
+      const { HOMEPAGE_TOP_PRODUCTS } = await import("@/data/homepageTopProducts");
+      const staticMap = new Map(products.map((p) => [p.slug, p]));
+
+      for (const staticItem of HOMEPAGE_TOP_PRODUCTS) {
+        const catalogProduct = staticItem.productSlug
+          ? staticMap.get(staticItem.productSlug)
+          : null;
+        if (!catalogProduct) continue;
+
+        const item: HomepageSectionItem = {
+          id: staticItem.id,
+          sectionKey: "shop_the_highlights",
+          productId: catalogProduct.id,
+          categorySlug: undefined,
+          customTitle: staticItem.title,
+          customHref: staticItem.href,
+          customImage: staticItem.image,
+          badgeLabel: undefined,
+          offerText: undefined,
+          isActive: true,
+          sortOrder: 0,
+          startDate: undefined,
+          endDate: undefined,
+          createdAt: at.toISOString(),
+          updatedAt: at.toISOString(),
+        };
+
+        fallbackProducts.push(toProductItem(catalogProduct, item, fallbackProducts.length + 1));
+      }
+    }
+
+    const finalProducts = resolved.length > 0 ? resolved : fallbackProducts;
+
+    if (finalProducts.length === 0) {
+      return {
+        isActive: false,
+        title: config.title,
+        subtitle: config.subtitle,
+        ctaText: config.ctaText ?? "Shop All Products",
+        ctaLink: config.ctaLink ?? ROUTES.search,
+        products: [],
+      };
+    }
+
+    return {
+      isActive: true,
+      title: config.title || "Shop the Highlights",
+      subtitle: config.subtitle,
+      ctaText: config.ctaText || "Shop All Products",
+      ctaLink: config.ctaLink || ROUTES.search,
+      products: finalProducts,
+    };
+  } catch {
+    // Database down: use static fallback
+    const { HOMEPAGE_TOP_PRODUCTS } = await import("@/data/homepageTopProducts");
+    const products = await getCachedHomepageProducts();
+    const staticMap = new Map(products.map((p) => [p.slug, p]));
+
+    const fallbackProducts: HomepageProductItem[] = [];
+    for (const staticItem of HOMEPAGE_TOP_PRODUCTS) {
+      const catalogProduct = staticItem.productSlug ? staticMap.get(staticItem.productSlug) : null;
+      if (!catalogProduct) continue;
+
+      const item: HomepageSectionItem = {
+        id: staticItem.id,
+        sectionKey: "shop_the_highlights",
+        productId: catalogProduct.id,
+        categorySlug: undefined,
+        customTitle: staticItem.title,
+        customHref: staticItem.href,
+        customImage: staticItem.image,
+        badgeLabel: undefined,
+        offerText: undefined,
+        isActive: true,
+        sortOrder: 0,
+        startDate: undefined,
+        endDate: undefined,
+        createdAt: at.toISOString(),
+        updatedAt: at.toISOString(),
+      };
+
+      fallbackProducts.push(toProductItem(catalogProduct, item, fallbackProducts.length + 1));
+    }
+
+    return {
+      isActive: true,
+      title: defaults?.title ?? "Shop the Highlights",
+      subtitle: defaults?.subtitle,
+      ctaText: defaults?.ctaText ?? "Shop All Products",
+      ctaLink: defaults?.ctaLink ?? ROUTES.search,
+      products: fallbackProducts.slice(0, 3),
+    };
+  }
+}

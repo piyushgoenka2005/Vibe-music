@@ -247,13 +247,16 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
             activeKey === "browse_by_categories" ||
             activeKey === "category_bento" ||
             activeKey === "gear_stories" ||
+            activeKey === "shop_the_highlights" ||
             activeKey === "social_rail"
               ? "manual"
               : (sectionForm.sourceMode ?? activeSection.sourceMode),
           maxItems:
             activeKey === "big_names_deals"
               ? BIG_NAMES_DEALS_MAX_ITEMS
-              : (sectionForm.maxItems ?? activeSection.maxItems),
+              : activeKey === "shop_the_highlights"
+                ? 3
+                : (sectionForm.maxItems ?? activeSection.maxItems),
           layout: sectionForm.layout ?? activeSection.layout,
         }),
       });
@@ -433,6 +436,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     activeKey === "featured_categories" ||
     activeKey === "browse_by_categories" ||
     activeKey === "category_bento";
+  const isShopHighlightsSection = activeKey === "shop_the_highlights";
   const isBentoSection = activeKey === "category_bento";
   const isBrowseSection = activeKey === "browse_by_categories";
   const isProductSection =
@@ -449,6 +453,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     isBigNamesSection ||
     isCategorySection ||
     isGearStoriesSection ||
+    isShopHighlightsSection ||
     isSocialRailSection;
   const canAddBigNamesItem = !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
   const showCatalogEmptyWarning =

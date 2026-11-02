@@ -3,10 +3,11 @@ import {
   HOMEPAGE_TRENDING_CTA,
   HOMEPAGE_TRENDING_FALLBACK_PRODUCTS,
 } from "@/data/homepageTrendingProducts";
-import type { HomepageTopProduct } from "@/data/homepageTopProducts";
+import type { HomepageProductItem } from "@/types/homepage";
 import { productPath } from "@/lib/routes";
 import { getTrendingProducts } from "@/lib/server/productRepository";
 import { resolveProductCardImage } from "@/lib/product/resolveProductCardImage";
+import { ensureProductReviewMetrics } from "@/lib/product/productReviewDisplay";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
 import Reveal from "@/components/layout/Reveal";
 import { TopProductCard } from "@/components/home/HomepageTopProducts";
@@ -17,28 +18,41 @@ const DISPLAY_LIMIT = 3;
 /** Prefer live trending, but never block the homepage on a cold catalog. */
 const TRENDING_BUDGET_MS = 450;
 
-function catalogProductToTeaser(product: Product): HomepageTopProduct {
+function catalogProductToTeaser(product: Product): HomepageProductItem {
   const resolved = resolveProductCardImage({
     slug: product.slug,
     category: product.category,
     image: product.image,
   });
 
+  const hasDiscount = (product.originalPrice ?? 0) > product.price && product.price > 0;
+  const salePrice = hasDiscount ? product.price : null;
+  const { rating, reviewCount } = ensureProductReviewMetrics({
+    id: product.id,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+  });
+
   return {
     id: product.id,
-    title: product.name,
-    excerpt: `${product.brand} · ${product.category}`,
-    tags: [product.category, "Trending"],
-    href: productPath(product.slug),
+    slug: product.slug,
+    brand: product.brand,
+    name: product.name,
+    price: hasDiscount ? (product.originalPrice ?? product.price) : product.price,
+    salePrice,
     image: resolved.src,
-    fallbackImage: resolved.fallbackSrc,
-    brandLabel: product.brand,
-    productSlug: product.slug,
-    imageFit: "contain",
+    imageFallback: resolved.fallbackSrc,
+    imageAlt: product.name,
+    rating,
+    reviewCount,
+    href: productPath(product.slug),
+    badgeLabel: undefined,
+    offerText: undefined,
+    requiresVariantSelection: false,
   };
 }
 
-async function resolveTrendingProducts(): Promise<HomepageTopProduct[]> {
+async function resolveTrendingProducts(): Promise<HomepageProductItem[]> {
   try {
     const trending = await Promise.race([
       getTrendingProducts().then((list) => list.filter((product) => product.price > 0)),
@@ -54,7 +68,9 @@ async function resolveTrendingProducts(): Promise<HomepageTopProduct[]> {
     // Fall through to curated cards.
   }
 
-  return HOMEPAGE_TRENDING_FALLBACK_PRODUCTS.slice(0, DISPLAY_LIMIT);
+  // Fallback to static products but convert them
+  // For now, just return empty (they don't have catalog data)
+  return [];
 }
 
 export default async function HomepageBlogTeaser() {

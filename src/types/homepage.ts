@@ -13,6 +13,7 @@ export const HOMEPAGE_SECTION_KEYS = [
   "brand_strip",
   "featured_stories",
   "gear_stories",
+  "shop_the_highlights",
   "social_rail",
 ] as const;
 
@@ -192,6 +193,7 @@ export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionKey, string> = {
   brand_strip: "Brand Strip",
   featured_stories: "Featured Stories (A+ Banners)",
   gear_stories: "Gear Style Reels",
+  shop_the_highlights: "Shop the Highlights",
   social_rail: "Social Rail (Sidebar)",
 };
 
@@ -312,11 +314,23 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     layout: "brand_strip",
   },
   {
+    sectionKey: "shop_the_highlights",
+    title: "Shop the highlights",
+    subtitle: "Grand pianos, guitars, and live sound — hand-picked in-stock gear from our catalog.",
+    ctaText: "View all products",
+    ctaLink: "/search",
+    isActive: true,
+    sortOrder: 10,
+    sourceMode: "manual",
+    maxItems: 3,
+    layout: "product_grid",
+  },
+  {
     sectionKey: "featured_stories",
     title: "Featured Gear Stories",
     subtitle: "Deep dives and tonal versatility from our showcase collections",
     isActive: true,
-    sortOrder: 10,
+    sortOrder: 11,
     sourceMode: "manual",
     maxItems: 8,
     layout: "story_banners",
@@ -326,7 +340,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     title: "Gear style stories",
     subtitle: "Discover instruments in action.",
     isActive: true,
-    sortOrder: 11,
+    sortOrder: 12,
     sourceMode: "manual",
     maxItems: 12,
     layout: "gear_stories_reels",
@@ -339,7 +353,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     ctaText: "Newsletter",
     ctaLink: "#newsletter",
     isActive: true,
-    sortOrder: 12,
+    sortOrder: 13,
     sourceMode: "manual",
     maxItems: 10,
     layout: "social_rail",

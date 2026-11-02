@@ -267,6 +267,7 @@ const homepageSectionKeySchema = z.enum([
   "brand_strip",
   "featured_stories",
   "gear_stories",
+  "shop_the_highlights",
   "social_rail",
 ]);
 
