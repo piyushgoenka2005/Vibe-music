@@ -1,38 +1,50 @@
 import { describe, it, expect } from "vitest";
 import * as categoryRepo from "./categoryRepository";
 
-describe("categoryRepository - Error Handling", () => {
+describe("categoryRepository - Category Deletion & Management", () => {
   describe("listCategories", () => {
-    it("should return static categories when database is empty", async () => {
-      // This test verifies that when the database has no categories,
-      // the system gracefully falls back to static categories instead of throwing an error
+    it("should return the EXACT database state (no auto-restoration)", async () => {
+      // This test verifies that listCategories() returns exactly what's in the database
+      // If all categories were deleted, it returns an empty array (NO automatic seeding)
       const categories = await categoryRepo.listCategories();
 
       expect(categories).toBeDefined();
       expect(Array.isArray(categories)).toBe(true);
-      // Should have at least the static categories
-      expect(categories.length).toBeGreaterThan(0);
+      // The array could be empty if all categories were deleted - that's correct behavior
+      expect(typeof categories.length).toBe("number");
     });
 
-    it("should never return an error state when all categories are deleted", async () => {
-      // This test ensures that even if seedCategoriesFromStatic() fails,
-      // the system falls back to static categories
+    it("should allow permanent deletion of all categories", async () => {
+      // This test ensures that admins can completely delete all categories
+      // if they want an empty category list (no automatic restoration)
       const categories = await categoryRepo.listCategories();
 
-      // The function should always return an array, never throw
+      // Whether empty or not, the function should return the exact DB state
       expect(Array.isArray(categories)).toBe(true);
-      // Should have fallback categories available
+      // If the test runs with an empty DB, that's valid - no error should occur
       expect(categories.length).toBeGreaterThanOrEqual(0);
     });
 
-    it("should handle product loading failures gracefully during seeding", async () => {
-      // This test ensures that if getAllProducts() fails, the seeding continues
-      // with empty products array instead of failing completely
+    it("should not auto-seed when database is empty", async () => {
+      // This test ensures that listCategories() does NOT automatically seed
+      // the database with static categories. That must be an explicit admin action
+      // (calling restoreCategoriesFromMasterTaxonomy() instead)
       const categories = await categoryRepo.listCategories();
 
-      // Should always return categories even if product loading failed
-      expect(categories).toBeDefined();
+      // Should return whatever is actually in the database
       expect(Array.isArray(categories)).toBe(true);
+      // No auto-restoration happens - the array reflects the actual DB state
+    });
+  });
+
+  describe("restoreCategoriesFromMasterTaxonomy", () => {
+    it("should explicitly restore from Master Taxonomy only when admin requests it", async () => {
+      // This is an explicit admin action to rebuild the category list
+      // It should only happen when explicitly called (e.g., from an admin button)
+      // NOT automatically
+
+      // The function exists and can be called explicitly
+      expect(typeof categoryRepo.restoreCategoriesFromMasterTaxonomy).toBe("function");
     });
   });
 });

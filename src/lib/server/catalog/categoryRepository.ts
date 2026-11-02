@@ -200,6 +200,13 @@ async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
   return allCategories;
 }
 
+/**
+ * List all categories from database.
+ *
+ * IMPORTANT: This function returns the EXACT state of the database.
+ * If you deleted all categories, it returns an empty array (NO auto-restoration).
+ * If you want automatic fallback to static categories, use getCachedCategories() instead.
+ */
 export async function listCategories(): Promise<AdminCategory[]> {
   if (!isPostgresConfigured()) {
     console.debug("[categoryRepository] PostgreSQL not configured, using static categories");
@@ -209,43 +216,88 @@ export async function listCategories(): Promise<AdminCategory[]> {
   try {
     const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
 
-    // If database is empty (e.g., after deletion), seed from static data
-    if (rows.length === 0) {
-      console.debug(
-        "[categoryRepository] No categories in database, attempting to seed from static data...",
-      );
-      try {
-        const seededCategories = await seedCategoriesFromStatic();
-        console.debug(
-          "[categoryRepository] Successfully seeded",
-          seededCategories.length,
-          "categories from static data",
-        );
-        return seededCategories;
-      } catch (seedErr) {
-        console.error(
-          "[categoryRepository] Failed to seed categories from static data, falling back to in-memory static categories:",
-          seedErr instanceof Error ? seedErr.message : String(seedErr),
-        );
-        // If seeding fails, fall back to static categories without DB persistence
-        return staticCategories();
-      }
-    }
-
-    // Return categories from database
-    console.debug("[categoryRepository] Returning", rows.length, "categories from database");
+    // Return exactly what's in the database - NO automatic seeding
+    // This allows admins to have completely empty categories if they delete them all
+    console.debug(
+      "[categoryRepository] Returning",
+      rows.length,
+      "categories from database (NO auto-restoration)",
+    );
     return rows.map(mapAdminCategory);
   } catch (err) {
     console.error(
-      "[categoryRepository] Failed to list categories from database, falling back to in-memory static categories:",
+      "[categoryRepository] Failed to list categories from database:",
       err instanceof Error ? err.message : String(err),
     );
-    // Ultimate fallback: return in-memory static categories
+    // Only fallback to static if database query fails (connection error, not empty)
+    console.warn("[categoryRepository] Falling back to in-memory static categories");
+    return staticCategories();
+  }
+}
+
+/**
+ * Get categories with automatic fallback to static data only on database errors.
+ * Use this for the storefront (header navigation, etc.) where you want graceful degradation.
+ * Use listCategories() for the admin panel where you want the exact database state.
+ */
+export async function getCategoriesWithFallback(): Promise<AdminCategory[]> {
+  if (!isPostgresConfigured()) {
+    console.debug("[categoryRepository] PostgreSQL not configured, using static categories");
+    return staticCategories();
+  }
+
+  try {
+    const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+
+    // If database is empty, return empty (don't auto-seed)
+    // The storefront can handle empty categories gracefully
+    if (rows.length === 0) {
+      console.debug("[categoryRepository] No categories in database - returning empty array");
+      return [];
+    }
+
+    return rows.map(mapAdminCategory);
+  } catch (err) {
+    console.error(
+      "[categoryRepository] Failed to list categories from database:",
+      err instanceof Error ? err.message : String(err),
+    );
+    // Fallback only if database connection fails
+    console.warn("[categoryRepository] Falling back to in-memory static categories");
     return staticCategories();
   }
 }
 
 export { seedCategoriesFromStatic };
+
+/**
+ * ADMIN FUNCTION: Restore all categories from Master Taxonomy (static data)
+ * This is for when admin wants to rebuild the category list from the default configuration
+ */
+export async function restoreCategoriesFromMasterTaxonomy(): Promise<AdminCategory[]> {
+  console.log("[categoryRepository] ADMIN ACTION: Restoring categories from Master Taxonomy");
+
+  try {
+    const restored = await seedCategoriesFromStatic();
+    console.log(
+      "[categoryRepository] Successfully restored",
+      restored.length,
+      "categories from Master Taxonomy",
+    );
+    invalidateCatalogCache();
+    try {
+      invalidateAllStorefrontCaches();
+    } catch {
+      /* outside request scope */
+    }
+    return restored;
+  } catch (err) {
+    console.error("[categoryRepository] Failed to restore categories:", err);
+    throw new Error(
+      `Failed to restore categories from Master Taxonomy: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+}
 
 export async function getCategoryById(id: string): Promise<AdminCategory | null> {
   const row = await prisma.category.findUnique({ where: { id } });
