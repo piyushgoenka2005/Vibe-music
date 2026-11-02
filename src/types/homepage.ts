@@ -228,11 +228,13 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
   {
     sectionKey: "trending",
     title: "Trending Now",
-    ctaText: "Explore Trending",
+    subtitle:
+      "Buy what's trending. In-stock gear other musicians are shopping right now — products only, ready to add to cart.",
+    ctaText: "Shop all trending",
     ctaLink: "/search/results?q=trending",
     isActive: true,
     sortOrder: 2,
-    sourceMode: "auto",
+    sourceMode: "manual",
     maxItems: 8,
     layout: "product_carousel",
   },

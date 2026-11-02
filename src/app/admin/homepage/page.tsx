@@ -457,7 +457,8 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     isGearStoriesSection ||
     isGearAdvisorsSection ||
     isShopHighlightsSection ||
-    isSocialRailSection;
+    isSocialRailSection ||
+    activeKey === "trending";
   const canAddBigNamesItem = !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
   const showCatalogEmptyWarning =
     isProductSection &&
@@ -542,9 +543,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
           }}
           role="status"
         >
-          Catalog has 0 products. Auto sections (New Arrivals, Best Sellers, Trending, Staff Picks,
-          Deals) stay empty until you import products. Switch to Manual and add product IDs, or run
-          bulk import first.
+          Catalog has 0 products. Auto sections (New Arrivals, Best Sellers, Staff Picks, Deals)
+          stay empty until you import products. Switch to Manual and add product IDs, or run bulk
+          import first.
         </p>
       ) : null}
 
