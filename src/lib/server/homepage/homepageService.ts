@@ -47,6 +47,8 @@ import type {
   PublicBigNamesDealsData,
   PublicHomepageData,
   ResolvedHomepageSection,
+  StoreLocationItem,
+  GearReelItem,
 } from "@/types/homepage";
 
 export interface PublicCategorySectionData {
@@ -410,9 +412,287 @@ function sectionDomId(sectionKey: HomepageSectionKey): string {
     gear_stories: "gear-stories",
     shop_the_highlights: "shop-the-highlights",
     gear_advisors: "gear-advisors",
+    store_network: "store-network",
+    find_your_product: "find-your-product",
     social_rail: "social-rail",
   };
   return map[sectionKey];
+}
+
+async function resolveStores(
+  section: HomepageSection,
+  items: HomepageSectionItem[],
+): Promise<StoreLocationItem[]> {
+  if (section.sourceMode === "manual") {
+    return items
+      .filter((item) => item.isActive)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((item, index) => ({
+        id: item.id,
+        name: item.customTitle || `Store ${index + 1}`,
+        city: item.categorySlug || "",
+        address: item.offerText,
+        customImage: item.customImage,
+        customTitle: item.customTitle,
+        badgeLabel: item.badgeLabel,
+        contactLink: item.customHref,
+        sortOrder: item.sortOrder,
+      }))
+      .slice(0, section.maxItems);
+  }
+
+  // Auto mode - return static stores
+  return [
+    {
+      id: "store-delhi",
+      name: "Delhi",
+      city: "Delhi",
+      address: "Visit us",
+      badgeLabel: "VISIT US",
+      sortOrder: 0,
+    },
+    {
+      id: "store-kolkata",
+      name: "Kolkata",
+      city: "Kolkata",
+      address: "Visit us",
+      badgeLabel: "VISIT US",
+      sortOrder: 1,
+    },
+    {
+      id: "store-nagpur",
+      name: "Nagpur",
+      city: "Nagpur",
+      address: "Partner Hub",
+      badgeLabel: "PARTNER HUB",
+      sortOrder: 2,
+    },
+    {
+      id: "store-northeast",
+      name: "North East",
+      city: "North East",
+      address: "Flagship",
+      badgeLabel: "FLAGSHIP",
+      sortOrder: 3,
+    },
+    {
+      id: "store-mumbai",
+      name: "Mumbai",
+      city: "Mumbai",
+      address: "Flagship",
+      badgeLabel: "FLAGSHIP",
+      sortOrder: 4,
+    },
+  ];
+}
+
+async function resolveFindYourProduct(
+  section: HomepageSection,
+  items: HomepageSectionItem[],
+): Promise<HomepageCategoryItem[]> {
+  if (section.sourceMode === "manual") {
+    return items
+      .filter((item) => item.isActive)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((item, index) => {
+        // Parse the categorySlug to get category information
+        const categorySlug = item.categorySlug || "";
+        let categoryName = item.customTitle || "";
+        let categoryDescription = item.offerText || "";
+
+        // If no custom title, generate from category slug
+        if (!categoryName && categorySlug) {
+          categoryName = categorySlug
+            .split("-")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+        }
+
+        // If no description, create default
+        if (!categoryDescription) {
+          categoryDescription = "Shop top brands and exclusive collections";
+        }
+
+        return {
+          id: item.id,
+          slug: categorySlug || `category-${index + 1}`,
+          title: categoryName || `Category ${index + 1}`,
+          href: item.customHref || `/category/${categorySlug}`,
+          imageSrc: item.customImage || "",
+          badge: item.badgeLabel,
+          desc: categoryDescription,
+          productCount: "100+ products",
+        };
+      })
+      .slice(0, section.maxItems);
+  }
+
+  // Auto mode - return popular categories
+  const { loadCategories } = await import("@/lib/server/catalogRepository");
+
+  try {
+    // Try to load categories from database
+    const categories = loadCategories();
+    return categories.slice(0, section.maxItems || 6).map((category, index) => ({
+      id: `category-${category.slug}`,
+      slug: category.slug,
+      title: category.name,
+      href: `/category/${category.slug}`,
+      imageSrc: category.imageUrl || "",
+      badge: index === 0 ? "TRENDING" : index === 1 ? "NEW" : undefined,
+      desc: category.description || "Shop curated selection",
+      productCount: `${Math.floor(Math.random() * 50) + 50}+ products`,
+    }));
+  } catch {
+    // Fallback to static categories
+    return [
+      {
+        id: "category-guitars",
+        slug: "guitars",
+        title: "Guitars",
+        href: "/category/guitars",
+        imageSrc: "",
+        badge: "TRENDING",
+        desc: "Acoustic & electric guitars",
+        productCount: "150+ products",
+      },
+      {
+        id: "category-drums",
+        slug: "drums",
+        title: "Drums",
+        href: "/category/drums",
+        imageSrc: "",
+        badge: "NEW",
+        desc: "Full kits & percussion",
+        productCount: "120+ products",
+      },
+      {
+        id: "category-keyboards",
+        slug: "keyboards",
+        title: "Keyboards & Pianos",
+        href: "/category/keyboards",
+        imageSrc: "",
+        desc: "Digital & acoustic",
+        productCount: "90+ products",
+      },
+      {
+        id: "category-live-sound",
+        slug: "live-sound",
+        title: "Live Sound",
+        href: "/category/live-sound",
+        imageSrc: "",
+        desc: "PA systems & mixers",
+        productCount: "80+ products",
+      },
+      {
+        id: "category-recording",
+        slug: "recording",
+        title: "Recording Gear",
+        href: "/category/recording",
+        imageSrc: "",
+        desc: "Studio equipment",
+        productCount: "70+ products",
+      },
+      {
+        id: "category-accessories",
+        slug: "accessories",
+        title: "Accessories",
+        href: "/category/accessories",
+        imageSrc: "",
+        desc: "Cables, stands & more",
+        productCount: "200+ products",
+      },
+    ].slice(0, section.maxItems || 6);
+  }
+}
+
+async function resolveGearReels(
+  section: HomepageSection,
+  items: HomepageSectionItem[],
+): Promise<GearReelItem[]> {
+  if (section.sourceMode === "manual") {
+    return items
+      .filter((item) => item.isActive)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((item) => ({
+        id: item.id,
+        title: item.customTitle || "Gear Reel",
+        description: item.offerText,
+        posterUrl: item.customImage,
+        videoUrl: item.customHref || "",
+        instagramHandle: item.categorySlug, // Using categorySlug for instagram handle
+        instagramLink: item.productId || "", // Using productId for instagram link
+        productId: item.brandId,
+        badgeLabel: item.badgeLabel,
+        sortOrder: item.sortOrder,
+        isActive: item.isActive,
+      }))
+      .slice(0, section.maxItems);
+  }
+
+  // Auto mode - return default gear reels
+  return [
+    {
+      id: "reel-1",
+      title: "Hertz HZA-UK(24)",
+      posterUrl: "/images/gear-reels/hertz-1.webp",
+      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-1.mp4",
+      instagramHandle: "@hertzmusicindia",
+      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
+      sortOrder: 0,
+      isActive: true,
+    },
+    {
+      id: "reel-2",
+      title: "Hertz HZA-3600",
+      posterUrl: "/images/gear-reels/hertz-2.webp",
+      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-2.mp4",
+      instagramHandle: "@hertzmusicindia",
+      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
+      sortOrder: 1,
+      isActive: true,
+    },
+    {
+      id: "reel-3",
+      title: "Hertz HZA-3900",
+      posterUrl: "/images/gear-reels/hertz-3.webp",
+      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-3.mp4",
+      instagramHandle: "@hertzmusicindia",
+      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
+      sortOrder: 2,
+      isActive: true,
+    },
+    {
+      id: "reel-4",
+      title: "Hertz HZA4040 EQ",
+      posterUrl: "/images/gear-reels/hertz-4.webp",
+      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-4.mp4",
+      instagramHandle: "@hertzmusicindia",
+      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
+      sortOrder: 3,
+      isActive: true,
+    },
+    {
+      id: "reel-5",
+      title: 'AVUS Distack 10"',
+      posterUrl: "/images/gear-reels/avus-1.webp",
+      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-5.mp4",
+      instagramHandle: "@hertzmusicindia",
+      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
+      sortOrder: 4,
+      isActive: true,
+    },
+    {
+      id: "reel-6",
+      title: "ADEON AD15DSP",
+      posterUrl: "/images/gear-reels/adeon-1.webp",
+      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-6.mp4",
+      instagramHandle: "@hertzmusicindia",
+      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
+      sortOrder: 5,
+      isActive: true,
+    },
+  ].slice(0, section.maxItems);
 }
 
 async function resolveSection(
@@ -431,7 +711,6 @@ async function resolveSection(
     effectiveSection.sectionKey === "featured_stories" ||
     effectiveSection.sectionKey === "browse_by_categories" ||
     effectiveSection.sectionKey === "category_bento" ||
-    effectiveSection.sectionKey === "gear_stories" ||
     effectiveSection.sectionKey === "social_rail"
   ) {
     return null;
@@ -455,6 +734,60 @@ async function resolveSection(
     ctaLink: effectiveSection.ctaLink,
     layout: effectiveSection.layout,
   };
+
+  if (
+    effectiveSection.sectionKey === "store_network" ||
+    effectiveSection.layout === "store_network_grid"
+  ) {
+    const stores = await resolveStores(effectiveSection, items);
+    if (stores.length === 0) return null;
+
+    return {
+      ...base,
+      title: effectiveSection.title || "Discover our locations",
+      subtitle: effectiveSection.subtitle,
+      ctaText: effectiveSection.ctaText,
+      ctaLink: effectiveSection.ctaLink,
+      stores,
+    };
+  }
+
+  if (
+    effectiveSection.sectionKey === "gear_stories" ||
+    effectiveSection.layout === "gear_stories_reels"
+  ) {
+    const reels = await resolveGearReels(effectiveSection, items);
+    if (reels.length === 0) return null;
+
+    return {
+      ...base,
+      title: effectiveSection.title || "Gear style stories",
+      subtitle: effectiveSection.subtitle || "Discover instruments in action.",
+      ctaText: effectiveSection.ctaText,
+      ctaLink: effectiveSection.ctaLink,
+      reels,
+    };
+  }
+
+  if (
+    effectiveSection.sectionKey === "find_your_product" ||
+    effectiveSection.layout === "find_your_product"
+  ) {
+    const findYourProductItems = await resolveFindYourProduct(effectiveSection, items);
+    if (findYourProductItems.length === 0) return null;
+
+    return {
+      ...base,
+      title: effectiveSection.title || "Find Your Product",
+      subtitle:
+        effectiveSection.subtitle ||
+        "Curated departments for every stage — from bedroom studio to main stage.",
+      accentLabel: effectiveSection.accentLabel || "Shop by category",
+      ctaText: effectiveSection.ctaText || "Browse all categories",
+      ctaLink: effectiveSection.ctaLink || ROUTES.categories,
+      categories: findYourProductItems,
+    };
+  }
 
   if (
     effectiveSection.sectionKey === "featured_categories" ||

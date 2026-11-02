@@ -269,6 +269,8 @@ const homepageSectionKeySchema = z.enum([
   "gear_stories",
   "shop_the_highlights",
   "gear_advisors",
+  "store_network",
+  "find_your_product",
   "social_rail",
 ]);
 
@@ -294,6 +296,9 @@ export const adminHomepageSectionSchema = z.object({
       "big_names_deals",
       "story_banners",
       "gear_stories_reels",
+      "editorial_split",
+      "store_network_grid",
+      "find_your_product",
       "social_rail",
     ])
     .optional(),
@@ -317,20 +322,34 @@ export const adminHomepageSectionItemSchema = z.object({
 
 export function assertGearStoryItemPayload(
   sectionKey: z.infer<typeof homepageSectionKeySchema>,
-  data: { customHref?: string; customTitle?: string },
+  data: { customHref?: string; customTitle?: string; customImage?: string },
   mode: "create" | "update" = "create",
 ): void {
-  if (sectionKey !== "gear_stories") return;
+  if (sectionKey === "gear_stories") {
+    const isStatusOnlyUpdate =
+      mode === "update" && data.customHref === undefined && data.customTitle === undefined;
+    if (isStatusOnlyUpdate) return;
 
-  const isStatusOnlyUpdate =
-    mode === "update" && data.customHref === undefined && data.customTitle === undefined;
-  if (isStatusOnlyUpdate) return;
-
-  if (!data.customHref?.trim()) {
-    throw new Error("Video URL is required for gear reels.");
+    if (!data.customHref?.trim()) {
+      throw new Error("Video URL is required for gear reels.");
+    }
+    if (!data.customTitle?.trim()) {
+      throw new Error("Reel title is required for gear reels.");
+    }
   }
-  if (!data.customTitle?.trim()) {
-    throw new Error("Reel title is required for gear reels.");
+
+  if (sectionKey === "store_network") {
+    // Store network items can have minimal data (auto mode) or custom overrides
+    // No required validation - customTitle and customHref are optional
+    return;
+  }
+
+  if (sectionKey === "find_your_product") {
+    // Find Your Product section items - customTitle required for display
+    if (mode === "create" && !data.customTitle?.trim()) {
+      throw new Error("Title is required for Find Your Product items.");
+    }
+    return;
   }
 }
 

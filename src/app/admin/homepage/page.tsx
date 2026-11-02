@@ -93,6 +93,9 @@ const HOMEPAGE_LAYOUT_OPTIONS: HomepageSectionLayout[] = [
   "big_names_deals",
   "story_banners",
   "gear_stories_reels",
+  "editorial_split",
+  "store_network_grid",
+  "find_your_product",
   "social_rail",
 ];
 

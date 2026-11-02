@@ -15,6 +15,8 @@ export const HOMEPAGE_SECTION_KEYS = [
   "gear_stories",
   "shop_the_highlights",
   "gear_advisors",
+  "store_network",
+  "find_your_product",
   "social_rail",
 ] as const;
 
@@ -34,6 +36,8 @@ export type HomepageSectionLayout =
   | "story_banners"
   | "gear_stories_reels"
   | "editorial_split"
+  | "store_network_grid"
+  | "find_your_product"
   | "social_rail";
 
 export interface HomepageSection {
@@ -114,6 +118,33 @@ export interface HomepageBrandItem {
   logoUrl?: string;
 }
 
+export interface StoreLocationItem {
+  id: string;
+  name: string;
+  city: string;
+  address?: string;
+  customImage?: string;
+  customTitle?: string;
+  badgeLabel?: string;
+  contactLink?: string;
+  sortOrder: number;
+}
+
+export interface GearReelItem {
+  id: string;
+  title: string;
+  description?: string;
+  posterUrl?: string;
+  videoUrl: string;
+  instagramHandle?: string;
+  instagramLink?: string;
+  productId?: string;
+  productTitle?: string;
+  badgeLabel?: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
 export interface ResolvedHomepageSection {
   key: HomepageSectionKey;
   sectionId: string;
@@ -126,6 +157,8 @@ export interface ResolvedHomepageSection {
   products?: HomepageProductItem[];
   categories?: HomepageCategoryItem[];
   brands?: HomepageBrandItem[];
+  stores?: StoreLocationItem[];
+  reels?: GearReelItem[];
 }
 
 export interface PublicBigNamesDealsData {
@@ -197,6 +230,8 @@ export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionKey, string> = {
   gear_stories: "Gear Style Reels",
   shop_the_highlights: "Shop the Highlights",
   gear_advisors: "Gear Advisors (Editorial)",
+  store_network: "Store Network",
+  find_your_product: "Find Your Product",
   social_rail: "Social Rail (Sidebar)",
 };
 
@@ -363,6 +398,32 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     layout: "editorial_split",
   },
   {
+    sectionKey: "store_network",
+    title: "Discover our locations",
+    subtitle: "Store hours vary by location — contact an advisor before visiting.",
+    accentLabel: "Store Network",
+    ctaText: "Contact a store advisor",
+    ctaLink: "#contact",
+    isActive: true,
+    sortOrder: 13,
+    sourceMode: "manual",
+    maxItems: 12,
+    layout: "store_network_grid",
+  },
+  {
+    sectionKey: "find_your_product",
+    title: "Find Your Product",
+    subtitle: "Curated departments for every stage — from bedroom studio to main stage.",
+    accentLabel: "Shop by category",
+    ctaText: "Browse all categories",
+    ctaLink: "/category",
+    isActive: true,
+    sortOrder: 14,
+    sourceMode: "manual",
+    maxItems: 12,
+    layout: "find_your_product",
+  },
+  {
     sectionKey: "social_rail",
     title: "Social Rail",
     subtitle:
@@ -370,7 +431,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     ctaText: "Newsletter",
     ctaLink: "#newsletter",
     isActive: true,
-    sortOrder: 13,
+    sortOrder: 15,
     sourceMode: "manual",
     maxItems: 10,
     layout: "social_rail",
