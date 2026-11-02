@@ -2,26 +2,26 @@ import Link from "next/link";
 import Image from "next/image";
 import { ROUTES } from "@/lib/routes";
 import { MARKETING_EDITORIAL_IMAGE } from "@/lib/categoryImages";
+import { getGearAdvisorsPublicData } from "@/lib/server/homepage/homepageService";
 import Reveal from "@/components/layout/Reveal";
 
-export default function EditorialSplit() {
+export default async function EditorialSplit() {
+  const content = await getGearAdvisorsPublicData();
+
+  if (!content?.isActive) {
+    return null;
+  }
+
   return (
-    <Reveal as="section" className="editorial-split">
+    <Reveal as="section" className="editorial-split" id={content ? "gear-advisors" : undefined}>
       <div className="editorial-split__inner">
         <div className="editorial-split__copy">
-          <p className="editorial-split__eyebrow premium-section-eyebrow">
-            Gear advisors, not a warehouse
-          </p>
-          <h2 className="editorial-split__title">
-            Pro gear. Honest advice. Delivered across India.
-          </h2>
-          <p className="editorial-split__text">
-            Whether you&apos;re building your first home studio or upgrading a worship rig, our team
-            helps you choose gear that fits your budget and your goals.
-          </p>
+          <p className="editorial-split__eyebrow premium-section-eyebrow">{content.eyebrow}</p>
+          <h2 className="editorial-split__title">{content.title}</h2>
+          <p className="editorial-split__text">{content.subtitle}</p>
           <div className="editorial-split__actions">
-            <Link href={ROUTES.search} className="premium-btn premium-btn--primary">
-              Explore studio gear
+            <Link href={content.cta.href} className="premium-btn premium-btn--primary">
+              {content.cta.text}
             </Link>
             <Link href={ROUTES.blog} className="premium-btn premium-btn--outline">
               Read buying guides
@@ -32,8 +32,8 @@ export default function EditorialSplit() {
           <div className="editorial-split__card">
             <div className="editorial-split__orb" />
             <Image
-              src={MARKETING_EDITORIAL_IMAGE}
-              alt="Professional electric guitar — expert gear advice for every player"
+              src={content.image.src || MARKETING_EDITORIAL_IMAGE}
+              alt={content.image.alt}
               className="editorial-split__image"
               fill
               loading="lazy"

@@ -268,6 +268,7 @@ const homepageSectionKeySchema = z.enum([
   "featured_stories",
   "gear_stories",
   "shop_the_highlights",
+  "gear_advisors",
   "social_rail",
 ]);
 

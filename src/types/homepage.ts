@@ -14,6 +14,7 @@ export const HOMEPAGE_SECTION_KEYS = [
   "featured_stories",
   "gear_stories",
   "shop_the_highlights",
+  "gear_advisors",
   "social_rail",
 ] as const;
 
@@ -32,6 +33,7 @@ export type HomepageSectionLayout =
   | "big_names_deals"
   | "story_banners"
   | "gear_stories_reels"
+  | "editorial_split"
   | "social_rail";
 
 export interface HomepageSection {
@@ -194,6 +196,7 @@ export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionKey, string> = {
   featured_stories: "Featured Stories (A+ Banners)",
   gear_stories: "Gear Style Reels",
   shop_the_highlights: "Shop the Highlights",
+  gear_advisors: "Gear Advisors (Editorial)",
   social_rail: "Social Rail (Sidebar)",
 };
 
@@ -344,6 +347,18 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
     sourceMode: "manual",
     maxItems: 12,
     layout: "gear_stories_reels",
+  },
+  {
+    sectionKey: "gear_advisors",
+    title: "Gear advisors, not a warehouse",
+    subtitle: "Pro gear. Honest advice. Delivered across India.",
+    ctaText: "Explore studio gear",
+    ctaLink: "/search",
+    isActive: true,
+    sortOrder: 12,
+    sourceMode: "manual",
+    maxItems: 1,
+    layout: "editorial_split",
   },
   {
     sectionKey: "social_rail",

@@ -409,6 +409,7 @@ function sectionDomId(sectionKey: HomepageSectionKey): string {
     featured_stories: "featured-gear-stories",
     gear_stories: "gear-stories",
     shop_the_highlights: "shop-the-highlights",
+    gear_advisors: "gear-advisors",
     social_rail: "social-rail",
   };
   return map[sectionKey];
@@ -1016,6 +1017,120 @@ export async function getShopTheHighlightsPublicData(at = new Date()): Promise<{
       ctaText: defaults?.ctaText ?? "Shop All Products",
       ctaLink: defaults?.ctaLink ?? ROUTES.search,
       products: fallbackProducts.slice(0, 3),
+    };
+  }
+}
+
+/**
+ * Fetch gear_advisors editorial section for storefront rendering.
+ * Returns database-driven editorial content with customizable eyebrow, title, subtitle, CTA, and image.
+ */
+export async function getGearAdvisorsPublicData(at = new Date()): Promise<{
+  isActive: boolean;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  cta: { text: string; href: string };
+  image: { src: string; alt: string };
+} | null> {
+  const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
+    (section) => section.sectionKey === "gear_advisors",
+  );
+
+  try {
+    const [section, allItems] = await Promise.all([
+      getSectionByKey("gear_advisors"),
+      listAllSectionItems(),
+    ]);
+
+    const config = section ?? {
+      id: "gear_advisors",
+      sectionKey: "gear_advisors" as const,
+      title: defaults?.title ?? "Gear advisors, not a warehouse",
+      subtitle: defaults?.subtitle ?? "Pro gear. Honest advice. Delivered across India.",
+      accentLabel: defaults?.accentLabel ?? "Gear advisors, not a warehouse",
+      ctaText: defaults?.ctaText ?? "Explore studio gear",
+      ctaLink: defaults?.ctaLink ?? ROUTES.search,
+      isActive: defaults?.isActive ?? true,
+      sortOrder: defaults?.sortOrder ?? 12,
+      sourceMode: "manual" as const,
+      maxItems: 1,
+      layout: "editorial_split" as const,
+      createdAt: at.toISOString(),
+      updatedAt: at.toISOString(),
+    };
+
+    if (!config.isActive) {
+      return null;
+    }
+
+    const items = allItems
+      .filter(
+        (item) =>
+          item.sectionKey === "gear_advisors" &&
+          item.isActive &&
+          isHomepageItemScheduledActive(item, at),
+      )
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .slice(0, 1); // Max 1 item for editorial split
+
+    // Use configured item or defaults
+    const item = items[0];
+
+    if (item) {
+      return {
+        isActive: true,
+        eyebrow: item.customTitle || config.accentLabel || "Gear advisors, not a warehouse",
+        title: config.title || "Pro gear. Honest advice. Delivered across India.",
+        subtitle:
+          config.subtitle ||
+          "Whether you're building your first home studio or upgrading a worship rig, our team helps you choose gear that fits your budget and your goals.",
+        cta: {
+          text: item.offerText || config.ctaText || "Explore studio gear",
+          href: item.customHref || config.ctaLink || ROUTES.search,
+        },
+        image: {
+          src: item.customImage || "/images/editorial-guitar.jpg",
+          alt:
+            item.badgeLabel || "Professional electric guitar — expert gear advice for every player",
+        },
+      };
+    }
+
+    // Default fallback
+    return {
+      isActive: true,
+      eyebrow: config.accentLabel || "Gear advisors, not a warehouse",
+      title: config.title || "Pro gear. Honest advice. Delivered across India.",
+      subtitle:
+        config.subtitle ||
+        "Whether you're building your first home studio or upgrading a worship rig, our team helps you choose gear that fits your budget and your goals.",
+      cta: {
+        text: config.ctaText || "Explore studio gear",
+        href: config.ctaLink || ROUTES.search,
+      },
+      image: {
+        src: "/images/editorial-guitar.jpg",
+        alt: "Professional electric guitar — expert gear advice for every player",
+      },
+    };
+  } catch {
+    // Database down: use static fallback
+    return {
+      isActive: true,
+      eyebrow: defaults?.accentLabel ?? "Gear advisors, not a warehouse",
+      title: defaults?.title ?? "Pro gear. Honest advice. Delivered across India.",
+      subtitle:
+        defaults?.subtitle ??
+        "Whether you're building your first home studio or upgrading a worship rig, our team helps you choose gear that fits your budget and your goals.",
+      cta: {
+        text: defaults?.ctaText ?? "Explore studio gear",
+        href: defaults?.ctaLink ?? ROUTES.search,
+      },
+      image: {
+        src: "/images/editorial-guitar.jpg",
+        alt: "Professional electric guitar — expert gear advice for every player",
+      },
     };
   }
 }

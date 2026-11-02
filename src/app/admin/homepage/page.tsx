@@ -431,6 +431,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
   const isStorySection = activeKey === "featured_stories";
   const isBigNamesSection = activeKey === "big_names_deals";
   const isGearStoriesSection = activeKey === "gear_stories";
+  const isGearAdvisorsSection = activeKey === "gear_advisors";
   const isSocialRailSection = activeKey === "social_rail";
   const isCategorySection =
     activeKey === "featured_categories" ||
@@ -446,6 +447,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     activeKey !== "brand_strip" &&
     activeKey !== "featured_stories" &&
     activeKey !== "gear_stories" &&
+    activeKey !== "gear_advisors" &&
     activeKey !== "social_rail";
   const isBrandSection = activeKey === "brand_strip";
   const forceManualSource =
@@ -453,6 +455,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     isBigNamesSection ||
     isCategorySection ||
     isGearStoriesSection ||
+    isGearAdvisorsSection ||
     isShopHighlightsSection ||
     isSocialRailSection;
   const canAddBigNamesItem = !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
