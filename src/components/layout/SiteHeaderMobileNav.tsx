@@ -14,18 +14,8 @@ import { useShallow } from "zustand/react/shallow";
 const MOBILE_EXTRA_LINKS = [
   {
     key: "deals",
-    label: "Deals",
+    label: "Today Deals",
     href: ROUTES.deals,
-  },
-  {
-    key: "programs",
-    label: "Programs",
-    href: ROUTES.programs,
-  },
-  {
-    key: "guides",
-    label: "Guides",
-    href: ROUTES.blog,
   },
   {
     key: "gp9",
