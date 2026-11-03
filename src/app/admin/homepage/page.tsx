@@ -501,6 +501,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     isSocialRailSection ||
     activeKey === "trending";
   const canAddBigNamesItem = !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
+  const canAddHighlightsItem = !isShopHighlightsSection || sectionItems.length < 3;
   const showCatalogEmptyWarning =
     isProductSection &&
     !isBigNamesSection &&
@@ -636,7 +637,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
             isGearAdvisorsSection ? (
               <div className="admin-form-group">
                 <label>
-                  {isBigNamesSection || isGearAdvisorsSection
+                  {isBigNamesSection || isGearAdvisorsSection || isShopHighlightsSection
                     ? "Eyebrow"
                     : isBentoSection
                       ? "Card CTA label (Explore Category)"
@@ -646,7 +647,13 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.accentLabel}
-                  placeholder={isGearAdvisorsSection ? "GEAR ADVISORS, NOT A WAREHOUSE" : undefined}
+                  placeholder={
+                    isShopHighlightsSection
+                      ? "TOP PRODUCTS AT VIBE MUSIC"
+                      : isGearAdvisorsSection
+                        ? "GEAR ADVISORS, NOT A WAREHOUSE"
+                        : undefined
+                  }
                   onChange={(event) =>
                     setSectionForm((prev) => ({ ...prev, accentLabel: event.target.value }))
                   }
@@ -783,6 +790,13 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   card (poster, MP4, Instagram handle, optional linked product).
                 </p>
               </div>
+            ) : isShopHighlightsSection ? (
+              <div className="admin-form-group">
+                <p className="admin-form-hint" style={{ margin: 0 }}>
+                  Manage the 3 dedicated highlight cards shown after Shop Top Brands. Pick up to 3
+                  catalog products or custom showcase items below.
+                </p>
+              </div>
             ) : isGearAdvisorsSection ? (
               <div className="admin-form-group">
                 <p className="admin-form-hint" style={{ margin: 0 }}>
@@ -907,7 +921,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                     ? "Social Links"
                     : isGearAdvisorsSection
                       ? "Editorial Card & Secondary Action"
-                      : "Curated Items"}
+                      : isShopHighlightsSection
+                        ? "Highlight Products (3 Cards)"
+                        : "Curated Items"}
             </h2>
           </div>
           <div className="admin-panel__body">
@@ -1416,7 +1432,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   ) : null}
                   {!isBigNamesSection ? (
                     <div className="admin-form-group">
-                      <label>Custom Title</label>
+                      <label>
+                        {isShopHighlightsSection
+                          ? "Card Title (Overrides product name)"
+                          : "Custom Title"}
+                      </label>
                       <input
                         className="admin-input"
                         style={{ width: "100%" }}
@@ -1429,7 +1449,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   ) : null}
                   {!isBigNamesSection ? (
                     <div className="admin-form-group">
-                      <label>Custom Image URL</label>
+                      <label>
+                        {isShopHighlightsSection
+                          ? "Card Image URL (Overrides product image)"
+                          : "Custom Image URL"}
+                      </label>
                       <input
                         className="admin-input"
                         style={{ width: "100%" }}
@@ -1442,7 +1466,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   ) : null}
                   {!isBigNamesSection ? (
                     <div className="admin-form-group">
-                      <label>Custom Link</label>
+                      <label>
+                        {isShopHighlightsSection
+                          ? "Card Link (Overrides product URL)"
+                          : "Custom Link"}
+                      </label>
                       <input
                         className="admin-input"
                         style={{ width: "100%" }}
@@ -1455,7 +1483,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   ) : null}
                   {isProductSection && !isBigNamesSection ? (
                     <div className="admin-form-group">
-                      <label>Offer Text</label>
+                      <label>
+                        {isShopHighlightsSection ? "Card Description / Excerpt" : "Offer Text"}
+                      </label>
                       <input
                         className="admin-input"
                         style={{ width: "100%" }}
@@ -1484,7 +1514,13 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                     </div>
                   ) : null}
                   <div className="admin-form-group">
-                    {!isBigNamesSection ? <label>Badge Label</label> : null}
+                    {!isBigNamesSection ? (
+                      <label>
+                        {isShopHighlightsSection
+                          ? "Card Badge (e.g. Pianos, Guitars, Live Sound)"
+                          : "Badge Label"}
+                      </label>
+                    ) : null}
                     {!isBigNamesSection ? (
                       <input
                         className="admin-input"
@@ -1535,7 +1571,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   disabled={
                     addItemMutation.isPending ||
                     (!editingItemId &&
-                      (!canAddBigNamesItem || (isGearAdvisorsSection && sectionItems.length >= 1)))
+                      (!canAddBigNamesItem ||
+                        !canAddHighlightsItem ||
+                        (isGearAdvisorsSection && sectionItems.length >= 1)))
                   }
                   onClick={() => addItemMutation.mutate()}
                 >
@@ -1560,7 +1598,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                             ? "Add Guitar"
                             : isGearAdvisorsSection
                               ? "Add Editorial Card"
-                              : "Add Item"}
+                              : isShopHighlightsSection
+                                ? "Add Highlight Product"
+                                : "Add Item"}
                 </button>
               ) : null}
               {canWrite && editingItemId ? (

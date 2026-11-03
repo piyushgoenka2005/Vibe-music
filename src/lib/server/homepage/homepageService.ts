@@ -670,6 +670,8 @@ async function resolveSection(
     effectiveSection.sectionKey === "featured_stories" ||
     effectiveSection.sectionKey === "browse_by_categories" ||
     effectiveSection.sectionKey === "category_bento" ||
+    effectiveSection.sectionKey === "shop_the_highlights" ||
+    effectiveSection.sectionKey === "gear_advisors" ||
     effectiveSection.sectionKey === "social_rail"
   ) {
     return null;
@@ -1159,6 +1161,7 @@ export async function getShopTheHighlightsPublicData(at = new Date()): Promise<{
   isActive: boolean;
   title: string;
   subtitle?: string;
+  accentLabel?: string;
   ctaText: string;
   ctaLink: string;
   products: HomepageProductItem[];
@@ -1286,9 +1289,10 @@ export async function getShopTheHighlightsPublicData(at = new Date()): Promise<{
 
     return {
       isActive: true,
-      title: config.title || "Shop the Highlights",
+      title: config.title || "Shop the highlights",
       subtitle: config.subtitle,
-      ctaText: config.ctaText || "Shop All Products",
+      accentLabel: config.accentLabel || defaults?.accentLabel || "TOP PRODUCTS AT VIBE MUSIC",
+      ctaText: config.ctaText || "View all products",
       ctaLink: config.ctaLink || ROUTES.search,
       products: finalProducts,
     };
@@ -1326,9 +1330,10 @@ export async function getShopTheHighlightsPublicData(at = new Date()): Promise<{
 
     return {
       isActive: true,
-      title: defaults?.title ?? "Shop the Highlights",
+      title: defaults?.title ?? "Shop the highlights",
       subtitle: defaults?.subtitle,
-      ctaText: defaults?.ctaText ?? "Shop All Products",
+      accentLabel: defaults?.accentLabel ?? "TOP PRODUCTS AT VIBE MUSIC",
+      ctaText: defaults?.ctaText ?? "View all products",
       ctaLink: defaults?.ctaLink ?? ROUTES.search,
       products: fallbackProducts.slice(0, 3),
     };
@@ -1496,6 +1501,11 @@ export async function seedDefaultShopTheHighlights() {
       title: "Shop the highlights",
       subtitle:
         "Grand pianos, guitars, and live sound — hand-picked in-stock gear from our catalog.",
+      accentLabel: "TOP PRODUCTS AT VIBE MUSIC",
+      ctaText: "View all products",
+      ctaLink: ROUTES.search,
+      layout: "product_grid",
+      sourceMode: "manual",
       updatedAt: timestamp,
     },
   });
@@ -1538,6 +1548,8 @@ export async function seedDefaultShopTheHighlights() {
         productId: hertz?.id || "prod-hertz-hza4503-hza4503",
         customImage: "/images/New Guitar.png",
         badgeLabel: "Guitars",
+        offerText:
+          "Acoustic and electric guitars from Hertz and leading brands — built for stage, studio, and everyday play.",
         createdAt: timestamp,
         updatedAt: timestamp,
       },
@@ -1549,6 +1561,8 @@ export async function seedDefaultShopTheHighlights() {
         productId: adeon?.id || "prod-adeon-ad12-dsp-ad12-dsp",
         customImage: "/images/m/home/cats/k12_2.png",
         badgeLabel: "Live Sound",
+        offerText:
+          "Professional active PA speakers with DSP control for DJs, live performance, karaoke, and venue sound.",
         createdAt: timestamp,
         updatedAt: timestamp,
       },

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ProductShareButton from "@/components/product/ProductShareButton";
 import HomepageProductImage from "@/components/homepage/HomepageProductImage";
+import { ROUTES } from "@/lib/routes";
 import { getShopTheHighlightsPublicData } from "@/lib/server/homepage/homepageService";
 import type { HomepageProductItem } from "@/types/homepage";
 import SECTION_CTA_ARROW from "@/components/homepage/SectionCtaArrow";
@@ -53,19 +54,33 @@ export function TopProductCard({ product }: { product: HomepageProductItem }) {
 export default async function HomepageTopProducts() {
   const section = await getShopTheHighlightsPublicData();
 
+  if (!section?.isActive) {
+    return null;
+  }
+
+  const ctaLink = section.ctaLink || ROUTES.search;
+  const ctaText = section.ctaText || "View all products";
+
   return (
-    <Reveal as="section" className="blog-teaser" aria-labelledby={HEADLINE_ID}>
+    <Reveal
+      as="section"
+      className="blog-teaser"
+      aria-labelledby={HEADLINE_ID}
+      id="shop-the-highlights"
+    >
       <div className="blog-teaser__inner">
         <header className="blog-teaser__header">
           <div className="blog-teaser__header-copy">
-            <p className="blog-teaser__eyebrow">Top products at Vibe Music</p>
+            <p className="blog-teaser__eyebrow">
+              {section.accentLabel || "TOP PRODUCTS AT VIBE MUSIC"}
+            </p>
             <h2 className="blog-teaser__title" id={HEADLINE_ID}>
               {section.title}
             </h2>
             {section.subtitle ? <p className="blog-teaser__subtitle">{section.subtitle}</p> : null}
           </div>
-          <Link className="homepage-section__cta-btn blog-teaser__all" href={section.ctaLink}>
-            {section.ctaText}
+          <Link className="homepage-section__cta-btn blog-teaser__all" href={ctaLink}>
+            {ctaText}
             {SECTION_CTA_ARROW}
           </Link>
         </header>
@@ -73,7 +88,7 @@ export default async function HomepageTopProducts() {
         {section.products.length === 0 ? (
           <p className="blog-teaser__subtitle">
             Featured products will appear here once configured in the admin panel.{" "}
-            <Link href={section.ctaLink}>{section.ctaText}</Link>.
+            <Link href={ctaLink}>{ctaText}</Link>.
           </p>
         ) : (
           <div className="blog-teaser__grid blog-teaser__grid--three">
