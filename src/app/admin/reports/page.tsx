@@ -216,30 +216,32 @@ function ReportsContent() {
               Category Revenue Share
             </h3>
           </div>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Revenue</th>
-                <th>Orders</th>
-                <th>Share</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.topCategories.map((c) => (
-                <tr key={c.name}>
-                  <td style={{ fontWeight: 600 }}>{c.name}</td>
-                  <td>₹{c.revenue.toLocaleString("en-IN")}</td>
-                  <td>{c.orderCount}</td>
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <span className="admin-badge admin-badge--neutral">{c.sharePercent}%</span>
-                    </div>
-                  </td>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Revenue</th>
+                  <th>Orders</th>
+                  <th>Share</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {report.topCategories.map((c) => (
+                  <tr key={c.name}>
+                    <td style={{ fontWeight: 600 }}>{c.name}</td>
+                    <td>₹{c.revenue.toLocaleString("en-IN")}</td>
+                    <td>{c.orderCount}</td>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <span className="admin-badge admin-badge--neutral">{c.sharePercent}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Top Brands */}
@@ -259,24 +261,26 @@ function ReportsContent() {
               Top Brands by Revenue
             </h3>
           </div>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Brand Name</th>
-                <th>Revenue</th>
-                <th>Units Sold</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.topBrands.map((b) => (
-                <tr key={b.name}>
-                  <td style={{ fontWeight: 600 }}>{b.name}</td>
-                  <td>₹{b.revenue.toLocaleString("en-IN")}</td>
-                  <td>{b.unitsSold} units</td>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Brand Name</th>
+                  <th>Revenue</th>
+                  <th>Units Sold</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {report.topBrands.map((b) => (
+                  <tr key={b.name}>
+                    <td style={{ fontWeight: 600 }}>{b.name}</td>
+                    <td>₹{b.revenue.toLocaleString("en-IN")}</td>
+                    <td>{b.unitsSold} units</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

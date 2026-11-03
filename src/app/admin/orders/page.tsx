@@ -274,6 +274,14 @@ function OrdersContent({
                         onClick={() => {
                           setSelectedId(order.id);
                           setNewStatus(order.status);
+                          if (
+                            typeof window !== "undefined" &&
+                            window.matchMedia("(max-width: 1024px)").matches
+                          ) {
+                            document
+                              .getElementById("admin-order-details")
+                              ?.scrollIntoView({ behavior: "smooth" });
+                          }
                         }}
                         style={{
                           cursor: "pointer",
@@ -318,7 +326,7 @@ function OrdersContent({
           )}
         </div>
 
-        <div className="admin-panel">
+        <div className="admin-panel" id="admin-order-details">
           <div className="admin-panel__header">
             <h2 className="admin-panel__title">Order Details</h2>
           </div>

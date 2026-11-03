@@ -577,7 +577,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
 
   return (
     <>
-      <div className="admin-toolbar" style={{ flexWrap: "wrap", gap: "0.5rem" }}>
+      <div className="admin-homepage-nav-toolbar">
         {HOMEPAGE_SECTION_KEYS.map((key) => (
           <button
             key={key}

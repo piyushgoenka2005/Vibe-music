@@ -446,3 +446,47 @@
   border: 1px solid color-mix(in srgb, var(--admin-accent) 25%, var(--admin-border));
   background: color-mix(in srgb, var(--admin-accent-soft) 65%, transparent);
 }
+
+@media (max-width: 768px) {
+  .bulk-import-modal {
+    width: 96%;
+    margin: 0.5rem auto;
+    padding: 1rem 0.75rem;
+    max-height: 92vh;
+  }
+
+  .bulk-import-stepper {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.35rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bulk-import-stepper__item {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .bulk-import-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bulk-import-template-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .bulk-import-options {
+    grid-template-columns: 1fr;
+  }
+
+  .bulk-import-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .bulk-import-actions button {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+}

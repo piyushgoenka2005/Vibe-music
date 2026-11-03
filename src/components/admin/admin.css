@@ -1054,37 +1054,83 @@
 
 @media (max-width: 768px) {
   .admin-sidebar {
-    width: min(280px, 86vw);
-    z-index: 70;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(300px, 86vw);
+    max-width: 320px;
+    z-index: 100;
+    box-shadow: 4px 0 28px rgba(0, 0, 0, 0.5);
     transform: translateX(0);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .admin-root--sidebar-collapsed .admin-sidebar {
     transform: translateX(-100%);
+    pointer-events: none;
   }
 
   .admin-main {
     margin-left: 0;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
   }
 
   .admin-sidebar-backdrop {
     display: block;
     position: fixed;
     inset: 0;
-    z-index: 60;
+    z-index: 90;
     border: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     cursor: pointer;
   }
 
   .admin-header {
-    padding: 0 0.75rem;
+    height: auto;
+    min-height: 3.5rem;
+    padding: 0.5rem 0.75rem;
     z-index: 50;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .admin-header__left {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 0.5rem;
+  }
+
+  .admin-header__title {
+    font-size: clamp(1rem, 3.8vw, 1.25rem);
+    max-width: calc(100vw - 160px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  .admin-header__actions .admin-btn {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8125rem;
+    min-height: 40px;
   }
 
   .admin-header__menu {
     display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .admin-sidebar__toggle,
@@ -1097,30 +1143,117 @@
   }
 
   .admin-input,
-  .admin-select {
+  .admin-select,
+  .admin-field input,
+  .admin-field textarea {
     font-size: 16px;
   }
 
-  .admin-table-wrap {
+  .admin-content {
+    padding: clamp(0.75rem, 2.5vw, 1rem);
+    min-width: 0;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .admin-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.625rem;
+    width: 100%;
+  }
+
+  .admin-toolbar > * {
+    width: 100%;
+  }
+
+  .admin-toolbar .admin-input,
+  .admin-toolbar input[type="search"] {
+    width: 100% !important;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .admin-toolbar .admin-select,
+  .admin-toolbar select {
+    width: 100% !important;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .admin-toolbar .admin-btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .admin-table-wrap,
+  .admin-table-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.5rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
-  .admin-table-wrap table {
-    min-width: 36rem;
+  .admin-table-wrap table,
+  .admin-table-container table,
+  .admin-table,
+  .admin-table-premium {
+    min-width: 580px;
+    width: 100%;
   }
 
   .admin-pagination {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
+    text-align: center;
+    padding: 0.875rem 0.5rem;
+  }
+
+  .admin-pagination > div {
+    display: flex;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .admin-pagination button {
+    flex: 1 1 50%;
+    min-height: 44px;
+    justify-content: center;
   }
 
   .admin-chart {
     height: min(280px, 50vw);
     min-height: 200px;
   }
+
+  .admin-homepage-nav-toolbar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .admin-homepage-nav-toolbar .admin-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+.admin-homepage-nav-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1.25rem;
 }
 
 .admin-form-group {

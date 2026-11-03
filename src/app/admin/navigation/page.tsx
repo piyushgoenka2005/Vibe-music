@@ -375,7 +375,7 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
             )}
           </div>
 
-          <div className="admin-table-container">
+          <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
                 <tr>
@@ -568,7 +568,7 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
             )}
           </div>
 
-          <div className="admin-table-container">
+          <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
                 <tr>

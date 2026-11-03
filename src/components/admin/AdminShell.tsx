@@ -36,6 +36,32 @@ export default function AdminShell({ admin, title, children, actions }: AdminShe
     return () => mq.removeEventListener("change", sync);
   }, [setSidebarCollapsed]);
 
+  // Lock background body scroll when sidebar drawer is open on mobile
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isMobile = window.matchMedia(MOBILE_ADMIN_MQ).matches;
+    if (isMobile && !sidebarCollapsed) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [sidebarCollapsed]);
+
+  // Close drawer on Escape key when on mobile
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !sidebarCollapsed) {
+        if (window.matchMedia(MOBILE_ADMIN_MQ).matches) {
+          setSidebarCollapsed(true);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [sidebarCollapsed, setSidebarCollapsed]);
+
   return (
     <div
       className={`admin-root admin-root--${theme}${sidebarCollapsed ? " admin-root--sidebar-collapsed" : ""}`}
