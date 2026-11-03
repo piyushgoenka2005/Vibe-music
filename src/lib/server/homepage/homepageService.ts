@@ -1486,7 +1486,7 @@ export async function seedDefaultShopTheHighlights() {
       sectionKey: "shop_the_highlights",
       title: "Shop the highlights",
       subtitle:
-        "Grand pianos, guitars, and live sound — hand-picked in-stock gear from our catalog.",
+        "Grand pianos, guitars, and live sound - hand-picked in-stock gear from our catalog.",
       accentLabel: "TOP PRODUCTS AT VIBE MUSIC",
       ctaText: "View all products",
       ctaLink: ROUTES.search,
@@ -1502,7 +1502,7 @@ export async function seedDefaultShopTheHighlights() {
       isActive: true,
       title: "Shop the highlights",
       subtitle:
-        "Grand pianos, guitars, and live sound — hand-picked in-stock gear from our catalog.",
+        "Grand pianos, guitars, and live sound - hand-picked in-stock gear from our catalog.",
       accentLabel: "TOP PRODUCTS AT VIBE MUSIC",
       ctaText: "View all products",
       ctaLink: ROUTES.search,
@@ -1532,7 +1532,7 @@ export async function seedDefaultShopTheHighlights() {
         sectionKey: "shop_the_highlights",
         sortOrder: 1,
         isActive: true,
-        customTitle: "Grand Piano — 9",
+        customTitle: "Grand Piano - 9",
         customHref: ROUTES.gp9,
         customImage: "/images/grand-piano-9.png",
         badgeLabel: "Pianos",
@@ -1551,7 +1551,7 @@ export async function seedDefaultShopTheHighlights() {
         customImage: "/images/New Guitar.png",
         badgeLabel: "Guitars",
         offerText:
-          "Acoustic and electric guitars from Hertz and leading brands — built for stage, studio, and everyday play.",
+          "Acoustic and electric guitars from Hertz and leading brands - built for stage, studio, and everyday play.",
         createdAt: timestamp,
         updatedAt: timestamp,
       },

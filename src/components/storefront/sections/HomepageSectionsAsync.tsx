@@ -24,7 +24,10 @@ function orderHomepageSections(sections: ResolvedHomepageSection[]): ResolvedHom
       section.key !== "featured_categories" &&
       section.key !== "deals_of_the_day" &&
       section.key !== "brand_strip" &&
-      section.key !== "new_arrivals",
+      section.key !== "new_arrivals" &&
+      section.key !== "shop_the_highlights" &&
+      section.key !== "gear_stories" &&
+      section.key !== "gear_advisors",
   );
 
   const ordered: ResolvedHomepageSection[] = [];

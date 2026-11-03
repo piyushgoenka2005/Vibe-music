@@ -355,7 +355,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
   {
     sectionKey: "shop_the_highlights",
     title: "Shop the highlights",
-    subtitle: "Grand pianos, guitars, and live sound — hand-picked in-stock gear from our catalog.",
+    subtitle: "Grand pianos, guitars, and live sound - hand-picked in-stock gear from our catalog.",
     ctaText: "View all products",
     ctaLink: "/search",
     isActive: true,
