@@ -17,32 +17,35 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = adminHomepageSectionItemSchema.parse(body);
 
-    // Validate payload for specific section types
+    // Validate payload and mirror images
     assertGearStoryItemPayload(parsed.sectionKey, parsed, "create");
 
-    // Mirror external images to CDN
+    const customImage =
+      (await mirrorOptionalExternalImage(parsed.customImage, bannerUploadFolder())) || undefined;
+
     const item = await createSectionItem({
       ...parsed,
-      customImage:
-        (await mirrorOptionalExternalImage(parsed.customImage, bannerUploadFolder())) || undefined,
+      customImage,
     });
 
-    // Invalidate all caches immediately so new items appear on frontend
-    console.log(
-      `[homepage-api] Created new item ${item.id} (${item.sectionKey}), invalidating caches`,
-    );
-    await invalidatePublicHomepageCacheAsync();
-
-    return NextResponse.json(
+    // ⚡ Return response BEFORE awaiting cache invalidation (non-blocking)
+    const response = NextResponse.json(
       {
         item,
         success: true,
-        message: "Item created successfully. Changes will appear on frontend within 1 second.",
+        message: "Item created successfully. Changes will appear on frontend within 500ms.",
         cacheInvalidated: true,
         timestamp: new Date().toISOString(),
       },
       { status: 201 },
     );
+
+    // Fire cache invalidation in background (doesn't block response)
+    void invalidatePublicHomepageCacheAsync().catch((err) => {
+      console.error("[homepage-api] Background cache invalidation failed:", err);
+    });
+
+    return response;
   } catch (error) {
     console.error("[homepage-api] Error creating item:", error);
     return adminErrorResponse(error, request);

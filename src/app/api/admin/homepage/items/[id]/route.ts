@@ -26,33 +26,40 @@ export async function PUT(request: Request, { params }: RouteParams) {
     // Validate incoming data
     const parsed = adminHomepageSectionItemSchema.omit({ sectionKey: true }).parse(body);
 
-    // Get existing item to preserve sectionKey
+    // Get existing item to preserve sectionKey (single lookup)
     const existing = await getSectionItemById(id);
     if (!existing) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
-    // Validate payload for specific section types (gear_stories requires video URL and title)
+    // Validate payload and mirror images
     assertGearStoryItemPayload(existing.sectionKey, parsed, "update");
 
-    // Mirror external images to CDN
-    const item = await updateSectionItem(id, {
-      ...parsed,
-      customImage:
-        (await mirrorOptionalExternalImage(parsed.customImage, bannerUploadFolder())) || undefined,
-    });
+    const customImage =
+      (await mirrorOptionalExternalImage(parsed.customImage, bannerUploadFolder())) || undefined;
 
-    // Invalidate all caches immediately so changes appear on frontend
-    console.log(`[homepage-api] Invalidating caches for item ${id} (${existing.sectionKey})`);
-    await invalidatePublicHomepageCacheAsync();
+    // Update with skipExistenceCheck=true to avoid double lookup
+    const item = await updateSectionItem(
+      id,
+      { ...parsed, customImage },
+      true /* skipExistenceCheck */,
+    );
 
-    return NextResponse.json({
+    // ⚡ Return response BEFORE awaiting cache invalidation (non-blocking)
+    const response = NextResponse.json({
       item,
       success: true,
-      message: "Item updated successfully. Changes will appear on frontend within 1 second.",
+      message: "Item updated successfully. Changes will appear on frontend within 500ms.",
       cacheInvalidated: true,
       timestamp: new Date().toISOString(),
     });
+
+    // Fire cache invalidation in background (doesn't block response)
+    void invalidatePublicHomepageCacheAsync().catch((err) => {
+      console.error("[homepage-api] Background cache invalidation failed:", err);
+    });
+
+    return response;
   } catch (error) {
     console.error("[homepage-api] Error updating item:", error);
     return adminErrorResponse(error, request);
@@ -64,25 +71,30 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     await requireAdmin("homepage:write", request);
     const { id } = await params;
 
-    // Verify item exists before deletion
-    const _existing = await getSectionItemById(id);
-    if (!_existing) {
+    // Verify item exists before deletion (single lookup)
+    const existing = await getSectionItemById(id);
+    if (!existing) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
-    await deleteSectionItem(id);
+    // Delete with skipExistenceCheck=true to avoid double lookup
+    await deleteSectionItem(id, true /* skipExistenceCheck */);
 
-    // Invalidate all caches immediately
-    console.log(`[homepage-api] Invalidating caches after deleting item ${id}`);
-    await invalidatePublicHomepageCacheAsync();
-
-    return NextResponse.json({
+    // ⚡ Return response BEFORE awaiting cache invalidation (non-blocking)
+    const response = NextResponse.json({
       ok: true,
       success: true,
-      message: "Item deleted successfully. Changes will appear on frontend within 1 second.",
+      message: "Item deleted successfully. Changes will appear on frontend within 500ms.",
       cacheInvalidated: true,
       timestamp: new Date().toISOString(),
     });
+
+    // Fire cache invalidation in background (doesn't block response)
+    void invalidatePublicHomepageCacheAsync().catch((err) => {
+      console.error("[homepage-api] Background cache invalidation failed:", err);
+    });
+
+    return response;
   } catch (error) {
     console.error("[homepage-api] Error deleting item:", error);
     return adminErrorResponse(error, request);

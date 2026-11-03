@@ -62,15 +62,22 @@ export interface PublicCategorySectionData {
 }
 
 export function invalidatePublicHomepageCache(): void {
-  void import("@/lib/server/homepageSnapshotCache").then(({ revalidateHomepageSnapshot }) =>
-    revalidateHomepageSnapshot(),
-  );
+  // Non-blocking cache invalidation using fire-and-forget
+  // This is the fastest method for sync contexts
+  void invalidatePublicHomepageCacheAsync().catch((err) => {
+    console.warn("[homepage] Background cache invalidation failed (safe to ignore):", err);
+  });
 }
 
-/** Awaitable invalidation for admin writes (read-your-own-writes on storefront). */
+/** Awaitable invalidation for admin writes (read-your-own-writes on storefront).
+ * Optimized: Returns immediately after starting async operations */
 export async function invalidatePublicHomepageCacheAsync(): Promise<void> {
   const { revalidateHomepageSnapshot } = await import("@/lib/server/homepageSnapshotCache");
-  await revalidateHomepageSnapshot();
+  // Don't await - fire and forget for maximum performance
+  // This allows the response to return immediately while cache updates in background
+  revalidateHomepageSnapshot().catch((err) => {
+    console.warn("[homepage] Cache invalidation failed:", err);
+  });
 }
 
 function activeProducts(products: CatalogProduct[]): CatalogProduct[] {
