@@ -2,15 +2,14 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { ResolvedHomepageSection } from "@/types/homepage";
+import { GearReelItem } from "@/types/homepage";
 
 interface HomepageGearReelsSectionProps {
-  section: ResolvedHomepageSection;
+  reels: GearReelItem[];
 }
 
-export default function HomepageGearReelsSection({ section }: HomepageGearReelsSectionProps) {
-  const reels = section.reels ?? [];
-  const [selectedReel, setSelectedReel] = useState<(typeof reels)[number] | null>(null);
+export default function HomepageGearReelsSection({ reels }: HomepageGearReelsSectionProps) {
+  const [selectedReel, setSelectedReel] = useState<GearReelItem | null>(null);
 
   if (!reels || reels.length === 0) {
     return null;

@@ -322,7 +322,7 @@ export const adminHomepageSectionItemSchema = z.object({
 
 export function assertGearStoryItemPayload(
   sectionKey: z.infer<typeof homepageSectionKeySchema>,
-  data: { customHref?: string; customTitle?: string; customImage?: string },
+  data: { customHref?: string; customTitle?: string },
   mode: "create" | "update" = "create",
 ): void {
   if (sectionKey === "gear_stories") {

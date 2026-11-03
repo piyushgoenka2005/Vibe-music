@@ -132,18 +132,16 @@ export interface StoreLocationItem {
 
 export interface GearReelItem {
   id: string;
+  posterUrl: string;
   title: string;
   description?: string;
-  posterUrl?: string;
+  bulletFeatures?: string[];
   videoUrl: string;
   instagramHandle?: string;
   instagramLink?: string;
   productId?: string;
-  productTitle?: string;
   badgeLabel?: string;
-  featureBullets?: string;
   sortOrder: number;
-  isActive: boolean;
 }
 
 export interface ResolvedHomepageSection {

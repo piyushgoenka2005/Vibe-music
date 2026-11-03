@@ -1,9 +1,8 @@
-import HomepageBrandStripSection from "./HomepageBrandStripSection";
-import HomepageCategoryGridSection from "./HomepageCategoryGridSection";
-import HomepageDealsSection from "./HomepageDealsSection";
-import HomepageProductCarouselSection from "./HomepageProductCarouselSection";
-import HomepageProductGridSection from "./HomepageProductGridSection";
-import HomepageGearReelsSection from "./HomepageGearReelsSection";
+import HomepageBrandStripSection from "@/components/homepage/HomepageBrandStripSection";
+import HomepageCategoryGridSection from "@/components/homepage/HomepageCategoryGridSection";
+import HomepageDealsSection from "@/components/homepage/HomepageDealsSection";
+import HomepageProductCarouselSection from "@/components/homepage/HomepageProductCarouselSection";
+import HomepageProductGridSection from "@/components/homepage/HomepageProductGridSection";
 import FindYourProductSectionLazy from "@/components/home/find-your-product/FindYourProductSectionLazy";
 import type { ResolvedHomepageSection } from "@/types/homepage";
 
@@ -35,8 +34,6 @@ export default function HomepageSectionRenderer({
     case "find_your_product":
       // Render categories in find_your_product layout
       return <HomepageCategoryGridSection section={section} />;
-    case "gear_stories_reels":
-      return <HomepageGearReelsSection section={section} />;
     case "deals_slider":
       if (section.key === "deals_of_the_day" && attachFindYourProduct) {
         return (

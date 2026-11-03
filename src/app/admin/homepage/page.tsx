@@ -291,6 +291,25 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     onError: (error: Error) => setFormError(error.message),
   });
 
+  const seedHighlightsMutation = useMutation({
+    mutationFn: async () => {
+      return adminMutateJson<{ ok: boolean; count: number }>(
+        "/api/admin/homepage/seed/shop_the_highlights",
+        {
+          method: "POST",
+        },
+      );
+    },
+    onSuccess: (res) => {
+      setFormError(null);
+      setSaveNotice(
+        `Restored ${res.count ?? 3} default highlights successfully. Storefront updated!`,
+      );
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+    onError: (error: Error) => setFormError(error.message),
+  });
+
   const addItemMutation = useMutation({
     mutationFn: async () => {
       if (isGearStoriesSection) {
@@ -463,7 +482,6 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     isSocialRailSection ||
     activeKey === "trending";
   const canAddBigNamesItem = !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
-  const canAddGearAdvisorsItem = !isGearAdvisorsSection || sectionItems.length === 0;
   const showCatalogEmptyWarning =
     isProductSection &&
     !isBigNamesSection &&
@@ -718,14 +736,6 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   card (poster, MP4, Instagram handle, optional linked product).
                 </p>
               </div>
-            ) : isGearAdvisorsSection ? (
-              <div className="admin-form-group">
-                <p className="admin-form-hint" style={{ margin: 0 }}>
-                  Customize the Gear Advisors editorial section below. Upload a custom image, edit
-                  the title, subtitle, eyebrow label, and CTA buttons. The section displays a
-                  full-width split layout with image on the right and text on the left.
-                </p>
-              </div>
             ) : isSocialRailSection ? (
               <div className="admin-form-group">
                 <p className="admin-form-hint" style={{ margin: 0 }}>
@@ -785,6 +795,24 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                     }}
                   >
                     {seedReelsMutation.isPending ? "Restoring…" : "Restore Default Reels"}
+                  </button>
+                ) : null}
+                {isShopHighlightsSection ? (
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary"
+                    disabled={seedHighlightsMutation.isPending}
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "Restore default 3 highlights? This will reset the cards in this section to Grand Piano, Hertz Guitar, and Adeon Speaker.",
+                        )
+                      ) {
+                        seedHighlightsMutation.mutate();
+                      }
+                    }}
+                  >
+                    {seedHighlightsMutation.isPending ? "Restoring…" : "Restore Default Highlights"}
                   </button>
                 ) : null}
               </>
@@ -1046,88 +1074,6 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                         Linked product ID: {itemForm.productId}
                       </p>
                     ) : null}
-                  </div>
-                </>
-              ) : isGearAdvisorsSection ? (
-                <>
-                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <BannerImageUpload
-                      label="Hero Image (upload directly to CDN)"
-                      value={itemForm.customImage}
-                      onChange={(url) => setItemForm((prev) => ({ ...prev, customImage: url }))}
-                    />
-                  </div>
-                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label>Or Image URL / Path</label>
-                    <input
-                      className="admin-input"
-                      style={{ width: "100%" }}
-                      value={itemForm.customImage}
-                      placeholder="/images/editorial-guitar.jpg or https://cdn.vibemusic.in/..."
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, customImage: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label>Eyebrow Label (Small text above title)</label>
-                    <input
-                      className="admin-input"
-                      style={{ width: "100%" }}
-                      value={itemForm.customTitle}
-                      placeholder="e.g. Gear advisors, not a warehouse"
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, customTitle: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label>Primary CTA Text</label>
-                    <input
-                      className="admin-input"
-                      style={{ width: "100%" }}
-                      value={itemForm.offerText}
-                      placeholder="e.g. Explore studio gear"
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, offerText: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label>Primary CTA Link</label>
-                    <input
-                      className="admin-input"
-                      style={{ width: "100%" }}
-                      value={itemForm.customHref}
-                      placeholder="/search or /category/guitars"
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, customHref: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label>Secondary CTA Text (Optional)</label>
-                    <input
-                      className="admin-input"
-                      style={{ width: "100%" }}
-                      value={itemForm.badgeLabel}
-                      placeholder="e.g. Read buying guides"
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, badgeLabel: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label>Secondary CTA Link (Optional)</label>
-                    <input
-                      className="admin-input"
-                      style={{ width: "100%" }}
-                      value={itemForm.categorySlug}
-                      placeholder="/blog/buying-guides or /about"
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, categorySlug: event.target.value }))
-                      }
-                    />
                   </div>
                 </>
               ) : isSocialRailSection ? (
@@ -1449,11 +1395,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                 <button
                   type="button"
                   className="admin-btn admin-btn--primary"
-                  disabled={
-                    addItemMutation.isPending ||
-                    (!editingItemId && !canAddBigNamesItem) ||
-                    (!editingItemId && !canAddGearAdvisorsItem)
-                  }
+                  disabled={addItemMutation.isPending || (!editingItemId && !canAddBigNamesItem)}
                   onClick={() => addItemMutation.mutate()}
                 >
                   <Plus size={16} />{" "}
@@ -1462,24 +1404,18 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                       ? "Update Story Banner"
                       : isGearStoriesSection
                         ? "Update Gear Reel"
-                        : isGearAdvisorsSection
-                          ? "Update Gear Advisors"
-                          : isSocialRailSection
-                            ? "Update Social Link"
-                            : "Update Item"
+                        : isSocialRailSection
+                          ? "Update Social Link"
+                          : "Update Item"
                     : isStorySection
                       ? "Add Story Banner"
                       : isGearStoriesSection
                         ? "Add Gear Reel"
-                        : isGearAdvisorsSection
-                          ? sectionItems.length > 0
-                            ? "Update Gear Advisors"
-                            : "Add Gear Advisors"
-                          : isSocialRailSection
-                            ? "Add Social Link"
-                            : isBigNamesSection
-                              ? "Add Guitar"
-                              : "Add Item"}
+                        : isSocialRailSection
+                          ? "Add Social Link"
+                          : isBigNamesSection
+                            ? "Add Guitar"
+                            : "Add Item"}
                 </button>
               ) : null}
               {canWrite && editingItemId ? (
@@ -1497,12 +1433,6 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
               {isBigNamesSection && !canAddBigNamesItem && !editingItemId ? (
                 <p className="admin-form-hint" style={{ marginTop: 8, width: "100%" }}>
                   Maximum {BIG_NAMES_DEALS_MAX_ITEMS} guitars reached.
-                </p>
-              ) : null}
-              {isGearAdvisorsSection && !canAddGearAdvisorsItem && !editingItemId ? (
-                <p className="admin-form-hint" style={{ marginTop: 8, width: "100%" }}>
-                  Gear Advisors section can have only 1 item. Edit the existing item or delete it to
-                  add a new one.
                 </p>
               ) : null}
             </div>
@@ -1585,39 +1515,6 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                                 {item.badgeLabel ? (
                                   <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
                                     {item.badgeLabel}
-                                  </div>
-                                ) : null}
-                              </div>
-                            </div>
-                          ) : isGearAdvisorsSection ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                              {item.customImage ? (
-                                <Image
-                                  src={item.customImage}
-                                  alt={item.customTitle || "Gear Advisors image"}
-                                  width={180}
-                                  height={120}
-                                  unoptimized
-                                  style={{
-                                    width: 90,
-                                    height: 60,
-                                    objectFit: "cover",
-                                    borderRadius: 4,
-                                    background: "#111",
-                                    border: "1px solid var(--admin-border, #333)",
-                                  }}
-                                />
-                              ) : null}
-                              <div>
-                                <div style={{ fontWeight: 600 }}>Gear Advisors Section</div>
-                                {item.offerText ? (
-                                  <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
-                                    CTA: {item.offerText}
-                                  </div>
-                                ) : null}
-                                {item.customHref ? (
-                                  <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
-                                    Link: {item.customHref}
                                   </div>
                                 ) : null}
                               </div>

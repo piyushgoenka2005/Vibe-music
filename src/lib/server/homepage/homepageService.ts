@@ -62,22 +62,15 @@ export interface PublicCategorySectionData {
 }
 
 export function invalidatePublicHomepageCache(): void {
-  // Non-blocking cache invalidation using fire-and-forget
-  // This is the fastest method for sync contexts
-  void invalidatePublicHomepageCacheAsync().catch((err) => {
-    console.warn("[homepage] Background cache invalidation failed (safe to ignore):", err);
-  });
+  void import("@/lib/server/homepageSnapshotCache").then(({ revalidateHomepageSnapshot }) =>
+    revalidateHomepageSnapshot(),
+  );
 }
 
-/** Awaitable invalidation for admin writes (read-your-own-writes on storefront).
- * Optimized: Returns immediately after starting async operations */
+/** Awaitable invalidation for admin writes (read-your-own-writes on storefront). */
 export async function invalidatePublicHomepageCacheAsync(): Promise<void> {
   const { revalidateHomepageSnapshot } = await import("@/lib/server/homepageSnapshotCache");
-  // Don't await - fire and forget for maximum performance
-  // This allows the response to return immediately while cache updates in background
-  revalidateHomepageSnapshot().catch((err) => {
-    console.warn("[homepage] Cache invalidation failed:", err);
-  });
+  await revalidateHomepageSnapshot();
 }
 
 function activeProducts(products: CatalogProduct[]): CatalogProduct[] {
@@ -107,15 +100,15 @@ function toProductItem(
     id: product.id,
     slug: product.slug,
     brand: product.brand,
-    name: product.name,
+    name: overrides?.customTitle?.trim() ? overrides.customTitle : product.name,
     price: hasDiscount ? product.originalPrice : product.price,
     salePrice,
     image: resolvedImage.src,
     imageFallback: resolvedImage.fallbackSrc,
-    imageAlt: overrides?.customTitle || product.name,
+    imageAlt: overrides?.customTitle?.trim() ? overrides.customTitle : product.name,
     rating,
     reviewCount,
-    href: productPath(product.slug),
+    href: overrides?.customHref?.trim() ? overrides.customHref : productPath(product.slug),
     badgeLabel: overrides?.badgeLabel,
     offerText: overrides?.offerText,
     rank,
@@ -131,7 +124,29 @@ function resolveManualProducts(
 
   return items
     .map((item, index) => {
-      if (!item.productId) return null;
+      if (!item.productId) {
+        if (item.customTitle && (item.customHref || item.customImage)) {
+          return {
+            id: item.id,
+            slug: item.customHref?.replace(/^\/product\//, "") || item.id,
+            brand: item.brandId || item.badgeLabel || "Roland",
+            name: item.customTitle,
+            price: 0,
+            salePrice: null,
+            image: item.customImage || "/images/grand-piano-9.png",
+            imageFallback: undefined,
+            imageAlt: item.customTitle,
+            rating: 5,
+            reviewCount: 12,
+            href: item.customHref || ROUTES.gp9,
+            badgeLabel: item.badgeLabel,
+            offerText: item.offerText,
+            rank: index + 1,
+            requiresVariantSelection: false,
+          };
+        }
+        return null;
+      }
       const product = productMap.get(item.productId);
       if (!product || product.status !== "active") return null;
       // Manual pins stay visible even when price is TBD / Coming Soon (price <= 0).
@@ -617,89 +632,26 @@ async function resolveGearReels(
   section: HomepageSection,
   items: HomepageSectionItem[],
 ): Promise<GearReelItem[]> {
-  if (section.sourceMode === "manual") {
-    return items
-      .filter((item) => item.isActive)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((item) => ({
-        id: item.id,
-        title: item.customTitle || "Gear Reel",
-        description: item.categorySlug, // Modal description from categorySlug field
-        posterUrl: item.customImage,
-        videoUrl: item.customHref || "",
-        instagramHandle: item.badgeLabel, // Instagram handle from badgeLabel field
-        instagramLink: item.offerText || "", // Instagram link from offerText field
-        productId: item.productId, // Linked product from productId field
-        featureBullets: item.brandId || "", // Features/bullets from brandId field
-        sortOrder: item.sortOrder,
-        isActive: item.isActive,
-      }))
-      .slice(0, section.maxItems);
-  }
+  // Filter active reels and sort by order
+  const reels = items
+    .filter((item) => item.isActive)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .slice(0, section.maxItems || 12)
+    .map((item) => ({
+      id: item.id,
+      posterUrl: item.customImage || "",
+      title: item.customTitle || "",
+      description: item.categorySlug || undefined,
+      bulletFeatures: item.brandId ? item.brandId.split("\n").filter(Boolean) : undefined,
+      videoUrl: item.customHref || "",
+      instagramHandle: item.badgeLabel || undefined,
+      instagramLink: item.offerText || undefined,
+      productId: item.productId || undefined,
+      badgeLabel: undefined,
+      sortOrder: item.sortOrder,
+    }));
 
-  // Auto mode - return default gear reels
-  return [
-    {
-      id: "reel-1",
-      title: "Hertz HZA-UK(24)",
-      posterUrl: "/images/gear-reels/hertz-1.webp",
-      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-1.mp4",
-      instagramHandle: "@hertzmusicindia",
-      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
-      sortOrder: 0,
-      isActive: true,
-    },
-    {
-      id: "reel-2",
-      title: "Hertz HZA-3600",
-      posterUrl: "/images/gear-reels/hertz-2.webp",
-      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-2.mp4",
-      instagramHandle: "@hertzmusicindia",
-      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
-      sortOrder: 1,
-      isActive: true,
-    },
-    {
-      id: "reel-3",
-      title: "Hertz HZA-3900",
-      posterUrl: "/images/gear-reels/hertz-3.webp",
-      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-3.mp4",
-      instagramHandle: "@hertzmusicindia",
-      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
-      sortOrder: 2,
-      isActive: true,
-    },
-    {
-      id: "reel-4",
-      title: "Hertz HZA4040 EQ",
-      posterUrl: "/images/gear-reels/hertz-4.webp",
-      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-4.mp4",
-      instagramHandle: "@hertzmusicindia",
-      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
-      sortOrder: 3,
-      isActive: true,
-    },
-    {
-      id: "reel-5",
-      title: 'AVUS Distack 10"',
-      posterUrl: "/images/gear-reels/avus-1.webp",
-      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-5.mp4",
-      instagramHandle: "@hertzmusicindia",
-      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
-      sortOrder: 4,
-      isActive: true,
-    },
-    {
-      id: "reel-6",
-      title: "ADEON AD15DSP",
-      posterUrl: "/images/gear-reels/adeon-1.webp",
-      videoUrl: "https://cdn.vibemusic.in/videos/style-story/reel-6.mp4",
-      instagramHandle: "@hertzmusicindia",
-      instagramLink: "https://www.instagram.com/p/DeHUpIBh84q/",
-      sortOrder: 5,
-      isActive: true,
-    },
-  ].slice(0, section.maxItems);
+  return reels;
 }
 
 async function resolveSection(
@@ -760,23 +712,6 @@ async function resolveSection(
   }
 
   if (
-    effectiveSection.sectionKey === "gear_stories" ||
-    effectiveSection.layout === "gear_stories_reels"
-  ) {
-    const reels = await resolveGearReels(effectiveSection, items);
-    if (reels.length === 0) return null;
-
-    return {
-      ...base,
-      title: effectiveSection.title || "Gear style stories",
-      subtitle: effectiveSection.subtitle || "Discover instruments in action.",
-      ctaText: effectiveSection.ctaText,
-      ctaLink: effectiveSection.ctaLink,
-      reels,
-    };
-  }
-
-  if (
     effectiveSection.sectionKey === "find_your_product" ||
     effectiveSection.layout === "find_your_product"
   ) {
@@ -823,6 +758,23 @@ async function resolveSection(
     const brands = await resolveBrands(effectiveSection, items);
     if (brands.length === 0) return null;
     return { ...base, brands };
+  }
+
+  if (
+    effectiveSection.sectionKey === "gear_stories" ||
+    effectiveSection.layout === "gear_stories_reels"
+  ) {
+    const reels = await resolveGearReels(effectiveSection, items);
+    if (reels.length === 0) return null;
+
+    return {
+      ...base,
+      title: effectiveSection.title || "Gear style stories",
+      subtitle: effectiveSection.subtitle || "Discover instruments in action.",
+      ctaText: effectiveSection.ctaText,
+      ctaLink: effectiveSection.ctaLink,
+      reels,
+    };
   }
 
   const resolvedProducts =
@@ -1255,7 +1207,8 @@ export async function getShopTheHighlightsPublicData(at = new Date()): Promise<{
         (item) =>
           item.sectionKey === "shop_the_highlights" &&
           item.isActive &&
-          item.productId &&
+          (Boolean(item.productId) ||
+            Boolean(item.customTitle && (item.customHref || item.customImage))) &&
           isHomepageItemScheduledActive(item, at),
       )
       .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -1273,20 +1226,41 @@ export async function getShopTheHighlightsPublicData(at = new Date()): Promise<{
         const catalogProduct = staticItem.productSlug
           ? staticMap.get(staticItem.productSlug)
           : null;
-        if (!catalogProduct) continue;
+
+        if (!catalogProduct) {
+          fallbackProducts.push({
+            id: staticItem.id,
+            slug: staticItem.productSlug || staticItem.id,
+            brand: staticItem.brandLabel,
+            name: staticItem.title,
+            price: 0,
+            salePrice: null,
+            image: staticItem.image,
+            imageFallback: staticItem.fallbackImage,
+            imageAlt: staticItem.title,
+            rating: 5,
+            reviewCount: 12,
+            href: staticItem.href,
+            badgeLabel: staticItem.tags[0],
+            offerText: staticItem.excerpt,
+            rank: fallbackProducts.length + 1,
+            requiresVariantSelection: false,
+          });
+          continue;
+        }
 
         const item: HomepageSectionItem = {
           id: staticItem.id,
           sectionKey: "shop_the_highlights",
           productId: catalogProduct.id,
           categorySlug: undefined,
-          customTitle: staticItem.title,
+          customTitle: undefined,
           customHref: staticItem.href,
           customImage: staticItem.image,
-          badgeLabel: undefined,
-          offerText: undefined,
+          badgeLabel: staticItem.tags[0],
+          offerText: staticItem.excerpt,
           isActive: true,
-          sortOrder: 0,
+          sortOrder: fallbackProducts.length + 1,
           startDate: undefined,
           endDate: undefined,
           createdAt: at.toISOString(),
@@ -1473,4 +1447,100 @@ export async function getGearAdvisorsPublicData(at = new Date()): Promise<{
       },
     };
   }
+}
+
+/** Restores all 3 default highlight products into the database and invalidates storefront caches. */
+export async function seedDefaultShopTheHighlights() {
+  const { prisma } = await import("@/lib/db/prisma");
+  const { invalidateHomepageCache, listSectionItems } =
+    await import("@/lib/server/homepage/homepageRepository");
+  const timestamp = new Date().toISOString();
+
+  await prisma.homepageSection.upsert({
+    where: { sectionKey: "shop_the_highlights" },
+    create: {
+      id: "shop_the_highlights",
+      sectionKey: "shop_the_highlights",
+      title: "Shop the highlights",
+      subtitle:
+        "Grand pianos, guitars, and live sound — hand-picked in-stock gear from our catalog.",
+      accentLabel: "TOP PRODUCTS AT VIBE MUSIC",
+      ctaText: "View all products",
+      ctaLink: ROUTES.search,
+      isActive: true,
+      sortOrder: 10,
+      sourceMode: "manual",
+      maxItems: 3,
+      layout: "product_grid",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    update: {
+      isActive: true,
+      title: "Shop the highlights",
+      subtitle:
+        "Grand pianos, guitars, and live sound — hand-picked in-stock gear from our catalog.",
+      updatedAt: timestamp,
+    },
+  });
+
+  const products = await prisma.product.findMany({
+    where: {
+      slug: { in: ["hertz-hza4503-hza4503", "adeon-ad12-dsp-ad12-dsp"] },
+    },
+    select: { id: true, slug: true, name: true },
+  });
+  const hertz = products.find((p) => p.slug === "hertz-hza4503-hza4503");
+  const adeon = products.find((p) => p.slug === "adeon-ad12-dsp-ad12-dsp");
+
+  await prisma.homepageSectionItem.deleteMany({
+    where: { sectionKey: "shop_the_highlights" },
+  });
+
+  await prisma.homepageSectionItem.createMany({
+    data: [
+      {
+        id: `highlight-gp9-${Date.now()}`,
+        sectionKey: "shop_the_highlights",
+        sortOrder: 1,
+        isActive: true,
+        customTitle: "Grand Piano — 9",
+        customHref: ROUTES.gp9,
+        customImage: "/images/grand-piano-9.png",
+        badgeLabel: "Pianos",
+        offerText:
+          "Roland GP-9 digital grand piano with hybrid key action, immersive sound, and home-concert elegance.",
+        brandId: "Roland",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: `highlight-guitar-${Date.now()}`,
+        sectionKey: "shop_the_highlights",
+        sortOrder: 2,
+        isActive: true,
+        productId: hertz?.id || "prod-hertz-hza4503-hza4503",
+        customImage: "/images/New Guitar.png",
+        badgeLabel: "Guitars",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: `highlight-speaker-${Date.now()}`,
+        sectionKey: "shop_the_highlights",
+        sortOrder: 3,
+        isActive: true,
+        productId: adeon?.id || "prod-adeon-ad12-dsp-ad12-dsp",
+        customImage: "/images/m/home/cats/k12_2.png",
+        badgeLabel: "Live Sound",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+    ],
+  });
+
+  invalidateHomepageCache();
+  await invalidatePublicHomepageCacheAsync();
+
+  return listSectionItems("shop_the_highlights");
 }

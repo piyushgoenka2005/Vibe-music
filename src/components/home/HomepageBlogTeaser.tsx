@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { HOMEPAGE_TRENDING_CTA } from "@/data/homepageTrendingProducts";
+import {
+  HOMEPAGE_TRENDING_CTA,
+  HOMEPAGE_TRENDING_FALLBACK_PRODUCTS,
+} from "@/data/homepageTrendingProducts";
 import type { HomepageProductItem } from "@/types/homepage";
 import { productPath } from "@/lib/routes";
 import { getTrendingProducts } from "@/lib/server/productRepository";

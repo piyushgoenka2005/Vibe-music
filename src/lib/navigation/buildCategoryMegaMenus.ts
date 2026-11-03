@@ -27,6 +27,11 @@ export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
     }
   }
 
+  // Create a map of baseline menus by slug for quick lookup
+  const baselineBySlug = new Map<string, MegaMenuItem>(
+    HEADER_MEGA_MENUS.map((menu) => [menu.slug, menu]),
+  );
+
   const result: MegaMenuItem[] = [];
 
   // Iterate over DB main categories so that deleted categories are completely excluded from the header.

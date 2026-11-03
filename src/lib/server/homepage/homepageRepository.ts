@@ -188,25 +188,18 @@ export async function createSectionItem(
 export async function updateSectionItem(
   id: string,
   input: UpdateHomepageSectionItemInput,
-  skipExistenceCheck = false,
 ): Promise<HomepageSectionItem> {
-  // Only fetch if not already verified (reduces redundant queries)
-  if (!skipExistenceCheck) {
-    const existing = await getSectionItemById(id);
-    if (!existing) throw new Error("Homepage section item not found");
-  }
+  const existing = await getSectionItemById(id);
+  if (!existing) throw new Error("Homepage section item not found");
 
   const updated = await pg.updateHomepageSectionItemRecord(id, input);
   invalidateHomepageCache();
   return updated;
 }
 
-export async function deleteSectionItem(id: string, skipExistenceCheck = false): Promise<void> {
-  // Only fetch if not already verified (reduces redundant queries)
-  if (!skipExistenceCheck) {
-    const existing = await getSectionItemById(id);
-    if (!existing) throw new Error("Homepage section item not found");
-  }
+export async function deleteSectionItem(id: string): Promise<void> {
+  const existing = await getSectionItemById(id);
+  if (!existing) throw new Error("Homepage section item not found");
   await pg.deleteHomepageSectionItemRecord(id);
   invalidateHomepageCache();
 }
