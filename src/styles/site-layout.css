@@ -1077,18 +1077,24 @@ body.site-nav-open .site-header--scroll-hidden {
 .header-mega__featured {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 1rem;
+  align-self: start;
+  width: 100%;
 }
 
 .header-mega__card {
   position: relative;
-  display: block;
-  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  max-height: 320px;
   border-radius: var(--radius-md);
   overflow: hidden;
   text-decoration: none;
-  background: var(--surface-subtle);
+  background: var(--surface-subtle, #f8fafc);
   border: 1px solid var(--border-default);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition:
     transform var(--duration-fast) var(--ease-premium),
     box-shadow var(--duration-fast);
@@ -1096,14 +1102,14 @@ body.site-nav-open .site-header--scroll-hidden {
 
 .header-mega__card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md, 0 6px 16px rgba(0, 0, 0, 0.12));
 }
 
 .header-mega__card-image {
   width: 100%;
   height: 100%;
-  min-height: 220px;
   object-fit: cover;
+  object-position: center center;
   display: block;
   transition: transform var(--duration-normal) var(--ease-premium);
 }
@@ -1128,14 +1134,16 @@ body.site-nav-open .site-header--scroll-hidden {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 0.85rem 0.75rem;
+  padding: 1.25rem 0.75rem 0.75rem;
   text-align: center;
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-inverse);
-  background: linear-gradient(180deg, transparent, rgba(15, 23, 42, 0.72));
+  color: var(--text-inverse, #ffffff);
+  background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.78) 100%);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
 }
 
 .site-header__auth-hooks {

@@ -66,14 +66,14 @@ export const IMAGE_SPECS = {
   /** `category.featuredImageUrls[i]` — the two mega-menu featured cards. */
   categoryFeaturedCard: spec({
     id: "category-featured-card",
-    label: "Mega-menu featured card",
-    aspectRatio: "1 / 1",
-    ratioLabel: "1:1 (square)",
-    recommendedWidth: 1000,
+    label: "Mega-menu featured promo card",
+    aspectRatio: "4 / 5",
+    ratioLabel: "4:5 (portrait card)",
+    recommendedWidth: 800,
     recommendedHeight: 1000,
     fit: "cover",
-    hint: "Rendered in the near-square 2-up mega-menu grid with the category label over the bottom edge. Use a centred product shot with breathing room.",
-    previewMaxWidth: 320,
+    hint: "Rendered in the header mega-menu 2-card promo panel (recommended: 800×1000px, 4:5 portrait ratio). Keep subject centred with bottom 20% clear for the title overlay.",
+    previewMaxWidth: 260,
   }),
 
   /** Homepage banner hero desktop frame — 1920×720 (8:3). */

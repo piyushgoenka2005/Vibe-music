@@ -100,8 +100,35 @@ export default function SiteHeaderNav({
     if (resolvedBrandsMegaMenu) {
       menus[BRANDS_MEGA_MENU_SLUG] = resolvedBrandsMegaMenu;
     }
+
+    // Merge any item-level megaMenuData overrides configured in admin
+    if (configuredNavItems && configuredNavItems.length > 0) {
+      for (const item of configuredNavItems) {
+        if (item.megaMenuData && typeof item.megaMenuData === "object") {
+          const customData = item.megaMenuData as {
+            featured?: { title: string; href: string; image: string }[];
+          };
+          const slug =
+            item.categoryId ||
+            item.url.replace(/^\/category\//, "").split("?")[0] ||
+            item.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+          if (slug && menus[slug] && customData.featured && customData.featured.length > 0) {
+            menus[slug] = {
+              ...menus[slug],
+              featured: customData.featured.map((card, idx) => ({
+                title: card.title || menus[slug].featured[idx]?.title || "",
+                href: card.href || menus[slug].featured[idx]?.href || item.url,
+                image: card.image || menus[slug].featured[idx]?.image || "",
+              })),
+            };
+          }
+        }
+      }
+    }
+
     return menus;
-  }, [effectiveCategoryMenus, resolvedBrandsMegaMenu]);
+  }, [effectiveCategoryMenus, resolvedBrandsMegaMenu, configuredNavItems]);
 
   // Build navigation items from configured admin navigation if present, or stable defaults
   const navItems: NavGooItem[] = useMemo(() => {

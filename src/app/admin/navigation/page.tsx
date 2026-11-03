@@ -38,6 +38,12 @@ import type { AdminCategory } from "@/types/admin";
 
 type ActiveTab = "nav" | "utility" | "settings" | "preview";
 
+interface PromoCardData {
+  title: string;
+  href: string;
+  image: string;
+}
+
 interface ItemFormData {
   label: string;
   url: string;
@@ -49,6 +55,7 @@ interface ItemFormData {
   visibleDesktop: boolean;
   visibleMobile: boolean;
   openInNewTab: boolean;
+  promoCards: [PromoCardData, PromoCardData];
 }
 
 const EMPTY_ITEM_FORM: ItemFormData = {
@@ -62,6 +69,10 @@ const EMPTY_ITEM_FORM: ItemFormData = {
   visibleDesktop: true,
   visibleMobile: true,
   openInNewTab: false,
+  promoCards: [
+    { title: "", href: "", image: "" },
+    { title: "", href: "", image: "" },
+  ],
 };
 
 function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
@@ -140,6 +151,18 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
         visibleDesktop: itemForm.visibleDesktop,
         visibleMobile: itemForm.visibleMobile,
         openInNewTab: itemForm.openInNewTab,
+        megaMenuData:
+          itemForm.itemType === "mega_menu"
+            ? {
+                featured: itemForm.promoCards
+                  .filter((card) => card.image.trim() || card.title.trim())
+                  .map((card) => ({
+                    title: card.title.trim(),
+                    href: card.href.trim() || itemForm.url.trim(),
+                    image: card.image.trim(),
+                  })),
+              }
+            : undefined,
       };
 
       if (editingItem.id) {
@@ -236,6 +259,7 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
   function openEditModal(menuId: string, item?: NavigationMenuItemRecord) {
     if (item) {
       setEditingItem({ id: item.id, menuId });
+      const rawFeatured = (item.megaMenuData as { featured?: PromoCardData[] } | null)?.featured;
       setItemForm({
         label: item.label,
         url: item.url,
@@ -247,6 +271,18 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
         visibleDesktop: item.visibleDesktop,
         visibleMobile: item.visibleMobile,
         openInNewTab: item.openInNewTab,
+        promoCards: [
+          {
+            title: rawFeatured?.[0]?.title ?? "",
+            href: rawFeatured?.[0]?.href ?? "",
+            image: rawFeatured?.[0]?.image ?? "",
+          },
+          {
+            title: rawFeatured?.[1]?.title ?? "",
+            href: rawFeatured?.[1]?.href ?? "",
+            image: rawFeatured?.[1]?.image ?? "",
+          },
+        ],
       });
     } else {
       setEditingItem({ id: null, menuId });
@@ -999,7 +1035,14 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
       {/* Edit / Add Item Modal */}
       {editingItem && (
         <div className="admin-modal-overlay">
-          <div className="admin-modal" style={{ maxWidth: 520 }}>
+          <div
+            className="admin-modal"
+            style={{
+              maxWidth: itemForm.itemType === "mega_menu" ? 640 : 520,
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+          >
             <h3>{editingItem.id ? "Edit Navigation Item" : "Add Navigation Item"}</h3>
 
             <div className="admin-form-group">
@@ -1126,6 +1169,102 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
                 <span>Open in New Tab</span>
               </label>
             </div>
+
+            {itemForm.itemType === "mega_menu" && (
+              <div
+                style={{
+                  marginTop: "1.25rem",
+                  padding: "1rem",
+                  background: "var(--admin-surface-2, #18181b)",
+                  borderRadius: "var(--admin-radius-sm)",
+                  border: "1px solid var(--admin-border)",
+                }}
+              >
+                <div style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: "0.25rem" }}>
+                  Mega-Menu Promotional Cards (4:5 Portrait Ratio · Recommended 800 × 1000 px)
+                </div>
+                <p style={{ color: "var(--admin-muted)", fontSize: "0.75rem", margin: "0 0 1rem" }}>
+                  Configure up to two promotional cards shown on the right side of this mega menu.
+                  If left blank, cards will inherit from the category or baseline.
+                </p>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  {[0, 1].map((cardIdx) => (
+                    <div
+                      key={cardIdx}
+                      style={{
+                        padding: "0.75rem",
+                        background: "var(--admin-surface-1, #09090b)",
+                        borderRadius: "var(--admin-radius-sm)",
+                        border: "1px solid var(--admin-border)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "0.8rem",
+                          fontWeight: 600,
+                          color: "var(--brand-primary, #60a5fa)",
+                          display: "block",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        Promo Card {cardIdx + 1}
+                      </span>
+
+                      <div className="admin-form-group" style={{ marginBottom: "0.5rem" }}>
+                        <label style={{ fontSize: "0.75rem" }}>Card Title</label>
+                        <input
+                          className="admin-input"
+                          type="text"
+                          value={itemForm.promoCards[cardIdx].title}
+                          onChange={(e) => {
+                            const updated = [...itemForm.promoCards] as [
+                              PromoCardData,
+                              PromoCardData,
+                            ];
+                            updated[cardIdx] = { ...updated[cardIdx], title: e.target.value };
+                            setItemForm({ ...itemForm, promoCards: updated });
+                          }}
+                          placeholder="e.g. Audio Interfaces"
+                        />
+                      </div>
+
+                      <div className="admin-form-group" style={{ marginBottom: "0.5rem" }}>
+                        <label style={{ fontSize: "0.75rem" }}>Card Destination URL</label>
+                        <input
+                          className="admin-input"
+                          type="text"
+                          value={itemForm.promoCards[cardIdx].href}
+                          onChange={(e) => {
+                            const updated = [...itemForm.promoCards] as [
+                              PromoCardData,
+                              PromoCardData,
+                            ];
+                            updated[cardIdx] = { ...updated[cardIdx], href: e.target.value };
+                            setItemForm({ ...itemForm, promoCards: updated });
+                          }}
+                          placeholder="e.g. /category/studio-recording?q=interface"
+                        />
+                      </div>
+
+                      <BannerImageUpload
+                        label="Card Image (4:5 portrait)"
+                        spec={IMAGE_SPECS.categoryFeaturedCard}
+                        value={itemForm.promoCards[cardIdx].image}
+                        onChange={(url) => {
+                          const updated = [...itemForm.promoCards] as [
+                            PromoCardData,
+                            PromoCardData,
+                          ];
+                          updated[cardIdx] = { ...updated[cardIdx], image: url };
+                          setItemForm({ ...itemForm, promoCards: updated });
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="admin-modal-actions">
               <button
