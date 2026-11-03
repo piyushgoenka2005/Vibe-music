@@ -3,11 +3,14 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { ChevronDown, LayoutGrid } from "lucide-react";
 import { HEADER_MEGA_MENUS, MEGA_MENU_BY_SLUG, type MegaMenuItem } from "@/data/headerMegaMenu";
 import { BRANDS_MEGA_MENU_SLUG, resolveBrandsMegaMenu } from "@/lib/navigation/buildBrandsMegaMenu";
 import { ROUTES } from "@/lib/routes";
 import { isHeaderNavItemActive } from "@/lib/navigation/headerNavActive";
 import HeaderMegaMenu from "@/components/layout/HeaderMegaMenu";
+import AllCategoriesMegaMenu from "@/components/layout/AllCategoriesMegaMenu";
+import type { NavigationMenuItemRecord } from "@/lib/server/navigation/navigationRepository";
 
 function SearchParamsWatcher({
   onParamsChange,
@@ -28,17 +31,20 @@ function SearchParamsWatcher({
 interface SiteHeaderNavProps {
   brandsMegaMenu?: MegaMenuItem | null;
   categoryMegaMenus?: MegaMenuItem[] | null;
+  configuredNavItems?: NavigationMenuItemRecord[] | null;
   onNavigate?: () => void;
   onMegaMenuOpenChange?: (open: boolean) => void;
 }
 
-const HOVER_CLOSE_DELAY_MS = 120;
+const HOVER_CLOSE_DELAY_MS = 140;
 
 interface NavGooItem {
   key: string;
   label: string;
   href: string;
   slug?: string;
+  hasDropdown?: boolean;
+  badge?: string | null;
   accent?: boolean;
   active?: boolean;
   routeActive?: boolean;
@@ -47,6 +53,7 @@ interface NavGooItem {
 export default function SiteHeaderNav({
   brandsMegaMenu = null,
   categoryMegaMenus = null,
+  configuredNavItems = null,
   onNavigate,
   onMegaMenuOpenChange,
 }: SiteHeaderNavProps) {
@@ -66,6 +73,7 @@ export default function SiteHeaderNav({
   const searchCategory = searchParamsState.category;
   const searchQuery = searchParamsState.q;
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
+  const [allCategoriesOpen, setAllCategoriesOpen] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [scrollable, setScrollable] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -78,7 +86,7 @@ export default function SiteHeaderNav({
 
   const effectiveCategoryMenus = useMemo(
     () =>
-      categoryMegaMenus !== null && categoryMegaMenus !== undefined
+      categoryMegaMenus !== null && categoryMegaMenus !== undefined && categoryMegaMenus.length > 0
         ? categoryMegaMenus
         : HEADER_MEGA_MENUS,
     [categoryMegaMenus],
@@ -95,22 +103,67 @@ export default function SiteHeaderNav({
     return menus;
   }, [effectiveCategoryMenus, resolvedBrandsMegaMenu]);
 
-  const navItems: NavGooItem[] = useMemo(
-    () => [
+  // Build navigation items from configured admin navigation if present, or stable defaults
+  const navItems: NavGooItem[] = useMemo(() => {
+    if (configuredNavItems && configuredNavItems.length > 0) {
+      // Filter out "All Categories" if configured as an item, since it gets its own special trigger
+      return configuredNavItems
+        .filter(
+          (item) =>
+            item.label.toLowerCase() !== "all categories" && item.isActive && item.visibleDesktop,
+        )
+        .map((item) => {
+          let slug: string | undefined = undefined;
+          if (item.url.includes("/brands")) {
+            slug = resolvedBrandsMegaMenu ? BRANDS_MEGA_MENU_SLUG : undefined;
+          } else {
+            const match = effectiveCategoryMenus.find(
+              (m) =>
+                item.url.includes(m.slug) ||
+                item.label.toLowerCase() === m.name.toLowerCase() ||
+                item.categoryId === m.slug,
+            );
+            if (match) slug = match.slug;
+          }
+
+          const hasDropdown =
+            item.itemType === "dropdown" || item.itemType === "mega_menu" || Boolean(slug);
+
+          return {
+            key: item.id,
+            label: item.label,
+            href: item.url,
+            slug,
+            hasDropdown,
+            badge: item.badgeText,
+          };
+        });
+    }
+
+    // Default approved list
+    return [
       {
         key: "brands",
         label: "Brands",
         href: ROUTES.brands,
         slug: resolvedBrandsMegaMenu ? BRANDS_MEGA_MENU_SLUG : undefined,
+        hasDropdown: true,
       },
       ...effectiveCategoryMenus.map((menu) => ({
         key: menu.slug,
         label: menu.name,
         href: menu.href,
         slug: menu.slug,
+        hasDropdown: true,
       })),
       {
         key: "deals",
+        label: "Deals",
+        href: ROUTES.deals,
+        badge: "Hot",
+      },
+      {
+        key: "today-deals",
         label: "Today Deals",
         href: ROUTES.deals,
       },
@@ -118,10 +171,10 @@ export default function SiteHeaderNav({
         key: "gp9",
         label: "Grand Piano",
         href: ROUTES.gp9,
+        badge: "Flagship",
       },
-    ],
-    [effectiveCategoryMenus, resolvedBrandsMegaMenu],
-  );
+    ];
+  }, [configuredNavItems, effectiveCategoryMenus, resolvedBrandsMegaMenu]);
 
   const resolvedNavItems = useMemo(
     () =>
@@ -155,7 +208,10 @@ export default function SiteHeaderNav({
   }, []);
 
   useEffect(() => {
-    queueMicrotask(() => setActiveSlug(null));
+    queueMicrotask(() => {
+      setActiveSlug(null);
+      setAllCategoriesOpen(false);
+    });
   }, [pathname]);
 
   const clearCloseTimer = useCallback(() => {
@@ -168,18 +224,29 @@ export default function SiteHeaderNav({
   const openMenu = useCallback(
     (slug: string) => {
       clearCloseTimer();
+      setAllCategoriesOpen(false);
       setActiveSlug(slug);
     },
     [clearCloseTimer],
   );
 
+  const openAllCategories = useCallback(() => {
+    clearCloseTimer();
+    setActiveSlug(null);
+    setAllCategoriesOpen(true);
+  }, [clearCloseTimer]);
+
   const scheduleClose = useCallback(() => {
     clearCloseTimer();
-    closeTimerRef.current = setTimeout(() => setActiveSlug(null), HOVER_CLOSE_DELAY_MS);
+    closeTimerRef.current = setTimeout(() => {
+      setActiveSlug(null);
+      setAllCategoriesOpen(false);
+    }, HOVER_CLOSE_DELAY_MS);
   }, [clearCloseTimer]);
 
   const handleNavigate = useCallback(() => {
     setActiveSlug(null);
+    setAllCategoriesOpen(false);
     setHoveredKey(null);
     onNavigate?.();
   }, [onNavigate]);
@@ -187,38 +254,14 @@ export default function SiteHeaderNav({
   const activeMenu = activeSlug ? (megaMenuBySlug[activeSlug] ?? null) : null;
 
   useEffect(() => {
-    onMegaMenuOpenChange?.(Boolean(activeSlug));
-  }, [activeSlug, onMegaMenuOpenChange]);
-
-  const hoveredIndex = hoveredKey
-    ? resolvedNavItems.findIndex((item) => item.key === hoveredKey)
-    : -1;
-
-  const shouldPull = (index: number) => {
-    if (hoveredIndex < 0 || index <= 0) return false;
-    return index === hoveredIndex || index === hoveredIndex + 1;
-  };
-
-  const blobClass = (item: NavGooItem) => {
-    const classes = ["gooey-linkup__blob"];
-    if (item.accent) classes.push("gooey-linkup__blob--accent");
-    if (item.active) classes.push("gooey-linkup__blob--active");
-    if (hoveredKey === item.key) classes.push("gooey-linkup__blob--hovered");
-    return classes.join(" ");
-  };
-
-  const hitClass = (item: NavGooItem) => {
-    const classes = ["gooey-linkup__hit"];
-    if (item.accent) classes.push("gooey-linkup__hit--accent");
-    if (item.active) classes.push("gooey-linkup__hit--active");
-    return classes.join(" ");
-  };
+    onMegaMenuOpenChange?.(Boolean(activeSlug || allCategoriesOpen));
+  }, [activeSlug, allCategoriesOpen, onMegaMenuOpenChange]);
 
   return (
     <nav
       id="site-header-nav"
       className="site-header__nav site-header__nav--desktop assets-site-header__nav"
-      aria-label="Shop categories"
+      aria-label="Shop categories and navigation"
       onMouseLeave={() => {
         scheduleClose();
         setHoveredKey(null);
@@ -227,57 +270,79 @@ export default function SiteHeaderNav({
       <Suspense fallback={null}>
         <SearchParamsWatcher onParamsChange={handleParamsChange} />
       </Suspense>
+
       <div
         ref={navShellRef}
         className={`site-header__nav-shell${scrollable ? " site-header__nav-shell--scrollable" : ""}`}
       >
         <div className="site-header__nav-inner">
+          {/* Prominent Blue "All Categories" Dropdown Trigger */}
+          <div className="site-header__all-cats-wrapper" onMouseEnter={openAllCategories}>
+            <button
+              type="button"
+              className={`site-header__all-cats-btn${allCategoriesOpen ? " is-active" : ""}`}
+              onClick={() => setAllCategoriesOpen((prev) => !prev)}
+              aria-expanded={allCategoriesOpen}
+              aria-haspopup="true"
+              aria-label="Browse all categories"
+            >
+              <LayoutGrid size={16} className="site-header__all-cats-icon" aria-hidden />
+              <span>All Categories</span>
+              <ChevronDown
+                size={14}
+                className={`site-header__all-cats-chevron${allCategoriesOpen ? " is-rotated" : ""}`}
+                aria-hidden
+              />
+            </button>
+          </div>
+
+          {/* Primary Navigation Items */}
           <div
-            className="gooey-linkup site-header__nav-gooey"
+            className="site-header__nav-items-list"
             role="list"
             onMouseLeave={() => setHoveredKey(null)}
           >
-            <div className="gooey-linkup__blobs" aria-hidden>
-              {resolvedNavItems.map((item, index) => (
-                <span
-                  key={item.key}
-                  className={blobClass(item)}
-                  data-goo-pull={shouldPull(index) ? "" : undefined}
+            {resolvedNavItems.map((item) => (
+              <div
+                key={item.key}
+                className={`site-header__nav-item-unit${item.active ? " is-active" : ""}${hoveredKey === item.key ? " is-hovered" : ""}`}
+                role="listitem"
+                onMouseEnter={() => {
+                  setHoveredKey(item.key);
+                  if (item.slug) {
+                    openMenu(item.slug);
+                  } else {
+                    setActiveSlug(null);
+                    setAllCategoriesOpen(false);
+                  }
+                }}
+              >
+                <Link
+                  href={item.href}
+                  className="site-header__nav-item-link"
+                  onClick={handleNavigate}
+                  aria-current={item.routeActive ? "page" : undefined}
+                  aria-expanded={item.slug ? activeSlug === item.slug : undefined}
+                  aria-haspopup={item.slug ? "true" : undefined}
                 >
-                  <span className="gooey-linkup__blob-size">{item.label}</span>
-                </span>
-              ))}
-            </div>
-
-            <div className="gooey-linkup__hits">
-              {resolvedNavItems.map((item, index) => (
-                <div
-                  key={item.key}
-                  className="gooey-linkup__unit"
-                  role="listitem"
-                  data-goo-pull={shouldPull(index) ? "" : undefined}
-                  onMouseEnter={() => {
-                    setHoveredKey(item.key);
-                    if (item.slug) openMenu(item.slug);
-                  }}
-                >
-                  <Link
-                    href={item.href}
-                    className={hitClass(item)}
-                    onClick={handleNavigate}
-                    aria-current={item.routeActive ? "page" : undefined}
-                    aria-expanded={item.slug ? activeSlug === item.slug : undefined}
-                    aria-haspopup={item.slug ? "true" : undefined}
-                  >
-                    {item.label}
-                  </Link>
-                </div>
-              ))}
-            </div>
+                  <span>{item.label}</span>
+                  {item.badge ? <span className="site-header__nav-badge">{item.badge}</span> : null}
+                  {item.hasDropdown ? (
+                    <ChevronDown size={12} className="site-header__nav-chevron" aria-hidden />
+                  ) : null}
+                </Link>
+              </div>
+            ))}
           </div>
         </div>
 
+        {/* Mega Menus Panel */}
         <div onMouseEnter={clearCloseTimer} onMouseLeave={scheduleClose}>
+          <AllCategoriesMegaMenu
+            open={allCategoriesOpen}
+            onClose={() => setAllCategoriesOpen(false)}
+            onNavigate={handleNavigate}
+          />
           <HeaderMegaMenu menu={activeMenu} open={Boolean(activeMenu)} />
         </div>
       </div>

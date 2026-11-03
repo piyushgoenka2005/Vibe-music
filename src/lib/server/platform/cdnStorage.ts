@@ -19,7 +19,7 @@ const DEFAULT_PUBLIC_BASE_URL = "https://cdn.vibemusic.in";
 const OPTIMIZED_DERIVATIVE_WIDTHS = [240, 480, 960, 1600] as const;
 
 /** Folder prefixes this module is allowed to write to or delete from. */
-const ALLOWED_PREFIXES = ["products/", "banners/", "blog/", "reviews/"];
+const ALLOWED_PREFIXES = ["products/", "banners/", "blog/", "reviews/", "videos/"];
 
 const EXTENSION_BY_MIME: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -28,9 +28,21 @@ const EXTENSION_BY_MIME: Record<string, string> = {
   "image/gif": ".gif",
   "image/avif": ".avif",
   "image/svg+xml": ".svg",
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
 };
 
-const ALLOWED_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif", ".svg"]);
+const ALLOWED_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".gif",
+  ".avif",
+  ".svg",
+  ".mp4",
+  ".webm",
+]);
 
 /** `{uuid}.webp` or `{uuid}-w960.webp` from uploadOptimizedImageToCdn. */
 const OPTIMIZED_CDN_FILE_RE =
@@ -273,4 +285,8 @@ export function blogUploadFolder(): string {
 export function reviewUploadFolder(productId: string): string {
   const safe = productId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
   return `reviews/${safe || "general"}`;
+}
+
+export function videoUploadFolder(): string {
+  return "videos/style-story";
 }

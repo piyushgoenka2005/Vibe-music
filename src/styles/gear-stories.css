@@ -134,6 +134,7 @@
   width: 100%;
   height: 100%;
   touch-action: manipulation;
+  overflow: hidden;
 }
 
 .gear-story-card__poster {
@@ -144,18 +145,19 @@
   object-fit: cover;
   display: block;
   background: #111;
+  z-index: 0;
 }
 
 .gear-story-card__video {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
   background: transparent;
-  opacity: 0;
-  transition: opacity 220ms ease;
+  opacity: 1;
 }
 
 .gear-story-card__video--ready {

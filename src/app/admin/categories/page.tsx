@@ -12,6 +12,7 @@ import {
   adminMutateJson,
 } from "@/components/admin/AdminQueryState";
 import type { AdminCategory } from "@/types/admin";
+import BannerImageUpload from "@/components/admin/BannerImageUpload";
 
 type CategoryForm = {
   name: string;
@@ -19,6 +20,7 @@ type CategoryForm = {
   description: string;
   parentId: string | null;
   imageUrl: string;
+  featuredImageUrls: string[];
   isFeatured: boolean;
   sortOrder: number;
   metaTitle: string;
@@ -31,6 +33,7 @@ const EMPTY_FORM: CategoryForm = {
   description: "",
   parentId: null,
   imageUrl: "",
+  featuredImageUrls: ["", ""],
   isFeatured: false,
   sortOrder: 0,
   metaTitle: "",
@@ -63,6 +66,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
         body: JSON.stringify({
           ...form,
           imageUrl: form.imageUrl.trim() || undefined,
+          featuredImageUrls: form.featuredImageUrls.map((url) => url.trim()),
           metaTitle: form.metaTitle.trim() || undefined,
           metaDescription: form.metaDescription.trim() || undefined,
         }),
@@ -112,6 +116,32 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
     },
   });
 
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      await adminMutateJson(`/api/admin/categories/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
+  });
+
+  const toggleArchiveMutation = useMutation({
+    mutationFn: async ({ id, isArchived }: { id: string; isArchived: boolean }) => {
+      await adminMutateJson(`/api/admin/categories/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isArchived, isActive: !isArchived }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
+  });
+
   if (isLoading) return <LoadingState />;
 
   const categories = data?.categories ?? [];
@@ -139,10 +169,17 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
   };
 
   const handleDelete = (cat: AdminCategory) => {
+    if (cat.productCount && cat.productCount > 0) {
+      alert(
+        `Safety Restriction: Cannot delete "${cat.name}" because it currently has ${cat.productCount} assigned product(s).\n\nTo safeguard catalog data, please reassign products first, or click "Archive" to safely retire this category without breaking product assignments.`,
+      );
+      return;
+    }
+
     const isParent = categories.some((c) => c.parentId === cat.id);
     const message = isParent
-      ? `Are you sure you want to delete "${cat.name}" and all of its subcategories? This cannot be undone.`
-      : `Are you sure you want to delete "${cat.name}"? This cannot be undone.`;
+      ? `Are you sure you want to delete "${cat.name}" and all of its subcategories? This cannot be undone.\n\nNote: Website Header Navigation and Master Taxonomy records will NOT be affected.`
+      : `Are you sure you want to delete "${cat.name}"? This cannot be undone.\n\nNote: Website Header Navigation and Master Taxonomy records will NOT be affected.`;
 
     if (window.confirm(message)) {
       deleteMutation.mutate(cat.id);
@@ -160,6 +197,23 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
 
   return (
     <>
+      <div
+        style={{
+          background: "rgba(37, 99, 235, 0.06)",
+          borderLeft: "4px solid #2563eb",
+          padding: "0.75rem 1rem",
+          marginBottom: "1rem",
+          borderRadius: "0 6px 6px 0",
+          fontSize: "0.85rem",
+          color: "var(--admin-text)",
+        }}
+      >
+        <strong>Functional Separation Active:</strong> Deleting, archiving, or deactivating
+        categories controls storefront browsing only. It will <strong>never</strong> delete or
+        modify Header Navigation links, Master Taxonomy nodes, or Homepage configurations. If
+        products are assigned to a category, archival or reassignment is required before deletion.
+      </div>
+
       <div
         className="admin-toolbar"
         style={{
@@ -281,7 +335,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
               </div>
 
               <div className="admin-form-group">
-                <label>Image URL</label>
+                <label>Storefront Image URL</label>
                 <input
                   className="admin-input"
                   style={{ width: "100%" }}
@@ -289,6 +343,33 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                   onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
                   placeholder="https://… or /images/…"
                 />
+                <small style={{ color: "var(--admin-text-muted, #6b7280)", marginTop: "0.35rem" }}>
+                  Used for this category&apos;s storefront tiles and featured menu cards.
+                </small>
+              </div>
+
+              <div className="admin-form-group admin-form-grid--full">
+                <label>Featured menu card images</label>
+                <small
+                  style={{ color: "var(--admin-text-muted, #6b7280)", marginBottom: "0.5rem" }}
+                >
+                  Edit each featured image independently. These cards appear in the category
+                  mega-menu.
+                </small>
+                <div className="admin-form-grid">
+                  {[0, 1].map((index) => (
+                    <BannerImageUpload
+                      key={index}
+                      label={`Featured card ${index + 1}`}
+                      value={form.featuredImageUrls[index] ?? ""}
+                      onChange={(url) => {
+                        const featuredImageUrls = [...form.featuredImageUrls];
+                        featuredImageUrls[index] = url;
+                        setForm({ ...form, featuredImageUrls });
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
 
               <div className="admin-form-group">
@@ -427,6 +508,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                   <th>Name</th>
                   <th>Type / Parent</th>
                   <th>Slug</th>
+                  <th>Status</th>
                   <th>Featured</th>
                   <th>Products</th>
                   <th>Actions</th>
@@ -439,7 +521,10 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                   const isDeleting = deletingId === cat.id;
 
                   return (
-                    <tr key={cat.id}>
+                    <tr
+                      key={cat.id}
+                      style={{ opacity: cat.isArchived ? 0.6 : cat.isActive === false ? 0.75 : 1 }}
+                    >
                       <td>
                         <strong>{cat.name}</strong>
                       </td>
@@ -454,6 +539,25 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                       </td>
                       <td>
                         <code style={{ fontSize: "0.8rem" }}>{cat.slug}</code>
+                      </td>
+                      <td>
+                        {cat.isArchived ? (
+                          <span
+                            className="admin-badge"
+                            style={{ background: "#fef3c7", color: "#92400e" }}
+                          >
+                            Archived
+                          </span>
+                        ) : cat.isActive === false ? (
+                          <span className="admin-badge admin-badge--neutral">Inactive</span>
+                        ) : (
+                          <span
+                            className="admin-badge"
+                            style={{ background: "#dcfce7", color: "#166534" }}
+                          >
+                            Active
+                          </span>
+                        )}
                       </td>
                       <td>
                         {canWrite ? (
@@ -487,7 +591,43 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                               title={`Add subcategory under ${cat.name}`}
                               onClick={() => handleAddSubcategory(cat.id)}
                             >
-                              + Subcategory
+                              + Sub
+                            </button>
+                          ) : null}
+                          {canWrite ? (
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--ghost"
+                              style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
+                              title={
+                                cat.isActive === false ? "Activate category" : "Deactivate category"
+                              }
+                              disabled={toggleActiveMutation.isPending}
+                              onClick={() =>
+                                toggleActiveMutation.mutate({
+                                  id: cat.id,
+                                  isActive: cat.isActive === false,
+                                })
+                              }
+                            >
+                              {cat.isActive === false ? "Activate" : "Deactivate"}
+                            </button>
+                          ) : null}
+                          {canWrite ? (
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--ghost"
+                              style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
+                              title={cat.isArchived ? "Unarchive category" : "Archive category"}
+                              disabled={toggleArchiveMutation.isPending}
+                              onClick={() =>
+                                toggleArchiveMutation.mutate({
+                                  id: cat.id,
+                                  isArchived: !cat.isArchived,
+                                })
+                              }
+                            >
+                              {cat.isArchived ? "Unarchive" : "Archive"}
                             </button>
                           ) : null}
                           {canWrite ? (
@@ -503,6 +643,10 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                                   description: cat.description ?? "",
                                   parentId: cat.parentId ?? null,
                                   imageUrl: cat.imageUrl ?? "",
+                                  featuredImageUrls: [
+                                    cat.featuredImageUrls?.[0] ?? "",
+                                    cat.featuredImageUrls?.[1] ?? "",
+                                  ],
                                   isFeatured: cat.isFeatured ?? false,
                                   sortOrder: cat.sortOrder ?? 0,
                                   metaTitle: cat.metaTitle ?? "",

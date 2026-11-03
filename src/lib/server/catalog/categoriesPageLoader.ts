@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
-import { getCategoryGridImage, hasCuratedCategoryImage } from "@/lib/categoryImages";
+import { getCategoryGridImage } from "@/lib/categoryImages";
 import { isAmplifierProduct } from "@/lib/catalog/categoryProductsCore";
 import { ROUTES } from "@/lib/routes";
 import { getCachedHomepageProducts } from "@/lib/server/catalogSnapshotCache";
@@ -49,11 +49,8 @@ async function loadCategoriesForIndexUncached(): Promise<CategoryIndexItem[]> {
   const items: CategoryIndexItem[] = categories
     .map((category) => {
       const productCount = countBySlug.get(category.slug) ?? category.productCount ?? 0;
-      // Always prefer curated local art over CMS imageUrl — admin/CMS often
-      // reused the Guitars Les Paul thumb for Bass, Software, etc.
-      const imageSrc = hasCuratedCategoryImage(category.slug)
-        ? getCategoryGridImage(category.slug)
-        : category.imageUrl || getCategoryGridImage(category.slug);
+      // An admin-provided image is authoritative; curated art is only the fallback.
+      const imageSrc = category.imageUrl || getCategoryGridImage(category.slug);
       return {
         ...category,
         productCount,

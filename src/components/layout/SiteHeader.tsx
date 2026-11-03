@@ -15,24 +15,32 @@ import { useIsCompactHeaderViewport } from "@/hooks/useIsMobileViewport";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import SiteHeaderNav from "@/components/layout/SiteHeaderNav";
 import SiteHeaderMobileDrawer from "@/components/layout/SiteHeaderMobileDrawer";
-import SearchRollingPlaceholder, {
-  SEARCH_ROLLING_ARIA_LABEL,
-} from "@/components/search/SearchRollingPlaceholder";
+import SearchRollingPlaceholder from "@/components/search/SearchRollingPlaceholder";
 import { MIN_QUERY_LENGTH } from "@/services/search.service";
 import { searchStore } from "@/store/searchStore";
 import WishlistCounter from "@/components/wishlist/WishlistCounter";
 import type { MegaMenuItem } from "@/data/headerMegaMenu";
+import type {
+  HeaderSettingRecord,
+  NavigationMenuItemRecord,
+} from "@/lib/server/navigation/navigationRepository";
 
 interface SiteHeaderProps {
   shippingAnnouncement?: string;
   brandsMegaMenu?: MegaMenuItem | null;
   categoryMegaMenus?: MegaMenuItem[] | null;
+  utilityItems?: NavigationMenuItemRecord[] | null;
+  configuredNavItems?: NavigationMenuItemRecord[] | null;
+  headerSettings?: HeaderSettingRecord | null;
 }
 
 export default function SiteHeader({
   shippingAnnouncement,
   brandsMegaMenu = null,
   categoryMegaMenus = null,
+  utilityItems = null,
+  configuredNavItems = null,
+  headerSettings = null,
 }: SiteHeaderProps) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
@@ -47,13 +55,10 @@ export default function SiteHeader({
 
   const handleLogoClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement>) => {
-      // If already on home page, scroll to top
       if (pathname === ROUTES.home) {
         event.preventDefault();
-        // Scroll to top smoothly
         window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
       }
-      // Otherwise, let the link navigate naturally (which will refresh the page and go to top)
     },
     [pathname],
   );
@@ -63,7 +68,6 @@ export default function SiteHeader({
     window.dispatchEvent(new Event("site-header:sync"));
   }, [pathname]);
 
-  /* Drawer is for compact header only — close when switching to full desktop nav */
   useEffect(() => {
     if (!isCompactHeader && mobileOpen) setMobileOpen(false);
   }, [isCompactHeader, mobileOpen]);
@@ -110,7 +114,8 @@ export default function SiteHeader({
     })),
   );
 
-  const accountHref = isAuthenticated ? ROUTES.account : ROUTES.login;
+  const accountHref =
+    headerSettings?.profileDestination || (isAuthenticated ? ROUTES.account : ROUTES.login);
   const accountAriaLabel =
     isInitialized && isAuthenticated && user?.name ? user.name.split(" ")[0] : "Account";
   const accountPhotoUrl = isInitialized && isAuthenticated ? (user?.photoURL ?? null) : null;
@@ -171,6 +176,10 @@ export default function SiteHeader({
     searchStore.openOverlay(rect, "sw-search-input-mobile", true);
   }, []);
 
+  const searchPlaceholder =
+    headerSettings?.searchPlaceholder || "Search for guitars, keyboards, microphones and more...";
+  const logoSrc = headerSettings?.logoAsset || BRAND.headerLogoPath;
+
   return (
     <header
       ref={headerRef}
@@ -178,8 +187,14 @@ export default function SiteHeader({
       className={`site-header assets-site-nav--desktop${headerHidden ? " site-header--hidden" : ""}${scrolled ? " site-header--scrolled" : ""}`}
       data-vibe-section="header"
     >
-      <AnnouncementBar announcement={shippingAnnouncement} />
+      {/* Row 1: Utility / Announcement Bar */}
+      <AnnouncementBar
+        announcement={headerSettings?.shippingAnnouncement || shippingAnnouncement}
+        items={utilityItems ?? undefined}
+        active={headerSettings?.utilityBarActive ?? true}
+      />
 
+      {/* Row 2: Main Header Bar */}
       <div className="site-header__bar">
         <div className="site-header__inner">
           <Link
@@ -189,7 +204,6 @@ export default function SiteHeader({
             scroll={false}
             onClick={handleLogoClick}
           >
-            {/* Plain img — CSS controls max dimensions; avoids Next/Image aspect-ratio dev warnings. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               alt={BRAND.name}
@@ -197,38 +211,42 @@ export default function SiteHeader({
               decoding="async"
               fetchPriority="high"
               height={58}
-              src={BRAND.headerLogoPath}
+              src={logoSrc}
               width={240}
             />
           </Link>
 
-          <form
-            className="site-header__search site-header__search--bar assets-site-header__menu-search-form"
-            action={ROUTES.searchResults}
-            method="get"
-            onSubmit={handleSearchSubmit}
-          >
-            <Search size={16} className="site-header__search-icon" aria-hidden />
-            <div className="site-header__search-field">
-              <input
-                id="sw-search-input"
-                name="q"
-                type="search"
-                className="site-header__search-input assets-site-header__menu-search-typeahead-field"
-                placeholder=" "
-                autoComplete="off"
-                aria-label={SEARCH_ROLLING_ARIA_LABEL}
-              />
-              <SearchRollingPlaceholder inputId="sw-search-input" />
-            </div>
-            <button
-              type="submit"
-              className="site-header__search-submit assets-site-header__menu-search-submit"
-              aria-label="Search"
+          {headerSettings?.searchVisibility !== false ? (
+            <form
+              className="site-header__search site-header__search--bar assets-site-header__menu-search-form"
+              action={ROUTES.searchResults}
+              method="get"
+              onSubmit={handleSearchSubmit}
             >
-              <Search size={14} strokeWidth={2} aria-hidden />
-            </button>
-          </form>
+              <Search size={18} className="site-header__search-icon" aria-hidden />
+              <div className="site-header__search-field">
+                <input
+                  id="sw-search-input"
+                  name="q"
+                  type="search"
+                  className="site-header__search-input assets-site-header__menu-search-typeahead-field"
+                  placeholder={searchPlaceholder}
+                  autoComplete="off"
+                  aria-label={searchPlaceholder}
+                />
+                <SearchRollingPlaceholder inputId="sw-search-input" />
+              </div>
+              <button
+                type="submit"
+                className="site-header__search-submit assets-site-header__menu-search-submit"
+                aria-label="Search"
+              >
+                <Search size={16} strokeWidth={2.5} aria-hidden />
+              </button>
+            </form>
+          ) : (
+            <div style={{ flex: 1 }} />
+          )}
 
           <div className="site-header__toolbar">
             <button
@@ -242,56 +260,62 @@ export default function SiteHeader({
             </button>
 
             <div className="site-header__actions">
-              <div className="site-header__account-wrap">
+              {headerSettings?.profileVisibility !== false ? (
+                <div className="site-header__account-wrap">
+                  <Link
+                    href={accountHref}
+                    className="site-header__action site-header__action--account assets-site-header__menu-account"
+                    aria-label={accountAriaLabel}
+                  >
+                    {accountPhotoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- OAuth avatar requires referrerPolicy
+                      <img
+                        src={accountPhotoUrl}
+                        alt=""
+                        className="site-header__avatar"
+                        width={28}
+                        height={28}
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <User size={20} strokeWidth={1.75} aria-hidden />
+                    )}
+                    <span className="site-header__action-label assets-site-header__menu-account-navlink">
+                      Profile
+                    </span>
+                  </Link>
+                </div>
+              ) : null}
+
+              {headerSettings?.wishlistVisibility !== false ? (
+                <div className="site-header__action--desktop-only assets-site-header__menu-cart-wrap">
+                  <WishlistCounter onClick={openWishlistDrawer} />
+                </div>
+              ) : null}
+
+              {headerSettings?.cartVisibility !== false ? (
                 <Link
-                  href={accountHref}
-                  className="site-header__action site-header__action--account assets-site-header__menu-account"
-                  aria-label={accountAriaLabel}
+                  href={headerSettings?.cartDestination || ROUTES.cart}
+                  className="site-header__action site-header__cart assets-site-header__menu-cart"
+                  aria-label={cartLabel}
+                  onClick={handleCartClick}
                 >
-                  {accountPhotoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- OAuth avatar requires referrerPolicy
-                    <img
-                      src={accountPhotoUrl}
-                      alt=""
-                      className="site-header__avatar"
-                      width={28}
-                      height={28}
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <User size={20} strokeWidth={1.75} aria-hidden />
-                  )}
-                  <span className="site-header__action-label assets-site-header__menu-account-navlink">
-                    Profile
+                  <ShoppingCart size={20} strokeWidth={1.75} aria-hidden />
+                  {cartCount > 0 ? (
+                    <span
+                      ref={cartCountRef}
+                      className="site-header__cart-count assets-site-header__menu-cart-count"
+                      data-count={cartDataCount}
+                      aria-hidden="true"
+                    >
+                      {cartCountText}
+                    </span>
+                  ) : null}
+                  <span className="site-header__action-label" aria-hidden="true">
+                    Cart
                   </span>
                 </Link>
-              </div>
-
-              <div className="site-header__action--desktop-only assets-site-header__menu-cart-wrap">
-                <WishlistCounter onClick={openWishlistDrawer} />
-              </div>
-
-              <Link
-                href={ROUTES.cart}
-                className="site-header__action site-header__cart assets-site-header__menu-cart"
-                aria-label={cartLabel}
-                onClick={handleCartClick}
-              >
-                <ShoppingCart size={20} strokeWidth={1.75} aria-hidden />
-                {cartCount > 0 ? (
-                  <span
-                    ref={cartCountRef}
-                    className="site-header__cart-count assets-site-header__menu-cart-count"
-                    data-count={cartDataCount}
-                    aria-hidden="true"
-                  >
-                    {cartCountText}
-                  </span>
-                ) : null}
-                <span className="site-header__action-label" aria-hidden="true">
-                  Cart
-                </span>
-              </Link>
+              ) : null}
             </div>
 
             <button
@@ -315,10 +339,12 @@ export default function SiteHeader({
         </div>
       </div>
 
+      {/* Row 3: Primary Navigation */}
       <Suspense fallback={null}>
         <SiteHeaderNav
           brandsMegaMenu={brandsMegaMenu}
           categoryMegaMenus={categoryMegaMenus}
+          configuredNavItems={configuredNavItems}
           onMegaMenuOpenChange={handleMegaMenuOpenChange}
         />
       </Suspense>

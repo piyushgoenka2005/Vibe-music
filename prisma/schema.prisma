@@ -27,7 +27,10 @@ model Category {
   description     String?
   parentId        String? @map("parent_id")
   imageUrl        String? @map("image_url")
+  featuredImageUrls Json? @map("featured_image_urls")
   isFeatured      Boolean @default(false) @map("is_featured")
+  isActive        Boolean @default(true) @map("is_active")
+  isArchived      Boolean @default(false) @map("is_archived")
   sortOrder       Int     @default(0) @map("sort_order")
   metaTitle       String? @map("meta_title")
   metaDescription String? @map("meta_description")
@@ -50,6 +53,7 @@ model CatalogTaxonomy {
   menuLevel1           String? @map("menu_level_1")
   menuLevel2           String? @map("menu_level_2")
   menuLevel3           String? @map("menu_level_3")
+  isArchived            Boolean @default(false) @map("is_archived")
   createdAt             String? @map("created_at")
   updatedAt             String? @map("updated_at")
 
@@ -59,6 +63,70 @@ model CatalogTaxonomy {
   @@index([productType])
   @@index([menuLevel1])
   @@map("catalog_taxonomies")
+}
+
+// ─── Header & Navigation ───────────────────────────────────────────────────
+
+model NavigationMenu {
+  id          String   @id @default(cuid())
+  handle      String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   String   @map("created_at")
+  updatedAt   String   @map("updated_at")
+
+  items       NavigationMenuItem[]
+
+  @@map("navigation_menus")
+}
+
+model NavigationMenuItem {
+  id             String   @id @default(cuid())
+  menuId         String   @map("menu_id")
+  parentId       String?  @map("parent_id")
+  label          String
+  url            String
+  categoryId     String?  @map("category_id")
+  icon           String?
+  sortOrder      Int      @default(0) @map("sort_order")
+  itemType       String   @default("link") @map("item_type")
+  megaMenuData   Json?    @map("mega_menu_data")
+  isActive       Boolean  @default(true) @map("is_active")
+  visibleDesktop Boolean  @default(true) @map("visible_desktop")
+  visibleMobile  Boolean  @default(true) @map("visible_mobile")
+  openInNewTab   Boolean  @default(false) @map("open_in_new_tab")
+  badgeText      String?  @map("badge_text")
+  createdAt      String   @map("created_at")
+  updatedAt      String   @map("updated_at")
+
+  menu           NavigationMenu        @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parent         NavigationMenuItem?   @relation("NavigationItemHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children       NavigationMenuItem[]  @relation("NavigationItemHierarchy")
+
+  @@index([menuId])
+  @@index([parentId])
+  @@index([sortOrder])
+  @@map("navigation_menu_items")
+}
+
+model HeaderSetting {
+  id                    String   @id @default("default")
+  logoAsset             String?  @map("logo_asset")
+  searchVisibility      Boolean  @default(true) @map("search_visibility")
+  searchPlaceholder     String   @default("Search for guitars, keyboards, microphones and more...") @map("search_placeholder")
+  profileVisibility     Boolean  @default(true) @map("profile_visibility")
+  profileDestination    String   @default("/account") @map("profile_destination")
+  wishlistVisibility    Boolean  @default(true) @map("wishlist_visibility")
+  wishlistDestination   String   @default("/account/wishlist") @map("wishlist_destination")
+  cartVisibility        Boolean  @default(true) @map("cart_visibility")
+  cartDestination       String   @default("/cart") @map("cart_destination")
+  utilityBarActive      Boolean  @default(true) @map("utility_bar_active")
+  shippingAnnouncement  String?  @map("shipping_announcement")
+  shippingThreshold     Float?   @map("shipping_threshold")
+  updatedAt             String   @map("updated_at")
+
+  @@map("header_settings")
 }
 
 model Product {

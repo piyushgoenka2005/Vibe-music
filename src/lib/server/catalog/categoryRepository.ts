@@ -13,7 +13,10 @@ function mapAdminCategory(row: {
   description: string | null;
   parentId: string | null;
   imageUrl: string | null;
+  featuredImageUrls: unknown;
   isFeatured: boolean;
+  isActive?: boolean;
+  isArchived?: boolean;
   sortOrder: number;
   metaTitle: string | null;
   metaDescription: string | null;
@@ -28,7 +31,12 @@ function mapAdminCategory(row: {
     description: row.description ?? undefined,
     parentId: row.parentId,
     imageUrl: row.imageUrl ?? undefined,
+    featuredImageUrls: Array.isArray(row.featuredImageUrls)
+      ? row.featuredImageUrls.filter((value): value is string => typeof value === "string")
+      : undefined,
     isFeatured: row.isFeatured,
+    isActive: row.isActive ?? true,
+    isArchived: row.isArchived ?? false,
     sortOrder: row.sortOrder,
     metaTitle: row.metaTitle ?? undefined,
     metaDescription: row.metaDescription ?? undefined,
@@ -272,6 +280,8 @@ export async function createCategory(
       metaTitle: record.metaTitle ?? null,
       metaDescription: record.metaDescription ?? null,
       productCount: record.productCount ?? 0,
+      isActive: record.isActive ?? true,
+      isArchived: record.isArchived ?? false,
       createdAt: now,
       updatedAt: now,
     },
@@ -303,7 +313,12 @@ export async function updateCategory(
       ...(rest.description !== undefined ? { description: rest.description ?? null } : {}),
       ...(rest.parentId !== undefined ? { parentId: rest.parentId } : {}),
       ...(rest.imageUrl !== undefined ? { imageUrl: rest.imageUrl ?? null } : {}),
+      ...(rest.featuredImageUrls !== undefined
+        ? { featuredImageUrls: rest.featuredImageUrls }
+        : {}),
       ...(rest.isFeatured !== undefined ? { isFeatured: rest.isFeatured } : {}),
+      ...(rest.isActive !== undefined ? { isActive: rest.isActive } : {}),
+      ...(rest.isArchived !== undefined ? { isArchived: rest.isArchived } : {}),
       ...(rest.sortOrder !== undefined ? { sortOrder: rest.sortOrder } : {}),
       ...(rest.metaTitle !== undefined ? { metaTitle: rest.metaTitle ?? null } : {}),
       ...(rest.metaDescription !== undefined
@@ -325,17 +340,42 @@ export async function updateCategory(
   return updated;
 }
 
+export async function archiveCategory(id: string, isArchived = true): Promise<AdminCategory> {
+  return updateCategory(id, { isArchived, isActive: !isArchived });
+}
+
 export async function deleteCategory(id: string): Promise<void> {
   const category = await prisma.category.findUnique({ where: { id } });
   if (!category) return;
 
-  // Clean up any subcategories belonging to this parent so deletion never fails with foreign/orphan errors
-  await prisma.category.deleteMany({ where: { parentId: id } });
-
-  // Clean up any homepage section item pointing to this category slug
-  await prisma.homepageSectionItem.deleteMany({
-    where: { categorySlug: category.slug },
+  // Safeguard: Check if this category or any child category has products assigned
+  const subcategories = await prisma.category.findMany({
+    where: { parentId: id },
+    select: { id: true, slug: true, name: true },
   });
+  const allSlugs = [category.slug, ...subcategories.map((s) => s.slug)];
+  const allNames = [category.name, ...subcategories.map((s) => s.name)];
+
+  const assignedProductsCount = await prisma.product.count({
+    where: {
+      OR: [{ categorySlug: { in: allSlugs } }, { category: { in: allNames } }],
+    },
+  });
+
+  if (assignedProductsCount > 0) {
+    throw new Error(
+      `Cannot delete category "${category.name}" because ${assignedProductsCount} product(s) are assigned to it or its subcategories. Please reassign products to another category or archive this category instead.`,
+    );
+  }
+
+  // Safe to delete child subcategories if neither parent nor children have assigned products
+  if (subcategories.length > 0) {
+    await prisma.category.deleteMany({ where: { parentId: id } });
+  }
+
+  // CRITICAL REQUIREMENT:
+  // Under NO circumstances delete homepage items, header navigation items, or taxonomy nodes!
+  // Removing a category leaves any existing header link or homepage item untouched (they remain independent records).
 
   await prisma.category.delete({ where: { id } });
   invalidateCatalogCache();

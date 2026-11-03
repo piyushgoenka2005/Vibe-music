@@ -28,10 +28,6 @@ function playMuted(video: HTMLVideoElement) {
   video.defaultMuted = true;
   video.loop = true;
 
-  if (video.readyState === 0) {
-    video.load();
-  }
-
   void video.play().catch(() => {
     if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
       video.addEventListener(
@@ -213,6 +209,7 @@ export function useVisibleVideo(
 
     const strip = scrollRootRef?.current;
     strip?.addEventListener("scroll", scheduleSync, { passive: true });
+    window.addEventListener("scroll", scheduleSync, { passive: true });
     window.addEventListener("resize", scheduleSync, { passive: true });
 
     const onMediaReady = () => scheduleSync();
@@ -242,6 +239,7 @@ export function useVisibleVideo(
       window.clearTimeout(playTimer);
       window.clearInterval(retryTimer);
       strip?.removeEventListener("scroll", scheduleSync);
+      window.removeEventListener("scroll", scheduleSync);
       window.removeEventListener("resize", scheduleSync);
       video.removeEventListener("loadeddata", onMediaReady);
       video.removeEventListener("canplay", onMediaReady);

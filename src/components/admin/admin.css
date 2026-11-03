@@ -347,6 +347,19 @@
   margin-top: 0.125rem;
 }
 
+.admin-sidebar__section {
+  margin-bottom: 0.85rem;
+}
+
+.admin-sidebar__section-title {
+  padding: 0.5rem 0.875rem 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--admin-text-muted, #94a3b8);
+}
+
 .admin-sidebar__link:hover {
   background: var(--admin-surface-hover, var(--admin-surface-2));
   color: var(--admin-text);

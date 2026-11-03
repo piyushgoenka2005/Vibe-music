@@ -169,6 +169,7 @@ export function categoryToPrisma(category: Category): Prisma.CategoryUncheckedCr
     slug: category.slug,
     description: category.description ?? null,
     imageUrl: category.imageUrl ?? null,
+    featuredImageUrls: category.featuredImageUrls ?? [],
     isFeatured: category.isFeatured ?? false,
     sortOrder: category.sortOrder ?? 0,
     productCount: category.productCount ?? 0,
@@ -182,6 +183,7 @@ export function prismaToCategory(row: {
   description: string | null;
   parentId?: string | null;
   imageUrl: string | null;
+  featuredImageUrls?: unknown;
   isFeatured: boolean;
   sortOrder: number;
 }): Category {
@@ -192,6 +194,9 @@ export function prismaToCategory(row: {
     description: row.description ?? undefined,
     parentId: row.parentId ?? null,
     imageUrl: row.imageUrl ?? undefined,
+    featuredImageUrls: Array.isArray(row.featuredImageUrls)
+      ? row.featuredImageUrls.filter((value): value is string => typeof value === "string")
+      : undefined,
     isFeatured: row.isFeatured,
     sortOrder: row.sortOrder,
   };

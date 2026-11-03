@@ -100,6 +100,16 @@ export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
         ...baseline,
         name: dbMain.name || baseline.name,
         href: categoryPath(dbMain.slug),
+        featured:
+          dbMain.imageUrl || dbMain.featuredImageUrls?.length
+            ? baseline.featured.map((card, index) => ({
+                ...card,
+                image:
+                  dbMain.featuredImageUrls?.[index] ||
+                  (index === 0 ? dbMain.imageUrl : undefined) ||
+                  card.image,
+              }))
+            : baseline.featured,
       });
       continue;
     }
@@ -163,11 +173,23 @@ export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
       }
     }
 
+    const featured =
+      dbMain.imageUrl || dbMain.featuredImageUrls?.length
+        ? baseline.featured.map((card, index) => ({
+            ...card,
+            image:
+              dbMain.featuredImageUrls?.[index] ||
+              (index === 0 ? dbMain.imageUrl : undefined) ||
+              card.image,
+          }))
+        : baseline.featured;
+
     result.push({
       ...baseline,
       name: dbMain.name || baseline.name,
       href: categoryPath(dbMain.slug),
       columns,
+      featured,
     });
   }
 

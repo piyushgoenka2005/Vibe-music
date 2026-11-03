@@ -84,7 +84,7 @@ export default function GearStoryCard({
           observer.disconnect();
         }
       },
-      { rootMargin: "160px 0px", threshold: 0.01 },
+      { rootMargin: "400px 0px", threshold: 0.01 },
     );
     observer.observe(container);
     return () => observer.disconnect();
@@ -104,7 +104,7 @@ export default function GearStoryCard({
     forcePaused: playbackLocked || userPaused,
     manualPausedRef: userPausedRef,
     playDelayMs,
-    visibilityRatio: 0.35,
+    visibilityRatio: 0.05,
   });
 
   const togglePause = useCallback(() => {
@@ -192,16 +192,20 @@ export default function GearStoryCard({
               .filter(Boolean)
               .join(" ")}
             src={videoSrc}
+            poster={story.posterUrl}
+            autoPlay
             muted
             loop
             playsInline
-            preload="metadata"
+            preload="auto"
             disablePictureInPicture
             controls={false}
             aria-hidden="true"
             onError={handleVideoError}
             onLoadedData={handleVideoReady}
             onCanPlay={handleVideoReady}
+            onPlaying={handleVideoReady}
+            onTimeUpdate={handleVideoReady}
           />
         ) : null}
         <div className="gear-story-card__overlay">

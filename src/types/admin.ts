@@ -167,7 +167,10 @@ export interface AdminCategory {
   description?: string;
   parentId?: string | null;
   imageUrl?: string;
+  featuredImageUrls?: string[];
   isFeatured?: boolean;
+  isActive?: boolean;
+  isArchived?: boolean;
   sortOrder?: number;
   metaTitle?: string;
   metaDescription?: string;

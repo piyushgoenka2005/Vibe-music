@@ -5,10 +5,9 @@ import AppShell from "@/components/layout/AppShell";
 import { resolvePublicLegal } from "@/lib/brand/resolvePublicLegal";
 import brandsCatalog from "@/data/catalog/brands.json";
 import { buildBrandsMegaMenu } from "@/lib/navigation/buildBrandsMegaMenu";
-import { buildCategoryMegaMenus } from "@/lib/navigation/buildCategoryMegaMenus";
-import { getCategoryCatalog } from "@/lib/server/catalog/categoryResolver";
 import { loadBrandsWithCounts } from "@/lib/server/brandsPageLoader";
 import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
+import { loadHeaderData } from "@/lib/server/navigation/headerDataLoader";
 import GoogleAnalyticsScripts from "@/components/analytics/GoogleAnalyticsScripts";
 import MetaPixelScripts from "@/components/analytics/MetaPixelScripts";
 import { getMetaDomainVerification, isMetaPixelConfigured } from "@/lib/analytics/metaPixel";
@@ -56,20 +55,20 @@ export default async function RootLayout({
   let legal;
   let shippingPolicy;
   let brands: Awaited<ReturnType<typeof loadBrandsWithCounts>> = [];
-  let categories: Awaited<ReturnType<typeof getCategoryCatalog>> = [];
+  let headerData: Awaited<ReturnType<typeof loadHeaderData>> | null = null;
   try {
-    const [resolvedLegal, resolvedShipping, resolvedBrands, resolvedCategories] = await Promise.all(
+    const [resolvedLegal, resolvedShipping, resolvedBrands, resolvedHeaderData] = await Promise.all(
       [
         resolvePublicLegal(),
         resolveStoreShippingPolicy(),
         loadBrandsWithCounts(),
-        getCategoryCatalog(),
+        loadHeaderData(),
       ],
     );
     legal = resolvedLegal;
     shippingPolicy = resolvedShipping;
     brands = resolvedBrands;
-    categories = resolvedCategories;
+    headerData = resolvedHeaderData;
   } catch (error) {
     console.error("[layout] error resolving layout data, using safe defaults", error);
     legal = { legalName: "Vibe Music", address: "India", gstin: "" };
@@ -85,7 +84,6 @@ export default async function RootLayout({
   const brandsMegaMenu = buildBrandsMegaMenu(
     brands.length > 0 ? brands : brandsCatalog.map((brand) => ({ ...brand, productCount: 0 })),
   );
-  const categoryMegaMenus = buildCategoryMegaMenus(categories);
   const splashEnabled = isPageLoadSplashEnabled();
   const metaDomainVerification = getMetaDomainVerification();
 
@@ -148,9 +146,14 @@ export default async function RootLayout({
         <AppProviders>
           <AppShell
             legal={legal}
-            shippingAnnouncement={shippingPolicy.announcement}
+            shippingAnnouncement={
+              headerData?.settings.shippingAnnouncement || shippingPolicy.announcement
+            }
             brandsMegaMenu={brandsMegaMenu}
-            categoryMegaMenus={categoryMegaMenus}
+            categoryMegaMenus={headerData?.megaMenus}
+            utilityItems={headerData?.utilityItems}
+            configuredNavItems={headerData?.navItems}
+            headerSettings={headerData?.settings}
           >
             {children}
           </AppShell>

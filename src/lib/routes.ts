@@ -41,6 +41,7 @@ export const ROUTES = {
   adminAnalytics: "/admin/analytics",
   adminReports: "/admin/reports",
   adminBanners: "/admin/banners",
+  adminNavigation: "/admin/navigation",
   adminHomepage: "/admin/homepage",
   adminMedia: "/admin/media",
   adminAuditLogs: "/admin/audit-logs",

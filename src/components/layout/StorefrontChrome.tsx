@@ -15,6 +15,10 @@ import { isMobileWhatsAppPath } from "@/data/helpWidget";
 import { ROUTES } from "@/lib/routes";
 import type { MegaMenuItem } from "@/data/headerMegaMenu";
 import type { PublicLegalInfo } from "@/types/publicLegal";
+import type {
+  HeaderSettingRecord,
+  NavigationMenuItemRecord,
+} from "@/lib/server/navigation/navigationRepository";
 
 const HelpWidget = dynamic(() => import("@/components/layout/HelpWidget"), {
   ssr: false,
@@ -51,12 +55,18 @@ export default function StorefrontChrome({
   shippingAnnouncement,
   brandsMegaMenu = null,
   categoryMegaMenus = null,
+  utilityItems = null,
+  configuredNavItems = null,
+  headerSettings = null,
 }: {
   children: React.ReactNode;
   legal: PublicLegalInfo;
   shippingAnnouncement?: string;
   brandsMegaMenu?: MegaMenuItem | null;
   categoryMegaMenus?: MegaMenuItem[] | null;
+  utilityItems?: NavigationMenuItemRecord[] | null;
+  configuredNavItems?: NavigationMenuItemRecord[] | null;
+  headerSettings?: HeaderSettingRecord | null;
 }) {
   const pathname = usePathname() ?? "";
   const hideChrome = pathname.startsWith("/admin") || pathname.startsWith("/gp9");
@@ -148,6 +158,9 @@ export default function StorefrontChrome({
         shippingAnnouncement={shippingAnnouncement}
         brandsMegaMenu={brandsMegaMenu}
         categoryMegaMenus={categoryMegaMenus}
+        utilityItems={utilityItems}
+        configuredNavItems={configuredNavItems}
+        headerSettings={headerSettings}
       />
       <div className="storefront-main" id="main-content" tabIndex={-1}>
         {children}

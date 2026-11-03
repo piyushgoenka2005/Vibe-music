@@ -40,6 +40,8 @@ import {
   Images,
   TrendingUp,
   Receipt,
+  Menu as MenuIcon,
+  Search,
 } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { ADMIN_ROLE_LABELS } from "@/lib/auth/permissions";
@@ -49,96 +51,175 @@ import { useAdminUiStore } from "@/store/adminUiStore";
 import { adminFetchJson } from "@/lib/admin/adminFetch";
 import { setCachedAdminSession } from "@/components/admin/AdminGuard";
 
-const NAV_ITEMS = [
-  { href: ROUTES.admin, label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:read" },
-  { href: ROUTES.adminProducts, label: "Products", icon: Package, permission: "products:read" },
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  permission: string;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const SECTIONS: NavSection[] = [
   {
-    href: ROUTES.adminCategories,
-    label: "Categories",
-    icon: FolderTree,
-    permission: "categories:read",
+    title: "Catalog Management",
+    items: [
+      { href: ROUTES.adminProducts, label: "Products", icon: Package, permission: "products:read" },
+      {
+        href: ROUTES.adminCategories,
+        label: "Category Management",
+        icon: FolderTree,
+        permission: "categories:read",
+      },
+      {
+        href: ROUTES.adminTaxonomy,
+        label: "Master Taxonomy",
+        icon: ListTree,
+        permission: "categories:read",
+      },
+      {
+        href: ROUTES.adminAttributes,
+        label: "Attributes",
+        icon: Sliders,
+        permission: "categories:read",
+      },
+      { href: ROUTES.adminBrands, label: "Brands", icon: Tag, permission: "categories:read" },
+    ],
   },
   {
-    href: ROUTES.adminTaxonomy,
-    label: "Master Taxonomy",
-    icon: ListTree,
-    permission: "categories:read",
+    title: "Website Management",
+    items: [
+      {
+        href: ROUTES.adminNavigation,
+        label: "Header & Menu Management",
+        icon: MenuIcon,
+        permission: "settings:read",
+      },
+      {
+        href: ROUTES.adminHomepage,
+        label: "Homepage Sections",
+        icon: LayoutTemplate,
+        permission: "homepage:read",
+      },
+      { href: ROUTES.adminBanners, label: "Banners", icon: ImageIcon, permission: "banners:read" },
+      {
+        href: ROUTES.adminCms,
+        label: "Footer Management",
+        icon: FilePenLine,
+        permission: "settings:read",
+      },
+      { href: ROUTES.adminCms, label: "SEO Management", icon: Search, permission: "settings:read" },
+    ],
   },
   {
-    href: ROUTES.adminAttributes,
-    label: "Attributes",
-    icon: Sliders,
-    permission: "categories:read",
-  },
-  { href: ROUTES.adminBrands, label: "Brands", icon: Tag, permission: "categories:read" },
-  { href: ROUTES.adminOrders, label: "Orders", icon: ShoppingCart, permission: "orders:read" },
-  { href: ROUTES.adminRentals, label: "Rentals", icon: KeyRound, permission: "rentals:read" },
-  { href: ROUTES.adminGiveaway, label: "Giveaways", icon: Gift, permission: "giveaways:read" },
-  { href: ROUTES.adminCompare, label: "Compare", icon: GitCompare, permission: "compare:read" },
-  { href: ROUTES.adminReturns, label: "Returns", icon: RotateCcw, permission: "orders:read" },
-  { href: ROUTES.adminSupport, label: "Support", icon: Headset, permission: "orders:read" },
-  { href: ROUTES.adminCustomers, label: "Customers", icon: Users, permission: "customers:read" },
-  { href: ROUTES.adminNewsletter, label: "Newsletter", icon: Mail, permission: "customers:read" },
-  { href: ROUTES.adminCoupons, label: "Coupons", icon: Ticket, permission: "coupons:read" },
-  { href: ROUTES.adminBanners, label: "Banners", icon: ImageIcon, permission: "banners:read" },
-  {
-    href: ROUTES.adminHomepage,
-    label: "Homepage",
-    icon: LayoutTemplate,
-    permission: "homepage:read",
-  },
-  {
-    href: ROUTES.adminMedia,
-    label: "Media Library",
-    icon: Images,
-    permission: "products:read",
-  },
-  { href: ROUTES.adminReviews, label: "Reviews", icon: Star, permission: "reviews:read" },
-  {
-    href: ROUTES.adminQuestions,
-    label: "Q&A",
-    icon: MessageCircleQuestion,
-    permission: "reviews:read",
+    title: "Business Management",
+    items: [
+      { href: ROUTES.adminOrders, label: "Orders", icon: ShoppingCart, permission: "orders:read" },
+      {
+        href: ROUTES.adminInventory,
+        label: "Inventory",
+        icon: Warehouse,
+        permission: "inventory:read",
+      },
+      {
+        href: ROUTES.adminCustomers,
+        label: "Customers",
+        icon: Users,
+        permission: "customers:read",
+      },
+      { href: ROUTES.adminReturns, label: "Returns", icon: RotateCcw, permission: "orders:read" },
+      {
+        href: ROUTES.adminCoupons,
+        label: "Coupons & Deals",
+        icon: Ticket,
+        permission: "coupons:read",
+      },
+    ],
   },
   {
-    href: ROUTES.adminInventory,
-    label: "Inventory",
-    icon: Warehouse,
-    permission: "inventory:read",
+    title: "Operations & Admin",
+    items: [
+      {
+        href: ROUTES.admin,
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        permission: "dashboard:read",
+      },
+      { href: ROUTES.adminRentals, label: "Rentals", icon: KeyRound, permission: "rentals:read" },
+      { href: ROUTES.adminReviews, label: "Reviews", icon: Star, permission: "reviews:read" },
+      {
+        href: ROUTES.adminQuestions,
+        label: "Q&A",
+        icon: MessageCircleQuestion,
+        permission: "reviews:read",
+      },
+      {
+        href: ROUTES.adminMedia,
+        label: "Media Library",
+        icon: Images,
+        permission: "products:read",
+      },
+      { href: ROUTES.adminBlog, label: "Guides / Blog", icon: FileText, permission: "blog:read" },
+      { href: ROUTES.adminGiveaway, label: "Giveaways", icon: Gift, permission: "giveaways:read" },
+      { href: ROUTES.adminCompare, label: "Compare", icon: GitCompare, permission: "compare:read" },
+      {
+        href: ROUTES.adminNewsletter,
+        label: "Newsletter",
+        icon: Mail,
+        permission: "customers:read",
+      },
+      { href: ROUTES.adminSupport, label: "Support", icon: Headset, permission: "orders:read" },
+      {
+        href: ROUTES.adminAnalytics,
+        label: "Analytics",
+        icon: BarChart3,
+        permission: "analytics:read",
+      },
+      {
+        href: ROUTES.adminReports,
+        label: "Reports",
+        icon: TrendingUp,
+        permission: "analytics:read",
+      },
+      {
+        href: ROUTES.adminNotifications,
+        label: "Notifications",
+        icon: Bell,
+        permission: "dashboard:read",
+      },
+      {
+        href: ROUTES.adminAuditLogs,
+        label: "Audit logs",
+        icon: ScrollText,
+        permission: "audit:read",
+      },
+      { href: ROUTES.adminUsers, label: "Admin users", icon: UserCog, permission: "admins:read" },
+      { href: ROUTES.adminRoles, label: "Roles", icon: Shield, permission: "admins:read" },
+      {
+        href: ROUTES.adminShipping,
+        label: "Shipping zones",
+        icon: Truck,
+        permission: "settings:read",
+      },
+      { href: ROUTES.adminTax, label: "GST & Taxes", icon: Receipt, permission: "settings:read" },
+      {
+        href: ROUTES.adminLocalization,
+        label: "Localization",
+        icon: Languages,
+        permission: "settings:read",
+      },
+      {
+        href: ROUTES.adminSettings,
+        label: "Settings",
+        icon: Settings,
+        permission: "settings:read",
+      },
+    ],
   },
-  {
-    href: ROUTES.adminAnalytics,
-    label: "Analytics",
-    icon: BarChart3,
-    permission: "analytics:read",
-  },
-  {
-    href: ROUTES.adminReports,
-    label: "Reports",
-    icon: TrendingUp,
-    permission: "analytics:read",
-  },
-  {
-    href: ROUTES.adminNotifications,
-    label: "Notifications",
-    icon: Bell,
-    permission: "dashboard:read",
-  },
-  { href: ROUTES.adminAuditLogs, label: "Audit logs", icon: ScrollText, permission: "audit:read" },
-  { href: ROUTES.adminUsers, label: "Admin users", icon: UserCog, permission: "admins:read" },
-  { href: ROUTES.adminRoles, label: "Roles", icon: Shield, permission: "admins:read" },
-  { href: ROUTES.adminCms, label: "CMS", icon: FilePenLine, permission: "settings:read" },
-  { href: ROUTES.adminShipping, label: "Shipping zones", icon: Truck, permission: "settings:read" },
-  { href: ROUTES.adminTax, label: "GST & Taxes", icon: Receipt, permission: "settings:read" },
-  {
-    href: ROUTES.adminLocalization,
-    label: "Localization",
-    icon: Languages,
-    permission: "settings:read",
-  },
-  { href: ROUTES.adminSettings, label: "Settings", icon: Settings, permission: "settings:read" },
-  { href: ROUTES.adminBlog, label: "Guides / Blog", icon: FileText, permission: "blog:read" },
-] as const;
+];
 
 interface AdminSidebarProps {
   admin: AdminSession;
@@ -166,23 +247,13 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
     router.replace(ROUTES.adminLogin);
   }
 
-  const visibleItems = NAV_ITEMS.filter(
-    (item) =>
-      admin.role === "super_admin" ||
-      admin.permissions.includes(item.permission as (typeof admin.permissions)[number]),
-  );
-
-  const showNotificationBadge = visibleItems.some(
-    (item) => item.href === ROUTES.adminNotifications,
-  );
+  const isSuperAdmin = admin.role === "super_admin";
 
   const { data: notificationData } = useQuery({
     queryKey: ["admin-notifications-count"],
     queryFn: async () => {
-      // Lightweight count endpoint — full list is only fetched by /admin/notifications.
       return adminFetchJson<{ unreadCount: number }>("/api/admin/notifications/count");
     },
-    enabled: showNotificationBadge,
     staleTime: 60_000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: false,
@@ -213,29 +284,48 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
       </div>
 
       <nav className="admin-sidebar__nav" aria-label="Admin navigation">
-        {visibleItems.map((item) => {
-          const Icon = item.icon;
-          const isActive =
-            pathname === item.href ||
-            (item.href !== ROUTES.admin && pathname.startsWith(item.href));
+        {SECTIONS.map((section) => {
+          const visibleSectionItems = section.items.filter(
+            (item) =>
+              isSuperAdmin ||
+              admin.permissions.includes(item.permission as (typeof admin.permissions)[number]),
+          );
+
+          if (visibleSectionItems.length === 0) return null;
+
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch={false}
-              onMouseEnter={() => router.prefetch(item.href)}
-              className={`admin-sidebar__link${isActive ? " admin-sidebar__link--active" : ""}`}
-              title={collapsed ? item.label : undefined}
-              onClick={closeSidebarOnMobile}
-            >
-              <Icon size={18} className="admin-sidebar__link-icon" />
-              <span className="admin-sidebar__link-label">{item.label}</span>
-              {item.href === ROUTES.adminNotifications && unreadNotifications > 0 ? (
-                <span className="admin-sidebar__badge" aria-hidden>
-                  {unreadNotifications > 99 ? "99+" : unreadNotifications}
-                </span>
+            <div key={section.title} className="admin-sidebar__section">
+              {!collapsed ? (
+                <div className="admin-sidebar__section-title">{section.title}</div>
               ) : null}
-            </Link>
+
+              {visibleSectionItems.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== ROUTES.admin && pathname.startsWith(item.href));
+
+                return (
+                  <Link
+                    key={`${section.title}-${item.label}-${item.href}`}
+                    href={item.href}
+                    prefetch={false}
+                    onMouseEnter={() => router.prefetch(item.href)}
+                    className={`admin-sidebar__link${isActive ? " admin-sidebar__link--active" : ""}`}
+                    title={collapsed ? item.label : undefined}
+                    onClick={closeSidebarOnMobile}
+                  >
+                    <Icon size={18} className="admin-sidebar__link-icon" />
+                    <span className="admin-sidebar__link-label">{item.label}</span>
+                    {item.href === ROUTES.adminNotifications && unreadNotifications > 0 ? (
+                      <span className="admin-sidebar__badge" aria-hidden>
+                        {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                      </span>
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </div>
           );
         })}
       </nav>

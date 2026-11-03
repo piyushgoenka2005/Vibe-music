@@ -121,6 +121,60 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
   const [productSearch, setProductSearch] = useState("");
   const [productResults, setProductResults] = useState<AdminProduct[]>([]);
   const [productSearching, setProductSearching] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [fetchingInstagram, setFetchingInstagram] = useState(false);
+
+  async function handleVideoFileUpload(file: File) {
+    setVideoUploading(true);
+    setFormError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload/video", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload video");
+      }
+      setItemForm((prev) => ({ ...prev, customHref: data.url }));
+      setSaveNotice(`Video uploaded successfully to CDN: ${data.url}`);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Video upload failed");
+    } finally {
+      setVideoUploading(false);
+    }
+  }
+
+  async function handleFetchInstagram(rawUrl: string) {
+    if (!rawUrl.trim()) return;
+    setFetchingInstagram(true);
+    setFormError(null);
+    try {
+      const res = await fetch("/api/admin/homepage/fetch-instagram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: rawUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to parse Instagram link");
+      }
+      setItemForm((prev) => ({
+        ...prev,
+        offerText: data.cleanUrl || prev.offerText,
+        badgeLabel: data.handle || prev.badgeLabel || "@vibemusicindia",
+        customTitle: prev.customTitle || data.title || "",
+        customImage: prev.customImage || data.posterUrl || "",
+      }));
+      setSaveNotice(`Instagram details auto-detected: ${data.handle} (${data.cleanUrl})`);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Instagram fetch failed");
+    } finally {
+      setFetchingInstagram(false);
+    }
+  }
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: QUERY_KEY,
@@ -1032,7 +1086,61 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                     />
                   </div>
                   <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label>Choose video preset (or enter custom MP4 below)</label>
+                    <label>Video URL (MP4, direct URL or CDN)</label>
+                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                      <input
+                        className="admin-input"
+                        style={{ flex: 1 }}
+                        value={itemForm.customHref}
+                        placeholder="https://cdn.vibemusic.in/videos/style-story/reel-1.mp4"
+                        onChange={(event) => {
+                          const val = event.target.value;
+                          if (
+                            val.includes("instagram.com/reel/") ||
+                            val.includes("instagram.com/p/")
+                          ) {
+                            setItemForm((prev) => ({
+                              ...prev,
+                              offerText: val.trim(),
+                            }));
+                            void handleFetchInstagram(val.trim());
+                            setSaveNotice(
+                              "Instagram link detected and moved to the Instagram link field. Direct .mp4 video is required for video playback.",
+                            );
+                          } else {
+                            setItemForm((prev) => ({ ...prev, customHref: val }));
+                          }
+                        }}
+                      />
+                      <label
+                        className="admin-btn admin-btn--secondary"
+                        style={{
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
+                          display: "inline-flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        {videoUploading ? "Uploading..." : "Upload MP4"}
+                        <input
+                          type="file"
+                          accept="video/mp4,video/webm"
+                          style={{ display: "none" }}
+                          disabled={videoUploading}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) void handleVideoFileUpload(file);
+                          }}
+                        />
+                      </label>
+                    </div>
+                    <p className="admin-form-hint" style={{ margin: "0.25rem 0 0" }}>
+                      Direct MP4 video file URL. You can upload an MP4 directly to the CDN, pick a
+                      preset below, or paste any video URL.
+                    </p>
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Or choose existing video preset</label>
                     <select
                       className="admin-select"
                       style={{ width: "100%" }}
@@ -1056,42 +1164,8 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                           {preset.label}
                         </option>
                       ))}
-                      <option value="custom">Custom MP4 URL</option>
+                      <option value="custom">Custom / Uploaded MP4 (above)</option>
                     </select>
-                  </div>
-                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label>Video URL (MP4, required)</label>
-                    <input
-                      className="admin-input"
-                      style={{ width: "100%" }}
-                      value={itemForm.customHref}
-                      placeholder="/videos/style-story/reel-1.mp4 or https://cdn.vibemusic.in/videos/..."
-                      onChange={(event) => {
-                        const val = event.target.value;
-                        if (
-                          val.includes("instagram.com/reel/") ||
-                          val.includes("instagram.com/p/")
-                        ) {
-                          setItemForm((prev) => ({
-                            ...prev,
-                            offerText: val.trim(),
-                            customHref:
-                              prev.customHref && !prev.customHref.includes("instagram.com")
-                                ? prev.customHref
-                                : "https://cdn.vibemusic.in/videos/style-story/reel-1.mp4",
-                          }));
-                          setSaveNotice(
-                            "Notice: Instagram links are set as the post link. HTML video players require a direct .mp4 video file, so a video preset has been selected.",
-                          );
-                        } else {
-                          setItemForm((prev) => ({ ...prev, customHref: val }));
-                        }
-                      }}
-                    />
-                    <p className="admin-form-hint" style={{ margin: "0.25rem 0 0" }}>
-                      Direct MP4 video file. For Instagram post/reel link, enter it in the Instagram
-                      link field below.
-                    </p>
                   </div>
                   <div className="admin-form-group">
                     <label>Instagram handle</label>
@@ -1107,15 +1181,37 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   </div>
                   <div className="admin-form-group">
                     <label>Instagram link</label>
-                    <input
-                      className="admin-input"
-                      style={{ width: "100%" }}
-                      value={itemForm.offerText}
-                      placeholder="https://www.instagram.com/vibemusicindia/"
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, offerText: event.target.value }))
-                      }
-                    />
+                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                      <input
+                        className="admin-input"
+                        style={{ flex: 1 }}
+                        value={itemForm.offerText}
+                        placeholder="https://www.instagram.com/reel/..."
+                        onChange={(event) => {
+                          const val = event.target.value;
+                          setItemForm((prev) => ({ ...prev, offerText: val }));
+                          if (
+                            val.includes("instagram.com/reel/") ||
+                            val.includes("instagram.com/p/")
+                          ) {
+                            void handleFetchInstagram(val.trim());
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--secondary"
+                        disabled={fetchingInstagram || !itemForm.offerText}
+                        onClick={() => void handleFetchInstagram(itemForm.offerText)}
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        {fetchingInstagram ? "Fetching..." : "Auto-fill"}
+                      </button>
+                    </div>
+                    <p className="admin-form-hint" style={{ margin: "0.25rem 0 0" }}>
+                      Paste Instagram reel or post link. Auto-fill will clean the URL and detect the
+                      handle.
+                    </p>
                   </div>
                   <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
                     <label>Search catalog product (optional shop modal)</label>

@@ -20,6 +20,10 @@ import SupportChatLoader from "@/components/support/SupportChatLoader";
 import DevExtensionNoiseFilter from "@/components/dev/DevExtensionNoiseFilter";
 import type { MegaMenuItem } from "@/data/headerMegaMenu";
 import type { PublicLegalInfo } from "@/types/publicLegal";
+import type {
+  HeaderSettingRecord,
+  NavigationMenuItemRecord,
+} from "@/lib/server/navigation/navigationRepository";
 
 const StorefrontDrawers = dynamic(() => import("@/components/layout/StorefrontDrawers"), {
   ssr: false,
@@ -32,12 +36,18 @@ export default function AppShell({
   shippingAnnouncement,
   brandsMegaMenu = null,
   categoryMegaMenus = null,
+  utilityItems = null,
+  configuredNavItems = null,
+  headerSettings = null,
 }: {
   children: React.ReactNode;
   legal: PublicLegalInfo;
   shippingAnnouncement?: string;
   brandsMegaMenu?: MegaMenuItem | null;
   categoryMegaMenus?: MegaMenuItem[] | null;
+  utilityItems?: NavigationMenuItemRecord[] | null;
+  configuredNavItems?: NavigationMenuItemRecord[] | null;
+  headerSettings?: HeaderSettingRecord | null;
 }) {
   const pathname = usePathname() ?? "";
   const isAdmin = pathname.startsWith("/admin");
@@ -73,6 +83,9 @@ export default function AppShell({
             shippingAnnouncement={shippingAnnouncement}
             brandsMegaMenu={brandsMegaMenu}
             categoryMegaMenus={categoryMegaMenus}
+            utilityItems={utilityItems}
+            configuredNavItems={configuredNavItems}
+            headerSettings={headerSettings}
           >
             <DeferredHtmlLinkInterceptor />
             <DeferredGlobalSearch />
