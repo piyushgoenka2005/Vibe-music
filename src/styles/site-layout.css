@@ -890,6 +890,10 @@ body.site-nav-open .site-header--scroll-hidden {
   opacity: 1;
 }
 
+.site-header__nav--desktop .site-header__nav-shell::after {
+  display: none !important;
+}
+
 /* Header gooey linkup nav — filter disabled for sharp rendering */
 .site-header__nav-gooey .gooey-linkup__blobs {
   filter: none;
@@ -2237,11 +2241,12 @@ body:has(.cart-page) {
 .site-header__nav-inner {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  max-width: var(--content-wide, 1280px);
+  gap: clamp(0.75rem, 1.2vw, 1.25rem);
+  max-width: var(--content-wide, 1440px);
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 clamp(0.75rem, 1.5vw, 1.5rem);
   position: relative;
+  width: 100%;
 }
 
 /* All Categories Prominent Blue Trigger */
@@ -2252,12 +2257,12 @@ body:has(.cart-page) {
 .site-header__all-cats-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   background-color: #2166ff;
   color: #ffffff;
   font-weight: 600;
-  font-size: 0.875rem;
-  padding: 0.5rem 1rem;
+  font-size: clamp(0.78rem, 0.85vw, 0.84rem);
+  padding: 0.45rem clamp(0.65rem, 0.85vw, 0.85rem);
   border-radius: 6px;
   border: none;
   cursor: pointer;
@@ -2279,6 +2284,7 @@ body:has(.cart-page) {
 
 .site-header__all-cats-chevron {
   transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .site-header__all-cats-chevron.is-rotated {
@@ -2289,7 +2295,10 @@ body:has(.cart-page) {
 .site-header__nav-items-list {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: space-between;
+  flex: 1;
+  min-width: 0;
+  gap: clamp(0.15rem, 0.35vw, 0.45rem);
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
@@ -2307,10 +2316,11 @@ body:has(.cart-page) {
 .site-header__nav-item-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.65rem 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  gap: 0.25rem;
+  padding: 0.55rem clamp(0.32rem, 0.5vw, 0.6rem);
+  font-size: clamp(0.75rem, 0.78vw, 0.825rem);
+  font-weight: 600;
+  letter-spacing: 0.015em;
   color: #1e293b;
   text-decoration: none;
   border-radius: 6px;
@@ -2328,12 +2338,13 @@ body:has(.cart-page) {
 
 .site-header__nav-item-unit.is-active .site-header__nav-item-link {
   color: #2166ff;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .site-header__nav-chevron {
   color: #94a3b8;
   transition: transform 0.15s ease;
+  flex-shrink: 0;
 }
 
 .site-header__nav-item-unit.is-hovered .site-header__nav-chevron {
@@ -2351,6 +2362,51 @@ body:has(.cart-page) {
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+}
+
+/* Ensure Grand Piano (last item) has clean margin and is never clipped */
+.site-header__nav-item-unit:last-child {
+  padding-right: 0;
+}
+
+.site-header__nav-item-unit:last-child .site-header__nav-item-link {
+  padding-right: 0.45rem;
+}
+
+@media (max-width: 1280px) {
+  .site-header__nav-inner {
+    padding: 0 1rem;
+    gap: 0.75rem;
+  }
+
+  .site-header__all-cats-btn {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.78rem;
+  }
+
+  .site-header__nav-item-link {
+    padding: 0.5rem 0.35rem;
+    font-size: 0.75rem;
+    gap: 0.2rem;
+  }
+}
+
+@media (max-width: 1100px) {
+  .site-header__nav-inner {
+    padding: 0 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .site-header__all-cats-btn {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.74rem;
+  }
+
+  .site-header__nav-item-link {
+    padding: 0.45rem 0.25rem;
+    font-size: 0.71rem;
+    gap: 0.15rem;
+  }
 }
 
 /* All Categories Mega Menu Panel */

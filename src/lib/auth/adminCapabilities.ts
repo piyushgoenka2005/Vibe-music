@@ -2,8 +2,9 @@ import { hasPermission } from "@/lib/auth/permissions";
 import type { Permission } from "@/types/admin";
 
 /** UI capability flags derived from admin session permissions. */
-export function getAdminCapabilities(permissions: Permission[], role?: string) {
-  const isSuperAdmin = role === "super_admin" || permissions.includes("admins:write");
+export function getAdminCapabilities(permissions: Permission[] | null | undefined, role?: string) {
+  const isSuperAdmin =
+    role === "super_admin" || (Array.isArray(permissions) && permissions.includes("admins:write"));
   if (isSuperAdmin) {
     return {
       productsWrite: true,

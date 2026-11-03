@@ -463,9 +463,11 @@ export default function AdminUsersPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Admin users">
-          {admin.permissions.includes("admins:read") ? (
+          {admin.role === "super_admin" || (admin.permissions ?? []).includes("admins:read") ? (
             <UsersContent
-              canInvite={admin.permissions.includes("admins:write")}
+              canInvite={
+                admin.role === "super_admin" || (admin.permissions ?? []).includes("admins:write")
+              }
               currentUid={admin.uid}
             />
           ) : (

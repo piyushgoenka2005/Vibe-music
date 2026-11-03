@@ -722,8 +722,14 @@ export default function AdminGiveawayCampaignsPage() {
         <AdminShell admin={admin} title="Giveaway campaigns">
           <Suspense fallback={<LoadingState />}>
             <CampaignsAdmin
-              canWrite={admin.permissions.includes("giveaways:write")}
-              canDelete={admin.permissions.includes("giveaways:delete")}
+              canWrite={
+                admin.role === "super_admin" ||
+                (admin.permissions ?? []).includes("giveaways:write")
+              }
+              canDelete={
+                admin.role === "super_admin" ||
+                (admin.permissions ?? []).includes("giveaways:delete")
+              }
             />
           </Suspense>
         </AdminShell>

@@ -992,8 +992,12 @@ export default function AdminCouponsPage() {
       {(admin) => (
         <AdminShell admin={admin} title="Coupons">
           <CouponsContent
-            canWrite={admin.permissions.includes("coupons:write")}
-            canDelete={admin.permissions.includes("coupons:delete")}
+            canWrite={
+              admin.role === "super_admin" || (admin.permissions ?? []).includes("coupons:write")
+            }
+            canDelete={
+              admin.role === "super_admin" || (admin.permissions ?? []).includes("coupons:delete")
+            }
           />
         </AdminShell>
       )}

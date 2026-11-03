@@ -83,7 +83,7 @@ function SettingsContent({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       <AdminTwoFactorPanel />
-      {admin.permissions.includes("admins:read") ? (
+      {admin.role === "super_admin" || (admin.permissions ?? []).includes("admins:read") ? (
         <div className="admin-panel">
           <div className="admin-panel__header">
             <h2 className="admin-panel__title">Team access</h2>

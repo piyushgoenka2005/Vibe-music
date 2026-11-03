@@ -178,7 +178,11 @@ export default function AdminRentalPoliciesPage() {
     <AdminGuard>
       {(admin: AdminSession) => (
         <AdminShell admin={admin} title="Rental policies">
-          <PoliciesAdmin canWrite={admin.permissions.includes("rentals:write")} />
+          <PoliciesAdmin
+            canWrite={
+              admin.role === "super_admin" || (admin.permissions ?? []).includes("rentals:write")
+            }
+          />
         </AdminShell>
       )}
     </AdminGuard>

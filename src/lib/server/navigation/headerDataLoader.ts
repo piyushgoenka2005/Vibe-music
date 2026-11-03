@@ -1,6 +1,9 @@
 import { cache } from "react";
 import { HEADER_MEGA_MENUS, type MegaMenuItem } from "@/data/headerMegaMenu";
+import { buildCategoryMegaMenus } from "@/lib/navigation/buildCategoryMegaMenus";
+import { listCategories } from "@/lib/server/catalog/categoryRepository";
 import { isPostgresConfigured } from "@/lib/db/prisma";
+import type { Category } from "@/types/category";
 import {
   getHeaderSettings,
   getNavigationMenuByHandle,
@@ -355,9 +358,22 @@ export const loadHeaderData = cache(async (): Promise<ResolvedHeaderData> => {
         ? mainMenu.items.filter((i) => i.isActive)
         : DEFAULT_MAIN_NAV_ITEMS;
 
-    // Build mega-menu map based on configured navigation items + baseline definitions
-    // This ensures header mega-menus are never wiped out when categories are altered.
-    const megaMenus: MegaMenuItem[] = HEADER_MEGA_MENUS.map((base) => {
+    // 1. Build category mega menus from database categories (so custom images from Category Management appear)
+    // with graceful fallback to static definitions if categories are empty.
+    let baseMegaMenus: MegaMenuItem[] = HEADER_MEGA_MENUS;
+    try {
+      const categories = await listCategories();
+      if (categories && categories.length > 0) {
+        baseMegaMenus = buildCategoryMegaMenus(categories as unknown as Category[]);
+      }
+    } catch (e) {
+      console.warn("[headerDataLoader] Falling back to default mega menus:", e);
+    }
+
+    // 2. Build mega-menu map based on configured navigation items + category definitions
+    // This allows Header & Menu Management to customize promo cards while ensuring
+    // changing or deleting categories never deletes or modifies header navigation items.
+    const megaMenus: MegaMenuItem[] = baseMegaMenus.map((base) => {
       // If there's a matching nav item configured with custom name or href, respect it
       const matchingNavItem = navItems.find(
         (n) =>
@@ -366,10 +382,24 @@ export const loadHeaderData = cache(async (): Promise<ResolvedHeaderData> => {
           n.categoryId === base.slug,
       );
       if (matchingNavItem) {
+        let customFeatured = base.featured;
+        if (matchingNavItem.megaMenuData && typeof matchingNavItem.megaMenuData === "object") {
+          const customData = matchingNavItem.megaMenuData as {
+            featured?: { title: string; href: string; image: string }[];
+          };
+          if (Array.isArray(customData.featured) && customData.featured.length > 0) {
+            customFeatured = customData.featured.map((card, idx) => ({
+              title: card.title || base.featured[idx]?.title || "",
+              href: card.href || base.featured[idx]?.href || matchingNavItem.url,
+              image: card.image || base.featured[idx]?.image || "",
+            }));
+          }
+        }
         return {
           ...base,
           name: matchingNavItem.label,
           href: matchingNavItem.url,
+          featured: customFeatured,
         };
       }
       return base;

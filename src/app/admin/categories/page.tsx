@@ -685,10 +685,11 @@ export default function AdminCategoriesPage() {
         <AdminShell admin={admin} title="Categories & Subcategories">
           <CategoriesContent
             canWrite={
-              admin.role === "super_admin" || admin.permissions.includes("categories:write")
+              admin.role === "super_admin" || (admin.permissions ?? []).includes("categories:write")
             }
             canDelete={
-              admin.role === "super_admin" || admin.permissions.includes("categories:delete")
+              admin.role === "super_admin" ||
+              (admin.permissions ?? []).includes("categories:delete")
             }
           />
         </AdminShell>

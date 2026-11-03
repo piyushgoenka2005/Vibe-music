@@ -1934,7 +1934,9 @@ export default function AdminHomepagePage() {
       {(admin) => (
         <AdminShell admin={admin} title="Homepage Sections">
           <HomepageContent
-            canWrite={admin.role === "super_admin" || admin.permissions.includes("homepage:write")}
+            canWrite={
+              admin.role === "super_admin" || (admin.permissions ?? []).includes("homepage:write")
+            }
           />
         </AdminShell>
       )}

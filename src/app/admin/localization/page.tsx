@@ -620,7 +620,12 @@ export default function AdminLocalizationPage() {
     <AdminGuard>
       {(session) => (
         <AdminShell admin={session} title="Localization & Regional Settings">
-          <LocalizationContent canWrite={session.permissions.includes("settings:write")} />
+          <LocalizationContent
+            canWrite={
+              session.role === "super_admin" ||
+              (session.permissions ?? []).includes("settings:write")
+            }
+          />
         </AdminShell>
       )}
     </AdminGuard>

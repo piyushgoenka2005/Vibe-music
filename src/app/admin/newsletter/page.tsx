@@ -312,7 +312,11 @@ export default function AdminNewsletterPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Newsletter">
-          <NewsletterContent canWrite={admin.permissions.includes("customers:write")} />
+          <NewsletterContent
+            canWrite={
+              admin.role === "super_admin" || (admin.permissions ?? []).includes("customers:write")
+            }
+          />
         </AdminShell>
       )}
     </AdminGuard>

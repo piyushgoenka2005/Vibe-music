@@ -72,7 +72,7 @@ export default function CategoryBentoImage({
 
   const loadedClass = loaded || priority ? " category-bento__image--loaded" : "";
   const imageStyle: CSSProperties = {
-    objectFit: "contain",
+    objectFit: "cover",
     objectPosition,
   };
 

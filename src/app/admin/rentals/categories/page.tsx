@@ -256,8 +256,12 @@ export default function AdminRentalCategoriesPage() {
       {(admin: AdminSession) => (
         <AdminShell admin={admin} title="Rental categories">
           <CategoriesAdmin
-            canWrite={admin.permissions.includes("rentals:write")}
-            canDelete={admin.permissions.includes("rentals:delete")}
+            canWrite={
+              admin.role === "super_admin" || (admin.permissions ?? []).includes("rentals:write")
+            }
+            canDelete={
+              admin.role === "super_admin" || (admin.permissions ?? []).includes("rentals:delete")
+            }
           />
         </AdminShell>
       )}

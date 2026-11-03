@@ -1201,8 +1201,10 @@ export default function AdminTaxonomyPage() {
   return (
     <AdminGuard>
       {(admin) => {
-        const canWrite = admin.permissions.includes("categories:write");
-        const canDelete = admin.permissions.includes("categories:delete");
+        const canWrite =
+          admin.role === "super_admin" || (admin.permissions ?? []).includes("categories:write");
+        const canDelete =
+          admin.role === "super_admin" || (admin.permissions ?? []).includes("categories:delete");
         return (
           <AdminShell admin={admin} title="Master Catalog Taxonomy">
             <TaxonomyContent canWrite={canWrite} canDelete={canDelete} />

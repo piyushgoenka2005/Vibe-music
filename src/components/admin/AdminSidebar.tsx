@@ -288,7 +288,9 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
           const visibleSectionItems = section.items.filter(
             (item) =>
               isSuperAdmin ||
-              admin.permissions.includes(item.permission as (typeof admin.permissions)[number]),
+              (admin.permissions ?? []).includes(
+                item.permission as (typeof admin.permissions)[number],
+              ),
           );
 
           if (visibleSectionItems.length === 0) return null;

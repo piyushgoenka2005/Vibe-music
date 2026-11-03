@@ -366,7 +366,12 @@ export default function AdminCustomersPage() {
       {(admin) => (
         <AdminShell admin={admin} title="Customers">
           <Suspense fallback={<LoadingState message="Loading customers…" />}>
-            <CustomersContent canWrite={admin.permissions.includes("customers:write")} />
+            <CustomersContent
+              canWrite={
+                admin.role === "super_admin" ||
+                (admin.permissions ?? []).includes("customers:write")
+              }
+            />
           </Suspense>
         </AdminShell>
       )}

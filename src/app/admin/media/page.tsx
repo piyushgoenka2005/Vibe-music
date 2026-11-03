@@ -867,8 +867,14 @@ export default function AdminMediaPage() {
       {(session) => (
         <AdminShell admin={session} title="Media Library & Assets">
           <MediaContent
-            canWrite={session.permissions.includes("products:write")}
-            canDelete={session.permissions.includes("products:delete")}
+            canWrite={
+              session.role === "super_admin" ||
+              (session.permissions ?? []).includes("products:write")
+            }
+            canDelete={
+              session.role === "super_admin" ||
+              (session.permissions ?? []).includes("products:delete")
+            }
           />
         </AdminShell>
       )}

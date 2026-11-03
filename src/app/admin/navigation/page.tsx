@@ -152,7 +152,7 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
         visibleMobile: itemForm.visibleMobile,
         openInNewTab: itemForm.openInNewTab,
         megaMenuData:
-          itemForm.itemType === "mega_menu"
+          itemForm.itemType === "mega_menu" || itemForm.itemType === "dropdown"
             ? {
                 featured: itemForm.promoCards
                   .filter((card) => card.image.trim() || card.title.trim())
@@ -1170,7 +1170,7 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
               </label>
             </div>
 
-            {itemForm.itemType === "mega_menu" && (
+            {(itemForm.itemType === "mega_menu" || itemForm.itemType === "dropdown") && (
               <div
                 style={{
                   marginTop: "1.25rem",
@@ -1347,7 +1347,9 @@ export default function AdminNavigationPage() {
       {(admin) => (
         <AdminShell admin={admin} title="Header & Menu Management">
           <NavigationManagementContent
-            canWrite={admin.role === "super_admin" || admin.permissions.includes("settings:write")}
+            canWrite={
+              admin.role === "super_admin" || (admin.permissions ?? []).includes("settings:write")
+            }
           />
         </AdminShell>
       )}

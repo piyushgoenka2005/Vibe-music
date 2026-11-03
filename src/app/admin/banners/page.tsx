@@ -513,8 +513,12 @@ export default function AdminBannersPage() {
             keep the homepage open to preview without reloading.
           </p>
           <BannersContent
-            canWrite={admin.permissions.includes("banners:write")}
-            canDelete={admin.permissions.includes("banners:delete")}
+            canWrite={
+              admin.role === "super_admin" || (admin.permissions ?? []).includes("banners:write")
+            }
+            canDelete={
+              admin.role === "super_admin" || (admin.permissions ?? []).includes("banners:delete")
+            }
           />
         </AdminShell>
       )}

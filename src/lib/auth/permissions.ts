@@ -145,16 +145,32 @@ export function getPermissionsForRole(role: AdminRole): Permission[] {
   return getDefaultPermissionsForRole(role);
 }
 
-export function hasPermission(permissions: Permission[], required: Permission): boolean {
+export function hasPermission(
+  permissions: Permission[] | null | undefined,
+  required: Permission,
+  role?: string,
+): boolean {
+  if (role === "super_admin") return true;
+  if (!Array.isArray(permissions)) return false;
   return permissions.includes(required);
 }
 
-export function hasAnyPermission(permissions: Permission[], required: Permission[]): boolean {
+export function hasAnyPermission(
+  permissions: Permission[] | null | undefined,
+  required: Permission[],
+  role?: string,
+): boolean {
+  if (role === "super_admin") return true;
+  if (!Array.isArray(permissions)) return false;
   return required.some((p) => permissions.includes(p));
 }
 
-export function canAccessRoute(permissions: Permission[], routePermission: Permission): boolean {
-  return hasPermission(permissions, routePermission);
+export function canAccessRoute(
+  permissions: Permission[] | null | undefined,
+  routePermission: Permission,
+  role?: string,
+): boolean {
+  return hasPermission(permissions, routePermission, role);
 }
 
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {

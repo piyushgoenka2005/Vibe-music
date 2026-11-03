@@ -113,13 +113,28 @@ export default function SiteHeaderNav({
             item.url.replace(/^\/category\//, "").split("?")[0] ||
             item.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
-          if (slug && menus[slug] && customData.featured && customData.featured.length > 0) {
-            menus[slug] = {
-              ...menus[slug],
+          const matchedSlug =
+            (item.categoryId && menus[item.categoryId] ? item.categoryId : null) ||
+            Object.keys(menus).find(
+              (s) =>
+                item.url.includes(s) ||
+                menus[s]?.name?.toLowerCase() === item.label.toLowerCase() ||
+                item.categoryId === s,
+            ) ||
+            slug;
+
+          if (
+            matchedSlug &&
+            menus[matchedSlug] &&
+            customData.featured &&
+            customData.featured.length > 0
+          ) {
+            menus[matchedSlug] = {
+              ...menus[matchedSlug],
               featured: customData.featured.map((card, idx) => ({
-                title: card.title || menus[slug].featured[idx]?.title || "",
-                href: card.href || menus[slug].featured[idx]?.href || item.url,
-                image: card.image || menus[slug].featured[idx]?.image || "",
+                title: card.title || menus[matchedSlug].featured[idx]?.title || "",
+                href: card.href || menus[matchedSlug].featured[idx]?.href || item.url,
+                image: card.image || menus[matchedSlug].featured[idx]?.image || "",
               })),
             };
           }

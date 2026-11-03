@@ -187,8 +187,12 @@ export default function AdminRolesPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Roles & permissions">
-          {admin.permissions.includes("admins:read") ? (
-            <RolesContent canWrite={admin.permissions.includes("admins:write")} />
+          {admin.role === "super_admin" || (admin.permissions ?? []).includes("admins:read") ? (
+            <RolesContent
+              canWrite={
+                admin.role === "super_admin" || (admin.permissions ?? []).includes("admins:write")
+              }
+            />
           ) : (
             <EmptyState message="Insufficient permissions." />
           )}

@@ -536,10 +536,12 @@ export default function AdminSupportPage() {
   return (
     <AdminGuard>
       {(admin) => {
-        const caps = getAdminCapabilities(admin.permissions);
+        const caps = getAdminCapabilities(admin.permissions, admin.role);
+        const canRead =
+          admin.role === "super_admin" || (admin.permissions ?? []).includes("orders:read");
         return (
           <AdminShell admin={admin} title="Support inbox">
-            {admin.permissions.includes("orders:read") ? (
+            {canRead ? (
               <SupportContent canWrite={caps.ordersWrite} />
             ) : (
               <EmptyState message="Insufficient permissions." />

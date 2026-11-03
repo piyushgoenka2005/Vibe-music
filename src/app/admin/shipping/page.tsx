@@ -315,10 +315,15 @@ export default function AdminShippingPage() {
   return (
     <AdminGuard>
       {(admin) => {
-        const canWrite = admin.permissions.includes("settings:write");
+        const canWrite =
+          admin.role === "super_admin" || (admin.permissions ?? []).includes("settings:write");
+        const canRead =
+          admin.role === "super_admin" ||
+          (admin.permissions ?? []).includes("settings:read") ||
+          canWrite;
         return (
           <AdminShell admin={admin} title="Shipping zones">
-            {admin.permissions.includes("settings:read") || canWrite ? (
+            {canRead ? (
               <ShippingContent canWrite={canWrite} />
             ) : (
               <EmptyState message="Insufficient permissions." />

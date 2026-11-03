@@ -63,12 +63,17 @@ export function getRequiredPermissionForAdminPath(pathname: string): Permission 
 }
 
 export function canAccessAdminPath(
-  permissions: Permission[],
+  permissions: Permission[] | null | undefined,
   pathname: string,
   role?: string,
 ): boolean {
-  if (role === "super_admin" || permissions.includes("admins:write")) return true;
+  if (
+    role === "super_admin" ||
+    (Array.isArray(permissions) && permissions.includes("admins:write"))
+  ) {
+    return true;
+  }
   const required = getRequiredPermissionForAdminPath(pathname);
   if (!required) return true;
-  return hasPermission(permissions, required);
+  return hasPermission(permissions, required, role);
 }

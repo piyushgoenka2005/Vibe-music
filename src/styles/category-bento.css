@@ -432,9 +432,11 @@
 
 .category-bento__link--overlay .category-bento__image,
 .category-bento__link--wide .category-bento__image {
-  object-fit: contain;
+  object-fit: cover;
   object-position: center center;
-  padding: clamp(0.35rem, 0.9vw, 0.65rem);
+  padding: 0;
+  width: 100%;
+  height: 100%;
   transform: scale(1);
 }
 
@@ -1167,8 +1169,8 @@
 
   .category-bento__link--overlay .category-bento__image,
   .category-bento__link--wide .category-bento__image {
-    padding: 0.35rem;
-    object-fit: contain;
+    padding: 0;
+    object-fit: cover;
     object-position: center center;
     transform: scale(1);
   }

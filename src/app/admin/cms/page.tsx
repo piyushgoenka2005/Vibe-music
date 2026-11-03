@@ -382,10 +382,15 @@ export default function AdminCmsPage() {
   return (
     <AdminGuard>
       {(admin) => {
-        const canWrite = admin.permissions.includes("settings:write");
+        const canWrite =
+          admin.role === "super_admin" || (admin.permissions ?? []).includes("settings:write");
+        const canRead =
+          admin.role === "super_admin" ||
+          (admin.permissions ?? []).includes("settings:read") ||
+          canWrite;
         return (
           <AdminShell admin={admin} title="CMS pages">
-            {admin.permissions.includes("settings:read") || canWrite ? (
+            {canRead ? (
               <CmsContent canWrite={canWrite} />
             ) : (
               <EmptyState message="Insufficient permissions." />
